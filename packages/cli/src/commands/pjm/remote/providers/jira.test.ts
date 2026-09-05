@@ -1,3 +1,4 @@
+import { assessOutboundProjectionSafety } from '@commands/pjm/remote/outbound-projection-safety';
 import type { SanitizedProviderObservation } from '@commands/pjm/remote/provider';
 import { describe, expect, it } from 'vitest';
 
@@ -6,7 +7,9 @@ import {
   parseJiraIssueReference,
   planJiraDiscussionRead,
   planJiraMetadataRead,
+  planJiraMutation,
   planJiraRead,
+  previewJiraMutation,
   type JiraHostCapabilityObservation,
 } from './jira';
 
@@ -192,5 +195,112 @@ describe('Jira semantic read and metadata intents', () => {
         limit: 101,
       }),
     ).toThrow('bounds');
+  });
+});
+
+describe('Jira semantic mutation intents', () => {
+  const metadata = {
+    evidenceDigest: 'sha256:jira-metadata',
+    writableFields: [
+      'title',
+      'description',
+      'priority',
+      'status',
+      'annotation',
+    ] as const,
+    transitions: ['Done'],
+  };
+
+  function mutationInput(
+    operation: 'create' | 'update' | 'transition' | 'annotate',
+  ) {
+    const projection =
+      operation === 'transition'
+        ? { status: 'Done' }
+        : operation === 'annotate'
+          ? { annotation: 'Completed locally' }
+          : { title: 'Published title' };
+    const outboundSafety = assessOutboundProjectionSafety(projection, {
+      assessedAt: '2026-09-05T12:00:00.000Z',
+    });
+    return {
+      operation,
+      context: jiraContext,
+      hostCapability: jiraCapability,
+      normalizedMetadata: {
+        ...metadata,
+        writableFields: [...metadata.writableFields],
+      },
+      bindingId: 'binding_jira_42',
+      ...(operation === 'create'
+        ? {
+            provenance: {
+              bindingId: 'binding_jira_42',
+              origin: 'local:item-42',
+            },
+          }
+        : { stableId: 'jira:site_01:10042' }),
+      fieldMask: Object.keys(projection),
+      projection,
+      outboundSafety,
+    };
+  }
+
+  it('binds projection, safety, metadata, preview, approval, and readback evidence', () => {
+    const input = mutationInput('update');
+    const preview = previewJiraMutation(input);
+    const action = planJiraMutation({
+      ...input,
+      approvedPreviewDigest: preview.previewDigest,
+    });
+    expect(action.intent).toMatchObject({
+      projection: { title: 'Published title' },
+      postconditions: { title: 'Published title' },
+      metadataEvidenceDigest: metadata.evidenceDigest,
+      previewDigest: preview.previewDigest,
+      approvalDigest: preview.previewDigest,
+      readbackContract: { pinned: true, fields: ['title'] },
+    });
+  });
+
+  it('plans create, transition, and annotation without native invocation shapes', () => {
+    for (const operation of ['create', 'transition', 'annotate'] as const) {
+      const input = mutationInput(operation);
+      const preview = previewJiraMutation(input);
+      const action = planJiraMutation({
+        ...input,
+        approvedPreviewDigest: preview.previewDigest,
+      });
+      expect(action.operation).toBe(operation);
+      expect(JSON.stringify(action)).not.toMatch(
+        /command|executable|arguments|catalog/i,
+      );
+    }
+  });
+
+  it('fails closed on unavailable transitions, metadata drift, and stale approval', () => {
+    const transition = mutationInput('transition');
+    expect(() =>
+      previewJiraMutation({
+        ...transition,
+        normalizedMetadata: {
+          ...transition.normalizedMetadata,
+          transitions: [],
+        },
+      }),
+    ).toThrow('transition');
+    const update = mutationInput('update');
+    expect(() =>
+      previewJiraMutation({
+        ...update,
+        normalizedMetadata: {
+          ...update.normalizedMetadata,
+          writableFields: [],
+        },
+      }),
+    ).toThrow('metadata');
+    expect(() =>
+      planJiraMutation({ ...update, approvedPreviewDigest: 'sha256:stale' }),
+    ).toThrow('approval');
   });
 });

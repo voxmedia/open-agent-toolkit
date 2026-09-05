@@ -1,5 +1,10 @@
 import { containsSensitiveContentSignal } from '@commands/pjm/remote/credential-safety';
 import {
+  requireCurrentOutboundSafety,
+  type OutboundProjection,
+  type OutboundProjectionSafetyResult,
+} from '@commands/pjm/remote/outbound-projection-safety';
+import {
   contextsEqual,
   semanticDigest,
   type FieldVerification,
@@ -68,6 +73,46 @@ export interface JiraDiscussionReadPlanInput {
   stableId: string;
   cursor: string | null;
   limit: number;
+}
+
+export type JiraMutationField =
+  | 'title'
+  | 'description'
+  | 'priority'
+  | 'status'
+  | 'annotation';
+
+export interface JiraNormalizedMetadata {
+  evidenceDigest: string;
+  writableFields: JiraMutationField[];
+  transitions: string[];
+}
+
+export interface JiraMutationPreviewInput {
+  operation: 'create' | 'update' | 'transition' | 'annotate';
+  context: ProviderContext;
+  hostCapability: JiraHostCapabilityObservation;
+  normalizedMetadata: JiraNormalizedMetadata;
+  bindingId: string;
+  stableId?: string;
+  provenance?: { bindingId: string; origin: string };
+  fieldMask: readonly string[];
+  projection: OutboundProjection;
+  outboundSafety: OutboundProjectionSafetyResult;
+}
+
+export interface JiraMutationPlanInput extends JiraMutationPreviewInput {
+  approvedPreviewDigest: string;
+}
+
+export interface JiraMutationPreview {
+  previewDigest: string;
+  executionEvidence: {
+    capabilityEvidenceDigest: string;
+    metadataEvidenceDigest: string;
+    projectionDigest: string;
+    outboundSafetyResultDigest: string;
+  };
 }
 
 const ISSUE_KEY = /^[A-Z][A-Z0-9_]*-[1-9][0-9]*$/;
@@ -313,6 +358,69 @@ export function planJiraDiscussionRead(
   });
 }
 
+export function previewJiraMutation(
+  input: JiraMutationPreviewInput,
+): JiraMutationPreview {
+  requireJiraCapability(input.hostCapability, input.context, input.operation);
+  assertJiraMutationIdentity(input);
+  const fieldMask = normalizeJiraMutationFieldMask(input);
+  requireCurrentOutboundSafety(input.projection, input.outboundSafety);
+  assertJiraMetadataSupports(input, fieldMask);
+  const executionEvidence = {
+    capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    metadataEvidenceDigest: input.normalizedMetadata.evidenceDigest,
+    projectionDigest: input.outboundSafety.projectionDigest,
+    outboundSafetyResultDigest: input.outboundSafety.resultDigest,
+  };
+  return {
+    previewDigest: semanticDigest({
+      provider: 'jira',
+      operation: input.operation,
+      context: input.context,
+      bindingId: input.bindingId,
+      stableId: input.stableId ?? null,
+      provenance: input.provenance ?? null,
+      fieldMask,
+      projection: input.projection,
+      postconditions: input.projection,
+      executionEvidence,
+    }),
+    executionEvidence,
+  };
+}
+
+export function planJiraMutation(input: JiraMutationPlanInput): SemanticAction {
+  const preview = previewJiraMutation(input);
+  if (input.approvedPreviewDigest !== preview.previewDigest) {
+    throw new Error('Jira mutation approval does not match its preview.');
+  }
+  const fieldMask = normalizeJiraMutationFieldMask(input);
+  return jiraAction(input.operation, input.context, {
+    bindingId: input.bindingId,
+    stableId: input.stableId ?? null,
+    provenance: input.provenance ?? null,
+    fieldMask,
+    projection: { ...input.projection },
+    postconditions: { ...input.projection },
+    capabilityEvidenceDigest: input.hostCapability.evidenceDigest,
+    metadataEvidenceDigest: input.normalizedMetadata.evidenceDigest,
+    outboundSafety: {
+      projectionDigest: input.outboundSafety.projectionDigest,
+      resultDigest: input.outboundSafety.resultDigest,
+    },
+    outboundSafetyEvidence: { ...input.outboundSafety },
+    previewDigest: preview.previewDigest,
+    approvalDigest: input.approvedPreviewDigest,
+    executionEvidence: preview.executionEvidence,
+    readbackContract: {
+      pinned: true,
+      requireStableIdentity: true,
+      requireExactContext: true,
+      fields: fieldMask,
+    },
+  });
+}
+
 export const jiraAdapter: ProviderAdapter = {
   provider: 'jira',
   normalize: normalizeJiraIssueObservation,
@@ -320,6 +428,12 @@ export const jiraAdapter: ProviderAdapter = {
     operation: SemanticOperation,
     input: Record<string, unknown>,
   ): SemanticAction {
+    if (['create', 'update', 'transition', 'annotate'].includes(operation)) {
+      if (input.operation !== operation) {
+        throw new Error('Jira mutation operation selector does not match.');
+      }
+      return planJiraMutation(input as unknown as JiraMutationPlanInput);
+    }
     if (operation === 'read' && input.kind === 'metadata') {
       return planJiraMetadataRead(
         input as unknown as JiraMetadataReadPlanInput,
@@ -399,6 +513,80 @@ function requireJiraCapability(
     throw new Error(
       `Jira semantic capability is unavailable: ${validation.reasons.join(',')}`,
     );
+  }
+}
+
+function assertJiraMutationIdentity(input: JiraMutationPreviewInput): void {
+  if (!hasPinnedJiraContext(input.context) || !input.bindingId) {
+    throw new Error('Jira mutation requires a binding and pinned context.');
+  }
+  if (input.operation === 'create') {
+    if (
+      input.stableId !== undefined ||
+      input.provenance?.bindingId !== input.bindingId ||
+      !input.provenance.origin
+    ) {
+      throw new Error('Jira create requires exact creation provenance.');
+    }
+  } else if (
+    !input.stableId ||
+    !validJiraStableIdForContext(input.stableId, input.context)
+  ) {
+    throw new Error('Jira mutation requires a stable issue identity.');
+  }
+}
+
+function normalizeJiraMutationFieldMask(
+  input: JiraMutationPreviewInput,
+): JiraMutationField[] {
+  const allowed: Record<
+    JiraMutationPreviewInput['operation'],
+    JiraMutationField[]
+  > = {
+    create: ['title', 'description', 'priority'],
+    update: ['title', 'description', 'priority'],
+    transition: ['status'],
+    annotate: ['annotation'],
+  };
+  if (
+    input.fieldMask.length === 0 ||
+    new Set(input.fieldMask).size !== input.fieldMask.length ||
+    input.fieldMask.some(
+      (field) => !allowed[input.operation].includes(field as JiraMutationField),
+    ) ||
+    Object.keys(input.projection).length !== input.fieldMask.length ||
+    Object.keys(input.projection).some(
+      (field) => !input.fieldMask.includes(field),
+    )
+  ) {
+    throw new Error('Jira mutation projection or field mask is invalid.');
+  }
+  return [...input.fieldMask] as JiraMutationField[];
+}
+
+function assertJiraMetadataSupports(
+  input: JiraMutationPreviewInput,
+  fieldMask: JiraMutationField[],
+): void {
+  if (!input.normalizedMetadata.evidenceDigest) {
+    throw new Error('Jira normalized metadata evidence is missing.');
+  }
+  if (
+    fieldMask.some(
+      (field) => !input.normalizedMetadata.writableFields.includes(field),
+    )
+  ) {
+    throw new Error(
+      'Jira normalized metadata does not allow requested fields.',
+    );
+  }
+  if (
+    input.operation === 'transition' &&
+    !input.normalizedMetadata.transitions.includes(
+      String(input.projection.status),
+    )
+  ) {
+    throw new Error('Jira transition is unavailable in normalized metadata.');
   }
 }
 
