@@ -1,7 +1,7 @@
 ---
-oat_current_task: p06-t01
-oat_last_commit: a0a5eca48b40b1a75c6761c9c79406f290f82543
-oat_blockers: []
+oat_current_task: null
+oat_last_commit: 1903de1bc6295aa91454d6ca5080b59d1cdc4db9
+oat_blockers: ['Phase 6 review round 1 is pending']
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -42,21 +42,11 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p06:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: p06-recovery-01-read-verification-20260905
-        original_request: p06-implementation-20260905-50d46710b
-        original_task: p06-t01
-        original_commit: 4e234aafe80f75cc5cd14685ecf6403f08cb4eaa
-        discovered_by: phase-wide self-review after focused and full remote verification
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: b16811bc5d2105b0055a576144831488a1382c6d
-        status: completed
-        verification: focused 23/23 and phase Jira 42/42; CLI lint, type-check, and build passed
+      pending_attempt: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T22:33:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-05T22:45:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -68,9 +58,10 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 6 — Jira Cloud Semantic Adapter. Phase 5 passed independent
-operator-extension review 4/4 with zero findings after fix loop 3/3. Phase 6 is
-unblocked and `p06-t01` is next.
+Phase 6 — Jira Cloud Semantic Adapter. All 10 planned tasks and one bounded
+recovery are complete through `1903de1bc`; the Jira and remote suites pass
+42/42 and 586/586. Root-owned review round 1 is pending. Phase 7 has not
+started.
 
 ## Artifacts
 
@@ -78,7 +69,7 @@ unblocked and `p06-t01` is next.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (in progress; Phase 6 ready)
+- **Implementation:** implementation.md (in progress; Phase 6 review pending)
 
 ## Progress
 
@@ -194,14 +185,18 @@ unblocked and `p06-t01` is next.
 - ✓ Expanded Phase 5 live suite passed 93/93 and remote suite passed 544/544
 - ✓ Independent Phase 5 operator-extension review 4/4 passed with zero findings
 - ✓ Phase 5 completed after 4/4 reviews and 3/3 fix loops
-- ⧗ Phase 6 `p06-t01` ready
+- ✓ Phase 6 tasks `p06-t01` through `p06-t10` completed in 10 ordered commits
+- ✓ Phase 6 bounded recovery attempt 1/10 committed as `1903de1bc`
+- ✓ Phase 6 Jira suite passed 42/42 and remote suite passed 586/586
+- ⧗ Phase 6 review round 1 pending
 
 ## Blockers
 
-None. The branch-level lockstep version gate remains preserved for planned
-`p08-t05` release work.
+Phase 6 is gated on root-owned review round 1. The branch-level lockstep version
+gate remains preserved for planned `p08-t05` release work.
 
 ## Next Milestone
 
-Implement Phase 6 tasks `p06-t01` through `p06-t10` in order, beginning with
-Jira Cloud issue normalization in `p06-t01`.
+Run root-owned Phase 6 review round 1 over the full implementation range ending
+at `1903de1bc6295aa91454d6ca5080b59d1cdc4db9`. Do not begin Phase 7 until a
+review passes with zero Critical and zero Important findings.

@@ -24,20 +24,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | completed | 10    | 10/10     |
-| Phase 2    | completed | 10    | 10/10     |
-| Phase 3    | blocked   | 12    | 12/12     |
-| Phase 4    | completed | 11    | 11/11     |
-| Phase 5    | completed | 9     | 9/9       |
-| Phase 6    | pending   | 10    | 0/10      |
-| Phase 7    | pending   | 10    | 0/10      |
-| Phase 8    | pending   | 6     | 0/6       |
-| Revision 1 | blocked   | 4     | 4/4       |
-| Revision 2 | completed | 2     | 2/2       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | completed   | 10    | 10/10     |
+| Phase 2    | completed   | 10    | 10/10     |
+| Phase 3    | blocked     | 12    | 12/12     |
+| Phase 4    | completed   | 11    | 11/11     |
+| Phase 5    | completed   | 9     | 9/9       |
+| Phase 6    | in_progress | 10    | 10/10     |
+| Phase 7    | pending     | 10    | 0/10      |
+| Phase 8    | pending     | 6     | 0/6       |
+| Revision 1 | blocked     | 4     | 4/4       |
+| Revision 2 | completed   | 2     | 2/2       |
 
-**Total:** 58/84 tasks completed
+**Total:** 68/84 tasks completed
 
 ---
 
@@ -929,6 +929,74 @@ zero findings after fix loop 3/3.
   Important, Medium, or Minor findings at
   `reviews/p05-operator-review-2026-09-05T223153Z.md`. Reconnaissance was not
   attempted. Phase 5 is complete and `p06-t01` is next.
+
+---
+
+## Phase 6: Jira Cloud Semantic Adapter
+
+**Status:** in progress — all ten tasks and one bounded recovery are complete;
+root-owned review round 1 is pending.
+**Started:** 2026-09-05
+**Implementation head:** 1903de1bc6295aa91454d6ca5080b59d1cdc4db9
+
+### Phase Summary
+
+- Added stable Jira Cloud issue identity, site/project context, mutable key
+  history, moved-project evidence, normalized snapshots, and provider
+  extensions.
+- Added structural ADF managed-content preservation that keeps surrounding
+  remote-owned nodes intact and fails closed on ambiguity or lossy conversion.
+- Added provider-neutral semantic read, metadata, mutation, discussion, and
+  duplicate-search intents plus bounded sanitized observations and exact
+  capability, action, provenance, context, and readback evidence.
+- Added real adapter conformance and lifecycle integration coverage without
+  native connector schemas, captured catalogs, JQL, REST, or CLI dialects.
+
+### Task Commits
+
+- `p06-t01` — `4e234aafe80f75cc5cd14685ecf6403f08cb4eaa`
+- `p06-t02` — `436b5a8b6cdd1d5857bbef9f9e2535b84f2238ae`
+- `p06-t03` — `5adb5018527deacfceab6196fd4e2bc935da6750`
+- `p06-t04` — `9017c2fc8e650639b1412c20c10f4eb4e63d2a88`
+- `p06-t05` — `3c4213406cd5d715cbe2a448f210537b398d1e25`
+- `p06-t06` — `d7c345de48f89a90d17dfeef4105263d68ab01c8`
+- `p06-t07` — `f554cd33b95c7e8664ddd28b1ba575f308db7591`
+- `p06-t08` — `a1658baff70bc176770c7880a4ce94916c95af72`
+- `p06-t09` — `d8f14bd2e1ff9267214e2d90809cd59906514d6e`
+- `p06-t10` — `b16811bc5d2105b0055a576144831488a1382c6d`
+
+### Recovery Event p06-recovery-01-read-verification-20260905
+
+- Phase/task: p06 / p06-t01
+- Original request: p06-implementation-20260905-50d46710b
+- Original commit: 4e234aafe80f75cc5cd14685ecf6403f08cb4eaa
+- Defect class: composition
+- Discovered by: phase-wide self-review after focused and full remote verification
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Reservation commit: 961fedfbcd1fca6ed0c646179f1c98b8e616c361
+- Recovery commit: 1903de1bc6295aa91454d6ca5080b59d1cdc4db9
+- Verification: focused 23/23; phase Jira 42/42; full remote 586/586;
+  lint, type-check, build, format, diff, and provider-neutrality checks passed
+- Reason: public read verification now binds stable issue identity, required
+  capability semantics, and the capability digest. Root validated immutable
+  history and cleared only the completed pending marker; usage remains 1/10.
+
+### Verification and Review Boundary
+
+- Root verified exactly ten ordered task commits, the one reservation commit,
+  the one recovery commit, and the exact six-file implementation boundary plus
+  the required recovery-ledger transitions.
+- The live Jira suite passed independently at 42/42. The implementer reported
+  the full remote suite at 586/586 plus CLI lint, type-check, build, six-file
+  formatting, diff integrity, and provider-neutrality passing.
+- No optional nested dispatch occurred. Recovery usage is settled at 1/10 with
+  no pending attempt.
+- The planned lockstep version bump remains deferred to `p08-t05`; Phase 6 does
+  not claim release gates pass at version `0.2.50`.
+- Root-owned review round 1 is next. Phase 7 has not started.
 
 ---
 
@@ -1910,6 +1978,73 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   reviewed head `a0a5eca48b40b1a75c6761c9c79406f290f82543`;
   reconnaissance was not attempted. Phase 5 is complete and `p06-t01` is next.
 
+### Run 9 — Phase p06
+
+```yaml
+request_id: p06-implementation-20260905-50d46710b
+caller: oat-project-implement
+scope: p06
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+model_axis: selected:gpt-5.6-sol
+effort_axis: selected:high
+task_class: consequential
+model_class_floor: consequential
+floor_satisfaction: satisfied
+selection_source: native-default
+selection_reason: native-catalog exact managed candidate
+candidates_considered:
+  - gpt-5.6-sol/high
+  - gpt-5.6-sol/medium
+selected_route: native
+phase_base_head: 50d46710b4f7559e4a010924ce1d54ed7fc955ae
+phase_head: 1903de1bc6295aa91454d6ca5080b59d1cdc4db9
+task_commits:
+  - 4e234aafe80f75cc5cd14685ecf6403f08cb4eaa
+  - 436b5a8b6cdd1d5857bbef9f9e2535b84f2238ae
+  - 5adb5018527deacfceab6196fd4e2bc935da6750
+  - 9017c2fc8e650639b1412c20c10f4eb4e63d2a88
+  - 3c4213406cd5d715cbe2a448f210537b398d1e25
+  - d7c345de48f89a90d17dfeef4105263d68ab01c8
+  - f554cd33b95c7e8664ddd28b1ba575f308db7591
+  - a1658baff70bc176770c7880a4ce94916c95af72
+  - d8f14bd2e1ff9267214e2d90809cd59906514d6e
+  - b16811bc5d2105b0055a576144831488a1382c6d
+launch_status: accepted
+child_outcome: done
+continuation_events:
+  - p06-recovery-01-read-verification-20260905
+recovery_usage: 1/10
+pending_attempt: null
+review_rounds: 0/3
+fix_loops: 0/3
+recovery_reservation_commit: 961fedfbcd1fca6ed0c646179f1c98b8e616c361
+recovery_commit: 1903de1bc6295aa91454d6ca5080b59d1cdc4db9
+phase_outcome: implementation_passed_review_pending
+```
+
+**Implementation dispatch:** Dispatch: scope=p06 action=implementation
+role=implementer producer=unknown provenance=unknown
+model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+dispatch_policy=high dispatch_ceiling=high
+target=oat-phase-implementer-gpt-5-6-sol-high
+
+- All ten tasks produced one ordered declared-boundary commit each.
+- One bounded phase-standing recovery attempt corrected public read verification
+  evidence, with committed reservation and completed terminal marker. Root
+  validated the immutable history and settled the ledger at 1/10 with no
+  pending attempt.
+- Root independently passed the Jira suite at 42/42. The implementer passed the
+  full remote suite at 586/586 plus lint, type-check, build, format, diff, and
+  provider-neutrality checks.
+- No optional nested dispatch occurred. Review round 1 is pending; Phase 7 did
+  not start.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -2011,6 +2146,7 @@ Track test execution during implementation.
 | rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
 | 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 116/116; remote 451/451; checks passed | 0      | review passed              |
 | 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 93/93; remote 544/544; checks passed   | 0      | operator review passed     |
+| 6     | Jira adapter, ADF, conformance, integration, and duplicate-search suite              | 42/42; remote 586/586; checks passed   | 0      | review round 1 pending     |
 
 ## Final Summary (for PR/docs)
 
