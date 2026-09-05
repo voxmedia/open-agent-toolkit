@@ -102,6 +102,41 @@ describe('remote discussion command', () => {
   });
 });
 
+describe('remote resolution commands', () => {
+  it.each([
+    [
+      ['resolve', 'relink', '--binding', 'bnd_resolution_001', 'linear:new-1'],
+      'relink',
+    ],
+    [['resolve', 'detach', '--binding', 'bnd_resolution_001'], 'detach'],
+  ] as const)('registers %s', async (argv, resolutionKind) => {
+    const requests: RemoteCommandRequest[] = [];
+    const command = createPjmRemoteCommand({
+      resolveProjectRoot: async () => '/repo',
+      checkAdoption: async () => 'complete',
+      run: async (request) => {
+        requests.push(request);
+        return {
+          schemaVersion: 1,
+          status: 'needs-review',
+          operation: 'resolve',
+          projectRoot: request.projectRoot,
+          persisted: true,
+          results: [],
+          externalAction: null,
+          recovery: [],
+        };
+      },
+    });
+    await command.parseAsync([...argv], { from: 'user' });
+    expect(requests[0]).toMatchObject({
+      operation: 'resolve',
+      bindingId: 'bnd_resolution_001',
+      resolutionKind,
+    });
+  });
+});
+
 async function adoptedRepository() {
   const repo = await mkdtemp(join(tmpdir(), 'oat-remote-live-'));
   tempDirs.push(repo);

@@ -16,6 +16,7 @@ export type RemoteLifecycleOperation =
   | 'reconcile'
   | 'closeout'
   | 'discussion'
+  | 'resolve'
   | 'storage-transition'
   | 'operation-continue';
 
@@ -29,6 +30,7 @@ export interface RemoteCommandRequest {
   backlogId?: string;
   projectPath?: string;
   discussionLimit?: number;
+  resolutionKind?: 'relink' | 'detach' | 'recreate';
   createTarget?: {
     provider: string;
     localKind: 'backlog' | 'project';
@@ -138,6 +140,54 @@ export function createPjmRemoteCommand(
             operation: 'discussion',
             bindingId: options.binding,
             discussionLimit: options.limit,
+          },
+          command,
+          dependencies,
+        );
+      },
+    );
+
+  const resolveCommand = remote
+    .command('resolve')
+    .description('Resolve a remote binding anomaly with fresh approval');
+  resolveCommand
+    .command('relink <provider-ref>')
+    .requiredOption('--binding <id>', 'Remote binding ID')
+    .option('--apply-preview <operation-id>', 'Apply an exact approved preview')
+    .action(
+      async (
+        providerRef: string,
+        options: { binding: string; applyPreview?: string },
+        command: Command,
+      ) => {
+        await execute(
+          {
+            operation: 'resolve',
+            resolutionKind: 'relink',
+            bindingId: options.binding,
+            providerRef,
+            previewOperationId: options.applyPreview,
+          },
+          command,
+          dependencies,
+        );
+      },
+    );
+  resolveCommand
+    .command('detach')
+    .requiredOption('--binding <id>', 'Remote binding ID')
+    .option('--apply-preview <operation-id>', 'Apply an exact approved preview')
+    .action(
+      async (
+        options: { binding: string; applyPreview?: string },
+        command: Command,
+      ) => {
+        await execute(
+          {
+            operation: 'resolve',
+            resolutionKind: 'detach',
+            bindingId: options.binding,
+            previewOperationId: options.applyPreview,
           },
           command,
           dependencies,
