@@ -96,6 +96,9 @@ describe('generateStateDashboard', () => {
 
     const dashboard = await readFile(result.dashboardPath, 'utf8');
     expect(dashboard).toContain('*(not set)*');
+    expect(dashboard).toContain(
+      '- `oat-project-lite` - Create a lite workflow project',
+    );
   });
 
   it('generates dashboard with existing projects but no active project', async () => {
@@ -295,7 +298,7 @@ describe('generateStateDashboard', () => {
     expect(result.recommendedStep).not.toBe('oat-project-spec');
   });
 
-  it('routes computeNextStep correctly for spec-driven/quick/import modes with HiLL gating', async () => {
+  it('routes computeNextStep correctly for all workflow modes with HiLL gating', async () => {
     const root = await createTempRepo();
     tempDirs.push(root);
 
@@ -320,6 +323,43 @@ describe('generateStateDashboard', () => {
 
     expect(result.recommendedStep).toBe('oat-project-design');
     expect(result.recommendedReason).toContain('HiLL approval');
+
+    await writeStateFile(root, '.oat/projects/shared/lite-proj', {
+      oat_phase: 'plan',
+      oat_phase_status: 'in_progress',
+      oat_workflow_mode: 'lite',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
+    });
+    await writeLocalConfig(root, {
+      activeProject: '.oat/projects/shared/lite-proj',
+    });
+
+    const liteInProgress = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-02-17',
+      git: mockGit,
+    });
+    expect(liteInProgress.recommendedStep).toBe('oat-project-lite');
+    expect(liteInProgress.recommendedReason).toBe('Continue lite planning');
+
+    const liteDashboard = await readFile(liteInProgress.dashboardPath, 'utf8');
+    expect(liteDashboard).toContain('| Mode | lite |');
+
+    await writeStateFile(root, '.oat/projects/shared/lite-proj', {
+      oat_phase: 'plan',
+      oat_phase_status: 'complete',
+      oat_workflow_mode: 'lite',
+      oat_hill_checkpoints: '[]',
+      oat_hill_completed: '[]',
+    });
+
+    const liteComplete = await generateStateDashboard({
+      repoRoot: root,
+      today: '2026-02-17',
+      git: mockGit,
+    });
+    expect(liteComplete.recommendedStep).toBe('oat-project-implement');
   });
 
   it('lists multiple available projects', async () => {

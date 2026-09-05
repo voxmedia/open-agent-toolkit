@@ -400,6 +400,10 @@ function computeNextStep(
       step: 'oat-project-import-plan',
       reason: 'Continue import-plan normalization',
     },
+    'lite:plan:in_progress': {
+      step: 'oat-project-lite',
+      reason: 'Continue lite planning',
+    },
   };
 
   if (routeMap[key]) return routeMap[key]!;
@@ -651,6 +655,7 @@ function buildDashboardMarkdown(
   lines.push('- `oat-project-new` - Create a spec-driven project');
   lines.push('- `oat-project-quick-start` - Create a quick workflow project');
   lines.push('- `oat-project-import-plan` - Import an external provider plan');
+  lines.push('- `oat-project-lite` - Create a lite workflow project');
   lines.push('- `oat project open <name>` - Open or resume a project');
   lines.push('- `oat project pause [name]` - Pause active or named project');
   lines.push('- `oat-project-complete` - Mark project complete');
