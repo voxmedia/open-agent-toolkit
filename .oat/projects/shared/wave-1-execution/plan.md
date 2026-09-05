@@ -341,16 +341,16 @@ git commit -m "feat(p04-t01): add exclusion patterns to docs index generation"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -                                                           | -             | -          | -           |
-| p02    | code     | pending | -          | -                                                           | -             | -          | -           |
-| p03    | code     | pending | -          | -                                                           | -             | -          | -           |
-| p04    | code     | pending | -          | -                                                           | -             | -          | -           |
-| final  | code     | pending | -          | -                                                           | -             | -          | -           |
-| plan   | artifact | passed  | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -             | -          | -           |
-| spec   | artifact | pending | -          | -                                                           | -             | -          | -           |
-| design | artifact | pending | -          | -                                                           | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -                                                           | -                                        | -          | -           |
+| p02    | code     | passed  | 2026-09-05 | reviews/p02-review-2026-09-05T231204Z.md                    | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -           |
+| p03    | code     | pending | -          | -                                                           | -                                        | -          | -           |
+| p04    | code     | pending | -          | -                                                           | -                                        | -          | -           |
+| final  | code     | pending | -          | -                                                           | -                                        | -          | -           |
+| plan   | artifact | passed  | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -                                        | -          | -           |
+| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -           |
+| design | artifact | pending | -          | -                                                           | -                                        | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
