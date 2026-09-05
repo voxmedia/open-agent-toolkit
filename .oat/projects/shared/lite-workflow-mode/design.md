@@ -346,7 +346,11 @@ One line or branch each:
   spurious artifact-missing gaps.
 - Progress and next routing tables.
 - Brainstorm fold-back (lite with no PR: `oat-project-lite`; open PR:
-  `oat-project-revise`).
+  `oat-project-revise`). Fold-back artifact selection for lite is `plan.md`,
+  since a lite project has neither design.md nor discovery.md.
+- Autonomous orchestrator: new-goal mode selection gains the lite
+  heuristic, an in-progress lite plan resumes to `oat-project-lite`, and the
+  completion report accepts `lite`.
 - Promote-spec-driven eligibility stays quick or import, so lite reaches
   spec-driven via quick.
 - State and plan template enum comments.

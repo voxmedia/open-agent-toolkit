@@ -65,6 +65,7 @@ _No explicit constraints. Runtime selection chooses within the project ceiling._
 - Modify: `packages/control-plane/src/types.ts` (the constant and derived type live here; `index.ts` already re-exports `./types`)
 - Modify: `packages/control-plane/src/state/parser.ts`
 - Modify: `packages/control-plane/src/state/parser.test.ts`
+- Modify: `packages/control-plane/README.md` (public API section documents the exported `WORKFLOW_MODES` constant and its four values)
 
 **Step 1: Write test (RED)**
 
@@ -104,7 +105,7 @@ Expected: type-check clean; control-plane suite green. Note: `getWorkflowRoutes`
 **Step 5: Commit**
 
 ```bash
-git add packages/control-plane/src/types.ts packages/control-plane/src/state/parser.ts packages/control-plane/src/state/parser.test.ts
+git add packages/control-plane/src/types.ts packages/control-plane/src/state/parser.ts packages/control-plane/src/state/parser.test.ts packages/control-plane/README.md
 git commit -m "feat(p01-t01): add lite to array-derived WORKFLOW_MODES"
 ```
 
@@ -456,14 +457,14 @@ git commit -m "feat(p03-t02): add oat project promote --to quick for lite projec
 
 **Step 1: Write test (RED)**
 
-Negative control first, preserved as fixtures with their expected categorical outcome: a lite project whose `plan.md` contains two `## Phase` headings is rejected with a message naming the invariant; a lite project with exactly one phase passes; a quick project with two phases still passes (no behavior change for other modes); a lite project with `oat_plan_parallel_groups` non-empty is rejected.
+Negative controls, preserved as fixtures with their expected categorical outcome. Test the new pure function `validateLitePlan(planContent, workflowMode)` directly so each clause has its own RED: (a) a lite plan with two `## Phase` headings returns a `lite-multi-phase` error naming the invariant; (b) a lite plan with non-empty `oat_plan_parallel_groups` returns a `lite-parallel-groups` error. Clause (b) cannot be proven through the command alone because the existing singleton-group rule already rejects a one-phase plan with any group, so assert the categorical error from the pure function, not merely non-zero exit. Command-level cases: a lite project with exactly one phase passes; a quick project with two phases still passes.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/validate-plan`
-Expected: the two lite rejection cases fail on current code (RED)
+Expected: both pure-function cases fail on current code because the function does not exist (RED); the two command-level pass cases stay green
 
 **Step 2: Implement (GREEN)**
 
-Add a `validateLitePhaseCount(planContent, workflowMode)` check in `validate-plan.ts` that runs after `validateParallelGroups`; `index.ts` parses `state.md` frontmatter for the mode using the existing frontmatter helper and passes it through. Because the implement skill's preflight already runs `oat project validate-plan --project-path`, this single check enforces the invariant both at planning time and before implementation, so p05-t03's checkpoint bypass can never apply to a multi-phase plan.
+Add the exported pure function `validateLitePlan(planContent, workflowMode)` in `validate-plan.ts` returning `{ ok: true } | { ok: false; code: 'lite-multi-phase' | 'lite-parallel-groups'; message }`, and run it before `validateParallelGroups` in the command so the lite-specific error is the one reported; `index.ts` parses `state.md` frontmatter for the mode using the existing frontmatter helper and passes it through. Because the implement skill's preflight already runs `oat project validate-plan --project-path`, this single check enforces the invariant both at planning time and before implementation, so p05-t03's checkpoint bypass can never apply to a multi-phase plan.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/validate-plan`
 Expected: pass (GREEN)
@@ -585,7 +586,8 @@ git commit -m "test(p04-t02): cover lite scaffold, dashboard routing, and promot
 - Modify: `.agents/skills/oat-project-discover/SKILL.md` (lite route: "continue with `oat-project-lite` / `oat-project-progress`", version bump)
 - Modify: `.agents/skills/oat-project-progress/SKILL.md` (Lite mode routing table, version bump)
 - Modify: `.agents/skills/oat-project-next/SKILL.md` (Lite routing table, version bump)
-- Modify: `.agents/skills/oat-brainstorm/SKILL.md` (fold-back handoff row, version bump)
+- Modify: `.agents/skills/oat-brainstorm/SKILL.md` (fold-back handoff row; fold-back artifact selection gains a lite rule: when `oat_workflow_mode` is `lite`, `ARTIFACT_PATH` is `plan.md`, the appended section is `## Brainstorming Update` above `## Phase 1`, and the confirmation and commit wording name plan.md; version bump)
+- Modify: `.agents/skills/oat-project-autonomous/SKILL.md` (new-goal review-density selection gains the lite heuristic for single-sitting goals; the resume routing table gains "Lite plan incomplete → `oat-project-lite`"; the completion report's workflow-mode field accepts `lite`; version bump and pin update if present)
 - Modify: `.agents/skills/oat-project-promote-spec-driven/SKILL.md` (state that lite promotes via quick, version bump)
 - Modify: `.agents/skills/oat-project-pr-progress/SKILL.md` (lite requirement source is plan.md Summary and Validation Criteria, version bump)
 - Modify: `.agents/agents/oat-reviewer.md` (`lite` in the workflow_mode input, a Mode Contract line stating plan.md is expected and discovery/spec/design are absent by design, the Step 1 read rule, the Step 3 requirement-source line pointing at plan.md Summary, Decisions, and Validation Criteria, and the plan-review upstream set; version bump)
@@ -602,6 +604,8 @@ Skill-contract changes, using each skill's real marker strings:
 - Assert lite routing text in both skills (plan tier 3 → `oat-project-lite`).
 - Review-provide and pr-final: assert lite proceeds without spec or design and carries the reduced-assurance note. Keep the review-provide sentence "reviewing `design` in `quick/import` mode requires only `discovery.md`" byte-identical (review-skill-contracts.test.ts asserts it literally) and add lite guidance as a separate line.
 - Assert that both agent files name `lite` in their mode inputs and that the reviewer's Mode Contract has a lite line.
+- Assert the brainstorm fold-back rule: for lite, artifact selection resolves to `plan.md`, and add a filesystem-level contract test (temp lite project with only plan.md, state.md, implementation.md) proving the documented fold-back append lands in `plan.md` and creates no `discovery.md`.
+- Assert the autonomous skill's new-goal selection names lite with its heuristic, its resume table routes an incomplete lite plan to `oat-project-lite`, and its report accepts `lite`; add a persisted-lite resume fixture.
 - Update every pinned version assertion for the bumped skills and agents in `skills.test.ts` and `review-skill-contracts.test.ts` (find them with `grep -n "'2\.3\.1'\|'1\.5\.3'\|'1\.0\.12'\|'1\.3\.0'\|'1\.4\.6'\|'1\.2\.21'\|'1\.6\.0'\|'2\.2\.2'\|'1\.2\.1'\|'1\.1\.1'"` across both files before editing; several pins are bare array entries without `toBe`, the reviewer agent is pinned at 1.2.1 in both files, and the `'1.1.1'` hit for `oat-review-provide-remote` near line 5331 is out of scope and must not change) to the new versions chosen in Step 2.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
@@ -609,7 +613,7 @@ Expected: fail on the lite assertions and the version pins (RED)
 
 **Step 2: Implement (GREEN)**
 
-Apply only the one-line or one-branch changes for the files listed in this task's Files section (implement payload enum, plan-writing table and enum, review-provide plan case, pr-final artifact gate, spec-driven planner stop branch, discover route, progress and next routing tables, brainstorm fold-back, promote-spec-driven note, pr-progress requirement source, and both agent contracts). Do not touch plan-and-resume.md, completion-and-closeout.md, or the closeout branches of next and pr-final; those belong to p05-t03 and p05-t04. Bump each changed skill's and agent's `version:` once (patch for prose-only additions, minor for progress and next which gain a routing table).
+Apply only the one-line or one-branch changes for the files listed in this task's Files section (implement payload enum, plan-writing table and enum, review-provide plan case, pr-final artifact gate, spec-driven planner stop branch, discover route, progress and next routing tables, brainstorm fold-back handoff row and lite artifact-selection rule, autonomous new-goal selection, resume route, and report field, promote-spec-driven note, pr-progress requirement source, and both agent contracts). Do not touch plan-and-resume.md, completion-and-closeout.md, or the closeout branches of next and pr-final; those belong to p05-t03 and p05-t04. Bump each changed skill's and agent's `version:` once (patch for prose-only additions, minor for progress and next which gain a routing table).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
 Expected: pass (GREEN)
@@ -626,7 +630,7 @@ Expected: both green
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-project-implement .agents/skills/oat-project-plan-writing .agents/skills/oat-project-review-provide .agents/skills/oat-project-pr-final .agents/skills/oat-project-plan .agents/skills/oat-project-discover .agents/skills/oat-project-progress .agents/skills/oat-project-next .agents/skills/oat-brainstorm .agents/skills/oat-project-promote-spec-driven .agents/skills/oat-project-pr-progress .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git add .agents/skills/oat-project-implement .agents/skills/oat-project-plan-writing .agents/skills/oat-project-review-provide .agents/skills/oat-project-pr-final .agents/skills/oat-project-plan .agents/skills/oat-project-discover .agents/skills/oat-project-progress .agents/skills/oat-project-next .agents/skills/oat-brainstorm .agents/skills/oat-project-autonomous .agents/skills/oat-project-promote-spec-driven .agents/skills/oat-project-pr-progress .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "feat(p05-t01): add lite branches to mode-aware skills"
 ```
 
@@ -769,6 +773,7 @@ git commit -m "feat(p05-t04): collapse lite closeout to PR creation"
 - Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md` (gate-aware skill lists near lines 65 and 528 gain `oat-project-lite`)
 - Modify: `apps/oat-docs/docs/workflows/projects/reviews.md` (the plan-producing workflows that run the structured plan review loop gain `oat-project-lite`)
 - Modify: `apps/oat-docs/index.md` (generated; regenerate with the command in Step 3, never hand-edit)
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md` (project command map gains `oat project promote <path> --to quick`: supported transition, refusal cases, and the `--json` status contract; `validate-plan` entry notes the lite single-phase rule)
 
 **Step 1: Write test (RED)**
 
@@ -780,7 +785,7 @@ Add the lite entries. In AGENTS.md the option reads: "Lite workflow — batched 
 
 **Step 3: Refactor**
 
-Run: `pnpm exec oxfmt --write AGENTS.md apps/oat-docs/docs/workflows/index.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/skills/index.md apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/reviews.md`, then regenerate the docs index: `pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`.
+Run: `pnpm exec oxfmt --write AGENTS.md apps/oat-docs/docs/workflows/index.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/skills/index.md apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/reviews.md apps/oat-docs/docs/reference/cli-reference.md`, then regenerate the docs index: `pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`.
 
 **Step 4: Verify**
 
@@ -790,7 +795,7 @@ Expected: both `exit=0`, and the docs build's own index regeneration leaves no d
 **Step 5: Commit**
 
 ```bash
-git add AGENTS.md apps/oat-docs/docs/workflows/index.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/skills/index.md apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/reviews.md apps/oat-docs/index.md
+git add AGENTS.md apps/oat-docs/docs/workflows/index.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/pr-flow.md apps/oat-docs/docs/reference/oat-directory-structure.md apps/oat-docs/docs/workflows/skills/index.md apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/reviews.md apps/oat-docs/docs/reference/cli-reference.md apps/oat-docs/index.md
 git commit -m "docs(p06-t01): document lite workflow mode"
 ```
 

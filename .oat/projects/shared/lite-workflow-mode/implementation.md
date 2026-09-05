@@ -217,6 +217,14 @@ disposition:
   `WORKFLOW_MODES` export; p06-t01 omits
   `apps/oat-docs/docs/reference/cli-reference.md` for the promote command.
 
+**Disposition (2026-09-05):** user chose to apply all four and authorized
+one further gate run. Resolved in artifacts: I1 → p05-t01 adds the
+autonomous skill (selection, resume, report) with tests; I2 → p05-t01
+changes brainstorm fold-back artifact selection to plan.md for lite with a
+filesystem-level test; M1 → p03-t03 tests a pure `validateLitePlan` with
+separate categorical errors; M2 → p01-t01 adds the control-plane README and
+p06-t01 adds the CLI reference page.
+
 Chronological log of implementation progress.
 
 ### 2026-09-04
