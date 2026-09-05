@@ -4,6 +4,9 @@
 
 ## Curated Overview
 
+- 2026-09-04: `BL-260901-make-terminal-project-status` and
+  `BL-260904-diagnose-canonical-skills` now carry external plans in the
+  execution program (W5 and W6).
 - 2026-09-04: issue #258 became `BL-260904-honor-metadata-version` (planned,
   W6) and `BL-260904-migrate-bundled-skills-from` (bulk migration after the
   program).
@@ -281,6 +284,7 @@
 | BL-260830-wire-provide-remote-skills     | Wire provide-remote skills to the review-remote helper CLI                                            | open   | medium   | feature    | L        |
 | BL-260903-pr-final-archives-reviews      | pr-final archives reviews before a late final review exists                                           | open   | medium   | task       | S        |
 | BL-260830-add-per-claude-md-adoption-opt | Add per-CLAUDE.md adoption opt-out for instruction sync                                               | open   | low      | feature    | M        |
+| BL-260904-add-recap-seam-config-keys     | Add recap seam config keys                                                                            | open   | low      | task       | S        |
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                                                           | open   | low      | feature    | L        |
 | BL-260830-benchmark-listprojects-before  | Benchmark listProjects before approving a summary fast path                                           | open   | low      | idea       | M        |
 | BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight                                           | open   | low      | task       | M        |

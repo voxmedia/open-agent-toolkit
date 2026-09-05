@@ -12,11 +12,12 @@ labels:
   - cli
 assignee: null
 created: 2026-09-04T21:32:37.762Z
-updated: 2026-09-04T21:32:37Z
+updated: 2026-09-04T22:34:57Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/203
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-04-diagnose-canonical-skills-missing-from-provider-views.md
 ---
 
 ## Description

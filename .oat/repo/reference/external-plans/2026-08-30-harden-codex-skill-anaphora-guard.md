@@ -71,6 +71,13 @@ independently classifies the selected model as a direct-API specialist route.
 
 There are no unsatisfied hard dependencies.
 
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                         | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections. | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None.                                                   | None.                                                                  |
+
 ## Drift check
 
 Run before editing:
@@ -89,9 +96,9 @@ new semantic boundary. Do not preserve clause indexes from this baseline.
   is wrong; no `SKILL.md` change or skill-version bump is currently planned.
 - Use semantic anchors and clause relationships, not physical line numbers.
 - Run `pnpm lint && pnpm format` for `.agents/skills` test changes.
-- The test is a bundled skill asset; bump all five public packages together and
-  update `pnpm-lock.yaml`.
-- Run the focused Node test independently, then the complete Definition of Done.
+- The test is a bundled skill asset, so the change is release-shaped; the
+  lockstep bump is owned by the wave fan-in in lane mode (see Scope).
+- Run the focused Node test independently, then the mode's gates in step 4.
 - Do not push or open a PR unless instructed.
 
 ## Scope
@@ -102,7 +109,7 @@ new semantic boundary. Do not preserve clause indexes from this baseline.
   detection for anaphoric clauses immediately following below-floor guidance.
 - Permanent negative cases for “In that case” and “Then.”
 - Preservation test for the explicit direct-API specialist exception.
-- Five public package versions and `pnpm-lock.yaml`.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -159,11 +166,24 @@ These cases must execute the same helper used for live skill prose.
 **Verify:** remove anaphora attachment temporarily and observe both negative
 cases fail their expectations, then restore and pass the suite.
 
-### 4. Apply release bookkeeping and complete gates
+### 4. Run the mode's gates
 
-Bump all five public packages together, update `pnpm-lock.yaml`, and run the
-complete repository Definition of Done. Do not bump the codex-skill version
-unless its `SKILL.md` changes in the final diff.
+Do not bump the codex-skill version unless its `SKILL.md` changes in the final
+diff.
+
+**Lane mode (default under the execution program):** bump changed skill
+`version:` fields and update their pins in
+`packages/cli/src/validation/skills.test.ts` where a pin exists; run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes, plus `pnpm lint`,
+`pnpm format`, and `pnpm oat:validate-skills` because this plan changes
+`.agents/skills`. Do not edit lockstep release files or run
+`pnpm release:check-versions` / `pnpm release:validate`; the wave fan-in owns
+the lockstep bump and the full definition-of-done sequence. **Standalone mode
+only:** bump the five public packages above freshly fetched `origin/main` and
+run the eight AGENTS.md gates in order.
+
+**Verify:** every named command exits zero with its own captured exit code.
 
 ## Test plan
 
@@ -181,7 +201,9 @@ unless its `SKILL.md` changes in the final diff.
 - [ ] The implementation uses no unqualified proximity window.
 - [ ] Permanent cases exercise the same helper as live prose.
 - [ ] No unrelated prose guard or skill version changes.
-- [ ] Five public package versions and all gates are correct.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions

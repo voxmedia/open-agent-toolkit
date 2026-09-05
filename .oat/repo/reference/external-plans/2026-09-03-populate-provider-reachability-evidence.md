@@ -43,7 +43,10 @@ recovery guidance. The six diagnostic codes that have no emitter today gain
 emitters. Human output names the provider; JSON carries the structured
 evidence. `oat tools list` and `oat tools info` stop reporting
 unmaterialized user agents when an active Codex or Cursor adapter supplies
-managed roles.
+managed roles. That list/info correction is a separate defect kept in this
+plan deliberately: it is a one-argument change on the same
+`projectRenderablePackEvidence` seam step 5 rewires, and splitting it would
+put two lanes on `info-tool.ts` in one wave.
 
 ## Source and live evidence
 
@@ -95,11 +98,12 @@ assets }` plus an index signature; none of the design's activation,
 
 ## Dependencies
 
-| Type          | Dependency                                                                                                                | Required state                                                                          | Current state |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------- |
-| Satisfied     | PR #255 `tool-pack-scope-provider-truthfulness`                                                                           | Registry, evidence types, and sync JSON evidence exist on main.                         | Merged.       |
-| Soft ordering | `BL-260903-retire-deprecated-pack` (unplanned)                                                                            | Run after this plan; it removes deprecated placement and then finds no dead codes left. | Open.         |
-| Soft boundary | [Warn on non-sync manifest restamps](./2026-08-30-warn-on-non-sync-manifest-restamps.md) (W4) owns `sync/apply.ts` output | Consume the sync JSON; do not reshape it.                                               | Pending (W4). |
+| Type          | Dependency                                                                                                                                      | Required state                                                                                                            | Current state         |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Satisfied     | PR #255 `tool-pack-scope-provider-truthfulness`                                                                                                 | Registry, evidence types, and sync JSON evidence exist on main.                                                           | Merged.               |
+| Soft ordering | `BL-260903-retire-deprecated-pack` (unplanned)                                                                                                  | Run after this plan; it removes deprecated placement and then finds no dead codes left.                                   | Open.                 |
+| Soft boundary | [Warn on non-sync manifest restamps](./2026-08-30-warn-on-non-sync-manifest-restamps.md) (W4) owns `sync/apply.ts` output                       | Consume the sync JSON; do not reshape it.                                                                                 | Pending (W4).         |
+| Soft ordering | W6 group 2 plan [Diagnose canonical skills missing from a provider view](./2026-09-04-diagnose-canonical-skills-missing-from-provider-views.md) | Runs after this plan; both edit `info-tool.ts`, `info-tool.test.ts`, and `tool-packs.md`, so never in one parallel group. | Pending (W6 group 2). |
 
 There are no unsatisfied hard dependencies.
 
@@ -129,8 +133,9 @@ part of this outcome landed; refresh rather than duplicate.
 - Lint/format/docs: `pnpm check` → passes.
 - Implementation pattern: `providerSyncOutcomeFromAutoSync` for outcome
   wiring; `projectRenderablePackEvidence` as the one rendering seam.
-- Git/PR convention: shipped CLI behavior; five-package lockstep bump above
-  `0.2.53`; do not push or open a PR unless instructed.
+- Git/PR convention: shipped CLI behavior. In lane mode the wave fan-in owns
+  the lockstep bump; only a standalone execution bumps the five packages
+  itself. Do not push or open a PR unless instructed.
 
 ## Scope
 
@@ -146,14 +151,15 @@ part of this outcome landed; refresh rather than duplicate.
   `remove/index.ts`, `remove-tools.ts`, `init/tools/index.ts` — replace
   every production `providers: []`.
 - `format-pack-inventory.ts` — provider context parameter and a provider
-  line in the human renderer; `list-tools.ts`, `info-tool.ts` — pass
-  `userManagedRoleMaterialization`; `status/index.ts`, `doctor/index.ts`
-  — thread the context.
+  line in the human renderer; `packEvidenceBlock` (`:131`) derives `partial`
+  from warning/error diagnostics only, per the severity matrix below;
+  `list-tools.ts`, `info-tool.ts` — pass `userManagedRoleMaterialization`;
+  `status/index.ts`, `doctor/index.ts` — thread the context.
 - Tests named in the test plan; docs
   `apps/oat-docs/docs/cli-utilities/tool-packs.md:282-308` (section
   "User-scope agent projection is provider-capability driven"; PR #248 added
   pack-dependency sections above it).
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -172,8 +178,36 @@ already emits per-operation results as JSON. The auto-sync seam throws that
 JSON away, so lifecycle outcomes are constructed with an empty provider
 array and inventory renderers have no provider context. Emitting new
 diagnostic codes will flip `packEvidenceBlock` from `ok` to `partial`
-(`format-pack-inventory.ts:131`) and can change the install exit code
-(`init/tools/index.ts:1605-1610`), so severity assignment is load-bearing.
+(`format-pack-inventory.ts:131`, which today counts every diagnostic
+regardless of severity) and can change the install exit code
+(`init/tools/index.ts:1605-1610`, which fails on any lifecycle outcome whose
+status is not `complete`), so severity assignment is load-bearing.
+
+### Severity matrix (pinned before dispatch)
+
+Every provider state maps to exactly one row. The mapper in step 2 emits the
+code; `packEvidenceBlock` and the lifecycle-outcome status derive from the
+severity column, never from the code name, so adding a code later cannot
+silently change exit codes.
+
+| Provider state (per provider, scope, content kind)                     | Diagnostic code                                                                               | Severity  | Pack evidence status | Lifecycle outcome / exit code                    |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | --------- | -------------------- | ------------------------------------------------ |
+| Active, supported, projection and materialization succeeded            | none                                                                                          | —         | `ok`                 | `complete` / 0                                   |
+| Inactive (config-disabled or not detected) for this scope              | `provider-inactive`                                                                           | `info`    | `ok`                 | `complete` / 0                                   |
+| Active but the content kind is unsupported by the adapter              | `provider-unsupported`                                                                        | `info`    | `ok`                 | `complete` / 0                                   |
+| Active, supported, no projection exists (never synced or sync skipped) | `provider-materialization-missing`                                                            | `warning` | `partial`            | `complete` / 0 (install succeeded; sync advised) |
+| Active, supported, the sync operation for this asset failed            | `provider-materialization-failed`                                                             | `error`   | `partial`            | `partial` / 1                                    |
+| Active, projected, no sourced refresh contract for the host            | `visibility-unknown`                                                                          | `info`    | `ok`                 | `complete` / 0                                   |
+| Active, projected, host catalog needs a refresh or a restart           | `refresh-required` / `restart-required`                                                       | `info`    | `ok`                 | `complete` / 0                                   |
+| Read-only inventory (`list`, `info`, `status`, `doctor`): no sync ran  | registry- and manifest-derived codes only; `provider-materialization-failed` is never emitted | as above  | as above             | not applicable                                   |
+| Auto-sync not run (disabled or skipped) after a lifecycle operation    | none; `providerSync.status: 'not-run'` with the reason                                        | —         | `ok`                 | `complete` / 0                                   |
+
+Rows with `info` severity are visible in JSON and in the human provider line
+but do not turn `ok` into `partial`; this is the one behavior change to
+`packEvidenceBlock`, and it must be made explicitly with the existing
+`format-pack-inventory.test.ts` expectations updated deliberately. `unknown`
+visibility is reported as unknown; it never claims reachability and never
+fails an otherwise successful install.
 
 ## Implementation steps
 
@@ -184,18 +218,24 @@ recovery fields required on `ProviderReachabilityEvidence`; add
 `providerDiagnostics()` producing `provider-inactive`,
 `provider-unsupported`, `provider-materialization-failed`,
 `visibility-unknown`, `refresh-required`, and `restart-required` from
-registry state, with severities chosen so a healthy configured host stays
-`ok`.
+registry state, with severities taken from the pinned severity matrix (a
+healthy configured host stays `ok`; only `provider-materialization-failed`
+is an error). Change `packEvidenceBlock` so only warning/error diagnostics
+produce `partial`.
 
-**Verify:** `pnpm exec vitest run src/commands/tools/shared/pack-evidence.test.ts`
-→ existing five cases and the new cases pass.
+**Verify:** `pnpm exec vitest run src/commands/tools/shared/pack-evidence.test.ts src/commands/tools/shared/format-pack-inventory.test.ts`
+→ existing cases and the new cases pass, including one case per matrix row
+asserting code, severity, and block status together.
 
 ### 2. Add the mapper
 
-Create `provider-reachability.ts`: `(activation, capabilities,
+Create `provider-reachability.ts`: `(providerScopeContext, capabilities,
 syncOperationResults, extensionResults, refreshPolicy) →
-ProviderReachabilityEvidence[]`, consuming `resolveProviderScopeContext`
-and never filesystem presence.
+ProviderReachabilityEvidence[]`, consuming the `ProviderScopeContext` from
+`resolveProviderScopeContext` (`registry.ts:320`; activation, active and
+detected providers, registrations) and never filesystem presence. The
+context object is the boundary the W6 diagnose plan reuses; keep it a plain
+parameter, not a module-level cache.
 
 **Verify:** `pnpm exec vitest run src/commands/tools/shared/provider-reachability.test.ts`
 → supported, unsupported, failed, unknown, and refresh-required cases pass.
@@ -227,10 +267,17 @@ provider line.
 **Verify:** `pnpm exec vitest run src/commands/tools/list src/commands/tools/info src/commands/status src/commands/doctor`
 → pass, including the list/info regression case.
 
-### 6. Docs, bump, gates
+### 6. Docs and gates
 
-Update `tool-packs.md:282-308`; bump the five packages; run the eight
-AGENTS.md gates in order with captured exit codes.
+Update `tool-packs.md:282-308`, including the severity matrix.
+
+**Verify (lane mode, the default under the execution program):** run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes. Do not edit lockstep
+release files or run `pnpm release:check-versions` / `pnpm release:validate`;
+the wave fan-in owns the lockstep bump and the full definition-of-done
+sequence. **Standalone mode only:** bump the five public packages above
+freshly fetched `origin/main` and run the eight AGENTS.md gates in order.
 
 ## Test plan
 
@@ -238,7 +285,14 @@ AGENTS.md gates in order with captured exit codes.
   config-disabled provider; emits `provider-unsupported` with the registry
   reason; emits refresh/restart codes from catalog state; names the provider
   on `provider-materialization-missing`.
-- `provider-reachability.test.ts` (new): the five reachability states.
+- `provider-reachability.test.ts` (new): the five reachability states, plus
+  every severity-matrix row: an `unknown` visibility row is reported without
+  claiming reachability, keeps block status `ok`, and leaves an otherwise
+  successful install at exit code 0; a read-only inventory never emits
+  `provider-materialization-failed`; `not-run` auto-sync carries its reason.
+- `format-pack-inventory.test.ts`: `info` diagnostics do not produce
+  `partial`; a `warning` does; neutralize the severity filter and prove the
+  first case fails.
 - `auto-sync.test.ts` (pattern `:69`): returns evidence on success; empty
   evidence with failure preserved on failure.
 - `pack-lifecycle-outcome.test.ts` (pattern `:91`): carries provider
@@ -253,7 +307,11 @@ AGENTS.md gates in order with captured exit codes.
 - [ ] All six previously dead diagnostic codes have emitters and tests.
 - [ ] Human output names providers; JSON is additive.
 - [ ] list/info agree with status/doctor on managed-role materialization.
-- [ ] Lockstep bump and all gates pass; clean tree.
+- [ ] Every severity-matrix row has an executable case; `unknown` never
+      claims reachability and never fails a successful install.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is
+      edited. Standalone mode: one lockstep bump and all eight gates pass.
 
 ## STOP conditions
 
@@ -262,8 +320,9 @@ Stop and report instead of improvising when:
 - closing the interface breaks a consumer outside `commands/tools/`;
 - capturing sync evidence would require reshaping `sync/apply.ts` JSON;
 - the mapper would need filesystem presence to decide reachability;
-- new diagnostics would change `oat tools install` exit codes on a healthy
-  host without an explicit severity decision; or
+- a provider state has no row in the pinned severity matrix, or applying
+  the matrix would change `oat tools install` exit codes on a healthy host;
+  or
 - a named verification gate fails twice after one bounded correction.
 
 ## Revalidation Before Execution
@@ -280,6 +339,7 @@ be reproduced.
 
 ## Review focus
 
-- Severity choices for the six new codes and their effect on exit codes.
+- The severity matrix: each code's severity, the `packEvidenceBlock`
+  change, and the resulting exit codes.
 - The auto-sync seam: in-process service versus parsed subprocess JSON.
 - DR-260831: no filesystem-derived reachability anywhere in the mapper.

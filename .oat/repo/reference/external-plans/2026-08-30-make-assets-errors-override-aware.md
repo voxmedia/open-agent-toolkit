@@ -69,6 +69,13 @@ will repair the supplied path.
 
 The first hard dependency is unsatisfied, so execution remains blocked.
 
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                         | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections. | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None.                                                   | None.                                                                  |
+
 ## Drift check
 
 After satisfying the hard dependency and before editing:
@@ -91,9 +98,10 @@ source-aware remedy design. Missing that branch is a STOP condition.
 - Lint/format check: `pnpm check` → repository checks pass.
 - Implementation pattern: preserve `CliError` exit code 2 and never fall back
   from an invalid explicit override to packaged assets.
-- Git/PR convention: shipped CLI behavior requires a lockstep five-package
-  version bump unless this is deliberately batched into the predecessor's one
-  release bump; do not push or open a PR unless instructed.
+- Git/PR convention: shipped CLI behavior is release-shaped; the lockstep bump
+  is owned by the wave fan-in in lane mode (see Scope), or batched into the
+  predecessor's one release bump in standalone mode; do not push or open a PR
+  unless instructed.
 
 ## Scope
 
@@ -104,8 +112,7 @@ source-aware remedy design. Missing that branch is a STOP condition.
 - `packages/cli/src/fs/assets.test.ts` — paired assertions for missing root,
   wrong-type root, missing/invalid metadata, version mismatch, and missing
   required directory.
-- Five public package manifests and `pnpm-lock.yaml` when this ships in a
-  separate release-shaped change.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -176,15 +183,21 @@ Preserve complete-bundle success tests.
 `pnpm --filter @open-agent-toolkit/cli test -- src/fs/assets.test.ts` → all
 paired rows execute and pass.
 
-### 4. Apply release bookkeeping and full gates
+### 4. Run the mode's gates
 
-If implemented as a separate PR, bump all five public packages together and
-update `pnpm-lock.yaml`. If explicitly batched directly after the structural
-plan in one PR, preserve exactly one final lockstep bump for the combined diff.
+**Lane mode (default under the execution program):** run the focused tests
+above, then `pnpm check`, `pnpm type-check`, and `pnpm run check:skill-bumps`
+with captured exit codes. Do not edit lockstep release files or run
+`pnpm release:check-versions` / `pnpm release:validate`; the wave fan-in owns
+the lockstep bump and the full definition-of-done sequence. **Standalone mode
+only:** bump the five public packages above freshly fetched `origin/main` and
+run the eight AGENTS.md gates in order.
+When this plan is batched directly after the structural plan in one
+standalone PR, preserve exactly one final lockstep bump for the combined diff.
 
-**Verify:** run the repository Definition of Done in order, fetching
-`origin/main` immediately before `release:check-versions`; every command exits
-zero and the assets suite executes rather than replaying stale cache output.
+**Verify:** each named command with its own captured exit code → all exit 0;
+and from `packages/cli`, `pnpm exec vitest run src/fs/assets.test.ts` → the
+focused assets suite executes (no `cache hit, replaying logs`).
 
 ## Test plan
 
@@ -203,7 +216,9 @@ zero and the assets suite executes rather than replaying stale cache output.
 - [ ] All fail-closed families, including structural validation, are covered.
 - [ ] Paths, expected/actual versions, and exit code 2 remain observable.
 - [ ] No validation or fallback rule weakened.
-- [ ] Required lockstep release bookkeeping and full gates pass.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions

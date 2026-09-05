@@ -1,7 +1,7 @@
 ---
 oat_triage_record: true
 schema_version: 1
-status: pr_open
+status: post_merge_complete
 scope: post-merge cleanup of labeled issues overtaken by merged PRs (#211, #197, #203) plus triage-record hygiene
 baseline_sha: 83d8c9f2e1c317870040148212db40d40007f7af
 triage_pr: 259
@@ -53,7 +53,7 @@ updated: 2026-09-04
 - Backlog action: None.
 - Priority and size rationale: Not applicable.
 - Approval: Approved by the operator in session on 2026-09-04 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-04 after PR #259 merged (`6b9a15841`); receipt posted on PR #259.
 
 ### GH-197 — `oat gate review` can terminate with no envelope, no artifact, and no cause
 
@@ -79,7 +79,7 @@ updated: 2026-09-04
   `BL-260711-add-activity-aware-gate` and linked #197 there.
 - Priority and size rationale: Inherits the item (high / feature / M).
 - Approval: Approved by the operator in session on 2026-09-04 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-04 after PR #259 merged (`6b9a15841`); receipt posted on PR #259.
 
 ### GH-203 — Detect stale provider skill views and offer safe sync
 
@@ -105,7 +105,7 @@ updated: 2026-09-04
   drift and sync repairs it; S because the diagnostic reuses the existing
   drift detector and adds one message path plus tests.
 - Approval: Approved by the operator in session on 2026-09-04 as one consolidated set.
-- Post-merge result: Pending.
+- Post-merge result: Applied 2026-09-04 after PR #259 merged (`6b9a15841`); receipt posted on PR #259.
 
 ## Open concerns
 
