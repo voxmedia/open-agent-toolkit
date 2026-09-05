@@ -33,6 +33,42 @@ afterEach(async () => {
   tempDirs.length = 0;
 });
 
+describe('remote closeout command', () => {
+  it('registers closeout --project and forwards the normalized request', async () => {
+    const requests: RemoteCommandRequest[] = [];
+    const command = createPjmRemoteCommand({
+      resolveProjectRoot: async () => '/repo',
+      checkAdoption: async () => 'complete',
+      run: async (request) => {
+        requests.push(request);
+        return {
+          schemaVersion: 1,
+          status: 'ok',
+          operation: 'closeout',
+          projectRoot: request.projectRoot,
+          persisted: true,
+          results: [],
+          externalAction: null,
+          recovery: [],
+        };
+      },
+    });
+    command.exitOverride();
+
+    await command.parseAsync(['closeout', '--project', 'shared/example'], {
+      from: 'user',
+    });
+
+    expect(requests).toEqual([
+      {
+        operation: 'closeout',
+        projectRoot: '/repo',
+        projectPath: 'shared/example',
+      },
+    ]);
+  });
+});
+
 async function adoptedRepository() {
   const repo = await mkdtemp(join(tmpdir(), 'oat-remote-live-'));
   tempDirs.push(repo);

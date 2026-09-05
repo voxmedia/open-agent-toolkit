@@ -14,6 +14,7 @@ export type RemoteLifecycleOperation =
   | 'publish'
   | 'refresh'
   | 'reconcile'
+  | 'closeout'
   | 'storage-transition'
   | 'operation-continue';
 
@@ -25,6 +26,7 @@ export interface RemoteCommandRequest {
   previewOperationId?: string;
   providerRef?: string;
   backlogId?: string;
+  projectPath?: string;
   createTarget?: {
     provider: string;
     localKind: 'backlog' | 'project';
@@ -109,6 +111,18 @@ export function createPjmRemoteCommand(
     'Publish one selected remote binding',
     dependencies,
   );
+
+  remote
+    .command('closeout')
+    .description('Review and close out every eligible binding for one project')
+    .requiredOption('--project <path>', 'Local OAT project path')
+    .action(async (options: { project: string }, command: Command) => {
+      await execute(
+        { operation: 'closeout', projectPath: options.project },
+        command,
+        dependencies,
+      );
+    });
   addBindingCommand(
     remote,
     'refresh',
