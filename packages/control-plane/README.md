@@ -22,8 +22,13 @@ import {
   getProjectState,
   listProjects,
   recommendSkill,
+  WORKFLOW_MODES,
 } from '@open-agent-toolkit/control-plane';
 ```
+
+`WORKFLOW_MODES` is the ordered runtime list of supported modes:
+`spec-driven`, `quick`, `import`, and `lite`. The exported `WorkflowMode` type
+is derived from this constant.
 
 ### `getProjectState(projectPath)`
 
