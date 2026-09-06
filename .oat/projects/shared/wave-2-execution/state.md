@@ -79,12 +79,12 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:9d1d8345ca1ad25afa2fba8a7bf9185d052ec1c2aab7d2868e4df4e7633c6f7f'
   freshness_head: 3fc69573fa1a4ad26dd18d149172239d2309b708 # closeout-only: round-4 receive
   freshness_fingerprint: 'sha256:effective-delta-v1:86c6c7ec8f3cdc3cd22e6875d3330673691209738299d8b148619d74a0318dd9'
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: 'w2-exit-gate-20260906T101022Z'
   launch_started_at: '2026-09-06T10:10:22Z'
   launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w2/w2-exit-gate-20260906T101022Z.receipt.json'
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/ba8ff320-bc59-493e-ab3b-c4ffd5ccdd99.json'
+  gate_run_id: 'ba8ff320-bc59-493e-ab3b-c4ffd5ccdd99'
   envelope_status: null
   artifact: null
   handoff: 'attempt 2 after the Bugbot fix 3ee49fcad'
@@ -98,7 +98,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-09-06T10:10:22Z'
+  updated_at: '2026-09-06T10:11:12Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -154,7 +154,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/267' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T02:27:21.413Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-09-06T09:37:19.119Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T10:10:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T10:11:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_lifecycle: complete
 ---
