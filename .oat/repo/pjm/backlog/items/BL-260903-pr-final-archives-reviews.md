@@ -12,9 +12,10 @@ labels:
   - retro
 assignee: null
 created: 2026-09-03T17:54:40.503Z
-updated: 2026-09-03T17:54:40.503Z
+updated: 2026-09-04T03:55:32Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-03-validate-review-ledger-paths-before-final-pr.md
 ---
 
 ## Description

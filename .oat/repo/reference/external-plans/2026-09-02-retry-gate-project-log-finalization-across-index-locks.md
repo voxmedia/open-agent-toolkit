@@ -37,8 +37,10 @@ gate. Gate-owned project-log finalization carries the gate `runId` as a stable
 event identity, retries `git add`/`git commit` a declared bounded number of
 times when the failure is an index lock, classifies the lock as transient or
 persistent in its diagnostic, never appends a duplicate log entry on retry,
-and, when retries are exhausted, writes a partial-finalization receipt that a
-later run can complete without re-running the review. The lock file is never
+and, when retries are exhausted, writes a durable partial-finalization receipt
+that names the exact recovery command. A later process completes finalization
+from that receipt alone — idempotent append keyed by `runId`, then commit —
+without invoking a reviewer or re-running the gate. The lock file is never
 deleted.
 
 ## Source and live evidence
@@ -73,7 +75,15 @@ failure without changing the gate result` holds a real `.git/index.lock`
   - `packages/cli/src/commands/gate/index.ts:415-448` —
     `writeGateRunMarker`/`removeGateRunMarker` write
     `tmpdir()/oat-gate-runs/<runId>.json` through injectable dependencies; the
-    shape to copy for a receipt.
+    injection shape to copy for a receipt writer (not the location: a temp dir
+    does not survive the "later run" the outcome promises).
+  - `packages/cli/src/commands/project/log/append.ts:410-428` — the
+    `oat project log append` command exposes `--structural`, `--producer`,
+    `--ref`, `--body`, and `--project`; it has no idempotency option, so a
+    recovery command cannot yet be replayed safely.
+  - `.gitignore:72-76` — `.oat/projects/local/**`, `archived/**`, and
+    `synced/*/` are ignored, but `.oat/projects/shared/**` is tracked, so a
+    receipt under a shared project needs its own ignore pattern.
 - Constraining decisions:
   - [DR-260718-cli-owned-log-mutations](../decisions/DR-260718-cli-owned-log-mutations.md)
     — log mutation and any dedupe scan live in the `oat project log` module,
@@ -89,11 +99,11 @@ failure without changing the gate result` holds a real `.git/index.lock`
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                                                                                       | Required state                                                                                                                  | Current state                                                 |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| Soft integration | Sibling plan [Recover committed review artifacts](./2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md)                                              | Land first in a shared wave; rebase this plan's `gate/index.ts` hunks after it.                                                 | Pending.                                                      |
-| Soft ownership   | [review-gate-integrity](../../../projects/shared/review-gate-integrity/state.md) / [BL-260820-bind-each-gate-review](../../pjm/backlog/items/BL-260820-bind-each-gate-review.md) | Do not touch lifecycle-event consumption or receive routing; record the receipt shape as a decision.                            | Project in discovery; this item is listed as a child.         |
-| Design decision  | Receipt location                                                                                                                                                                 | One decision record chooses `tmpdir()/oat-gate-runs/` (existing precedent, not reboot-durable) or a gitignored repo-local path. | Unresolved; decide in step 4 before writing the receipt code. |
+| Type             | Dependency                                                                                                                                                                       | Required state                                                                                                                                                                                                                                                                   | Current state                                                                       |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Soft integration | Sibling plan [Recover committed review artifacts](./2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md)                                              | Land first in a shared wave; rebase this plan's `gate/index.ts` hunks and its `workflow-gates.md` status-table and incident-table hunks after it; never in one parallel group.                                                                                                   | Pending.                                                                            |
+| Soft ownership   | [review-gate-integrity](../../../projects/shared/review-gate-integrity/state.md) / [BL-260820-bind-each-gate-review](../../pjm/backlog/items/BL-260820-bind-each-gate-review.md) | Do not touch lifecycle-event consumption or receive routing; record the receipt shape as a decision.                                                                                                                                                                             | Project in discovery; this item is listed as a child.                               |
+| Design decision  | Receipt shape and retention                                                                                                                                                      | One decision record fixes the receipt at `<project>/gate-receipts/<runId>.json` (durable, project-local, gitignored via `.oat/projects/**/gate-receipts/`) with the retention rule in step 4; `tmpdir()` is rejected because the outcome requires survival into a later process. | Location settled by this plan; record it in step 4 before writing the receipt code. |
 
 There are no unsatisfied hard dependencies.
 
@@ -125,8 +135,9 @@ STOP until this plan is refreshed.
 - Lint/format/docs: `pnpm check` → passes.
 - Implementation pattern: injectable dependencies as in
   `writeGateRunMarker`; bounded recovery constants declared, not inline.
-- Git/PR convention: docs under `apps/oat-docs/docs` are shipped, so bump the
-  five lockstep packages; do not push or open a PR unless instructed.
+- Git/PR convention: docs under `apps/oat-docs/docs` are shipped, so the
+  integrated change carries a lockstep bump (fan-in owned in lane mode; see
+  Scope); do not push or open a PR unless instructed.
 
 ## Scope
 
@@ -135,14 +146,21 @@ STOP until this plan is refreshed.
 - `packages/cli/src/commands/gate/index.ts` — `runId` on
   `ReviewGateProjectLogFinalization` and in the structural body;
   `classifyGitLockFailure`; bounded retry in `commitReviewGateProjectLog`;
-  receipt writer and `gate-project-log-partial-finalization` diagnostic.
+  receipt writer, `gate-project-log-partial-finalization` diagnostic, and a
+  start-of-run `gate-project-log-receipt-pending` warning when a receipt for
+  the same project already exists (discovery).
 - `packages/cli/src/commands/project/log/append.ts` and its tests — optional
-  idempotency key with an `already-appended` result branch.
+  idempotency key with an `already-appended` result branch, exposed as
+  `--idempotency-key <key>` on `oat project log append`, plus
+  `--commit` to stage and commit the log with the same bounded retry (the
+  recovery entry point; the gate module calls the same function).
 - `packages/cli/src/commands/gate/index.test.ts` — the cases below.
 - `apps/oat-docs/docs/cli-utilities/workflow-gates.md` — finalization,
-  retry bound, receipt, incident-to-regression row.
-- One decision record for the receipt shape and location.
-- Five public package manifests.
+  retry bound, receipt, incident-to-regression row (`reference/cli-reference.md`
+  is watch-only in the drift check; no edit planned).
+- One decision record for the receipt shape and location (Before writing the record, run `oat pjm doctor --json` and require `adoption.state` of `declared` or `inferred-legacy` (STOP otherwise), read `.oat/repo/reference/decisions/AGENTS.md`, create it with `oat decision new`, and run `oat decision regenerate-index`.)
+- `.gitignore` — add `.oat/projects/**/gate-receipts/`.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -186,35 +204,63 @@ and an existing-entry scan returning `status: 'already-appended'`. Have
 In `commitReviewGateProjectLog` add `classifyGitLockFailure(stderr, lockPath)`
 returning `transient-index-lock | persistent-index-lock | other` (persistent
 when the lock's mtime is unchanged across the whole retry window). Retry
-`add`/`commit` with a declared `PROJECT_LOG_COMMIT_ATTEMPTS` bound and an
-injectable sleep. Return `{ committed, error?, lockClass?, attempts }`. Never
-unlink the lock.
+`add`/`commit` with `PROJECT_LOG_COMMIT_ATTEMPTS = 3`, meaning three
+`add`/`commit` attempts separated by two injectable sleeps defaulting to
+250 ms and 500 ms (the window the mtime-unchanged check spans). Return
+`{ committed, error?, lockClass?, attempts }`. Never unlink the lock. Export the
+retrying commit as a function the log module's `--commit` path (step 5) can
+call, so gate and recovery share one implementation.
 
 **Verify:** `pnpm exec vitest run src/commands/gate/index.test.ts -t 'index lock'`
 → transient and persistent cases pass.
 
 ### 4. Write the partial-finalization receipt
 
-Record the location decision with `oat decision new`. On exhausted retries
-write `{ runId, project, logPath, appendStatus, commitStatus, lockClass,
-attempts, body }` through a new injectable `writeGateProjectLogReceipt` and
-emit a `gate-project-log-partial-finalization` diagnostic naming the path.
-Derive exactly one outcome from the pre-action snapshot. Do not remove the
-receipt in `removeGateRunMarker`'s cleanup path.
+Record the shape, location, and retention decision with `oat decision new`.
+On exhausted retries write `<project>/gate-receipts/<runId>.json` containing
+`{ runId, project, projectPath, worktreeRoot, logPath, artifactPath,
+artifactSignature, appendStatus, commitStatus, lockClass, attempts, producer,
+ref, body, recovery: { command } }` through a new injectable
+`writeGateProjectLogReceipt`, and emit a `gate-project-log-partial-finalization`
+diagnostic naming the path and printing `recovery.command` verbatim. Derive
+exactly one outcome from the pre-action snapshot. Do not remove the receipt in
+`removeGateRunMarker`'s cleanup path. Retention: the recovery path deletes the
+receipt after its commit succeeds; a receipt whose `runId` entry is already
+committed is reported as stale by the start-of-run warning and deleted by the
+recovery command with `already-appended` status.
 
 **Verify:** `pnpm exec vitest run src/commands/gate/index.test.ts -t 'partial finalization'`
-→ receipt asserted.
+→ receipt asserted with every field above and a runnable `recovery.command`.
 
-### 5. Document and bump
+### 5. Add the recovery entry point
 
-Update `workflow-gates.md` and add the incident-to-regression row
-(`:800-809`); bump the five lockstep packages above fresh `origin/main`.
+Add `--idempotency-key <key>` and `--commit` to `oat project log append`
+(`append.ts:410-428`). `recovery.command` in the receipt is exactly:
+`oat project log append --project <projectPath> --structural --producer <producer> --ref <ref> --body <body> --idempotency-key <runId> --commit`.
+Before appending, the command validates the receipt's identity against the
+live tree: `projectPath` exists and resolves to the same project,
+`worktreeRoot` matches `git rev-parse --show-toplevel`, and `artifactPath`
+still exists with `artifactSignature` (sha256 of content); any mismatch exits
+non-zero with a `gate-project-log-receipt-mismatch` diagnostic and touches
+nothing. On match it appends (or observes `already-appended`), commits with
+the step 3 retry, and removes the receipt. It never invokes a reviewer, never
+re-runs the gate, and never edits the review envelope.
 
-**Verify:** `pnpm check` → exit 0.
+**Verify:** `pnpm exec vitest run src/commands/project/log -t 'idempotency|commit'`
+→ pass, including the identity-mismatch control.
 
-### 6. Run the definition-of-done gates
+### 6. Document and verify
 
-**Verify:** the eight AGENTS.md gates in order, each with a captured exit code.
+Update `workflow-gates.md` (finalization, retry bound, receipt location,
+recovery command) and add the incident-to-regression row (`:800-809`).
+
+**Verify (lane mode, the default under the execution program):** run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes. Do not edit lockstep
+release files or run `pnpm release:check-versions` / `pnpm release:validate`;
+the wave fan-in owns the lockstep bump and the full definition-of-done
+sequence. **Standalone mode only:** bump the five public packages above
+freshly fetched `origin/main` and run the eight AGENTS.md gates in order.
 
 ## Test plan
 
@@ -226,10 +272,26 @@ at `index.test.ts:5085` (real repo, real lock) and
 - `retries and commits after a transient index lock clears` → HEAD advances,
   one structural heading, no failure diagnostic.
 - `classifies a held index lock as persistent after exhausting retries` →
-  `lockClass: 'persistent-index-lock'`, `attempts: 3`, gate result unchanged.
+  `lockClass: 'persistent-index-lock'`, `attempts: 3`, exactly two sleep
+  calls, gate result unchanged.
 - `does not delete the index lock` → lock file still present.
 - `emits a partial-finalization receipt when retries are exhausted` → receipt
-  fields and diagnostic path.
+  at `<project>/gate-receipts/<runId>.json` with every field and a
+  `recovery.command`; diagnostic names the path.
+- `recovers finalization from the receipt in a fresh process` → exhaust
+  retries under a held lock, release the lock, run the receipt's
+  `recovery.command` through a separate `execFile` of the built CLI: HEAD
+  advances by one commit, the log has exactly one `run=<runId>` heading, the
+  receipt is deleted, and no reviewer spawn or gate invocation occurs (assert
+  the dispatch mock is never called).
+- `running the recovery command twice appends nothing new` → second run
+  reports `already-appended`, heading count stays 1, no new commit.
+- `refuses recovery when the receipt identity does not match the tree` →
+  altered `artifactSignature` or foreign `worktreeRoot` → non-zero exit,
+  `gate-project-log-receipt-mismatch`, log and HEAD unchanged.
+- `warns at gate start when a receipt is pending for the project` →
+  `gate-project-log-receipt-pending` diagnostic naming the receipt; the gate
+  still runs.
 - `never duplicates the log entry when finalization is retried for the same run`
   → heading count stays 1 (`:4871-4901` pattern).
 - `unstages the log when the commit itself fails after staging` (`:5121`) →
@@ -241,10 +303,15 @@ at `index.test.ts:5085` (real repo, real lock) and
 - [ ] Transient index locks are retried within the declared bound; persistent
       locks are classified and reported.
 - [ ] A retry never appends a duplicate entry or commit for the same `runId`.
-- [ ] Exhausted retries leave a receipt a later run can complete.
+- [ ] Exhausted retries leave a durable receipt whose printed recovery
+      command completes finalization from a fresh process with exactly one
+      log entry and no review or gate re-run.
 - [ ] `.git/index.lock` is never deleted by the gate.
 - [ ] Envelope emission ordering and the PR #246 contracts are unchanged.
-- [ ] Decision record, docs, lockstep bump, and all gates pass.
+- [ ] Decision record and docs land.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is
+      edited. Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions
@@ -256,6 +323,9 @@ Stop and report instead of improvising when:
   emission);
 - the retry would extend the gate beyond its own time budget;
 - the dedupe scan would read or edit `project-log.md` from the gate module;
+- recovery would need to re-read or re-validate the review verdict (that is
+  the sibling recovery plan's surface, and recovery here only finalizes the
+  log);
 - a downstream parser of the structural body is found (grep found none);
 - PR #190 merged first and the finalization functions no longer match the
   cited shapes; or
@@ -275,6 +345,9 @@ Apply the landing-event table above for the two named events.
 
 - The receipt outcome derivation follows DR-260807 (one outcome, pre-action
   snapshot).
-- Retry bound and sleep are injectable and declared.
+- Retry bound and sleep are injectable and declared; three attempts means two
+  sleeps.
+- The receipt is consumed, not merely written: the fresh-process recovery test
+  is the evidence for the later-run promise.
 - The `run=` token is additive to the structural body and does not break the
   project-log grammar.

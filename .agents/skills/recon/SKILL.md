@@ -1,6 +1,6 @@
 ---
 name: recon
-version: 1.0.1
+version: 1.1.0
 description: Use when a bounded investigation needs source-grounded evidence before analysis or implementation. Produces a validated evidence-packet directory through approved provider-neutral worker waves.
 argument-hint: '<question-or-target> [--profile quick|standard|thorough] [--scope description] [--context path] [--output directory] [--strict]'
 disable-model-invocation: true
@@ -53,6 +53,21 @@ Report these compact stage transitions:
 - `[8/8] Returning packet directory…`
 
 Do not print worker transcripts or raw dossier content.
+
+When a run stops early or publishes a partial, label every failure with one of
+these categories so a controller problem is never reported as a worker
+problem:
+
+- `worker`: an accepted lane failed, was cancelled, or wrote an invalid
+  artifact;
+- `provider/dispatch`: the launch surface could not satisfy the approved
+  envelope, or a launched axis drifted from approval;
+- `contract validation`: artifacts were produced but the packet or a
+  candidate failed deterministic validation;
+- `source availability`: a declared source was unavailable, stale, or lacked
+  a read-only boundary.
+
+State whether every accepted lane reached a terminal result.
 
 ## Workflow
 
@@ -123,58 +138,81 @@ intended scope: `oat tools install utility --scope <user|project>` or, when the
 pack is already installed, `oat tools update --pack utility --scope
 <user|project>`.
 
-Read `${UTILITY_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md` and use its
-selection-only `prepare` operation. From the same root, read
+Read `${UTILITY_SKILLS_ROOT}/oat-dispatch-subagents/SKILL.md` and perform
+only the selection steps of its Full-Information Selection: observe the
+catalog, resolve one exact target, and record the selection. Stop before its
+launch step; nothing launches until Step 5 runs after approval. From the same
+root, read
 `subagent-orchestration/references/model-selection-principles.md`, exactly one
 active-provider selection reference, and the matching
 `oat-dispatch-subagents` provider mechanics reference. Do not copy provider
 catalogs or exact launch construction into this skill.
 
-Prepare every planned and conditional wave against one exact target satisfying
+Resolve every planned and conditional wave against one exact target satisfying
 the run-wide floor. Prefer the canonical `recon-worker` role. If that role is
-unavailable, prepare the generic role with the complete worker contract as a
+unavailable, plan the generic role with the complete worker contract as a
 visible generic role fallback before approval. A fallback after approval is
 forbidden.
 
-Assemble the exact approval envelope from the prepared records. It must bind:
+Write the approval envelope into `manifest.execution`. It binds:
 
-- provider, route, role selector, model, effort, reasoning mode, and service
-  tier;
-- profile, wave classes and floors, lane identities, lane scopes, conditional
-  lane caps, and concurrency;
-- per-lane authority, writable path, deadlines, and retry limits; and
-- live catalog observation identity and canonical approval fingerprint.
+- provider, route, role, model, effort, reasoning mode, and service tier;
+- authority level, maximum concurrency, per-lane deadline, and retry limit; and
+- every wave with its mode, task class, and conditional flag, and every lane
+  with its identity, read scope, and worker-owned write root.
+
+Its canonical fingerprint covers every field above.
 
 Present the exact provider, model and effort for explicit approval before any
-worker launch. Also present the full topology and hard execution limits. Named
-model examples are illustrative and non-normative; never route from an example.
-Declining approval leaves the run at `awaiting-approval` and launches nothing.
+worker launch, together with the full topology and hard execution limits. Named model examples are
+illustrative and non-normative; never route from an example. Declining approval
+leaves the run at `awaiting-approval` and launches nothing. Approval records
+`explicit-user-approval`, the approval time, and the fingerprint.
 
-### Step 5: Execute the Approved Waves
+**Deadlines.** Choose the per-lane deadline from the expected task class and
+scope, and show it in the approval envelope; it is an approved execution limit,
+not a short watchdog. A deadline authorizes the provider to end a lane and
+report a terminal timeout. It never authorizes the controller to interrupt an
+accepted lane by hand: elapsed display time is not a failure. If the provider
+cannot enforce the deadline, wait or poll and report elapsed time, or obtain
+renewed approval before any cancellation.
 
-Submit only the approval-bound prepared records to the dispatch dependency's
-`execute` operation. Before each launch, compare every approved selection and
-execution axis plus relevant catalog identity. Any drift returns the complete
-manifest for renewed approval.
+### Step 5: Preflight the Launch Surface, Then Execute
 
-Store immutable prepared, approval, launch-acceptance, and terminal receipts
-under `raw/dispatch/`. Launch acceptance is distinct from worker completion.
-After acceptance there is no replacement child, alternate route, target
-substitution, or no silent retry. Continue the accepted handle only when the
-dispatch contract authorizes continuation; otherwise record the pass failure.
+Before any worker launch, confirm that the live launch surface can run the
+approved role, model, effort, and authority level, and can return each lane's
+result. If any approved axis cannot be satisfied, stop with a
+`provider/dispatch` diagnostic, leave the run at `awaiting-approval`, and
+launch nothing. Never substitute a different axis to make the launch fit.
 
-Run the stages in this order:
+Launch each wave through the dispatch dependency with exactly the approved
+axes. Immediately before each launch, compare the axes that will actually run
+against the approval fingerprint. Any drift returns the complete manifest for
+renewed approval. Launch acceptance is distinct from worker completion. After
+acceptance there is no replacement child, alternate route, target
+substitution, or no silent retry. If an accepted lane fails, is cancelled, or
+times out, record that pass as failed with a material `PASS_FAILED` gap
+naming the pass.
+
+Run the passes in this order:
 
 1. `map` and `gather` workers write unique dossiers under `raw/dossiers/`.
 2. `compile` writes a candidate canonical claim ledger.
-3. deterministic validation reopens sources and validates locators.
+3. Source preflight: run `scripts/validate-artifact.mjs` on the candidate
+   manifest and ledger, then reopen every declared source and evidence locator
+   with the checks in `scripts/validate-packet.mjs`. Resolve source roots to
+   canonical realpaths, pin one observation time per source, capture URLs or
+   mark them unavailable, and add a material gap for every ineligible source
+   and each affected claim. Do not create review briefs until the candidate
+   manifest and ledger pair validates.
 4. profile-required `verify`, `adversary`, and `coverage` workers consume only
    immutable selectively blind briefs created by
    `scripts/create-review-brief.mjs` at unique paths.
 5. `reconcile` writes a new candidate ledger without mutating the prior ledger.
 
 Use `references/worker-contract.md` for every assignment. Never allow two
-workers to share a write path.
+workers to share a write path. Every dossier records its approved wave and lane;
+every review result records its approved lane.
 
 Read `references/packet-contract.md` before creating any packet artifact. Run
 `scripts/validate-artifact.mjs` on each candidate and record its canonical
@@ -205,9 +243,9 @@ candidate failure separately. Only a publishable candidate proceeds to
 `scripts/render-packet.mjs`; failure leaves no consumer entry point that could
 refer to a different canonical generation.
 
-Derive the achieved profile from completed stages whose required typed,
-digest-bound artifacts validate. Do not accept a worker or manifest assertion
-of achievement. A `quick` run can reach `supported` but never `verified`.
+Derive the achieved profile from complete, typed, digest-bound same-run
+artifacts written by approved lanes. Do not accept a worker or manifest
+assertion of achievement. A `quick` run can reach `supported` but never `verified`.
 `verified` claims require unique complete semantic, adversarial, and coverage
 results bound to immutable briefs and correct claim dispositions. Unresolved
 material challenge prevents verification. A run with contested claims may
@@ -231,9 +269,9 @@ diagnostics, and safe failure record for diagnosis.
 ### Step 8: Return the Directory-Only Handoff
 
 Return only the packet directory path plus a compact summary containing status,
-requested and achieved profile, claim-state counts, unresolved gaps, and failed
-or omitted passes. Do not inline raw dossiers, source bodies, or worker
-reasoning. The consumer may open `packet.md` and selectively follow compact
+requested and achieved profile, claim-state counts, unresolved gaps, failed or
+omitted passes, and each failure's category from the list above. Do not inline
+raw dossiers, source bodies, or worker reasoning. The consumer may open `packet.md` and selectively follow compact
 references.
 
 ## Examples

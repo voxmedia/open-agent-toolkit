@@ -13,7 +13,7 @@ import {
   validatePacket,
 } from '../scripts/validate-packet.mjs';
 import {
-  createApprovalBinding,
+  approveExecution,
   createPacketFixture,
 } from './fixtures/packet-fixture.mjs';
 
@@ -49,29 +49,6 @@ async function replaceArtifact(packet, relative, value) {
   return reference;
 }
 
-async function replaceApprovalProjection(packet, approvalProjection) {
-  const binding = createApprovalBinding(approvalProjection);
-  packet.manifest.execution = binding;
-  for (const reference of packet.manifest.artifacts.filter((item) =>
-    item.path.startsWith('raw/dispatch/'),
-  )) {
-    const receipt = await readJson(join(packet.packetRoot, reference.path));
-    receipt.approvalProjection = approvalProjection;
-    receipt.approvalCanonicalJson = binding.approvalCanonicalJson;
-    receipt.approvalFingerprint = binding.approvalFingerprint;
-    receipt.approvedAt =
-      receipt.state === 'prepared' ? null : binding.approvedAt;
-    receipt.approvalEvidence =
-      receipt.state === 'prepared' ? null : binding.approvalEvidence;
-    receipt.catalogRecheck =
-      receipt.state === 'accepted' || receipt.state === 'completed'
-        ? binding.catalogRecheck
-        : null;
-    await replaceArtifact(packet, reference.path, receipt);
-  }
-  await writeJson(packet.manifestPath, packet.manifest);
-}
-
 async function coreReviewResults(packet) {
   return Promise.all(
     ['semantic', 'adversarial', 'coverage'].map(async (kind) => {
@@ -84,20 +61,6 @@ async function coreReviewResults(packet) {
       };
     }),
   );
-}
-
-async function replaceCatalogRecheck(packet, catalogRecheck) {
-  packet.manifest.execution.catalogRecheck = catalogRecheck;
-  for (const reference of packet.manifest.artifacts.filter((item) =>
-    item.path.startsWith('raw/dispatch/'),
-  )) {
-    const receipt = await readJson(join(packet.packetRoot, reference.path));
-    if (receipt.state === 'accepted' || receipt.state === 'completed') {
-      receipt.catalogRecheck = catalogRecheck;
-      await replaceArtifact(packet, reference.path, receipt);
-    }
-  }
-  await writeJson(packet.manifestPath, packet.manifest);
 }
 
 test('later ledger revisions reject final transitions that mismatch claim status', async () => {
@@ -146,521 +109,46 @@ test('ValidatedRun retains exact digests for canonical and referenced packet byt
   }
 });
 
-const omittedAxisMutations = [
-  [
-    'wave task class',
-    (projection) => delete projection.execution.waves[0].task_class,
-  ],
-  [
-    'wave floor',
-    (projection) => delete projection.execution.waves[0].model_class_floor,
-  ],
-  ['wave scope', (projection) => delete projection.execution.waves[0].scope],
-  [
-    'lane scope',
-    (projection) => delete projection.execution.waves[0].lanes[0].scope,
-  ],
-  [
-    'wave authority',
-    (projection) => delete projection.execution.waves[0].authority,
-  ],
-  [
-    'authorization scope',
-    (projection) => delete projection.execution.waves[0].authorization_scope,
-  ],
-  [
-    'writable roots',
-    (projection) => delete projection.execution.waves[0].writable_roots,
-  ],
-  [
-    'deadline',
-    (projection) => delete projection.execution.waves[0].deadline_seconds,
-  ],
-  [
-    'retry limit',
-    (projection) => delete projection.execution.waves[0].retry_limit,
-  ],
-  ['fallback', (projection) => delete projection.execution.waves[0].fallback],
-  [
-    'dispatch mode',
-    (projection) => delete projection.execution.waves[0].dispatch_mode,
-  ],
-  [
-    'context controls',
-    (projection) => delete projection.execution.waves[0].context_fork_controls,
-  ],
-  [
-    'wave concurrency',
-    (projection) => delete projection.execution.waves[0].concurrency,
-  ],
-  [
-    'wave lane cap',
-    (projection) => delete projection.execution.waves[0].lane_cap,
-  ],
-  [
-    'payload digest',
-    (projection) => delete projection.execution.waves[0].payload_digest,
-  ],
-  [
-    'run maximum floor',
-    (projection) => delete projection.execution.run_maximum_floor,
-  ],
-  ['pinned target', (projection) => delete projection.execution.pinned_target],
-  [
-    'catalog identity',
-    (projection) => delete projection.catalog_observation.id,
-  ],
-  [
-    'catalog source',
-    (projection) => delete projection.catalog_observation.source,
-  ],
-  [
-    'catalog context',
-    (projection) => delete projection.catalog_observation.dispatch_context,
-  ],
-  [
-    'catalog observation time',
-    (projection) => delete projection.catalog_observation.observed_at,
-  ],
-  [
-    'catalog fingerprint',
-    (projection) =>
-      delete projection.catalog_observation.relevant_catalog_fingerprint,
-  ],
-];
-
-test('complete prepared projection rejects deletion of every formerly omitted dispatch axis', async () => {
-  for (const [label, mutate] of omittedAxisMutations) {
-    const packet = await fixture();
-    const projection = structuredClone(
-      packet.manifest.execution.approvalProjection,
-    );
-    mutate(projection);
-    await replaceApprovalProjection(packet, projection);
+test('approval fingerprint binds every approved execution axis', async () => {
+  for (const [axis, value] of [
+    ['model', 'other-model'],
+    ['effort', 'low'],
+    ['role', 'generic'],
+    ['authority', 'provider-enforced'],
+    ['maxConcurrency', 9],
+    ['deadlineSeconds', 5],
+  ]) {
+    const packet = await fixture('quick');
+    packet.manifest.execution[axis] = value;
+    await writeJson(packet.manifestPath, packet.manifest);
     const validation = await validatePacket(packet.packetRoot);
-    assert.equal(
-      validation.valid,
-      false,
-      `${label} deletion remained valid: ${JSON.stringify(validation, null, 2)}`,
-    );
     assert.ok(
       validation.errors.some(
-        (error) =>
-          error.path?.includes('approvalProjection') &&
-          error.code !== 'APPROVAL_FINGERPRINT_MISMATCH',
+        (error) => error.code === 'APPROVAL_FINGERPRINT_MISMATCH',
       ),
-      `${label} deletion lacked a projection-structure error: ${JSON.stringify(validation, null, 2)}`,
+      `${axis} drift was not rejected: ${JSON.stringify(validation, null, 2)}`,
     );
   }
 });
 
-test('canonical projection string-set arrays reject invalid members, duplicates, and unstable order', async () => {
-  const arrayCases = [
-    [
-      'writable roots null',
-      (projection) => (projection.execution.waves[0].writable_roots = [null]),
-    ],
-    [
-      'writable roots empty',
-      (projection) => (projection.execution.waves[0].writable_roots = ['']),
-    ],
-    [
-      'writable roots duplicate',
-      (projection) =>
-        (projection.execution.waves[0].writable_roots = ['raw/a', 'raw/a']),
-    ],
-    [
-      'writable roots unstable order',
-      (projection) =>
-        (projection.execution.waves[0].writable_roots = ['raw/z', 'raw/a']),
-    ],
-    [
-      'escalate when null',
-      (projection) => (projection.request.escalate_when = [null]),
-    ],
-    [
-      'escalate when empty',
-      (projection) => (projection.request.escalate_when = ['']),
-    ],
-    [
-      'escalate when duplicate',
-      (projection) =>
-        (projection.request.escalate_when = ['scope drift', 'scope drift']),
-    ],
-    [
-      'escalate when unstable order',
-      (projection) => (projection.request.escalate_when = ['zeta', 'alpha']),
-    ],
-    [
-      'candidates considered null',
-      (projection) => (projection.selection.candidates_considered = [null]),
-    ],
-    [
-      'candidates considered empty',
-      (projection) => (projection.selection.candidates_considered = ['']),
-    ],
-    [
-      'candidates considered duplicate',
-      (projection) =>
-        (projection.selection.candidates_considered = ['model-a', 'model-a']),
-    ],
-    [
-      'candidates considered unstable order',
-      (projection) =>
-        (projection.selection.candidates_considered = ['model-z', 'model-a']),
-    ],
-  ];
-  const unexpectedlyValid = [];
-  for (const [label, mutate] of arrayCases) {
-    const packet = await fixture();
-    const projection = structuredClone(
-      packet.manifest.execution.approvalProjection,
-    );
-    mutate(projection);
-    await replaceApprovalProjection(packet, projection);
-    const validation = await validatePacket(packet.packetRoot);
-    if (validation.valid) unexpectedlyValid.push(label);
-  }
-  assert.deepEqual(unexpectedlyValid, []);
-});
+test('approved execution rejects unknown axes and unapproved lanes', async () => {
+  const packet = await fixture('quick');
+  packet.manifest.execution.catalogRecheck = { id: 'legacy' };
+  await writeJson(packet.manifestPath, packet.manifest);
+  const unknown = await validatePacket(packet.packetRoot);
+  assert.ok(unknown.errors.some((error) => error.code === 'UNKNOWN_FIELD'));
+  delete packet.manifest.execution.catalogRecheck;
 
-test('every immutable receipt state binds every formerly omitted projection axis', async () => {
-  const mutationCases = [
-    [
-      'task class',
-      (projection) =>
-        (projection.execution.waves[0].task_class = 'hard-reasoning'),
-    ],
-    [
-      'wave floor',
-      (projection) =>
-        (projection.execution.waves[0].model_class_floor = 'hard-reasoning'),
-    ],
-    [
-      'wave scope',
-      (projection) => (projection.execution.waves[0].scope = 'packet:drift'),
-    ],
-    [
-      'lane scope',
-      (projection) =>
-        (projection.execution.waves[0].lanes[0].scope = 'packet/drift'),
-    ],
-    [
-      'authority',
-      (projection) =>
-        (projection.execution.waves[0].authority = 'provider-enforced'),
-    ],
-    [
-      'authorization scope',
-      (projection) =>
-        (projection.execution.waves[0].authorization_scope = 'other-run'),
-    ],
-    [
-      'writable root',
-      (projection) =>
-        projection.execution.waves[0].writable_roots.push('raw/drift'),
-    ],
-    [
-      'deadline',
-      (projection) => projection.execution.waves[0].deadline_seconds++,
-    ],
-    [
-      'retry limit',
-      (projection) => projection.execution.waves[0].retry_limit++,
-    ],
-    [
-      'fallback',
-      (projection) =>
-        (projection.execution.waves[0].fallback.mode = 'alternate'),
-    ],
-    [
-      'dispatch mode',
-      (projection) =>
-        (projection.execution.waves[0].dispatch_mode = 'foreground'),
-    ],
-    [
-      'context control',
-      (projection) =>
-        (projection.execution.waves[0].context_fork_controls.fork_turns =
-          'none'),
-    ],
-    [
-      'wave concurrency',
-      (projection) => projection.execution.waves[0].concurrency++,
-    ],
-    ['wave lane cap', (projection) => projection.execution.waves[0].lane_cap++],
-    [
-      'payload digest',
-      (projection) =>
-        (projection.execution.waves[0].payload_digest = `sha256:${'f'.repeat(64)}`),
-    ],
-    [
-      'run maximum floor',
-      (projection) =>
-        (projection.execution.run_maximum_floor = 'hard-reasoning'),
-    ],
-    [
-      'pinned target',
-      (projection) =>
-        (projection.execution.pinned_target.effort_selector = 'low'),
-    ],
-    [
-      'catalog identity',
-      (projection) => (projection.catalog_observation.id = 'catalog-drift'),
-    ],
-    [
-      'catalog source',
-      (projection) => (projection.catalog_observation.source = 'stale-catalog'),
-    ],
-    [
-      'catalog context',
-      (projection) =>
-        (projection.catalog_observation.dispatch_context = 'stale-context'),
-    ],
-    [
-      'catalog observation time',
-      (projection) =>
-        (projection.catalog_observation.observed_at = '2026-07-12T01:00:00Z'),
-    ],
-    [
-      'catalog fingerprint',
-      (projection) =>
-        (projection.catalog_observation.relevant_catalog_fingerprint = `sha256:${'e'.repeat(64)}`),
-    ],
-  ];
-  for (const state of ['prepared', 'approved', 'accepted', 'completed']) {
-    for (const [label, mutate] of mutationCases) {
-      const packet = await fixture();
-      const reference = packet.manifest.artifacts.find(
-        (item) =>
-          item.path.startsWith('raw/dispatch/') &&
-          item.path.endsWith(`-${state}.json`),
-      );
-      const receipt = await readJson(join(packet.packetRoot, reference.path));
-      mutate(receipt.approvalProjection);
-      const binding = createApprovalBinding(receipt.approvalProjection);
-      receipt.approvalCanonicalJson = binding.approvalCanonicalJson;
-      receipt.approvalFingerprint = binding.approvalFingerprint;
-      if (receipt.approvalEvidence) {
-        receipt.approvalEvidence.fingerprint = binding.approvalFingerprint;
-      }
-      await replaceArtifact(packet, reference.path, receipt);
-      const validation = await validatePacket(packet.packetRoot);
-      assert.equal(
-        validation.valid,
-        false,
-        `${state} receipt ${label} drift remained valid: ${JSON.stringify(validation, null, 2)}`,
-      );
-    }
-  }
-});
-
-test('approval evidence, canonical fingerprint, and catalog recheck are immutable across state receipts', async () => {
-  const manifestMutations = [
-    ['canonical JSON', (execution) => (execution.approvalCanonicalJson += ' ')],
-    [
-      'approval evidence',
-      (execution) =>
-        (execution.approvalEvidence.fingerprint = `sha256:${'a'.repeat(64)}`),
-    ],
-    ['catalog recheck', (execution) => delete execution.catalogRecheck],
-  ];
-  for (const [label, mutate] of manifestMutations) {
-    const packet = await fixture();
-    mutate(packet.manifest.execution);
-    await writeJson(packet.manifestPath, packet.manifest);
-    const validation = await validatePacket(packet.packetRoot);
-    assert.equal(validation.valid, false, `${label} drift remained valid`);
-  }
-
-  const receiptMutations = new Map([
-    ['prepared', (receipt) => delete receipt.approvalCanonicalJson],
-    ['approved', (receipt) => delete receipt.approvalEvidence],
-    ['accepted', (receipt) => delete receipt.catalogRecheck],
-    [
-      'completed',
-      (receipt) =>
-        (receipt.catalogRecheck.relevant_catalog_fingerprint = `sha256:${'b'.repeat(64)}`),
-    ],
-  ]);
-  for (const [state, mutate] of receiptMutations) {
-    const packet = await fixture();
-    const reference = packet.manifest.artifacts.find(
-      (item) =>
-        item.path.startsWith('raw/dispatch/') &&
-        item.path.endsWith(`-${state}.json`),
-    );
-    const receipt = await readJson(join(packet.packetRoot, reference.path));
-    mutate(receipt);
-    await replaceArtifact(packet, reference.path, receipt);
-    const validation = await validatePacket(packet.packetRoot);
-    assert.equal(
-      validation.valid,
-      false,
-      `${state} receipt drift remained valid`,
-    );
-  }
-});
-
-test('accepted receipt chain binds approval time, child handle, and fresh catalog chronology', async () => {
-  const receiptCases = [
-    [
-      'accepted handle',
-      'accepted',
-      (receipt) => (receipt.launchAcceptance.handle = 'replacement-child'),
-    ],
-    [
-      'completed handle',
-      'completed',
-      (receipt) => (receipt.launchAcceptance.handle = 'replacement-child'),
-    ],
-    [
-      'approved receipt time',
-      'approved',
-      (receipt) => (receipt.approvedAt = '2026-08-31T00:00:46.000Z'),
-    ],
-    [
-      'accepted receipt time',
-      'accepted',
-      (receipt) => (receipt.approvedAt = '2026-08-31T00:00:46.000Z'),
-    ],
-    [
-      'completed receipt time',
-      'completed',
-      (receipt) => (receipt.approvedAt = '2026-08-31T00:00:46.000Z'),
-    ],
-  ];
-  const unexpectedlyValid = [];
-  for (const [label, state, mutate] of receiptCases) {
-    const packet = await fixture();
-    const reference = packet.manifest.artifacts.find(
-      (item) =>
-        item.path.startsWith('raw/dispatch/') &&
-        item.path.endsWith(`-${state}.json`),
-    );
-    const receipt = await readJson(join(packet.packetRoot, reference.path));
-    mutate(receipt);
-    await replaceArtifact(packet, reference.path, receipt);
-    const validation = await validatePacket(packet.packetRoot);
-    if (validation.valid) unexpectedlyValid.push(label);
-  }
-
-  {
-    const packet = await fixture();
-    packet.manifest.execution.approvedAt = '2026-08-31T00:00:46.000Z';
-    await writeJson(packet.manifestPath, packet.manifest);
-    const validation = await validatePacket(packet.packetRoot);
-    if (validation.valid) unexpectedlyValid.push('manifest approval time');
-  }
-
-  const catalogCases = [
-    [
-      'copied original catalog observation',
-      (packet) =>
-        structuredClone(
-          packet.manifest.execution.approvalProjection.catalog_observation,
-        ),
-    ],
-    [
-      'catalog recheck at approval time',
-      (packet) => ({
-        ...packet.manifest.execution.catalogRecheck,
-        observed_at: packet.manifest.execution.approvedAt,
-      }),
-    ],
-    [
-      'catalog recheck after launch acceptance',
-      (packet) => ({
-        ...packet.manifest.execution.catalogRecheck,
-        observed_at: '2026-08-31T00:01:01.000Z',
-      }),
-    ],
-  ];
-  for (const [label, createRecheck] of catalogCases) {
-    const packet = await fixture();
-    await replaceCatalogRecheck(packet, createRecheck(packet));
-    const validation = await validatePacket(packet.packetRoot);
-    if (validation.valid) unexpectedlyValid.push(label);
-  }
-
-  assert.deepEqual(unexpectedlyValid, []);
-});
-
-test('terminal receipt chronology rejects completion before acceptance and permits equal or later completion', async () => {
-  const mutateCompletedAt = async (completedAt) => {
-    const packet = await fixture();
-    const reference = packet.manifest.artifacts.find(
-      (item) =>
-        item.path.startsWith('raw/dispatch/') &&
-        item.path.endsWith('-completed.json'),
-    );
-    const receipt = await readJson(join(packet.packetRoot, reference.path));
-    receipt.terminalOutcome.completedAt = completedAt;
-    await replaceArtifact(packet, reference.path, receipt);
-    return validatePacket(packet.packetRoot);
-  };
-
-  const before = await mutateCompletedAt('2026-08-31T00:00:59.999Z');
-  assert.equal(before.valid, false, JSON.stringify(before, null, 2));
-
-  const equal = await mutateCompletedAt('2026-08-31T00:01:00.000Z');
-  assert.equal(equal.valid, true, JSON.stringify(equal, null, 2));
-
-  const after = await mutateCompletedAt('2026-08-31T00:01:00.001Z');
-  assert.equal(after.valid, true, JSON.stringify(after, null, 2));
-});
-
-test('declared-complete stages reject selection drift under complete and partial outcomes', async () => {
-  for (const status of ['complete', 'partial']) {
-    for (const receiptState of ['accepted', 'completed']) {
-      for (const axis of ['provider', 'model_selector', 'effort_selector']) {
-        const packet = await createPacketFixture({ profile: 'quick', status });
-        roots.push(packet.tempRoot);
-        if (status === 'partial') {
-          packet.manifest.run.achievedProfile = null;
-          packet.manifest.gaps.push({
-            id: `gap-${receiptState}-${axis}`,
-            code: 'PASS_FAILED',
-            message:
-              'A declared-complete stage retained invalid receipt evidence.',
-            material: true,
-            sourceIds: [],
-            claimIds: [],
-            coverageFindingIds: [],
-          });
-        }
-        const reference = packet.manifest.artifacts.find(
-          (item) =>
-            item.path.startsWith('raw/dispatch/') &&
-            item.path.endsWith(`-${receiptState}.json`),
-        );
-        const receipt = await readJson(join(packet.packetRoot, reference.path));
-        const selection = receipt.approvalProjection.selection;
-        selection[axis] = `${selection[axis]}-drift`;
-        const binding = createApprovalBinding(receipt.approvalProjection);
-        receipt.approvalCanonicalJson = binding.approvalCanonicalJson;
-        receipt.approvalFingerprint = binding.approvalFingerprint;
-        receipt.approvalEvidence.fingerprint = binding.approvalFingerprint;
-        await replaceArtifact(packet, reference.path, receipt);
-
-        const validation = await validatePacket(packet.packetRoot);
-        assert.ok(
-          validation.errors.some(
-            (error) => error.code === 'INCOMPLETE_DECLARED_STAGE',
-          ),
-          `${status}/${receiptState}/${axis} lacked structural rejection: ${JSON.stringify(validation, null, 2)}`,
-        );
-        if (status === 'partial') {
-          assert.ok(
-            validation.errors.some(
-              (error) => error.code === 'PROFILE_ASSURANCE_EXCEEDED',
-            ),
-            `${status}/${receiptState}/${axis} retained supported assurance without quick`,
-          );
-        }
-      }
-    }
-  }
+  const dossier = await readJson(
+    join(packet.packetRoot, 'raw/dossiers/pass-map.json'),
+  );
+  dossier.laneId = 'lane-rogue';
+  await replaceArtifact(packet, 'raw/dossiers/pass-map.json', dossier);
+  const rogue = await validatePacket(packet.packetRoot);
+  assert.ok(
+    rogue.errors.some((error) => error.code === 'UNAPPROVED_LANE'),
+    JSON.stringify(rogue, null, 2),
+  );
 });
 
 test('review dispositions bind exact claim-bearing typed immutable briefs', async () => {
@@ -697,67 +185,174 @@ test('review dispositions bind exact claim-bearing typed immutable briefs', asyn
   ]);
 });
 
-test('every stage requires one same-run typed artifact and all four immutable receipts', async () => {
-  const packet = await fixture('thorough');
-  for (const stage of packet.manifest.stages) {
-    const original = structuredClone(stage);
-    stage.artifactIds = [];
-    await writeJson(packet.manifestPath, packet.manifest);
-    const missing = await validatePacket(packet.packetRoot);
-    assert.notEqual(missing.achievedProfile, 'thorough', stage.mode);
-    Object.assign(stage, original);
+test('approved lanes bind wave mode, write root, and per-lane outcomes', async () => {
+  const wrongWave = await fixture();
+  const semantic = await readJson(
+    join(wrongWave.packetRoot, 'reviews/semantic.json'),
+  );
+  semantic.reviewerLane = 'lane-gather';
+  await replaceArtifact(wrongWave, 'reviews/semantic.json', semantic);
+  const wrongWaveValidation = await validatePacket(wrongWave.packetRoot);
+  assert.ok(
+    wrongWaveValidation.errors.some(
+      (error) =>
+        error.code === 'UNAPPROVED_LANE' && error.path === 'review-semantic',
+    ),
+    JSON.stringify(wrongWaveValidation, null, 2),
+  );
 
-    stage.artifactIds = [
-      packet.manifest.stages.find((candidate) => candidate.id !== stage.id)
-        .artifactIds[0],
-    ];
-    await writeJson(packet.manifestPath, packet.manifest);
-    const wrongKind = await validatePacket(packet.packetRoot);
-    assert.notEqual(wrongKind.achievedProfile, 'thorough', stage.mode);
-    Object.assign(stage, original);
+  const wrongPath = await fixture('quick');
+  const mapWave = wrongPath.manifest.execution.waves.find(
+    (wave) => wave.mode === 'map',
+  );
+  mapWave.lanes[0].writeRoot = 'raw/elsewhere';
+  wrongPath.manifest.execution = approveExecution(wrongPath.manifest.execution);
+  await writeJson(wrongPath.manifestPath, wrongPath.manifest);
+  const wrongPathValidation = await validatePacket(wrongPath.packetRoot);
+  assert.ok(
+    wrongPathValidation.errors.some(
+      (error) => error.code === 'LANE_WRITE_PATH_VIOLATION',
+    ),
+    JSON.stringify(wrongPathValidation, null, 2),
+  );
 
-    stage.dispatchReceiptIds = [];
-    await writeJson(packet.manifestPath, packet.manifest);
-    const absentReceipt = await validatePacket(packet.packetRoot);
-    assert.notEqual(absentReceipt.achievedProfile, 'thorough', stage.mode);
-    Object.assign(stage, original);
+  const silentLane = await fixture('quick');
+  const gatherWave = silentLane.manifest.execution.waves.find(
+    (wave) => wave.mode === 'gather',
+  );
+  gatherWave.lanes.push({
+    laneId: 'lane-gather-2',
+    scope: 'packet/gather-2',
+    writeRoot: 'raw/dossiers/gather-2.json',
+  });
+  silentLane.manifest.execution = approveExecution(
+    silentLane.manifest.execution,
+  );
+  await writeJson(silentLane.manifestPath, silentLane.manifest);
+  const silentValidation = await validatePacket(silentLane.packetRoot);
+  assert.ok(
+    silentValidation.errors.some(
+      (error) =>
+        error.code === 'MISSING_LANE_OUTCOME' &&
+        error.path === 'lane:lane-gather-2',
+    ),
+    JSON.stringify(silentValidation, null, 2),
+  );
 
-    const receiptId = stage.dispatchReceiptIds[0];
-    const reference = packet.manifest.artifacts.find((item) =>
-      item.path.includes(`${receiptId}.json`),
+  const failedPath = join(silentLane.packetRoot, 'raw/dossiers/gather-2.json');
+  await writeJson(failedPath, {
+    kind: 'recon.raw-dossier',
+    schemaVersion: 1,
+    id: 'dossier-gather-2',
+    runId: 'run-render',
+    waveId: 'wave-gather',
+    laneId: 'lane-gather-2',
+    mode: 'gather',
+    outcome: 'failed',
+    allowedInputs: ['source-1'],
+    excludedInputs: [],
+    findings: [],
+    uncertainty: [],
+    contradictions: [],
+    gaps: [],
+  });
+  silentLane.manifest.artifacts.push({
+    path: 'raw/dossiers/gather-2.json',
+    digest: await hashFile(failedPath),
+  });
+  await writeJson(silentLane.manifestPath, silentLane.manifest);
+  const failedArtifact = await validatePacket(silentLane.packetRoot);
+  assert.ok(
+    failedArtifact.errors.some(
+      (error) =>
+        error.code === 'MISSING_LANE_OUTCOME' &&
+        error.path === 'lane:lane-gather-2',
+    ),
+    JSON.stringify(failedArtifact, null, 2),
+  );
+
+  silentLane.manifest.run.status = 'partial';
+  silentLane.manifest.gaps.push({
+    id: 'gap-substring',
+    code: 'PASS_FAILED',
+    message: 'redundant-gather was omitted before writing.',
+    material: true,
+    sourceIds: [],
+    claimIds: [],
+    coverageFindingIds: [],
+  });
+  await writeJson(silentLane.manifestPath, silentLane.manifest);
+  const substring = await validatePacket(silentLane.packetRoot);
+  assert.ok(
+    substring.errors.some(
+      (error) =>
+        error.code === 'MISSING_LANE_OUTCOME' &&
+        error.path === 'lane:lane-gather-2',
+    ),
+    'a redundant-gather gap must not cover a gather lane',
+  );
+  silentLane.manifest.gaps.pop();
+
+  silentLane.manifest.gaps.push({
+    id: 'gap-lane-gather-2',
+    code: 'PASS_FAILED',
+    message: 'gather lane lane-gather-2 was cancelled before writing.',
+    material: true,
+    sourceIds: [],
+    claimIds: [],
+    coverageFindingIds: [],
+  });
+  await writeJson(silentLane.manifestPath, silentLane.manifest);
+  const honest = await validatePacket(silentLane.packetRoot);
+  assert.equal(honest.valid, true, JSON.stringify(honest, null, 2));
+  assert.equal(honest.achievedProfile, 'quick');
+});
+
+test('a cancelled lane without a typed result downgrades the achieved profile', async () => {
+  const packet = await fixture();
+  packet.manifest.artifacts = packet.manifest.artifacts.filter(
+    (item) => item.path !== 'reviews/semantic.json',
+  );
+  await writeJson(packet.manifestPath, packet.manifest);
+  const validation = await validatePacket(packet.packetRoot);
+  assert.equal(validation.valid, false);
+  assert.notEqual(validation.achievedProfile, 'standard');
+  for (const code of [
+    'MISSING_PASS_OUTCOME_EVIDENCE',
+    'ACHIEVED_PROFILE_MISMATCH',
+  ]) {
+    assert.ok(
+      validation.errors.some((error) => error.code === code),
+      `${code}: ${JSON.stringify(validation, null, 2)}`,
     );
-    const receipt = await readJson(join(packet.packetRoot, reference.path));
-    const originalReceiptState = receipt.state;
-    receipt.state = 'failed';
-    await replaceArtifact(packet, reference.path, receipt);
-    const failed = await validatePacket(packet.packetRoot);
-    assert.notEqual(failed.achievedProfile, 'thorough', stage.mode);
-    receipt.state = originalReceiptState;
-    await replaceArtifact(packet, reference.path, receipt);
-
-    receipt.runId = 'wrong-run';
-    await replaceArtifact(packet, reference.path, receipt);
-    const wrongRun = await validatePacket(packet.packetRoot);
-    assert.notEqual(wrongRun.achievedProfile, 'thorough', stage.mode);
-    receipt.runId = packet.manifest.run.id;
-    await replaceArtifact(packet, reference.path, receipt);
-
-    const completedId = stage.dispatchReceiptIds.find((id) =>
-      id.endsWith('-completed'),
-    );
-    const completedReference = packet.manifest.artifacts.find((item) =>
-      item.path.includes(`${completedId}.json`),
-    );
-    const completed = await readJson(
-      join(packet.packetRoot, completedReference.path),
-    );
-    completed.artifactIds = ['wrong-artifact'];
-    await replaceArtifact(packet, completedReference.path, completed);
-    const wrongMembership = await validatePacket(packet.packetRoot);
-    assert.notEqual(wrongMembership.achievedProfile, 'thorough', stage.mode);
-    completed.artifactIds = [...stage.artifactIds];
-    await replaceArtifact(packet, completedReference.path, completed);
   }
+});
+
+test('a missing required pass needs a material outcome gap naming it', async () => {
+  const packet = await createPacketFixture({
+    profile: 'standard',
+    achievedProfile: 'quick',
+    status: 'partial',
+    failedPassMode: 'semantic-verification',
+  });
+  roots.push(packet.tempRoot);
+  const honest = await validatePacket(packet.packetRoot);
+  assert.equal(honest.valid, true, JSON.stringify(honest, null, 2));
+  assert.equal(honest.achievedProfile, 'quick');
+
+  packet.manifest.gaps = packet.manifest.gaps.filter(
+    (gap) => !gap.message.includes('semantic-verification'),
+  );
+  await writeJson(packet.manifestPath, packet.manifest);
+  const silent = await validatePacket(packet.packetRoot);
+  assert.ok(
+    silent.errors.some(
+      (error) =>
+        error.code === 'MISSING_PASS_OUTCOME_EVIDENCE' &&
+        error.path === 'pass:semantic-verification',
+    ),
+    JSON.stringify(silent, null, 2),
+  );
 });
 
 test('closed source states are ineligible until explicitly gapped', async () => {
@@ -1692,81 +1287,38 @@ test('persisted reconciliation compiles exact review evidence associations again
   );
 });
 
-test('claim assurance and reconciliation reject an exact but unreceipted review result', async () => {
+test('claim assurance and reconciliation reject a review from an unapproved lane', async () => {
   const packet = await fixture();
   const semantic = await readJson(
     join(packet.packetRoot, 'reviews/semantic.json'),
   );
-  semantic.id = 'review-semantic-unreceipted';
-  semantic.reviewerLane = 'lane-semantic-unreceipted';
-  const semanticPath = join(
-    packet.packetRoot,
-    'reviews/semantic-unreceipted.json',
-  );
-  await writeJson(semanticPath, semantic);
-  packet.manifest.artifacts.push({
-    path: 'reviews/semantic-unreceipted.json',
-    digest: await hashFile(semanticPath),
-  });
-  packet.ledger.claims[0].reviewIds[0] = semantic.id;
-  const reconciliation = await readJson(
-    join(packet.packetRoot, 'reviews/reconciliation.json'),
-  );
-  reconciliation.incorporatedReviewIds[0] = semantic.id;
-  await replaceArtifact(packet, 'reviews/reconciliation.json', reconciliation);
-  await packet.persist();
+  semantic.reviewerLane = 'lane-semantic-rogue';
+  await replaceArtifact(packet, 'reviews/semantic.json', semantic);
 
   const validation = await validatePacket(packet.packetRoot);
   assert.ok(
-    validation.errors.some(
-      (error) => error.code === 'UNRECEIPTED_ASSURANCE_REVIEW',
-    ),
+    validation.errors.some((error) => error.code === 'UNAPPROVED_LANE'),
     JSON.stringify(validation, null, 2),
   );
 });
 
-test('approved required lanes cannot disappear from the terminal stage topology', async () => {
-  const packet = await fixture();
-  const approvalProjection = structuredClone(
-    packet.manifest.execution.approvalProjection,
-  );
-  approvalProjection.execution.waves.push({
-    ...structuredClone(approvalProjection.execution.waves[0]),
-    wave_id: 'wave-approved-extra',
-    scope: 'packet:approved-extra',
-    lanes: [{ lane_id: 'lane-approved-extra', scope: 'packet/approved-extra' }],
-    writable_roots: ['raw/approved-extra'],
-    payload_digest: `sha256:${'d'.repeat(64)}`,
-  });
-  await replaceApprovalProjection(packet, approvalProjection);
-
-  const validation = await validatePacket(packet.packetRoot);
-  assert.ok(
-    validation.errors.some(
-      (error) => error.code === 'MISSING_APPROVED_LANE_STAGE',
-    ),
-    JSON.stringify(validation, null, 2),
-  );
-});
-
-test('thorough-only assurance stages use claim-bearing typed results', async () => {
+test('thorough-only assurance passes use claim-bearing typed results', async () => {
   const packet = await fixture('thorough');
-  const expectedKinds = new Map([
-    ['redundant-verification', 'redundant-verification'],
-    ['contradiction-resolution', 'contradiction-resolution'],
-  ]);
-  for (const [mode, reviewKind] of expectedKinds) {
-    const stage = packet.manifest.stages.find((item) => item.mode === mode);
+  for (const reviewKind of [
+    'redundant-verification',
+    'contradiction-resolution',
+  ]) {
     const reference = packet.manifest.artifacts.find(
       (item) => item.path === `reviews/${reviewKind}.json`,
     );
     const artifact = await readJson(join(packet.packetRoot, reference.path));
-    assert.deepEqual(stage.artifactIds, [artifact.id]);
     assert.equal(artifact.kind, 'recon.review-result');
     assert.equal(artifact.reviewKind, reviewKind);
     assert.ok(artifact.dispositions.length > 0);
     assert.ok(artifact.permittedInputs.length > 0);
   }
+  const validation = await validatePacket(packet.packetRoot);
+  assert.equal(validation.achievedProfile, 'thorough');
 });
 
 test('standard reconciliation cannot reset the canonical ledger to revision one', async () => {
@@ -1804,7 +1356,7 @@ test('reconciliation cannot remove a contested claim without a typed review auth
   );
 });
 
-test('a receipted typed rejection can explicitly authorize prior claim removal', async () => {
+test('a complete typed rejection can explicitly authorize prior claim removal', async () => {
   const packet = await fixture();
   const priorReference = packet.manifest.artifacts.find(
     (item) => item.path === 'raw/drafts/claims-v1.json',

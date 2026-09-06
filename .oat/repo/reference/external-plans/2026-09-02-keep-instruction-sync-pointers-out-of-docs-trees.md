@@ -34,9 +34,13 @@ created: '2026-09-02T23:59:00Z'
 ## Outcome
 
 `oat instructions sync` and `oat instructions validate` no longer treat a
-documentation content tree as a pointer site. Directories under the configured
-`documentation.root` are skipped by default, an explicit opt-out list in
-`.oat/config.json` excludes additional paths, both commands apply the same
+documentation content tree as a pointer site. The documentation content root
+is skipped by default: `<documentation.root>/docs` when that is a directory,
+otherwise `documentation.root` itself (the same derivation the W1 docs-index
+plan fixes, where app root is the canonical meaning of `documentation.root`
+and the `docs` child is compatibility behavior). App-level instruction files
+such as `apps/oat-docs/AGENTS.md` stay pointer sites. An explicit opt-out list
+in `.oat/config.json` excludes additional paths, both commands apply the same
 exclusion so validate never reports drift that sync refuses to fix, and the
 `.oat/repo` carve-in keeps working. Docs validators, `oat docs generate-index`,
 and MDX builds stay clean after a sync.
@@ -49,7 +53,7 @@ and MDX builds stay clean after a sync.
 - Planned at: `origin/main` commit
   `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
-  - `packages/cli/src/commands/pjm/init.ts:50-55` — comment and
+  - `packages/cli/src/commands/pjm/init.ts:58-63` (re-anchored 2026-09-04) — comment and
     `INSTRUCTIONS_SYNC_HINT`: `oat pjm init` never writes `CLAUDE.md` shims;
     ownership stays with `oat instructions sync`.
   - `packages/cli/src/commands/instructions/instructions.utils.ts:27-37` —
@@ -70,6 +74,11 @@ and MDX builds stay clean after a sync.
   - `packages/cli/src/config/oat-config.ts:36-42`, `:1195-1226` —
     `OatDocumentationConfig` exposes `root`; this repository sets
     `root: apps/oat-docs` in `.oat/config.json`.
+  - `apps/oat-docs/AGENTS.md` and `apps/oat-docs/CLAUDE.md` exist at the app
+    root while the authored content lives under `apps/oat-docs/docs/`. A
+    literal exclusion of `documentation.root` would therefore stop syncing the
+    app-level instruction file, which is not a docs page; only the content
+    subtree is the pointer-hostile surface.
 - Constraining decisions:
   [DR-260217-introduce-oat-config-json](../decisions/DR-260217-introduce-oat-config-json.md)
   (opt-out belongs in `.oat/config.json`, not a new dotfile),
@@ -78,19 +87,22 @@ and MDX builds stay clean after a sync.
 
 ## Dependencies
 
-| Type          | Dependency                                                                                        | Required state                                                                   | Current state          |
-| ------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------- |
-| Satisfied     | [PR #244](https://github.com/voxmedia/open-agent-toolkit/pull/244) doctor pointer acceptance      | Keep `pjm doctor` accepting repo-level pointers.                                 | Merged at `9aef8f81a`. |
-| Soft ordering | Sibling plan [Add docs-index exclusions](./2026-09-02-add-exclusions-to-docs-index-generation.md) | Both edit `OatDocumentationConfig` and its parser; sequence, do not parallelize. | Pending.               |
+| Type              | Dependency                                                                                                                                            | Required state                                                                                                                                                                                                                         | Current state          |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Satisfied         | [PR #244](https://github.com/voxmedia/open-agent-toolkit/pull/244) doctor pointer acceptance                                                          | Keep `pjm doctor` accepting repo-level pointers.                                                                                                                                                                                       | Merged at `9aef8f81a`. |
+| Soft ordering     | Sibling plan [Add docs-index exclusions](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                                     | Both edit `OatDocumentationConfig` and its parser; sequence, do not parallelize.                                                                                                                                                       | Pending.               |
+| Soft ordering     | W1 plan [Use configured docs index paths](./2026-08-30-use-configured-docs-index-paths.md)                                                            | Runs first; it settles the `documentation.root` contract (app root canonical, `<root>/docs` child as compatibility behavior). This plan's default exclusion must reuse that derivation, not re-derive it; never in one parallel group. | Pending.               |
+| Related, distinct | W5 group 3 plan [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md) | No longer shares `oat-config.ts`: its optional config keys moved to `BL-260904-add-recap-seam-config-keys` (2026-09-05). No ordering constraint.                                                                                       | Pending.               |
+| Soft ordering     | W5 group 2 plan [Add an oat config unset command](./2026-09-02-add-oat-config-unset-command.md)                                                       | Runs after this plan so its family-coverage test includes `documentation.instructionPointerExcludes`; never in one parallel group.                                                                                                     | Pending.               |
 
 There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                                                                | Affected | Files in common                                                                                                                         | Required update                                                                                                                                                                                                                |
-| ------------------------------------------------------------------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | Minor    | `pjm/init.ts` (read-only anchor here), `commands/shared/agents-md.ts`, and provider-sync docs pages; not the instructions scan or sync. | Re-run the drift check and re-anchor the `init.ts:50-55` citation; confirm no new pointer writer was added to `agents-md.ts`. Drift check on 2026-09-03 confirmed exactly these files changed; apply this row before dispatch. |
-| `review-plan-workflow` (draft PR #190) merges                                        | No       | None of the in-scope files.                                                                                                             | None.                                                                                                                                                                                                                          |
+| Event                                                                                          | Affected | Files in common                                                                                                                                                                                                                                                                                                                                                                           | Required update                                                                                                                                                              |
+| ---------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03)           | Yes      | `packages/cli/src/config/oat-config.ts` (the `documentation` parser moved from `:1195-1226` to `:1243-1275`; anchor step 2 on `if (isRecord(parsed.documentation))`), `pjm/init.ts` (`INSTRUCTIONS_SYNC_HINT` now `:58-63`), `provider-sync/commands.md` (`## oat instructions sync` now `:193`), `pjm/init.test.ts` (`exposes a sync next-step hint` now `:217`), `shared/agents-md.ts`. | Re-anchor the four citations above by symbol before editing; the instructions scan and sync are unchanged.                                                                   |
+| `review-plan-workflow` (draft PR #190, head `63161897dd40a66e1b29cf19e286665895c40dde`) merges | Minor    | `packages/cli/src/config/oat-config.ts`, which step 2 edits.                                                                                                                                                                                                                                                                                                                              | Re-run the drift check; re-anchor the `documentation` parser by the `if (isRecord(parsed.documentation))` symbol before editing and rebase step 2's hunk on the merged file. |
 
 ## Drift check
 
@@ -112,8 +124,9 @@ exclusion option, STOP and refresh this plan.
 - Lint/format/docs: `pnpm check` → passes.
 - Implementation pattern: extend `InstructionsScanOptions` and apply the
   predicate inside `scanInstructionDirectories` so sync and validate share it.
-- Git/PR convention: shipped CLI behavior; five-package lockstep bump; do not
-  push or open a PR unless instructed.
+- Git/PR convention: shipped CLI behavior, so the integrated change carries a
+  lockstep bump (fan-in owned in lane mode; see Scope); do not push or open a
+  PR unless instructed.
 
 ## Scope
 
@@ -127,13 +140,16 @@ exclusion option, STOP and refresh this plan.
 - `packages/cli/src/commands/instructions/sync/sync.ts` and
   `validate/validate.ts` — read config and pass exclusions.
 - `packages/cli/src/config/oat-config.ts` — parse an explicit opt-out list
-  (for example `documentation.instructionPointerExcludes`) beside `root`.
+  (`documentation.instructionPointerExcludes`, the exact key the `oat config
+unset` plan's family-coverage test relies on) beside `root`, and expose the
+  derived content root (`<root>/docs` when a directory, else `<root>`) so
+  sync, validate, and the docs-index generator agree on one rule.
 - Tests: `instructions.utils.test.ts`, `sync/sync.test.ts`,
   `validate/validate.test.ts`, `instructions.integration.test.ts`,
   `oat-config.test.ts`.
 - Docs: `apps/oat-docs/docs/provider-sync/instruction-sync.md` and
   `provider-sync/commands.md:165`.
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -166,11 +182,18 @@ after the carve-in check so `.oat/repo/**` is still scanned.
 
 ### 2. Add the config surface
 
-In `oat-config.ts:1195-1226` derive the default exclusion from
-`documentation.root` and parse an explicit list key; trim and normalize each
-entry like the existing string keys.
+In `oat-config.ts:1195-1226` derive the default exclusion as the documentation
+content root — `<documentation.root>/docs` when that path is a directory,
+otherwise `documentation.root` — by reusing the derivation the W1 docs-index
+plan lands (import its exported helper when one exists; otherwise implement
+the rule once in `oat-config.ts` and add a test asserting it matches the
+docs-index generator's rule on the same fixtures). Parse an explicit list key; trim and normalize each
+entry like the existing string keys. The app root itself is never excluded by
+default: `apps/oat-docs/AGENTS.md` must keep receiving pointers unless it is
+listed in the explicit opt-out.
 
-**Verify:** `pnpm exec vitest run src/config/oat-config.test.ts` → pass.
+**Verify:** `pnpm exec vitest run src/config/oat-config.test.ts` → pass,
+including the app-root and nested-`docs` derivation cases.
 
 ### 3. Wire sync and validate identically
 
@@ -183,41 +206,58 @@ additive `excludedPaths` field.
 
 ### 4. Prove it on a fixture tree
 
-Add an integration case with `documentation.root` pointing at a fixture docs
-tree containing `AGENTS.md` pages; run sync twice.
+Add two integration cases: (a) `documentation.root` pointing at a fixture app
+root with an app-level `AGENTS.md` and a `docs/` subtree containing `AGENTS.md`
+pages; (b) `documentation.root` pointing at a bare content tree with no `docs`
+child. Run sync twice in each.
 
 **Verify:** `pnpm exec vitest run src/commands/instructions/instructions.integration.test.ts`
-→ no pointer under the docs tree, second run is a no-op, `.oat/repo` pointers
-present.
+→ in (a) the app-level `AGENTS.md` gets a pointer and nothing under `docs/`
+does; in (b) nothing under the root does; second run is a no-op in both;
+`.oat/repo` pointers present in both.
 
-### 5. Document and bump
+### 5. Document and verify
 
-Update the two docs pages; bump the five lockstep packages above fresh
-`origin/main`.
+Update the two docs pages, stating the content-root derivation and that
+app-level instruction files are still synced.
 
-**Verify:** `pnpm check` → exit 0; then the eight AGENTS.md gates in order.
+**Verify (lane mode, the default under the execution program):** run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes. Do not edit lockstep
+release files or run `pnpm release:check-versions` / `pnpm release:validate`;
+the wave fan-in owns the lockstep bump and the full definition-of-done
+sequence. **Standalone mode only:** bump the five public packages above
+freshly fetched `origin/main` and run the eight AGENTS.md gates in order.
 
 ## Test plan
 
 Pattern: the existing carve-in scan cases in `instructions.utils.test.ts`.
 
-- `skips directories under documentation.root`.
-- `honors an explicit opt-out list`.
+- `skips directories under the derived content root` (`<root>/docs` when
+  present).
+- `keeps syncing the app-level instruction file when the content root is a
+docs child` → `apps/oat-docs/AGENTS.md`-shaped fixture still gets a pointer.
+- `excludes the whole root when it has no docs child`.
+- `honors an explicit opt-out list` (including opting the app root out).
 - `still scans the .oat/repo carve-in when .oat is excluded`.
 - `re-run is idempotent with no create actions`.
 - `sync.test.ts`: `plans no create for an excluded docs directory`; `still
 plans create for a non-excluded sibling`.
-- `pjm/init.test.ts:188` (`exposes a sync next-step hint`) stays green as the
+- `pjm/init.test.ts:217` (`exposes a sync next-step hint`) stays green as the
   proof that init remains pointer-free.
 
 ## Done criteria
 
-- [ ] Sync and validate skip the configured docs root and opt-out paths and
-      agree with each other.
+- [ ] Sync and validate skip the derived content root and opt-out paths and
+      agree with each other; app-level instruction files outside the content
+      root still receive pointers.
 - [ ] The `.oat/repo` carve-in still produces pointers.
 - [ ] A fixture docs tree stays free of pointers across repeated syncs.
 - [ ] `pjm doctor` still accepts repo-level pointers.
-- [ ] Docs, lockstep bump, and all gates pass; `git status --short` is clean.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is
+      edited. Standalone mode: one lockstep bump and all eight gates pass.
+- [ ] `git status --short` is clean.
 
 ## STOP conditions
 
@@ -225,6 +265,8 @@ Stop and report instead of improvising when:
 
 - `oat pjm init` on the executor's tree does write pointers (the target moved);
 - excluding a docs root would leave `.oat/repo/**` unscanned;
+- the merged W1 docs-index plan's content-root rule differs from
+  `<root>/docs`-when-directory (this plan must not encode a second rule);
 - the opt-out design requires a new dotfile instead of `.oat/config.json`;
 - sync and validate cannot share one exclusion path; or
 - a named verification gate fails twice after one bounded correction.
@@ -241,5 +283,7 @@ cannot be reproduced. Apply the landing-event table above.
 ## Review focus
 
 - The predicate is evaluated after the carve-in, not before.
+- The default exclusion is the content root, not the app root; the app-level
+  and nested-content cases are tested separately.
 - Validate and sync produce consistent results on the same tree.
 - No pointer deletion logic was introduced.

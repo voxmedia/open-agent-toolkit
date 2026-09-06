@@ -1,17 +1,23 @@
 ---
 oat_triage_record: true
 schema_version: 1
-status: verifying
+status: partial
 scope: open GitHub issues without a completed disposition label: #199, #204-#207, #209-#210, #213-#214, #228, and #230
 baseline_sha: 5d684ba9746cd91006524eb5a82f18078a3196ef
 triage_pr: null
 created: 2026-08-29
-updated: 2026-08-30
+updated: 2026-09-04
 ---
 
 # Untriaged OAT Issues
 
 ## Scope and exclusions
+
+> Superseded on 2026-09-02 by
+> [2026-09-02-program-intake-triage.md](./2026-09-02-program-intake-triage.md),
+> which re-verified every row here and executed the approved actions after
+> PR #253 merged. This record merged in PR #244 with all approvals pending and
+> is retained as evidence only.
 
 Included: GitHub issues #199, #204, #205, #206, #207, #209, #210,
 #213, #214, #228, and #230. This record replaces the initial

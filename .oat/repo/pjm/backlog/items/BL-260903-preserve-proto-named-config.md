@@ -11,9 +11,10 @@ labels:
   - parser
 assignee: null
 created: 2026-09-03T15:55:01.416Z
-updated: 2026-09-03T15:55:01.416Z
+updated: 2026-09-04T03:55:32Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-03-preserve-proto-named-config-keys.md
 ---
 
 ## Description

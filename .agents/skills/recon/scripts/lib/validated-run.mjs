@@ -14,18 +14,12 @@ function deepFreeze(value) {
   return Object.freeze(value);
 }
 
-function normalizeTopology(topology) {
-  return {
-    requiredLanes: clone(topology.requiredLanes),
-    stages: [...topology.stageByLane.entries()]
-      .map(([laneId, stage]) => ({ laneId, stage: clone(stage) }))
-      .sort((left, right) => left.laneId.localeCompare(right.laneId)),
-    completeArtifactIdsByMode: Object.fromEntries(
-      [...topology.completeArtifactIdsByMode.entries()]
-        .sort(([left], [right]) => left.localeCompare(right))
-        .map(([mode, ids]) => [mode, [...ids].sort()]),
-    ),
-  };
+function normalizePasses(passes) {
+  return Object.fromEntries(
+    [...passes.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([mode, ids]) => [mode, [...ids].sort()]),
+  );
 }
 
 export function createValidatedRun({
@@ -36,9 +30,9 @@ export function createValidatedRun({
   ledger,
   artifactsById,
   exactEvidence,
-  topology,
+  passes,
   achievedProfile,
-  receiptedReviewIds,
+  assuranceReviewIds,
   reconciliationContext,
 }) {
   const run = {
@@ -59,9 +53,9 @@ export function createValidatedRun({
       }))
       .sort((left, right) => left.id.localeCompare(right.id)),
     exactEvidenceIds: [...exactEvidence].sort(),
-    topology: normalizeTopology(topology),
+    passes: normalizePasses(passes),
     achievedProfile,
-    receiptedReviewIds: [...receiptedReviewIds].sort(),
+    assuranceReviewIds: [...assuranceReviewIds].sort(),
     terminalReconciliation: reconciliationContext?.reconciliation
       ? clone(reconciliationContext.reconciliation)
       : null,

@@ -1,6 +1,6 @@
 ---
 name: oat-project-discover
-version: 2.2.3
+version: 2.2.4
 description: Use when the user explicitly asks to continue discovery for an active spec-driven OAT project — e.g. "continue discovery", "run discovery", or confirms a previously offered discovery step. Do NOT auto-invoke for new ideas or quick/lite-mode projects. Gathers requirements and context before spec/design.
 disable-model-invocation: false
 user-invocable: true
@@ -316,7 +316,7 @@ Branch on `confidence`:
 - `soft` — at least two signals fired, but not both load-bearing signals. Use soft wording: "This may be multiple projects. Split, do one round of broad cross-cutting discovery first, or keep it as one project?"
 - `below` — Below 2 signals, do not surface a split offer.
 
-If the user confirms split, invoke the `oat-project-split` skill with a `SplitPayload` using `origin: "detected-mid-stream"`, `interactive: true`, the active discovery path as `priorDiscovery.path`, and any inferred children already named in the conversation. The discover hook only detects and hands off; it does not scaffold children or write the coordination parent itself.
+If the user confirms split, invoke the `oat-project-split` skill with a `SplitPayload` using `origin: "detected-mid-stream"`, `interactive: true`, the active discovery path as `priorDiscovery.path`, and any inferred children already named in the conversation. Invoking it means loading the current `oat-project-split/SKILL.md` and following it, or dispatching a child that carries it. The discover hook only detects and hands off; it does not scaffold children or write the coordination parent itself.
 
 **Non-interactive branch:** if `OAT_NON_INTERACTIVE=1` and detection triggers (`confidence` is `high` or `soft`), do not show an offer prompt and do not silently choose. Append this section to `"$PROJECT_PATH/discovery.md"` and exit non-zero:
 
@@ -396,7 +396,7 @@ For interactive runs, show an always-visible scope-check confirmation. The promp
 
 > "This reads as one cohesive project — proceed, or split into multiple?"
 
-Pre-fill the recommendation from `oat project split evaluate-signals --fired "<comma-list>"`: recommend splitting for `high`, suggest considering a split for `soft`, and recommend proceeding as one cohesive project for `below`. If the user chooses split at this convergence point, invoke `oat-project-split` with `origin: "detected-convergence"` and `interactive: true`.
+Pre-fill the recommendation from `oat project split evaluate-signals --fired "<comma-list>"`: recommend splitting for `high`, suggest considering a split for `soft`, and recommend proceeding as one cohesive project for `below`. If the user chooses split at this convergence point, invoke `oat-project-split` with `origin: "detected-convergence"` and `interactive: true`, loading the current `oat-project-split/SKILL.md` and following it rather than a remembered split procedure.
 
 Read `"$PROJECT_PATH/state.md"` frontmatter:
 

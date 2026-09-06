@@ -240,9 +240,12 @@ When `OAT_AUTONOMOUS=1`, a configured checkpoint never waits for a user:
 
 1. Use the scope calculation in `phase-execution.md` and dispatch
    `oat-project-review-provide` with `oat_review_invocation: auto` through the
-   project dispatch substrate.
+   project dispatch substrate, loading the current
+   `oat-project-review-provide/SKILL.md` and following it or dispatching a child
+   that carries it.
 2. Validate the returned artifact and invoke `oat-project-review-receive`
-   immediately. Its auto-review disposition path must run without user
+   immediately, loading the current `oat-project-review-receive/SKILL.md` and
+   following it rather than a remembered receive procedure. Its auto-review disposition path must run without user
    prompts.
 3. If receive creates fix tasks, execute them through the normal implement
    route and repeat the same bounded review/receive cycle. Do not mark the

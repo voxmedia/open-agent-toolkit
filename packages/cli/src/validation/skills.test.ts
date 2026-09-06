@@ -11,6 +11,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
+import {
+  getPackMemberNames,
+  PACK_MANIFEST,
+} from '@commands/tools/shared/pack-manifest';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { validateChangedSkillVersionBumps, validateOatSkills } from './skills';
@@ -179,6 +183,49 @@ function extractArtifactHygieneContract(content: string): string {
     .slice(start, end === -1 ? undefined : end)
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * Fenced code blocks, in order. Contract snippets are executed one block at a
+ * time, so a safety preamble only protects the block it appears in.
+ */
+function fencedBlocks(markdown: string): string[] {
+  const blocks: string[] = [];
+  let current: string[] | null = null;
+  let fenceChar = '';
+  let fenceLength = 0;
+
+  for (const line of markdown.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    const marker = /^(`{3,}|~{3,})(.*)$/.exec(trimmed);
+    if (current === null) {
+      if (marker) {
+        fenceChar = marker[1]![0]!;
+        fenceLength = marker[1]!.length;
+        current = [];
+      }
+      continue;
+    }
+    // CommonMark: a closer is a line of only fence characters, of the same kind
+    // and at least as long as the opener. Requiring an exact length would let a
+    // longer closer merge a guarded block into an unguarded one.
+    const closes =
+      marker !== null &&
+      marker[1]![0] === fenceChar &&
+      marker[1]!.length >= fenceLength &&
+      marker[2]!.trim() === '';
+    if (closes) {
+      blocks.push(current.join('\n'));
+      current = null;
+      continue;
+    }
+    current.push(line);
+  }
+
+  // An unterminated block still carries instructions a runtime would execute.
+  if (current !== null) blocks.push(current.join('\n'));
+
+  return blocks;
 }
 
 describe('validateOatSkills', () => {
@@ -1782,7 +1829,7 @@ describe('validateOatSkills', () => {
     } of [
       {
         skillName: 'oat-project-discover',
-        version: '2.2.3',
+        version: '2.2.4',
         finalizedHeading:
           '### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)',
         gateHeading: '### Step 12: Gate Execution',
@@ -1801,7 +1848,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.7',
+        version: '1.4.8',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -1809,7 +1856,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.7',
+        version: '2.3.8',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -1818,7 +1865,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-lite',
-        version: '1.0.1',
+        version: '1.1.0',
         finalizedHeading: '### Step 6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 7: Mark Plan Complete and Hand Off',
@@ -2859,11 +2906,11 @@ describe('validateOatSkills', () => {
       ['.agents/agents/oat-phase-implementer.md', '1.1.2'],
       ['.agents/agents/oat-reviewer.md', '1.2.2'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.4'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.1'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.2'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.2'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.1'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.7'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.2'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.8'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -3481,6 +3528,300 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('prescribes verified capture-and-restore before a fresh child continues on a dirty tree', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+
+    expect(phase).toMatch(
+      /a\s+fresh\s+child\s+never\s+starts\s+on\s+a\s+dirty\s+tree/i,
+    );
+    expect(phase).toMatch(
+      /dirty worktree[\s\S]{0,120}blocks continuation[\s\S]{0,240}`recovered_patch`[\s\S]{0,240}unverified[\s\S]{0,160}still blocks/i,
+    );
+
+    let cursor = -1;
+    for (const step of [
+      'capture-dirty-tree.mjs',
+      'capture-script-unavailable',
+      'cannot still be writing',
+      'node "$CAPTURE_SCRIPT"',
+      '--bounded-file',
+      '`round-trip-failed`',
+      'restore --staged',
+      '`recovered_patch`',
+      '--verify',
+      '--expected-head',
+      'git apply --index',
+      'it as its first action',
+      'continuation event',
+    ]) {
+      const next = phase.indexOf(step, cursor + 1);
+      expect(next, `ordered capture chain step ${step}`).toBeGreaterThan(
+        cursor,
+      );
+      cursor = next;
+    }
+
+    const contracts = [
+      ['phase root', phase],
+      ['phase agent', agent],
+    ] as const;
+
+    for (const [name, contract] of contracts) {
+      // Resolved through installed scope, never a repository-relative literal:
+      // a user-scope install has no `.agents/skills/...` under the process cwd,
+      // and a MODULE_NOT_FOUND there is not one of the named stop reasons the
+      // same prose requires the operator to report verbatim.
+      expect(contract, `${name} capture script`).toContain(
+        'scripts/capture-dirty-tree.mjs',
+      );
+      expect(contract, `${name} capture script resolution roots`).toMatch(
+        /(?:\$\{SKILL_DIR:-\}|\$\{HOME:-\}\/\.agents\/skills)[\s\S]{0,400}scripts\/capture-dirty-tree\.mjs/,
+      );
+      // Per invoking block, not per file. `node ""` reads its program from
+      // stdin and exits zero at EOF, so a block that runs the script without
+      // resolving and guarding it in the same block reports an unverified
+      // artifact as verified — shell variables do not survive across separate
+      // tool invocations, and a guard in some other block does not protect it.
+      const invokingBlocks = fencedBlocks(contract).filter((block) =>
+        block.includes('node "$CAPTURE_SCRIPT"'),
+      );
+      expect(
+        invokingBlocks.length,
+        `${name} blocks invoking the capture script`,
+      ).toBeGreaterThan(0);
+      for (const [index, block] of invokingBlocks.entries()) {
+        const label = `${name} capture invocation block ${index + 1}`;
+        // Before the invocation, not merely somewhere in the block.
+        expect(block, `${label} runs under set -eu`).toMatch(/^\s*set -eu$/m);
+        expect(
+          block.search(/^\s*set -eu$/m),
+          `${label} sets -eu before it runs`,
+        ).toBeLessThan(block.indexOf('node "$CAPTURE_SCRIPT"'));
+        expect(block, `${label} binds the probed root`).toContain(
+          'CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"',
+        );
+        expect(block, `${label} terminates on a miss`).toMatch(
+          /\[ -n "\$CAPTURE_SCRIPT" \] \|\| \{[\s\S]{0,160}capture-script-unavailable[\s\S]{0,80}exit 1/,
+        );
+        expect(
+          block.indexOf('capture-script-unavailable'),
+          `${label} guards before it runs`,
+        ).toBeLessThan(block.indexOf('node "$CAPTURE_SCRIPT"'));
+        // A bare `<placeholder>` after a flag is shell input redirection, not a
+        // placeholder, so a block carrying one is not runnable verbatim.
+        expect(block, `${label} has no unquoted placeholder`).not.toMatch(
+          /--[a-z-]+ <[a-z_]+>/,
+        );
+      }
+      // The verifier runs only for a briefed artifact. Unconditional again, the
+      // artifact variables sit in an artifact-free retry's path, where `set -u`
+      // exits before the ledger reconciliation that retry has to reach.
+      const verifyingBlocks = invokingBlocks.filter((block) =>
+        block.includes('--verify'),
+      );
+      expect(
+        verifyingBlocks.length,
+        `${name} blocks verifying an artifact`,
+      ).toBeGreaterThan(0);
+      for (const [index, block] of verifyingBlocks.entries()) {
+        const label = `${name} verify block ${index + 1}`;
+        // All three fields together, so a partial brief is a named stop rather
+        // than an unbound-variable death under `set -u`.
+        const guardAt = block.indexOf(
+          'if [ -z "${ARTIFACT_DIR:-}${MANIFEST_DIGEST:-}${ARTIFACT_SIZE:-}" ]; then',
+        );
+        expect(
+          guardAt,
+          `${label} is conditional on a complete briefed artifact`,
+        ).toBeGreaterThan(-1);
+        expect(block, `${label} names the partial-brief stop`).toMatch(
+          /artifact-verification-failed: a partial recovered_patch is unusable/,
+        );
+        // Bounded by this branch's own closer — the FIRST `fi` at the guard's
+        // indentation — not by the last `fi` in the block. Taking the last one
+        // would let a `fi` moved above the verifier pass unnoticed.
+        const lineStart = block.lastIndexOf('\n', guardAt) + 1;
+        const indent = block.slice(lineStart, guardAt);
+        const closeMatch = new RegExp(`^${indent}fi$`, 'm').exec(
+          block.slice(guardAt),
+        );
+        const closeAt = closeMatch ? guardAt + closeMatch.index : -1;
+        expect(closeAt, `${label} closes its branch`).toBeGreaterThan(guardAt);
+        for (const token of [
+          '--verify',
+          '"$ARTIFACT_DIR"',
+          '"$MANIFEST_DIGEST"',
+          '"$ARTIFACT_SIZE"',
+        ]) {
+          expect(
+            block.indexOf(token),
+            `${label} opens ${token} inside the branch`,
+          ).toBeGreaterThan(guardAt);
+          expect(
+            block.lastIndexOf(token),
+            `${label} closes ${token} inside the branch`,
+          ).toBeLessThan(closeAt);
+        }
+      }
+      expect(
+        contract,
+        `${name} no repo-relative capture invocation`,
+      ).not.toMatch(
+        /node\s+"?\.agents\/skills\/oat-project-implement\/scripts\/capture-dirty-tree\.mjs/,
+      );
+      for (const reason of [
+        'active-writer',
+        'unsupported-dirt',
+        'round-trip-failed',
+        'artifact-verification-failed',
+      ]) {
+        // Presence is not enough: each reason has to sit inside a clause that
+        // still calls it a stop, so a prose rewrite cannot quietly turn one
+        // into a best-effort path.
+        expect(contract, `${name} ${reason} stop clause`).toMatch(
+          new RegExp(`${reason}[\\s\\S]{0,320}\\bstop`, 'i'),
+        );
+      }
+      expect(contract, `${name} recovered_patch brief field`).toMatch(
+        /recovered_patch:\s*\{\s*artifact,\s*manifest_digest,\s*size,\s*stat,\s*components\s*\}/,
+      );
+      expect(contract, `${name} artifact lives outside the worktree`).toMatch(
+        /`artifact`\s+is\s+a\s+readable\s+path\s+outside\s+the\s+worktree,\s+never\s+a\s+mutable\s+worktree\s+path/i,
+      );
+      expect(contract, `${name} verifies before applying`).toMatch(
+        /--verify[\s\S]{0,300}--manifest-digest[\s\S]{0,120}--size[\s\S]{0,160}--expected-head[\s\S]{0,2400}git apply --index/i,
+      );
+      expect(contract, `${name} reconciles the artifact base`).toMatch(
+        /integrity is not base agreement/i,
+      );
+      expect(contract, `${name} refuses a best-effort restore`).toMatch(
+        /(?:never|no)[\s\S]{0,120}best-effort restore/i,
+      );
+    }
+  });
+
+  it('reconciles the pending attempt before the recovered patch is applied and committed', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+
+    // Applying and committing the artifact before the ledger reconciliation
+    // put a new commit on the phase branch whenever the reconcile blocked.
+    // The retry then failed the exact-HEAD check against `recovery_base_head`
+    // and the phase parked with no contract path to continue, so the
+    // reconciliation — and every other precondition that can park the phase —
+    // has to finish while the branch is still exactly at its briefed base.
+    // Bounded to the sequence under test. `indexOf('## Mode: Recover')` would
+    // land on the inline cross-reference inside Mode: Implement, dragging that
+    // mode's own apply-and-commit sentence into the comparison.
+    const recoverStart = agent.indexOf('\n## Mode: Recover\n');
+    expect(recoverStart, 'phase agent recover heading').toBeGreaterThan(-1);
+    const recoverEnd = agent.indexOf('\n## ', recoverStart + 1);
+    const recover = agent.slice(
+      recoverStart,
+      recoverEnd > -1 ? recoverEnd : undefined,
+    );
+    const sequenceStart = phase.indexOf(
+      "**Recovering a lost child's uncommitted work.**",
+    );
+    expect(sequenceStart, 'phase root capture sequence').toBeGreaterThan(-1);
+    const sequence = phase.slice(
+      sequenceStart,
+      phase.indexOf('Attempt accounting uses exactly one', sequenceStart),
+    );
+
+    const surfaces = [
+      [
+        'phase agent',
+        recover,
+        /Reconcile the authoritative\s+`pending_attempt`/,
+        /Only now apply the verified\s+`recovered_patch`/,
+      ],
+      [
+        'phase root',
+        sequence,
+        /pending-attempt\s+reconciliation/,
+        /before it applies or commits anything/,
+      ],
+    ] as const;
+
+    for (const [name, contract, reconcile, ordering] of surfaces) {
+      // Searched, not indexed: the contracts wrap, so a literal phrase can
+      // straddle a newline.
+      const reconcileAt = contract.search(reconcile);
+      const applyAt = contract.search(/git apply --index/);
+      const commitAt = contract.search(
+        /commit\s+it as (?:your|its) first action/,
+      );
+
+      // Position alone would survive a rewrite that keeps the words and
+      // reverses the meaning, so pin the clause that states the ordering and
+      // reject its negation.
+      expect(contract, `${name} states the ordering`).toMatch(ordering);
+      expect(contract, `${name} does not invert the ordering`).not.toMatch(
+        /(?:after|once) it (?:applies|has applied|commits|has committed)[\s\S]{0,120}reconcil/i,
+      );
+      expect(
+        contract,
+        `${name} does not negate the first-action commit`,
+      ).not.toMatch(
+        /(?:do not|never|must not)\s+commit\s+it as (?:your|its) first action/i,
+      );
+
+      expect(reconcileAt, `${name} states the reconciliation`).toBeGreaterThan(
+        -1,
+      );
+      expect(applyAt, `${name} states the apply`).toBeGreaterThan(-1);
+      expect(
+        commitAt,
+        `${name} states the first-action commit`,
+      ).toBeGreaterThan(-1);
+      expect(reconcileAt, `${name} reconciles before applying`).toBeLessThan(
+        applyAt,
+      );
+      expect(reconcileAt, `${name} reconciles before committing`).toBeLessThan(
+        commitAt,
+      );
+      expect(
+        contract,
+        `${name} a precondition stop leaves the briefed base intact`,
+      ).toMatch(/leaves the branch exactly at\s+`recovery_base_head`/);
+      // And the other direction: once the recovery commit exists it is the
+      // base a retry is measured against, so a legitimate retry can proceed.
+      expect(contract, `${name} retry base after a recovery commit`).toMatch(
+        /`recovery_base_head`[\s\S]{0,80}(?:is|set to)[\s\S]{0,120}that recovery commit/,
+      );
+      expect(
+        contract,
+        `${name} the retry brief drops the committed artifact`,
+      ).toMatch(/(?:without|omits) the already-committed artifact/);
+      // And that artifact-free brief must still reach the reconciliation
+      // rather than parking on an unset artifact variable.
+      const skipAt = contract.search(
+        /skips verification and continues to the ledger\s+reconciliation/,
+      );
+      expect(
+        skipAt,
+        `${name} an artifact-free brief skips verification`,
+      ).toBeGreaterThan(-1);
+      expect(
+        skipAt,
+        `${name} skips verification before the reconciliation`,
+      ).toBeLessThan(reconcileAt);
+      expect(contract, `${name} the artifact-free apply is a no-op`).toMatch(
+        /(?:step 4|apply step) is a no-op/,
+      );
+    }
+  });
+
   it('uses one monotonic durable per-phase attempt ledger across resumes', async () => {
     const agent = await readRawRepoFile(
       '.agents/agents/oat-phase-implementer.md',
@@ -4083,12 +4424,12 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.22'],
       ['oat-project-review-provide', '1.5.4'],
-      ['oat-project-review-receive', '1.6.1'],
+      ['oat-project-review-receive', '1.6.2'],
       ['oat-project-review-receive-remote', '1.5.1'],
       ['oat-project-implement', '2.3.2'],
-      ['oat-project-pr-final', '1.6.1'],
+      ['oat-project-pr-final', '1.6.2'],
       ['oat-project-pr-progress', '1.3.1'],
-      ['oat-project-complete', '1.7.6'],
+      ['oat-project-complete', '1.7.7'],
       ['oat-project-next', '1.1.0'],
     ] as const;
 
@@ -4166,7 +4507,7 @@ describe('validateOatSkills', () => {
       receive.indexOf('### Step 2: Parse Findings into Buckets'),
     );
 
-    expect(receive.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.1');
+    expect(receive.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.2');
     expect(resolver).toContain(
       'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
     );
@@ -5168,9 +5509,9 @@ describe('validateOatSkills', () => {
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.22'],
-      ['oat-project-plan', '1.4.7'],
-      ['oat-project-quick-start', '2.3.7'],
-      ['oat-project-import-plan', '1.4.12'],
+      ['oat-project-plan', '1.4.8'],
+      ['oat-project-quick-start', '2.3.8'],
+      ['oat-project-import-plan', '1.4.13'],
       ['oat-project-review-provide', '1.5.4'],
     ] as const;
 
@@ -5264,7 +5605,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(engine).toMatch(/^version:\s*1\.2\.5$/m);
+    expect(engine).toMatch(/^version:\s*1\.2\.6$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(adapter).toMatch(/^version:\s*1\.1\.4$/m);
@@ -5387,7 +5728,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable research-pack callers to installed-root schema reads', async () => {
     const callers = [
-      ['.agents/skills/analyze/SKILL.md', '0.1.1'],
+      ['.agents/skills/analyze/SKILL.md', '0.2.0'],
       ['.agents/skills/compare/SKILL.md', '0.1.1'],
     ] as const;
 
@@ -5427,7 +5768,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable utility-pack callers to installed-root sibling reads', async () => {
     const callers = [
-      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.5'],
+      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.6'],
       ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.2'],
       ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.1'],
     ] as const;
@@ -6171,7 +6512,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.7');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.8');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -6788,7 +7129,7 @@ describe('lite mode skill contracts', () => {
     expect(stateWrite).toContain('oat_workflow_origin: imported');
     expect(stateWrite).toMatch(/oat_import_reference|oat_import_\*/);
     expect(stateWrite).toContain('oat_plan_source: imported');
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.12');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.13');
   });
 
   it('lite bypasses implementation checkpoints', async () => {
@@ -7390,7 +7731,7 @@ describe('recon canonical contracts', () => {
     ]);
 
     expect(skill).toMatch(/^name:\s*recon$/m);
-    expect(skill).toMatch(/^version:\s*1\.0\.1$/m);
+    expect(skill).toMatch(/^version:\s*1\.1\.0$/m);
     expect(skill).toMatch(/provider-neutral/i);
     expect(skill).toMatch(/exact (?:provider, )?model and effort/i);
     expect(skill).toMatch(/before\s+(?:any\s+)?(?:worker\s+)?launch/i);
@@ -7398,5 +7739,282 @@ describe('recon canonical contracts', () => {
     expect(skill).toMatch(/packet directory/i);
     expect(worker).toMatch(/never interact with the user/i);
     expect(worker).toMatch(/never dispatch/i);
+  });
+});
+
+describe('bundled skill contract truthfulness — doctor inventory', () => {
+  it("keeps doctor's declared bundled inventory identical to the pack manifest", async () => {
+    const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
+
+    const sectionStart = doctor.indexOf(
+      '**Bundled skill manifest (source of truth):**',
+    );
+    const sectionEnd = doctor.indexOf('For each pack, determine:');
+    expect(sectionStart, 'inventory section start').toBeGreaterThan(-1);
+    expect(sectionEnd, 'inventory section end').toBeGreaterThan(sectionStart);
+
+    const section = doctor.slice(sectionStart, sectionEnd);
+    const declared = new Map<string, string[]>();
+    let currentPack: string | undefined;
+    for (const line of section.split('\n')) {
+      const heading = line.match(/^`([a-z-]+)` pack skills:$/);
+      if (heading?.[1]) {
+        currentPack = heading[1];
+        // A repeated heading would let a later block silently discard the
+        // names declared under the earlier one.
+        expect(
+          declared.has(currentPack),
+          `duplicate ${currentPack} heading`,
+        ).toBe(false);
+        declared.set(currentPack, []);
+        continue;
+      }
+      const bullet = line.match(/^-\s+(.+)$/);
+      if (bullet?.[1] && currentPack) {
+        declared.get(currentPack)?.push(
+          ...bullet[1]
+            .split(',')
+            .map((name) => name.trim())
+            .filter((name) => name.length > 0),
+        );
+      }
+    }
+
+    const expected = new Map(
+      PACK_MANIFEST.map((pack) => [
+        pack.name,
+        [...getPackMemberNames(pack.name, 'skill')].sort(),
+      ]),
+    );
+
+    expect([...declared.keys()].sort(), 'declared pack headings').toEqual(
+      [...expected.keys()].sort(),
+    );
+    for (const [pack, expectedSkills] of expected) {
+      expect([...(declared.get(pack) ?? [])].sort(), `${pack} pack`).toEqual(
+        expectedSkills,
+      );
+    }
+  });
+
+  it("derives doctor's summary example counts from the pack manifest", async () => {
+    const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
+    const packSkills = new Map(
+      PACK_MANIFEST.map((pack) => [
+        pack.name,
+        [...getPackMemberNames(pack.name, 'skill')].sort(),
+      ]),
+    );
+
+    const installedTable = doctor.slice(
+      doctor.indexOf('## Installed Packs'),
+      doctor.indexOf('## Outdated Skills'),
+    );
+    const installedRows = [
+      ...installedTable.matchAll(
+        /^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/gm,
+      ),
+    ];
+    expect(installedRows.length, 'installed pack example rows').toBeGreaterThan(
+      0,
+    );
+    for (const [, pack, total] of installedRows) {
+      // Membership is asserted, never filtered: a row naming a pack that does
+      // not exist is itself the drift this case exists to catch.
+      expect(packSkills.has(pack ?? ''), `${pack} is a manifest pack`).toBe(
+        true,
+      );
+      expect(Number(total), `${pack} example denominator`).toBe(
+        packSkills.get(pack ?? '')?.length,
+      );
+    }
+
+    const availableSection = doctor.slice(
+      doctor.indexOf('## Available But Not Installed'),
+      doctor.indexOf('## Configuration'),
+    );
+    const availableRows = [
+      ...availableSection.matchAll(
+        /^- \*\*([a-z-]+)\*\* pack: (.+?) \((\d+) skills available\)$/gm,
+      ),
+    ];
+    expect(availableRows.length, 'available pack example rows').toBeGreaterThan(
+      0,
+    );
+    for (const [, pack, names, count] of availableRows) {
+      const listed = (names ?? '')
+        .split(',')
+        .map((name) => name.trim())
+        .sort();
+      expect(listed, `${pack} example skill list`).toEqual(
+        packSkills.get(pack ?? ''),
+      );
+      expect(Number(count), `${pack} example count`).toBe(listed.length);
+    }
+  });
+});
+
+describe('bundled skill contract truthfulness — brainstorm diagnostics', () => {
+  it('keeps the brainstorm node-missing note free of a later-doctor promise', async () => {
+    const brainstorm = await readRepoFile(
+      '.agents/skills/oat-brainstorm/SKILL.md',
+    );
+    const nodeMissing = brainstorm
+      .split('\n')
+      .find((line) => line.startsWith('- If `node` is **missing**:'));
+
+    expect(nodeMissing, 'node-missing branch').toBeDefined();
+
+    // The invariant is bounded, not keyword-blocked: exactly one sentence in
+    // this branch may refer to a later diagnostic reader, and it must be the
+    // sentence that denies the note survives at all. Any *additional*
+    // sentence promising a later run observes it therefore fails, even when
+    // the truthful wording is still present alongside it.
+    const readerSentences = (branch: string): string[] =>
+      branch
+        .split(/(?<=\.)\s+/)
+        .filter((sentence) =>
+          /\b(?:oat-)?doctor\b|\bdiagnostics?\b|\b(?:later|subsequent|future|another)\b[^.]*\brun\b/i.test(
+            sentence,
+          ),
+        );
+    const permitted = [
+      'Nothing persists that note, so no later diagnostic run can report it.',
+    ];
+
+    expect(readerSentences(nodeMissing ?? '')).toEqual(permitted);
+
+    // Permanent negative controls: the guard must reject a reinstated promise
+    // appended beside the truthful clause, and the original pre-fix phrasing.
+    expect(
+      readerSentences(
+        `${nodeMissing ?? ''} A subsequent \`oat-doctor\` run surfaces it under Configuration.`,
+      ),
+      'paraphrased promise appended beside the truthful clause',
+    ).not.toEqual(permitted);
+    expect(
+      readerSentences(
+        '- If `node` is **missing**: skip the offer entirely. Do not print the offer message. Log a one-line note in the conversation that the visual companion is unavailable in this environment (a state `oat-doctor` can pick up later: "visual companion suppressed — node not on PATH"). Proceed with `VISUAL_COMPANION = "unavailable"`.',
+      ),
+      'original pre-fix phrasing',
+    ).not.toEqual(permitted);
+
+    expect(nodeMissing).toMatch(/for this session only|conversation-only/i);
+    expect(nodeMissing).toMatch(/nothing persists/i);
+    // The immediate, supported behaviour stays intact.
+    expect(nodeMissing).toContain(
+      'visual companion suppressed — node not on PATH',
+    );
+    expect(nodeMissing).toContain('VISUAL_COMPANION = "unavailable"');
+    expect(nodeMissing).toContain('skip the offer entirely');
+  });
+});
+
+describe('bundled skill contract truthfulness — idea-summarize tools', () => {
+  it('declares Bash and Glob alongside its prior tools', async () => {
+    const skill = await readRepoFile(
+      '.agents/skills/oat-idea-summarize/SKILL.md',
+    );
+
+    const frontmatter = skill.match(/^---\n([\s\S]*?)\n---\n/)?.[1];
+    expect(frontmatter, 'idea-summarize frontmatter').toBeDefined();
+    const declaredTools = (
+      frontmatter?.match(/^allowed-tools:\s*(.+)$/m)?.[1] ?? ''
+    )
+      .split(',')
+      .map((tool) => tool.trim())
+      .filter((tool) => tool.length > 0);
+
+    // Declaration and usage are asserted together: the steps below invoke
+    // shell commands (Bash) and the Glob tool, so both must be declared, and
+    // the previously declared tools must survive.
+    expect(declaredTools).toEqual(
+      expect.arrayContaining([
+        'Read',
+        'Write',
+        'Bash',
+        'Glob',
+        'Grep',
+        'AskUserQuestion',
+      ]),
+    );
+
+    const resolveStep = skill.match(
+      /### Step 1: Resolve Active Idea[\s\S]*?(?=### Step 2:)/,
+    )?.[0];
+    expect(resolveStep, 'resolve-active-idea step').toBeDefined();
+    // Normal path: a shell command reads the pointer.
+    expect(resolveStep).toContain('oat config get activeIdea');
+    // Missing-active-idea fallback: Glob tool plus a shell write-back.
+    const fallback = resolveStep?.slice(
+      resolveStep.indexOf('**If missing or invalid:**'),
+    );
+    expect(fallback, 'missing-active-idea fallback').toBeDefined();
+    expect(fallback).toContain('Use the Glob tool');
+    expect(fallback).toContain('oat config set activeIdea');
+  });
+});
+
+describe('bundled skill contract truthfulness — analyze progress model', () => {
+  it('keeps analyze on a single ten-step progress model', async () => {
+    const analyze = await readRepoFile('.agents/skills/analyze/SKILL.md');
+
+    // No stale nine-step denominator survives anywhere in the skill.
+    expect(analyze).not.toMatch(/\[\d+\/9\]/);
+
+    const advertised = analyze.slice(
+      analyze.indexOf('## Progress Indicators (User-Facing)'),
+      analyze.indexOf('## Workflow'),
+    );
+    const advertisedSteps = [
+      ...advertised.matchAll(/^- `\[(\d+)\/(\d+)\] ([^`]+)`/gm),
+    ];
+
+    expect(advertisedSteps.map(([, index]) => index)).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+    ]);
+    expect([...new Set(advertisedSteps.map(([, , total]) => total))]).toEqual([
+      '10',
+    ]);
+    expect(
+      new Set(advertisedSteps.map(([, , , label]) => label)).size,
+      'distinct advertised step labels',
+    ).toBe(10);
+
+    // The workflow body emits the same ten-step model it advertises: same
+    // indices, same denominators, same labels, one heading each.
+    // Bounded at the next top-level heading so Examples, Troubleshooting, and
+    // Success Criteria may legitimately quote a progress marker.
+    const workflowStart = analyze.indexOf('## Workflow');
+    const headingOffset = analyze.slice(workflowStart + 1).search(/^## /m);
+    expect(headingOffset, 'heading after the workflow section').toBeGreaterThan(
+      -1,
+    );
+    const workflow = analyze.slice(
+      workflowStart,
+      workflowStart + 1 + headingOffset,
+    );
+    const emitted = [...workflow.matchAll(/\[(\d+)\/(\d+)\] ([^`\n]+)/g)];
+    expect(emitted.map(([, index]) => index)).toEqual(
+      advertisedSteps.map(([, index]) => index),
+    );
+    expect(emitted.map(([, , total]) => total)).toEqual(
+      advertisedSteps.map(([, , total]) => total),
+    );
+    expect(emitted.map(([, , , label]) => label.trim())).toEqual(
+      advertisedSteps.map(([, , , label]) => label.trim()),
+    );
+    expect(
+      [...workflow.matchAll(/^### Step (\d+):/gm)].map(([, index]) => index),
+    ).toEqual(advertisedSteps.map(([, index]) => index));
   });
 });

@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.7.6
+version: 1.7.7
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -289,7 +289,7 @@ Set `SHOULD_GENERATE_RECAP="true"` only when the final resolved decision is
 preference results are effective for this run but are not copied into project
 state.
 
-Also preflight summary status using the same freshness rules as `oat-project-summary`:
+Also preflight summary status using the same freshness rules as `oat-project-summary`, read from the current `oat-project-summary/SKILL.md` rather than a remembered version of that step:
 
 - `summary.md` is `missing` when `{PROJECT_PATH}/summary.md` does not exist
 - `summary.md` is `stale` when the tracking frontmatter fields `oat_summary_last_task`, `oat_summary_revision_count`, or `oat_summary_includes_revisions` no longer match `current_last_task`, `current_rev_count`, or `current_rev_list` as defined in `oat-project-summary` Step 3
@@ -461,7 +461,7 @@ After collecting all warnings from 3.1, 3.2, and 3.3:
 Check if `{PROJECT_PATH}/summary.md` exists and whether it is current against the implementation state:
 
 - If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="true"`, generate or refresh it before completing.
-- Prefer running the `oat-project-summary` skill when skill-to-skill invocation is available in the current host/runtime.
+- When skill-to-skill invocation is available in the current host/runtime, load the current `oat-project-summary/SKILL.md` and follow it; never synthesize the summary from a remembered version of that skill.
 - If direct skill invocation is unavailable, generate or update `summary.md` inline by following the same synthesis rules as `oat-project-summary` (validate implementation state, read the same project artifacts, apply the same freshness checks, update the same frontmatter tracking fields, and write a complete `summary.md` before continuing).
 - Do not assume `oat-project-summary` is a shell command on `PATH`. Only execute a shell command with that name if the environment explicitly provides a real executable.
 - If `summary.md` is missing or stale and `SHOULD_GENERATE_SUMMARY="false"`, emit: `Warning: Proceeding without summary generation.`
@@ -474,8 +474,9 @@ Check if `{PROJECT_PATH}/summary.md` exists and whether it is current against th
 ### Step 3.5.5: Retro Safety-Net
 
 When `SHOULD_GENERATE_RETRO="true"`, dispatch `oat-project-retro` in generate
-mode before any lifecycle mutation. Apply and filing behavior remains
-config-gated inside that skill.
+mode before any lifecycle mutation: load the current
+`oat-project-retro/SKILL.md` and follow it, or dispatch a child that carries it.
+Apply and filing behavior remains config-gated inside that skill.
 
 Use the host's skill-to-skill invocation when available. Do not assume
 `oat-project-retro` is a shell command on `PATH`. If dispatch is unavailable or
@@ -609,8 +610,9 @@ Route on the structured result:
   the synthesis remains pending. Synthesis is warn-only.
 - When entry counts are nonzero, require a current `summary.md`. This hard gate
   overrides Step 3.5's tolerance for declined, skipped, missing, or failed
-  summary generation: invoke `oat-project-summary` when available or author a
-  complete summary inline before continuing.
+  summary generation: load the current `oat-project-summary/SKILL.md` and follow
+  it; only when skill loading is unavailable in the current host/runtime, author
+  a complete summary inline before continuing.
 
 For a log with entries, reuse the summary flow's structured roll-up result only
 when this completion run has that exact result in memory and it reports
@@ -719,7 +721,15 @@ fi
 
 PR description generation is automatic — it always runs as part of project completion. This must happen **before** archiving so that project artifacts are still at their tracked paths and blob links resolve correctly.
 
-Follow the `oat-project-pr-final` skill's process (Steps 0.5 through 4) inline:
+Load the current `oat-project-pr-final/SKILL.md` and follow its Steps 0.5
+through 4 as the authoritative source for the templates and policies this step
+applies, then execute completion's adapted mapping below instead of pr-final's
+own step sequence. Apply only pr-final's templates and content policies; apply
+none of its gates, prompts, blocks, or state writes. Step 5 has already run
+`oat project complete-state`, so blocking or re-deciding a gate here would
+strand a completed project mid-lifecycle. When skill loading is unavailable in
+the current host/runtime, the mapping below is the explicit inline fallback that
+carries the same Steps 0.5 through 4 contract:
 
 1. **Archive residual review artifacts** — already handled in Step 4.
 2. **Validate required artifacts** — read available project artifacts (`plan.md`, `implementation.md`, `spec.md`, `design.md`, `discovery.md`) based on workflow mode from `state.md`.

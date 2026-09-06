@@ -112,7 +112,8 @@ projects, and synced records whose detached checkout is absent.
 
 - **The `projects` array is non-empty but the active pointer is missing or
   invalid:** Show the available project names with their `scope` and `checkout`
-  state, then invoke `oat-project-open` so the user selects an existing
+  state, then invoke `oat-project-open` by loading the current
+  `oat-project-open/SKILL.md` and following it, so the user selects an existing
   project. An absent-checkout synced record and a local-only project both take
   this selection route; never suggest creating a replacement project. **STOP**
   this router after the selection workflow returns so the next invocation can
@@ -338,8 +339,9 @@ alone:
   a valid `freshness_fingerprint`. Exactly one merge base and 64-character
   lowercase hexadecimal implementation/freshness digests are mandatory.
   Missing or malformed inputs route as stale. When HEAD differs from
-  `freshness_head`, use the full raw Git byte algorithm from
-  `oat-project-implement` with only its literal state-carrier exclusion. Verify
+  `freshness_head`, use the full raw Git byte algorithm read from the current
+  `oat-project-implement/SKILL.md`, with only its literal state-carrier
+  exclusion, rather than a remembered version of that algorithm. Verify
   and ignore state-only checkpoint commits before classification. An unchanged
   qualified fingerprint preserves freshness across a merge, rebase, or base
   update but routes to `oat-project-implement` to persist the advanced rolling
@@ -454,7 +456,7 @@ Reason: {one-line explanation}
 
 The router still dispatches (blockers are informational, not gates).
 
-**Invoke the target skill** using the Skill tool. The agent will load the skill content and follow it directly.
+**Invoke the target skill** using the Skill tool. Invoking the target means loading the target skill's current `SKILL.md` and following it directly, or dispatching a child that carries it; a remembered outcome or ambient discovery is not compliant. This step, not the Step 5 routing decisions, is this router's execution boundary.
 
 ## Success Criteria
 

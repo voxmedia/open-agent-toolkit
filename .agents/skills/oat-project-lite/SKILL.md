@@ -1,6 +1,6 @@
 ---
 name: oat-project-lite
-version: 1.0.1
+version: 1.1.0
 description: Use when a single-sitting change needs a critical interview, an approved single-phase plan, and resumable OAT implementation with minimal ceremony.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -246,9 +246,10 @@ boundary. Do not add another approval pause later.
 ### Step 5: Resolve Dispatch Ceiling
 
 Invoke the complete **Managed Dispatch Readiness and Review Contract** from
-`oat-project-plan-writing`. Resolve and, when necessary, adopt the dispatch
-ladder before selecting a project policy. Do not copy model names into the
-skill.
+`oat-project-plan-writing`. Load the current `oat-project-plan-writing/SKILL.md`
+and follow that contract as written. Resolve and, when necessary, adopt the
+dispatch ladder before selecting a project policy. Do not copy model names into
+the skill.
 
 For the ladder ownership decision, apply `LITE-06`, which is identical to
 `QS-08`: check existing user, local, then authorized shared configuration in
@@ -271,7 +272,9 @@ HiLL setup. Built-in implementation review remains unchanged.
 
 ### Step 6: Run Plan Artifact Review Loop
 
-Invoke the `Auto Artifact-Review Loop` from `oat-project-plan-writing` with:
+Invoke the `Auto Artifact-Review Loop` from `oat-project-plan-writing`. Load
+the current `oat-project-plan-writing/SKILL.md` and follow that loop as written,
+with:
 
 - `target: plan`
 - `type: artifact`

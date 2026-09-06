@@ -70,10 +70,17 @@ maximum concurrency; they do not silently choose a different model tier.
 | `thorough` | Expensive failure or correlated blind spots | Standard work plus redundant gathering and verification and contradiction resolution     | `verified`    |
 
 The approval manifest shows the exact adaptive lane count, concurrency, pass
-topology, conditional lane caps, deadlines, retries, and source/write authority.
-Declining approval launches nothing. A material change to a provider, model,
-effort, route, role, service tier, or execution cap requires renewed approval;
-there is no silent substitution after approval.
+topology, deadlines, retries, and source/write authority. Declining approval
+launches nothing. A change to a provider, model, effort, route, role, service
+tier, or execution cap requires renewed approval; there is no silent
+substitution after approval.
+
+Before any worker launches, recon confirms that the live launch surface can run
+the approved role, model, effort, and authority level. If it cannot, the run
+stays at `awaiting-approval` with a provider/dispatch diagnostic and nothing is
+launched. Deadlines are approved execution limits chosen for the task class,
+not short watchdogs; an accepted lane is never interrupted by hand because a
+displayed deadline elapsed.
 
 ## Destination Precedence
 
@@ -105,12 +112,12 @@ non-publishable candidate generation withdraws any existing `packet.md`:
 
 - `packet.md` is the compact consumer view and is published last.
 - `claims.json` is the canonical claim ledger.
-- `manifest.json` records request, source, dispatch, topology, stage, and gap
-  provenance.
-- `reviews/` contains compact locator, semantic, adversarial, coverage, and
+- `manifest.json` records request, source, approved execution envelope, and
+  gap provenance.
+- `reviews/` contains compact semantic, adversarial, coverage, and
   reconciliation evidence.
-- `raw/` contains worker dossiers, dispatch receipts, candidate artifacts, and
-  safe failure diagnostics. It is not normal consumer input.
+- `raw/` contains worker dossiers, candidate artifacts, and safe failure
+  diagnostics. It is not normal consumer input.
 
 The ledger compiler and packet validator enforce categorical referential
 integrity on `synthesis.keyClaimIds` and `synthesis.unresolvedQuestionIds`. Any
@@ -137,7 +144,8 @@ percentages:
 - `unsupported`: valid supporting evidence is absent or verification failed.
 
 A quick packet never promotes a claim to `verified`. Stronger profiles can do
-so only when their required review artifacts and receipts validate.
+so only when their required review artifacts validate and were written by
+approved lanes.
 
 When an independent semantic review rejects a proposed claim, the reconciler
 transitions it to `unsupported` rather than deleting it. This preserves the
@@ -179,7 +187,15 @@ A structurally valid run can publish an honest `partial` packet. The manifest
 and `packet.md` then identify the requested and achieved profiles, failed or
 omitted passes, material gaps, affected claims, and required assurance
 downgrades. A run may be partial even when it achieved the requested profile if
-a material evidence gap remains.
+a material evidence gap remains. The achieved profile is derived from the
+complete typed artifacts in the packet; each required pass without a complete
+result needs a material `PASS_FAILED` or `PASS_OMITTED` gap naming it.
+
+Status updates and the final handoff label each failure as `worker`,
+`provider/dispatch`, `contract validation`, or `source availability`, and
+say whether every accepted lane reached a terminal result. Workers that
+completed are never reported as failed because the controller could not
+publish.
 
 Before assurance or publication, candidate runs are normalized into a deeply
 immutable `ValidatedRun`. To prevent premature or invalid promotion,
@@ -189,6 +205,6 @@ runs (`failed`, `running`, `preparing`, `awaiting-approval`) withdraw any
 existing `packet.md` under the unchanged-root guard, leave no `ValidatedRun`,
 and cause the exported renderer to fail closed with `PACKET_NOT_PUBLISHABLE`.
 
-If the manifest, ledger, topology, receipts, source identities, or publication
+If the manifest, ledger, approval envelope, source identities, or publication
 boundary cannot be validated, the run is `failed`. It may retain safe raw
 diagnostics, but it does not publish a misleading `packet.md`.

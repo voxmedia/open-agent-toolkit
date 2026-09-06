@@ -67,8 +67,16 @@ gate contract documents that recovery means re-validation, never re-review.
     its own `artifact_validation_failed` guard; corroboration, invocation
     check, threshold, handoff, and result writing after it are unguarded and
     fall to the catch-all. That is the #232 incident shape.
-  - `packages/cli/src/commands/gate/index.test.ts:5943` and `:5984` — the only
-    two assertions on this envelope; neither pins recovery or a step name.
+  - `packages/cli/src/commands/gate/index.ts:3553-3559` (at review baseline
+    `6d5c11243`) — the normal path parses the verdict from the selected
+    artifact's `artifactSnapshot: { content, signature }`, not from whatever
+    bytes the path holds at parse time; `:3595` corroborates the invocation,
+    `:3632` rejects `verdict.invocation !== 'gate'`, and `:3657` applies the
+    threshold. Recovery must reuse exactly this pipeline on the same snapshot.
+  - `packages/cli/src/commands/gate/index.test.ts:5945`, `:5984`, and the
+    branch-local route-receipt case at `:6640` — the three assertions on this
+    envelope; none pins recovery or a step name (the `:6640` case has no
+    resolved artifact, so the recovery branch must stay inert there).
   - `packages/cli/src/commands/gate/index.ts:2680-2712` — PR #246's
     `artifact_missing` envelope shape that must stay byte-stable.
   - `apps/oat-docs/docs/cli-utilities/workflow-gates.md:293-316` — status
@@ -89,11 +97,12 @@ gate contract documents that recovery means re-validation, never re-review.
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                                                                                       | Required state                                                                                                        | Current state                                                           |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Satisfied        | [PR #246](https://github.com/voxmedia/open-agent-toolkit/pull/246) gate execution contracts                                                                                      | Preserve `artifact_missing`, `targeting_correlation_failed`, and structured-command envelopes byte-for-byte.          | Merged at `511ffff38`; contracts pinned by `validation/skills.test.ts`. |
-| Soft ownership   | [review-gate-integrity](../../../projects/shared/review-gate-integrity/state.md) / [BL-260820-bind-each-gate-review](../../pjm/backlog/items/BL-260820-bind-each-gate-review.md) | Do not change lifecycle-event identity or receive consumption; record the envelope-shape choice as a decision record. | Project still in discovery; this item is listed as one of its children. |
-| Soft integration | Sibling plan [Retry gate project-log finalization](./2026-09-02-retry-gate-project-log-finalization-across-index-locks.md)                                                       | Land this plan first in a shared wave; both edit disjoint regions of `gate/index.ts` and `index.test.ts`.             | Pending.                                                                |
+| Type             | Dependency                                                                                                                                                                       | Required state                                                                                                                                                                                                                                                        | Current state                                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Satisfied        | [PR #246](https://github.com/voxmedia/open-agent-toolkit/pull/246) gate execution contracts                                                                                      | Preserve `artifact_missing`, `targeting_correlation_failed`, and structured-command envelopes byte-for-byte.                                                                                                                                                          | Merged at `511ffff38`; contracts pinned by `validation/skills.test.ts`. |
+| Soft ownership   | [review-gate-integrity](../../../projects/shared/review-gate-integrity/state.md) / [BL-260820-bind-each-gate-review](../../pjm/backlog/items/BL-260820-bind-each-gate-review.md) | Do not change lifecycle-event identity or receive consumption; record the envelope-shape choice as a decision record.                                                                                                                                                 | Project still in discovery; this item is listed as one of its children. |
+| Soft integration | Sibling plan [Retry gate project-log finalization](./2026-09-02-retry-gate-project-log-finalization-across-index-locks.md)                                                       | Land this plan first in a shared wave; both edit disjoint regions of `gate/index.ts` and `index.test.ts`, and both append to the status table and incident-to-regression table in `workflow-gates.md`, so the docs hunk must be rebased; never in one parallel group. | Pending.                                                                |
+| Soft ordering    | W5 group 2 plan [Add an oat config unset command](./2026-09-02-add-oat-config-unset-command.md)                                                                                  | Runs after this plan; both edit `apps/oat-docs/docs/reference/cli-reference.md`, so never in one parallel group.                                                                                                                                                      | Pending.                                                                |
 
 There are no unsatisfied hard dependencies.
 
@@ -127,23 +136,28 @@ new post-selection segment is a STOP until this plan is refreshed.
 - Implementation pattern: `lateCompletion` additive recovery in
   `gate/index.ts` per DR-260714; envelope writers stay in `index.ts`.
 - Git/PR convention: docs under `apps/oat-docs/docs` are shipped assets, so
-  bump the five lockstep packages together; do not push or open a PR unless
-  instructed.
+  the integrated change carries a lockstep bump (fan-in owned in lane mode;
+  see Scope); do not push or open a PR unless instructed.
 
 ## Scope
 
 ### In scope
 
 - `packages/cli/src/commands/gate/index.ts` — widen `postSelectionContext`
-  with `step` and the resolved artifact, label each post-selection segment,
-  recover in the catch, and extend `writeReviewGateUnexpectedFailure` with
-  `postSelection: { step, code }`.
+  with `step` and the resolved artifact snapshot (path, `generatedAt`,
+  `generatedTime`, `containingProject`, `content`, `signature`), label each
+  post-selection segment, factor the post-parse eligibility pipeline into one
+  function shared by the normal path and the catch, recover in the catch, and
+  extend `writeReviewGateUnexpectedFailure` with `postSelection: { step, code }`.
 - `packages/cli/src/commands/gate/index.test.ts` — the cases in the test plan.
+- `packages/cli/src/commands/gate/configured-gate.integration.test.ts` and
+  `gate-hardening.integration.test.ts` — assertion additions only (step 4); no
+  production edits.
 - `apps/oat-docs/docs/cli-utilities/workflow-gates.md` and
   `apps/oat-docs/docs/reference/cli-reference.md` — recovery contract prose
   and the incident-to-regression row.
 - One decision record for the envelope additions via `oat decision new`.
-- Five public package manifests.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -178,9 +192,12 @@ In `index.ts:3164-3172` widen `postSelectionContext` with
 `step: PostSelectionStep` (new union: `target-dispatch`, `artifact-scan`,
 `artifact-correlation`, `artifact-validation`, `verdict-parse`,
 `invocation-corroboration`, `verdict-disposition`) and
-`artifact?: { path; generatedAt; containingProject }`. Assign `step` before
-each segment and set `artifact` immediately after `resolveRunCorrelatedReviewArtifact`
-succeeds.
+`artifact?: { path; generatedAt; generatedTime; containingProject; content; signature }`
+copied from the resolved `producedArtifact` (`:3436`), plus the run identity
+the eligibility checks need (`reviewProject.path`, the gate `runId`, and the
+dispatch report's target). Assign `step` before each segment and set
+`artifact` immediately after `resolveRunCorrelatedReviewArtifact` succeeds.
+The snapshot, not the path, is what recovery re-validates.
 
 **Verify:** `pnpm exec vitest run src/commands/gate/index.test.ts` → the two
 existing unexpected-failure cases still pass.
@@ -192,22 +209,45 @@ Extend `writeReviewGateUnexpectedFailure` (`index.ts:2594`) to include
 constructor name) and append `(post-selection step: <step>)` to the human
 error line. Keep `status` and `outcome` unchanged.
 
-**Verify:** same command; the two existing cases assert the new field.
+**Verify:** same command; the three existing cases assert the new field and
+the `:6640` case still yields `review_failed`.
 
-### 3. Recover a validating committed artifact
+### 3. Factor the eligibility pipeline into one function
+
+Extract the post-parse segment of `runReviewGate` (`index.ts:3553-3667` at
+`6d5c11243`: `parseReviewGateVerdict` with `artifactSnapshot`, target/project
+containment, `generatedAt` validity, `corroborateGateInvocation`, the
+`verdict.invocation !== 'gate'` marker check, and `reviewBlocksAtThreshold`)
+into a single `disposeValidatedReviewArtifact(snapshot, identity, dependencies)`
+that returns either `{ eligible: true, verdict, blocking, corroboration }` or
+`{ eligible: false, cause, envelope }` where `envelope` is the exact existing
+failure writer to call. The normal path calls it and writes the same
+envelopes it writes today; no envelope changes shape or wording.
+
+**Verify:** `pnpm exec vitest run src/commands/gate/index.test.ts` → every
+existing validation-failure, marker, target, and threshold case passes
+unchanged; `git diff` shows no change to any `write*Failure` body.
+
+### 4. Recover a validating committed artifact
 
 In the catch (`index.ts:3684-3700`), when `postSelectionContext.artifact` is
-set: re-run `dependencies.parseReviewGateVerdict`, `corroborateGateInvocation`,
-and `reviewBlocksAtThreshold`; on success call `writeReviewGateResult` with the
-real `ok`/`blocked` status, `receiveEligible: true`, a built handoff, and the
-additive `postSelectionRecovery: true`; set `projectLogFinalization.status` and
-`exitCode` accordingly. On any failure fall through to step 2's envelope with
-the sub-step named. Never re-dispatch.
+set: call `disposeValidatedReviewArtifact` on the stored snapshot and run
+identity (never re-read the path); on `eligible: true` call
+`writeReviewGateResult` with the real `ok`/`blocked` status,
+`receiveEligible: true`, a built handoff, and the additive
+`postSelectionRecovery: true`; set `projectLogFinalization.status` and
+`exitCode` accordingly. On `eligible: false` fall through to step 2's
+`review_failed` envelope with the sub-step named and the eligibility cause in
+`postSelection.code`; do not emit the eligibility envelope from inside the
+catch, because the thrown sub-step is what failed. The failing sub-step is
+diagnostic context in the envelope, never eligibility evidence. Never
+re-dispatch.
 
 **Verify:** `pnpm exec vitest run src/commands/gate/index.test.ts -t 'post-selection'`
-→ recovery cases pass.
+→ recovery cases pass, including the path-replacement and invalid-marker
+controls in the test plan.
 
-### 4. Lock the preserved contracts
+### 5. Lock the preserved contracts
 
 Add assertions that recovered envelopes keep the handoff and eligibility
 shape, and that `artifact_missing` and `targeting_correlation_failed`
@@ -215,22 +255,24 @@ envelopes are byte-identical to today.
 
 **Verify:** `pnpm exec vitest run src/commands/gate/configured-gate.integration.test.ts src/commands/gate/gate-hardening.integration.test.ts` → pass.
 
-### 5. Document, decide, and bump
+### 6. Document, decide, and bump
 
 Add the recovery paragraph and status-table entry to `workflow-gates.md`
 (`:293-316`) and an incident-to-regression row (`:800-809`); add one clause to
-`cli-reference.md:144` without disturbing the regex-pinned `artifact_missing`
-sentence. Record the additive-field decision with `oat decision new`. Bump the
-five lockstep packages above fresh `origin/main`.
+`cli-reference.md:145` (the `oat gate review` bullet) without disturbing the regex-pinned `artifact_missing`
+sentence. Record the additive-field decision: Before writing the record, run `oat pjm doctor --json` and require `adoption.state` of `declared` or `inferred-legacy` (STOP otherwise), read `.oat/repo/reference/decisions/AGENTS.md`, create it with `oat decision new`, and run `oat decision regenerate-index`.
 
 **Verify:** `pnpm check` and `pnpm exec vitest run src/validation/skills.test.ts` → pass.
 
-### 6. Run the definition-of-done gates
+### 7. Run the verification gates for the execution mode
 
-Run the eight AGENTS.md gates in order with captured exit codes; fetch
-`origin/main` immediately before `pnpm release:check-versions`.
-
-**Verify:** every gate exits 0.
+**Verify (lane mode, the default under the execution program):** run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes. Do not edit lockstep
+release files or run `pnpm release:check-versions` / `pnpm release:validate`;
+the wave fan-in owns the lockstep bump and the full definition-of-done
+sequence. **Standalone mode only:** bump the five public packages above
+freshly fetched `origin/main` and run the eight AGENTS.md gates in order.
 
 ## Test plan
 
@@ -246,11 +288,26 @@ at `index.test.ts:5984` (poisoned `reviews` path) and the
   `postSelection.step: 'artifact-scan'`.
 - `keeps review_failed when the committed artifact does not validate` →
   `postSelection.step: 'verdict-parse'` with the validation cause.
+- `recovers from the selected snapshot, not the current path contents` →
+  after selection, overwrite the artifact path with a different passing
+  review body, then throw in `verdict-disposition`; the recovered envelope
+  carries the original signature and verdict, and the replacement bytes are
+  never parsed (spy on `parseReviewGateVerdict` for `artifactSnapshot`).
+- `does not recover an artifact whose invocation marker is not gate` →
+  snapshot with `oat_review_invocation: review`; result is `review_failed`
+  with `postSelection.code` naming the marker cause; no second dispatch
+  (assert the child spawn mock was called once).
+- `does not recover an artifact targeting another project` → containment
+  mismatch in the snapshot; `review_failed`, one dispatch.
+- `normal and recovery paths share one eligibility function` → both call
+  paths hit the same `disposeValidatedReviewArtifact` spy with identical
+  snapshot and identity arguments.
 - `preserves the artifact_missing envelope` → byte-equal to the `:4698` and
   `:7915` expectations.
 - `records the recovered disposition in the project log` → `status=ok` in the
   appended body (`:4816-4838` pattern).
-- Full CLI suite, build, release validation, docs build.
+- Full CLI suite and build in lane mode; release validation and docs build
+  run at wave fan-in or in standalone mode.
 
 ## Done criteria
 
@@ -259,7 +316,13 @@ at `index.test.ts:5984` (poisoned `reviews` path) and the
 - [ ] Every `review_failed` envelope names `postSelection.step` and `code`.
 - [ ] The six terminal statuses and the PR #246 envelopes are unchanged.
 - [ ] Docs describe recovery-by-revalidation; `skills.test.ts` still passes.
-- [ ] Decision record added; five-package lockstep bump and all gates pass.
+- [ ] Decision record added.
+- [ ] Recovery re-validates the selected content/signature snapshot through
+      the same eligibility function as the normal path; replacement bytes,
+      a non-gate marker, or a foreign target never recover.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is
+      edited. Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions
@@ -289,7 +352,8 @@ reproduced. Apply the landing-event table above for the two named events.
 ## Review focus
 
 - The recovery path must reuse the existing validation and corroboration
-  functions unchanged; no duplicated verdict logic.
+  functions through the single factored eligibility function; no duplicated
+  verdict logic, no path re-read, no skipped invocation-marker check.
 - Envelope additions are purely additive; existing consumers keyed on
   `status` and `outcome` are unaffected.
 - The project-log finalization records the recovered disposition, not the

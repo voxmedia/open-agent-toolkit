@@ -17,10 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 import { hashCanonicalJson, hashFile } from '../scripts/lib/canonical-json.mjs';
 import { validatePacket } from '../scripts/validate-packet.mjs';
-import {
-  createApprovalBinding,
-  createApprovalProjection,
-} from './fixtures/packet-fixture.mjs';
+import { createExecutionApproval } from './fixtures/packet-fixture.mjs';
 
 const fixtureRoot = new URL('./fixtures/', import.meta.url);
 const tempRoots = [];
@@ -33,8 +30,8 @@ afterEach(async () => {
   );
 });
 
-function stagesFor(profile) {
-  const modes = ['map', 'gather', 'compile', 'locator-validation'];
+function passesFor(profile) {
+  const modes = ['map', 'gather', 'compile'];
   if (profile === 'standard' || profile === 'thorough') {
     modes.push(
       'semantic-verification',
@@ -50,15 +47,7 @@ function stagesFor(profile) {
       'contradiction-resolution',
     );
   }
-  return modes.map((mode, index) => ({
-    kind: 'recon.stage-result',
-    schemaVersion: 1,
-    id: `stage-${index + 1}`,
-    waveId: `wave-${mode}`,
-    mode,
-    status: 'complete',
-    artifactIds: [],
-  }));
+  return modes;
 }
 
 async function writeJson(path, value) {
@@ -89,8 +78,8 @@ async function makePacket({
     schemaVersion: 1,
     id: 'dossier-gather',
     runId: 'run-1',
-    waveId: 'wave-1',
-    laneId: 'lane-1',
+    waveId: 'wave-gather',
+    laneId: 'lane-gather',
     mode: 'gather',
     outcome: 'complete',
     allowedInputs: ['source-1'],
@@ -496,119 +485,37 @@ async function makePacket({
     path: 'claims.json',
     digest: await hashFile(claimsPath),
   };
-  const stageDefinitions = stagesFor(profile);
-  const stageLaneId = (stage) =>
-    stage.mode === 'semantic-verification'
-      ? 'lane-semantic'
-      : `lane-${stage.mode}`;
-  const approvalProjection = createApprovalProjection({
-    runId: 'run-1',
-    stages: stageDefinitions,
-    laneIdForStage: stageLaneId,
+  const passModes = passesFor(profile);
+  const passLaneId = (mode) =>
+    mode === 'semantic-verification' ? 'lane-semantic' : `lane-${mode}`;
+  const execution = createExecutionApproval({
+    modes: passModes,
+    laneIdForMode: passLaneId,
     concurrency: profile === 'thorough' ? 4 : 2,
-    laneCap: profile === 'thorough' ? 20 : 10,
   });
-  const approvalBinding = createApprovalBinding(approvalProjection);
-  const stageArtifacts = [];
-  const stageRows = [];
-  for (const stage of stageDefinitions) {
-    const laneId = stageLaneId(stage);
-    let artifactId;
-    if (stage.mode === 'semantic-verification') artifactId = 'review-semantic';
-    else if (stage.mode === 'adversarial') artifactId = 'review-adversarial';
-    else if (stage.mode === 'coverage') artifactId = 'review-coverage';
-    else if (stage.mode === 'reconciliation')
-      artifactId = 'review-reconciliation';
-    else if (stage.mode === 'redundant-verification')
-      artifactId = 'review-redundant-verification';
-    else if (stage.mode === 'contradiction-resolution')
-      artifactId = 'review-contradiction-resolution';
-    else {
-      artifactId = `stage-artifact-${stage.mode}`;
-      const mode =
-        stage.mode === 'locator-validation'
-          ? 'verify'
-          : stage.mode === 'redundant-gather'
-            ? 'gather'
-            : stage.mode;
-      const path = join(
-        packetRoot,
-        'raw',
-        'dossiers',
-        `stage-${stage.mode}.json`,
-      );
-      await writeJson(path, {
-        kind: 'recon.raw-dossier',
-        schemaVersion: 1,
-        id: artifactId,
-        runId: 'run-1',
-        waveId: `wave-${stage.mode}`,
-        laneId,
-        mode,
-        outcome: 'complete',
-        allowedInputs: ['source-1'],
-        excludedInputs: [],
-        findings: [],
-        uncertainty: [],
-        contradictions: [],
-        gaps: [],
-      });
-      stageArtifacts.push({
-        path: `raw/dossiers/stage-${stage.mode}.json`,
-        digest: await hashFile(path),
-      });
-    }
-    const dispatchReceiptIds = [];
-    for (const state of ['prepared', 'approved', 'accepted', 'completed']) {
-      const id = `dispatch-${stage.id}-${state}`;
-      const path = join(packetRoot, 'raw', 'dispatch', `${id}.json`);
-      await mkdir(join(packetRoot, 'raw', 'dispatch'), { recursive: true });
-      await writeJson(path, {
-        kind: 'recon.dispatch-receipt',
-        schemaVersion: 1,
-        id,
-        runId: 'run-1',
-        stageId: stage.id,
-        laneId,
-        state,
-        approvalProjection,
-        approvalCanonicalJson: approvalBinding.approvalCanonicalJson,
-        approvalFingerprint: approvalBinding.approvalFingerprint,
-        approvedAt: state === 'prepared' ? null : approvalBinding.approvedAt,
-        approvalEvidence:
-          state === 'prepared' ? null : approvalBinding.approvalEvidence,
-        catalogRecheck:
-          state === 'accepted' || state === 'completed'
-            ? approvalBinding.catalogRecheck
-            : null,
-        launchAcceptance:
-          state === 'accepted' || state === 'completed'
-            ? {
-                status: 'accepted',
-                acceptedAt: '2026-08-31T00:01:00.000Z',
-                handle: `handle-${stage.id}`,
-              }
-            : null,
-        terminalOutcome:
-          state === 'completed'
-            ? {
-                status: 'completed',
-                completedAt: '2026-08-31T00:01:30.000Z',
-              }
-            : null,
-        ...(state === 'completed' ? { artifactIds: [artifactId] } : {}),
-      });
-      stageArtifacts.push({
-        path: `raw/dispatch/${id}.json`,
-        digest: await hashFile(path),
-      });
-      dispatchReceiptIds.push(id);
-    }
-    stageRows.push({
-      ...stage,
-      laneId,
-      artifactIds: [artifactId],
-      dispatchReceiptIds,
+  const passArtifacts = [];
+  for (const mode of passModes) {
+    if (!['map', 'gather', 'redundant-gather'].includes(mode)) continue;
+    const path = join(packetRoot, 'raw', 'dossiers', `pass-${mode}.json`);
+    await writeJson(path, {
+      kind: 'recon.raw-dossier',
+      schemaVersion: 1,
+      id: `pass-artifact-${mode}`,
+      runId: 'run-1',
+      waveId: `wave-${mode}`,
+      laneId: passLaneId(mode),
+      mode: mode === 'redundant-gather' ? 'gather' : mode,
+      outcome: 'complete',
+      allowedInputs: ['source-1'],
+      excludedInputs: [],
+      findings: [],
+      uncertainty: [],
+      contradictions: [],
+      gaps: [],
+    });
+    passArtifacts.push({
+      path: `raw/dossiers/pass-${mode}.json`,
+      digest: await hashFile(path),
     });
   }
   const manifest = {
@@ -632,11 +539,8 @@ async function makePacket({
       outputPath: packetRoot,
     },
     sources: [source],
-    execution: {
-      ...approvalBinding,
-    },
-    stages: stageRows,
-    artifacts: [claimsRef, dossierRef, ...reviewArtifacts, ...stageArtifacts],
+    execution,
+    artifacts: [claimsRef, dossierRef, ...reviewArtifacts, ...passArtifacts],
     gaps: [],
   };
   const manifestPath = join(packetRoot, 'manifest.json');
@@ -732,32 +636,6 @@ for (const status of ['failed', 'running', 'preparing', 'awaiting-approval']) {
   });
 }
 
-test('normalized packet validation enforces acceptedAt before or equal to completedAt', async () => {
-  const setCompletedAt = async (packet, completedAt) => {
-    const reference = packet.manifest.artifacts.find(
-      (item) =>
-        item.path.startsWith('raw/dispatch/') &&
-        item.path.endsWith('-completed.json'),
-    );
-    const path = join(packet.packetRoot, reference.path);
-    const receipt = JSON.parse(await readFile(path, 'utf8'));
-    receipt.terminalOutcome.completedAt = completedAt;
-    await writeJson(path, receipt);
-    reference.digest = await hashFile(path);
-    await writeJson(packet.manifestPath, packet.manifest);
-  };
-
-  const before = await makePacket({ profile: 'standard' });
-  await setCompletedAt(before, '2026-08-31T00:00:59.999Z');
-  const invalid = await validatePacket(before.packetRoot);
-  assert.equal(invalid.valid, false, JSON.stringify(invalid, null, 2));
-
-  const equal = await makePacket({ profile: 'standard' });
-  await setCompletedAt(equal, '2026-08-31T00:01:00.000Z');
-  const valid = await validatePacket(equal.packetRoot);
-  assert.equal(valid.valid, true, JSON.stringify(valid, null, 2));
-});
-
 for (const sourceKind of [
   'repository',
   'url',
@@ -773,13 +651,7 @@ for (const sourceKind of [
 
 test('valid lower-assurance packet publishes as an honest partial', async () => {
   const packet = await makePacket({ profile: 'standard', status: 'partial' });
-  const omittedStages = packet.manifest.stages.slice(4);
-  for (const stage of omittedStages) {
-    stage.status = 'omitted';
-    stage.artifactIds = [];
-    stage.dispatchReceiptIds = [];
-    stage.message = `${stage.mode} was omitted after the quick profile completed.`;
-  }
+  const omittedPasses = passesFor('standard').slice(3);
   packet.manifest.artifacts = packet.manifest.artifacts.filter(
     (artifact) => !artifact.path.startsWith('reviews/'),
   );
@@ -793,10 +665,10 @@ test('valid lower-assurance packet publishes as an honest partial', async () => 
     to: 'supported',
   };
   packet.manifest.gaps.push(
-    ...omittedStages.map((stage, index) => ({
+    ...omittedPasses.map((mode, index) => ({
       id: `gap-${index + 1}`,
       code: 'PASS_OMITTED',
-      message: `${stage.mode} was omitted after the quick profile completed.`,
+      message: `${mode} was omitted after the quick profile completed.`,
       material: true,
     })),
   );
@@ -921,8 +793,7 @@ test('rejects connected-resource version drift and insufficient provenance', asy
 
 test('rejects approval fingerprint drift and unresolved verification challenge', async () => {
   const approval = await makePacket();
-  approval.manifest.execution.approvalProjection.selection.effort_selector =
-    'low';
+  approval.manifest.execution.effort = 'low';
   await writeJson(approval.manifestPath, approval.manifest);
   await expectInvalid(approval, 'APPROVAL_FINGERPRINT_MISMATCH');
 

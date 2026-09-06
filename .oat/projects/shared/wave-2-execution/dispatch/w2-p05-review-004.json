@@ -1,0 +1,86 @@
+{
+  "request_id": "w2-p05-review-004",
+  "caller": "oat-project-implement",
+  "scope": "p05",
+  "objective": "Disposition-verification round 4 for the p05 Bugbot ordering fix 3ee49fcad",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "review",
+  "provider": "claude",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "opus",
+  "catalog_snapshot": {
+    "id": "claude-task-catalog-p05-review",
+    "source": "tool-schema",
+    "observed_at": "2026-09-06T10:02:35.000Z"
+  },
+  "authority": "read-only",
+  "role_selector": "oat-reviewer",
+  "model_selector": "opus",
+  "model_selector_granularity": "tier-alias",
+  "effort_selector": null,
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-claude.md",
+  "guidance_version": "2026-07-25",
+  "guidance_verified_at": "2026-09-05",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["opus"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 7200,
+  "retry_limit": 0,
+  "payload": {
+    "subagent_type": "oat-reviewer",
+    "model": "opus",
+    "scope": "p05",
+    "worktree": "root"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    "dispatch ceiling resolver",
+    "Claude Code Task tool model argument"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [
+    {
+      "kind": "review-round",
+      "original_request_id": "w2-p05-review-001",
+      "round": 4,
+      "trigger": "Cursor Bugbot PR 267 comment 3943573356"
+    }
+  ],
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "Independent review of a merged-bound lane where a subtle miss is expensive.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<project>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.1",
+      "contentDigest": "sha256:1e2987f2cb1d74e9c13203a45ba39de13c7a52624059985f154c04dbed87a0d4",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}

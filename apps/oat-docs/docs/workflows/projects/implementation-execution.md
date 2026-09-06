@@ -152,7 +152,11 @@ by the phase's standing authority. The important distinctions are:
   boundary, not for every eligible defect;
 - a **continuation** preserves the original request and exact target, either in
   the accepted handle or through an explicitly linked fresh same-target
-  recovery launch; and
+  recovery launch, and never starts on a dirty tree: uncommitted work a lost
+  child left behind is first captured into a digest-verified artifact,
+  restored out of the worktree, handed forward as `recovered_patch`, and
+  committed by the continuation as its first action, while unverified or
+  unsupported dirt still blocks; and
 - a **successful repair** produces one immutable append-only recovery commit.
 
 This recovery is not accepted-launch fallback. After a launch is accepted,

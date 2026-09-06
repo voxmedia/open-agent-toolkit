@@ -60,6 +60,7 @@ Before each phase:
    worktree: {assigned checkout}
    parallel_group: {group or null}
    expected_base_sha: {group base or PHASE_BASE_HEAD}
+   recovered_patch: {artifact reference for a same-target continuation, or null}
    commit_convention: {from plan.md}
    request_id: {generic dispatch request ID}
    phase_recovery_limit: {resolved 0-20 limit}
@@ -212,6 +213,200 @@ Handle and exact-target continuity use these mutually compatible branches:
 Handle unavailability alone does not make automatic recovery ineligible or
 stop it. It selects the second branch only when all its conditions hold.
 
+**Recovering a lost child's uncommitted work.** A fresh child never starts on a
+dirty tree. When the lost or unresumable child left uncommitted work behind,
+neither continuity branch above may run until that work is captured into an
+immutable, verified artifact and the worktree is returned to its clean base.
+Run this ordered sequence, and treat every nonzero exit as a park-the-phase
+STOP rather than a best-effort restore:
+
+1. Resolve the capture script through this skill's installed root rather than a
+   repository-relative path, so a user-scope install resolves too:
+
+   ```bash
+   set -eu
+   CAPTURE_SCRIPT=""
+   REPO_ROOT=$(git -C "$PHASE_WORKTREE" rev-parse --show-toplevel 2>/dev/null || true)
+   for CAPTURE_ROOT in "${SKILL_DIR:-}" \
+     "${HOME:-}/.agents/skills/oat-project-implement" \
+     "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-implement}"; do
+     [ -n "$CAPTURE_ROOT" ] || continue
+     [ -f "$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs" ] || continue
+     CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"
+     break
+   done
+   [ -n "$CAPTURE_SCRIPT" ] || {
+     echo "capture-script-unavailable" >&2
+     exit 1
+   }
+   ```
+
+   The guard terminates; it never falls through to an empty command, because
+   `node ""` reads its program from stdin and exits zero at EOF, which is what a
+   non-interactive harness always presents — an unverified artifact would sail
+   through as a pass. Shell variables do not survive across separate tool
+   invocations, so every block below that runs the script repeats this
+   resolution and this guard in the same block rather than relying on
+   `CAPTURE_SCRIPT` carrying over. An empty `CAPTURE_SCRIPT` is a
+   `capture-script-unavailable` STOP: report it verbatim
+   with the probed roots and the recovery command
+   `oat tools install workflows --scope <user|project>` or
+   `oat tools update --pack workflows --scope <user|project>`, leave the
+   worktree as it is, and park the phase. Never fall back to a
+   repository-relative path.
+
+2. Establish that the former child cannot still be writing: its handle is
+   terminated, or its worktree is quiescent.
+3. Capture the work. The script establishes quiescence from two byte-identical
+   worktree snapshots, classifies the dirt, captures the index, worktree, and
+   untracked components binary-safely, writes a `manifest.json` carrying the
+   `HEAD` SHA, the affected paths, the `git diff --cached --stat` summary, and a
+   SHA-256 digest and byte size for every artifact file, derives the
+   `restorePlan` step 4 follows, and proves the artifact replays into a pristine
+   replica of that same `HEAD` before it seals the result. Only a sealed
+   artifact can be verified later:
+
+   ```bash
+   set -eu
+   CAPTURE_SCRIPT=""
+   REPO_ROOT=$(git -C "$PHASE_WORKTREE" rev-parse --show-toplevel 2>/dev/null || true)
+   for CAPTURE_ROOT in "${SKILL_DIR:-}" \
+     "${HOME:-}/.agents/skills/oat-project-implement" \
+     "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-implement}"; do
+     [ -n "$CAPTURE_ROOT" ] || continue
+     [ -f "$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs" ] || continue
+     CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"
+     break
+   done
+   [ -n "$CAPTURE_SCRIPT" ] || {
+     echo "capture-script-unavailable" >&2
+     exit 1
+   }
+
+   node "$CAPTURE_SCRIPT" \
+     --worktree "$PHASE_WORKTREE" \
+     --artifact-dir "$ARTIFACT_DIR" \
+     --writer-identity "$FORMER_CHILD_IDENTITY" \
+     --bounded-file "<in-phase path>" \
+     --bounded-file "<another in-phase path>"
+   ```
+
+   The phase file boundary is mandatory, not a template flourish: repeat
+   `--bounded-file` once per in-phase path from the plan, because capture
+   refuses to run without one and dirt outside the boundary is
+   `unsupported-dirt` rather than something a continuation may re-commit.
+   Repeat the flag rather than packing paths into one delimited value; a
+   filename may legitimately contain a comma.
+
+   A nonzero exit is a STOP. Report its reason — `active-writer`,
+   `unsupported-dirt`, or `round-trip-failed` — verbatim, leave the worktree as
+   it is, and park the phase.
+
+4. Restore only the affected paths, following the `restorePlan` the script
+   emitted, and always with `git --literal-pathspecs` so a filename cannot act
+   as pathspec magic: `restore-from-head` runs
+   `git --literal-pathspecs restore --staged --worktree --source=HEAD -- <path>`,
+   `unstage-and-remove` runs
+   `git --literal-pathspecs restore --staged -- <path>` and then deletes the
+   file, and `remove-untracked` deletes the captured untracked path. The script
+   never restores; this lifecycle does, and only the actions the plan names.
+5. Brief the fresh same-target continuation with `recovered_patch`.
+6. The continuation resolves the script the same way and re-verifies the
+   artifact before it applies anything:
+
+   ```bash
+   set -eu
+   # `recovered_patch` is optional and all-or-nothing. Without one there is
+   # nothing to verify and nothing to apply, so the verifier is skipped
+   # entirely; a partial brief is a named stop rather than an unbound-variable
+   # death. Never dereference an artifact variable outside the branch: under
+   # `set -u` an unset one exits here, and an empty one fails verification —
+   # either way an artifact-free retry parks before the ledger reconciliation
+   # it needs to reach.
+   if [ -z "${ARTIFACT_DIR:-}${MANIFEST_DIGEST:-}${ARTIFACT_SIZE:-}" ]; then
+     : # No recovered_patch: continue to the ledger reconciliation.
+   elif [ -z "${ARTIFACT_DIR:-}" ] || [ -z "${MANIFEST_DIGEST:-}" ] ||
+     [ -z "${ARTIFACT_SIZE:-}" ]; then
+     echo "artifact-verification-failed: a partial recovered_patch is unusable; artifact, manifest_digest and size travel together" >&2
+     exit 1
+   else
+     CAPTURE_SCRIPT=""
+     REPO_ROOT=$(git -C "$PHASE_WORKTREE" rev-parse --show-toplevel 2>/dev/null || true)
+     for CAPTURE_ROOT in "${SKILL_DIR:-}" \
+       "${HOME:-}/.agents/skills/oat-project-implement" \
+       "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-implement}"; do
+       [ -n "$CAPTURE_ROOT" ] || continue
+       [ -f "$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs" ] || continue
+       CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"
+       break
+     done
+     [ -n "$CAPTURE_SCRIPT" ] || {
+       echo "capture-script-unavailable" >&2
+       exit 1
+     }
+
+     EXPECTED_HEAD=$(git -C "$PHASE_WORKTREE" rev-parse --verify HEAD)
+     node "$CAPTURE_SCRIPT" --verify \
+       --artifact-dir "$ARTIFACT_DIR" \
+       --manifest-digest "$MANIFEST_DIGEST" \
+       --size "$ARTIFACT_SIZE" \
+       --expected-head "$EXPECTED_HEAD"
+   fi
+   ```
+
+   `--expected-head` is mandatory and reconciles the artifact's captured base
+   with the `HEAD` about to be patched. Integrity is not base agreement: a hunk
+   whose context happens to match applies cleanly at the wrong commit and
+   silently produces wrong content, so a base mismatch is a STOP.
+
+   An `artifact-verification-failed` exit is a STOP. Verification is read-only
+   and conditional: it runs only when the brief carries a `recovered_patch`.
+   A continuation briefed without one has no artifact to resolve a script for,
+   so it skips verification and continues to the ledger reconciliation, and its
+   apply step is a no-op. The continuation completes every fail-closed
+   precondition — input validation, the base and immutable-history checks,
+   artifact verification when an artifact was briefed, and pending-attempt
+   reconciliation — before it applies or commits anything,
+   so a precondition stop leaves the branch exactly at `recovery_base_head`
+   with the artifact untouched and re-verifiable; re-brief from current
+   authoritative state rather than assuming the earlier brief still holds. Only
+   then, and only when an artifact was briefed and verified, does it apply
+   `git apply --index` for the `index` component, `git apply` for the
+   `worktree` component, and byte copies plus the manifest's recorded
+   executable bit for the `untracked` component, review the result, and commit
+   it as its first action. The artifact is immutable between the verification
+   and the application: nothing may write to it in between, and a
+   re-verification is required if anything might have. A continuation briefed
+   without a `recovered_patch` applies nothing, commits nothing here, records
+   no artifact reference, and proceeds to its own work with the tree as it
+   found it.
+
+7. Record the artifact reference and manifest digest in the continuation event
+   (`cont-<project>-<phase>-fix-N`). That first commit is a recovery commit,
+   not a planned task commit: expect exactly one, require the continuation to
+   report it with the artifact reference and manifest digest, and do not count
+   it against any task's one-commit rule. It is also immutable and becomes part
+   of the phase's base. If a later stop parks the phase after it landed, brief
+   the retry with `recovery_base_head` set to the reconciled current HEAD —
+   which includes that recovery commit and any candidate or ledger-only commit
+   already durably made — and without the already-committed artifact;
+   re-supplying it would apply the same work twice, and holding the original
+   base would make the exact-HEAD check unsatisfiable. That retry runs no
+   verifier: with `recovered_patch` null there is nothing to verify, and a
+   contract that referenced the artifact variables anyway would park the retry
+   under `set -u` before it reached the reconciliation. Carry the recovery
+   commit as provenance in the continuation event, and capture dirt that
+   accumulated afterwards as its own new `recovered_patch`.
+
+An unresolvable capture script (`capture-script-unavailable`), an active writer
+(`active-writer`), unsupported dirt (`unsupported-dirt`), a failed round trip
+(`round-trip-failed`), and an unreadable, unproven, base-mismatched, or tampered
+artifact (`artifact-verification-failed`) are terminal stops. None of
+them authorizes a partial or best-effort restore, a widened scope, or a
+fallback target. Supported dirt is exactly staged and unstaged hunks in tracked
+paths, binary changes, and untracked regular files; everything else, including
+staged renames, submodules, and in-progress merge or rebase state, stops.
+
 Attempt accounting uses exactly one of these alternatives:
 
 1. **Pending completion:** a matching `pending_attempt` may continue only after
@@ -264,7 +459,10 @@ If the exact target is lost or cannot continue, stop before editing.
 Architecture, security, product, or requirements changes stop for direction.
 Non-mechanical widening or destructive work stops before editing. Retry
 exhaustion and every governance cap stop automatic recovery. A dirty worktree
-or dirty history blocks continuation. Inability to establish correctness,
+or dirty history blocks continuation, except for the single verified, named
+`recovered_patch` artifact the sequence above produced and the continuation
+verified; unverified, unsupported, or unnamed dirt still blocks. Inability to
+establish correctness,
 missing original-request provenance, missing exact-target provenance, an
 unverifiable commit range, or a malformed recovery event stops for direction.
 If focused and phase verification cannot establish correctness, stop for
@@ -301,7 +499,19 @@ phase_verification: { relevant phase command }
 dispatch_target: { exact original launcher-owned target }
 dispatch_axes: { unchanged original axes }
 dispatch_stamp: { original formal Dispatch line }
+recovered_patch: { artifact, manifest_digest, size, stat, components }
 ```
+
+`recovered_patch` is optional and present only when the sequence above captured
+a lost child's uncommitted work that is not yet committed. The same field
+appears in the `mode: implement` Phase Scope above; it is null on an ordinary
+first dispatch, and null again on any retry briefed after the recovery commit
+landed, whose `recovery_base_head` is the reconciled current HEAD. Its `artifact` is a readable path outside the
+worktree, never a mutable worktree path; `manifest_digest` and `size` are the
+values the capture printed and both are required by `--verify`; `stat` is the
+captured `git diff --cached --stat` summary; and `components` lists the `index`, `worktree`, and `untracked`
+entries the artifact actually holds. The same field carries a recovered patch
+into a same-target `implement` continuation.
 
 Recover mode never replays planned tasks and never consumes review findings.
 Require its Phase Recovery Continuation Report, matching canonical event,
@@ -691,14 +901,18 @@ Count only whole-phase scopes: `pNN` or `pNN-pMM`.
 - Example: no prior passed whole-phase review, current checkpoint `p03` → review `p01-p03`.
 
 For the final implementation phase use `oat-project-review-provide code final`
-and do not duplicate the already completed root-owned per-phase review.
+— loading the current `oat-project-review-provide/SKILL.md` and following it, or
+dispatching a child that carries it — and do not duplicate the already completed
+root-owned per-phase review.
 
 Example: `["p01", "p04"]` → pause after p01 completes and after p04 completes;
 skip p02, p03.
 
 If this is the final implementation phase checkpoint, run
-`oat-project-review-provide code final` and do not run a duplicate final
-phase-only lifecycle review.
+`oat-project-review-provide code final` — loading the current
+`oat-project-review-provide/SKILL.md` and following it, or dispatching a child
+that carries it — and do not run a duplicate final phase-only lifecycle
+review.
 
 Defer only a checkpoint on the final implementation phase; non-final checkpoint
 behavior remains unchanged. The final checkpoint continues through final

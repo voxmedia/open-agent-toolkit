@@ -37,7 +37,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.60` (`lite-workflow-mode`, implementation complete; pending
+- CLI `0.2.61` (`lite-workflow-mode`, implementation complete; pending
   PR/release) adds Lite as a first-class workflow mode for single-sitting
   changes that still need an approved plan, atomic task commits, managed
   dispatch, and independent review. Lite uses a three-artifact project shape
@@ -50,6 +50,39 @@ copying their content here. -->
   repository/release/docs gate sequence passed. The configured cross-family
   exit gate passed after the final design wording was aligned with the shipped
   artifact-level readiness behavior.
+- CLI `0.2.57` (wave 2 of the 2026-08-31 execution program, wrapper project
+  `wave-2-execution`, "skill contract truthfulness", merged as PR #267) repairs four bundled
+  skills whose prose disagreed with what ships (`oat-doctor` inventory,
+  `oat-brainstorm`, `oat-idea-summarize` tools, `analyze` step model), makes
+  the codex-skill below-floor guard reject anaphoric confirmation
+  reinstatements, runs the explainer-kit publication-boundary assertions over
+  the docs page with a whole-document forbidden-phrase guard, requires
+  thirteen lifecycle skills to load the current `SKILL.md` of every OAT skill
+  they direct an orchestrator to execute (backed by
+  `validation/named-skill-load-contract.test.ts`, which also detects stray
+  fences; three hidden-fence defects repaired), and ships
+  `oat-project-implement/scripts/capture-dirty-tree.mjs` plus the
+  `recovered_patch` contract so a lost child handle's staged work has a
+  verified, fail-closed path into the next attempt. Closed
+  `BL-260819-repair-verified-bundled-skill`, `BL-260827-harden-the-codex-skill-below`,
+  `BL-260818-extend-guarded-prose-contract`, `BL-260718-mandatory-skill-load-clause`,
+  `BL-260902-document-patch-and-restore`.
+- CLI `0.2.56` (wave 1 of the 2026-08-31 execution program, wrapper project
+  `wave-1-execution`, merged as PR #262) resolves
+  `oat docs generate-index` from `documentation.root` (app root canonical,
+  `<root>/docs` precedence as compatibility behavior), defaults output to the
+  app-root manifest, never writes the scaffold's authored `docs/index.md` or
+  `mkdocs.yml`, refuses unsafe outputs before writing (exit 1; unusable
+  configuration exits 2), updates `documentation.index` only for the Fumadocs
+  bootstrap transition, and prunes generation through the new
+  `documentation.excludes` / `--exclude` root-anchored glob grammar backed by a
+  ReDoS-safe matcher. `validateAssetsBundle` fails closed on a partial or
+  malformed bundle (seven required directories, exit 2, first offender named,
+  errno-bearing unreadable diagnosis) and every asset remedy is source-aware
+  (`OAT_ASSETS_DIR` failures never advise a rebuild or reinstall). Closed
+  `BL-260718-fix-oat-docs-generate-index`, `BL-260827-fail-closed-on-partial-or`,
+  `BL-260827-override-aware-remedy-text`, and
+  `BL-260902-add-an-exclusion-mechanism`; filed three `BL-260906-*` follow-ups.
 - CLI `0.2.51` (retire-archived-synced-project, implementation complete;
   pending PR/release) retires a successfully archived synced project from its
   active JSON-record and discovery-ref namespaces only after local and every
@@ -81,6 +114,18 @@ copying their content here. -->
   discovery/quick-start integration and broader analysis and research
   integration remain separately tracked in `BL-260830-integrate-recon-with-oat`
   and `BL-260830-integrate-recon-across`.
+- CLI `0.2.55` (recon receipt-chain removal, 2026-09-04) removes the
+  prepared/approved/accepted/completed dispatch receipts, catalog recheck, and
+  typed stage topology from the recon packet contract and reverts the
+  `prepare`/`execute` operations from `oat-dispatch-subagents`, because no
+  live launcher produced those records and every real run failed publication.
+  The manifest now carries a compact fingerprint-bound execution envelope; the
+  achieved profile derives from complete typed artifacts written by approved
+  lanes; claim evidence links are closed objects validated before brief
+  creation; the skill adds a launch-capability preflight, deadline semantics
+  that forbid manual interruption of accepted lanes, and worker vs
+  provider/dispatch vs contract vs source failure categories. See
+  `DR-260904-remove-dispatch-receipt-chain`.
 - CLI `0.2.50` (scope-adoption diagnostics, implementation complete) makes PJM
   migration eligibility depend on recognized legacy evidence rather than pack
   intent or adoption labels alone. User-agent reachability now follows

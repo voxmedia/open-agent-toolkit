@@ -47,6 +47,7 @@ import {
   normalizeWorkflowPostImplementSequence,
   readOatConfig,
   readOatConfigForDefaultScopeRepair,
+  readOatConfigForDocumentationExcludesRepair,
   readOatLocalConfig,
   readUserConfig,
   writeOatConfig,
@@ -104,6 +105,7 @@ type ConfigKey =
   | 'autoReviewAtCheckpoints'
   | 'lastPausedProject'
   | 'documentation.config'
+  | 'documentation.excludes'
   | 'documentation.requireForProjectCompletion'
   | 'documentation.root'
   | 'documentation.tooling'
@@ -184,6 +186,9 @@ interface ConfigCommandDependencies {
   resolveProjectRoot: (cwd: string) => Promise<string>;
   readOatConfig: (repoRoot: string) => Promise<OatConfig>;
   readOatConfigForDefaultScopeRepair: (repoRoot: string) => Promise<OatConfig>;
+  readOatConfigForDocumentationExcludesRepair: (
+    repoRoot: string,
+  ) => Promise<OatConfig>;
   writeOatConfig: (repoRoot: string, config: OatConfig) => Promise<void>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
   writeOatLocalConfig: (
@@ -230,6 +235,7 @@ const KEY_ORDER: ConfigKey[] = [
   'documentation.root',
   'documentation.tooling',
   'documentation.config',
+  'documentation.excludes',
   'documentation.requireForProjectCompletion',
   'explainers.defaults.style',
   'explainers.defaults.palette',
@@ -373,6 +379,18 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat config set documentation.config <value>',
     description:
       'Repository-relative path to the primary documentation tool config file.',
+  },
+  {
+    key: 'documentation.excludes',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string[]',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat config set documentation.excludes <glob[,glob...]>',
+    description:
+      'Comma-separated globs, relative to the docs directory, excluded from `oat docs generate-index`. Repeated `--exclude` flags extend this list; an empty value clears the key.',
   },
   {
     key: 'documentation.requireForProjectCompletion',
@@ -1118,6 +1136,7 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   resolveProjectRoot,
   readOatConfig,
   readOatConfigForDefaultScopeRepair,
+  readOatConfigForDocumentationExcludesRepair,
   writeOatConfig,
   readOatLocalConfig,
   writeOatLocalConfig,
@@ -1204,6 +1223,21 @@ function normalizeSharedRoot(value: string): string {
     throw new Error('Shared config values cannot be empty.');
   }
   return trimmed.replace(/\/+$/, '');
+}
+
+/**
+ * Split the one array-valued config key's comma-separated grammar.
+ *
+ * Entries are trimmed and de-duplicated in order; blank entries are dropped, so
+ * an empty (or all-blank) value yields an empty list, which the caller treats
+ * as "clear the key" rather than as an error.
+ */
+function parseDocumentationExcludes(rawValue: string): string[] {
+  const parsed = rawValue
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+  return [...new Set(parsed)];
 }
 
 function parseExplainerValue(
@@ -2184,7 +2218,13 @@ async function setConfigValue(
     return { key, value: defaultScope, source: 'shared' };
   }
 
-  const config = await dependencies.readOatConfig(repoRoot);
+  // `documentation.excludes` is the one shared key whose own validation error
+  // names `oat config set` as the repair, so it reads leniently: a strict read
+  // would reject the very value the operator is trying to replace.
+  const config =
+    key === 'documentation.excludes'
+      ? await dependencies.readOatConfigForDocumentationExcludesRepair(repoRoot)
+      : await dependencies.readOatConfig(repoRoot);
 
   if (key.startsWith('documentation.')) {
     const doc = { ...config.documentation };
@@ -2195,6 +2235,15 @@ async function setConfigValue(
       doc.tooling = rawValue.trim();
     } else if (key === 'documentation.config') {
       doc.config = normalizeSharedRoot(rawValue);
+    } else if (key === 'documentation.excludes') {
+      const excludes = parseDocumentationExcludes(rawValue);
+      if (excludes.length === 0) {
+        // Unlike the scalar shared keys, an empty value is the documented way
+        // to clear this list rather than an error.
+        delete doc.excludes;
+      } else {
+        doc.excludes = excludes;
+      }
     } else if (key === 'documentation.requireForProjectCompletion') {
       doc.requireForProjectCompletion =
         rawValue.trim().toLowerCase() === 'true';
@@ -2208,9 +2257,11 @@ async function setConfigValue(
     const resultValue =
       key === 'documentation.requireForProjectCompletion'
         ? String(doc.requireForProjectCompletion ?? false)
-        : ((doc[
-            key.replace('documentation.', '') as keyof typeof doc
-          ] as string) ?? null);
+        : key === 'documentation.excludes'
+          ? (doc.excludes ?? null)
+          : ((doc[
+              key.replace('documentation.', '') as keyof typeof doc
+            ] as string) ?? null);
 
     return {
       key,
@@ -2706,7 +2757,11 @@ async function runSet(
         ...result,
       });
     } else {
-      context.logger.info(`${result.key}=${result.value ?? ''}`);
+      // `formatResolvedValue` renders an array-valued key the same way `get`
+      // does, rather than leaning on implicit `Array.prototype.toString`.
+      context.logger.info(
+        `${result.key}=${formatResolvedValue(result.value) ?? ''}`,
+      );
     }
     process.exitCode = 0;
   } catch (error) {

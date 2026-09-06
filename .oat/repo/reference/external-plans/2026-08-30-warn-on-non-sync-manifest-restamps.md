@@ -31,7 +31,8 @@ created: '2026-08-30T23:40:20Z'
 > (0.2.53). The 2026-09-03 refresh re-anchored every evidence line on that
 > tree: Manifest V2 landed, new engine save sites exist, status gained a
 > collection-migration block, and no part of this outcome was implemented.
-> Execute against a lockstep version above `0.2.53`.
+> In standalone mode, execute against a lockstep version above the then-current
+> `origin/main`; under the execution program the wave fan-in owns that bump.
 
 ## Outcome
 
@@ -52,11 +53,11 @@ that no changes were required.
 ManifestV2)`) always replaces `manifest.oatVersion` with `OAT_VERSION`
     and validates through `ManifestV2Schema` immediately before atomic save;
     `loadManifest` (`:37-82`) silently upgrades V1 files to V2 in memory.
-  - `packages/cli/src/commands/init/index.ts:1249` saves every processed scope
+  - `packages/cli/src/commands/init/index.ts:1246` saves every processed scope
     without first reporting version skew.
   - `packages/cli/src/commands/remove/skill/remove-skill.ts:359-367` derives a
     new manifest and saves it without preserving/restating the old producer.
-  - `packages/cli/src/commands/status/index.ts:1501-1505` can save an adopted
+  - `packages/cli/src/commands/status/index.ts:1508-1512` can save an adopted
     manifest without an advisory, after a collection-migration block
     (`:1282-1390`) that may set `migrationAborted` and mutate the manifest.
   - `packages/cli/src/commands/sync/index.ts:302` (`detectVersionSkew`) defines plain
@@ -91,6 +92,13 @@ ManifestV2)`) always replaces `manifest.oatVersion` with `OAT_VERSION`
 
 There are no unsatisfied hard dependencies.
 
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                                                 | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections.                         | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None (init, remove-skill, status, sync, manifest are outside the #190 surface). | None.                                                                  |
+
 ## Drift check
 
 Run before editing:
@@ -115,7 +123,9 @@ this plan is refreshed.
   human warnings in JSON mode, and compare version identity rather than semver
   ordering.
 - Git/PR convention: shipped CLI behavior requires a lockstep five-package
-  version bump; do not push or open a PR unless instructed.
+  version bump, whose owner is mode-dependent (see step 5): the wave fan-in
+  under the execution program, the executor only in standalone mode. Do not
+  push or open a PR unless instructed.
 
 ## Scope
 
@@ -132,7 +142,7 @@ this plan is refreshed.
   diagnostics project.
 - `packages/cli/src/commands/sync/index.ts`, `apply.ts`, shared types, and tests —
   reuse the common comparison where practical and acknowledge restamp-only apply.
-- Five public package manifests and `pnpm-lock.yaml`.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -195,7 +205,7 @@ separation, equality suppression, and one diagnostic per affected scope.
 
 ### 3. Reconcile and cover status adoption
 
-Cover the status-owned `saveManifest` path (`status/index.ts:1501`). Place the
+Cover the status-owned `saveManifest` path (`status/index.ts:1508`). Place the
 advisory after the collection-migration block and immediately before the save,
 using the original loaded version, and prove the `migrationAborted` path emits
 no restamp advisory. Add a test that establishes JSON status is
@@ -216,17 +226,27 @@ against the enlarged JSON payload (`collectionOperations`, `operationResults`,
 case. Preserve `No changes required.` only when no operation or restamp occurs.
 JSON already exposes `versionSkew`; do not add a second redundant field there.
 
-**Verify:** existing sync tests around lines 570-601 assert the new message,
+**Verify:** the restamp-only and true no-op cases in `sync/index.test.ts`
+(`:1310-1347`, the block whose comment says the restamp is the only mutation)
+assert the new message,
 continued restamp, unchanged exit code, and no false success text.
 
-### 5. Apply release bookkeeping and full gates
+### 5. Run the mode-appropriate gates
 
-Bump the five public packages together and update `pnpm-lock.yaml`. Fetch main
-immediately before version validation.
+**Lane mode (default under the execution program):** bump changed skill
+`version:` fields and update their pins in
+`packages/cli/src/validation/skills.test.ts` where a pin exists; run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes. Do not edit
+lockstep release files or run `pnpm release:check-versions` /
+`pnpm release:validate`; the wave fan-in owns the lockstep bump and the full
+definition-of-done sequence. **Standalone mode only:** bump the five public
+packages above freshly fetched `origin/main` and run the eight AGENTS.md gates
+in order.
 
-**Verify:** run the repository Definition of Done in order; every command exits
-zero. Run focused command tests independently so Turbo cache replay cannot
-stand in for execution evidence.
+**Verify:** every command in the selected mode exits zero. Run focused command
+tests independently so Turbo cache replay cannot stand in for execution
+evidence.
 
 ## Test plan
 
@@ -240,7 +260,8 @@ stand in for execution evidence.
   the dependency's final contract.
 - Sync tests: restamp-only output acknowledges refresh; true no-op keeps the
   current message.
-- Full CLI tests, build, release validation, and docs build.
+- Full CLI tests and build, then the lane-mode or standalone gate set from
+  step 5.
 
 ## Done criteria
 
@@ -252,7 +273,9 @@ stand in for execution evidence.
 - [ ] Invalid manifests retain current fail-closed schema behavior.
 - [ ] Restamp-only sync no longer says no changes were required.
 - [ ] Status behavior is based on the completed diagnostics-project baseline.
-- [ ] Five-package lockstep release bookkeeping and all gates pass.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions
@@ -271,7 +294,8 @@ Stop and report instead of improvising when:
 ## Revalidation Before Execution
 
 Refreshed 2026-09-03 against `origin/main` after PR #255 (truthfulness) and
-PR #256 merged; all seven evidence anchors and the new engine save sites were
+PR #256 merged, and re-anchored 2026-09-04 after PR #248 (recon packets)
+shifted the init and status save sites by a few lines without changing them; all seven evidence anchors and the new engine save sites were
 re-verified on that tree and the checklist below is applied in the steps
 above. If a later PR touches `manifest/manager.ts`, the status
 collection-migration block, or `runSyncApply`, repeat the re-anchor.
