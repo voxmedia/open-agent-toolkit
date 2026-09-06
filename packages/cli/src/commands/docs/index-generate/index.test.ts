@@ -20,6 +20,7 @@ import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { GenerateIndexOptions } from './generator';
 import {
   createDocsGenerateIndexCommand,
   GENERATED_INDEX_WARNING,
@@ -87,12 +88,16 @@ function createHarness(options: HarnessOptions = {}) {
   const writtenConfigs: Array<{ repoRoot: string; config: OatConfig }> = [];
   const writtenFiles: Array<{ path: string; content: string }> = [];
   const indexedDirs: string[] = [];
+  const requestedExcludes: string[][] = [];
 
   const readOatConfigMock = vi.fn(async () => structuredClone(config));
-  const generateIndexMock = vi.fn(async (docsDir: string) => {
-    indexedDirs.push(docsDir);
-    return [{ title: 'Home', path: 'index.md', description: 'Welcome' }];
-  });
+  const generateIndexMock = vi.fn(
+    async (docsDir: string, generateOptions: GenerateIndexOptions) => {
+      indexedDirs.push(docsDir);
+      requestedExcludes.push(generateOptions.excludes ?? []);
+      return [{ title: 'Home', path: 'index.md', description: 'Welcome' }];
+    },
+  );
   const writeOatConfigMock = vi.fn(
     async (root: string, nextConfig: OatConfig) => {
       writtenConfigs.push({ repoRoot: root, config: nextConfig });
@@ -148,6 +153,7 @@ function createHarness(options: HarnessOptions = {}) {
     generateIndexMock,
     indexedDirs,
     readOatConfigMock,
+    requestedExcludes,
     writeOatConfigMock,
     writtenConfigs,
     writtenFiles,
@@ -876,6 +882,39 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(config.documentation?.index).toBe('apps/docs/index.md');
     });
 
+    it('drops configured and flag exclusions from the real manifest', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+        excludes: ['**/CLAUDE.md'],
+      });
+
+      // Non-page Markdown at depth plus a whole directory: the two shapes
+      // issue #239 asks for, written to the real tree the generator walks.
+      await mkdir(join(repo.appRoot, 'docs', 'drafts'), { recursive: true });
+      await writeFile(
+        join(repo.appRoot, 'docs', 'drafts', 'wip.md'),
+        '---\ntitle: Wip\n---\n',
+        'utf8',
+      );
+      await writeFile(
+        join(repo.appRoot, 'docs', 'CLAUDE.md'),
+        '---\ntitle: Agent Notes\n---\n',
+        'utf8',
+      );
+
+      await runCommand(repo.command, ['--exclude', 'drafts/']);
+
+      expect(process.exitCode).toBe(0);
+      const manifest = await readFile(join(repo.appRoot, 'index.md'), 'utf8');
+      expect(manifest).toContain('Guide');
+      // Config-sourced and flag-sourced exclusions both took effect...
+      expect(manifest).not.toContain('Agent Notes');
+      expect(manifest).not.toContain('Wip');
+      // ...and the directory emptied by exclusion emitted no heading.
+      expect(manifest).not.toContain('Drafts');
+    });
+
     it('refuses a real symlinked --output that resolves into the docs tree', async () => {
       const repo = await createRealRepo({
         root: 'apps/docs',
@@ -1193,6 +1232,93 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(capture.error).toHaveLength(0);
       expect(generateIndexMock).toHaveBeenCalledTimes(1);
       expect(writeFileMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('exclusions', () => {
+    it('passes no exclusions when neither config nor flags supply any', async () => {
+      const { command, requestedExcludes } = createHarness();
+
+      await runCommand(command);
+
+      expect(requestedExcludes).toEqual([[]]);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('applies config-sourced excludes with no flags', async () => {
+      const { command, requestedExcludes } = createHarness({
+        config: {
+          version: 1,
+          documentation: {
+            root: 'apps/docs',
+            tooling: 'fumadocs',
+            excludes: ['**/CLAUDE.md', 'drafts/'],
+          },
+        },
+      });
+
+      await runCommand(command);
+
+      expect(requestedExcludes).toEqual([['**/CLAUDE.md', 'drafts/']]);
+    });
+
+    it('accumulates repeated --exclude flags in order', async () => {
+      const { command, requestedExcludes } = createHarness();
+
+      await runCommand(command, [
+        '--exclude',
+        '**/CLAUDE.md',
+        '--exclude',
+        'drafts/',
+      ]);
+
+      expect(requestedExcludes).toEqual([['**/CLAUDE.md', 'drafts/']]);
+    });
+
+    it('extends rather than replaces config excludes', async () => {
+      const { command, requestedExcludes } = createHarness({
+        config: {
+          version: 1,
+          documentation: {
+            root: 'apps/docs',
+            tooling: 'fumadocs',
+            excludes: ['**/CLAUDE.md'],
+          },
+        },
+      });
+
+      await runCommand(command, ['--exclude', 'drafts/']);
+
+      // The configured entry survives; the flag is appended after it.
+      expect(requestedExcludes).toEqual([['**/CLAUDE.md', 'drafts/']]);
+    });
+
+    it('collapses a flag that repeats a configured exclude', async () => {
+      const { command, requestedExcludes } = createHarness({
+        config: {
+          version: 1,
+          documentation: {
+            root: 'apps/docs',
+            tooling: 'fumadocs',
+            excludes: ['drafts/'],
+          },
+        },
+      });
+
+      await runCommand(command, ['--exclude', ' drafts/ ']);
+
+      expect(requestedExcludes).toEqual([['drafts/']]);
+    });
+
+    it('leaves path resolution untouched', async () => {
+      const { command, indexedDirs, writtenFiles } = createHarness();
+
+      await runCommand(command, ['--exclude', 'drafts/']);
+
+      // Same derivation as the bare run: exclusion never feeds path resolution.
+      expect(indexedDirs).toEqual([`${REPO_ROOT}/apps/docs/docs`]);
+      expect(writtenFiles[0]!.path).toBe(`${REPO_ROOT}/apps/docs/index.md`);
+      expect(process.exitCode).toBe(0);
     });
   });
 

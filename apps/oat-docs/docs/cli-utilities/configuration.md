@@ -90,6 +90,7 @@ Common keys in `.oat/config.json`:
 - `worktrees.root` — where OAT-managed worktrees live
 - `git.defaultBranch` — base branch fallback for PR workflows
 - `documentation.root`, `documentation.tooling`, `documentation.config` — docs-surface ownership
+- `documentation.excludes` — a JSON array of globs, relative to the docs directory, that `oat docs generate-index` leaves out of the generated index. `oat config set` takes the list as one comma-separated value (`"a/**,b.md"`) and stores it as an array; repeated `--exclude` flags extend it, and an empty value clears the key
 - `documentation.requireForProjectCompletion` — whether docs sync is a completion gate
 - `archive.s3Uri` — base S3 archive prefix
 - `archive.s3SyncOnComplete` — upload archived projects to S3 during completion

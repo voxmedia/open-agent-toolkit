@@ -137,11 +137,28 @@ Key behavior:
 - should be freshness-checked against authored `docs/**/index.md` `## Contents` maps before treating it as navigation evidence
 - sorting: `index.md` first, then directories before files, then lexical
 - reports the derived docs directory in human output and as `docsDir` / `docsDirSource` under `--json`
+- omits pages matching the exclusion list. Nothing is excluded by default; once listed, non-page Markdown such as `CLAUDE.md` or `AGENTS.md` stops reaching the manifest. Patterns come from `documentation.excludes` in `.oat/config.json` and from repeated `--exclude` flags, and the flags **extend** the configured list rather than replacing it. A directory left empty by exclusion emits no heading, and an empty list produces byte-identical output to no exclusions at all
 
 Supported flags:
 
 - `--docs-dir <path>` (default: `<documentation.root>/docs`, falling back to `<documentation.root>`)
 - `--output <path>` (default: `<documentation.root>/index.md`)
+- `--exclude <glob>` (repeatable; additive to `documentation.excludes`)
+
+### Exclusion patterns
+
+Patterns match the path of each candidate **relative to the docs directory being indexed** — `api/auth.md`, `api/nested` — never an absolute or current-directory-relative path, and never the repository-relative path.
+
+| Pattern        | Matches                                                  |
+| -------------- | -------------------------------------------------------- |
+| `CLAUDE.md`    | only the root-level `CLAUDE.md`; patterns are anchored   |
+| `**/CLAUDE.md` | `CLAUDE.md` at any depth, including the docs root        |
+| `*.md`         | root-level Markdown only; `*` never crosses `/`          |
+| `drafts/`      | the `drafts` directory and everything beneath it         |
+| `drafts`       | the same directory; the trailing `/` only forbids a file |
+| `api/**/*.md`  | Markdown at any depth under `api/`, including `api/x.md` |
+
+A trailing `/` restricts a pattern to directories and never matches a file; without it, a pattern that matches a directory path still prunes that directory. `**` spans `/` only as a whole path segment — inside a segment (`a**b`) it is an ordinary single-segment wildcard. Matching is case-sensitive, `/` is the separator on every platform, and only `*` and `**` are metacharacters — every other character, `.` included, is literal. A leading `./` or `/` is stripped, so both spellings anchor at the docs root.
 
 Example:
 
@@ -151,6 +168,10 @@ oat docs generate-index
 
 # Portable explicit form, resolved from the current directory
 oat docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
+
+# Persist the repository's own exclusions, then add a one-off
+oat config set documentation.excludes "**/CLAUDE.md,**/AGENTS.md"
+oat docs generate-index --exclude 'drafts/'
 ```
 
 See [Documentation path resolution](../reference/oat-directory-structure.md#documentation-path-resolution) for the app-root meaning of `documentation.root` and the legacy source-root compatibility rule.

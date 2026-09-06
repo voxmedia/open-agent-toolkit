@@ -3518,6 +3518,238 @@ describe('oat config', () => {
     });
   });
 
+  describe('documentation.excludes', () => {
+    async function readSharedConfig(root: string): Promise<unknown> {
+      return JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      );
+    }
+
+    it('sets the array key from a comma-separated value', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'documentation.excludes',
+        ' **/CLAUDE.md , drafts/ ,**/CLAUDE.md',
+      ]);
+
+      expect(await readSharedConfig(root)).toEqual({
+        version: 1,
+        documentation: { excludes: ['**/CLAUDE.md', 'drafts/'] },
+      });
+      // Entries are trimmed and de-duplicated, and render comma-joined.
+      expect(capture.info[0]).toBe(
+        'documentation.excludes=**/CLAUDE.md,drafts/',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('round-trips through get in human and JSON form', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          documentation: { excludes: ['**/CLAUDE.md', 'drafts/'] },
+        })}\n`,
+        'utf8',
+      );
+
+      const human = createHarness({ cwd: root });
+      await runCommand(human.command, ['get', 'documentation.excludes']);
+      expect(human.capture.info[0]).toBe('**/CLAUDE.md,drafts/');
+
+      const json = createHarness({ cwd: root });
+      await runCommand(
+        json.command,
+        ['get', 'documentation.excludes'],
+        ['--json'],
+      );
+      expect(json.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'documentation.excludes',
+        value: ['**/CLAUDE.md', 'drafts/'],
+        source: 'shared',
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('clears the key with an empty value', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          documentation: { root: 'apps/docs', excludes: ['drafts/'] },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'documentation.excludes', '']);
+
+      // Clearing removes only this key; its siblings survive.
+      expect(await readSharedConfig(root)).toEqual({
+        version: 1,
+        documentation: { root: 'apps/docs' },
+      });
+      expect(capture.info[0]).toBe('documentation.excludes=');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('treats an all-blank value as a clear rather than an entry', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          documentation: { excludes: ['drafts/'] },
+        })}\n`,
+        'utf8',
+      );
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'documentation.excludes', ' , ']);
+
+      expect(await readSharedConfig(root)).toEqual({ version: 1 });
+      expect(process.exitCode).toBe(0);
+    });
+
+    const malformedValues: Array<{ name: string; value: unknown }> = [
+      { name: 'a non-array', value: 'drafts/' },
+      { name: 'an empty entry', value: [''] },
+    ];
+
+    for (const testCase of malformedValues) {
+      it(`repairs ${testCase.name} with the command its error prescribes`, async () => {
+        const root = await createRepoRoot();
+        await writeFile(
+          join(root, '.oat', 'config.json'),
+          `${JSON.stringify({
+            version: 1,
+            documentation: { root: 'apps/docs', excludes: testCase.value },
+          })}\n`,
+          'utf8',
+        );
+        const { command } = createHarness({ cwd: root });
+
+        await runCommand(command, [
+          'set',
+          'documentation.excludes',
+          '**/CLAUDE.md',
+        ]);
+
+        // A strict read would reject the very value being replaced, leaving
+        // the prescribed repair impossible.
+        expect(await readSharedConfig(root)).toEqual({
+          version: 1,
+          documentation: { root: 'apps/docs', excludes: ['**/CLAUDE.md'] },
+        });
+        expect(process.exitCode).toBe(0);
+      });
+
+      it(`clears ${testCase.name} with an empty value`, async () => {
+        const root = await createRepoRoot();
+        await writeFile(
+          join(root, '.oat', 'config.json'),
+          `${JSON.stringify({
+            version: 1,
+            documentation: { root: 'apps/docs', excludes: testCase.value },
+          })}\n`,
+          'utf8',
+        );
+        const { command } = createHarness({ cwd: root });
+
+        await runCommand(command, ['set', 'documentation.excludes', '']);
+
+        expect(await readSharedConfig(root)).toEqual({
+          version: 1,
+          documentation: { root: 'apps/docs' },
+        });
+        expect(process.exitCode).toBe(0);
+      });
+    }
+
+    it('leaves sibling keys strict when repairing is not in play', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          documentation: { excludes: 'drafts/' },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'documentation.root', 'apps/docs']);
+
+      // Only the excludes set-branch reads leniently; every other key still
+      // fails closed on the malformed file.
+      expect(capture.error[0]).toContain('Invalid documentation.excludes');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('gets an empty string when unset', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['get', 'documentation.excludes']);
+
+      expect(capture.info[0]).toBe('');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('rejects an unknown sibling key', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'documentation.exclude', 'drafts/']);
+
+      expect(capture.error[0]).toContain(
+        'Unknown config key: documentation.exclude',
+      );
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('list includes the key comma-joined', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          documentation: { excludes: ['**/CLAUDE.md', 'drafts/'] },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['list']);
+
+      expect(capture.info[0]).toContain('documentation.excludes');
+      // The list column renders the array the same way `get` does.
+      expect(capture.info[0]).toContain('**/CLAUDE.md,drafts/');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe surfaces the array catalog entry', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['describe', 'documentation.excludes']);
+
+      expect(capture.info[0]).toContain('Key: documentation.excludes');
+      expect(capture.info[0]).toContain('Type: string[]');
+      expect(capture.info[0]).toContain('File: .oat/config.json');
+      expect(capture.info[0]).toContain(
+        'Owning command: oat config set documentation.excludes <glob[,glob...]>',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+  });
+
   it('sets archive.wrapUpExportPath in config.json', async () => {
     const root = await createRepoRoot();
     const { command } = createHarness({ cwd: root });
