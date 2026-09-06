@@ -102,7 +102,7 @@ oat_generated: false
 
 # Project State: wave-3-execution
 
-**Status:** Planned — wrapper artifacts written from the wave-3 program section; plan gate pending
+**Status:** Implementing — plan gate passed after in-artifact fixes; group 1 (p01, p02) next
 **Started:** 2026-09-06
 **Last Updated:** 2026-09-06
 
@@ -112,17 +112,19 @@ Plan — complete; `oat-project-implement` runs groups [p01, p02] then p03 after
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
-- **Plan:** `plan.md` (scaffolded template — not started)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (complete; three pointer-only tasks, groups [p01, p02] then p03)
+- **Implementation:** `implementation.md` (ready; current task p01-t01, 0/3 complete)
 
 ## Progress
 
-- ✓ Discovery started
-- ✓ Execution artifacts scaffolded
-- ⧗ Awaiting user input
+- ✓ Preflight: `wave-3-execution` created from `origin/main` `e97954dd1e85287a41a59fe58730c606e00eb598`; install, build, type-check green
+- ✓ Wave-boundary drift refresh (recon, non-authoritative) recorded in `plan.md`
+- ✓ Wrapper artifacts written and `oat project validate-plan` passed
+- ✓ Plan gate received (3I/1M resolved in-artifact)
+- ⧗ Group 1 (p01 + p02) dispatch, then p03
 
 ## Blockers
 
@@ -130,4 +132,4 @@ None
 
 ## Next Milestone
 
-Plan gate (`oat --json gate review … --review-type artifact --review-scope plan`) passes; then dispatch group 1 (p01 + p02) at the wave base `e97954dd1`.
+Bootstrap group-1 worktrees at the post-gate commit; dispatch p01 and p02; root reviews; fan-in with the single lockstep bump (0.2.58) and manifest restamp.

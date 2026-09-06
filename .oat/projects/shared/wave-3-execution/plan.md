@@ -22,10 +22,10 @@ oat_template: false
 > `oat_plan_parallel_groups`. Concurrency ceiling: 3 worktrees (operator
 > decision); group 1 is p01 + p02, p03 is ungrouped and runs alone after it.
 
-**Goal:** Execute the 5 Wave 2 external plans (bundled-skill contract repair;
-codex-skill anaphora guard; docs-app mirrors of contract-tested prose; named
-lifecycle skills must be loaded; patch-and-restore recovery for lost child
-handles) through the wave→project wrapper pattern
+**Goal:** Execute the 3 Wave 3 external plans (repo-wide call-site sweeps for
+cross-cutting options; deterministic smoke worktree journaling before creation;
+executable backstops for standing contract claims) through the wave→project
+wrapper pattern
 (DR-260713-wave-project-wrapper-over), per the 2026-08-31 execution program
 (`.oat/repo/reference/external-plans/2026-08-31-execution-program.md`, Wave 3).
 
@@ -114,12 +114,12 @@ examples can cite the freshly delivered executable contracts.
   (stable assertions + negative probe), conditionally
   `.agents/skills/oat-project-implement/SKILL.md` (+ bump and seven pins, only
   if the canonical file is actually edited), provider views are symlinks,
-  `.oat/sync/manifest.json` (no-op restamp). **Rule-1 addendum (non-narrowing):**
-  the plan's In-scope list and drift-check command omit `skills.test.ts`
-  although the agent bump (wave-2 precedent 1.1.1 → 1.1.2) moves its three pins;
-  the lane extends its in-worktree drift check with
-  `git diff --stat <plan-commit>..HEAD -- packages/cli/src/validation/skills.test.ts`
-  and treats the pins as part of its write surface.
+  `.oat/sync/manifest.json` (no-op restamp). **Observation (descriptive, non-authoritative):**
+  the plan's In-scope list and drift-check command do not name `skills.test.ts`;
+  if the lane bumps the agent file (the plan's own step decides), the three pins
+  there fail until they match, so the recon lists the file as a likely write.
+  Any mismatch with the plan's stated surface is reported through the plan's
+  own Revalidation/STOP process, not resolved here.
 - p02 write surface: `tools/smoke/runner/journal.mjs`, `tools/smoke/runner/cleanup.mjs`,
   `tools/smoke/runner/provision.mjs`, `tools/smoke/deterministic/provider.mjs`,
   `tools/smoke/CONTRACT.md`, the five smoke test files (`journal`, `cleanup`,
@@ -131,11 +131,11 @@ examples can cite the freshly delivered executable contracts.
   pin anywhere), `.agents/skills/oat-project-design/SKILL.md` (2.3.2 → next;
   pins at `skills.test.ts:1839` and `:6467` — the plan's step-4 "pins where they
   exist" is plural), `packages/cli/src/validation/skills.test.ts` (new
-  assertions + pins), `.oat/sync/manifest.json` (no-op restamp). **Executor
-  note (non-narrowing):** `packages/cli/src/validation/named-skill-load-contract.test.ts`
-  (wave 2) scans `create-oat-skill/SKILL.md` and requires a load clause on every
-  execution-boundary-shaped mention of an `oat-project-*` skill; examples in the
-  new subsection must avoid that shape or carry the clause.
+  assertions + pins), `.oat/sync/manifest.json` (no-op restamp). **Observation
+  (descriptive, non-authoritative):** `packages/cli/src/validation/named-skill-load-contract.test.ts`
+  (wave 2) scans `create-oat-skill/SKILL.md` and fails on an execution-boundary-shaped
+  mention of an `oat-project-*` skill without a load clause; the plan's Done
+  criteria run the CLI suite, which includes that file.
 - Intersections: p01 ∩ p03 = `skills.test.ts` and the manifest restamp
   (cross-group by construction); p02 ∩ anything = lockstep files only (fan-in
   owned). Group 1 is write-disjoint.
@@ -170,14 +170,11 @@ commit `49aeb5075`; draft PR #190 is unchanged at
   Anchors re-verified: `oat-phase-implementer.md:348-374` → `:359-385`
   (`### 2. Execute Tasks in Plan Order` at `:359`), `:161-240` → `:162-241`;
   `oat-project-implement/SKILL.md:191-216` unchanged;
-  `post-implement-sequence-contracts.test.ts:850-865` unchanged. **Executor note
-  (non-narrowing):** the wave-2 lesson encoded at
+  `post-implement-sequence-contracts.test.ts:850-865` unchanged. **Observation (descriptive):** the wave-2 lesson encoded at
   `post-implement-sequence-contracts.test.ts:855-867` ("the entry file states
-  the contract, but `phase-execution.md` is the route that runs") will create
-  review pressure to mirror the rule into `phase-execution.md`; doing so is a
-  plan decision that escalates into an `oat-project-implement` bump plus seven
-  pins — the plan's own owner choice governs, and any widening is reported, not
-  improvised.
+  the contract, but `phase-execution.md` is the route that runs") may surface in
+  review; whether the rule also belongs in `phase-execution.md` is the source
+  plan's owner choice, and a mismatch goes through its Revalidation/STOP process.
 - **p02 — journal deterministic smoke worktrees:** MINOR-DRIFT (benign). Only
   `tools/smoke/CONTRACT.md` changed (+14/−1, PR #255's `runtimeObservation`
   paragraph at `:421-424` and `:466-477`), the landing event the plan already
@@ -197,10 +194,11 @@ execution**` block at `:109-128`, moving the autonomy-inventory anchor
   STOP is not tripped. `oat-project-design/SKILL.md:387-400`,
   `autonomy-gate-inventory.test.ts`, and `commands/project/log/rollup.ts` are
   unchanged.
-- **Coverage audit:** every drift command omits the lockstep release files
-  (fan-in owned by all three In-scope lists) and `.oat/sync/manifest.json`; p01's
-  omits `skills.test.ts` (rule-1 addendum above); p03's omits
-  `named-skill-load-contract.test.ts` (executor note above).
+- **Coverage audit (descriptive):** every drift command omits the lockstep release
+  files (fan-in owned by all three In-scope lists) and `.oat/sync/manifest.json`;
+  p01's omits `skills.test.ts`; p03's omits `named-skill-load-contract.test.ts`.
+  Lanes re-run their plan's own drift check in the worktree; these omissions are
+  reported, not patched, by the wrapper.
 - **Landing events:** draft PR #190 unchanged; W1/W2 merges are the only
   churn, all accounted for above. Lockstep bump for this wave: 0.2.57 → 0.2.58
   at the group-1 fan-in, with the manifest restamp in the same commit.

@@ -79,19 +79,19 @@ merged as PR #267 (closed as #268).
 - Every lane runs `oat sync --scope all` after skill edits and inspects the
   provider-view diff before committing; provider-view deletions are a STOP.
 - Exactly one lockstep bump for the wave, owned by the fan-in.
-- Draft PR #190 rewrites `oat-project-implement` references that p04 and p05
-  touch; if it merges before those lanes start, apply their landing-event rows.
+- Draft PR #190 rewrites `oat-project-implement` references that p01's source
+  plan cites; if it merges before p01 starts, apply that plan's landing-event row.
 
 ## Success Criteria
 
-- All five source plans' `## Done criteria` confirmed and recorded in
+- All three source plans' `## Done criteria` confirmed and recorded in
   `implementation.md`.
 - Per-phase reviews, final review, and the configured implementation exit gate
   all `passed` with fresh evidence on the reviewed head.
 - Integration DoD gates green after each fan-in and on the final branch; CI and
-  Bugbot clean on the wave PR; PR merged; `wave-close wave-2` recorded.
+  Bugbot clean on the wave PR; PR merged; `wave-close wave-3` recorded.
 
 ## Out of Scope
 
-- Any W3–W6 plan; PR #190's content; backlog reprioritization; program
+- Any W4–W6 plan; PR #190's content; backlog reprioritization; program
   recomposition beyond parking a lane on a tripped STOP.

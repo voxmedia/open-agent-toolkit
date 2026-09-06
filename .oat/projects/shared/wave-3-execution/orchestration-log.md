@@ -47,6 +47,20 @@ worktree. Remote name will be `origin/wave-3-execution-2026-09`.
 
 ---
 
+### 2026-09-06 · structural · oat gate review · plan
+
+Plan gate run `6a82672b-4cfd-49ab-ad23-b8853c33cadf` (`codex-5-6-sol-xhigh`) blocked: 0C / 3I / 1M —
+the wrapper goal and discovery still carried wave-2 wording, three drift notes
+used operative wording that constrained lanes beyond the pointer-only boundary,
+and implementation.md was the raw template. All resolved in-artifact; the
+orchestrator's first fix script died on an f-string brace and left a partial
+commit (`3a3a9ec29`: ledger row + unarchived artifact), repaired in the next
+commit. **Skill signal (strengthens):** template the wrapper from the program
+section, not from the previous wave's artifacts; a copied wrapper carries the
+previous wave's load-bearing scope statements.
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:
