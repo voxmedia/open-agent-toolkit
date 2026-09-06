@@ -145,6 +145,22 @@ fix round dispatched on the original handle.
 
 ---
 
+### 2026-09-06 · project · friction · p02 cross-model rounds
+
+The p02 lane ran three Codex pre-commit rounds (94 minutes wall clock for a
+one-file test change): each round resolved the prior findings and produced
+new regex edge cases, and the implementer stopped at three with one
+contrived false positive outstanding. Friction logged by the lane:
+`pnpm check` does not cover `.agents/skills/**/*.mjs` while `pnpm format`
+does, and lint-staged has no `.mjs` task, so a skill test edit passes
+`check`, fails `format`, and is not auto-formatted at commit (second lane
+this wave to hit it — follow-up candidate); oxfmt rewrapping mid-review
+shifted the citations of an in-flight Codex round. **Skill signal (gap):**
+briefs should cap cross-model rounds (two, then disposition) and say "format
+before dispatching Codex".
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:
