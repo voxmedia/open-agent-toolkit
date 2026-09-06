@@ -1,0 +1,79 @@
+{
+  "request_id": "w4-p03-impl-001",
+  "caller": "oat-project-implement",
+  "scope": "p03",
+  "objective": "Execute wave-4 phase p03 via its external plan",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "implementation",
+  "provider": "claude",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "opus",
+  "catalog_snapshot": {
+    "id": "claude-task-catalog-p03-implementation",
+    "source": "tool-schema",
+    "observed_at": "2026-09-06T18:06:28.000Z"
+  },
+  "authority": "phase-files",
+  "role_selector": "oat-phase-implementer",
+  "model_selector": "opus",
+  "model_selector_granularity": "tier-alias",
+  "effort_selector": null,
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-claude.md",
+  "guidance_version": "2026-07-25",
+  "guidance_verified_at": "2026-09-05",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["opus"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 7200,
+  "retry_limit": 0,
+  "payload": {
+    "subagent_type": "oat-phase-implementer",
+    "model": "opus",
+    "scope": "p03",
+    "worktree": ".worktrees/wave-4/p03"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    "dispatch ceiling resolver",
+    "Claude Code Task tool model argument"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "task_class": "default-implementation",
+  "model_class_floor": "default-implementation",
+  "classification_source": "caller",
+  "classification_reason": "Bounded external-plan implementation reconciling dispersed context across CLI, tests, and docs.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<project>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.3",
+      "contentDigest": "sha256:197b9ab24659dfaf3e89948eb56cd38756acd164b2f36d746d983c44b2a96ee5",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
