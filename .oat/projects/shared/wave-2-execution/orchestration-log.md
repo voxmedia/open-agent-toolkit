@@ -175,6 +175,22 @@ the p04 reviewer amended its own artifact twice after re-checking its claims.
 
 ---
 
+### 2026-09-06 · project · review · p05 rounds 1–2
+
+The p05 lane ships an executable safety surface (dirty-tree capture and
+restore). Round 1 ran eleven adversarial probes and found two Important gaps
+(hardcoded script path; opt-in file bound). The round-1 fix closed both but
+introduced a Critical the round-2 verification caught only by executing the
+prose snippets verbatim in a fresh shell: the guard lived in one fenced block
+and the invocations in two others, and `node ""` exits 0, so a tampered
+artifact was accepted. **Skill signal (strengthens):** disposition-verification
+rounds must execute shell snippets end to end, not only re-run the
+implementer's assertions; the reviewer's own prose-execution probe is what
+turned a passing test suite into a Critical. Fix round 2 dispatched with a
+per-block guard assertion.
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:
