@@ -29,8 +29,17 @@ oat_phase_recovery_policy:
       used_attempts: 2
       pending_attempt: null
     p-rev1:
-      used_attempts: 1
-      pending_attempt: null
+      used_attempts: 2
+      pending_attempt:
+        attempt: 2
+        event_id: p-rev1-recovery-2
+        original_request_id: db708ad8-cd34-4116-a84e-fa24e5d77846
+        original_task_id: prev1-t02
+        original_commit: c2c27b647697499cdffb3a64141b10af095b9ef5
+        discovered_by: pnpm test
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
+        reservation_head: 605e839048ef578c5f11fc2ae6420d72a079fb1a
+        status: active
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
