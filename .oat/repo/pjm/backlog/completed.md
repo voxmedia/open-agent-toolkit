@@ -8,6 +8,11 @@
 
 ## Completed Items
 
+- 2026-09-06 — BL-260902-document-patch-and-restore — Document patch-and-restore recovery for lost child handles with staged work — Wave 2 p05: capture-dirty-tree.mjs plus the recovered_patch contract in phase-execution.md and oat-phase-implementer.md; fail-closed containment, mandatory bound, head reconciliation, guarded invocations
+- 2026-09-06 — BL-260718-mandatory-skill-load-clause — Mandatory skill-load clause for lifecycle steps that name skills — Wave 2 p04: thirteen lifecycle skills require loading named execution skills; named-skill-load-contract.test.ts sweeps the surface; three hidden-fence defects repaired
+- 2026-09-06 — BL-260818-extend-guarded-prose-contract — Extend guarded-prose contract tests to docs-app mirrors — Wave 2 p03: explainer-kit publication-boundary assertions run over the docs mirror with a whole-document forbidden-phrase guard and negation/mutation-aware patterns
+- 2026-09-06 — BL-260827-harden-the-codex-skill-below — Harden the codex-skill below-floor guard against paraphrase and anaphora — Wave 2 p02: below-floor guard attaches anaphoric continuations (list, blockquote, scenario forms) and rejects them; direct-API exception preserved; 15/6/6 cases pinned
+- 2026-09-06 — BL-260819-repair-verified-bundled-skill — Repair verified bundled skill contract drift — Wave 2 p01: doctor inventory, brainstorm later-doctor promise, idea-summarize tool declarations, analyze ten-step model repaired with per-skill contract groups
 - 2026-09-06 — BL-260902-add-an-exclusion-mechanism — Add an exclusion mechanism to oat docs generate-index — Wave 1 p04: documentation.excludes and --exclude prune docs-index generation with a bounded root-anchored glob grammar and a ReDoS-safe matcher.
 - 2026-09-06 — BL-260827-override-aware-remedy-text — Override-aware remedy text in assets-root fail-closed errors — Wave 1 p03: every asset error remedy is source-aware; OAT_ASSETS_DIR failures never advise a rebuild or reinstall.
 - 2026-09-06 — BL-260827-fail-closed-on-partial-or — Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles — Wave 1 p02: validateAssetsBundle fails closed on a partial or malformed bundle (seven required directories, exit 2, deterministic first offender).

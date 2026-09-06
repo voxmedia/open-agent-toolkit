@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.4.11
+version: 1.4.12
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 oat_gateable: true
@@ -189,7 +189,7 @@ contract.
 
 ### Step 3: Normalize Into Canonical OAT plan.md
 
-Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md` and map imported content into the canonical structure. Apply `oat-project-plan-writing` invariants after mapping:
+Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md` and map imported content into the canonical structure. Apply `oat-project-plan-writing` invariants after mapping — load the current `oat-project-plan-writing/SKILL.md` and follow its invariants as written:
 
 Restore the exact snapshot into the resulting `plan.md` frontmatter as part of
 the first normalized plan write, before any later frontmatter rewrite and
@@ -245,7 +245,9 @@ cannot advance it to implementation.
 ### Step 4.1: Adopt Complete Ladders and Record the Named Ceiling
 
 Invoke the `Complete Dispatch Ladder Adoption Contract` from
-`oat-project-plan-writing`. If the effective ladder is missing or incomplete,
+`oat-project-plan-writing`: load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written. If the
+effective ladder is missing or incomplete,
 show the complete bundled recommendation and ask for its owning scope before
 running exactly one of:
 
@@ -288,7 +290,9 @@ explicit modes; `Leave Unresolved` is not implementation-ready.
 
 After normalization has produced stable phase IDs and before Step 4.5 starts
 the import-aware plan artifact review, invoke the `Shared Phase Gate Review Setup
-Contract` from `oat-project-plan-writing`. Provider native plan mode uses this
+Contract` from `oat-project-plan-writing`: load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written.
+Provider native plan mode uses this
 same import step and inherits its result.
 
 If `plan.md` already contains an explicit `oat_phase_review_gate`, preserve it
@@ -306,7 +310,9 @@ lifecycle command.
 ### Step 4.5: Run Import-Aware Plan Artifact Review Loop
 
 Before dispatching the artifact reviewer, invoke the `Managed Dispatch
-Readiness and Review Contract` from `oat-project-plan-writing`:
+Readiness and Review Contract` from `oat-project-plan-writing` — load the
+current `oat-project-plan-writing/SKILL.md` and follow that contract as
+written:
 
 ```bash
 oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
@@ -317,7 +323,7 @@ If managed resolution or the complete ladder is unresolved, return to Step
 resolver. Do not set `oat_ready_for: oat-project-implement` while either
 contract is unresolved.
 
-Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before advancing project state or handing off to implementation.
+Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before advancing project state or handing off to implementation. Load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written.
 
 Required payload:
 

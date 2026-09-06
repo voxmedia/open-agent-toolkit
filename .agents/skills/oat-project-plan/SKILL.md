@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.4.6
+version: 1.4.7
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -18,13 +18,13 @@ This skill is the plan authoring path for **spec-driven** projects only. Quick a
 
 Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`):
 
-- **`spec-driven`**: Complete design document required (`design.md` with `oat_status: complete`). If missing, run the `oat-project-design` skill first. Proceed with planning.
+- **`spec-driven`**: Complete design document required (`design.md` with `oat_status: complete`). If missing, **Stop.** Tell the user: "Run the `oat-project-design` skill first, then return to planning." Otherwise proceed with planning.
 - **`quick`**: **Stop.** Plan is already produced by the quick workflow. Tell the user: "Plan already produced by quick workflow. Run `oat-project-implement` to begin execution."
 - **`import`**: **Stop.** If a normalized `plan.md` exists, tell the user: "Imported plan is ready. Run `oat-project-implement` to begin execution." If no `plan.md` exists, tell the user: "Run `oat-project-import-plan` to import and normalize the external plan first."
 
 ## Plan Format Contract
 
-When creating or editing `plan.md`, follow `oat-project-plan-writing` canonical format rules. This includes stable task IDs (`pNN-tNN`), required sections (`## Reviews`, `## Implementation Complete`, `## References`), required frontmatter keys (`oat_plan_source`, `oat_status`, `oat_ready_for`), and review table preservation rules. `oat_plan_hill_phases` remains optional until `oat-project-implement` confirms the checkpoint selection.
+When creating or editing `plan.md`, load the current `oat-project-plan-writing/SKILL.md` and follow its canonical format rules. This includes stable task IDs (`pNN-tNN`), required sections (`## Reviews`, `## Implementation Complete`, `## References`), required frontmatter keys (`oat_plan_source`, `oat_status`, `oat_ready_for`), and review table preservation rules. `oat_plan_hill_phases` remains optional until `oat-project-implement` confirms the checkpoint selection.
 
 ## Mode Assertion
 
@@ -283,8 +283,6 @@ git commit -m "feat(p{NN}-t{NN}): {description}"
 ```
 ````
 
-````
-
 ### Step 8: Apply TDD Discipline
 
 For each task that involves code:
@@ -295,6 +293,7 @@ For each task that involves code:
 4. **Refactor:** Clean up while tests pass
 
 **Task order for features:**
+
 1. Write test file
 2. Run tests (red)
 3. Write implementation
@@ -304,6 +303,7 @@ For each task that involves code:
 ### Step 9: Specify Exact Details
 
 For each task, include:
+
 - **Files:** Exact paths for create/modify/delete
 - **Signatures:** Interface definitions, function signatures, type declarations
 - **Test cases:** Test file paths and test descriptions (pseudocode OK for test bodies)
@@ -311,6 +311,7 @@ For each task, include:
 - **Commit:** Conventional commit message with task ID (e.g., `feat(p01-t03): ...`)
 
 **Avoid:**
+
 - Vague instructions ("update the file")
 - Missing verification steps
 - Verification shortcuts that claim file-scoped coverage but actually run a broader suite
@@ -322,6 +323,7 @@ For each task, include:
 Go back to spec.md and fill in the "Planned Tasks" column in the Requirement Index:
 
 For each requirement (FR/NFR):
+
 - List the stable task IDs that implement it
 - Example: "p01-t03, p02-t01, p02-t05"
 
@@ -329,7 +331,8 @@ This creates traceability: Requirement → Tasks → Implementation
 
 ### Step 10.1: Keep Reviews Table Rows
 
-Follow the review table preservation rules from `oat-project-plan-writing`:
+Load the current `oat-project-plan-writing/SKILL.md` and follow its review table preservation rules:
+
 - Include both **code** rows (p01/p02/…/final) and **artifact** rows (`spec`, `design`, `plan`)
 - Add additional rows as needed (e.g., p03), but never delete existing rows
 
@@ -342,6 +345,7 @@ Do **not** ask the user to choose HiLL checkpoints during planning.
 Unless the source artifact or user already supplied a confirmed `oat_plan_hill_phases` value that should be preserved, leave `oat_plan_hill_phases` unset in `plan.md` during planning. `oat-project-implement` will confirm the checkpoint choice at implementation start and write the chosen value before task execution begins.
 
 **Required plan body update (do not skip):**
+
 - In `## Planning Checklist`, mark:
   - `[x] Defer HiLL checkpoint confirmation to oat-project-implement`
 - If a legacy checklist item such as `Confirmed HiLL checkpoints with user` exists, replace it with:
@@ -353,7 +357,9 @@ If `## Planning Checklist` is missing (older plans), add it before finalizing wi
 
 Before marking the plan ready for implementation, invoke the
 `Complete Dispatch Ladder Adoption Contract` from
-`oat-project-plan-writing` and then resolve the project named ceiling.
+`oat-project-plan-writing` — load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written — and
+then resolve the project named ceiling.
 
 #### A. Ensure a complete owned ladder
 
@@ -424,6 +430,7 @@ unresolved and block readiness.
 ### Step 12: Review Plan with User
 
 Present plan summary:
+
 - Number of phases
 - Tasks per phase
 - Key milestones
@@ -457,7 +464,8 @@ Never silently infer parallelism without explicit user confirmation.
 
 After the confirmed plan has stable phase IDs and before Step 12.5 starts the
 plan artifact review, invoke the `Shared Phase Gate Review Setup Contract` from
-`oat-project-plan-writing`.
+`oat-project-plan-writing`: load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written.
 
 When that contract offers a choice, render its required question verbatim:
 "Should an additional cross-runtime phase gate review run after implementation
@@ -478,7 +486,9 @@ lifecycle command.
 ### Step 12.5: Run Plan Artifact Review Loop
 
 Before dispatching the artifact reviewer, invoke the `Managed Dispatch
-Readiness and Review Contract` from `oat-project-plan-writing`:
+Readiness and Review Contract` from `oat-project-plan-writing` — load the
+current `oat-project-plan-writing/SKILL.md` and follow that contract as
+written:
 
 ```bash
 oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
@@ -489,7 +499,7 @@ If managed resolution or the complete ladder is unresolved, return to Step
 resolver. Do not mark the spec-driven plan ready while either contract is
 unresolved.
 
-Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before setting `plan.md` to implementation-ready.
+Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before setting `plan.md` to implementation-ready. Load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written.
 
 Required payload:
 
@@ -597,20 +607,22 @@ Reach this completion boundary only after the configured gate passes or resolves
 according to its `onFailure` policy.
 
 Before setting `oat_status: complete`, verify:
+
 - `## Planning Checklist` exists
 - the checklist records that checkpoint confirmation is deferred to implementation
 - if `oat_plan_hill_phases` is already present, it is intentionally preserved and valid
 - the `plan` artifact review row has been recorded by Step 12.5, unless `workflow.autoArtifactReview.plan` was explicitly disabled
 
 Update frontmatter:
+
 ```yaml
 ---
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: {today}
+oat_last_updated: { today }
 ---
-````
+```
 
 ### Step 14: Update Project State
 

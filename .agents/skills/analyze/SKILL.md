@@ -1,6 +1,6 @@
 ---
 name: analyze
-version: 0.1.1
+version: 0.2.0
 description: Multi-angle analysis of existing artifacts, codebases, documents, or systems. Examines what you have from six analysis angles and produces structured findings with prioritized recommendations.
 argument-hint: 'target [--context path]'
 user-invocable: true
@@ -49,15 +49,16 @@ Print this banner once at start:
 
 Then print step indicators before beginning work:
 
-- `[1/9] Parsing arguments…`
-- `[2/9] Reading context…` (if applicable)
-- `[3/9] Classifying input type…`
-- `[4/9] Selecting analysis angles…`
-- `[5/9] Checking sub-agent availability…`
-- `[6/9] Executing analysis angles…`
-- `[7/9] Checking for comparisons…` (if applicable)
-- `[8/9] Cross-angle synthesis…`
-- `[9/9] Writing artifact…`
+- `[1/10] Parsing arguments…`
+- `[2/10] Reading context…` (if applicable)
+- `[3/10] Classifying input type…`
+- `[4/10] Selecting analysis angles…`
+- `[5/10] Checking sub-agent availability…`
+- `[6/10] Executing analysis angles…`
+- `[7/10] Checking for comparisons…` (if applicable)
+- `[8/10] Cross-angle synthesis…`
+- `[9/10] Resolving output destination…`
+- `[10/10] Writing artifact…`
 
 For long-running operations, print a start line and a completion line:
 
@@ -72,7 +73,7 @@ Keep it concise; don't print a line for every shell command.
 
 ### Step 1: Parse arguments
 
-`[1/9] Parsing arguments…`
+`[1/10] Parsing arguments…`
 
 Parse from `$ARGUMENTS`:
 
@@ -91,7 +92,7 @@ The prompt should ask: _"What would you like me to analyze? Provide a file path,
 
 ### Step 2: Read context (if provided)
 
-`[2/9] Reading context…`
+`[2/10] Reading context…`
 
 If `--context` is specified:
 
@@ -107,7 +108,7 @@ If `--context` is not specified, skip this step.
 
 ### Step 3: Input type classification
 
-`[3/9] Classifying input type…`
+`[3/10] Classifying input type…`
 
 Classify the target to determine analysis angle emphasis:
 
@@ -126,7 +127,7 @@ Log: `→ Input type: {type}`
 
 ### Step 4: Analysis angle selection
 
-`[4/9] Selecting analysis angles…`
+`[4/10] Selecting analysis angles…`
 
 All six angles are ALWAYS run. The input type determines emphasis weighting (primary angles get deeper investigation):
 
@@ -157,7 +158,7 @@ Log the selected emphasis: `→ Primary: {angles} · Secondary: {angles}`
 ### Step 5: Sub-agent availability probe
 
 ```
-[5/9] Checking sub-agent availability…
+[5/10] Checking sub-agent availability…
   → analysis workers: {available | not resolved} ({reason})
   → Selected: Execution Tier {1|2|3} — {description}
 ```
@@ -184,7 +185,7 @@ Log the selected emphasis: `→ Primary: {angles} · Secondary: {angles}`
 
 ### Step 6: Execute analysis angles
 
-`[6/9] Executing analysis angles…`
+`[6/10] Executing analysis angles…`
 
 For each angle, the worker (sub-agent or self) receives:
 
@@ -209,7 +210,7 @@ Print progress for each angle:
 
 ### Step 7: Conditional /compare dispatch
 
-`[7/9] Checking for comparisons…`
+`[7/10] Checking for comparisons…`
 
 If any angle surfaces comparables (e.g. "this component could use library A or B"):
 

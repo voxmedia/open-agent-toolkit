@@ -1,7 +1,7 @@
 ---
 id: BL-260818-extend-guarded-prose-contract
 title: Extend guarded-prose contract tests to docs-app mirrors
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - explainer-kit
 assignee: null
 created: 2026-08-18T00:00:46.965Z
-updated: 2026-08-31T00:11:26Z
+updated: '2026-09-06T08:30:36Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-30-guard-docs-app-mirrors-of-skill-prose.md

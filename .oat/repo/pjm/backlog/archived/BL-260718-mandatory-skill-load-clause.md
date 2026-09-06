@@ -1,7 +1,7 @@
 ---
 id: BL-260718-mandatory-skill-load-clause
 title: Mandatory skill-load clause for lifecycle steps that name skills
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - dx
 assignee: null
 created: 2026-07-18T19:59:12.099Z
-updated: 2026-08-30T23:55:32Z
+updated: '2026-09-06T08:30:37Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-30-require-named-lifecycle-skills-to-be-loaded.md

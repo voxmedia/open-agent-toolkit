@@ -1,6 +1,6 @@
 ---
 name: create-oat-skill
-version: 1.4.0
+version: 1.5.0
 description: Use when adding a new oat-* workflow skill or lifecycle action. Scaffolds the skill with OAT conventions like mode assertions, progress banners, and project-root resolution.
 argument-hint: '[skill-name]'
 disable-model-invocation: true
@@ -105,6 +105,27 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
   - Codex: use structured user-input tooling when available in the current host/runtime
   - Fallback: ask in plain conversational text
 - Do not hard-code a specific Codex question tool name in the skill text unless the host/runtime contract is guaranteed.
+
+**Named-skill execution (required when a step names another OAT project skill):**
+
+- When a step directs the agent running this skill to execute a named
+  `oat-project-*` skill, require loading that skill's current `SKILL.md` and
+  following its current steps, or dispatching a child that carries it.
+- Achieving a remembered outcome, paraphrasing what the named skill used to do,
+  or relying on ambient discovery to locate it is not compliant.
+- Place the clause at the execution boundary itself, not in a remote preface the
+  orchestrator may skip.
+- Three exemption classes need no load clause:
+  - **user advice** — text the skill prints or tells the user, where the user
+    runs the named skill in their own turn or session;
+  - **non-executing reference** — examples, self-references, owner or provenance
+    pointers, inventories, and routing decisions whose invocation boundary lives
+    in a different step;
+  - **explicit capability fallback** — a clause that states why skill loading is
+    unavailable in the current host/runtime and then executes the same contract
+    inline.
+- Classify rather than blanket-rewrite: adding the clause to an exempt mention is
+  as wrong as omitting it at a real execution boundary.
 
 **Autonomy gate inventory (required for inventoried lifecycle skills):**
 

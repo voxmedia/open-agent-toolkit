@@ -37,8 +37,25 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.57` (wave 2 of the 2026-08-31 execution program, wrapper project
+  `wave-2-execution`, "skill contract truthfulness") repairs four bundled
+  skills whose prose disagreed with what ships (`oat-doctor` inventory,
+  `oat-brainstorm`, `oat-idea-summarize` tools, `analyze` step model), makes
+  the codex-skill below-floor guard reject anaphoric confirmation
+  reinstatements, runs the explainer-kit publication-boundary assertions over
+  the docs page with a whole-document forbidden-phrase guard, requires
+  thirteen lifecycle skills to load the current `SKILL.md` of every OAT skill
+  they direct an orchestrator to execute (backed by
+  `validation/named-skill-load-contract.test.ts`, which also detects stray
+  fences; three hidden-fence defects repaired), and ships
+  `oat-project-implement/scripts/capture-dirty-tree.mjs` plus the
+  `recovered_patch` contract so a lost child handle's staged work has a
+  verified, fail-closed path into the next attempt. Closed
+  `BL-260819-repair-verified-bundled-skill`, `BL-260827-harden-the-codex-skill-below`,
+  `BL-260818-extend-guarded-prose-contract`, `BL-260718-mandatory-skill-load-clause`,
+  `BL-260902-document-patch-and-restore`.
 - CLI `0.2.56` (wave 1 of the 2026-08-31 execution program, wrapper project
-  `wave-1-execution`, implementation complete; pending PR/release) resolves
+  `wave-1-execution`, merged as PR #262) resolves
   `oat docs generate-index` from `documentation.root` (app root canonical,
   `<root>/docs` precedence as compatibility behavior), defaults output to the
   app-root manifest, never writes the scaffold's authored `docs/index.md` or
