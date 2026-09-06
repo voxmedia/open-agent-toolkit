@@ -195,6 +195,7 @@ Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passe
 - `w2-p02-fix-001` outcome: one commit `530f428971dba27749bfb3f14cb8b0f13a65c8e7` on `c25e1fd4f` (test file only, +87/−5): I1 documented and pinned without widening the span (MUT-B and B1–B5 as a labelled known-accepted loop, MUT-C rejected); M2 blockquote/callout strip with rejected and control cases; m1 `scenarios?` token; pinned counts now 15 rejected / 6 accepted controls / 6 known-accepted boundary cases (the implementer withdrew its earlier 17/7 claim). Per-proof isolated neutralization; gates exit 0 with forced `Cached: 0`. Record `dispatch/w2-p02-fix-001.json`.
 - `w2-p02-review-002` — disposition-verification round 2 on the original reviewer handle, range `c25e1fd4f..530f42897`. Record `dispatch/w2-p02-review-002.json`.
 - `w2-p02-review-002` outcome: PASS (fan-in may proceed), 0C/0I/0M/1m; I1/M2/m1 verified by probe re-run (B1–B5 still accepted, span not widened, tripwire load-bearing under a proximity mutation; M1/M2/M6/A1/A8 flip to rejected); weaker-anywhere over the full 36-input round-1 corpus: 0 rejected→accepted; counts 15/6/6 confirmed. New m4: `LIST_MARKER_ONLY` not updated with `clauseOpener`, so a blockquoted ordered marker (`> 1. In that case, …`) still escapes — deferred to `BL-260827-span-based-prose-guards` with m2 (no `SKILL.md` under `.agents/skills` contains a blockquote).
+- `w2-p05-impl-001` — p05 dispatched from group base `7c68ba1bfc32b0ecdae473337800c360ed4da816` (worktree HEAD identical; sync commit skipped because the manifest already carries 0.2.57); target opus, model_axis selected:opus, task_class default-implementation (plan dispatch profile), native-catalog selection; brief carries the p04 `oat-project-implement` no-rebump rule, the `oat-phase-implementer.md` bump + `skills.test.ts:3080` pin authorization, and the scratch-hygiene rule. Record `dispatch/w2-p05-impl-001.json`.
 
 #### Phase Outcomes
 
@@ -204,6 +205,7 @@ Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passe
 | p02   | `.worktrees/wave-2/p02` | DONE (`c25e1fd4f` + fix `530f42897`; lane gates forced `Cached: 0`, test:skills 798)        | passed (round 1 0C/1I/2M/3m → round 2 0C/0I/0M/1m)                    | 1          |
 | p03   | `.worktrees/wave-2/p03` | DONE (`a207d3c11` + fix `5a99837ec`; lane gates forced `Cached: 0`, test:skills 801/801)    | passed (round 1 1C/1I/1M/3m → round 2 0C/0I/0M/3m)                    | 1          |
 | p04   | `.worktrees/wave-2/p04` | DONE (`6ef43933e` + fix `2b06f7292` + sweep `ef0c8595c`; forced CLI suite 5601 green)       | passed (round 1 0C/4I/5M/5m → round 2 0C/0I/2M/3m; address-now sweep) | 1          |
+| p05   | `.worktrees/wave-2/p05` | in progress                                                                                 | pending                                                               | -          |
 
 #### Group 1 fan-in — p01 (2026-09-06)
 
