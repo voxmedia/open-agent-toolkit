@@ -112,6 +112,10 @@ verdict=blocked; tasks=2/3; request=lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c0
 
 verdict=pass; tasks=3/3; fix_loops=1; review=reviews/p06-review-2026-09-06T011617Z.md; reviewed_head=d79a58b1b0f8aff53a361b3e591f5cff510106d9; findings=critical:0,important:0,medium:2,minor:0; next=final-review
 
+### 2026-09-06 · structural · oat-project-review-provide · final
+
+artifact=reviews/final-review-2026-09-06T012310Z.md; reconnaissance=attempted; lane=final-docs-1; outcome=rejected-no-artifact; fallback=caller-inline; primary-review=blocked; findings=critical:0,important:1,medium:2,minor:0
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
