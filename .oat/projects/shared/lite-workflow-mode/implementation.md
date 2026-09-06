@@ -486,6 +486,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ### 2026-09-06
 
+#### Final closeout verification passed
+
+The committed closeout baseline passed `pnpm test`, `pnpm lint`,
+`pnpm type-check`, and `pnpm build`, each with an independently captured exit
+code of 0. Evidence directory:
+`/tmp/lite-final-verification.jLf6mm`; ledger:
+`/tmp/lite-final-verification.jLf6mm/exit-codes.txt`.
+
 #### Phase p06 passed fresh independent re-review
 
 **Review artifact:** `reviews/p06-review-2026-09-06T011617Z.md`.
