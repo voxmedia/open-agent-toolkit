@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - PR #264 does not yet include the local p-rev1 commits; push requires explicit authorization
 oat_last_updated: 2026-09-06
 oat_current_task_id: null
 oat_generated: false
@@ -24,17 +25,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status         | Tasks | Completed |
-| ------------ | -------------- | ----- | --------- |
-| Phase 1      | complete       | 4     | 4/4       |
-| Phase 2      | complete       | 3     | 3/3       |
-| Phase 3      | complete       | 3     | 3/3       |
-| Phase 4      | complete       | 2     | 2/2       |
-| Phase 5      | complete       | 4     | 4/4       |
-| Phase 6      | complete       | 11    | 11/11     |
-| Phase p-rev1 | review pending | 7     | 7/7       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 4     | 4/4       |
+| Phase 2      | complete | 3     | 3/3       |
+| Phase 3      | complete | 3     | 3/3       |
+| Phase 4      | complete | 2     | 2/2       |
+| Phase 5      | complete | 4     | 4/4       |
+| Phase 6      | complete | 11    | 11/11     |
+| Phase p-rev1 | complete | 7     | 7/7       |
 
-**Total:** 34/34 tasks completed; final p-rev1 re-review is pending
+**Total:** 34/34 tasks completed; p-rev1 passed independent review
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -685,13 +686,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Phase Outcomes
 
-| Phase  | Implementation | Review            | Fix Loops | Outcome         |
-| ------ | -------------- | ----------------- | --------- | --------------- |
-| p-rev1 | complete (7/7) | re-review pending | 2         | fixes completed |
+| Phase  | Implementation | Review | Fix Loops | Outcome |
+| ------ | -------------- | ------ | --------- | ------- |
+| p-rev1 | complete (7/7) | passed | 2         | passed  |
 
 #### Outstanding Items
 
-- Run fresh independent p-rev1 re-review cycle 3 against `prev1-t07`.
+- Push the completed revision commits and refresh PR #264 after explicit
+  authorization.
 
 ---
 
@@ -1742,6 +1744,18 @@ No finding is deferred. Review cycle 2 of 3 is blocking; fix loop 2 is queued.
   passed 28/28 in the worker and again in root.
 
 The second review event is `fixes_completed` pending fresh re-review cycle 3.
+
+### p-rev1 re-review cycle 3 passed
+
+**Review artifact:** `reviews/archived/p-rev1-review-2026-09-06T173547Z.md`
+**Reviewed head:** `1ad8e44b9b83c7d887085c04c6afafb2bb7e5056`
+**Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor.
+
+The fresh reviewer independently reproduced the tail-only omission failure,
+confirmed exact parsed Technical Design comparison, retained the earlier
+promotion controls, and found no production-code change. Review cycle 3 of 3
+passes. Phase p-rev1 is complete after two review-fix loops and two bounded
+recovery attempts.
 
 ---
 
