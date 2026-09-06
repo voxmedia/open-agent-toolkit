@@ -10,6 +10,8 @@ import {
 } from '@commands/__tests__/helpers';
 import { resolveEffectiveConfig } from '@config/resolve';
 import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
+import type { DispatchReportV1 } from '@providers/identity/dispatch-report';
+import { formatDispatchStamp } from '@providers/identity/stamp';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -52,6 +54,29 @@ function coordinatorReviewSelectionMatches(
     provider?.modelAxis === expected.modelAxis &&
     provider?.effortAxis === expected.effortAxis
   );
+}
+
+interface StampBearingPayload {
+  dispatchReport?: DispatchReportV1;
+  dispatchStamp?: string;
+}
+
+function stampView(payload: unknown): StampBearingPayload {
+  return payload as StampBearingPayload;
+}
+
+function expectCanonicalStamp(payload: unknown): string {
+  const view = stampView(payload);
+  const report = view.dispatchReport;
+  expect(report).toBeDefined();
+  expect(report?.schemaVersion).toBe(1);
+  // The identity stamp suite owns full field order; here we only assert the
+  // resolver returned exactly what the canonical formatter produces.
+  expect(view.dispatchStamp).toBe(
+    formatDispatchStamp(report as DispatchReportV1),
+  );
+  expect(view.dispatchStamp?.startsWith('Dispatch: ')).toBe(true);
+  return view.dispatchStamp as string;
 }
 
 function createHarness(options: HarnessOptions): {
@@ -2242,6 +2267,181 @@ describe('oat project dispatch-ceiling resolve', () => {
       },
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('emits the canonical dispatch stamp beside a resolved dispatch report', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'balanced' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              balanced: {
+                candidates: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'medium',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--candidate-model',
+      'gpt-5.6-terra',
+      '--candidate-effort',
+      'medium',
+      '--task-class',
+      'default-implementation',
+      '--task-effort',
+      'high',
+      '--report-scope',
+      'p03-t01',
+      '--report-action',
+      'implementation',
+      '--json',
+    ]);
+
+    const stamp = expectCanonicalStamp(capture.jsonPayloads[0]);
+    expect(stamp).toContain('scope=p03-t01');
+    expect(stamp).toContain('action=implementation');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('emits the canonical dispatch stamp for inherited and provider-default report routes', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchPolicy: { mode: 'inherit' } },
+    });
+
+    const inherited = createHarness({ cwd: root, home });
+    await runCommand(inherited.command, [
+      '--provider',
+      'codex',
+      '--role',
+      'reviewer',
+      '--report-scope',
+      'p03-review',
+      '--report-action',
+      'review',
+      '--json',
+    ]);
+
+    const inheritedStamp = expectCanonicalStamp(
+      inherited.capture.jsonPayloads[0],
+    );
+    expect(inheritedStamp).toContain('scope=p03-review');
+    expect(inheritedStamp).toContain('action=review');
+    expect(inheritedStamp).toContain('role=reviewer');
+
+    const claudeDefault = createHarness({ cwd: root, home });
+    await runCommand(claudeDefault.command, [
+      '--provider',
+      'claude',
+      '--report-scope',
+      'p03-t02',
+      '--report-action',
+      'implementation',
+      '--json',
+    ]);
+
+    expectCanonicalStamp(claudeDefault.capture.jsonPayloads[0]);
+  });
+
+  it('keeps unknown producer and provenance explicit in the emitted stamp', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchCeiling: { providers: { claude: 'fable' } } },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'claude',
+      '--role',
+      'reviewer',
+      '--report-scope',
+      'p02-review',
+      '--report-action',
+      'review',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      dispatchReport: {
+        runtimeIdentity: { producer: null, provenance: 'unknown' },
+      },
+    });
+    const stamp = expectCanonicalStamp(capture.jsonPayloads[0]);
+    expect(stamp).toContain('producer=unknown');
+    expect(stamp).toContain('provenance=unknown');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('omits dispatchStamp without report context and on resolver errors', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchPolicy: { mode: 'inherit' } },
+    });
+
+    const withoutReport = createHarness({ cwd: root, home });
+    await runCommand(withoutReport.command, ['--provider', 'codex', '--json']);
+    expect(withoutReport.capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+    });
+    expect(withoutReport.capture.jsonPayloads[0]).not.toHaveProperty(
+      'dispatchReport',
+    );
+    expect(withoutReport.capture.jsonPayloads[0]).not.toHaveProperty(
+      'dispatchStamp',
+    );
+
+    const incomplete = createHarness({ cwd: root, home });
+    await runCommand(incomplete.command, [
+      '--provider',
+      'codex',
+      '--report-scope',
+      'p03-t01',
+      '--json',
+    ]);
+    expect(incomplete.capture.jsonPayloads[0]).toEqual({
+      status: 'error',
+      message: '--report-scope and --report-action must be provided together.',
+    });
+    expect(incomplete.capture.jsonPayloads[0]).not.toHaveProperty(
+      'dispatchStamp',
+    );
+
+    const mismatch = createHarness({ cwd: root, home });
+    await runCommand(mismatch.command, [
+      '--provider',
+      'codex',
+      '--report-scope',
+      'p03-review',
+      '--report-action',
+      'review',
+      '--json',
+    ]);
+    expect(mismatch.capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+    });
+    expect(mismatch.capture.jsonPayloads[0]).not.toHaveProperty(
+      'dispatchStamp',
+    );
+    expect(process.exitCode).toBe(1);
   });
 
   it('warns without failing when managed capped implementation selection is skipped', async () => {

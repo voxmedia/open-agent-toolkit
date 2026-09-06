@@ -438,7 +438,8 @@ write authority. See
 ## Dispatch Report V1 and Producer Provenance
 
 Resolver calls that pass `--report-scope` and `--report-action` include a
-`dispatchReport` object in JSON output. Consumers must require
+`dispatchReport` object in JSON output, plus the additive `dispatchStamp`
+string described below. Consumers must require
 `dispatchReport.schemaVersion: 1` before dispatch. The report keeps these
 concerns separate:
 
@@ -485,12 +486,39 @@ also retain a parseable compatibility stamp for later review gates:
 Dispatch: scope=p06-t03 action=implementation role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 ```
 
-The stamp must be derived through `toDispatchStampRecord(dispatchReport)` and
-`formatDispatchStamp`; callers must not reconstruct it from policy labels, role
-names, candidate strings, or target names. `producer` is the runtime model slug
+### The additive `dispatchStamp` field
+
+JSON responses that carry `dispatchReport` also carry `dispatchStamp`, a single
+canonical string produced by the same formatter that owns the grammar above:
+
+```json
+{
+  "status": "resolved",
+  "dispatchReport": { "schemaVersion": 1 },
+  "dispatchStamp": "Dispatch: scope=p06-t03 action=implementation role=implementer ..."
+}
+```
+
+Field eligibility matches report eligibility exactly. The field is present when
+and only when `dispatchReport` is present, so non-report resolver calls and
+error envelopes never carry it. `DispatchReportV1`, its schema version, and the
+stamp grammar are unchanged; the field is purely additive.
+
+Consumers read `dispatchStamp` directly, validate that it is a non-empty string
+beginning with the canonical `Dispatch:` prefix, and copy it byte-for-byte into
+dispatch and audit metadata. Reformatting the report through
+`toDispatchStampRecord(dispatchReport)` and `formatDispatchStamp` is an optional
+corroboration where that library is already loaded; it is never the normal path,
+and no out-of-tree shim is required. Callers must not reconstruct the stamp from
+policy labels, role names, candidate strings, or target names.
+
+`producer` is the runtime model slug
 when OAT can establish it; otherwise it is `unknown`. `provenance` is
 `declared`, `observed`, `inferred`, or `unknown`. Selected model and effort axes
-can remain exact even when runtime producer identity is not reported.
+can remain exact even when runtime producer identity is not reported. A stamp
+carrying `producer=unknown provenance=unknown` is truthful, not degraded: the
+resolver reports configured invocation, and it stays `unknown` until an
+independent runtime observation exists.
 
 Before launching an implementation, fix, or reviewer, surface the structured
 notices in `dispatchReport.notices` and render the report. Structured notices
