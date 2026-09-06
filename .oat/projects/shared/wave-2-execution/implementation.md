@@ -229,9 +229,15 @@ Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passe
 - Lockstep retained at 0.2.57 (origin/main still 0.2.56); integration gates (group fan-in mode), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - p05 readiness on the merged tip: its source plan is READY; the base now carries p04's single `oat-project-implement` bump (2.3.1 → 2.3.2, seven pins) which p05 must not repeat, and p03/p04 touched neither `oat-phase-implementer.md` nor its `skills.test.ts:3080` pin. Group-2 worktrees and branches removed after the merge.
 
+#### Group 3 fan-in — p05 (2026-09-06)
+
+- `wave-2/p05` rebased onto the integration tip and merged with `git merge --no-ff` as `eecd58fc3`. Lane commits re-hashed (identical `git patch-id --stable` pairs; the Reviews table keeps the pre-rebase heads): `de0ba133a`→`01015f4f2`, `27cc81e8e`→`116b86241`, `0f301c8e1`→`5ebf62d40`. No sync commit in this lane (the manifest already carried 0.2.57).
+- Lockstep retained at 0.2.57 (origin/main still 0.2.56); integration gates (group fan-in mode), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
+- All five lanes merged; p05 worktree and branch removed. Final-wave re-check: this is the last group, so the closeout runs the final review over the whole integration diff and the configured exit gate.
+
 #### Parallel Groups
 
-- p01 ungrouped (merged); group 2: p02 + p03 + p04 (merged, fan-in complete); p05 ungrouped (running).
+- p01 ungrouped (merged); group 2: p02 + p03 + p04 (merged); p05 ungrouped (merged). All groups fanned in.
 
 #### Outstanding Items
 

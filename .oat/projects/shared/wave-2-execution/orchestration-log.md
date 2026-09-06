@@ -191,6 +191,16 @@ per-block guard assertion.
 
 ---
 
+### 2026-09-06 · project · fan-in · group 3 (p05)
+
+p05 merged (`eecd58fc3`) after three review rounds; lockstep retained at
+0.2.57; all eight gates exit 0 with a forced test run (`Cached: 0`). Every
+wave-2 lane is on the integration branch. Closeout begins: synthesis,
+backlog archive and follow-up filing, final review, configured exit gate,
+post-implement sequence.
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:
