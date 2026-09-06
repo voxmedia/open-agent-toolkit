@@ -98,12 +98,12 @@ while explicit path flags remain explicit overrides.
 
 ## Dependencies
 
-| Type          | Dependency                                                                                                                           | Required state                                                                                                                                                                                     | Current state                                        |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Soft          | [Issue #239](https://github.com/voxmedia/open-agent-toolkit/issues/239)                                                              | Recheck only if it changes the same option/config resolver first.                                                                                                                                  | Open; concerns exclusion rather than path ownership. |
-| Soft ordering | W1 group 2 plan [Add an exclusion mechanism to docs index generation](./2026-09-02-add-exclusions-to-docs-index-generation.md)       | Runs after this plan; both edit `index-generate/index.ts`, `index.test.ts`, and `docs-tooling/commands.md`, so never in one parallel group.                                                        | Pending.                                             |
-| Soft ordering | W5 group 1 plan [Keep instruction-sync pointers out of docs trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md) | Runs after this plan and inherits the app-root meaning of `documentation.root` and the content-tree derivation settled here; it must not re-derive the docs root independently. No file is shared. | Pending.                                             |
-| Soft surface  | `packages/cli/src/commands/docs/init/scaffold.ts`, its tests, and `.agents/skills/oat-docs-bootstrap/SKILL.md`                       | No other program plan edits these files; this plan owns the Fumadocs seed value and the bootstrap narration if its wording changes.                                                                | Verified 2026-09-05 against the corpus.              |
+| Type          | Dependency                                                                                                                           | Required state                                                                                                                                                                                         | Current state                                        |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| Soft          | [Issue #239](https://github.com/voxmedia/open-agent-toolkit/issues/239)                                                              | Recheck only if it changes the same option/config resolver first.                                                                                                                                      | Open; concerns exclusion rather than path ownership. |
+| Soft ordering | W1 group 2 plan [Add an exclusion mechanism to docs index generation](./2026-09-02-add-exclusions-to-docs-index-generation.md)       | Runs after this plan; both edit `index-generate/index.ts`, `apps/oat-docs/docs/reference/oat-directory-structure.md`, `index.test.ts`, and `docs-tooling/commands.md`, so never in one parallel group. | Pending.                                             |
+| Soft ordering | W5 group 1 plan [Keep instruction-sync pointers out of docs trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md) | Runs after this plan and inherits the app-root meaning of `documentation.root` and the content-tree derivation settled here; it must not re-derive the docs root independently. No file is shared.     | Pending.                                             |
+| Soft surface  | `packages/cli/src/commands/docs/init/scaffold.ts`, its tests, and `.agents/skills/oat-docs-bootstrap/SKILL.md`                       | No other program plan edits these files; this plan owns the Fumadocs seed value and the bootstrap narration if its wording changes.                                                                    | Verified 2026-09-05 against the corpus.              |
 
 There are no unsatisfied hard dependencies.
 
@@ -231,8 +231,11 @@ The safe contract is configuration-first for omitted values:
   repo-relative output path in `documentation.index`. This preserves the
   bootstrap transition at `oat-docs-bootstrap/SKILL.md:906-910` for both the
   bare invocation and the explicit `predev`/`prebuild` script at `:564`. When
-  `documentation.tooling` is `mkdocs` or `documentation.config` is set, never
-  call `writeOatConfig`.
+  `documentation.tooling` names any tooling other than `fumadocs`, or tooling
+  is undeclared and `documentation.config` is set, never call `writeOatConfig`
+  (amended 2026-09-06 by the wave-1 wrapper: the earlier "or
+  `documentation.config` is set" wording contradicted the Fumadocs transition
+  above for this repository's own config shape).
 
 ## Implementation steps
 

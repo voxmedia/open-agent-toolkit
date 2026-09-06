@@ -321,6 +321,24 @@ oat_generated: false
 
 **Review row `final` (round 1) → `fixes_completed`; a narrowed round 2 on the same reviewer handle verifies these dispositions.**
 
+### Review Received: final (round 2, narrowed)
+
+**Date:** 2026-09-06
+**Review artifact:** reviews/final-review-2026-09-06T014238Z.md (reviewed head `63ea98d28825ce0db7bc9e15047b223a794cb1ec`, range `2bfb39a56..63ea98d28`, prior round 1 / head `2bfb39a56`, invocation manual, dispatch `w1-final-review-002`, reconnaissance not-attempted)
+
+**Findings:** Critical 0 · Important 0 · Medium 2 · Minor 2. All nine round-1 dispositions verified (C1, I1, I2, I3, M1, M2, m2, m3 plus the sixth patch-id pair); zero product paths changed, so round 1's gate and seam coverage carries forward.
+
+**Residual dispositions (root, this commit; artifact and plan text only):**
+
+- M1 — the docs-index plan's stale `## Current state` config-write clause: **fixed** — amended to the reconciled wording in `2026-08-30-use-configured-docs-index-paths.md` (the reconciliation note in `plan.md` now cites the amendment instead of a queued one); its dependency row on the exclusions plan also gained the omitted `oat-directory-structure.md`.
+- M2 — inaccurate sync-manifest disclosure: **fixed** — Final Summary and PR description now state schema `version` 1 → 2 with `collections: []`, `oatVersion` 0.2.50 → 0.2.56, `lastSynced` values byte-identical.
+- m1 — the reviewer's own round-1 overcount corrected in its artifact; the real pre-existing gap (the `orchestration-log.md` pointer to "Review Received: plan") is **fixed** — that section (Autonomy Gate Provenance and the plan-gate receive record) was lost when the group-1 dispatch bookkeeping replaced the template body; restored from `ab7d5168d`.
+- m2 — recorded, no action (reviewer's minor on artifact wording).
+
+**Verification record:** what — the three text repairs above; how — `grep` for the restored heading and the corrected disclosure, `grep -n 'documentation.config' <plan>` shows the amended clause, `oat project validate-plan` exit 0; where — this section and the commit that carries it.
+
+**Review row `final` (round 2) → `passed`.**
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)
@@ -340,6 +358,54 @@ oat_generated: false
 - p01 round-2 residual — the symlink hop-cap refusal always advises `--output` even when the chain is on the derived docs directory, and surfaces under the refusal code rather than the configuration code. Deferred: very low reachability; filed as `BL-260906-docs-index-follow-ups-from`.
 
 - p02 review m1 — the new "unreadable" branch discards the errno. Deferred to p03, whose plan rewrites this error family's remedy text; the p03 brief carries it as a non-narrowing executor note.
+
+## Autonomy Gate Provenance
+
+- `IMPLEMENT-08` (subagent delegation): authorized once for this run for
+  `oat-phase-implementer` and `oat-reviewer` within the plan's bounded phase
+  and review scopes; native Claude Code Task dispatch (Tier 1). Operator
+  approval 2026-09-05 ("let it rip"), covering PR creation and merge by the
+  root orchestrator once required gates pass.
+- `IMPLEMENT-03` / `IMPLEMENT-04` (checkpoints): `oat_plan_hill_phases: ['p04']`
+  (final phase; `workflow.hillCheckpointDefault: final`) and
+  `oat_auto_review_at_hill_checkpoints: true` explicit in `plan.md`.
+- Dispatch policy preflight: `oat project dispatch-ceiling resolve --provider claude --preflight --task-class default-implementation --report-scope implementation-preflight --report-action implementation`
+  → `resolved`, managed / `high`, source `project-state`, value `opus`
+  (Task model argument mechanism).
+
+### Review Received: plan
+
+**Date:** 2026-09-05
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-05T224504Z.md
+(gate run `ace386d5-d88b-43e4-bccc-3fd12f3cc7ad`, target `codex-5-6-sol-xhigh`,
+threshold important, blocking)
+
+**Findings:** Critical 0, Important 1, Medium 1, Minor 1. Artifact review: no
+plan tasks created; all findings resolved in-artifact (auto-disposition, gate
+mode).
+
+**Disposition and verification records:**
+
+- `I1` Dispatch Profile embedded `claude → opus` → resolve_in_artifact. What:
+  removed the provider/model observation; profile now names only the managed
+  `high` policy. How: `rg -n 'claude|opus' plan.md` under `## Dispatch Profile`
+  returns nothing. Where: `plan.md` `## Dispatch Profile`; the historical
+  resolution stays as orchestration evidence in this file's Autonomy Gate
+  Provenance.
+- `M1` PR #190 count and overlap set → resolve_in_artifact. What: 228 → 217
+  files (`gh api repos/voxmedia/open-agent-toolkit/pulls/190` `changed_files`
+  = 217, head unchanged `63161897dd40a66e1b29cf19e286665895c40dde`); "seven
+  overlapping files" → six write-surface overlaps named, `cli-reference.md`
+  marked verify-only. How: `rg -n '228 files|seven overlapping' plan.md`
+  returns nothing; `rg -n '217 files' plan.md` returns one hit. Where:
+  `plan.md` Drift Refresh Record.
+- `m1` Abbreviated base SHA in the log → resolve_in_artifact. What:
+  append-only correction entry with the full SHA. How: `rg -n 'a1fd7cd41031719c4db85276fceee402f6045e9c' orchestration-log.md`
+  returns the correction entry. Where: `orchestration-log.md`.
+- Post-fix validation: `oat project validate-plan --project-path <project>` →
+  "Plan validation passed."
+
+**Next:** dispatch group 1 (p01, p02) via `oat-project-implement`.
 
 ## Orchestration Runs
 
@@ -475,7 +541,7 @@ Track test execution during implementation.
 - Docs-index output refusals exit 1 (actionable), unusable configuration exits 2 (repair command).
 - Metadata-only or truncated asset bundles exit 2 instead of resolving as empty installations.
 - New config key `documentation.excludes` (JSON array) and `oat config set|get|unset documentation.excludes`.
-- `.oat/sync/manifest.json` carries the worktree-init restamp (`oatVersion` 0.2.50 → 0.2.55 and `lastSynced` refresh) from the lane bootstrap; no provider-view content changed.
+- `.oat/sync/manifest.json` carries the worktree-init restamp from the lane bootstrap: schema `version` 1 → 2 with a new `collections: []` key and `oatVersion` 0.2.50 → 0.2.56; the 91 `lastSynced` values are byte-identical (only key order moved) and no provider-view content changed.
 
 **Key files / modules:**
 

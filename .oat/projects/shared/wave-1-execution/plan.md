@@ -201,9 +201,9 @@ that names it stays a forecast until it merges.
   filesystem (probe P6) and which the fix round pins with a test. Nothing the
   plan requires is waived: authored `docs/index.md` and `mkdocs.yml` are never
   written, MkDocs configuration is never touched, and the config value written
-  is the generated app-root manifest. The plan's negative clause is the stale
-  artifact; its amendment is queued for wave-close plan corrections, not
-  edited mid-wave.
+  is the generated app-root manifest. The plan's negative clause was the stale
+  artifact; amended in the final-review fix commit (2026-09-06) after the
+  round-2 reviewer asked for it to land with the wave.
 - **Rule-1 coverage audit:** every lane's drift-check pathspec covers its write
   surface; no addendum needed.
 
@@ -379,16 +379,16 @@ git commit -m "feat(p04-t01): add exclusion patterns to docs index generation"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | passed          | 2026-09-06 | reviews/p01-review-2026-09-06T001443Z.md                    | 7dd086feafb9ba53dd25b5a77900ece5f4cb5cc3 | manual     | -           |
-| p02    | code     | passed          | 2026-09-05 | reviews/p02-review-2026-09-05T231204Z.md                    | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -           |
-| p03    | code     | passed          | 2026-09-06 | reviews/p03-review-2026-09-06T004322Z.md                    | f54cb43162ffad21543105fc8b9858f1e6cc6a68 | manual     | -           |
-| p04    | code     | passed          | 2026-09-06 | reviews/p04-review-2026-09-06T011441Z.md                    | 4f1ada48d2e471cdf9391bed70d836527e90395d | manual     | -           |
-| final  | code     | fixes_completed | 2026-09-06 | reviews/final-review-2026-09-06T013330Z.md                  | 2bfb39a567640f9e83f6673c7b098f849cd6d93b | manual     | -           |
-| plan   | artifact | passed          | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -                                        | -          | -           |
-| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
-| design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | passed  | 2026-09-06 | reviews/p01-review-2026-09-06T001443Z.md                    | 7dd086feafb9ba53dd25b5a77900ece5f4cb5cc3 | manual     | -           |
+| p02    | code     | passed  | 2026-09-05 | reviews/p02-review-2026-09-05T231204Z.md                    | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -           |
+| p03    | code     | passed  | 2026-09-06 | reviews/p03-review-2026-09-06T004322Z.md                    | f54cb43162ffad21543105fc8b9858f1e6cc6a68 | manual     | -           |
+| p04    | code     | passed  | 2026-09-06 | reviews/p04-review-2026-09-06T011441Z.md                    | 4f1ada48d2e471cdf9391bed70d836527e90395d | manual     | -           |
+| final  | code     | passed  | 2026-09-06 | reviews/final-review-2026-09-06T014238Z.md                  | 63ea98d28825ce0db7bc9e15047b223a794cb1ec | manual     | -           |
+| plan   | artifact | passed  | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -                                        | -          | -           |
+| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -           |
+| design | artifact | pending | -          | -                                                           | -                                        | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
