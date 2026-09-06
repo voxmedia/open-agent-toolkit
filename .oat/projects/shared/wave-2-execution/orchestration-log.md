@@ -47,6 +47,39 @@ global CLI now trails the branch by one lockstep bump; lanes use
 session on this worktree. Remote name will be `origin/wave-2-execution-2026-09`
 (rule-1 deviation carried from W1).
 
+### 2026-09-06 · structural · oat gate review · plan
+
+Plan gate run `54c02cde-f2f7-4e21-a798-ea4a12b49b09` (`codex-5-6-sol-xhigh`)
+blocked: 0C / 1I / 0M / 1m — the p01 task text restated the source plan's
+commit and review granularity, and oxfmt had turned a line-initial `+ \`p04\``into
+a list item. Both resolved in-artifact; a fix script aborted before writing
+once, so`f631d1cd6`carries only the archive move and`70250093` the fixes.
+**Skill signal (strengthens):** wrapper tasks must stay pointer-only even when
+the source plan has unusual commit boundaries.
+
+### 2026-09-06 · project · friction · lane briefs
+
+The p01 implementer found a stale `/tmp/p01-codex-review.md` from the wave-1
+p01 lane and would have read it as its own review had it not checked the
+mtime. Brief template changed to wave-prefixed `/tmp/wave-2-<phase>-*` names
+for the remaining lanes. **Skill signal (gap):** brief templates should scope
+scratch paths by wave.
+
+### 2026-09-06 · project · friction · check:skill-bumps timing
+
+`pnpm run check:skill-bumps` compares committed state against `origin/main`,
+so before the task commit it reports "nothing to validate"; it is evidence
+only after the commits exist. Lanes should run it post-commit (they do) and
+not cite the pre-commit run.
+
+### 2026-09-06 · project · feedback · in-phase reset disclosure
+
+The p01 implementer reset to the phase base and re-created its four commits
+after discovering a revertibility problem during self-review, before anything
+was reported. Accepted: nothing reported, pushed, or ledgered depended on the
+discarded SHAs; the standing no-reset rule protects reported history. Recorded
+for the reviewer's confirmation.
+
 ---
 
 ## End-of-run synthesis (pending — do not skip at project completion)
