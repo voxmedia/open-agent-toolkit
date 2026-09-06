@@ -99,11 +99,11 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T05:02:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T05:11:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -171,7 +171,7 @@ None. The documentation Medium is fixed and root-verified against the canonical
 brainstorm contract. The user explicitly waived a redundant standard lifecycle
 re-review because the change is wording-only. The additionally authorized exit
 gate passed; its Minor design wording drift was aligned during receive under
-the same instruction. No push, PR, merge, or release is authorized.
+the same instruction. PR creation is authorized; merge and release are not.
 
 ## Next Milestone
 
