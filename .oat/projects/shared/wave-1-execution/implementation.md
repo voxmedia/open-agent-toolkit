@@ -73,7 +73,7 @@ oat_generated: false
 **Notes / Decisions:**
 
 - Cross-model review (Codex, four read-only rounds): three rounds of real containment/symlink defects fixed before commit; round 4 clean.
-- Root review round 1 `reviews/p01-review-2026-09-05T235808Z.md`: 0C/2I/2M/5m → bounded fix round; round 2 `reviews/p01-review-2026-09-06T001443Z.md`: 0C/0I/0M/2m → passed.
+- Root review round 1 `reviews/archived/p01-review-2026-09-05T235808Z.md`: 0C/2I/2M/5m → bounded fix round; round 2 `reviews/archived/p01-review-2026-09-06T001443Z.md`: 0C/0I/0M/2m → passed.
 - Non-narrowing reconciliation of the plan's self-contradictory config-write clause recorded in `plan.md` Drift Refresh Record; plan amendment queued for wave-close.
 
 ### Task p01-t01: Execute external plan — Use configured docs index paths
@@ -150,7 +150,7 @@ oat_generated: false
 **Notes / Decisions:**
 
 - Cross-model review (Codex, read-only, uncommitted diff): SHIP, no findings.
-- Root review `reviews/p02-review-2026-09-05T231204Z.md`: 0C/0I/2M/1m → passed.
+- Root review `reviews/archived/p02-review-2026-09-05T231204Z.md`: 0C/0I/2M/1m → passed.
 
 ### Task p02-t01: Execute external plan — Validate assets bundle structure
 
@@ -210,7 +210,7 @@ oat_generated: false
 **Notes / Decisions:**
 
 - Cross-model review (Codex, read-only): SHIP, zero findings.
-- Root review `reviews/p03-review-2026-09-06T004322Z.md`: 0C/1I/1M/3m → passed after the root-owned bookkeeping fix below.
+- Root review `reviews/archived/p03-review-2026-09-06T004322Z.md`: 0C/1I/1M/3m → passed after the root-owned bookkeeping fix below.
 - Rulings recorded: the wrong-type root branch gaining a remedy is plan-mandated; exporting `AssetsRootSource` is acceptable (`declaration: true` forces it; the `fs` barrel still exports only `resolveAssetsRoot`).
 - Root-verified bounded fix (review I1): the wrapper had recorded the group-2 readiness checks but not flipped the source plans' `oat_execution_status`, which the program's group-2 gate requires. What: both successor plans set `BLOCKED` → `READY` in frontmatter only, in commit `cbaee759a` citing the readiness evidence. How: `grep -n '^oat_execution_status'` on both plans shows `READY`; no other plan line changed. Where: `.oat/repo/reference/external-plans/2026-08-30-make-assets-errors-override-aware.md`, `2026-09-02-add-exclusions-to-docs-index-generation.md`; this record.
 
@@ -263,7 +263,7 @@ oat_generated: false
 **Notes / Decisions:**
 
 - Cross-model review (Codex, two read-only passes): one Important and two Medium fixed pre-commit (repairable malformed value, catastrophic globstar backtracking → matcher rewrite, circular golden); one Important rejected as pre-existing (unknown `documentation` sibling drop), confirmed by the root reviewer against the phase base.
-- Root review `reviews/p04-review-2026-09-06T011441Z.md`: 0C/0I/1M/4m → passed. Address-now sweep (`w1-p04-fix-001`): M1 duplicated matcher JSDoc, m1 docs exit-code claim; other minors deferred below.
+- Root review `reviews/archived/p04-review-2026-09-06T011441Z.md`: 0C/0I/1M/4m → passed. Address-now sweep (`w1-p04-fix-001`): M1 duplicated matcher JSDoc, m1 docs exit-code claim; other minors deferred below.
 - Grammar decision: a bare `CLAUDE.md` is root-anchored (minimatch-style), documented on all three pages.
 
 ### Task p04-t01: Execute external plan — Add exclusions to docs index generation
@@ -303,7 +303,7 @@ oat_generated: false
 ### Review Received: final (round 1)
 
 **Date:** 2026-09-06
-**Review artifact:** reviews/final-review-2026-09-06T013330Z.md (reviewed head `2bfb39a567640f9e83f6673c7b098f849cd6d93b`, invocation manual, dispatch `w1-final-review-001`, reconnaissance attempted)
+**Review artifact:** reviews/archived/final-review-2026-09-06T013330Z.md (reviewed head `2bfb39a567640f9e83f6673c7b098f849cd6d93b`, invocation manual, dispatch `w1-final-review-001`, reconnaissance attempted)
 
 **Findings:** Critical 1 · Important 3 · Medium 2 · Minor 3. Shipped code clean on every probe (p02×p03 nine probes, p01×p04 eleven probes, no weaker-anywhere); all defects in the wave's own record.
 
@@ -324,7 +324,7 @@ oat_generated: false
 ### Review Received: final (round 2, narrowed)
 
 **Date:** 2026-09-06
-**Review artifact:** reviews/final-review-2026-09-06T014238Z.md (reviewed head `63ea98d28825ce0db7bc9e15047b223a794cb1ec`, range `2bfb39a56..63ea98d28`, prior round 1 / head `2bfb39a56`, invocation manual, dispatch `w1-final-review-002`, reconnaissance not-attempted)
+**Review artifact:** reviews/archived/final-review-2026-09-06T014238Z.md (reviewed head `63ea98d28825ce0db7bc9e15047b223a794cb1ec`, range `2bfb39a56..63ea98d28`, prior round 1 / head `2bfb39a56`, invocation manual, dispatch `w1-final-review-002`, reconnaissance not-attempted)
 
 **Findings:** Critical 0 · Important 0 · Medium 2 · Minor 2. All nine round-1 dispositions verified (C1, I1, I2, I3, M1, M2, m2, m3 plus the sixth patch-id pair); zero product paths changed, so round 1's gate and seam coverage carries forward.
 

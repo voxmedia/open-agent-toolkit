@@ -89,7 +89,7 @@ records in `implementation.md` under "Review Received: plan".
 
 ### 2026-09-05 · structural · oat-reviewer · p01
 
-Root review `reviews/p01-review-2026-09-05T235808Z.md` (opus, reconnaissance
+Root review `reviews/archived/p01-review-2026-09-05T235808Z.md` (opus, reconnaissance
 attempted): 0C / 2I / 2M / 5m; weaker-anywhere analysis clean; thirteen
 real-filesystem probes. Bounded fix round dispatched through the original
 implementer handle (`w1-p01-impl-001`, continuation `w1-p01-fix-001`): I1
@@ -123,7 +123,7 @@ Merged p03 (`9561caf19`) and p04 (`a6410ad0c`) with `--no-ff` in plan order afte
 
 ### 2026-09-06 · structural · oat-reviewer · p03 and p04
 
-p03 `reviews/p03-review-2026-09-06T004322Z.md`: 0C/1I/1M/3m (Important = wrapper READY flip, fixed by root bookkeeping `cbaee759a`); p04 `reviews/p04-review-2026-09-06T011441Z.md`: 0C/0I/1M/4m (Medium + one Minor addressed in sweep `915c2a63f`; rest deferred). **Skill signal (strengthens):** reviewers' independent oracles (3.8M-case glob oracle, 24-probe asset harness) found no defects the lanes' own negative controls had missed, but they turned every P0 claim into reproducible evidence.
+p03 `reviews/archived/p03-review-2026-09-06T004322Z.md`: 0C/1I/1M/3m (Important = wrapper READY flip, fixed by root bookkeeping `cbaee759a`); p04 `reviews/archived/p04-review-2026-09-06T011441Z.md`: 0C/0I/1M/4m (Medium + one Minor addressed in sweep `915c2a63f`; rest deferred). **Skill signal (strengthens):** reviewers' independent oracles (3.8M-case glob oracle, 24-probe asset harness) found no defects the lanes' own negative controls had missed, but they turned every P0 claim into reproducible evidence.
 
 ### 2026-09-05 · project · friction · session
 

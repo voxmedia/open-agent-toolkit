@@ -251,7 +251,7 @@ git commit -m "fix(p01-t01): resolve docs index generation from configuration"
 
 **Step 1: Understand the issue**
 
-Review finding: root review `reviews/p01-review-2026-09-05T235808Z.md` (0C/2I/2M/5m): pin the Fumadocs-plus-config write (I1), make the MkDocs discriminator falsifiable (I2), split refusal exit codes from configuration exit codes (M1), add a real-filesystem end-to-end tier (M2), plus m2–m4.
+Review finding: root review `reviews/archived/p01-review-2026-09-05T235808Z.md` (0C/2I/2M/5m): pin the Fumadocs-plus-config write (I1), make the MkDocs discriminator falsifiable (I2), split refusal exit codes from configuration exit codes (M1), add a real-filesystem end-to-end tier (M2), plus m2–m4.
 
 **Step 2: Implement fix**
 
@@ -383,7 +383,7 @@ git commit -m "feat(p04-t01): add exclusion patterns to docs index generation"
 
 **Step 1: Understand the issue**
 
-Review finding: root review `reviews/p04-review-2026-09-06T011441Z.md` (0C/0I/1M/4m): duplicated matcher grammar JSDoc (M1) and a docs exit-code claim (m1); address-now sweep, comment and docs only.
+Review finding: root review `reviews/archived/p04-review-2026-09-06T011441Z.md` (0C/0I/1M/4m): duplicated matcher grammar JSDoc (M1) and a docs exit-code claim (m1); address-now sweep, comment and docs only.
 
 **Step 2: Implement fix**
 
@@ -406,11 +406,11 @@ git commit -m "fix(p04-t02): dedupe matcher grammar comment and correct config e
 
 | Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
 | ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
-| p01    | code     | passed  | 2026-09-06 | reviews/p01-review-2026-09-06T001443Z.md                    | 7dd086feafb9ba53dd25b5a77900ece5f4cb5cc3 | manual     | -                   |
-| p02    | code     | passed  | 2026-09-05 | reviews/p02-review-2026-09-05T231204Z.md                    | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -                   |
-| p03    | code     | passed  | 2026-09-06 | reviews/p03-review-2026-09-06T004322Z.md                    | f54cb43162ffad21543105fc8b9858f1e6cc6a68 | manual     | -                   |
-| p04    | code     | passed  | 2026-09-06 | reviews/p04-review-2026-09-06T011441Z.md                    | 4f1ada48d2e471cdf9391bed70d836527e90395d | manual     | -                   |
-| final  | code     | passed  | 2026-09-06 | reviews/final-review-2026-09-06T014238Z.md                  | 63ea98d28825ce0db7bc9e15047b223a794cb1ec | manual     | -                   |
+| p01    | code     | passed  | 2026-09-06 | reviews/archived/p01-review-2026-09-06T001443Z.md           | 7dd086feafb9ba53dd25b5a77900ece5f4cb5cc3 | manual     | -                   |
+| p02    | code     | passed  | 2026-09-05 | reviews/archived/p02-review-2026-09-05T231204Z.md           | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -                   |
+| p03    | code     | passed  | 2026-09-06 | reviews/archived/p03-review-2026-09-06T004322Z.md           | f54cb43162ffad21543105fc8b9858f1e6cc6a68 | manual     | -                   |
+| p04    | code     | passed  | 2026-09-06 | reviews/archived/p04-review-2026-09-06T011441Z.md           | 4f1ada48d2e471cdf9391bed70d836527e90395d | manual     | -                   |
+| final  | code     | passed  | 2026-09-06 | reviews/archived/final-review-2026-09-06T014238Z.md         | 63ea98d28825ce0db7bc9e15047b223a794cb1ec | manual     | -                   |
 | final  | code     | passed  | 2026-09-06 | reviews/archived/final-review-2026-09-06T015333Z.md         | ecf1b8821a9de7b5c55b48d41215fdcb762b1972 | gate       | codex-5-6-sol-xhigh |
 | plan   | artifact | passed  | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -                                        | -          | -                   |
 | spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                   |
