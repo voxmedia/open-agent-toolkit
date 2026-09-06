@@ -741,6 +741,15 @@ checkpoint, so approval remains pending until all three stored pre-approval
 steps complete. The snapshot is immutable for this closeout. The external PR
 step remains subject to the user's explicit no-PR authorization boundary.
 
+#### Closeout summary step completed
+
+`oat-project-summary` generated `summary.md` at task pointer `p06-t11`, rolled
+up 22 structural project-log entries, and promoted five deduplicated Lite
+decisions through the canonical decision CLI. Commit
+`ec61c68b4882ed159e52cfed676e2ad23f7952a7` contains the 196-line summary,
+five decision records, and regenerated decision index. The stored sequence now
+marks `summary` complete; `document` is next.
+
 #### Exit-gate review 2 received — final configured attempt
 
 **Review artifact:**
