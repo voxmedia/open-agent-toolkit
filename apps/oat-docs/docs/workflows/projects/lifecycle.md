@@ -170,8 +170,10 @@ When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter 
 
 ### Phase-review setup during planning
 
-Spec-driven, quick, lite, and import planning run one shared setup after stable phase
-IDs exist and before the plan artifact review. The target probe qualifies only
+Spec-driven, quick, and import planning run one shared setup after stable phase
+IDs exist and before the plan artifact review. Lite omits this planning-time
+setup and prompt, while its built-in implementation phase and final reviews
+remain required. The target probe qualifies only
 an explicitly configured, enabled, and available review target, then offers all
 phases, selected phases, or disabled. Existing explicit
 `oat_phase_review_gate` values are preserved unchanged without re-prompting.
