@@ -585,6 +585,20 @@ final code-review scope, and start time `2026-09-06T02:38:31.833Z`. Launch
 attempt `f5f83ab8-0ae8-4aa8-ba13-6ed3d3549254` is accepted and still running;
 no terminal envelope has been consumed.
 
+#### Configured implementation exit gate result 2 persisted
+
+Run `e1faf839-7cd8-4635-8d73-2196ade93c55` returned one correlated
+`blocked` envelope at the Important threshold with 0 Critical, 1 Important,
+0 Medium, and 0 Minor findings. The envelope is receive eligible and hands off
+`reviews/final-review-2026-09-06T024254Z.md`.
+
+The reviewer reproduced that the p06-t08 branch is inert for real promoted
+projects: promotion leaves `discovery.md` readiness null while the recommender
+reads readiness from that artifact, not `state.md`. The hand-built router
+fixture therefore modeled a state no shipped path creates. The structured
+receipt is authoritative; no policy disposition has been applied before
+receive.
+
 #### Final lifecycle re-review 3 received — passed
 
 **Review artifact:**
