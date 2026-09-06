@@ -158,6 +158,17 @@ been reclaimed. Recorded as a failed launch (not an attempt) and relaunched.
 
 ---
 
+### 2026-09-06 · structural · oat gate review · final (attempt 2, host-killed)
+
+Run `7ce7a2ae` completed its review (0C/0I/0M/1m on `f1cf3881a`) and
+appended its ledger row, then the host killed the gate command before the
+receipt. Recorded as superseded; the safe cleanup batch (pnpm v10 prune,
+turbo cache, idle node_modules, parity-check worktree; Chrome quit and an
+orphaned session killed by the operator's approval) freed ~6 GB and swap,
+and the gate is re-run in the foreground for a receipted result.
+
+---
+
 ## End-of-run synthesis (2026-09-06)
 
 **Convention verdicts (evidence: entries above and `implementation.md` Run 1):**

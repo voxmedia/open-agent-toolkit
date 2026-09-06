@@ -188,6 +188,14 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Gate row `final` (attempt 1) → `fixes_added`; `oat_implement_exit_gate` → `blocked` (1 attempt completed); re-run after `w3-p01-fix-002`.**
 
+## Review Received: final (configured exit gate, attempt 2 — host-killed run, superseded)
+
+**Date:** 2026-09-06
+**Gate:** run `7ce7a2ae-c803-4723-808e-b83366d8823c` (attempt `w3-exit-gate-20260906T142749Z`) was killed by the host for memory pressure after the reviewer had written its artifact but before the gate command produced a receipt or envelope.
+**Review artifact:** reviews/archived/final-review-2026-09-06T143613Z.md (reviewed head `f1cf3881ae8c4be6a6fd451c2cc5313e50f5212e`, invocation gate, headless; Critical 0 · Important 0 · Medium 0 · Minor 1).
+
+**Disposition:** the artifact is recorded as **superseded** (its ledger row keeps the gate lineage) because no gate receipt exists to make it a terminal gate outcome; the gate is re-run for a receipted result. Its one Minor (the Deferred Findings ledger still listed the `implementation-execution.md:91` docs fix as pending although `ec061f241` landed it) is **fixed** in this commit.
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)
@@ -198,7 +206,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### Deferred Findings (Minor)
 
-- p01 m1: docs mirror `implementation-execution.md:91` → document step (this closeout).
+- p01 m1: docs mirror `implementation-execution.md:91` → done in `ec061f241` (root document-step commit before the final review).
 - p01 m2: source plan In-scope omits `skills.test.ts` → wave-close plan correction.
 - p01 m3: `check:skill-bumps` ignores `.agents/agents/*.md` → `BL-260906-extend-check-skill-bumps`.
 - p01 m4: bolded-negation lookbehind; synonym gap → `BL-260906-make-the-phase-implementer`.

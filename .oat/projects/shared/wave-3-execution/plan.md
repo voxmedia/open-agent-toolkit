@@ -324,6 +324,7 @@ git commit -m "docs(p03-t01): require executable backstops for standing contract
 | spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
 | design | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
 | final  | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T140727Z.md         | 182c832a98a608c40b740e1490fad2b989aef694 | gate       | codex-5-6-sol-xhigh |
+| final  | code     | superseded  | 2026-09-06 | reviews/archived/final-review-2026-09-06T143613Z.md         | f1cf3881ae8c4be6a6fd451c2cc5313e50f5212e | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
