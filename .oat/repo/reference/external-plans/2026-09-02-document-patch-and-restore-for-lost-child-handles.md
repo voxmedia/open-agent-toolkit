@@ -286,10 +286,14 @@ the three STOP reasons by name, and `recovered_patch` with `artifact` and
 
 **Verify:** `pnpm exec vitest run src/validation/skills.test.ts -t 'capture-and-restore'` → pass.
 
-### 5. Refresh the inventory mapping
+### 5. Refresh the inventory mapping (conditional)
 
-Run the inventory test; if `autonomy-contract.md:295` line refs shifted,
-update them and copy the file byte-identically to the four mirrors.
+Run the inventory test. This step only has work when the prose change adds,
+removes, or rewords a prompt-site sentence (the inventory is keyed by content
+hash, not line number; `autonomy-contract.md:295` sits in the historical
+comparison table pinned to an old commit). If a hash moved, update the mapping
+row; the four skill-tree mirrors are symlinks and need no copy. Wave 2 needed
+no edit here.
 
 **Verify:** `pnpm exec vitest run src/validation/autonomy-gate-inventory.test.ts` → 4 passed.
 
@@ -350,6 +354,10 @@ Stop and report instead of improvising when:
 - PR #190 merged first and the handle-loss branch no longer matches the
   cited shape; or
 - a named verification gate fails twice after one bounded correction.
+
+## Execution record (2026-09-06, wave 2)
+
+Executed as wave-2 p05 (PR #267, CLI 0.2.57): `capture-dirty-tree.mjs` plus the `recovered_patch` contract; `oat-phase-implementer` 1.1.1 → 1.1.2 with three pins; `oat-project-implement` bump carried from p04 (one bump per skill per PR). Five review rounds plus two post-PR rounds: the reviewer's fresh-shell execution of the prose snippets caught a guard living in a different block than its invocations; Cursor Bugbot caught the recover-mode ordering (patch committed before the pending attempt was reconciled); the exit gate caught the artifact-free retry path. The plan's 'two byte-identical status snapshots' rule shipped as a superset (HEAD plus per-path content and exec-bit fingerprints, because porcelain v2 carries no worktree object id); staged renames are `unsupported-dirt`.
 
 ## Revalidation Before Execution
 

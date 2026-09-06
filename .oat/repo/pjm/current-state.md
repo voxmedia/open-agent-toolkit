@@ -38,7 +38,7 @@ copying their content here. -->
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
 - CLI `0.2.57` (wave 2 of the 2026-08-31 execution program, wrapper project
-  `wave-2-execution`, "skill contract truthfulness") repairs four bundled
+  `wave-2-execution`, "skill contract truthfulness", merged as PR #267) repairs four bundled
   skills whose prose disagreed with what ships (`oat-doctor` inventory,
   `oat-brainstorm`, `oat-idea-summarize` tools, `analyze` step model), makes
   the codex-skill below-floor guard reject anaphoric confirmation
