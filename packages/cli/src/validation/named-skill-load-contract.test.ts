@@ -99,12 +99,18 @@ interface Block {
 
 type WalkedLine =
   | { kind: 'heading'; heading: string; line: number }
+  | { kind: 'fence'; line: number }
   | { kind: 'blank'; text: string; line: number }
   | { kind: 'text'; text: string; line: number };
 
 /**
  * Single fence-aware line walk over a markdown file. Fenced content is dropped,
  * so a `#` comment inside a fenced block is never mistaken for a heading.
+ *
+ * An opening fence is emitted as a `fence` boundary rather than swallowed:
+ * a fenced block terminates the prose block before it, so prose on either side
+ * of a fence never merges into one block. Without that boundary a block-scoped
+ * `requires` could be satisfied by a clause on the far side of a fence.
  */
 function walkMarkdown(content: string): WalkedLine[] {
   const lines = content.split(/\r?\n/);
@@ -117,6 +123,7 @@ function walkMarkdown(content: string): WalkedLine[] {
       const marker = fenceMatch[1];
       if (fence === null) {
         fence = marker;
+        walked.push({ kind: 'fence', line: index + 1 });
         continue;
       }
       if (
@@ -167,7 +174,7 @@ function collectProseBlocks(content: string): Block[] {
       anchor = walked.heading;
       continue;
     }
-    if (walked.kind === 'blank') {
+    if (walked.kind === 'blank' || walked.kind === 'fence') {
       flush();
       continue;
     }
@@ -203,6 +210,7 @@ function collectSections(content: string): Map<string, string> {
       anchor = line.heading;
       continue;
     }
+    if (line.kind === 'fence') continue;
     buffer.push(line.text);
   }
   flush();
@@ -231,8 +239,28 @@ interface FenceDefect {
  *    duplicated-closer shape found three times in this corpus
  *    (`oat-project-plan`, `oat-project-review-receive`, `oat-project-revise`).
  *
- * Rule 2 deliberately does not fire on a bare fence that merely contains a
- * heading: printed console templates legitimately do that.
+ * Rule 2's blind spot, stated precisely: the `gap` test requires the bare fence
+ * to open immediately after a *closing* fence with only blank lines between
+ * them. A bare fence that opens after ordinary prose never reaches the heading
+ * condition, so it is not reported.
+ *
+ * Known uncovered live instance: `.agents/skills/oat-project-review-provide/SKILL.md:1057`
+ * — a bare four-backtick fence spanning 1057-1167 (110 lines) that swallows
+ * `### Step 8.5`, `### Step 9`, and `### Step 9.5`. It escapes rule 2 because
+ * lines 993-1056 are prose, not blank, so the `gap` test fails before the
+ * heading condition is reached. It is left uncovered here on purpose:
+ * `oat-project-review-provide` is not one of this change's skills, and
+ * repairing it forces a version bump plus its pin. Widening rule 2 to "bare
+ * fence of length >= 4 swallowing a heading" would catch it while sparing the
+ * legitimate three-backtick console template at
+ * `.agents/skills/oat-project-document/SKILL.md:423`.
+ *
+ * That repair is indivisible and must land as one change: the missing opener
+ * before `SKILL.md:1013` currently promotes a review-artifact template into
+ * live prose, and matrix row `oat-project-review-provide/SKILL.md`
+ * [`Recommended Next Step`] below binds to exactly that promoted text. Insert
+ * the opener, narrow `:1167` to three backticks, delete that row, and tighten
+ * this rule in the same commit; a partial repair reads as a red gate.
  */
 function findFenceDefects(file: string, content: string): FenceDefect[] {
   const lines = content.split(/\r?\n/);
@@ -791,10 +819,11 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     file: '.agents/skills/oat-project-complete/SKILL.md',
     anchor: 'Step 2: Upfront User Questions (Batched)',
     match: 'Also preflight summary status using the same freshness rules',
-    classification: 'non-executing',
+    classification: 'load-required',
     skills: ['oat-project-summary'],
-    reason:
-      'Read-only preflight; the freshness rules are reproduced inline below and Step 3.5 is the summary execution boundary that carries the load clause.',
+    requires: [
+      'read from the current `oat-project-summary/SKILL.md` rather than a remembered version of that step',
+    ],
   },
   {
     file: '.agents/skills/oat-project-complete/SKILL.md',
@@ -2205,9 +2234,12 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
 /**
  * Floors, not exact counts: the corpus grows, but a glob or path regression that
  * shrinks it must fail loudly rather than quietly widening every exemption.
- * Recorded at 41 bounded files / 158 candidate sentences.
+ * Recorded at 41 bounded files / 158 candidate sentences, so losing a single
+ * scanned file or one reference file's worth of candidates breaches the floor.
+ * The negative control below reads these values rather than restating them, so
+ * lowering them cannot silently disarm the guard.
  */
-const CORPUS_MINIMUMS: CorpusMinimums = { files: 38, candidates: 140 };
+const CORPUS_MINIMUMS: CorpusMinimums = { files: 40, candidates: 150 };
 
 const tempDirs: string[] = [];
 
@@ -2267,10 +2299,10 @@ describe('named-skill execution contract', () => {
         missingClauses: [],
         malformedRows: [],
         fenceDefects: [],
-        corpusShortfalls: [],
       }),
     ).toBe('');
     expect(report.unclassified).toHaveLength(0);
+    expect(report.corpusShortfalls).toEqual([]);
   });
 
   it('keeps every load-required and explicit-fallback clause at its execution boundary', async () => {
@@ -2292,7 +2324,7 @@ describe('named-skill execution contract', () => {
     expect(report.overMatchedRows).toEqual([]);
   });
 
-  it('keeps the bounded surface free of stray fences that would hide directives', async () => {
+  it('rejects the duplicated-closer stray-fence shape across the bounded surface', async () => {
     const repoRoot = resolve(process.cwd(), '..', '..');
     const report = await inspectContract(
       repoRoot,
@@ -2494,6 +2526,32 @@ describe('named-skill execution contract', () => {
     ).rejects.toThrowError(/no longer bind to a live call site/);
   });
 
+  it('keeps prose on either side of a fence in separate blocks', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(
+      root,
+      [
+        '# Fixture',
+        '',
+        '## Step 1: Close Out',
+        '',
+        'Dispatch `oat-project-summary` to produce the summary.',
+        '```bash',
+        'echo build',
+        '```',
+        'load the current `oat-project-summary/SKILL.md` and follow it.',
+        '',
+      ].join('\n'),
+    );
+
+    // No blank line on either side of the fence. The clause after the fence
+    // must not satisfy a block-scoped `requires` on the candidate before it.
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).rejects.toThrowError(/missing its load-required clause/);
+  });
+
   it('resolves a section-scoped clause across an in-fence `#` comment', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
     tempDirs.push(root);
@@ -2662,12 +2720,12 @@ describe('named-skill execution contract', () => {
     await writeFixtureSkill(root, COMPLIANT_FIXTURE);
 
     await expect(
-      assertContractCurrent(root, FIXTURE_MATRIX, {
-        files: 38,
-        candidates: 140,
-      }),
+      assertContractCurrent(root, FIXTURE_MATRIX, CORPUS_MINIMUMS),
     ).rejects.toThrowError(
-      /bounded surface shrank to 2 files \(floor 38\)[\s\S]*candidate sweep shrank to 1 sentences \(floor 140\)/,
+      new RegExp(
+        `bounded surface shrank to 2 files \\(floor ${CORPUS_MINIMUMS.files}\\)` +
+          `[\\s\\S]*candidate sweep shrank to 1 sentences \\(floor ${CORPUS_MINIMUMS.candidates}\\)`,
+      ),
     );
   });
 

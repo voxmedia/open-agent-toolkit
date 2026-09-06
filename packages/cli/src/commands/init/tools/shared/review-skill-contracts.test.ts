@@ -1557,7 +1557,7 @@ printf 'artifact-read\\n'`,
       'Do not ask whether to generate or refresh `summary.md` during pr-final.',
     );
     expect(completeContent).toContain(
-      'Also preflight summary status using the same freshness rules as `oat-project-summary`:',
+      'Also preflight summary status using the same freshness rules as `oat-project-summary`, read from the current `oat-project-summary/SKILL.md` rather than a remembered version of that step:',
     );
     expect(completeContent).toContain(
       'Would you like me to generate it now as part of completion?',

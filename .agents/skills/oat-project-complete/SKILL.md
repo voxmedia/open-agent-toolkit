@@ -289,7 +289,7 @@ Set `SHOULD_GENERATE_RECAP="true"` only when the final resolved decision is
 preference results are effective for this run but are not copied into project
 state.
 
-Also preflight summary status using the same freshness rules as `oat-project-summary`:
+Also preflight summary status using the same freshness rules as `oat-project-summary`, read from the current `oat-project-summary/SKILL.md` rather than a remembered version of that step:
 
 - `summary.md` is `missing` when `{PROJECT_PATH}/summary.md` does not exist
 - `summary.md` is `stale` when the tracking frontmatter fields `oat_summary_last_task`, `oat_summary_revision_count`, or `oat_summary_includes_revisions` no longer match `current_last_task`, `current_rev_count`, or `current_rev_list` as defined in `oat-project-summary` Step 3
