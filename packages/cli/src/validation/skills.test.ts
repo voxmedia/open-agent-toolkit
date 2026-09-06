@@ -6732,11 +6732,16 @@ describe('bundled skill contract truthfulness — doctor inventory', () => {
       ...installedTable.matchAll(
         /^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/gm,
       ),
-    ].filter(([, pack]) => pack && packSkills.has(pack));
+    ];
     expect(installedRows.length, 'installed pack example rows').toBeGreaterThan(
       0,
     );
     for (const [, pack, total] of installedRows) {
+      // Membership is asserted, never filtered: a row naming a pack that does
+      // not exist is itself the drift this case exists to catch.
+      expect(packSkills.has(pack ?? ''), `${pack} is a manifest pack`).toBe(
+        true,
+      );
       expect(Number(total), `${pack} example denominator`).toBe(
         packSkills.get(pack ?? '')?.length,
       );
@@ -6777,12 +6782,41 @@ describe('bundled skill contract truthfulness — brainstorm diagnostics', () =>
       .find((line) => line.startsWith('- If `node` is **missing**:'));
 
     expect(nodeMissing, 'node-missing branch').toBeDefined();
-    // Nothing persists the note, so no later run of any diagnostic can read it
-    // back. The branch must not promise that any of them can.
-    expect(nodeMissing).not.toMatch(
-      /doctor[\s\S]{0,40}\b(?:can|could|will|may)\b/i,
-    );
-    expect(nodeMissing).not.toMatch(/pick(?:s|ed)?(?: it)? up later/i);
+
+    // The invariant is bounded, not keyword-blocked: exactly one sentence in
+    // this branch may refer to a later diagnostic reader, and it must be the
+    // sentence that denies the note survives at all. Any *additional*
+    // sentence promising a later run observes it therefore fails, even when
+    // the truthful wording is still present alongside it.
+    const readerSentences = (branch: string): string[] =>
+      branch
+        .split(/(?<=\.)\s+/)
+        .filter((sentence) =>
+          /\b(?:oat-)?doctor\b|\bdiagnostics?\b|\b(?:later|subsequent|future|another)\b[^.]*\brun\b/i.test(
+            sentence,
+          ),
+        );
+    const permitted = [
+      'Nothing persists that note, so no later diagnostic run can report it.',
+    ];
+
+    expect(readerSentences(nodeMissing ?? '')).toEqual(permitted);
+
+    // Permanent negative controls: the guard must reject a reinstated promise
+    // appended beside the truthful clause, and the original pre-fix phrasing.
+    expect(
+      readerSentences(
+        `${nodeMissing ?? ''} A subsequent \`oat-doctor\` run surfaces it under Configuration.`,
+      ),
+      'paraphrased promise appended beside the truthful clause',
+    ).not.toEqual(permitted);
+    expect(
+      readerSentences(
+        '- If `node` is **missing**: skip the offer entirely. Do not print the offer message. Log a one-line note in the conversation that the visual companion is unavailable in this environment (a state `oat-doctor` can pick up later: "visual companion suppressed — node not on PATH"). Proceed with `VISUAL_COMPANION = "unavailable"`.',
+      ),
+      'original pre-fix phrasing',
+    ).not.toEqual(permitted);
+
     expect(nodeMissing).toMatch(/for this session only|conversation-only/i);
     expect(nodeMissing).toMatch(/nothing persists/i);
     // The immediate, supported behaviour stays intact.
@@ -6795,7 +6829,7 @@ describe('bundled skill contract truthfulness — brainstorm diagnostics', () =>
 });
 
 describe('bundled skill contract truthfulness — idea-summarize tools', () => {
-  it('declares every tool the idea-summarize steps invoke', async () => {
+  it('declares Bash and Glob alongside its prior tools', async () => {
     const skill = await readRepoFile(
       '.agents/skills/oat-idea-summarize/SKILL.md',
     );
@@ -6876,7 +6910,17 @@ describe('bundled skill contract truthfulness — analyze progress model', () =>
 
     // The workflow body emits the same ten-step model it advertises: same
     // indices, same denominators, same labels, one heading each.
-    const workflow = analyze.slice(analyze.indexOf('## Workflow'));
+    // Bounded at the next top-level heading so Examples, Troubleshooting, and
+    // Success Criteria may legitimately quote a progress marker.
+    const workflowStart = analyze.indexOf('## Workflow');
+    const headingOffset = analyze.slice(workflowStart + 1).search(/^## /m);
+    expect(headingOffset, 'heading after the workflow section').toBeGreaterThan(
+      -1,
+    );
+    const workflow = analyze.slice(
+      workflowStart,
+      workflowStart + 1 + headingOffset,
+    );
     const emitted = [...workflow.matchAll(/\[(\d+)\/(\d+)\] ([^`\n]+)/g)];
     expect(emitted.map(([, index]) => index)).toEqual(
       advertisedSteps.map(([, index]) => index),
