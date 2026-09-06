@@ -1,6 +1,6 @@
 ---
 oat_current_task: p03-t01
-oat_last_commit: null
+oat_last_commit: 87c10a81
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260718-fix-oat-docs-generate-index' }
@@ -100,13 +100,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-05T22:36:14.653Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T22:51:27.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T00:20:49.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-1-execution
 
-**Status:** Implementing — group 1 lanes passed review; fan-in in progress
+**Status:** Implementing — group 1 merged (0.2.56 bump, gates green); group 2 dispatching
 **Started:** 2026-09-05
 **Last Updated:** 2026-09-05
 
@@ -132,8 +132,9 @@ drift refresh.
 - ✓ Wave-boundary drift refresh (recon, non-authoritative) recorded in `plan.md`
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
 - ✓ Plan gate passed after three in-artifact fixes (run `ace386d5`)
-- ⧗ Group 1 (p01, p02) dispatched at `ab7d5168d2cbd3199c257f73e7e2afdde40cc74b`; fan-in and integration gates pending
-- ⧗ Group 2 successors (p03, p04) after readiness checks
+- ✓ Group 1 (p01, p02) merged; lockstep 0.2.56; integration gates green
+- ✓ Group 2 readiness checks passed on the merged tip (p03, p04 READY)
+- ⧗ Group 2 (p03, p04) dispatched from `87c10a816a77d347e75a44c71c3d7a08cfdbe589`
 
 ## Blockers
 

@@ -113,6 +113,10 @@ cannot later carry the terminal outcome; outcomes live in `implementation.md`.
 **Skill signal (contradicts):** the lineage contract says record immediately
 after acceptance, but the journal cannot then be closed out.
 
+### 2026-09-06 · structural · oat-wave-execute · group 1 fan-in
+
+Merged p01 (`88ca7f9b1`) and p02 (`d9366de0f`) with `--no-ff` in plan order after rebase; lockstep bump 0.2.55 → 0.2.56 at `87c10a816a77d347e75a44c71c3d7a08cfdbe589`; all eight DoD gates exit 0 with an uncached test run; group-2 readiness checks passed. Worked well: the pre-declared cumulative churn made both lanes' drift checks trivial; the rebase dropped p02's duplicate sync commit automatically.
+
 ### 2026-09-05 · project · friction · session
 
 The orchestrator session restarted during the drift-refresh recon dispatch; the
