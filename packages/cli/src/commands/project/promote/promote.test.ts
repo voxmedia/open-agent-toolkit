@@ -365,8 +365,9 @@ describe('oat project promote', () => {
     'preserves the %s adaptive shape during promotion',
     async (shape) => {
       const repoRoot = await createRepo();
+      const originalPlan = litePlanContent(shape);
       const { projectPath, projectRoot } = await seedRepo(repoRoot, {
-        plan: litePlanContent(shape),
+        plan: originalPlan,
       });
       const { command } = createHarness(repoRoot);
 
@@ -384,12 +385,23 @@ describe('oat project promote', () => {
       expect(discovery.includes('## Carried-Forward Technical Design')).toBe(
         carriesTechnical,
       );
+      if (carriesProduct) {
+        expect(discovery).toContain(
+          '### Product Behavior (from Lite plan)\n\n1. **Visible result** — Users see the promoted behavior.',
+        );
+      }
       if (carriesTechnical) {
         expect(
           discovery.indexOf('## Carried-Forward Technical Design'),
         ).toBeLessThan(discovery.indexOf('## Next Steps'));
         expect(discovery).toContain('not a new discovery deliverable');
+        expect(discovery).toContain(
+          '## Carried-Forward Technical Design\n\n> Prior implementation context carried forward from the Lite plan; this is not a new discovery deliverable.\n\n- **Current operation:** `promoteLite()` reads the five core sections.\n- **Proposed changes:** `promoteLite()` carries adaptive sections forward.',
+        );
       }
+      await expect(
+        readFile(join(projectRoot, 'references', 'lite-plan.md'), 'utf8'),
+      ).resolves.toBe(originalPlan);
     },
   );
 
