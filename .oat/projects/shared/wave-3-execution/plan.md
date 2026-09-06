@@ -316,7 +316,8 @@ git commit -m "docs(p03-t01): require executable backstops for standing contract
 | ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01    | code     | fixes_added | 2026-09-06 | reviews/archived/p01-review-2026-09-06T114536Z.md           | ecf4756860bbf82ca5ecdb89ffa42e56a5a27ce1 | manual     | -           |
 | p01    | code     | passed      | 2026-09-06 | reviews/archived/p01-review-2026-09-06T120914Z.md           | f275a469ba06dac9923d89eb5b6a21ef1b42bba0 | manual     | -           |
-| p02    | code     | fixes_added | 2026-09-06 | reviews/p02-review-2026-09-06T121404Z.md                    | dceaf63c5a691787a0503cfeb43601553a46ec1e | manual     | -           |
+| p02    | code     | fixes_added | 2026-09-06 | reviews/archived/p02-review-2026-09-06T121404Z.md           | dceaf63c5a691787a0503cfeb43601553a46ec1e | manual     | -           |
+| p02    | code     | passed      | 2026-09-06 | reviews/archived/p02-review-2026-09-06T124137Z.md           | e39046cf5e7e5d9bd0714796479a2c31446e8ab4 | manual     | -           |
 | p03    | code     | pending     | -          | -                                                           | -                                        | -          | -           |
 | final  | code     | pending     | -          | -                                                           | -                                        | -          | -           |
 | plan   | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T110723Z.md | -                                        | -          | -           |
