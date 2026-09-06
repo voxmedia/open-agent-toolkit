@@ -525,6 +525,11 @@ contracts change.
 `oat-project-implement`, rerun terminal verification, and request a fresh final
 re-review.
 
+**Continuation accepted:** the original Phase 6 handle resumed as event
+`final-review-fix1-7e9aece7-21e5-4ad7-b33e-cd12239fd549` from clean baseline
+`45cf46d8726690f6f278fd947ef0a7091230f7af`. The exact managed-high target and
+original request ID remain unchanged.
+
 #### Final closeout verification passed
 
 The committed closeout baseline passed `pnpm test`, `pnpm lint`,
