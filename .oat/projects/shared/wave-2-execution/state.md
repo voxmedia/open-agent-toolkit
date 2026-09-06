@@ -79,26 +79,26 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:b15ed9200bc192b81817a8c885cf8b9864c884ee7724c5fdfbf6906093a8bffb'
   freshness_head: 1a0eaf587c0f6f5d197894f4ab50c52c1ea8d10c # closeout-only descendants: round-3 receive + comment-only sweep
   freshness_fingerprint: 'sha256:effective-delta-v1:2776ff3f338d69b83a7fac0577316f3cc4dfb1eee2f1866dfb369b747b05ccff'
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 'w2-exit-gate-20260906T092349Z'
   launch_started_at: '2026-09-06T09:23:49Z'
   launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w2/w2-exit-gate-20260906T092349Z.receipt.json'
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/45ee23dc-b25b-462d-ab7e-451c518e7f18.json'
   gate_run_id: '45ee23dc-b25b-462d-ab7e-451c518e7f18'
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
+  envelope_status: ok
+  artifact: '.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T093256Z.md'
+  handoff: 'Gate passed at the important threshold with no findings (0C/0I/0M/0m); run oat-project-review-receive for final-review-2026-09-06T093256Z.md'
+  receive_state: intent_persisted
+  receive_correlation: 'run=45ee23dc-b25b-462d-ab7e-451c518e7f18; handoff=receive; source=reviews/final-review-2026-09-06T093256Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T093256Z.md'
   receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_event_identity: 'final | code | final-review-2026-09-06T093256Z.md'
+  receive_pre_head: 0f25bbee42fd1ff972c0cb85d0cc82583e55d718
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-06T09:24:26Z'
+  updated_at: '2026-09-06T09:35:05Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -139,7 +139,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T02:27:21.413Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T09:24:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T09:35:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 

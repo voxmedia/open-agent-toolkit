@@ -202,6 +202,15 @@ post-implement sequence.
 
 ---
 
+### 2026-09-06 · structural · oat gate review · final (exit gate)
+
+Configured exit gate run `45ee23dc` (`codex-5-6-sol-xhigh`, different-family)
+passed with zero findings on head `15ec41133` after the root final review's three
+rounds (0C/3I/7M/8m → 0C/1I/1M/5m → 0C/0I/0M/1m). Received and archived as
+`reviews/archived/final-review-2026-09-06T093256Z.md`.
+
+---
+
 ## End-of-run synthesis (2026-09-06)
 
 **Convention verdicts (evidence: entries above and `implementation.md` Run 1):**

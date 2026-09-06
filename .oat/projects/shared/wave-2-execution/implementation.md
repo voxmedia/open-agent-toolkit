@@ -305,6 +305,23 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Review row `final` (round 3) → `passed`.** Everything after the reviewed head is closeout bookkeeping plus this comment-only edit; the configured exit gate reviews the tree at its own launch head.
 
+## Review Received: final (configured exit gate)
+
+**Date:** 2026-09-06
+**Gate:** `oat-project-implement` configured exit gate, run `45ee23dc-b25b-462d-ab7e-451c518e7f18`, target `codex-5-6-sol-xhigh` (achieved diversity: different-family vs the `claude` implementer stamps), envelope `ok`, `receiveEligible: true`, threshold important, blocking false, attempt `w2-exit-gate-20260906T092349Z`.
+**Review artifact:** reviews/archived/final-review-2026-09-06T093256Z.md (reviewed head `15ec41133c536e7d24c89dc4aa54ffcb25df130e`, invocation gate)
+
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 0. Nothing to disposition; the artifact is archived and the ledger row carries the gate lineage.
+
+**Gate row `final` (gate lineage) → `passed`; `oat_implement_exit_gate` → `allowed / passed` in the following state checkpoint.**
+
+## Final HiLL approval (IMPLEMENT-16, autonomous)
+
+- Pre-approval sequence (configured `workflow.postImplementSequence`): summary, document, pr — recorded below as each completes; no post-approval steps configured; recap intent `skip` (deferred to program close per the execution program).
+- Evidence: final review row `passed` (round 3 artifact `reviews/archived/final-review-2026-09-06T092134Z.md`, head `1e688a1e5`, dispatch `w2-final-review-003`); configured exit gate `allowed / passed` (run `45ee23dc`, artifact `reviews/archived/final-review-2026-09-06T093256Z.md`, different-family reviewer, zero findings); every descendant after the reviewed head is closeout-only bookkeeping plus one comment-only sweep.
+- Decision: `approval: approved`, `approval_source: oat-autonomous`, `status: post_approval` → no post-approval steps → `complete`. Operator authorization: 2026-09-05 ("let it rip"), covering PR creation and merge by the root orchestrator once CI, Bugbot, and the final gate are green. This approval waives nothing.
+- Completion: `oat project complete-state` recorded before merge; the archive tail (`oat project archive`, pointer clear, completion bookkeeping commit) is `completion tail: deferred to program close`.
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)

@@ -415,6 +415,7 @@ git commit -m "docs(p05-t01): document fail-closed patch-and-restore recovery fo
 | final | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T085208Z.md         | bee72dd4d300762366475781f7d97ac76464948f | manual     | -                   |
 | final | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T091621Z.md         | c0210b9d32941133fa65f2bef9150acf6f6fbae6 | manual     | -                   |
 | final | code     | passed      | 2026-09-06 | reviews/archived/final-review-2026-09-06T092134Z.md         | 1e688a1e5de97a3a49ec3e069dd5afd11a1bd756 | manual     | -                   |
+| final | code     | passed      | 2026-09-06 | reviews/archived/final-review-2026-09-06T093256Z.md         | 15ec41133c536e7d24c89dc4aa54ffcb25df130e | gate       | codex-5-6-sol-xhigh |
 | final | code     | received    | 2026-09-06 | reviews/final-review-2026-09-06T093256Z.md                  | 15ec41133c536e7d24c89dc4aa54ffcb25df130e | gate       | codex-5-6-sol-xhigh |
 | plan  | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T023526Z.md | -                                        | -          | -                   |
 
