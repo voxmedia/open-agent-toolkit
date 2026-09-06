@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev2-t03
-oat_last_commit: 59d4254a59c8658ced67911e71bfffbf666a059f
+oat_current_task: null
+oat_last_commit: 6db21410ff85bdc01632154784c9f4baa815ddaa
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition

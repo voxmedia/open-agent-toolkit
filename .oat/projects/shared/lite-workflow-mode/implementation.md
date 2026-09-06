@@ -75,8 +75,8 @@ header wording remains explicitly deferred. Current generated projections are
 the source of truth. Revisit only if projection ownership or header contracts
 change.
 
-**Next:** Execute p-rev2 through `oat-project-implement`, then run a focused
-re-review of the p-rev2 fix range before retrospective generation.
+**Next:** Run a focused final re-review of the complete p-rev2 fix range, then
+publish the stabilized branch and require fresh CI for that exact remote head.
 
 ### Task prev2-t01: Compose Lite with lifecycle-gate posture setup
 
