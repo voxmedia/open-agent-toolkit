@@ -196,7 +196,7 @@ The authored plan contains, in order:
    grammar
 
 Every validation criterion is one bullet and names its proof as a backticked
-command, a test name, or a `manual:` visual-proof instruction. A criterion
+command or test name, or a `manual:` visual-proof instruction. A criterion
 without one of those checks is a defect. The task graph has exactly one phase,
 no parallel groups, stable task IDs, declared files, RED/GREEN/refactor steps
 where applicable, verification commands, and one commit message per task.

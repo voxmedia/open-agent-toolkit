@@ -1941,6 +1941,12 @@ describe('validateOatSkills', () => {
       'oat project validate-plan --project-path "$PROJECT_PATH"',
     );
     expect(content).not.toContain('oat project validate-plan "$PROJECT_PATH"');
+    expect(content).toMatch(
+      /a backticked\s+command or test name, or a `manual:` visual-proof instruction/,
+    );
+    expect(content).not.toMatch(
+      /a backticked\s+command, a test name, or a `manual:` visual-proof instruction/,
+    );
     expect(persistence).toMatch(
       /after Step 3[\s\S]*before the Step 4 approval gate/i,
     );
