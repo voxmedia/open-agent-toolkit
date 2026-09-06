@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 945d3e2d4
+oat_last_commit: fb6b55245
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260712-per-project-override' }
@@ -15,7 +15,7 @@ oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 10
 oat_dispatch_policy: # managed/high per operator routing preference
@@ -116,34 +116,39 @@ oat_implement_exit_gate:
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_post_implement_sequence:
-  status: pre_approval # pre_approval | awaiting_approval | post_approval | complete
+  status: complete # pre_approval | awaiting_approval | post_approval | complete (autonomous approval 2026-09-06; no post-approval steps)
   source: configured # workflow.postImplementSequence
   final_phase: p03
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
-  approval: pending # pending | approved | not_required
-  approval_source: null # null | user | oat-autonomous
+  pre_approval_completed: [summary, document, pr]
+  approval: approved # pending | approved | not_required
+  approval_source: oat-autonomous # null | user | oat-autonomous
   post_approval: []
   post_approval_completed: []
   failure: null
+oat_project_recap:
+  decision: skip
+  source: interactive # operator-approved program rule: recap deferred to program close
+  decided_at: '2026-09-06T20:38:30Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/271' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T16:15:50.821Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T20:37:11.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_completed: '2026-09-06T20:38:32.952Z' # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-09-06T20:38:32.952Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_lifecycle: complete
 ---
 
 # Project State: wave-4-execution
 
-**Status:** Implementation in progress
+**Status:** Complete
 **Started:** 2026-09-06
 **Last Updated:** 2026-09-06
 
 ## Current Phase
 
-Implementation — all three lanes merged (lockstep 0.2.59); final review and configured exit gate passed; post-implement sequence in progress (summary done).
+Lifecycle complete
 
 ## Artifacts
 
@@ -165,7 +170,9 @@ Implementation — all three lanes merged (lockstep 0.2.59); final review and co
 - ✓ Final review passed (round 1 0C/3I/4M/4m → fixes `f46465dd2`, `375c740ed`, `f6128f017`, `945d3e2d4` → round 2 0C/0I/0M/2m)
 - ✓ Exit gate attempt 1 allowed/passed (run `910b6d29`, 0C/0I/1M/1m; M1 deferred to `BL-260906-make-the-dispatch-stamp`)
 - ✓ Post-implement sequence: summary (three decisions), document (PJM current-state + roadmap; lane docs already current)
-- ⧗ Post-implement sequence: pr
+- ✓ Post-implement sequence: pr (PR #271 on `origin/wave-4-execution-2026-09`)
+- ✓ Final HiLL approval (autonomous) and complete-state recorded before merge
+- ✓ Project lifecycle complete
 
 ## Blockers
 
@@ -173,4 +180,4 @@ None
 
 ## Next Milestone
 
-Post-implement sequence: pr; then complete-state and the wave PR.
+None. Project complete.

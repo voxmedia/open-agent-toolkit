@@ -145,7 +145,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-06
 
-- p01-t01 `71ec87be9`..`291234dc0` (`c4a810b86`..`a49e3e20e`), fix `e11d901b3` (`6b3a16872`); p02-t01 `9ad58ea48` (`d869acf4c`), fix `145adbed8` (`50483da4b`); p03-t01 `901a0f7aa` (`9f587b23a`), sweep `edbc76c94` (`131e65798`); merges `034780db0`, `6a09a6bd2`, `92da1d57b`; lockstep bump `0bb028ca2`; review-receive and closeout bookkeeping `a97aa6f7e`, `7075a7084`, `1db9f3fc6`, `efbcc6e91`, `1dfdd1a83`; post-final-review record repairs `f46465dd2`; post-merge fix round `w4-final-fix-001` `375c740ed`, `f6128f017`, `945d3e2d4`; final-review receive `0fbc7df1d`; exit-gate intent `f926f6d0f`; gate-written commits `26d424c8d` (artifact + project-log entry) and `f6560983f` (project-log gate entry); exit-gate receive + allowed/passed checkpoint `204cb0021`.
+- p01-t01 `71ec87be9`..`291234dc0` (`c4a810b86`..`a49e3e20e`), fix `e11d901b3` (`6b3a16872`); p02-t01 `9ad58ea48` (`d869acf4c`), fix `145adbed8` (`50483da4b`); p03-t01 `901a0f7aa` (`9f587b23a`), sweep `edbc76c94` (`131e65798`); merges `034780db0`, `6a09a6bd2`, `92da1d57b`; lockstep bump `0bb028ca2`; review-receive and closeout bookkeeping `a97aa6f7e`, `7075a7084`, `1db9f3fc6`, `efbcc6e91`, `1dfdd1a83`; post-final-review record repairs `f46465dd2`; post-merge fix round `w4-final-fix-001` `375c740ed`, `f6128f017`, `945d3e2d4`; final-review receive `0fbc7df1d`; exit-gate intent `f926f6d0f`; gate-written commits `26d424c8d` (artifact + project-log entry) and `f6560983f` (project-log gate entry); exit-gate receive + allowed/passed checkpoint `204cb0021`, freshness checkpoint `ed01928a4`; summary `ac35cffd9`; document `f60deb9f6`; PR artifact `fb6b55245`.
 - Wrapper authored from the program's Wave 4 section and the wave-boundary drift refresh; plan validated (`5c2978916`); plan gate passed first time (0C/0I/0M/0m).
 
 ## Deviations from Plan / Design
@@ -211,7 +211,10 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Final HiLL approval (IMPLEMENT-16, autonomous)
 
-_(recorded after the post-implement sequence)_
+- Pre-approval sequence (configured `workflow.postImplementSequence`): summary (`ac35cffd9`, with two promoted decisions beside the one created in the fix round), document (`f60deb9f6`), pr (PR #271 on `origin/wave-4-execution-2026-09`, artifact commit `fb6b55245`) — all complete; no post-approval steps configured; recap intent `skip` (deferred to program close per the execution program).
+- Evidence: final review row `passed` (round 2 artifact `reviews/archived/final-review-2026-09-06T201820Z.md`, head `945d3e2d4`, dispatch `w4-final-review-002`); configured exit gate `allowed / passed` (run `910b6d29`, artifact `reviews/archived/final-review-2026-09-06T203008Z.md`, 0C/0I/1M/1m, M1 deferred to `BL-260906-make-the-dispatch-stamp`); every descendant after the gate's reviewed head `f926f6d0f` is closeout-only bookkeeping.
+- Decision: `approval: approved`, `approval_source: oat-autonomous`, `status: post_approval` → no post-approval steps → `complete`. Operator authorization: 2026-09-05 ("let it rip"), covering PR creation and merge by the root orchestrator once CI, Bugbot, and the final gate are green. This approval waives nothing.
+- Completion: `oat project complete-state` recorded before merge; the archive tail is `completion tail: deferred to program close`.
 
 ## Deferred Findings
 
