@@ -4,12 +4,13 @@
 
 ## Curated Overview
 
-- 2026-09-04 brainstorm scaffolded the active `lite-workflow-mode` project
-  (quick mode) to add a third, lighter workflow mode for single-sitting
-  changes. The companion rename that makes `quick` the default mode and
-  `spec-driven` the explicit escalation is tracked separately in
-  `BL-260904-make-quick-the-default-oat` at L scope; it should follow, not
-  precede, the lite mode landing so the mode ladder is renamed once.
+- The `lite-workflow-mode` project is implementation-complete at CLI `0.2.60`
+  and pending PR/release. It adds the third, lighter workflow mode for
+  single-sitting changes plus in-place promotion to Quick. The companion
+  rename that makes `quick` the default mode and `spec-driven` the explicit
+  escalation remains separately tracked in
+  `BL-260904-make-quick-the-default-oat` at L scope; it should follow the Lite
+  mode landing so the mode ladder is renamed once.
 
 - 2026-09-02 program-intake triage
   ([record](../triage/2026-09-02-program-intake-triage.md)) created twelve
