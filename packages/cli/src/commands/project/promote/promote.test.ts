@@ -377,6 +377,7 @@ describe('oat project promote', () => {
         join(projectRoot, 'discovery.md'),
         'utf8',
       );
+      const parsedSource = parseLitePlanSections(originalPlan);
       const carriesProduct = shape === 'product' || shape === 'both';
       const carriesTechnical = shape === 'technical' || shape === 'both';
       expect(discovery.includes('### Product Behavior (from Lite plan)')).toBe(
@@ -395,8 +396,19 @@ describe('oat project promote', () => {
           discovery.indexOf('## Carried-Forward Technical Design'),
         ).toBeLessThan(discovery.indexOf('## Next Steps'));
         expect(discovery).toContain('not a new discovery deliverable');
-        expect(discovery).toContain(
-          '## Carried-Forward Technical Design\n\n> Prior implementation context carried forward from the Lite plan; this is not a new discovery deliverable.\n\n- **Current operation:** `promoteLite()` reads the five core sections.\n- **Proposed changes:** `promoteLite()` carries adaptive sections forward.',
+        expect(parsedSource?.technicalDesign).toBeDefined();
+        const carriedForwardStart = discovery.indexOf(
+          '## Carried-Forward Technical Design',
+        );
+        const carriedForwardEnd = discovery.indexOf('\n## Next Steps');
+        expect(discovery.slice(carriedForwardStart, carriedForwardEnd)).toBe(
+          [
+            '## Carried-Forward Technical Design',
+            '',
+            '> Prior implementation context carried forward from the Lite plan; this is not a new discovery deliverable.',
+            '',
+            parsedSource?.technicalDesign,
+          ].join('\n'),
         );
       }
       await expect(
