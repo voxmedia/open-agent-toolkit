@@ -24,92 +24,42 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                                        | Status      | Tasks | Completed |
-| ------------------------------------------------------------ | ----------- | ----- | --------- |
-| Phase 01 (repair-bundled-skill-contract-drift)               | in_progress | 1     | 0/1       |
-| Phase 02 (harden-codex-skill-anaphora-guard)                 | pending     | 1     | 0/1       |
-| Phase 03 (guard-docs-app-mirrors-of-skill-prose)             | pending     | 1     | 0/1       |
-| Phase 04 (require-named-lifecycle-skills-to-be-loaded)       | pending     | 1     | 0/1       |
-| Phase 05 (document-patch-and-restore-for-lost-child-handles) | pending     | 1     | 0/1       |
+| Phase                                                        | Status   | Tasks | Completed |
+| ------------------------------------------------------------ | -------- | ----- | --------- |
+| Phase 01 (repair-bundled-skill-contract-drift)               | complete | 1     | 1/1       |
+| Phase 02 (harden-codex-skill-anaphora-guard)                 | complete | 1     | 1/1       |
+| Phase 03 (guard-docs-app-mirrors-of-skill-prose)             | complete | 1     | 1/1       |
+| Phase 04 (require-named-lifecycle-skills-to-be-loaded)       | complete | 1     | 1/1       |
+| Phase 05 (document-patch-and-restore-for-lost-child-handles) | complete | 1     | 1/1       |
 
-**Total:** 0/5 tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-09-06
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Total:** 5/5 planned tasks completed (plus six review-fix tasks p01-t02, p02-t02, p03-t02, p04-t02, p05-t02, p05-t03)
 
 ---
 
-### Task p01-t02: {Task Name}
+## Phase 1: repair bundled-skill contract drift (p01)
 
-**Status:** pending
-**Commit:** -
+**Status:** complete · **Started/Finished:** 2026-09-06 · **Tasks:** p01-t01 (four defect commits, the plan's own batch-exception boundary) + p01-t02 (review fixes)
+**Outcome:** `oat-doctor`, `oat-brainstorm`, `oat-idea-summarize`, `analyze` SKILL.md repaired; per-skill contract groups in `validation/skills.test.ts`; `analyze` pin moved. **Verification:** focused 170, uncached CLI suite 5579, forced check/type-check; review rounds 1–2 (`reviews/archived/p01-review-*`). **Deviations:** four commits instead of one; an in-phase reset before any report (accepted).
 
-**Notes:**
+## Phase 2: harden codex-skill anaphora guard (p02)
 
-- {Notes will be added during implementation}
+**Status:** complete · **Tasks:** p02-t01 + p02-t02
+**Outcome:** anaphor-only attachment in `codex-skill/tests/codex-skill-contract.test.mjs` (list markers, blockquotes, `scenario`/`circumstances`), documented fail-open filler boundary pinned, direct-API exception preserved. **Verification:** node --test 9, test:skills 798, forced check/type-check; review rounds 1–2. **Deviations:** a Codex-suggested exemption reverted on round-2 evidence (upheld by the reviewer).
 
----
+## Phase 3: guard docs-app mirrors of skill prose (p03)
 
-## Phase 2: {Phase Name}
+**Status:** complete · **Tasks:** p03-t01 + p03-t02
+**Outcome:** `explainer-kit/tests/contracts.test.mjs` runs the publication-boundary matrix over the canonical reference and the docs page; the whole-document forbidden-phrase guard was restored after round 1 found it narrowed (Critical); negation/mutation markers; the docs page names the catalog requirement and the canonical owner. **Verification:** node --test 53, test:skills 801; review rounds 1–2.
 
-**Status:** pending
-**Started:** -
+## Phase 4: require named lifecycle skills to be loaded (p04)
 
-### Task p02-t01: {Task Name}
+**Status:** complete · **Tasks:** p04-t01 + p04-t02 (review fixes and the round-2 address-now sweep)
+**Outcome:** thirteen lifecycle skills carry load clauses (or narrow inline fallbacks); new `validation/named-skill-load-contract.test.ts` (160 rows, 22 tests: verb/anaphor detection, exemptions bound to exactly one sentence, stray-fence detection, corpus floors); pins moved; `.agents/docs/autonomy-contract.md` hashes restamped; three hidden four-backtick fences repaired. **Verification:** forced CLI suite 5601, check:skill-bumps 17; review rounds 1–2 plus the sweep. **Deviations:** three skills beyond the brief's pre-declared ten (in scope per the reviewer); matrix in an adjacent file (permitted by the plan's Test plan).
 
-**Status:** pending
-**Commit:** -
+## Phase 5: document patch-and-restore recovery for lost child handles (p05)
 
----
+**Status:** complete · **Tasks:** p05-t01 + p05-t02 + p05-t03
+**Outcome:** `oat-project-implement/scripts/capture-dirty-tree.mjs` + 30-test suite; `phase-execution.md` and `oat-phase-implementer.md` (1.1.1 → 1.1.2, three pins) define `recovered_patch`; docs mirror sentence; provider views regenerated. **Verification:** node --test 30, forced CLI suite 5602, test:skills 832, smoke 141, release 39; review rounds 1–3 (round 2 found a Critical the round-1 fix introduced; round 3 clean). **Deviations:** `oat-project-implement` not re-bumped (p04's 2.3.2 carried); staged renames classified `unsupported-dirt` (ruled strictly fail-closed); quiescence rule strengthened to a superset.
 
 ## Autonomy Gate Provenance
 
@@ -252,82 +202,77 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
-Chronological log of implementation progress.
+Chronological log of implementation progress (root orchestrator; lane detail lives in the dispatch transcripts and review artifacts).
 
 ### 2026-09-06
 
-**Session Start:** {time}
+- [x] p01-t01 — `a106af09b`, `5097fd03a`, `383419381`, `dcccb72d7` (integration `91748b102`, `dab384c31`, `7147b73ae`, `7284a1a01`)
+- [x] p01-t02 — `848b8ef41` (`02148129f`)
+- [x] p02-t01 — `c25e1fd4f` (`b3b014a14`); p02-t02 — `530f42897` (`35db0c323`)
+- [x] p03-t01 — `a207d3c11` (`35e75f6e8`); p03-t02 — `5a99837ec` (`a7bcdd9e6`)
+- [x] p04-t01 — `6ef43933e` (`f70f1e11e`); p04-t02 — `2b06f7292`, `ef0c8595c` (`8e2111185`, `7cf56951d`)
+- [x] p05-t01 — `de0ba133a` (`01015f4f2`); p05-t02 / p05-t03 — `27cc81e8e`, `0f301c8e1` (`116b86241`, `5ebf62d40`)
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+**What changed (high level):** four bundled skills tell the truth about their inventory, promises, tools, and step model; the codex-skill below-floor guard rejects anaphoric reinstatements of a confirmation demand; explainer-kit publication rules are enforced on the docs page too; thirteen lifecycle skills require loading the skills they direct an orchestrator to run, with a contract matrix that also detects stray fences; a lost child's dirty tree has a verified, fail-closed path back into the next attempt; lockstep 0.2.56 → 0.2.57.
 
-**What changed (high level):**
+**Decisions:** one bump per skill per PR (p05 carried p04's `oat-project-implement` bump); address-now sweeps stay bounded to the reviewer's own one-line fixes (the `oat-project-review-provide` fence repair became a backlog item); p02's anaphor-only rule upheld as honoring the plan's "explicitly and independently classifies" wording.
 
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-09-06
-
-**Session Start:** {time}
-
-{Continue log...}
+**Follow-ups / TODO:** see Deferred Findings. **Blockers:** none.
 
 ---
 
 ## Deviations from Plan / Design
 
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact                                      | Planned / Documented                                                                              | Actual / Accepted                                                                                                              | Reason                                                                         | Source of Truth | Follow-up                                                      |
+| ------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | --------------- | -------------------------------------------------------------- |
+| p01-t01       | repair-bundled-skill-contract-drift.md               | one commit per task; `analyze` unpinned                                                           | four commits (one per defect); `analyze` pin moved                                                                             | plan's own batch-exception boundary; the pin exists                            | implementation  | wave-close plan correction                                     |
+| p04-t01       | require-named-lifecycle-skills-to-be-loaded.md       | ten executor-operated skills; matrix in `post-implement-sequence-contracts.test.ts`               | thirteen skills; adjacent `named-skill-load-contract.test.ts`                                                                  | all inside the plan's In-scope surface; Test plan permits an adjacent file     | implementation  | wave-close plan correction (named tests omit two ripple files) |
+| p05-t01       | document-patch-and-restore-for-lost-child-handles.md | `oat-project-implement/SKILL.md` bump; autonomy-contract refresh; byte-identical status snapshots | bump carried from p04; inventory untouched (symlinked mirrors, no prompt-site token); snapshot rule strengthened to a superset | one bump per skill per PR; step 5 conditional; porcelain v2 lacks worktree ids | implementation  | wave-close plan correction                                     |
+| p02 review    | harden-codex-skill-anaphora-guard.md                 | a clause that "explicitly and independently classifies" the route may confirm                     | anaphor-only rule; fail-open filler boundary documented and pinned                                                             | anaphoric continuations are not independent by construction                    | implementation  | residuals on `BL-260827-span-based-prose-guards`               |
 
 ## Test Results
 
-Track test execution during implementation.
+| Phase   | Focused / uncached evidence                                                       | Result | Exit | Where recorded              |
+| ------- | --------------------------------------------------------------------------------- | ------ | ---- | --------------------------- |
+| p01     | focused 170 + uncached CLI suite 5579; forced check/type-check                    | all    | 0    | lane report + review rounds |
+| p02     | node --test 9 + test:skills 798; forced check/type-check                          | all    | 0    | lane report + review rounds |
+| p03     | node --test 53 + test:skills 801; forced check/type-check                         | all    | 0    | lane report + review rounds |
+| p04     | contract matrix 22 tests + forced CLI suite 5601; check:skill-bumps 17            | all    | 0    | lane report + review rounds |
+| p05     | node --test 30 + forced CLI suite 5602 + test:skills 832 + smoke 141 + release 39 | all    | 0    | lane report + review rounds |
+| fan-ins | eight-gate definition-of-done sequence ×3 with `Cached: 0` forced test runs       | all    | 0    | fan-in entries above        |
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+## Deferred Findings
+
+### Deferred Findings (Medium)
+
+- p04 round 2 M: `oat-project-review-provide/SKILL.md:1057` stray fence (span 1057–1167, Steps 8.5/9/9.5 hidden; zero `oat-project-*` pointers inside) and the coupled matrix row → `BL-260906-repair-the-stray-fence-in-oat`.
+- p04 round 2 M: three out-of-surface spurious fences (`oat-repo-knowledge-index`, `oat-repo-improve/references/plan-template.md`, a create-oat-skill reference) → same item.
+
+### Deferred Findings (Minor)
+
+- p01 m2: doctor example table self-contradiction → `BL-260906-reconcile-the-oat-doctor`.
+- p01 m3 / p04 / p05 m5: external-plan wording (step-2 "one named contract group"; ten-skill list and named focused tests; conditional step 5) → wave-close plan corrections (program refresh commit).
+- p01 m5: `readerSentences()` reader-vocabulary bound — informational, no action.
+- p02 m2/m4: `requiresConfirmation` vocabulary; blockquoted ordered-marker escape → appended to `BL-260827-span-based-prose-guards`.
+- p02 m3 / p03 friction: `.agents/skills/**/*.mjs` not covered by `pnpm check` or lint-staged → `BL-260906-cover-skill-test-files-under`.
+- p03 round 2 m4–m6: punctuation-only band accepted by the `[\s\S]*` widening; docs mirror packs three requirements into one sentence; v1-token distance unbounded → informational, no action.
+- p04 round 2 m: `complete/SKILL.md:292` consistency and corpus-floor self-guard → fixed in the sweep (`ef0c8595c`).
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
+**What shipped (five external plans, five backlog items closed):**
 
-- {capability 1}
-- {capability 2}
+- p01 — four bundled skills repaired to match what ships (`oat-doctor` pack inventory = `PACK_MANIFEST`, `oat-brainstorm` no later-doctor promise, `oat-idea-summarize` declares `Bash`/`Glob`, `analyze` one ten-step model), each with its own contract group in `validation/skills.test.ts`.
+- p02 — codex-skill below-floor guard attaches and rejects anaphoric continuations (list, blockquote, scenario/circumstance forms); direct-API exception preserved; 15 rejected / 6 accepted / 6 boundary cases pinned.
+- p03 — explainer-kit publication-boundary assertions run over the docs page as well as the canonical reference, with a whole-document forbidden-phrase guard and negation/mutation-aware patterns; the docs page names the catalog requirement and canonical owner.
+- p04 — thirteen lifecycle skills require loading the current `SKILL.md` of every OAT skill they direct an orchestrator to execute; `validation/named-skill-load-contract.test.ts` sweeps the surface (verb/anaphor detection, one-sentence exemptions, stray-fence detection, corpus floors); three hidden four-backtick fences repaired (`oat-project-plan`, `oat-project-review-receive`, `oat-project-revise`).
+- p05 — `oat-project-implement/scripts/capture-dirty-tree.mjs` captures a lost child's dirty tree into a digest-verified, sealed, contained artifact (mandatory bound, expected-head reconciliation, guarded invocations in every prose block, symlinked-install fail-closed), and the `recovered_patch` contract in `phase-execution.md` / `oat-phase-implementer.md` (1.1.1 → 1.1.2) lets the next attempt apply and commit exactly that artifact first.
 
-**Behavioral changes (user-facing):**
+**Release:** lockstep 0.2.56 → 0.2.57 (single fan-in bump); `.oat/sync/manifest.json` `oatVersion` 0.2.56 → 0.2.57 (carried by p02's worktree-init sync commit); `.codex/agents` and `.cursor/agents` views regenerated for the `oat-phase-implementer` bump.
 
-- {bullet}
+**Verification:** per lane focused suites, forced-turbo check/type-check, Codex read-only review, and a root-owned adversarial review with one or two disposition-verification rounds (one Critical caught in p03 round 1; one Critical caught in p05 round 2 that the round-1 fix had introduced); three fan-ins with the eight-gate sequence and `Cached: 0` forced test runs; final review and configured exit gate recorded above.
 
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+**Bookkeeping:** archived `BL-260819-repair-verified-bundled-skill`, `BL-260827-harden-the-codex-skill-below`, `BL-260818-extend-guarded-prose-contract`, `BL-260718-mandatory-skill-load-clause`, `BL-260902-document-patch-and-restore`; filed `BL-260906-repair-the-stray-fence-in-oat`, `BL-260906-cover-skill-test-files-under`, `BL-260906-reconcile-the-oat-doctor`; residuals appended to `BL-260827-span-based-prose-guards`; plan corrections queued for the wave-close program refresh; completion tail and recap deferred to program close.
 
 ## References
 

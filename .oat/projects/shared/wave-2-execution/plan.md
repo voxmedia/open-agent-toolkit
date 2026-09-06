@@ -417,6 +417,8 @@ git commit -m "docs(p05-t01): document fail-closed patch-and-restore recovery fo
 | spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
 | design | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
 
+> Reviewed heads are the pre-rebase lane commits the reviewers examined. The fan-in entries in `implementation.md` map each to its integration commit (identical `git patch-id --stable` pairs): p01 `dcccb72d7`→`7284a1a01`, `848b8ef41`→`02148129f`; p02 `c25e1fd4f`→`b3b014a14`, `530f42897`→`35db0c323`; p03 `a207d3c11`→`35e75f6e8`, `5a99837ec`→`a7bcdd9e6`; p04 `6ef43933e`→`f70f1e11e`, `2b06f7292`→`8e2111185`, `ef0c8595c`→`7cf56951d` (address-now sweep after the round-2 pass, no re-review per the judgment-sweep rule); p05 `de0ba133a`→`01015f4f2`, `27cc81e8e`→`116b86241`, `0f301c8e1`→`5ebf62d40`. Review-fix tasks (p01-t02, p02-t02, p03-t02, p04-t02, p05-t02, p05-t03) are the fix rounds recorded in `implementation.md`; each is one append-only commit on the reviewed head.
+
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 **Ledger rule:** superseded review events keep their own row; a later round is

@@ -116,7 +116,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - p01 running alone in `.worktrees/wave-2/p01` (plan gate passed, run `54c02cde`); group 2 (p02, p03, p04) follows its fan-in, then p05.
+Implementation — all five phases merged on `wave-2-execution`; closeout (final review, configured exit gate, post-implement sequence) in progress.
 
 ## Artifacts
 

@@ -1,7 +1,7 @@
 ---
 id: BL-260902-document-patch-and-restore
 title: Document patch-and-restore recovery for lost child handles with staged work
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - autonomy
 assignee: null
 created: 2026-09-02T23:48:32.116Z
-updated: 2026-09-03T00:08:42Z
+updated: '2026-09-06T08:30:39Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/234

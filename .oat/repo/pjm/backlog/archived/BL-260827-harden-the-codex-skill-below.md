@@ -1,7 +1,7 @@
 ---
 id: BL-260827-harden-the-codex-skill-below
 title: Harden the codex-skill below-floor guard against paraphrase and anaphora
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -12,7 +12,7 @@ labels:
   - wave-4-follow-up
 assignee: null
 created: 2026-08-27T06:56:35.323Z
-updated: 2026-08-31T00:11:26Z
+updated: '2026-09-06T08:30:34Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-30-harden-codex-skill-anaphora-guard.md

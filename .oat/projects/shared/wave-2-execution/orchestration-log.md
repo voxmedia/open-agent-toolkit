@@ -201,14 +201,32 @@ post-implement sequence.
 
 ---
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis (2026-09-06)
 
-At project completion, BEFORE any archive step, the orchestrator writes:
-(1) verdicts on the conventions this wave exercised, with evidence entries cited;
-(2) a ruling on every "Skill signal"-tagged entry — what the `oat-wave-execute`
-skill should change; (3) adjustments adopted for later waves, stated as rules;
-(4) a graduated-entries ledger (backlog IDs / upstream refs / closed-with-evidence
-/ open-with-owner).
+**Convention verdicts (evidence: entries above and `implementation.md` Run 1):**
 
-Roll-up ordering (critical): `summary.md` `## Workflow Observations` and any
-repo-level ledger updates happen BEFORE `oat-project-complete` archives this file.
+1. Wave→project wrapper with pointer-only tasks: held. Five lanes executed their immutable plans; the plan gate's only structural finding was the wrapper restating the p01 plan's commit granularity, fixed in-artifact. No lane narrowed its plan; two lanes deliberately widened within the plan's declared surface (p04's thirteen skills, p05's quiescence superset) and the reviewers ruled both in scope.
+2. Wave-boundary drift refresh plus per-lane cumulative-churn pre-declaration: held with one wrinkle. Every drift check matched the pre-declaration, but two briefs carried a stale lockstep version after the group-1 bump (harmless; fixed for p05).
+3. Lane mode vs fan-in mode verification: held. No lane touched a lockstep file; the single bump (0.2.56 → 0.2.57) at the group-1 fan-in was retained through group 2 and p05. Gap: the bump did not restamp `.oat/sync/manifest.json`, so every group-2 lane's sync commit carried the restamp and p02's survived the rebase.
+4. Root-owned reviews with adversarial probes: held and load-bearing. Every lane needed exactly one fix round; the reviewers found one Critical (p03's passage scoping narrowed a whole-document guard), nine Important findings across p01/p02/p04, and every round-2 disposition-verification passed. The p04 reviewer amended its own artifact twice after re-checking its published claims — the weaker-anywhere instruction is what caught the p03 Critical.
+5. Cross-model in-lane review (Codex, read-only): held but expensive. p05's three rounds caught a real containment Critical pre-commit; p02's three rounds converged on regex edge cases (94 minutes for a one-file test change). Adopted: cap at two rounds, then disposition.
+6. Group composition from mechanical write-surface intersection: held. No merge conflicts; rebase dropped p03/p04's duplicate sync commits and kept p02's.
+
+**Skill-signal rulings:**
+
+- Gap — the fan-in bump step must run `pnpm run cli -- sync --scope all` in the bump commit so the manifest restamps with the lockstep.
+- Gap — lane and reviewer briefs must give the forced-turbo form for every gate cited as evidence (plain `pnpm check` / `pnpm type-check` replay caches) and name the real package filter.
+- Gap — briefs must carry the scratch-hygiene rule (`mktemp -d`, never `rm -rf` a variable path): the harness stops every such call for operator approval, which blocked lanes repeatedly until the rule was added mid-wave.
+- Gap — cap cross-model rounds at two and format before dispatching Codex (oxfmt rewrapping mid-review shifts citations).
+- Strengthens — the reviewer brief's weaker-anywhere instruction; add "any assertion whose input surface shrinks is a weaker-anywhere candidate".
+- Gap — plans that reword lifecycle-skill prose should name the autonomy-contract hash table and `review-skill-contracts.test.ts` as expected ripple; only the forced full suite surfaced them for p04.
+- Gap (repo, not skill) — four-backtick fences in `oat-project-plan`, `oat-project-review-receive`, `oat-project-revise` hid whole lifecycle steps from every prose scan and every gate; a fourth in `oat-project-review-provide` remains (follow-up item).
+
+**Adjustments adopted as rules for later waves:**
+
+1. Bump commit = lockstep files + `public-package-versions.json` + manifest restamp, in one commit.
+2. Reviewer brief template carries the forced-gate, package-filter, scratch-hygiene, and shrinking-input-surface clauses (already applied for W3).
+3. Cross-model rounds capped at two per lane; the implementer dispositions the rest in its report.
+4. Address-now sweeps stay bounded to the reviewer's own one-line fixes; anything that needs a bump or a new file is a follow-up item, never a sweep.
+
+**Graduated-entries ledger:** follow-up backlog items filed at closeout (see `implementation.md` Deferred Findings); plan corrections queued for the wave-close program refresh; skill-signal rulings above are the `oat-wave-execute` change list.
