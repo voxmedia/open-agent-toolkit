@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues:
@@ -14,8 +14,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-the-loop lifecycle approval (workflow.hillCheckpointDefault=final)
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
@@ -96,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T10:56:52.547Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T10:56:52.547Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T11:14:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -108,7 +108,7 @@ oat_generated: false
 
 ## Current Phase
 
-Plan — complete; `oat-project-implement` runs groups [p01, p02] then p03 after the plan gate passes.
+Implementation — group 1 (p01, p02) dispatched at `31ac33d60`; p03 after the group-1 fan-in.
 
 ## Artifacts
 
@@ -124,7 +124,7 @@ Plan — complete; `oat-project-implement` runs groups [p01, p02] then p03 after
 - ✓ Wave-boundary drift refresh (recon, non-authoritative) recorded in `plan.md`
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
 - ✓ Plan gate received (3I/1M resolved in-artifact)
-- ⧗ Group 1 (p01 + p02) dispatch, then p03
+- ⧗ Group 1 (p01 + p02) dispatched at `31ac33d60`; reviews, fan-in, then p03
 
 ## Blockers
 
