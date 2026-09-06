@@ -24,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                              | Status   | Tasks | Completed |
-| -------------------------------------------------- | -------- | ----- | --------- |
-| Phase 01 (use-configured-docs-index-paths)         | complete | 2     | 2/2       |
-| Phase 02 (validate-assets-bundle-structure)        | complete | 1     | 1/1       |
-| Phase 03 (make-assets-errors-override-aware)       | pending  | 1     | 0/1       |
-| Phase 04 (add-exclusions-to-docs-index-generation) | pending  | 1     | 0/1       |
+| Phase                                              | Status      | Tasks | Completed |
+| -------------------------------------------------- | ----------- | ----- | --------- |
+| Phase 01 (use-configured-docs-index-paths)         | complete    | 2     | 2/2       |
+| Phase 02 (validate-assets-bundle-structure)        | complete    | 1     | 1/1       |
+| Phase 03 (make-assets-errors-override-aware)       | in_progress | 1     | 0/1       |
+| Phase 04 (add-exclusions-to-docs-index-generation) | in_progress | 1     | 0/1       |
 
 **Total:** 3/5 tasks completed (p01-t01, p01-t02 review fix, p02-t01)
 
@@ -183,24 +183,24 @@ oat_generated: false
 
 ## Phase 03: make-assets-errors-override-aware (group 2)
 
-**Status:** pending (source plan `BLOCKED` until p02 merges into the wave branch and the readiness check passes)
-**Started:** -
+**Status:** in_progress (source plan `BLOCKED` until p02 merges into the wave branch and the readiness check passes)
+**Started:** 2026-09-06
 
 ### Task p03-t01: Execute external plan — Make asset errors override-aware
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ---
 
 ## Phase 04: add-exclusions-to-docs-index-generation (group 2)
 
-**Status:** pending (source plan `BLOCKED` until p01 merges into the wave branch and its step 1 passes)
-**Started:** -
+**Status:** in_progress (source plan `BLOCKED` until p01 merges into the wave branch and its step 1 passes)
+**Started:** 2026-09-06
 
 ### Task p04-t01: Execute external plan — Add exclusions to docs index generation
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ---
@@ -258,7 +258,7 @@ Group 1 base `ab7d5168d2cbd3199c257f73e7e2afdde40cc74b`; worktrees bootstrapped 
 
 #### Parallel Groups
 
-- Group 1: p01 + p02 (merged). Group 2: p03 + p04 (dispatching).
+- Group 1: p01 + p02 (merged). Group 2: p03 + p04 dispatched from `b03f07f1d8a67be9110baece2fe5a9cd6741936f` (worktrees `.worktrees/wave-1/p03` at `a4ace05f5`, `p04` at `133cae1e9`; `w1-p03-impl-001`, `w1-p04-impl-001`, opus, same axes and stamps as group 1 with scope p03/p04; records under `dispatch/`).
 
 #### Outstanding Items
 
