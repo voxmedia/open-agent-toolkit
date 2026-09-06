@@ -1404,7 +1404,7 @@ git commit -m "docs(p06-t11): align brainstorming guidance with lite"
 | final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T032005Z.md                             | c4793585aee012ed134e1ba1eba0a819230a9c23 | auto       | -                             |
 | final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T041855Z.md                             | 1db941a63c0d2892c6686f4b2a3727ab0143bea0 | gate       | claude-fable-skip-permissions |
 | final  | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T225347Z.md                             | 55a724468eb48f89e49850392f831127a0c2852c | manual     | -                             |
-| final  | code     | received        | 2026-09-06 | reviews/final-review-2026-09-06T233432Z.md                                      | 6543c0d31372df5dd0305938c78cb8e50ff3e033 | auto       | -                             |
+| final  | code     | fixes_added     | 2026-09-06 | reviews/archived/final-review-2026-09-06T233432Z.md                             | 6543c0d31372df5dd0305938c78cb8e50ff3e033 | auto       | -                             |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1937,6 +1937,36 @@ git commit -m "test(prev2-t03): restore terminal verification evidence"
 
 ---
 
+### Task prev2-t04: (review) Align current closeout wording
+
+**Files:**
+
+- Modify: `.oat/projects/shared/lite-workflow-mode/state.md`
+- Modify: `.oat/projects/shared/lite-workflow-mode/summary.md`
+- Modify: `.oat/projects/shared/lite-workflow-mode/implementation.md`
+- Modify: `.oat/projects/shared/lite-workflow-mode/pr/project-pr-2026-09-06.md`
+
+**Step 1: Correct active remaining-work statements**
+
+State that all p-rev2 tasks and local terminal verification are complete.
+Retain PR publication and required CI for the exact remote head as the remaining
+boundaries. Preserve historical execution entries and the honest statement that
+the refreshed local PR body has not yet been published.
+
+**Step 2: Verify**
+
+Run the review artifact's closeout-prose search and require no stale active
+match. Run `pnpm format`.
+
+**Step 3: Commit**
+
+```bash
+git add .oat/projects/shared/lite-workflow-mode/state.md .oat/projects/shared/lite-workflow-mode/summary.md .oat/projects/shared/lite-workflow-mode/implementation.md .oat/projects/shared/lite-workflow-mode/pr/project-pr-2026-09-06.md
+git commit -m "docs(prev2-t04): align current closeout wording"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -1948,9 +1978,9 @@ git commit -m "test(prev2-t03): restore terminal verification evidence"
 - Phase 5: 4 tasks - mode-aware skill branches, import-to-lite offer, checkpoint bypass, collapsed closeout
 - Phase 6: 11 tasks - docs and triage, manual run and sync, lockstep release gates, four lifecycle-final-review fixes, and four exit-gate fixes (last)
 - Phase p-rev1: 7 tasks - adaptive specification depth, proportionate proof, executable evidence, exact promotion preservation, autonomous proof boundaries, and design alignment
-- Phase p-rev2: 3 tasks - Lite lifecycle-gate posture composition, Wave 4 closeout alignment, and terminal CI evidence
+- Phase p-rev2: 4 tasks - Lite lifecycle-gate posture composition, Wave 4 closeout alignment, terminal CI evidence, and current closeout wording
 
-**Total:** 37 tasks across 8 phases
+**Total:** 38 tasks across 8 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

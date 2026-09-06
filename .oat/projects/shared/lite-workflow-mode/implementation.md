@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: null
+oat_current_task_id: prev2-t04
 oat_generated: false
 ---
 
@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 4     | 4/4       |
-| Phase 2      | complete | 3     | 3/3       |
-| Phase 3      | complete | 3     | 3/3       |
-| Phase 4      | complete | 2     | 2/2       |
-| Phase 5      | complete | 4     | 4/4       |
-| Phase 6      | complete | 11    | 11/11     |
-| Phase p-rev1 | complete | 7     | 7/7       |
-| Phase p-rev2 | complete | 3     | 3/3       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 4     | 4/4       |
+| Phase 2      | complete    | 3     | 3/3       |
+| Phase 3      | complete    | 3     | 3/3       |
+| Phase 4      | complete    | 2     | 2/2       |
+| Phase 5      | complete    | 4     | 4/4       |
+| Phase 6      | complete    | 11    | 11/11     |
+| Phase p-rev1 | complete    | 7     | 7/7       |
+| Phase p-rev2 | in progress | 4     | 3/4       |
 
-**Total:** 37/37 tasks completed
+**Total:** 37/38 tasks completed; final wording alignment pending
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -198,6 +198,31 @@ Terminal local verification completed with explicit exit codes:
 A fresh required CI run for the exact eventual pushed head remains mandatory.
 Root owns push, remote CI, focused p-rev2 re-review, and merge decisions; no
 remote action was performed by this task.
+
+### Review Received: final — stabilized p-rev2 range
+
+**Date:** 2026-09-06
+**Review artifact:** `reviews/archived/final-review-2026-09-06T233432Z.md`
+
+The final re-review closed all three prior Important findings and accepted the
+historical deferred Medium. It reported one new Medium artifact-alignment
+finding: current closeout prose still groups completed `prev2-t03` and local
+terminal verification with the genuinely pending publication and CI work.
+
+**New task added:** `prev2-t04`
+
+**Disposition:** `artifact_alignment_required`. Apply the wording-only fix
+without another review under the user's standing direction for this class of
+finding.
+
+### Task prev2-t04: Align current closeout wording
+
+**Status:** pending
+
+Update only active closeout prose in state, summary, and the local PR body.
+Preserve historical execution records. State that all p-rev2 tasks and local
+terminal verification are complete, while PR publication and exact-remote-head
+CI remain pending.
 
 ---
 
