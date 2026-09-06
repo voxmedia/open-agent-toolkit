@@ -28,26 +28,26 @@ predecessor record and the operator.
 
 ## Status Ledger
 
-Execution approval: awaiting operator composition approval. No wave execution,
-wrapper project, implementation branch, or implementation PR has started.
+Execution approval: operator approved the composition and autonomous execution
+(including merges) on 2026-09-05. W1 merged 2026-09-06; W2 is next.
 
-| Wave | Theme                                | Lanes | Status   | Record                                                        |
-| ---- | ------------------------------------ | ----- | -------- | ------------------------------------------------------------- |
-| W1   | CLI resolution and asset correctness | 4     | composed | Awaiting operator composition approval; no execution started. |
-| W2   | Skill contract truthfulness          | 5     | composed | Awaiting operator composition approval; no execution started. |
-| W3   | Workflow durability and containment  | 3     | composed | Awaiting operator composition approval; no execution started. |
-| W4   | Delivered-project follow-ups         | 3     | composed | Awaiting operator composition approval; no execution started. |
-| W5   | Program-intake follow-ups            | 11    | composed | Awaiting operator composition approval; no execution started. |
-| W6   | Truthfulness residue                 | 5     | composed | Awaiting operator composition approval; no execution started. |
+| Wave | Theme                                | Lanes | Status   | Record                                                                                                                                                                                                                                                                                                                                        |
+| ---- | ------------------------------------ | ----- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| W1   | CLI resolution and asset correctness | 4     | merged   | PR #262 → `6db0457c095e4384e5ac2f464ee1c4d5a47d0179` (squash, 2026-09-06T02:19:50Z); wrapper project `.oat/projects/shared/wave-1-execution` (lifecycle complete 2026-09-06; completion record `summary.md` + `implementation.md` § Final Summary; CLI 0.2.56); completion tail: deferred to program close; recap: deferred to program close. |
+| W2   | Skill contract truthfulness          | 5     | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
+| W3   | Workflow durability and containment  | 3     | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
+| W4   | Delivered-project follow-ups         | 3     | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
+| W5   | Program-intake follow-ups            | 11    | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
+| W6   | Truthfulness residue                 | 5     | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
 
 ## Wave Table (coverage: 31 plans = 31 index rows; verified 2026-09-04)
 
 | Plan                                                                                                                                                      | Index                                                            | Wave | Ordering notes                                                                                                                            | Status  |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| [Use configured docs index paths](./2026-08-30-use-configured-docs-index-paths.md)                                                                        | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | parallel group 1                                                                                                                          | pending |
+| [Use configured docs index paths](./2026-08-30-use-configured-docs-index-paths.md)                                                                        | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | parallel group 1                                                                                                                          | done    |
 | [Emit dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md)                                                          | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W4   | group 2 after gate override (shared contract tests and pins); moved from W1 on 2026-09-02; READY since PR #255 merged; issue #211 is soft | pending |
-| [Validate assets bundle structure](./2026-08-30-validate-assets-bundle-structure.md)                                                                      | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | parallel group 1; merge before asset-error successor                                                                                      | pending |
-| [Make asset errors override-aware](./2026-08-30-make-assets-errors-override-aware.md)                                                                     | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | group 2 after dependency revalidation sets the plan READY                                                                                 | pending |
+| [Validate assets bundle structure](./2026-08-30-validate-assets-bundle-structure.md)                                                                      | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | parallel group 1; merge before asset-error successor                                                                                      | done    |
+| [Make asset errors override-aware](./2026-08-30-make-assets-errors-override-aware.md)                                                                     | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | group 2 after dependency revalidation sets the plan READY                                                                                 | done    |
 | [Repair bundled skill contract drift](./2026-08-30-repair-bundled-skill-contract-drift.md)                                                                | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W2   | group 1; merge-first contract baseline                                                                                                    | pending |
 | [Harden codex-skill anaphora guard](./2026-08-30-harden-codex-skill-anaphora-guard.md)                                                                    | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation                                                                                           | pending |
 | [Guard docs-app mirrors of skill prose](./2026-08-30-guard-docs-app-mirrors-of-skill-prose.md)                                                            | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation                                                                                           | pending |
@@ -60,7 +60,7 @@ wrapper project, implementation branch, or implementation PR has started.
 | [Recover committed review artifacts after post-selection gate failures](./2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md) | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1; land before the index-lock plan                                                                                                  | pending |
 | [Retry gate project-log finalization across transient Git index locks](./2026-09-02-retry-gate-project-log-finalization-across-index-locks.md)            | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2 after post-selection recovery                                                                                                     | pending |
 | [Keep instruction-sync pointer files out of documentation content trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md)                | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1; before `oat config unset`                                                                                                        | pending |
-| [Add an exclusion mechanism to docs index generation](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                            | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W1   | group 2 successor; READY only after the docs-index lane merges and step 1 passes                                                          | pending |
+| [Add an exclusion mechanism to docs index generation](./2026-09-02-add-exclusions-to-docs-index-generation.md)                                            | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W1   | group 2 successor; READY only after the docs-index lane merges and step 1 passes                                                          | done    |
 | [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md)     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2; before the readiness-contract lane                                                                                               | pending |
 | [Add an oat config unset command](./2026-09-02-add-oat-config-unset-command.md)                                                                           | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2 after instruction-sync pointers                                                                                                   | pending |
 | [Route incomplete quick projects to quick-start from plan, progress, and next](./2026-09-02-route-incomplete-quick-projects-to-quick-start.md)            | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1                                                                                                                                   | pending |
@@ -172,7 +172,7 @@ wrapper project, implementation branch, or implementation PR has started.
   after the named-skill lane, with one coordinated `oat-project-implement`
   bump. Draft PR #190 rewrites the same reference; apply that plan's
   landing-event row if #190 merges first.
-- **Cross-wave prerequisites:** W1 merged. Revalidate the lifecycle corpus if
+- **Cross-wave prerequisites:** W1 merged (PR #262, 2026-09-06) — satisfied. Revalidate the lifecycle corpus if
   draft PR #190 changes before group 2 starts.
 - **Composition rationale:** Group 1 establishes the corrected canonical prose
   baseline. The three guard/loading lanes can then run as peers against that
@@ -333,6 +333,23 @@ unset`; its optional seam keys live in `BL-260904-add-recap-seam-config-keys`.
   and #255 were refreshed. Review record:
   `.oat/repo/reference/reviews/2026-09-04-external-plan-independent-review.md`.
 
+- **2026-09-06 (W1 closed)** — Wave 1 executed as wrapper project
+  `wave-1-execution` (four lanes, two groups, one lockstep bump to 0.2.56) and
+  merged as PR #262 (`6db0457c095e4384e5ac2f464ee1c4d5a47d0179`). Two of the four plans' rows flip to `done`
+  together with their two ordered successors; both successors were flipped
+  `BLOCKED → READY` inside the wave after their readiness checks. Wave
+  learnings adopted as program rules: flip successor plans in the fan-in
+  bookkeeping commit with cited evidence; address-now sweeps for Medium/Minor
+  findings go through the original implementer handle; record lane-commit SHA
+  mappings at every rebase; file the follow-up ledger as backlog items before
+  the final gate. Plan corrections applied in the wave: the docs-index plan's
+  config-write clause and its dependency row; the two successors' status
+  callouts. Still queued: the exclusions plan's PR #190 landing row
+  under-reports three shared files (moot once W1 merged; PR #190 must rebase
+  onto the new `index-generate`, `oat-config.ts`, and docs pages). Follow-ups
+  `BL-260906-guard-packed-asset-directories`,
+  `BL-260906-report-errno-for-asset-root`, and
+  `BL-260906-docs-index-follow-ups-from` are unplanned candidates. W2 unblocked.
 - **2026-09-05 (Astra review)** — An independent GPT 6 Astra review (three
   luna and one terra subagents) of all 31 plans at `6d5c11243` returned 3
   Critical, 19 Important, and 9 Medium findings; all were accepted except the
