@@ -120,18 +120,18 @@ oat_post_implement_sequence:
   source: configured # workflow.postImplementSequence
   final_phase: p03
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending # pending | approved | not_required
   approval_source: null # null | user | oat-autonomous
   post_approval: []
   post_approval_completed: []
   failure: null
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T16:15:50.821Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T20:36:45.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T20:37:11.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -164,8 +164,8 @@ Implementation — all three lanes merged (lockstep 0.2.59); final review and co
 - ✓ Backlog archived (3) and follow-ups filed (4); synthesis written
 - ✓ Final review passed (round 1 0C/3I/4M/4m → fixes `f46465dd2`, `375c740ed`, `f6128f017`, `945d3e2d4` → round 2 0C/0I/0M/2m)
 - ✓ Exit gate attempt 1 allowed/passed (run `910b6d29`, 0C/0I/1M/1m; M1 deferred to `BL-260906-make-the-dispatch-stamp`)
-- ✓ Post-implement sequence: summary (three decisions)
-- ⧗ Post-implement sequence: document, pr
+- ✓ Post-implement sequence: summary (three decisions), document (PJM current-state + roadmap; lane docs already current)
+- ⧗ Post-implement sequence: pr
 
 ## Blockers
 
@@ -173,4 +173,4 @@ None
 
 ## Next Milestone
 
-Post-implement sequence: document, then pr; then complete-state and the wave PR.
+Post-implement sequence: pr; then complete-state and the wave PR.
