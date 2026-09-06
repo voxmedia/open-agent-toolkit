@@ -158,28 +158,6 @@ function matchPath(
  * - A trailing `/` restricts a pattern to directories: `drafts/` prunes the
  *   `drafts` directory and everything beneath it, and never matches a file.
  *   Without it, a pattern that matches a directory path prunes it too.
- * - Matching is case-sensitive, and `/` is the separator on every platform.
- *
- * Entries are trimmed; a leading `./` or `/` is stripped so both spellings
- * anchor at the docs root. Blank entries are ignored.
- */
-/**
- * Compile exclusion globs matched against **docs-root-relative POSIX paths**
- * (`api/auth.md`, `api/nested`), never against absolute or CWD-relative ones.
- *
- * Grammar, defined once and documented in
- * `apps/oat-docs/docs/reference/oat-directory-structure.md`:
- *
- * - `*` matches any run of characters inside a single path segment.
- * - `**` spans `/` only as a whole segment, where it covers zero or more
- *   segments: `**\/CLAUDE.md` matches `CLAUDE.md` and `api/CLAUDE.md`. Inside a
- *   segment (`a**b`) it is an ordinary single-segment wildcard.
- * - Patterns are anchored at both ends against the whole relative path, so a
- *   bare `CLAUDE.md` matches only the root-level file. Use `**\/CLAUDE.md` for
- *   every depth.
- * - A trailing `/` restricts a pattern to directories: `drafts/` prunes the
- *   `drafts` directory and everything beneath it, and never matches a file.
- *   Without it, a pattern that matches a directory path prunes it too.
  * - Matching is case-sensitive, `/` is the separator on every platform, and
  *   `*` is the only metacharacter — `.`, `+`, and friends are literal.
  *
