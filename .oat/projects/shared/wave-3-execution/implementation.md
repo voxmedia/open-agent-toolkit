@@ -183,7 +183,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Dispositions:**
 
-- I1 — the root acceptance clause at `phase-execution.md:608` still rejects the effective task boundary (the concern p01 reported and the root reviewer routed to wave close): the gate overrides that routing — **fix in code**, `w3-p01-fix-002` dispatched to the p01 handle on the integration branch (align `:608` with `:493`/`:652`, `oat-project-implement` 2.3.2 → 2.3.3 with its seven pins, contract assertion plus a negative control that the clause cannot regress to plan-list-only files). Verified by the gate's re-run.
+- I1 — the root acceptance clause at `phase-execution.md:608` still rejects the effective task boundary (the concern p01 reported and the root reviewer routed to wave close): the gate overrides that routing — **fixed in code**, `w3-p01-fix-002`, commit `1f09bb832f4db62a7c48f9b9b2b776f86973c380` (`:608` now reads "declared or mechanically derived in-phase files, meaning the task's declared files plus the mechanical additions permitted by, and reported under, the phase implementer's cross-cutting option sweep … a plan-list-only file set is not the acceptance boundary", converged with `:493`/`:652`; `oat-project-implement` 2.3.2 → 2.3.3 with exactly seven pins; `assertRootAcceptanceBoundary` plus a negative control — reverting to "changes only declared files" fails 2/37; `check:skill-bumps` now validates 3; one Codex round SHIP; no autonomy-contract restamp needed). Verified by the gate's re-run (attempt 2).
 - I2 — `discovery.md` still instructed lanes to sync `--scope all`, and the Deviations row read as if the program/source-plan correction had been applied: **fixed** (this commit) — the discovery constraint now says `--scope project`; the Deviations row and Deferred Findings describe the source-plan and program corrections truthfully as PENDING and tracked as `BL-260906-wave-3-external-plan`; the p03 incident stays in the append-only logs.
 
 **Gate row `final` (attempt 1) → `fixes_added`; `oat_implement_exit_gate` → `blocked` (1 attempt completed); re-run after `w3-p01-fix-002`.**
@@ -193,7 +193,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 ### Deferred Findings (Medium)
 
 - p02 M3: evidence bundle drops the v2 `state` discriminator → `BL-260906-project-journal-reservation`.
-- p01 I1 (CONCERN 1): `phase-execution.md:608` owner decision → overtaken by the exit gate, which required the alignment now (`w3-p01-fix-002`).
+- p01 I1 (CONCERN 1): `phase-execution.md:608` owner decision → overtaken by the exit gate; aligned in `1f09bb832` (`w3-p01-fix-002`).
 - p03 M3: plans' `oat sync --scope all` convention → pending, tracked as `BL-260906-wave-3-external-plan` (wrapper artifacts already say `--scope project`).
 
 ### Deferred Findings (Minor)
@@ -209,7 +209,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **What shipped (three external plans, three backlog items closed):**
 
-- p01 — `oat-phase-implementer.md` (1.1.2 → 1.1.3) requires a repository-wide call-site sweep for cross-cutting options, defines the effective task boundary as declared files plus mechanical additions permitted by and reported under the sweep, and stops to report cross-owner expansions; pinned by `post-implement-sequence-contracts.test.ts` (six negative probes, scoped deny-list).
+- p01 — `oat-phase-implementer.md` (1.1.2 → 1.1.3) and, after the exit gate, `oat-project-implement` (2.3.2 → 2.3.3, root acceptance clause aligned) require a repository-wide call-site sweep for cross-cutting options, defines the effective task boundary as declared files plus mechanical additions permitted by and reported under the sweep, and stops to report cross-owner expansions; pinned by `post-implement-sequence-contracts.test.ts` (six negative probes, scoped deny-list).
 - p02 — the deterministic smoke runner reserves nested resources before `git worktree add`, cleanup reconciles reserved entries with re-derived ownership invariants, every deletion path re-reads the tip; the reserve-to-create residual is documented in code, `CONTRACT.md`, and a pinning test; test:smoke 141 → 160.
 - p03 — `create-oat-skill` (1.5.0 → 1.5.1) and `oat-project-design` (2.3.2 → 2.3.3) require every standing claim to name its executable owner and ship its backstop in the same PR; `skills.test.ts` pins the rule with fence-, comment-, and indent-aware extraction, `existsSync` precedent checks, and a weakening deny-list.
 
