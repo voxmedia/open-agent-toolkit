@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: null
+oat_current_task_id: prev1-t03
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status         | Tasks | Completed |
-| ------------ | -------------- | ----- | --------- |
-| Phase 1      | complete       | 4     | 4/4       |
-| Phase 2      | complete       | 3     | 3/3       |
-| Phase 3      | complete       | 3     | 3/3       |
-| Phase 4      | complete       | 2     | 2/2       |
-| Phase 5      | complete       | 4     | 4/4       |
-| Phase 6      | complete       | 11    | 11/11     |
-| Phase p-rev1 | review pending | 2     | 2/2       |
+| Phase        | Status       | Tasks | Completed |
+| ------------ | ------------ | ----- | --------- |
+| Phase 1      | complete     | 4     | 4/4       |
+| Phase 2      | complete     | 3     | 3/3       |
+| Phase 3      | complete     | 3     | 3/3       |
+| Phase 4      | complete     | 2     | 2/2       |
+| Phase 5      | complete     | 4     | 4/4       |
+| Phase 6      | complete     | 11    | 11/11     |
+| Phase p-rev1 | fixes queued | 6     | 2/6       |
 
-**Total:** 29/29 tasks completed; p-rev1 verification passed and review is pending
+**Total:** 29/33 tasks completed; four p-rev1 review fixes are queued
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -666,6 +666,11 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   `dispatch/db708ad8-cd34-4116-a84e-fa24e5d77846.json`; target
   `oat-phase-implementer-gpt-5-6-sol-medium`; both tasks committed, then the
   same target completed bounded recovery attempt 2 at `d57119df38dbcf812340bb6a11b504863e354144`.
+- **p-rev1 review:** accepted request
+  `7674a37f-36ea-471d-a80e-b4c08d897506`; durable record
+  `dispatch/7674a37f-36ea-471d-a80e-b4c08d897506.json`; target
+  `oat-reviewer-gpt-5-6-sol-high`; returned blocking with 0 Critical,
+  3 Important, 1 Medium, and 0 Minor findings.
 - Dispatch policy: high; selected=medium; cap=high (codex, enforced — variant
   `oat-phase-implementer-gpt-5-6-sol-medium`).
 - Dispatch: scope=p-rev1 action=implementation role=implementer
@@ -675,14 +680,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Phase Outcomes
 
-| Phase  | Implementation | Review  | Fix Loops | Outcome        |
-| ------ | -------------- | ------- | --------- | -------------- |
-| p-rev1 | complete (2/2) | pending | 0         | review pending |
+| Phase  | Implementation     | Review      | Fix Loops | Outcome                  |
+| ------ | ------------------ | ----------- | --------- | ------------------------ |
+| p-rev1 | fixes queued (2/6) | fixes_added | 1         | blocking review received |
 
 #### Outstanding Items
 
-- Run the required independent `p-rev1` phase review against the committed
-  recovery baseline.
+- Execute `prev1-t03` through `prev1-t06` on the exact original implementation
+  target, then run a fresh independent `p-rev1` review.
 
 ---
 
@@ -1650,6 +1655,35 @@ current journal records, and the 71 focused recorder tests pass.
   provider views, and added the mechanically required named-skill call-site
   classification. All repository gates passed; root repeated the 26 focused
   contract tests and a project-sync dry-run with no drift.
+
+### Review Received: p-rev1
+
+**Date:** 2026-09-06
+**Review artifact:** `reviews/archived/p-rev1-review-2026-09-06T165618Z.md`
+**Reviewed head:** `5e9e23fc90bf20da5735e8fd7b97bbbfe04fa0fa`
+**Invocation:** auto
+
+**Findings:**
+
+- Critical: 0
+- Important: 3
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** `prev1-t03`, `prev1-t04`, `prev1-t05`, `prev1-t06`
+
+- I1 → `prev1-t04` (`code_fix_required`): prove exact Product Behavior and
+  Technical Design payload preservation and byte-equal Lite-plan archival.
+- I2 → `prev1-t05` (`code_fix_required`): move the autonomous proof boundary
+  to the implementation executor and guard it with contract tests.
+- I3 → `prev1-t06` (`artifact_alignment_required`): align the active
+  lightweight design with the accepted p-rev1 plan, which remains the source
+  of truth until that task commits.
+- M1 → `prev1-t03` (`artifact_alignment_required`): replace non-executable
+  root Vitest commands with CLI-workspace commands.
+
+No finding is deferred. Resume the exact original implementation target in fix
+mode, then run fresh p-rev1 verification and re-review.
 
 ---
 

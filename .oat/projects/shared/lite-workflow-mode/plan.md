@@ -1379,6 +1379,7 @@ git commit -m "docs(p06-t11): align brainstorming guidance with lite"
 | p05    | code     | passed          | 2026-09-05 | reviews/archived/p05-review-2026-09-05T231617Z.md                               | c11a1150239dc179c60b0b82defc9c350999955d | manual     | -                             |
 | p06    | code     | fixes_completed | 2026-09-06 | reviews/archived/p06-review-2026-09-06T005620Z.md                               | cfcaae8fd81da49b1f75862be2260a65eec2c5e7 | manual     | -                             |
 | p06    | code     | passed          | 2026-09-06 | reviews/archived/p06-review-2026-09-06T011617Z.md                               | d79a58b1b0f8aff53a361b3e591f5cff510106d9 | auto       | -                             |
+| p-rev1 | code     | fixes_added     | 2026-09-06 | reviews/archived/p-rev1-review-2026-09-06T165618Z.md                            | 5e9e23fc90bf20da5735e8fd7b97bbbfe04fa0fa | auto       | -                             |
 | final  | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T012310Z.md                             | 919676d8623a4a4c9cf0654e76ba78ea593e1645 | auto       | -                             |
 | final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T015505Z.md                             | dfb7a8beb41c663d8bd327fa47c19f9ef28e393f | auto       | -                             |
 | spec   | artifact | pending         | -          | -                                                                               | -                                        | -          | -                             |
@@ -1606,6 +1607,152 @@ git commit -m "feat(prev1-t02): make lite proof strategy proportionate"
 
 ---
 
+### Task prev1-t03: (review) Correct the executable revision proof commands
+
+**Files:**
+
+- Modify: `.oat/projects/shared/lite-workflow-mode/plan.md`
+
+**Step 1: Correct the proof commands**
+
+Replace the two repository-root `pnpm exec vitest run ...` commands in
+`prev1-t01` and `prev1-t02` with the executable CLI-workspace form:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run ...`. Use package-relative
+test paths after `run`. Preserve each task's intended test set and expected
+outcome.
+
+**Step 2: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts src/commands/project/promote/promote.test.ts src/commands/project/validate-plan/validate-plan.test.ts src/validation/skills.test.ts`
+Expected: the corrected combined proof command executes from the repository
+root and passes.
+
+**Step 3: Commit**
+
+```bash
+git add .oat/projects/shared/lite-workflow-mode/plan.md
+git commit -m "docs(prev1-t03): correct revision proof commands"
+```
+
+---
+
+### Task prev1-t04: (review) Prove adaptive promotion preserves content
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/promote/promote.test.ts`
+
+**Step 1: Strengthen the preservation controls**
+
+For the `product`, `technical`, and `both` Lite shapes, assert that distinctive
+source Product Behavior and Technical Design body text survives in the derived
+discovery artifact under the required headings. Assert that
+`references/lite-plan.md` is byte-equal to the original Lite plan for every
+adaptive shape. Keep the existing heading and placement checks.
+
+Demonstrate that the focused test fails when each payload interpolation is
+neutralized, then restore the implementation. Record the negative-control
+result in `implementation.md`; do not add a new fixture or harness.
+
+**Step 2: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/promote/promote.test.ts`
+Expected: all four shapes pass, including exact source-body and archive
+preservation assertions.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/src/commands/project/promote/promote.test.ts
+git commit -m "test(prev1-t04): prove adaptive promotion payload preservation"
+```
+
+---
+
+### Task prev1-t05: (review) Put autonomous proof boundaries in the executor
+
+**Files:**
+
+- Modify: `.agents/docs/autonomy-contract.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/references/phase-execution.md`
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `packages/cli/src/validation/autonomy-gate-inventory.test.ts`
+- Modify: `packages/cli/src/validation/named-skill-load-contract.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Regenerate: `packages/cli/assets/skills/oat-project-implement/`
+- Regenerate: `packages/cli/assets/agents/oat-phase-implementer.md`
+- Regenerate: `.codex/agents/`, `.cursor/agents/`, and `.oat/sync/manifest.json`
+
+**Step 1: Correct ownership and executable behavior**
+
+Make `oat-project-implement` the lifecycle owner for autonomy gate
+`IMPLEMENT-20`. The implementation workflow and materialized phase implementer
+must detect available computer-use capability for required visual proof. When
+the required manual or visual proof has no executor, return an explicit
+unverified proof boundary before committing the task or marking the task or
+phase complete. Planning may declare the proof strategy, but it must not own
+execution of this boundary.
+
+Add a contract test that fails when the executor-side boundary is removed.
+Update the named-skill inventory and every exact version pin. Because current
+`origin/main` carries `oat-project-implement` `2.3.3`, set its final version to
+at least `2.3.4`; bump `oat-phase-implementer` from `1.1.3` to `1.1.4` unless a
+newer merged baseline requires the next version. Regenerate bundled assets and
+run only `oat sync --scope project`; never use `--scope all`.
+
+**Step 2: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts src/validation/named-skill-load-contract.test.ts src/validation/skills.test.ts --no-file-parallelism`
+Expected: executor ownership, fail-closed proof-boundary wording, version pins,
+and named-skill classifications pass.
+
+Run: `pnpm run cli -- sync --scope project --dry-run`
+Expected: no project-scoped provider drift remains.
+
+Run: `pnpm oat:validate-skills && pnpm lint && pnpm format && pnpm check && pnpm run check:skill-bumps`
+Expected: canonical skills, generated views, and repository contracts pass.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/docs/autonomy-contract.md .agents/skills/oat-project-implement .agents/agents/oat-phase-implementer.md packages/cli/src/validation/autonomy-gate-inventory.test.ts packages/cli/src/validation/named-skill-load-contract.test.ts packages/cli/src/validation/skills.test.ts packages/cli/assets/skills/oat-project-implement packages/cli/assets/agents/oat-phase-implementer.md .codex/agents .cursor/agents .oat/sync/manifest.json
+git commit -m "fix(prev1-t05): enforce autonomous proof boundaries in execution"
+```
+
+---
+
+### Task prev1-t06: (review) Align the lightweight design with revision 1
+
+**Files:**
+
+- Modify: `.oat/projects/shared/lite-workflow-mode/design.md`
+
+**Step 1: Align the durable design**
+
+Update the Lite template, promotion parser, agent-consumer, validation/evidence,
+and autonomous-boundary sections that still describe the original fixed
+five-section plan. Describe the adaptive `minimal`, `product`, `technical`, and
+`both` shapes, payload-preserving promotion, proportionate proof strategy, and
+executor-owned manual/visual proof boundary. Identify the p-rev1 revision plan
+as the accepted source of truth for this refinement. Do not change unrelated
+historical design decisions.
+
+**Step 2: Verify**
+
+Run: `rg -n "Product Behavior|Technical Design|proportionate|proof boundary|five-section|five required" .oat/projects/shared/lite-workflow-mode/design.md`
+Expected: the active design describes the revised contract and contains no
+contradictory fixed-five-section instruction.
+
+**Step 3: Commit**
+
+```bash
+git add .oat/projects/shared/lite-workflow-mode/design.md
+git commit -m "docs(prev1-t06): align lite design with revision contract"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -1616,9 +1763,9 @@ git commit -m "feat(prev1-t02): make lite proof strategy proportionate"
 - Phase 4: 2 tasks - oat-project-lite skill, end-to-end integration test
 - Phase 5: 4 tasks - mode-aware skill branches, import-to-lite offer, checkpoint bypass, collapsed closeout
 - Phase 6: 11 tasks - docs and triage, manual run and sync, lockstep release gates, four lifecycle-final-review fixes, and four exit-gate fixes (last)
-- Phase p-rev1: 2 tasks - adaptive product/technical specification depth and risk-proportionate implementation proof
+- Phase p-rev1: 6 tasks - adaptive specification depth, proportionate proof, executable evidence, promotion preservation, autonomous proof boundaries, and design alignment
 
-**Total:** 29 tasks across 7 phases
+**Total:** 33 tasks across 7 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t03
 oat_last_commit: d57119df38dbcf812340bb6a11b504863e354144
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -106,7 +106,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T16:54:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T17:05:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -118,7 +118,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — revision 1 verification passed; independent phase review pending.
+Implementation — independent p-rev1 review received; four fix tasks queued.
 
 ## Artifacts
 
@@ -171,17 +171,16 @@ Implementation — revision 1 verification passed; independent phase review pend
 - ✓ Revision-plan review feedback incorporated before implementation
 - ✓ Legacy dispatch records normalized to the current canonical schema
 - ✓ Revision phase verification passed after bounded recovery attempt 2
-- ⧗ Independent `p-rev1` phase review pending
+- ⧗ Independent `p-rev1` review found 3 Important and 1 Medium finding
+- ⧗ Review fix tasks `prev1-t03` through `prev1-t06` queued
 
 ## Blockers
 
-None. Recovery attempt 2 reassigned `IMPLEMENT-20` to the existing
-`oat-project-lite` skill root, synchronized bundled and project-scoped provider
-views, and passed the focused and full phase verification. PR #264 remains
-open; push, merge, and release remain unauthorized.
+No external blocker. The blocking p-rev1 review has an actionable four-task fix
+queue. PR #264 remains open; push, merge, and release remain unauthorized.
 
 ## Next Milestone
 
-Run the required independent `p-rev1` review against the committed recovery
-baseline. If it passes, record the terminal revision-phase outcome before any
-PR refresh.
+Resume the exact original p-rev1 implementation target in fix mode for
+`prev1-t03` through `prev1-t06`. Verify the phase, then dispatch a fresh
+independent p-rev1 review.
