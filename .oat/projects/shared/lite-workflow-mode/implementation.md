@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: prev1-t07
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status       | Tasks | Completed |
-| ------------ | ------------ | ----- | --------- |
-| Phase 1      | complete     | 4     | 4/4       |
-| Phase 2      | complete     | 3     | 3/3       |
-| Phase 3      | complete     | 3     | 3/3       |
-| Phase 4      | complete     | 2     | 2/2       |
-| Phase 5      | complete     | 4     | 4/4       |
-| Phase 6      | complete     | 11    | 11/11     |
-| Phase p-rev1 | fixes queued | 7     | 6/7       |
+| Phase        | Status         | Tasks | Completed |
+| ------------ | -------------- | ----- | --------- |
+| Phase 1      | complete       | 4     | 4/4       |
+| Phase 2      | complete       | 3     | 3/3       |
+| Phase 3      | complete       | 3     | 3/3       |
+| Phase 4      | complete       | 2     | 2/2       |
+| Phase 5      | complete       | 4     | 4/4       |
+| Phase 6      | complete       | 11    | 11/11     |
+| Phase p-rev1 | review pending | 7     | 7/7       |
 
-**Total:** 33/34 tasks completed; one p-rev1 re-review fix is queued
+**Total:** 34/34 tasks completed; final p-rev1 re-review is pending
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -685,14 +685,13 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Phase Outcomes
 
-| Phase  | Implementation     | Review      | Fix Loops | Outcome                     |
-| ------ | ------------------ | ----------- | --------- | --------------------------- |
-| p-rev1 | fixes queued (6/7) | fixes_added | 2         | blocking re-review received |
+| Phase  | Implementation | Review            | Fix Loops | Outcome         |
+| ------ | -------------- | ----------------- | --------- | --------------- |
+| p-rev1 | complete (7/7) | re-review pending | 2         | fixes completed |
 
 #### Outstanding Items
 
-- Execute `prev1-t07` on the exact original implementation target, then run a
-  fresh independent p-rev1 re-review.
+- Run fresh independent p-rev1 re-review cycle 3 against `prev1-t07`.
 
 ---
 
@@ -1732,6 +1731,17 @@ controls.
   fails.
 
 No finding is deferred. Review cycle 2 of 3 is blocking; fix loop 2 is queued.
+
+**Fix loop 2 completed:**
+
+- `prev1-t07` → `f6504815b2e175a4d1e2af0a03baf45a59baa412`.
+- The complete parsed Technical Design body is now compared exactly.
+- A tail-only Data Flow truncation control exited 1 with only the `technical`
+  and `both` cases failing (2 failed, 26 passed).
+- The production implementation remained unchanged. The restored focused suite
+  passed 28/28 in the worker and again in root.
+
+The second review event is `fixes_completed` pending fresh re-review cycle 3.
 
 ---
 

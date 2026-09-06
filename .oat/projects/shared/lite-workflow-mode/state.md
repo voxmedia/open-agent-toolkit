@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev1-t07
-oat_last_commit: a0d92b1384992ef2ce9eb656b904039638977927
+oat_current_task: null
+oat_last_commit: f6504815b2e175a4d1e2af0a03baf45a59baa412
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -106,7 +106,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T17:31:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T17:35:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -118,7 +118,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — p-rev1 re-review 1 received; one test-only fix queued.
+Implementation — p-rev1 fix loop 2 complete; final re-review pending.
 
 ## Artifacts
 
@@ -176,16 +176,16 @@ Implementation — p-rev1 re-review 1 received; one test-only fix queued.
 - ✓ Post-fix focused and repository verification passed
 - ⧗ Fresh independent `p-rev1` re-review closed 3 findings and retained 1
   Important test-evidence gap
-- ⧗ Review fix task `prev1-t07` queued
+- ✓ Review fix task `prev1-t07` completed with a capable tail-truncation
+  negative control
+- ⧗ Fresh independent p-rev1 re-review cycle 3 pending
 
 ## Blockers
 
-No external blocker. Re-review cycle 2 identified one actionable test-only
-evidence gap. PR #264 remains open; push, merge, and release remain
-unauthorized.
+None. The remaining test-evidence gap is fixed and verified. PR #264 remains
+open; push, merge, and release remain unauthorized.
 
 ## Next Milestone
 
-Resume the exact original p-rev1 implementation target for `prev1-t07`, verify
-the focused promotion suite and negative control, then dispatch fresh re-review
-cycle 3.
+Dispatch fresh independent p-rev1 re-review cycle 3 against the test-only fix.
+If it passes, record the terminal revision-phase outcome before any PR refresh.
