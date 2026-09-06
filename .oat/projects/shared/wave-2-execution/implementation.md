@@ -175,12 +175,16 @@ Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passe
 - `w2-p01-review-001` — scope p01, role reviewer, target opus (native catalog, task_class default-implementation). Review of `70250093..dcccb72d7`: 0C/1I/1M/4m → `fixes_added`. Record `dispatch/w2-p01-review-001.json`.
 - `w2-p01-fix-001` — continuation of `w2-p01-impl-001` (mode fix) on the original implementer handle; one commit `848b8ef419e36f3a09c7a45e8cd69425af16e1f0` touching only `packages/cli/src/validation/skills.test.ts` (I1, M1, m1, m4 fixed with neutralization evidence; m2 → follow-up backlog item, m3 → wave close). Record `dispatch/w2-p01-fix-001.json`.
 - `w2-p01-review-002` — disposition-verification round 2 on the original reviewer handle, range `dcccb72d7..848b8ef41`: all four fixes resolved by probe re-run (P5 and P3 now fail against the strengthened guards, P2b passes, title renamed), deferrals accepted, SKILL.md blobs byte-identical, no lockstep file; verdict PASS, 0C/0I/0M/1m (new m5: `readerSentences()` vocabulary bound, non-blocking). Reviewer re-ran `check`/`type-check` forced (`Cached: 0`) because plain runs were full replays. Record `dispatch/w2-p01-review-002.json`.
+- `w2-p02-impl-001`, `w2-p03-impl-001`, `w2-p04-impl-001` — group 2 dispatched together from group base `565d79981ed3be08128758cf0974eec30c1688b2` (lane heads after the worktree-init sync commit: p02 `dd9a84d0e`, p03 `5c480f4b2`, p04 `db3d7ebb6`); each target opus, model_axis selected:opus, task_class default-implementation (plan dispatch profile), native-catalog selection. Records `dispatch/w2-p0{2,3,4}-impl-001.json`.
 
 #### Phase Outcomes
 
 | Phase | Worktree                | Implementer outcome                                                                         | Review outcome                                     | Fix rounds |
 | ----- | ----------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------- |
 | p01   | `.worktrees/wave-2/p01` | DONE (`848b8ef41`; 4 defect commits + 1 fix commit; lane gates + uncached suite 5579 green) | passed (round 1 0C/1I/1M/4m → round 2 0C/0I/0M/1m) | 1          |
+| p02   | `.worktrees/wave-2/p02` | in progress                                                                                 | pending                                            | -          |
+| p03   | `.worktrees/wave-2/p03` | in progress                                                                                 | pending                                            | -          |
+| p04   | `.worktrees/wave-2/p04` | in progress                                                                                 | pending                                            | -          |
 
 #### Group 1 fan-in — p01 (2026-09-06)
 
