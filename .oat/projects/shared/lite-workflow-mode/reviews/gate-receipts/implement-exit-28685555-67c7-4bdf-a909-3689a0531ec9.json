@@ -1,0 +1,150 @@
+{
+  "outcome": "review_completed_gate_passed",
+  "status": "ok",
+  "runId": "0da02d5a-4d15-4c3c-97bf-94cf246ac945",
+  "target": "claude-fable-skip-permissions",
+  "project": ".oat/projects/shared/lite-workflow-mode",
+  "projectResolutionSource": "declared",
+  "artifactPath": ".oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T041855Z.md",
+  "generatedAt": "2026-09-06T04:18:55Z",
+  "threshold": "important",
+  "blocking": false,
+  "counts": {
+    "critical": 0,
+    "important": 0,
+    "medium": 0,
+    "minor": 1
+  },
+  "reviewType": "code",
+  "scope": "final",
+  "invocation": "gate",
+  "handoff": "Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=1). Run oat-project-review-receive for .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T041855Z.md to disposition them before marking the final review row passed.",
+  "diversity": {
+    "avoid": "same-family",
+    "achieved": "different-family",
+    "producer": {
+      "value": "unknown",
+      "provenance": "unknown",
+      "confidence": "unknown",
+      "family": "unknown",
+      "source": "aggregated-stamps",
+      "avoidFamilies": ["openai"],
+      "contributingScopes": ["p06-t11", "p01", "p04", "p05", "p06"],
+      "contributingStampCount": 5
+    },
+    "reviewer": {
+      "target": "claude-fable-skip-permissions",
+      "runtime": "claude",
+      "family": "claude",
+      "model": "fable"
+    }
+  },
+  "gateInvocation": {
+    "runId": "0da02d5a-4d15-4c3c-97bf-94cf246ac945",
+    "targetId": "claude-fable-skip-permissions",
+    "runtime": "claude",
+    "model": "fable",
+    "reasoningEffort": "provider-default",
+    "source": "exec-target-config"
+  },
+  "dispatchReport": {
+    "schemaVersion": 1,
+    "route": {
+      "scope": "final",
+      "action": "review",
+      "role": "reviewer",
+      "target": "claude-fable-skip-permissions"
+    },
+    "policy": {
+      "status": "resolved",
+      "mode": null,
+      "name": null,
+      "source": null
+    },
+    "selection": {
+      "requestedCandidate": null,
+      "preferredValue": null,
+      "candidateTier": null,
+      "candidateIndex": null,
+      "ceilingTier": null,
+      "ceilingTarget": null,
+      "selectedValue": null,
+      "exactSelectedTarget": null,
+      "selectionMode": "gate-invocation",
+      "selectionBranch": "gate-configured-invocation",
+      "cellSource": null
+    },
+    "classification": {
+      "taskClass": null,
+      "preferredEffort": null,
+      "source": "not-reported"
+    },
+    "notices": [],
+    "requestedControls": {
+      "model": {
+        "value": null,
+        "mechanism": "base-role",
+        "reason": "Configured gate invocation is reported separately from runtime identity."
+      },
+      "effort": {
+        "value": null,
+        "mechanism": "base-role",
+        "reason": "Configured gate invocation is reported separately from runtime identity."
+      }
+    },
+    "configuredDefaults": {
+      "model": null,
+      "modelSource": null,
+      "effort": null,
+      "effortSource": null
+    },
+    "gateInvocation": {
+      "runId": "0da02d5a-4d15-4c3c-97bf-94cf246ac945",
+      "targetId": "claude-fable-skip-permissions",
+      "runtime": "claude",
+      "model": "fable",
+      "reasoningEffort": "provider-default",
+      "source": "exec-target-config"
+    },
+    "runtimeIdentity": {
+      "producer": null,
+      "model": null,
+      "effort": null,
+      "provenance": "unknown",
+      "confidence": "not-reported"
+    }
+  },
+  "corroboration": {
+    "run": "matched",
+    "project": "matched",
+    "invocation": "matched",
+    "expected": {
+      "project": ".oat/projects/shared/lite-workflow-mode",
+      "invocation": {
+        "runId": "0da02d5a-4d15-4c3c-97bf-94cf246ac945",
+        "targetId": "claude-fable-skip-permissions",
+        "runtime": "claude",
+        "model": "fable",
+        "reasoningEffort": "provider-default",
+        "source": "exec-target-config"
+      }
+    },
+    "actual": {
+      "containingProject": ".oat/projects/shared/lite-workflow-mode",
+      "artifactProject": ".oat/projects/shared/lite-workflow-mode",
+      "normalizedArtifactProject": ".oat/projects/shared/lite-workflow-mode",
+      "matchingArtifactPaths": [
+        ".oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T041855Z.md"
+      ],
+      "invocation": {
+        "runId": "0da02d5a-4d15-4c3c-97bf-94cf246ac945",
+        "targetId": "claude-fable-skip-permissions",
+        "runtime": "claude",
+        "model": "fable",
+        "reasoningEffort": "provider-default",
+        "source": "exec-target-config"
+      }
+    }
+  },
+  "receiveEligible": true
+}

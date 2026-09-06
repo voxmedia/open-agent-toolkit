@@ -687,6 +687,17 @@ final code-review scope, and start time `2026-09-06T04:11:57.426Z`. Launch
 attempt `28685555-67c7-4bdf-a909-3689a0531ec9` is accepted and still running;
 no terminal envelope has been consumed.
 
+#### Configured implementation exit gate result 3 persisted
+
+Run `0da02d5a-4d15-4c3c-97bf-94cf246ac945` returned one correlated `ok`
+envelope at the Important threshold with 0 Critical, 0 Important, 0 Medium,
+and 1 Minor finding. The configured cross-family target was
+`claude-fable-skip-permissions`; different-family diversity was achieved. The
+envelope is receive eligible and hands off
+`reviews/final-review-2026-09-06T041855Z.md` for disposition. The structured
+receipt is authoritative; no terminal gate allowance has been recorded before
+receive.
+
 #### Exit-gate review 2 received — final configured attempt
 
 **Review artifact:**
