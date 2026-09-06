@@ -9,8 +9,9 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
   catalogFromManifest,
@@ -769,22 +770,24 @@ test('rejects control characters and backslashes in both publication roots', () 
 // the repository: an entry is added only when a copy is known to restate this
 // contract for a different reader. The canonical reference owns the rule; the
 // docs-app page mirrors it for users who never open the skill.
+// Paths are repo-root-relative so the guard can be driven against a copy of
+// the repository laid out under any root -- which is what lets the fixtures
+// below exercise the real matrix and the real wiring instead of restating it.
+// Escaping the skill directory is safe because
+// `packages/cli/scripts/bundle-assets.sh:49` strips each skill's `tests/`
+// directory from the published bundle, so these paths are only ever resolved
+// inside this repository, never by an installed consumer.
+const REPO_ROOT = fileURLToPath(new URL('../../../../', import.meta.url));
+
 const GUARDED_PUBLICATION_COPIES = [
   {
     label: 'explainer-kit/references/extension-contract.md (canonical)',
-    url: new URL('../references/extension-contract.md', import.meta.url),
+    path: '.agents/skills/explainer-kit/references/extension-contract.md',
     startMarker: 'After the core command returns',
   },
   {
-    // Repo-root-relative, which escapes the skill directory. That is safe
-    // because `packages/cli/scripts/bundle-assets.sh:49` strips each skill's
-    // `tests/` directory from the published bundle, so this path is only ever
-    // resolved inside this repository, never by an installed consumer.
     label: 'apps/oat-docs/docs/workflows/skills/explainer-kit.md (mirror)',
-    url: new URL(
-      '../../../../apps/oat-docs/docs/workflows/skills/explainer-kit.md',
-      import.meta.url,
-    ),
+    path: 'apps/oat-docs/docs/workflows/skills/explainer-kit.md',
     startMarker: '## Private wrappers',
   },
 ];
@@ -820,11 +823,20 @@ function readGuardedPassage(source, { label, startMarker }) {
   return end === -1 ? remainder : remainder.slice(0, end);
 }
 
-// Sentence view of a passage. Splitting on a full stop followed by whitespace
-// leaves `name.json` tokens intact, because those periods are not followed by
-// whitespace.
+// Sentence view of a passage.
+//
+// A split happens after `.`, `!`, or `?` when the next character is
+// whitespace, a closing bracket or quote, an emphasis marker, or end of input.
+// Terminators followed directly by a word character do NOT split, which is
+// deliberate: `name.json` and `0.2.57` must stay inside one sentence.
+//
+// The consequence, stated plainly because the requirement patterns below
+// depend on it: two real sentences separated by such an intra-word terminator
+// are still one sentence to this guard, so tokens could be drawn across that
+// boundary. Terminators followed by `)`, `"`, `'`, `*`, or `]` used to have the
+// same effect and no longer do; those three shapes are fixtured below.
 function guardedSentences(passage) {
-  return passage.split(/(?<=\.)\s+/);
+  return passage.split(/(?<=[.!?])(?=[\s)"'*\]]|$)/);
 }
 
 // Markers that invert a rule while preserving its tokens. A sentence carrying
@@ -854,22 +866,27 @@ function assertAffirmativeRequirement(
 
 // One semantic contract, applied independently to each copy.
 //
-// What this guard does hold: each positive requirement must be stated in one
-// sentence, with its tokens in order, and that sentence must not carry a
-// negation marker; the v1 sentence must additionally keep `only` within a few
-// words of `replay`, not merely somewhere in the same sentence, and must not
-// declare the receipt mutable. That rejects reordered prose, dropped tokens,
-// and the token-preserving inversions fixtured below.
+// What this guard does hold: each positive requirement must be stated within
+// one sentence as `guardedSentences` splits them, with its tokens in order,
+// and that sentence must not carry a negation marker; the v1 sentence must
+// additionally keep `only` within a few words of `replay`, not merely
+// somewhere in the same sentence, and must not declare the receipt mutable.
+// That rejects reordered prose, dropped tokens, and the token-preserving
+// inversions fixtured below.
 //
 // What it does NOT hold: this is pattern matching, not comprehension. An
 // inversion phrased without any of the markers above can still pass, so the
-// guard is a drift alarm, not a proof of meaning.
+// guard is a drift alarm, not a proof of meaning. Sentence scoping is also
+// only as good as the splitter: see `guardedSentences` for the intra-word
+// terminators it deliberately does not split on.
 //
 // The forbidden-phrase guard runs against the WHOLE source rather than the
 // scoped passage. The obsolete claim must not appear anywhere in a guarded
 // file; scoping it to the passage would silently accept it in every other
-// section, which is a coverage regression rather than a refinement.
-function assertPublicationBoundary(passage, label, source = passage) {
+// section, which is a coverage regression rather than a refinement. `source`
+// has no default: a caller must name the scope it is guarding, so the whole-
+// document property cannot be narrowed by omitting an argument.
+function assertPublicationBoundary(passage, label, source) {
   assertAffirmativeRequirement(passage, label, {
     pattern: /\bcomplete\b[\s\S]*publish-receipt\/v2/i,
     requirement: 'must consume the complete current publish-receipt/v2',
@@ -891,15 +908,24 @@ function assertPublicationBoundary(passage, label, source = passage) {
   );
 }
 
+// The one path every guarded copy travels, fixtures included. Keeping the
+// wiring here rather than inline in the loop is what lets the out-of-passage
+// fixture below exercise this exact code -- reading a copy, scoping the
+// passage, and guarding the WHOLE file -- instead of a restatement of it that
+// could stay green while the loop narrowed.
+async function assertGuardedCopy(copy, root) {
+  const source = await readFile(join(root, copy.path), 'utf8');
+
+  assertPublicationBoundary(
+    readGuardedPassage(source, copy),
+    copy.label,
+    source,
+  );
+}
+
 for (const copy of GUARDED_PUBLICATION_COPIES) {
   test(`documents complete receipt v2 consumption and immutable v1 replay: ${copy.label}`, async () => {
-    const source = await readFile(copy.url, 'utf8');
-
-    assertPublicationBoundary(
-      readGuardedPassage(source, copy),
-      copy.label,
-      source,
-    );
+    await assertGuardedCopy(copy, REPO_ROOT);
   });
 }
 
@@ -955,7 +981,7 @@ test('the guarded publication assertion rejects drifted prose', () => {
     'A `publish-receipt/v1` remains readable for replay of older runs only.',
   ].join('\n');
 
-  assertPublicationBoundary(accepted, 'accepted control');
+  assertPublicationBoundary(accepted, 'accepted control', accepted);
 
   for (const [drift, prose] of [
     [
@@ -1034,7 +1060,7 @@ test('the guarded publication assertion rejects drifted prose', () => {
     ],
   ]) {
     assert.throws(
-      () => assertPublicationBoundary(prose, `drifted copy: ${drift}`),
+      () => assertPublicationBoundary(prose, `drifted copy: ${drift}`, prose),
       (error) =>
         error instanceof assert.AssertionError &&
         error.message.includes(`drifted copy: ${drift}`),
@@ -1046,43 +1072,100 @@ test('the guarded publication assertion rejects drifted prose', () => {
 // The obsolete claim is rejected wherever it appears in a guarded file, not
 // only inside the scoped passage. Passage-scoping this guard once accepted the
 // claim in every other section of the same document.
-test('the guarded publication assertion rejects an out-of-passage forbidden claim', () => {
-  const passage = [
-    'Wrapper acceptance reads the complete post-run `publish-receipt/v2` and',
-    'validates complete manifest and catalog evidence before it accepts a run.',
+//
+// This drives `assertGuardedCopy` over the real matrix against copies of the
+// real guarded files, so narrowing the production wiring back to the passage
+// turns this test red. A fixture that called `assertPublicationBoundary`
+// directly could not detect that: it would supply the whole-document scope
+// itself and stay green while the loop stopped supplying it.
+test('every guarded copy rejects an out-of-passage forbidden claim', async () => {
+  const scratch = await mkdtemp(join(tmpdir(), 'guarded-publication-copies-'));
+  tempDirs.push(scratch);
+  const cleanRoot = join(scratch, 'clean');
+  const injectedRoot = join(scratch, 'injected');
+  const forbiddenClaim =
+    'Acceptance still requires a complete `PublishReceiptV1`.';
+
+  for (const copy of GUARDED_PUBLICATION_COPIES) {
+    const source = await readFile(join(REPO_ROOT, copy.path), 'utf8');
+    const markerIndex = source.indexOf(`\n${copy.startMarker}`);
+    assert.notEqual(
+      markerIndex,
+      -1,
+      `${copy.label}: guarded passage marker is missing`,
+    );
+
+    // Inserted immediately before the marker: inside the guarded file, outside
+    // the guarded passage. Only a whole-document guard can see it.
+    const injected = `${source.slice(0, markerIndex)}\n\n${forbiddenClaim}\n${source.slice(markerIndex)}`;
+
+    for (const [root, contents] of [
+      [cleanRoot, source],
+      [injectedRoot, injected],
+    ]) {
+      const target = join(root, copy.path);
+      await mkdir(dirname(target), { recursive: true });
+      await writeFile(target, contents);
+    }
+
+    // Control: the same copy through the same wiring passes when clean, so the
+    // rejection below is caused by the claim and not by the scratch layout.
+    await assertGuardedCopy(copy, cleanRoot);
+
+    await assert.rejects(
+      assertGuardedCopy(copy, injectedRoot),
+      (error) =>
+        error instanceof assert.AssertionError &&
+        error.message.includes(
+          `${copy.label}: must not claim a complete PublishReceiptV1 anywhere in the source`,
+        ),
+      `${copy.label}: a forbidden claim outside the guarded passage must still be rejected`,
+    );
+  }
+});
+
+// Sentence splitting is load-bearing for every positive requirement, so pin
+// the terminator shapes that would otherwise merge two real sentences into
+// one. Each fixture draws the manifest-and-catalog tokens from two sentences
+// whose boundary is a terminator followed by closing punctuation, whose second
+// sentence disclaims the rule.
+test('the guarded publication assertion splits sentences at closing punctuation', () => {
+  const otherRequirements = [
+    'Wrapper acceptance reads the complete post-run `publish-receipt/v2`.',
     'A `publish-receipt/v1` remains readable for replay of older runs only.',
   ].join('\n');
-  const outsidePassage = [
-    '## Frozen versioned boundary',
-    '',
-    'Acceptance still requires a complete `PublishReceiptV1`.',
-    '',
-    '## Private wrappers',
-    '',
-    passage,
-  ].join('\n');
 
-  // Control: the identical passage passes when the rest of the source is clean.
-  assertPublicationBoundary(
-    passage,
-    'clean source',
-    `## Private wrappers\n\n${passage}`,
-  );
+  for (const [shape, straddling] of [
+    [
+      'terminator before a closing parenthesis',
+      'Wrapper acceptance validates complete inputs (details below.) Manifest and catalog evidence are handled elsewhere.',
+    ],
+    [
+      'terminator before an emphasis marker',
+      'Wrapper acceptance validates complete inputs.**Manifest** and catalog evidence are handled elsewhere.',
+    ],
+    [
+      'terminator before a closing quote',
+      'Wrapper acceptance validates "complete inputs." Manifest and catalog evidence are handled elsewhere.',
+    ],
+  ]) {
+    const prose = `${otherRequirements}\n${straddling}`;
 
-  assert.throws(
-    () =>
-      assertPublicationBoundary(
-        passage,
-        'source with outside claim',
-        outsidePassage,
-      ),
-    (error) =>
-      error instanceof assert.AssertionError &&
-      error.message.includes(
-        'source with outside claim: must not claim a complete PublishReceiptV1 anywhere in the source',
-      ),
-    'a forbidden claim outside the guarded passage must still be rejected',
-  );
+    assert.throws(
+      () =>
+        assertPublicationBoundary(
+          prose,
+          `straddled requirement: ${shape}`,
+          prose,
+        ),
+      (error) =>
+        error instanceof assert.AssertionError &&
+        error.message.includes(
+          `straddled requirement: ${shape}: must require complete manifest and catalog evidence`,
+        ),
+      `${shape}: tokens drawn from two sentences must not satisfy the requirement`,
+    );
+  }
 });
 
 test('documents project-recap v2 as the current producer policy with immutable v1 replay', async () => {
