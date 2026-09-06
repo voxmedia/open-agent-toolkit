@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.12
+version: 1.0.13
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -111,7 +111,8 @@ projects, and synced records whose detached checkout is absent.
 
 - **The `projects` array is non-empty but the active pointer is missing or
   invalid:** Show the available project names with their `scope` and `checkout`
-  state, then invoke `oat-project-open` so the user selects an existing
+  state, then invoke `oat-project-open` by loading the current
+  `oat-project-open/SKILL.md` and following it, so the user selects an existing
   project. An absent-checkout synced record and a local-only project both take
   this selection route; never suggest creating a replacement project. **STOP**
   this router after the selection workflow returns so the next invocation can
@@ -438,7 +439,7 @@ Reason: {one-line explanation}
 
 The router still dispatches (blockers are informational, not gates).
 
-**Invoke the target skill** using the Skill tool. The agent will load the skill content and follow it directly.
+**Invoke the target skill** using the Skill tool. Invoking the target means loading the target skill's current `SKILL.md` and following it directly, or dispatching a child that carries it; a remembered outcome or ambient discovery is not compliant. This step, not the Step 5 routing decisions, is this router's execution boundary.
 
 ## Success Criteria
 

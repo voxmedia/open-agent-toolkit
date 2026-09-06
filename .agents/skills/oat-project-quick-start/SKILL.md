@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.3.7
+version: 2.3.8
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -566,7 +566,9 @@ Before moving the quick project to ready-for-implementation, resolve the
 complete dispatch ladder and the project named ceiling.
 
 Invoke the `Complete Dispatch Ladder Adoption Contract` from
-`oat-project-plan-writing`. If the effective ladder is missing or incomplete,
+`oat-project-plan-writing`: load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written. If the
+effective ladder is missing or incomplete,
 show the full bundled recommendation and ask the user to select its owning
 scope before running exactly one command:
 
@@ -630,7 +632,8 @@ non-interactive unresolved state are not implementation-ready.
 
 After the generated quick plan has stable phase IDs and before Step 3.6 starts
 the plan artifact review, invoke the `Shared Phase Gate Review Setup Contract` from
-`oat-project-plan-writing`.
+`oat-project-plan-writing`: load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written.
 
 When that contract offers a choice, render its required question verbatim:
 "Should an additional cross-runtime phase gate review run after implementation
@@ -651,7 +654,9 @@ lifecycle command.
 ### Step 3.6: Run Plan Artifact Review Loop
 
 Before dispatching the artifact reviewer, invoke the `Managed Dispatch
-Readiness and Review Contract` from `oat-project-plan-writing`:
+Readiness and Review Contract` from `oat-project-plan-writing` — load the
+current `oat-project-plan-writing/SKILL.md` and follow that contract as
+written:
 
 ```bash
 oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
@@ -662,7 +667,7 @@ If managed resolution or the complete ladder is unresolved, return to Step
 resolver. Do not hand the quick plan to implementation while either contract is
 unresolved.
 
-Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before syncing project state or handing off to implementation.
+Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before syncing project state or handing off to implementation. Load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written.
 
 Required payload:
 

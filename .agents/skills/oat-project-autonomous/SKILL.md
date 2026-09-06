@@ -1,6 +1,6 @@
 ---
 name: oat-project-autonomous
-version: 1.0.9
+version: 1.0.10
 description: Use when a user explicitly asks to run an OAT project autonomously end-to-end. Activates session-only autonomy, resumes the correct lifecycle phase, and drives the existing OAT skills through final PR or a reported boundary.
 argument-hint: '<goal | project-slug | ticket-ref>'
 disable-model-invocation: true
@@ -174,8 +174,8 @@ repository-policy boundary.
 ### Step 0.5: Capability Detection and Tier Selection
 
 Before artifact writes, external side effects, tests, or long-running work,
-load `oat-project-dispatch-subagents`, which in turn requires
-`oat-dispatch-subagents`. Probe the roles and dispatch surfaces needed for
+load the current `oat-project-dispatch-subagents/SKILL.md` and follow it, which
+in turn requires `oat-dispatch-subagents`. Probe the roles and dispatch surfaces needed for
 lifecycle workers and independent reviewers.
 
 Classify each required capability as:
@@ -247,7 +247,9 @@ If evidence cannot support the choice without changing product intent, stop at
 a product-judgment boundary.
 
 Invoke `oat-project-new` for spec-driven mode or `oat-project-quick-start` for
-quick mode. Existing projects retain their persisted workflow mode.
+quick mode: load the selected creation skill's current `SKILL.md` and follow it,
+or dispatch a child that carries it, never a remembered outcome. Existing
+projects retain their persisted workflow mode.
 
 ### Step 2.5: Persist Autonomous Explainer Intent
 
@@ -341,8 +343,11 @@ fi
 ### Step 5: Invoke Lifecycle Skills and Reviews
 
 Invoke each lifecycle skill by name and let it own its complete workflow,
-artifacts, gates, commits, and state transitions. Re-read project status after
-each return and route to the next earliest incomplete owner.
+artifacts, gates, commits, and state transitions. Invoking a lifecycle skill
+means loading that skill's current `SKILL.md` and following it, or dispatching a
+child that carries it; a remembered outcome or ambient discovery is not
+compliant. Re-read project status after each return and route to the next
+earliest incomplete owner.
 
 When planning finds an incomplete dispatch ladder, apply the gate inventory's
 autonomous ownership resolution instead of treating ordinary non-interactive
@@ -359,8 +364,9 @@ Block when the ladder remains incomplete after adoption.
 
 At every required artifact or code review:
 
-1. Resolve the route before launch through
-   `oat-project-dispatch-subagents` and its generic dispatch substrate.
+1. Resolve the route before launch by loading the current
+   `oat-project-dispatch-subagents/SKILL.md`, following it, and using its
+   generic dispatch substrate.
 2. Prefer a configured independent gate route when its exact target is
    available; otherwise select a policy-compliant cross-family reviewer.
 3. Select same-family/context-independent review only when no second family is
@@ -406,8 +412,9 @@ Ensure `oat-project-implement` resolves its immutable
   credential stops at its boundary.
 
 The orchestrator's responsibility is to keep invoking
-`oat-project-implement` until that sequence reaches `complete` or reports a
-boundary. Never wrap or replace implement's phase-agent topology.
+`oat-project-implement` — loading the current `oat-project-implement/SKILL.md`
+and following it on every resume — until that sequence reaches `complete` or
+reports a boundary. Never wrap or replace implement's phase-agent topology.
 
 ### Step 8: Commit and Push Phase Boundaries
 

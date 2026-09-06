@@ -1,6 +1,6 @@
 ---
 name: oat-project-revise
-version: 1.0.1
+version: 1.0.2
 description: Use when a project has an open PR and human feedback needs to be incorporated. Creates revision tasks and re-enters implementation.
 disable-model-invocation: true
 user-invocable: true
@@ -236,7 +236,7 @@ Add a "Revision Received" entry:
 
 Tell the user: "Revision tasks created. Run the `oat-project-implement` skill to execute them starting from {first_task_id}."
 
-Or directly invoke `oat-project-implement` if environment supports skill chaining.
+Or directly invoke `oat-project-implement` if environment supports skill chaining, loading the current `oat-project-implement/SKILL.md` and following it.
 
 ### Step 5: Delegated Feedback Paths
 
@@ -255,6 +255,7 @@ This is the key value revise adds: state transition management so agents know th
 
 - **GitHub PR feedback:** Delegate to `oat-project-review-receive-remote`
 - **Review artifact feedback:** Delegate to `oat-project-review-receive`
+- Delegating means loading the selected skill's current `SKILL.md` and following it, or dispatching a child that carries it; never act from a remembered delegation outcome.
 
 These skills use their existing conventions: `(review)` task prefix, severity classification, standard task IDs appended to the last plan phase. This is correct — structured review feedback should go through the structured triage model.
 
@@ -262,7 +263,7 @@ These skills use their existing conventions: `(review)` task prefix, severity cl
 
 After the delegated skill completes:
 
-- **If fix tasks were added:** State stays `in_progress`. Route to `oat-project-implement`.
+- **If fix tasks were added:** State stays `in_progress`. Route to `oat-project-implement` by loading the current `oat-project-implement/SKILL.md` and following it, or by dispatching a child that carries it.
 - **If no actionable findings:** Return to `pr_open`:
   - `oat_phase_status: pr_open`
   - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`

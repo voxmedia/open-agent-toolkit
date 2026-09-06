@@ -192,7 +192,9 @@ If `OAT_AUTONOMOUS=1`, do not present a review-execution choice. Resolve the
 exact reviewer target through the project dispatch substrate, select the
 highest target-preserving route before launch, and run
 `oat-project-review-provide code final` followed immediately by
-`oat-project-review-receive`.
+`oat-project-review-receive`. Run each of those by loading its current
+`SKILL.md` and following it, or by dispatching a child that carries it; a
+remembered review or receive outcome does not satisfy this step.
 
 - If receive creates fix tasks, return through the normal bounded implement and
   re-review loop.
@@ -240,7 +242,7 @@ REVIEW_MODEL=$(oat config get workflow.reviewExecutionModel 2>/dev/null || true)
 ```
 
 - **If `REVIEW_MODEL` is `subagent`:** Print `Review execution: subagent (from workflow.reviewExecutionModel).` Dispatch the review subagent directly via the Task tool. No prompt.
-- **If `REVIEW_MODEL` is `inline`:** Honor it only when the inline route satisfies the verified-equivalent-controls or documented-exception guard. Otherwise use the exact/pinned route or block. When allowed, print `Review execution: inline (from workflow.reviewExecutionModel).` and run the review in-context per `oat-project-review-provide`.
+- **If `REVIEW_MODEL` is `inline`:** Honor it only when the inline route satisfies the verified-equivalent-controls or documented-exception guard. Otherwise use the exact/pinned route or block. When allowed, print `Review execution: inline (from workflow.reviewExecutionModel).` and run the review in-context by loading the current `oat-project-review-provide/SKILL.md` and following it in this context.
 - **If `REVIEW_MODEL` is `fresh-session`:** This is a **soft preference with escape hatch** because the agent cannot run the review in a fresh session on the user's behalf. Print the guidance block below, then handle the user's response per the three outcomes listed after it.
 - **If unset or invalid:** Fall through to the standard 3-tier prompt below.
 
@@ -457,6 +459,8 @@ artifact paths, exact Reviews event identity, and `receive_pre_head` before
 invoking receive. `receive_correlation` binds the gate run ID, handoff, source
 artifact, scope, type, and source filename; set `receive_state:
 intent_persisted` and commit it before calling `oat-project-review-receive`.
+Calling receive means loading the current `oat-project-review-receive/SKILL.md`
+and following it, or dispatching a child that carries it.
 
 On normal return or resume from `intent_persisted`, reconcile all three durable
 receipt components:
@@ -739,7 +743,10 @@ including a partially completed noncanonical order.
 
 For every pending `summary`, `document`, `pr`, or `retro`, dispatch respectively
 `oat-project-summary`, `oat-project-document`, `oat-project-pr-final`, or
-`oat-project-retro`. Dispatch `retro` in generate mode; apply and filing
+`oat-project-retro`. Immediately before each of those steps, load that step's
+current `SKILL.md` and follow it, or dispatch a child that carries it; a
+remembered outcome from an earlier run or an ambiently discovered copy does not
+satisfy the step. Dispatch `retro` in generate mode; apply and filing
 behavior remains config-gated inside that skill. Every `summary`, `document`,
 `pr`, and `retro` child receives the authoritative snapshot and must merge state
 updates without replacing `oat_post_implement_sequence`.
@@ -921,6 +928,8 @@ Choose:
 ```
 
 **If user chooses sequence (a or b):**
+
+Immediately before each numbered step below, load that named skill's current `SKILL.md` and follow it, or dispatch a child that carries it; never substitute a remembered outcome.
 
 1. Invoke `oat-project-summary` to generate summary.md
 2. If docs selected: invoke `oat-project-document`
