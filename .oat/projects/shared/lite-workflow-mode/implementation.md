@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Fresh p-rev1 dispatch authorization required after invalid launch abort
 oat_last_updated: 2026-09-06
 oat_current_task_id: prev1-t01
 oat_generated: false
@@ -1557,6 +1558,12 @@ Chronological log of implementation progress.
 **New tasks added:** `prev1-t01`, `prev1-t02`
 
 **Next:** Execute revision tasks via the `oat-project-implement` skill.
+
+**Launch stop (2026-09-06):** The exact phase worker was accepted but stopped
+before edits when the dispatch recorder rejected legacy review-record fields in
+this project's journal. The separately authorized backlog commit then advanced
+HEAD, so the invalid launch cannot be resumed or replaced automatically. A
+fresh explicitly authorized dispatch must use the current HEAD.
 
 ---
 

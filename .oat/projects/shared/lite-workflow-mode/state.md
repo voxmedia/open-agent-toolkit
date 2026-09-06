@@ -1,7 +1,8 @@
 ---
 oat_current_task: prev1-t01
 oat_last_commit: daca23b157c2cec331434052d721372455106218
-oat_blockers: []
+oat_blockers:
+  - Fresh p-rev1 dispatch authorization required after invalid launch abort
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -103,7 +104,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T13:24:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T13:29:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -168,10 +169,12 @@ Implementation — revision 1 in progress from post-PR inline feedback.
 
 ## Blockers
 
-None. PR #264 is open; revision implementation is in progress. Merge and
-release remain unauthorized.
+The first `p-rev1` launch was stopped before edits because dispatch-journal
+persistence rejected legacy review-record fields. The later backlog commit
+advanced HEAD, so a fresh explicitly authorized dispatch is required. PR #264
+remains open; merge and release remain unauthorized.
 
 ## Next Milestone
 
-Implement and independently review revision phase `p-rev1`, then refresh PR
-status. Start with `prev1-t01` through `oat-project-implement`.
+Authorize a fresh `p-rev1` dispatch from the current HEAD. Then implement and
+independently review `prev1-t01` and `prev1-t02` before refreshing PR status.

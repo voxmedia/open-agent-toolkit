@@ -132,6 +132,10 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 
 retro artifact=.oat/projects/shared/lite-workflow-mode/references/project-retro.md evidence_used=archived-review-markdown,dispatch-records,gate-receipts,git-history,github-pr-state,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings,spec promotions=2 upstream=2 apply=deferred filing=deferred
 
+### 2026-09-06 · structural · oat-project-implement · p-rev1
+
+Phase launch invalidated before edits: accepted native child was stopped because dispatch-journal persistence failed on legacy review-record fields; root later advanced HEAD with the separately authorized backlog commit.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
