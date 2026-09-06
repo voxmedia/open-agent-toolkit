@@ -671,6 +671,13 @@ delta is
 Attempts 1 and 2 remain consumed. The explicit one-attempt operator extension
 sets the effective limit to 3; no attempt-3 launch has occurred yet.
 
+#### Configured implementation exit gate launch intent 3 persisted
+
+Attempt `28685555-67c7-4bdf-a909-3689a0531ec9` is reserved at
+`2026-09-06T04:11:39Z`. Its stdout receipt will be captured directly at
+`reviews/gate-receipts/implement-exit-28685555-67c7-4bdf-a909-3689a0531ec9.json`.
+The exact resolved command remains unexecuted at this checkpoint.
+
 #### Exit-gate review 2 received — final configured attempt
 
 **Review artifact:**
