@@ -53,6 +53,8 @@ export interface LitePlanSections {
   assumptions: string;
   outOfScope: string;
   validationCriteria: string;
+  productBehavior?: string;
+  technicalDesign?: string;
 }
 
 type PromotionReason =
@@ -144,6 +146,10 @@ function extractLitePlanSections(planContent: string): LitePlanSections | null {
     if (!body) return null;
     sections[key] = body;
   }
+  const productBehavior = extractSection(planContent, 'Product Behavior');
+  const technicalDesign = extractSection(planContent, 'Technical Design');
+  if (productBehavior) sections.productBehavior = productBehavior;
+  if (technicalDesign) sections.technicalDesign = technicalDesign;
   return sections as LitePlanSections;
 }
 
@@ -236,14 +242,32 @@ function renderDiscovery(
     rendered,
     YAML.stringify(frontmatter).trimEnd(),
   );
+  const successCriteria = sections.productBehavior
+    ? `### Product Behavior (from Lite plan)\n\n${sections.productBehavior}\n\n### Validation Criteria (from Lite plan)\n\n${sections.validationCriteria}`
+    : sections.validationCriteria;
   for (const [heading, body] of [
     ['Initial Request', sections.summary],
     ['Key Decisions', sections.decisions],
     ['Assumptions', sections.assumptions],
     ['Out of Scope', sections.outOfScope],
-    ['Success Criteria', sections.validationCriteria],
+    ['Success Criteria', successCriteria],
   ] as const) {
     rendered = replaceSection(rendered, heading, body);
+  }
+  if (sections.technicalDesign) {
+    const nextSteps = /^## Next Steps[ \t]*$/m.exec(rendered);
+    if (!nextSteps) {
+      throw new Error('discovery template is missing ## Next Steps');
+    }
+    const carriedForward = [
+      '## Carried-Forward Technical Design',
+      '',
+      '> Prior implementation context carried forward from the Lite plan; this is not a new discovery deliverable.',
+      '',
+      sections.technicalDesign,
+      '',
+    ].join('\n');
+    rendered = `${rendered.slice(0, nextSteps.index)}${carriedForward}${rendered.slice(nextSteps.index)}`;
   }
   return rendered;
 }

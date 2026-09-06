@@ -122,7 +122,9 @@ Read each required artifact once at phase start:
   present.
 - `lite`: read the whole plan.md requirements contract: the assigned phase
   section plus Summary, Decisions, Assumptions, Out of Scope, and Validation
-  Criteria. Discovery, spec, and design are absent by design.
+  Criteria, and the Product Behavior and/or Technical Design selected by its
+  recorded `minimal`, `product`, `technical`, or `both` content shape.
+  Discovery, spec, and design are absent by design.
 
 Extract all phase tasks, dependency order, file boundaries, verification
 commands, commit messages, and phase-wide verification before editing.

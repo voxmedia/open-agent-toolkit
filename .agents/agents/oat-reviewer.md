@@ -170,7 +170,7 @@ For each requirement in scope, use the best available requirement source by mode
 - `spec-driven`: `spec.md` (primary), `design.md` mapping (secondary)
 - `quick`: `discovery.md` + `plan.md`
 - `import`: normalized `plan.md` + `references/imported-plan.md` (if present)
-- `lite`: all five requirements-contract sections in `plan.md`: Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria
+- `lite`: the requirements contract in `plan.md`: Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria. Also use Product Behavior and/or Technical Design when selected by the recorded `minimal`, `product`, `technical`, or `both` content shape.
 
 Then verify:
 
@@ -210,7 +210,7 @@ Treat the artifact as a product deliverable. Verify it is:
      - `spec-driven`: spec + design
      - `quick`: discovery (+ spec/design if present)
      - `import`: imported-plan reference (+ discovery/spec/design if present)
-     - `lite`: plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria
+     - `lite`: plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria. Also review the Product Behavior and/or Technical Design required by its recorded content shape; challenge `minimal` when an observable shape trigger applies.
    - For import-mode `plan` reviews, bias findings toward canonical-format conformance and completeness. Do not rewrite the imported author's intent merely to match OAT house style.
 
 4. **Actionable**

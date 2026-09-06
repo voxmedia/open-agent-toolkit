@@ -36,7 +36,23 @@ const SPEC_SECTIONS = [
   'Validation Criteria',
 ] as const;
 
-function litePlanContent(): string {
+type LiteContentShape = 'minimal' | 'product' | 'technical' | 'both';
+
+function litePlanContent(shape: LiteContentShape = 'minimal'): string {
+  const productBehavior = [
+    '## Product Behavior',
+    '',
+    '1. **Visible result** — Users see the promoted behavior.',
+    '',
+  ];
+  const technicalDesign = [
+    '## Technical Design',
+    '',
+    '- **Current operation:** `promoteLite()` reads the five core sections.',
+    '- **Proposed changes:** `promoteLite()` carries adaptive sections forward.',
+    '- **Data flow:** Lite plan content flows into discovery context.',
+    '',
+  ];
   return [
     '---',
     'oat_template: true',
@@ -51,8 +67,11 @@ function litePlanContent(): string {
     '',
     '## Decisions',
     '',
+    `- **Content shape:** \`${shape}\` — Matches the observable triggers.`,
     '- Keep the command mechanical.',
     '',
+    ...(shape === 'product' || shape === 'both' ? productBehavior : []),
+    ...(shape === 'technical' || shape === 'both' ? technicalDesign : []),
     '## Assumptions',
     '',
     '- The project is already registered.',
@@ -121,6 +140,10 @@ const DISCOVERY_TEMPLATE = [
   '## Success Criteria',
   '',
   '{Success criteria}',
+  '',
+  '## Next Steps',
+  '',
+  '{Next steps}',
   '',
 ].join('\n');
 
@@ -317,16 +340,58 @@ describe('oat project promote', () => {
     return repoRoot;
   }
 
-  it('parses the five authored lite plan sections as a pure operation', () => {
-    expect(parseLitePlanSections(litePlanContent())).toEqual({
-      summary: 'Ship safe behavior.',
-      decisions: '- Keep the command mechanical.',
-      assumptions: '- The project is already registered.',
-      outOfScope: '- Spec-driven promotion.',
-      validationCriteria:
-        '- [ ] Promotion preserves provenance — Check: `pnpm test`',
-    });
-  });
+  it.each(['minimal', 'product', 'technical', 'both'] as const)(
+    'parses the %s adaptive lite content shape as a pure operation',
+    (shape) => {
+      const parsed = parseLitePlanSections(litePlanContent(shape));
+      expect(parsed).toMatchObject({
+        summary: 'Ship safe behavior.',
+        decisions: expect.stringContaining(`**Content shape:** \`${shape}\``),
+        assumptions: '- The project is already registered.',
+        outOfScope: '- Spec-driven promotion.',
+        validationCriteria:
+          '- [ ] Promotion preserves provenance — Check: `pnpm test`',
+      });
+      expect(parsed?.productBehavior !== undefined).toBe(
+        shape === 'product' || shape === 'both',
+      );
+      expect(parsed?.technicalDesign !== undefined).toBe(
+        shape === 'technical' || shape === 'both',
+      );
+    },
+  );
+
+  it.each(['minimal', 'product', 'technical', 'both'] as const)(
+    'preserves the %s adaptive shape during promotion',
+    async (shape) => {
+      const repoRoot = await createRepo();
+      const { projectPath, projectRoot } = await seedRepo(repoRoot, {
+        plan: litePlanContent(shape),
+      });
+      const { command } = createHarness(repoRoot);
+
+      await runCommand(command, projectPath);
+
+      const discovery = await readFile(
+        join(projectRoot, 'discovery.md'),
+        'utf8',
+      );
+      const carriesProduct = shape === 'product' || shape === 'both';
+      const carriesTechnical = shape === 'technical' || shape === 'both';
+      expect(discovery.includes('### Product Behavior (from Lite plan)')).toBe(
+        carriesProduct,
+      );
+      expect(discovery.includes('## Carried-Forward Technical Design')).toBe(
+        carriesTechnical,
+      );
+      if (carriesTechnical) {
+        expect(
+          discovery.indexOf('## Carried-Forward Technical Design'),
+        ).toBeLessThan(discovery.indexOf('## Next Steps'));
+        expect(discovery).toContain('not a new discovery deliverable');
+      }
+    },
+  );
 
   it.each(['native', 'imported'] as const)(
     'promotes an authored lite project while preserving %s origin',
@@ -362,7 +427,7 @@ describe('oat project promote', () => {
       });
       expect(discovery).toContain('## Initial Request\n\nShip safe behavior.');
       expect(discovery).toContain(
-        '## Key Decisions\n\n- Keep the command mechanical.',
+        '## Key Decisions\n\n- **Content shape:** `minimal` — Matches the observable triggers.\n- Keep the command mechanical.',
       );
       expect(discovery).toContain(
         '## Assumptions\n\n- The project is already registered.',

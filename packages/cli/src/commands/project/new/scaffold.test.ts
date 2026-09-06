@@ -1854,6 +1854,9 @@ describe('scaffoldProject', () => {
 
     const plan = await readFile(join(projectRoot, 'plan.md'), 'utf8');
     expect(plan).toContain('## Validation Criteria');
+    expect(plan).toContain('## Product Behavior');
+    expect(plan).toContain('## Technical Design');
+    expect(plan).toContain('`[minimal | product | technical | both]`');
     expect(plan).toContain('oat_template: true');
     expectSingleLiteCodeReviewPhase(plan);
 

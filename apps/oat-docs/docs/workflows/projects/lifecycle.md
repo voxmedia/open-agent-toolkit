@@ -322,23 +322,28 @@ flowchart LR
   P -->|Scope grows| Q["Promote to Quick"]
 ```
 
-Lite keeps planning and validation in `plan.md`. It has no discovery, spec, or
-design artifact by default, skips implementation HiLL prompts, and routes a
-passed final review directly to PR creation. Summary and documentation run only
-when enabled through the lite-specific post-implementation sequence.
+Lite keeps planning and validation in `plan.md`. The interview selects a
+`minimal`, `product`, `technical`, or `both` content shape and records the
+rationale. Product Behavior is required for user-visible changes; Technical
+Design is required for cross-module, data/state-format, or consumed-contract
+changes. It has no separate discovery, spec, or design artifact, skips
+implementation HiLL prompts, and routes a passed final review directly to PR
+creation. Summary and documentation run only when enabled through the
+lite-specific post-implementation sequence.
 
 ### Promoting a lite project to quick
 
 When lite work outgrows one sitting, `oat project promote <project-path> --to quick`
 converts it in place. Each artifact has a different fate: the authored lite plan
 is **moved** to `references/lite-plan.md`, a new `discovery.md` is **derived**
-from its five authored sections, a **fresh** quick template takes over the
-`plan.md` path, and `state.md` is **rewritten** to quick mode.
+from its five core sections plus any adaptive Product Behavior and Technical
+Design, a **fresh** quick template takes over the `plan.md` path, and `state.md`
+is **rewritten** to quick mode.
 
 ```mermaid
 flowchart LR
   subgraph Before
-    LPLAN["plan.md\nSummary, Decisions, Assumptions,\nOut of Scope, Validation Criteria"]
+    LPLAN["plan.md\nfive core sections plus adaptive\nProduct Behavior / Technical Design"]
     LSTATE["state.md\noat_workflow_mode: lite"]
   end
 

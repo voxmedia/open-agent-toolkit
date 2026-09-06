@@ -172,6 +172,13 @@ constraints, decisions, assumptions, exclusions, and proof. Keep the batch
 small and load-bearing. Wait for the complete response before proceeding
 (`LITE-03`).
 
+Use the interview to select exactly one plan content shape: `minimal`,
+`product`, `technical`, or `both`. Product content is required whenever the
+change alters user-visible behavior. Technical content is required when the
+work crosses module boundaries, changes a data or state format, or changes a
+contract consumed by another surface. Select `both` when both triggers apply.
+Select `minimal` only when neither trigger applies.
+
 Run a second round only for questions that the first round's answers created.
 It may clarify those new ambiguities; it must not reopen the whole
 interview. If the user says "just proceed", choose the most careful supported
@@ -189,11 +196,25 @@ The authored plan contains, in order:
 
 1. `## Summary`
 2. `## Decisions`
-3. `## Assumptions`
-4. `## Out of Scope`
-5. `## Validation Criteria`
-6. the required single-phase task list in the `oat-project-plan-writing`
+3. `## Product Behavior` when the selected shape is `product` or `both`
+4. `## Technical Design` when the selected shape is `technical` or `both`
+5. `## Assumptions`
+6. `## Out of Scope`
+7. `## Validation Criteria`
+8. the required single-phase task list in the `oat-project-plan-writing`
    grammar
+
+In Decisions, record the selected shape and a one-line rationale tied to the
+triggers above. Product Behavior is a numbered list of testable outcomes, not
+implementation steps. Technical Design describes current operation and the
+proposed changes; include data flow only when state or data crosses a boundary.
+Use file-and-symbol references instead of line numbers. A short snippet is
+allowed only to establish a proposed interface shape.
+
+`minimal` fits a typo or copy-only documentation edit, a version or pin update,
+or a semantics-preserving mechanical rename. A configuration edit that changes
+runtime behavior is not minimal. Keep each optional section to roughly one
+screen. If either needs more space to remove ambiguity, promote to Quick.
 
 Every validation criterion is one bullet and names its proof as a backticked
 command or test name, or a `manual:` visual-proof instruction. A criterion

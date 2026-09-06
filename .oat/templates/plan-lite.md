@@ -26,7 +26,22 @@ oat_template_name: plan-lite
 
 ## Decisions
 
-- [Record the decisions made during the critical interview.]
+- **Content shape:** `[minimal | product | technical | both]` — [One-line rationale tied to the observable shape triggers.]
+- [Record the other decisions made during the critical interview.]
+
+## Product Behavior
+
+<!-- Include for product or both; omit this section for minimal or technical. -->
+
+1. **[Observable behavior]** — [State the testable user-visible outcome.]
+
+## Technical Design
+
+<!-- Include for technical or both; omit this section for minimal or product. -->
+
+- **Current operation:** [Describe how the affected modules and contracts work now.]
+- **Proposed changes:** [Describe the change with file-and-symbol references, not line numbers.]
+- **Data flow:** [When state or data crosses a boundary, describe its path and transformations. Omit this item otherwise.]
 
 ## Assumptions
 

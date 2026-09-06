@@ -1990,6 +1990,18 @@ describe('validateOatSkills', () => {
     expect(content).not.toMatch(/^### .*HiLL/m);
     expect(content).not.toMatch(/^### .*Phase Gate/m);
     expect(content).not.toContain('oat_hill_checkpoints');
+    expect(interview).toMatch(
+      /select exactly one plan content shape: `minimal`,\s*`product`,\s*`technical`, or `both`/i,
+    );
+    expect(content).toMatch(
+      /Product Behavior is a numbered list of testable outcomes/i,
+    );
+    expect(content).toMatch(
+      /Technical Design describes current operation and the\s+proposed changes/i,
+    );
+    expect(content).toMatch(
+      /configuration edit that changes\s+runtime behavior is not minimal/i,
+    );
     expect(content).toContain(
       'oat project validate-plan --project-path "$PROJECT_PATH"',
     );
@@ -7448,6 +7460,9 @@ describe('lite mode skill contracts', () => {
         new RegExp(`lite[^\\n]*${section}|${section}[^\\n]*lite`, 'i'),
       );
     }
+    expect(reviewer).toMatch(
+      /Product Behavior and\/or\s+Technical Design[\s\S]{0,180}minimal[\s\S]{0,120}product[\s\S]{0,120}technical[\s\S]{0,120}both/i,
+    );
     expect(implementer).toMatch(
       /`lite`: read the whole plan\.md requirements contract:[\s\S]{0,200}Summary, Decisions, Assumptions, Out of Scope, and Validation[\s\S]{0,40}Criteria/i,
     );
@@ -7456,6 +7471,9 @@ describe('lite mode skill contracts', () => {
     );
     expect(implementer).toMatch(
       /`lite`: read the whole plan\.md requirements contract: the assigned phase/i,
+    );
+    expect(implementer).toMatch(
+      /Product Behavior and\/or Technical Design selected by its[\s\S]{0,120}`minimal`, `product`, `technical`, or `both`/i,
     );
     expect(phaseExecution).toContain(
       'workflow_mode: {spec-driven|quick|import|lite}',

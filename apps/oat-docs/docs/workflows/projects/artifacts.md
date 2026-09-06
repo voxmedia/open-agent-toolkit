@@ -53,12 +53,20 @@ Mode-sensitive notes:
 - `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`, `lite`) for routing.
 - `plan.md` remains the canonical execution artifact across all modes.
 
-| Mode          | Core authored artifacts                                                                            | Optional artifacts                         |
-| ------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| `spec-driven` | `discovery.md`, `spec.md`, `design.md`, `plan.md`                                                  | -                                          |
-| `quick`       | `discovery.md`, `plan.md`                                                                          | Lightweight `design.md`, `spec.md`         |
-| `import`      | `references/imported-plan.md`, `plan.md`                                                           | `spec.md`, `design.md`                     |
-| `lite`        | Single-phase `plan.md` with Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria | `summary.md` and documentation at closeout |
+| Mode          | Core authored artifacts                                                                                                                | Optional artifacts                         |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `spec-driven` | `discovery.md`, `spec.md`, `design.md`, `plan.md`                                                                                      | -                                          |
+| `quick`       | `discovery.md`, `plan.md`                                                                                                              | Lightweight `design.md`, `spec.md`         |
+| `import`      | `references/imported-plan.md`, `plan.md`                                                                                               | `spec.md`, `design.md`                     |
+| `lite`        | Single-phase `plan.md` with Summary, Decisions, Assumptions, Out of Scope, Validation Criteria, and an explicit adaptive content shape | `summary.md` and documentation at closeout |
+
+Every Lite plan keeps Summary, Decisions, Assumptions, Out of Scope, and
+Validation Criteria. User-visible changes add numbered, testable Product
+Behavior. Changes that cross module boundaries, alter data or state formats,
+or change a contract consumed by another surface add Technical Design. That
+section covers current operation, proposed changes, and data flow when data or
+state crosses a boundary. The Decisions section records the selected shape and
+why it fits.
 
 ## Supporting artifacts
 
