@@ -1,8 +1,11 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
-oat_last_updated: 2026-09-05
+oat_blockers:
+  - task_id: p06-t03
+    reason: 'Three canonical skill-contract tests fail outside the task version-and-sync boundary; plan revision or explicit scope direction is required.'
+    since: 2026-09-06
+oat_last_updated: 2026-09-06
 oat_current_task_id: p06-t03
 oat_generated: false
 ---
@@ -398,7 +401,14 @@ lite-smoke-note.md` validation.
 
 ### Task p06-t03: Bump lockstep public package versions and run release gates
 
-**Status:** pending
+**Status:** blocked
+**Blocker:** `pnpm test`, the isolated-HOME forced Turbo test, and
+`pnpm test:skills` expose three canonical skill-contract drifts outside this
+task's declared version-and-sync boundary. Plan revision or explicit scope
+direction is required before those files may be changed.
+
+**Preserved work:** The seven intended `0.2.56` version and sync-manifest
+changes remain uncommitted. All other definition-of-done gates passed.
 
 ## Orchestration Runs
 
@@ -441,6 +451,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
 - Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 - **p05 review lifecycle:** initial review plus two same-handle fixes and two fresh re-reviews are recorded under `dispatch/lite-p05-*.json`; passing reviewed head `c11a1150239dc179c60b0b82defc9c350999955d`; passing artifact `reviews/p05-review-2026-09-05T231617Z.md`.
+- **p06 implementation:** accepted request `lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7`; durable record `dispatch/lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7.json`; target `oat-phase-implementer-gpt-5-6-sol-high`; returned `BLOCKED` at `fd9d9b217187cb07bbc43343e48cf36c80a77cf6` after completing two of three tasks.
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
+- Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 #### Phase Outcomes
 
@@ -451,14 +464,48 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | p03   | DONE (3/3)     | passed | 1         | pass    |
 | p04   | DONE (2/2)     | passed | 0         | pass    |
 | p05   | DONE (4/4)     | passed | 2         | pass    |
+| p06   | BLOCKED (2/3)  | —      | 0         | blocked |
 
 #### Outstanding Items
 
-- Phase p06 implementation, validation, provider-view sync, and release gates remain.
+- `p06-t03` remains blocked by three canonical skill-contract drifts outside
+  its declared version-and-sync boundary. The seven intended version and
+  sync-manifest paths are preserved uncommitted pending operator direction.
 
 ---
 
 ## Implementation Log
+
+### 2026-09-06
+
+#### p06 terminal gate blocker after two completed tasks
+
+**Dispatch:** `lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7`
+**Completed commits:** `a2fa453b3b339da34cf9a20d8b70635112b8cc10`
+(`p06-t01`) and `fd9d9b217187cb07bbc43343e48cf36c80a77cf6`
+(`p06-t02`).
+**Outcome:** `BLOCKED`; 2/3 tasks complete. `p06-t03` made the intended
+lockstep `0.2.56` and sync-manifest edits, then stopped before commit because
+three terminal contract tests require files outside its declared boundary.
+
+**Failing evidence:**
+
+- `pnpm test` and the isolated-HOME forced Turbo run fail the completion
+  autonomy gate inventory and exact non-lite post-implement sentence contract.
+- `pnpm test:skills` also fails an `oat-explainer-kit` completion heading
+  expectation.
+
+**Passing evidence:** `pnpm check`, `pnpm type-check`, `pnpm test:smoke`,
+`pnpm build`, `pnpm run check:skill-bumps`,
+`pnpm release:check-versions`, `pnpm release:validate`,
+`pnpm build:docs`, `pnpm lint`, and `pnpm format` all exited 0.
+
+**Preserved state:** exactly seven intended `p06-t03` paths remain
+uncommitted: the sync manifest, public package version asset, and five
+lockstep package manifests. No out-of-scope contract file was changed.
+
+**Required next step:** operator direction to resolve the blocker, defer the
+task, or revise the plan with bounded ownership for the three contract fixes.
 
 ### 2026-09-05
 
