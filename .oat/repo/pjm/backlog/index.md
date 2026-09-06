@@ -263,6 +263,7 @@
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                          | open   | medium   | task       | M        |
 | BL-260902-make-consolidated-project      | Make consolidated-project retirement checks semantic                                                  | open   | medium   | task       | M        |
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                         | open   | medium   | feature    | M        |
+| BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions  | open   | medium   | task       | S        |
 | BL-260830-persist-instruction-sync       | Persist instruction sync strategy in config and init                                                  | open   | medium   | feature    | M        |
 | BL-260906-persist-status-native-skill    | Persist status native-skill adoption by setting manifestChanged                                       | open   | medium   | task       | S        |
 | BL-260903-populate-provider-reachability | Populate provider reachability evidence across pack and lifecycle surfaces                            | open   | medium   | feature    | M        |

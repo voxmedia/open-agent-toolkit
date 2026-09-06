@@ -192,10 +192,32 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Review row `final` → `passed`.** The configured exit gate runs next on the closeout head.
 
+## Review Received: final (configured exit gate, attempt 1 — passed)
+
+**Date:** 2026-09-06
+**Gate:** run `910b6d29-031b-4929-aa48-cadaa1dc1293`, target `codex-5-6-sol-xhigh` (diversity: unknown-producer), envelope `ok`, outcome `review_completed_gate_passed`, `receiveEligible: true`, threshold important, blocking false, attempt `w4-exit-gate-20260906T202132Z` (launched in the foreground; the harness moved it to the background after ten minutes and it completed with a receipt).
+**Review artifact:** reviews/archived/final-review-2026-09-06T203008Z.md (reviewed head `f926f6d0f0e6b57fe6195413c95e176a48b87b5d`, invocation gate)
+
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 1 — judgment-sweep mode (passing gate).
+
+**Dispositions:**
+
+- M1 — `dispatch-stamp-contract.ts` still accepts two mutations (a direct "an out-of-tree shim may be the normal path" sentence; a sibling bold step inserted before the normative paragraph, because the boundary detector recognizes ATX headings only while two owning sections are bold step markers): **deferred → `BL-260906-make-the-dispatch-stamp`**. Shipped prose is compliant and the gate passed at its threshold; closing the backstop is a product change that would stale the passed gate for a test-helper hardening, so it is filed with both exact mutations as the required red-then-green fixtures.
+- m1 — trailing whitespace on one line of the archived `p01-review-2026-09-06T173547Z.md` (`git diff --check` over the range): **fixed** in this commit (whitespace only; review content unchanged).
+
+**Verification record:** what — the backlog item and the whitespace fix; how — `git diff --check 0af558db8..HEAD` clean after the commit, `oat backlog new` regenerated the index; where — this section and the commit that carries it.
+
+**Gate row `final` (attempt 1) → `passed`** (gate-written row moved forward in place with the archived path); `oat_implement_exit_gate` → `allowed / passed` in the following state checkpoint.
+
+## Final HiLL approval (IMPLEMENT-16, autonomous)
+
+_(recorded after the post-implement sequence)_
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)
 
+- Exit gate attempt 1 M1 — the stamp contract helper accepts a bold-step boundary and a direct normal-path shim permission → `BL-260906-make-the-dispatch-stamp`.
 - p01 review round 1 M1 — `PROJECT_STATE_FRONTMATTER_FIELDS` has no production consumer; preserve-on-write is pinned by an executable writer test (`e11d901b3`) but the plan's cited seam is misleading → `BL-260906-give-project-state-frontmatter`.
 - p01 review round 2 M1 (record-level) — the I2 docs expansion created cross-wave shared writes the gate-override plan's Dependencies table does not record (`contributing/skills.md` is a W6 group-2 deliverable; W5 group 4 cites `state-utils.ts` while p01 wrote `state-utils.test.ts`) → wave-close plan correction telling those lanes to re-anchor.
 - p02 review round 1 observation — status's native-skill adopt path mutates the manifest without setting `manifestChanged` (pre-existing) → `BL-260906-persist-status-native-skill`.
