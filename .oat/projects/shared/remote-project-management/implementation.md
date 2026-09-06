@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Phase 7 production command routing requires an operator-authorized recovery scope expansion into service.ts and service.test.ts.
-oat_last_updated: 2026-09-05
+  - Phase 7 authorized production-routing recovery is pending reservation and execution through the original implementer.
+oat_last_updated: 2026-09-06
 oat_current_task_id: null
 oat_generated: false
 ---
@@ -11,7 +11,7 @@ oat_generated: false
 # Implementation: remote-project-management
 
 **Started:** 2026-03-15
-**Last Updated:** 2026-09-05
+**Last Updated:** 2026-09-06
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -1077,6 +1077,21 @@ operator-authorized file-boundary expansion before recovery.
   Phase 7 task boundary.
 - Ledger: no attempt was reserved, no recovery edit occurred, usage remains
   0/10, and `pending_attempt` remains null.
+
+### Authorized Recovery Continuation
+
+- On 2026-09-06, the operator authorized one bounded same-target recovery for
+  the production command-routing composition defect.
+- The plan now declares `service.ts` and `service.test.ts` plus only
+  mechanically required in-phase bridges and consumer tests as the recovery
+  boundary. Recovery event
+  `p07-recovery-02-production-command-routing-20260906` will reserve attempt
+  1/10 before any edit.
+- After Phase 7 passes its root-owned review, merge latest `origin/main` before
+  Phase 8 using
+  `reference/2026-09-06-wave-program-resume-handoff.md` as the bounded
+  reconciliation guide. The operator explicitly selected this ordering over
+  the handoff's earlier recommendation to merge before recovery.
 
 ---
 

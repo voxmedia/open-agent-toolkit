@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-09-01
+oat_last_updated: 2026-09-06
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_source: spec-driven
@@ -1291,6 +1291,41 @@ packages/cli/src/commands/help-snapshots.test.ts.
 3. Format: pnpm format:fix
 4. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/e2e/pjm-remote.test.ts src/commands/help-snapshots.test.ts
 5. Commit: test(p07-t10): add remote pjm end-to-end workflows
+
+### Authorized Phase 7 Recovery Boundary
+
+The operator authorized one same-target production-routing recovery on
+2026-09-06 after all ten planned Phase 7 tasks committed. This is recovery
+event `p07-recovery-02-production-command-routing-20260906`, not an additional
+plan task, so task totals remain unchanged.
+
+1. Modify `packages/cli/src/commands/pjm/remote/service.ts` and
+   `service.test.ts` to route closeout, discussion, resolution, doctor, and
+   migration through production services rather than shared-storage fallback.
+2. Add only the mechanically required `RemoteSyncStore` bridges in existing
+   Phase 7 modules and tests. A cross-cutting consumer sweep may add an
+   in-phase mechanical consumer file only when the recovery report names the
+   file and evidence; crossing another owner stops for direction.
+3. Preserve provider-neutral action, approval, journal, privacy, and
+   authoritative-readback contracts. Do not add provider tool names, native
+   schemas, captured catalogs, provider CLI dialects, credential parsing, or
+   repository/worktree/Git-history secret scans.
+4. Use the original Phase 7 implementer target, reserve attempt 1/10 before
+   editing, and create one append-only recovery commit with the terminal ledger
+   marker.
+5. Run production-path focused tests, the Phase 7 union, full remote and smoke
+   suites, CLI lint/type-check/build/format, diff integrity, boundary, and
+   provider-neutrality checks before and after the recovery commit.
+
+### Transition Gate: Reconcile Latest Main Before Phase 8
+
+After Phase 7 passes its root-owned review, fetch and merge latest
+`origin/main` before beginning `p08-t01`. Follow
+`reference/2026-09-06-wave-program-resume-handoff.md`: preserve reviewed commit
+reachability with a merge rather than rebase; take main's V2 sync manifest and
+regenerate the project entry with project-scope sync; retain both config seams;
+re-anchor affected help/config tests; and re-establish the Phase 7 verification
+baseline. Resolve release versions only against then-current main.
 
 ## Phase 8: Documentation, Packaging, and Release Validation
 

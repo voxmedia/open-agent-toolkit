@@ -3,7 +3,7 @@ oat_current_task: null
 oat_last_commit: 390f21157181e2b5cfd5d83ad582ed0aa00bba60
 oat_blockers:
   [
-    'Phase 7 production command routing requires operator-authorized recovery scope expansion into service.ts and service.test.ts',
+    'Phase 7 authorized production-routing recovery is pending reservation and execution through the original implementer',
   ]
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -52,7 +52,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-05T23:29:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T20:16:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -60,17 +60,17 @@ oat_generated: false
 
 **Status:** Implementation in progress
 **Started:** 2026-03-15
-**Last Updated:** 2026-09-05
+**Last Updated:** 2026-09-06
 
 ## Current Phase
 
 Phase 7 — Cross-Provider Convergence and Recovery. All 10 tasks are committed
 through `390f21157`; union 165/165, remote 665/665, and smoke 141/141 pass.
 Phase-wide production-dispatch inspection found that the new commands fall
-through to shared-storage handling and lack production store bridges. Recovery
-requires operator authorization to expand into `service.ts` and
-`service.test.ts`; no attempt has been consumed and Phase 7 review has not
-started.
+through to shared-storage handling and lack production store bridges. The
+operator authorized one same-target recovery into `service.ts`,
+`service.test.ts`, and mechanically required in-phase bridge consumers. No
+attempt has yet been consumed and Phase 7 review has not started.
 
 ## Artifacts
 
@@ -210,16 +210,19 @@ started.
 - ⚠ Phase 7 production-dispatch self-review found a composition defect
 - ⛔ Phase 7 recovery requires operator-authorized expansion into `service.ts`
   and `service.test.ts`; usage remains 0/10 and no edit was made
+- ✓ Operator authorized one bounded same-target Phase 7 production-routing
+  recovery on 2026-09-06
+- ⧗ After Phase 7 review passes, merge latest `origin/main` and re-establish
+  the verification baseline before Phase 8
 
 ## Blockers
 
-Phase 7 is blocked on operator direction for the production-routing recovery
-scope. The branch-level lockstep version gate remains preserved for planned
-`p08-t05` release work.
+Phase 7 is blocked only while the authorized production-routing recovery is
+reserved and executed. The branch-level lockstep version gate remains
+preserved for planned `p08-t05` release work after mainline reconciliation.
 
 ## Next Milestone
 
-Authorize or decline one bounded same-target Phase 7 recovery that adds
-production dispatch/store bridges and tests in `service.ts`, `service.test.ts`,
-and the existing Phase 7 modules. Phase review follows only after recovery
-passes.
+Reserve and execute Phase 7 recovery attempt 1/10 through the original
+implementer, then run the root-owned Phase 7 review. After that review passes,
+merge latest `origin/main` and re-establish the phase baseline before Phase 8.
