@@ -3,14 +3,14 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: p06-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: lite-workflow-mode
 
 **Started:** 2026-09-04
-**Last Updated:** 2026-09-05
+**Last Updated:** 2026-09-06
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -305,7 +305,7 @@ retro, and reduced-artifact closeout paths passed the full contract suite.
 
 ## Phase 6: Documentation, Provider Sync, Smoke Run, and Release Gates
 
-**Status:** in_progress
+**Status:** in_review
 **Started:** 2026-09-05
 
 ### Task p06-t01: Document lite workflow mode
@@ -400,12 +400,22 @@ lite-smoke-note.md` validation.
 
 **Status:** completed
 **Commit:** cfcaae8fd81da49b1f75862be2260a65eec2c5e7
+**Review-fix commit:** 3f5c8174bb74877e676e00dc78a1a1e2963f9b36
 **Authorized revision:** On 2026-09-06 the user authorized bounded ownership
 of the autonomy inventory mappings and the two stale contract assertions. The
 task may resume without changing runtime behavior.
 
-**Preserved work:** The seven intended `0.2.56` version and sync-manifest
-changes remain uncommitted. All other definition-of-done gates passed.
+**Outcome:** The five public packages and bundled public-package asset are at
+`0.2.56`, provider views are synchronized, and the three authorized contract
+drifts are repaired. Review fix loop 1 corrected the lifecycle guide's Lite
+review wording without changing runtime behavior.
+
+**Verification:** The explicit exit ledger at
+`/tmp/p06-fix1-gates.qVgVPh/exit-codes.txt` records exit 0 for the ordered
+definition-of-done gates, release validation, docs build, isolated-HOME forced
+tests, smoke tests, skills tests, lint, format, and post-commit checks. The
+first `pnpm test` hit the unrelated SIGTERM cleanup timeout; its single
+authorized no-edit rerun passed and consumed no recovery attempt.
 
 ## Orchestration Runs
 
@@ -448,32 +458,50 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
 - Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 - **p05 review lifecycle:** initial review plus two same-handle fixes and two fresh re-reviews are recorded under `dispatch/lite-p05-*.json`; passing reviewed head `c11a1150239dc179c60b0b82defc9c350999955d`; passing artifact `reviews/p05-review-2026-09-05T231617Z.md`.
-- **p06 implementation:** accepted request `lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7`; durable record `dispatch/lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7.json`; target `oat-phase-implementer-gpt-5-6-sol-high`; returned `BLOCKED` at `fd9d9b217187cb07bbc43343e48cf36c80a77cf6` after completing two of three tasks.
+- **p06 implementation:** accepted request `lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7`; durable record `dispatch/lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7.json`; target `oat-phase-implementer-gpt-5-6-sol-high`; resumed on the same handle after the authorized bounded plan revision and returned `DONE` at review-fix commit `3f5c8174bb74877e676e00dc78a1a1e2963f9b36` with all three tasks complete.
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
 - Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
 #### Phase Outcomes
 
-| Phase | Implementation | Review | Fix Loops | Outcome |
-| ----- | -------------- | ------ | --------- | ------- |
-| p01   | DONE (4/4)     | passed | 0         | pass    |
-| p02   | DONE (3/3)     | passed | 1         | pass    |
-| p03   | DONE (3/3)     | passed | 1         | pass    |
-| p04   | DONE (2/2)     | passed | 0         | pass    |
-| p05   | DONE (4/4)     | passed | 2         | pass    |
-| p06   | BLOCKED (2/3)  | —      | 0         | blocked |
+| Phase | Implementation | Review          | Fix Loops | Outcome   |
+| ----- | -------------- | --------------- | --------- | --------- |
+| p01   | DONE (4/4)     | passed          | 0         | pass      |
+| p02   | DONE (3/3)     | passed          | 1         | pass      |
+| p03   | DONE (3/3)     | passed          | 1         | pass      |
+| p04   | DONE (2/2)     | passed          | 0         | pass      |
+| p05   | DONE (4/4)     | passed          | 2         | pass      |
+| p06   | DONE (3/3)     | fixes completed | 1         | in review |
 
 #### Outstanding Items
 
-- `p06-t03` remains blocked by three canonical skill-contract drifts outside
-  its declared version-and-sync boundary. The seven intended version and
-  sync-manifest paths are preserved uncommitted pending operator direction.
+- Fresh independent p06 re-review is required for the review-fix commit.
+- The two Medium findings from the first p06 review remain recorded as
+  non-blocking and were deliberately excluded from fix loop 1.
 
 ---
 
 ## Implementation Log
 
 ### 2026-09-06
+
+#### p06 review fixes completed — awaiting fresh re-review
+
+**Fix commit:** `3f5c8174bb74877e676e00dc78a1a1e2963f9b36`.
+The original accepted Phase 6 handle corrected the lifecycle guide's Lite
+planning-time review statement and preserved explicit terminal-gate evidence.
+The commit changes only
+`apps/oat-docs/docs/workflows/projects/lifecycle.md`.
+
+**Gate evidence:** `/tmp/p06-fix1-gates.qVgVPh/exit-codes.txt` records the
+ordered required gates at exit 0 after one authorized no-edit rerun of an
+unrelated SIGTERM cleanup timeout. Supplemental isolated-HOME forced tests,
+smoke tests, skills tests, lint, format, and post-commit checks also exited 0.
+No phase-recovery attempt was consumed.
+
+**Disposition:** the first p06 review row is `fixes_completed`; launch a fresh
+managed-high independent re-review over the original p06 base through this
+fix commit. The two Medium findings remain non-blocking and deferred.
 
 #### p06 phase review received — fix loop 1
 
