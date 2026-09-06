@@ -38,7 +38,7 @@ copying their content here. -->
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
 - CLI `0.2.59` (wave 4 of the 2026-08-31 execution program, wrapper project
-  `wave-4-execution`, "delivered-project follow-ups") lets one project disable a
+  `wave-4-execution`, "delivered-project follow-ups", merged as PR #271) lets one project disable a
   configured lifecycle gate through a strict `oat_skill_gate_overrides` map in
   its own `state.md` (`oat gate resolve --project` reports `configured`,
   `configured_disabled_by_project`, or `not_configured`; a `project_disabled`
