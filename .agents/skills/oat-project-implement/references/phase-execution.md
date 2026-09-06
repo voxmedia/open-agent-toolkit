@@ -262,7 +262,7 @@ STOP rather than a best-effort restore:
    untracked components binary-safely, writes a `manifest.json` carrying the
    `HEAD` SHA, the affected paths, the `git diff --cached --stat` summary, and a
    SHA-256 digest and byte size for every artifact file, derives the
-   `restorePlan` step 3 follows, and proves the artifact replays into a pristine
+   `restorePlan` step 4 follows, and proves the artifact replays into a pristine
    replica of that same `HEAD` before it seals the result. Only a sealed
    artifact can be verified later:
 
@@ -345,19 +345,33 @@ STOP rather than a best-effort restore:
    whose context happens to match applies cleanly at the wrong commit and
    silently produces wrong content, so a base mismatch is a STOP.
 
-   An `artifact-verification-failed` exit is a STOP. On success it applies
-   `git apply --index` for the `index` component, `git apply` for the
-   `worktree` component, and byte copies plus the manifest's recorded
-   executable bit for the `untracked` component, reviews the result, and
-   commits it as its first action. The artifact is immutable between the
-   verification and the application: nothing may write to it in between, and a
-   re-verification is required if anything might have.
+   An `artifact-verification-failed` exit is a STOP. Verification is read-only.
+   The continuation completes every fail-closed precondition — input
+   validation, the base and immutable-history checks, artifact verification,
+   and pending-attempt reconciliation — before it applies or commits anything,
+   so a precondition stop leaves the branch exactly at `recovery_base_head`
+   with the artifact untouched and re-verifiable; re-brief from current
+   authoritative state rather than assuming the earlier brief still holds. Only
+   then does it apply `git apply --index` for the `index` component,
+   `git apply` for the `worktree` component, and byte copies plus the
+   manifest's recorded executable bit for the `untracked` component, review the
+   result, and commit it as its first action. The artifact is immutable between
+   the verification and the application: nothing may write to it in between,
+   and a re-verification is required if anything might have.
 
 7. Record the artifact reference and manifest digest in the continuation event
    (`cont-<project>-<phase>-fix-N`). That first commit is a recovery commit,
    not a planned task commit: expect exactly one, require the continuation to
    report it with the artifact reference and manifest digest, and do not count
-   it against any task's one-commit rule.
+   it against any task's one-commit rule. It is also immutable and becomes part
+   of the phase's base. If a later stop parks the phase after it landed, brief
+   the retry with `recovery_base_head` set to the reconciled current HEAD —
+   which includes that recovery commit and any candidate or ledger-only commit
+   already durably made — and without the already-committed artifact;
+   re-supplying it would apply the same work twice, and holding the original
+   base would make the exact-HEAD check unsatisfiable. Carry the recovery
+   commit as provenance in the continuation event, and capture dirt that
+   accumulated afterwards as its own new `recovered_patch`.
 
 An unresolvable capture script (`capture-script-unavailable`), an active writer
 (`active-writer`), unsupported dirt (`unsupported-dirt`), a failed round trip
@@ -464,8 +478,10 @@ recovered_patch: { artifact, manifest_digest, size, stat, components }
 ```
 
 `recovered_patch` is optional and present only when the sequence above captured
-a lost child's uncommitted work. The same field appears in the `mode: implement`
-Phase Scope above; it is null on an ordinary first dispatch. Its `artifact` is a readable path outside the
+a lost child's uncommitted work that is not yet committed. The same field
+appears in the `mode: implement` Phase Scope above; it is null on an ordinary
+first dispatch, and null again on any retry briefed after the recovery commit
+landed, whose `recovery_base_head` is the reconciled current HEAD. Its `artifact` is a readable path outside the
 worktree, never a mutable worktree path; `manifest_digest` and `size` are the
 values the capture printed and both are required by `--verify`; `stat` is the
 captured `git diff --cached --stat` summary; and `components` lists the `index`, `worktree`, and `untracked`

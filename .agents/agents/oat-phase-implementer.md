@@ -345,7 +345,8 @@ any task edit.
 A fresh child never starts on a dirty tree. The one exception is a supplied
 `recovered_patch`, which carries work a lost child left behind: verify it,
 apply it, review it, and commit it as your first action before task one,
-exactly as `## Mode: Recover` step 2 describes. That single commit is a
+exactly as `## Mode: Recover` steps 2 and 4 describe, and only after every
+precondition that can park the phase has passed. That single commit is a
 recovery commit rather than a planned task commit, so it does not consume any
 task's one-commit budget; report it under `### Recovery Events` with the
 artifact reference and manifest digest. Without a verified `recovered_patch`,
@@ -491,11 +492,18 @@ continuation.
    remains immutable at the same history position; and the worktree contains
    only the reconciled pending ledger reservation plus an optional mechanically
    bounded diff inside `bounded_files`. Any other dirt or history change
-   blocks. Beyond that reconciled reservation and its bounded diff, a supplied
-   `recovered_patch` is the only permitted pre-existing dirt, and only after it
-   verifies. Resolve `capture-dirty-tree.mjs` through installed scope rather
-   than a repository-relative path, probing in order and binding the first
-   match:
+   blocks. Compare against the briefed `recovery_base_head`, never a remembered
+   earlier value: once a recovery-patch commit has landed, the retry's
+   `recovery_base_head` is the reconciled current HEAD, which includes that
+   recovery commit and any candidate or ledger-only commit already durably
+   made, and the brief omits the already-committed artifact because re-applying
+   it would duplicate the work. Beyond that reconciled reservation and its
+   bounded diff, a supplied `recovered_patch` is the only permitted
+   pre-existing dirt, and only after it verifies. Verification is read-only and
+   happens here; the apply and the commit wait for step 4, so every precondition
+   that can park the phase resolves before anything is written. Resolve
+   `capture-dirty-tree.mjs` through installed scope rather than a
+   repository-relative path, probing in order and binding the first match:
 
    ```bash
    set -eu
@@ -538,31 +546,41 @@ continuation.
    back to a repository-relative path. Verify before touching the tree and stop
    on any `artifact-verification-failed` mismatch, including the base mismatch
    `--expected-head` catches: integrity is not base agreement, and a hunk whose
-   context happens to match applies cleanly at the wrong commit. On success
-   apply `git apply --index` for the `index` component, `git apply` for the
-   `worktree` component, and byte copies plus the manifest's recorded
-   executable bit for the `untracked` component, review the result, and commit
-   it as your first action. Report an `active-writer`, `unsupported-dirt`,
-   `round-trip-failed`, or `artifact-verification-failed` reason verbatim and
-   stop; never improvise a partial or best-effort restore. Without a verified
-   `recovered_patch` you start on a clean tree.
+   context happens to match applies cleanly at the wrong commit. Report an
+   `active-writer`, `unsupported-dirt`, `round-trip-failed`, or
+   `artifact-verification-failed` reason verbatim and stop; never improvise a
+   partial or best-effort restore. Without a verified `recovered_patch` you
+   start on a clean tree.
 
 3. Reconcile the authoritative `pending_attempt` and nonzero
    `phase_recovery_attempts_used` with `state.md`. Recover mode continues that
    same consumed attempt and must not increment usage again. Missing,
-   contradictory, or unreconciled state blocks before editing.
-4. Apply or complete only `bounded_correction_scope`. Recover mode must not
+   contradictory, or unreconciled state blocks before editing. Nothing has been
+   applied or committed yet, so this block leaves the branch exactly at
+   `recovery_base_head` with the artifact untouched and re-verifiable; the root
+   re-briefs from current authoritative state once the ledger is repaired.
+4. Only now apply the verified `recovered_patch`, if one was supplied:
+   `git apply --index` for the `index` component, `git apply` for the
+   `worktree` component, and byte copies plus the manifest's recorded
+   executable bit for the `untracked` component. Review the result and commit
+   it as your first action. That commit is immutable, and so is every commit
+   this mode durably makes after it: if anything later parks the phase, the
+   retry's `recovery_base_head` is the reconciled current HEAD, which includes
+   that recovery commit and any candidate or ledger-only commit already made.
+   That brief omits the already-committed artifact; dirt that accumulated
+   afterwards travels as its own newly captured `recovered_patch`.
+5. Apply or complete only `bounded_correction_scope`. Recover mode must not
    replay planned tasks and must not require, fabricate, or consume a review
    artifact.
-5. Apply the bounded correction, then run `focused_verification` and
+6. Apply the bounded correction, then run `focused_verification` and
    `phase_verification` before creating a candidate commit. If either check
    fails, restore `bounded_files` to their original committed content,
    atomically mark the pending entry `failed`, durably commit only that
    ledger transition, emit one `failed-attempt` event, and stop.
-6. When both pre-commit checks pass, atomically mark the pending entry
+7. When both pre-commit checks pass, atomically mark the pending entry
    `completed` and create one append-only candidate recovery commit containing
    only `bounded_files` plus that ledger transition.
-7. Immediately rerun `focused_verification` and `phase_verification` against the
+8. Immediately rerun `focused_verification` and `phase_verification` against the
    committed HEAD; these reruns are authoritative. On pass, emit one `recovered`
    event and report the candidate as the successful recovery commit. On
    failure, atomically replace `completed` with `failed`, durably commit that
@@ -571,7 +589,7 @@ continuation.
    commit. If terminal evidence cannot be committed, report an unreconciled
    block that root must reject before bookkeeping. Never amend history or
    launch fallback.
-8. Return the report below. `DONE` is accepted success;
+9. Return the report below. `DONE` is accepted success;
    `DONE_WITH_CONCERNS` and `BLOCKED` may be accepted terminal stops and must
    still report provenance, accounting, immutable history, and the event.
 

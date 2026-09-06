@@ -3467,7 +3467,7 @@ describe('validateOatSkills', () => {
       '--verify',
       '--expected-head',
       'git apply --index',
-      'commits it as its first',
+      'it as its first action',
       'continuation event',
     ]) {
       const next = phase.indexOf(step, cursor + 1);
@@ -3555,7 +3555,7 @@ describe('validateOatSkills', () => {
         /`artifact`\s+is\s+a\s+readable\s+path\s+outside\s+the\s+worktree,\s+never\s+a\s+mutable\s+worktree\s+path/i,
       );
       expect(contract, `${name} verifies before applying`).toMatch(
-        /--verify[\s\S]{0,300}--manifest-digest[\s\S]{0,120}--size[\s\S]{0,160}--expected-head[\s\S]{0,1600}git apply --index/i,
+        /--verify[\s\S]{0,300}--manifest-digest[\s\S]{0,120}--size[\s\S]{0,160}--expected-head[\s\S]{0,2400}git apply --index/i,
       );
       expect(contract, `${name} reconciles the artifact base`).toMatch(
         /integrity is not base agreement/i,
@@ -3563,6 +3563,107 @@ describe('validateOatSkills', () => {
       expect(contract, `${name} refuses a best-effort restore`).toMatch(
         /(?:never|no)[\s\S]{0,120}best-effort restore/i,
       );
+    }
+  });
+
+  it('reconciles the pending attempt before the recovered patch is applied and committed', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+
+    // Applying and committing the artifact before the ledger reconciliation
+    // put a new commit on the phase branch whenever the reconcile blocked.
+    // The retry then failed the exact-HEAD check against `recovery_base_head`
+    // and the phase parked with no contract path to continue, so the
+    // reconciliation — and every other precondition that can park the phase —
+    // has to finish while the branch is still exactly at its briefed base.
+    // Bounded to the sequence under test. `indexOf('## Mode: Recover')` would
+    // land on the inline cross-reference inside Mode: Implement, dragging that
+    // mode's own apply-and-commit sentence into the comparison.
+    const recoverStart = agent.indexOf('\n## Mode: Recover\n');
+    expect(recoverStart, 'phase agent recover heading').toBeGreaterThan(-1);
+    const recoverEnd = agent.indexOf('\n## ', recoverStart + 1);
+    const recover = agent.slice(
+      recoverStart,
+      recoverEnd > -1 ? recoverEnd : undefined,
+    );
+    const sequenceStart = phase.indexOf(
+      "**Recovering a lost child's uncommitted work.**",
+    );
+    expect(sequenceStart, 'phase root capture sequence').toBeGreaterThan(-1);
+    const sequence = phase.slice(
+      sequenceStart,
+      phase.indexOf('Attempt accounting uses exactly one', sequenceStart),
+    );
+
+    const surfaces = [
+      [
+        'phase agent',
+        recover,
+        /Reconcile the authoritative\s+`pending_attempt`/,
+        /Only now apply the verified\s+`recovered_patch`/,
+      ],
+      [
+        'phase root',
+        sequence,
+        /pending-attempt reconciliation/,
+        /before it applies or commits anything/,
+      ],
+    ] as const;
+
+    for (const [name, contract, reconcile, ordering] of surfaces) {
+      // Searched, not indexed: the contracts wrap, so a literal phrase can
+      // straddle a newline.
+      const reconcileAt = contract.search(reconcile);
+      const applyAt = contract.search(/git apply --index/);
+      const commitAt = contract.search(
+        /commit\s+it as (?:your|its) first action/,
+      );
+
+      // Position alone would survive a rewrite that keeps the words and
+      // reverses the meaning, so pin the clause that states the ordering and
+      // reject its negation.
+      expect(contract, `${name} states the ordering`).toMatch(ordering);
+      expect(contract, `${name} does not invert the ordering`).not.toMatch(
+        /(?:after|once) it (?:applies|has applied|commits|has committed)[\s\S]{0,120}reconcil/i,
+      );
+      expect(
+        contract,
+        `${name} does not negate the first-action commit`,
+      ).not.toMatch(
+        /(?:do not|never|must not)\s+commit\s+it as (?:your|its) first action/i,
+      );
+
+      expect(reconcileAt, `${name} states the reconciliation`).toBeGreaterThan(
+        -1,
+      );
+      expect(applyAt, `${name} states the apply`).toBeGreaterThan(-1);
+      expect(
+        commitAt,
+        `${name} states the first-action commit`,
+      ).toBeGreaterThan(-1);
+      expect(reconcileAt, `${name} reconciles before applying`).toBeLessThan(
+        applyAt,
+      );
+      expect(reconcileAt, `${name} reconciles before committing`).toBeLessThan(
+        commitAt,
+      );
+      expect(
+        contract,
+        `${name} a precondition stop leaves the briefed base intact`,
+      ).toMatch(/leaves the branch exactly at\s+`recovery_base_head`/);
+      // And the other direction: once the recovery commit exists it is the
+      // base a retry is measured against, so a legitimate retry can proceed.
+      expect(contract, `${name} retry base after a recovery commit`).toMatch(
+        /`recovery_base_head`[\s\S]{0,80}(?:is|set to)[\s\S]{0,120}that recovery commit/,
+      );
+      expect(
+        contract,
+        `${name} the retry brief drops the committed artifact`,
+      ).toMatch(/(?:without|omits) the already-committed artifact/);
     }
   });
 
