@@ -1171,9 +1171,93 @@ describe('oat gate', () => {
         'oat-project-implement',
       ]);
 
-      // An override must never reach a consumer that did not opt in.
+      // An override must never reach a consumer that did not opt in, and the
+      // serialized shape (key order included) must be the legacy one.
       expect(capture.jsonPayloads[0]).toEqual(GATE);
+      // Literal legacy serialization, including key order as normalized by
+      // the config layer. A reordered envelope would break naive consumers.
+      expect(JSON.stringify(capture.jsonPayloads[0])).toBe(
+        '{"command":"pnpm test","onFailure":"block","maxAttempts":3,"description":"Run the test suite before finishing."}',
+      );
       expect(process.exitCode).toBe(0);
+    });
+
+    it('fails closed when project state has no readable frontmatter', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      const projectPath = '.oat/projects/shared/demo';
+      await mkdir(join(root, projectPath), { recursive: true });
+      // Present but unreadable: defaulting to "no overrides" here would launch
+      // a gate the operator disabled.
+      await writeFile(
+        join(root, projectPath, 'state.md'),
+        '# State without frontmatter\n',
+        'utf8',
+      );
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(JSON.stringify(capture.jsonPayloads[0])).toContain(
+        'no readable YAML frontmatter',
+      );
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('reads an override from a CRLF project state file', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      const projectPath = '.oat/projects/shared/demo';
+      await mkdir(join(root, projectPath), { recursive: true });
+      await writeFile(
+        join(root, projectPath, 'state.md'),
+        [
+          '---',
+          'oat_kind: implementation',
+          ...DISABLED_OVERRIDE,
+          '---',
+          '',
+          '# State',
+        ].join('\r\n'),
+        'utf8',
+      );
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        resolution: 'configured_disabled_by_project',
+      });
+    });
+
+    it('reports not_configured when a local null shadows a shared gate', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      await writeLocalGate(root, null);
+      const projectPath = await writeProject(root);
+
+      // Precedence is reconciled, not overwritten: the nearer layer wins.
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        resolution: 'not_configured',
+        configuredGate: null,
+        effectiveGate: null,
+      });
     });
   });
 

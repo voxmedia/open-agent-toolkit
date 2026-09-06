@@ -359,8 +359,11 @@ configuration. Canonically serialize the resolved command, description,
 `onFailure`, `maxAttempts`, and the resolved project override state to derive
 `config_fingerprint`; persist the complete resolved inputs with `status:
 pending` before any gate launch. Missing state means unresolved, never no gate.
-A `null` resolution persists `allowed/no_gate` with `disposition: no_gate`,
-null run/artifact/receive provenance, and the current implementation basis.
+A `not_configured` resolution persists `allowed/no_gate` with
+`disposition: no_gate`, null run/artifact/receive provenance, and the current
+implementation basis. Only that resolution may produce a no-gate success: a
+null, missing, malformed, or unrecognized resolver result is an operational
+failure that fails closed as unresolved and never as no gate.
 
 A `configured_disabled_by_project` resolution persists `allowed/configured`
 with `disposition: project_disabled`. It sets `resolved_command` to the
@@ -535,7 +538,17 @@ disposition.
   its generation. Continue from the first incomplete launch, envelope, receive,
   policy, or persistence boundary.
 - A fresh `allowed` result resumes after the gate without executing the gate or
-  receive a second time. Reuse requires a valid disposition, complete
+  receive a second time.
+- An `allowed/configured` result carrying `disposition: project_disabled` is
+  revalidated before it is reused, because the override lives in the state
+  carrier that the implementation fingerprint deliberately excludes. Re-resolve
+  the gate with project context, recompute `config_fingerprint` from that
+  current resolution, and require both that the current resolution is still
+  `configured_disabled_by_project` and that the recomputed fingerprint equals
+  the persisted one. Any other current resolution, including a re-enabled
+  `configured` gate, or any fingerprint mismatch marks the generation `stale`
+  and requires a new configured generation. Reproducing the fingerprint from
+  the persisted inputs alone never satisfies this check. Reuse requires a valid disposition, complete
   configured-gate provenance when configured, an unchanged immutable
   implementation fingerprint, a valid rolling freshness checkpoint, and any
   eligible receive marked complete.

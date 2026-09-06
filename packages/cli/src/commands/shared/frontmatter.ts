@@ -66,18 +66,27 @@ export function isProjectStateFrontmatterField(
   );
 }
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
 export const SKILL_GATE_OVERRIDE_FIELD = 'oat_skill_gate_overrides';
 export const SKILL_GATE_OVERRIDE_DISABLED = 'disabled';
 export const SKILL_GATE_OVERRIDE_SOURCE = `state.md:${SKILL_GATE_OVERRIDE_FIELD}`;
 
 /**
- * Skill-name shape for an override key. Deliberately a shape test rather than
- * the live `oat_gateable: true` set: an override for a skill that has no
- * configured gate is inert but must stay visible to project progress, so this
- * parser must not fabricate or reject configuration knowledge it does not own.
- * A bare `implement` or an empty key is still a typo and is rejected.
+ * Canonical gate-aware lifecycle skills: exactly the skills declaring
+ * `oat_gateable: true` in their frontmatter, which is the only set a configured
+ * gate may target. An override key outside this set can never disable anything,
+ * so accepting one would silently record an inert instruction.
+ *
+ * `skills.test.ts` pins this constant against the live `oat_gateable: true`
+ * declarations so the two cannot drift apart.
  */
-const SKILL_GATE_OVERRIDE_KEY = /^oat-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const GATE_AWARE_SKILLS = [
+  'oat-project-implement',
+  'oat-project-import-plan',
+  'oat-project-plan',
+  'oat-project-quick-start',
+] as const;
 
 export type SkillGateOverrideValue = typeof SKILL_GATE_OVERRIDE_DISABLED;
 
@@ -145,22 +154,37 @@ export function parseSkillGateOverrides(
     if (!isScalar(pair.key) || typeof pair.key.value !== 'string') {
       throw skillGateOverrideError(statePath, 'has a non-string skill key');
     }
-    const skill = pair.key.value.trim();
+    // Exact spelling only: a padded or decorated key is not the skill name.
+    const skill = pair.key.value;
     if (!skill) {
       throw skillGateOverrideError(statePath, 'has an empty skill key');
     }
-    if (!SKILL_GATE_OVERRIDE_KEY.test(skill)) {
+    if (pair.key.anchor !== undefined || pair.key.tag !== undefined) {
       throw skillGateOverrideError(
         statePath,
-        `has an invalid skill key \`${skill}\``,
+        `decorates the key \`${skill}\` with a YAML anchor or tag`,
+      );
+    }
+    if (!(GATE_AWARE_SKILLS as readonly string[]).includes(skill)) {
+      throw skillGateOverrideError(
+        statePath,
+        `names \`${skill}\`, which is not a gate-aware skill`,
+      );
+    }
+    if (hasOwnProperty.call(overrides, skill)) {
+      throw skillGateOverrideError(
+        statePath,
+        `declares \`${skill}\` more than once`,
       );
     }
 
     const entry = pair.value;
     if (
       !isScalar(entry) ||
+      entry.anchor !== undefined ||
+      entry.tag !== undefined ||
       typeof entry.value !== 'string' ||
-      entry.value.trim() !== SKILL_GATE_OVERRIDE_DISABLED
+      entry.value !== SKILL_GATE_OVERRIDE_DISABLED
     ) {
       throw skillGateOverrideError(
         statePath,

@@ -303,7 +303,12 @@ describe('post-implementation sequence contracts', () => {
       );
     }
     expect(normalized).toContain(
-      'A `null` resolution persists `allowed/no_gate` with `disposition: no_gate`',
+      'A `not_configured` resolution persists `allowed/no_gate` with `disposition: no_gate`',
+    );
+    // A null or unrecognized resolver result must never be read as no-gate
+    // success now that closeout always resolves with project context.
+    expect(normalized).toContain(
+      'a null, missing, malformed, or unrecognized resolver result is an operational failure that fails closed as unresolved and never as no gate',
     );
     expect(normalized).toContain(
       '`block` outcomes consume remediation attempts only after a valid configured gate result',
@@ -512,6 +517,18 @@ describe('post-implementation sequence contracts', () => {
     expect(gate).toContain(
       'can never be reused as a fresh `allowed` result once the gate is re-enabled',
     );
+    // The stored fingerprint alone proves nothing: the override lives in the
+    // one file the implementation fingerprint excludes, so reuse must
+    // re-resolve the gate rather than reproduce persisted inputs.
+    expect(gate).toContain(
+      'Re-resolve the gate with project context, recompute `config_fingerprint` from that current resolution',
+    );
+    expect(gate).toContain(
+      'require both that the current resolution is still `configured_disabled_by_project` and that the recomputed fingerprint equals the persisted one',
+    );
+    expect(gate).toContain(
+      'Reproducing the fingerprint from the persisted inputs alone never satisfies this check.',
+    );
   });
 
   it('routes a project-disabled closeout forward and a re-enabled one as stale', () => {
@@ -535,10 +552,24 @@ describe('post-implementation sequence contracts', () => {
     );
     // enabled -> disabled -> enabled must route as stale.
     expect(next).toContain(
-      'removing the override from `state.md` changes the fingerprint, so an override-era transition routes as stale and a fresh configured run is required',
+      'A re-enabled gate changes the resolution and the fingerprint, so an override-era transition routes as stale and a fresh configured run is required',
     );
     expect(next).toContain(
       'Every other combination keeps its current fail-closed routing.',
+    );
+    // The exact accepted shape, so contradictory launch or receive provenance
+    // cannot slip through a broad "null provenance" reading.
+    expect(next).toContain('`launch_state: not_started`');
+    expect(next).toContain('`receive_state: not_started`');
+    expect(next).toContain('`receive_completed: false`');
+    expect(next).toContain(
+      'Any populated launch or receive field contradicts a gate that never ran and fails closed.',
+    );
+    expect(next).toContain(
+      'a persisted `project_disabled` result is never accepted on its stored value alone',
+    );
+    expect(next).toContain(
+      'require that the current resolution is still `configured_disabled_by_project`',
     );
     // The pre-existing valid combinations must be unchanged.
     expect(next).toContain(

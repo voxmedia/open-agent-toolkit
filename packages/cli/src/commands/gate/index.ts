@@ -2978,9 +2978,12 @@ interface ProjectAwareGateResolution {
 }
 
 /**
- * Read the project's declared gate overrides. A project without frontmatter
- * simply has none; a malformed map throws with its own state path so the
- * caller fails closed instead of silently following configuration.
+ * Read the project's declared gate overrides.
+ *
+ * Fails closed rather than defaulting to "no overrides": unreadable project
+ * state would otherwise silently launch a gate the operator disabled. CRLF
+ * checkouts are normalized first so a line-ending difference is not mistaken
+ * for missing frontmatter.
  */
 async function readProjectGateOverrides(
   repoRoot: string,
@@ -2988,9 +2991,11 @@ async function readProjectGateOverrides(
 ): Promise<Record<string, typeof SKILL_GATE_OVERRIDE_DISABLED>> {
   const statePath = normalizeToPosixPath(join(projectPath, 'state.md'));
   const content = await readFile(join(repoRoot, statePath), 'utf8');
-  const frontmatter = getFrontmatterBlock(content);
-  if (!frontmatter) {
-    return {};
+  const frontmatter = getFrontmatterBlock(content.replace(/\r\n/g, '\n'));
+  if (frontmatter === null) {
+    throw new Error(
+      `${statePath}: project state has no readable YAML frontmatter block, so gate overrides cannot be resolved. Repair the state file before resolving a project-aware gate.`,
+    );
   }
 
   return parseSkillGateOverrides(frontmatter, statePath).overrides;

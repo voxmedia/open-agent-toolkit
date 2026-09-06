@@ -324,8 +324,19 @@ alone:
   `config_fingerprint`, `reviewed_head`, and `implementation_fingerprint`, a
   `project_override` sub-record recording the disabled value and its
   `state.md:oat_skill_gate_overrides` source, and the same rolling-freshness
-  rules as every other allowed result. Because `config_fingerprint` covers the
-  resolved override state, removing the override from `state.md` changes the
+  rules as every other allowed result. The complete accepted shape is
+  `resolved_command` set to the configured command, `launch_state:
+not_started`, null `launch_attempt_id`, `launch_started_at`,
+  `launch_result_receipt`, `gate_run_marker`, `gate_run_id`, `envelope_status`,
+  `artifact`, and `handoff`, plus `receive_state: not_started`,
+  `receive_eligible: false`, and `receive_completed: false`. Any populated
+  launch or receive field contradicts a gate that never ran and fails closed.
+- Because the override lives in the state carrier the implementation
+  fingerprint excludes, a persisted `project_disabled` result is never accepted
+  on its stored value alone. Re-resolve the gate with project context and
+  require that the current resolution is still `configured_disabled_by_project`
+  and that `config_fingerprint` recomputed from that current resolution equals
+  the persisted one. A re-enabled gate changes the resolution and the
   fingerprint, so an override-era transition routes as stale and a fresh
   configured run is required.
 - `pending`, `blocked`, malformed, contradictory, or legacy-absent state never

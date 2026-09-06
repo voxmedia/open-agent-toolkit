@@ -16,6 +16,7 @@ import {
   parseFrontmatterField,
   parseGeneratedTime,
   parseSkillGateOverrides,
+  GATE_AWARE_SKILLS,
   SKILL_GATE_OVERRIDE_SOURCE,
 } from './frontmatter';
 
@@ -318,16 +319,43 @@ describe('frontmatter', () => {
         ).toEqual({ present: true, overrides: {} });
       });
 
-      it('keeps an override for a skill that has no configured gate', () => {
+      it('keeps an override for a gate-aware skill with no configured gate', () => {
         // Visible in progress, but it must never fabricate configuration.
         expect(
+          parseSkillGateOverrides(
+            [
+              'oat_skill_gate_overrides:',
+              '  oat-project-quick-start: disabled',
+            ].join('\n'),
+            STATE_PATH,
+          ).overrides,
+        ).toEqual({ 'oat-project-quick-start': 'disabled' });
+      });
+
+      it('rejects a key that is not a gate-aware skill', () => {
+        // An override on a non-gateable skill can never disable anything, so
+        // accepting it would silently record an inert instruction.
+        expect(() =>
           parseSkillGateOverrides(
             ['oat_skill_gate_overrides:', '  oat-project-spec: disabled'].join(
               '\n',
             ),
             STATE_PATH,
-          ).overrides,
-        ).toEqual({ 'oat-project-spec': 'disabled' });
+          ),
+        ).toThrow(/not a gate-aware skill/);
+      });
+
+      it('accepts every canonical gate-aware skill', () => {
+        const frontmatter = [
+          'oat_skill_gate_overrides:',
+          ...GATE_AWARE_SKILLS.map((skill) => `  ${skill}: disabled`),
+        ].join('\n');
+
+        expect(
+          Object.keys(
+            parseSkillGateOverrides(frontmatter, STATE_PATH).overrides,
+          ),
+        ).toEqual([...GATE_AWARE_SKILLS]);
       });
 
       it('exposes the durable override source string', () => {
@@ -367,6 +395,18 @@ describe('frontmatter', () => {
         [
           'a duplicate skill key',
           'oat_skill_gate_overrides:\n  oat-project-implement: disabled\n  oat-project-implement: disabled',
+        ],
+        [
+          'a padded value',
+          'oat_skill_gate_overrides:\n  oat-project-implement: "disabled "',
+        ],
+        [
+          'an anchored value',
+          'oat_skill_gate_overrides:\n  oat-project-implement: &ref disabled',
+        ],
+        [
+          'a tagged value',
+          'oat_skill_gate_overrides:\n  oat-project-implement: !!str disabled',
         ],
         [
           'a duplicate map key',

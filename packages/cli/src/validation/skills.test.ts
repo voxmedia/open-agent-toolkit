@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
+import { GATE_AWARE_SKILLS } from '@commands/shared/frontmatter';
 import {
   getPackMemberNames,
   PACK_MANIFEST,
@@ -5404,6 +5405,34 @@ describe('validateOatSkills', () => {
     expect(reviews).not.toMatch(
       /user-scope Codex role generation[^\n]{0,120}(?:deferred|not (?:implemented|available))/i,
     );
+  });
+
+  it('pins the gate-aware skill set against live oat_gateable declarations', async () => {
+    // The override parser rejects keys outside GATE_AWARE_SKILLS. If a skill
+    // gains or loses `oat_gateable: true` without updating that constant, a
+    // legitimate override would be rejected or an inert one accepted.
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillsRoot = join(repoRoot, '.agents', 'skills');
+    const entries = await readdir(skillsRoot, { withFileTypes: true });
+    const declared: string[] = [];
+
+    for (const entry of entries.filter((candidate) =>
+      candidate.isDirectory(),
+    )) {
+      let content: string;
+      try {
+        content = await readRawRepoFile(
+          `.agents/skills/${entry.name}/SKILL.md`,
+        );
+      } catch {
+        continue;
+      }
+      if (/^oat_gateable:\s*true\s*$/m.test(content)) {
+        declared.push(entry.name);
+      }
+    }
+
+    expect(declared.sort()).toEqual([...GATE_AWARE_SKILLS].sort());
   });
 
   it('tracks the p04 planning skill contract versions', async () => {

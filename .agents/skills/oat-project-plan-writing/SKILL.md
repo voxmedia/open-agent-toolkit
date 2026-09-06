@@ -405,9 +405,10 @@ They must not add a provider/model `--target` argument.
 
 ## Shared Lifecycle Gate Posture Setup Contract
 
-Every plan-producing workflow invokes this procedure once the project path is
-known and before plan writing begins. It runs adjacent to, but independently
-from, the phase gate review setup above: neither contract reads, writes, or
+Every plan-producing workflow invokes this procedure after the complete plan
+has stable phase IDs and before the plan artifact review begins, which is the
+same boundary the phase gate review setup uses. It runs adjacent to, but
+independently from, that setup: neither contract reads, writes, or
 satisfies the other's setting. The calling skill owns the prompt and the write
 to `"$PROJECT_PATH/state.md"`; this section owns the shared eligibility,
 preservation, validation, and non-interactive behavior.

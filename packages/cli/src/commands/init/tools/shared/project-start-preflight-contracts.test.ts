@@ -335,7 +335,10 @@ describe('project-start preflight contracts', () => {
       const contract = readPostureContract();
 
       expect(flat(contract)).toContain(
-        'adjacent to, but independently from, the phase gate review setup',
+        'after the complete plan has stable phase IDs and before the plan artifact review begins',
+      );
+      expect(flat(contract)).toContain(
+        'adjacent to, but independently from, that setup',
       );
       expect(flat(contract)).toContain(
         "neither contract reads, writes, or satisfies the other's setting",
