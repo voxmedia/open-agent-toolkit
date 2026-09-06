@@ -1,0 +1,107 @@
+{
+  "request_id": "348bd412-b8a9-40e9-8d98-6aab9099cbeb",
+  "caller": "oat-project-implement",
+  "scope": "p-rev2",
+  "objective": "Implement the three bounded post-Wave-4 review fixes and restore terminal verification evidence",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-native-implement-20260906T230305Z",
+    "source": "tool-schema",
+    "observed_at": "2026-09-06T23:03:05Z"
+  },
+  "authority": "phase-files",
+  "role_selector": "oat-phase-implementer-gpt-5-6-sol-medium",
+  "model_selector": "gpt-5.6-sol",
+  "model_selector_granularity": "materialized-role",
+  "effort_selector": "medium",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-07-25",
+  "guidance_verified_at": "2026-07-25",
+  "guidance_status": "fresh",
+  "selection_source": "policy-resolved",
+  "candidates_considered": ["oat-phase-implementer-gpt-5-6-sol-medium"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 7200,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-phase-implementer-gpt-5-6-sol-medium",
+    "fork_turns": "none",
+    "phase": "p-rev2",
+    "mode": "implement",
+    "phase_base_head": "90f5a18eaf1f8df1dbd9fe7f450872c09cb60e08",
+    "expected_base_sha": "90f5a18eaf1f8df1dbd9fe7f450872c09cb60e08",
+    "worktree": "root",
+    "task_ids": ["prev2-t01", "prev2-t02", "prev2-t03"]
+  },
+  "launch_status": "accepted",
+  "child_outcome": "pending",
+  "configured_invocation_evidence": [
+    "dispatch-report-v1:p-rev2-implementation",
+    "Dispatch: scope=p-rev2 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium",
+    "native-spawn-accepted",
+    "canonical-role:project"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [
+    {
+      "id": "cont-lite-p-rev2-fix-3",
+      "kind": "same-handle-recovery",
+      "original_request_id": "348bd412-b8a9-40e9-8d98-6aab9099cbeb",
+      "recovery_request_id": "348bd412-b8a9-40e9-8d98-6aab9099cbeb",
+      "mode": "recover",
+      "recovery_base_head": "315d532f925aa9e2d820d487f5a6318659644b93"
+    }
+  ],
+  "fallback": {
+    "mode": "block",
+    "allow_below_task_class_floor": false
+  },
+  "task_class": "default-implementation",
+  "model_class_floor": "default-implementation",
+  "classification_source": "caller",
+  "classification_reason": "Bounded multi-file contract composition, closeout reconciliation, and terminal verification require normal context-heavy implementation without architectural redesign.",
+  "floor_satisfaction": "satisfied",
+  "authorization_scope": "lite-workflow-mode-p-rev2-implementation",
+  "expected_output": "One Phase Implementation Report covering three ordered task commits and phase verification",
+  "verification_evidence": "Exact task commits, bounded files, fail-capable focused tests, local Definition of Done gates, SIGTERM reproduction evidence, and clean worktree",
+  "escalate_when": [
+    "plan conflicts with current artifacts",
+    "scope expansion is required",
+    "verification cannot establish correctness",
+    "a protected or external publication boundary is reached"
+  ],
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<project>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.4",
+      "contentDigest": "sha256:1bc90a0e55817750e23be7e05684a651db185d370bcdf7ef1e12c0ce80204e31",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
