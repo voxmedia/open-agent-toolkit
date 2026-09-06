@@ -47,11 +47,14 @@ const CONFIGURATION_EXIT_CODE = 2;
 interface IndexGenerateOptions {
   docsDir?: string;
   output?: string;
+  /** Accumulated `--exclude` values, in the order they were supplied. */
+  exclude?: string[];
 }
 
 interface IndexGenerateFileDependencies {
   generateIndex: (
     docsDir: string,
+    options: import('./generator').GenerateIndexOptions,
   ) => Promise<import('./generator').IndexEntry[]>;
   renderIndex: (entries: import('./generator').IndexEntry[]) => string;
   writeFile: (
@@ -213,6 +216,40 @@ function trimmed(value: string | undefined): string | null {
   return trimmedValue ? trimmedValue : null;
 }
 
+/** Commander collector for the repeatable `--exclude` flag. */
+function collectExclude(
+  value: string,
+  previous: string[] | undefined,
+): string[] {
+  return [...(previous ?? []), value];
+}
+
+/**
+ * The exclusion list handed to the generator: `documentation.excludes` first,
+ * then the `--exclude` flags.
+ *
+ * Flags **extend** the configured defaults rather than replacing them, so a
+ * one-off exclusion on the command line cannot silently republish the pages a
+ * repository deliberately excluded. Entries are trimmed, blanks are dropped,
+ * and duplicates collapse while preserving first-seen order.
+ */
+function resolveExcludes(
+  config: OatConfig,
+  flagValues: string[] | undefined,
+): string[] {
+  const merged: string[] = [];
+  for (const value of [
+    ...(config.documentation?.excludes ?? []),
+    ...(flagValues ?? []),
+  ]) {
+    const entry = value.trim();
+    if (entry && !merged.includes(entry)) {
+      merged.push(entry);
+    }
+  }
+  return merged;
+}
+
 type DocsDirSource = 'flag' | 'config-docs-subdirectory' | 'config-root';
 
 interface ResolvedIndexGeneratePaths {
@@ -224,6 +261,8 @@ interface ResolvedIndexGeneratePaths {
   docsDirSource: DocsDirSource;
   outputPath: string;
   outputIsExplicit: boolean;
+  /** Config defaults extended by `--exclude`, trimmed and de-duplicated. */
+  excludes: string[];
 }
 
 function missingRootError(flag: '--docs-dir' | '--output'): CliError {
@@ -303,6 +342,7 @@ async function resolveIndexGeneratePaths(
     docsDirSource,
     outputPath,
     outputIsExplicit,
+    excludes: resolveExcludes(config, options.exclude),
   };
 }
 
@@ -491,7 +531,9 @@ async function runIndexGenerate(
 
   const { config, docsDir, outputPath, repoRoot } = resolved;
 
-  const entries = await deps.generateIndex(docsDir);
+  const entries = await deps.generateIndex(docsDir, {
+    excludes: resolved.excludes,
+  });
   const content = buildGeneratedIndexOutput(deps.renderIndex(entries));
 
   await deps.writeFile(outputPath, content, 'utf8');
@@ -565,6 +607,12 @@ export function createDocsGenerateIndexCommand(
         '--output <path>',
         'Output file path, resolved from the CWD (default: `<documentation.root>/index.md`)',
       ),
+    )
+    .addOption(
+      new Option(
+        '--exclude <glob>',
+        'Exclude matching paths, relative to the docs directory (`*` within a segment, `**` across segments, trailing `/` for directories only). Repeatable, and additive to `documentation.excludes`',
+      ).argParser(collectExclude),
     )
     .action(async (options: IndexGenerateOptions, command: Command) => {
       const context = dependencies.buildCommandContext(

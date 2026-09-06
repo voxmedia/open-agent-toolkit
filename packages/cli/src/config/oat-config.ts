@@ -39,6 +39,12 @@ export interface OatDocumentationConfig {
   config?: string;
   index?: string;
   requireForProjectCompletion?: boolean;
+  /**
+   * Globs, relative to the docs directory `oat docs generate-index` indexes,
+   * whose matches are left out of the generated index. Trimmed, de-duplicated,
+   * and order-preserving.
+   */
+  excludes?: string[];
 }
 
 export interface OatGitConfig {
@@ -1113,6 +1119,49 @@ async function normalizeReadableProjectPath(
   }
 }
 
+/**
+ * Parse `documentation.excludes` into a trimmed, de-duplicated,
+ * order-preserving list.
+ *
+ * Unlike its scalar `documentation.*` siblings, a malformed value is rejected
+ * rather than silently dropped: a typo in an exclusion list would otherwise
+ * publish pages the operator believed were excluded, with no signal anywhere.
+ * An absent key and an empty array are both "no exclusions".
+ */
+function normalizeDocumentationExcludes(
+  value: unknown,
+  configPath: string,
+): string[] {
+  if (value === undefined) {
+    return [];
+  }
+
+  const invalid = (): never => {
+    throw new CliError(
+      `Invalid documentation.excludes in ${configPath}: expected an array of non-empty strings. ` +
+        'Repair it with oat config set documentation.excludes "<glob>,<glob>" (an empty value clears it).',
+      2,
+    );
+  };
+
+  if (!Array.isArray(value)) {
+    invalid();
+  }
+
+  const normalized: string[] = [];
+  for (const entry of value as unknown[]) {
+    if (typeof entry !== 'string' || !entry.trim()) {
+      invalid();
+    }
+    const trimmedEntry = (entry as string).trim();
+    if (!normalized.includes(trimmedEntry)) {
+      normalized.push(trimmedEntry);
+    }
+  }
+
+  return normalized;
+}
+
 function normalizeOatConfig(
   parsed: unknown,
   configPath = '.oat/config.json',
@@ -1270,6 +1319,13 @@ function normalizeOatConfig(
       doc.requireForProjectCompletion =
         parsed.documentation.requireForProjectCompletion;
     }
+    const excludes = normalizeDocumentationExcludes(
+      parsed.documentation.excludes,
+      configPath,
+    );
+    if (excludes.length > 0) {
+      doc.excludes = excludes;
+    }
     if (Object.keys(doc).length > 0) {
       next.documentation = doc;
     }
@@ -1373,6 +1429,36 @@ export async function readOatConfigForDefaultScopeRepair(
       const { defaultScope: _invalidDefaultScope, ...projects } =
         parsed.projects;
       return normalizeOatConfig({ ...parsed, projects }, configPath);
+    }
+    return normalizeOatConfig(parsed, configPath);
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return { ...DEFAULT_OAT_CONFIG };
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Read shared config with an unusable `documentation.excludes` dropped, so
+ * `oat config set documentation.excludes ...` can perform the repair its own
+ * validation error prescribes. Mirrors the `projects.defaultScope` precedent
+ * above: without it, the only key-specific repair command the error names is
+ * itself blocked by the invalid value.
+ */
+export async function readOatConfigForDocumentationExcludesRepair(
+  repoRoot: string,
+): Promise<OatConfig> {
+  const configPath = getConfigPath(repoRoot);
+
+  try {
+    const raw = await readFile(configPath, 'utf8');
+    const parsed = parseJsonConfig(raw, configPath);
+    if (isRecord(parsed) && isRecord(parsed.documentation)) {
+      const { excludes: _invalidExcludes, ...documentation } =
+        parsed.documentation;
+      return normalizeOatConfig({ ...parsed, documentation }, configPath);
     }
     return normalizeOatConfig(parsed, configPath);
   } catch (error) {
