@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues:
@@ -16,8 +16,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-the-loop lifecycle approval (workflow.hillCheckpointDefault=final)
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy:
   default_attempt_limit: 10
@@ -104,22 +104,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T02:27:21.413Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T02:27:21.413Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T02:40:46.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-2-execution
 
-**Status:** Plan complete; awaiting the configured plan gate, then implementation
+**Status:** Implementing — p01 (bundled-skill contract repair) dispatched
 **Started:** 2026-09-06
 **Last Updated:** 2026-09-06
 
 ## Current Phase
 
-Plan - Wave 2 wrapper (five external plans: the bundled-skill contract repair
-first, then three parallel guard/loading lanes, then the patch-and-restore
-recovery reference) scaffolded from the `oat-wave-execute` templates; groups
-composed from the wave-boundary drift refresh.
+Implement - p01 running alone in `.worktrees/wave-2/p01` (plan gate passed, run `54c02cde`); group 2 (p02, p03, p04) follows its fan-in, then p05.
 
 ## Artifacts
 
@@ -135,8 +132,9 @@ composed from the wave-boundary drift refresh.
 - ✓ Preflight: `wave-2-execution` created from `origin/main` `90883f9bcfb0bc52a2fd58571542d194f71ee585` (W1 merged as PR #262, wave-close PR #263); install, build, type-check green
 - ✓ Wave-boundary drift refresh (recon, non-authoritative) recorded in `plan.md`
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
-- ⧗ Plan gate (configured cross-runtime artifact gate)
-- ⧗ p01 repair lane, then group 2 (p02, p03, p04), then p05
+- ✓ Plan gate passed after two in-artifact fixes (run `54c02cde`)
+- ⧗ p01 dispatched at `70250093695a147a6271b5c8e14a203066eef6d7`; fan-in and integration gates pending
+- ⧗ Group 2 (p02, p03, p04), then p05
 
 ## Blockers
 
@@ -144,4 +142,4 @@ None
 
 ## Next Milestone
 
-Plan gate `passed`, then the p01 repair lane bootstrapped and dispatched
+p01 phase report, root-owned review, fan-in with the single lockstep bump (≥ 0.2.57), integration gates

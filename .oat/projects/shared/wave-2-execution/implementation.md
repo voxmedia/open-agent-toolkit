@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                                        | Status  | Tasks | Completed |
-| ------------------------------------------------------------ | ------- | ----- | --------- |
-| Phase 01 (repair-bundled-skill-contract-drift)               | pending | 1     | 0/1       |
-| Phase 02 (harden-codex-skill-anaphora-guard)                 | pending | 1     | 0/1       |
-| Phase 03 (guard-docs-app-mirrors-of-skill-prose)             | pending | 1     | 0/1       |
-| Phase 04 (require-named-lifecycle-skills-to-be-loaded)       | pending | 1     | 0/1       |
-| Phase 05 (document-patch-and-restore-for-lost-child-handles) | pending | 1     | 0/1       |
+| Phase                                                        | Status      | Tasks | Completed |
+| ------------------------------------------------------------ | ----------- | ----- | --------- |
+| Phase 01 (repair-bundled-skill-contract-drift)               | in_progress | 1     | 0/1       |
+| Phase 02 (harden-codex-skill-anaphora-guard)                 | pending     | 1     | 0/1       |
+| Phase 03 (guard-docs-app-mirrors-of-skill-prose)             | pending     | 1     | 0/1       |
+| Phase 04 (require-named-lifecycle-skills-to-be-loaded)       | pending     | 1     | 0/1       |
+| Phase 05 (document-patch-and-restore-for-lost-child-handles) | pending     | 1     | 0/1       |
 
 **Total:** 0/5 tasks completed
 
@@ -163,6 +163,29 @@ _- Parallel Groups list_
 _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
+
+### Run 1 — 2026-09-06 — branch `wave-2-execution`, Tier 1 (native Claude Task dispatch), policy managed/high
+
+Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passed after two in-artifact fixes; p01 worktree bootstrapped at `70250093695a147a6271b5c8e14a203066eef6d7` (view-parity ok; no sync restamp needed).
+
+#### Dispatch Notes
+
+- `w2-p01-impl-001` — scope p01, target opus, model_axis selected:opus, effort_axis not-applicable, selection_reason native-catalog, candidates [opus], task_class default-implementation (plan dispatch profile). Stamp: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=opus`. Record `dispatch/w2-p01-impl-001.json`.
+- Dispatch policy enforcement log: `Dispatch policy: high; selected=opus; cap=opus (claude, enforced — Task model arg)`.
+
+#### Phase Outcomes
+
+| Phase | Worktree                | Implementer outcome | Review outcome | Fix rounds |
+| ----- | ----------------------- | ------------------- | -------------- | ---------- |
+| p01   | `.worktrees/wave-2/p01` | in progress         | pending        | -          |
+
+#### Parallel Groups
+
+- p01 ungrouped (running); group 2: p02 + p03 + p04 (after the p01 fan-in); p05 ungrouped (after group 2).
+
+#### Outstanding Items
+
+- p01 report and review; fan-in with the single lockstep bump.
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
