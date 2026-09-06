@@ -375,21 +375,46 @@ disposition every finding in the phase report.
 git commit -m "feat(p04-t01): add exclusion patterns to docs index generation"
 ```
 
+### Task p04-t02: (review sweep) Dedupe matcher grammar comment and correct config exit-code docs
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/docs/index-generate/generator.ts`, `apps/oat-docs/docs/reference/oat-directory-structure.md`
+
+**Step 1: Understand the issue**
+
+Review finding: root review `reviews/p04-review-2026-09-06T011441Z.md` (0C/0I/1M/4m): duplicated matcher grammar JSDoc (M1) and a docs exit-code claim (m1); address-now sweep, comment and docs only.
+
+**Step 2: Implement fix**
+
+One append-only commit on top of the reviewed SHA; no lockstep release file; no file outside the declared surface.
+
+**Step 3: Verify**
+
+Run: focused `index-generate` suite, `pnpm check`, `pnpm type-check`
+Expected: all exit 0; generator diff is comment lines only
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p04-t02): dedupe matcher grammar comment and correct config exit code docs"
+```
+
 ---
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
-| p01    | code     | passed   | 2026-09-06 | reviews/p01-review-2026-09-06T001443Z.md                    | 7dd086feafb9ba53dd25b5a77900ece5f4cb5cc3 | manual     | -                   |
-| p02    | code     | passed   | 2026-09-05 | reviews/p02-review-2026-09-05T231204Z.md                    | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -                   |
-| p03    | code     | passed   | 2026-09-06 | reviews/p03-review-2026-09-06T004322Z.md                    | f54cb43162ffad21543105fc8b9858f1e6cc6a68 | manual     | -                   |
-| p04    | code     | passed   | 2026-09-06 | reviews/p04-review-2026-09-06T011441Z.md                    | 4f1ada48d2e471cdf9391bed70d836527e90395d | manual     | -                   |
-| final  | code     | passed   | 2026-09-06 | reviews/final-review-2026-09-06T014238Z.md                  | 63ea98d28825ce0db7bc9e15047b223a794cb1ec | manual     | -                   |
-| final  | code     | received | 2026-09-06 | reviews/final-review-2026-09-06T015333Z.md                  | ecf1b8821a9de7b5c55b48d41215fdcb762b1972 | gate       | codex-5-6-sol-xhigh |
-| plan   | artifact | passed   | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -                                        | -          | -                   |
-| spec   | artifact | pending  | -          | -                                                           | -                                        | -          | -                   |
-| design | artifact | pending  | -          | -                                                           | -                                        | -          | -                   |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
+| p01    | code     | passed  | 2026-09-06 | reviews/p01-review-2026-09-06T001443Z.md                    | 7dd086feafb9ba53dd25b5a77900ece5f4cb5cc3 | manual     | -                   |
+| p02    | code     | passed  | 2026-09-05 | reviews/p02-review-2026-09-05T231204Z.md                    | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -                   |
+| p03    | code     | passed  | 2026-09-06 | reviews/p03-review-2026-09-06T004322Z.md                    | f54cb43162ffad21543105fc8b9858f1e6cc6a68 | manual     | -                   |
+| p04    | code     | passed  | 2026-09-06 | reviews/p04-review-2026-09-06T011441Z.md                    | 4f1ada48d2e471cdf9391bed70d836527e90395d | manual     | -                   |
+| final  | code     | passed  | 2026-09-06 | reviews/final-review-2026-09-06T014238Z.md                  | 63ea98d28825ce0db7bc9e15047b223a794cb1ec | manual     | -                   |
+| final  | code     | passed  | 2026-09-06 | reviews/archived/final-review-2026-09-06T015333Z.md         | ecf1b8821a9de7b5c55b48d41215fdcb762b1972 | gate       | codex-5-6-sol-xhigh |
+| plan   | artifact | passed  | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -                                        | -          | -                   |
+| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                   |
+| design | artifact | pending | -          | -                                                           | -                                        | -          | -                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -397,17 +422,17 @@ git commit -m "feat(p04-t01): add exclusion patterns to docs index generation"
 
 ## Implementation Complete
 
-- [ ] 4/4 phases, 5/5 tasks complete (4 planned + 1 review fix)
-- [ ] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
-- [ ] **Serialized backlog bookkeeping** (integration branch, after all merges):
+- [x] 4/4 phases, 6/6 tasks complete (4 planned + 1 review fix + 1 review sweep)
+- [x] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`; re-checked by the final review on the integrated tree)
+- [x] **Serialized backlog bookkeeping** (integration branch, after all merges):
       `oat backlog archive` with real outcome summaries for
       `BL-260718-fix-oat-docs-generate-index`, `BL-260827-fail-closed-on-partial-or`,
       `BL-260827-override-aware-remedy-text`, `BL-260902-add-an-exclusion-mechanism`,
       one commit
-- [ ] Orchestration-log end-of-run synthesis written; roll-up into `summary.md`
-      before any archive step
-- [ ] Full DoD gates green on the integration branch (fan-in lockstep bump above
-      freshly fetched `origin/main`)
+- [x] Orchestration-log end-of-run synthesis written (2026-09-06); roll-up into `summary.md`
+      at the summary step, before any archive step
+- [x] Full DoD gates green on the integration branch (fan-in lockstep bump above
+      freshly fetched `origin/main`; twice, uncached tests)
 
 ## References
 

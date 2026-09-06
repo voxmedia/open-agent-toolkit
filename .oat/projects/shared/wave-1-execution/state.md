@@ -75,26 +75,26 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:ec05b9d2172cd8aa80044a7e146260657d0378142f9200358149dae04a1a43a7'
   freshness_head: c98540a1e8cac890554995f2fd79641f03019405 # closeout-only descendant c98540a1e (project record, external-plan text, backlog); corroborated before launch
   freshness_fingerprint: 'sha256:effective-delta-v1:ef9361c64cbd89d6c378a857613f467def4bb4fd5699a0d2051ec7fc3cad1c29'
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 'w1-exit-gate-20260906T014616Z'
   launch_started_at: '2026-09-06T01:46:16Z'
   launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w1/w1-exit-gate-20260906T014616Z.receipt.json'
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/5d03a6ac-af5d-4bbd-8eed-0f83cc76ca8d.json'
   gate_run_id: '5d03a6ac-af5d-4bbd-8eed-0f83cc76ca8d'
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  envelope_status: ok
+  artifact: '.oat/projects/shared/wave-1-execution/reviews/final-review-2026-09-06T015333Z.md'
+  handoff: 'Gate passed at the important threshold with non-blocking findings (medium=1, minor=1); run oat-project-review-receive for final-review-2026-09-06T015333Z.md'
+  receive_state: intent_persisted
+  receive_correlation: 'run=5d03a6ac-af5d-4bbd-8eed-0f83cc76ca8d; handoff=receive; source=reviews/final-review-2026-09-06T015333Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/wave-1-execution/reviews/final-review-2026-09-06T015333Z.md'
+  receive_archived_artifact: '.oat/projects/shared/wave-1-execution/reviews/archived/final-review-2026-09-06T015333Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-06T015333Z.md'
+  receive_pre_head: c13232426a26f53626b51297f8305495a0903b05
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-06T01:47:11Z'
+  updated_at: '2026-09-06T01:56:47Z'
 # oat_implement_exit_gate (reference): optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -135,7 +135,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-05T22:36:14.653Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T01:47:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T01:56:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -154,8 +154,8 @@ Implement - all four lanes merged into `wave-1-execution` (two fan-ins, lockstep
 - **Discovery:** `discovery.md` (complete: inherited wrapper contract and this wave's decisions)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (the external plans carry the design)
-- **Plan:** `plan.md` (complete: pointer-only tasks, wrapper execution contract, drift refresh record)
-- **Implementation:** `implementation.md` (scaffolded; filled during execution)
+- **Plan:** `plan.md` (complete: pointer-only tasks, wrapper execution contract, drift refresh record, review ledger)
+- **Implementation:** `implementation.md` (complete: six tasks, four fan-in records, review chain, final summary)
 - **Orchestration log:** `orchestration-log.md` (append-only observations)
 
 ## Progress
@@ -174,4 +174,4 @@ None
 
 ## Next Milestone
 
-Group 1 phase reports, root-owned reviews, fan-in with the single lockstep bump, integration gates
+Exit-gate receive recorded; pre-approval sequence (summary, document, pr), autonomous final HiLL approval, complete-state, wave PR and merge

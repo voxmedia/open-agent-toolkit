@@ -31,7 +31,7 @@ oat_generated: false
 | Phase 03 (make-assets-errors-override-aware)       | complete | 1     | 1/1       |
 | Phase 04 (add-exclusions-to-docs-index-generation) | complete | 2     | 2/2       |
 
-**Total:** 6/6 tasks completed (p01-t01, p01-t02 review fix, p02-t01, p03-t01, p04-t01, p04-t02 review sweep)
+**Total:** 6/6 tasks completed — five canonical plan tasks (p01-t01, p01-t02 review fix, p02-t01, p03-t01, p04-t01) plus the p04-t02 address-now review sweep, now also listed in `plan.md`
 
 ---
 
@@ -339,6 +339,23 @@ oat_generated: false
 
 **Review row `final` (round 2) → `passed`.**
 
+### Review Received: final (configured exit gate, judgment sweep)
+
+**Date:** 2026-09-06
+**Gate:** `workflow.gates.skills.oat-project-implement` run `5d03a6ac-af5d-4bbd-8eed-0f83cc76ca8d`, target `codex-5-6-sol-xhigh` (achieved diversity: different-family vs the `claude` implementer stamps), envelope `ok`, `receiveEligible: true`, threshold important, blocking false.
+**Review artifact:** reviews/archived/final-review-2026-09-06T015333Z.md (reviewed head `ecf1b8821a9de7b5c55b48d41215fdcb762b1972`, invocation gate)
+
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 1.
+
+**Judgment-sweep dispositions (address now, record-only):**
+
+- gate-M1 — `state.md` prose still described a scaffold and the group-1 fan-in as next; `implementation.md` counted the p04 sweep as a sixth task without a plan entry and kept template rows in the implementation log and test table: **fixed** (this commit — state prose refreshed to the exit-gate milestone; `plan.md` now lists p04-t02 as a review-sweep task so both records say 6/6; implementation log and test results replaced with real entries; only satisfied `## Implementation Complete` items ticked).
+- gate-m1 — deferred ledger counted two resolved entries: **fixed** (p04 BLOCKED-callout entry marked resolved in `63ea98d28`; p02 errno entry marked resolved by p03 `f54cb4316`; six Minor follow-ups remain mapped to the three backlog items).
+
+**Verification record:** what — the record repairs above; how — `oat project validate-plan` exit 0, `grep -c '{' implementation.md` shows no template placeholders in the log/test sections, `git diff --stat` touches only project artifacts; where — this section and the receive commit.
+
+**Gate row `final` (gate lineage) → `passed`; `oat_implement_exit_gate` → `allowed / passed` in the following state checkpoint.**
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)
@@ -351,13 +368,13 @@ oat_generated: false
 ### Deferred Findings (Minor)
 
 - final review m1 — no regression test for the bare-invocation refusal in `config-root` mode. Deferred to `BL-260906-docs-index-follow-ups-from`.
-- p04 review minors — no signal when exclusions empty the manifest; `excludes` absent from `DEFAULT_SHARED_CONFIG` (behaviorally inert); the implementer's noted follow-up of exposing `excludes` in the command's `--json` payload. Deferred: outside the plan's scope or JSON-contract changes; filed as `BL-260906-docs-index-follow-ups-from`. The external plan's body callout still reads BLOCKED against READY frontmatter: fan-in-owned plan correction queued for wave-close.
+- p04 review minors — no signal when exclusions empty the manifest; `excludes` absent from `DEFAULT_SHARED_CONFIG` (behaviorally inert); the implementer's noted follow-up of exposing `excludes` in the command's `--json` payload. Deferred: outside the plan's scope or JSON-contract changes; filed as `BL-260906-docs-index-follow-ups-from`. The external plan's body callout (BLOCKED vs READY frontmatter) was resolved in `63ea98d28`.
 - p03 review m3 — the file-global `statRedirects` test seam has no `afterEach` reset. Deferred: trivial test hygiene in a lane already passed; filed as `BL-260906-report-errno-for-asset-root`. p03 m2 (Reviews-table `Reviewed Head` SHAs are pre-rebase branch heads) is handled by the SHA mapping in the group fan-in records.
 
 - p01 review m1 — `docs/init/index.ts:196` "Index file" label now diverges from the Fumadocs `documentation.index` seed. Deferred: outside the plan's declared write surface; filed as `BL-260906-docs-index-follow-ups-from`.
 - p01 round-2 residual — the symlink hop-cap refusal always advises `--output` even when the chain is on the derived docs directory, and surfaces under the refusal code rather than the configuration code. Deferred: very low reachability; filed as `BL-260906-docs-index-follow-ups-from`.
 
-- p02 review m1 — the new "unreadable" branch discards the errno. Deferred to p03, whose plan rewrites this error family's remedy text; the p03 brief carries it as a non-narrowing executor note.
+- p02 review m1 — the new "unreadable" branch discarded the errno: **resolved** by p03 (`f54cb4316`, errno included in the unreadable diagnosis).
 
 ## Autonomy Gate Provenance
 
@@ -477,36 +494,23 @@ Chronological log of implementation progress.
 
 ### 2026-09-05
 
-**Session Start:** {time}
+- [x] Preflight, drift refresh, wrapper scaffold (`40e86f787`), plan gate (`ab7d5168d`)
+- [x] Group 1 dispatched (p01, p02); p02-t01 `ffb9d54e5` passed review; p01-t01 `9b92d002c` → fix `7dd086fea` passed round 2
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+### 2026-09-06
 
-**What changed (high level):**
+- [x] Group 1 fan-in (`88ca7f9b1`, `d9366de0f`), lockstep 0.2.56 (`87c10a816`), gates green
+- [x] Group 2 dispatched (p03, p04); p03-t01 `f54cb4316` passed; p04-t01 `4f1ada48d` + sweep `915c2a63f` passed
+- [x] Group 2 fan-in (`9561caf19`, `a6410ad0c`), gates green; synthesis; backlog archived and follow-ups filed
+- [x] Final review rounds 1–2 passed (`63ea98d28`); configured exit gate run `5d03a6ac` ok (`ecf1b8821`)
 
-- {short bullets suitable for PR/docs}
+**What changed (high level):** see `## Final Summary (for PR/docs)`.
 
-**Decisions:**
+**Decisions:** see the Notes / Decisions under each phase and the Drift Refresh Record in `plan.md`.
 
-- {Decision made and rationale}
+**Follow-ups / TODO:** `BL-260906-guard-packed-asset-directories`, `BL-260906-report-errno-for-asset-root`, `BL-260906-docs-index-follow-ups-from`; plan corrections applied in the wave; completion tail and recap deferred to program close.
 
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-09-05
-
-**Session Start:** {time}
-
-{Continue log...}
+**Blockers:** none.
 
 ---
 
@@ -522,10 +526,13 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                   | Passed | Failed | Coverage                  |
+| ----- | ----------------------------------------------------------- | ------ | ------ | ------------------------- |
+| p01   | focused 46 + uncached CLI suite 5498                        | all    | 0      | lane gates + fan-in gates |
+| p02   | focused 34 + uncached CLI suite 5480 + smoke 141            | all    | 0      | lane gates + fan-in gates |
+| p03   | focused 48 + uncached CLI suite 5532                        | all    | 0      | lane gates + fan-in gates |
+| p04   | focused 75 + forced turbo test 5560                         | all    | 0      | lane gates + fan-in gates |
+| final | full DoD sequence ×2 (uncached), final review ×2, exit gate | all    | 0      | integration               |
 
 ## Final Summary (for PR/docs)
 
