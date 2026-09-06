@@ -368,6 +368,22 @@ describe('autonomy gate-inventory drift enforcement', () => {
     }
   });
 
+  it('assigns required manual or visual proof to the implementation executor', async () => {
+    const repoRoot = resolve(process.cwd(), '..', '..');
+    const contract = await readFile(
+      join(repoRoot, '.agents', 'docs', 'autonomy-contract.md'),
+      'utf8',
+    );
+    const proofGate = parseTable(contract, '## Gate inventory').find(
+      (row) => row[0] === 'IMPLEMENT-20',
+    );
+
+    expect(proofGate?.[1]).toBe('`oat-project-implement`');
+    expect(proofGate?.[4]).toContain('computer-use capability');
+    expect(proofGate?.[4]).toContain('explicit proof boundary');
+    expect(proofGate?.[4]).toContain('deferred-but-verified');
+  });
+
   it('keeps all sixteen autonomous skill roots mapped at repository HEAD', async () => {
     const repoRoot = resolve(process.cwd(), '..', '..');
     const contract = await readFile(

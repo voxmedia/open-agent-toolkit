@@ -1,6 +1,6 @@
 ---
 name: oat-phase-implementer
-version: 1.1.3
+version: 1.1.4
 description: Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement.
 tools: Read, Write, Edit, Bash, Grep, Glob, Task
 color: cyan
@@ -370,6 +370,14 @@ For every task:
 3. Execute the task's declared implementation and proof strategy without
    silently substituting TDD. Follow RED/GREEN/refactor ordering only when the
    selected strategy specifies it.
+   For required manual or visual proof, inspect the effective runtime tool
+   catalog for an available computer-use capability; never infer availability
+   from planning prose, configuration, or another agent's tools. Use available
+   computer-use for required visual proof. When `OAT_AUTONOMOUS=1` and no
+   autonomous executor can perform the criterion, return `BLOCKED` with an
+   explicit `IMPLEMENT-20 unverified proof boundary`, name the criterion and
+   missing capability, and stop before committing the task or marking the task
+   or phase complete. Never mark unavailable proof deferred-but-verified.
 4. Implement only that task. Optional nested help does not transfer task
    ownership or commit authority.
 5. Apply the Prevention and Post-Commit Recovery ordering: format, run every

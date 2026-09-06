@@ -1873,7 +1873,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.3.2',
+        version: '2.3.4',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -2356,7 +2356,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.2');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
   });
 
   it('requires classified resolver calls and effective terminal reviewer notices before launch', async () => {
@@ -2662,7 +2662,7 @@ describe('validateOatSkills', () => {
     );
     const combined = `${content}\n${dispatchReference}`;
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.2');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
     expect(dispatchReference).toContain(
       '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
     );
@@ -2736,7 +2736,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.2');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -2915,7 +2915,7 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.3'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.4'],
       ['.agents/agents/oat-reviewer.md', '1.2.2'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.4'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
@@ -3225,12 +3225,12 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.3');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.4');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.2');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -4438,7 +4438,7 @@ describe('validateOatSkills', () => {
       ['oat-project-review-provide', '1.5.4'],
       ['oat-project-review-receive', '1.6.2'],
       ['oat-project-review-receive-remote', '1.5.1'],
-      ['oat-project-implement', '2.3.2'],
+      ['oat-project-implement', '2.3.4'],
       ['oat-project-pr-final', '1.6.2'],
       ['oat-project-pr-progress', '1.3.1'],
       ['oat-project-complete', '1.7.7'],
@@ -5539,7 +5539,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.3.2'],
+      ['oat-project-implement', '2.3.4'],
       ['oat-project-review-provide', '1.5.4'],
       ['oat-project-review-provide-remote', '1.1.2'],
     ] as const;
@@ -5687,7 +5687,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.3'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.4'],
       ['.agents/agents/oat-reviewer.md', '1.2.2'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.1'],
     ] as const;
@@ -7481,15 +7481,25 @@ describe('lite mode skill contracts', () => {
   });
 
   it('makes Lite proof strategy proportionate to observable risk', async () => {
-    const [lite, reviewer, implementer, autonomy, template] = await Promise.all(
-      [
-        readRepoFile('.agents/skills/oat-project-lite/SKILL.md'),
-        readRepoFile('.agents/agents/oat-reviewer.md'),
-        readRepoFile('.agents/agents/oat-phase-implementer.md'),
-        readRepoFile('.agents/docs/autonomy-contract.md'),
-        readRepoFile('.oat/templates/plan-lite.md'),
-      ],
-    );
+    const [
+      lite,
+      reviewer,
+      implementer,
+      implementWorkflow,
+      phaseExecution,
+      autonomy,
+      template,
+    ] = await Promise.all([
+      readRepoFile('.agents/skills/oat-project-lite/SKILL.md'),
+      readRepoFile('.agents/agents/oat-reviewer.md'),
+      readRepoFile('.agents/agents/oat-phase-implementer.md'),
+      readRepoFile('.agents/skills/oat-project-implement/SKILL.md'),
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/phase-execution.md',
+      ),
+      readRepoFile('.agents/docs/autonomy-contract.md'),
+      readRepoFile('.oat/templates/plan-lite.md'),
+    ]);
 
     expect(template).toContain('**Implementation and Proof Strategy:**');
     expect(template).toMatch(
@@ -7513,9 +7523,24 @@ describe('lite mode skill contracts', () => {
       /declared implementation and proof strategy without[\s\S]{0,80}silently substituting TDD/i,
     );
     expect(autonomy).toMatch(
-      /^\| IMPLEMENT-20\s+\|[\s\S]*computer-use capability[\s\S]*explicit proof boundary[\s\S]*deferred-but-verified/m,
+      /^\| IMPLEMENT-20\s+\|\s+`oat-project-implement`[\s\S]*computer-use capability[\s\S]*explicit proof boundary[\s\S]*deferred-but-verified/m,
     );
-    expect(implementer.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.3');
+    expect(implementWorkflow).toMatch(
+      /manual\/visual proof[\s\S]{0,80}`IMPLEMENT-20`[\s\S]{0,80}phase-execution\.md/i,
+    );
+    for (const executor of [phaseExecution, implementer]) {
+      expect(executor).toMatch(/effective runtime tool\s+catalog/i);
+      expect(executor).toMatch(/computer-use capability/i);
+      expect(executor).toContain('`IMPLEMENT-20 unverified proof boundary`');
+      expect(executor).toMatch(
+        /before\s+committing\s+the\s+task\s+or\s+marking\s+the\s+task\s+or\s+phase\s+complete/i,
+      );
+      expect(executor).toMatch(/deferred-but-verified/i);
+    }
+    expect(implementWorkflow.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe(
+      '2.3.4',
+    );
+    expect(implementer.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.4');
   });
 
   it('keeps lite review and PR prerequisites reduced but explicit', async () => {
