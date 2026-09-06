@@ -65,20 +65,20 @@ oat_dispatch_policy: # managed/high per operator routing preference
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0
+  attempts_completed: 1
   reviewed_head: 1e688a1e5de97a3a49ec3e069dd5afd11a1bd756 # final review round 3 passed (reviews/archived/final-review-2026-09-06T092134Z.md)
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:b15ed9200bc192b81817a8c885cf8b9864c884ee7724c5fdfbf6906093a8bffb'
-  freshness_head: 1a0eaf587c0f6f5d197894f4ab50c52c1ea8d10c # closeout-only descendants: round-3 receive + comment-only sweep
-  freshness_fingerprint: 'sha256:effective-delta-v1:2776ff3f338d69b83a7fac0577316f3cc4dfb1eee2f1866dfb369b747b05ccff'
+  freshness_head: 751e81c5afd97c7b76a398d3bca0221e47c0dd85 # closeout-only: gate receive
+  freshness_fingerprint: 'sha256:effective-delta-v1:e815f4b47f53448e8afde2c55ae1a286d2d8b57576c0ac2f27297ca98b1fce2d'
   launch_state: result_persisted
   launch_attempt_id: 'w2-exit-gate-20260906T092349Z'
   launch_started_at: '2026-09-06T09:23:49Z'
@@ -88,17 +88,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T093256Z.md'
   handoff: 'Gate passed at the important threshold with no findings (0C/0I/0M/0m); run oat-project-review-receive for final-review-2026-09-06T093256Z.md'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=45ee23dc-b25b-462d-ab7e-451c518e7f18; handoff=receive; source=reviews/final-review-2026-09-06T093256Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T093256Z.md'
-  receive_archived_artifact: null
+  receive_archived_artifact: '.oat/projects/shared/wave-2-execution/reviews/archived/final-review-2026-09-06T093256Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-06T093256Z.md'
   receive_pre_head: 0f25bbee42fd1ff972c0cb85d0cc82583e55d718
-  receive_commit: null
+  receive_commit: 751e81c5afd97c7b76a398d3bca0221e47c0dd85
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-06T09:35:05Z'
+  updated_at: '2026-09-06T09:35:08Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -139,7 +139,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T02:27:21.413Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T09:35:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T09:35:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
