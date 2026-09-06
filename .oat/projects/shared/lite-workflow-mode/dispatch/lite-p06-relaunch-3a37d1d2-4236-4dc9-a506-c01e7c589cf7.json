@@ -140,7 +140,7 @@
     {
       "event_id": "final-wording-fix-851b10c2-855c-4d37-ac5b-c1356d604378",
       "reason": "Execute p06-t11 for the final lifecycle review Medium; the user waived another standard lifecycle re-review",
-      "status": "intent_persisted",
+      "status": "completed",
       "authorized_at": "2026-09-06T03:54:50Z",
       "authorization": "explicit-user",
       "authorization_scope": "p06-t11 wording alignment plus mechanically required 0.2.60 release and sync metadata; no lifecycle re-review, push, PR, merge, or release",
@@ -150,7 +150,14 @@
       "dispatch_target": "oat-phase-implementer-gpt-5-6-sol-high",
       "model_selector": "gpt-5.6-sol",
       "effort_selector": "high",
-      "re_review": "waived-by-user"
+      "re_review": "waived-by-user",
+      "accepted_head": "9a1ce4bf17edcdcb3b53c5cfe33cb84531948095",
+      "completed_at": "2026-09-06T04:06:12Z",
+      "final_head": "daca23b157c2cec331434052d721372455106218",
+      "fix_commit": "daca23b157c2cec331434052d721372455106218",
+      "verification_ledger": "/tmp/p06-t11-gates.Sodgd5/exit-codes.txt",
+      "recovery_attempts": 0,
+      "flake_retries": 0
     }
   ],
   "fallback": {
