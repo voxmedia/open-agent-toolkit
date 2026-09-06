@@ -46,10 +46,13 @@
     "deferred_medium_count": 1,
     "deferred_minor_count": 0
   },
-  "launch_status": "intent_persisted",
+  "launch_status": "accepted",
+  "accepted_at": "2026-09-06T03:18:13Z",
+  "child_handle": "/root/lite_final_rereview3",
   "child_outcome": null,
   "configured_invocation_evidence": [
     "dispatch-report-v1:final-review",
+    "native-spawn-accepted",
     "canonical-role:project",
     "workflow.reviewExecutionModel:subagent"
   ],
