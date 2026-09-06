@@ -185,6 +185,8 @@ Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passe
 - `w2-p04-review-001` — reviewer, target opus, range `db3d7ebb6..6ef43933e` with eight root rulings (scope expansion, autonomy-contract edit, fence repairs, new test file collection, bump/pin audit, manifest claim, Codex I5 residual, fallback weaker-anywhere). Record `dispatch/w2-p04-review-001.json`.
 - `w2-p04-review-001` outcome: 0C/4I/5M/5m, reconnaissance attempted; all eight root rulings answered (scope in-bounds; autonomy-contract edit forced by `autonomy-gate-inventory.test.ts`; fences were true 328-line and 49-line defects; adjacent test file permitted and collected; 13 bumps/pins clean with `oat-project-implement` 2.3.1→2.3.2 once; manifest dry-run clean; Codex I5 residual acceptable once documented; no fallback lost). Important: substring exemption matching absorbs injected directives; `use`/`apply` verbs escape the sweep; a stray fence silently disables the scanner with no gate; one exemption mislabels non-terminal prose as a handoff.
 - `w2-p04-fix-001` — continuation of `w2-p04-impl-001` (mode fix): I1–I4, M1–M5, address-now m1–m4 in one commit. Record `dispatch/w2-p04-fix-001.json`.
+- `w2-p04-fix-001` outcome: one commit `2b06f7292ec47bf2835b91e7765d562dafd9e7b9` on `6ef43933e` (9 files, no version or pin moved); I1–I4, M1–M5, m1–m4 fixed with per-finding neutralization evidence; the new stray-fence assertion found and repaired a third live fence (`oat-project-revise/SKILL.md:193`, 33 lines); M5 content pass found nothing stale in the un-fenced regions; matrix 160 rows / 21 tests, forced CLI suite 5600 green, sync dry-run clean. Disclosed and deliberately not fixed: a fourth, differently shaped stray fence at `oat-project-review-provide/SKILL.md:1057` hiding Step 8.5 (needs its own bump and a structural audit) → follow-up backlog item at closeout.
+- `w2-p04-review-002` — disposition-verification round 2 on the original reviewer handle, range `6ef43933e..2b06f7292`. Record `dispatch/w2-p04-review-002.json`.
 
 #### Phase Outcomes
 
@@ -193,7 +195,7 @@ Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passe
 | p01   | `.worktrees/wave-2/p01` | DONE (`848b8ef41`; 4 defect commits + 1 fix commit; lane gates + uncached suite 5579 green) | passed (round 1 0C/1I/1M/4m → round 2 0C/0I/0M/1m) | 1          |
 | p02   | `.worktrees/wave-2/p02` | in progress                                                                                 | pending                                            | -          |
 | p03   | `.worktrees/wave-2/p03` | DONE (`a207d3c11` + fix `5a99837ec`; lane gates forced `Cached: 0`, test:skills 801/801)    | passed (round 1 1C/1I/1M/3m → round 2 0C/0I/0M/3m) | 1          |
-| p04   | `.worktrees/wave-2/p04` | DONE (`6ef43933e`; forced CLI suite 5592 green, 13 skill bumps validated)                   | fixes_added (0C/4I/5M/5m; fix round 1 dispatched)  | 1          |
+| p04   | `.worktrees/wave-2/p04` | DONE (`6ef43933e` + fix `2b06f7292`; forced CLI suite 5600 green, 13 skill bumps validated) | fixes_added (0C/4I/5M/5m; round 2 running)         | 1          |
 
 #### Group 1 fan-in — p01 (2026-09-06)
 
