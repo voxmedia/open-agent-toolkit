@@ -284,8 +284,19 @@ validation warning rather than an executable contract.
 
 The Gate Execution step should:
 
-1. Run `oat gate resolve <this-skill> --json`.
-2. Treat `null` as "no gate configured."
+1. Run `oat gate resolve <this-skill> --project "$PROJECT_PATH" --json`.
+   Project context is required. Without `--project` the command returns the
+   legacy raw gate and can never report a project override, so the skill would
+   silently run a gate the project deliberately disabled.
+2. Handle all three `resolution` values explicitly:
+   - `configured` - run `effectiveGate` exactly as configured.
+   - `configured_disabled_by_project` - the project disabled this configured gate. Do not launch any process; emit `configured but disabled by project override`, including the project path and the `projectOverride` source, and finish the skill. The returned `configuredGate` is evidence only and is never executed.
+   - `not_configured` - no gate is configured; finish the skill.
+
+   A null, missing, malformed, or unrecognized result is an operational failure
+   that fails closed as unresolved. Never treat it as "no gate configured." See
+   [Per-project gate overrides](../cli-utilities/workflow-gates.md#per-project-gate-overrides).
+
 3. Export the resolved path with `export PROJECT_PATH` before launching the
    command shell.
 4. For `oat gate review`, require the configured command to use
