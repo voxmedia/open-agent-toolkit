@@ -312,15 +312,15 @@ git commit -m "docs(p03-t01): require executable backstops for standing contract
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -                                                           | -             | -          | -           |
-| p02    | code     | pending | -          | -                                                           | -             | -          | -           |
-| p03    | code     | pending | -          | -                                                           | -             | -          | -           |
-| final  | code     | pending | -          | -                                                           | -             | -          | -           |
-| plan   | artifact | passed  | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T110723Z.md | -             | -          | -           |
-| spec   | artifact | pending | -          | -                                                           | -             | -          | -           |
-| design | artifact | pending | -          | -                                                           | -             | -          | -           |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | fixes_added | 2026-09-06 | reviews/p01-review-2026-09-06T114536Z.md                    | ecf4756860bbf82ca5ecdb89ffa42e56a5a27ce1 | manual     | -           |
+| p02    | code     | pending     | -          | -                                                           | -                                        | -          | -           |
+| p03    | code     | pending     | -          | -                                                           | -                                        | -          | -           |
+| final  | code     | pending     | -          | -                                                           | -                                        | -          | -           |
+| plan   | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T110723Z.md | -                                        | -          | -           |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
