@@ -1,10 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p06-t03
-    reason: 'Three canonical skill-contract tests fail outside the task version-and-sync boundary; plan revision or explicit scope direction is required.'
-    since: 2026-09-06
+oat_blockers: []
 oat_last_updated: 2026-09-06
 oat_current_task_id: p06-t03
 oat_generated: false
@@ -401,11 +398,10 @@ lite-smoke-note.md` validation.
 
 ### Task p06-t03: Bump lockstep public package versions and run release gates
 
-**Status:** blocked
-**Blocker:** `pnpm test`, the isolated-HOME forced Turbo test, and
-`pnpm test:skills` expose three canonical skill-contract drifts outside this
-task's declared version-and-sync boundary. Plan revision or explicit scope
-direction is required before those files may be changed.
+**Status:** pending
+**Authorized revision:** On 2026-09-06 the user authorized bounded ownership
+of the autonomy inventory mappings and the two stale contract assertions. The
+task may resume without changing runtime behavior.
 
 **Preserved work:** The seven intended `0.2.56` version and sync-manifest
 changes remain uncommitted. All other definition-of-done gates passed.
@@ -477,6 +473,24 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 ## Implementation Log
 
 ### 2026-09-06
+
+#### p06-t03 plan revision authorized
+
+The user authorized an in-place plan correction for the three reproduced
+contract drifts. `p06-t03` now owns the autonomy prompt-site coverage update,
+the non-lite post-implement sentence assertion, and the non-lite explainer
+recap heading assertion, with focused categorical controls before the full
+definition-of-done sequence. The preserved `0.2.56` and sync-manifest edits
+remain the task's starting state.
+
+The managed-high plan artifact review found one Important defect: the first
+draft named the skill-reference symlink instead of the tracked canonical
+autonomy contract. The plan now consistently owns
+`.agents/docs/autonomy-contract.md`. Fresh rereview passed with zero findings.
+Dispatch receipts:
+`dispatch/lite-plan-revision-review-0f1327a9-2212-4070-bc18-03f8759cfca6.json`
+and
+`dispatch/lite-plan-revision-rereview1-60cc80ff-7013-4da9-a678-45e17246b821.json`.
 
 #### p06 terminal gate blocker after two completed tasks
 

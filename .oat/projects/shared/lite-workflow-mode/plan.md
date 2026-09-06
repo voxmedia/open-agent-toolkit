@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-09-05
+oat_last_updated: 2026-09-06
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: ['p06'] # phases to pause AFTER completing (empty = every phase)
@@ -866,26 +866,50 @@ git commit -m "chore(p06-t02): sync provider views and record manual lite run"
 
 - Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`
 - Modify: `packages/cli/assets/public-package-versions.json` (if the release tooling requires it)
+- Modify: `.agents/docs/autonomy-contract.md` (canonical target behind the skill reference; refresh the HEAD prompt-site coverage mappings for the intentional lite closeout wording)
+- Modify: `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts` (align the exact assertion with the non-lite-qualified contract)
+- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` (align the section boundary with the non-lite-qualified recap heading)
 
 **Step 1: Write test (RED)**
 
 Run: `git fetch origin main && pnpm release:check-versions`
 Expected: fails because versions equal `origin/main` (RED)
 
+Preserve the reproduced contract RED evidence from the pre-commit terminal run:
+
+- `packages/cli/src/validation/autonomy-gate-inventory.test.ts` rejects stale and unmapped prompt-site keys introduced by the intentional lite closeout wording.
+- `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts` expects the pre-lite sentence without its new `For non-lite workflows only` qualification.
+- `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` searches for the old `**Implementation-Tail Project Recap:**` heading instead of the qualified `**Implementation-Tail Project Recap (non-lite only):**` heading.
+
 **Step 2: Implement (GREEN)**
 
 Bump all five lockstep packages to the next patch (from 0.2.54 unless main moved) and regenerate the lockfile if it references package versions. Then rerun `pnpm run cli -- sync --scope all` so `.oat/sync/manifest.json` and any managed outputs are restamped at the new CLI version, and confirm `pnpm run cli -- sync --scope all --dry-run` reports no operations and no version skew.
+
+Repair only the three reproduced contract drifts without changing runtime behavior:
+
+1. Refresh the `oat-project-implement` HEAD prompt-site coverage table from the inventory test's exact stale/unmapped report, mapping each reachable site to its existing gate ID and each non-gate site to `NG`; remove replaced stale keys.
+2. Update the post-implement sequence assertion to include the contract's explicit non-lite qualification.
+3. Update the explainer-kit completion test's section start marker to the qualified non-lite recap heading.
 
 Run: `pnpm release:check-versions`
 Expected: pass (GREEN)
 
 **Step 3: Refactor and format**
 
-Format every file this task created or edited: `pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json` Do not format `pnpm-lock.yaml`, `.oat/sync/manifest.json`, or the sync-managed agent and skill views.
+Format every non-generated file this task created or edited: `pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json .agents/docs/autonomy-contract.md packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs` Do not format `pnpm-lock.yaml`, `.oat/sync/manifest.json`, or the sync-managed agent and skill views.
 
 **Step 4: Verify**
 
 This is the last task in the plan by design: p06-t02 has already regenerated provider views and recorded the manual run, and this task reruns sync after the bump, so the evidence below covers the branch's terminal tree. Run the full definition-of-done sequence in AGENTS.md order, capturing each exit code. `pnpm test` is gate 3 and includes the release tests; the forced Turbo run is supplemental evidence, not a substitute. If anything changes after this task, repeat the whole sequence before the final commit:
+
+Before the full sequence, run the focused controls:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts
+node --test .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs
+```
+
+Expected: both focused commands exit 0, while reverting each assertion/mapping repair reproduces its categorical failure.
 
 ```bash
 pnpm check > g1.log 2>&1; echo "check=$?"
@@ -909,7 +933,7 @@ Expected: every line prints `=0`
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json pnpm-lock.yaml .oat/sync/manifest.json .codex/agents .cursor/agents .claude/skills/oat-project-lite
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json pnpm-lock.yaml .oat/sync/manifest.json .codex/agents .cursor/agents .claude/skills/oat-project-lite .agents/docs/autonomy-contract.md packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs
 git commit -m "chore(p06-t03): bump lockstep package versions for lite mode"
 ```
 
@@ -921,28 +945,29 @@ git commit -m "chore(p06-t03): bump lockstep package versions for lite mode"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target              |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------------ |
-| p01    | code     | passed   | 2026-09-05 | reviews/code-p01-review-2026-09-05T204609Z.md               | 3427d2176a86b3f6a95219f6557b4d4798a6f1a2 | manual     | -                        |
-| p02    | code     | passed   | 2026-09-05 | reviews/code-p02-review-2026-09-05T210504Z.md               | 948434796085b5c537542213fd562194827a822c | manual     | -                        |
-| p03    | code     | passed   | 2026-09-05 | reviews/code-p03-review-2026-09-05T210747Z.md               | 4b1eb65a41ffe179793cd9eca7e7f3d963ec6766 | manual     | -                        |
-| p04    | code     | passed   | 2026-09-05 | reviews/code-p04-review-2026-09-05T223510Z.md               | 3e89f14de30836512bb5aa16e46b7a68323503bd | manual     | -                        |
-| p05    | code     | passed   | 2026-09-05 | reviews/p05-review-2026-09-05T231617Z.md                    | c11a1150239dc179c60b0b82defc9c350999955d | manual     | -                        |
-| p06    | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
-| final  | code     | pending  | -          | -                                                           | -                                        | -          | -                        |
-| spec   | artifact | pending  | -          | -                                                           | -                                        | -          | -                        |
-| design | artifact | pending  | -          | -                                                           | -                                        | -          | -                        |
-| plan   | artifact | received | 2026-09-04 | reviews/archived/artifact-plan-review-2026-09-04T231105Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T141656Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T150544Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T151613Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T152744Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T181952Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T185313Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T190345Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T195731Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T200630Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T201454Z.md | -                                        | gate       | cursor-gpt-5-6-sol-xhigh |
+| Scope  | Type     | Status   | Date       | Artifact                                                                        | Reviewed Head                            | Invocation | Gate Target                   |
+| ------ | -------- | -------- | ---------- | ------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01    | code     | passed   | 2026-09-05 | reviews/code-p01-review-2026-09-05T204609Z.md                                   | 3427d2176a86b3f6a95219f6557b4d4798a6f1a2 | manual     | -                             |
+| p02    | code     | passed   | 2026-09-05 | reviews/code-p02-review-2026-09-05T210504Z.md                                   | 948434796085b5c537542213fd562194827a822c | manual     | -                             |
+| p03    | code     | passed   | 2026-09-05 | reviews/code-p03-review-2026-09-05T210747Z.md                                   | 4b1eb65a41ffe179793cd9eca7e7f3d963ec6766 | manual     | -                             |
+| p04    | code     | passed   | 2026-09-05 | reviews/code-p04-review-2026-09-05T223510Z.md                                   | 3e89f14de30836512bb5aa16e46b7a68323503bd | manual     | -                             |
+| p05    | code     | passed   | 2026-09-05 | reviews/p05-review-2026-09-05T231617Z.md                                        | c11a1150239dc179c60b0b82defc9c350999955d | manual     | -                             |
+| p06    | code     | pending  | -          | -                                                                               | -                                        | -          | -                             |
+| final  | code     | pending  | -          | -                                                                               | -                                        | -          | -                             |
+| spec   | artifact | pending  | -          | -                                                                               | -                                        | -          | -                             |
+| design | artifact | pending  | -          | -                                                                               | -                                        | -          | -                             |
+| plan   | artifact | received | 2026-09-04 | reviews/archived/artifact-plan-review-2026-09-04T231105Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T141656Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T150544Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T151613Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T152744Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T181952Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T185313Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T190345Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T195731Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T200630Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan   | artifact | received | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T201454Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan   | artifact | passed   | 2026-09-06 | dispatch/lite-plan-revision-rereview1-60cc80ff-7013-4da9-a678-45e17246b821.json | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -960,6 +985,12 @@ cell; never truncate a widened row back to five columns.
 - `passed`: re-review run and recorded as passing (no Critical/Important)
 
 **Plan artifact review disposition (2026-09-05):** the structured `oat-reviewer` loop ran three attempts (bound 2) and the configured cross-family gate (`cursor-gpt-5-6-sol-xhigh`, threshold important) ran six times; every finding from all runs was resolved in this plan and `design.md` and is archived under `reviews/archived/`. The gate never returned clean: each run surfaced new mode-aware surfaces rather than regressions. The user explicitly overrode the exhausted gate budget on 2026-09-05, first directing completion after the sixth review, then choosing to keep running until a round returned zero Important findings. Eleven gate rounds ran in total (Important counts 5, 4, 2, 2, 3, 1, 1, 1, 2, 2, 2); every finding was applied and is recorded in implementation.md. On 2026-09-05 the user directed a stop after round eleven and handoff to implementation, accepting that further mode-aware misses will be caught by per-phase root reviews and the final code review. The `plan` artifact rows therefore remain `received`, not `passed`. Residual risk: further mode-aware misses are expected to surface during implementation and are to be handled by per-phase root reviews and the final review, which run regardless.
+
+**Bounded p06-t03 revision review (2026-09-06):** managed-high structured
+review attempt 1 found one Important canonical-path ownership defect. The plan
+was corrected to name, format, and stage `.agents/docs/autonomy-contract.md`;
+fresh attempt 2 passed with no findings. The earlier historical plan-review
+rows remain unchanged.
 
 ---
 

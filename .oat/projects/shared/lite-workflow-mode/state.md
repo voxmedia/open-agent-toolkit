@@ -1,10 +1,7 @@
 ---
 oat_current_task: p06-t03
 oat_last_commit: fd9d9b217187cb07bbc43343e48cf36c80a77cf6
-oat_blockers:
-  - task_id: p06-t03
-    reason: 'Three canonical skill-contract tests fail outside the task version-and-sync boundary; plan revision or explicit scope direction is required.'
-    since: 2026-09-06
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -89,7 +86,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T00:07:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T00:19:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -131,14 +128,12 @@ Phase 6 - Documentation, Provider Sync, Smoke Run, and Release Gates
 
 ## Blockers
 
-`p06-t03` is blocked by three canonical skill-contract drifts outside its
-declared version-and-sync boundary: the completion autonomy gate inventory,
-the non-lite post-implement sentence contract, and an explainer-kit heading
-expectation. The intended lockstep `0.2.56` and sync-manifest edits remain
-uncommitted.
+None. On 2026-09-06 the user authorized an in-place plan revision that gives
+`p06-t03` bounded ownership of the completion autonomy inventory and the two
+stale contract assertions. The intended lockstep `0.2.56` and sync-manifest
+edits remain uncommitted for the resumed task.
 
 ## Next Milestone
 
-Obtain operator direction to revise the plan for the three bounded contract
-fixes, defer the task, or otherwise resolve the scope blocker before resuming
-`p06-t03`.
+Resume `p06-t03` from the preserved version/sync edits, apply the three bounded
+contract repairs, and rerun its focused and full terminal gates.
