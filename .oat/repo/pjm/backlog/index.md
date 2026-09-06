@@ -267,6 +267,7 @@
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                            | open   | medium   | feature    | M        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                                        | open   | medium   | task       |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature    | L        |
+| BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                          | open   | medium   | feature    | M        |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                    | open   | medium   | feature    | M        |
 | BL-260902-keep-pjm-init-provider         | Keep instruction-sync pointer files out of documentation content trees                                | open   | medium   | task       | M        |
