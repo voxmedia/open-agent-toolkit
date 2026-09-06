@@ -543,6 +543,16 @@ time `2026-09-06T02:03:28Z`. Its stdout receipt will be written directly to
 `reviews/gate-receipts/implement-exit-99a353dd-5365-4820-9f46-ad81e9edc2ab.json`.
 The exact resolved command remains unexecuted at this checkpoint.
 
+#### Configured implementation exit gate launch accepted
+
+The gate created run marker
+`/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/bd618f54-927e-4994-8462-2eb7c3a5b33b.json`
+for run `bd618f54-927e-4994-8462-2eb7c3a5b33b`. The marker binds the normalized
+project path, final code-review scope, and start time
+`2026-09-06T02:04:11.315Z`, so launch attempt
+`99a353dd-5365-4820-9f46-ad81e9edc2ab` is accepted. The review is still
+running; no terminal envelope has been consumed.
+
 #### Final re-review passed
 
 **Review artifact:**
