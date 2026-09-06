@@ -57,7 +57,8 @@ oat_phase_recovery_policy:
         discovered_by: phase-wide production-dispatch inspection
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
         reservation_head: 336db62601d9cbc962c6c17105cdca1c8dbc33f2
-        status: active
+        status: completed
+        verification: production routing 6/6 and Phase 7 union 218/218; remote, E2E, and help 746/746; smoke 141/141 and scoped smoke 1/1; CLI lint, type-check, build, and format passed
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived

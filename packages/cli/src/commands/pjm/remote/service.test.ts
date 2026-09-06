@@ -131,6 +131,199 @@ function state(
 }
 
 describe('production lifecycle composition', () => {
+  it.each([
+    ['closeout', { operation: 'closeout', projectPath: 'shared/example' }],
+    [
+      'discussion',
+      {
+        operation: 'discussion',
+        bindingId: 'bnd_missing_001',
+        discussionLimit: 5,
+      },
+    ],
+    [
+      'resolve',
+      {
+        operation: 'resolve',
+        bindingId: 'bnd_missing_001',
+        resolutionKind: 'detach',
+      },
+    ],
+    ['doctor', { operation: 'doctor' }],
+    ['migrate', { operation: 'migrate', migrationMode: 'check' }],
+  ] as const)(
+    'routes the production %s family without shared-storage fallthrough',
+    async (_family, partialRequest) => {
+      const repository = await mkdtemp(join(tmpdir(), 'oat-p07-routing-'));
+      temporaryDirectories.push(repository);
+      execFileSync('git', ['init', '--quiet'], { cwd: repository });
+      await mkdir(join(repository, '.oat'), { recursive: true });
+      await writeFile(
+        join(repository, '.oat', 'config.json'),
+        `${JSON.stringify({ pjm: { initialized: true } })}\n`,
+      );
+      const runner = createProductionRemoteRunner({ now: () => timestamp });
+      try {
+        await runner({
+          ...partialRequest,
+          projectRoot: repository,
+        } as RemoteCommandRequest);
+      } catch (error) {
+        expect(error).not.toMatchObject({
+          message: expect.stringContaining(
+            'Shared-storage request is incomplete',
+          ),
+        });
+      }
+    },
+  );
+
+  it('persists closeout and resolution previews while keeping read-only services bounded', async () => {
+    const repository = await mkdtemp(join(tmpdir(), 'oat-p07-bridges-'));
+    temporaryDirectories.push(repository);
+    execFileSync('git', ['init', '--quiet'], { cwd: repository });
+    await mkdir(join(repository, '.oat'), { recursive: true });
+    await writeFile(
+      join(repository, '.oat', 'config.json'),
+      `${JSON.stringify({
+        pjm: {
+          initialized: true,
+          remote: {
+            schemaVersion: 1,
+            policy: { authority: { default: 'user-approved' } },
+          },
+        },
+      })}\n`,
+    );
+    const store = new RemoteSyncStore(
+      resolveRemoteStorageLocations({
+        repoRoot: repository,
+        gitCommonDir: join(repository, '.git'),
+        repositoryIdentity: `local-repository:${resolve(repository)}`,
+        stateStorage: 'local',
+        target: { kind: 'backlog', scope: 'shared', path: null },
+      }),
+    );
+    const projectBinding: RemoteBindingMetadata = {
+      ...binding(['source', 'planning']),
+      target: {
+        kind: 'project',
+        scope: 'shared',
+        id: 'shared/example',
+        path: 'shared/example',
+      },
+    };
+    await store.materializeIntakeBinding(projectBinding);
+    await store.writeBindingState(state());
+    const migrationPath = '.oat/repo/pjm/backlog/items/migrate.md';
+    await mkdir(join(repository, '.oat', 'repo', 'pjm', 'backlog', 'items'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(repository, migrationPath),
+      '---\ntitle: Migration fixture\nassociated_issues:\n  - linear:issue-legacy\n---\n\n## Description\n\nUnrelated content remains unchanged.\n',
+    );
+    await store.materializeIntakeBinding({
+      ...binding(['source']),
+      bindingId: 'bnd_migrate_001',
+      target: {
+        kind: 'backlog',
+        scope: 'shared',
+        id: 'migrate',
+        path: migrationPath,
+      },
+      remoteIdentity: {
+        stableId: 'issue-legacy',
+        context: { workspaceId: 'workspace-1' },
+        aliases: [],
+      },
+      provenanceToken: 'oat-binding:bnd_migrate_001',
+    });
+    let sequence = 0;
+    const runner = createProductionRemoteRunner({
+      now: () => timestamp,
+      randomId: () => `routing_${(sequence += 1)}`,
+    });
+
+    const closeout = await runner({
+      operation: 'closeout',
+      projectRoot: repository,
+      projectPath: 'shared/example',
+    });
+    expect(closeout).toMatchObject({
+      status: 'needs-review',
+      persisted: true,
+      results: [
+        {
+          bindingId: projectBinding.bindingId,
+          authority: 'user-approved',
+        },
+      ],
+    });
+    await expect(
+      readdir(store.locations.operational.batchesDir),
+    ).resolves.toHaveLength(1);
+
+    const discussion = await runner({
+      operation: 'discussion',
+      projectRoot: repository,
+      bindingId: projectBinding.bindingId,
+      discussionLimit: 5,
+    });
+    expect(discussion).toMatchObject({
+      status: 'blocked',
+      persisted: false,
+      results: [{ diagnosticCode: 'discussion-capability-unavailable' }],
+    });
+
+    const resolution = await runner({
+      operation: 'resolve',
+      projectRoot: repository,
+      bindingId: projectBinding.bindingId,
+      resolutionKind: 'detach',
+    });
+    expect(resolution).toMatchObject({
+      status: 'needs-review',
+      persisted: true,
+      results: [{ diagnosticCode: 'fresh-approval-and-evidence-required' }],
+    });
+
+    const doctor = await runner({
+      operation: 'doctor',
+      projectRoot: repository,
+    });
+    expect(doctor).toMatchObject({ status: 'blocked', persisted: true });
+
+    const migration = await runner({
+      operation: 'migrate',
+      projectRoot: repository,
+      migrationMode: 'check',
+    });
+    expect(migration).toMatchObject({
+      status: 'needs-review',
+      persisted: false,
+    });
+    const previewDigest =
+      migration.recovery[0]?.instruction.match(/preview (\S+);/)?.[1];
+    expect(previewDigest).toBeTruthy();
+    const appliedMigration = await runner({
+      operation: 'migrate',
+      projectRoot: repository,
+      migrationMode: 'apply',
+      migrationApprovalDigest: previewDigest,
+    });
+    expect(appliedMigration).toMatchObject({ status: 'ok', persisted: true });
+    expect(await readFile(join(repository, migrationPath), 'utf8')).toContain(
+      'type: linear\n    ref: issue-legacy',
+    );
+    await expect(
+      readFile(
+        join(store.locations.operational.root, 'shared-storage-preview.json'),
+        'utf8',
+      ),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
   it.each(['source', 'delivery', 'reference'] as const)(
     'blocks the empty outbound intersection for %s bindings',
     (purpose) => {
