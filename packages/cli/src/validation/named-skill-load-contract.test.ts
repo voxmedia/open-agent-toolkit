@@ -660,6 +660,14 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-lite/SKILL.md',
+    anchor: 'Step 5.5: Configure Lifecycle Gate Posture',
+    match: 'At this boundary, load the current',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [PLAN_WRITING_CONTRACT_CLAUSE],
+  },
+  {
+    file: '.agents/skills/oat-project-lite/SKILL.md',
     anchor: 'Step 6: Run Plan Artifact Review Loop',
     match:
       'Invoke the `Auto Artifact-Review Loop` from `oat-project-plan-writing`',
