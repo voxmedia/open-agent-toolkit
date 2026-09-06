@@ -1031,15 +1031,18 @@ async function runInitCommand(
 
     const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');
     let manifest = await dependencies.loadManifest(manifestPath);
-    if (!manifest.entries) {
-      manifest = createEmptyManifest();
-    }
-    // Captured from the pre-mutation manifest: adoption rewrites `manifest`
-    // and the save then replaces `oatVersion` outright, so this is the last
-    // point at which the producing version is still observable.
+    // Captured from the manifest exactly as loaded, before any replacement:
+    // adoption rewrites `manifest` and the save then replaces `oatVersion`
+    // outright, so this is the last point at which the producing version is
+    // still observable. Taken ahead of the `entries` fallback below so the
+    // ordering is correct by construction rather than by the schema's current
+    // insistence that `entries` be present.
     const versionRestamp = detectManifestVersionRestamp(scope, manifest);
     if (versionRestamp) {
       manifestVersionRestamps.push(versionRestamp);
+    }
+    if (!manifest.entries) {
+      manifest = createEmptyManifest();
     }
 
     const canonicalEntries = await dependencies.scanCanonical(scopeRoot, scope);

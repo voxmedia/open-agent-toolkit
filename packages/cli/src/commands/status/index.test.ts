@@ -866,6 +866,57 @@ describe('createStatusCommand', () => {
       ).toEqual([]);
     });
 
+    it('emits no advisory when the native-skill disposition is aborted', async () => {
+      // The second of the two `migrationAborted` assignments: aborting the
+      // per-skill disposition prompt breaks out of the native loop, skips the
+      // ordinary-stray block, and never sets `manifestChanged`, so the advisory
+      // is unreachable on this branch too.
+      const {
+        capture,
+        command,
+        saveManifest,
+        selectWithAbort,
+        selectManyWithAbort,
+      } = createHarness({
+        adapters: [createCursorAdapter(), createAdapter()],
+        interactive: true,
+        manifestEntries: [],
+        driftReports: [],
+        manifestOatVersion: '0.0.1',
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'cursor',
+            providerPath: '.cursor/skills/adopt-me',
+            state: { status: 'stray' as const },
+          },
+          // An ordinary stray behind the native one. Without the
+          // `migrationAborted` transition the run would fall through to this
+          // checklist and could still adopt and save, so its absence is what
+          // makes the abort observable rather than merely incidental.
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/stray-one',
+            state: { status: 'stray' as const },
+          },
+        ],
+        singleSelectResponses: [null],
+        selectManyResponses: [['0']],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      expect(selectWithAbort).toHaveBeenCalledTimes(1);
+      expect(selectManyWithAbort).not.toHaveBeenCalled();
+      expect(saveManifest).not.toHaveBeenCalled();
+      expect(
+        capture.warn.filter((message) =>
+          message.startsWith('Manifest version restamp'),
+        ),
+      ).toEqual([]);
+    });
+
     it('does not mutate or claim restamp evidence in JSON mode', async () => {
       const { capture, command, saveManifest } = createHarness({
         ...strayHarnessOptions,

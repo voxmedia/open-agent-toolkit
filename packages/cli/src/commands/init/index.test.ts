@@ -507,6 +507,27 @@ describe('createInitCommand', () => {
       expect(saveManifest).toHaveBeenCalledTimes(1);
     });
 
+    it('reads the producing version before the empty-entries fallback', async () => {
+      // `createEmptyManifest()` is already stamped with the invoking version,
+      // so deriving the diagnostic after that replacement would silently
+      // discard the producer. The real loader rejects a manifest without
+      // `entries`, which makes this branch reachable only through an injected
+      // loader -- and therefore ordering that must hold by construction, not by
+      // the schema's current strictness.
+      const withoutEntries = {
+        ...staleManifest('0.0.1'),
+        entries: undefined,
+      } as unknown as Manifest;
+      const { capture, command } = createHarness({
+        interactive: false,
+        loadedManifests: [withoutEntries],
+      });
+
+      await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+      expect(capture.warn).toContain(restampWarning('project', '0.0.1'));
+    });
+
     it('emits structured JSON evidence and no warning text in JSON mode', async () => {
       const { capture, command } = createHarness({
         interactive: false,
