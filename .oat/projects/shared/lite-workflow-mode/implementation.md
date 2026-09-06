@@ -510,7 +510,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- Fresh final re-review is required for p06-t04 through p06-t06.
+- Execute and receive the configured implementation exit gate.
 - The historical p06-t02 supported-catalogue header wording is explicitly
   accepted for defer because current managed projections and sync evidence are
   correct.
@@ -520,6 +520,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 ## Implementation Log
 
 ### 2026-09-06
+
+#### Configured implementation exit gate generated
+
+The configured `oat-project-implement` exit gate is resolved and durably
+recorded before launch. The canonical gate declaration fingerprint is
+`sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`
+using ordered JSON fields `command`, `description`, `onFailure`, and
+`maxAttempts`.
+
+The gate will review passed final-review head
+`dfb7a8beb41c663d8bd327fa47c19f9ef28e393f` against the unique
+`origin/main` merge base `7c90b220a27449fa652c51af38388dd6fdcb73f4`.
+Its state-carrier-excluded implementation and freshness fingerprint is
+`sha256:effective-delta-v1:cbc2516b42a85a03417b862004ff102f07281d8fc28b636e0be1992ad6ce511d`.
+No launch has occurred yet.
 
 #### Final re-review passed
 
