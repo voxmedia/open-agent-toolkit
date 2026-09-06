@@ -44,7 +44,7 @@
     "worktree": "root"
   },
   "launch_status": "accepted",
-  "child_outcome": "in_progress",
+  "child_outcome": "DONE",
   "configured_invocation_evidence": [
     "dispatch-report-v1:p06",
     "native-spawn-accepted",
@@ -65,9 +65,16 @@
     {
       "event_id": "final-review-fix1-7e9aece7-21e5-4ad7-b33e-cd12239fd549",
       "reason": "Execute p06-t04 through p06-t06 for the blocking final-review findings",
-      "status": "accepted",
+      "status": "completed",
       "accepted_at": "2026-09-06T01:33:30Z",
+      "completed_at": "2026-09-06T01:52:00Z",
       "expected_base_sha": "45cf46d8726690f6f278fd947ef0a7091230f7af",
+      "final_head": "de3da96511d66325b36ced57dff2a34587e5fcfa",
+      "fix_commits": [
+        "8d238b7555e92c876b57186ce84db855027e05e0",
+        "907ac960f2af1cba237480ec8437dba6b94d76f1",
+        "de3da96511d66325b36ced57dff2a34587e5fcfa"
+      ],
       "findings": {
         "critical": 0,
         "important": 1,

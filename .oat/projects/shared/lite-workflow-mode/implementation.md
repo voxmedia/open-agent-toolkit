@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: p06-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 4     | 4/4       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | complete    | 2     | 2/2       |
-| Phase 5 | complete    | 4     | 4/4       |
-| Phase 6 | in_progress | 6     | 3/6       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 2     | 2/2       |
+| Phase 5 | complete | 4     | 4/4       |
+| Phase 6 | complete | 6     | 6/6       |
 
-**Total:** 19/22 tasks completed
+**Total:** 22/22 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -305,9 +305,10 @@ retro, and reduced-artifact closeout paths passed the full contract suite.
 
 ## Phase 6: Documentation, Provider Sync, Smoke Run, and Release Gates
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-09-05
 **Reopened for final review fixes:** 2026-09-06
+**Completed:** 2026-09-06
 
 ### Task p06-t01: Document lite workflow mode
 
@@ -420,15 +421,36 @@ authorized no-edit rerun passed and consumed no recovery attempt.
 
 ### Task p06-t04: Fix the Lite validator command
 
-**Status:** pending
+**Status:** completed
+**Commit:** 8d238b7555e92c876b57186ce84db855027e05e0
+
+**Outcome:** The Lite skill now uses the supported `--project-path` validator
+option, carries its PR-scoped `1.0.1` version bump, and has a fail-capable
+contract guard.
 
 ### Task p06-t05: Align Lite validation-criterion grammar
 
-**Status:** pending
+**Status:** completed
+**Commit:** 907ac960f2af1cba237480ec8437dba6b94d76f1
+
+**Outcome:** Lite validation proofs now require a backticked command or test
+name, matching the validator's accepted grammar, with a fail-capable guard.
 
 ### Task p06-t06: Correct Lite artifact docs and refresh release surfaces
 
-**Status:** pending
+**Status:** completed
+**Commit:** de3da96511d66325b36ced57dff2a34587e5fcfa
+
+**Outcome:** The artifacts guide names all five Lite plan sections; managed
+sync outputs are current; all five public packages and the bundled version
+asset are at `0.2.57`.
+
+**Verification:** `/tmp/p06-t06-gates-final.XRG87F/exit-codes.txt` records all
+required gates at exit 0 plus forced uncached tests, skills, release,
+skill-validation, lint, format, focused pre/post-commit controls, sync dry-runs,
+diff check, and version parity. One standalone smoke run hit the unrelated
+60-second SIGTERM provision-cleanup timeout at 140/141; its single authorized
+no-edit rerun passed 141/141. No recovery attempt was consumed.
 
 ## Orchestration Runs
 
@@ -488,7 +510,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- Final review fix tasks p06-t04 through p06-t06 are pending.
+- Fresh final re-review is required for p06-t04 through p06-t06.
 - The historical p06-t02 supported-catalogue header wording is explicitly
   accepted for defer because current managed projections and sync evidence are
   correct.
@@ -529,6 +551,14 @@ re-review.
 `final-review-fix1-7e9aece7-21e5-4ad7-b33e-cd12239fd549` from clean baseline
 `45cf46d8726690f6f278fd947ef0a7091230f7af`. The exact managed-high target and
 original request ID remain unchanged.
+
+**Fixes completed:** p06-t04 `8d238b7555e92c876b57186ce84db855027e05e0`,
+p06-t05 `907ac960f2af1cba237480ec8437dba6b94d76f1`, and p06-t06
+`de3da96511d66325b36ced57dff2a34587e5fcfa`. The final review event is now
+`fixes_completed`, awaiting a fresh final re-review. Terminal evidence is in
+`/tmp/p06-t06-gates-final.XRG87F/exit-codes.txt`; the first deterministic
+version-matrix failure remains preserved in
+`/tmp/p06-t06-gates.MCPner/exit-codes.txt`.
 
 #### Final closeout verification passed
 
