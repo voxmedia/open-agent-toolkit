@@ -106,18 +106,138 @@ test('codex-skill does not pin the retired fixed model pair', () => {
   );
 });
 
+// --- Below-floor confirmation guard --------------------------------------
+// A confirmation requirement escapes a clause-local check by sitting in the
+// *next* clause: "...sits below the route the matrix gives...  In that case,
+// confirm before launching." The anaphor carries the below-floor subject
+// forward, so that clause restates the same rule and must obey it.
+//
+// Attachment is relational, never a proximity window. A guarded span is one
+// below-floor clause plus the consecutive run of clauses that *open with* a
+// bounded anaphor. The first clause that stands on its own ends the span --
+// including the shipped direct-API sentence, which opens with its own
+// imperative and its own `when` condition instead of pointing back. Nothing
+// here inspects the words "direct API": that exception survives because it is
+// structurally independent, not because it is whitelisted.
+const BELOW_FLOOR_ANCHOR = /below the route/i;
+
+// Closed set, deliberately. Growing this into general paraphrase or antecedent
+// detection is the separate span-based prose-guard work, not this guard. The
+// `(?!-)` guards keep a hyphenated compound ("Then-current policy...") from
+// reading as an anaphor. A case noun that continues into another noun ("In this
+// instance method, ...") does still attach: separating that needs noun-phrase
+// parsing, which this plan puts out of scope, and it fails closed -- such prose
+// is rejected and rewritten, never silently permitted.
+const ANAPHORIC_CONTINUATION =
+  /^(?:and\b,?\s*)?(?:(?:in|under)\s+(?:that|this|such|those|these)\s+(?:an?\s+)?(?:cases?|events?|situations?|instances?|circumstances?|scenarios?)(?!-)|in\s+which\s+case|if\s+so|then(?!-))\b/i;
+
+// A continuation is guarded whatever condition it then carries. Exempting an
+// anaphoric clause that states its own route classification was tried and
+// reverted: every workable form of that test was an ordered-token heuristic
+// that admitted real escapes ("Then, if the reference classifies the pairing as
+// a below-floor route, confirm before launching") while still rejecting the
+// passive voice of the very clause it meant to protect. The direct-API rule is
+// preserved instead by how it is written -- as an independent clause, exactly
+// as the shipped prose states it -- so prose that hangs a confirmation off "In
+// that case" is rejected and must be restated independently.
+
+// Property, not phrase: any construction that *requires* a confirmation or
+// authorization is rejected. Deliberately fail-closed on negation: this matches
+// the requirement wording wherever it appears, so "do not ask the user for
+// confirmation" is rejected too. A clause-wide negation skip is the alternative
+// and it is worse, because one "not" anywhere would then mask a real
+// requirement. Prose that means to permit a run says so without naming the
+// requirement ("you do not need to confirm the run").
+const requiresConfirmation =
+  /\b(?:ask (?:the user )?(?:for|to) (?:a )?confirm|confirm before|must confirm|require[sd]? (?:a )?confirmation|obtain (?:the user'?s )?(?:confirmation|authorization))/i;
+
+// A bare list marker is markup, not a clause: an ordered marker ends in a
+// period, so it otherwise splits off as its own "clause" and breaks the
+// adjacency the anaphor depends on.
+const LIST_MARKER_ONLY = /^(?:[-*+]|\d+[.)])$/;
+
+const splitClauses = (prose) =>
+  prose
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.;])\s+/)
+    .map((clause) => clause.trim())
+    .filter((clause) => clause.length > 0 && !LIST_MARKER_ONLY.test(clause));
+
+// Markup, not meaning: a clause lifted out of a blockquote, a callout, a list
+// item, or a bolded lead-in still opens with its anaphor. Strip only the
+// markers, outermost first, and keep the verbatim clause for failure labels.
+// The blockquote strip repeats because a callout nests one marker inside
+// another ("> [!IMPORTANT] > In that case, ...") once soft wraps are undone.
+const clauseOpener = (clause) =>
+  clause
+    .replace(/^(?:>\s*(?:\[![A-Za-z]+\]\s*)?)+/, '')
+    .replace(/^(?:[-*+]|\d+[.)])\s+/, '')
+    .replace(/^[*_`]+/, '');
+
+const isAnaphoricContinuation = (clause) =>
+  ANAPHORIC_CONTINUATION.test(clauseOpener(clause));
+
+// Every below-floor clause paired with the continuations that inherit it.
+//
+// KNOWN FAIL-OPEN BOUNDARY. The run stops at the first clause that is not a
+// bounded anaphor, so a continuation separated from its anchor by any
+// intervening clause is NOT attached. This matters in the shipped paragraph:
+// the anchor's immediate successor is permanently the direct-API clause, so an
+// anaphor appended after that clause escapes this guard entirely, while the
+// same anaphor inserted between the two is caught. Both outcomes are pinned as
+// permanent cases below.
+//
+// Widening the run would re-reject the direct-API clause the plan protects, and
+// resolving which earlier clause an anaphor actually refers to is antecedent
+// resolution. That work belongs to BL-260827-span-based-prose-guards, which
+// owns the shared span runner; this guard deliberately stops short of it.
+const belowFloorSpans = (prose) => {
+  const clauses = splitClauses(prose);
+  const spans = [];
+
+  for (const [index, clause] of clauses.entries()) {
+    if (!BELOW_FLOOR_ANCHOR.test(clause)) continue;
+
+    const attached = [];
+    for (let next = index + 1; next < clauses.length; next += 1) {
+      const continuation = clauses[next];
+      if (!isAnaphoricContinuation(continuation)) break;
+      attached.push(continuation);
+    }
+
+    spans.push({ anchor: clause, attached });
+  }
+
+  return spans;
+};
+
+// null when clean, otherwise the anchor and the offending clause so a failure
+// names the semantic relation rather than a line number.
+const findConfirmationEscape = (prose) => {
+  for (const { anchor, attached } of belowFloorSpans(prose)) {
+    for (const clause of [anchor, ...attached]) {
+      if (requiresConfirmation.test(clause)) {
+        return { anchor, clause, attached: clause !== anchor };
+      }
+    }
+  }
+
+  return null;
+};
+
+const describeConfirmationEscape = (escape) =>
+  escape === null
+    ? null
+    : `${escape.attached ? 'an anaphoric continuation of the' : 'the'} below-floor clause "${escape.anchor}" requires a confirmation: "${escape.clause}"`;
+
 test('codex-skill keeps the below-floor warning non-blocking', () => {
   // The plan forbids re-asking when the user already supplied a model and
-  // effort, so the below-floor clause may warn but must not gate on a
+  // effort, so the below-floor rule may warn but must not gate on a
   // confirmation. Only the direct-API classification does.
   const prose = guidance.replace(/\s+/g, ' ');
-  const clauses = prose.split(/(?<=[.;])\s+/);
-  const belowFloor = clauses.filter((clause) =>
-    /below the route/i.test(clause),
-  );
 
   assert.ok(
-    belowFloor.length >= 1,
+    belowFloorSpans(guidance).length >= 1,
     'expected the guidance to describe a below-floor pairing',
   );
   // Semantic, not phrase-co-located: the non-blocking rule may live in a
@@ -127,21 +247,196 @@ test('codex-skill keeps the below-floor warning non-blocking', () => {
     /without blocking[\s\S]{0,200}?below the route|below the route[\s\S]{0,200}?without blocking/i,
     'the below-floor pairing must be reported without blocking the run',
   );
-  // Property, not phrase: any construction that *requires* a confirmation or
-  // authorization is rejected. It applies to every below-floor clause with no
-  // negation escape — a merely negated mention ("you do not need to confirm the
-  // run") matches none of these alternatives, so nothing legitimate needs one,
-  // while a clause-wide skip would let a negation mask a real requirement.
-  const requiresConfirmation =
-    /\b(?:ask (?:the user )?(?:for|to) (?:a )?confirm|confirm before|must confirm|require[sd]? (?:a )?confirmation|obtain (?:the user'?s )?(?:confirmation|authorization))/i;
+  assert.equal(
+    describeConfirmationEscape(findConfirmationEscape(guidance)),
+    null,
+    'neither a below-floor clause nor an anaphoric clause attached to one may require a confirmation',
+  );
+});
 
-  for (const clause of belowFloor) {
-    assert.doesNotMatch(
-      clause,
-      requiresConfirmation,
-      'the below-floor pairing must not require a confirmation',
+test('codex-skill below-floor guard follows anaphora, not proximity', () => {
+  // Same helper as the live-prose test above, so these cases pin the behaviour
+  // that actually guards the shipped skill.
+  const belowFloor =
+    'Say so once, without blocking, when the pairing sits below the route the matrix gives the classified work.';
+  // Mirrors the shipped sentence: an independent clause carrying its own
+  // direct-API condition, joined by a semicolon rather than an anaphor.
+  const shippedDirectApiRule =
+    'Say so once, without blocking, when the pairing sits below the route the matrix gives the classified work; confirm before launching when the reference classifies that model as a direct-API specialist route rather than a CLI route.';
+
+  for (const [label, prose] of [
+    [
+      'immediate anaphoric confirmation',
+      `${belowFloor} In that case, confirm before launching.`,
+    ],
+    [
+      'immediate anaphoric authorization',
+      `${belowFloor} Then obtain authorization.`,
+    ],
+    [
+      'chained anaphora',
+      `${belowFloor} In that case, pause. Then obtain the user's confirmation.`,
+    ],
+    [
+      'semicolon-joined anaphora',
+      `${belowFloor.replace(/\.$/, ';')} in that case you must confirm.`,
+    ],
+    [
+      'anaphor behind list markup',
+      `${belowFloor} - **In that case**, confirm before launching.`,
+    ],
+    [
+      'anaphor behind an ordered list marker',
+      `${belowFloor}\n1. In that case, confirm before launching.`,
+    ],
+    [
+      'anaphor behind a parenthesized list marker',
+      `${belowFloor} 1) In that case, confirm before launching.`,
+    ],
+    [
+      'demonstrative anaphor with a different case noun',
+      `${belowFloor} In those circumstances, confirm before launching.`,
+    ],
+    [
+      'conjunctive lead-in before the anaphor',
+      `${belowFloor} And, in that case, confirm before launching.`,
+    ],
+    // A continuation stays guarded whatever condition it carries: exempting
+    // self-classifying continuations let "classifies the pairing as a
+    // below-floor route" through. The direct-API rule must be an independent
+    // clause, which is how the shipped prose already states it.
+    [
+      'continuation carrying its own route classification',
+      `${belowFloor} Then, if the reference classifies that model as a direct-API specialist route rather than a CLI route, confirm before launching.`,
+    ],
+    [
+      'continuation re-classifying the pairing itself',
+      `${belowFloor} Then, if the reference classifies the pairing as a below-floor route, confirm before launching.`,
+    ],
+    [
+      'anaphor behind a blockquote marker',
+      `${belowFloor} > In that case, confirm before launching.`,
+    ],
+    [
+      'anaphor behind a callout blockquote',
+      `${belowFloor} > [!IMPORTANT]\n> In that case, confirm before launching.`,
+    ],
+    [
+      'demonstrative anaphor with a scenario noun',
+      `${belowFloor} In such a scenario, confirm before launching.`,
+    ],
+    // The live-shaped counterpart of the known-accepted boundary below: the
+    // same sentence inserted *between* the anchor and the direct-API clause is
+    // adjacent to the anchor, so it attaches and is caught.
+    [
+      'anaphor inserted between the anchor and the direct-API clause',
+      `${belowFloor.replace(/\.$/, ';')} in that case, confirm before launching; confirm before launching when the reference classifies that model as a direct-API specialist route rather than a CLI route.`,
+    ],
+  ]) {
+    const escape = findConfirmationEscape(prose);
+    assert.notEqual(
+      escape,
+      null,
+      `${label}: a confirmation requirement inherited by the below-floor clause must be rejected`,
+    );
+    assert.ok(
+      escape.attached,
+      `${label}: the failure must name the attached continuation, not the anchor alone`,
     );
   }
+
+  for (const [label, prose] of [
+    ['shipped direct-API exception', shippedDirectApiRule],
+    [
+      'non-blocking anaphoric continuation',
+      `${belowFloor} In that case, note the mismatch in your summary and continue.`,
+    ],
+    // Permitting wording that never names the requirement is accepted; wording
+    // that names it ("do not ask the user for confirmation") is deliberately
+    // rejected instead of negation-parsed. See the fail-closed note above.
+    [
+      'permission granted without naming the requirement',
+      `${belowFloor} In that case, you do not need to confirm the run.`,
+    ],
+    [
+      'independent later rule',
+      `${belowFloor} A destructive sandbox escalation must confirm before launching.`,
+    ],
+    [
+      'hyphenated compound that merely starts with an anaphor',
+      `${belowFloor} Then-current policy requires confirmation before a direct API launch.`,
+    ],
+    [
+      'blockquoted independent clause',
+      `${belowFloor} > A destructive sandbox escalation must confirm before launching.`,
+    ],
+  ]) {
+    assert.equal(
+      describeConfirmationEscape(findConfirmationEscape(prose)),
+      null,
+      `${label}: this construction must stay accepted`,
+    );
+  }
+
+  // KNOWN-ACCEPTED BOUNDARY, pinned so it stays deliberate. Each of these hides
+  // a blocking confirmation behind an intervening clause, and the guard does
+  // NOT catch any of them: the run stops at the first non-anaphoric clause.
+  // These assertions document the gap; they do not endorse it. Closing it needs
+  // the antecedent resolution owned by BL-260827-span-based-prose-guards, and a
+  // change that starts rejecting these should flip them here on purpose.
+  for (const [label, prose] of [
+    // The live-prose shape: appended after the shipped direct-API clause, which
+    // is permanently the anchor's immediate successor in SKILL.md.
+    [
+      'anaphor appended after the shipped direct-API clause',
+      `${shippedDirectApiRule} In that case, confirm before launching.`,
+    ],
+    [
+      'filler clause before the anaphor',
+      `${belowFloor} The matrix is advisory. In that case, confirm before launching.`,
+    ],
+    [
+      'filler breaking an anaphoric chain mid-run',
+      `${belowFloor} In that case, note it. The matrix is advisory. Then obtain authorization.`,
+    ],
+    [
+      'parenthetical filler before the anaphor',
+      `${belowFloor} (This is advisory.) In that case, confirm before launching.`,
+    ],
+    [
+      'filler as the semicolon clause, then the anaphor',
+      `${belowFloor.replace(/\.$/, ';')} the matrix is advisory. In that case, confirm before launching.`,
+    ],
+    [
+      'two-word filler before the anaphor',
+      `${belowFloor} Note it. Then obtain authorization.`,
+    ],
+  ]) {
+    assert.equal(
+      describeConfirmationEscape(findConfirmationEscape(prose)),
+      null,
+      `${label}: known fail-open boundary -- if this now fails, the span was widened; confirm that was intended and move the case to the rejected set`,
+    );
+  }
+
+  // Structural, not phrase-whitelisted: the direct-API clause is excluded
+  // because the span stops at an independent clause, while an anaphoric clause
+  // is pulled in. Neither outcome consults the words "direct API".
+  const [shipped] = belowFloorSpans(shippedDirectApiRule);
+  assert.deepEqual(
+    shipped.attached,
+    [],
+    'an independent clause must end the guarded span',
+  );
+
+  const [continued] = belowFloorSpans(
+    `${belowFloor} In that case, confirm before launching.`,
+  );
+  assert.deepEqual(
+    continued.attached,
+    ['In that case, confirm before launching.'],
+    'an immediately following anaphoric clause must join the guarded span',
+  );
 });
 
 test('codex-skill never mandates the repository-check bypass', () => {
