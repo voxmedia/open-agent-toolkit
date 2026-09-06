@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -30,7 +30,7 @@ oat_generated: false
 | Phase 02 (warn-on-non-sync-manifest-restamps)     | complete | 1     | 1/1       |
 | Phase 03 (emit-dispatch-stamp-with-resolver-json) | pending  | 1     | 0/1       |
 
-**Total:** 2/3 planned tasks completed
+**Total:** 3/3 planned tasks completed
 
 ---
 
@@ -56,15 +56,13 @@ oat_generated: false
 
 ## Phase 03: emit the dispatch stamp with resolver JSON (p03)
 
-**Status:** pending · **Group:** ungrouped, after group 1 · **Tasks:** p03-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** ungrouped, after group 1 · **Tasks:** p03-t01 (+ one address-now sweep commit)
+**Outcome:** `oat project dispatch-ceiling resolve … --report-scope … --report-action … --json` returns `dispatchStamp` beside `dispatchReport` (present iff the report is present, byte-equal to `formatDispatchStamp(dispatchReport)`, absent on non-report and error envelopes); the review-provide, review-provide-remote, and implement dispatch guidance now require reading the returned field (validate `schemaVersion === 1` and the `Dispatch:` prefix, never hand-assemble, no out-of-tree shim on the normal path) with a shared bounded-window contract helper and negative fixtures; docs page documents the additive field. **Verification:** forced CLI suite 5721, check:skill-bumps 10, test:skills 833, forced docs build; review round 1 (pass) plus sweep. **Deviations:** none; `oat-project-implement` deliberately not re-bumped (p01 owns the wave's bump); the documented prefix drops the grammar's trailing space in prose (MD038) while tests keep it.
 
 ### Task p03-t01: Execute external plan — Emit the canonical dispatch stamp with resolver JSON
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `901a0f7aa`; sweep `edbc76c94`
 
 ## Autonomy Gate Provenance
 
@@ -103,6 +101,12 @@ Wave base `0af558db80068649fb8858be7a98c635e6f12f3d`; plan gate passed first tim
 - `w4-p01-review-002` — disposition-verification round 2 on the original reviewer handle, range `291234dc0..e11d901b3`. Record `dispatch/w4-p01-review-002.json`.
 - `w4-p01-review-002` outcome: PASS (fan-in may proceed), 0C/0I/1M/1m. Both relocation shapes re-applied by the reviewer went red; `contributing/skills.md` now restates `completion-and-closeout.md:361-365` and no stale "no gate configured" instruction survives in the docs tree (anchor `id="per-project-gate-overrides"` present in the built page); the writer test went red under a neutralized writer and the real `oat project complete-state` preserved a two-key map plus an unrelated key; `configSource` probed live (explicit-null → `shared`, absent → `null`); legacy `gate review` strings byte-identical; two malformed-input probes and the legacy byte-for-byte check unchanged; forced suite 5682. The I2 scope expansion approved as a required-consequence edit. The reviewer withdrew its own round-1 m3 (inventory rows and prompt sites are different granularities) and confirmed deleting the `QS-13` row alone turns the inventory check red. New M1 (record-level): the I2 expansion creates cross-wave shared writes the plan's Dependencies table does not record — `contributing/skills.md` is a W6 group-2 deliverable and W5 group 4 cites `state-utils.ts` while this lane writes `state-utils.test.ts` → wave-close plan correction telling those lanes to re-anchor. New m1: the reviewer noted its own `rm -rf` on a scratch path (no prompt fired; switched to `mv`).
 
+- `w4-p03-impl-001` — p03 dispatched from group base `7075a70844d9cfbd2cf6cd53844ba25192f9a4d4` (worktree HEAD identical; no sync commit needed, manifest already 0.2.59); target opus, model_axis selected:opus, task_class default-implementation (plan dispatch profile); brief carries the two-skill bump rule, the no-second-bump rule for `oat-project-implement`, the load-contract hazard, and scratch hygiene. Record `dispatch/w4-p03-impl-001.json`.
+- `w4-p03-impl-001` outcome: DONE, one commit `901a0f7aad41ae89acb606d5fc5f75170b9ed097` (11 files, +472/−32): `dispatchStamp` emitted beside `dispatchReport` from the single `formatDispatchStamp` call; resolver tests for present/absent/error/byte-equality; a shared prose-contract helper `packages/cli/src/__tests__/skills/dispatch-stamp-contract.ts` with a 7-case negative-fixture suite; review-provide 1.5.3 → 1.5.4 (five pins — the brief said two; the lane grepped the version literal), review-provide-remote 1.1.2 → 1.1.3 (one pin), `dispatch-and-dry-run.md` rewritten to the field-based route with `oat-project-implement` left at 2.3.4; docs page gained an additive-field subsection. Two Codex rounds (R1 Medium: whole-document positive matches let unrelated clauses satisfy the contract → bounded, uniquely-anchored windows plus negatives; R2 Medium: negated copy and "permitted to hand-assemble" slipped past → negated-copy rejection, broadened pattern, fixture suite). Two negative controls red; real-artifact probe on the built CLI. Forced CLI suite 5721, check:skill-bumps 10, test:skills 833. MD038 forced the documented prefix to `Dispatch:` without the grammar's trailing space in prose (tests still assert `startsWith('Dispatch: ')`).
+- `w4-p03-review-001` — reviewer, target opus, range `7075a7084..901a0f7aa`, eight phase-specific rulings (single producer, eligibility iff report with byte-equality against `dist/providers/identity/stamp.js`, grammar/schema untouched, shim removal without weakening, five pins and no second implement bump, docs nesting, weaker-anywhere, the MD038 prefix change). Record `dispatch/w4-p03-review-001.json`.
+- `w4-p03-review-001` outcome: PASS, 0C/0I/2M/1m, reconnaissance not-attempted. Rulings: single producer confirmed (no hand-built grammar, one call site evaluated once); eligibility matches `dispatchReport` exactly, `BYTE-EQUAL: true` on a real CLI response; `providers/identity` diff empty, four identity blobs identical to base; helper location conventional (`__tests__/skills/` precedent, `@test-support/*` alias, excluded from `dist`) and its window fails closed on a missing anchor; five pins moved with zero `'1.5.3'` literals left; implement correctly not re-bumped (gate validated 10); no lockstep file; MD038 ruling — nothing weakened, `index.test.ts:78` still asserts the real trailing space. M1: the helper accepted a permissive-qualifier weakening ("may optionally", "where convenient") and a delete-the-normative-paragraph vector because the window anchors on the first occurrence; M2: a report-bearing `status: blocked` response carries the stamp (correct — base already emitted the report there) but is neither documented nor pinned; m1: the new h3 swept two pre-existing paragraphs under it. Address-now sweep `w4-p03-fix-001` dispatched for M1, M2, m1; no re-review per the judgment-sweep rule.
+- `w4-p03-fix-001` outcome (address-now sweep, no re-review): one commit `edbc76c94` on `901a0f7aa`. Four files: the contract helper gained mandatory-wording, permissive-qualifier, and owning-section-bound window guards (the reviewer's probes A and B2 and a Codex relocation evasion now all turn the contract suites red; helper fails closed on an unregistered surface; 13 fixtures, up from 7); the blocked-route stamp documented and pinned (present and byte-equal on a report-bearing blocked resolution, absent on a non-report one); the docs h3 moved to the end of its section with the two report-level paragraphs restored under the h2. Forced CLI suite 5728, docs check 0 errors, check:skill-bumps 10, test:skills 833, sync no changes. One Codex round (0C/0I/2M/2m: relocation evasion → fixed by section binding; unnecessary export → fixed; regex-evasion residue and coordinated-prose false positives → rejected with reasons, documented in the helper header as a tripwire, not a proof). Record `dispatch/w4-p03-fix-001.json`.
+
 #### Phase Outcomes
 
 | Phase | Worktree                | Implementer outcome                                                                                     | Review outcome                                     | Fix rounds |
@@ -119,11 +123,11 @@ Wave base `0af558db80068649fb8858be7a98c635e6f12f3d`; plan gate passed first tim
 
 #### Parallel Groups
 
-- group 1: p01 + p02 (merged, fan-in complete); p03 ungrouped (running).
+- group 1: p01 + p02 (merged); p03 ungrouped (merged). All groups fanned in.
 
 #### Outstanding Items
 
-- p03 (emit the dispatch stamp with resolver JSON) after the group-1 fan-in; then closeout: final review, configured exit gate, post-implement sequence.
+- None for implementation: all three lanes merged and gated. Closeout in progress: final review, configured exit gate, post-implement sequence.
 - Journal note: dispatch records are immutable after the first revision; terminal outcomes live in the Dispatch Notes above.
 
 <!-- orchestration-runs-end -->
