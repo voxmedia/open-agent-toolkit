@@ -161,27 +161,53 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p02   | 5643 (forced CLI suite) + 314 focused                            | all    | 0      | -        |
 | p03   | -                                                                | -      | -      | -        |
 
+## Deferred Findings
+
+### Deferred Findings (Medium)
+
+- p01 review round 1 M1 — `PROJECT_STATE_FRONTMATTER_FIELDS` has no production consumer; preserve-on-write is pinned by an executable writer test (`e11d901b3`) but the plan's cited seam is misleading → `BL-260906-give-project-state-frontmatter`.
+- p01 review round 2 M1 (record-level) — the I2 docs expansion created cross-wave shared writes the gate-override plan's Dependencies table does not record (`contributing/skills.md` is a W6 group-2 deliverable; W5 group 4 cites `state-utils.ts` while p01 wrote `state-utils.test.ts`) → wave-close plan correction telling those lanes to re-anchor.
+- p02 review round 1 observation — status's native-skill adopt path mutates the manifest without setting `manifestChanged` (pre-existing) → `BL-260906-persist-status-native-skill`.
+- p02 review round 2 ruling — `runSyncApply` prints `No changes required.` when a rejected collection leaves zero planned operations (pre-existing; exit code already 1) → `BL-260906-fix-sync-apply-branch`.
+
+### Deferred Findings (Minor)
+
+- p02 review round 2 m3 — `restampOnly` is a whole-run boolean under `--scope all` → `BL-260906-scope-the-restamp-only-sync`.
+- p03 sweep Codex residue — the lexical qualifier guards in `dispatch-stamp-contract.ts` are a tripwire, not a proof against adversarial prose (documented in the helper header); no item filed.
+- p01 review round 2 m1 — the reviewer's own `rm -rf` on a scratch path (process note; briefs already forbid it).
+
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- (filled at closeout)
+- Per-project gate overrides: a strict `oat_skill_gate_overrides` map in project `state.md` (keys restricted to `oat_gateable` skills, literal `disabled`), `oat gate resolve --project [path-or-name]` returning `configured` / `configured_disabled_by_project` / `not_configured` with byte-identical legacy output, a shared gate-posture setup contract used by quick-start, plan, and import-plan (non-interactive runs never write), a `project_disabled` closeout disposition whose fingerprint covers the override so re-enabling stales it, router acceptance in `oat-project-next`, progress visibility, and docs (workflow-gates, configuration, gate-authoring contract). Eight skills bumped.
+- Non-sync manifest restamp advisories: one pure `detectManifestVersionRestamp` helper; init, remove-skill, and interactive status adoption warn before `saveManifest` in human mode and carry `manifestVersionRestamps` in JSON; sync's `versionSkew` reuses the shared shape; a restamp-only sync apply reports the refresh and no longer says `No changes required.` anywhere in its body.
+- Dispatch stamp with resolver JSON: `oat project dispatch-ceiling resolve … --json` emits `dispatchStamp` beside `dispatchReport` (present iff the report is, byte-equal to `formatDispatchStamp`); review-provide, review-provide-remote, and the implement dispatch reference consume the field under a bounded-window contract helper with negative fixtures; no out-of-tree shim on the normal path. Two skills bumped.
 
 **Behavioral changes (user-facing):**
 
-- (filled at closeout)
+- Lockstep public packages 0.2.58 → 0.2.59; `.oat/sync/manifest.json` restamped in the same commit (the fan-in sync emitted the new advisory for real).
+- Gate-aware lifecycle skills pass project context to `oat gate resolve`; a configured gate disabled by a project override is reported as such and never launched, never read as passed or missing.
+- Init, remove-skill, status adoption, and sync tell the operator when they replace a manifest's producer version.
+- Orchestrators copy the resolver's returned stamp instead of formatting one.
 
 **Key files / modules:**
 
-- (filled at closeout)
+- `packages/cli/src/commands/gate/index.ts`, `config/resolve.ts`, `commands/shared/frontmatter.ts`, `.oat/templates/state.md` — override state and project-aware resolution.
+- `.agents/skills/oat-project-{plan-writing,quick-start,plan,import-plan,implement,next,progress,autonomous}` — gate posture, closeout disposition, router, inventory.
+- `packages/cli/src/manifest/manager.ts`, `commands/{init,remove/skill,status,sync}` — restamp diagnostics.
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts`, `packages/cli/src/__tests__/skills/dispatch-stamp-contract.ts`, `.agents/skills/oat-project-review-provide{,-remote}`, `oat-project-implement/references/dispatch-and-dry-run.md` — stamp emission and consumption.
 
 **Verification performed:**
 
-- (filled at closeout)
+- Per lane: plan-focused suites, forced-turbo check/type-check/test (`Cached: 0`), lint, format, validate-skills, check:skill-bumps, one or two read-only Codex rounds, a root-owned adversarial review (p01 and p02 with a fix round and a round-2 verification; p03 with an address-now sweep). Live CLI probes in scratch projects for every fail-closed surface.
+- Two fan-ins with the full eight-gate definition-of-done sequence and uncached test runs (5728 CLI tests at the tip); final review and the configured exit gate recorded below.
 
 **Design deltas (if any):**
 
-- (filled at closeout)
+- p01 edited `apps/oat-docs/docs/contributing/skills.md` outside its plan's named docs scope (mechanical consequence of the fail-closed closeout rule) and bumped `oat-project-autonomous` via a recovery for the autonomy inventory.
+- p02's `restampOnly` additionally requires zero failed operations.
+- p03 did not re-bump `oat-project-implement` (p01 owns the wave's bump) and documents the stamp prefix without its trailing space in prose (MD038).
 
 ## References
 

@@ -1,7 +1,7 @@
 ---
 id: BL-260826-emit-the-dispatch-stamp-from
 title: Emit the dispatch stamp from the dispatch-ceiling resolver
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - wave-2-follow-up
 assignee: null
 created: 2026-08-26T22:57:19.455Z
-updated: 2026-08-30T23:55:32Z
+updated: '2026-09-06T19:21:07Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-30-emit-dispatch-stamp-with-resolver-json.md
