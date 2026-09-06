@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 7ff21e64
+oat_last_commit: 7ad021c9
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260718-fix-oat-docs-generate-index' }
@@ -16,7 +16,7 @@ oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy:
   default_attempt_limit: 10
@@ -73,8 +73,8 @@ oat_implement_exit_gate:
   reviewed_head: 63ea98d28825ce0db7bc9e15047b223a794cb1ec # final review round 2 passed (reviews/final-review-2026-09-06T014238Z.md)
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:ec05b9d2172cd8aa80044a7e146260657d0378142f9200358149dae04a1a43a7'
-  freshness_head: 7ff21e6460babde832f44ef426c79ec6c65f425b # closeout-only: document step (docs page, pjm reference surfaces)
-  freshness_fingerprint: 'sha256:effective-delta-v1:543d77c79ea5be0fd303acd0b6b263f4935677c67e53f731309b5929104c67f9'
+  freshness_head: 7ad021c971f9aff92498946b8f7e8231ee2620a7 # closeout-only: pr step (review archival re-points, PR metadata)
+  freshness_fingerprint: 'sha256:effective-delta-v1:eeca9c5904a141fe261a2031c5b23b64b633217f5e394a19fe96b2381dc6427e'
   launch_state: result_persisted
   launch_attempt_id: 'w1-exit-gate-20260906T014616Z'
   launch_started_at: '2026-09-06T01:46:16Z'
@@ -94,7 +94,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-06T02:01:06Z'
+  updated_at: '2026-09-06T02:02:57Z'
 # oat_implement_exit_gate (reference): optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -135,7 +135,7 @@ oat_post_implement_sequence:
   source: configured # workflow.postImplementSequence
   final_phase: p04
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending # pending | approved | not_required
   approval_source: null # null | user | oat-autonomous
   post_approval: []
@@ -144,11 +144,11 @@ oat_post_implement_sequence:
 oat_project_recap:
   decision: skip # deferred to program close per the execution program (recap: deferred to program close)
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/262' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-05T22:36:14.653Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T02:01:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T02:02:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -160,7 +160,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - all four lanes merged into `wave-1-execution` (two fan-ins, lockstep 0.2.56, eight-gate sequence green twice); awaiting final review, the configured exit gate, and the pre-approval sequence.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -187,4 +187,10 @@ None
 
 ## Next Milestone
 
-Exit-gate receive recorded; pre-approval sequence (summary, document, pr), autonomous final HiLL approval, complete-state, wave PR and merge
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
+
+Autonomous run: final HiLL approval is recorded next (IMPLEMENT-16); complete-state runs before merge; the archive tail is deferred to program close.
