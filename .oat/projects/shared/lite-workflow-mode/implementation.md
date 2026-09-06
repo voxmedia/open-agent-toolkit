@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | complete | 2     | 2/2       |
-| Phase 5 | complete | 4     | 4/4       |
-| Phase 6 | complete | 11    | 11/11     |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 4     | 4/4       |
+| Phase 2      | complete    | 3     | 3/3       |
+| Phase 3      | complete    | 3     | 3/3       |
+| Phase 4      | complete    | 2     | 2/2       |
+| Phase 5      | complete    | 4     | 4/4       |
+| Phase 6      | complete    | 11    | 11/11     |
+| Phase p-rev1 | in_progress | 2     | 0/2       |
 
-**Total:** 27/27 tasks completed
+**Total:** 27/29 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -1536,6 +1537,26 @@ Chronological log of implementation progress.
 **Session Start:** {time}
 
 {Continue log...}
+
+---
+
+### Revision Received: Inline Feedback
+
+**Date:** 2026-09-06
+**Source:** inline conversation
+
+**Changes requested:**
+
+- Restore adaptive Product Behavior and Technical Design content from the Warp
+  reference so a collapsed Lite plan remains self-contained without forcing
+  unnecessary sections onto mechanical work.
+- Replace Lite's fixed RED/GREEN/refactor recipe with a risk-proportionate proof
+  strategy. Avoid low-value fixtures and harnesses while preserving strong
+  evidence for bugs, user interfaces, and assurance-sensitive contracts.
+
+**New tasks added:** `prev1-t01`, `prev1-t02`
+
+**Next:** Execute revision tasks via the `oat-project-implement` skill.
 
 ---
 

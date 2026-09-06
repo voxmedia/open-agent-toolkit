@@ -1426,6 +1426,104 @@ rows remain unchanged.
 
 ---
 
+## Phase p-rev1: Revision 1 — Restore Adaptive Spec Depth and Proportionate Proof
+
+Source: inline feedback (2026-09-06)
+
+### Task prev1-t01: (revision) Restore adaptive product and technical specification content
+
+**Files:**
+
+- Modify: `.oat/templates/plan-lite.md`
+- Modify: `.agents/skills/oat-project-lite/SKILL.md`
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `packages/cli/src/commands/project/new/scaffold.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `apps/oat-docs/docs/workflows/projects/artifacts.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+
+**Step 1: Define the adaptive Lite spec contract**
+
+Update the template and Lite authoring contract to select one explicit content
+shape from `minimal`, `product`, `technical`, or `both` during the interview.
+Keep Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria in
+every plan. Require numbered, testable Product Behavior when behavioral
+ambiguity exists. Require Technical Design when implementation ambiguity
+exists, including current operation, proposed changes, data flow, and precise
+code references or short snippets only when they remove ambiguity. Permit the
+minimal shape only for mechanical work with no material product or technical
+design decision.
+
+Align reviewer, implementer, documentation, scaffold, and skill-contract
+surfaces so the selected shape is a self-contained implementation contract and
+promotion preserves it.
+
+**Step 2: Verify**
+
+Run: `pnpm exec vitest run packages/cli/src/commands/project/new/scaffold.test.ts packages/cli/src/validation/skills.test.ts`
+Expected: Lite scaffold and contract coverage pass for all four adaptive shapes.
+
+Run: `pnpm oat:validate-skills`
+Expected: Canonical skill structure and references remain valid.
+
+**Step 3: Commit**
+
+```bash
+git add .oat/templates/plan-lite.md .agents/skills/oat-project-lite/SKILL.md .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md packages/cli/src/commands/project/new/scaffold.test.ts packages/cli/src/validation/skills.test.ts apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/lifecycle.md
+git commit -m "feat(prev1-t01): restore adaptive lite specification depth"
+```
+
+---
+
+### Task prev1-t02: (revision) Make Lite implementation proof proportionate to risk
+
+**Files:**
+
+- Modify: `.oat/templates/plan-lite.md`
+- Modify: `.agents/skills/oat-project-lite/SKILL.md`
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `apps/oat-docs/docs/workflows/projects/artifacts.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+
+**Step 1: Replace the mandatory test-first recipe with an evidence strategy**
+
+Replace the fixed RED/GREEN/refactor steps with a task-level implementation and
+proof strategy chosen for the change. Allow test-first development,
+characterization-first work, implementation followed by a focused regression,
+static or build checks, and manual or computer-use visual proof. Require the
+plan to name the selected strategy, the observable risk it covers, and the
+exact command or manual proof. When no automated test adds useful confidence,
+require a short rationale instead of a ceremonial fixture or harness.
+
+Preserve stricter evidence where it is load-bearing: bug fixes normally retain
+a pre-fix reproduction; user-interface changes require visual proof; and
+security, provenance, approval, receipt, or publication contracts retain
+reproduction-grade negative and valid controls.
+
+Align Lite reviewer and implementer guidance and add focused contract coverage
+that rejects both unconditional test-first wording and plans that provide no
+meaningful proof.
+
+**Step 2: Verify**
+
+Run: `pnpm exec vitest run packages/cli/src/validation/skills.test.ts`
+Expected: Lite contract tests accept proportionate proof choices and reject unconditional test-first or proof-free guidance.
+
+Run: `pnpm lint && pnpm format && pnpm check`
+Expected: Skill, template, documentation, and repository checks pass.
+
+**Step 3: Commit**
+
+```bash
+git add .oat/templates/plan-lite.md .agents/skills/oat-project-lite/SKILL.md .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md packages/cli/src/validation/skills.test.ts apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/lifecycle.md
+git commit -m "feat(prev1-t02): make lite proof strategy proportionate"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -1436,8 +1534,9 @@ rows remain unchanged.
 - Phase 4: 2 tasks - oat-project-lite skill, end-to-end integration test
 - Phase 5: 4 tasks - mode-aware skill branches, import-to-lite offer, checkpoint bypass, collapsed closeout
 - Phase 6: 11 tasks - docs and triage, manual run and sync, lockstep release gates, four lifecycle-final-review fixes, and four exit-gate fixes (last)
+- Phase p-rev1: 2 tasks - adaptive product/technical specification depth and risk-proportionate implementation proof
 
-**Total:** 27 tasks across 6 phases
+**Total:** 29 tasks across 7 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

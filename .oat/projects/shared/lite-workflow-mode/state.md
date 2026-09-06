@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t01
 oat_last_commit: daca23b157c2cec331434052d721372455106218
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -103,7 +103,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T05:12:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T13:24:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -115,14 +115,14 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — revision 1 in progress from post-PR inline feedback.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete lightweight design)
-- **Plan:** `plan.md` (complete)
+- **Plan:** `plan.md` (revision 1 in progress)
 - **Implementation:** `implementation.md` (in_progress)
 
 ## Progress
@@ -164,16 +164,14 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Additional implementation exit-gate attempt passed at the Important
   threshold with one addressed Minor finding
 - ✓ PR created
-- ⧗ Awaiting human review
+- ⧗ Revision tasks `prev1-t01` and `prev1-t02` queued for implementation
 
 ## Blockers
 
-None. PR #264 is open for review. Merge and release remain unauthorized.
+None. PR #264 is open; revision implementation is in progress. Merge and
+release remain unauthorized.
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Implement and independently review revision phase `p-rev1`, then refresh PR
+status. Start with `prev1-t01` through `oat-project-implement`.
