@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: prev2-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 4     | 4/4       |
-| Phase 2      | complete    | 3     | 3/3       |
-| Phase 3      | complete    | 3     | 3/3       |
-| Phase 4      | complete    | 2     | 2/2       |
-| Phase 5      | complete    | 4     | 4/4       |
-| Phase 6      | complete    | 11    | 11/11     |
-| Phase p-rev1 | complete    | 7     | 7/7       |
-| Phase p-rev2 | in progress | 3     | 2/3       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 4     | 4/4       |
+| Phase 2      | complete | 3     | 3/3       |
+| Phase 3      | complete | 3     | 3/3       |
+| Phase 4      | complete | 2     | 2/2       |
+| Phase 5      | complete | 4     | 4/4       |
+| Phase 6      | complete | 11    | 11/11     |
+| Phase p-rev1 | complete | 7     | 7/7       |
+| Phase p-rev2 | complete | 3     | 3/3       |
 
-**Total:** 36/37 tasks completed; p-rev2 terminal verification pending
+**Total:** 37/37 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -43,8 +43,9 @@ Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are seque
 
 ## Phase p-rev2: Review Fixes — Wave 4 Integration and Closeout
 
-**Status:** in progress
+**Status:** complete
 **Started:** 2026-09-06
+**Completed:** 2026-09-06
 
 ### Review Received: final — Wave 4 integration
 
@@ -158,10 +159,45 @@ frontmatter stripping by the root session; no GitHub mutation has occurred.
 is recorded; the third event restored passing phase verification without
 changing the accepted dispatch target or widening the bounded file scope.
 
-**Next:** `prev2-t03` must reproduce the SIGTERM cleanup subtest before any code
-change, run terminal repository verification, and record the results. A fresh
-required CI run for the exact pushed head and the focused p-rev2 re-review remain
-root-owned closeout boundaries.
+### Task prev2-t03: Re-establish terminal verification and CI
+
+**Status:** complete
+
+The exact SIGTERM cleanup subtest passed 10 consecutive local runs before any
+cleanup-code change. The original CI timeout mechanism is therefore
+inconclusive, not classified as flaky. No change to
+`tools/smoke/runner/cleanup.test.mjs` was justified or made.
+
+Exact reproduction command:
+
+```bash
+node --test --test-name-pattern='SIGTERM during drive cleans the durable manifest without collateral writes' tools/smoke/runner/cleanup.test.mjs
+```
+
+Terminal local verification completed with explicit exit codes:
+
+| Command                                          | Exit | Evidence                                                   |
+| ------------------------------------------------ | ---: | ---------------------------------------------------------- |
+| `pnpm check`                                     |    0 | 10/10 tasks; 64 canonical OAT skills validated             |
+| `pnpm type-check`                                |    0 | 10/10 tasks                                                |
+| `pnpm test`                                      |    0 | 10/10 tasks; CLI 5799/5799                                 |
+| `pnpm build`                                     |    0 | 5/5 tasks                                                  |
+| `pnpm run check:skill-bumps`                     |    0 | 20 changed canonical skill bump checks                     |
+| `git fetch origin main`                          |    0 | fresh `origin/main` comparison input                       |
+| `pnpm release:check-versions`                    |    0 | lockstep version gate passed                               |
+| `pnpm release:validate`                          |    0 | five public `0.2.60` packages and visual validation passed |
+| `pnpm build:docs`                                |    0 | 6/6 tasks; 73 static pages generated                       |
+| isolated-home `pnpm exec turbo run test --force` |    0 | 10/10 tasks, zero cache hits; CLI 5799/5799                |
+| `pnpm lint`                                      |    0 | 10/10 tasks; skill and smoke surfaces included             |
+| `pnpm format`                                    |    0 | 10/10 tasks; repository format check passed                |
+| `pnpm test:smoke`                                |    0 | 160/160                                                    |
+| `pnpm test:skills`                               |    0 | 833/833                                                    |
+| `pnpm test:release`                              |    0 | 39 passed, 1 skipped                                       |
+| `pnpm oat:validate-skills`                       |    0 | 64 canonical OAT skills validated                          |
+
+A fresh required CI run for the exact eventual pushed head remains mandatory.
+Root owns push, remote CI, focused p-rev2 re-review, and merge decisions; no
+remote action was performed by this task.
 
 ---
 
@@ -2094,6 +2130,7 @@ Track test execution during implementation.
 | 5      | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops              | 0 final | Review, import, progress, recap bypass, PR flow               |
 | 6      | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes; p06-t10 and p06-t11 used no retries    | 0 final | Docs, provider sync, real promotion routing, release `0.2.60` |
 | p-rev1 | Focused revision suites, promotion negative controls, full repository gates, post-fix contract tests, project sync dry-run           | Yes after recovery and two review fix loops | 0 final | Adaptive Lite depth, proportionate proof, executor boundary   |
+| p-rev2 | SIGTERM reproduction, ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, release validation  | Yes after three recovery events             | 0 final | Wave 4 composition, closeout alignment, local terminal proof  |
 
 ## Final Summary (for PR/docs)
 
@@ -2147,8 +2184,11 @@ Track test execution during implementation.
   implementation task, phase and final reviews, exit gate, and PR-description
   generation without creating an external PR.
 - The p-rev2 shared-posture focused suite, autonomy inventory, project sync
-  dry-run, skill-bump gate, lint, and format passed. Fresh terminal repository
-  verification and required CI for the eventual pushed head remain pending.
+  dry-run, skill-bump gate, lint, format, ordered terminal gates, and uncached
+  isolated-HOME test run passed. The exact SIGTERM subtest passed 10/10 locally,
+  so the prior CI mechanism remains inconclusive rather than classified as
+  flaky. Required CI for the eventual pushed head remains root-owned and
+  pending.
 
 **Design deltas (if any):**
 
