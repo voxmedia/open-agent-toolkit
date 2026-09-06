@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Fresh p-rev1 dispatch authorization required after invalid launch abort
+  - Fresh p-rev1 dispatch authorization required from the post-repair HEAD
 oat_last_updated: 2026-09-06
 oat_current_task_id: prev1-t01
 oat_generated: false
@@ -1572,6 +1572,15 @@ alignment, explicit syntactic-versus-semantic enforcement, autonomy behavior,
 observable section triggers, version pins, and representative change-class
 guidance. The phase remains Lite-only pending
 `BL-260906-re-evaluate-universal-plan`.
+
+**Dispatch-journal repair (2026-09-06):** Six legacy records were normalized
+to the current canonical parser. Five records lost redundant top-level review
+metadata (`artifact`, `reviewed_head`, and `finding_counts`); one of those also
+lost ad hoc lifecycle timestamps and a child handle. A sixth record lost two
+redundant `authorization` keys whose scope and timestamps remain in canonical
+fields. The review ledger, implementation record, review artifacts, and Git
+history preserve the removed information. The source parser accepts all 33
+current journal records, and the 71 focused recorder tests pass.
 
 ---
 

@@ -47,18 +47,7 @@
     "deferred_minor_count": 0
   },
   "launch_status": "accepted",
-  "accepted_at": "2026-09-06T03:18:13Z",
-  "child_handle": "/root/lite_final_rereview3",
   "child_outcome": "passed",
-  "completed_at": "2026-09-06T03:20:05Z",
-  "artifact": "reviews/final-review-2026-09-06T032005Z.md",
-  "reviewed_head": "c4793585aee012ed134e1ba1eba0a819230a9c23",
-  "finding_counts": {
-    "critical": 0,
-    "important": 0,
-    "medium": 1,
-    "minor": 0
-  },
   "configured_invocation_evidence": [
     "dispatch-report-v1:final-review",
     "native-spawn-accepted",

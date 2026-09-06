@@ -48,14 +48,6 @@
   },
   "launch_status": "accepted",
   "child_outcome": "passed",
-  "artifact": "reviews/final-review-2026-09-06T023254Z.md",
-  "reviewed_head": "6ba4c38dd08d192fdb35840becbdf52b74f5d8a9",
-  "finding_counts": {
-    "critical": 0,
-    "important": 0,
-    "medium": 0,
-    "minor": 0
-  },
   "configured_invocation_evidence": [
     "dispatch-report-v1:final-review",
     "native-spawn-accepted",
