@@ -1818,7 +1818,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-lite',
-        version: '1.0.0',
+        version: '1.0.1',
         finalizedHeading: '### Step 6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 7: Mark Plan Complete and Hand Off',
@@ -1905,6 +1905,12 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-lite/SKILL.md',
     );
+    const artifacts = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/artifacts.md',
+    );
+    const liteArtifactRow = artifacts
+      .split('\n')
+      .find((line) => line.startsWith('| `lite`'));
     const interviewStart = content.indexOf(
       '### Step 2: Batched Critical Interview',
     );
@@ -1946,6 +1952,9 @@ describe('validateOatSkills', () => {
     );
     expect(content).not.toMatch(
       /a backticked\s+command, a test name, or a `manual:` visual-proof instruction/,
+    );
+    expect(liteArtifactRow).toMatch(
+      /Summary.*Decisions.*Assumptions.*Out of Scope.*Validation Criteria/,
     );
     expect(persistence).toMatch(
       /after Step 3[\s\S]*before the Step 4 approval gate/i,
