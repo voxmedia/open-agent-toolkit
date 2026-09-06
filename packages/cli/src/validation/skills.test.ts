@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import {
   mkdir,
   mkdtemp,
@@ -7292,31 +7293,92 @@ interface BackstopClause {
 
 /**
  * Markdown a reader actually receives as guidance. HTML comments render to
- * nothing and fenced blocks are literal samples rather than directives, so
- * counting either would let a requirement be disabled while its words still
- * match.
+ * nothing, and fenced or indented code blocks are literal samples rather than
+ * directives, so counting any of them would let a requirement be disabled
+ * while its words still match.
  */
 function liveMarkdown(content: string): string {
   const kept: string[] = [];
   let fence: string | null = null;
+  let indented = false;
 
   for (const line of content.replace(/<!--[\s\S]*?-->/g, '').split(/\r?\n/)) {
-    const marker = /^(`{3,}|~{3,})/.exec(line.trim());
-    if (fence === null) {
-      if (marker) fence = marker[1]!;
-      else kept.push(line);
+    const trimmed = line.trim();
+    const marker = /^(`{3,}|~{3,})/.exec(trimmed);
+
+    if (fence !== null) {
+      // CommonMark: a closer is the same fence character, at least as long.
+      if (
+        marker !== null &&
+        marker[1]![0] === fence[0] &&
+        marker[1]!.length >= fence.length
+      )
+        fence = null;
       continue;
     }
-    // CommonMark: a closer is the same fence character, at least as long.
+
+    if (indented) {
+      // An indented block runs until a non-blank line indented under four
+      // spaces; blank lines inside it belong to the block.
+      if (trimmed === '' || /^ {4,}/.test(line)) continue;
+      indented = false;
+    }
+
+    if (marker !== null) {
+      fence = marker[1]!;
+      continue;
+    }
+
+    // CommonMark indented code: four spaces after a blank line. Continuation
+    // lines of a list item are indented too, but they follow a non-blank line,
+    // so they stay live.
+    const previous = kept.at(-1);
     if (
-      marker !== null &&
-      marker[1]![0] === fence[0] &&
-      marker[1]!.length >= fence.length
-    )
-      fence = null;
+      /^ {4,}\S/.test(line) &&
+      (previous === undefined || previous.trim() === '')
+    ) {
+      indented = true;
+      continue;
+    }
+
+    kept.push(line);
   }
 
   return kept.join('\n');
+}
+
+/** Repository-relative paths the guarded prose cites as live code. */
+function citedRepoPaths(text: string): string[] {
+  return [...text.matchAll(/`(packages\/[^`\s]+)`/g)].map(([, path]) => path!);
+}
+
+function unresolvedRepoPaths(paths: string[]): string[] {
+  const repoRoot = join(process.cwd(), '..', '..');
+  return paths.filter((path) => !existsSync(join(repoRoot, path)));
+}
+
+/**
+ * Additive weakening is invisible to presence-only clause matching, so the
+ * guarded block carries an explicit deny list. Neither intentional carve-out
+ * (a point-in-time observation needing no permanent backstop, and unguarded
+ * non-normative prose) is worded with any of these terms; introducing one
+ * deliberately means updating this list in the same PR.
+ */
+/** Top-level and nested bullet counts, so an added clause is visible. */
+function bulletShape(block: string): [number, number] {
+  const lines = block.split('\n');
+  return [
+    lines.filter((line) => /^- /.test(line)).length,
+    lines.filter((line) => /^ {2}- /.test(line)).length,
+  ];
+}
+
+function weakeningTerms(text: string): string[] {
+  return [
+    ...text.matchAll(
+      /\b(?:exempt(?:s|ed|ion|ions)?|waive[ds]?|waivers?|opt(?:ed)?[ -]?out|grandfathered|optional|discretion)\b/gi,
+    ),
+  ].map(([term]) => term.toLowerCase());
 }
 
 /**
@@ -7390,8 +7452,14 @@ const authoringBackstopClauses: BackstopClause[] = [
     requires: /Never key a guard to a physical line number/i,
   },
   {
-    id: 'no-prose-test-for-runtime-claims',
-    requires: /not restate a runtime claim as a prose test/i,
+    id: 'prose-is-not-runtime-enforcement',
+    requires:
+      /A prose assertion is not enforcement for a runtime claim: keep the enforcement in the owning code/i,
+  },
+  {
+    id: 'prose-pins-stay-legitimate',
+    requires:
+      /Pinning the prose that documents the claim is still useful and is not a substitute/i,
   },
   {
     id: 'no-cli-when-a-test-suffices',
@@ -7410,6 +7478,11 @@ const authoringBackstopClauses: BackstopClause[] = [
   {
     id: 'maintenance-rule-in-artifact',
     requires: /maintenance rule inside the guarded artifact/i,
+  },
+  {
+    id: 'names-its-own-guard',
+    requires:
+      /packages\/cli\/src\/validation\/skills\.test\.ts`[^.]*in the same\s+PR/i,
   },
   {
     id: 'non-normative-prose-exempt',
@@ -7454,6 +7527,11 @@ const designEchoClauses: BackstopClause[] = [
     requires:
       /taxonomy, stable-identity, and same-PR rules live in the `create-oat-skill` skill/i,
   },
+  {
+    id: 'names-its-own-guard',
+    requires:
+      /packages\/cli\/src\/validation\/skills\.test\.ts` in the same PR/i,
+  },
 ];
 
 describe('authoring contract — executable backstops for standing claims', () => {
@@ -7483,6 +7561,49 @@ describe('authoring contract — executable backstops for standing claims', () =
     const text = normalizeProse(rule);
     expect(missingClauses(text, authoringBackstopClauses)).toEqual([]);
     expect(lineIdentityViolations(text)).toEqual([]);
+
+    // "Every cited mechanism exists" is repository-static by the rule's own
+    // taxonomy, so it is keyed to the files rather than to the strings. A
+    // rename would otherwise leave the guidance pointing at a dead precedent
+    // with a green suite — the drift the plan's STOP condition is written
+    // against.
+    const cited = citedRepoPaths(text);
+    expect(cited.length, 'repository paths cited by the rule').toBe(4);
+    expect(unresolvedRepoPaths(cited), 'every cited path resolves').toEqual([]);
+    expect(
+      unresolvedRepoPaths([
+        ...cited,
+        'packages/cli/src/validation/renamed-away.test.ts',
+      ]),
+      'a renamed-away precedent is detected',
+    ).toEqual(['packages/cli/src/validation/renamed-away.test.ts']);
+
+    // Presence-only clause matching cannot see an obligation that is
+    // neutralized by addition rather than deletion, so the block also carries
+    // a weakening deny list and a bullet-structure check.
+    expect(weakeningTerms(text), 'weakening vocabulary in the rule').toEqual(
+      [],
+    );
+    expect(bulletShape(rule), 'rule bullet structure').toEqual([7, 3]);
+
+    // Negative control: a blanket exemption appended to the block leaves every
+    // required clause matched, and both additive signals still catch it.
+    const exemptionAppended = `${rule}\n- Skills under active development are exempt from every requirement in this block until they stabilize.`;
+    expect(
+      missingClauses(
+        normalizeProse(exemptionAppended),
+        authoringBackstopClauses,
+      ),
+      'presence-only matching is blind to the appended exemption',
+    ).toEqual([]);
+    expect(
+      weakeningTerms(normalizeProse(exemptionAppended)),
+      'the deny list catches the appended exemption',
+    ).toEqual(['exempt']);
+    expect(
+      bulletShape(exemptionAppended),
+      'the bullet structure catches the appended exemption',
+    ).toEqual([8, 3]);
 
     // Red/green mutation 1: the same-PR obligation is removed. A guard that
     // only checked for the words "backstop" or "contract test" would still
@@ -7568,6 +7689,25 @@ describe('authoring contract — executable backstops for standing claims', () =
         'Executable backstops for contract claims',
       ),
       'fenced guidance is a sample, not live',
+    ).toBe('');
+
+    // Extraction control 4: demoting the rule into a four-space indented block
+    // after a blank line is an indented code sample, so it must read as absent
+    // rather than as live guidance.
+    const indentedOut = skill.replace(
+      rule,
+      rule
+        .split('\n')
+        .map((line) => `    ${line}`)
+        .join('\n'),
+    );
+    expect(indentedOut, 'indented-demotion control applied').not.toBe(skill);
+    expect(
+      extractBoldedRequirementBlock(
+        indentedOut,
+        'Executable backstops for contract claims',
+      ),
+      'indented guidance is a sample, not live',
     ).toBe('');
   });
 

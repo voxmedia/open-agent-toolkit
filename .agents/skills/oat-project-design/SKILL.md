@@ -413,7 +413,8 @@ emits a structured result. A point-in-time observation about today's codebase
 needs a citation, not an owner. Record the owner beside the error category it
 guards, or in the Requirement-to-Test Mapping row it belongs to. The full
 taxonomy, stable-identity, and same-PR rules live in the `create-oat-skill`
-skill; do not restate them here.
+skill; do not restate them here. Changing this paragraph means updating its
+contract case in `packages/cli/src/validation/skills.test.ts` in the same PR.
 
 ### Step 4a: Selective Review Pass
 

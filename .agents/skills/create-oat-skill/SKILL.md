@@ -159,14 +159,19 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
   plus semantic anchors, such as heading text, an ID, or an exact quoted
   phrase. Never key a guard to a physical line number; an edit above the claim
   would silently retarget or break it.
-- Do not restate a runtime claim as a prose test, and do not add a CLI command
-  when a repository-static contract test already decides the claim.
+- A prose assertion is not enforcement for a runtime claim: keep the
+  enforcement in the owning code. Pinning the prose that documents the claim is
+  still useful and is not a substitute. Do not add a CLI command when a
+  repository-static contract test already decides the claim.
 - Ship the claim and its backstop in the same PR. Splitting them, or deferring
   the backstop to follow-up work, is not allowed: write the backstop now, or
   downgrade the sentence to a point-in-time observation.
 - State the maintenance rule inside the guarded artifact, beside the claim, so
   the next author learns the obligation from the artifact rather than from
-  review.
+  review. This block does that for itself: its own claims are guarded by
+  `packages/cli/src/validation/skills.test.ts`, so adding, removing, or
+  reweakening a requirement here means updating that contract case in the same
+  PR.
 - Leave rationale, examples, troubleshooting notes, and deliberately
   non-normative guidance unguarded. Demanding a test for explanatory prose is
   as wrong as leaving a standing claim unbacked.
