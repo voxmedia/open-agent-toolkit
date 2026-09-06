@@ -173,13 +173,28 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Review row `final` → `passed`.** The configured exit gate runs next on the closeout head.
 
+## Review Received: final (configured exit gate, attempt 1)
+
+**Date:** 2026-09-06
+**Gate:** run `872d498a-ade9-4dff-8881-6da0b70c0360`, target `codex-5-6-sol-xhigh`, envelope `blocked`, threshold important, blocking true, attempt `w3-exit-gate-20260906T140148Z`.
+**Review artifact:** reviews/archived/final-review-2026-09-06T140727Z.md (reviewed head `182c832a98a608c40b740e1490fad2b989aef694`, invocation gate)
+
+**Findings:** Critical 0 · Important 2 · Medium 0 · Minor 0.
+
+**Dispositions:**
+
+- I1 — the root acceptance clause at `phase-execution.md:608` still rejects the effective task boundary (the concern p01 reported and the root reviewer routed to wave close): the gate overrides that routing — **fix in code**, `w3-p01-fix-002` dispatched to the p01 handle on the integration branch (align `:608` with `:493`/`:652`, `oat-project-implement` 2.3.2 → 2.3.3 with its seven pins, contract assertion plus a negative control that the clause cannot regress to plan-list-only files). Verified by the gate's re-run.
+- I2 — `discovery.md` still instructed lanes to sync `--scope all`, and the Deviations row read as if the program/source-plan correction had been applied: **fixed** (this commit) — the discovery constraint now says `--scope project`; the Deviations row and Deferred Findings describe the source-plan and program corrections truthfully as PENDING and tracked as `BL-260906-wave-3-external-plan`; the p03 incident stays in the append-only logs.
+
+**Gate row `final` (attempt 1) → `fixes_added`; `oat_implement_exit_gate` → `blocked` (1 attempt completed); re-run after `w3-p01-fix-002`.**
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)
 
 - p02 M3: evidence bundle drops the v2 `state` discriminator → `BL-260906-project-journal-reservation`.
-- p01 I1 (CONCERN 1): `phase-execution.md:608` owner decision → wave-close plan correction (`BL-260906-wave-2-external-plan` pattern; recorded in the program refresh).
-- p03 M3: plans' `oat sync --scope all` convention → wave-close plan correction (program rule).
+- p01 I1 (CONCERN 1): `phase-execution.md:608` owner decision → overtaken by the exit gate, which required the alignment now (`w3-p01-fix-002`).
+- p03 M3: plans' `oat sync --scope all` convention → pending, tracked as `BL-260906-wave-3-external-plan` (wrapper artifacts already say `--scope project`).
 
 ### Deferred Findings (Minor)
 

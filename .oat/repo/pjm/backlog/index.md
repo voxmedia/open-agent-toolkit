@@ -307,6 +307,7 @@
 | BL-260906-run-scripts-worktree-init-test | Run scripts/worktree/init.test.mjs under a repository gate                                            | open   | low      | task       | XS       |
 | BL-260904-stabilize-the-collection       | Stabilize the collection-detach engine integration test                                               | open   | low      | task       | S        |
 | BL-260903-verify-the-packs-inventory     | Verify the packs:inventory path-redaction claim in troubleshooting docs                               | open   | low      | task       | XS       |
+| BL-260906-wave-3-external-plan           | Wave 3 external-plan corrections for the program refresh                                              | open   | low      | task       | XS       |
 | BL-260903-project-document-should-prompt | project-document should prompt a re-run when review fixes change a shipped contract                   | open   | low      | task       | S        |
 
 <!-- END OAT BACKLOG-INDEX -->

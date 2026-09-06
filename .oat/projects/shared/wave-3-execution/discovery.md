@@ -76,8 +76,10 @@ merged as PR #267 (closed as #268).
 
 - No force-push, no rewriting reviewed commits, no bypassing branch policy, no
   weakening tests or gates, no discarding unrelated work.
-- Every lane runs `oat sync --scope all` after skill edits and inspects the
-  provider-view diff before committing; provider-view deletions are a STOP.
+- Every lane runs `pnpm run cli -- sync --scope project` after skill edits and
+  inspects the provider-view diff before committing; provider-view deletions
+  are a STOP (`--scope all` also rewrites the operator's user-scope views and is
+  operator-only).
 - Exactly one lockstep bump for the wave, owned by the fan-in.
 - Draft PR #190 rewrites `oat-project-implement` references that p01's source
   plan cites; if it merges before p01 starts, apply that plan's landing-event row.
