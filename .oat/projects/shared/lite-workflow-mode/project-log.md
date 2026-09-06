@@ -152,6 +152,10 @@ review artifact=.oat/projects/shared/lite-workflow-mode/reviews/final-review-202
 
 Completed 3/3 p-rev2 tasks at 6db21410ff85bdc01632154784c9f4baa815ddaa; three governed recovery events are recorded, local Definition of Done gates pass, and final re-review plus exact-remote-head CI remain.
 
+### 2026-09-06 · structural · oat-project-review-provide · reviews/final-review-2026-09-06T233432Z.md
+
+Final re-review used one mechanical reconnaissance wave plus primary inline semantic reconciliation; see the review artifact for target, acceptance, floor, fallback, and reconciliation evidence.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
