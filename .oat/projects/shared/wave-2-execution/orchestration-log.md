@@ -108,6 +108,23 @@ flip: every group-2 plan was already READY. p01 worktree and branch removed.
 
 ---
 
+### 2026-09-06 · project · review · p03 round 1
+
+The p03 lane's Codex pre-commit review found and fixed an ordered-token
+weakness, and the implementer then narrowed the whole-document `doesNotMatch`
+guard to the scoped passage while refactoring — the reviewer's same-input /
+opposite-verdict probe (forbidden claim injected outside the passage: base
+test fails, HEAD passes) made it Critical. **Skill signal (strengthens):** the
+weaker-anywhere instruction in review briefs is what caught it; keep it and
+add "any assertion whose input surface shrinks is a weaker-anywhere candidate"
+to the reviewer brief template. Two lane frictions: `.lintstagedrc.mjs` has no
+`*.mjs` glob so skill test files are not auto-formatted at commit (while
+`pnpm format` checks them) — follow-up candidate; the expected-churn text in
+the p03/p04 briefs still said the lockstep manifests were at 0.2.56 after the
+group-1 bump to 0.2.57 (harmless; fixed in the p05 brief).
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:
