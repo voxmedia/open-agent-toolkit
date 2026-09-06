@@ -1095,6 +1095,160 @@ git commit -m "fix(p06-t06): align lite artifacts and release surfaces"
 
 ---
 
+### Task p06-t07: (review) Make local-scope Lite promotion report success atomically
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/promote/promote.ts`
+- Modify: `packages/cli/src/commands/project/promote/promote.test.ts`
+
+**Step 1: Write test (RED)**
+
+Add a local-scope promotion test that uses the gitignored
+`.oat/projects/local/` convention, asserts the result is `promoted`, and
+asserts no git stage or commit operation runs. Confirm it fails against the
+current unconditional non-synced persistence branch. Preserve the existing
+shared and synced positive controls.
+
+**Step 2: Implement fix (GREEN)**
+
+In `persistPromotion`, return successfully without a git operation when the
+resolved scope is `local`, matching the project scaffolder's persistence
+contract. Do not change the shared commit or synced push behavior, the JSON
+shape, or the fail-closed scope resolver.
+
+**Step 3: Refactor and format**
+
+Run:
+`pnpm exec oxfmt --write packages/cli/src/commands/project/promote/promote.ts packages/cli/src/commands/project/promote/promote.test.ts`
+
+**Step 4: Verify**
+
+Run:
+`HOME=$(mktemp -d) pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/promote/promote.test.ts`
+
+Expected: the focused suite exits 0. Prove the local-scope guard can fail once
+by neutralizing it, observing the new test fail with the reproduced
+`persistence-failed` outcome, then restoring the fix.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/promote/promote.ts packages/cli/src/commands/project/promote/promote.test.ts
+git commit -m "fix(p06-t07): handle local lite promotion persistence"
+```
+
+---
+
+### Task p06-t08: (review) Route promoted quick projects to quick-start consistently
+
+**Files:**
+
+- Modify: `packages/control-plane/src/recommender/router.ts`
+- Modify: `packages/control-plane/src/recommender/router.test.ts`
+
+**Step 1: Write test (RED)**
+
+Add a recommender test for a promoted quick state whose `readyFor` is
+`oat-project-quick-start`. Assert the recommendation agrees with the dashboard
+and state contract instead of falling back to `oat-project-discover`. Confirm
+the test fails before the router change.
+
+**Step 2: Implement fix (GREEN)**
+
+Add the promoted-state `readyFor === 'oat-project-quick-start'` branch to the
+control-plane recommender. Keep all existing quick discovery boundary routes
+unchanged for projects that do not carry this explicit readiness signal.
+
+**Step 3: Refactor and format**
+
+Run:
+`pnpm exec oxfmt --write packages/control-plane/src/recommender/router.ts packages/control-plane/src/recommender/router.test.ts`
+
+**Step 4: Verify**
+
+Run:
+`pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts`
+
+Expected: the focused suite exits 0, and temporarily removing the new branch
+makes the promoted-state assertion fail with an `oat-project-discover`
+recommendation.
+
+**Step 5: Commit**
+
+```bash
+git add packages/control-plane/src/recommender/router.ts packages/control-plane/src/recommender/router.test.ts
+git commit -m "fix(p06-t08): align promoted quick routing"
+```
+
+---
+
+### Task p06-t09: (review) Remove the phantom Lite phase and refresh release surfaces
+
+**Files:**
+
+- Modify: `.oat/templates/plan-lite.md`
+- Regenerate: `packages/cli/assets/templates/plan-lite.md`
+- Modify: `packages/cli/src/commands/project/new/scaffold.test.ts`
+- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`,
+  `packages/docs-config/package.json`, `packages/docs-theme/package.json`,
+  `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+
+**Step 1: Write test (RED)**
+
+Add a scaffold/template contract assertion that a Lite plan seeds only the
+`p01` review row and contains no `p02` code-review row. Confirm it fails
+against both the canonical template and its bundled CLI asset.
+
+**Step 2: Implement fix (GREEN)**
+
+Remove the `p02` review row from the canonical Lite template and regenerate
+the bundled asset. Because p06-t07 and p06-t08 change shipped public-package
+behavior and this task changes a bundled CLI asset, advance all five lockstep
+public packages and `public-package-versions.json` from `0.2.57` to `0.2.58`.
+Run the repository bundle/sync commands needed to leave generated release
+surfaces current; do not alter canonical skills or provider projections unless
+the sync reports a real source-derived change.
+
+**Step 3: Refactor and format**
+
+Format only non-generated files edited by this review-fix group:
+`pnpm exec oxfmt --write .oat/templates/plan-lite.md packages/cli/src/commands/project/new/scaffold.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json`.
+
+**Step 4: Verify**
+
+Run the focused promote, router, and scaffold suites and preserve the three
+fail-capable negative controls from p06-t07 through p06-t09. Then run the full
+definition-of-done sequence in AGENTS.md order with each exit code captured:
+
+1. `pnpm check`
+2. `pnpm type-check`
+3. `pnpm test`
+4. `pnpm build`
+5. `pnpm run check:skill-bumps`
+6. `git fetch origin main` followed by `pnpm release:check-versions`
+7. `pnpm release:validate`
+8. `pnpm build:docs`
+
+Also run the evidence-grade isolated-HOME forced tests, `pnpm test:smoke`,
+`pnpm test:skills`, `pnpm test:release`, `pnpm oat:validate-skills`,
+`pnpm lint`, `pnpm format`, and a full-scope sync dry-run. Expected: every
+terminal command exits 0, the sync dry-run reports no operations, and all five
+public-package manifests plus the bundled version asset equal `0.2.58`.
+
+**Step 5: Commit**
+
+Stage only the task's template, bundled asset, contract test, lockstep package
+manifests, version asset, and any source-derived lockfile or sync-manifest
+change. Commit:
+
+```bash
+git commit -m "fix(p06-t09): align lite template and release surfaces"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -1126,7 +1280,7 @@ git commit -m "fix(p06-t06): align lite artifacts and release surfaces"
 | plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T200630Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
 | plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T201454Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
 | plan   | artifact | passed          | 2026-09-06 | dispatch/lite-plan-revision-rereview1-60cc80ff-7013-4da9-a678-45e17246b821.json | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
-| final  | code     | received        | 2026-09-06 | reviews/final-review-2026-09-06T021128Z.md                                      | 5b2a6462c3b21f8e6f1383e796c3328bba18329d | gate       | claude-fable-skip-permissions |
+| final  | code     | fixes_added     | 2026-09-06 | reviews/archived/final-review-2026-09-06T021128Z.md                             | 5b2a6462c3b21f8e6f1383e796c3328bba18329d | gate       | claude-fable-skip-permissions |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1162,9 +1316,9 @@ rows remain unchanged.
 - Phase 3: 3 tasks - split-detector guard, promote command, lite single-phase validator
 - Phase 4: 2 tasks - oat-project-lite skill, end-to-end integration test
 - Phase 5: 4 tasks - mode-aware skill branches, import-to-lite offer, checkpoint bypass, collapsed closeout
-- Phase 6: 6 tasks - docs and triage, manual run and sync, lockstep release gates, and three final-review fixes (last)
+- Phase 6: 9 tasks - docs and triage, manual run and sync, lockstep release gates, three lifecycle-final-review fixes, and three exit-gate fixes (last)
 
-**Total:** 22 tasks across 6 phases
+**Total:** 25 tasks across 6 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 
