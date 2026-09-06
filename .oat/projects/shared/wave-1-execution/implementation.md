@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 01 (use-configured-docs-index-paths)         | complete    | 2     | 2/2       |
 | Phase 02 (validate-assets-bundle-structure)        | complete    | 1     | 1/1       |
 | Phase 03 (make-assets-errors-override-aware)       | complete    | 1     | 1/1       |
-| Phase 04 (add-exclusions-to-docs-index-generation) | in_progress | 1     | 0/1       |
+| Phase 04 (add-exclusions-to-docs-index-generation) | in_progress | 2     | 1/2       |
 
-**Total:** 4/5 tasks completed (p01-t01, p01-t02 review fix, p02-t01, p03-t01)
+**Total:** 5/6 tasks completed (p01-t01, p01-t02 review fix, p02-t01, p03-t01, p04-t01; p04-t02 sweep pending)
 
 ---
 
@@ -236,10 +236,55 @@ oat_generated: false
 
 ## Phase 04: add-exclusions-to-docs-index-generation (group 2)
 
-**Status:** in_progress (source plan `BLOCKED` until p01 merges into the wave branch and its step 1 passes)
+**Status:** complete (lane verified; address-now sweep commit pending; awaiting fan-in merge)
 **Started:** 2026-09-06
 
+### Phase Summary
+
+**Outcome (what changed):**
+
+- `documentation.excludes` (JSON array; `oat config set documentation.excludes "a,b"` grammar) plus `--exclude` flags prune docs-index generation with a bounded, root-anchored glob grammar (`**`, `*`, trailing `/`), implemented as a greedy two-pointer matcher (no RegExp; ReDoS-safe, oracle-verified over millions of cases by the reviewer) consuming p01's already-resolved docs directory.
+- A malformed `documentation.excludes` value is repairable by the command its own error names (scoped lenient repair reader on that one `set` branch); every other key still fails closed.
+- Pre-exclusion rendering is byte-identical (golden captured from the phase-base generator); docs pages describe the grammar and the JSON-array storage.
+
+**Key files touched:**
+
+- `packages/cli/src/commands/docs/index-generate/generator.ts` / `generator.test.ts` - matcher and pruning
+- `packages/cli/src/commands/docs/index-generate/index.ts` / `index.test.ts` - flag/config wiring
+- `packages/cli/src/config/oat-config.ts` / `oat-config.test.ts` - schema and normalizer
+- `packages/cli/src/commands/config/index.ts` / `index.test.ts` - key family, set/unset, repair reader
+- `apps/oat-docs/docs/docs-tooling/commands.md`, `cli-utilities/configuration.md`, `reference/oat-directory-structure.md`
+
+**Verification:**
+
+- Run: `pnpm check`, `pnpm type-check`, `turbo run test --force` (0 cached; 5560 tests), `pnpm build`, `pnpm run check:skill-bumps`, forced docs build, all exit 0; lockstep diff = 0. Five negative controls fired (flags-replace-config, pruning disabled, config rejection disabled, repair reader unwired, regex matcher restored incl. the ReDoS timing test).
+- Result: pass
+
+**Notes / Decisions:**
+
+- Cross-model review (Codex, two read-only passes): one Important and two Medium fixed pre-commit (repairable malformed value, catastrophic globstar backtracking → matcher rewrite, circular golden); one Important rejected as pre-existing (unknown `documentation` sibling drop), confirmed by the root reviewer against the phase base.
+- Root review `reviews/p04-review-2026-09-06T011441Z.md`: 0C/0I/1M/4m → passed. Address-now sweep (`w1-p04-fix-001`): M1 duplicated matcher JSDoc, m1 docs exit-code claim; other minors deferred below.
+- Grammar decision: a bare `CLAUDE.md` is root-anchored (minimatch-style), documented on all three pages.
+
 ### Task p04-t01: Execute external plan — Add exclusions to docs index generation
+
+**Status:** completed
+**Commit:** 4f1ada48d2e471cdf9391bed70d836527e90395d
+
+**Outcome (required when completed):**
+
+- Operators can exclude paths from docs index generation via config or flags without hand-editing the generated manifest.
+
+**Files changed:**
+
+- see Phase Summary (11 declared files)
+
+**Verification:**
+
+- Run: see Phase Summary
+- Result: pass
+
+### Task p04-t02: (review sweep) Dedupe matcher grammar comment and correct config exit-code docs
 
 **Status:** in_progress
 **Commit:** -
@@ -257,6 +302,7 @@ oat_generated: false
 
 ### Deferred Findings (Minor)
 
+- p04 review minors — no signal when exclusions empty the manifest; `excludes` absent from `DEFAULT_SHARED_CONFIG` (behaviorally inert); the implementer's noted follow-up of exposing `excludes` in the command's `--json` payload. Deferred: outside the plan's scope or JSON-contract changes; file with the wave follow-up items. The external plan's body callout still reads BLOCKED against READY frontmatter: fan-in-owned plan correction queued for wave-close.
 - p03 review m3 — the file-global `statRedirects` test seam has no `afterEach` reset. Deferred: trivial test hygiene in a lane already passed; bundle with the follow-up item above rather than reopen the lane. p03 m2 (Reviews-table `Reviewed Head` SHAs are pre-rebase branch heads) is handled by the SHA mapping in the group fan-in records.
 
 - p01 review m1 — `docs/init/index.ts:196` "Index file" label now diverges from the Fumadocs `documentation.index` seed. Deferred: outside the plan's declared write surface; file a follow-up backlog item at closeout.
