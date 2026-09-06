@@ -1,7 +1,7 @@
 ---
 id: BL-260826-deterministic-smoke-tier-leaks
 title: Deterministic smoke tier leaks worktrees on interrupted runs
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - wave-2-follow-up
 assignee: null
 created: 2026-08-26T22:57:19.956Z
-updated: 2026-08-31T00:11:26Z
+updated: '2026-09-06T13:43:54Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-30-journal-deterministic-smoke-worktrees-before-creation.md
