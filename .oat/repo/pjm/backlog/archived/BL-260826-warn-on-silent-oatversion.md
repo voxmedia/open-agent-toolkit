@@ -1,7 +1,7 @@
 ---
 id: BL-260826-warn-on-silent-oatversion
 title: Warn on silent oatVersion restamps outside sync
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - wave-2-follow-up
 assignee: null
 created: 2026-08-26T22:57:18.952Z
-updated: 2026-08-30T23:49:30Z
+updated: '2026-09-06T19:21:06Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-30-warn-on-non-sync-manifest-restamps.md

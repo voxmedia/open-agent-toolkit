@@ -15,7 +15,7 @@ import type {
   SyncPlan,
   SyncResult,
 } from '@engine/index';
-import type { Manifest } from '@manifest/index';
+import type { Manifest, ManifestVersionRestamp } from '@manifest/index';
 import type {
   ConfigAwareAdaptersResult,
   MaterializationApplyResult,
@@ -41,12 +41,12 @@ export interface CanonicalSyncFilter {
  * Advisory diagnostic emitted when the CLI version that produced a scope's sync
  * manifest differs from the CLI version invoking sync. Comparison is symmetric
  * string inequality: the contract is version identity, not which side is newer.
+ *
+ * Sync's scoped view of the shared manifest diagnostic. It is an alias rather
+ * than a parallel declaration so sync's semantics cannot drift from the
+ * comparison every other save site uses.
  */
-export interface SyncVersionSkew {
-  scope: ConcreteScope;
-  producingVersion: string;
-  invokingVersion: string;
-}
+export type SyncVersionSkew = ManifestVersionRestamp<ConcreteScope>;
 
 export interface ScopeSyncPlan {
   scope: ConcreteScope;

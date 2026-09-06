@@ -37,6 +37,21 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.59` (wave 4 of the 2026-08-31 execution program, wrapper project
+  `wave-4-execution`, "delivered-project follow-ups") lets one project disable a
+  configured lifecycle gate through a strict `oat_skill_gate_overrides` map in
+  its own `state.md` (`oat gate resolve --project` reports `configured`,
+  `configured_disabled_by_project`, or `not_configured`; a `project_disabled`
+  closeout disposition whose fingerprint covers the override; every lifecycle
+  gate step now resolves with project context and fails closed on a null or
+  malformed result; `DR-260906-project-scoped-gate-overrides`), makes init,
+  remove-skill, interactive status adoption, and restamp-only sync report a
+  manifest `oatVersion` restamp before `saveManifest` replaces the producer
+  version (`manifestVersionRestamps` in init/remove-skill JSON), and emits
+  `dispatchStamp` beside `dispatchReport` from the dispatch-ceiling resolver so
+  orchestrators copy the canonical stamp instead of assembling it. Closed
+  `BL-260712-per-project-override`, `BL-260826-warn-on-silent-oatversion`,
+  `BL-260826-emit-the-dispatch-stamp-from`.
 - CLI `0.2.58` (wave 3 of the 2026-08-31 execution program, wrapper project
   `wave-3-execution`, "workflow durability and containment", merged as PR #269) makes the
   phase-implementer contract sweep the repository for every consumer of a

@@ -93,7 +93,13 @@ import {
   resolveScopeRoot,
 } from '@fs/paths';
 import type { Manifest } from '@manifest/index';
-import { loadManifest, saveManifest } from '@manifest/manager';
+import {
+  detectManifestVersionRestamp,
+  formatManifestVersionRestampWarning,
+  loadManifest,
+  type ManifestVersionRestamp,
+  saveManifest,
+} from '@manifest/manager';
 import {
   applyCodexProjectExtensionPlan,
   type CodexExtensionPlan,
@@ -388,6 +394,12 @@ interface ScopeReportCollection {
   activeAdapterNames: string[];
   userAgentMaterializationCoverage: UserAgentMaterializationCoverage;
   providerContext: ProviderScopeContext | null;
+  /**
+   * Captured from the manifest as loaded. Interactive adoption mutates
+   * `manifest` in place across the migration block, so the advisory reports
+   * this value rather than re-deriving it at save time.
+   */
+  versionRestamp?: ManifestVersionRestamp<ConcreteScope>;
 }
 
 function collectProviderRefreshAdvice(
@@ -1192,6 +1204,7 @@ async function collectScopeReports(
     activeAdapterNames,
     userAgentMaterializationCoverage: scope === 'user' ? agentCoverage : 'none',
     providerContext,
+    versionRestamp: detectManifestVersionRestamp(scope, manifest),
   };
 }
 
@@ -1505,6 +1518,17 @@ async function runStatusCommand(
         }
 
         if (manifestChanged) {
+          // Placed after the collection-migration block and immediately before
+          // the only status-owned save. An aborted migration never reaches
+          // here, so it never claims a restamp it did not perform.
+          if (scopeCollection.versionRestamp && !context.json) {
+            context.logger.warn(
+              formatManifestVersionRestampWarning(
+                'status',
+                scopeCollection.versionRestamp,
+              ),
+            );
+          }
           await dependencies.saveManifest(
             scopeCollection.manifestPath,
             scopeCollection.manifest,

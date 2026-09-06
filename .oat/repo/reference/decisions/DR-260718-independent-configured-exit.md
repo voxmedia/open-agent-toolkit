@@ -19,3 +19,5 @@ Require a configured oat-project-implement exit gate to reach a fresh policy-all
 ## Consequences
 
 A configured gate cannot be disabled or satisfied by another review mechanism, while projects with null gate resolution retain an explicit no-gate terminal path.
+
+Superseded in part by DR-260906-project-scoped-gate-overrides (2026-09-06): a project may disable a configured gate through `oat_skill_gate_overrides`, and null resolution fails closed.

@@ -250,8 +250,11 @@ for another.
 
 Resolution and policy outcomes are explicit:
 
-- A null resolution persists `allowed/no_gate` for the current implementation
-  basis.
+- A `not_configured` resolution persists `allowed/no_gate` for the current
+  implementation basis; a null, missing, or unrecognized resolver result fails
+  closed as unresolved instead.
+- A gate the project disabled persists `allowed/configured` with
+  `disposition: project_disabled` and never launches.
 - A configured passing review persists `allowed/passed` after any eligible
   review receive is durably completed.
 - `warn` persists `allowed/warned`; `prompt` proceeds only after explicit

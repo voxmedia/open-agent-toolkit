@@ -1,14 +1,14 @@
 ---
 id: BL-260712-per-project-override
 title: 'Per-project override to disable configured external gates'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: medium # urgent | high | medium | low | none
 scope: feature # idea | task | feature | initiative
 scope_estimate: M # XS | S | M | L | XL | XXL
 labels: [workflow-gates, configuration, ux]
 assignee: null
 created: '2026-07-12T20:57:00Z'
-updated: '2026-08-30T23:55:32Z'
+updated: '2026-09-06T19:21:04Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-30-disable-configured-gates-per-project.md

@@ -75,6 +75,7 @@ interface TestHarnessOptions {
   packInventories?: PackInventory[];
   pjmAdoption?: PjmAdoption;
   projectScopeUnavailable?: boolean;
+  manifestOatVersion?: string;
   resolveAssetsRootError?: Error;
   inventoryPackError?: { pack: PackName; error: Error };
 }
@@ -222,10 +223,13 @@ function createDetectedAdapter(
   };
 }
 
-function createManifest(entries: ManifestEntry[]): Manifest {
+function createManifest(
+  entries: ManifestEntry[],
+  oatVersion: string = OAT_VERSION,
+): Manifest {
   return {
     version: 1,
-    oatVersion: OAT_VERSION,
+    oatVersion,
     entries,
     lastUpdated: '2026-02-14T00:00:00.000Z',
   };
@@ -487,7 +491,9 @@ function createHarness(options: TestHarnessOptions = {}): {
         ? (options.home ?? '/tmp/home')
         : (options.cwd ?? '/tmp/workspace');
     }),
-    loadManifest: vi.fn(async () => createManifest(manifestEntries)),
+    loadManifest: vi.fn(async () =>
+      createManifest(manifestEntries, options.manifestOatVersion),
+    ),
     loadSyncConfig: vi.fn(async () => syncConfig),
     resolveUserSyncConfig: vi.fn(async () => userSyncConfig),
     saveManifest,
@@ -783,6 +789,153 @@ describe('createStatusCommand', () => {
     await runStatusCommand(command, ['--scope', 'project']);
 
     expect(capture.warn).toContain(REMEDIATION_TEXT);
+  });
+
+  describe('manifest version restamp advisory', () => {
+    const restampWarning = (producingVersion: string): string =>
+      `Manifest version restamp [status project]: manifest produced by oat "${producingVersion}" will be restamped to oat "${OAT_VERSION}".`;
+
+    const strayHarnessOptions = {
+      interactive: true,
+      driftReports: [],
+      strayReports: [
+        {
+          canonical: null,
+          provider: 'claude',
+          providerPath: '.claude/skills/stray-one',
+          state: { status: 'stray' as const },
+        },
+      ],
+    };
+
+    it('warns before the interactive adoption save', async () => {
+      const { capture, command, saveManifest } = createHarness({
+        ...strayHarnessOptions,
+        manifestOatVersion: '0.0.1',
+        selectManyResponses: [['0']],
+      });
+
+      let warningsWhenSaved: string[] = [];
+      saveManifest.mockImplementationOnce(async () => {
+        warningsWhenSaved = [...capture.warn];
+      });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      const expected = restampWarning('0.0.1');
+      expect(saveManifest).toHaveBeenCalledTimes(1);
+      expect(warningsWhenSaved).toContain(expected);
+      expect(
+        capture.warn.filter((message) => message === expected),
+      ).toHaveLength(1);
+    });
+
+    it('stays quiet when the manifest was produced by the invoking version', async () => {
+      const { capture, command, saveManifest } = createHarness({
+        ...strayHarnessOptions,
+        manifestOatVersion: OAT_VERSION,
+        selectManyResponses: [['0']],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      expect(saveManifest).toHaveBeenCalledTimes(1);
+      expect(
+        capture.warn.filter((message) =>
+          message.startsWith('Manifest version restamp'),
+        ),
+      ).toEqual([]);
+    });
+
+    it('emits no advisory when the migration is aborted', async () => {
+      const { capture, command, saveManifest } = createHarness({
+        ...strayHarnessOptions,
+        manifestOatVersion: '0.0.1',
+        // Aborting the checklist leaves the manifest untouched, so no restamp
+        // is coming and the advisory must not claim one.
+        selectManyResponses: [null],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      expect(saveManifest).not.toHaveBeenCalled();
+      expect(
+        capture.warn.filter((message) =>
+          message.startsWith('Manifest version restamp'),
+        ),
+      ).toEqual([]);
+    });
+
+    it('emits no advisory when the native-skill disposition is aborted', async () => {
+      // The second of the two `migrationAborted` assignments: aborting the
+      // per-skill disposition prompt breaks out of the native loop, skips the
+      // ordinary-stray block, and never sets `manifestChanged`, so the advisory
+      // is unreachable on this branch too.
+      const {
+        capture,
+        command,
+        saveManifest,
+        selectWithAbort,
+        selectManyWithAbort,
+      } = createHarness({
+        adapters: [createCursorAdapter(), createAdapter()],
+        interactive: true,
+        manifestEntries: [],
+        driftReports: [],
+        manifestOatVersion: '0.0.1',
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'cursor',
+            providerPath: '.cursor/skills/adopt-me',
+            state: { status: 'stray' as const },
+          },
+          // An ordinary stray behind the native one. Without the
+          // `migrationAborted` transition the run would fall through to this
+          // checklist and could still adopt and save, so its absence is what
+          // makes the abort observable rather than merely incidental.
+          {
+            canonical: null,
+            provider: 'claude',
+            providerPath: '.claude/skills/stray-one',
+            state: { status: 'stray' as const },
+          },
+        ],
+        singleSelectResponses: [null],
+        selectManyResponses: [['0']],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      expect(selectWithAbort).toHaveBeenCalledTimes(1);
+      expect(selectManyWithAbort).not.toHaveBeenCalled();
+      expect(saveManifest).not.toHaveBeenCalled();
+      expect(
+        capture.warn.filter((message) =>
+          message.startsWith('Manifest version restamp'),
+        ),
+      ).toEqual([]);
+    });
+
+    it('does not mutate or claim restamp evidence in JSON mode', async () => {
+      const { capture, command, saveManifest } = createHarness({
+        ...strayHarnessOptions,
+        interactive: false,
+        manifestOatVersion: '0.0.1',
+      });
+
+      await runStatusCommand(command, ['--json', '--scope', 'project']);
+
+      expect(saveManifest).not.toHaveBeenCalled();
+      const payload = capture.jsonPayloads[0] as Record<string, unknown>;
+      expect(payload).not.toHaveProperty('manifestVersionRestamps');
+      expect(JSON.stringify(payload)).not.toContain('Manifest version restamp');
+      expect(
+        [...capture.warn, ...capture.info].filter((message) =>
+          message.includes('Manifest version restamp'),
+        ),
+      ).toEqual([]);
+    });
   });
 
   it('prompts with one checklist and adopts only selected entries', async () => {

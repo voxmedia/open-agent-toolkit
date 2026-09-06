@@ -40,6 +40,7 @@ import type {
 } from '@providers/shared';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { ConcreteScope, Scope } from '@shared/types';
+import { formatSyncPlan as formatSyncPlanForReal } from '@ui/output';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -57,6 +58,12 @@ interface HarnessOptions {
   interactive?: boolean;
   loadedSyncConfig?: SyncConfig;
   loadedManifests?: Manifest[];
+  /**
+   * Use the production plan formatter instead of the compact fake. Required by
+   * any assertion about the composed human body, because the fake never emits
+   * the formatter's own "No changes required." sentence.
+   */
+  useRealSyncPlanFormatter?: boolean;
   loadManifestError?: Error;
   configAwareResults?: ConfigAwareAdaptersResult[];
   providerSelectResponses?: Array<string[] | null>;
@@ -230,7 +237,8 @@ function createEmptyPlan(scope: SyncPlan['scope'] = 'project'): SyncPlan {
 function createCollectionPlan(
   action:
     | 'create-collection-link'
-    | 'fallback-per-entry' = 'create-collection-link',
+    | 'fallback-per-entry'
+    | 'reject-collection' = 'create-collection-link',
 ): SyncPlan {
   return {
     scope: 'project',
@@ -247,7 +255,7 @@ function createCollectionPlan(
         ownership: action === 'create-collection-link' ? 'oat-created' : 'none',
         configuredStrategy: 'auto',
         proof:
-          action === 'fallback-per-entry'
+          action !== 'create-collection-link'
             ? {
                 status: 'ineligible',
                 reason: 'real-directory',
@@ -481,9 +489,11 @@ function createHarness(options: HarnessOptions = {}): {
     ],
     applyMaterializationExtensionPlan: (extension, scopeRoot, plan) =>
       extension.applyPlan(scopeRoot, plan),
-    formatSyncPlan: vi.fn((plan: SyncPlan, applied: boolean) => {
-      return `sync-${applied ? 'applied' : 'dry'}-${plan.scope}-${plan.entries.length + plan.removals.length}`;
-    }),
+    formatSyncPlan: options.useRealSyncPlanFormatter
+      ? vi.fn(formatSyncPlanForReal)
+      : vi.fn((plan: SyncPlan, applied: boolean) => {
+          return `sync-${applied ? 'applied' : 'dry'}-${plan.scope}-${plan.entries.length + plan.removals.length}`;
+        }),
   });
 
   return {
@@ -1269,6 +1279,9 @@ describe('createSyncCommand', () => {
 
     expect(executeSyncPlan).toHaveBeenCalledTimes(1);
     expect(capture.info).toContain('\nNo changes required.');
+    expect(capture.info).not.toContain(
+      '\nManifest version refreshed; no content changes required.',
+    );
   });
 
   it('apply (default): executes transformed rule copy plans', async () => {
@@ -1319,6 +1332,9 @@ describe('createSyncCommand', () => {
 
     expect(executeSyncPlan).toHaveBeenCalledTimes(1);
     expect(capture.info).toContain('\nNo changes required.');
+    expect(capture.info).not.toContain(
+      '\nManifest version refreshed; no content changes required.',
+    );
   });
 
   it('apply no-op: refreshes stale manifest oatVersion even when no files changed', async () => {
@@ -1327,6 +1343,9 @@ describe('createSyncCommand', () => {
       loadedManifests: [staleManifest],
       plans: [createEmptyPlan()],
       executeResults: [{ applied: 0, failed: 0, skipped: 0 }],
+      // Production formatter: the empty-plan sentence lives inside the plan
+      // body it composes, and the compact fake would hide it.
+      useRealSyncPlanFormatter: true,
     });
 
     // The restamp is the *only* mutation on this path, so it is the exact case
@@ -1352,7 +1371,57 @@ describe('createSyncCommand', () => {
       staleManifest,
       '/tmp/workspace/.oat/sync/manifest.json',
     );
-    expect(capture.info).toContain('\nNo changes required.');
+    // The restamp *is* a mutation, so the run must not report that nothing was
+    // required. Exit code and the restamp itself are unchanged by the wording.
+    expect(capture.info).toContain(
+      '\nManifest version refreshed; no content changes required.',
+    );
+    // Joined rather than element-wise: the plan body logs a single multi-line
+    // string, so array membership is blind to a sentence embedded inside it.
+    // The heading survives; only the contradicting sentence is dropped.
+    expect(capture.info.join('\n')).toContain('Sync plan (applied)');
+    expect(capture.info.join('\n')).not.toContain('No changes required.');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('apply: never calls a failed run restamp-only, even with zero planned operations', async () => {
+    // A rejected collection counts as a failure but is not a planned operation
+    // (`countPlannedOperations` admits only the mutating collection actions),
+    // so `plannedOperations === 0 && failed > 0` is reachable. Such a run is
+    // not restamp-only and must not be described as needing no content changes.
+    const { capture, command } = createHarness({
+      loadedManifests: [createManifest({ oatVersion: '0.0.1' })],
+      plans: [createCollectionPlan('reject-collection')],
+      executeResults: [{ applied: 0, failed: 1, skipped: 0 }],
+      useRealSyncPlanFormatter: true,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    const output = capture.info.join('\n');
+    expect(output).not.toContain('Manifest version refreshed');
+    expect(capture.warn).toContain(versionSkewWarning('0.0.1'));
+  });
+
+  it('apply true no-op: keeps the plan body sentence when nothing was restamped', async () => {
+    const { capture, command } = createHarness({
+      loadedManifests: [createManifest({ oatVersion: OAT_VERSION })],
+      plans: [createEmptyPlan()],
+      executeResults: [{ applied: 0, failed: 0, skipped: 0 }],
+      useRealSyncPlanFormatter: true,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    // The other side of the restamp-only contract: with no skew, the shared
+    // formatter's own sentence must still reach the operator.
+    const output = capture.info.join('\n');
+    expect(output).toContain('Sync plan (applied)\nNo changes required.');
+    expect(output).not.toContain('Manifest version refreshed');
   });
 
   it('apply: warns once about version skew before the sync plan executes', async () => {

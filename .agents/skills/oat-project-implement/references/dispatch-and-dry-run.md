@@ -367,11 +367,18 @@ Require `dispatchReport.schemaVersion: 1` in the completed resolver JSON before
 dispatch. Surface every structured entry in `dispatchReport.notices`, then
 render the versioned block with `formatDispatchReport(dispatchReport)`
 semantics, before the implementation, fix, or reviewer launch. Consume the
-report as the human/audit source, and derive the formal compatibility line only
-through
-`formatDispatchStamp(dispatchReport)` / `toDispatchStampRecord(dispatchReport)`.
+report as the human/audit source, and take the formal compatibility line
+directly from the same response's additive `dispatchStamp` field: it must be a
+non-empty string beginning with the canonical `Dispatch:` prefix, copied
+byte-for-byte into dispatch and audit metadata. Reformatting the report through
+`formatDispatchStamp(dispatchReport)` / `toDispatchStampRecord(dispatchReport)`
+is an optional corroboration where that library is already loaded; it is never
+the normal path and never a substitute for the returned field, and no
+out-of-tree shim is required.
 Never hand-assemble a second `Dispatch:` schema from policy labels, role names,
-candidate strings, or target names.
+candidate strings, or target names. If `dispatchStamp` is absent or lacks the
+canonical prefix on a report-bearing response, stop and report instead of
+reconstructing it.
 
 The exact provider invocation remains authoritative in
 `providers.<provider>.dispatchArgs` and `providers.<provider>.selection.target`;
@@ -537,10 +544,9 @@ Payload-first invariant:
 - Those fields are launcher-owned. Agent self-report cannot populate or
   overwrite them; it may only be retained separately as optional diagnostics.
 - Derive `Dispatch target` and `Effort axis` / `Model axis` from the payload.
-- After the payload is built, append the compatibility stamp returned from
-  `formatDispatchStamp(dispatchReport)` to Dispatch Notes for every
-  implementation, fix, and review dispatch. The derived line retains the p01
-  grammar exactly:
+- After the payload is built, append the resolver-returned `dispatchStamp`
+  value to Dispatch Notes for every implementation, fix, and review dispatch.
+  The returned line retains the p01 grammar exactly:
   `Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>`.
   Populate the report from the completed resolver and actual host arguments.
   Only independently observed or otherwise supported runtime evidence may
