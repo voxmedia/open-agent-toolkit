@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 4     | 4/4       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | complete    | 2     | 2/2       |
-| Phase 5 | complete    | 4     | 4/4       |
-| Phase 6 | in_progress | 11    | 10/11     |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 2     | 2/2       |
+| Phase 5 | complete | 4     | 4/4       |
+| Phase 6 | complete | 11    | 11/11     |
 
-**Total:** 26/27 tasks completed
+**Total:** 27/27 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -749,6 +749,15 @@ decisions through the canonical decision CLI. Commit
 `ec61c68b4882ed159e52cfed676e2ad23f7952a7` contains the 196-line summary,
 five decision records, and regenerated decision index. The stored sequence now
 marks `summary` complete; `document` is next.
+
+#### Closeout documentation step completed
+
+`oat-project-document` confirmed that the Phase 6 documentation already covers
+every shipped Lite capability, so no additional user-facing docs edit was
+needed. The automatic PJM reference sync updated the current operating picture
+and curated backlog note in commit `50a7b4a90`; the documentation state commit
+is `f55c5baa7`. The stored sequence now marks `summary` and `document`
+complete; the unauthorized external `pr` step is next.
 
 #### Exit-gate review 2 received — final configured attempt
 
