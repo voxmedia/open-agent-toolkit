@@ -116,6 +116,10 @@ verdict=pass; tasks=3/3; fix_loops=1; review=reviews/p06-review-2026-09-06T01161
 
 artifact=reviews/final-review-2026-09-06T012310Z.md; reconnaissance=attempted; lane=final-docs-1; outcome=rejected-no-artifact; fallback=caller-inline; primary-review=blocked; findings=critical:0,important:1,medium:2,minor:0
 
+### 2026-09-06 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T021128Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
