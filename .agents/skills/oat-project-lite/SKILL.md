@@ -1,6 +1,6 @@
 ---
 name: oat-project-lite
-version: 1.0.0
+version: 1.0.1
 description: Use when a single-sitting change needs a critical interview, an approved single-phase plan, and resumable OAT implementation with minimal ceremony.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -205,7 +205,7 @@ Initialize or update `implementation.md` with the first task pointer while
 keeping implementation in progress. Run:
 
 ```bash
-oat project validate-plan "$PROJECT_PATH"
+oat project validate-plan --project-path "$PROJECT_PATH"
 ```
 
 Format the authored artifacts, resolve project scope, and create the scoped

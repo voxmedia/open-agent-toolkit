@@ -1937,6 +1937,10 @@ describe('validateOatSkills', () => {
     expect(content).not.toMatch(/^### .*HiLL/m);
     expect(content).not.toMatch(/^### .*Phase Gate/m);
     expect(content).not.toContain('oat_hill_checkpoints');
+    expect(content).toContain(
+      'oat project validate-plan --project-path "$PROJECT_PATH"',
+    );
+    expect(content).not.toContain('oat project validate-plan "$PROJECT_PATH"');
     expect(persistence).toMatch(
       /after Step 3[\s\S]*before the Step 4 approval gate/i,
     );
