@@ -68,6 +68,15 @@
       "mode": "fix",
       "review_artifact": "reviews/archived/final-review-2026-09-06T233432Z.md",
       "task_id": "prev2-t04"
+    },
+    {
+      "id": "cont-lite-p-rev2-ci-fix-4",
+      "kind": "same-handle-recovery",
+      "original_request_id": "348bd412-b8a9-40e9-8d98-6aab9099cbeb",
+      "recovery_request_id": "348bd412-b8a9-40e9-8d98-6aab9099cbeb",
+      "mode": "recover",
+      "recovery_base_head": "3e7c8bb02001240b0d3d2911e06d43972500cd89",
+      "trigger": "required-ci-run-34067919653"
     }
   ],
   "fallback": {
