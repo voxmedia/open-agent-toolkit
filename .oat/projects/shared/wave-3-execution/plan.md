@@ -312,17 +312,18 @@ git commit -m "docs(p03-t01): require executable backstops for standing contract
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | fixes_added | 2026-09-06 | reviews/archived/p01-review-2026-09-06T114536Z.md           | ecf4756860bbf82ca5ecdb89ffa42e56a5a27ce1 | manual     | -           |
-| p01    | code     | passed      | 2026-09-06 | reviews/archived/p01-review-2026-09-06T120914Z.md           | f275a469ba06dac9923d89eb5b6a21ef1b42bba0 | manual     | -           |
-| p02    | code     | fixes_added | 2026-09-06 | reviews/archived/p02-review-2026-09-06T121404Z.md           | dceaf63c5a691787a0503cfeb43601553a46ec1e | manual     | -           |
-| p02    | code     | passed      | 2026-09-06 | reviews/archived/p02-review-2026-09-06T124137Z.md           | e39046cf5e7e5d9bd0714796479a2c31446e8ab4 | manual     | -           |
-| p03    | code     | passed      | 2026-09-06 | reviews/archived/p03-review-2026-09-06T132922Z.md           | a38435f251759b9ed92d8f35776895cfa5bc650b | manual     | -           |
-| final  | code     | passed      | 2026-09-06 | reviews/archived/final-review-2026-09-06T135731Z.md         | b1d50f5bf6c6b69f3ee9b2cf5f8c8f43295c111a | manual     | -           |
-| plan   | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T110723Z.md | -                                        | -          | -           |
-| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
-| design | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
+| p01    | code     | fixes_added | 2026-09-06 | reviews/archived/p01-review-2026-09-06T114536Z.md           | ecf4756860bbf82ca5ecdb89ffa42e56a5a27ce1 | manual     | -                   |
+| p01    | code     | passed      | 2026-09-06 | reviews/archived/p01-review-2026-09-06T120914Z.md           | f275a469ba06dac9923d89eb5b6a21ef1b42bba0 | manual     | -                   |
+| p02    | code     | fixes_added | 2026-09-06 | reviews/archived/p02-review-2026-09-06T121404Z.md           | dceaf63c5a691787a0503cfeb43601553a46ec1e | manual     | -                   |
+| p02    | code     | passed      | 2026-09-06 | reviews/archived/p02-review-2026-09-06T124137Z.md           | e39046cf5e7e5d9bd0714796479a2c31446e8ab4 | manual     | -                   |
+| p03    | code     | passed      | 2026-09-06 | reviews/archived/p03-review-2026-09-06T132922Z.md           | a38435f251759b9ed92d8f35776895cfa5bc650b | manual     | -                   |
+| final  | code     | passed      | 2026-09-06 | reviews/archived/final-review-2026-09-06T135731Z.md         | b1d50f5bf6c6b69f3ee9b2cf5f8c8f43295c111a | manual     | -                   |
+| plan   | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T110723Z.md | -                                        | -          | -                   |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
+| final  | code     | received    | 2026-09-06 | reviews/final-review-2026-09-06T140727Z.md                  | 182c832a98a608c40b740e1490fad2b989aef694 | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
