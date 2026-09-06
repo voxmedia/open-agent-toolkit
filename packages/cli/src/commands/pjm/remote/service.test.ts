@@ -285,6 +285,9 @@ describe('production lifecycle composition', () => {
         },
       ],
     });
+    expect(closeout.recovery[0]?.instruction).toMatch(
+      /target=sha256:.* capability=sha256:.* policy=sha256:.* projection=sha256:.* safety=sha256:.* action=sha256:/,
+    );
     await expect(
       readdir(store.locations.operational.batchesDir),
     ).resolves.toHaveLength(1);
@@ -460,7 +463,8 @@ describe('production lifecycle composition', () => {
       randomId: vi
         .fn()
         .mockReturnValueOnce('discussion-operation')
-        .mockReturnValueOnce('discussion-step'),
+        .mockReturnValueOnce('discussion-step')
+        .mockReturnValueOnce('discussion-next-step'),
       readObservationStdin: async () => discussionInput,
     });
     const discussionHandoff = await discussionRunner({
@@ -490,6 +494,35 @@ describe('production lifecycle composition', () => {
       availability: 'available',
       items: [
         { id: 'comment-1', body: syntheticSensitiveBody, createdAt: timestamp },
+      ],
+      nextCursor: 'page-2',
+    };
+    const discussionNext = await discussionRunner({
+      operation: 'operation-continue',
+      projectRoot: repository,
+      operationId: discussionAction.operationId,
+      observationStdin: true,
+    });
+    expect(discussionNext).toMatchObject({
+      status: 'pending',
+      externalAction: {
+        semanticOperation: 'read-discussion',
+        intent: { limit: 1, cursor: 'page-2' },
+      },
+      discussionEvidence: { persisted: false, truncated: true },
+    });
+    const discussionNextAction = discussionNext.externalAction!;
+    discussionInput = {
+      schemaVersion: 1,
+      operationId: discussionNextAction.operationId,
+      stepId: discussionNextAction.stepId,
+      actionDigest: discussionNextAction.actionDigest,
+      observedAt: timestamp,
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      capabilityEvidenceDigest: 'sha256:discussion-capability',
+      availability: 'available',
+      items: [
         {
           id: 'comment-2',
           body: 'Bounded public discussion.',
@@ -509,15 +542,9 @@ describe('production lifecycle composition', () => {
       discussionEvidence: {
         persisted: false,
         truncated: false,
-        items: [
-          { id: 'comment-1', incomplete: true },
-          { id: 'comment-2', incomplete: false },
-        ],
+        items: [{ id: 'comment-2', incomplete: false }],
       },
     });
-    expect(discussionComplete.discussionEvidence?.items[0]?.body).not.toBe(
-      syntheticSensitiveBody,
-    );
     expect(
       await readFile(
         join(
@@ -649,7 +676,12 @@ describe('production lifecycle composition', () => {
       outcome: {
         classification: 'observed',
         identity: { stableId: 'issue-relocated', aliases: ['RELOCATED-1'] },
-        fields: { title: 'Relocated issue' },
+        fields: {
+          title: 'Relocated issue',
+          description: 'Relocated description',
+          priority: 'high',
+          status: 'open',
+        },
         revisionDigest: 'sha256:relink-read',
         diagnosticCode: null,
       },
@@ -735,15 +767,52 @@ describe('production lifecycle composition', () => {
         classification: 'observed',
         identity: null,
         fields: {},
+        extensions: { duplicateSearchOutcome: 'no-match' },
         revisionDigest: 'sha256:recreate-search',
         diagnosticCode: null,
       },
     };
-    const createHandoff = await runner({
+    const createPreview = await runner({
       operation: 'operation-continue',
       projectRoot: repository,
       operationId: recreateOperationId,
       observationStdin: true,
+    });
+    expect(createPreview).toMatchObject({
+      status: 'needs-review',
+      externalAction: null,
+    });
+    const createOperation = await store.readOperation(recreateOperationId!);
+    await writeFile(
+      authorityPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        kind: 'interactive',
+        sourceId: 'synthetic-test',
+        invocationId: 'recreate-create-invocation',
+        issuedAt: timestamp,
+        expiresAt: '2026-08-31T12:05:00.000Z',
+        instruction: {
+          operationClass: 'recreate',
+          targetId: migrationBinding.bindingId,
+          evidenceDigest: 'sha256:recreate-create-instruction',
+        },
+        approval: {
+          previewDigest: createOperation!.preview.digest,
+          operationClass: 'recreate',
+          approvedAt: timestamp,
+          actor: 'synthetic-reviewer',
+          source: 'synthetic-test-approval',
+        },
+      }),
+    );
+    const createHandoff = await runner({
+      operation: 'resolve',
+      projectRoot: repository,
+      bindingId: migrationBinding.bindingId,
+      resolutionKind: 'recreate',
+      previewOperationId: recreateOperationId,
+      authorityEvidenceFile: authorityPath,
     });
     expect(createHandoff.externalAction).toMatchObject({
       semanticOperation: 'create',
@@ -768,7 +837,6 @@ describe('production lifecycle composition', () => {
         identity: { stableId: 'issue-recreated', aliases: ['RECREATED-1'] },
         fields: {
           title: 'Local title',
-          description: 'Local managed description',
           priority: 'high',
         },
         revisionDigest: 'sha256:recreate-create',
@@ -802,6 +870,7 @@ describe('production lifecycle composition', () => {
           title: 'Local title',
           description: 'Local managed description',
           priority: 'high',
+          status: 'open',
         },
         revisionDigest: 'sha256:recreate-readback',
         diagnosticCode: null,
@@ -818,6 +887,189 @@ describe('production lifecycle composition', () => {
     expect(
       await store.readBindingMetadata(migrationBinding.bindingId),
     ).toMatchObject({ remoteIdentity: { stableId: 'issue-recreated' } });
+
+    const completedRecreate = await store.readOperation(recreateOperationId!);
+    for (const [duplicateOutcome, expectedStatus] of [
+      ['found-existing', 'pending'],
+      ['search-unavailable', 'blocked'],
+      ['ambiguous', 'blocked'],
+    ] as const) {
+      const operationId = `op_duplicate_${duplicateOutcome.replace('-', '_')}`;
+      const search = buildExternalAction({
+        operationId,
+        stepId: `${operationId}_search`,
+        provider: 'linear',
+        semanticOperation: 'search-duplicates',
+        context: { workspaceId: 'workspace-1' },
+        intent: { query: 'Local title' },
+        expectedObservation: {
+          fields: ['title'],
+          extensionFields: ['duplicateSearchOutcome', 'candidateCount'],
+          requireIdentity: false,
+          stableId: null,
+          capabilityEvidenceDigest: 'sha256:recreate-capability',
+        },
+        persistedPreview: {},
+      });
+      await store.createOperation({
+        ...completedRecreate!,
+        operationId,
+        correlationId: operationId,
+        state: 'pending',
+        reason: {
+          code: 'resolution-recreate-observation-required',
+          message: 'Provider-neutral resolution evidence is required.',
+        },
+        attempts: [],
+        observations: [],
+        verification: [],
+        materializationPlan: undefined,
+        materializationSteps: undefined,
+        currentAction: undefined,
+        verificationHandoff: undefined,
+        lastSafeStep: 'planned',
+        retryDisposition: 'safe-before-attempt',
+        outcome: { classification: 'pending', message: null, verifiedAt: null },
+      });
+      await store.writeCurrentAction(operationId, search);
+      runnerInput = {
+        schemaVersion: 1,
+        operationId,
+        stepId: search.stepId,
+        actionDigest: search.actionDigest,
+        observedAt: timestamp,
+        surfaceKind: 'connector',
+        capabilityEvidenceDigest: 'sha256:recreate-capability',
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        outcome: {
+          classification: 'observed',
+          identity:
+            duplicateOutcome === 'found-existing'
+              ? { stableId: 'issue-found', aliases: ['FOUND-1'] }
+              : null,
+          fields: {},
+          extensions: {
+            duplicateSearchOutcome: duplicateOutcome,
+            ...(duplicateOutcome === 'ambiguous' ? { candidateCount: 2 } : {}),
+          },
+          revisionDigest: 'sha256:duplicate-search',
+          diagnosticCode: null,
+        },
+      };
+      expect(
+        await runner({
+          operation: 'operation-continue',
+          projectRoot: repository,
+          operationId,
+          observationStdin: true,
+        }),
+      ).toMatchObject({ status: expectedStatus });
+    }
+
+    const uncertainAction = buildExternalAction({
+      operationId: 'op_recreate_uncertain',
+      stepId: 'op_recreate_uncertain_create',
+      provider: createAction.provider,
+      semanticOperation: 'create',
+      context: createAction.context,
+      intent: createAction.intent,
+      expectedObservation: createAction.expectedObservation,
+      persistedPreview: {
+        projectionDigest: createAction.outboundSafety!.projectionDigest,
+        safetyResultDigest: createAction.outboundSafety!.resultDigest,
+      },
+      projection: createAction.intent.fields as {
+        title?: string;
+        description?: string | null;
+        priority?: string | null;
+      },
+      outboundSafety: {
+        schemaVersion: 1,
+        projectionDigest: createAction.outboundSafety!.projectionDigest,
+        verdict: 'safe',
+        resultDigest: createAction.outboundSafety!.resultDigest,
+        reasons: [],
+        assessedAt: timestamp,
+      },
+    });
+    await store.createOperation({
+      ...completedRecreate!,
+      operationId: uncertainAction.operationId,
+      correlationId: uncertainAction.operationId,
+      state: 'attempt-started',
+      reason: {
+        code: 'recreate-create-attempt-started',
+        message: 'Approved create substep handed off exactly once.',
+      },
+      approval: completedRecreate!.approval,
+      attempts: [
+        {
+          attemptId: uncertainAction.stepId,
+          startedAt: timestamp,
+          completedAt: null,
+          execution: completedRecreate!.selectedExecution!,
+          requestDigest: uncertainAction.actionDigest,
+          receiptDigest: null,
+        },
+      ],
+      observations: [],
+      verification: [],
+      materializationPlan: undefined,
+      materializationSteps: undefined,
+      currentAction: undefined,
+      verificationHandoff: undefined,
+      lastSafeStep: 'attempt-started',
+      retryDisposition: 'reconcile-required',
+      outcome: { classification: 'pending', message: null, verifiedAt: null },
+    });
+    await store.writeCurrentAction(
+      uncertainAction.operationId,
+      uncertainAction,
+    );
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: uncertainAction.operationId,
+      stepId: uncertainAction.stepId,
+      actionDigest: uncertainAction.actionDigest,
+      observedAt: timestamp,
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest: 'sha256:recreate-capability',
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'unknown',
+        identity: null,
+        fields: {},
+        revisionDigest: null,
+        diagnosticCode: 'unknown-create-result',
+      },
+    };
+    expect(
+      await runner({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: uncertainAction.operationId,
+        observationStdin: true,
+      }),
+    ).toMatchObject({ status: 'uncertain' });
+    expect(
+      await store.readBindingMetadata(migrationBinding.bindingId),
+    ).toMatchObject({ lifecycle: 'blocked' });
+    expect(
+      await store.readBindingState(migrationBinding.bindingId),
+    ).toMatchObject({
+      lifecycle: 'blocked',
+      lifecycleCondition: 'temporarily-unavailable',
+    });
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: uncertainAction.operationId,
+        observationStdin: true,
+      }),
+    ).rejects.toThrow(/terminal|replay/i);
 
     const doctor = await runner({
       operation: 'doctor',

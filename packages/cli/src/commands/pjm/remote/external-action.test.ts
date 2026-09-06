@@ -55,6 +55,36 @@ function observation(overrides: Record<string, unknown> = {}) {
 }
 
 describe('external action protocol', () => {
+  it('binds bounded discussion limit and cursor into the durable action', () => {
+    const discussion = buildExternalAction({
+      operationId: 'op-discussion',
+      stepId: 'step-discussion',
+      provider: 'linear',
+      semanticOperation: 'read-discussion',
+      context,
+      intent: { stableId: 'issue-1', limit: 5, cursor: 'next-page' },
+      expectedObservation: {
+        fields: [],
+        requireIdentity: false,
+        stableId: 'issue-1',
+        capabilityEvidenceDigest: 'sha256:capability',
+      },
+      persistedPreview: {},
+    });
+    expect(discussion.intent).toEqual({
+      stableId: 'issue-1',
+      limit: 5,
+      cursor: 'next-page',
+    });
+    expect(() =>
+      buildExternalAction({
+        ...discussion,
+        intent: { stableId: 'issue-1', limit: 101 },
+        persistedPreview: {},
+      }),
+    ).toThrow();
+  });
+
   it('builds a provider-neutral digest-bound mutation action', () => {
     expect(action.actionDigest).toMatch(/^sha256:/);
     expect(action.outboundSafety).toEqual({

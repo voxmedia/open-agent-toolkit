@@ -160,6 +160,7 @@ describe('representative cross-provider workflows', () => {
       [
         ['github', { repositoryId: 'repository-1' }],
         ['linear', { workspaceId: 'workspace-1' }],
+        ['jira', { siteId: 'site-1', projectId: 'project-1' }],
       ] as const
     ).map(([provider, context], index) => ({
       recordType: 'binding-metadata',
@@ -217,9 +218,10 @@ describe('representative cross-provider workflows', () => {
 
     expect(preview.results.map((result) => result.provider).sort()).toEqual([
       'github',
+      'jira',
       'linear',
     ]);
-    expect(await store.listBindingMetadata()).toHaveLength(2);
+    expect(await store.listBindingMetadata()).toHaveLength(3);
     expect(await readdir(store.locations.operational.batchesDir)).toHaveLength(
       1,
     );

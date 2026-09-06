@@ -68,8 +68,6 @@ import { composePurposePolicies } from './purpose-policy';
 import { reconcileBinding } from './reconcile';
 import {
   detachBinding,
-  recreateBinding,
-  relinkBinding,
   type ResolutionBinding,
   type ResolutionJournal,
   type ResolutionStore,
@@ -391,13 +389,16 @@ async function prepareCloseout(
       status === 'needs-review'
         ? closeout.operations.flatMap((operation) => {
             const next = operation.substeps.find(
-              (step) => step.state === 'planned',
+              (step) => step.state === 'planned' || step.state === 'pending',
             );
             return next
               ? [
                   {
                     code: 'fresh-approval-required',
-                    instruction: `Approve exact ${next.kind} preview ${next.previewDigest} in closeout batch ${closeout.batch.batchId}; apply one substep at a time.`,
+                    instruction: (() => {
+                      const action = actionByStep.get(next.stepId)!;
+                      return `Approve exact ${next.kind} preview ${next.previewDigest} in closeout batch ${closeout.batch.batchId}; target=${semanticDigest(action.intent)} capability=${action.expectedObservation.capabilityEvidenceDigest} policy=${next.authoritySourceDigest} projection=${action.outboundSafety?.projectionDigest ?? 'none'} safety=${action.outboundSafety?.resultDigest ?? 'none'} action=${action.actionDigest}; apply one substep at a time.`;
+                    })(),
                   },
                 ]
               : [];
@@ -497,7 +498,7 @@ async function applyCloseoutBatch(
   const authority = validateProductionMutationAuthority({
     effective: step.authority.effective,
     invocation,
-    preview: closeoutStepApprovalPreview(operation, step),
+    preview: closeoutStepApprovalPreview(operation, step, action),
     expected: {
       operationClass: step.semanticOperation,
       targetId: operation.bindingId,
@@ -556,6 +557,7 @@ async function applyCloseoutBatch(
 function closeoutStepApprovalPreview(
   operation: RemoteOperationRecord,
   step: RemoteOperationRecord['steps'][number],
+  action: ExternalActionEnvelope,
 ): BindingPreview {
   const digest = (component: string) =>
     semanticDigest({
@@ -572,17 +574,26 @@ function closeoutStepApprovalPreview(
     fieldMask: ['title'],
     createdAt: operation.createdAt,
     componentDigests: {
-      target: digest('target'),
+      target: semanticDigest(action.intent),
       baseline: digest('baseline'),
       revision: operation.preview.revisionDigest,
       capability: operation.preview.capabilityEvidenceDigest,
       policy: operation.preview.policyDigest,
-      projection: operation.preview.projectionDigest ?? digest('projection'),
+      projection:
+        action.outboundSafety?.projectionDigest ??
+        operation.preview.projectionDigest ??
+        digest('projection'),
       outboundSafety:
-        operation.preview.safetyResultDigest ?? digest('outbound-safety'),
+        action.outboundSafety?.resultDigest ??
+        operation.preview.safetyResultDigest ??
+        digest('outbound-safety'),
     },
     renderedFields: {
-      title: { kind: 'value', value: step.semanticOperation },
+      title: {
+        kind: 'hash',
+        digest: semanticDigest(action.intent),
+        bytes: Buffer.byteLength(JSON.stringify(action.intent), 'utf8'),
+      },
       description: { kind: 'value', value: null },
       priority: { kind: 'value', value: null },
     },
@@ -622,7 +633,10 @@ async function prepareDiscussion(
       provider: metadata.provider,
       semanticOperation: 'read-discussion',
       context: metadata.remoteIdentity.context,
-      intent: { stableId: metadata.remoteIdentity.stableId },
+      intent: {
+        stableId: metadata.remoteIdentity.stableId,
+        limit: request.discussionLimit ?? 0,
+      },
       expectedObservation: {
         fields: [],
         requireIdentity: false,
@@ -643,7 +657,7 @@ async function prepareDiscussion(
       operationClass: null,
       state: 'pending',
       reason: {
-        code: `discussion-limit-${request.discussionLimit ?? 0}`,
+        code: `discussion-limit-${request.discussionLimit ?? 0}-remaining-${request.discussionLimit ?? 0}-pages-0`,
         message: 'Bounded non-persistent discussion read.',
       },
       lastSafeStep: 'planned',
@@ -852,6 +866,60 @@ async function applyResolutionPreview(
   store: RemoteSyncStore,
   dependencies: ProductionRemoteRunnerDependencies,
 ): Promise<RemoteCommandEnvelope> {
+  const pendingCreate =
+    operation.lifecycleOperation === 'recreate' &&
+    operation.reason?.code === 'recreate-create-approval-required';
+  if (pendingCreate) {
+    const action = await store.readAction(
+      operation.operationId,
+      `${operation.operationId}_create`,
+    );
+    if (!action) {
+      throw new Error(
+        'Recreate create-substep action is missing or mismatched.',
+      );
+    }
+    const invocation = await readCurrentMutationInvocation(request);
+    const authority = validateProductionMutationAuthority({
+      effective: operation.authority!.effective,
+      invocation,
+      preview: resolutionCreateApprovalPreview(operation, action),
+      expected: {
+        operationClass: 'recreate',
+        targetId: metadata.bindingId,
+        workflowId: metadata.target.id,
+        workflowRevision: state.localProjection.sourceRevision,
+      },
+      now: dependencies.now(),
+      approvalMaxAgeMs: 300_000,
+    });
+    const now = dependencies.now();
+    const updated: RemoteOperationRecord = {
+      ...operation,
+      state: 'attempt-started',
+      approval: authority.approval,
+      updatedAt: now,
+      reason: {
+        code: 'recreate-create-attempt-started',
+        message: 'Approved create substep handed off exactly once.',
+      },
+      attempts: [
+        ...operation.attempts,
+        {
+          attemptId: action.stepId,
+          startedAt: now,
+          completedAt: null,
+          execution: operation.selectedExecution!,
+          requestDigest: action.actionDigest,
+          receiptDigest: null,
+        },
+      ],
+      retryDisposition: 'reconcile-required',
+    };
+    await store.updateOperation(updated);
+    await store.writeCurrentAction(operation.operationId, action);
+    return envelopeFrom(request, updated, metadata, action);
+  }
   const currentPreviewDigest = semanticDigest({
     bindingId: metadata.bindingId,
     provider: metadata.provider,
@@ -966,7 +1034,15 @@ async function applyResolutionPreview(
         ? { stableId: stableId! }
         : { query: state.localProjection.title },
     expectedObservation: {
-      fields: ['title'],
+      fields:
+        semanticOperation === 'read'
+          ? ['title', 'description', 'priority', 'status']
+          : ['title'],
+      ...(semanticOperation === 'search-duplicates'
+        ? {
+            extensionFields: ['duplicateSearchOutcome', 'candidateCount'],
+          }
+        : {}),
       requireIdentity: semanticOperation === 'read',
       stableId,
       capabilityEvidenceDigest: capability.evidenceDigest,
@@ -1236,7 +1312,7 @@ function closeoutRecordFromJournal(
   actionByStep: ReadonlyMap<string, ExternalActionEnvelope>,
 ): RemoteOperationRecord {
   const operationState = closeoutRecordState(journal.state);
-  return {
+  const record: RemoteOperationRecord = {
     recordType: 'operation',
     schemaVersion: 2,
     operationId: journal.operationId,
@@ -1331,6 +1407,7 @@ function closeoutRecordFromJournal(
       verifiedAt: operationState === 'verified' ? journal.updatedAt : null,
     },
   };
+  return record;
 }
 
 function closeoutJournalFromRecord(
@@ -1466,6 +1543,52 @@ function resolutionApprovalPreview(
       title: { kind: 'value', value: operation.lifecycleOperation },
       description: { kind: 'value', value: null },
       priority: { kind: 'value', value: null },
+    },
+  };
+}
+
+function resolutionCreateApprovalPreview(
+  operation: RemoteOperationRecord,
+  action: ExternalActionEnvelope,
+): BindingPreview {
+  const projection = operation.preview.projectionDigest!;
+  const safety = operation.preview.safetyResultDigest!;
+  const fields = action.intent.fields as Record<
+    'title' | 'description' | 'priority',
+    string | null
+  >;
+  const fieldMask = Object.keys(fields) as Array<
+    'title' | 'description' | 'priority'
+  >;
+  const rendered = (field: 'title' | 'description' | 'priority') => {
+    const value = Object.hasOwn(fields, field) ? fields[field] : null;
+    return {
+      kind: 'hash' as const,
+      digest: semanticDigest(value),
+      bytes: Buffer.byteLength(JSON.stringify(value), 'utf8'),
+    };
+  };
+  return {
+    schemaVersion: 1,
+    digest: operation.preview.digest,
+    bindingId: operation.bindingId,
+    provider: operation.provider,
+    operationClass: 'recreate',
+    fieldMask,
+    createdAt: operation.updatedAt,
+    componentDigests: {
+      target: semanticDigest({ bindingId: operation.bindingId }),
+      baseline: operation.preview.revisionDigest,
+      revision: operation.preview.revisionDigest,
+      capability: operation.preview.capabilityEvidenceDigest,
+      policy: operation.preview.policyDigest,
+      projection,
+      outboundSafety: safety,
+    },
+    renderedFields: {
+      title: rendered('title'),
+      description: rendered('description'),
+      priority: rendered('priority'),
     },
   };
 }
@@ -3454,6 +3577,59 @@ async function continueOperation(
   return envelopeFrom(request, updated, metadata, null);
 }
 
+function parseDuplicateSearchOutcome(
+  observation: ReturnType<typeof acceptExternalObservation>,
+): 'found-existing' | 'search-unavailable' | 'ambiguous' | 'no-match' {
+  const outcome = observation.outcome.extensions?.duplicateSearchOutcome;
+  if (
+    outcome !== 'found-existing' &&
+    outcome !== 'search-unavailable' &&
+    outcome !== 'ambiguous' &&
+    outcome !== 'no-match'
+  ) {
+    throw new Error('Duplicate search requires an explicit bounded outcome.');
+  }
+  if (outcome === 'found-existing' && !observation.outcome.identity) {
+    throw new Error('Found-existing duplicate evidence requires identity.');
+  }
+  if (outcome !== 'found-existing' && observation.outcome.identity) {
+    throw new Error('Duplicate search outcome contradicts identity evidence.');
+  }
+  if (outcome === 'ambiguous') {
+    const count = observation.outcome.extensions?.candidateCount;
+    if (
+      typeof count !== 'number' ||
+      !Number.isSafeInteger(count) ||
+      count < 2
+    ) {
+      throw new Error(
+        'Ambiguous duplicate evidence requires a bounded candidate count.',
+      );
+    }
+  }
+  return outcome;
+}
+
+async function freezeUncertainResolutionBinding(
+  metadata: RemoteBindingMetadata,
+  state: RemoteBindingState,
+  store: RemoteSyncStore,
+  updatedAt: string,
+): Promise<void> {
+  await store.updateBindingMetadata({
+    ...metadata,
+    lifecycle: 'blocked',
+    updatedAt,
+  });
+  await store.writeBindingState({
+    ...state,
+    metadataUpdatedAt: updatedAt,
+    lifecycle: 'blocked',
+    lifecycleCondition: 'temporarily-unavailable',
+    updatedAt,
+  });
+}
+
 async function continueCloseoutOperation(
   request: RemoteCommandRequest,
   operation: RemoteOperationRecord,
@@ -3710,21 +3886,83 @@ async function continueDiscussionOperation(
   dependencies: ProductionRemoteRunnerDependencies,
 ): Promise<RemoteCommandEnvelope> {
   if (!metadata) throw new Error('Discussion binding metadata is missing.');
-  const limit = Number(
-    operation.reason?.code.match(/^discussion-limit-(\d+)$/)?.[1],
+  const bounds = operation.reason?.code.match(
+    /^discussion-limit-(\d+)-remaining-(\d+)-pages-(\d+)$/,
   );
+  const limit = Number(bounds?.[1]);
+  const remaining = Number(bounds?.[2]);
+  const pages = Number(bounds?.[3]);
   if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
     throw new Error('Persisted discussion limit is invalid.');
   }
+  if (!Number.isSafeInteger(remaining) || remaining < 1 || remaining > limit) {
+    throw new Error('Persisted discussion remaining limit is invalid.');
+  }
+  const rawObservation = await dependencies.readObservationStdin();
   const evidence = await acceptRemoteDiscussionObservation({
     action,
-    observation: await dependencies.readObservationStdin(),
+    observation: rawObservation,
     bindingId: operation.bindingId,
-    limit,
+    limit: remaining,
     maxPages: 1,
   });
   await store.retireCurrentAction(operation.operationId, action);
   const verified = evidence.status === 'available';
+  const nextCursor = discussionObservationCursor(rawObservation);
+  const nextRemaining = remaining - evidence.items.length;
+  if (verified && nextCursor && nextRemaining > 0 && pages + 1 < 10) {
+    const nextAction = buildExternalAction({
+      operationId: operation.operationId,
+      stepId: durableId('discussion', dependencies.randomId()),
+      provider: metadata.provider,
+      semanticOperation: 'read-discussion',
+      context: metadata.remoteIdentity.context,
+      intent: {
+        stableId: metadata.remoteIdentity.stableId,
+        limit: nextRemaining,
+        cursor: nextCursor,
+      },
+      expectedObservation: {
+        fields: [],
+        requireIdentity: false,
+        stableId: metadata.remoteIdentity.stableId,
+        capabilityEvidenceDigest:
+          operation.selectedExecution?.evidenceDigest ??
+          action.expectedObservation.capabilityEvidenceDigest,
+      },
+      persistedPreview: {},
+    });
+    const updated: RemoteOperationRecord = {
+      ...operation,
+      state: 'pending',
+      reason: {
+        code: `discussion-limit-${limit}-remaining-${nextRemaining}-pages-${pages + 1}`,
+        message: 'Bounded non-persistent discussion read continuation.',
+      },
+      observations: [
+        ...operation.observations,
+        {
+          observedAt: evidence.observedAt,
+          classification: 'none',
+          evidenceDigest: semanticDigest({
+            status: evidence.status,
+            pagesRead: evidence.pagesRead,
+            itemCount: evidence.items.length,
+            truncated: evidence.truncated,
+          }),
+          actionDigest: action.actionDigest,
+        },
+      ],
+      updatedAt: evidence.observedAt,
+    };
+    await store.updateOperation(updated);
+    await store.writeCurrentAction(operation.operationId, nextAction);
+    return {
+      ...envelopeFrom(request, updated, metadata, nextAction),
+      status: 'pending',
+      discussionEvidence: evidence,
+    };
+  }
   const updated = await store.transitionOperation(
     operation.operationId,
     operation.state,
@@ -3753,6 +3991,12 @@ async function continueDiscussionOperation(
     status: verified ? 'ok' : 'blocked',
     discussionEvidence: evidence,
   };
+}
+
+function discussionObservationCursor(value: unknown): string | null {
+  if (!value || typeof value !== 'object') return null;
+  const cursor = (value as { nextCursor?: unknown }).nextCursor;
+  return typeof cursor === 'string' && cursor.length > 0 ? cursor : null;
 }
 
 async function continueResolutionOperation(
@@ -3794,6 +4038,17 @@ async function continueResolutionOperation(
         ? ('rejected' as const)
         : ('uncertain' as const);
     await store.retireCurrentAction(operation.operationId, action);
+    if (
+      operation.lifecycleOperation === 'recreate' &&
+      action.semanticOperation === 'create'
+    ) {
+      await freezeUncertainResolutionBinding(
+        metadata,
+        state,
+        store,
+        observation.observedAt,
+      );
+    }
     const updated = await store.transitionOperation(
       operation.operationId,
       operation.state,
@@ -3811,84 +4066,182 @@ async function continueResolutionOperation(
   }
   if (
     operation.lifecycleOperation === 'recreate' &&
-    action.semanticOperation === 'search-duplicates' &&
-    !observation.outcome.identity
+    action.semanticOperation === 'search-duplicates'
   ) {
-    if (!operation.selectedExecution?.semanticCapabilities.includes('create')) {
-      throw new Error(
-        'Pinned resolution capability cannot create a replacement.',
+    const duplicateOutcome = parseDuplicateSearchOutcome(observation);
+    if (duplicateOutcome === 'found-existing') {
+      if (!observation.outcome.identity) {
+        throw new Error('Found-existing duplicate evidence requires identity.');
+      }
+    } else if (duplicateOutcome !== 'no-match') {
+      await store.retireCurrentAction(operation.operationId, action);
+      const updated = await store.transitionOperation(
+        operation.operationId,
+        operation.state,
+        {
+          state: 'blocked',
+          updatedAt: observation.observedAt,
+          appendObservation: {
+            observedAt: observation.observedAt,
+            classification: 'none',
+            evidenceDigest: semanticDigest(observation),
+            actionDigest: action.actionDigest,
+          },
+          outcome: {
+            classification: 'blocked',
+            message: `duplicate search ${duplicateOutcome}`,
+            verifiedAt: null,
+          },
+          retryDisposition: 'safe-before-attempt',
+        },
       );
+      return envelopeFrom(request, updated, metadata, null);
     }
-    const projection: OutboundProjection = {
-      title: state.localProjection.title,
-      description: state.localProjection.description,
-      priority: state.localProjection.priority,
-    };
-    const safety = assessOutboundProjectionSafety(projection, {
-      assessedAt: dependencies.now(),
-    });
-    const createAction = buildExternalAction({
-      operationId: operation.operationId,
-      stepId: durableId('resolution_create', dependencies.randomId()),
-      provider: operation.provider,
-      semanticOperation: 'create',
-      context: operation.providerContext,
-      intent: {
-        target: {
-          kind: metadata.target.kind,
-          id: metadata.target.id,
-          scope: metadata.target.scope,
+    if (duplicateOutcome === 'found-existing') {
+      const identity = observation.outcome.identity!;
+      const readAction = buildExternalAction({
+        operationId: operation.operationId,
+        stepId: durableId('resolution_verify', dependencies.randomId()),
+        provider: operation.provider,
+        semanticOperation: 'read',
+        context: operation.providerContext,
+        intent: { stableId: identity.stableId },
+        expectedObservation: {
+          fields: ['title', 'description', 'priority', 'status'],
+          requireIdentity: true,
+          stableId: identity.stableId,
+          capabilityEvidenceDigest: operation.selectedExecution!.evidenceDigest,
         },
-        fields: projection,
-        provenanceToken: metadata.provenanceToken,
-      },
-      expectedObservation: {
-        fields: Object.keys(projection),
-        requireIdentity: true,
-        stableId: null,
+        persistedPreview: {},
+      });
+      await store.retireCurrentAction(operation.operationId, action);
+      await store.writeCurrentAction(operation.operationId, readAction);
+      const updated: RemoteOperationRecord = {
+        ...operation,
+        state: 'pending',
+        reason: {
+          code: 'recreate-found-existing-readback-required',
+          message: 'Authoritative replacement read-back is required.',
+        },
+        observations: [
+          ...operation.observations,
+          {
+            observedAt: observation.observedAt,
+            classification: 'none',
+            evidenceDigest: semanticDigest(observation),
+            actionDigest: action.actionDigest,
+          },
+        ],
+        updatedAt: observation.observedAt,
+      };
+      await store.updateOperation(updated);
+      return envelopeFrom(request, updated, metadata, readAction);
+    } else {
+      if (
+        !operation.selectedExecution?.semanticCapabilities.includes('create')
+      ) {
+        throw new Error(
+          'Pinned resolution capability cannot create a replacement.',
+        );
+      }
+      const effective = await effectivePolicyForBinding(
+        request.projectRoot,
+        metadata,
+      );
+      const projection = buildCreateProjection(
+        state.localProjection,
+        effective.description,
+        metadata.bindingId,
+      );
+      const safety = assessOutboundProjectionSafety(projection, {
+        assessedAt: dependencies.now(),
+      });
+      if (safety.verdict !== 'safe') {
+        throw new Error(
+          'Recreate create-substep is blocked by outbound safety.',
+        );
+      }
+      const stepId = `${operation.operationId}_create`;
+      const previewDigest = semanticDigest({
+        bindingId: metadata.bindingId,
+        target: metadata.target,
+        policyDigest: semanticDigest(effective),
+        projectionDigest: safety.projectionDigest,
+        safetyResultDigest: safety.resultDigest,
         capabilityEvidenceDigest: operation.selectedExecution.evidenceDigest,
-      },
-      persistedPreview: {
-        projectionDigest: safety.projectionDigest,
-        safetyResultDigest: safety.resultDigest,
-      },
-      projection,
-      outboundSafety: safety,
-    });
-    await store.retireCurrentAction(operation.operationId, action);
-    await store.writeCurrentAction(operation.operationId, createAction);
-    const updated: RemoteOperationRecord = {
-      ...operation,
-      preview: {
-        ...operation.preview,
-        projectionDigest: safety.projectionDigest,
-        safetyResultDigest: safety.resultDigest,
-      },
-      observations: [
-        ...operation.observations,
-        {
-          observedAt: observation.observedAt,
-          classification: 'none',
-          evidenceDigest: semanticDigest(observation),
-          actionDigest: action.actionDigest,
+        provenanceToken: metadata.provenanceToken,
+        preimage: operation.preview.revisionDigest,
+      });
+      const createAction = buildExternalAction({
+        operationId: operation.operationId,
+        stepId,
+        provider: operation.provider,
+        semanticOperation: 'create',
+        context: operation.providerContext,
+        intent: {
+          target: {
+            kind: metadata.target.kind,
+            id: metadata.target.id,
+            scope: metadata.target.scope,
+          },
+          fields: projection,
+          provenanceToken: metadata.provenanceToken,
         },
-      ],
-      attempts: [
-        ...operation.attempts,
-        {
-          attemptId: createAction.stepId,
-          startedAt: dependencies.now(),
-          completedAt: null,
-          execution: operation.selectedExecution,
-          requestDigest: createAction.actionDigest,
-          receiptDigest: null,
+        expectedObservation: {
+          fields: Object.keys(projection),
+          requireIdentity: true,
+          stableId: null,
+          capabilityEvidenceDigest: operation.selectedExecution.evidenceDigest,
         },
-      ],
-      retryDisposition: 'reconcile-required',
-      updatedAt: dependencies.now(),
-    };
-    await store.updateOperation(updated);
-    return envelopeFrom(request, updated, metadata, createAction);
+        persistedPreview: {
+          projectionDigest: safety.projectionDigest,
+          safetyResultDigest: safety.resultDigest,
+        },
+        projection,
+        outboundSafety: safety,
+      });
+      await store.retireCurrentAction(operation.operationId, action);
+      await store.writeActionEvidence(operation.operationId, createAction);
+      const updated: RemoteOperationRecord = {
+        ...operation,
+        state: 'planned',
+        preview: {
+          ...operation.preview,
+          digest: previewDigest,
+          policyDigest: semanticDigest(effective),
+          projectionDigest: safety.projectionDigest,
+          safetyResultDigest: safety.resultDigest,
+        },
+        observations: [
+          ...operation.observations,
+          {
+            observedAt: observation.observedAt,
+            classification: 'none',
+            evidenceDigest: semanticDigest(observation),
+            actionDigest: action.actionDigest,
+          },
+        ],
+        reason: {
+          code: 'recreate-create-approval-required',
+          message:
+            'Fresh approval of the exact gated create substep is required.',
+        },
+        approval: null,
+        retryDisposition: 'safe-before-attempt',
+        updatedAt: dependencies.now(),
+      };
+      await store.updateOperation(updated);
+      return {
+        ...envelopeFrom(request, updated, metadata, null),
+        status: 'needs-review',
+        recovery: [
+          {
+            code: 'recreate-create-substep-approval-required',
+            instruction: `Approve exact recreate create-substep preview ${previewDigest} before action handoff.`,
+          },
+        ],
+      };
+    }
   }
   if (!observation.outcome.identity) {
     throw new Error('Resolution observation lacks verified identity evidence.');
@@ -3896,23 +4249,25 @@ async function continueResolutionOperation(
   if (
     action.semanticOperation === 'read' &&
     operation.lifecycleOperation === 'recreate' &&
-    operation.verificationHandoff &&
-    !isDeepStrictEqual(
-      {
-        title: observation.outcome.fields.title,
-        description: observation.outcome.fields.description,
-        priority: observation.outcome.fields.priority,
-      },
-      {
-        title: state.localProjection.title,
-        description: state.localProjection.description,
-        priority: state.localProjection.priority,
-      },
-    )
+    operation.verificationHandoff
   ) {
-    throw new Error(
-      'Recreate authoritative read-back does not match the gated projection.',
+    const createEvidence = await store.readAction(
+      operation.operationId,
+      `${operation.operationId}_create`,
     );
+    const expected = createEvidence?.intent.fields as
+      | Record<string, unknown>
+      | undefined;
+    if (
+      !expected ||
+      Object.entries(expected).some(
+        ([field, value]) => observation.outcome.fields[field] !== value,
+      )
+    ) {
+      throw new Error(
+        'Recreate authoritative read-back does not match the gated projection.',
+      );
+    }
   }
   if (action.semanticOperation === 'create') {
     if (!operation.selectedExecution?.semanticCapabilities.includes('read')) {
@@ -3928,7 +4283,7 @@ async function continueResolutionOperation(
       context: operation.providerContext,
       intent: { stableId: observation.outcome.identity.stableId },
       expectedObservation: {
-        fields: ['title', 'description', 'priority'],
+        fields: ['title', 'description', 'priority', 'status'],
         requireIdentity: true,
         stableId: observation.outcome.identity.stableId,
         capabilityEvidenceDigest:
@@ -4002,60 +4357,95 @@ async function continueResolutionOperation(
   if (!operation.verificationHandoff) {
     await store.retireCurrentAction(operation.operationId, action);
   }
-  const common = {
-    operationId: operation.operationId,
-    binding: resolutionBindingFrom(metadata, state),
-    now: dependencies.now(),
-    previewDigest: operation.preview.digest,
-    approval: resolutionApprovalFrom(operation.approval, dependencies.now()),
+  const now = dependencies.now();
+  const nextIdentity: RemoteBindingMetadata['remoteIdentity'] = {
+    stableId: replacement.identity.stableId,
+    context: operation.providerContext,
+    aliases: replacement.identity.aliases,
   };
-  const bridge = resolutionStoreBridge(
-    request.projectRoot,
-    store,
-    operation,
-    dependencies.now(),
-  );
-  const resolved =
-    operation.lifecycleOperation === 'relink'
-      ? await relinkBinding({ ...common, replacement }, bridge)
-      : await recreateBinding(
-          {
-            ...common,
-            searchDuplicates: async () => ({
-              kind: 'found-existing' as const,
-              replacement,
-            }),
-            createReplacement: async () => ({
-              kind: 'committed' as const,
-              replacement,
-            }),
-          },
-          bridge,
-        );
-  const journal = resolved.journal;
-  const updated = await completeResolutionOperation(
-    operation,
-    {
-      authority: operation.authority!,
-      approval: {
-        ...operation.approval,
-        actor: operation.approval.actor ?? 'current-cli-invocation',
-        operationClass: operation.lifecycleOperation as
-          | 'relink'
-          | 'detach'
-          | 'recreate',
+  const nextMetadata: RemoteBindingMetadata = {
+    ...metadata,
+    remoteIdentity: nextIdentity,
+    identityHistory: [
+      ...metadata.identityHistory,
+      {
+        provider: metadata.provider,
+        identity: metadata.remoteIdentity,
+        replacedAt: now,
+        replacedByOperationId: operation.operationId,
       },
-    },
-    journal,
-    store,
-    dependencies.now(),
-  );
-  return envelopeFrom(
+    ],
+    lifecycle: 'active',
+    updatedAt: now,
+  };
+  const snapshot = snapshotFromObservation({
+    snapshotId: durableId('snap', operation.operationId),
+    bindingId: metadata.bindingId,
+    provider: metadata.provider,
+    context: operation.providerContext,
+    identity: nextIdentity,
+    observation,
+    allowedExtensionKeys: action.expectedObservation.extensionFields ?? [],
+  });
+  const finalState: RemoteBindingState = {
+    ...state,
+    metadataUpdatedAt: now,
+    snapshot,
+    baseline: baselineFromSnapshot({
+      snapshot,
+      operationId: operation.operationId,
+      localProjectionRevision: state.localProjection.sourceRevision,
+      agreedAt: now,
+      descriptionMode: 'replace',
+    }),
+    contentRedacted: snapshot.contentRedacted,
+    lifecycle: 'active',
+    lifecycleCondition: 'active',
+    updatedAt: now,
+  };
+  return stageAndResumeMaterialization({
     request,
-    updated,
-    await store.readBindingMetadata(metadata.bindingId),
-    null,
-  );
+    operation,
+    store,
+    dependencies,
+    observationEvidence: {
+      observedAt: observation.observedAt,
+      classification: 'none',
+      evidenceDigest: semanticDigest(observation),
+      actionDigest: action.actionDigest,
+    },
+    verification: [
+      {
+        field: 'former-snapshot',
+        expectedHash: semanticDigest(state.snapshot),
+        observedHash: semanticDigest(state.snapshot),
+        status: 'verified',
+      },
+      {
+        field: 'replacement-snapshot',
+        expectedHash: semanticDigest(snapshot),
+        observedHash: semanticDigest(snapshot),
+        status: 'verified',
+      },
+    ],
+    plan: {
+      kind: 'update',
+      metadata: nextMetadata,
+      finalState,
+      association:
+        metadata.target.kind === 'backlog'
+          ? {
+              provider: metadata.provider,
+              ref:
+                replacement.identity.aliases[0]?.value ??
+                replacement.identity.stableId,
+              bindingId: metadata.bindingId,
+              target: metadata.target,
+              seedContent: null,
+            }
+          : null,
+    },
+  });
 }
 
 async function resumeCreateActionHandoff(
@@ -4838,8 +5228,10 @@ async function resumeMaterialization(
     );
     await complete('target', plan.association.seedContent, 'after-target');
   }
-  if (plan.kind !== 'update' && !completed().has('metadata')) {
-    if (plan.kind === 'create') {
+  if (!completed().has('metadata')) {
+    if (plan.kind === 'update') {
+      await store.updateBindingMetadata(plan.metadata);
+    } else if (plan.kind === 'create') {
       const identityEvidence = operation.verification.find(
         (item) => item.field === 'remoteIdentity',
       )?.observedHash;
@@ -4870,7 +5262,10 @@ async function resumeMaterialization(
       baseline: null,
       contentRedacted: false,
     };
-    if (!state) {
+    if (plan.kind === 'update') {
+      await store.writeBindingState(initial);
+      state = initial;
+    } else if (!state) {
       await store.writeBindingState(initial);
       state = initial;
     } else {
@@ -4915,16 +5310,29 @@ async function resumeMaterialization(
     await complete('baseline', plan.finalState.baseline, 'after-baseline');
   }
   if (plan.association && !completed().has('association')) {
-    await writeVerifiedAssociation(
-      request.projectRoot,
-      {
-        bindingId: plan.association.bindingId,
-        provider: plan.association.provider,
-        target: plan.association.target,
-      },
-      plan.association.ref,
-      operation.operationId,
-    );
+    if (plan.kind === 'update') {
+      await writeResolutionAssociation(
+        request.projectRoot,
+        plan.association.target.path,
+        operation.bindingId,
+        {
+          bindingId: plan.association.bindingId,
+          referenceRef: null,
+        },
+        plan.metadata,
+      );
+    } else {
+      await writeVerifiedAssociation(
+        request.projectRoot,
+        {
+          bindingId: plan.association.bindingId,
+          provider: plan.association.provider,
+          target: plan.association.target,
+        },
+        plan.association.ref,
+        operation.operationId,
+      );
+    }
     await complete('association', plan.association, 'after-association');
   }
   const terminal = await store.transitionOperation(

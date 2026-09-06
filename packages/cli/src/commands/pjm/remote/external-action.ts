@@ -141,6 +141,7 @@ const ActionIntentSchemas: Record<
   'read-discussion': z
     .object({
       stableId: z.string().min(1).max(512),
+      limit: z.number().int().min(1).max(100),
       cursor: z.string().max(512).optional(),
     })
     .strict(),

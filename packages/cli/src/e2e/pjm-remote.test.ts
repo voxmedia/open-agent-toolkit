@@ -14,7 +14,10 @@ import type {
   RemoteCommandEnvelope,
   RemoteCommandStatus,
 } from '../commands/pjm/remote/output';
+import type { RemoteBindingMetadata } from '../commands/pjm/remote/schema';
 import { createProductionRemoteRunner } from '../commands/pjm/remote/service';
+import { resolveRemoteStorageLocations } from '../commands/pjm/remote/storage-locator';
+import { RemoteSyncStore } from '../commands/pjm/remote/store';
 
 const originalExitCode = process.exitCode;
 const temporaryDirectories: string[] = [];
@@ -221,6 +224,112 @@ describe('pjm remote end-to-end command workflows', () => {
       operation: 'migrate',
       status: 'ok',
     });
+  });
+
+  it('drives representative provider-neutral closeout through the real CLI runner without mirroring', async () => {
+    const repository = await mkdtemp(join(tmpdir(), 'oat-p07-e2e-closeout-'));
+    temporaryDirectories.push(repository);
+    execFileSync('git', ['init', '--quiet'], { cwd: repository });
+    await mkdir(join(repository, '.oat'), { recursive: true });
+    await writeFile(
+      join(repository, '.oat', 'config.json'),
+      `${JSON.stringify({
+        pjm: {
+          initialized: true,
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              description: 'none',
+              authority: { default: 'user-approved' },
+            },
+            storage: { state: 'local' },
+          },
+        },
+      })}\n`,
+    );
+    const store = new RemoteSyncStore(
+      resolveRemoteStorageLocations({
+        repoRoot: repository,
+        gitCommonDir: join(repository, '.git'),
+        repositoryIdentity: `local-repository:${repository}`,
+        stateStorage: 'local',
+        target: { kind: 'backlog', scope: 'shared', path: null },
+      }),
+    );
+    const providers = [
+      ['github', { repositoryId: 'repository-1' }],
+      ['linear', { workspaceId: 'workspace-1' }],
+      ['jira', { siteId: 'site-1', projectId: 'project-1' }],
+    ] as const;
+    for (const [provider, context] of providers) {
+      const metadata: RemoteBindingMetadata = {
+        recordType: 'binding-metadata',
+        schemaVersion: 1,
+        bindingId: `bnd_${provider}_e2e_001`,
+        provider,
+        target: {
+          kind: 'project',
+          scope: 'shared',
+          id: 'shared/e2e-cross-provider',
+          path: 'shared/e2e-cross-provider',
+        },
+        remoteIdentity: {
+          stableId: `${provider}-issue-1`,
+          context,
+          aliases: [],
+        },
+        identityHistory: [],
+        purposes: ['source'],
+        policyRestrictions: {},
+        publicationProjection: {
+          title: 'frontmatter',
+          description: 'description-section',
+          priority: 'frontmatter',
+        },
+        provenanceToken: `oat-binding:${provider}-e2e-001`,
+        lifecycle: 'active',
+        createdAt: '2026-09-05T12:00:00.000Z',
+        updatedAt: '2026-09-05T12:00:00.000Z',
+      };
+      await store.materializeIntakeBinding(metadata);
+    }
+    const runner = createProductionRemoteRunner({
+      now: () => '2026-09-05T12:00:00.000Z',
+      randomId: (() => {
+        let sequence = 0;
+        return () => `e2e-closeout-${(sequence += 1)}`;
+      })(),
+      readObservationStdin: async () =>
+        providers.map(([provider, context]) => ({
+          provider,
+          context,
+          surfaceKind: 'connector',
+          availability: 'available',
+          semanticCapabilities: ['annotate'],
+          evidenceDigest: `sha256:${provider}-e2e-capability`,
+          observedAt: '2026-09-05T12:00:00.000Z',
+        })),
+    });
+    const result = await runRemoteCommand(
+      [
+        'closeout',
+        '--project',
+        'shared/e2e-cross-provider',
+        '--capability-evidence-stdin',
+      ],
+      'needs-review',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    const envelope = JSON.parse(result.stdout) as RemoteCommandEnvelope;
+    expect(envelope.status).toBe('needs-review');
+    expect(envelope.results.map((item) => item.provider).sort()).toEqual([
+      'github',
+      'jira',
+      'linear',
+    ]);
+    expect(await store.listBindingMetadata()).toHaveLength(3);
+    expect(result.exitCode).toBe(1);
   });
 });
 
