@@ -48,6 +48,10 @@ target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,m
 
 Final gate code review recorded at reviews/final-review-2026-09-06T015333Z.md (0C/0I/1M/1m).
 
+### 2026-09-06 · structural · oat gate review · final
+
+target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/wave-1-execution/reviews/final-review-2026-09-06T015333Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
