@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: p06-t11
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -305,7 +305,7 @@ retro, and reduced-artifact closeout paths passed the full contract suite.
 
 ## Phase 6: Documentation, Provider Sync, Smoke Run, and Release Gates
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-09-05
 **Reopened for final review fixes:** 2026-09-06
 **Completed:** 2026-09-06
@@ -523,13 +523,34 @@ independent implementation exit gate remains required.
 
 ### Task p06-t11: Align lifecycle brainstorming documentation with Lite
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** daca23b157c2cec331434052d721372455106218
 
 **Review source:**
 `reviews/archived/final-review-2026-09-06T032005Z.md` (M1,
 `artifact_alignment_required`). The shipped Lite implementation is accepted
 as authoritative; this task aligns the stale lifecycle guide and required
 lockstep release surfaces without changing runtime behavior.
+
+**Outcome:** The lifecycle guide now documents Lite, Quick, and Spec-Driven
+brainstorm seeds, including Lite `plan.md` seeding, active-project fold-back,
+and the `oat-project-lite` handoff. The five public packages and bundled
+version metadata are synchronized at `0.2.60`.
+
+**Verification:** `/tmp/p06-t11-gates.Sodgd5/exit-codes.txt` records the full
+definition-of-done sequence and supplemental uncached test, lint, format,
+version-parity, diff, and sync checks at exit 0. The final sync dry-run was a
+true no-op. One post-commit wrapper invocation used zsh's reserved `status`
+name and exited 1 before running its assertion; the identical no-edit check
+reran with `rc` and exited 0. No recovery attempt or flaky retry was used.
+
+**Review disposition:** The original final lifecycle review passed with zero
+Critical and zero Important findings and identified this single Medium wording
+alignment. Per the user's explicit direction, root verified the bounded fix
+against the canonical `oat-brainstorm` contract and accepted it without a
+redundant lifecycle re-review. The reviewed-head field remains the reviewer's
+actual `c4793585aee012ed134e1ba1eba0a819230a9c23`; the waiver does not claim a
+reviewer examined the later task commit.
 
 **Dispatch:** Continuation
 `final-wording-fix-851b10c2-855c-4d37-ac5b-c1356d604378` resumes the original
@@ -607,7 +628,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
 - Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 - **p05 review lifecycle:** initial review plus two same-handle fixes and two fresh re-reviews are recorded under `dispatch/lite-p05-*.json`; passing reviewed head `c11a1150239dc179c60b0b82defc9c350999955d`; passing artifact `reviews/p05-review-2026-09-05T231617Z.md`.
-- **p06 implementation:** accepted request `lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7`; durable record `dispatch/lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7.json`; target `oat-phase-implementer-gpt-5-6-sol-high`; resumed on the same handle after the authorized bounded plan revision and returned `DONE` at review-fix commit `3f5c8174bb74877e676e00dc78a1a1e2963f9b36` with all three tasks complete.
+- **p06 implementation:** accepted request `lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7`; durable record `dispatch/lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7.json`; target `oat-phase-implementer-gpt-5-6-sol-high`; the same handle completed all eleven planned and review-derived tasks through `daca23b157c2cec331434052d721372455106218`.
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
 - Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 
@@ -620,12 +641,12 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | p03   | DONE (3/3)     | passed | 1         | pass    |
 | p04   | DONE (2/2)     | passed | 0         | pass    |
 | p05   | DONE (4/4)     | passed | 2         | pass    |
-| p06   | DONE (9/9)     | passed | 3         | pass    |
+| p06   | DONE (11/11)   | passed | 5         | pass    |
 
 #### Outstanding Items
 
-- Run a fresh final lifecycle review for p06-t07 through p06-t09, then rerun
-  the configured implementation exit gate.
+- Run the single additionally authorized configured implementation exit-gate
+  attempt. The user waived another lifecycle re-review for p06-t11.
 - The historical p06-t02 supported-catalogue header wording is explicitly
   accepted for defer because current managed projections and sync evidence are
   correct.
@@ -1426,19 +1447,20 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p06-t03 revision   | plan.md            | Version, sync, and release-only terminal task                                 | Added three bounded contract-alignment repairs before release commit          | Terminal negative controls reproduced stale assertions outside the original file list                                    | Contract tests and `cfcaae8f` task commit | None; authorized and plan-reviewed                      |
 | p06 review fix 1   | p06 initial review | Lifecycle docs described Lite review setup correctly                          | Corrected planning-time setup wording and added explicit exit ledger          | Independent review found two blocking evidence/docs defects                                                              | `3f5c8174` and passing p06 re-review      | Two Medium artifact wording notes remain non-blocking   |
 | final review defer | final review       | p06-t02 verification prose applies the variant header rule to all projections | Accept the historical wording without changing shipped behavior               | Base and variant headers are correct and sync is current; changing historical execution prose adds no release confidence | Current provider views and sync dry-run   | Revisit if projection ownership/header contracts change |
+| p06-t11 waiver     | final review M1    | Lifecycle brainstorming docs described only Quick and Spec-Driven seeds       | Aligned the guide to the accepted three-mode behavior without another review  | User waived redundant re-review for wording-only alignment; root verified canonical agreement                            | `oat-brainstorm` and task gate ledger     | Independent exit gate remains required                  |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                            | Passed                         | Failed  | Coverage                                                      |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ | ------- | ------------------------------------------------------------- |
-| 1     | Focused control-plane/CLI, check, type-check, test, build                                                                            | Yes                            | 0       | Mode declaration, parsing, scaffold, help                     |
-| 2     | Focused router/dashboard/closeout suites plus full phase gates                                                                       | Yes                            | 0       | Recommendation, progress routing, PR closeout                 |
-| 3     | Focused split/promote/validator suites plus full phase gates                                                                         | Yes                            | 0       | Promotion safety and Lite plan validation                     |
-| 4     | Skill contracts, end-to-end Lite integration, full phase gates                                                                       | Yes after bounded recovery     | 0 final | Dedicated Lite workflow and bundled assets                    |
-| 5     | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops | 0 final | Review, import, progress, recap bypass, PR flow               |
-| 6     | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes; p06-t10 used no retries   | 0 final | Docs, provider sync, real promotion routing, release `0.2.59` |
+| Phase | Tests Run                                                                                                                            | Passed                                   | Failed  | Coverage                                                      |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | ------- | ------------------------------------------------------------- |
+| 1     | Focused control-plane/CLI, check, type-check, test, build                                                                            | Yes                                      | 0       | Mode declaration, parsing, scaffold, help                     |
+| 2     | Focused router/dashboard/closeout suites plus full phase gates                                                                       | Yes                                      | 0       | Recommendation, progress routing, PR closeout                 |
+| 3     | Focused split/promote/validator suites plus full phase gates                                                                         | Yes                                      | 0       | Promotion safety and Lite plan validation                     |
+| 4     | Skill contracts, end-to-end Lite integration, full phase gates                                                                       | Yes after bounded recovery               | 0 final | Dedicated Lite workflow and bundled assets                    |
+| 5     | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops           | 0 final | Review, import, progress, recap bypass, PR flow               |
+| 6     | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes; p06-t10 and p06-t11 used no retries | 0 final | Docs, provider sync, real promotion routing, release `0.2.60` |
 
 ## Final Summary (for PR/docs)
 
@@ -1450,7 +1472,7 @@ Track test execution during implementation.
   approval, automatic promotion to quick when scope outgrows Lite, managed
   dispatch, phase/final reviews, and PR-first closeout.
 - Provider projections, docs, lifecycle integrations, and lockstep public
-  package release surfaces synchronized at `0.2.59`.
+  package release surfaces synchronized at `0.2.60`.
 
 **Behavioral changes (user-facing):**
 
