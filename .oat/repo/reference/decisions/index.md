@@ -10,6 +10,11 @@
 
 | ID                                       | Date       | Status   | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | -------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-260906-keep-lite-single-phase         | 2026-09-06 | accepted | Keep Lite single-phase and sequential                                                                  | -       |
+| DR-260906-lite-is-a-first-class-workflow | 2026-09-06 | accepted | Lite is a first-class workflow mode                                                                    | -       |
+| DR-260906-promote-oversized-lite-work    | 2026-09-06 | accepted | Promote oversized Lite work in place                                                                   | -       |
+| DR-260906-retain-managed-implementation  | 2026-09-06 | accepted | Retain managed implementation and independent review                                                   | -       |
+| DR-260906-use-a-three-artifact-lite      | 2026-09-06 | accepted | Use a three-artifact Lite project shape                                                                | -       |
 | DR-260831-approval-bound-homogeneous     | 2026-08-31 | accepted | Approval-bound homogeneous dispatch                                                                    | -       |
 | DR-260831-canonical-validated-run        | 2026-08-31 | accepted | Canonical validated-run boundary                                                                       | -       |
 | DR-260831-cause-specific-fail-closed     | 2026-08-31 | accepted | Cause-specific fail-closed runtime terminal                                                            | -       |
