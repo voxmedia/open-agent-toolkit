@@ -414,6 +414,7 @@ git commit -m "docs(p05-t01): document fail-closed patch-and-restore recovery fo
 | p05   | code     | passed      | 2026-09-06 | reviews/archived/p05-review-2026-09-06T082528Z.md           | 0f301c8e12451c66fe26c2fb79d2dedb8a60e30d | manual     | -           |
 | final | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T085208Z.md         | bee72dd4d300762366475781f7d97ac76464948f | manual     | -           |
 | final | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T091621Z.md         | c0210b9d32941133fa65f2bef9150acf6f6fbae6 | manual     | -           |
+| final | code     | passed      | 2026-09-06 | reviews/archived/final-review-2026-09-06T092134Z.md         | 1e688a1e5de97a3a49ec3e069dd5afd11a1bd756 | manual     | -           |
 | plan  | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T023526Z.md | -                                        | -          | -           |
 
 > The plan-gate artifact reports its findings as blocking (1I/1m); they were auto-dispositioned in gate mode and fixed in-artifact in `702500936`, after which the row reads `passed`.
