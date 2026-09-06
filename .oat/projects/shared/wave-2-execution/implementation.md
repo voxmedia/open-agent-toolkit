@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: p05-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -164,7 +164,7 @@ Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passe
 | p02   | `.worktrees/wave-2/p02` | DONE (`c25e1fd4f` + fix `530f42897`; lane gates forced `Cached: 0`, test:skills 798)              | passed (round 1 0C/1I/2M/3m → round 2 0C/0I/0M/1m)                    | 1          |
 | p03   | `.worktrees/wave-2/p03` | DONE (`a207d3c11` + fix `5a99837ec`; lane gates forced `Cached: 0`, test:skills 801/801)          | passed (round 1 1C/1I/1M/3m → round 2 0C/0I/0M/3m)                    | 1          |
 | p04   | `.worktrees/wave-2/p04` | DONE (`6ef43933e` + fix `2b06f7292` + sweep `ef0c8595c`; forced CLI suite 5601 green)             | passed (round 1 0C/4I/5M/5m → round 2 0C/0I/2M/3m; address-now sweep) | 1          |
-| p05   | `.worktrees/wave-2/p05` | DONE (`de0ba133a` + fixes `27cc81e8e`, `0f301c8e1`; forced CLI suite 5602, test:skills 832 green) | passed (round 1 0C/2I/1M/4m → round 2 1C/0I/0M/3m → round 3 clean)    | 2          |
+| p05   | `.worktrees/wave-2/p05` | DONE (`de0ba133a` + fixes `27cc81e8e`, `0f301c8e1`; forced CLI suite 5602, test:skills 832 green) | passed (round 1 0C/2I/1M/5m → round 2 1C/0I/0M/3m → round 3 clean)    | 2          |
 
 #### Group 1 fan-in — p01 (2026-09-06)
 
@@ -259,7 +259,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - M3 — the p03 "one sentence" property did not hold at terminators followed by closing punctuation: **fixed in code** (`e82e2442f`; splitter, three fixtures, both comments corrected; neutralization fails 1/54).
 - M4 — false no-op-rebase lesson in the group-1 fan-in record: **fixed** (`604ddd10a` log; `77c6fb164` implementation record).
 - M5 — project state files described a mid-p01 snapshot: **fixed** (`77c6fb164`; `oat_status`, `oat_current_task_id`, Outstanding Items, state prose, `oat_last_commit`).
-- M6 — Implementation Complete checklist unchecked; `summary.md` missing: **fixed / deferred by rule** (four items checked; `summary.md` is produced by the post-implement sequence below).
+- M6 — Implementation Complete checklist unchecked; `summary.md` missing: **fixed** (four items checked; the `summary.md` item stays unchecked with a note until the post-implement sequence produces the file — round 2 caught it checked prematurely, reverted).
 - M7 — dispatch records frozen at `child_outcome: running`; Dispatch Note :125 task-class claim: **fixed by note** (records are immutable after the first revision; terminal outcomes live in the Dispatch Notes; the reviewer-record task class corrected to `consequential`).
 - m1 — plan-review ledger row `passed` against a blocking artifact: **fixed** (annotation beneath the row naming the gate-mode auto-disposition and fix commit `702500936`).
 - m2 — three wave-close plan corrections had no durable tracker: **fixed** — `BL-260906-wave-2-external-plan` filed.
@@ -273,6 +273,27 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Review row `final` (round 1) → `fixes_added`; a narrowed round 2 on the same reviewer handle verifies these dispositions.**
 
+## Review Received: final (round 2, narrowed)
+
+**Date:** 2026-09-06
+**Review artifact:** reviews/archived/final-review-2026-09-06T091621Z.md (reviewed head `c0210b9d32941133fa65f2bef9150acf6f6fbae6`, range `bee72dd4d..c0210b9d3`, invocation manual, dispatch `w2-final-review-002`, reconnaissance not-attempted)
+
+**Findings:** Critical 0 · Important 1 · Medium 1 · Minor 5. Both code fixes verified genuine (I1: narrowing the loop body back to the passage now turns `not ok 14` red; omitting the third argument fails 3/54; M3: all three closing-punctuation shapes flip to rejected); `e17532ded` provably comment-only; I3's numbers recounted from the eleven artifacts and match; m7 rejection upheld.
+
+**Dispositions (root, this commit):**
+
+- I1 (M6 regressed) — the `summary.md` checklist box had been checked before the file existed: **fixed** — box unchecked with a note that the post-implement sequence produces it; the round-1 disposition text corrected.
+- M1 — `BL-260906-wave-2-external-plan` shipped placeholder acceptance criteria: **fixed** — real criteria written.
+- m1 — `oat_current_task_id` / `oat_current_task` / `oat_project_state_updated` not terminal: **fixed** (`null`, `null`, restamped).
+- m2 — Phase Outcomes p05 count: **fixed** (`5m`).
+- m3 — `project-log.md` pending-synthesis boilerplate: **fixed** — section body replaced with a pointer to `orchestration-log.md`; append-only entries untouched.
+- m4 — stale Deferred Findings bullets: **fixed** (external-plan corrections point at the new item; p03 m4 recorded as closed by `e82e2442f`).
+- m5 — splitter trade-off one-sided in the comment: **fixed** — one sentence added to the `guardedSentences` comment (comment-only, root-owned closeout edit, no behavior change).
+
+**Verification record:** what — the record and comment repairs above; how — `oat project validate-plan` exit 0, `node --test` on `contracts.test.mjs` 54/54 after the comment edit, `git diff --stat` shows record files plus one comment-only hunk; where — this section and the commit that carries it.
+
+**Review row `final` (round 2) → `fixes_added`; round 3 verifies these and, on pass, marks the row `passed`.**
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)
@@ -283,11 +304,11 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 ### Deferred Findings (Minor)
 
 - p01 m2: doctor example table self-contradiction → `BL-260906-reconcile-the-oat-doctor`.
-- p01 m3 / p04 / p05 m5: external-plan wording (step-2 "one named contract group"; ten-skill list and named focused tests; conditional step 5) → wave-close plan corrections (program refresh commit).
+- p01 m3 / p04 / p05 m5: external-plan wording (step-2 "one named contract group"; ten-skill list and named focused tests; conditional step 5) → `BL-260906-wave-2-external-plan` (lands in the wave-close program refresh).
 - p01 m5: `readerSentences()` reader-vocabulary bound — informational, no action.
 - p02 m2/m4: `requiresConfirmation` vocabulary; blockquoted ordered-marker escape → appended to `BL-260827-span-based-prose-guards`.
 - p02 m3 / p03 friction: `.agents/skills/**/*.mjs` not covered by `pnpm check` or lint-staged → `BL-260906-cover-skill-test-files-under`.
-- p03 round 2 m4–m6: punctuation-only band accepted by the `[\s\S]*` widening; docs mirror packs three requirements into one sentence; v1-token distance unbounded → informational, no action.
+- p03 round 2 m4: the punctuation-only band accepted by the `[\s\S]*` widening → closed by `e82e2442f` (closing-punctuation splitter; the symmetric trade-off — finer splitting also narrows what `NEGATION_MARKER` can disqualify — is documented in the `guardedSentences` comment). p03 round 2 m5–m6: docs mirror packs three requirements into one sentence; v1-token distance unbounded → informational, no action.
 - p04 round 2 m: `complete/SKILL.md:292` consistency and corpus-floor self-guard → fixed in the sweep (`ef0c8595c`).
 
 ## Final Summary (for PR/docs)

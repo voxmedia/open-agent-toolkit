@@ -21,5 +21,8 @@ Corrections the wave-2 reviews queued for the external plans, to land in the wav
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] `2026-08-30-repair-bundled-skill-contract-drift.md`: step 2 wording matches the shipped per-defect contract groups and the `analyze` pin is named in the in-scope files
+- [ ] `2026-08-30-require-named-lifecycle-skills-to-be-loaded.md`: executor list names all thirteen skills, the named focused tests include `review-skill-contracts.test.ts` and `autonomy-gate-inventory.test.ts`, and the PR #190 dependency row cites the current head
+- [ ] `2026-09-02-document-patch-and-restore-for-lost-child-handles.md`: step 5 is stated as conditional on prompt-site changes, the landing row is current, and the `skills.test.ts` anchors are re-verified
+- [ ] `2026-08-30-harden-codex-skill-anaphora-guard.md`: records the anaphor-only ruling and the fail-open filler boundary as the accepted shape
+- [ ] All four corrections land in one program-refresh commit that also updates the execution program's revalidation log

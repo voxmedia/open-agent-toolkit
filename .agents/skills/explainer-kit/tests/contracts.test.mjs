@@ -832,6 +832,8 @@ function readGuardedPassage(source, { label, startMarker }) {
 //
 // The consequence, stated plainly because the requirement patterns below
 // depend on it: two real sentences separated by such an intra-word terminator
+// Finer splitting cuts both ways: a disqualifying clause joined by `.)` or `."` no longer
+// poisons the affirmative sentence before it, so this guard stays a drift alarm, not a proof of meaning.
 // are still one sentence to this guard, so tokens could be drawn across that
 // boundary. Terminators followed by `)`, `"`, `'`, `*`, or `]` used to have the
 // same effect and no longer do; those three shapes are fixtured below.

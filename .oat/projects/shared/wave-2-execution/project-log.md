@@ -48,6 +48,6 @@ target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,m
 
 End-of-run synthesis for this wave wrapper lives in orchestration-log.md (convention verdicts, skill-signal rulings, adopted rules, graduated-entries ledger); this project log carries structural events only.
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Owned by `orchestration-log.md` for wave wrappers (convention verdicts, skill-signal rulings, adopted rules, graduated-entries ledger); see its `## End-of-run synthesis (2026-09-06)` section.
