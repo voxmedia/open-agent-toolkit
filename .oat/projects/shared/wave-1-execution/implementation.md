@@ -28,10 +28,10 @@ oat_generated: false
 | -------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 01 (use-configured-docs-index-paths)         | complete    | 2     | 2/2       |
 | Phase 02 (validate-assets-bundle-structure)        | complete    | 1     | 1/1       |
-| Phase 03 (make-assets-errors-override-aware)       | in_progress | 1     | 0/1       |
+| Phase 03 (make-assets-errors-override-aware)       | complete    | 1     | 1/1       |
 | Phase 04 (add-exclusions-to-docs-index-generation) | in_progress | 1     | 0/1       |
 
-**Total:** 3/5 tasks completed (p01-t01, p01-t02 review fix, p02-t01)
+**Total:** 4/5 tasks completed (p01-t01, p01-t02 review fix, p02-t01, p03-t01)
 
 ---
 
@@ -183,13 +183,54 @@ oat_generated: false
 
 ## Phase 03: make-assets-errors-override-aware (group 2)
 
-**Status:** in_progress (source plan `BLOCKED` until p02 merges into the wave branch and the readiness check passes)
+**Status:** complete (lane verified; awaiting fan-in merge)
 **Started:** 2026-09-06
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Every asset-bundle failure (nine `CliError` sites, including p02's three
+  structural sub-branches and the errno-bearing unreadable diagnosis) routes
+  through one `assetsRemedy` formatter fed by a single `AssetsRootSource`
+  discriminator derived once in `resolveAssetsRoot`: override failures name
+  `OAT_ASSETS_DIR` with no rebuild/reinstall/fallback wording; packaged
+  failures keep both prior remedy strings verbatim.
+
+**Key files touched:**
+
+- `packages/cli/src/fs/assets.ts` - source-aware remedy formatter and discriminator
+- `packages/cli/src/fs/assets.test.ts` - paired override/packaged cases (48 total)
+
+**Verification:**
+
+- Run: focused 48/48; uncached CLI suite 327 files / 5532 tests; `pnpm check`, `pnpm type-check`, `pnpm run check:skill-bumps`, all exit 0; lockstep diff = 0. Three neutralizations (always-packaged, always-override, errno dropped) fail 9/10/2 tests respectively; the reviewer's five adversarial probes survived and were proven non-vacuous.
+- Result: pass
+
+**Notes / Decisions:**
+
+- Cross-model review (Codex, read-only): SHIP, zero findings.
+- Root review `reviews/p03-review-2026-09-06T004322Z.md`: 0C/1I/1M/3m → passed after the root-owned bookkeeping fix below.
+- Rulings recorded: the wrong-type root branch gaining a remedy is plan-mandated; exporting `AssetsRootSource` is acceptable (`declaration: true` forces it; the `fs` barrel still exports only `resolveAssetsRoot`).
+- Root-verified bounded fix (review I1): the wrapper had recorded the group-2 readiness checks but not flipped the source plans' `oat_execution_status`, which the program's group-2 gate requires. What: both successor plans set `BLOCKED` → `READY` in frontmatter only, in commit `cbaee759a` citing the readiness evidence. How: `grep -n '^oat_execution_status'` on both plans shows `READY`; no other plan line changed. Where: `.oat/repo/reference/external-plans/2026-08-30-make-assets-errors-override-aware.md`, `2026-09-02-add-exclusions-to-docs-index-generation.md`; this record.
 
 ### Task p03-t01: Execute external plan — Make asset errors override-aware
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** f54cb43162ffad21543105fc8b9858f1e6cc6a68
+
+**Outcome (required when completed):**
+
+- Asset error remedies are source-aware: `OAT_ASSETS_DIR` failures no longer tell the operator to rebuild or reinstall.
+
+**Files changed:**
+
+- `packages/cli/src/fs/assets.ts`, `packages/cli/src/fs/assets.test.ts`
+
+**Verification:**
+
+- Run: see Phase Summary
+- Result: pass
 
 ---
 
@@ -212,7 +253,11 @@ oat_generated: false
 - p02 review M1 — `apps/oat-docs/docs/cli-utilities/configuration.md:240-246` still describes the `OAT_ASSETS_DIR` validation contract as sufficient. Deferred: the page is outside the lane's declared write surface and outside every W1 plan; file a follow-up backlog item at closeout (follow-up ledger) so the docs land with p03's remedy rewrite or as a docs-only PR.
 - p02 review M2 — `requiredPackedPaths` guards no packed path under `agents/`, `scripts/`, `docs/`, or `config/`, so a future producer change that empties a conditionally populated directory could publish a CLI that exits 2 on every command while local gates stay green. Deferred: release-safety scope outside W1; file a follow-up backlog item at closeout. Present-day tarball verified to retain entries under all seven directories.
 
+- p03 review M1 — the outer `stat` catch in `resolveAssetsRoot` collapses every non-`CliError` root failure into "Assets directory not found" (a real EACCES on a complete override root is reported as missing). Deferred: outside the lane's authorized scope; file a follow-up backlog item at closeout alongside the p02 M1/M2 items.
+
 ### Deferred Findings (Minor)
+
+- p03 review m3 — the file-global `statRedirects` test seam has no `afterEach` reset. Deferred: trivial test hygiene in a lane already passed; bundle with the follow-up item above rather than reopen the lane. p03 m2 (Reviews-table `Reviewed Head` SHAs are pre-rebase branch heads) is handled by the SHA mapping in the group fan-in records.
 
 - p01 review m1 — `docs/init/index.ts:196` "Index file" label now diverges from the Fumadocs `documentation.index` seed. Deferred: outside the plan's declared write surface; file a follow-up backlog item at closeout.
 - p01 round-2 residual — the symlink hop-cap refusal always advises `--output` even when the chain is on the derived docs directory, and surfaces under the refusal code rather than the configuration code. Deferred: very low reachability; file with the m1 follow-up.
