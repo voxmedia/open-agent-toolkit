@@ -764,16 +764,139 @@ test('rejects control characters and backslashes in both publication roots', () 
   }
 });
 
-test('documents complete receipt v2 consumption and immutable v1 replay', async () => {
-  const guidance = await readFile(
-    new URL('../references/extension-contract.md', import.meta.url),
-    'utf8',
-  );
+// Every deliberate copy of the wrapper publication boundary, recorded
+// explicitly. Mirrors are never inferred from phrase similarity elsewhere in
+// the repository: an entry is added only when a copy is known to restate this
+// contract for a different reader. The canonical reference owns the rule; the
+// docs-app page mirrors it for users who never open the skill.
+const GUARDED_PUBLICATION_COPIES = [
+  {
+    label: 'explainer-kit/references/extension-contract.md (canonical)',
+    url: new URL('../references/extension-contract.md', import.meta.url),
+    startMarker: 'After the core command returns',
+  },
+  {
+    label: 'apps/oat-docs/docs/workflows/skills/explainer-kit.md (mirror)',
+    url: new URL(
+      '../../../../apps/oat-docs/docs/workflows/skills/explainer-kit.md',
+      import.meta.url,
+    ),
+    startMarker: '## Private wrappers',
+  },
+];
 
-  assert.match(guidance, /publish-receipt\/v2/i);
-  assert.match(guidance, /complete.*manifest.*catalog.*evidence/i);
-  assert.match(guidance, /publish-receipt\/v1.*replay/is);
-  assert.doesNotMatch(guidance, /complete `PublishReceiptV1`/);
+// Scope each copy to its own publication section: from its start marker to the
+// next top-level section, or to the end of the document when the passage is
+// last. A whole-document match would let an unrelated paragraph satisfy one of
+// the tokens below and hide a regression in the passage that states the rule.
+// The marker must start a line and occur exactly once, so a later duplicate
+// cannot silently redirect the guard at an unguarded passage.
+function readGuardedPassage(source, { label, startMarker }) {
+  const anchor = `\n${startMarker}`;
+  assert.equal(
+    source.split(anchor).length - 1,
+    1,
+    `${label}: expected exactly one line-anchored guarded passage marker ${startMarker}`,
+  );
+  const remainder = source.slice(source.indexOf(anchor) + anchor.length);
+  const end = remainder.indexOf('\n## ');
+  return end === -1 ? remainder : remainder.slice(0, end);
+}
+
+// One semantic contract, applied independently to each copy. Every positive
+// pattern is sentence-scoped (`[^.]*` cannot cross a full stop) so the tokens
+// must appear in one affirmative clause rather than anywhere in the passage:
+// prose that names a token while asserting the opposite rule does not pass.
+// Failure messages carry the source label so a regression names the copy that
+// drifted.
+function assertPublicationBoundary(prose, label) {
+  assert.match(
+    prose,
+    /\bcomplete\b[^.]*publish-receipt\/v2/i,
+    `${label}: must consume the complete current publish-receipt/v2`,
+  );
+  assert.match(
+    prose,
+    /\bcomplete\b[^.]*manifest[^.]*catalog[^.]*evidence/i,
+    `${label}: must require complete manifest and catalog evidence`,
+  );
+  assert.match(
+    prose,
+    /publish-receipt\/v1(?=[^.]*\breplay\b)(?=[^.]*\bonly\b)/i,
+    `${label}: must keep publish-receipt/v1 readable for replay only`,
+  );
+  assert.doesNotMatch(
+    prose,
+    /complete `PublishReceiptV1`/,
+    `${label}: must not claim a complete PublishReceiptV1`,
+  );
+}
+
+for (const copy of GUARDED_PUBLICATION_COPIES) {
+  test(`documents complete receipt v2 consumption and immutable v1 replay: ${copy.label}`, async () => {
+    const source = await readFile(copy.url, 'utf8');
+
+    assertPublicationBoundary(readGuardedPassage(source, copy), copy.label);
+  });
+}
+
+// Non-vacuity guard for the loop above: reading both files proves nothing
+// unless the shared assertion actually rejects drift. Each fixture keeps every
+// other positive token, so a mutation can only fail for the stated reason.
+test('the guarded publication assertion rejects drifted prose', () => {
+  const accepted = [
+    'Wrapper acceptance reads the complete post-run `publish-receipt/v2` and',
+    'validates complete manifest and catalog evidence before it accepts a run.',
+    'A `publish-receipt/v1` remains readable for replay of older runs only.',
+  ].join('\n');
+
+  assertPublicationBoundary(accepted, 'accepted control');
+
+  for (const [drift, prose] of [
+    [
+      'obsolete complete v1 claim',
+      `${accepted}\nAcceptance still requires a complete \`PublishReceiptV1\`.`,
+    ],
+    [
+      'dropped catalog evidence',
+      accepted.replace('manifest and catalog evidence', 'manifest evidence'),
+    ],
+    [
+      'dropped receipt v2 consumption',
+      accepted.replace('`publish-receipt/v2`', '`publish-receipt`'),
+    ],
+    [
+      'dropped immutable v1 replay',
+      accepted.replace(
+        'A `publish-receipt/v1` remains readable for replay of older runs only.',
+        'Older receipts are rewritten in place.',
+      ),
+    ],
+    // Contradiction fixtures: every token survives, only the rule inverts.
+    // They fail unless the patterns above stay bound to affirmative clauses.
+    [
+      'receipt completeness made optional',
+      accepted.replace(
+        'the complete post-run `publish-receipt/v2` and',
+        'the post-run `publish-receipt/v2`, complete or not, and',
+      ),
+    ],
+    [
+      'v1 replay made mutable',
+      accepted.replace(
+        'A `publish-receipt/v1` remains readable for replay of older runs only.',
+        'A `publish-receipt/v1` is rewritten in place; replay reuses it.',
+      ),
+    ],
+  ]) {
+    assert.throws(
+      () => assertPublicationBoundary(prose, `drifted copy: ${drift}`),
+      (error) =>
+        error instanceof assert.AssertionError &&
+        error.message.includes(`drifted copy: ${drift}`),
+      `${drift} must be rejected, and the failure must name the drifting copy`,
+    );
+  }
 });
 
 test('documents project-recap v2 as the current producer policy with immutable v1 replay', async () => {
