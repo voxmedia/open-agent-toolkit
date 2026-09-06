@@ -1126,6 +1126,7 @@ git commit -m "fix(p06-t06): align lite artifacts and release surfaces"
 | plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T200630Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
 | plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T201454Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
 | plan   | artifact | passed          | 2026-09-06 | dispatch/lite-plan-revision-rereview1-60cc80ff-7013-4da9-a678-45e17246b821.json | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
+| final  | code     | received        | 2026-09-06 | reviews/final-review-2026-09-06T021128Z.md                                      | 5b2a6462c3b21f8e6f1383e796c3328bba18329d | gate       | claude-fable-skip-permissions |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
