@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 2bfb39a5
+oat_last_commit: c98540a1
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260718-fix-oat-docs-generate-index' }
@@ -60,7 +60,42 @@ oat_dispatch_policy: # managed/high per operator routing preference (2026-09-05)
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-# oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: 63ea98d28825ce0db7bc9e15047b223a794cb1ec # final review round 2 passed (reviews/final-review-2026-09-06T014238Z.md)
+  implementation_base_ref: origin/main
+  implementation_fingerprint: 'sha256:effective-delta-v1:ec05b9d2172cd8aa80044a7e146260657d0378142f9200358149dae04a1a43a7'
+  freshness_head: c98540a1e8cac890554995f2fd79641f03019405 # closeout-only descendant c98540a1e (project record, external-plan text, backlog); corroborated before launch
+  freshness_fingerprint: 'sha256:effective-delta-v1:ef9361c64cbd89d6c378a857613f467def4bb4fd5699a0d2051ec7fc3cad1c29'
+  launch_state: intent_persisted
+  launch_attempt_id: 'w1-exit-gate-20260906T014616Z'
+  launch_started_at: '2026-09-06T01:46:16Z'
+  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w1/w1-exit-gate-20260906T014616Z.receipt.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-09-06T01:46:16Z'
+# oat_implement_exit_gate (reference): optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
 #   disposition: null # null | passed | warned | prompt_approved | no_gate
@@ -100,7 +135,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-05T22:36:14.653Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T01:38:47.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T01:46:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
