@@ -1,6 +1,6 @@
 ---
 name: oat-project-lite
-version: 1.1.0
+version: 1.1.1
 description: Use when a single-sitting change needs a critical interview, an approved single-phase plan, and resumable OAT implementation with minimal ceremony.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -39,7 +39,8 @@ through its `LITE-0N` row and stop only where that row declares a boundary:
 - `LITE-06`: dispatch-ladder scope;
 - `LITE-07`: project dispatch policy;
 - `LITE-08`: plan artifact-review findings; and
-- `LITE-09`: configured exit gate.
+- `LITE-09`: configured exit gate; and
+- `LITE-10`: configured lifecycle gate posture.
 
 Record each autonomous resolution and its provenance in the artifact named by
 the row. Never persist either autonomy environment signal.
@@ -321,6 +322,23 @@ oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role review
 
 Lite has no workflow-preference prompt, no phase review setup step, and no
 HiLL setup. Built-in implementation review remains unchanged.
+
+### Step 5.5: Configure Lifecycle Gate Posture
+
+After the complete Lite plan has stable phase IDs and before its plan artifact
+review, invoke the `Shared Lifecycle Gate Posture Setup Contract` from the
+shared planning contract. At this boundary, load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written. This
+setup remains independent from Lite's project-aware Gate Execution and does not
+add phase-review or HiLL setup.
+
+Apply `LITE-10` to the shared contract's interaction. When
+`oat_skill_gate_overrides` already exists, preserve it through the shared
+contract without probing, prompting, or mutation. Otherwise, in interactive
+planning, offer Keep or Disable independently for each configured gate.
+Persist only disabled choices to `"$PROJECT_PATH/state.md"`. Never modify the
+shared, local, or user configuration layers. In non-interactive planning,
+preserve configured gates and do not invent or write an override.
 
 ### Step 6: Run Plan Artifact Review Loop
 

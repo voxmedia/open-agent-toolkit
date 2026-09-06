@@ -1868,7 +1868,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-lite',
-        version: '1.1.0',
+        version: '1.1.1',
         finalizedHeading: '### Step 6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 7: Mark Plan Complete and Hand Off',
@@ -2033,7 +2033,7 @@ describe('validateOatSkills', () => {
     expect(content).toMatch(
       /OAT_AUTONOMOUS=1[\s\S]*references\/docs\/autonomy-contract\.md/,
     );
-    for (let gate = 1; gate <= 9; gate += 1) {
+    for (let gate = 1; gate <= 10; gate += 1) {
       const gateId = `LITE-${String(gate).padStart(2, '0')}`;
       expect(content, `${gateId} cited by skill`).toContain(gateId);
       expect(contract, `${gateId} registered`).toMatch(
