@@ -291,6 +291,10 @@ Stop and report instead of improvising when:
   or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-06, wave 4)
+
+Executed as wave-4 p02 (PR wave-4-execution, CLI 0.2.59): shared `detectManifestVersionRestamp` in `manifest/manager.ts` (re-exported through `manifest/index.ts`); init, remove-skill, and interactive status adoption warn before `saveManifest` (init and remove-skill JSON carry `manifestVersionRestamps`; JSON status carries none because it never saves, per step 3); sync's `versionSkew` is a type alias of the shared shape; restamp-only apply reports `Manifest version refreshed; no content changes required.` and suppresses the plan body's empty-plan sentence in the command layer (the root review found the body line the array-element assertion could not see; the fixed test runs the production formatter). `restampOnly` additionally requires zero failed operations (a rejected collection is counted as failed but never as planned). The wave fan-in's `sync --scope project` after the lockstep bump exercised the advisory on the repository's own manifest. Follow-ups: `BL-260906-fix-sync-apply-branch` (pre-existing precedence corner), `BL-260906-persist-status-native-skill`, `BL-260906-scope-the-restamp-only-sync`. Docs for the behavior were added to `apps/oat-docs/docs/provider-sync/commands.md` in the wave's final fix round (the plan named no docs file).
+
 ## Revalidation Before Execution
 
 Refreshed 2026-09-03 against `origin/main` after PR #255 (truthfulness) and
