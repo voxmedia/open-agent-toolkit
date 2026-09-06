@@ -1,6 +1,6 @@
 ---
 name: oat-phase-implementer
-version: 1.1.2
+version: 1.1.3
 description: Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement.
 tools: Read, Write, Edit, Bash, Grep, Glob, Task
 color: cyan
@@ -358,6 +358,46 @@ Do not launch a child, continue sequentially, review, or repair the invalid run.
 
 ### 2. Execute Tasks in Plan Order
 
+#### Cross-Cutting Option Sweep
+
+Before the first edit of a task that adds, renames, retypes, or changes the
+default or meaning of an option, argument, flag, configuration field, schema
+property, or policy value consumed outside the module that defines it,
+inventory that symbol repository-wide. A value that is defined, read, and
+written only inside its own module does not trigger this rule.
+
+The inventory is repository-wide. It is never limited to the declared file
+boundary and never limited to production source: sweep declarations and type
+definitions, constructors and factories, adapters and wrappers, serializers and
+deserializers, persisted schemas and templates, fixtures, mocks, snapshots, and
+tests, and every call site that constructs, forwards, or defaults the value.
+Use `rg` or an equivalent repository-wide search together with whatever
+language-aware check this repository already provides; no single tool is proof
+of completeness, so search the property name, its serialized spelling, and its
+accessors.
+
+A declared file list is review scope, not a correctness boundary. When the
+sweep finds files outside that list:
+
+- **Widen mechanically and proceed** when every discovered file is already
+  required by the declared task outcome, the edit to it is mechanical
+  propagation of the same value, and no sibling or active parallel task owns
+  it. The effective task boundary is the declared list plus those mechanically
+  discovered files. Record every addition in the Task Outcomes `Files` cell and
+  in Self-Review Observations, and never edit `plan.md` to match.
+- **Stop and report** the exact discovered file set and the ownership conflict
+  when the expansion would change the declared task outcome, cross sibling or
+  parallel-lane ownership, invalidate a plan-declared parallel group, or
+  require a new design, architecture, or public-behavior decision.
+
+Threading an already-agreed option through four call sites that would otherwise
+keep the stale default is mechanical propagation. Adding new behavior at a
+discovered call site, changing an unrelated default, or deciding how two lanes
+divide a shared file is not, and stops for direction. This pre-edit rule
+matches the mechanically derived, in-phase widening already allowed during
+post-commit recovery, and it never relaxes the standing rule against scope
+expansion beyond the phase.
+
 For every task:
 
 1. Record `PRE_TASK_HEAD`.
@@ -380,7 +420,9 @@ For every task:
    mutate Git config or use `--no-verify`.
 9. Verify:
    - HEAD is exactly one commit after `PRE_TASK_HEAD`;
-   - the commit changes only declared task files;
+   - the commit changes only files in the effective task boundary, which is
+     the declared task files plus any mechanical additions permitted by, and
+     reported under, the cross-cutting option sweep;
    - every task verification passed; and
    - the worktree is clean.
 10. Perform a brief between-task transition check before starting the next
