@@ -331,6 +331,14 @@ implementation HiLL prompts, and routes a passed final review directly to PR
 creation. Summary and documentation run only when enabled through the
 lite-specific post-implementation sequence.
 
+Each task chooses evidence proportionate to its risk instead of requiring one
+test-first recipe. Behavioral changes need a proof that fails without the
+change; refactors default to characterization-first when existing coverage is
+insufficient; documentation-only work may use formatting, link, spelling, or
+build checks. UI changes require visual proof. In autonomous runs, available
+computer-use capability performs that proof; otherwise execution stops at an
+explicit proof boundary.
+
 ### Promoting a lite project to quick
 
 When lite work outgrows one sitting, `oat project promote <project-path> --to quick`

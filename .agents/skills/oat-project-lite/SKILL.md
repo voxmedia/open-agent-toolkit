@@ -219,8 +219,39 @@ screen. If either needs more space to remove ambiguity, promote to Quick.
 Every validation criterion is one bullet and names its proof as a backticked
 command or test name, or a `manual:` visual-proof instruction. A criterion
 without one of those checks is a defect. The task graph has exactly one phase,
-no parallel groups, stable task IDs, declared files, RED/GREEN/refactor steps
-where applicable, verification commands, and one commit message per task.
+no parallel groups, stable task IDs, declared files, a task-level implementation
+and proof strategy, verification commands, and one commit message per task.
+
+For each task, name the strategy, the observable risk it covers, why the
+evidence is proportionate, and the exact command or `manual:` proof. Supported
+strategies include test-first development, characterization-first work,
+implementation followed by a focused regression, static or build checks, and
+manual or computer-use visual proof. Apply these tiebreakers:
+
+- Static or build checks alone are sufficient only when the change cannot alter
+  runtime behavior.
+- Every behavioral change has at least one proof that fails without the change.
+  For reusable skill, template, or agent wording, a lightweight assertion in
+  the existing `skills.test.ts` suite is proportionate when removing the
+  contract makes it fail; do not create a prose-only fixture or harness.
+- A bug fix preserves a pre-fix reproduction. Waive this only after a bounded
+  attempt proves the original environment or state unavailable; record that
+  evidence, use the strongest alternate regression control, and require
+  reviewer acceptance.
+- A user-interface change requires visual proof. Under autonomy, use available
+  computer-use capability or stop at the `IMPLEMENT-20` proof boundary.
+- Security, provenance, approval, receipt, publication, and other
+  assurance-sensitive contracts require reproduction-grade negative and valid
+  controls.
+- Refactors default to characterization-first unless existing tests already
+  cover the preserved behavior. Documentation-only work may use link, spelling,
+  formatting, or build proof. Behavior-changing configuration requires
+  behavioral proof. Deletions require a negative search plus the relevant build
+  or composition check.
+
+`oat project validate-plan` enforces proof syntax for Validation Criteria, not
+semantic adequacy. Artifact review challenges the selected shape and strategy;
+code review verifies that the declared evidence exists and can prove the claim.
 
 Initialize or update `implementation.md` with the first task pointer while
 keeping implementation in progress. Run:

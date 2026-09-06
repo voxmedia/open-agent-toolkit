@@ -2915,7 +2915,7 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.2'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.3'],
       ['.agents/agents/oat-reviewer.md', '1.2.2'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.4'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
@@ -3225,7 +3225,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.2');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.3');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
@@ -5687,7 +5687,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.2'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.3'],
       ['.agents/agents/oat-reviewer.md', '1.2.2'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.1'],
     ] as const;
@@ -7478,6 +7478,44 @@ describe('lite mode skill contracts', () => {
     expect(phaseExecution).toContain(
       'workflow_mode: {spec-driven|quick|import|lite}',
     );
+  });
+
+  it('makes Lite proof strategy proportionate to observable risk', async () => {
+    const [lite, reviewer, implementer, autonomy, template] = await Promise.all(
+      [
+        readRepoFile('.agents/skills/oat-project-lite/SKILL.md'),
+        readRepoFile('.agents/agents/oat-reviewer.md'),
+        readRepoFile('.agents/agents/oat-phase-implementer.md'),
+        readRepoFile('.agents/docs/autonomy-contract.md'),
+        readRepoFile('.oat/templates/plan-lite.md'),
+      ],
+    );
+
+    expect(template).toContain('**Implementation and Proof Strategy:**');
+    expect(template).toMatch(
+      /Strategy:[\s\S]{0,180}Observable risk:[\s\S]{0,180}Why proportionate:/i,
+    );
+    expect(template).not.toMatch(/Write test \(RED\)|Implement \(GREEN\)/i);
+    expect(lite).toMatch(
+      /Every behavioral change has at least one proof that fails without the change/i,
+    );
+    expect(lite).toMatch(
+      /Static or build checks alone are sufficient only when the change cannot alter\s+runtime behavior/i,
+    );
+    expect(lite).toMatch(/bug fix preserves a pre-fix reproduction/i);
+    expect(lite).toMatch(/user-interface change requires visual proof/i);
+    expect(lite).toMatch(/Deletions require a negative search/i);
+    expect(reviewer).toMatch(
+      /evidence matches the declared strategy[\s\S]{0,160}capable of failing when the claim is false/i,
+    );
+    expect(reviewer).toMatch(/absence of an automated\s+test alone is not/i);
+    expect(implementer).toMatch(
+      /declared implementation and proof strategy without[\s\S]{0,80}silently substituting TDD/i,
+    );
+    expect(autonomy).toMatch(
+      /^\| IMPLEMENT-20\s+\|[\s\S]*computer-use capability[\s\S]*explicit proof boundary[\s\S]*deferred-but-verified/m,
+    );
+    expect(implementer.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.3');
   });
 
   it('keeps lite review and PR prerequisites reduced but explicit', async () => {

@@ -1,6 +1,6 @@
 ---
 name: oat-phase-implementer
-version: 1.1.2
+version: 1.1.3
 description: Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement.
 tools: Read, Write, Edit, Bash, Grep, Glob, Task
 color: cyan
@@ -367,7 +367,9 @@ For every task:
 
 1. Record `PRE_TASK_HEAD`.
 2. Read the task steps and declared file boundary.
-3. Follow RED/GREEN/refactor ordering when specified.
+3. Execute the task's declared implementation and proof strategy without
+   silently substituting TDD. Follow RED/GREEN/refactor ordering only when the
+   selected strategy specifies it.
 4. Implement only that task. Optional nested help does not transfer task
    ownership or commit authority.
 5. Apply the Prevention and Post-Commit Recovery ordering: format, run every

@@ -179,10 +179,12 @@ Then verify:
    - Check acceptance criteria are met
    - If missing: add to Critical findings
 
-2. **Is the Verification satisfied?**
-   - Check if tests exist matching declared verification intent in available artifacts
+2. **Is the declared proof strategy satisfied?**
+   - Check whether the evidence matches the declared strategy, covers its
+     observable risk, and is capable of failing when the claim is false
    - If `design.md` exists, cross-reference Requirement-to-Test Mapping
-   - If tests missing for P0 requirements: add to Critical findings
+   - A missing or unjustified strategy is a finding; the absence of an automated
+     test alone is not
 
 3. **Is there extra work?**
    - Code that doesn't map to any requirement
@@ -224,7 +226,7 @@ Treat the artifact as a product deliverable. Verify it is:
    - Stable task IDs: task headings use `pNN-tNN`, IDs are monotonic within each phase, and review-generated tasks do not reuse prior IDs.
    - Required sections: the plan includes Reviews, Implementation Complete, and References sections without placeholder-only critical content.
    - Review-table preservation: existing review rows are preserved; never require deleting rows to "clean up" the table.
-   - Task atomicity and verifiability: each task is independently committable, has bounded file scope, and declares verification that can actually be run.
+   - Task atomicity and verifiability: each task is independently committable, has bounded file scope, and declares a proportionate implementation and proof strategy that can actually be executed.
    - Coverage of design/discovery: every in-scope design component or discovery decision is mapped to at least one task or explicitly deferred/out of scope.
    - Parallelism-claim sanity: any parallel phase group or parallelism statement is consistent with declared file boundaries and dependency order.
 
@@ -287,10 +289,10 @@ Pragmatic code quality review (not exhaustive):
    - Off-by-one errors, null handling
    - Missing error handling for likely failures
 
-2. **Test coverage**
-   - Critical paths have tests
-   - Edge cases covered
-   - Unhappy paths tested
+2. **Evidence coverage**
+   - Critical paths have evidence matching the declared proof strategy
+   - Edge cases are covered where relevant
+   - Behavioral claims have a control that fails without the change
 
 3. **Security**
    - Input validation at boundaries
@@ -311,14 +313,14 @@ Group findings by severity:
 - Missing P0 requirements
 - Security vulnerabilities
 - Broken functionality
-- Missing tests for critical paths
+- Missing capable evidence for critical paths
 
 **Important** (should fix before merge)
 
 - Missing P1 requirements
 - Missing error handling
 - Significant maintainability issues
-- Missing tests for important paths
+- Missing capable evidence for important paths
 - Stale spec/design/plan artifact that conflicts with a defensible implementation and should be aligned before closeout
 
 **Medium** (default fix before pass)
