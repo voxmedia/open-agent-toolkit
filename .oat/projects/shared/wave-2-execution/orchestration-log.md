@@ -161,6 +161,20 @@ before dispatching Codex".
 
 ---
 
+### 2026-09-06 · project · fan-in · group 2 (p02, p03, p04)
+
+Three lanes merged in plan order (`d22e29058`, `67f747e74`, `7b9e379a8`),
+lockstep retained at 0.2.57, all eight gates exit 0 with a forced test run
+(`Cached: 0`). p02's worktree-init sync commit survived the rebase because
+the group-1 bump had left `.oat/sync/manifest.json` at `oatVersion` 0.2.56.
+**Skill signal (gap):** the fan-in bump step should restamp the manifest
+(`pnpm run cli -- sync --scope all`) in the same commit as the lockstep bump.
+Review economics this group: every lane needed exactly one fix round
+(p03 Critical, p04 four Important, p02 one Important) and every round-2 passed;
+the p04 reviewer amended its own artifact twice after re-checking its claims.
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:

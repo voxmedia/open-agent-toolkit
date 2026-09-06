@@ -212,9 +212,15 @@ Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passe
 - Integration gates (group fan-in mode), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - Group-2 readiness on the merged tip: p02, p03, p04 source plans all carry `oat_execution_status: READY` with no predecessor inside this wave; the only shared-write seam with p01 (`packages/cli/src/validation/skills.test.ts`, p04's `oat-project-implement` pin) is serialized by the group order. p01 worktree and branch removed after the merge.
 
+#### Group 2 fan-in — p02, p03, p04 (2026-09-06)
+
+- Merge order p02 → p03 → p04 with `git merge --no-ff` after rebasing each lane on the integration tip. Merge commits `d22e29058` (p02), `67f747e74` (p03), `7b9e379a8` (p04). Lane commits re-hashed by the rebase (identical `git patch-id --stable` pairs; the Reviews table keeps the pre-rebase heads the reviewers examined): p02 `c25e1fd4f`→`b3b014a14`, `530f42897`→`35db0c323`; p03 `a207d3c11`→`35e75f6e8`, `5a99837ec`→`a7bcdd9e6`; p04 `6ef43933e`→`f70f1e11e`, `2b06f7292`→`8e2111185`, `ef0c8595c`→`7cf56951d`. p02's worktree-init sync commit (`946224937`, `.oat/sync/manifest.json` `oatVersion` 0.2.56 → 0.2.57) was retained because the group-1 fan-in bump had not restamped the manifest; p03's and p04's identical sync commits were dropped as already applied. Lesson: the fan-in bump step should run `pnpm run cli -- sync --scope all` so the manifest restamps with the lockstep.
+- Lockstep retained at 0.2.57 (origin/main still 0.2.56); integration gates (group fan-in mode), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
+- p05 readiness on the merged tip: its source plan is READY; the base now carries p04's single `oat-project-implement` bump (2.3.1 → 2.3.2, seven pins) which p05 must not repeat, and p03/p04 touched neither `oat-phase-implementer.md` nor its `skills.test.ts:3080` pin. Group-2 worktrees and branches removed after the merge.
+
 #### Parallel Groups
 
-- p01 ungrouped (merged, fan-in complete); group 2: p02 + p03 + p04 (running); p05 ungrouped (after group 2).
+- p01 ungrouped (merged); group 2: p02 + p03 + p04 (merged, fan-in complete); p05 ungrouped (running).
 
 #### Outstanding Items
 
