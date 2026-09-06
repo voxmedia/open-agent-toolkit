@@ -553,6 +553,23 @@ project path, final code-review scope, and start time
 `99a353dd-5365-4820-9f46-ad81e9edc2ab` is accepted. The review is still
 running; no terminal envelope has been consumed.
 
+#### Configured implementation exit gate result persisted
+
+Run `bd618f54-927e-4994-8462-2eb7c3a5b33b` returned one correlated
+`blocked` envelope at the Important threshold with 0 Critical, 1 Important,
+1 Medium, and 1 Minor finding. The envelope explicitly sets
+`receiveEligible: true` and hands off
+`reviews/final-review-2026-09-06T021128Z.md` to
+`oat-project-review-receive`. Exit code 1 is retained separately and agrees
+with the envelope, but the structured receipt is the authoritative terminal
+result.
+
+The blocking reproduction shows local-scope Lite promotion mutating project
+files and then failing while staging gitignored paths. The non-blocking
+findings cover promoted-project recommender routing and a phantom `p02` row in
+the single-phase Lite template. No policy disposition or remediation attempt
+has been consumed before receive.
+
 #### Final re-review passed
 
 **Review artifact:**
