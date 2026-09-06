@@ -558,6 +558,17 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ### 2026-09-06
 
+#### Configured implementation exit gate generation 2 created
+
+The configured declaration re-resolved byte-for-byte with fingerprint
+`sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`.
+Generation 2 binds passed lifecycle-review head
+`6ba4c38dd08d192fdb35840becbdf52b74f5d8a9` to the unique `origin/main`
+merge base `7c90b220a27449fa652c51af38388dd6fdcb73f4`. Its state-carrier-excluded
+effective delta is
+`sha256:effective-delta-v1:689ce3c9329c6143637d2c805a96d238bdf492bddab47b1dacab804247f5eb31`.
+Attempt 1 remains consumed; no attempt-2 launch has occurred yet.
+
 #### Final lifecycle re-review 3 received — passed
 
 **Review artifact:**

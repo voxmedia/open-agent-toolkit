@@ -47,7 +47,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
@@ -56,37 +56,37 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: dfb7a8beb41c663d8bd327fa47c19f9ef28e393f
+  reviewed_head: 6ba4c38dd08d192fdb35840becbdf52b74f5d8a9
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v1:cbc2516b42a85a03417b862004ff102f07281d8fc28b636e0be1992ad6ce511d'
-  freshness_head: dfb7a8beb41c663d8bd327fa47c19f9ef28e393f
-  freshness_fingerprint: 'sha256:effective-delta-v1:cbc2516b42a85a03417b862004ff102f07281d8fc28b636e0be1992ad6ce511d'
-  launch_state: result_persisted
-  launch_attempt_id: 99a353dd-5365-4820-9f46-ad81e9edc2ab
-  launch_started_at: '2026-09-06T02:03:28Z'
-  launch_result_receipt: .oat/projects/shared/lite-workflow-mode/reviews/gate-receipts/implement-exit-99a353dd-5365-4820-9f46-ad81e9edc2ab.json
-  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/bd618f54-927e-4994-8462-2eb7c3a5b33b.json
-  gate_run_id: bd618f54-927e-4994-8462-2eb7c3a5b33b
-  envelope_status: blocked
-  artifact: .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T021128Z.md
-  handoff: 'Run oat-project-review-receive for .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T021128Z.md before treating this gate review as consumed.'
-  receive_state: completed
-  receive_correlation: 'run=bd618f54-927e-4994-8462-2eb7c3a5b33b; handoff=Run oat-project-review-receive for .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T021128Z.md before treating this gate review as consumed.; source=.oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T021128Z.md; scope=final; type=code; filename=final-review-2026-09-06T021128Z.md'
-  receive_source_artifact: .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T021128Z.md
-  receive_archived_artifact: .oat/projects/shared/lite-workflow-mode/reviews/archived/final-review-2026-09-06T021128Z.md
-  receive_event_identity: 'final|code|final-review-2026-09-06T021128Z.md'
-  receive_pre_head: 653e033d3651e3c107558525d667303f4685dcef
-  receive_commit: 287941659e43d3f14eb7d396eb77b63c490ce387
-  receive_eligible: true
-  receive_completed: true
+  implementation_fingerprint: 'sha256:effective-delta-v1:689ce3c9329c6143637d2c805a96d238bdf492bddab47b1dacab804247f5eb31'
+  freshness_head: 6ba4c38dd08d192fdb35840becbdf52b74f5d8a9
+  freshness_fingerprint: 'sha256:effective-delta-v1:689ce3c9329c6143637d2c805a96d238bdf492bddab47b1dacab804247f5eb31'
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
   failure: null
-  updated_at: '2026-09-06T02:37:14Z'
+  updated_at: '2026-09-06T02:37:45Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T02:37:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T02:37:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
