@@ -81,6 +81,22 @@ candidate: extend the bump gate to canonical agent files.
 
 ---
 
+### 2026-09-06 · project · review · p02 deletion-safety review
+
+The program's dedicated ownership/deletion-safety review found the deletion
+surface unchanged and every adversarial probe refusing correctly, but caught
+the lane's "documented residual" as unsubstantiated: the code comment claimed
+Git closes the probe→`worktree add -b` window, and a probe deleted a foreign
+branch created in that window at the exact reserved baseline. **Skill signal
+(strengthens):** when a lane labels something a "documented residual", the
+reviewer brief must ask for the exact documentation location and a probe of
+the residual itself. The reviewer also reported that its own mechanical recon
+lane returned a false base-vs-head delta; it re-ran the search itself.
+**Skill signal (gap):** reviewer-dispatched mechanical lanes need the same
+"verify load-bearing claims" rule the root applies to reviewers.
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:
