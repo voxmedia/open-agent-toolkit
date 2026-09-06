@@ -2,9 +2,9 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Fresh p-rev1 dispatch authorization required from the post-repair HEAD
+  - p-rev1 phase verification requires a bounded autonomy-inventory owner correction and project-scope provider sync
 oat_last_updated: 2026-09-06
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -25,17 +25,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 4     | 4/4       |
-| Phase 2      | complete    | 3     | 3/3       |
-| Phase 3      | complete    | 3     | 3/3       |
-| Phase 4      | complete    | 2     | 2/2       |
-| Phase 5      | complete    | 4     | 4/4       |
-| Phase 6      | complete    | 11    | 11/11     |
-| Phase p-rev1 | in_progress | 2     | 0/2       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 4     | 4/4       |
+| Phase 2      | complete | 3     | 3/3       |
+| Phase 3      | complete | 3     | 3/3       |
+| Phase 4      | complete | 2     | 2/2       |
+| Phase 5      | complete | 4     | 4/4       |
+| Phase 6      | complete | 11    | 11/11     |
+| Phase p-rev1 | blocked  | 2     | 2/2       |
 
-**Total:** 27/29 tasks completed
+**Total:** 29/29 tasks completed; p-rev1 phase verification remains blocked
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -652,6 +652,40 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - The historical p06-t02 supported-catalogue header wording is explicitly
   accepted for defer because current managed projections and sync evidence are
   correct.
+
+### Run 2 — 2026-09-06
+
+**Branch:** `simple-project`
+**Tier:** Tier 1 — subagents
+**Dispatch policy:** managed `high` (Codex)
+**Schedule:** `p-rev1`
+
+#### Dispatch Records
+
+- **p-rev1 implementation:** accepted request
+  `db708ad8-cd34-4116-a84e-fa24e5d77846`; durable record
+  `dispatch/db708ad8-cd34-4116-a84e-fa24e5d77846.json`; target
+  `oat-phase-implementer-gpt-5-6-sol-medium`; returned `BLOCKED` after both
+  tasks committed and one failed bounded recovery attempt.
+- Dispatch policy: high; selected=medium; cap=high (codex, enforced — variant
+  `oat-phase-implementer-gpt-5-6-sol-medium`).
+- Dispatch: scope=p-rev1 action=implementation role=implementer
+  producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol
+  effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high
+  target=oat-phase-implementer-gpt-5-6-sol-medium
+
+#### Phase Outcomes
+
+| Phase  | Implementation | Review  | Fix Loops | Outcome |
+| ------ | -------------- | ------- | --------- | ------- |
+| p-rev1 | BLOCKED (2/2)  | pending | 0         | blocked |
+
+#### Outstanding Items
+
+- Reassign autonomy gate `IMPLEMENT-20` from nonexistent skill root
+  `oat-phase-implementer` to the existing `oat-project-lite` skill root.
+- Synchronize project-scoped provider views after the canonical skill and agent
+  changes, then rerun phase verification.
 
 ---
 
@@ -1581,6 +1615,25 @@ redundant `authorization` keys whose scope and timestamps remain in canonical
 fields. The review ledger, implementation record, review artifacts, and Git
 history preserve the removed information. The source parser accepts all 33
 current journal records, and the 71 focused recorder tests pass.
+
+### Recovery Event p-rev1-recovery-1
+
+- Phase/task: p-rev1 / prev1-t02
+- Original request: db708ad8-cd34-4116-a84e-fa24e5d77846
+- Original commit: c2c27b647697499cdffb3a64141b10af095b9ef5
+- Defect class: composition
+- Discovered by: `pnpm test`
+- Disposition: failed-attempt
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
+- Recovery commit: -
+- Verification: focused fail; phase fail
+- Reason: The full suite found the autonomous skill-root inventory count had
+  increased from 16 to 17. A count-only correction exposed an `ENOENT` for the
+  nonexistent `.agents/skills/oat-phase-implementer` path. The attempted
+  content change was restored, and the committed failed marker was validated
+  before root bookkeeping cleared it.
 
 ---
 
