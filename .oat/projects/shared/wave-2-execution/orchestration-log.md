@@ -225,6 +225,22 @@ weaker-anywhere on inputs.
 
 ---
 
+### 2026-09-06 · structural · oat gate review · final (exit gate, generation 2)
+
+Re-running the exit gate after the Bugbot fix blocked (run `ba8ff320`,
+0C/2I): the artifact-free retry the fix prescribes still ran the `--verify`
+block unconditionally under `set -eu` (a second instance of the exact class
+Bugbot found — a prescribed path that cannot complete), and the gate command
+appends its own `received` ledger row per artifact, so the root's manually
+appended `passed` row duplicated the event. **Skill signal (contradicts):**
+`oat gate review` writes the Reviews row itself; the receive step must move
+that row's status forward in place and archive the path, never append a
+second row for a gate artifact. **Skill signal (strengthens):** contract prose
+that prescribes a branch (artifact present / absent) needs a control per
+branch; positional ordering assertions alone missed the absent-artifact path.
+
+---
+
 ## End-of-run synthesis (2026-09-06)
 
 **Convention verdicts (evidence: entries above and `implementation.md` Run 1):**
