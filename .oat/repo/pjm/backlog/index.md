@@ -4,6 +4,11 @@
 
 ## Curated Overview
 
+- 2026-09-06: wave 1 of the execution program closed `BL-260718-fix-oat-docs-generate-index`,
+  `BL-260827-fail-closed-on-partial-or`, `BL-260827-override-aware-remedy-text`, and
+  `BL-260902-add-an-exclusion-mechanism` (CLI 0.2.56) and filed three `BL-260906-*`
+  follow-ups from deferred review findings; the docs half of
+  `BL-260906-guard-packed-asset-directories` shipped with the wave.
 - 2026-09-04: `BL-260901-make-terminal-project-status` and
   `BL-260904-diagnose-canonical-skills` now carry external plans in the
   execution program (W5 and W6).
