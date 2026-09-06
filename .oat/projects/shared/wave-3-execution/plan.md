@@ -68,7 +68,7 @@ governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
 6. **Merge serialization:** within a group, merge phase branches one at a time in
    plan order, rebasing each on the updated tip first. Deliberately sequenced
    shared files: `packages/cli/src/validation/skills.test.ts` (p01 → p03: p01 moves the three `oat-phase-implementer` pins when it bumps the agent, p03 adds assertions and moves the two `oat-project-design` pins), `.oat/sync/manifest.json` (p01 → p03; a no-op restamp in lane mode because every entry is a symlink, so it only diffs with the lockstep), and `.agents/skills/create-oat-skill/SKILL.md` (wave 2 bumped it to 1.5.0; p03 bumps it once more) (each lane that edits a canonical skill or agent file
-   runs `pnpm run cli -- sync --scope all` after its edits and commits the
+   runs `pnpm run cli -- sync --scope project` after its edits and commits the
    restamp; never the global `oat`, which is 0.2.55 and would restamp
    `oatVersion` downward). The fan-in bump commit also runs the sync so
    `.oat/sync/manifest.json` restamps with the lockstep.
@@ -319,7 +319,7 @@ git commit -m "docs(p03-t01): require executable backstops for standing contract
 | p02    | code     | fixes_added | 2026-09-06 | reviews/archived/p02-review-2026-09-06T121404Z.md           | dceaf63c5a691787a0503cfeb43601553a46ec1e | manual     | -           |
 | p02    | code     | passed      | 2026-09-06 | reviews/archived/p02-review-2026-09-06T124137Z.md           | e39046cf5e7e5d9bd0714796479a2c31446e8ab4 | manual     | -           |
 | p03    | code     | passed      | 2026-09-06 | reviews/archived/p03-review-2026-09-06T132922Z.md           | a38435f251759b9ed92d8f35776895cfa5bc650b | manual     | -           |
-| final  | code     | pending     | -          | -                                                           | -                                        | -          | -           |
+| final  | code     | passed      | 2026-09-06 | reviews/archived/final-review-2026-09-06T135731Z.md         | b1d50f5bf6c6b69f3ee9b2cf5f8c8f43295c111a | manual     | -           |
 | plan   | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T110723Z.md | -                                        | -          | -           |
 | spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
 | design | artifact | pending     | -          | -                                                           | -                                        | -          | -           |

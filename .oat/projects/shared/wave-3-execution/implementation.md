@@ -135,7 +135,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-06
 
-- p01-t01 `ecf475686` (`d4bb8e1f4`), p01-t02 `f275a469b` (`b9215937d`); p02-t01 `dceaf63c5` (`8050817b9`), p02-t02 `e39046cf5` (`b00e00d84`); p03-t01 `a38435f25` (`31f1f22be`), p03-t02 `612040dc7` (`36ac53fb8`); merges `388dd1c96`, `034486193`, `0a460472d`; lockstep bump `eb767b3ed`.
+- p01-t01 `ecf475686` (`d4bb8e1f4`), p01-t02 `f275a469b` (`b9215937d`); p02-t01 `dceaf63c5` (`8050817b9`), p02-t02 `e39046cf5` (`b00e00d84`); p03-t01 `a38435f25` (`31f1f22be`), p03-t02 `612040dc7` (`36ac53fb8`); merges `388dd1c96`, `034486193`, `0a460472d`; lockstep bump `eb767b3ed`; root closeout docs commit `ec061f241` (the p01 docs-mirror sentence, document-step delta landed before the final review so the gate reviews the final tree).
 
 ## Deviations from Plan / Design
 
@@ -153,6 +153,25 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p02     | test:smoke 160 + focused node --test 50; forced check/type-check            | all    | 0    | lane report + review rounds  |
 | p03     | focused 200 + forced CLI suite 5613; check:skill-bumps validated 2          | all    | 0    | lane report + review + sweep |
 | fan-ins | eight-gate definition-of-done sequence ×2 with `Cached: 0` forced test runs | all    | 0    | fan-in entries above         |
+
+## Review Received: final
+
+**Date:** 2026-09-06
+**Review artifact:** reviews/archived/final-review-2026-09-06T135731Z.md" (reviewed head `b1d50f5bf6c6b69f3ee9b2cf5f8c8f43295c111a`, invocation manual, dispatch `w3-final-review-001`, reconnaissance not-attempted)
+
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 4 — PASS. Six lane commits patch-identical to their reviewed heads; ledger append-only (7 → 9 rows); three bumps one level each with all five pins matching; manifest carries exactly the 0.2.57 → 0.2.58 restamp; one release-file commit; all gates cache-bypassed green including test:smoke 160 with byte-identical worktree/branch inventories; seven deletion probes plus p01 and p03 neutralizations behaved as specified; the only green escape is the disclosed synonym gap already filed as `BL-260906-make-the-phase-implementer`.
+
+**Dispositions (root, this commit):**
+
+- M1 — `state.md` Artifacts block and `oat_last_commit` stale: **fixed**.
+- m1 — `ec061f241` in no record: **fixed** (Implementation Log names it as the root document-step commit).
+- m2 — wrapper contract item 6 still said `sync --scope all`: **fixed** (`--scope project`).
+- m3 — Deviations row overstated the `--scope project` outcome: **fixed** (row scoped to p03-t01 with the actual effect).
+- m4 — round-2 artifacts' `oat_prior_review_artifact` point at pre-archival paths: **rejected as a wave-3 defect** — archived artifacts are the reviewers' immutable records; the archive-relative pointer is a skill convention gap (recorded in the synthesis).
+
+**Verification record:** what — the four record repairs; how — `oat project validate-plan` exit 0, grep for `--scope all` in plan.md returns nothing, state Artifacts line and `oat_last_commit` read the terminal values; where — this section and the commit that carries it.
+
+**Review row `final` → `passed`.** The configured exit gate runs next on the closeout head.
 
 ## Deferred Findings
 
