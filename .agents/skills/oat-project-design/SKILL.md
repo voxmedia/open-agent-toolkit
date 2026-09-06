@@ -1,6 +1,6 @@
 ---
 name: oat-project-design
-version: 2.3.2
+version: 2.3.3
 description: Use when discovery is complete and implementation-ready decisions are needed. Runs a collaborative, selective collaborative, or draft-and-review design flow, confirms requirements and produces both `spec.md` and `design.md`, and commits artifacts before the user-review gate.
 disable-model-invocation: true
 user-invocable: true
@@ -401,6 +401,19 @@ Draft `design.md` section-by-section (Collaborative mode) or in a single pass (D
 10. **Migration Plan** — Database migrations, Data migrations, Breaking changes handling, Rollback strategy. If not applicable, state as a single sentence.
 11. **Implementation Phases** — Break work into manageable phases (1-3 days each). Per-phase structure: Goal, Tasks (high-level), Verification.
 12. **Risks and Mitigation** — For each significant risk: Probability | Impact; Mitigation; Contingency.
+
+**Standing invariants (Error Handling and Testing Strategy):** when a section
+states a standing invariant — an "every", "always", "only", ordering, or
+completeness claim expected to hold for the life of the feature — name its
+executable owner and its verification method in the same design: the specific
+test or check that fails when the claim breaks, and how that failure surfaces.
+Route a claim decidable from tracked files to a contract test, and a claim that
+depends on execution state or ordering to the code that owns the operation and
+emits a structured result. A point-in-time observation about today's codebase
+needs a citation, not an owner. Record the owner beside the error category it
+guards, or in the Requirement-to-Test Mapping row it belongs to. The full
+taxonomy, stable-identity, and same-PR rules live in the `create-oat-skill`
+skill; do not restate them here.
 
 ### Step 4a: Selective Review Pass
 

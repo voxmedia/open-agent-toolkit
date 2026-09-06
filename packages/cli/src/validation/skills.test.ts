@@ -1836,7 +1836,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-design',
-        version: '2.3.2',
+        version: '2.3.3',
         finalizedHeading:
           '### Step 6: User-Review Gate (commit-first ordering)',
         gateHeading: '### Step 7: Gate Execution',
@@ -6464,7 +6464,7 @@ describe('validateOatSkills', () => {
     expect(
       skillContent,
       'oat-project-design selective-mode contract version must stay explicit',
-    ).toMatch(/^version:\s*2\.3\.2$/m);
+    ).toMatch(/^version:\s*2\.3\.3$/m);
     expect(
       skillContent,
       'Step 4a heading must remain present for selective review-pass flow',
@@ -7271,5 +7271,363 @@ describe('bundled skill contract truthfulness — analyze progress model', () =>
     expect(
       [...workflow.matchAll(/^### Step (\d+):/gm)].map(([, index]) => index),
     ).toEqual(advertisedSteps.map(([, index]) => index));
+  });
+});
+
+/**
+ * Executable backstops for standing contract claims.
+ *
+ * Maintenance rule (the guidance guarded here demands one beside the claim):
+ * every assertion below is keyed to a stable semantic anchor — a bolded
+ * requirement-block label, a markdown heading, or a list ordinal — and, where
+ * prose is guarded, a semantic phrase inside the extracted slice, never to a
+ * physical line number.
+ * Rewording a clause means updating its `requires` pattern in the same PR;
+ * deliberately dropping a clause means deleting its row here and saying why.
+ */
+interface BackstopClause {
+  id: string;
+  requires: RegExp;
+}
+
+/**
+ * Markdown a reader actually receives as guidance. HTML comments render to
+ * nothing and fenced blocks are literal samples rather than directives, so
+ * counting either would let a requirement be disabled while its words still
+ * match.
+ */
+function liveMarkdown(content: string): string {
+  const kept: string[] = [];
+  let fence: string | null = null;
+
+  for (const line of content.replace(/<!--[\s\S]*?-->/g, '').split(/\r?\n/)) {
+    const marker = /^(`{3,}|~{3,})/.exec(line.trim());
+    if (fence === null) {
+      if (marker) fence = marker[1]!;
+      else kept.push(line);
+      continue;
+    }
+    // CommonMark: a closer is the same fence character, at least as long.
+    if (
+      marker !== null &&
+      marker[1]![0] === fence[0] &&
+      marker[1]!.length >= fence.length
+    )
+      fence = null;
+  }
+
+  return kept.join('\n');
+}
+
+/**
+ * Bounded extraction of one bolded requirement block. The block runs from its
+ * `**Label ...:**` opener to the next bolded opener of any case or the next
+ * markdown heading, so edits above or below it neither widen nor truncate the
+ * guard.
+ */
+function extractBoldedRequirementBlock(content: string, label: string): string {
+  const live = liveMarkdown(content);
+  const start = live.indexOf(`**${label}`);
+  if (start === -1) return '';
+  const rest = live.slice(start);
+  const end = rest.slice(1).search(/\n(?:\*\*\S|#{1,6} )/);
+  return (end === -1 ? rest : rest.slice(0, end + 1)).trim();
+}
+
+function normalizeProse(block: string): string {
+  return block.replace(/\s+/g, ' ').trim();
+}
+
+function missingClauses(text: string, clauses: BackstopClause[]): string[] {
+  return clauses
+    .filter(({ requires }) => !requires.test(text))
+    .map(({ id }) => id);
+}
+
+/**
+ * Stable identity is two-sided. Requiring the prohibition alone would still
+ * pass if an author *added* line-number keying beside it, so every sentence
+ * that mentions line numbers must also deny them.
+ */
+function lineIdentityViolations(text: string): string[] {
+  const violations: string[] = [];
+  const mentions = text
+    .split(/(?<=[.;])\s+/)
+    .filter((sentence) => /line numbers?/i.test(sentence));
+  if (mentions.length === 0) violations.push('line-identity-unmentioned');
+  if (mentions.some((sentence) => !/\bnever\b|\bnot\b/i.test(sentence)))
+    violations.push('line-identity-not-prohibited');
+  return violations;
+}
+
+const authoringBackstopClauses: BackstopClause[] = [
+  { id: 'point-in-time-class', requires: /\*\*point-in-time observation\*\*/i },
+  {
+    id: 'repository-static-class',
+    requires: /\*\*repository-static standing invariant\*\*/i,
+  },
+  {
+    id: 'runtime-class',
+    requires: /\*\*runtime\/lifecycle standing invariant\*\*/i,
+  },
+  {
+    id: 'point-in-time-needs-no-backstop',
+    requires:
+      /revalidation trigger[^.]{0,80}no permanent\s+backstop is required/i,
+  },
+  {
+    id: 'static-owner-is-a-contract-test',
+    requires:
+      /decidable from tracked files[^.]{0,160}\. Back it with a contract test\./i,
+  },
+  {
+    id: 'runtime-owner-is-the-owning-code',
+    requires:
+      /Enforce it in the CLI or runtime code that owns the operation, and expose a structured result/i,
+  },
+  {
+    id: 'stable-identity',
+    requires: /Never key a guard to a physical line number/i,
+  },
+  {
+    id: 'no-prose-test-for-runtime-claims',
+    requires: /not restate a runtime claim as a prose test/i,
+  },
+  {
+    id: 'no-cli-when-a-test-suffices',
+    requires:
+      /not add a CLI command when a repository-static contract test already decides the claim/i,
+  },
+  {
+    id: 'same-pr-timing',
+    requires: /Ship the claim and its backstop in the same PR/i,
+  },
+  {
+    id: 'no-deferred-backstop',
+    requires:
+      /(?:Splitting them|deferring the backstop to follow-up work)[^.]{0,120}is not allowed/i,
+  },
+  {
+    id: 'maintenance-rule-in-artifact',
+    requires: /maintenance rule inside the guarded artifact/i,
+  },
+  {
+    id: 'non-normative-prose-exempt',
+    requires:
+      /rationale, examples, troubleshooting notes, and deliberately non-normative guidance unguarded/i,
+  },
+  {
+    id: 'names-the-static-inventory-precedent',
+    requires: /validation\/autonomy-gate-inventory\.test\.ts/,
+  },
+  {
+    id: 'names-the-shipped-copy-precedent',
+    requires: /skills-bundled-docs-contract\.test\.ts/,
+  },
+  {
+    id: 'names-the-runtime-precedent',
+    requires: /commands\/project\/log\/rollup\.ts/,
+  },
+];
+
+const designEchoClauses: BackstopClause[] = [
+  { id: 'names-standing-invariants', requires: /standing invariant/i },
+  { id: 'executable-owner', requires: /name its\s+executable owner/i },
+  {
+    id: 'verification-method',
+    requires: /verification method in the same design/i,
+  },
+  {
+    id: 'static-routing',
+    requires: /decidable from tracked files to a contract test/i,
+  },
+  {
+    id: 'runtime-routing',
+    requires: /owns the operation and\s+emits a structured result/i,
+  },
+  {
+    id: 'point-in-time-exempt',
+    requires: /point-in-time observation[^.]{0,120}citation, not an owner/i,
+  },
+  {
+    id: 'delegates-the-full-rule',
+    requires:
+      /taxonomy, stable-identity, and same-PR rules live in the `create-oat-skill` skill/i,
+  },
+];
+
+describe('authoring contract — executable backstops for standing claims', () => {
+  it('requires a same-PR executable backstop with a stable identity', async () => {
+    const skill = await readRepoFile(
+      '.agents/skills/create-oat-skill/SKILL.md',
+    );
+    const rule = extractBoldedRequirementBlock(
+      skill,
+      'Executable backstops for contract claims',
+    );
+
+    expect(rule, 'executable-backstops requirement block').not.toBe('');
+
+    // The rule lives with the other OAT authoring conventions, beside the
+    // autonomy inventory guidance it generalizes.
+    const conventions = skill.slice(
+      skill.indexOf('### Step 3: Apply OAT Conventions'),
+      skill.indexOf('### Step 4: Create Files'),
+    );
+    expect(conventions, 'rule placement inside Step 3').toContain(rule);
+    expect(
+      skill.indexOf('**Autonomy gate inventory'),
+      'rule follows the autonomy inventory guidance it generalizes',
+    ).toBeLessThan(skill.indexOf('**Executable backstops'));
+
+    const text = normalizeProse(rule);
+    expect(missingClauses(text, authoringBackstopClauses)).toEqual([]);
+    expect(lineIdentityViolations(text)).toEqual([]);
+
+    // Red/green mutation 1: the same-PR obligation is removed. A guard that
+    // only checked for the words "backstop" or "contract test" would still
+    // pass here, so this proves the timing clause is really enforced.
+    const withoutSamePr = text.replace(
+      /- Ship the claim and its backstop in the same PR\..*?point-in-time observation\. /,
+      '',
+    );
+    expect(withoutSamePr, 'same-PR mutation applied').not.toBe(text);
+    expect(missingClauses(withoutSamePr, authoringBackstopClauses)).toEqual([
+      'same-pr-timing',
+      'no-deferred-backstop',
+    ]);
+
+    // Red/green mutation 2: stable identity is rewritten to key guards to
+    // physical line numbers. Both the prohibition and the two-sided sentence
+    // check must fail.
+    const keyedByLineNumber = text.replace(
+      /Never key a guard to a physical line number;/i,
+      'Key each guard to a physical line number;',
+    );
+    expect(keyedByLineNumber, 'line-number mutation applied').not.toBe(text);
+    expect(missingClauses(keyedByLineNumber, authoringBackstopClauses)).toEqual(
+      ['stable-identity'],
+    );
+    expect(lineIdentityViolations(keyedByLineNumber)).toEqual([
+      'line-identity-not-prohibited',
+    ]);
+
+    // Red/green mutation 3: the prohibition is deleted outright rather than
+    // inverted, so no line-number sentence survives at all.
+    const withoutIdentityRule = text
+      .split(/(?<=[.;])\s+/)
+      .filter((sentence) => !/line numbers?/i.test(sentence))
+      .join(' ');
+    expect(withoutIdentityRule, 'identity-deletion mutation applied').not.toBe(
+      text,
+    );
+    expect(lineIdentityViolations(withoutIdentityRule)).toEqual([
+      'line-identity-unmentioned',
+    ]);
+
+    // Extraction control 1: a bolded sibling still bounds the block when its
+    // label is lowercase, so requirements that move below it are not silently
+    // absorbed into this rule and counted as satisfying it.
+    const lowercaseSibling = skill.replace(
+      '**Subagent/worker availability',
+      '**subagent/worker availability',
+    );
+    expect(lowercaseSibling, 'lowercase-sibling control applied').not.toBe(
+      skill,
+    );
+    expect(
+      extractBoldedRequirementBlock(
+        lowercaseSibling,
+        'Executable backstops for contract claims',
+      ),
+      'a lowercase bolded sibling still bounds the block',
+    ).toBe(rule);
+
+    // Extraction control 2: commented-out prose renders to nothing, so the
+    // guard must read the rule as absent rather than as live guidance.
+    const commentedOut = skill.replace(rule, `<!--\n${rule}\n-->`);
+    expect(commentedOut, 'comment-out control applied').not.toBe(skill);
+    expect(
+      extractBoldedRequirementBlock(
+        commentedOut,
+        'Executable backstops for contract claims',
+      ),
+      'commented-out guidance is not live',
+    ).toBe('');
+
+    // Extraction control 3: fenced prose is a literal sample. Demoting the
+    // rule into a code block must read as absent, not as live guidance.
+    const fencedOut = skill.replace(
+      rule,
+      ['```markdown', rule, '```'].join('\n'),
+    );
+    expect(fencedOut, 'fenced-out control applied').not.toBe(skill);
+    expect(
+      extractBoldedRequirementBlock(
+        fencedOut,
+        'Executable backstops for contract claims',
+      ),
+      'fenced guidance is a sample, not live',
+    ).toBe('');
+  });
+
+  it('echoes the obligation in design without duplicating the taxonomy', async () => {
+    const design = await readRepoFile(
+      '.agents/skills/oat-project-design/SKILL.md',
+    );
+    const echo = extractBoldedRequirementBlock(design, 'Standing invariants');
+
+    expect(echo, 'design standing-invariant echo').not.toBe('');
+
+    const text = normalizeProse(echo);
+    expect(missingClauses(text, designEchoClauses)).toEqual([]);
+
+    // The echo points at the authoring rule instead of restating its classes;
+    // a copied taxonomy would drift out of step with create-oat-skill.
+    expect(text, 'design echo must not restate the claim taxonomy').not.toMatch(
+      /\*\*(?:repository-static|runtime\/lifecycle) standing invariant\*\*/i,
+    );
+
+    // Red/green mutation: dropping the executable-owner obligation leaves
+    // prose that still mentions standing invariants but demands nothing.
+    const withoutOwner = text.replace(
+      'name its executable owner and its verification method in the same design: ',
+      '',
+    );
+    expect(withoutOwner, 'executable-owner mutation applied').not.toBe(text);
+    expect(missingClauses(withoutOwner, designEchoClauses)).toEqual([
+      'executable-owner',
+      'verification-method',
+    ]);
+
+    // Red/green mutation: dropping the deferral pointer would strand the
+    // design echo with no owner for the taxonomy, stable-identity, and same-PR
+    // rules it deliberately does not restate.
+    const withoutPointer = text.replace(
+      /The full taxonomy, stable-identity, and same-PR rules live in the `create-oat-skill` skill;[^.]*\./i,
+      '',
+    );
+    expect(withoutPointer, 'delegation mutation applied').not.toBe(text);
+    expect(missingClauses(withoutPointer, designEchoClauses)).toEqual([
+      'delegates-the-full-rule',
+    ]);
+
+    // The echo is additive: the shared section list and the
+    // requirement-to-test mapping keep their order and content.
+    const iterator = design.slice(
+      design.indexOf('### Step 4: Section Iterator'),
+      design.indexOf('### Step 4a: Selective Review Pass'),
+    );
+    const sections = [...iterator.matchAll(/^(\d+)\. \*\*([^*]+)\*\*/gm)];
+    expect(sections.map(([, index]) => Number(index))).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+    ]);
+    expect(sections.at(6)?.[2]).toBe('Error Handling');
+    expect(sections.at(7)?.[2]).toBe(
+      'Testing Strategy (with Requirement-to-Test Mapping)',
+    );
+    expect(iterator).toContain('**Step a (Requirement-to-Test Mapping):**');
+    expect(iterator).toContain('**Step b (Test Levels):**');
+    expect(iterator).toContain('`ID | Verification | Key Scenarios`');
   });
 });
