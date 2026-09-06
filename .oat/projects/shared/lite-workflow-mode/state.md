@@ -1,8 +1,7 @@
 ---
 oat_current_task: null
-oat_last_commit: c2c27b647697499cdffb3a64141b10af095b9ef5
-oat_blockers:
-  - p-rev1 phase verification requires a bounded autonomy-inventory owner correction and project-scope provider sync
+oat_last_commit: d57119df38dbcf812340bb6a11b504863e354144
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -30,16 +29,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p-rev1:
       used_attempts: 2
-      pending_attempt:
-        attempt: 2
-        event_id: p-rev1-recovery-2
-        original_request_id: db708ad8-cd34-4116-a84e-fa24e5d77846
-        original_task_id: prev1-t02
-        original_commit: c2c27b647697499cdffb3a64141b10af095b9ef5
-        discovered_by: pnpm test
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
-        reservation_head: 605e839048ef578c5f11fc2ae6420d72a079fb1a
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -116,7 +106,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T16:07:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T16:54:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -128,7 +118,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — revision 1 tasks complete; phase verification blocked.
+Implementation — revision 1 verification passed; independent phase review pending.
 
 ## Artifacts
 
@@ -180,22 +170,18 @@ Implementation — revision 1 tasks complete; phase verification blocked.
 - ✓ Revision tasks `prev1-t01` and `prev1-t02` implemented in bounded commits
 - ✓ Revision-plan review feedback incorporated before implementation
 - ✓ Legacy dispatch records normalized to the current canonical schema
-- ⧗ Revision phase verification blocked on autonomy inventory ownership and
-  generated provider-view synchronization
+- ✓ Revision phase verification passed after bounded recovery attempt 2
+- ⧗ Independent `p-rev1` phase review pending
 
 ## Blockers
 
-The two revision tasks are committed and their focused checks pass. Full
-`pnpm test` found that `IMPLEMENT-20` names `oat-phase-implementer` as a skill
-root even though that contract is an agent, not a skill. The obvious count-only
-correction exposed the missing path and was restored. Canonical agent and skill
-changes also require project-scope provider synchronization. The first bounded
-recovery attempt is recorded as failed and settled. PR #264 remains open;
-merge and release remain unauthorized.
+None. Recovery attempt 2 reassigned `IMPLEMENT-20` to the existing
+`oat-project-lite` skill root, synchronized bundled and project-scoped provider
+views, and passed the focused and full phase verification. PR #264 remains
+open; push, merge, and release remain unauthorized.
 
 ## Next Milestone
 
-Choose whether to authorize a bounded same-target recovery that reassigns
-`IMPLEMENT-20` to the existing `oat-project-lite` skill root, synchronizes
-project provider views, and reruns phase verification. On success, run the
-required independent `p-rev1` review before refreshing PR status.
+Run the required independent `p-rev1` review against the committed recovery
+baseline. If it passes, record the terminal revision-phase outcome before any
+PR refresh.

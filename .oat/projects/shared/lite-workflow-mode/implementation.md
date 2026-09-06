@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p-rev1 phase verification requires a bounded autonomy-inventory owner correction and project-scope provider sync
+oat_blockers: []
 oat_last_updated: 2026-09-06
 oat_current_task_id: null
 oat_generated: false
@@ -25,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 4     | 4/4       |
-| Phase 2      | complete | 3     | 3/3       |
-| Phase 3      | complete | 3     | 3/3       |
-| Phase 4      | complete | 2     | 2/2       |
-| Phase 5      | complete | 4     | 4/4       |
-| Phase 6      | complete | 11    | 11/11     |
-| Phase p-rev1 | blocked  | 2     | 2/2       |
+| Phase        | Status         | Tasks | Completed |
+| ------------ | -------------- | ----- | --------- |
+| Phase 1      | complete       | 4     | 4/4       |
+| Phase 2      | complete       | 3     | 3/3       |
+| Phase 3      | complete       | 3     | 3/3       |
+| Phase 4      | complete       | 2     | 2/2       |
+| Phase 5      | complete       | 4     | 4/4       |
+| Phase 6      | complete       | 11    | 11/11     |
+| Phase p-rev1 | review pending | 2     | 2/2       |
 
-**Total:** 29/29 tasks completed; p-rev1 phase verification remains blocked
+**Total:** 29/29 tasks completed; p-rev1 verification passed and review is pending
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -665,8 +664,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **p-rev1 implementation:** accepted request
   `db708ad8-cd34-4116-a84e-fa24e5d77846`; durable record
   `dispatch/db708ad8-cd34-4116-a84e-fa24e5d77846.json`; target
-  `oat-phase-implementer-gpt-5-6-sol-medium`; returned `BLOCKED` after both
-  tasks committed and one failed bounded recovery attempt.
+  `oat-phase-implementer-gpt-5-6-sol-medium`; both tasks committed, then the
+  same target completed bounded recovery attempt 2 at `d57119df38dbcf812340bb6a11b504863e354144`.
 - Dispatch policy: high; selected=medium; cap=high (codex, enforced — variant
   `oat-phase-implementer-gpt-5-6-sol-medium`).
 - Dispatch: scope=p-rev1 action=implementation role=implementer
@@ -676,16 +675,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Phase Outcomes
 
-| Phase  | Implementation | Review  | Fix Loops | Outcome |
-| ------ | -------------- | ------- | --------- | ------- |
-| p-rev1 | BLOCKED (2/2)  | pending | 0         | blocked |
+| Phase  | Implementation | Review  | Fix Loops | Outcome        |
+| ------ | -------------- | ------- | --------- | -------------- |
+| p-rev1 | complete (2/2) | pending | 0         | review pending |
 
 #### Outstanding Items
 
-- Reassign autonomy gate `IMPLEMENT-20` from nonexistent skill root
-  `oat-phase-implementer` to the existing `oat-project-lite` skill root.
-- Synchronize project-scoped provider views after the canonical skill and agent
-  changes, then rerun phase verification.
+- Run the required independent `p-rev1` phase review against the committed
+  recovery baseline.
 
 ---
 
@@ -1635,6 +1632,25 @@ current journal records, and the 71 focused recorder tests pass.
   content change was restored, and the committed failed marker was validated
   before root bookkeeping cleared it.
 
+### Recovery Event p-rev1-recovery-2
+
+- Phase/task: p-rev1 / prev1-t02
+- Original request: db708ad8-cd34-4116-a84e-fa24e5d77846
+- Original commit: c2c27b647697499cdffb3a64141b10af095b9ef5
+- Defect class: composition
+- Discovered by: `pnpm test`
+- Disposition: recovered
+- Authorization: operator-scope
+- Attempt: 2/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
+- Recovery commit: d57119df38dbcf812340bb6a11b504863e354144
+- Verification: focused pass; relevant phase pass
+- Reason: Reconciled the completed pending attempt and exact target. Corrected
+  inventory ownership, regenerated the bundled Lite template and project-scoped
+  provider views, and added the mechanically required named-skill call-site
+  classification. All repository gates passed; root repeated the 26 focused
+  contract tests and a project-sync dry-run with no drift.
+
 ---
 
 ## Deviations from Plan / Design
@@ -1654,14 +1670,15 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                            | Passed                                   | Failed  | Coverage                                                      |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | ------- | ------------------------------------------------------------- |
-| 1     | Focused control-plane/CLI, check, type-check, test, build                                                                            | Yes                                      | 0       | Mode declaration, parsing, scaffold, help                     |
-| 2     | Focused router/dashboard/closeout suites plus full phase gates                                                                       | Yes                                      | 0       | Recommendation, progress routing, PR closeout                 |
-| 3     | Focused split/promote/validator suites plus full phase gates                                                                         | Yes                                      | 0       | Promotion safety and Lite plan validation                     |
-| 4     | Skill contracts, end-to-end Lite integration, full phase gates                                                                       | Yes after bounded recovery               | 0 final | Dedicated Lite workflow and bundled assets                    |
-| 5     | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops           | 0 final | Review, import, progress, recap bypass, PR flow               |
-| 6     | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes; p06-t10 and p06-t11 used no retries | 0 final | Docs, provider sync, real promotion routing, release `0.2.60` |
+| Phase  | Tests Run                                                                                                                            | Passed                                   | Failed  | Coverage                                                      |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | ------- | ------------------------------------------------------------- |
+| 1      | Focused control-plane/CLI, check, type-check, test, build                                                                            | Yes                                      | 0       | Mode declaration, parsing, scaffold, help                     |
+| 2      | Focused router/dashboard/closeout suites plus full phase gates                                                                       | Yes                                      | 0       | Recommendation, progress routing, PR closeout                 |
+| 3      | Focused split/promote/validator suites plus full phase gates                                                                         | Yes                                      | 0       | Promotion safety and Lite plan validation                     |
+| 4      | Skill contracts, end-to-end Lite integration, full phase gates                                                                       | Yes after bounded recovery               | 0 final | Dedicated Lite workflow and bundled assets                    |
+| 5      | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops           | 0 final | Review, import, progress, recap bypass, PR flow               |
+| 6      | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes; p06-t10 and p06-t11 used no retries | 0 final | Docs, provider sync, real promotion routing, release `0.2.60` |
+| p-rev1 | Focused revision suites, full repository gates, post-recovery contract tests, project sync dry-run                                   | Yes after bounded recovery attempt 2     | 0 final | Adaptive Lite plan depth and proportionate proof strategy     |
 
 ## Final Summary (for PR/docs)
 

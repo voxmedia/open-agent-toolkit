@@ -1,0 +1,106 @@
+{
+  "request_id": "82c01893-f98e-46c2-b1b2-48b40c8d680f",
+  "caller": "oat-project-implement",
+  "scope": "p-rev1-recovery-2",
+  "objective": "Recover p-rev1 by correcting autonomy inventory ownership and synchronizing deterministic project-scoped generated views",
+  "action": "fix",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-native-recovery-20260906T163917Z",
+    "source": "tool-schema",
+    "observed_at": "2026-09-06T16:39:17Z"
+  },
+  "authority": "phase-recovery",
+  "role_selector": "oat-phase-implementer-gpt-5-6-sol-medium",
+  "model_selector": "gpt-5.6-sol",
+  "model_selector_granularity": "materialized-role",
+  "effort_selector": "medium",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-07-25",
+  "guidance_verified_at": "2026-07-25",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["oat-phase-implementer-gpt-5-6-sol-medium"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 7200,
+  "retry_limit": 0,
+  "payload": {
+    "mode": "recover",
+    "phase": "p-rev1",
+    "recovery_attempt": 2,
+    "recovery_base_head": "de66bfd59b2a4661f158aa3f575267cf438fffc0",
+    "original_request_id": "db708ad8-cd34-4116-a84e-fa24e5d77846",
+    "original_task_id": "prev1-t02",
+    "original_commit": "c2c27b647697499cdffb3a64141b10af095b9ef5",
+    "worktree": "root",
+    "fork_turns": "none"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "completed",
+  "configured_invocation_evidence": [
+    "dispatch-report-v1:p-rev1-recovery-2",
+    "native-spawn-accepted",
+    "canonical-role:project",
+    "project-policy:managed-high",
+    "operator-bounded-recovery"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [
+    {
+      "event_id": "p-rev1-recovery-2",
+      "original_request_id": "db708ad8-cd34-4116-a84e-fa24e5d77846",
+      "recovery_attempt": 2,
+      "mode": "recover"
+    }
+  ],
+  "fallback": {
+    "mode": "block",
+    "allow_below_task_class_floor": false
+  },
+  "task_class": "default-implementation",
+  "model_class_floor": "default-implementation",
+  "classification_source": "caller",
+  "classification_reason": "The correction is bounded and mechanically verifiable but must reconcile canonical inventory ownership, generated bundle output, provider projections, and the full phase gate.",
+  "floor_satisfaction": "satisfied",
+  "authorization_scope": "lite-workflow-mode-p-rev1-recovery-2",
+  "expected_output": "One bounded append-only recovery commit with a completed attempt marker, synchronized project views, and passing focused and phase verification.",
+  "verification_evidence": "Autonomy inventory test, project-scope sync result, full p-rev1 gate sequence, immutable task history, completed attempt ledger, and clean worktree.",
+  "escalate_when": [
+    "The correction requires semantic or product scope outside the authorized inventory and generated-view repair.",
+    "Project sync would write outside repository project scope.",
+    "The exact original target, request linkage, or immutable commit history cannot be reconciled."
+  ],
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<project>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.3",
+      "contentDigest": "sha256:c30ac128b2c798fcfea917d2e33292e163c9d4cba34e184a72f0d6b60f7fac30",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
