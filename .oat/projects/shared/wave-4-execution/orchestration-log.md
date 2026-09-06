@@ -57,3 +57,12 @@ wrapper carries the one-bump-per-skill-per-PR rule for that skill explicitly.
 write-surface intersection is the load-bearing input to group composition.
 
 ---
+
+### 2026-09-06 · structural · oat gate review · plan
+
+Plan gate run `e89abdea-e24d-476f-8640-7bd848d13999` (`codex-5-6-sol-xhigh`) passed
+first time: 0C / 0I / 0M / 0m. **Skill signal (strengthens):** authoring the
+wrapper from the program section and the recon (not from the previous wave's
+artifacts) removed the whole finding class the W3 plan gate blocked on.
+
+---

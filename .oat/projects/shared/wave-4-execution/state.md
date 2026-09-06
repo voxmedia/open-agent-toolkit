@@ -85,19 +85,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T16:15:50.821Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T16:15:50.821Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T16:26:57.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-4-execution
 
-**Status:** Plan complete — awaiting plan gate
+**Status:** Implementation in progress
 **Started:** 2026-09-06
 **Last Updated:** 2026-09-06
 
 ## Current Phase
 
-Plan — wrapper artifacts authored and validated; the configured plan gate runs next, then `oat-project-implement` (group 1: p01 + p02).
+Implementation — group 1 (p01 + p02) dispatched in parallel worktrees at the wave base.
 
 ## Artifacts
 
@@ -112,7 +112,7 @@ Plan — wrapper artifacts authored and validated; the configured plan gate runs
 - ✓ Preflight: `wave-4-execution` created from `origin/main` `0af558db80068649fb8858be7a98c635e6f12f3d`; install, build, type-check green
 - ✓ Wave-boundary drift refresh (recon, non-authoritative) recorded in `plan.md`
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
-- ⧗ Plan gate
+- ✓ Plan gate passed (0 findings)
 - ⧗ Group 1 (p01 + p02), fan-in, p03, closeout
 
 ## Blockers
@@ -121,4 +121,4 @@ None
 
 ## Next Milestone
 
-Plan gate passes; dispatch group 1 (p01 + p02) in parallel worktrees at the wave base.
+Group 1 lanes reviewed and fanned in with the lockstep bump 0.2.58 → 0.2.59; then p03.
