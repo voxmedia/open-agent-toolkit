@@ -1315,6 +1315,55 @@ git commit -m "fix(p06-t10): carry promoted readiness through artifacts"
 
 ---
 
+### Task p06-t11: (review) Align lifecycle brainstorming documentation with Lite
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`,
+  `packages/docs-config/package.json`, `packages/docs-theme/package.json`,
+  `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Regenerate when source-derived: `.oat/sync/manifest.json`
+
+**Step 1: Reproduce the documentation drift**
+
+Confirm the lifecycle guide presents only Quick and Spec-Driven brainstorming
+seeds, always names `discovery.md`, and omits the Lite `plan.md` fold-back and
+`oat-project-lite` handoff defined by the canonical `oat-brainstorm` skill.
+
+**Step 2: Correct the two stale paragraphs**
+
+Document all three seed modes. Preserve the existing Quick and Spec-Driven
+discovery behavior, and add the Lite path: seed the Lite plan, fold related
+active-project brainstorming into `plan.md`, and hand off to
+`oat-project-lite`. Do not change runtime behavior or unrelated documentation.
+
+**Step 3: Refresh shipped version surfaces**
+
+Because `apps/oat-docs/docs` is shipped CLI content under repository policy,
+advance all five public packages and the public-version asset from `0.2.59` to
+`0.2.60`. Refresh only source-derived sync metadata.
+
+**Step 4: Format and verify**
+
+Format edited non-generated files with `pnpm exec oxfmt --write`. Verify the
+stale two-mode wording is gone and the guide agrees with the canonical skill.
+Run the full AGENTS.md definition-of-done sequence with explicit exit codes,
+plus lint, format, version parity, and a full-scope sync dry-run.
+
+The user explicitly waived another standard lifecycle re-review because this
+is wording-only alignment after a passing review. The configured independent
+implementation exit gate remains required and is not waived.
+
+**Step 5: Commit**
+
+```bash
+git commit -m "docs(p06-t11): align brainstorming guidance with lite"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -1349,7 +1398,7 @@ git commit -m "fix(p06-t10): carry promoted readiness through artifacts"
 | final  | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T021128Z.md                             | 5b2a6462c3b21f8e6f1383e796c3328bba18329d | gate       | claude-fable-skip-permissions |
 | final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T023254Z.md                             | 6ba4c38dd08d192fdb35840becbdf52b74f5d8a9 | auto       | -                             |
 | final  | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T024254Z.md                             | c3a79f0589615b6f30760fc964bbe14d0007356e | gate       | claude-fable-skip-permissions |
-| final  | code     | received        | 2026-09-06 | reviews/final-review-2026-09-06T032005Z.md                                      | c4793585aee012ed134e1ba1eba0a819230a9c23 | auto       | -                             |
+| final  | code     | fixes_added     | 2026-09-06 | reviews/archived/final-review-2026-09-06T032005Z.md                             | c4793585aee012ed134e1ba1eba0a819230a9c23 | auto       | -                             |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1385,9 +1434,9 @@ rows remain unchanged.
 - Phase 3: 3 tasks - split-detector guard, promote command, lite single-phase validator
 - Phase 4: 2 tasks - oat-project-lite skill, end-to-end integration test
 - Phase 5: 4 tasks - mode-aware skill branches, import-to-lite offer, checkpoint bypass, collapsed closeout
-- Phase 6: 10 tasks - docs and triage, manual run and sync, lockstep release gates, three lifecycle-final-review fixes, and four exit-gate fixes (last)
+- Phase 6: 11 tasks - docs and triage, manual run and sync, lockstep release gates, four lifecycle-final-review fixes, and four exit-gate fixes (last)
 
-**Total:** 26 tasks across 6 phases
+**Total:** 27 tasks across 6 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

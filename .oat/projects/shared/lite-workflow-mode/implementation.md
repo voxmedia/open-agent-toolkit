@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: null
+oat_current_task_id: p06-t11
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | complete | 2     | 2/2       |
-| Phase 5 | complete | 4     | 4/4       |
-| Phase 6 | complete | 10    | 10/10     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 4     | 4/4       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 3     | 3/3       |
+| Phase 4 | complete    | 2     | 2/2       |
+| Phase 5 | complete    | 4     | 4/4       |
+| Phase 6 | in_progress | 11    | 10/11     |
 
-**Total:** 26/26 tasks completed
+**Total:** 26/27 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -516,10 +516,20 @@ No recovery attempt or flake retry was used.
 fix passed independent verification. The Medium identifies stale Lite wording
 in the lifecycle guide's brainstorming section.
 
-**Receive boundary:** This is non-gate final review cycle 4, beyond the
-three-cycle automatic receive limit. Processing is paused for explicit user
-direction on both the cycle override and whether to convert the Medium into a
-bounded documentation fix task or accept a documented deferral.
+**Receive disposition:** The user explicitly overrode the three-cycle receive
+limit and directed M1 to be fixed as wording-only task p06-t11. The user also
+waived another standard lifecycle re-review after this task; the configured
+independent implementation exit gate remains required.
+
+### Task p06-t11: Align lifecycle brainstorming documentation with Lite
+
+**Status:** pending
+
+**Review source:**
+`reviews/archived/final-review-2026-09-06T032005Z.md` (M1,
+`artifact_alignment_required`). The shipped Lite implementation is accepted
+as authoritative; this task aligns the stale lifecycle guide and required
+lockstep release surfaces without changing runtime behavior.
 
 ## Orchestration Runs
 
