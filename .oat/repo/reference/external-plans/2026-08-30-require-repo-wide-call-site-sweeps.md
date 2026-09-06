@@ -240,6 +240,10 @@ Stop and report instead of improvising when:
 - the negative probe does not fail when a required property is removed; or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-06, wave 3)
+
+Executed as wave-3 p01 (PR wave-3-execution, CLI 0.2.58): `oat-phase-implementer.md` 1.1.2 → 1.1.3 with its three `skills.test.ts` pins (this file belongs in the In-scope list: steps 4–5 move the pins); contract assertions plus six negative probes in `post-implement-sequence-contracts.test.ts`; `oat-project-implement` not bumped because the agent-level rule is reachable through the existing dispatch contract. Reported owner decision, not applied by the lane: `oat-project-implement/references/phase-execution.md:608` still says a task commit "changes only declared files" while `:493` and `:652` already say "declared or mechanically derived"; aligning `:608` costs an `oat-project-implement` bump plus seven pins and belongs to that skill's owner (recorded for a later lane). Docs mirror `apps/oat-docs/docs/workflows/projects/implementation-execution.md:91` updated at the wave's document step. Sync convention (program rule from wave 3): where this plan says `oat sync --scope all`, lanes run `pnpm run cli -- sync --scope project`; `--scope all` also rewrites the operator's user-scope provider views and manifest and is operator-only.
+
 ## Revalidation Before Execution
 
 Revalidate against current `origin/main`, the source backlog item, both cited
