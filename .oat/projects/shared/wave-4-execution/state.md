@@ -115,12 +115,23 @@ oat_implement_exit_gate:
 #   receive_completed: false
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
+oat_post_implement_sequence:
+  status: pre_approval # pre_approval | awaiting_approval | post_approval | complete
+  source: configured # workflow.postImplementSequence
+  final_phase: p03
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: [summary]
+  approval: pending # pending | approved | not_required
+  approval_source: null # null | user | oat-autonomous
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T16:15:50.821Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T20:35:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T20:36:45.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -132,7 +143,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all three lanes merged (lockstep 0.2.59); final review passed; configured exit gate next, then the post-implement sequence.
+Implementation — all three lanes merged (lockstep 0.2.59); final review and configured exit gate passed; post-implement sequence in progress (summary done).
 
 ## Artifacts
 
@@ -152,7 +163,9 @@ Implementation — all three lanes merged (lockstep 0.2.59); final review passed
 - ✓ p03 merged (`92da1d57b`); eight gates green, lockstep retained
 - ✓ Backlog archived (3) and follow-ups filed (4); synthesis written
 - ✓ Final review passed (round 1 0C/3I/4M/4m → fixes `f46465dd2`, `375c740ed`, `f6128f017`, `945d3e2d4` → round 2 0C/0I/0M/2m)
-- ⧗ Configured exit gate, post-implement sequence
+- ✓ Exit gate attempt 1 allowed/passed (run `910b6d29`, 0C/0I/1M/1m; M1 deferred to `BL-260906-make-the-dispatch-stamp`)
+- ✓ Post-implement sequence: summary (three decisions)
+- ⧗ Post-implement sequence: document, pr
 
 ## Blockers
 
@@ -160,4 +173,4 @@ None
 
 ## Next Milestone
 
-Configured exit gate (foreground) on the closeout head, then summary / document / pr.
+Post-implement sequence: document, then pr; then complete-state and the wave PR.
