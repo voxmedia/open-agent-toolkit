@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: prev2-t01
+oat_current_task_id: prev2-t03
 oat_generated: false
 ---
 
@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status   | Tasks | Completed |
-| ------------ | -------- | ----- | --------- |
-| Phase 1      | complete | 4     | 4/4       |
-| Phase 2      | complete | 3     | 3/3       |
-| Phase 3      | complete | 3     | 3/3       |
-| Phase 4      | complete | 2     | 2/2       |
-| Phase 5      | complete | 4     | 4/4       |
-| Phase 6      | complete | 11    | 11/11     |
-| Phase p-rev1 | complete | 7     | 7/7       |
-| Phase p-rev2 | pending  | 3     | 0/3       |
+| Phase        | Status      | Tasks | Completed |
+| ------------ | ----------- | ----- | --------- |
+| Phase 1      | complete    | 4     | 4/4       |
+| Phase 2      | complete    | 3     | 3/3       |
+| Phase 3      | complete    | 3     | 3/3       |
+| Phase 4      | complete    | 2     | 2/2       |
+| Phase 5      | complete    | 4     | 4/4       |
+| Phase 6      | complete    | 11    | 11/11     |
+| Phase p-rev1 | complete    | 7     | 7/7       |
+| Phase p-rev2 | in progress | 3     | 2/3       |
 
-**Total:** 34/37 tasks completed; p-rev2 review fixes pending
+**Total:** 36/37 tasks completed; p-rev2 terminal verification pending
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -43,7 +43,7 @@ Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are seque
 
 ## Phase p-rev2: Review Fixes — Wave 4 Integration and Closeout
 
-**Status:** pending
+**Status:** in progress
 **Started:** 2026-09-06
 
 ### Review Received: final — Wave 4 integration
@@ -76,6 +76,34 @@ change.
 
 **Next:** Execute p-rev2 through `oat-project-implement`, then run a focused
 re-review of the p-rev2 fix range before retrospective generation.
+
+### Task prev2-t01: Compose Lite with lifecycle-gate posture setup
+
+**Status:** complete
+**Commit:** `59d4254a59c8658ced67911e71bfffbf666a059f`
+
+Lite now invokes the complete shared lifecycle-gate posture setup after stable
+plan structure and before artifact review. Existing override maps are preserved;
+interactive planning offers per-gate Keep or Disable choices; non-interactive
+planning preserves configured gates without inventing an override. `LITE-10`,
+its prompt-site mapping, the fail-capable caller inventory, and exact version
+pins are current. The focused 232-test contract suite, autonomy inventory,
+project sync dry-run, skill-bump gate, lint, and format all passed. Public
+package versions remain `0.2.60`.
+
+### Task prev2-t02: Align Wave 4 closeout artifacts
+
+**Status:** complete
+
+The active state, summary, implementation closeout, and local final PR artifact
+now name the reviewed Wave 4 merge and public lockstep `0.2.60` as authoritative.
+Historical execution entries remain unchanged. The local artifact is ready for
+frontmatter stripping by the root session; no GitHub mutation has occurred.
+
+**Next:** `prev2-t03` must reproduce the SIGTERM cleanup subtest before any code
+change, run terminal repository verification, and record the results. A fresh
+required CI run for the exact pushed head and the focused p-rev2 re-review remain
+root-owned closeout boundaries.
 
 ---
 
@@ -2021,9 +2049,10 @@ Track test execution during implementation.
   executor-owned manual or visual proof boundaries.
 - The `oat-project-lite` planning skill with one batched interview, one plan
   approval, automatic promotion to quick when scope outgrows Lite, managed
-  dispatch, phase/final reviews, and PR-first closeout.
+  dispatch, shared lifecycle-gate posture setup, phase/final reviews, and
+  PR-first closeout.
 - Provider projections, docs, lifecycle integrations, and lockstep public
-  package release surfaces synchronized at `0.2.62` after integrating Wave 3.
+  package release surfaces synchronized at `0.2.60` after integrating Wave 4.
 
 **Behavioral changes (user-facing):**
 
@@ -2059,6 +2088,9 @@ Track test execution during implementation.
 - A disposable manual Lite project completed one interview, one approval, one
   implementation task, phase and final reviews, exit gate, and PR-description
   generation without creating an external PR.
+- The p-rev2 shared-posture focused suite, autonomy inventory, project sync
+  dry-run, skill-bump gate, lint, and format passed. Fresh terminal repository
+  verification and required CI for the eventual pushed head remain pending.
 
 **Design deltas (if any):**
 

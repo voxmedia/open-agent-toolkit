@@ -4,9 +4,9 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
 oat_generated: true
-oat_summary_last_task: prev1-t07
-oat_summary_revision_count: 1
-oat_summary_includes_revisions: [p-rev1]
+oat_summary_last_task: prev2-t02
+oat_summary_revision_count: 2
+oat_summary_includes_revisions: [p-rev1, p-rev2]
 ---
 
 # Summary: lite-workflow-mode
@@ -30,14 +30,15 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   Behavior and bounded Technical Design sections when observable triggers apply.
 - Added `oat-project-lite`, which runs a batched critical interview, writes the
   pre-approval plan, detects scope that outgrows Lite, obtains one plan
-  approval, resolves managed dispatch, and hands off to implementation.
+  approval, resolves managed dispatch, configures project-local lifecycle-gate
+  posture through the shared planning contract, and hands off to implementation.
 - Added `oat project promote <path> --to quick`. It preserves the Lite plan,
   renders discovery, scaffolds a Quick plan, updates project state, and commits
   or pushes according to project scope. Real shared and local promotion paths
   now carry artifact-level quick-start readiness.
 - Added validation, fail-capable integration coverage, provider projections,
   lifecycle documentation, a disposable end-to-end Lite run, and synchronized
-  public release surfaces at `0.2.62` after integrating Wave 3.
+  public release surfaces at `0.2.60` after integrating Wave 4.
 - Replaced mandatory test-first task wording with a declared, risk-proportionate
   proof strategy. Behavioral changes retain fail-capable evidence, while prose
   and mechanical changes can use focused static or composition checks instead
@@ -118,7 +119,7 @@ heavy for this class of work while retaining OAT's safety and handoff value.
 - Docs, canonical skills, agent definitions, templates, and bundled assets are
   shipped CLI functionality and therefore require the five-package lockstep
   version bump plus sync-manifest regeneration.
-- Wave 3's repository-wide option sweep composes with Lite's proportionate proof
+- Wave 4's repository-wide option sweep composes with Lite's proportionate proof
   strategy: mechanical caller expansion is reported, while new behavior or
   cross-owner scope still stops for direction.
 
@@ -129,6 +130,11 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   payloads during promotion, and replaced mandatory test-first wording with a
   risk-based proof strategy. Seven tasks completed after one recovered execution
   defect and two review-fix loops; the final independent review had no findings.
+- **p-rev2 — Wave 4 integration and closeout.** Composed native Lite planning
+  with the complete shared lifecycle-gate posture contract, registered
+  `LITE-10`, and aligned local closeout and PR artifacts to Wave 4 and `0.2.60`.
+  Fresh terminal verification, required CI for the pushed head, and focused
+  re-review remain closeout boundaries.
 
 ## Follow-up Items
 
@@ -136,6 +142,8 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   projection ownership or header contracts change.
 - Re-evaluate universal plan-template proof and testing guidance under
   `BL-260906-re-evaluate-universal-plan`.
+- Complete `prev2-t03`, obtain required CI for the exact pushed head, and pass
+  the focused p-rev2 re-review before project completion.
 
 ## Workflow Observations
 
