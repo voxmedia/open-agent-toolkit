@@ -124,26 +124,66 @@ export function createPjmRemoteCommand(
     .command('closeout')
     .description('Review and close out every eligible binding for one project')
     .requiredOption('--project <path>', 'Local OAT project path')
-    .action(async (options: { project: string }, command: Command) => {
-      await execute(
-        { operation: 'closeout', projectPath: options.project },
-        command,
-        dependencies,
-      );
-    });
+    .option(
+      '--apply-preview <batch-id>',
+      'Apply one approved composite substep',
+    )
+    .option(
+      '--capability-evidence-stdin',
+      'Read current host capability evidence',
+    )
+    .option(
+      '--authority-evidence-file <path>',
+      'Read bounded caller authority evidence',
+    )
+    .action(
+      async (
+        options: {
+          project: string;
+          applyPreview?: string;
+          capabilityEvidenceStdin: boolean;
+          authorityEvidenceFile?: string;
+        },
+        command: Command,
+      ) => {
+        await execute(
+          {
+            operation: 'closeout',
+            projectPath: options.project,
+            previewOperationId: options.applyPreview,
+            capabilityEvidenceStdin: options.capabilityEvidenceStdin,
+            authorityEvidenceFile: options.authorityEvidenceFile,
+          },
+          command,
+          dependencies,
+        );
+      },
+    );
 
   remote
     .command('discussion')
     .description('Read bounded remote discussion as non-persisted evidence')
     .requiredOption('--binding <id>', 'Remote binding ID')
     .requiredOption('--limit <count>', 'Maximum evidence items', parseCount)
+    .option(
+      '--capability-evidence-stdin',
+      'Read one sanitized live capability evidence object from stdin',
+    )
     .action(
-      async (options: { binding: string; limit: number }, command: Command) => {
+      async (
+        options: {
+          binding: string;
+          limit: number;
+          capabilityEvidenceStdin: boolean;
+        },
+        command: Command,
+      ) => {
         await execute(
           {
             operation: 'discussion',
             bindingId: options.binding,
             discussionLimit: options.limit,
+            capabilityEvidenceStdin: options.capabilityEvidenceStdin,
           },
           command,
           dependencies,
@@ -158,10 +198,23 @@ export function createPjmRemoteCommand(
     .command('relink <provider-ref>')
     .requiredOption('--binding <id>', 'Remote binding ID')
     .option('--apply-preview <operation-id>', 'Apply an exact approved preview')
+    .option(
+      '--capability-evidence-stdin',
+      'Read current host capability evidence',
+    )
+    .option(
+      '--authority-evidence-file <path>',
+      'Read bounded caller authority evidence',
+    )
     .action(
       async (
         providerRef: string,
-        options: { binding: string; applyPreview?: string },
+        options: {
+          binding: string;
+          applyPreview?: string;
+          capabilityEvidenceStdin: boolean;
+          authorityEvidenceFile?: string;
+        },
         command: Command,
       ) => {
         await execute(
@@ -171,6 +224,8 @@ export function createPjmRemoteCommand(
             bindingId: options.binding,
             providerRef,
             previewOperationId: options.applyPreview,
+            capabilityEvidenceStdin: options.capabilityEvidenceStdin,
+            authorityEvidenceFile: options.authorityEvidenceFile,
           },
           command,
           dependencies,
@@ -181,9 +236,25 @@ export function createPjmRemoteCommand(
   remote
     .command('doctor')
     .description('Diagnose local remote-binding state without provider contact')
-    .action(async (_options: unknown, command: Command) => {
-      await execute({ operation: 'doctor' }, command, dependencies);
-    });
+    .option(
+      '--capability-evidence-stdin',
+      'Read one sanitized current host capability evidence object from stdin',
+    )
+    .action(
+      async (
+        options: { capabilityEvidenceStdin: boolean },
+        command: Command,
+      ) => {
+        await execute(
+          {
+            operation: 'doctor',
+            capabilityEvidenceStdin: options.capabilityEvidenceStdin,
+          },
+          command,
+          dependencies,
+        );
+      },
+    );
 
   remote
     .command('migrate')
@@ -220,9 +291,17 @@ export function createPjmRemoteCommand(
     .command('detach')
     .requiredOption('--binding <id>', 'Remote binding ID')
     .option('--apply-preview <operation-id>', 'Apply an exact approved preview')
+    .option(
+      '--authority-evidence-file <path>',
+      'Read bounded caller authority evidence',
+    )
     .action(
       async (
-        options: { binding: string; applyPreview?: string },
+        options: {
+          binding: string;
+          applyPreview?: string;
+          authorityEvidenceFile?: string;
+        },
         command: Command,
       ) => {
         await execute(
@@ -231,6 +310,7 @@ export function createPjmRemoteCommand(
             resolutionKind: 'detach',
             bindingId: options.binding,
             previewOperationId: options.applyPreview,
+            authorityEvidenceFile: options.authorityEvidenceFile,
           },
           command,
           dependencies,
@@ -241,9 +321,22 @@ export function createPjmRemoteCommand(
     .command('recreate')
     .requiredOption('--binding <id>', 'Remote binding ID')
     .option('--apply-preview <operation-id>', 'Apply an exact approved preview')
+    .option(
+      '--capability-evidence-stdin',
+      'Read current host capability evidence',
+    )
+    .option(
+      '--authority-evidence-file <path>',
+      'Read bounded caller authority evidence',
+    )
     .action(
       async (
-        options: { binding: string; applyPreview?: string },
+        options: {
+          binding: string;
+          applyPreview?: string;
+          capabilityEvidenceStdin: boolean;
+          authorityEvidenceFile?: string;
+        },
         command: Command,
       ) => {
         await execute(
@@ -252,6 +345,8 @@ export function createPjmRemoteCommand(
             resolutionKind: 'recreate',
             bindingId: options.binding,
             previewOperationId: options.applyPreview,
+            capabilityEvidenceStdin: options.capabilityEvidenceStdin,
+            authorityEvidenceFile: options.authorityEvidenceFile,
           },
           command,
           dependencies,

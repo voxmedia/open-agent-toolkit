@@ -1,6 +1,13 @@
 import { execFile } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  readFile,
+  readdir,
+  rename,
+  unlink,
+  writeFile,
+} from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { isDeepStrictEqual, promisify } from 'node:util';
 
@@ -19,12 +26,16 @@ import {
   validateProductionMutationAuthority,
   type ProductionMutationInvocation,
 } from './authority';
+import { reduceReviewedBatchOutcomes, resumeReviewedBatch } from './batch';
 import {
   closeoutBindings,
   type CloseoutJournal,
   type CloseoutStore,
 } from './closeout';
-import { readRemoteDiscussion } from './discussion';
+import {
+  acceptRemoteDiscussionObservation,
+  readRemoteDiscussion,
+} from './discussion';
 import { runRemoteDoctorChecks } from './doctor';
 import {
   acceptExternalObservation,
@@ -55,6 +66,14 @@ import type { BindingPreview } from './preview';
 import { semanticDigest } from './provider';
 import { composePurposePolicies } from './purpose-policy';
 import { reconcileBinding } from './reconcile';
+import {
+  detachBinding,
+  recreateBinding,
+  relinkBinding,
+  type ResolutionBinding,
+  type ResolutionJournal,
+  type ResolutionStore,
+} from './resolution';
 import type {
   PlannedBindingCreate,
   RemoteBaselineRecord,
@@ -181,6 +200,19 @@ async function prepareCloseout(
     return emptyPersistedEnvelope(request, 'ok');
   }
 
+  if (request.previewOperationId) {
+    return applyCloseoutBatch(request, eligible, store, dependencies);
+  }
+  if (!request.capabilityEvidenceStdin) {
+    throw new Error(
+      'Closeout preview requires current host capability evidence.',
+    );
+  }
+  const capabilityInput = await dependencies.readObservationStdin();
+  const capabilities = (
+    Array.isArray(capabilityInput) ? capabilityInput : [capabilityInput]
+  ).map(parseHostCapabilityEvidence);
+
   const config = await readOatConfig(request.projectRoot);
   const repositoryPolicy = config.pjm?.remote?.policy ?? {
     description: 'none' as const,
@@ -190,6 +222,106 @@ async function prepareCloseout(
   const byBindingId = new Map(
     eligible.map((binding) => [binding.bindingId, binding]),
   );
+  const batchId = durableId('batch', dependencies.randomId());
+  const actionByStep = new Map<string, ExternalActionEnvelope>();
+  const capabilityByOperation = new Map<string, HostCapabilityEvidence>();
+  const plans = eligible.map((binding) => {
+    const effective = resolveEffectiveRemotePolicy({
+      repository: repositoryPolicy,
+      provider: repositoryPolicy.providers?.[binding.provider],
+      binding: binding.policyRestrictions,
+    });
+    const sourceDigest = semanticDigest(effective);
+    const operationId = durableId('op', dependencies.randomId());
+    const step = (kind: 'annotation' | 'transition') => {
+      const semanticOperation =
+        kind === 'annotation' ? 'annotate' : 'transition';
+      const selection = selectHostExecution({
+        provider: binding.provider,
+        context: binding.remoteIdentity.context,
+        operation: semanticOperation,
+        candidates: capabilities,
+        attemptStarted: false,
+      });
+      if (!selection.selected) {
+        throw new Error(`No current closeout capability: ${selection.reason}.`);
+      }
+      const pinned = capabilityByOperation.get(operationId);
+      if (
+        pinned &&
+        pinned.evidenceDigest !== selection.evidence.evidenceDigest
+      ) {
+        throw new Error(
+          'Composite closeout substeps selected inconsistent host capability evidence.',
+        );
+      }
+      capabilityByOperation.set(operationId, selection.evidence);
+      const stepId = `${operationId}_${kind}`;
+      const intent =
+        kind === 'annotation'
+          ? {
+              stableId: binding.remoteIdentity.stableId,
+              body: `OAT closeout recorded for project ${binding.target.id}.`,
+            }
+          : {
+              stableId: binding.remoteIdentity.stableId,
+              transition: 'completed',
+            };
+      const projection: OutboundProjection =
+        kind === 'annotation'
+          ? { annotation: intent.body }
+          : { status: intent.transition };
+      const safety = assessOutboundProjectionSafety(projection, {
+        assessedAt: now,
+      });
+      const action = buildExternalAction({
+        operationId,
+        stepId,
+        provider: binding.provider,
+        semanticOperation,
+        context: binding.remoteIdentity.context,
+        intent,
+        expectedObservation: {
+          fields: Object.keys(projection),
+          requireIdentity: true,
+          stableId: binding.remoteIdentity.stableId,
+          capabilityEvidenceDigest: selection.evidence.evidenceDigest,
+        },
+        persistedPreview: {
+          projectionDigest: safety.projectionDigest,
+          safetyResultDigest: safety.resultDigest,
+        },
+        projection,
+        outboundSafety: safety,
+      });
+      actionByStep.set(stepId, action);
+      return {
+        authority: effective.authority[semanticOperation],
+        sourceDigest,
+        previewDigest: semanticDigest({
+          actionDigest: action.actionDigest,
+          capabilityEvidenceDigest: selection.evidence.evidenceDigest,
+          projectionDigest: safety.projectionDigest,
+          safetyResultDigest: safety.resultDigest,
+          sourceDigest,
+        }),
+      };
+    };
+    return {
+      bindingId: binding.bindingId,
+      operationId,
+      provider: binding.provider,
+      purposes: binding.purposes,
+      ...(binding.purposes.some((purpose) =>
+        ['source', 'planning'].includes(purpose),
+      )
+        ? { annotation: step('annotation') }
+        : {}),
+      ...(binding.purposes.includes('planning')
+        ? { transition: step('transition') }
+        : {}),
+    };
+  });
   const bridge: CloseoutStore = {
     async readOperation(operationId) {
       return closeoutJournalFromRecord(
@@ -208,7 +340,14 @@ async function prepareCloseout(
       }
       const state = await store.readBindingState(journal.bindingId);
       await store.createOperation(
-        closeoutRecordFromJournal(journal, binding, state),
+        closeoutRecordFromJournal(
+          journal,
+          binding,
+          state,
+          batchId,
+          capabilityByOperation.get(journal.operationId)!,
+          actionByStep,
+        ),
       );
     },
     async writeBatch(batch) {
@@ -217,48 +356,16 @@ async function prepareCloseout(
   };
   const closeout = await closeoutBindings(
     {
-      batchId: durableId('batch', dependencies.randomId()),
+      batchId,
       projectPath: request.projectPath,
-      plans: eligible.map((binding) => {
-        const effective = resolveEffectiveRemotePolicy({
-          repository: repositoryPolicy,
-          provider: repositoryPolicy.providers?.[binding.provider],
-          binding: binding.policyRestrictions,
-        });
-        const sourceDigest = semanticDigest(effective);
-        const operationId = durableId('op', dependencies.randomId());
-        const step = (kind: 'annotation' | 'transition') => ({
-          authority:
-            effective.authority[
-              kind === 'annotation' ? 'annotate' : 'transition'
-            ],
-          sourceDigest,
-          previewDigest: semanticDigest({
-            bindingId: binding.bindingId,
-            operationId,
-            kind,
-            sourceDigest,
-          }),
-        });
-        return {
-          bindingId: binding.bindingId,
-          operationId,
-          provider: binding.provider,
-          purposes: binding.purposes,
-          ...(binding.purposes.some((purpose) =>
-            ['source', 'planning'].includes(purpose),
-          )
-            ? { annotation: step('annotation') }
-            : {}),
-          ...(binding.purposes.includes('planning')
-            ? { transition: step('transition') }
-            : {}),
-        };
-      }),
+      plans,
       now,
     },
     bridge,
   );
+  for (const action of actionByStep.values()) {
+    await store.writeActionEvidence(action.operationId, action);
+  }
   const status = batchStatus(closeout.batch.state);
   return {
     schemaVersion: 1,
@@ -282,13 +389,203 @@ async function prepareCloseout(
     externalAction: null,
     recovery:
       status === 'needs-review'
-        ? [
-            {
-              code: 'fresh-approval-required',
-              instruction: `Approve persisted closeout batch ${closeout.batch.batchId} with preview ${closeout.batch.previewDigest}.`,
-            },
-          ]
+        ? closeout.operations.flatMap((operation) => {
+            const next = operation.substeps.find(
+              (step) => step.state === 'planned',
+            );
+            return next
+              ? [
+                  {
+                    code: 'fresh-approval-required',
+                    instruction: `Approve exact ${next.kind} preview ${next.previewDigest} in closeout batch ${closeout.batch.batchId}; apply one substep at a time.`,
+                  },
+                ]
+              : [];
+          })
         : [],
+  };
+}
+
+async function applyCloseoutBatch(
+  request: RemoteCommandRequest,
+  eligible: readonly RemoteBindingMetadata[],
+  store: RemoteSyncStore,
+  dependencies: ProductionRemoteRunnerDependencies,
+): Promise<RemoteCommandEnvelope> {
+  const batch = await store.readBatch(request.previewOperationId!);
+  if (!batch || batch.lifecycleOperation !== 'closeout') {
+    throw new Error('Closeout apply requires an existing closeout batch.');
+  }
+  const operations = await Promise.all(
+    batch.members.map((member) => requireOperation(member.operationId, store)),
+  );
+  resumeReviewedBatch(
+    batch,
+    operations.map((operation) => ({
+      bindingId: operation.bindingId,
+      operationId: operation.operationId,
+      bindingPreviewDigest: operation.preview.digest,
+    })),
+  );
+  const operation = operations.find((candidate) =>
+    candidate.steps.some((step) => step.state === 'planned'),
+  );
+  if (!operation) {
+    return {
+      ...emptyPersistedEnvelope(
+        request,
+        batch.state === 'complete' ? 'ok' : 'blocked',
+      ),
+      results: operations.map((item) => ({
+        bindingId: item.bindingId,
+        provider: item.provider,
+        target:
+          eligible.find((binding) => binding.bindingId === item.bindingId)
+            ?.target.id ?? item.bindingId,
+        status: operationStatus(item.state),
+        freshness: item.updatedAt,
+        authority: 'composite',
+        diagnosticCode: item.reason?.code ?? null,
+      })),
+    };
+  }
+  const step = operation.steps.find(
+    (candidate) =>
+      candidate.state === 'planned' &&
+      (candidate.semanticOperation !== 'transition' ||
+        operation.steps
+          .filter((item) => item.semanticOperation === 'annotate')
+          .every((item) => item.state === 'verified')),
+  );
+  if (!step) {
+    throw new Error('Closeout has no dependency-safe substep to apply.');
+  }
+  if (!request.capabilityEvidenceStdin) {
+    throw new Error(
+      'Closeout apply requires current host capability evidence.',
+    );
+  }
+  const capability = parseHostCapabilityEvidence(
+    await dependencies.readObservationStdin(),
+  );
+  const selection = selectHostExecution({
+    provider: operation.provider,
+    context: operation.providerContext,
+    operation: step.semanticOperation as 'annotate' | 'transition',
+    candidates: [capability],
+    attemptStarted: false,
+  });
+  if (
+    !selection.selected ||
+    capability.evidenceDigest !== operation.selectedExecution?.evidenceDigest
+  ) {
+    throw new Error(
+      'Closeout capability does not match the pinned composite preview.',
+    );
+  }
+  const action = await store.readAction(operation.operationId, step.stepId);
+  if (!action || action.actionDigest !== step.actionDigest) {
+    throw new Error('Closeout exact reviewed action is missing or mismatched.');
+  }
+  const metadata = eligible.find(
+    (binding) => binding.bindingId === operation.bindingId,
+  );
+  if (!metadata) throw new Error('Closeout binding left the reviewed set.');
+  const state = await store.readBindingState(metadata.bindingId);
+  if (!state) throw new Error('Closeout binding state is missing.');
+  const invocation = await readCurrentMutationInvocation(request);
+  const authority = validateProductionMutationAuthority({
+    effective: step.authority.effective,
+    invocation,
+    preview: closeoutStepApprovalPreview(operation, step),
+    expected: {
+      operationClass: step.semanticOperation,
+      targetId: operation.bindingId,
+      workflowId: metadata.target.id,
+      workflowRevision: state.localProjection.sourceRevision,
+    },
+    now: dependencies.now(),
+    approvalMaxAgeMs: 300_000,
+  });
+  const updatedStep = {
+    ...step,
+    state: 'attempt-started' as const,
+    approval: authority.approval
+      ? {
+          previewDigest: authority.approval.previewDigest,
+          approvedAt: authority.approval.approvedAt,
+          source: authority.approval.source,
+        }
+      : null,
+    attempts: [...step.attempts, action.actionDigest],
+    retryDisposition: 'reconcile-required' as const,
+  };
+  const now = dependencies.now();
+  const updated: RemoteOperationRecord = {
+    ...operation,
+    state: 'attempt-started',
+    updatedAt: now,
+    steps: operation.steps.map((candidate) =>
+      candidate.stepId === step.stepId ? updatedStep : candidate,
+    ),
+    attempts: [
+      ...operation.attempts,
+      {
+        attemptId: action.stepId,
+        startedAt: now,
+        completedAt: null,
+        execution: capabilityReference(capability),
+        requestDigest: action.actionDigest,
+        receiptDigest: null,
+      },
+    ],
+    retryDisposition: 'reconcile-required',
+  };
+  await store.updateOperation(updated);
+  await store.writeCurrentAction(operation.operationId, action);
+  await store.updateBatch(
+    reduceReviewedBatchOutcomes(
+      batch,
+      { [operation.operationId]: 'attempt-started' },
+      now,
+    ),
+  );
+  return envelopeFrom(request, updated, metadata, action);
+}
+
+function closeoutStepApprovalPreview(
+  operation: RemoteOperationRecord,
+  step: RemoteOperationRecord['steps'][number],
+): BindingPreview {
+  const digest = (component: string) =>
+    semanticDigest({
+      operationId: operation.operationId,
+      stepId: step.stepId,
+      component,
+    });
+  return {
+    schemaVersion: 1,
+    digest: step.previewDigest,
+    bindingId: operation.bindingId,
+    provider: operation.provider,
+    operationClass: step.semanticOperation,
+    fieldMask: ['title'],
+    createdAt: operation.createdAt,
+    componentDigests: {
+      target: digest('target'),
+      baseline: digest('baseline'),
+      revision: operation.preview.revisionDigest,
+      capability: operation.preview.capabilityEvidenceDigest,
+      policy: operation.preview.policyDigest,
+      projection: operation.preview.projectionDigest ?? digest('projection'),
+      outboundSafety:
+        operation.preview.safetyResultDigest ?? digest('outbound-safety'),
+    },
+    renderedFields: {
+      title: { kind: 'value', value: step.semanticOperation },
+      description: { kind: 'value', value: null },
+      priority: { kind: 'value', value: null },
+    },
   };
 }
 
@@ -298,6 +595,103 @@ async function prepareDiscussion(
   dependencies: ProductionRemoteRunnerDependencies,
 ): Promise<RemoteCommandEnvelope> {
   const { metadata } = await requireBinding(request.bindingId, store);
+  if (request.capabilityEvidenceStdin) {
+    const capability = parseHostCapabilityEvidence(
+      await dependencies.readObservationStdin(),
+    );
+    const selection = selectHostExecution({
+      provider: metadata.provider,
+      context: metadata.remoteIdentity.context,
+      operation: 'read-discussion',
+      candidates: [capability],
+      attemptStarted: false,
+    });
+    if (!selection.selected) {
+      return unavailableDiscussionEnvelope(
+        request,
+        metadata,
+        dependencies.now(),
+        selection.reason,
+      );
+    }
+    const now = dependencies.now();
+    const operationId = durableId('op', dependencies.randomId());
+    const action = buildExternalAction({
+      operationId,
+      stepId: durableId('discussion', dependencies.randomId()),
+      provider: metadata.provider,
+      semanticOperation: 'read-discussion',
+      context: metadata.remoteIdentity.context,
+      intent: { stableId: metadata.remoteIdentity.stableId },
+      expectedObservation: {
+        fields: [],
+        requireIdentity: false,
+        stableId: metadata.remoteIdentity.stableId,
+        capabilityEvidenceDigest: capability.evidenceDigest,
+      },
+      persistedPreview: {},
+    });
+    await store.createOperation({
+      recordType: 'operation',
+      schemaVersion: 2,
+      operationId,
+      correlationId: operationId,
+      bindingId: metadata.bindingId,
+      provider: metadata.provider,
+      providerContext: metadata.remoteIdentity.context,
+      lifecycleOperation: 'discussion',
+      operationClass: null,
+      state: 'pending',
+      reason: {
+        code: `discussion-limit-${request.discussionLimit ?? 0}`,
+        message: 'Bounded non-persistent discussion read.',
+      },
+      lastSafeStep: 'planned',
+      preview: {
+        digest: semanticDigest({
+          actionDigest: action.actionDigest,
+          bindingId: metadata.bindingId,
+          limit: request.discussionLimit,
+        }),
+        bindingId: metadata.bindingId,
+        provider: metadata.provider,
+        providerContext: metadata.remoteIdentity.context,
+        capabilityEvidenceDigest: capability.evidenceDigest,
+        revisionDigest: 'non-persistent-evidence',
+        policyDigest: 'read-only',
+      },
+      authority: null,
+      approval: null,
+      createdAt: now,
+      updatedAt: now,
+      selectedExecution: capabilityReference(capability),
+      attempts: [],
+      observations: [],
+      verification: [],
+      retryDisposition: 'safe-before-attempt',
+      steps: [],
+      outcome: {
+        classification: 'pending',
+        message: 'bounded discussion observation required',
+        verifiedAt: null,
+      },
+    });
+    await store.writeCurrentAction(operationId, action);
+    return {
+      ...envelopeFrom(
+        request,
+        (await store.readOperation(operationId))!,
+        metadata,
+        action,
+      ),
+      recovery: [
+        {
+          code: 'host-observation-required',
+          instruction: `Run the bounded discussion action and continue operation ${operationId}.`,
+        },
+      ],
+    };
+  }
   const evidence = await readRemoteDiscussion(
     {
       bindingId: metadata.bindingId,
@@ -308,18 +702,35 @@ async function prepareDiscussion(
     null,
   );
   return {
+    ...unavailableDiscussionEnvelope(
+      request,
+      metadata,
+      evidence.observedAt,
+      'unavailable',
+    ),
+    discussionEvidence: evidence,
+  };
+}
+
+function unavailableDiscussionEnvelope(
+  request: RemoteCommandRequest,
+  metadata: RemoteBindingMetadata,
+  observedAt: string,
+  reason: string,
+): RemoteCommandEnvelope {
+  return {
     schemaVersion: 1,
     status: 'blocked',
     operation: request.operation,
     projectRoot: request.projectRoot,
-    persisted: evidence.persisted,
+    persisted: false,
     results: [
       {
         bindingId: metadata.bindingId,
         provider: metadata.provider,
         target: metadata.target.id,
         status: 'blocked',
-        freshness: evidence.observedAt,
+        freshness: observedAt,
         authority: 'read-only',
         diagnosticCode: 'discussion-capability-unavailable',
       },
@@ -328,8 +739,7 @@ async function prepareDiscussion(
     recovery: [
       {
         code: 'live-host-service-required',
-        instruction:
-          'Run the bounded discussion read through a current host-discovered provider-neutral discussion service.',
+        instruction: `Current provider-neutral discussion capability is ${reason}.`,
       },
     ],
   };
@@ -354,7 +764,14 @@ async function prepareResolution(
         'Resolution preview does not match this binding and kind.',
       );
     }
-    return resolutionPreviewEnvelope(request, metadata, preview);
+    return applyResolutionPreview(
+      request,
+      metadata,
+      state,
+      preview,
+      store,
+      dependencies,
+    );
   }
 
   const config = await readOatConfig(request.projectRoot);
@@ -427,18 +844,213 @@ async function prepareResolution(
   return resolutionPreviewEnvelope(request, metadata, operation);
 }
 
+async function applyResolutionPreview(
+  request: RemoteCommandRequest,
+  metadata: RemoteBindingMetadata,
+  state: RemoteBindingState,
+  operation: RemoteOperationRecord,
+  store: RemoteSyncStore,
+  dependencies: ProductionRemoteRunnerDependencies,
+): Promise<RemoteCommandEnvelope> {
+  const currentPreviewDigest = semanticDigest({
+    bindingId: metadata.bindingId,
+    provider: metadata.provider,
+    providerContext: metadata.remoteIdentity.context,
+    remoteIdentity: metadata.remoteIdentity,
+    lifecycleOperation: operation.lifecycleOperation,
+    providerRef: request.providerRef ?? null,
+    revision: state.snapshot?.revision.contentHash ?? null,
+  });
+  const persistedBindingTransition = operation.verification.some(
+    (entry) =>
+      entry.field === 'binding-transition' && entry.status === 'verified',
+  );
+  if (
+    currentPreviewDigest !== operation.preview.digest &&
+    !persistedBindingTransition
+  ) {
+    throw new Error(
+      'Resolution apply no longer matches the exact persisted preview.',
+    );
+  }
+  const invocation = await readCurrentMutationInvocation(request);
+  const effective = await effectivePolicyForBinding(
+    request.projectRoot,
+    metadata,
+  );
+  const authority = validateProductionMutationAuthority({
+    effective:
+      effective.authority[
+        operation.lifecycleOperation as 'relink' | 'detach' | 'recreate'
+      ],
+    invocation,
+    preview: resolutionApprovalPreview(operation),
+    expected: {
+      operationClass: operation.lifecycleOperation as
+        | 'relink'
+        | 'detach'
+        | 'recreate',
+      targetId: metadata.bindingId,
+      workflowId: metadata.target.id,
+      workflowRevision: state.localProjection.sourceRevision,
+    },
+    now: dependencies.now(),
+    approvalMaxAgeMs: 300_000,
+  });
+  if (operation.lifecycleOperation === 'detach') {
+    const result = await detachBinding(
+      {
+        operationId: operation.operationId,
+        binding: resolutionBindingFrom(metadata, state),
+        now: dependencies.now(),
+        previewDigest: operation.preview.digest,
+        approval: resolutionApprovalFrom(
+          authority.approval,
+          dependencies.now(),
+        ),
+        keepReference: true,
+      },
+      resolutionStoreBridge(
+        request.projectRoot,
+        store,
+        operation,
+        dependencies.now(),
+      ),
+    );
+    const updated = await completeResolutionOperation(
+      operation,
+      authority,
+      result.journal,
+      store,
+      dependencies.now(),
+    );
+    return envelopeFrom(
+      request,
+      updated,
+      await store.readBindingMetadata(metadata.bindingId),
+      null,
+    );
+  }
+  if (!request.capabilityEvidenceStdin) {
+    throw new Error(
+      'Relink and recreate require current live host capability evidence.',
+    );
+  }
+  const capability = parseHostCapabilityEvidence(
+    await dependencies.readObservationStdin(),
+  );
+  const semanticOperation =
+    operation.lifecycleOperation === 'relink' ? 'read' : 'search-duplicates';
+  const selection = selectHostExecution({
+    provider: metadata.provider,
+    context: metadata.remoteIdentity.context,
+    operation: semanticOperation,
+    candidates: [capability],
+    attemptStarted: false,
+  });
+  if (!selection.selected) {
+    throw new Error(`No current host capability: ${selection.reason}.`);
+  }
+  const stableId =
+    operation.lifecycleOperation === 'relink'
+      ? parseProviderReference(request.providerRef, metadata.provider)
+      : null;
+  const action = buildExternalAction({
+    operationId: operation.operationId,
+    stepId: durableId('resolution', dependencies.randomId()),
+    provider: metadata.provider,
+    semanticOperation,
+    context: metadata.remoteIdentity.context,
+    intent:
+      semanticOperation === 'read'
+        ? { stableId: stableId! }
+        : { query: state.localProjection.title },
+    expectedObservation: {
+      fields: ['title'],
+      requireIdentity: semanticOperation === 'read',
+      stableId,
+      capabilityEvidenceDigest: capability.evidenceDigest,
+    },
+    persistedPreview: {},
+  });
+  const updated: RemoteOperationRecord = {
+    ...operation,
+    state: 'pending',
+    authority: authority.authority,
+    approval: authority.approval,
+    selectedExecution: capabilityReference(capability),
+    reason: {
+      code: `resolution-${operation.lifecycleOperation}-observation-required`,
+      message: 'Provider-neutral resolution evidence is required.',
+    },
+    updatedAt: dependencies.now(),
+  };
+  await store.updateOperation(updated);
+  await store.writeCurrentAction(operation.operationId, action);
+  return envelopeFrom(request, updated, metadata, action);
+}
+
 async function runProductionDoctor(
   request: RemoteCommandRequest,
   store: RemoteSyncStore,
   dependencies: ProductionRemoteRunnerDependencies,
 ): Promise<RemoteCommandEnvelope> {
   const config = await readOatConfig(request.projectRoot);
+  const metadata = await store.listBindingMetadata();
+  const associationTargets = await Promise.all(
+    (await discoverDeclaredAssociationPaths(request.projectRoot)).map((path) =>
+      readMigrationTarget(request.projectRoot, path),
+    ),
+  );
+  const associatedBindingIds = associationTargets.flatMap((target) =>
+    parseAssociatedIssues(target.associatedIssues).flatMap((association) =>
+      association.kind === 'reference' && association.bindingId
+        ? [association.bindingId]
+        : [],
+    ),
+  );
+  let hostCapabilityAvailability: Array<{
+    bindingId: string;
+    available: boolean;
+  }>;
+  if (request.capabilityEvidenceStdin) {
+    const capabilityInput = await dependencies.readObservationStdin();
+    const capabilities = (
+      Array.isArray(capabilityInput) ? capabilityInput : [capabilityInput]
+    ).map(parseHostCapabilityEvidence);
+    hostCapabilityAvailability = metadata.map((binding) => ({
+      bindingId: binding.bindingId,
+      available: Boolean(
+        selectHostExecution({
+          provider: binding.provider,
+          context: binding.remoteIdentity.context,
+          operation: 'read',
+          candidates: capabilities,
+          attemptStarted: false,
+        }).selected,
+      ),
+    }));
+  } else {
+    hostCapabilityAvailability = metadata.map((binding) => ({
+      bindingId: binding.bindingId,
+      available: false,
+    }));
+  }
   const checks = await runRemoteDoctorChecks({
     portableBindingsDir: store.locations.portable.bindingsDir,
     operationalBindingsDir: store.locations.operational.bindingsDir,
     operationsDir: store.locations.operational.operationsDir,
     policy: config.pjm?.remote,
     now: dependencies.now(),
+    staleAfterMs: 24 * 60 * 60 * 1_000,
+    associatedBindingIds,
+    retentionBreaches: [],
+    hostCapabilityAvailability,
+    evidenceAvailability: {
+      associations: true,
+      retention: true,
+      hostCapabilities: request.capabilityEvidenceStdin === true,
+    },
   });
   const failures = checks.filter((check) => check.status === 'fail');
   return {
@@ -462,20 +1074,28 @@ async function runProductionMigration(
     throw new Error('Migration requires check or apply mode.');
   }
   const bindings = await store.listBindingMetadata();
+  const declaredPaths = await discoverDeclaredAssociationPaths(
+    request.projectRoot,
+  );
   const paths = [
-    ...new Set(
-      bindings.flatMap((binding) =>
+    ...new Set([
+      ...declaredPaths,
+      ...bindings.flatMap((binding) =>
         binding.target.kind === 'backlog' ? [binding.target.path] : [],
       ),
-    ),
+    ]),
   ].sort();
-  const targets = await Promise.all(
+  const inspected = await Promise.all(
     paths.map((path) => readMigrationTarget(request.projectRoot, path)),
+  );
+  const targets = inspected.filter(
+    (target) => target.associatedIssues.length > 0,
   );
   const previewDigest = semanticDigest({
     operation: 'local-remote-association-migration',
     targets: targets.map((target) => ({
       path: target.path,
+      preimageDigest: semanticDigest(target.content),
       before: target.associatedIssues,
       after: target.migration.associatedIssues,
     })),
@@ -486,6 +1106,11 @@ async function runProductionMigration(
     }
     for (const target of targets) {
       if (!target.migration.changed) continue;
+      if ((await readFile(target.absolutePath, 'utf8')) !== target.content) {
+        throw new Error(
+          `Migration target '${target.path}' changed after its approved preimage was read.`,
+        );
+      }
       target.document.set(
         'associated_issues',
         target.migration.associatedIssues,
@@ -524,10 +1149,52 @@ async function runProductionMigration(
     recovery: [
       {
         code: 'migration-preview',
-        instruction: `Review local-only migration preview ${previewDigest}; ${targets.length} explicitly bound local targets were inspected without provider contact.`,
+        instruction: `Review local-only migration preview ${previewDigest}; ${paths.length} declared local targets were inspected and ${targets.length} association candidates were found without provider contact.`,
       },
     ],
   };
+}
+
+async function discoverDeclaredAssociationPaths(
+  projectRoot: string,
+): Promise<string[]> {
+  const paths: string[] = [];
+  const backlogRoot = resolve(
+    projectRoot,
+    '.oat',
+    'repo',
+    'pjm',
+    'backlog',
+    'items',
+  );
+  for (const entry of await readBoundedDirectory(backlogRoot)) {
+    if (entry.isFile() && entry.name.endsWith('.md')) {
+      paths.push(`.oat/repo/pjm/backlog/items/${entry.name}`);
+    }
+  }
+  for (const scope of ['local', 'shared', 'synced'] as const) {
+    const scopeRoot = resolve(projectRoot, '.oat', 'projects', scope);
+    for (const entry of await readBoundedDirectory(scopeRoot)) {
+      if (!entry.isDirectory()) continue;
+      const relativePath = `.oat/projects/${scope}/${entry.name}/state.md`;
+      try {
+        await readFile(resolveInsideProject(projectRoot, relativePath), 'utf8');
+        paths.push(relativePath);
+      } catch (error) {
+        if (!(isNodeError(error) && error.code === 'ENOENT')) throw error;
+      }
+    }
+  }
+  return paths.sort();
+}
+
+async function readBoundedDirectory(path: string) {
+  try {
+    return await readdir(path, { withFileTypes: true });
+  } catch (error) {
+    if (isNodeError(error) && error.code === 'ENOENT') return [];
+    throw error;
+  }
 }
 
 async function readMigrationTarget(projectRoot: string, path: string) {
@@ -564,13 +1231,16 @@ function closeoutRecordFromJournal(
   journal: CloseoutJournal,
   metadata: RemoteBindingMetadata,
   state: RemoteBindingState | null,
+  batchId: string,
+  capability: HostCapabilityEvidence,
+  actionByStep: ReadonlyMap<string, ExternalActionEnvelope>,
 ): RemoteOperationRecord {
   const operationState = closeoutRecordState(journal.state);
   return {
     recordType: 'operation',
     schemaVersion: 2,
     operationId: journal.operationId,
-    correlationId: journal.operationId,
+    correlationId: batchId,
     bindingId: journal.bindingId,
     provider: journal.provider,
     providerContext: metadata.remoteIdentity.context,
@@ -590,18 +1260,29 @@ function closeoutRecordFromJournal(
       bindingId: journal.bindingId,
       provider: journal.provider,
       providerContext: metadata.remoteIdentity.context,
-      capabilityEvidenceDigest: 'unprobed',
+      capabilityEvidenceDigest: capability.evidenceDigest,
       revisionDigest: state?.snapshot?.revision.contentHash ?? 'unobserved',
       policyDigest: semanticDigest({
         policyRestrictions: metadata.policyRestrictions,
         purposes: metadata.purposes,
       }),
+      projectionDigest: semanticDigest(
+        journal.substeps.map(
+          (step) =>
+            actionByStep.get(step.stepId)?.outboundSafety?.projectionDigest,
+        ),
+      ),
+      safetyResultDigest: semanticDigest(
+        journal.substeps.map(
+          (step) => actionByStep.get(step.stepId)?.outboundSafety?.resultDigest,
+        ),
+      ),
     },
     authority: null,
     approval: null,
     createdAt: journal.createdAt,
     updatedAt: journal.updatedAt,
-    selectedExecution: null,
+    selectedExecution: capabilityReference(capability),
     attempts: [],
     observations: [],
     verification: [],
@@ -614,11 +1295,13 @@ function closeoutRecordFromJournal(
           ? ('annotate' as const)
           : ('transition' as const),
       state: closeoutRecordState(step.state),
-      actionDigest: semanticDigest({
-        bindingId: journal.bindingId,
-        stepId: step.stepId,
-        kind: step.kind,
-      }),
+      actionDigest:
+        actionByStep.get(step.stepId)?.actionDigest ??
+        (() => {
+          throw new Error(
+            `Closeout step '${step.stepId}' lacks its exact action.`,
+          );
+        })(),
       previewDigest: step.previewDigest,
       authority: {
         effective: step.authority,
@@ -733,6 +1416,323 @@ function strictestCloseoutAuthority(journal: CloseoutJournal): string {
         : strictest,
     'autonomous',
   );
+}
+
+async function effectivePolicyForBinding(
+  projectRoot: string,
+  metadata: RemoteBindingMetadata,
+) {
+  const config = await readOatConfig(projectRoot);
+  const repository = config.pjm?.remote?.policy ?? {
+    description: 'none' as const,
+    authority: { default: 'read-only' as const },
+  };
+  return resolveEffectiveRemotePolicy({
+    repository,
+    provider: repository.providers?.[metadata.provider],
+    binding: metadata.policyRestrictions,
+  });
+}
+
+function resolutionApprovalPreview(
+  operation: RemoteOperationRecord,
+): BindingPreview {
+  const digest = (value: string) =>
+    semanticDigest({
+      operationId: operation.operationId,
+      component: value,
+    });
+  return {
+    schemaVersion: 1,
+    digest: operation.preview.digest,
+    bindingId: operation.bindingId,
+    provider: operation.provider,
+    operationClass: operation.lifecycleOperation as
+      | 'relink'
+      | 'detach'
+      | 'recreate',
+    fieldMask: ['title'],
+    createdAt: operation.createdAt,
+    componentDigests: {
+      target: digest('target'),
+      baseline: digest('baseline'),
+      revision: operation.preview.revisionDigest,
+      capability: operation.preview.capabilityEvidenceDigest,
+      policy: operation.preview.policyDigest,
+      projection: digest('projection'),
+      outboundSafety: digest('outbound-safety'),
+    },
+    renderedFields: {
+      title: { kind: 'value', value: operation.lifecycleOperation },
+      description: { kind: 'value', value: null },
+      priority: { kind: 'value', value: null },
+    },
+  };
+}
+
+function resolutionApprovalFrom(
+  approval: RemoteOperationRecord['approval'],
+  now: string,
+) {
+  if (!approval) {
+    throw new Error('Resolution requires fresh approval of the exact preview.');
+  }
+  return {
+    previewDigest: approval.previewDigest,
+    approvedAt: approval.approvedAt,
+    source: approval.source || now,
+  };
+}
+
+function resolutionBindingFrom(
+  metadata: RemoteBindingMetadata,
+  state: RemoteBindingState,
+): ResolutionBinding {
+  return {
+    bindingId: metadata.bindingId,
+    provider: metadata.provider,
+    targetRef: metadata.target.path,
+    remoteIdentity: structuredClone(metadata.remoteIdentity),
+    identityHistory: structuredClone(metadata.identityHistory),
+    lifecycle: metadata.lifecycle,
+    snapshotDigest: state.snapshot ? semanticDigest(state.snapshot) : null,
+  };
+}
+
+function resolutionStoreBridge(
+  projectRoot: string,
+  store: RemoteSyncStore,
+  seedOperation: RemoteOperationRecord,
+  updatedAt: string,
+): ResolutionStore {
+  return {
+    async findByIdentity(provider, identity) {
+      const duplicate = (await store.listBindingMetadata()).find(
+        (binding) =>
+          binding.provider === provider &&
+          binding.remoteIdentity.stableId === identity.stableId &&
+          isDeepStrictEqual(
+            compactContext(binding.remoteIdentity.context),
+            compactContext(identity.context),
+          ),
+      );
+      return duplicate?.bindingId ?? null;
+    },
+    async writeBinding(binding) {
+      const metadata = await store.readBindingMetadata(binding.bindingId);
+      const state = await store.readBindingState(binding.bindingId);
+      if (!metadata || !state) {
+        throw new Error('Resolution binding state is incomplete.');
+      }
+      await store.updateBindingMetadata({
+        ...metadata,
+        remoteIdentity: structuredClone(binding.remoteIdentity),
+        identityHistory: structuredClone(binding.identityHistory),
+        lifecycle: binding.lifecycle,
+        updatedAt,
+      });
+      await store.writeBindingState({
+        ...state,
+        lifecycle: binding.lifecycle,
+        lifecycleCondition:
+          binding.lifecycle === 'tombstoned'
+            ? 'missing-or-invisible'
+            : 'active',
+        updatedAt,
+      });
+    },
+    async writeAssociation(input) {
+      const currentMetadata = await store.readBindingMetadata(
+        seedOperation.bindingId,
+      );
+      await writeResolutionAssociation(
+        projectRoot,
+        input.targetRef,
+        seedOperation.bindingId,
+        input,
+        currentMetadata,
+      );
+    },
+    async readJournal(operationId) {
+      const operation = await store.readOperation(operationId);
+      if (!operation) return null;
+      return resolutionJournalFromOperation(operation, store);
+    },
+    async writeJournal(journal) {
+      const current = await store.readOperation(journal.operationId);
+      if (!current) throw new Error('Resolution operation disappeared.');
+      const verification = [
+        {
+          field: 'binding-transition',
+          expectedHash: 'complete',
+          observedHash: journal.bindingTransitionCompleted ? 'complete' : null,
+          status: journal.bindingTransitionCompleted
+            ? ('verified' as const)
+            : ('unavailable' as const),
+        },
+        {
+          field: 'local-association',
+          expectedHash: 'complete',
+          observedHash: journal.associationCompleted ? 'complete' : null,
+          status: journal.associationCompleted
+            ? ('verified' as const)
+            : ('unavailable' as const),
+        },
+      ];
+      await store.updateOperation({
+        ...current,
+        state:
+          journal.state === 'complete'
+            ? 'verified'
+            : journal.state === 'pending'
+              ? current.state
+              : journal.state,
+        verification,
+        updatedAt: journal.updatedAt,
+        outcome: {
+          classification:
+            journal.state === 'complete' ? 'verified' : journal.state,
+          message: null,
+          verifiedAt: journal.state === 'complete' ? journal.updatedAt : null,
+        },
+      });
+    },
+  };
+}
+
+async function resolutionJournalFromOperation(
+  operation: RemoteOperationRecord,
+  store: RemoteSyncStore,
+): Promise<ResolutionJournal> {
+  const metadata = await store.readBindingMetadata(operation.bindingId);
+  const state = await store.readBindingState(operation.bindingId);
+  const bindingTransitionCompleted = operation.verification.some(
+    (entry) =>
+      entry.field === 'binding-transition' && entry.status === 'verified',
+  );
+  const associationCompleted = operation.verification.some(
+    (entry) =>
+      entry.field === 'local-association' && entry.status === 'verified',
+  );
+  return {
+    schemaVersion: 1,
+    operationId: operation.operationId,
+    bindingId: operation.bindingId,
+    kind: operation.lifecycleOperation as 'relink' | 'detach' | 'recreate',
+    previewDigest: operation.preview.digest,
+    state:
+      operation.state === 'verified'
+        ? 'complete'
+        : [
+              'planned',
+              'pending',
+              'authorized',
+              'attempt-started',
+              'verification-pending',
+            ].includes(operation.state)
+          ? 'pending'
+          : operation.state === 'rejected' || operation.state === 'failed'
+            ? 'blocked'
+            : (operation.state as ResolutionJournal['state']),
+    bindingTransitionCompleted,
+    associationCompleted,
+    resultingBinding:
+      metadata && state ? resolutionBindingFrom(metadata, state) : null,
+    createdAt: operation.createdAt,
+    updatedAt: operation.updatedAt,
+  };
+}
+
+async function writeResolutionAssociation(
+  projectRoot: string,
+  targetRef: string,
+  originalBindingId: string,
+  input: {
+    bindingId: string | null;
+    referenceRef: string | null;
+  },
+  currentMetadata: RemoteBindingMetadata | null,
+): Promise<void> {
+  const target = await readMigrationTarget(projectRoot, targetRef);
+  const existing = parseAssociatedIssues(target.associatedIssues);
+  const retained = existing.filter(
+    (entry) =>
+      !(entry.kind === 'reference' && entry.bindingId === originalBindingId),
+  );
+  if (input.referenceRef) {
+    const separator = input.referenceRef.indexOf(':');
+    retained.push({
+      kind: 'reference',
+      type: input.referenceRef.slice(0, separator),
+      ref: input.referenceRef.slice(separator + 1),
+    });
+  } else if (input.bindingId) {
+    if (!currentMetadata) {
+      throw new Error('Resolution binding metadata disappeared.');
+    }
+    retained.push({
+      kind: 'reference',
+      type: currentMetadata.provider,
+      ref: currentMetadata.remoteIdentity.stableId,
+      bindingId: input.bindingId,
+    });
+  }
+  target.document.set('associated_issues', serializeAssociatedIssues(retained));
+  const updated = target.content.replace(
+    target.frontmatter,
+    `---\n${target.document.toString().trimEnd()}\n---`,
+  );
+  await writeFile(target.absolutePath, updated, 'utf8');
+}
+
+async function completeResolutionOperation(
+  operation: RemoteOperationRecord,
+  authority: ReturnType<typeof validateProductionMutationAuthority>,
+  journal: ResolutionJournal,
+  store: RemoteSyncStore,
+  now: string,
+): Promise<RemoteOperationRecord> {
+  const current = (await store.readOperation(operation.operationId))!;
+  const {
+    currentAction: _currentAction,
+    verificationHandoff: _verificationHandoff,
+    ...terminalCurrent
+  } = current;
+  const updated: RemoteOperationRecord = {
+    ...terminalCurrent,
+    state: journal.state === 'complete' ? 'verified' : journal.state,
+    authority: authority.authority,
+    approval: authority.approval,
+    updatedAt: now,
+    lastSafeStep: journal.state === 'complete' ? 'complete' : 'planned',
+    retryDisposition:
+      journal.state === 'complete' ? 'not-applicable' : 'reconcile-required',
+    outcome: {
+      classification: journal.state === 'complete' ? 'verified' : journal.state,
+      message: null,
+      verifiedAt: journal.state === 'complete' ? now : null,
+    },
+  };
+  await store.updateOperation(updated);
+  return updated;
+}
+
+function parseProviderReference(
+  value: string | undefined,
+  expectedProvider: RemoteBindingMetadata['provider'],
+): string {
+  const separator = value?.indexOf(':') ?? -1;
+  if (
+    !value ||
+    separator < 1 ||
+    value.slice(0, separator) !== expectedProvider ||
+    separator === value.length - 1
+  ) {
+    throw new Error(
+      `Resolution replacement must be an explicit ${expectedProvider}:stable-id reference.`,
+    );
+  }
+  return value.slice(separator + 1);
 }
 
 function resolutionPreviewEnvelope(
@@ -1818,13 +2818,53 @@ async function continueOperation(
     !operation.createIntent
   )
     throw new Error(`Remote binding '${operation.bindingId}' does not exist.`);
-  const action = operation.verificationHandoff
+  let action = operation.verificationHandoff
     ? restoreDurableVerificationAction(operation)
-    : await store.readCurrentAction(operation.operationId);
+    : operation.currentAction
+      ? parseExternalAction(operation.currentAction)
+      : await store.readCurrentAction(operation.operationId);
+  if (!action && operation.lifecycleOperation === 'closeout') {
+    const pendingStep = operation.steps.find(
+      (step) => step.state === 'attempt-started',
+    );
+    action = pendingStep
+      ? await store.readAction(operation.operationId, pendingStep.stepId)
+      : null;
+  }
   if (!action)
     throw new Error(
       `Remote operation '${operation.operationId}' has no durable current action.`,
     );
+  if (operation.lifecycleOperation === 'discussion') {
+    return continueDiscussionOperation(
+      request,
+      operation,
+      metadata,
+      action,
+      store,
+      dependencies,
+    );
+  }
+  if (operation.lifecycleOperation === 'closeout') {
+    return continueCloseoutOperation(
+      request,
+      operation,
+      metadata,
+      action,
+      store,
+      dependencies,
+    );
+  }
+  if (['relink', 'recreate'].includes(operation.lifecycleOperation)) {
+    return continueResolutionOperation(
+      request,
+      operation,
+      metadata,
+      action,
+      store,
+      dependencies,
+    );
+  }
   if (
     ['verified', 'uncertain', 'rejected', 'failed', 'blocked'].includes(
       operation.state,
@@ -2412,6 +3452,610 @@ async function continueOperation(
     },
   );
   return envelopeFrom(request, updated, metadata, null);
+}
+
+async function continueCloseoutOperation(
+  request: RemoteCommandRequest,
+  operation: RemoteOperationRecord,
+  metadata: RemoteBindingMetadata | null,
+  action: ExternalActionEnvelope,
+  store: RemoteSyncStore,
+  dependencies: ProductionRemoteRunnerDependencies,
+): Promise<RemoteCommandEnvelope> {
+  if (!metadata) throw new Error('Closeout binding metadata is missing.');
+  if (
+    action.semanticOperation !== 'read' &&
+    !(await store.readCurrentAction(operation.operationId))
+  ) {
+    await store.writeCurrentAction(operation.operationId, action);
+  }
+  if (action.semanticOperation === 'read' && operation.verificationHandoff) {
+    const staleMutation = await store.readCurrentAction(operation.operationId);
+    if (
+      staleMutation &&
+      staleMutation.actionDigest ===
+        operation.verificationHandoff.acceptedMutation.actionDigest
+    ) {
+      await store.retireCurrentAction(operation.operationId, staleMutation);
+    }
+  }
+  const observation = acceptExternalObservation({
+    action,
+    observation: await dependencies.readObservationStdin(),
+    acceptedStepDigests: new Set(
+      operation.observations.flatMap((item) =>
+        item.actionDigest ? [item.actionDigest] : [],
+      ),
+    ),
+  });
+  const now = observation.observedAt;
+  const activeStep =
+    action.semanticOperation === 'read'
+      ? operation.steps.find((step) => step.state === 'verification-pending')
+      : operation.steps.find((step) => step.stepId === action.stepId);
+  if (!activeStep) {
+    throw new Error('Closeout observation does not match an active substep.');
+  }
+  if (observation.outcome.classification !== 'observed') {
+    const terminal =
+      observation.outcome.classification === 'rejected'
+        ? ('rejected' as const)
+        : ('uncertain' as const);
+    if (action.semanticOperation !== 'read') {
+      await store.retireCurrentAction(operation.operationId, action);
+    }
+    const updated: RemoteOperationRecord = {
+      ...operation,
+      state: terminal,
+      steps: operation.steps.map((step) =>
+        step.stepId === activeStep.stepId ? { ...step, state: terminal } : step,
+      ),
+      updatedAt: now,
+      outcome: {
+        classification: terminal,
+        message: observation.outcome.diagnosticCode,
+        verifiedAt: null,
+      },
+    };
+    await store.updateOperation(updated);
+    const batch = await store.readBatch(operation.correlationId);
+    if (batch) {
+      await store.updateBatch(
+        reduceReviewedBatchOutcomes(
+          batch,
+          { [operation.operationId]: terminal },
+          now,
+        ),
+      );
+    }
+    return envelopeFrom(request, updated, metadata, null);
+  }
+  if (!observation.outcome.identity) {
+    throw new Error(
+      'Closeout observation lacks authoritative identity evidence.',
+    );
+  }
+  if (action.semanticOperation !== 'read') {
+    const readAction = buildExternalAction({
+      operationId: operation.operationId,
+      stepId: durableId('closeout_verify', dependencies.randomId()),
+      provider: operation.provider,
+      semanticOperation: 'read',
+      context: operation.providerContext,
+      intent: { stableId: observation.outcome.identity.stableId },
+      expectedObservation: {
+        fields: activeStep.semanticOperation === 'transition' ? ['status'] : [],
+        ...(activeStep.semanticOperation === 'annotate'
+          ? { extensionFields: ['annotationDigest'] }
+          : {}),
+        requireIdentity: true,
+        stableId: metadata.remoteIdentity.stableId,
+        capabilityEvidenceDigest:
+          operation.selectedExecution?.evidenceDigest ??
+          observation.capabilityEvidenceDigest,
+      },
+      persistedPreview: {},
+    });
+    await store.writeActionEvidence(operation.operationId, readAction);
+    const updated: RemoteOperationRecord = {
+      ...operation,
+      state: 'verification-pending',
+      steps: operation.steps.map((step) =>
+        step.stepId === activeStep.stepId
+          ? { ...step, state: 'verification-pending' as const }
+          : step,
+      ),
+      currentAction: readAction as NonNullable<
+        RemoteOperationRecord['currentAction']
+      >,
+      verificationHandoff: {
+        acceptedMutation: {
+          actionDigest: action.actionDigest,
+          observedAt: now,
+          evidenceDigest: semanticDigest(observation),
+          stableId: observation.outcome.identity.stableId,
+        },
+        verificationAction: readAction as NonNullable<
+          RemoteOperationRecord['verificationHandoff']
+        >['verificationAction'],
+      },
+      observations: [
+        ...operation.observations,
+        {
+          observedAt: now,
+          classification: 'committed',
+          evidenceDigest: semanticDigest(observation),
+          actionDigest: action.actionDigest,
+        },
+      ],
+      attempts: operation.attempts.map((attempt) =>
+        attempt.attemptId === action.stepId
+          ? {
+              ...attempt,
+              completedAt: now,
+              receiptDigest: semanticDigest(observation),
+            }
+          : attempt,
+      ),
+      updatedAt: now,
+    };
+    await store.updateOperation(updated);
+    await store.retireCurrentAction(operation.operationId, action);
+    return envelopeFrom(request, updated, metadata, readAction);
+  }
+  if (
+    observation.outcome.identity.stableId !== metadata.remoteIdentity.stableId
+  ) {
+    throw new Error('Closeout read-back identity does not match the binding.');
+  }
+  const mutationAction = await store.readAction(
+    operation.operationId,
+    activeStep.stepId,
+  );
+  if (!mutationAction) {
+    throw new Error('Closeout mutation evidence is missing before read-back.');
+  }
+  const readBackMatches =
+    activeStep.semanticOperation === 'transition'
+      ? observation.outcome.fields.status === mutationAction.intent.transition
+      : observation.outcome.extensions?.annotationDigest ===
+        semanticDigest(mutationAction.intent.body);
+  if (!readBackMatches) {
+    throw new Error(
+      'Closeout authoritative read-back did not verify the exact mutation.',
+    );
+  }
+  const steps = operation.steps.map((step) =>
+    step.stepId === activeStep.stepId
+      ? {
+          ...step,
+          state: 'verified' as const,
+          verification: [...step.verification, semanticDigest(observation)],
+          retryDisposition: 'not-applicable' as const,
+        }
+      : step,
+  );
+  const complete = steps.every((step) => step.state === 'verified');
+  const {
+    currentAction: _currentAction,
+    verificationHandoff: _verificationHandoff,
+    ...withoutCurrentAction
+  } = operation;
+  const updated: RemoteOperationRecord = {
+    ...withoutCurrentAction,
+    state: complete ? 'verified' : 'planned',
+    steps,
+    observations: [
+      ...operation.observations,
+      {
+        observedAt: now,
+        classification: 'none',
+        evidenceDigest: semanticDigest(observation),
+        actionDigest: action.actionDigest,
+      },
+    ],
+    verification: complete
+      ? [
+          {
+            field: 'composite-closeout',
+            expectedHash: operation.preview.digest,
+            observedHash: operation.preview.digest,
+            status: 'verified',
+          },
+        ]
+      : operation.verification,
+    updatedAt: now,
+    lastSafeStep: complete ? 'complete' : 'planned',
+    retryDisposition: complete ? 'not-applicable' : 'safe-before-attempt',
+    outcome: {
+      classification: complete ? 'verified' : 'pending',
+      message: complete ? 'authoritative closeout read-back verified' : null,
+      verifiedAt: complete ? now : null,
+    },
+  };
+  await store.updateOperation(updated);
+  const batch = await store.readBatch(operation.correlationId);
+  if (batch && complete) {
+    await store.updateBatch(
+      reduceReviewedBatchOutcomes(
+        batch,
+        { [operation.operationId]: 'verified' },
+        now,
+      ),
+    );
+  }
+  return {
+    ...envelopeFrom(request, updated, metadata, null),
+    status: complete ? 'ok' : 'needs-review',
+    recovery: complete
+      ? []
+      : (() => {
+          const next = steps.find((step) => step.state === 'planned')!;
+          return [
+            {
+              code: 'next-closeout-substep-approval-required',
+              instruction: `Approve exact ${next.semanticOperation} preview ${next.previewDigest} in batch ${operation.correlationId}.`,
+            },
+          ];
+        })(),
+  };
+}
+
+async function continueDiscussionOperation(
+  request: RemoteCommandRequest,
+  operation: RemoteOperationRecord,
+  metadata: RemoteBindingMetadata | null,
+  action: ExternalActionEnvelope,
+  store: RemoteSyncStore,
+  dependencies: ProductionRemoteRunnerDependencies,
+): Promise<RemoteCommandEnvelope> {
+  if (!metadata) throw new Error('Discussion binding metadata is missing.');
+  const limit = Number(
+    operation.reason?.code.match(/^discussion-limit-(\d+)$/)?.[1],
+  );
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
+    throw new Error('Persisted discussion limit is invalid.');
+  }
+  const evidence = await acceptRemoteDiscussionObservation({
+    action,
+    observation: await dependencies.readObservationStdin(),
+    bindingId: operation.bindingId,
+    limit,
+    maxPages: 1,
+  });
+  await store.retireCurrentAction(operation.operationId, action);
+  const verified = evidence.status === 'available';
+  const updated = await store.transitionOperation(
+    operation.operationId,
+    operation.state,
+    {
+      state: verified ? 'verified' : 'blocked',
+      updatedAt: evidence.observedAt,
+      appendObservation: {
+        observedAt: evidence.observedAt,
+        classification: 'none',
+        evidenceDigest: semanticDigest(evidence),
+        actionDigest: action.actionDigest,
+      },
+      lastSafeStep: verified ? 'complete' : 'planned',
+      retryDisposition: verified ? 'not-applicable' : 'safe-before-attempt',
+      outcome: {
+        classification: verified ? 'verified' : 'blocked',
+        message: verified
+          ? 'bounded discussion evidence returned'
+          : 'discussion unavailable',
+        verifiedAt: verified ? evidence.observedAt : null,
+      },
+    },
+  );
+  return {
+    ...envelopeFrom(request, updated, metadata, null),
+    status: verified ? 'ok' : 'blocked',
+    discussionEvidence: evidence,
+  };
+}
+
+async function continueResolutionOperation(
+  request: RemoteCommandRequest,
+  operation: RemoteOperationRecord,
+  metadata: RemoteBindingMetadata | null,
+  action: ExternalActionEnvelope,
+  store: RemoteSyncStore,
+  dependencies: ProductionRemoteRunnerDependencies,
+): Promise<RemoteCommandEnvelope> {
+  if (!metadata) throw new Error('Resolution binding metadata is missing.');
+  const state = await store.readBindingState(metadata.bindingId);
+  if (!state) throw new Error('Resolution binding state is missing.');
+  if (!operation.approval) {
+    throw new Error('Resolution continuation lacks its bound approval.');
+  }
+  if (action.semanticOperation === 'read' && operation.verificationHandoff) {
+    const staleMutation = await store.readCurrentAction(operation.operationId);
+    if (
+      staleMutation &&
+      staleMutation.actionDigest ===
+        operation.verificationHandoff.acceptedMutation.actionDigest
+    ) {
+      await store.retireCurrentAction(operation.operationId, staleMutation);
+    }
+  }
+  const observation = acceptExternalObservation({
+    action,
+    observation: await dependencies.readObservationStdin(),
+    acceptedStepDigests: new Set(
+      operation.observations.flatMap((item) =>
+        item.actionDigest ? [item.actionDigest] : [],
+      ),
+    ),
+  });
+  if (observation.outcome.classification !== 'observed') {
+    const terminal =
+      observation.outcome.classification === 'rejected'
+        ? ('rejected' as const)
+        : ('uncertain' as const);
+    await store.retireCurrentAction(operation.operationId, action);
+    const updated = await store.transitionOperation(
+      operation.operationId,
+      operation.state,
+      {
+        state: terminal,
+        updatedAt: observation.observedAt,
+        outcome: {
+          classification: terminal,
+          message: observation.outcome.diagnosticCode,
+          verifiedAt: null,
+        },
+      },
+    );
+    return envelopeFrom(request, updated, metadata, null);
+  }
+  if (
+    operation.lifecycleOperation === 'recreate' &&
+    action.semanticOperation === 'search-duplicates' &&
+    !observation.outcome.identity
+  ) {
+    if (!operation.selectedExecution?.semanticCapabilities.includes('create')) {
+      throw new Error(
+        'Pinned resolution capability cannot create a replacement.',
+      );
+    }
+    const projection: OutboundProjection = {
+      title: state.localProjection.title,
+      description: state.localProjection.description,
+      priority: state.localProjection.priority,
+    };
+    const safety = assessOutboundProjectionSafety(projection, {
+      assessedAt: dependencies.now(),
+    });
+    const createAction = buildExternalAction({
+      operationId: operation.operationId,
+      stepId: durableId('resolution_create', dependencies.randomId()),
+      provider: operation.provider,
+      semanticOperation: 'create',
+      context: operation.providerContext,
+      intent: {
+        target: {
+          kind: metadata.target.kind,
+          id: metadata.target.id,
+          scope: metadata.target.scope,
+        },
+        fields: projection,
+        provenanceToken: metadata.provenanceToken,
+      },
+      expectedObservation: {
+        fields: Object.keys(projection),
+        requireIdentity: true,
+        stableId: null,
+        capabilityEvidenceDigest: operation.selectedExecution.evidenceDigest,
+      },
+      persistedPreview: {
+        projectionDigest: safety.projectionDigest,
+        safetyResultDigest: safety.resultDigest,
+      },
+      projection,
+      outboundSafety: safety,
+    });
+    await store.retireCurrentAction(operation.operationId, action);
+    await store.writeCurrentAction(operation.operationId, createAction);
+    const updated: RemoteOperationRecord = {
+      ...operation,
+      preview: {
+        ...operation.preview,
+        projectionDigest: safety.projectionDigest,
+        safetyResultDigest: safety.resultDigest,
+      },
+      observations: [
+        ...operation.observations,
+        {
+          observedAt: observation.observedAt,
+          classification: 'none',
+          evidenceDigest: semanticDigest(observation),
+          actionDigest: action.actionDigest,
+        },
+      ],
+      attempts: [
+        ...operation.attempts,
+        {
+          attemptId: createAction.stepId,
+          startedAt: dependencies.now(),
+          completedAt: null,
+          execution: operation.selectedExecution,
+          requestDigest: createAction.actionDigest,
+          receiptDigest: null,
+        },
+      ],
+      retryDisposition: 'reconcile-required',
+      updatedAt: dependencies.now(),
+    };
+    await store.updateOperation(updated);
+    return envelopeFrom(request, updated, metadata, createAction);
+  }
+  if (!observation.outcome.identity) {
+    throw new Error('Resolution observation lacks verified identity evidence.');
+  }
+  if (
+    action.semanticOperation === 'read' &&
+    operation.lifecycleOperation === 'recreate' &&
+    operation.verificationHandoff &&
+    !isDeepStrictEqual(
+      {
+        title: observation.outcome.fields.title,
+        description: observation.outcome.fields.description,
+        priority: observation.outcome.fields.priority,
+      },
+      {
+        title: state.localProjection.title,
+        description: state.localProjection.description,
+        priority: state.localProjection.priority,
+      },
+    )
+  ) {
+    throw new Error(
+      'Recreate authoritative read-back does not match the gated projection.',
+    );
+  }
+  if (action.semanticOperation === 'create') {
+    if (!operation.selectedExecution?.semanticCapabilities.includes('read')) {
+      throw new Error(
+        'Pinned recreate capability cannot perform authoritative read-back.',
+      );
+    }
+    const readAction = buildExternalAction({
+      operationId: operation.operationId,
+      stepId: durableId('resolution_verify', dependencies.randomId()),
+      provider: operation.provider,
+      semanticOperation: 'read',
+      context: operation.providerContext,
+      intent: { stableId: observation.outcome.identity.stableId },
+      expectedObservation: {
+        fields: ['title', 'description', 'priority'],
+        requireIdentity: true,
+        stableId: observation.outcome.identity.stableId,
+        capabilityEvidenceDigest:
+          operation.selectedExecution?.evidenceDigest ??
+          observation.capabilityEvidenceDigest,
+      },
+      persistedPreview: {},
+    });
+    await store.writeActionEvidence(operation.operationId, readAction);
+    const updated: RemoteOperationRecord = {
+      ...operation,
+      state: 'verification-pending',
+      currentAction: readAction as NonNullable<
+        RemoteOperationRecord['currentAction']
+      >,
+      verificationHandoff: {
+        acceptedMutation: {
+          actionDigest: action.actionDigest,
+          observedAt: observation.observedAt,
+          evidenceDigest: semanticDigest(observation),
+          stableId: observation.outcome.identity.stableId,
+        },
+        verificationAction: readAction as NonNullable<
+          RemoteOperationRecord['verificationHandoff']
+        >['verificationAction'],
+      },
+      attempts: operation.attempts.map((attempt) =>
+        attempt.attemptId === action.stepId
+          ? {
+              ...attempt,
+              completedAt: observation.observedAt,
+              receiptDigest: semanticDigest(observation),
+            }
+          : attempt,
+      ),
+      observations: [
+        ...operation.observations,
+        {
+          observedAt: observation.observedAt,
+          classification: 'committed',
+          evidenceDigest: semanticDigest(observation),
+          actionDigest: action.actionDigest,
+        },
+      ],
+      updatedAt: observation.observedAt,
+    };
+    await store.updateOperation(updated);
+    await store.retireCurrentAction(operation.operationId, action);
+    return envelopeFrom(request, updated, metadata, readAction);
+  }
+  const replacement = {
+    identity: {
+      stableId: observation.outcome.identity.stableId,
+      context: operation.providerContext,
+      aliases: observation.outcome.identity.aliases.map((value) => ({
+        kind: 'display' as const,
+        value,
+      })),
+    },
+    verifiedAt: observation.observedAt,
+    evidenceDigest: semanticDigest(observation),
+  };
+  if (
+    action.semanticOperation === 'read' &&
+    action.expectedObservation.stableId !== replacement.identity.stableId
+  ) {
+    throw new Error(
+      'Relink observation does not match the approved replacement.',
+    );
+  }
+  if (!operation.verificationHandoff) {
+    await store.retireCurrentAction(operation.operationId, action);
+  }
+  const common = {
+    operationId: operation.operationId,
+    binding: resolutionBindingFrom(metadata, state),
+    now: dependencies.now(),
+    previewDigest: operation.preview.digest,
+    approval: resolutionApprovalFrom(operation.approval, dependencies.now()),
+  };
+  const bridge = resolutionStoreBridge(
+    request.projectRoot,
+    store,
+    operation,
+    dependencies.now(),
+  );
+  const resolved =
+    operation.lifecycleOperation === 'relink'
+      ? await relinkBinding({ ...common, replacement }, bridge)
+      : await recreateBinding(
+          {
+            ...common,
+            searchDuplicates: async () => ({
+              kind: 'found-existing' as const,
+              replacement,
+            }),
+            createReplacement: async () => ({
+              kind: 'committed' as const,
+              replacement,
+            }),
+          },
+          bridge,
+        );
+  const journal = resolved.journal;
+  const updated = await completeResolutionOperation(
+    operation,
+    {
+      authority: operation.authority!,
+      approval: {
+        ...operation.approval,
+        actor: operation.approval.actor ?? 'current-cli-invocation',
+        operationClass: operation.lifecycleOperation as
+          | 'relink'
+          | 'detach'
+          | 'recreate',
+      },
+    },
+    journal,
+    store,
+    dependencies.now(),
+  );
+  return envelopeFrom(
+    request,
+    updated,
+    await store.readBindingMetadata(metadata.bindingId),
+    null,
+  );
 }
 
 async function resumeCreateActionHandoff(

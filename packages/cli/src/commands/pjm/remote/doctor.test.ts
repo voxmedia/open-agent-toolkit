@@ -468,4 +468,27 @@ describe('runRemoteDoctorChecks', () => {
     const checks = await runRemoteDoctorChecks(paths);
     expect(JSON.stringify(checks)).not.toContain(secret);
   });
+
+  it('fails closed when bounded association, retention, or capability evidence is unavailable', async () => {
+    const paths = await createPaths();
+    const checks = await runRemoteDoctorChecks({
+      ...paths,
+      policy: {},
+      evidenceAvailability: {
+        associations: false,
+        retention: false,
+        hostCapabilities: false,
+      },
+    });
+
+    expect(
+      checks.find((check) => check.name === 'pjm:remote_binding_ids'),
+    ).toMatchObject({ status: 'fail' });
+    expect(
+      checks.find((check) => check.name === 'pjm:remote_retention'),
+    ).toMatchObject({ status: 'fail' });
+    expect(
+      checks.find((check) => check.name === 'pjm:remote_host_capability'),
+    ).toMatchObject({ status: 'fail' });
+  });
 });

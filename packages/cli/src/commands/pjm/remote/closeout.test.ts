@@ -264,6 +264,87 @@ describe('per-binding composite closeout', () => {
     expect(result.batch.members).toHaveLength(1);
   });
 
+  it('uses the strict purpose intersection for composite closeout', async () => {
+    const result = await closeoutBindings(
+      {
+        batchId: 'batch_closeout_intersection',
+        projectPath: 'project',
+        now: NOW,
+        plans: [
+          {
+            bindingId: 'bnd_closeout_intersection',
+            operationId: 'op_closeout_intersection',
+            provider: 'linear',
+            purposes: ['planning', 'reference'],
+            annotation: {
+              authority: 'autonomous',
+              sourceDigest: 'sha256:a',
+              previewDigest: 'sha256:a-preview',
+            },
+            transition: {
+              authority: 'autonomous',
+              sourceDigest: 'sha256:t',
+              previewDigest: 'sha256:t-preview',
+            },
+          },
+        ],
+      },
+      memoryStore(),
+    );
+
+    expect(result.operations[0]).toMatchObject({
+      state: 'blocked',
+      substeps: [],
+    });
+  });
+
+  it('requires fresh exact substep approval before execution', async () => {
+    const store = memoryStore();
+    const created = await closeoutBindings(
+      {
+        batchId: 'batch_closeout_approval',
+        projectPath: 'project',
+        now: NOW,
+        plans: [
+          {
+            bindingId: 'bnd_closeout_approval',
+            operationId: 'op_closeout_approval',
+            provider: 'linear',
+            purposes: ['source'],
+            annotation: {
+              authority: 'user-approved',
+              sourceDigest: 'sha256:a',
+              previewDigest: 'sha256:a-preview',
+            },
+          },
+        ],
+      },
+      store,
+    );
+    await expect(
+      resumeCloseoutOperation(
+        created.operations[0]!,
+        store,
+        async () => 'verified',
+      ),
+    ).rejects.toThrow(/exact current composite preview/i);
+    await expect(
+      resumeCloseoutOperation(
+        created.operations[0]!,
+        store,
+        async () => 'verified',
+        undefined,
+        () => NOW,
+        {
+          kind: 'approval',
+          previewDigest: 'sha256:a-preview',
+          authorizedAt: NOW,
+          source: 'synthetic-test-approval',
+        },
+      ),
+    ).resolves.toMatchObject({ state: 'verified' });
+  });
+
   it('defers delivery closeout to provider automation', async () => {
     const result = await closeoutBindings(
       {

@@ -22,6 +22,11 @@ export interface RemoteDoctorInput {
   now?: string;
   staleAfterMs?: number;
   retentionBreaches?: readonly string[];
+  evidenceAvailability?: {
+    associations: boolean;
+    retention: boolean;
+    hostCapabilities: boolean;
+  };
   hostCapabilityAvailability?: ReadonlyArray<{
     bindingId: string;
     available: boolean;
@@ -96,6 +101,15 @@ export async function runRemoteDoctorChecks(
     .filter((entry) => !entry.available)
     .map((entry) => entry.bindingId)
     .sort();
+  if (input.evidenceAvailability?.associations === false) {
+    identityFindings.push('association-evidence-unavailable');
+  }
+  if (input.evidenceAvailability?.retention === false) {
+    retentionFindings.push('retention-evidence-unavailable');
+  }
+  if (input.evidenceAvailability?.hostCapabilities === false) {
+    unavailableCapabilities.push('host-capability-evidence-unavailable');
+  }
 
   return [
     findingCheck(

@@ -1049,4 +1049,45 @@ describe('RemoteSyncStore', () => {
       }),
     ).rejects.toBeTruthy();
   });
+
+  it('atomically replaces only existing metadata and operation records', async () => {
+    const { store } = await createStore();
+    const originalMetadata = metadata();
+    const originalOperation = operation();
+    await store.materializeIntakeBinding(originalMetadata);
+    await store.createOperation(originalOperation);
+
+    await store.updateBindingMetadata({
+      ...originalMetadata,
+      lifecycle: 'tombstoned',
+      updatedAt: '2026-08-31T00:02:00.000Z',
+    });
+    await store.updateOperation({
+      ...originalOperation,
+      state: 'blocked',
+      updatedAt: '2026-08-31T00:02:00.000Z',
+      outcome: {
+        classification: 'blocked',
+        message: 'bounded resolution stop',
+        verifiedAt: null,
+      },
+    });
+
+    expect(
+      await store.readBindingMetadata(originalMetadata.bindingId),
+    ).toMatchObject({
+      lifecycle: 'tombstoned',
+    });
+    expect(
+      await store.readOperation(originalOperation.operationId),
+    ).toMatchObject({
+      state: 'blocked',
+    });
+    await expect(
+      store.updateBindingMetadata(metadata('bnd_missing_123')),
+    ).rejects.toThrow(/does not exist/i);
+    await expect(
+      store.updateOperation(operation('op_missing_123')),
+    ).rejects.toThrow(/does not exist/i);
+  });
 });

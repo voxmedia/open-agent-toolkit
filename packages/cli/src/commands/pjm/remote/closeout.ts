@@ -1,5 +1,6 @@
 import { buildReviewedBatch, reduceReviewedBatchOutcomes } from './batch';
 import { semanticDigest, type RemoteProvider } from './provider';
+import { composePurposePolicies } from './purpose-policy';
 import type { RemoteBatchRecord, RemoteOperationRecord } from './schema';
 
 export type CloseoutStepState = RemoteOperationRecord['state'];
@@ -79,6 +80,13 @@ export type ExecuteCloseoutStep = (
   step: CloseoutSubstep,
 ) => Promise<'verified' | 'uncertain' | 'rejected' | 'blocked' | 'failed'>;
 
+export interface CloseoutAuthorization {
+  kind: 'approval' | 'instruction';
+  previewDigest: string;
+  authorizedAt: string;
+  source: string;
+}
+
 export async function closeoutBindings(
   input: CloseoutInput,
   store: CloseoutStore,
@@ -131,6 +139,7 @@ export async function resumeCloseoutOperation(
   executeStep: ExecuteCloseoutStep,
   crash?: (point: CloseoutCrashPoint) => void,
   now: () => string = () => new Date().toISOString(),
+  authorization?: CloseoutAuthorization,
 ): Promise<CloseoutJournal> {
   let current = cloneJournal(journal);
   for (let index = 0; index < current.substeps.length; index += 1) {
@@ -156,6 +165,8 @@ export async function resumeCloseoutOperation(
     );
     if (!dependenciesVerified) continue;
 
+    assertStepAuthorized(step, authorization, now());
+
     crash?.(`before-${step.kind}`);
     current.substeps[index] = { ...step, state: 'attempt-started' };
     current = withReducedState(current, now());
@@ -173,6 +184,32 @@ export async function resumeCloseoutOperation(
   current = withReducedState(current, now());
   await store.writeOperation(current);
   return current;
+}
+
+function assertStepAuthorized(
+  step: CloseoutSubstep,
+  authorization: CloseoutAuthorization | undefined,
+  currentTime: string,
+): void {
+  if (step.approvalRequirement === 'none') return;
+  const age = authorization
+    ? Date.parse(currentTime) - Date.parse(authorization.authorizedAt)
+    : Number.POSITIVE_INFINITY;
+  const expectedKind =
+    step.approvalRequirement === 'fresh-approval' ? 'approval' : 'instruction';
+  if (
+    !authorization ||
+    authorization.kind !== expectedKind ||
+    authorization.previewDigest !== step.previewDigest ||
+    !authorization.source ||
+    !Number.isFinite(age) ||
+    age < 0 ||
+    age > 5 * 60 * 1_000
+  ) {
+    throw new Error(
+      `Closeout ${step.approvalRequirement} must authorize the exact current composite preview.`,
+    );
+  }
 }
 
 function withReducedState(
@@ -207,11 +244,20 @@ function buildCloseoutJournal(
     );
   }
   const purposes = new Set(plan.purposes);
+  const composed = composePurposePolicies([...purposes]);
   const substeps: CloseoutSubstep[] = [];
-  if (plan.annotation && (purposes.has('source') || purposes.has('planning'))) {
+  if (
+    plan.annotation &&
+    composed.closeout.annotation === 'propose' &&
+    composed.lifecycle.includes('annotate')
+  ) {
     substeps.push(buildSubstep(plan, 'annotation', plan.annotation, []));
   }
-  if (plan.transition && purposes.has('planning')) {
+  if (
+    plan.transition &&
+    composed.closeout.transition === 'propose' &&
+    composed.lifecycle.includes('transition')
+  ) {
     substeps.push(
       buildSubstep(
         plan,
@@ -221,11 +267,13 @@ function buildCloseoutJournal(
       ),
     );
   }
-  const state = plan.providerAutomation
-    ? 'verified'
-    : substeps.length === 0
-      ? 'blocked'
-      : reduceCloseoutState(substeps);
+  const state =
+    plan.providerAutomation &&
+    composed.closeout.transition === 'provider-automation'
+      ? 'verified'
+      : substeps.length === 0
+        ? 'blocked'
+        : reduceCloseoutState(substeps);
   const previewDigest = semanticDigest({
     bindingId: plan.bindingId,
     operationId: plan.operationId,

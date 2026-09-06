@@ -5,6 +5,7 @@ import {
   readFile,
   readdir,
   rm,
+  unlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -16,6 +17,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildExternalAction } from './external-action';
 import { createPjmRemoteCommand, type RemoteCommandRequest } from './index';
 import { resolveLocalProjection } from './local-projection';
+import { semanticDigest } from './provider';
 import type { RemoteBindingMetadata, RemoteBindingState } from './schema';
 import {
   createProductionRemoteRunner,
@@ -223,7 +225,13 @@ describe('production lifecycle composition', () => {
       join(repository, migrationPath),
       '---\ntitle: Migration fixture\nassociated_issues:\n  - linear:issue-legacy\n---\n\n## Description\n\nUnrelated content remains unchanged.\n',
     );
-    await store.materializeIntakeBinding({
+    const associationOnlyMigrationPath =
+      '.oat/repo/pjm/backlog/items/association-only.md';
+    await writeFile(
+      join(repository, associationOnlyMigrationPath),
+      '---\ntitle: Association-only fixture\nassociated_issues:\n  - linear:association-only\n---\n\n## Description\n\nNo binding metadata exists for this fixture.\n',
+    );
+    const migrationBinding: RemoteBindingMetadata = {
       ...binding(['source']),
       bindingId: 'bnd_migrate_001',
       target: {
@@ -238,17 +246,34 @@ describe('production lifecycle composition', () => {
         aliases: [],
       },
       provenanceToken: 'oat-binding:bnd_migrate_001',
+    };
+    await store.materializeIntakeBinding(migrationBinding);
+    await store.writeBindingState({
+      ...state({ snapshot: null }),
+      bindingId: migrationBinding.bindingId,
     });
     let sequence = 0;
+    const capability = {
+      provider: 'linear' as const,
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector' as const,
+      availability: 'available' as const,
+      semanticCapabilities: ['read', 'annotate', 'transition'],
+      evidenceDigest: 'sha256:closeout-capability',
+      observedAt: timestamp,
+    };
+    let runnerInput: unknown = capability;
     const runner = createProductionRemoteRunner({
       now: () => timestamp,
       randomId: () => `routing_${(sequence += 1)}`,
+      readObservationStdin: async () => runnerInput,
     });
 
     const closeout = await runner({
       operation: 'closeout',
       projectRoot: repository,
       projectPath: 'shared/example',
+      capabilityEvidenceStdin: true,
     });
     expect(closeout).toMatchObject({
       status: 'needs-review',
@@ -263,6 +288,151 @@ describe('production lifecycle composition', () => {
     await expect(
       readdir(store.locations.operational.batchesDir),
     ).resolves.toHaveLength(1);
+    const closeoutBatchFile = (
+      await readdir(store.locations.operational.batchesDir)
+    )[0]!;
+    const closeoutBatchId = closeoutBatchFile.replace(/\.json$/, '');
+    const closeoutBatch = await store.readBatch(closeoutBatchId);
+    const closeoutOperationId = closeoutBatch!.members[0]!.operationId;
+    let closeoutOperation = await store.readOperation(closeoutOperationId);
+    const authorityPath = join(repository, 'resolution-authority.json');
+    const writeInteractiveAuthority = async (
+      operationClass: 'annotate' | 'transition',
+      previewDigest: string,
+    ) =>
+      writeFile(
+        authorityPath,
+        JSON.stringify({
+          schemaVersion: 1,
+          kind: 'interactive',
+          sourceId: 'synthetic-test',
+          invocationId: `${operationClass}-invocation`,
+          issuedAt: timestamp,
+          expiresAt: '2026-08-31T12:05:00.000Z',
+          instruction: {
+            operationClass,
+            targetId: projectBinding.bindingId,
+            evidenceDigest: `sha256:${operationClass}-instruction`,
+          },
+          approval: {
+            previewDigest,
+            operationClass,
+            approvedAt: timestamp,
+            actor: 'synthetic-reviewer',
+            source: 'synthetic-test-approval',
+          },
+        }),
+      );
+    const completeCloseoutAction = async (
+      action: NonNullable<typeof closeout.externalAction>,
+    ) => {
+      runnerInput = {
+        schemaVersion: 1,
+        operationId: action.operationId,
+        stepId: action.stepId,
+        actionDigest: action.actionDigest,
+        observedAt: timestamp,
+        surfaceKind: 'connector',
+        capabilityEvidenceDigest: 'sha256:closeout-capability',
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        outcome: {
+          classification: 'observed',
+          identity: { stableId: 'issue-1', aliases: [] },
+          fields:
+            action.semanticOperation === 'transition'
+              ? { status: 'completed' }
+              : {},
+          revisionDigest: `sha256:${action.semanticOperation}-receipt`,
+          diagnosticCode: null,
+        },
+      };
+      const verificationHandoff = await runner({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: closeoutOperationId,
+        observationStdin: true,
+      });
+      expect(verificationHandoff.externalAction).toMatchObject({
+        semanticOperation: 'read',
+      });
+      const readAction = verificationHandoff.externalAction!;
+      runnerInput = {
+        schemaVersion: 1,
+        operationId: readAction.operationId,
+        stepId: readAction.stepId,
+        actionDigest: readAction.actionDigest,
+        observedAt: timestamp,
+        surfaceKind: 'connector',
+        capabilityEvidenceDigest: 'sha256:closeout-capability',
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        outcome: {
+          classification: 'observed',
+          identity: { stableId: 'issue-1', aliases: [] },
+          fields:
+            action.semanticOperation === 'transition'
+              ? { status: 'completed' }
+              : {},
+          ...(action.semanticOperation === 'annotate'
+            ? {
+                extensions: {
+                  annotationDigest: semanticDigest(action.intent.body),
+                },
+              }
+            : {}),
+          revisionDigest: 'sha256:closeout-readback',
+          diagnosticCode: null,
+        },
+      };
+      return runner({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: closeoutOperationId,
+        observationStdin: true,
+      });
+    };
+    for (const operationClass of ['annotate', 'transition'] as const) {
+      closeoutOperation = await store.readOperation(closeoutOperationId);
+      const step = closeoutOperation!.steps.find(
+        (candidate) => candidate.semanticOperation === operationClass,
+      )!;
+      await writeInteractiveAuthority(operationClass, step.previewDigest);
+      runnerInput = capability;
+      const actionHandoff = await runner({
+        operation: 'closeout',
+        projectRoot: repository,
+        projectPath: 'shared/example',
+        previewOperationId: closeoutBatchId,
+        capabilityEvidenceStdin: true,
+        authorityEvidenceFile: authorityPath,
+      });
+      expect(actionHandoff.externalAction).toMatchObject({
+        semanticOperation: operationClass,
+        outboundSafety: {
+          projectionDigest: expect.stringMatching(/^sha256:/),
+          resultDigest: expect.stringMatching(/^sha256:/),
+        },
+      });
+      if (operationClass === 'annotate') {
+        await unlink(
+          join(
+            store.locations.operational.operationsDir,
+            `${closeoutOperationId}.action`,
+          ),
+        );
+      }
+      const completed = await completeCloseoutAction(
+        actionHandoff.externalAction!,
+      );
+      expect(completed.status).toBe(
+        operationClass === 'annotate' ? 'needs-review' : 'ok',
+      );
+    }
+    expect(await store.readBatch(closeoutBatchId)).toMatchObject({
+      state: 'complete',
+      outcomes: { [closeoutOperationId]: 'verified' },
+    });
 
     const discussion = await runner({
       operation: 'discussion',
@@ -276,10 +446,92 @@ describe('production lifecycle composition', () => {
       results: [{ diagnosticCode: 'discussion-capability-unavailable' }],
     });
 
+    let discussionInput: unknown = {
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['read-discussion'],
+      evidenceDigest: 'sha256:discussion-capability',
+      observedAt: timestamp,
+    };
+    const discussionRunner = createProductionRemoteRunner({
+      now: () => timestamp,
+      randomId: vi
+        .fn()
+        .mockReturnValueOnce('discussion-operation')
+        .mockReturnValueOnce('discussion-step'),
+      readObservationStdin: async () => discussionInput,
+    });
+    const discussionHandoff = await discussionRunner({
+      operation: 'discussion',
+      projectRoot: repository,
+      bindingId: projectBinding.bindingId,
+      discussionLimit: 2,
+      capabilityEvidenceStdin: true,
+    });
+    expect(discussionHandoff).toMatchObject({
+      status: 'pending',
+      persisted: true,
+      externalAction: { semanticOperation: 'read-discussion' },
+    });
+    const discussionAction = discussionHandoff.externalAction!;
+    const syntheticSensitiveBody =
+      'authorization: bearer synthetic_fixture_value_123456789';
+    discussionInput = {
+      schemaVersion: 1,
+      operationId: discussionAction.operationId,
+      stepId: discussionAction.stepId,
+      actionDigest: discussionAction.actionDigest,
+      observedAt: timestamp,
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      capabilityEvidenceDigest: 'sha256:discussion-capability',
+      availability: 'available',
+      items: [
+        { id: 'comment-1', body: syntheticSensitiveBody, createdAt: timestamp },
+        {
+          id: 'comment-2',
+          body: 'Bounded public discussion.',
+          createdAt: timestamp,
+        },
+      ],
+      nextCursor: null,
+    };
+    const discussionComplete = await discussionRunner({
+      operation: 'operation-continue',
+      projectRoot: repository,
+      operationId: discussionAction.operationId,
+      observationStdin: true,
+    });
+    expect(discussionComplete).toMatchObject({
+      status: 'ok',
+      discussionEvidence: {
+        persisted: false,
+        truncated: false,
+        items: [
+          { id: 'comment-1', incomplete: true },
+          { id: 'comment-2', incomplete: false },
+        ],
+      },
+    });
+    expect(discussionComplete.discussionEvidence?.items[0]?.body).not.toBe(
+      syntheticSensitiveBody,
+    );
+    expect(
+      await readFile(
+        join(
+          store.locations.operational.operationsDir,
+          `${discussionAction.operationId}.json`,
+        ),
+        'utf8',
+      ),
+    ).not.toContain(syntheticSensitiveBody);
+
     const resolution = await runner({
       operation: 'resolve',
       projectRoot: repository,
-      bindingId: projectBinding.bindingId,
+      bindingId: migrationBinding.bindingId,
       resolutionKind: 'detach',
     });
     expect(resolution).toMatchObject({
@@ -287,12 +539,314 @@ describe('production lifecycle composition', () => {
       persisted: true,
       results: [{ diagnosticCode: 'fresh-approval-and-evidence-required' }],
     });
+    const resolutionOperationId = resolution.recovery[0]?.instruction.match(
+      /preview (op_[A-Za-z0-9_-]+)/,
+    )?.[1];
+    expect(resolutionOperationId).toBeTruthy();
+    const resolutionOperation = await store.readOperation(
+      resolutionOperationId!,
+    );
+    await writeFile(
+      authorityPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        kind: 'interactive',
+        sourceId: 'synthetic-test',
+        invocationId: 'detach-invocation',
+        issuedAt: timestamp,
+        expiresAt: '2026-08-31T12:05:00.000Z',
+        instruction: {
+          operationClass: 'detach',
+          targetId: migrationBinding.bindingId,
+          evidenceDigest: 'sha256:detach-instruction',
+        },
+        approval: {
+          previewDigest: resolutionOperation!.preview.digest,
+          operationClass: 'detach',
+          approvedAt: timestamp,
+          actor: 'synthetic-reviewer',
+          source: 'synthetic-test-approval',
+        },
+      }),
+    );
+    const detached = await runner({
+      operation: 'resolve',
+      projectRoot: repository,
+      bindingId: migrationBinding.bindingId,
+      resolutionKind: 'detach',
+      previewOperationId: resolutionOperationId,
+      authorityEvidenceFile: authorityPath,
+    });
+    expect(detached).toMatchObject({ status: 'ok', persisted: true });
+    expect(
+      await store.readBindingMetadata(migrationBinding.bindingId),
+    ).toMatchObject({ lifecycle: 'tombstoned' });
+
+    const relinkPreview = await runner({
+      operation: 'resolve',
+      projectRoot: repository,
+      bindingId: migrationBinding.bindingId,
+      resolutionKind: 'relink',
+      providerRef: 'linear:issue-relocated',
+    });
+    const relinkOperationId = relinkPreview.recovery[0]?.instruction.match(
+      /preview (op_[A-Za-z0-9_-]+)/,
+    )?.[1];
+    const relinkOperation = await store.readOperation(relinkOperationId!);
+    await writeFile(
+      authorityPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        kind: 'interactive',
+        sourceId: 'synthetic-test',
+        invocationId: 'relink-invocation',
+        issuedAt: timestamp,
+        expiresAt: '2026-08-31T12:05:00.000Z',
+        instruction: {
+          operationClass: 'relink',
+          targetId: migrationBinding.bindingId,
+          evidenceDigest: 'sha256:relink-instruction',
+        },
+        approval: {
+          previewDigest: relinkOperation!.preview.digest,
+          operationClass: 'relink',
+          approvedAt: timestamp,
+          actor: 'synthetic-reviewer',
+          source: 'synthetic-test-approval',
+        },
+      }),
+    );
+    runnerInput = {
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['read'],
+      evidenceDigest: 'sha256:resolution-capability',
+      observedAt: timestamp,
+    };
+    const relinkHandoff = await runner({
+      operation: 'resolve',
+      projectRoot: repository,
+      bindingId: migrationBinding.bindingId,
+      resolutionKind: 'relink',
+      providerRef: 'linear:issue-relocated',
+      previewOperationId: relinkOperationId,
+      capabilityEvidenceStdin: true,
+      authorityEvidenceFile: authorityPath,
+    });
+    const relinkAction = relinkHandoff.externalAction!;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: relinkAction.operationId,
+      stepId: relinkAction.stepId,
+      actionDigest: relinkAction.actionDigest,
+      observedAt: timestamp,
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest: 'sha256:resolution-capability',
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'observed',
+        identity: { stableId: 'issue-relocated', aliases: ['RELOCATED-1'] },
+        fields: { title: 'Relocated issue' },
+        revisionDigest: 'sha256:relink-read',
+        diagnosticCode: null,
+      },
+    };
+    expect(
+      await runner({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: relinkOperationId,
+        observationStdin: true,
+      }),
+    ).toMatchObject({ status: 'ok' });
+    expect(
+      await store.readBindingMetadata(migrationBinding.bindingId),
+    ).toMatchObject({
+      lifecycle: 'active',
+      remoteIdentity: { stableId: 'issue-relocated' },
+    });
+
+    const recreatePreview = await runner({
+      operation: 'resolve',
+      projectRoot: repository,
+      bindingId: migrationBinding.bindingId,
+      resolutionKind: 'recreate',
+    });
+    const recreateOperationId = recreatePreview.recovery[0]?.instruction.match(
+      /preview (op_[A-Za-z0-9_-]+)/,
+    )?.[1];
+    const recreateOperation = await store.readOperation(recreateOperationId!);
+    await writeFile(
+      authorityPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        kind: 'interactive',
+        sourceId: 'synthetic-test',
+        invocationId: 'recreate-invocation',
+        issuedAt: timestamp,
+        expiresAt: '2026-08-31T12:05:00.000Z',
+        instruction: {
+          operationClass: 'recreate',
+          targetId: migrationBinding.bindingId,
+          evidenceDigest: 'sha256:recreate-instruction',
+        },
+        approval: {
+          previewDigest: recreateOperation!.preview.digest,
+          operationClass: 'recreate',
+          approvedAt: timestamp,
+          actor: 'synthetic-reviewer',
+          source: 'synthetic-test-approval',
+        },
+      }),
+    );
+    runnerInput = {
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['search-duplicates', 'create', 'read'],
+      evidenceDigest: 'sha256:recreate-capability',
+      observedAt: timestamp,
+    };
+    const recreateHandoff = await runner({
+      operation: 'resolve',
+      projectRoot: repository,
+      bindingId: migrationBinding.bindingId,
+      resolutionKind: 'recreate',
+      previewOperationId: recreateOperationId,
+      capabilityEvidenceStdin: true,
+      authorityEvidenceFile: authorityPath,
+    });
+    const searchAction = recreateHandoff.externalAction!;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: searchAction.operationId,
+      stepId: searchAction.stepId,
+      actionDigest: searchAction.actionDigest,
+      observedAt: timestamp,
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest: 'sha256:recreate-capability',
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'observed',
+        identity: null,
+        fields: {},
+        revisionDigest: 'sha256:recreate-search',
+        diagnosticCode: null,
+      },
+    };
+    const createHandoff = await runner({
+      operation: 'operation-continue',
+      projectRoot: repository,
+      operationId: recreateOperationId,
+      observationStdin: true,
+    });
+    expect(createHandoff.externalAction).toMatchObject({
+      semanticOperation: 'create',
+      outboundSafety: {
+        projectionDigest: expect.stringMatching(/^sha256:/),
+        resultDigest: expect.stringMatching(/^sha256:/),
+      },
+    });
+    const createAction = createHandoff.externalAction!;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: createAction.operationId,
+      stepId: createAction.stepId,
+      actionDigest: createAction.actionDigest,
+      observedAt: timestamp,
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest: 'sha256:recreate-capability',
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'observed',
+        identity: { stableId: 'issue-recreated', aliases: ['RECREATED-1'] },
+        fields: {
+          title: 'Local title',
+          description: 'Local managed description',
+          priority: 'high',
+        },
+        revisionDigest: 'sha256:recreate-create',
+        diagnosticCode: null,
+      },
+    };
+    const recreateReadHandoff = await runner({
+      operation: 'operation-continue',
+      projectRoot: repository,
+      operationId: recreateOperationId,
+      observationStdin: true,
+    });
+    expect(recreateReadHandoff.externalAction).toMatchObject({
+      semanticOperation: 'read',
+    });
+    const recreateReadAction = recreateReadHandoff.externalAction!;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: recreateReadAction.operationId,
+      stepId: recreateReadAction.stepId,
+      actionDigest: recreateReadAction.actionDigest,
+      observedAt: timestamp,
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest: 'sha256:recreate-capability',
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'observed',
+        identity: { stableId: 'issue-recreated', aliases: ['RECREATED-1'] },
+        fields: {
+          title: 'Local title',
+          description: 'Local managed description',
+          priority: 'high',
+        },
+        revisionDigest: 'sha256:recreate-readback',
+        diagnosticCode: null,
+      },
+    };
+    expect(
+      await runner({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: recreateOperationId,
+        observationStdin: true,
+      }),
+    ).toMatchObject({ status: 'ok' });
+    expect(
+      await store.readBindingMetadata(migrationBinding.bindingId),
+    ).toMatchObject({ remoteIdentity: { stableId: 'issue-recreated' } });
 
     const doctor = await runner({
       operation: 'doctor',
       projectRoot: repository,
     });
     expect(doctor).toMatchObject({ status: 'blocked', persisted: true });
+    runnerInput = {
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['read'],
+      evidenceDigest: 'sha256:doctor-capability',
+      observedAt: timestamp,
+    };
+    const doctorWithEvidence = await runner({
+      operation: 'doctor',
+      projectRoot: repository,
+      capabilityEvidenceStdin: true,
+    });
+    expect(doctorWithEvidence).toMatchObject({
+      status: 'blocked',
+      persisted: true,
+    });
+    expect(
+      doctorWithEvidence.recovery.some((item) =>
+        item.code.includes('host_capability'),
+      ),
+    ).toBe(false);
 
     const migration = await runner({
       operation: 'migrate',
@@ -316,6 +870,9 @@ describe('production lifecycle composition', () => {
     expect(await readFile(join(repository, migrationPath), 'utf8')).toContain(
       'type: linear\n    ref: issue-legacy',
     );
+    expect(
+      await readFile(join(repository, associationOnlyMigrationPath), 'utf8'),
+    ).toContain('type: linear\n    ref: association-only');
     await expect(
       readFile(
         join(store.locations.operational.root, 'shared-storage-preview.json'),

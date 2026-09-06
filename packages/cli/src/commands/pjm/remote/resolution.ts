@@ -88,6 +88,7 @@ export async function relinkBinding(
     throw new Error(`Replacement identity is already bound by '${duplicate}'.`);
   }
   let journal = await store.readJournal(input.operationId);
+  assertJournalMatches(journal, input, 'relink');
   if (!journal) {
     journal = createJournal(input, 'relink');
     await store.writeJournal(journal);
@@ -137,6 +138,7 @@ export async function detachBinding(
 ): Promise<{ binding: ResolutionBinding; journal: ResolutionJournal }> {
   assertFreshApproval(input);
   let journal = await store.readJournal(input.operationId);
+  assertJournalMatches(journal, input, 'detach');
   if (!journal) {
     journal = createJournal(input, 'detach');
     await store.writeJournal(journal);
@@ -210,6 +212,7 @@ export async function recreateBinding(
 }> {
   assertFreshApproval(input);
   let journal = await store.readJournal(input.operationId);
+  assertJournalMatches(journal, input, 'recreate');
   if (journal?.createAttempted && !journal.bindingTransitionCompleted) {
     return {
       status: 'uncertain',
@@ -310,6 +313,23 @@ export async function recreateBinding(
     input.crash?.('after-association');
   }
   return { status: 'verified', binding: journal.resultingBinding!, journal };
+}
+
+function assertJournalMatches(
+  journal: ResolutionJournal | null,
+  input: CommonResolutionInput,
+  kind: ResolutionJournal['kind'],
+): void {
+  if (
+    journal &&
+    (journal.kind !== kind ||
+      journal.bindingId !== input.binding.bindingId ||
+      journal.previewDigest !== input.previewDigest)
+  ) {
+    throw new Error(
+      'Persisted resolution journal does not match the requested kind, binding, and preview.',
+    );
+  }
 }
 
 function assertFreshApproval(input: CommonResolutionInput): void {

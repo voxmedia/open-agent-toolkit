@@ -208,6 +208,17 @@ export class RemoteSyncStore {
     );
   }
 
+  async updateBindingMetadata(record: RemoteBindingMetadata): Promise<void> {
+    const parsed = RemoteBindingMetadataSchema.parse(record);
+    if (!(await this.readBindingMetadata(parsed.bindingId))) {
+      throw new Error(`Remote binding '${parsed.bindingId}' does not exist.`);
+    }
+    await this.#atomicWrite(
+      join(this.locations.portable.bindingsDir, `${parsed.bindingId}.json`),
+      parsed,
+    );
+  }
+
   async readBindingState(
     bindingId: string,
   ): Promise<RemoteBindingState | null> {
@@ -411,6 +422,22 @@ export class RemoteSyncStore {
     );
     assertRecordIdMatchesFilename(path, parsed.operationId);
     await this.#exclusiveWrite(path, parsed);
+  }
+
+  async updateOperation(record: RemoteOperationRecord): Promise<void> {
+    const parsed = RemoteOperationRecordSchema.parse(record);
+    if (!(await this.readOperation(parsed.operationId))) {
+      throw new Error(
+        `Remote operation '${parsed.operationId}' does not exist.`,
+      );
+    }
+    await this.#atomicWrite(
+      join(
+        this.locations.operational.operationsDir,
+        `${parsed.operationId}.json`,
+      ),
+      parsed,
+    );
   }
 
   async createBindingIntent(intent: PlannedBindingCreate): Promise<void> {

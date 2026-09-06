@@ -67,6 +67,28 @@ describe('bounded discussion evidence', () => {
     expect(result.truncated).toBe(true);
   });
 
+  it('does not mark an exact complete page as truncated', async () => {
+    const result = await readRemoteDiscussion(
+      {
+        bindingId: 'bnd_discussion_001',
+        limit: 2,
+        maxPages: 1,
+        observedAt: NOW,
+      },
+      source([
+        {
+          items: [
+            { id: 'c1', body: 'one', createdAt: NOW },
+            { id: 'c2', body: 'two', createdAt: NOW },
+          ],
+          nextCursor: null,
+        },
+      ]),
+    );
+    expect(result.items).toHaveLength(2);
+    expect(result.truncated).toBe(false);
+  });
+
   it('suppresses an entire discussion body on a conservative signal', async () => {
     const result = await readRemoteDiscussion(
       {

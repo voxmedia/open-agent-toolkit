@@ -149,6 +149,46 @@ describe('remote anomaly resolution', () => {
     },
   );
 
+  it('rejects a persisted journal whose kind, binding, or preview drifts on restart', async () => {
+    const store = memoryStore();
+    store.journals.set('op_relink_001', {
+      schemaVersion: 1,
+      operationId: 'op_relink_001',
+      bindingId: binding.bindingId,
+      kind: 'detach',
+      previewDigest: approval.previewDigest,
+      state: 'partial',
+      bindingTransitionCompleted: true,
+      associationCompleted: false,
+      resultingBinding: binding,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+
+    await expect(
+      relinkBinding(
+        {
+          operationId: 'op_relink_001',
+          binding,
+          now: NOW,
+          previewDigest: approval.previewDigest,
+          approval,
+          replacement: {
+            identity: {
+              stableId: 'new-1',
+              context: { workspaceId: 'ws-1' },
+              aliases: [],
+            },
+            verifiedAt: NOW,
+            evidenceDigest: 'sha256:verified',
+          },
+        },
+        store,
+      ),
+    ).rejects.toThrow(/does not match/i);
+    expect(store.associationWrites).toEqual([]);
+  });
+
   it('tombstones detach state while retaining evidence and optional reference', async () => {
     const store = memoryStore();
     const result = await detachBinding(

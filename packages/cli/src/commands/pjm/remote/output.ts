@@ -1,3 +1,4 @@
+import type { DiscussionEvidence } from './discussion';
 import type { ExternalActionEnvelope } from './external-action';
 import type { BindingPreview } from './preview';
 
@@ -27,6 +28,7 @@ export interface RemoteCommandEnvelope {
     diagnosticCode: string | null;
   }>;
   externalAction: ExternalActionEnvelope | null;
+  discussionEvidence?: DiscussionEvidence;
   approvalPreview?: {
     operationId: string;
     digest: string;
@@ -75,6 +77,17 @@ export function renderRemoteCommand(
   ];
   if (envelope.externalAction)
     lines.push('external action: durable handoff required');
+  if (envelope.discussionEvidence) {
+    lines.push(
+      `discussion evidence: ${envelope.discussionEvidence.status}; items=${envelope.discussionEvidence.items.length}; pages=${envelope.discussionEvidence.pagesRead}; truncated=${String(envelope.discussionEvidence.truncated)}; persisted=${String(envelope.discussionEvidence.persisted)}`,
+    );
+    lines.push(
+      ...envelope.discussionEvidence.items.map(
+        (item) =>
+          `discussion item ${item.id}: ${item.body}${item.incomplete ? ' (incomplete)' : ''}`,
+      ),
+    );
+  }
   if (envelope.approvalPreview) {
     const preview = envelope.approvalPreview;
     lines.push(

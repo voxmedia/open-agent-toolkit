@@ -134,6 +134,38 @@ describe('remote command output', () => {
     );
   });
 
+  it('renders bounded non-persistent discussion evidence without changing status parity', () => {
+    const value = envelope('ok');
+    value.discussionEvidence = {
+      status: 'available',
+      bindingId: 'bnd_binding_001',
+      observedAt: '2026-08-31T12:00:00.000Z',
+      items: [
+        {
+          id: 'comment-1',
+          body: '[suppressed sensitive field]',
+          createdAt: '2026-08-31T11:59:00.000Z',
+          incomplete: true,
+        },
+      ],
+      pagesRead: 1,
+      truncated: false,
+      persisted: false,
+    };
+
+    const json = JSON.parse(
+      renderRemoteCommand(value, { json: true }).stdout,
+    ) as RemoteCommandEnvelope;
+    expect(json.discussionEvidence).toEqual(value.discussionEvidence);
+    expect(renderRemoteCommand(value, { json: false })).toMatchObject({
+      exitCode: 0,
+      stderr: '',
+    });
+    expect(renderRemoteCommand(value, { json: false }).stdout).toContain(
+      'discussion evidence: available; items=1; pages=1; truncated=false; persisted=false',
+    );
+  });
+
   it('rejects success without persistence and actions outside pending handoff', () => {
     expect(() =>
       renderRemoteCommand(

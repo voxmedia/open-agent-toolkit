@@ -79,7 +79,10 @@ export function reduceReviewedBatchOutcomes(
   }
   const outcomes = { ...parsed.outcomes };
   for (const [operationId, state] of Object.entries(updates)) {
-    if (state !== undefined) outcomes[operationId] = state;
+    if (state !== undefined) {
+      assertMonotonicOutcome(operationId, outcomes[operationId]!, state);
+      outcomes[operationId] = state;
+    }
   }
   return RemoteBatchRecordSchema.parse({
     ...parsed,
@@ -87,6 +90,40 @@ export function reduceReviewedBatchOutcomes(
     state: reduceBatchState(Object.values(outcomes)),
     updatedAt,
   });
+}
+
+const TERMINAL_MEMBER_OUTCOMES: ReadonlySet<ReviewedBatchOutcome> = new Set([
+  'verified',
+  'blocked',
+  'uncertain',
+  'rejected',
+  'failed',
+  'partial',
+]);
+
+const OUTCOME_RANK: Partial<Record<ReviewedBatchOutcome, number>> = {
+  planned: 0,
+  pending: 0,
+  authorized: 1,
+  'attempt-started': 2,
+  'verification-pending': 3,
+};
+
+function assertMonotonicOutcome(
+  operationId: string,
+  previous: ReviewedBatchOutcome,
+  next: ReviewedBatchOutcome,
+): void {
+  if (previous === next) return;
+  if (
+    TERMINAL_MEMBER_OUTCOMES.has(previous) ||
+    (OUTCOME_RANK[next] ?? Number.POSITIVE_INFINITY) <
+      (OUTCOME_RANK[previous] ?? Number.POSITIVE_INFINITY)
+  ) {
+    throw new Error(
+      `Reviewed batch outcome for '${operationId}' cannot regress from '${previous}' to '${next}'.`,
+    );
+  }
 }
 
 function canonicalMembers(

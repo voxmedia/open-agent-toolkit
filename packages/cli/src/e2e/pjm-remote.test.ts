@@ -1,3 +1,8 @@
+import { execFileSync } from 'node:child_process';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { Command } from 'commander';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -9,17 +14,29 @@ import type {
   RemoteCommandEnvelope,
   RemoteCommandStatus,
 } from '../commands/pjm/remote/output';
+import { createProductionRemoteRunner } from '../commands/pjm/remote/service';
 
 const originalExitCode = process.exitCode;
+const temporaryDirectories: string[] = [];
 
-afterEach(() => {
+afterEach(async () => {
   process.exitCode = originalExitCode;
+  await Promise.all(
+    temporaryDirectories.map((path) =>
+      rm(path, { recursive: true, force: true }),
+    ),
+  );
+  temporaryDirectories.length = 0;
 });
 
 async function runRemoteCommand(
   args: string[],
   status: RemoteCommandStatus,
   json: boolean,
+  overrides: {
+    projectRoot?: string;
+    run?: (request: RemoteCommandRequest) => Promise<RemoteCommandEnvelope>;
+  } = {},
 ): Promise<{
   request: RemoteCommandRequest;
   stdout: string;
@@ -39,11 +56,14 @@ async function runRemoteCommand(
     const root = new Command('oat').option('--json');
     root.addCommand(
       createPjmRemoteCommand({
-        resolveProjectRoot: async () => '/fixture-repository',
+        resolveProjectRoot: async () =>
+          overrides.projectRoot ?? '/fixture-repository',
         checkAdoption: async () => 'complete',
         run: async (candidate) => {
           request = candidate;
-          return envelopeFor(candidate, status);
+          return overrides.run
+            ? overrides.run(candidate)
+            : envelopeFor(candidate, status);
         },
       }),
     );
@@ -131,6 +151,77 @@ describe('pjm remote end-to-end command workflows', () => {
       });
     },
   );
+
+  it('runs doctor and migration through the real production runner in an isolated repository', async () => {
+    const repository = await mkdtemp(join(tmpdir(), 'oat-p07-e2e-production-'));
+    temporaryDirectories.push(repository);
+    execFileSync('git', ['init', '--quiet'], { cwd: repository });
+    await mkdir(join(repository, '.oat', 'repo', 'pjm', 'backlog', 'items'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(repository, '.oat', 'config.json'),
+      `${JSON.stringify({
+        pjm: {
+          initialized: true,
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              description: 'none',
+              authority: { default: 'read-only' },
+            },
+            storage: { state: 'local' },
+          },
+        },
+      })}\n`,
+    );
+    const target = join(
+      repository,
+      '.oat',
+      'repo',
+      'pjm',
+      'backlog',
+      'items',
+      'association-only.md',
+    );
+    await writeFile(
+      target,
+      '---\ntitle: Association-only\nassociated_issues:\n  - linear:fixture-1\n---\n',
+    );
+    const run = createProductionRemoteRunner({
+      now: () => '2026-09-05T12:00:00.000Z',
+      randomId: () => 'e2e-production',
+    });
+
+    const doctor = await runRemoteCommand(['doctor'], 'blocked', true, {
+      projectRoot: repository,
+      run,
+    });
+    expect(JSON.parse(doctor.stdout)).toMatchObject({
+      operation: 'doctor',
+      status: 'blocked',
+    });
+    const migration = await runRemoteCommand(
+      ['migrate', '--check'],
+      'needs-review',
+      true,
+      { projectRoot: repository, run },
+    );
+    const previewDigest = (
+      JSON.parse(migration.stdout) as RemoteCommandEnvelope
+    ).recovery[0]?.instruction.match(/preview (\S+);/)?.[1];
+    expect(previewDigest).toMatch(/^sha256:/);
+    const applied = await runRemoteCommand(
+      ['migrate', '--apply', '--approval-digest', previewDigest!],
+      'ok',
+      true,
+      { projectRoot: repository, run },
+    );
+    expect(JSON.parse(applied.stdout)).toMatchObject({
+      operation: 'migrate',
+      status: 'ok',
+    });
+  });
 });
 
 function envelopeFor(

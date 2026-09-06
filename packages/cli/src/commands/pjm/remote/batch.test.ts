@@ -139,4 +139,32 @@ describe('reviewed remote batches', () => {
     expect(partial.state).toBe('partial');
     expect(partial.outcomes.op_batch_001).toBe('verified');
   });
+
+  it.each(['verified', 'blocked', 'uncertain', 'partial'] as const)(
+    'rejects stale replay after terminal %s outcome',
+    (terminal) => {
+      const reviewed = buildReviewedBatch({
+        batchId: 'batch_reviewed_001',
+        lifecycleOperation: 'closeout',
+        members,
+        authority: {
+          effective: 'user-approved',
+          sourceDigest: 'sha256:policy',
+        },
+        createdAt: NOW,
+      });
+      const terminalBatch = reduceReviewedBatchOutcomes(
+        reviewed,
+        { op_batch_001: terminal },
+        NOW,
+      );
+      expect(() =>
+        reduceReviewedBatchOutcomes(
+          terminalBatch,
+          { op_batch_001: 'planned' },
+          NOW,
+        ),
+      ).toThrow(/cannot regress/i);
+    },
+  );
 });
