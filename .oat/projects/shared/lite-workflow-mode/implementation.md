@@ -698,6 +698,14 @@ envelope is receive eligible and hands off
 receipt is authoritative; no terminal gate allowance has been recorded before
 receive.
 
+#### Configured implementation exit gate receive intent 3 persisted
+
+The handoff is bound to run `0da02d5a-4d15-4c3c-97bf-94cf246ac945`, source
+`reviews/final-review-2026-09-06T041855Z.md`, event identity
+`final|code|final-review-2026-09-06T041855Z.md`, and collision-free destination
+`reviews/archived/final-review-2026-09-06T041855Z.md` at pre-receive HEAD
+`f167bb43a899976efac450c18b185db4eb514a42`. Receive has not yet run.
+
 #### Exit-gate review 2 received — final configured attempt
 
 **Review artifact:**
