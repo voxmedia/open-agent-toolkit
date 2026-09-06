@@ -6766,3 +6766,30 @@ describe('bundled skill contract truthfulness — doctor inventory', () => {
     }
   });
 });
+
+describe('bundled skill contract truthfulness — brainstorm diagnostics', () => {
+  it('keeps the brainstorm node-missing note free of a later-doctor promise', async () => {
+    const brainstorm = await readRepoFile(
+      '.agents/skills/oat-brainstorm/SKILL.md',
+    );
+    const nodeMissing = brainstorm
+      .split('\n')
+      .find((line) => line.startsWith('- If `node` is **missing**:'));
+
+    expect(nodeMissing, 'node-missing branch').toBeDefined();
+    // Nothing persists the note, so no later run of any diagnostic can read it
+    // back. The branch must not promise that any of them can.
+    expect(nodeMissing).not.toMatch(
+      /doctor[\s\S]{0,40}\b(?:can|could|will|may)\b/i,
+    );
+    expect(nodeMissing).not.toMatch(/pick(?:s|ed)?(?: it)? up later/i);
+    expect(nodeMissing).toMatch(/for this session only|conversation-only/i);
+    expect(nodeMissing).toMatch(/nothing persists/i);
+    // The immediate, supported behaviour stays intact.
+    expect(nodeMissing).toContain(
+      'visual companion suppressed — node not on PATH',
+    );
+    expect(nodeMissing).toContain('VISUAL_COMPANION = "unavailable"');
+    expect(nodeMissing).toContain('skip the offer entirely');
+  });
+});
