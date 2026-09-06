@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { expectDispatchStampFieldContract } from '@test-support/skills/dispatch-stamp-contract';
 import { describe, expect, it } from 'vitest';
 
 function repoFilePath(relativePath: string): string {
@@ -674,6 +675,7 @@ printf 'artifact-read\\n'`,
       expect(content, `${path} stamp adapter`).toContain(
         'toDispatchStampRecord(dispatchReport)',
       );
+      expectDispatchStampFieldContract(content, path);
       expect(content, `${path} exact provider payload`).toContain(
         'providers.<provider>.dispatchArgs',
       );

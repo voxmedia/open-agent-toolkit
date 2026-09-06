@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide-remote
-version: 1.1.2
+version: 1.1.3
 description: Use when reviewing a GitHub PR opened on another machine for an active OAT project and posting findings back as a single PR review. Resolves the project from the PR diff, reads project artifacts for mode-aware review, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
@@ -286,10 +286,17 @@ oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role review
 ```
 
 Require `dispatchReport.schemaVersion: 1`. Render/consume its versioned human
-block with `formatDispatchReport(dispatchReport)` semantics and derive the
-formal audit `Dispatch:` line only through
-`formatDispatchStamp(dispatchReport)` / `toDispatchStampRecord(dispatchReport)`.
-Never hand-build a parallel stamp schema.
+block with `formatDispatchReport(dispatchReport)` semantics and take the formal
+audit `Dispatch:` line directly from the same response's additive
+`dispatchStamp` field: it must be a non-empty string beginning with the
+canonical `Dispatch:` prefix. Copy that returned value byte-for-byte into the
+review dispatch audit metadata. Reformatting the report through
+`formatDispatchStamp(dispatchReport)` / `toDispatchStampRecord(dispatchReport)`
+is an optional corroboration where that library is already loaded; it is never
+the normal path and never a substitute for the returned field, and no
+out-of-tree shim is required. Never hand-build a parallel stamp schema. If
+`dispatchStamp` is absent or lacks the canonical prefix on a report-bearing
+response, stop and report instead of reconstructing it.
 
 Retain the exact managed provider payload from
 `providers.<provider>.dispatchArgs` and
