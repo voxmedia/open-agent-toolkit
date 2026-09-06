@@ -131,6 +131,21 @@ begins.
 
 ---
 
+### 2026-09-06 · structural · oat gate review · final (exit gate, attempt 1)
+
+Exit gate run `872d498a` (`codex-5-6-sol-xhigh`) blocked with two Important
+findings: the `phase-execution.md:608` acceptance clause that p01 reported and
+the root reviewer had routed to wave close (the gate requires the alignment
+now, with an `oat-project-implement` bump), and wrapper records that still
+said `sync --scope all` in discovery and read as if the source-plan correction
+had been applied. **Skill signal (strengthens):** a lane-reported cross-owner
+contradiction inside the same wave's integration diff is a fix, not a
+deferral — the exit gate reviews the whole tree and will block on it.
+**Skill signal (gap):** closeout records must describe pending corrections as
+pending with a durable tracker, never as applied.
+
+---
+
 ## End-of-run synthesis (2026-09-06)
 
 **Convention verdicts (evidence: entries above and `implementation.md` Run 1):**

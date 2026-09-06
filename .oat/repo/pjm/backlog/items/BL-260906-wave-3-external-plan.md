@@ -21,5 +21,7 @@ Corrections the wave-3 reviews queued for the external plans, to land in the wav
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] `2026-08-30-require-repo-wide-call-site-sweeps.md`: In-scope list names `packages/cli/src/validation/skills.test.ts` and an execution record notes the `phase-execution.md:608` alignment landed by the exit-gate fix
+- [ ] Every wave-3 plan whose step says `oat sync --scope all` carries the program rule that lanes run `pnpm run cli -- sync --scope project`
+- [ ] Execution records appended under each wave-3 plan's `## Revalidation Before Execution`
+- [ ] All corrections land in one program-refresh commit that also updates the execution program's revalidation log
