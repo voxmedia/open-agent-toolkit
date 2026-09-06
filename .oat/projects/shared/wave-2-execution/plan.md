@@ -401,17 +401,17 @@ git commit -m "docs(p05-t01): document fail-closed patch-and-restore recovery fo
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| p04    | code     | pending | -    | -        |
-| p05    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| plan   | artifact | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
+| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p05    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
+| plan   | artifact | received | 2026-09-06 | reviews/artifact-plan-review-2026-09-06T023526Z.md | -             | -          | -           |
+| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
