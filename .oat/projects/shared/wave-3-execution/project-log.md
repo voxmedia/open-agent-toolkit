@@ -52,6 +52,10 @@ target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:2,m
 
 target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-3-execution/reviews/final-review-2026-09-06T155523Z.md
 
+### 2026-09-06 · structural · oat-gate-review · final
+
+Exit gate attempt 2 (run 0c1ab7b5-c8d5-42ad-8b15-f832b05d8111, codex-5-6-sol-xhigh) passed with zero findings on 8483694bbb88a32a43ba0a4fff57f569064cf12a after attempt 1 (run 872d498a) blocked and two launches were host-killed; artifact reviews/archived/final-review-2026-09-06T155523Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

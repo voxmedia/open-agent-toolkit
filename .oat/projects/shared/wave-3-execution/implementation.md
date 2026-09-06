@@ -196,6 +196,23 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Disposition:** the artifact is recorded as **superseded** (its ledger row keeps the gate lineage) because no gate receipt exists to make it a terminal gate outcome; the gate is re-run for a receipted result. Its one Minor (the Deferred Findings ledger still listed the `implementation-execution.md:91` docs fix as pending although `ec061f241` landed it) is **fixed** in this commit.
 
+## Review Received: final (configured exit gate, attempt 2 — passed)
+
+**Date:** 2026-09-06
+**Gate:** run `0c1ab7b5-c8d5-42ad-8b15-f832b05d8111`, target `codex-5-6-sol-xhigh` (diversity: unknown-producer), envelope `ok`, `receiveEligible: true`, threshold important, blocking false, attempt `w3-exit-gate-20260906T155259Z` (run in the foreground after the safe cleanup batch; two earlier launches of this attempt were host-killed).
+**Review artifact:** reviews/archived/final-review-2026-09-06T155523Z.md (reviewed head `8483694bbb88a32a43ba0a4fff57f569064cf12a`, invocation gate)
+
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 0. Both attempt-1 findings verified closed by the gate itself. The gate-written ledger row moved forward in place to `passed` with the archived path.
+
+**Gate row `final` (attempt 2) → `passed`; `oat_implement_exit_gate` → `allowed / passed` in the following state checkpoint.** Gate history: `872d498a` blocked on `182c832a9`; `226f2a4e` host-killed (no result); `7ce7a2ae` host-killed after writing a 0C/0I/0M/1m artifact (superseded); `0c1ab7b5` passed on `8483694bbb88a32a43ba0a4fff57f569064cf12a`.
+
+## Final HiLL approval (IMPLEMENT-16, autonomous)
+
+- Pre-approval sequence (configured `workflow.postImplementSequence`): summary, document, pr — recorded below as each completes; no post-approval steps configured; recap intent `skip` (deferred to program close per the execution program).
+- Evidence: final review row `passed` (artifact `reviews/archived/final-review-2026-09-06T135731Z.md`, head `b1d50f5bf`, dispatch `w3-final-review-001`); configured exit gate `allowed / passed` (run `0c1ab7b5`, artifact `reviews/archived/final-review-2026-09-06T155523Z.md`, zero findings) after attempt 1 blocked and was fixed by `1f09bb832` and the record commits; every descendant after the gate's reviewed head is closeout-only bookkeeping.
+- Decision: `approval: approved`, `approval_source: oat-autonomous`, `status: post_approval` → no post-approval steps → `complete`. Operator authorization: 2026-09-05 ("let it rip"), covering PR creation and merge by the root orchestrator once CI, Bugbot, and the final gate are green. This approval waives nothing.
+- Completion: `oat project complete-state` recorded before merge; the archive tail is `completion tail: deferred to program close`.
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)
