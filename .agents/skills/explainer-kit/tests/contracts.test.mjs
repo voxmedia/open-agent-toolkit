@@ -776,6 +776,10 @@ const GUARDED_PUBLICATION_COPIES = [
     startMarker: 'After the core command returns',
   },
   {
+    // Repo-root-relative, which escapes the skill directory. That is safe
+    // because `packages/cli/scripts/bundle-assets.sh:49` strips each skill's
+    // `tests/` directory from the published bundle, so this path is only ever
+    // resolved inside this repository, never by an installed consumer.
     label: 'apps/oat-docs/docs/workflows/skills/explainer-kit.md (mirror)',
     url: new URL(
       '../../../../apps/oat-docs/docs/workflows/skills/explainer-kit.md',
@@ -785,50 +789,105 @@ const GUARDED_PUBLICATION_COPIES = [
   },
 ];
 
+function escapeForRegExp(literal) {
+  return literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // Scope each copy to its own publication section: from its start marker to the
 // next top-level section, or to the end of the document when the passage is
-// last. A whole-document match would let an unrelated paragraph satisfy one of
-// the tokens below and hide a regression in the passage that states the rule.
-// The marker must start a line and occur exactly once, so a later duplicate
-// cannot silently redirect the guard at an unguarded passage.
+// last. Passage scoping keeps the positive requirements local, so an unrelated
+// paragraph cannot satisfy one of them on the guarded passage's behalf. It is
+// deliberately NOT used for the forbidden-phrase guard below, which must cover
+// the whole document.
+//
+// The marker must start a line — the first line counts — and occur exactly
+// once, so a later duplicate cannot silently redirect the guard at an
+// unguarded passage.
 function readGuardedPassage(source, { label, startMarker }) {
-  const anchor = `\n${startMarker}`;
+  const anchors = [
+    ...source.matchAll(
+      new RegExp(`(?:^|\\n)${escapeForRegExp(startMarker)}`, 'g'),
+    ),
+  ];
   assert.equal(
-    source.split(anchor).length - 1,
+    anchors.length,
     1,
     `${label}: expected exactly one line-anchored guarded passage marker ${startMarker}`,
   );
-  const remainder = source.slice(source.indexOf(anchor) + anchor.length);
+  const [anchor] = anchors;
+  const remainder = source.slice(anchor.index + anchor[0].length);
   const end = remainder.indexOf('\n## ');
   return end === -1 ? remainder : remainder.slice(0, end);
 }
 
-// One semantic contract, applied independently to each copy. Every positive
-// pattern is sentence-scoped (`[^.]*` cannot cross a full stop) so the tokens
-// must appear in one affirmative clause rather than anywhere in the passage:
-// prose that names a token while asserting the opposite rule does not pass.
-// Failure messages carry the source label so a regression names the copy that
-// drifted.
-function assertPublicationBoundary(prose, label) {
-  assert.match(
-    prose,
-    /\bcomplete\b[^.]*publish-receipt\/v2/i,
-    `${label}: must consume the complete current publish-receipt/v2`,
+// Sentence view of a passage. Splitting on a full stop followed by whitespace
+// leaves `name.json` tokens intact, because those periods are not followed by
+// whitespace.
+function guardedSentences(passage) {
+  return passage.split(/(?<=\.)\s+/);
+}
+
+// Markers that invert a rule while preserving its tokens. A sentence carrying
+// one of these cannot satisfy an affirmative requirement.
+const NEGATION_MARKER =
+  /\b(?:not|never|no|nor|cannot|without|unless|optional|instead)\b|n['’]t\b/i;
+const MUTATION_MARKER =
+  /\b(?:rewritten|rewrites|mutated|mutable|overwritten|overwrites)\b/i;
+
+// A requirement holds when at least one sentence states it affirmatively:
+// the tokens appear in that sentence, in order, with no negation marker and no
+// disqualifying marker.
+function assertAffirmativeRequirement(
+  passage,
+  label,
+  { pattern, disqualifier, requirement },
+) {
+  const stated = guardedSentences(passage).some(
+    (sentence) =>
+      pattern.test(sentence) &&
+      !NEGATION_MARKER.test(sentence) &&
+      !(disqualifier?.test(sentence) ?? false),
   );
-  assert.match(
-    prose,
-    /\bcomplete\b[^.]*manifest[^.]*catalog[^.]*evidence/i,
-    `${label}: must require complete manifest and catalog evidence`,
-  );
-  assert.match(
-    prose,
-    /publish-receipt\/v1(?=[^.]*\breplay\b)(?=[^.]*\bonly\b)/i,
-    `${label}: must keep publish-receipt/v1 readable for replay only`,
-  );
+
+  assert.ok(stated, `${label}: ${requirement}`);
+}
+
+// One semantic contract, applied independently to each copy.
+//
+// What this guard does hold: each positive requirement must be stated in one
+// sentence, with its tokens in order, and that sentence must not carry a
+// negation marker; the v1 sentence must additionally keep `only` within a few
+// words of `replay`, not merely somewhere in the same sentence, and must not
+// declare the receipt mutable. That rejects reordered prose, dropped tokens,
+// and the token-preserving inversions fixtured below.
+//
+// What it does NOT hold: this is pattern matching, not comprehension. An
+// inversion phrased without any of the markers above can still pass, so the
+// guard is a drift alarm, not a proof of meaning.
+//
+// The forbidden-phrase guard runs against the WHOLE source rather than the
+// scoped passage. The obsolete claim must not appear anywhere in a guarded
+// file; scoping it to the passage would silently accept it in every other
+// section, which is a coverage regression rather than a refinement.
+function assertPublicationBoundary(passage, label, source = passage) {
+  assertAffirmativeRequirement(passage, label, {
+    pattern: /\bcomplete\b[\s\S]*publish-receipt\/v2/i,
+    requirement: 'must consume the complete current publish-receipt/v2',
+  });
+  assertAffirmativeRequirement(passage, label, {
+    pattern: /\bcomplete\b[\s\S]*manifest[\s\S]*catalog[\s\S]*evidence/i,
+    requirement: 'must require complete manifest and catalog evidence',
+  });
+  assertAffirmativeRequirement(passage, label, {
+    pattern:
+      /publish-receipt\/v1[\s\S]*?(?:\bonly\b[\s\S]{0,40}?\breplay\b|\breplay\b[\s\S]{0,40}?\bonly\b)/i,
+    disqualifier: MUTATION_MARKER,
+    requirement: 'must keep publish-receipt/v1 readable for replay only',
+  });
   assert.doesNotMatch(
-    prose,
+    source,
     /complete `PublishReceiptV1`/,
-    `${label}: must not claim a complete PublishReceiptV1`,
+    `${label}: must not claim a complete PublishReceiptV1 anywhere in the source`,
   );
 }
 
@@ -836,9 +895,55 @@ for (const copy of GUARDED_PUBLICATION_COPIES) {
   test(`documents complete receipt v2 consumption and immutable v1 replay: ${copy.label}`, async () => {
     const source = await readFile(copy.url, 'utf8');
 
-    assertPublicationBoundary(readGuardedPassage(source, copy), copy.label);
+    assertPublicationBoundary(
+      readGuardedPassage(source, copy),
+      copy.label,
+      source,
+    );
   });
 }
+
+// Passage selection is load-bearing, so pin its two branches directly. Both
+// real inputs currently run to end of document; without this test the
+// terminator branch would be unexercised until a later section is added.
+test('the guarded passage reader truncates at the next section', () => {
+  const followed = [
+    '# Title',
+    '',
+    '## Guarded',
+    '',
+    'Guarded body.',
+    '',
+    '## Later',
+    '',
+    'Unguarded body.',
+    '',
+  ].join('\n');
+
+  const truncated = readGuardedPassage(followed, {
+    label: 'synthetic followed passage',
+    startMarker: '## Guarded',
+  });
+  assert.match(truncated, /Guarded body\./);
+  assert.doesNotMatch(truncated, /Unguarded body\./);
+
+  // A marker on the first line is a legitimate anchor, not a missing one.
+  const fromFirstLine = readGuardedPassage('## Guarded\n\nGuarded body.\n', {
+    label: 'synthetic first-line marker',
+    startMarker: '## Guarded',
+  });
+  assert.match(fromFirstLine, /Guarded body\./);
+
+  // A duplicated marker is ambiguous and must fail closed.
+  assert.throws(
+    () =>
+      readGuardedPassage(`${followed}\n## Guarded\n\nOther body.\n`, {
+        label: 'synthetic duplicate marker',
+        startMarker: '## Guarded',
+      }),
+    /synthetic duplicate marker: expected exactly one line-anchored/,
+  );
+});
 
 // Non-vacuity guard for the loop above: reading both files proves nothing
 // unless the shared assertion actually rejects drift. Each fixture keeps every
@@ -888,6 +993,45 @@ test('the guarded publication assertion rejects drifted prose', () => {
         'A `publish-receipt/v1` is rewritten in place; replay reuses it.',
       ),
     ],
+    // Negation placed BEFORE the anchor token, which ordering alone cannot
+    // catch. Each keeps every positive token of the rule it inverts.
+    [
+      'receipt v2 completeness negated before the anchor',
+      accepted.replace(
+        'Wrapper acceptance reads the complete post-run',
+        'Wrapper acceptance never requires the complete post-run',
+      ),
+    ],
+    [
+      'manifest and catalog evidence negated before the anchor',
+      accepted.replace(
+        'validates complete manifest and catalog evidence',
+        'does not validate complete manifest and catalog evidence',
+      ),
+    ],
+    [
+      'v1 declared mutable with replay and only retained',
+      accepted.replace(
+        'A `publish-receipt/v1` remains readable for replay of older runs only.',
+        'A `publish-receipt/v1` is the only receipt rewritten in place after replay.',
+      ),
+    ],
+    [
+      'v1 mutation permitted with only kept in sentence',
+      accepted.replace(
+        'A `publish-receipt/v1` remains readable for replay of older runs only.',
+        'A `publish-receipt/v1` may be mutated; only a full replay is then required.',
+      ),
+    ],
+    // `only` no longer qualifies `replay`: both words survive in the sentence
+    // but the restriction has moved to a different subject.
+    [
+      'v1 replay no longer restricted by only',
+      accepted.replace(
+        'A `publish-receipt/v1` remains readable for replay of older runs only.',
+        'A `publish-receipt/v1` supports replay of archived runs, historical audits, and migration rehearsals, and is the only artifact kept.',
+      ),
+    ],
   ]) {
     assert.throws(
       () => assertPublicationBoundary(prose, `drifted copy: ${drift}`),
@@ -897,6 +1041,48 @@ test('the guarded publication assertion rejects drifted prose', () => {
       `${drift} must be rejected, and the failure must name the drifting copy`,
     );
   }
+});
+
+// The obsolete claim is rejected wherever it appears in a guarded file, not
+// only inside the scoped passage. Passage-scoping this guard once accepted the
+// claim in every other section of the same document.
+test('the guarded publication assertion rejects an out-of-passage forbidden claim', () => {
+  const passage = [
+    'Wrapper acceptance reads the complete post-run `publish-receipt/v2` and',
+    'validates complete manifest and catalog evidence before it accepts a run.',
+    'A `publish-receipt/v1` remains readable for replay of older runs only.',
+  ].join('\n');
+  const outsidePassage = [
+    '## Frozen versioned boundary',
+    '',
+    'Acceptance still requires a complete `PublishReceiptV1`.',
+    '',
+    '## Private wrappers',
+    '',
+    passage,
+  ].join('\n');
+
+  // Control: the identical passage passes when the rest of the source is clean.
+  assertPublicationBoundary(
+    passage,
+    'clean source',
+    `## Private wrappers\n\n${passage}`,
+  );
+
+  assert.throws(
+    () =>
+      assertPublicationBoundary(
+        passage,
+        'source with outside claim',
+        outsidePassage,
+      ),
+    (error) =>
+      error instanceof assert.AssertionError &&
+      error.message.includes(
+        'source with outside claim: must not claim a complete PublishReceiptV1 anywhere in the source',
+      ),
+    'a forbidden claim outside the guarded passage must still be rejected',
+  );
 });
 
 test('documents project-recap v2 as the current producer policy with immutable v1 replay', async () => {

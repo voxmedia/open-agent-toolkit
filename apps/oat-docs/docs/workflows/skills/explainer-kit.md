@@ -435,13 +435,13 @@ Private integrations use the core boundary directly: resolve private inputs
 before the run, construct one versioned request, invoke the core once, then
 publish or link the versioned manifest after the run. Wrapper acceptance reads
 the complete post-run `publish-receipt/v2`, requires complete manifest and
-catalog evidence — one receipt entry for every finalized manifest artifact and
-one generated catalog entry — verifies the core run ID, and rejects foreign or
-stale receipts; `publish-receipt/v1` remains readable for replay of older runs
-only. The `explainer-kit` wrapper extension contract owns this rule; this page
-restates it for integrators. Presets, private source systems,
-external-document synchronization, and personal destinations remain
-wrapper-owned.
+catalog evidence, verifies the core run ID, and rejects foreign or stale
+receipts; `publish-receipt/v1` remains readable for replay of older runs only.
+Public and protected v2 receipts must each provide exactly one entry for every
+finalized manifest artifact and exactly one generated catalog entry. The
+`explainer-kit` wrapper extension contract owns this rule; this page restates
+it for integrators. Presets, private source systems, external-document
+synchronization, and personal destinations remain wrapper-owned.
 
 V1 exposes no plugin registry or private mid-pipeline hook. Unsupported
 contract majors and identity mismatches fail closed instead of being guessed
