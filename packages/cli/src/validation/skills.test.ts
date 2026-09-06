@@ -11,6 +11,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
+import {
+  getPackMemberNames,
+  PACK_MANIFEST,
+} from '@commands/tools/shared/pack-manifest';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { validateChangedSkillVersionBumps, validateOatSkills } from './skills';
@@ -6653,5 +6657,112 @@ describe('recon canonical contracts', () => {
     expect(skill).toMatch(/packet directory/i);
     expect(worker).toMatch(/never interact with the user/i);
     expect(worker).toMatch(/never dispatch/i);
+  });
+});
+
+describe('bundled skill contract truthfulness — doctor inventory', () => {
+  it("keeps doctor's declared bundled inventory identical to the pack manifest", async () => {
+    const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
+
+    const sectionStart = doctor.indexOf(
+      '**Bundled skill manifest (source of truth):**',
+    );
+    const sectionEnd = doctor.indexOf('For each pack, determine:');
+    expect(sectionStart, 'inventory section start').toBeGreaterThan(-1);
+    expect(sectionEnd, 'inventory section end').toBeGreaterThan(sectionStart);
+
+    const section = doctor.slice(sectionStart, sectionEnd);
+    const declared = new Map<string, string[]>();
+    let currentPack: string | undefined;
+    for (const line of section.split('\n')) {
+      const heading = line.match(/^`([a-z-]+)` pack skills:$/);
+      if (heading?.[1]) {
+        currentPack = heading[1];
+        // A repeated heading would let a later block silently discard the
+        // names declared under the earlier one.
+        expect(
+          declared.has(currentPack),
+          `duplicate ${currentPack} heading`,
+        ).toBe(false);
+        declared.set(currentPack, []);
+        continue;
+      }
+      const bullet = line.match(/^-\s+(.+)$/);
+      if (bullet?.[1] && currentPack) {
+        declared.get(currentPack)?.push(
+          ...bullet[1]
+            .split(',')
+            .map((name) => name.trim())
+            .filter((name) => name.length > 0),
+        );
+      }
+    }
+
+    const expected = new Map(
+      PACK_MANIFEST.map((pack) => [
+        pack.name,
+        [...getPackMemberNames(pack.name, 'skill')].sort(),
+      ]),
+    );
+
+    expect([...declared.keys()].sort(), 'declared pack headings').toEqual(
+      [...expected.keys()].sort(),
+    );
+    for (const [pack, expectedSkills] of expected) {
+      expect([...(declared.get(pack) ?? [])].sort(), `${pack} pack`).toEqual(
+        expectedSkills,
+      );
+    }
+  });
+
+  it("derives doctor's summary example counts from the pack manifest", async () => {
+    const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
+    const packSkills = new Map(
+      PACK_MANIFEST.map((pack) => [
+        pack.name,
+        [...getPackMemberNames(pack.name, 'skill')].sort(),
+      ]),
+    );
+
+    const installedTable = doctor.slice(
+      doctor.indexOf('## Installed Packs'),
+      doctor.indexOf('## Outdated Skills'),
+    );
+    const installedRows = [
+      ...installedTable.matchAll(
+        /^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/gm,
+      ),
+    ].filter(([, pack]) => pack && packSkills.has(pack));
+    expect(installedRows.length, 'installed pack example rows').toBeGreaterThan(
+      0,
+    );
+    for (const [, pack, total] of installedRows) {
+      expect(Number(total), `${pack} example denominator`).toBe(
+        packSkills.get(pack ?? '')?.length,
+      );
+    }
+
+    const availableSection = doctor.slice(
+      doctor.indexOf('## Available But Not Installed'),
+      doctor.indexOf('## Configuration'),
+    );
+    const availableRows = [
+      ...availableSection.matchAll(
+        /^- \*\*([a-z-]+)\*\* pack: (.+?) \((\d+) skills available\)$/gm,
+      ),
+    ];
+    expect(availableRows.length, 'available pack example rows').toBeGreaterThan(
+      0,
+    );
+    for (const [, pack, names, count] of availableRows) {
+      const listed = (names ?? '')
+        .split(',')
+        .map((name) => name.trim())
+        .sort();
+      expect(listed, `${pack} example skill list`).toEqual(
+        packSkills.get(pack ?? ''),
+      );
+      expect(Number(count), `${pack} example count`).toBe(listed.length);
+    }
   });
 });
