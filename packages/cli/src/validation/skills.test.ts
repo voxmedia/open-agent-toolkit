@@ -2814,7 +2814,7 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.2'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.3'],
       ['.agents/agents/oat-reviewer.md', '1.2.1'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.3'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
@@ -3124,7 +3124,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.2');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.3');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
@@ -5574,7 +5574,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.2'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.3'],
       ['.agents/agents/oat-reviewer.md', '1.2.1'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.1'],
     ] as const;

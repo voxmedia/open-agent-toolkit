@@ -914,4 +914,168 @@ describe('post-implementation sequence contracts', () => {
       expect(normalized).not.toMatch(/project-log/i);
     });
   });
+
+  describe('cross-cutting option call-site sweeps', () => {
+    function readPhaseImplementerAgent(): string {
+      return readFileSync(
+        join(
+          import.meta.dirname,
+          '../../../../../../../.agents/agents/oat-phase-implementer.md',
+        ),
+        'utf8',
+      );
+    }
+
+    // Semantic slice: the task-execution section, never a prose line number.
+    function taskExecutionContract(agent: string): string {
+      return normalizeWhitespace(
+        requiredSlice(
+          agent,
+          '### 2. Execute Tasks in Plan Order',
+          '### 3. Phase-Wide Self-Review',
+        ),
+      );
+    }
+
+    function assertSweepContract(section: string): void {
+      // Property 1: the trigger is the nature of the interface change --
+      // an option consumed across a module boundary -- not a named symbol.
+      expect(section).toContain(
+        'adds, renames, retypes, or changes the default or meaning of an option, argument, flag, configuration field, schema property, or policy value consumed outside the module that defines it',
+      );
+      expect(section).toContain(
+        'A value that is defined, read, and written only inside its own module does not trigger this rule.',
+      );
+
+      // Property 2: the inventory is repository-wide and reaches
+      // non-production callers and serialization boundaries.
+      expect(section).toContain('inventory that symbol repository-wide');
+      expect(section).toContain(
+        'The inventory is repository-wide. It is never limited to the declared file boundary and never limited to production source:',
+      );
+      expect(section).toContain('serializers and deserializers');
+      expect(section).toContain('fixtures, mocks, snapshots, and tests');
+      expect(section).toContain('no single tool is proof of completeness');
+
+      // Property 3: a declared file list is review scope, not a correctness
+      // scope.
+      expect(section).toContain(
+        'A declared file list is review scope, not a correctness boundary.',
+      );
+
+      // Property 4: widen only mechanically, only inside the declared
+      // outcome, and only when no sibling or parallel lane owns the file.
+      expect(section).toContain('**Widen mechanically and proceed**');
+      expect(section).toContain('no sibling or active parallel task owns it');
+      expect(section).toContain(
+        '- **Stop and report** the exact discovered file set and the ownership conflict when the expansion would change the declared task outcome, cross sibling or parallel-lane ownership, invalidate a plan-declared parallel group, or require a new design, architecture, or public-behavior decision.',
+      );
+
+      // An allowed expansion is reported, never silent, and never written
+      // back into the plan.
+      expect(section).toContain(
+        'Record every addition in the Task Outcomes `Files` cell and in Self-Review Observations, and never edit `plan.md` to match.',
+      );
+
+      // The pre-edit rule aligns with post-commit recovery widening instead
+      // of relaxing the standing no-scope-expansion rule.
+      expect(section).toContain(
+        'never relaxes the standing rule against scope expansion beyond the phase',
+      );
+
+      // The post-commit verify step has to accept the boundary the
+      // widen-and-proceed path creates. A verify step that still demands
+      // "only declared task files" makes that path unusable.
+      expect(section).toContain(
+        'the commit changes only files in the effective task boundary, which is the declared task files plus any mechanical additions reported under the cross-cutting option sweep;',
+      );
+    }
+
+    // A probe that silently matches nothing would make every negative case
+    // vacuous, so both the anchor and the resulting change are checked.
+    function probe(
+      section: string,
+      target: string,
+      replacement: string,
+    ): string {
+      if (!section.includes(target)) {
+        throw new Error(`Negative probe anchor missing: ${target}`);
+      }
+      const mutated = section.replace(target, replacement);
+      if (mutated === section) {
+        throw new Error(`Negative probe mutation was a no-op: ${target}`);
+      }
+      return mutated;
+    }
+
+    it('requires a repo-wide caller inventory before editing a cross-module option', () => {
+      const agent = readPhaseImplementerAgent();
+      const section = taskExecutionContract(agent);
+
+      assertSweepContract(section);
+
+      // The sweep is a pre-edit obligation: it precedes the per-task loop.
+      expect(
+        section.indexOf('#### Cross-Cutting Option Sweep'),
+      ).toBeGreaterThanOrEqual(0);
+      expect(section.indexOf('#### Cross-Cutting Option Sweep')).toBeLessThan(
+        section.indexOf('For every task:'),
+      );
+
+      // The report surfaces the rule routes an allowed expansion through
+      // have to exist in the same contract.
+      expect(agent).toContain('### Task Outcomes');
+      expect(agent).toContain('### Self-Review Observations');
+    });
+
+    it('rejects a local-only sweep behind generic call-site prose', () => {
+      const localOnly = probe(
+        taskExecutionContract(readPhaseImplementerAgent()),
+        'The inventory is repository-wide. It is never limited to the declared file boundary and never limited to production source:',
+        'Search the call sites in the declared files:',
+      );
+
+      expect(() => assertSweepContract(localOnly)).toThrow();
+    });
+
+    it('rejects a trigger that degrades to generic search-call-sites wording', () => {
+      const generic = probe(
+        taskExecutionContract(readPhaseImplementerAgent()),
+        'Before the first edit of a task that adds, renames, retypes, or changes the default or meaning of an option, argument, flag, configuration field, schema property, or policy value consumed outside the module that defines it,',
+        'Before editing, search call sites for anything you change and',
+      );
+
+      expect(() => assertSweepContract(generic)).toThrow();
+    });
+
+    it('rejects boundary widening with the ownership stop removed', () => {
+      const noStop = probe(
+        taskExecutionContract(readPhaseImplementerAgent()),
+        '- **Stop and report** the exact discovered file set and the ownership conflict when the expansion would change the declared task outcome, cross sibling or parallel-lane ownership, invalidate a plan-declared parallel group, or require a new design, architecture, or public-behavior decision.',
+        '- Widen the boundary to whatever the search found and continue.',
+      );
+
+      expect(() => assertSweepContract(noStop)).toThrow();
+    });
+
+    it('rejects a silent boundary expansion that is never reported', () => {
+      const silent = probe(
+        taskExecutionContract(readPhaseImplementerAgent()),
+        'Record every addition in the Task Outcomes `Files` cell and in Self-Review Observations, and never edit `plan.md` to match.',
+        'Continue with the widened boundary.',
+      );
+
+      expect(() => assertSweepContract(silent)).toThrow();
+    });
+
+    it('rejects a verify step that contradicts the effective task boundary', () => {
+      const contradicted = probe(
+        taskExecutionContract(readPhaseImplementerAgent()),
+        'the commit changes only files in the effective task boundary, which is the declared task files plus any mechanical additions reported under the cross-cutting option sweep;',
+        'the commit changes only declared task files;',
+      );
+
+      expect(() => assertSweepContract(contradicted)).toThrow();
+    });
+  });
 });
