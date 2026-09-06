@@ -1,8 +1,7 @@
 ---
 oat_current_task: null
 oat_last_commit: f6504815b2e175a4d1e2af0a03baf45a59baa412
-oat_blockers:
-  - PR #264 does not yet include the local p-rev1 commits; push requires explicit authorization
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -107,7 +106,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T17:39:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T19:44:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -119,15 +118,16 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — p-rev1 complete and independently reviewed; PR refresh pending.
+Implementation — p-rev1 complete and independently reviewed; PR open and
+refreshed through the Wave 3 integration.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete lightweight design)
-- **Plan:** `plan.md` (revision 1 in progress)
-- **Implementation:** `implementation.md` (in_progress)
+- **Plan:** `plan.md` (complete, including revision 1)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
@@ -182,14 +182,16 @@ Implementation — p-rev1 complete and independently reviewed; PR refresh pendin
 - ✓ Fresh independent p-rev1 re-review cycle 3 passed with no findings
 - ✓ Revision phase p-rev1 complete after 7 tasks, 2 fix loops, and 2 bounded
   recovery attempts
-- ⧗ Local revision commits are not yet pushed to PR #264
+- ✓ Revision, Wave 3 merge, and reconciled tracking published to PR #264
 
 ## Blockers
 
-PR #264 remains open but does not yet include the completed local p-rev1
-revision. Push, merge, and release remain unauthorized.
+None. Wave 4 integration is expected before final closeout and will receive a
+separate review after it lands.
 
 ## Next Milestone
 
-After explicit authorization, push the branch and refresh PR #264 status. Do
-not merge or release without separate authorization.
+After the Wave 4 owner merges current `main` and resolves its conflicts, review
+that integration, refresh affected artifacts, run the project retrospective,
+and complete the project. Merge and release remain separate authorization
+boundaries.

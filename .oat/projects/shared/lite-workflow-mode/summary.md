@@ -4,9 +4,9 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
 oat_generated: true
-oat_summary_last_task: p06-t11
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
+oat_summary_last_task: prev1-t07
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: [p-rev1]
 ---
 
 # Summary: lite-workflow-mode
@@ -25,8 +25,9 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   project scaffolding, status routing, dashboard commands, progress, next-step,
   review, import, brainstorm, PR, and closeout surfaces.
 - Added a three-artifact Lite scaffold: `plan.md`, `state.md`, and
-  `implementation.md`. Its single-phase plan combines Summary, Decisions,
-  Assumptions, Out of Scope, Validation Criteria, and ordinary OAT task grammar.
+  `implementation.md`. Its single-phase plan always carries Summary, Decisions,
+  Assumptions, Out of Scope, and Validation Criteria, then adds numbered Product
+  Behavior and bounded Technical Design sections when observable triggers apply.
 - Added `oat-project-lite`, which runs a batched critical interview, writes the
   pre-approval plan, detects scope that outgrows Lite, obtains one plan
   approval, resolves managed dispatch, and hands off to implementation.
@@ -36,7 +37,11 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   now carry artifact-level quick-start readiness.
 - Added validation, fail-capable integration coverage, provider projections,
   lifecycle documentation, a disposable end-to-end Lite run, and synchronized
-  public release surfaces at `0.2.60`.
+  public release surfaces at `0.2.62` after integrating Wave 3.
+- Replaced mandatory test-first task wording with a declared, risk-proportionate
+  proof strategy. Behavioral changes retain fail-capable evidence, while prose
+  and mechanical changes can use focused static or composition checks instead
+  of new fixtures or harnesses.
 
 ## Key Decisions
 
@@ -55,6 +60,12 @@ heavy for this class of work while retaining OAT's safety and handoff value.
 - **Retain managed implementation and independent review.** Reduced planning
   ceremony does not waive dispatch ceilings, per-phase review, final review, or
   the configured implementation exit gate.
+- **Scale Lite specification depth from observable triggers.** User-visible
+  behavior requires Product Behavior; cross-module, format, state, or consumed
+  contract changes require Technical Design. Mechanical work may remain minimal.
+- **Use proportionate proof instead of universal TDD.** The plan declares the
+  risk and proof strategy. Review evaluates whether the evidence can prove the
+  claim, and the executor stops when required manual or visual proof is unavailable.
 
 ## Design Deltas
 
@@ -68,6 +79,9 @@ heavy for this class of work while retaining OAT's safety and handoff value.
 - One historical p06-t02 sentence about provider-view header ownership remains
   deferred. Current canonical and bundled projections are correct and a full
   sync dry-run is a no-op; revisit only if projection ownership changes.
+- Revision 1 restored Product Behavior and Technical Design depth, payload-safe
+  promotion, and executor-owned proof boundaries after the initial Lite contract
+  proved too shallow and too prescriptive.
 
 ## Notable Challenges
 
@@ -78,6 +92,9 @@ heavy for this class of work while retaining OAT's safety and handoff value.
 - Generated provider views and lockstep release metadata required repeated
   boundary checks. Final verification used isolated-HOME forced tests, explicit
   exit ledgers, version parity, release validation, and true no-op sync checks.
+- Revision 1 needed one bounded recovery and two review-fix loops. The final
+  reviewer reproduced the tail-only Technical Design omission control and passed
+  the phase with no findings.
 
 ## Tradeoffs Made
 
@@ -88,6 +105,8 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   configured closeout sequence.
 - The two route tables remain separate; deduplicating them was outside this
   feature and would have widened the risk surface.
+- The proof-strategy revision is Lite-only. Universal plan guidance remains a
+  separate backlog decision so this PR does not silently change other workflows.
 
 ## Integration Notes
 
@@ -99,11 +118,24 @@ heavy for this class of work while retaining OAT's safety and handoff value.
 - Docs, canonical skills, agent definitions, templates, and bundled assets are
   shipped CLI functionality and therefore require the five-package lockstep
   version bump plus sync-manifest regeneration.
+- Wave 3's repository-wide option sweep composes with Lite's proportionate proof
+  strategy: mechanical caller expansion is reported, while new behavior or
+  cross-owner scope still stops for direction.
+
+## Revision History
+
+- **p-rev1 — Adaptive specification depth and proportionate proof.** Restored
+  conditional Product Behavior and Technical Design sections, preserved their
+  payloads during promotion, and replaced mandatory test-first wording with a
+  risk-based proof strategy. Seven tasks completed after one recovered execution
+  defect and two review-fix loops; the final independent review had no findings.
 
 ## Follow-up Items
 
 - Revisit the deferred p06-t02 provider-view wording only if base/variant
   projection ownership or header contracts change.
+- Re-evaluate universal plan-template proof and testing guidance under
+  `BL-260906-re-evaluate-universal-plan`.
 
 ## Workflow Observations
 
@@ -153,15 +185,15 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 
 ### 2026-09-05 · structural · oat-project-implement · p01
 
-verdict=pass; fix_loops=0; review=reviews/archived/code-p01-review-2026-09-05T204609Z.md; reviewed_head=3427d2176a86b3f6a95219f6557b4d4798a6f1a2
+verdict=pass; fix_loops=0; review=reviews/code-p01-review-2026-09-05T204609Z.md; reviewed_head=3427d2176a86b3f6a95219f6557b4d4798a6f1a2
 
 ### 2026-09-05 · structural · oat-project-implement · p02
 
-verdict=pass; fix_loops=1; review=reviews/archived/code-p02-review-2026-09-05T210504Z.md; reviewed_head=948434796085b5c537542213fd562194827a822c; merge=d8e94966424e10b5616a09abc62d758e15ac672c
+verdict=pass; fix_loops=1; review=reviews/code-p02-review-2026-09-05T210504Z.md; reviewed_head=948434796085b5c537542213fd562194827a822c; merge=d8e94966424e10b5616a09abc62d758e15ac672c
 
 ### 2026-09-05 · structural · oat-project-implement · p03
 
-verdict=pass; fix_loops=1; review=reviews/archived/code-p03-review-2026-09-05T210747Z.md; reviewed_head=4b1eb65a41ffe179793cd9eca7e7f3d963ec6766; merge=2e922483f
+verdict=pass; fix_loops=1; review=reviews/code-p03-review-2026-09-05T210747Z.md; reviewed_head=4b1eb65a41ffe179793cd9eca7e7f3d963ec6766; merge=2e922483f
 
 ### 2026-09-05 · structural · oat-project-implement · p04-recovery-1
 
@@ -169,7 +201,7 @@ disposition=failed-attempt; attempt=1/10; event=p04-recovery-1-bundled-autonomy-
 
 ### 2026-09-05 · structural · oat-project-implement · p04
 
-Phase p04 passed independent review with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings; artifact reviews/archived/code-p04-review-2026-09-05T223510Z.md; fix loops 0.
+Phase p04 passed independent review with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings; artifact reviews/code-p04-review-2026-09-05T223510Z.md; fix loops 0.
 
 ### 2026-09-06 · structural · oat-project-implement · p06
 
@@ -177,7 +209,7 @@ verdict=blocked; tasks=2/3; request=lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c0
 
 ### 2026-09-06 · structural · oat-project-implement · p06
 
-verdict=pass; tasks=3/3; fix_loops=1; review=reviews/archived/p06-review-2026-09-06T011617Z.md; reviewed_head=d79a58b1b0f8aff53a361b3e591f5cff510106d9; findings=critical:0,important:0,medium:2,minor:0; next=final-review
+verdict=pass; tasks=3/3; fix_loops=1; review=reviews/p06-review-2026-09-06T011617Z.md; reviewed_head=d79a58b1b0f8aff53a361b3e591f5cff510106d9; findings=critical:0,important:0,medium:2,minor:0; next=final-review
 
 ### 2026-09-06 · structural · oat-project-review-provide · final
 
@@ -194,3 +226,19 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 ### 2026-09-06 · structural · oat gate review · final
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T041855Z.md
+
+### 2026-09-06 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/lite-workflow-mode/references/project-retro.md evidence_used=archived-review-markdown,dispatch-records,gate-receipts,git-history,github-pr-state,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings,spec promotions=2 upstream=2 apply=deferred filing=deferred
+
+### 2026-09-06 · structural · oat-project-implement · p-rev1
+
+Phase launch invalidated before edits: accepted native child was stopped because dispatch-journal persistence failed on legacy review-record fields; root later advanced HEAD with the separately authorized backlog commit.
+
+### 2026-09-06 · structural · oat-project-implement · p-rev1
+
+BLOCKED after 2/2 task commits and failed recovery attempt 1/10; see implementation.md Run 2 and Recovery Event p-rev1-recovery-1.
+
+### 2026-09-06 · structural · oat-project-implement · p-rev1
+
+verdict=pass; tasks=7/7; fix_loops=2; recovery_attempts=2; review=reviews/archived/p-rev1-review-2026-09-06T173547Z.md; reviewed_head=1ad8e44b9b83c7d887085c04c6afafb2bb7e5056; final_task=f6504815b2e175a4d1e2af0a03baf45a59baa412; findings=critical:0,important:0,medium:0,minor:0; next=authorized-push-pr-refresh

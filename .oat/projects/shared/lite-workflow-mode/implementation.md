@@ -1,8 +1,7 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
-oat_blockers:
-  - PR #264 does not yet include the local p-rev1 commits; push requires explicit authorization
+oat_blockers: []
 oat_last_updated: 2026-09-06
 oat_current_task_id: null
 oat_generated: false
@@ -1624,6 +1623,191 @@ fields. The review ledger, implementation record, review artifacts, and Git
 history preserve the removed information. The source parser accepts all 33
 current journal records, and the 71 focused recorder tests pass.
 
+## Phase p-rev1: Restore Adaptive Spec Depth and Proportionate Proof
+
+**Status:** complete
+**Completed:** 2026-09-06
+
+### Task prev1-t01: Restore adaptive product and technical specification content
+
+**Status:** completed
+**Commit:** 77710ca35524af03b3b257872813e2ce5f846d87 (reconciled)
+
+**Outcome (reconciled from implementation):**
+
+- Added explicit `minimal`, `product`, `technical`, and `both` Lite plan shapes.
+- Required numbered Product Behavior and bounded Technical Design content when
+  their observable triggers apply.
+- Preserved both optional sections during Lite-to-Quick promotion.
+
+**Files changed:**
+
+- `.oat/templates/plan-lite.md` and `.agents/skills/oat-project-lite/SKILL.md`
+- Lite reviewer, implementer, promotion, scaffold, contract-test, and docs surfaces
+
+**Verification:**
+
+- Result: passed the focused scaffold, promotion, and skill-contract suites.
+
+**Notes / Decisions:**
+
+- Reconciled from the task-ID commit and the existing revision outcome record.
+- Mapping confidence: high; mapping signal: exact task ID in commit message.
+
+### Task prev1-t02: Make Lite implementation proof proportionate to risk
+
+**Status:** completed
+**Commit:** c2c27b647697499cdffb3a64141b10af095b9ef5 (reconciled)
+
+**Outcome (reconciled from implementation):**
+
+- Replaced mandatory test-first wording with a risk-proportionate proof strategy.
+- Required fail-capable evidence for behavioral changes while avoiding unnecessary
+  fixtures and test harnesses for prose or mechanical work.
+- Repaired autonomy inventory and generated projection drift through bounded
+  recovery commit `d57119df38dbcf812340bb6a11b504863e354144`.
+
+**Files changed:**
+
+- Lite template, planning skill, reviewer, implementer, and autonomy contracts
+- Skill-contract tests, bundled template, and project-scoped provider projections
+
+**Verification:**
+
+- Result: passed focused proof-strategy, autonomy, skill, and repository gates.
+
+**Notes / Decisions:**
+
+- Reconciled from the task-ID commit, recovered continuation, and existing recovery ledger.
+- Mapping confidence: high; mapping signal: exact task ID in commit messages.
+
+### Task prev1-t03: Correct the executable revision proof commands
+
+**Status:** completed
+**Commit:** dab9d9e39b6618662ee9e052e3e7cd7b8846a95e (reconciled)
+
+**Outcome (reconciled from implementation):**
+
+- Corrected revision verification commands to execute from the CLI workspace.
+
+**Files changed:**
+
+- `.oat/projects/shared/lite-workflow-mode/plan.md`
+
+**Verification:**
+
+- Result: corrected combined proof command passed.
+
+**Notes / Decisions:**
+
+- Mapping confidence: high; mapping signal: exact task ID in commit message.
+
+### Task prev1-t04: Prove adaptive promotion preserves content
+
+**Status:** completed
+**Commit:** 84470bf096dd34f757307f0b894694c6fa53e77d (reconciled)
+
+**Outcome (reconciled from implementation):**
+
+- Added fail-capable controls for Product Behavior and Technical Design payloads.
+- Proved the archived Lite source remains byte-equal for all four plan shapes.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/promote/promote.test.ts`
+
+**Verification:**
+
+- Result: neutralized interpolations failed the expected cases; restored suite passed 28/28.
+
+**Notes / Decisions:**
+
+- Mapping confidence: high; mapping signal: exact task ID in commit message.
+
+### Task prev1-t05: Put autonomous proof boundaries in the executor
+
+**Status:** completed
+**Commit:** 90c74a7e1d62832b326c5a7d80b876169a9078ad (reconciled)
+
+**Outcome (reconciled from implementation):**
+
+- Moved `IMPLEMENT-20` ownership to `oat-project-implement` and its phase executor.
+- Made unavailable required manual or visual proof a fail-closed boundary.
+
+**Files changed:**
+
+- Implementation skill, phase-execution reference, phase implementer, autonomy contract
+- Autonomy, named-skill, and skill-contract tests plus provider projections
+
+**Verification:**
+
+- Result: executor-boundary contracts, project sync dry-run, and repository gates passed.
+
+**Notes / Decisions:**
+
+- Mapping confidence: high; mapping signal: exact task ID in commit message.
+
+### Task prev1-t06: Align the lightweight design with revision 1
+
+**Status:** completed
+**Commit:** a0d92b1384992ef2ce9eb656b904039638977927 (reconciled)
+
+**Outcome (reconciled from implementation):**
+
+- Aligned the durable design with adaptive shapes, payload-preserving promotion,
+  proportionate proof, and executor-owned proof boundaries.
+
+**Files changed:**
+
+- `.oat/projects/shared/lite-workflow-mode/design.md`
+
+**Verification:**
+
+- Result: terminology search found the revised contract without fixed-five-section drift.
+
+**Notes / Decisions:**
+
+- Mapping confidence: high; mapping signal: exact task ID in commit message.
+
+### Task prev1-t07: Assert the complete carried-forward technical design
+
+**Status:** completed
+**Commit:** f6504815b2e175a4d1e2af0a03baf45a59baa412 (reconciled)
+
+**Outcome (reconciled from implementation):**
+
+- Compared the complete Technical Design body with the parsed source section.
+- Added a tail-only Data Flow truncation control for the technical shapes.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/promote/promote.test.ts`
+
+**Verification:**
+
+- Result: truncation failed only the two expected cases; restored suite passed 28/28.
+
+**Notes / Decisions:**
+
+- Mapping confidence: high; mapping signal: exact task ID in commit message.
+
+### 2026-09-06 Reconciliation
+
+**Session Start:** reconciliation
+
+- [x] `prev1-t01` through `prev1-t07` mapped to their exact task-ID commits.
+
+**What changed (high level):**
+
+- Added structured completed-task entries for all seven already-completed revision tasks.
+- Preserved the existing recovery, review, and negative-control narrative.
+
+**Decisions:**
+
+- Seven high-confidence mappings; no unplanned or skipped commits.
+
+**Session End:** reconciliation complete
+
 ### Recovery Event p-rev1-recovery-1
 
 - Phase/task: p-rev1 / prev1-t02
@@ -1776,15 +1960,15 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase  | Tests Run                                                                                                                            | Passed                                   | Failed  | Coverage                                                      |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | ------- | ------------------------------------------------------------- |
-| 1      | Focused control-plane/CLI, check, type-check, test, build                                                                            | Yes                                      | 0       | Mode declaration, parsing, scaffold, help                     |
-| 2      | Focused router/dashboard/closeout suites plus full phase gates                                                                       | Yes                                      | 0       | Recommendation, progress routing, PR closeout                 |
-| 3      | Focused split/promote/validator suites plus full phase gates                                                                         | Yes                                      | 0       | Promotion safety and Lite plan validation                     |
-| 4      | Skill contracts, end-to-end Lite integration, full phase gates                                                                       | Yes after bounded recovery               | 0 final | Dedicated Lite workflow and bundled assets                    |
-| 5      | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops           | 0 final | Review, import, progress, recap bypass, PR flow               |
-| 6      | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes; p06-t10 and p06-t11 used no retries | 0 final | Docs, provider sync, real promotion routing, release `0.2.60` |
-| p-rev1 | Focused revision suites, promotion negative controls, full repository gates, post-fix contract tests, project sync dry-run           | Yes after recovery and review fix loop 1 | 0 final | Adaptive Lite depth, proportionate proof, executor boundary   |
+| Phase  | Tests Run                                                                                                                            | Passed                                      | Failed  | Coverage                                                      |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- | ------- | ------------------------------------------------------------- |
+| 1      | Focused control-plane/CLI, check, type-check, test, build                                                                            | Yes                                         | 0       | Mode declaration, parsing, scaffold, help                     |
+| 2      | Focused router/dashboard/closeout suites plus full phase gates                                                                       | Yes                                         | 0       | Recommendation, progress routing, PR closeout                 |
+| 3      | Focused split/promote/validator suites plus full phase gates                                                                         | Yes                                         | 0       | Promotion safety and Lite plan validation                     |
+| 4      | Skill contracts, end-to-end Lite integration, full phase gates                                                                       | Yes after bounded recovery                  | 0 final | Dedicated Lite workflow and bundled assets                    |
+| 5      | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops              | 0 final | Review, import, progress, recap bypass, PR flow               |
+| 6      | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes; p06-t10 and p06-t11 used no retries    | 0 final | Docs, provider sync, real promotion routing, release `0.2.60` |
+| p-rev1 | Focused revision suites, promotion negative controls, full repository gates, post-fix contract tests, project sync dry-run           | Yes after recovery and two review fix loops | 0 final | Adaptive Lite depth, proportionate proof, executor boundary   |
 
 ## Final Summary (for PR/docs)
 
@@ -1792,11 +1976,15 @@ Track test execution during implementation.
 
 - A fourth `lite` workflow mode with a dedicated three-artifact scaffold,
   adaptive single-phase plan contract, validation, and mode-aware routing.
+- Adaptive Lite plan shapes that add Product Behavior and Technical Design when
+  observable change triggers require them, without burdening mechanical work.
+- Risk-proportionate proof strategies with fail-capable behavioral evidence and
+  executor-owned manual or visual proof boundaries.
 - The `oat-project-lite` planning skill with one batched interview, one plan
   approval, automatic promotion to quick when scope outgrows Lite, managed
   dispatch, phase/final reviews, and PR-first closeout.
 - Provider projections, docs, lifecycle integrations, and lockstep public
-  package release surfaces synchronized at `0.2.61`.
+  package release surfaces synchronized at `0.2.62` after integrating Wave 3.
 
 **Behavioral changes (user-facing):**
 
