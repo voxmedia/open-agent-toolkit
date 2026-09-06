@@ -2771,7 +2771,7 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.1'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.2'],
       ['.agents/agents/oat-reviewer.md', '1.2.1'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.3'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
@@ -3081,7 +3081,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.1');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.2');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
@@ -3392,6 +3392,77 @@ describe('validateOatSkills', () => {
       );
       expect(contract, `${name} contradictory conjunction`).not.toMatch(
         /accepted implementation handle and exact (?:launcher-owned dispatch )?target[\s\S]{0,80}remain (?:available|intact)/i,
+      );
+    }
+  });
+
+  it('prescribes verified capture-and-restore before a fresh child continues on a dirty tree', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+
+    expect(phase).toMatch(
+      /a\s+fresh\s+child\s+never\s+starts\s+on\s+a\s+dirty\s+tree/i,
+    );
+    expect(phase).toMatch(
+      /dirty worktree[\s\S]{0,120}blocks continuation[\s\S]{0,240}`recovered_patch`[\s\S]{0,240}unverified[\s\S]{0,160}still blocks/i,
+    );
+
+    let cursor = -1;
+    for (const step of [
+      'cannot still be writing',
+      'capture-dirty-tree.mjs',
+      '`round-trip-failed`',
+      'restore --staged',
+      '`recovered_patch`',
+      '--verify',
+      'git apply --index',
+      'commits it as its first',
+      'continuation event',
+    ]) {
+      const next = phase.indexOf(step, cursor + 1);
+      expect(next, `ordered capture chain step ${step}`).toBeGreaterThan(
+        cursor,
+      );
+      cursor = next;
+    }
+
+    const contracts = [
+      ['phase root', phase],
+      ['phase agent', agent],
+    ] as const;
+
+    for (const [name, contract] of contracts) {
+      expect(contract, `${name} capture script path`).toContain(
+        '.agents/skills/oat-project-implement/scripts/capture-dirty-tree.mjs',
+      );
+      for (const reason of [
+        'active-writer',
+        'unsupported-dirt',
+        'round-trip-failed',
+        'artifact-verification-failed',
+      ]) {
+        // Presence is not enough: each reason has to sit inside a clause that
+        // still calls it a stop, so a prose rewrite cannot quietly turn one
+        // into a best-effort path.
+        expect(contract, `${name} ${reason} stop clause`).toMatch(
+          new RegExp(`${reason}[\\s\\S]{0,320}\\bstop`, 'i'),
+        );
+      }
+      expect(contract, `${name} recovered_patch brief field`).toMatch(
+        /recovered_patch:\s*\{\s*artifact,\s*manifest_digest,\s*size,\s*stat,\s*components\s*\}/,
+      );
+      expect(contract, `${name} artifact lives outside the worktree`).toMatch(
+        /`artifact`\s+is\s+a\s+readable\s+path\s+outside\s+the\s+worktree,\s+never\s+a\s+mutable\s+worktree\s+path/i,
+      );
+      expect(contract, `${name} verifies before applying`).toMatch(
+        /--verify[\s\S]{0,240}--manifest-digest[\s\S]{0,600}git apply --index/i,
+      );
+      expect(contract, `${name} refuses a best-effort restore`).toMatch(
+        /(?:never|no)[\s\S]{0,120}best-effort restore/i,
       );
     }
   });
@@ -5237,7 +5308,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.1'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.2'],
       ['.agents/agents/oat-reviewer.md', '1.2.1'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.1'],
     ] as const;
