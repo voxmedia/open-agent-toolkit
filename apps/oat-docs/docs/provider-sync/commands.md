@@ -94,16 +94,18 @@ Key behavior:
   `No changes required.`, so a manifest write is never described as a no-op.
 
 `oat sync` is not the only command that replaces a manifest's producer version.
-`oat init`, `oat remove skill`, and `oat status` each compare the manifest's
-`oatVersion` with the invoking CLI version immediately before the save that
-would restamp it, and log the same advisory when the two differ:
+`oat init`, `oat remove skill`, and `oat status` each capture the manifest's
+pre-mutation `oatVersion` while loading and planning, compare it with the
+invoking CLI version, and log the same advisory immediately before a qualifying
+save when the two differ:
 
 ```text
 Manifest version restamp [init user]: manifest produced by oat "0.2.58" will be restamped to oat "0.2.59".
 ```
 
-The check sits immediately before the save, so a run that aborts earlier never
-announces a restamp it did not perform, and an equal or absent version stays
+The advisory sits immediately before the save, so a run that aborts earlier
+never announces a restamp it did not perform; a save that fails after the
+advisory still leaves the manifest unrestamped. An equal or absent version stays
 quiet. JSON mode suppresses the human warning; `oat init` and `oat remove skill`
 report the applied restamps under a top-level `manifestVersionRestamps` array of
 `{ scope, producingVersion, invokingVersion }` entries. The `oat remove skill`

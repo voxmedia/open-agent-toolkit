@@ -74,9 +74,14 @@ export const SKILL_GATE_OVERRIDE_SOURCE = `state.md:${SKILL_GATE_OVERRIDE_FIELD}
 
 /**
  * Canonical gate-aware lifecycle skills: exactly the skills declaring
- * `oat_gateable: true` in their frontmatter, which is the only set a configured
- * gate may target. An override key outside this set can never disable anything,
- * so accepting one would silently record an inert instruction.
+ * `oat_gateable: true` in their frontmatter, which is the only set a project
+ * override may target. An override key outside this set can never disable
+ * anything, so accepting one would silently record an inert instruction.
+ *
+ * This set does not bound which skills a configured gate may target. Gate
+ * resolution performs the same config lookup for any skill name, so a
+ * configured gate on a non-gate-aware skill still resolves and executes; it
+ * simply applies to every project because no override key for it is accepted.
  *
  * `skills.test.ts` pins this constant against the live `oat_gateable: true`
  * declarations so the two cannot drift apart.

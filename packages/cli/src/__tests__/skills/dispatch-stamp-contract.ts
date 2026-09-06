@@ -19,9 +19,11 @@ import { expect } from 'vitest';
  * the contract must live inside its owning section (so a compliant paragraph
  * cannot be relocated elsewhere while the normative one is deleted), and it
  * must appear exactly once per surface. Section membership is enforced by
- * rejecting any Markdown heading between the owning section and the contract
- * anchor, not by the proximity bound alone; the 2000-character reach is a
- * secondary bound layered on top of that check.
+ * rejecting any ATX heading between the owning section and the contract anchor,
+ * not by the proximity bound alone; the 2000-character reach is a secondary
+ * bound layered on top of that check. Setext headings are out of reach because
+ * the content is flattened before scanning, which destroys the underline that
+ * defines them; every governed surface uses ATX headings throughout.
  */
 
 /** Anchor that opens the contract paragraph in every governed surface. */
@@ -62,7 +64,9 @@ const OWNING_SECTION_REACH = 2000;
  * belongs to a different section, which is what makes the membership claim in
  * this file's header categorical rather than merely proximate. The
  * whitespace-delimited form does not match `#` inside inline code or a link
- * fragment such as `(...#per-project-gate-overrides)`.
+ * fragment such as `(...#per-project-gate-overrides)`. A `# comment` line in a
+ * fenced block would match, which only ever rejects; erring toward rejection is
+ * the safe direction for a guard whose failure mode is a silent pass.
  */
 const INTERVENING_HEADING = /(?:^|\s)#{1,6}\s/;
 
