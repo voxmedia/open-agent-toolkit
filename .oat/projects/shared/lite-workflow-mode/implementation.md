@@ -536,6 +536,13 @@ Its state-carrier-excluded implementation and freshness fingerprint is
 `sha256:effective-delta-v1:cbc2516b42a85a03417b862004ff102f07281d8fc28b636e0be1992ad6ce511d`.
 No launch has occurred yet.
 
+#### Configured implementation exit gate launch intent persisted
+
+Launch attempt `99a353dd-5365-4820-9f46-ad81e9edc2ab` is reserved with start
+time `2026-09-06T02:03:28Z`. Its stdout receipt will be written directly to
+`reviews/gate-receipts/implement-exit-99a353dd-5365-4820-9f46-ad81e9edc2ab.json`.
+The exact resolved command remains unexecuted at this checkpoint.
+
 #### Final re-review passed
 
 **Review artifact:**
