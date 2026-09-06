@@ -5290,7 +5290,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable research-pack callers to installed-root schema reads', async () => {
     const callers = [
-      ['.agents/skills/analyze/SKILL.md', '0.1.1'],
+      ['.agents/skills/analyze/SKILL.md', '0.2.0'],
       ['.agents/skills/compare/SKILL.md', '0.1.1'],
     ] as const;
 
@@ -6836,5 +6836,59 @@ describe('bundled skill contract truthfulness — idea-summarize tools', () => {
     expect(fallback, 'missing-active-idea fallback').toBeDefined();
     expect(fallback).toContain('Use the Glob tool');
     expect(fallback).toContain('oat config set activeIdea');
+  });
+});
+
+describe('bundled skill contract truthfulness — analyze progress model', () => {
+  it('keeps analyze on a single ten-step progress model', async () => {
+    const analyze = await readRepoFile('.agents/skills/analyze/SKILL.md');
+
+    // No stale nine-step denominator survives anywhere in the skill.
+    expect(analyze).not.toMatch(/\[\d+\/9\]/);
+
+    const advertised = analyze.slice(
+      analyze.indexOf('## Progress Indicators (User-Facing)'),
+      analyze.indexOf('## Workflow'),
+    );
+    const advertisedSteps = [
+      ...advertised.matchAll(/^- `\[(\d+)\/(\d+)\] ([^`]+)`/gm),
+    ];
+
+    expect(advertisedSteps.map(([, index]) => index)).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+    ]);
+    expect([...new Set(advertisedSteps.map(([, , total]) => total))]).toEqual([
+      '10',
+    ]);
+    expect(
+      new Set(advertisedSteps.map(([, , , label]) => label)).size,
+      'distinct advertised step labels',
+    ).toBe(10);
+
+    // The workflow body emits the same ten-step model it advertises: same
+    // indices, same denominators, same labels, one heading each.
+    const workflow = analyze.slice(analyze.indexOf('## Workflow'));
+    const emitted = [...workflow.matchAll(/\[(\d+)\/(\d+)\] ([^`\n]+)/g)];
+    expect(emitted.map(([, index]) => index)).toEqual(
+      advertisedSteps.map(([, index]) => index),
+    );
+    expect(emitted.map(([, , total]) => total)).toEqual(
+      advertisedSteps.map(([, , total]) => total),
+    );
+    expect(emitted.map(([, , , label]) => label.trim())).toEqual(
+      advertisedSteps.map(([, , , label]) => label.trim()),
+    );
+    expect(
+      [...workflow.matchAll(/^### Step (\d+):/gm)].map(([, index]) => index),
+    ).toEqual(advertisedSteps.map(([, index]) => index));
   });
 });
