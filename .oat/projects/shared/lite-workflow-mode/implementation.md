@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: null
+oat_current_task_id: prev2-t01
 oat_generated: false
 ---
 
@@ -33,10 +33,49 @@ oat_generated: false
 | Phase 5      | complete | 4     | 4/4       |
 | Phase 6      | complete | 11    | 11/11     |
 | Phase p-rev1 | complete | 7     | 7/7       |
+| Phase p-rev2 | pending  | 3     | 0/3       |
 
-**Total:** 34/34 tasks completed; p-rev1 passed independent review
+**Total:** 34/37 tasks completed; p-rev2 review fixes pending
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
+
+---
+
+## Phase p-rev2: Review Fixes — Wave 4 Integration and Closeout
+
+**Status:** pending
+**Started:** 2026-09-06
+
+### Review Received: final — Wave 4 integration
+
+**Date:** 2026-09-06
+**Review artifact:** `reviews/archived/final-review-2026-09-06T225347Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 3
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** `prev2-t01`, `prev2-t02`, `prev2-t03`
+
+**Finding dispositions:**
+
+- I1 → `prev2-t01` (`code_fix_required`): compose the shared lifecycle-gate
+  posture setup into native Lite planning and register `LITE-10`.
+- I2 → `prev2-t03` (`code_fix_required` only if reproduced): obtain fresh
+  terminal CI evidence and fix the SIGTERM path only if the failure repeats.
+- I3 → `prev2-t02` (`artifact_alignment_required`): accept the merged `0.2.60`
+  release surfaces as authoritative and align state, summaries, and PR text.
+
+**Deferred Medium disposition:** The historical p06-t02 supported-catalogue
+header wording remains explicitly deferred. Current generated projections are
+the source of truth. Revisit only if projection ownership or header contracts
+change.
+
+**Next:** Execute p-rev2 through `oat-project-implement`, then run a focused
+re-review of the p-rev2 fix range before retrospective generation.
 
 ---
 

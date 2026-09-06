@@ -1403,7 +1403,7 @@ git commit -m "docs(p06-t11): align brainstorming guidance with lite"
 | final  | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T024254Z.md                             | c3a79f0589615b6f30760fc964bbe14d0007356e | gate       | claude-fable-skip-permissions |
 | final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T032005Z.md                             | c4793585aee012ed134e1ba1eba0a819230a9c23 | auto       | -                             |
 | final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T041855Z.md                             | 1db941a63c0d2892c6686f4b2a3727ab0143bea0 | gate       | claude-fable-skip-permissions |
-| final  | code     | received        | 2026-09-06 | reviews/final-review-2026-09-06T225347Z.md                                      | 55a724468eb48f89e49850392f831127a0c2852c | manual     | -                             |
+| final  | code     | fixes_added     | 2026-09-06 | reviews/archived/final-review-2026-09-06T225347Z.md                             | 55a724468eb48f89e49850392f831127a0c2852c | manual     | -                             |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1790,6 +1790,152 @@ git commit -m "test(prev1-t07): assert complete technical design preservation"
 
 ---
 
+## Phase p-rev2: Review Fixes — Wave 4 Integration and Closeout
+
+**Goal:** Close the three Important findings from the post-Wave-4 final review
+without reopening previously accepted Lite or p-rev1 behavior.
+
+**Finding disposition:** I1 requires a code/contract fix. I2 requires fresh
+terminal CI evidence and a conditional code fix only if the failure reproduces.
+I3 requires artifact alignment; the merged `0.2.60` release surfaces are the
+source of truth. The historical p06-t02 Medium remains explicitly deferred
+under the earlier user decision and the current final review.
+
+### Task prev2-t01: (review) Compose Lite with lifecycle-gate posture setup
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-lite/SKILL.md`
+- Modify: `.agents/docs/autonomy-contract.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/project-start-preflight-contracts.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Regenerate: `packages/cli/assets/skills/oat-project-lite/`
+- Regenerate: `.oat/sync/manifest.json`
+
+**Step 1: Implement the missing planning-time composition**
+
+After Lite has stable plan phase IDs and before its plan artifact-review loop,
+invoke the complete Shared Lifecycle Gate Posture Setup Contract from
+`oat-project-plan-writing`. Preserve an existing `oat_skill_gate_overrides`
+map unchanged. In interactive planning, offer Keep or Disable independently for
+each configured gate. In non-interactive planning, preserve configured gates
+and do not invent an override.
+
+Register this decision as `LITE-10` in the autonomy inventory and map the new
+prompt sites. Do not change Lite's existing project-aware gate execution,
+adaptive Product Behavior / Technical Design shapes, or proportionate-proof
+contract.
+
+Add a fail-capable contract assertion that enumerates Lite with the other
+plan-producing callers. Bump the canonical Lite skill once for this PR and
+update every exact version pin. Regenerate only project-scoped provider and
+bundled projections. Keep the public package lockstep at `0.2.60` unless the
+release gate proves a newer version is required relative to `origin/main`.
+
+**Step 2: Format**
+
+Run: `pnpm format:fix`
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/project-start-preflight-contracts.test.ts src/validation/skills.test.ts --no-file-parallelism`
+
+Expected: the test fails if Lite omits the shared posture call or `LITE-10`,
+and passes with the complete contract, autonomy mapping, and version pins.
+
+Run: `pnpm run cli -- sync --scope project --dry-run && pnpm run check:skill-bumps`
+
+Expected: project provider projections are current and the skill-version gate
+passes.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-lite/SKILL.md .agents/docs/autonomy-contract.md packages/cli/src/commands/init/tools/shared/project-start-preflight-contracts.test.ts packages/cli/src/validation/skills.test.ts packages/cli/assets/skills/oat-project-lite .oat/sync/manifest.json
+git commit -m "fix(prev2-t01): compose lite gate posture setup"
+```
+
+---
+
+### Task prev2-t02: (review) Align Wave 4 closeout artifacts
+
+**Files:**
+
+- Modify: `.oat/projects/shared/lite-workflow-mode/state.md`
+- Modify: `.oat/projects/shared/lite-workflow-mode/summary.md`
+- Modify: `.oat/projects/shared/lite-workflow-mode/implementation.md`
+- Modify: the existing final PR description artifact under
+  `.oat/projects/shared/lite-workflow-mode/pr/`
+
+**Step 1: Refresh the durable closeout narrative**
+
+Replace active Wave 3 / `0.2.62` closeout claims with the reviewed Wave 4 merge
+and `0.2.60` release facts. Preserve historical execution entries. Record the
+post-Wave-4 review, the p-rev2 fix phase, and the remaining CI/re-review
+boundary. Keep PR #264 open; do not merge it.
+
+Prepare the stripped final PR body from the refreshed local PR artifact. The
+root session will publish that body with `gh pr edit` after the bookkeeping
+commit; the implementation worker must not claim that external update occurred.
+
+**Step 2: Format**
+
+Run: `pnpm format:fix`
+
+**Step 3: Verify**
+
+Run: `rg -n "Wave 3|0\\.2\\.62" .oat/projects/shared/lite-workflow-mode/state.md .oat/projects/shared/lite-workflow-mode/summary.md .oat/projects/shared/lite-workflow-mode/implementation.md .oat/projects/shared/lite-workflow-mode/pr/`
+
+Expected: no active closeout or PR-description claim names Wave 3 or `0.2.62`;
+historical execution evidence is unchanged.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/lite-workflow-mode/state.md .oat/projects/shared/lite-workflow-mode/summary.md .oat/projects/shared/lite-workflow-mode/implementation.md .oat/projects/shared/lite-workflow-mode/pr/
+git commit -m "docs(prev2-t02): align Wave 4 closeout artifacts"
+```
+
+---
+
+### Task prev2-t03: (review) Re-establish terminal verification and CI
+
+**Files:**
+
+- Modify only if a defect reproduces: `tools/smoke/runner/cleanup.test.mjs`
+- Modify: `.oat/projects/shared/lite-workflow-mode/implementation.md`
+
+**Step 1: Reproduce before changing code**
+
+Run the exact SIGTERM cleanup subtest repeatedly in a clean local environment.
+If it fails, preserve the failing child-process evidence, instrument the signal
+path, and fix the termination or cleanup defect with a focused regression. If
+it does not fail, record the original CI mechanism as inconclusive rather than
+calling it flaky.
+
+**Step 2: Run terminal repository verification**
+
+Run every Definition of Done gate from `AGENTS.md` in order with explicit exit
+codes. Run evidence-grade uncached tests with isolated `HOME`, plus `pnpm lint`
+and `pnpm format` because canonical skills changed.
+
+After the root pushes the complete fix range, require a fresh required CI run
+for the exact remote head. A repeated SIGTERM timeout reopens this task; a green
+run supplies the external closeout evidence. Do not merge the PR.
+
+**Step 3: Format**
+
+Run: `pnpm format:fix`
+
+**Step 4: Commit**
+
+```bash
+git add tools/smoke/runner/cleanup.test.mjs .oat/projects/shared/lite-workflow-mode/implementation.md
+git commit -m "test(prev2-t03): restore terminal verification evidence"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -1801,8 +1947,9 @@ git commit -m "test(prev1-t07): assert complete technical design preservation"
 - Phase 5: 4 tasks - mode-aware skill branches, import-to-lite offer, checkpoint bypass, collapsed closeout
 - Phase 6: 11 tasks - docs and triage, manual run and sync, lockstep release gates, four lifecycle-final-review fixes, and four exit-gate fixes (last)
 - Phase p-rev1: 7 tasks - adaptive specification depth, proportionate proof, executable evidence, exact promotion preservation, autonomous proof boundaries, and design alignment
+- Phase p-rev2: 3 tasks - Lite lifecycle-gate posture composition, Wave 4 closeout alignment, and terminal CI evidence
 
-**Total:** 34 tasks across 7 phases
+**Total:** 37 tasks across 8 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

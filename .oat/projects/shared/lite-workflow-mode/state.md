@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev2-t01
 oat_last_commit: f6504815b2e175a4d1e2af0a03baf45a59baa412
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -106,7 +106,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T19:44:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T23:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -118,8 +118,8 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — p-rev1 complete and independently reviewed; PR open and
-refreshed through the Wave 3 integration.
+Implementation — p-rev2 review fixes in progress after the post-Wave-4 final
+review; PR #264 remains open.
 
 ## Artifacts
 
@@ -183,15 +183,17 @@ refreshed through the Wave 3 integration.
 - ✓ Revision phase p-rev1 complete after 7 tasks, 2 fix loops, and 2 bounded
   recovery attempts
 - ✓ Revision, Wave 3 merge, and reconciled tracking published to PR #264
+- ✓ Wave 4 merged from current `main` and published to PR #264
+- ⧗ Post-Wave-4 final review received with 3 Important findings
+- ⧗ Review-fix phase p-rev2 started at `prev2-t01`
 
 ## Blockers
 
-None. Wave 4 integration is expected before final closeout and will receive a
-separate review after it lands.
+None. The three post-Wave-4 findings are tracked as p-rev2 implementation work.
 
 ## Next Milestone
 
-After the Wave 4 owner merges current `main` and resolves its conflicts, review
-that integration, refresh affected artifacts, run the project retrospective,
-and complete the project. Merge and release remain separate authorization
-boundaries.
+Complete p-rev2, obtain a fresh green required CI run, and pass the focused
+final re-review. Then refresh the final PR description and generate the project
+retrospective. Project completion, PR merge, and release remain separate
+authorization boundaries.
