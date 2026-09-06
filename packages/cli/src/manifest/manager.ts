@@ -34,6 +34,66 @@ export function createEmptyManifest(): Manifest {
   };
 }
 
+/**
+ * Structured evidence that the CLI version recorded in a manifest differs from
+ * the CLI version that is about to rewrite it.
+ *
+ * `saveManifest` unconditionally replaces `oatVersion` with `OAT_VERSION`, so
+ * this is the only record of the producing version once a save has happened.
+ * Commands compute it from the pre-mutation manifest and report it *before*
+ * their save, which is why it is a value rather than an output side effect.
+ */
+export interface ManifestVersionRestamp<TScope extends string = string> {
+  scope: TScope;
+  producingVersion: string;
+  invokingVersion: string;
+}
+
+/**
+ * Derive the advisory restamp diagnostic for a loaded scope manifest.
+ *
+ * This is the single comparison used by every command that saves a manifest,
+ * so the semantics cannot drift between call sites. Comparison is plain string
+ * inequality on identity, never semantic-version ordering: "different" is the
+ * contract, not "older" or "newer".
+ *
+ * Only `oatVersion` is reported. The silent V1 -> V2 `version` upgrade that
+ * `loadManifest` performs in memory is deliberately out of scope for this
+ * advisory: it is a schema migration rather than a loss of producer evidence.
+ *
+ * An absent manifest never reports a restamp, because `loadManifest` returns an
+ * empty manifest already stamped with the invoking version and the two strings
+ * match. Invalid manifests never reach here at all; the loader and schema keep
+ * their existing fail-closed behavior.
+ */
+export function detectManifestVersionRestamp<TScope extends string>(
+  scope: TScope,
+  manifest: Pick<ManifestV2, 'oatVersion'>,
+): ManifestVersionRestamp<TScope> | undefined {
+  const producingVersion = manifest.oatVersion;
+  const invokingVersion = OAT_VERSION;
+
+  if (producingVersion === invokingVersion) {
+    return undefined;
+  }
+
+  return { scope, producingVersion, invokingVersion };
+}
+
+/**
+ * Render the human advisory for a restamp diagnostic.
+ *
+ * Formatting is shared so the message stays identical across commands, but
+ * *emitting* it stays with each command: only the command knows its output
+ * ordering and whether the run is in JSON mode.
+ */
+export function formatManifestVersionRestampWarning(
+  command: string,
+  restamp: ManifestVersionRestamp,
+): string {
+  return `Manifest version restamp [${command} ${restamp.scope}]: manifest produced by oat "${restamp.producingVersion}" will be restamped to oat "${restamp.invokingVersion}".`;
+}
+
 export async function loadManifest(manifestPath: string): Promise<Manifest> {
   try {
     const raw = await readFile(manifestPath, 'utf8');

@@ -496,7 +496,15 @@ export async function runSyncApply(
       formatAppliedOutput(scopePlans, coreApplyEvidence, dependencies),
     );
     if (summary.plannedOperations === 0) {
-      context.logger.info('\nNo changes required.');
+      // A restamp is a real mutation: it overwrites the producing-version
+      // evidence even though no file operation was planned. Reporting "no
+      // changes required" for that case would contradict the advisory this
+      // same run just emitted, so the two cases are reported separately.
+      context.logger.info(
+        versionSkew.length > 0
+          ? '\nManifest version refreshed; no content changes required.'
+          : '\nNo changes required.',
+      );
     } else if (summary.failed > 0) {
       context.logger.warn('\nSync completed with partial failures.');
     } else {

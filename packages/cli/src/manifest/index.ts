@@ -2,11 +2,14 @@ export { computeDirectoryHash } from './hash';
 export {
   addEntry,
   createEmptyManifest,
+  detectManifestVersionRestamp,
   findEntry,
+  formatManifestVersionRestampWarning,
   loadManifest,
   removeEntry,
   saveManifest,
 } from './manager';
+export type { ManifestVersionRestamp } from './manager';
 export type {
   Manifest,
   ManifestCollectionEntry,

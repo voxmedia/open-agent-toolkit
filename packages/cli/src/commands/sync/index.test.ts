@@ -1269,6 +1269,9 @@ describe('createSyncCommand', () => {
 
     expect(executeSyncPlan).toHaveBeenCalledTimes(1);
     expect(capture.info).toContain('\nNo changes required.');
+    expect(capture.info).not.toContain(
+      '\nManifest version refreshed; no content changes required.',
+    );
   });
 
   it('apply (default): executes transformed rule copy plans', async () => {
@@ -1319,6 +1322,9 @@ describe('createSyncCommand', () => {
 
     expect(executeSyncPlan).toHaveBeenCalledTimes(1);
     expect(capture.info).toContain('\nNo changes required.');
+    expect(capture.info).not.toContain(
+      '\nManifest version refreshed; no content changes required.',
+    );
   });
 
   it('apply no-op: refreshes stale manifest oatVersion even when no files changed', async () => {
@@ -1352,7 +1358,13 @@ describe('createSyncCommand', () => {
       staleManifest,
       '/tmp/workspace/.oat/sync/manifest.json',
     );
-    expect(capture.info).toContain('\nNo changes required.');
+    // The restamp *is* a mutation, so the run must not report that nothing was
+    // required. Exit code and the restamp itself are unchanged by the wording.
+    expect(capture.info).toContain(
+      '\nManifest version refreshed; no content changes required.',
+    );
+    expect(capture.info).not.toContain('\nNo changes required.');
+    expect(process.exitCode).toBe(0);
   });
 
   it('apply: warns once about version skew before the sync plan executes', async () => {

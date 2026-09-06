@@ -86,7 +86,10 @@ import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { normalizeToPosixPath } from '@fs/paths';
 import {
   createEmptyManifest,
+  detectManifestVersionRestamp,
+  formatManifestVersionRestampWarning,
   loadManifest,
+  type ManifestVersionRestamp,
   saveManifest,
 } from '@manifest/manager';
 import type { Manifest } from '@manifest/manifest.types';
@@ -288,6 +291,12 @@ interface InitJsonPayload {
   straysAdopted: number;
   hookInstalled: boolean | null;
   scopes: InitScopeSummary[];
+  /**
+   * Machine-readable equivalent of the human restamp advisory: one entry per
+   * scope whose manifest was produced by a different CLI version and was
+   * therefore restamped by this run.
+   */
+  manifestVersionRestamps: ManifestVersionRestamp<ConcreteScope>[];
 }
 
 async function ensureCanonicalDirectories(
@@ -916,6 +925,7 @@ async function runInitCommand(
   let projectRoot: string | null = null;
   let oatDirExistedBefore = true;
   const scopeSummaries: InitScopeSummary[] = [];
+  const manifestVersionRestamps: ManifestVersionRestamp<ConcreteScope>[] = [];
   let migrationAborted = false;
 
   for (const scope of scopes) {
@@ -1023,6 +1033,13 @@ async function runInitCommand(
     let manifest = await dependencies.loadManifest(manifestPath);
     if (!manifest.entries) {
       manifest = createEmptyManifest();
+    }
+    // Captured from the pre-mutation manifest: adoption rewrites `manifest`
+    // and the save then replaces `oatVersion` outright, so this is the last
+    // point at which the producing version is still observable.
+    const versionRestamp = detectManifestVersionRestamp(scope, manifest);
+    if (versionRestamp) {
+      manifestVersionRestamps.push(versionRestamp);
     }
 
     const canonicalEntries = await dependencies.scanCanonical(scopeRoot, scope);
@@ -1243,6 +1260,11 @@ async function runInitCommand(
       }
     }
 
+    if (versionRestamp && !context.json) {
+      context.logger.warn(
+        formatManifestVersionRestampWarning('init', versionRestamp),
+      );
+    }
     await dependencies.saveManifest(manifestPath, manifest);
     scopeSummaries.push({
       scope,
@@ -1271,6 +1293,7 @@ async function runInitCommand(
       ),
       hookInstalled,
       scopes: scopeSummaries,
+      manifestVersionRestamps,
     };
     context.logger.json(payload);
   }
