@@ -57,7 +57,7 @@ oat_dispatch_policy: # managed/high per operator routing preference
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: blocked
+  status: pending
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
@@ -66,31 +66,31 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: bb15b260df00ef7d91ef834f1e96744eaf2db5d0 # final review passed on b1d50f5bf; this head adds the receive record only
+  reviewed_head: 1f09bb832f4db62a7c48f9b9b2b776f86973c380 # w3-p01-fix-002 (phase-execution.md:608 alignment); attempt 872d498a blocked and received
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v1:6fe120ede2cea7075b7cb6241e1ad06e4b95fd9a87c6b13c4b469204351fb433'
-  freshness_head: bb15b260df00ef7d91ef834f1e96744eaf2db5d0
-  freshness_fingerprint: 'sha256:effective-delta-v1:6fe120ede2cea7075b7cb6241e1ad06e4b95fd9a87c6b13c4b469204351fb433'
-  launch_state: result_persisted
-  launch_attempt_id: 'w3-exit-gate-20260906T140148Z'
-  launch_started_at: '2026-09-06T14:01:48Z'
-  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w3/w3-exit-gate-20260906T140148Z.receipt.json'
-  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/872d498a-ade9-4dff-8881-6da0b70c0360.json'
-  gate_run_id: '872d498a-ade9-4dff-8881-6da0b70c0360'
-  envelope_status: blocked
-  artifact: '.oat/projects/shared/wave-3-execution/reviews/final-review-2026-09-06T140727Z.md'
-  handoff: 'Gate attempt 872d498a blocked (0C/2I): root acceptance clause at phase-execution.md:608; discovery sync-scope text and closeout wording. Received; fix w3-p01-fix-002 then re-run'
-  receive_state: completed
-  receive_correlation: 'run=872d498a-ade9-4dff-8881-6da0b70c0360; handoff=receive; source=reviews/final-review-2026-09-06T140727Z.md; scope=final; type=code'
-  receive_source_artifact: '.oat/projects/shared/wave-3-execution/reviews/final-review-2026-09-06T140727Z.md'
-  receive_archived_artifact: '.oat/projects/shared/wave-3-execution/reviews/archived/final-review-2026-09-06T140727Z.md'
-  receive_event_identity: 'final | code | final-review-2026-09-06T140727Z.md'
-  receive_pre_head: b60660ffc857af7a290cfae9b38c3f878eddae96
-  receive_commit: 1604c7a71fab07cf78d39c00609a3689964f6f60
-  receive_eligible: true
-  receive_completed: true
+  implementation_fingerprint: 'sha256:effective-delta-v1:3b64830655dfae7ae030b9ef8adc522d2f1e6be0d07da253eaeb2ca7a8830040'
+  freshness_head: eb3b726e7d77dc9c674df6aad39b2d3a4a4985a9 # closeout-only: fix-002 record
+  freshness_fingerprint: 'sha256:effective-delta-v1:b8a4da69298b2d5cd353aae5bfc7f0b8d63e781bd4ff2a6a4aa87660d9f86ce9'
+  launch_state: intent_persisted
+  launch_attempt_id: 'w3-exit-gate-20260906T142243Z'
+  launch_started_at: '2026-09-06T14:22:43Z'
+  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w3/w3-exit-gate-20260906T142243Z.receipt.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: 'attempt 2 after w3-p01-fix-002'
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
   failure: null
-  updated_at: '2026-09-06T14:10:15Z'
+  updated_at: '2026-09-06T14:22:44Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -131,7 +131,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T10:56:52.547Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T14:10:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T14:22:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
