@@ -399,23 +399,25 @@ git commit -m "docs(p05-t01): document fail-closed patch-and-restore recovery fo
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | fixes_added | 2026-09-06 | reviews/archived/p01-review-2026-09-06T031243Z.md           | dcccb72d7c807593fd7b908ef78389eb6c98e636 | manual     | -           |
-| p01    | code     | passed      | 2026-09-06 | reviews/archived/p01-review-2026-09-06T032717Z.md           | 848b8ef419e36f3a09c7a45e8cd69425af16e1f0 | manual     | -           |
-| p02    | code     | fixes_added | 2026-09-06 | reviews/archived/p02-review-2026-09-06T051600Z.md           | c25e1fd4f3cfc70a60d9d17afe889403e8d008c7 | manual     | -           |
-| p02    | code     | passed      | 2026-09-06 | reviews/archived/p02-review-2026-09-06T052907Z.md           | 530f428971dba27749bfb3f14cb8b0f13a65c8e7 | manual     | -           |
-| p03    | code     | fixes_added | 2026-09-06 | reviews/archived/p03-review-2026-09-06T035240Z.md           | a207d3c11923aa10802c7747908458a924f1851f | manual     | -           |
-| p03    | code     | passed      | 2026-09-06 | reviews/archived/p03-review-2026-09-06T041408Z.md           | 5a99837ec6fdb7e8d68bc7a5490228571ffd99ee | manual     | -           |
-| p04    | code     | fixes_added | 2026-09-06 | reviews/archived/p04-review-2026-09-06T043410Z.md           | 6ef43933eee2dd79c14eaf5c4ddb50b3facc9157 | manual     | -           |
-| p04    | code     | passed      | 2026-09-06 | reviews/archived/p04-review-2026-09-06T050809Z.md           | 2b06f7292ec47bf2835b91e7765d562dafd9e7b9 | manual     | -           |
-| p05    | code     | fixes_added | 2026-09-06 | reviews/archived/p05-review-2026-09-06T071018Z.md           | de0ba133a4fdf85d382c070e46e4519bb4b10219 | manual     | -           |
-| p05    | code     | fixes_added | 2026-09-06 | reviews/archived/p05-review-2026-09-06T075406Z.md           | 27cc81e8e85c12475e6930dcb0fa72c9b0fb61d5 | manual     | -           |
-| p05    | code     | passed      | 2026-09-06 | reviews/archived/p05-review-2026-09-06T082528Z.md           | 0f301c8e12451c66fe26c2fb79d2dedb8a60e30d | manual     | -           |
-| final  | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T085208Z.md         | bee72dd4d300762366475781f7d97ac76464948f | manual     | -           |
-| plan   | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T023526Z.md | -                                        | -          | -           |
-| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
-| design | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
+| Scope | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
+| ----- | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01   | code     | fixes_added | 2026-09-06 | reviews/archived/p01-review-2026-09-06T031243Z.md           | dcccb72d7c807593fd7b908ef78389eb6c98e636 | manual     | -           |
+| p01   | code     | passed      | 2026-09-06 | reviews/archived/p01-review-2026-09-06T032717Z.md           | 848b8ef419e36f3a09c7a45e8cd69425af16e1f0 | manual     | -           |
+| p02   | code     | fixes_added | 2026-09-06 | reviews/archived/p02-review-2026-09-06T051600Z.md           | c25e1fd4f3cfc70a60d9d17afe889403e8d008c7 | manual     | -           |
+| p02   | code     | passed      | 2026-09-06 | reviews/archived/p02-review-2026-09-06T052907Z.md           | 530f428971dba27749bfb3f14cb8b0f13a65c8e7 | manual     | -           |
+| p03   | code     | fixes_added | 2026-09-06 | reviews/archived/p03-review-2026-09-06T035240Z.md           | a207d3c11923aa10802c7747908458a924f1851f | manual     | -           |
+| p03   | code     | passed      | 2026-09-06 | reviews/archived/p03-review-2026-09-06T041408Z.md           | 5a99837ec6fdb7e8d68bc7a5490228571ffd99ee | manual     | -           |
+| p04   | code     | fixes_added | 2026-09-06 | reviews/archived/p04-review-2026-09-06T043410Z.md           | 6ef43933eee2dd79c14eaf5c4ddb50b3facc9157 | manual     | -           |
+| p04   | code     | passed      | 2026-09-06 | reviews/archived/p04-review-2026-09-06T050809Z.md           | 2b06f7292ec47bf2835b91e7765d562dafd9e7b9 | manual     | -           |
+| p05   | code     | fixes_added | 2026-09-06 | reviews/archived/p05-review-2026-09-06T071018Z.md           | de0ba133a4fdf85d382c070e46e4519bb4b10219 | manual     | -           |
+| p05   | code     | fixes_added | 2026-09-06 | reviews/archived/p05-review-2026-09-06T075406Z.md           | 27cc81e8e85c12475e6930dcb0fa72c9b0fb61d5 | manual     | -           |
+| p05   | code     | passed      | 2026-09-06 | reviews/archived/p05-review-2026-09-06T082528Z.md           | 0f301c8e12451c66fe26c2fb79d2dedb8a60e30d | manual     | -           |
+| final | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T085208Z.md         | bee72dd4d300762366475781f7d97ac76464948f | manual     | -           |
+| plan  | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T023526Z.md | -                                        | -          | -           |
+
+> The plan-gate artifact reports its findings as blocking (1I/1m); they were auto-dispositioned in gate mode and fixed in-artifact in `702500936`, after which the row reads `passed`.
+> | spec | artifact | pending | - | - | - | - | - |
+> | design | artifact | pending | - | - | - | - | - |
 
 > Reviewed heads are the pre-rebase lane commits the reviewers examined. The fan-in entries in `implementation.md` map each to its integration commit (identical `git patch-id --stable` pairs): p01 `dcccb72d7`→`7284a1a01`, `848b8ef41`→`02148129f`; p02 `c25e1fd4f`→`b3b014a14`, `530f42897`→`35db0c323`; p03 `a207d3c11`→`35e75f6e8`, `5a99837ec`→`a7bcdd9e6`; p04 `6ef43933e`→`f70f1e11e`, `2b06f7292`→`8e2111185`, `ef0c8595c`→`7cf56951d` (address-now sweep after the round-2 pass, no re-review per the judgment-sweep rule); p05 `de0ba133a`→`01015f4f2`, `27cc81e8e`→`116b86241`, `0f301c8e1`→`5ebf62d40`. Review-fix tasks (p01-t02, p02-t02, p03-t02, p04-t02, p05-t02, p05-t03) are the fix rounds recorded in `implementation.md`; each is one append-only commit on the reviewed head.
 
@@ -426,16 +428,16 @@ appended, never rewritten over an earlier event.
 
 ## Implementation Complete
 
-- [ ] 5/5 phases, 5/5 tasks complete
-- [ ] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
-- [ ] **Serialized backlog bookkeeping** (integration branch, after all merges):
+- [x] 5/5 phases, 5/5 tasks complete
+- [x] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
+- [x] **Serialized backlog bookkeeping** (integration branch, after all merges):
       `oat backlog archive` with real outcome summaries for
       `BL-260819-repair-verified-bundled-skill`, `BL-260827-harden-the-codex-skill-below`,
       `BL-260818-extend-guarded-prose-contract`, `BL-260718-mandatory-skill-load-clause`,
       `BL-260902-document-patch-and-restore`, one commit
-- [ ] Orchestration-log end-of-run synthesis written; roll-up into `summary.md`
-      before any archive step
-- [ ] Full DoD gates green on the integration branch (fan-in lockstep bump above
+- [x] Orchestration-log end-of-run synthesis written; roll-up into `summary.md`
+      before any archive step (summary.md is produced by the post-implement sequence; the archive tail is deferred to program close)
+- [x] Full DoD gates green on the integration branch (fan-in lockstep bump above
       freshly fetched `origin/main`)
 
 ## References

@@ -26,6 +26,7 @@ Wave 4's codex-skill contract guard took six review rounds to converge because e
 
 - `LIST_MARKER_ONLY` in `codex-skill/tests/codex-skill-contract.test.mjs` does not strip blockquote prefixes, so `> 1. In that case, confirm before launching.` still escapes attachment (fails open; no bundled SKILL.md contains a blockquote today).
 - `requiresConfirmation` misses `approve` / `sign-off` / `block until` / `require approval` synonyms inside an attached anaphoric continuation.
+- The pinned markup set for `clauseOpener` (plain `>`, `> [!TAG]`, list markers) overstates how general the normalization is; the final review found four more markup shapes that escape (see `codex-skill-contract.test.mjs:171-175`), and the `requiresConfirmation` comment at `:144-145` should read as a phrase list with a named residual.
 - The documented fail-open boundary: a filler clause between the non-blocking anchor and the anaphor breaks attachment; antecedent resolution is this item's scope, not the guard's.
 
 ## Acceptance Criteria

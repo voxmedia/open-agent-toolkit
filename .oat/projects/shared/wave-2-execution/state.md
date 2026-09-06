@@ -1,6 +1,6 @@
 ---
 oat_current_task: p05-t01
-oat_last_commit: null
+oat_last_commit: eecd58fc3
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260819-repair-verified-bundled-skill' }
@@ -110,7 +110,7 @@ oat_generated: false
 
 # Project State: wave-2-execution
 
-**Status:** Implementing — p01 (bundled-skill contract repair) dispatched
+**Status:** Implementation complete — all five phases merged; closeout (final review dispositions, exit gate, post-implement sequence) in progress
 **Started:** 2026-09-06
 **Last Updated:** 2026-09-06
 
@@ -133,8 +133,11 @@ Implementation — all five phases merged on `wave-2-execution`; closeout (final
 - ✓ Wave-boundary drift refresh (recon, non-authoritative) recorded in `plan.md`
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
 - ✓ Plan gate passed after two in-artifact fixes (run `54c02cde`)
-- ⧗ p01 dispatched at `70250093695a147a6271b5c8e14a203066eef6d7`; fan-in and integration gates pending
-- ⧗ Group 2 (p02, p03, p04), then p05
+- ✓ p01 merged (`80491b10c`), lockstep bump 0.2.57, eight gates green
+- ✓ Group 2 p02/p03/p04 merged (`d22e29058`, `67f747e74`, `7b9e379a8`), eight gates green
+- ✓ p05 merged (`eecd58fc3`), eight gates green
+- ✓ Backlog archived (5) and follow-ups filed; synthesis written
+- ⧗ Final review dispositions, configured exit gate, post-implement sequence
 
 ## Blockers
 
@@ -142,4 +145,4 @@ None
 
 ## Next Milestone
 
-p01 phase report, root-owned review, fan-in with the single lockstep bump (≥ 0.2.57), integration gates
+Final review round 2 (narrowed) passes; configured exit gate `allowed / passed`; summary → document → pr; `oat project complete-state`; PR to `main`.
