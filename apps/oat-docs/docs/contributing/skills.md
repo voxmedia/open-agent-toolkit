@@ -284,7 +284,8 @@ validation warning rather than an executable contract.
 
 The Gate Execution step should:
 
-1. Run `oat gate resolve <this-skill> --project "$PROJECT_PATH" --json`.
+1. Run `oat gate resolve <this-skill> --project "$PROJECT_PATH" --json`
+   (`$PROJECT_PATH` is the resolved project path exported in step 3).
    Project context is required. Without `--project` the command returns the
    legacy raw gate and can never report a project override, so the skill would
    silently run a gate the project deliberately disabled.

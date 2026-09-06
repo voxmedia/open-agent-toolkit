@@ -18,7 +18,10 @@ import { expect } from 'vitest';
  * Two protections are structural rather than lexical and do hold categorically:
  * the contract must live inside its owning section (so a compliant paragraph
  * cannot be relocated elsewhere while the normative one is deleted), and it
- * must appear exactly once per surface.
+ * must appear exactly once per surface. Section membership is enforced by
+ * rejecting any Markdown heading between the owning section and the contract
+ * anchor, not by the proximity bound alone; the 2000-character reach is a
+ * secondary bound layered on top of that check.
  */
 
 /** Anchor that opens the contract paragraph in every governed surface. */
@@ -45,9 +48,23 @@ const OWNING_SECTION: Readonly<Record<string, string>> = {
 /**
  * Maximum flattened distance from the owning section heading to the contract
  * anchor. Live surfaces use 505-846 characters, so this leaves room for prose
- * growth while still rejecting a paragraph moved out of its section.
+ * growth. This is a secondary proximity bound only: section membership itself
+ * is decided by {@link INTERVENING_HEADING}, because a distance bound alone
+ * would admit a paragraph relocated into a new subsection that happens to sit
+ * within the reach window.
  */
 const OWNING_SECTION_REACH = 2000;
+
+/**
+ * A Markdown ATX heading in flattened text: one to six `#` characters opening a
+ * whitespace-delimited token and followed by heading text. Any such heading
+ * between the owning section and the contract anchor means the anchor now
+ * belongs to a different section, which is what makes the membership claim in
+ * this file's header categorical rather than merely proximate. The
+ * whitespace-delimited form does not match `#` inside inline code or a link
+ * fragment such as `(...#per-project-gate-overrides)`.
+ */
+const INTERVENING_HEADING = /(?:^|\s)#{1,6}\s/;
 
 /**
  * Permissive qualifiers that would downgrade a mandatory validation step to an
@@ -97,6 +114,15 @@ function dispatchStampContractWindow(content: string, label: string): string {
   const anchorStart = flat.indexOf(CONTRACT_ANCHOR);
   const gap = anchorStart - sectionStart;
   if (gap < 0 || gap > OWNING_SECTION_REACH) {
+    return '';
+  }
+  // Skip the owning section's own marker before scanning, so a section that is
+  // itself an ATX heading does not report itself as an intervening one.
+  if (
+    INTERVENING_HEADING.test(
+      flat.slice(sectionStart + section.length, anchorStart),
+    )
+  ) {
     return '';
   }
   return flat.slice(anchorStart, anchorStart + CONTRACT_WINDOW_LENGTH);

@@ -88,6 +88,27 @@ Key behavior:
   `versionSkew` array (`{ scope, producingVersion, invokingVersion }`) in both
   `--dry-run` and apply envelopes; a scope without skew is omitted from the
   array.
+- When a run's only effect is that restamp — no planned operations and no
+  failures, but skew present — apply reports
+  `Manifest version refreshed; no content changes required.` instead of
+  `No changes required.`, so a manifest write is never described as a no-op.
+
+`oat sync` is not the only command that replaces a manifest's producer version.
+`oat init`, `oat remove skill`, and `oat status` each compare the manifest's
+`oatVersion` with the invoking CLI version immediately before the save that
+would restamp it, and log the same advisory when the two differ:
+
+```text
+Manifest version restamp [init user]: manifest produced by oat "0.2.58" will be restamped to oat "0.2.59".
+```
+
+The check sits immediately before the save, so a run that aborts earlier never
+announces a restamp it did not perform, and an equal or absent version stays
+quiet. JSON mode suppresses the human warning; `oat init` and `oat remove skill`
+report the applied restamps under a top-level `manifestVersionRestamps` array of
+`{ scope, producingVersion, invokingVersion }` entries. The `oat remove skill`
+dry-run payload omits the field rather than naming a restamp no save will
+perform.
 
 Preview project and user cleanup before applying it:
 

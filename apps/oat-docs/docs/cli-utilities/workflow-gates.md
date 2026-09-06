@@ -85,6 +85,13 @@ duplicate keys, and malformed maps are rejected with the offending project state
 path. An absent map means follow configuration; keeping every gate leaves the
 map absent.
 
+Override keys are accepted only for skills that declare `oat_gateable: true`.
+A configured gate may still be resolved and executed for a lifecycle skill that
+is not gate-aware — `oat-project-discover` and `oat-project-design` are the
+current examples — but because no override key for such a skill is accepted,
+their configured gates apply to every project and cannot be disabled per
+project.
+
 Precedence is layered, not merged: config layers decide whether a gate exists
 at all, and the project override then decides whether an existing gate runs for
 that project. An override never creates configuration, so a project may record
@@ -101,11 +108,16 @@ Resolution is opt-in. Without `--project`, `oat gate resolve` keeps returning
 the raw `GateConfig | null` that existing consumers parse:
 
 ```bash
+oat gate resolve oat-project-implement --json
+```
+
+With project context it returns a discriminated envelope instead:
+
+```bash
 oat gate resolve oat-project-implement --project "$PROJECT_PATH" --json
 ```
 
-With project context it returns a discriminated envelope whose `resolution` is
-one of three values:
+The envelope's `resolution` is one of three values:
 
 | `resolution`                     | Meaning                                   | `configuredGate` | `effectiveGate` |
 | -------------------------------- | ----------------------------------------- | ---------------- | --------------- |

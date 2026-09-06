@@ -160,6 +160,32 @@ describe('expectDispatchStampFieldContract', () => {
     );
   });
 
+  // Final review 2026-09-06 (m2): the proximity bound alone let a paragraph
+  // that had left its section pass whenever a new subsection heading sat inside
+  // the 2000-character reach. Section membership must be checked structurally.
+  it('rejects a paragraph separated from its owning section by a heading', () => {
+    const intervening = [
+      OWNING_SECTION,
+      '',
+      'Resolve the reviewer target before capability-tier selection.',
+      '',
+      '#### Unrelated subsection',
+      '',
+      CONTRACT_PARAGRAPH,
+    ].join('\n');
+    // The anchor is well inside OWNING_SECTION_REACH here, so only the
+    // heading check can reject it.
+    expect(
+      intervening
+        .replace(/\s+/g, ' ')
+        .indexOf('additive `dispatchStamp` field') -
+        intervening.replace(/\s+/g, ' ').indexOf(OWNING_SECTION),
+    ).toBeLessThan(2000);
+    expect(() =>
+      expectDispatchStampFieldContract(intervening, SURFACE),
+    ).toThrow(/dispatch stamp contract paragraph/);
+  });
+
   it('rejects a second copy of the contract paragraph', () => {
     const duplicated = `${COMPLIANT_CONTRACT}\n\n${CONTRACT_PARAGRAPH}`;
     expect(() => expectDispatchStampFieldContract(duplicated, SURFACE)).toThrow(

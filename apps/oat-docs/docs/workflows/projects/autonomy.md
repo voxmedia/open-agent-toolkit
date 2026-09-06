@@ -136,8 +136,11 @@ At final closeout, autonomy follows the same authoritative order as an
 interactive run: final verification, mandatory final lifecycle review,
 configured implementation exit gate, pre-approval sequence, final HiLL
 approval, post-approval sequence, then implementation completion and success
-output. A null gate resolution persists an explicit no-gate allowance before
-the sequence starts.
+output. A `not_configured` resolution persists an explicit no-gate allowance
+before the sequence starts; a null, missing, or unrecognized resolver result
+fails closed as unresolved. A gate this project disabled persists an
+`allowed/configured` result with `disposition: project_disabled` and never
+launches the configured command.
 
 Autonomy does not turn an ordinary independent review into configured-gate
 provenance. A configured review must produce a gate-originated artifact with
