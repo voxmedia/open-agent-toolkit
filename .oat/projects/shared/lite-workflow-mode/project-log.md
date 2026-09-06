@@ -156,6 +156,10 @@ Completed 3/3 p-rev2 tasks at 6db21410ff85bdc01632154784c9f4baa815ddaa; three go
 
 Final re-review used one mechanical reconnaissance wave plus primary inline semantic reconciliation; see the review artifact for target, acceptance, floor, fallback, and reconciliation evidence.
 
+### 2026-09-06 · structural · oat-project-review-receive · final-review-2026-09-06T233432Z.md
+
+Closed the review's wording-only Medium in prev2-t04 at 5465524e53c33bd870cb89e3b8ce30f0d5a4a49d; the review already met the Critical/Important threshold, and the user waived redundant re-review for this alignment class.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

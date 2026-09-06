@@ -218,6 +218,7 @@ finding.
 ### Task prev2-t04: Align current closeout wording
 
 **Status:** complete
+**Commit:** `5465524e53c33bd870cb89e3b8ce30f0d5a4a49d`
 
 Active closeout prose in state, summary, implementation, and the local PR body
 now consistently records all four p-rev2 tasks and local terminal verification
