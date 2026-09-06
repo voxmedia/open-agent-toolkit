@@ -492,6 +492,10 @@ no-op full-scope sync dry-run. No recovery attempt or flake retry was used.
 
 **Status:** pending
 
+**Authorization (2026-09-06):** The user explicitly authorized this bounded
+fix and one additional implementation exit-gate attempt beyond the configured
+2/2 cap. No push, PR, merge, or release authority was granted.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_

@@ -48,7 +48,8 @@
       "p06-t06",
       "p06-t07",
       "p06-t08",
-      "p06-t09"
+      "p06-t09",
+      "p06-t10"
     ],
     "plan": ".oat/projects/shared/lite-workflow-mode/plan.md",
     "worktree": "root"
@@ -113,6 +114,20 @@
         "medium": 1,
         "minor": 1
       }
+    },
+    {
+      "event_id": "exit-gate-override-fix-27405c06-126e-40b9-9b28-e56922cd916a",
+      "reason": "Execute p06-t10 and permit one additional implementation exit-gate attempt under explicit user authorization",
+      "status": "intent_persisted",
+      "authorized_at": "2026-09-06T02:59:17Z",
+      "authorization": "explicit-user",
+      "authorization_scope": "p06-t10 plus exactly one additional implementation exit-gate attempt; no push, PR, merge, or release",
+      "expected_base_sha": "6f868b424a0c6dc833d382e82aa5eccd9b9d5033",
+      "review_artifact": ".oat/projects/shared/lite-workflow-mode/reviews/archived/final-review-2026-09-06T024254Z.md",
+      "tasks": ["p06-t10"],
+      "dispatch_target": "oat-phase-implementer-gpt-5-6-sol-high",
+      "model_selector": "gpt-5.6-sol",
+      "effort_selector": "high"
     }
   ],
   "fallback": {

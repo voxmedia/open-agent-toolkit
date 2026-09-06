@@ -1,8 +1,7 @@
 ---
 oat_current_task: p06-t10
 oat_last_commit: 469141fba075371b9d6cd5dc075cb1f00fe9c6ff
-oat_blockers:
-  - 'Implementation exit gate exhausted 2/2 blocked attempts; explicit override required before implementation or another gate launch.'
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -87,7 +86,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T02:46:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T02:59:17Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -99,7 +98,7 @@ oat_generated: false
 
 ## Current Phase
 
-Blocked - configured exit gate exhausted 2/2 attempts; p06-t10 is queued.
+Implementing p06-t10 under the user's bounded exit-gate override.
 
 ## Artifacts
 
@@ -140,17 +139,16 @@ Blocked - configured exit gate exhausted 2/2 attempts; p06-t10 is queued.
 - ✓ Exit-gate fix tasks p06-t07 through p06-t09 completed (25/25 total)
 - ✓ Fresh final lifecycle review passed with no findings
 - ⧗ Exit gate attempt 2 found one Important production-path routing defect
-- ⧗ Fix task p06-t10 queued; configured attempt budget exhausted (2/2)
+- ⧗ Fix task p06-t10 authorized; one additional exit-gate attempt permitted
 
 ## Blockers
 
-Configured exit gate attempt 2 found that the p06-t08 fixture models readiness
-on an artifact the production path leaves null. Fix task p06-t10 is queued,
-but the configured 2/2 attempt budget is exhausted and requires explicit user
-direction. The historical p06-t02 header-wording Medium remains explicitly
-accepted for defer.
+None. The user explicitly authorized executing p06-t10 and one additional
+exit-gate attempt beyond the configured 2/2 cap. This does not authorize a
+push, PR, merge, or release. The historical p06-t02 header-wording Medium
+remains explicitly accepted for defer.
 
 ## Next Milestone
 
-Obtain explicit direction on whether to override the exhausted gate budget and
-execute p06-t10.
+Complete p06-t10, re-establish lifecycle review evidence as required, and run
+the single additionally authorized implementation exit-gate attempt.
