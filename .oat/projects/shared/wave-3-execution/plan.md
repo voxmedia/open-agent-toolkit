@@ -314,7 +314,8 @@ git commit -m "docs(p03-t01): require executable backstops for standing contract
 
 | Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
 | ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | fixes_added | 2026-09-06 | reviews/p01-review-2026-09-06T114536Z.md                    | ecf4756860bbf82ca5ecdb89ffa42e56a5a27ce1 | manual     | -           |
+| p01    | code     | fixes_added | 2026-09-06 | reviews/archived/p01-review-2026-09-06T114536Z.md           | ecf4756860bbf82ca5ecdb89ffa42e56a5a27ce1 | manual     | -           |
+| p01    | code     | passed      | 2026-09-06 | reviews/archived/p01-review-2026-09-06T120914Z.md           | f275a469ba06dac9923d89eb5b6a21ef1b42bba0 | manual     | -           |
 | p02    | code     | pending     | -          | -                                                           | -                                        | -          | -           |
 | p03    | code     | pending     | -          | -                                                           | -                                        | -          | -           |
 | final  | code     | pending     | -          | -                                                           | -                                        | -          | -           |
