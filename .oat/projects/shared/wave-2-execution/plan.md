@@ -417,9 +417,8 @@ git commit -m "docs(p05-t01): document fail-closed patch-and-restore recovery fo
 | final | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T091621Z.md         | c0210b9d32941133fa65f2bef9150acf6f6fbae6 | manual     | -                   |
 | final | code     | passed      | 2026-09-06 | reviews/archived/final-review-2026-09-06T092134Z.md         | 1e688a1e5de97a3a49ec3e069dd5afd11a1bd756 | manual     | -                   |
 | final | code     | passed      | 2026-09-06 | reviews/archived/final-review-2026-09-06T093256Z.md         | 15ec41133c536e7d24c89dc4aa54ffcb25df130e | gate       | codex-5-6-sol-xhigh |
-| final | code     | received    | 2026-09-06 | reviews/final-review-2026-09-06T093256Z.md                  | 15ec41133c536e7d24c89dc4aa54ffcb25df130e | gate       | codex-5-6-sol-xhigh |
 | plan  | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T023526Z.md | -                                        | -          | -                   |
-| final | code     | received    | 2026-09-06 | reviews/final-review-2026-09-06T101616Z.md                  | 1eb5299164bbd91c662dcae82bf680751935403a | gate       | codex-5-6-sol-xhigh |
+| final | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T101616Z.md         | 1eb5299164bbd91c662dcae82bf680751935403a | gate       | codex-5-6-sol-xhigh |
 
 > The plan-gate artifact reports its findings as blocking (1I/1m); they were auto-dispositioned in gate mode and fixed in-artifact in `702500936`, after which the row reads `passed`.
 > | spec | artifact | pending | - | - | - | - | - |
@@ -441,8 +440,8 @@ appended, never rewritten over an earlier event.
       `BL-260819-repair-verified-bundled-skill`, `BL-260827-harden-the-codex-skill-below`,
       `BL-260818-extend-guarded-prose-contract`, `BL-260718-mandatory-skill-load-clause`,
       `BL-260902-document-patch-and-restore`, one commit
-- [ ] Orchestration-log end-of-run synthesis written (done); roll-up into `summary.md`
-      before any archive step — `summary.md` is produced by the post-implement sequence after the exit gate; this box is checked when it exists (archive tail deferred to program close)
+- [x] Orchestration-log end-of-run synthesis written (done); roll-up into `summary.md`
+      before any archive step (`summary.md` written `c8678126c`; archive tail deferred to program close)
 - [x] Full DoD gates green on the integration branch (fan-in lockstep bump above
       freshly fetched `origin/main`)
 

@@ -65,7 +65,7 @@ oat_dispatch_policy: # managed/high per operator routing preference
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: blocked
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
@@ -79,26 +79,26 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:9d1d8345ca1ad25afa2fba8a7bf9185d052ec1c2aab7d2868e4df4e7633c6f7f'
   freshness_head: 3fc69573fa1a4ad26dd18d149172239d2309b708 # closeout-only: round-4 receive
   freshness_fingerprint: 'sha256:effective-delta-v1:86c6c7ec8f3cdc3cd22e6875d3330673691209738299d8b148619d74a0318dd9'
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 'w2-exit-gate-20260906T101022Z'
   launch_started_at: '2026-09-06T10:10:22Z'
   launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w2/w2-exit-gate-20260906T101022Z.receipt.json'
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/ba8ff320-bc59-493e-ab3b-c4ffd5ccdd99.json'
   gate_run_id: 'ba8ff320-bc59-493e-ab3b-c4ffd5ccdd99'
-  envelope_status: null
-  artifact: null
-  handoff: 'attempt 2 after the Bugbot fix 3ee49fcad'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  envelope_status: blocked
+  artifact: '.oat/projects/shared/wave-2-execution/reviews/archived/final-review-2026-09-06T101616Z.md'
+  handoff: 'Gate attempt ba8ff320 blocked (0C/2I): artifact-free retry path; ledger identity. Received; re-run after w2-p05-fix-004'
+  receive_state: completed
+  receive_correlation: 'run=ba8ff320-bc59-493e-ab3b-c4ffd5ccdd99; handoff=receive; source=reviews/final-review-2026-09-06T101616Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T101616Z.md'
+  receive_archived_artifact: '.oat/projects/shared/wave-2-execution/reviews/archived/final-review-2026-09-06T101616Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-06T101616Z.md'
+  receive_pre_head: d84e74f265d358cc188218eebbd07b1e33972468
   receive_commit: null
-  receive_eligible: false
-  receive_completed: false
+  receive_eligible: true
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-06T10:11:12Z'
+  updated_at: '2026-09-06T10:19:45Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -154,14 +154,14 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/267' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T02:27:21.413Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-09-06T09:37:19.119Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T10:11:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T10:19:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_lifecycle: complete
 ---
 
 # Project State: wave-2-execution
 
-**Status:** Complete
+**Status:** Implementation complete; configured exit gate re-run pending after the Bugbot-driven p05 fix (generation 2)
 **Started:** 2026-09-06
 **Last Updated:** 2026-09-06
 
@@ -188,7 +188,9 @@ Lifecycle complete
 - ✓ Group 2 p02/p03/p04 merged (`d22e29058`, `67f747e74`, `7b9e379a8`), eight gates green
 - ✓ p05 merged (`eecd58fc3`), eight gates green
 - ✓ Backlog archived (5) and follow-ups filed; synthesis written
-- ✓ Final review passed (three rounds) and configured exit gate allowed/passed (run `45ee23dc`, zero findings)
+- ✓ Final review passed (three rounds); exit gate generation 1 allowed/passed (run `45ee23dc`, zero findings) then went stale on `3ee49fcad` (Bugbot fix)
+- ✓ Bugbot High on PR #267 fixed (`3ee49fcad`) and verified (p05 round 4)
+- ⧗ Exit gate generation 2: attempt 1 (run `ba8ff320`) blocked with 2 Important (artifact-free retry path; ledger identity) — fix `w2-p05-fix-004` and record repairs, then re-run
 - ✓ Post-implement sequence: summary, document, pr (PR #267)
 - ✓ Project lifecycle complete
 
@@ -198,4 +200,4 @@ None
 
 ## Next Milestone
 
-None. Project complete.
+Exit gate generation 2 re-run passes → push → CI/Bugbot green → merge PR #267 → wave-close → W3.

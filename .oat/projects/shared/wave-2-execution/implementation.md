@@ -333,6 +333,21 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Verification:** disposition-verification round 4 on the original p05 reviewer handle (`w2-p05-review-004`, artifact `reviews/archived/p05-review-2026-09-06T100810Z.md`) over `cca79087b..3ee49fcad`: PASS, no findings — both failure sequences walked (reconcile blocks → branch still at the briefed base, retry proceeds; recovery commit landed then a later park → retry re-briefed from current HEAD with no duplicate apply), `--verify` proven read-only (static call graph plus sha256/mode/size/mtime snapshots of artifact and worktree), exact-HEAD check unchanged in strength, all four neutralizations fail. The `:688` note the implementer flagged is a correct cross-reference ("whose" binds to the bounded fix loop), so nothing is owed. Because this is a product change after the configured exit gate passed, the gate was marked stale and is re-run (attempt 2 of 2).
 
+## Review Received: final (configured exit gate, attempt 2 after the Bugbot fix)
+
+**Date:** 2026-09-06
+**Gate:** run `ba8ff320-bc59-493e-ab3b-c4ffd5ccdd99`, target `codex-5-6-sol-xhigh` (different-family), envelope `blocked`, threshold important, blocking true, attempt `w2-exit-gate-20260906T101022Z` (generation 2, attempt 1; generation 1 passed at run `45ee23dc` and went stale when `3ee49fcad` landed).
+**Review artifact:** reviews/archived/final-review-2026-09-06T101616Z.md (reviewed head `1eb5299164bbd91c662dcae82bf680751935403a`, invocation gate)
+
+**Findings:** Critical 0 · Important 2 · Medium 0 · Minor 0.
+
+**Dispositions:**
+
+- I1 — the prescribed artifact-free retry still runs the `--verify` block unconditionally under `set -eu` (unset `ARTIFACT_DIR` etc. exit before reconciliation), and the new test never pins the absent-artifact branch: **fix in code** — `w2-p05-fix-004` dispatched to the p05 handle (verification conditional on a non-null `recovered_patch`, clean-tree invariant otherwise, mirrored in the root contract, negative control that turns red when the verifier is made unconditional). Verified by the gate's re-run.
+- I2 — ledgers contradicted the gate lifecycle: **fixed** (this commit) — the gate command appends its own `received` row per artifact, so the root's duplicate `passed` row for the gate-1 artifact is removed and the gate-written row carries the terminal status and archived path (one event per artifact, status moved forward in place); the gate-2 row moved to `fixes_added` with the archived path; `state.md` prose and Next Milestone now describe the pending re-run; the summary roll-up box is checked because `summary.md` exists; `summary.md` and the structural log are updated with the gate-2 outcome when the re-run completes.
+
+**Gate row `final` (attempt 2) → `fixes_added`; `oat_implement_exit_gate` → `blocked` (generation 2, 1 attempt completed); re-run after `w2-p05-fix-004`.**
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)
