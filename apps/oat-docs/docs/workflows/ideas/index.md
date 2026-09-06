@@ -37,4 +37,4 @@ If the thought is still pre-shape — you don't know whether it should land as a
 
 ## Promotion Path
 
-When an idea becomes concrete, summarize it and then start a tracked OAT project in quick or spec-driven mode depending on design risk.
+When an idea becomes concrete, summarize it and then start a tracked OAT project in lite, quick, or spec-driven mode depending on scope and design risk. Lite suits a single-sitting change and seeds `plan.md` directly; quick and spec-driven seed `discovery.md` instead.

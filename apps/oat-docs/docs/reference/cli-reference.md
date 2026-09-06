@@ -56,8 +56,14 @@ The first practical expansion path is to keep improving the existing owners: [Do
 
 Notable commands introduced in the current CLI surface:
 
-- `oat project new <slug> --scope shared|local|synced [--force]` - create a
-  project in an explicit scope. Without `--scope`, creation uses
+- `oat project new <slug> [--mode spec-driven|quick|import|lite] --scope shared|local|synced [--force]` - create a
+  project in an explicit scope. `--mode` selects the workflow mode and therefore
+  which artifacts are scaffolded; it defaults to `spec-driven`. Use `quick` for a
+  bounded feature with clear requirements, `import` to normalize an externally
+  authored plan, and `lite` for a single-sitting change that scaffolds only
+  `plan.md`, `state.md`, and `implementation.md`. See
+  [Lifecycle](../workflows/projects/lifecycle.md) for the per-lane flow. Without
+  `--scope`, creation uses
   `projects.defaultScope`, which defaults to `synced`. Project slugs are
   unique across all scopes by default, including recorded or remotely
   published synced projects. `--force` deliberately permits a duplicate; use

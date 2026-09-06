@@ -42,6 +42,10 @@ flowchart LR
   DOC --> C["Complete"]
 ```
 
+This map shows the spec-driven default. The quick, lite, import, and capture
+lanes each skip part of it — see [Lane diagrams](#lane-diagrams) below. Lite in
+particular has no discovery, spec, or design step at all.
+
 ## Post-implementation flow
 
 Implementation closeout has one authoritative order:
@@ -71,6 +75,32 @@ After implementation closeout finishes:
    - Review artifacts delegate to `oat-project-review-receive`
    - After revision tasks complete, state returns to `pr_open`
 5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and archives when selected by the workflow preference or completion prompt
+
+### Project-recap gate (non-lite)
+
+The final-closeout orchestrator owns one project-recap gate. It runs after the
+final code review has passed and after any configured pre-approval summary and
+documentation steps, but before final HiLL approval. It neither replaces nor
+repeats the final review, and the stored order of the other pre-approval steps
+is preserved.
+
+Recap intent resolves through `oat-explainer-kit`. A fresh `project-recap`
+manifest for the current completed implementation is reused rather than
+regenerated — fresh means it names recipe `project-recap`, belongs to this
+project, has a terminal outcome, and its recorded source hashes match the
+current approved inputs. A present-but-incomplete, wrong-recipe, or stale
+manifest does not qualify.
+
+Recap outcomes are reported, not blocking: `failed` and `built-not-durable` are
+recorded as warnings and never block final approval, completion reporting, or
+later PR steps. The selected or attempted outcome and run path are included in
+the implementation completion report, and `summary.md` carries a single
+`Explainer Outcome` section when it exists.
+
+**Lite skips this gate entirely.** Lite sets `PROJECT_RECAP_REACHABLE=false` and
+does not resolve recap intent, inspect recap runs, invoke `oat-explainer-kit`,
+or run the terminal-outcome guard. It proceeds from the required reviews through
+its stored optional steps to `pr` and sequence completion.
 
 Lite mode collapses the default pre-approval sequence to PR creation only.
 `oat-project-pr-final` builds the body directly from the lite plan and
@@ -296,6 +326,47 @@ Lite keeps planning and validation in `plan.md`. It has no discovery, spec, or
 design artifact by default, skips implementation HiLL prompts, and routes a
 passed final review directly to PR creation. Summary and documentation run only
 when enabled through the lite-specific post-implementation sequence.
+
+### Promoting a lite project to quick
+
+When lite work outgrows one sitting, `oat project promote <project-path> --to quick`
+converts it in place. Each artifact has a different fate: the authored lite plan
+is **moved** to `references/lite-plan.md`, a new `discovery.md` is **derived**
+from its five authored sections, a **fresh** quick template takes over the
+`plan.md` path, and `state.md` is **rewritten** to quick mode.
+
+```mermaid
+flowchart LR
+  subgraph Before
+    LPLAN["plan.md\nSummary, Decisions, Assumptions,\nOut of Scope, Validation Criteria"]
+    LSTATE["state.md\noat_workflow_mode: lite"]
+  end
+
+  CMD["oat project promote\n--to quick"]
+
+  subgraph After
+    DISC["discovery.md\nderived from the lite plan\noat_ready_for: oat-project-quick-start"]
+    REF["references/lite-plan.md\noriginal lite plan, preserved"]
+    QPLAN["plan.md\nfresh quick-start template"]
+    QSTATE["state.md\noat_workflow_mode: quick\noat_phase: discovery (complete)\noat_ready_for: oat-project-quick-start"]
+  end
+
+  LPLAN --> CMD
+  LSTATE --> CMD
+  CMD -->|derive| DISC
+  CMD -->|move| REF
+  CMD -->|scaffold| QPLAN
+  CMD -->|rewrite| QSTATE
+```
+
+The project slug, directory, and branch are untouched, so history and any open
+work continue uninterrupted. `oat_ready_for` is stamped on **both** `discovery.md`
+and `state.md`; the quick-start recommender reads artifact readiness, so
+consumers must preserve both. Promotion refuses rather than half-applying: a
+non-lite project, an existing `references/lite-plan.md`, invalid authored
+sections, an unresolved scope, or an unreadable template each return a stable
+categorical `reason` and exit non-zero. See
+[CLI Reference](../../reference/cli-reference.md) for the full refusal contract.
 
 ### Import lane
 
