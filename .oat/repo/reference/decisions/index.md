@@ -16,6 +16,7 @@
 | DR-260906-docs-index-refusals-exit-1     | 2026-09-06 | accepted   | Docs-index refusals exit 1 and configuration errors exit 2                                             | -       |
 | DR-260906-fumadocs-config-write-survives | 2026-09-06 | accepted   | Fumadocs config write survives a declared documentation config                                         | -       |
 | DR-260906-one-version-bump-per-changed   | 2026-09-06 | accepted   | One version bump per changed skill per PR, carried across lanes                                        | -       |
+| DR-260906-project-scoped-gate-overrides  | 2026-09-06 | accepted   | Project-scoped gate overrides and fail-closed gate resolution                                          | -       |
 | DR-260906-root-anchored-minimatch-style  | 2026-09-06 | accepted   | Root-anchored minimatch-style docs-index exclusion grammar                                             | -       |
 | DR-260906-smoke-worktrees-are-journaled  | 2026-09-06 | accepted   | Smoke worktrees are journaled before creation and cleanup refuses unproven ownership                   | -       |
 | DR-260906-standing-claims-in-skills-name | 2026-09-06 | accepted   | Standing claims in skills name an executable owner and ship a backstop in the same PR                  | -       |

@@ -482,6 +482,9 @@ Before reporting this skill as complete, run the configured gate as the final st
    - `configured_disabled_by_project`: the operator disabled this configured gate for this project. Do not launch any process. Emit `configured but disabled by project override`, including the project path and the `projectOverride` source from the envelope, then the skill is complete. A project-disabled gate never enters the passed, missing, or failed branches, and its `configuredGate` is evidence only, never executed.
    - `configured`: continue with the steps below, executing `effectiveGate` exactly as configured.
 
+   A null, missing, malformed, or unrecognized result is an operational failure
+   that fails closed as unresolved. Never treat it as "no gate configured."
+
 2. Export the resolved project path into the command shell:
 
    ```bash
