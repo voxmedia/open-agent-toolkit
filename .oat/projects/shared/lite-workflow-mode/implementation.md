@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: prev1-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status       | Tasks | Completed |
-| ------------ | ------------ | ----- | --------- |
-| Phase 1      | complete     | 4     | 4/4       |
-| Phase 2      | complete     | 3     | 3/3       |
-| Phase 3      | complete     | 3     | 3/3       |
-| Phase 4      | complete     | 2     | 2/2       |
-| Phase 5      | complete     | 4     | 4/4       |
-| Phase 6      | complete     | 11    | 11/11     |
-| Phase p-rev1 | fixes queued | 6     | 2/6       |
+| Phase        | Status         | Tasks | Completed |
+| ------------ | -------------- | ----- | --------- |
+| Phase 1      | complete       | 4     | 4/4       |
+| Phase 2      | complete       | 3     | 3/3       |
+| Phase 3      | complete       | 3     | 3/3       |
+| Phase 4      | complete       | 2     | 2/2       |
+| Phase 5      | complete       | 4     | 4/4       |
+| Phase 6      | complete       | 11    | 11/11     |
+| Phase p-rev1 | review pending | 6     | 6/6       |
 
-**Total:** 29/33 tasks completed; four p-rev1 review fixes are queued
+**Total:** 33/33 tasks completed; fresh p-rev1 re-review is pending
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -680,14 +680,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Phase Outcomes
 
-| Phase  | Implementation     | Review      | Fix Loops | Outcome                  |
-| ------ | ------------------ | ----------- | --------- | ------------------------ |
-| p-rev1 | fixes queued (2/6) | fixes_added | 1         | blocking review received |
+| Phase  | Implementation | Review            | Fix Loops | Outcome         |
+| ------ | -------------- | ----------------- | --------- | --------------- |
+| p-rev1 | complete (6/6) | re-review pending | 1         | fixes completed |
 
 #### Outstanding Items
 
-- Execute `prev1-t03` through `prev1-t06` on the exact original implementation
-  target, then run a fresh independent `p-rev1` review.
+- Run a fresh independent `p-rev1` review against the four committed review
+  fixes.
 
 ---
 
@@ -1685,6 +1685,27 @@ current journal records, and the 71 focused recorder tests pass.
 No finding is deferred. Resume the exact original implementation target in fix
 mode, then run fresh p-rev1 verification and re-review.
 
+**Fix loop 1 completed:**
+
+- `prev1-t03` → `dab9d9e39`: corrected both revision proof commands.
+- `prev1-t04` → `84470bf09`: asserted distinctive adaptive payloads and
+  byte-equal archived Lite plans. Neutralizing Product Behavior interpolation
+  failed the `product` and `both` cases; neutralizing Technical Design
+  interpolation failed the `technical` and `both` cases. Both controls exited
+  1 before restoration; the restored promotion suite passed 28/28.
+- `prev1-t05` → `90c74a7e1`: moved `IMPLEMENT-20` to
+  `oat-project-implement`, added the executor-side fail-closed proof boundary,
+  advanced skill/agent versions and pins, and synchronized repository-local
+  projections with `--scope project`.
+- `prev1-t06` → `a0d92b138`: aligned the active lightweight design with the
+  accepted revision contract.
+
+The focused revision suite passed 343/343 in the worker and 333/333 in root's
+overlapping post-return suite. Project sync is converged. All relevant
+repository gates passed; the full test command had one unrelated visual
+companion startup timeout, then passed without edits with 5,671 CLI tests.
+The review event is `fixes_completed` pending fresh re-review.
+
 ---
 
 ## Deviations from Plan / Design
@@ -1712,19 +1733,19 @@ Track test execution during implementation.
 | 4      | Skill contracts, end-to-end Lite integration, full phase gates                                                                       | Yes after bounded recovery               | 0 final | Dedicated Lite workflow and bundled assets                    |
 | 5      | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops           | 0 final | Review, import, progress, recap bypass, PR flow               |
 | 6      | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes; p06-t10 and p06-t11 used no retries | 0 final | Docs, provider sync, real promotion routing, release `0.2.60` |
-| p-rev1 | Focused revision suites, full repository gates, post-recovery contract tests, project sync dry-run                                   | Yes after bounded recovery attempt 2     | 0 final | Adaptive Lite plan depth and proportionate proof strategy     |
+| p-rev1 | Focused revision suites, promotion negative controls, full repository gates, post-fix contract tests, project sync dry-run           | Yes after recovery and review fix loop 1 | 0 final | Adaptive Lite depth, proportionate proof, executor boundary   |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
 - A fourth `lite` workflow mode with a dedicated three-artifact scaffold,
-  five-section single-phase plan contract, validation, and mode-aware routing.
+  adaptive single-phase plan contract, validation, and mode-aware routing.
 - The `oat-project-lite` planning skill with one batched interview, one plan
   approval, automatic promotion to quick when scope outgrows Lite, managed
   dispatch, phase/final reviews, and PR-first closeout.
 - Provider projections, docs, lifecycle integrations, and lockstep public
-  package release surfaces synchronized at `0.2.60`.
+  package release surfaces synchronized at `0.2.61`.
 
 **Behavioral changes (user-facing):**
 
