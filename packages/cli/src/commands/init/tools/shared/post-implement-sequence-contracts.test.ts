@@ -562,8 +562,10 @@ describe('post-implementation sequence contracts', () => {
     expect(next).toContain('`launch_state: not_started`');
     expect(next).toContain('`receive_state: not_started`');
     expect(next).toContain('`receive_completed: false`');
+    expect(next).toContain('`attempts_completed: 0`');
+    expect(next).toContain('`failure: null`');
     expect(next).toContain(
-      'Any populated launch or receive field contradicts a gate that never ran and fails closed.',
+      'Any populated launch, receive, attempt, or failure field contradicts a gate that never ran and fails closed.',
     );
     expect(next).toContain(
       'a persisted `project_disabled` result is never accepted on its stored value alone',

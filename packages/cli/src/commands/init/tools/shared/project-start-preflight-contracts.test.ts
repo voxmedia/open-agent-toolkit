@@ -349,8 +349,23 @@ describe('project-start preflight contracts', () => {
     });
 
     it.each(GATE_POSTURE_CALLER_SKILLS)(
-      '%s invokes the shared gate-posture contract before plan writing',
+      '%s runs gate-posture setup between phase-gate setup and artifact review',
       (name) => {
+        const content = readSkill(name);
+        const phaseGate = content.indexOf(
+          ': Configure Optional Phase Gate Review',
+        );
+        const posture = content.indexOf(': Configure Lifecycle Gate Posture');
+        const artifactReview = content.indexOf('Plan Artifact Review Loop');
+
+        // Ordering, not mere presence: the posture choice must be persisted
+        // after the plan has stable phase IDs and before artifact review.
+        expect(phaseGate, `${name} has phase-gate setup`).toBeGreaterThan(0);
+        expect(posture, `${name} has posture setup`).toBeGreaterThan(phaseGate);
+        expect(artifactReview, `${name} has artifact review`).toBeGreaterThan(
+          posture,
+        );
+
         const step = readPostureStep(name);
 
         expect(step).toContain(

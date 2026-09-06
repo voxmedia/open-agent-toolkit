@@ -1160,7 +1160,7 @@ describe('oat gate', () => {
       expect(process.exitCode).toBe(1);
     });
 
-    it('keeps legacy no-project output byte-identical', async () => {
+    it('keeps the legacy no-project payload and key order unchanged', async () => {
       const { root, home } = await setup();
       await writeSharedGate(root);
       const projectPath = '.oat/projects/shared/demo';
@@ -1203,9 +1203,10 @@ describe('oat gate', () => {
       ]);
 
       expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
-      expect(JSON.stringify(capture.jsonPayloads[0])).toContain(
-        'no readable YAML frontmatter',
-      );
+      const message = JSON.stringify(capture.jsonPayloads[0]);
+      expect(message).toContain('no readable YAML frontmatter');
+      // The actionable state path is the point of the error.
+      expect(message).toContain(`${projectPath}/state.md`);
       expect(process.exitCode).toBe(1);
     });
 

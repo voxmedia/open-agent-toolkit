@@ -148,8 +148,10 @@ configured command. The state records:
 - launch and receive reconciliation data needed to resume without duplicating
   an accepted run or completed receive.
 
-A `null` resolution is explicit success for that closeout generation:
-`allowed/no_gate` with `disposition: no_gate`. A gate this project disabled
+Only a `not_configured` resolution is explicit success for that closeout
+generation: `allowed/no_gate` with `disposition: no_gate`. A null, missing,
+malformed, or unrecognized resolver result fails closed as unresolved and is
+never treated as no gate. A gate this project disabled
 persists `allowed/configured` with `disposition: project_disabled`, the
 configured command retained as never-executed evidence, null launch and receive
 provenance, and a `project_override` record. `config_fingerprint` covers the

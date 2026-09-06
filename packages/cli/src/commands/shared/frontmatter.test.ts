@@ -409,6 +409,16 @@ describe('frontmatter', () => {
           'oat_skill_gate_overrides:\n  oat-project-implement: !!str disabled',
         ],
         [
+          'an anchored key',
+          'oat_skill_gate_overrides:\n  &key oat-project-implement: disabled',
+        ],
+        [
+          'a tagged key',
+          'oat_skill_gate_overrides:\n  !!str oat-project-implement: disabled',
+        ],
+        ['a scalar frontmatter root', 'just-a-scalar'],
+        ['a sequence frontmatter root', '- oat_skill_gate_overrides'],
+        [
           'a duplicate map key',
           'oat_skill_gate_overrides:\n  oat-project-plan: disabled\noat_skill_gate_overrides:\n  oat-project-plan: disabled',
         ],

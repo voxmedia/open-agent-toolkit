@@ -329,8 +329,12 @@ alone:
 not_started`, null `launch_attempt_id`, `launch_started_at`,
   `launch_result_receipt`, `gate_run_marker`, `gate_run_id`, `envelope_status`,
   `artifact`, and `handoff`, plus `receive_state: not_started`,
-  `receive_eligible: false`, and `receive_completed: false`. Any populated
-  launch or receive field contradicts a gate that never ran and fails closed.
+  `receive_correlation`, `receive_source_artifact`,
+  `receive_archived_artifact`, `receive_event_identity`, `receive_pre_head`,
+  and `receive_commit` all null, `receive_eligible: false`,
+  `receive_completed: false`, `attempts_completed: 0`, and `failure: null`.
+  Any populated launch, receive, attempt, or failure field contradicts a gate
+  that never ran and fails closed.
 - Because the override lives in the state carrier the implementation
   fingerprint excludes, a persisted `project_disabled` result is never accepted
   on its stored value alone. Re-resolve the gate with project context and

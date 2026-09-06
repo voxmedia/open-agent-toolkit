@@ -120,8 +120,13 @@ export function parseSkillGateOverrides(
     );
   }
 
+  // A scalar or sequence root is malformed project state, not "no overrides":
+  // returning an empty map here would silently launch a disabled gate.
   if (!isMap(document.contents)) {
-    return { present: false, overrides: {} };
+    throw skillGateOverrideError(
+      statePath,
+      'cannot be read because the frontmatter root is not a YAML map',
+    );
   }
 
   const matches = document.contents.items.filter(
