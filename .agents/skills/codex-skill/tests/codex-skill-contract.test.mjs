@@ -141,13 +141,21 @@ const ANAPHORIC_CONTINUATION =
 // as the shipped prose states it -- so prose that hangs a confirmation off "In
 // that case" is rejected and must be restated independently.
 
-// Property, not phrase: any construction that *requires* a confirmation or
-// authorization is rejected. Deliberately fail-closed on negation: this matches
-// the requirement wording wherever it appears, so "do not ask the user for
-// confirmation" is rejected too. A clause-wide negation skip is the alternative
-// and it is worse, because one "not" anywhere would then mask a real
-// requirement. Prose that means to permit a run says so without naming the
-// requirement ("you do not need to confirm the run").
+// A closed phrase list, not a general property: it matches the confirmation and
+// authorization wordings enumerated below and nothing else. NAMED RESIDUAL --
+// synonyms outside the list are accepted, including "approve", "sign-off",
+// "block until", "seek confirmation", and "require approval" (so "In that case,
+// require approval before launching." passes). Widening this vocabulary belongs
+// to BL-260827-span-based-prose-guards, which already owns the
+// requiresConfirmation coverage gap; this guard reuses the pattern unchanged
+// because the plan's step 2 says to and puts refactoring it out of scope.
+//
+// Within the list it is deliberately fail-closed on negation: the wording is
+// matched wherever it appears, so "do not ask the user for confirmation" is
+// rejected too. A clause-wide negation skip is the alternative and it is worse,
+// because one "not" anywhere would then mask a real requirement. Prose that
+// means to permit a run says so without naming the requirement ("you do not
+// need to confirm the run").
 const requiresConfirmation =
   /\b(?:ask (?:the user )?(?:for|to) (?:a )?confirm|confirm before|must confirm|require[sd]? (?:a )?confirmation|obtain (?:the user'?s )?(?:confirmation|authorization))/i;
 
@@ -163,11 +171,21 @@ const splitClauses = (prose) =>
     .map((clause) => clause.trim())
     .filter((clause) => clause.length > 0 && !LIST_MARKER_ONLY.test(clause));
 
-// Markup, not meaning: a clause lifted out of a blockquote, a callout, a list
-// item, or a bolded lead-in still opens with its anaphor. Strip only the
-// markers, outermost first, and keep the verbatim clause for failure labels.
-// The blockquote strip repeats because a callout nests one marker inside
-// another ("> [!IMPORTANT] > In that case, ...") once soft wraps are undone.
+// Markup, not meaning: a clause lifted out of a blockquote, a callout, or a
+// list item still opens with its anaphor. Strip only the markers, outermost
+// first, and keep the verbatim clause for failure labels. The blockquote strip
+// repeats because a callout nests one marker inside another
+// ("> [!IMPORTANT] > In that case, ...") once soft wraps are undone.
+//
+// This normalizes exactly the shapes pinned below -- a plain `>` quote, a
+// `> [!TAG]` callout, a single list marker, and a leading emphasis run -- plus
+// the one composition pinned as a case ("> - "). It is not a general Markdown
+// normalizer: the list-marker strip runs once and the emphasis strip only
+// clears leading punctuation, so other compositions are a NAMED RESIDUAL and
+// are accepted -- "> 1. ", "- - ", "- [ ] ", and a wrapped emphasis span
+// ("_In that case_, ...", where the trailing `_` defeats the word boundary).
+// Those shapes are recorded on BL-260827-span-based-prose-guards, which owns
+// the shared span runner; none of them appears in any SKILL.md today.
 const clauseOpener = (clause) =>
   clause
     .replace(/^(?:>\s*(?:\[![A-Za-z]+\]\s*)?)+/, '')
