@@ -39,7 +39,17 @@
     "phase": "p06",
     "phase_base_head": "414778287cf4ee0735fcfa1cf9c681cbed4f44c3",
     "expected_base_sha": "414778287cf4ee0735fcfa1cf9c681cbed4f44c3",
-    "tasks": ["p06-t01", "p06-t02", "p06-t03", "p06-t04", "p06-t05", "p06-t06"],
+    "tasks": [
+      "p06-t01",
+      "p06-t02",
+      "p06-t03",
+      "p06-t04",
+      "p06-t05",
+      "p06-t06",
+      "p06-t07",
+      "p06-t08",
+      "p06-t09"
+    ],
     "plan": ".oat/projects/shared/lite-workflow-mode/plan.md",
     "worktree": "root"
   },
@@ -80,6 +90,20 @@
         "important": 1,
         "medium": 2,
         "minor": 0
+      }
+    },
+    {
+      "event_id": "exit-gate-fix1-e3c76f54-bcf2-4cff-bc82-4da67ff9fbd2",
+      "reason": "Execute p06-t07 through p06-t09 for the blocking implementation exit-gate findings",
+      "status": "intent_persisted",
+      "expected_base_sha": "1b710eac16f44cd15044a996b8d4be2e1b0c94f8",
+      "review_artifact": ".oat/projects/shared/lite-workflow-mode/reviews/archived/final-review-2026-09-06T021128Z.md",
+      "tasks": ["p06-t07", "p06-t08", "p06-t09"],
+      "findings": {
+        "critical": 0,
+        "important": 1,
+        "medium": 1,
+        "minor": 1
       }
     }
   ],
