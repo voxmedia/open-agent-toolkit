@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
 oat_generated: true
-oat_summary_last_task: prev2-t02
+oat_summary_last_task: prev2-t04
 oat_summary_revision_count: 2
 oat_summary_includes_revisions: [p-rev1, p-rev2]
 ---
@@ -133,8 +133,9 @@ heavy for this class of work while retaining OAT's safety and handoff value.
 - **p-rev2 — Wave 4 integration and closeout.** Composed native Lite planning
   with the complete shared lifecycle-gate posture contract, registered
   `LITE-10`, and aligned local closeout and PR artifacts to Wave 4 and `0.2.60`.
-  Fresh terminal verification, required CI for the pushed head, and focused
-  re-review remain closeout boundaries.
+  All four p-rev2 tasks and local terminal verification are complete, including
+  the wording-only alignment from the final re-review. Publication, push, and
+  required CI for the exact remote head remain closeout boundaries.
 
 ## Follow-up Items
 
@@ -142,8 +143,8 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   projection ownership or header contracts change.
 - Re-evaluate universal plan-template proof and testing guidance under
   `BL-260906-re-evaluate-universal-plan`.
-- Complete `prev2-t03`, obtain required CI for the exact pushed head, and pass
-  the focused p-rev2 re-review before project completion.
+- Publish the refreshed local PR body, push the stabilized range, and obtain
+  required CI for the exact remote head before merge.
 
 ## Workflow Observations
 

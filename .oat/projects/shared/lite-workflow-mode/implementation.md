@@ -3,7 +3,7 @@ oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: prev2-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,18 +24,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 4     | 4/4       |
-| Phase 2      | complete    | 3     | 3/3       |
-| Phase 3      | complete    | 3     | 3/3       |
-| Phase 4      | complete    | 2     | 2/2       |
-| Phase 5      | complete    | 4     | 4/4       |
-| Phase 6      | complete    | 11    | 11/11     |
-| Phase p-rev1 | complete    | 7     | 7/7       |
-| Phase p-rev2 | in progress | 4     | 3/4       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 4     | 4/4       |
+| Phase 2      | complete | 3     | 3/3       |
+| Phase 3      | complete | 3     | 3/3       |
+| Phase 4      | complete | 2     | 2/2       |
+| Phase 5      | complete | 4     | 4/4       |
+| Phase 6      | complete | 11    | 11/11     |
+| Phase p-rev1 | complete | 7     | 7/7       |
+| Phase p-rev2 | complete | 4     | 4/4       |
 
-**Total:** 37/38 tasks completed; final wording alignment pending
+**Total:** 38/38 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -217,12 +217,14 @@ finding.
 
 ### Task prev2-t04: Align current closeout wording
 
-**Status:** pending
+**Status:** complete
 
-Update only active closeout prose in state, summary, and the local PR body.
-Preserve historical execution records. State that all p-rev2 tasks and local
-terminal verification are complete, while PR publication and exact-remote-head
-CI remain pending.
+Active closeout prose in state, summary, implementation, and the local PR body
+now consistently records all four p-rev2 tasks and local terminal verification
+as complete. Historical execution records remain unchanged. The refreshed local
+PR body has not been published; root-owned publication, push, and required CI
+for the exact remote head remain pending. The user waived another review for
+this wording-only alignment.
 
 ---
 

@@ -1,5 +1,5 @@
 ---
-oat_current_task: prev2-t04
+oat_current_task: null
 oat_last_commit: 6db21410ff85bdc01632154784c9f4baa815ddaa
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -121,8 +121,9 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — p-rev2 review fixes in progress after the post-Wave-4 final
-review; PR #264 remains open.
+Implementation — all four p-rev2 tasks and local terminal verification are
+complete; PR #264 remains open pending publication of the stabilized local body
+and required CI for the exact remote head.
 
 ## Artifacts
 
@@ -192,16 +193,21 @@ review; PR #264 remains open.
   contract and registered `LITE-10`
 - ✓ `prev2-t02` aligned the local closeout artifacts to Wave 4 and public
   package version `0.2.60`
-- ⧗ Review-fix phase p-rev2 continues at `prev2-t03`
+- ✓ `prev2-t03` completed local terminal verification; the SIGTERM mechanism
+  remains honestly classified as inconclusive rather than flaky
+- ✓ Final p-rev2 re-review closed all prior Important findings and identified
+  one wording-only Medium alignment finding
+- ✓ `prev2-t04` aligned current closeout wording; all four p-rev2 tasks are
+  complete
 
 ## Blockers
 
-None. The remaining post-Wave-4 CI evidence finding is tracked by `prev2-t03`.
+None. Local implementation and terminal verification are complete. Publication,
+push, and exact-remote-head CI remain root-owned external boundaries.
 
 ## Next Milestone
 
-Re-establish terminal verification in `prev2-t03`, obtain a fresh green required
-CI run for the eventual pushed head, and pass the focused final re-review. The
-local final PR description is refreshed for later publication by the root
-session. Project completion, PR merge, and release remain separate authorization
-boundaries.
+Publish the refreshed local PR description, push the stabilized range, and
+obtain a fresh green required CI run for that exact remote head. This local PR
+body has not yet been published. PR merge and release remain separate
+authorization boundaries.

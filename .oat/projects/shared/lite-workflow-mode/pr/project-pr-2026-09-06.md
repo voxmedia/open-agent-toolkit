@@ -105,11 +105,12 @@ contract.
 - Wave 4 integrated from current `main`; its additive execution contracts
   compose with the revised Lite proof strategy, and public release surfaces are
   authoritative at `0.2.60`.
-- The post-Wave-4 final review reported three Important findings. The shared
-  planning composition and closeout-artifact alignment are complete locally;
-  fresh terminal verification, required CI for the exact pushed head, and a
-  focused p-rev2 re-review remain required. This local body has not been
-  published to GitHub.
+- The post-Wave-4 final review's three Important findings are closed. The
+  stabilized p-rev2 re-review found one wording-only Medium alignment issue,
+  resolved in `prev2-t04` under the user's no-re-review waiver. All four p-rev2
+  tasks and local terminal verification are complete. Publication, push, and
+  required CI for the exact remote head remain pending. This local body has not
+  been published to GitHub.
 
 ## References
 
