@@ -61,9 +61,8 @@ governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
    phases continue. **Bundle phases:** a STOP parks only the stopped task; the
    implementer records the blocker and continues remaining independent tasks; the
    phase is terminal when every task is completed or parked
-   (DR-260713-bundle-stop-semantics-park). p01 is a four-defect release batch
-   with four independent acceptance and commit boundaries (its recorded policy
-   exception); a STOP on one defect parks only that defect.
+   (DR-260713-bundle-stop-semantics-park). p01's source plan defines its own
+   task and commit boundaries; a STOP inside it parks per that plan.
 5. **Group-dependency rule:** a group starts when every phase of the previous
    group is terminal — merged, or parked with completed commits merged. A park
    never blocks the next group.
@@ -96,14 +95,13 @@ governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
 ## Parallelism
 
 p01 runs alone first (ungrouped) because it establishes the corrected canonical
-prose baseline and writes the shared contract-test file. Group 2 = `p02` + `p03`
-
-- `p04` in separate worktrees at the post-p01 integration tip. p05 runs alone
-  after group 2 (ungrouped) because it shares `oat-project-implement/SKILL.md`,
-  the version pins, and the sync manifest with p04. Rationale: the drift refresh
-  intersected all five complete write surfaces (including skill version bumps,
-  `skills.test.ts` pins, and the sync manifest); the only non-empty intersections
-  are p01∩p04, p01∩p05, and p04∩p05, all cross-group.
+prose baseline and writes the shared contract-test file. Group 2 is p02, p03,
+and p04 together in separate worktrees at the post-p01 integration tip. p05 runs alone
+after group 2 (ungrouped) because it shares `oat-project-implement/SKILL.md`,
+the version pins, and the sync manifest with p04. Rationale: the drift refresh
+intersected all five complete write surfaces (including skill version bumps,
+`skills.test.ts` pins, and the sync manifest); the only non-empty intersections
+are p01∩p04, p01∩p05, and p04∩p05, all cross-group.
 
 > The recon observations below are **non-authoritative grouping evidence only** —
 > they justify group composition but never constrain a source plan: each source
@@ -230,12 +228,12 @@ unchanged at `63161897dd40a66e1b29cf19e286665895c40dde` (217 files).
 
 **Ordering:** ungrouped; runs alone at the wave base and merges before group 2
 (it establishes the corrected canonical prose baseline and writes
-`skills.test.ts`). Four independent commits, one per defect, per the plan's
-batch policy exception.
+`skills.test.ts`). Execution, commit, and review boundaries are the source
+plan's own; the wrapper adds only the `p01-t01` prefix.
 
 **Step 1: Drift check** — per the source plan's `## Drift check`.
 
-**Step 2: Execute** the source plan in full (four separately committed defects).
+**Step 2: Execute** the source plan in full.
 
 **Step 3: Verify (wrapper gate)**
 
@@ -243,14 +241,14 @@ Run: the source plan's `## Done criteria` checks, then the lane-mode DoD gates f
 the wrapper execution contract
 Expected: all green.
 
-**Step 4: Cross-model review** — before committing each defect, obtain an
-independent cross-model review of the uncommitted diff via the runtime-configured
-reviewer; disposition every finding in the phase report.
+**Step 4: Cross-model review** — before committing, obtain an independent
+cross-model review of the uncommitted diff via the runtime-configured reviewer;
+disposition every finding in the phase report.
 
 **Step 5: Commit**
 
 ```bash
-git commit -m "fix(p01-t01): repair bundled-skill contract drift — <defect>"
+git commit -m "fix(p01-t01): repair bundled-skill contract drift"
 ```
 
 ---
@@ -401,17 +399,17 @@ git commit -m "docs(p05-t01): document fail-closed patch-and-restore recovery fo
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p05    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-09-06 | reviews/artifact-plan-review-2026-09-06T023526Z.md | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -                                                           | -             | -          | -           |
+| p02    | code     | pending | -          | -                                                           | -             | -          | -           |
+| p03    | code     | pending | -          | -                                                           | -             | -          | -           |
+| p04    | code     | pending | -          | -                                                           | -             | -          | -           |
+| p05    | code     | pending | -          | -                                                           | -             | -          | -           |
+| final  | code     | pending | -          | -                                                           | -             | -          | -           |
+| plan   | artifact | passed  | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T023526Z.md | -             | -          | -           |
+| spec   | artifact | pending | -          | -                                                           | -             | -          | -           |
+| design | artifact | pending | -          | -                                                           | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
