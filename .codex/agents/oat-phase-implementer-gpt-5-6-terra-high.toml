@@ -420,8 +420,8 @@ For every task:
 9. Verify:
    - HEAD is exactly one commit after `PRE_TASK_HEAD`;
    - the commit changes only files in the effective task boundary, which is
-     the declared task files plus any mechanical additions reported under
-     the cross-cutting option sweep;
+     the declared task files plus any mechanical additions permitted by, and
+     reported under, the cross-cutting option sweep;
    - every task verification passed; and
    - the worktree is clean.
 10. Perform a brief between-task transition check before starting the next

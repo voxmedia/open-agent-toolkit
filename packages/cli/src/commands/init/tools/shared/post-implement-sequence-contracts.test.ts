@@ -966,6 +966,12 @@ describe('post-implementation sequence contracts', () => {
       // Property 4: widen only mechanically, only inside the declared
       // outcome, and only when no sibling or parallel lane owns the file.
       expect(section).toContain('**Widen mechanically and proceed**');
+      // The ownership half alone is not the precondition. Without this
+      // clause the rule degrades to "widen into any unowned file", which is
+      // the exact fail-open the sweep exists to close.
+      expect(section).toContain(
+        'every discovered file is already required by the declared task outcome, the edit to it is mechanical propagation of the same value',
+      );
       expect(section).toContain('no sibling or active parallel task owns it');
       expect(section).toContain(
         '- **Stop and report** the exact discovered file set and the ownership conflict when the expansion would change the declared task outcome, cross sibling or parallel-lane ownership, invalidate a plan-declared parallel group, or require a new design, architecture, or public-behavior decision.',
@@ -983,11 +989,27 @@ describe('post-implementation sequence contracts', () => {
         'never relaxes the standing rule against scope expansion beyond the phase',
       );
 
+      // Every assertion above is presence-only, so required prose can survive
+      // verbatim beside an added escape hatch that negates it. This is a
+      // bounded deny-list over softeners of the stop-and-report duty, scoped
+      // to the sweep subsection, with a negation lookbehind so that
+      // *strengthening* the duty ("never treat the stop branch as advisory")
+      // does not trip it. It is not a general fix for substring-contract
+      // vacuity: a novel synonym still evades it.
+      const sweepSubsection = requiredSlice(
+        section,
+        '#### Cross-Cutting Option Sweep',
+        'For every task:',
+      );
+      expect(sweepSubsection).not.toMatch(
+        /(?<!never |not |do not |cannot )(?:treat the stop branch as advisory|treat the sweep as advisory|stopping is optional|the stop branch is optional|continue without reporting|widen without reporting)/i,
+      );
+
       // The post-commit verify step has to accept the boundary the
       // widen-and-proceed path creates. A verify step that still demands
       // "only declared task files" makes that path unusable.
       expect(section).toContain(
-        'the commit changes only files in the effective task boundary, which is the declared task files plus any mechanical additions reported under the cross-cutting option sweep;',
+        'the commit changes only files in the effective task boundary, which is the declared task files plus any mechanical additions permitted by, and reported under, the cross-cutting option sweep;',
       );
     }
 
@@ -1068,10 +1090,30 @@ describe('post-implementation sequence contracts', () => {
       expect(() => assertSweepContract(silent)).toThrow();
     });
 
+    it('rejects a widen branch stripped of its mechanical precondition', () => {
+      const unbounded = probe(
+        taskExecutionContract(readPhaseImplementerAgent()),
+        '- **Widen mechanically and proceed** when every discovered file is already required by the declared task outcome, the edit to it is mechanical propagation of the same value, and no sibling or active parallel task owns it.',
+        '- **Widen mechanically and proceed** whenever no sibling or active parallel task owns it.',
+      );
+
+      expect(() => assertSweepContract(unbounded)).toThrow();
+    });
+
+    it('rejects an advisory escape hatch appended beside the stop branch', () => {
+      const softened = probe(
+        taskExecutionContract(readPhaseImplementerAgent()),
+        'Threading an already-agreed option through four call sites',
+        'When stopping would cost time, treat the stop branch as advisory, widen to whatever the sweep found, and continue without reporting. Threading an already-agreed option through four call sites',
+      );
+
+      expect(() => assertSweepContract(softened)).toThrow();
+    });
+
     it('rejects a verify step that contradicts the effective task boundary', () => {
       const contradicted = probe(
         taskExecutionContract(readPhaseImplementerAgent()),
-        'the commit changes only files in the effective task boundary, which is the declared task files plus any mechanical additions reported under the cross-cutting option sweep;',
+        'the commit changes only files in the effective task boundary, which is the declared task files plus any mechanical additions permitted by, and reported under, the cross-cutting option sweep;',
         'the commit changes only declared task files;',
       );
 
