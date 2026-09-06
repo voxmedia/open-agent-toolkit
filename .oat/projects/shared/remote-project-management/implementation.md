@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Phase 7 recovery passed; root-owned review round 1 is pending.
+  - Phase 7 review round 1 found 5 Critical and 3 Important findings; bounded fix loop 1/3 is pending.
 oat_last_updated: 2026-09-06
 oat_current_task_id: null
 oat_generated: false
@@ -1025,8 +1025,8 @@ zero findings after fix loop 3/3.
 
 ## Phase 7: Cross-Provider Convergence and Recovery
 
-**Status:** in progress — all ten planned tasks and recovery attempt 1/10 are
-complete; root-owned review round 1 is pending.
+**Status:** blocked — review round 1 found five Critical and three Important
+findings; bounded fix loop 1/3 is pending.
 **Started:** 2026-09-05
 
 ### Phase Boundary
@@ -1115,6 +1115,21 @@ complete; root-owned review round 1 is pending.
   closeout, discussion, resolution, doctor, and migration without falling
   through to shared-storage handling or weakening provider-neutral privacy and
   authority boundaries.
+
+### Review Round 1
+
+- Independent review blocked at exact product head
+  `2ed83eb26862a4d5ebbd1b012d77edcfbfdbb720` with five Critical, three
+  Important, one Medium, and zero Minor findings.
+- Artifact: `reviews/p07-review-2026-09-06T203750Z.md`.
+- Reconnaissance: not-attempted.
+- The focused Phase 7 union passed 218/218. Full smoke passed 140/141 because a
+  pre-existing malformed linked-worktree metadata entry prevented one
+  deterministic provisioning case; the reviewer removed only its own
+  test-generated refs/worktrees.
+- The recovery ledger chronology and immutable ten-task history passed review,
+  but substantive production closeout, resolution, discussion, batch,
+  doctor/migration, and representative workflow proof require fix loop 1/3.
 
 ---
 
@@ -2221,13 +2236,17 @@ continuation_events:
   - p07-recovery-02-production-command-routing-20260906
 recovery_usage: 1/10
 pending_attempt: null
-review_rounds: 0/3
+review_rounds: 1/3
 fix_loops: 0/3
 recovery_02_reservation_commit: c1d755645dd172968d300c4fef0af6865b21c683
 recovery_02_activation_commit: 7712ddd1b876e9d905dad9ee88f0eac6745f3090
 recovery_02_commit: 2ed83eb26862a4d5ebbd1b012d77edcfbfdbb720
 recovery_outcome: recovered
-phase_outcome: implementation_passed_review_pending
+review_1_artifact: reviews/p07-review-2026-09-06T203750Z.md
+review_1_head: 2ed83eb26862a4d5ebbd1b012d77edcfbfdbb720
+review_1_findings: 5 critical, 3 important, 1 medium, 0 minor
+review_1_reconnaissance: not-attempted
+phase_outcome: review_blocked_fixes_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p07 action=implementation
@@ -2251,7 +2270,8 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   product correction touches only `service.ts` and `service.test.ts`, and root
   validated the terminal marker, immutable history, bounded range, and focused
   53/53 service suite. The marker is settled to null in root bookkeeping;
-  review round 1 is next.
+  review round 1 then blocked with five Critical and three Important findings.
+  Bounded fix loop 1/3 is next through the original implementer.
 
 <!-- orchestration-runs-end -->
 
