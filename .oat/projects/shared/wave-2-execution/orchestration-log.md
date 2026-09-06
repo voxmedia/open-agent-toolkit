@@ -98,6 +98,16 @@ filter.
 
 ---
 
+### 2026-09-06 · project · fan-in · group 1 (p01)
+
+Merge `80491b10c`, lockstep bump 0.2.56 → 0.2.57, all eight gates exit 0 with
+`Cached: 0 cached, 10 total` on the forced test run (~9 minutes end to end).
+The lane's `git merge-base` was already the integration tip, so the rebase was
+a no-op and the five lane commits re-hashed only through the merge. Nothing to
+flip: every group-2 plan was already READY. p01 worktree and branch removed.
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:
