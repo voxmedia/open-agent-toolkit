@@ -178,6 +178,8 @@ Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passe
 - `w2-p02-impl-001`, `w2-p03-impl-001`, `w2-p04-impl-001` — group 2 dispatched together from group base `565d79981ed3be08128758cf0974eec30c1688b2` (lane heads after the worktree-init sync commit: p02 `dd9a84d0e`, p03 `5c480f4b2`, p04 `db3d7ebb6`); each target opus, model_axis selected:opus, task_class default-implementation (plan dispatch profile), native-catalog selection. Records `dispatch/w2-p0{2,3,4}-impl-001.json`.
 - `w2-p03-review-001` — reviewer, target opus; review of `5c480f4b2..a207d3c11`: 1C/1I/1M/3m (C1: passage scoping narrowed the `doesNotMatch` guard to the guarded passage, so an out-of-passage forbidden claim previously rejected is now accepted). Record `dispatch/w2-p03-review-001.json`.
 - `w2-p03-fix-001` — continuation of `w2-p03-impl-001` (mode fix): C1, I1, M1 plus address-now m1–m3 in one commit. Record `dispatch/w2-p03-fix-001.json`.
+- `w2-p03-fix-001` outcome: one commit `5a99837ec6fdb7e8d68bc7a5490228571ffd99ee` on `a207d3c11`, both declared files only; all six findings fixed with per-clause neutralization evidence (C1 whole-source `doesNotMatch`; I1 strengthened with negation/mutation markers and adjacent `only`/`replay`, B1–B4 fixtures; M1 terminator test; m1 byte-0 anchor; m2 cardinality restored; m3 bundle-strip comment); gates exit 0 with forced `Cached: 0`, test:skills 801/801.
+- `w2-p03-review-002` — disposition-verification round 2 on the original reviewer handle, range `a207d3c11..5a99837ec`. Record `dispatch/w2-p03-review-002.json`.
 
 #### Phase Outcomes
 
@@ -185,7 +187,7 @@ Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passe
 | ----- | ----------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------- |
 | p01   | `.worktrees/wave-2/p01` | DONE (`848b8ef41`; 4 defect commits + 1 fix commit; lane gates + uncached suite 5579 green) | passed (round 1 0C/1I/1M/4m → round 2 0C/0I/0M/1m) | 1          |
 | p02   | `.worktrees/wave-2/p02` | in progress                                                                                 | pending                                            | -          |
-| p03   | `.worktrees/wave-2/p03` | DONE (`a207d3c11`; lane gates forced `Cached: 0`, test:skills 799/799)                      | fixes_added (1C/1I/1M/3m; fix round 1 dispatched)  | 1          |
+| p03   | `.worktrees/wave-2/p03` | DONE (`a207d3c11` + fix `5a99837ec`; lane gates forced `Cached: 0`, test:skills 801/801)    | fixes_added (1C/1I/1M/3m; round 2 running)         | 1          |
 | p04   | `.worktrees/wave-2/p04` | in progress                                                                                 | pending                                            | -          |
 
 #### Group 1 fan-in — p01 (2026-09-06)
