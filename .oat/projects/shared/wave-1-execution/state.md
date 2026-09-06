@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: c98540a1
+oat_last_commit: b96bbafe
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260718-fix-oat-docs-generate-index' }
@@ -73,8 +73,8 @@ oat_implement_exit_gate:
   reviewed_head: 63ea98d28825ce0db7bc9e15047b223a794cb1ec # final review round 2 passed (reviews/final-review-2026-09-06T014238Z.md)
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:ec05b9d2172cd8aa80044a7e146260657d0378142f9200358149dae04a1a43a7'
-  freshness_head: 8f1b0f488820aa4ea68cf66f9a41ed761f6660e1 # closeout-only descendants after the reviewed head: gate log commits, receive bookkeeping, docs-index plan clause amendment
-  freshness_fingerprint: 'sha256:effective-delta-v1:5a9a09698239e8e928b95377b8afe821efa6720612fcef4d13c5a6d5acfd0982'
+  freshness_head: b96bbafec4954977a23947d21bf39c94250d8ffd # closeout-only: summary step (summary.md, project-log, ledger, decision records)
+  freshness_fingerprint: 'sha256:effective-delta-v1:162dff2b1b1c7909d5073da97a574e3a6f18fafe3e4979b22ba78bf21f1de6fb'
   launch_state: result_persisted
   launch_attempt_id: 'w1-exit-gate-20260906T014616Z'
   launch_started_at: '2026-09-06T01:46:16Z'
@@ -94,7 +94,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-06T01:57:16Z'
+  updated_at: '2026-09-06T01:59:21Z'
 # oat_implement_exit_gate (reference): optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -135,7 +135,7 @@ oat_post_implement_sequence:
   source: configured # workflow.postImplementSequence
   final_phase: p04
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: pending # pending | approved | not_required
   approval_source: null # null | user | oat-autonomous
   post_approval: []
@@ -148,7 +148,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-05T22:36:14.653Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T01:57:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T01:59:21Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
