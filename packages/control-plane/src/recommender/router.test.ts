@@ -1,7 +1,27 @@
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
+import { scanArtifacts } from '../state/artifacts';
 import type { ArtifactStatus, ProjectState, ReviewStatus } from '../types';
 import { recommendSkill } from './router';
+
+// Captured from discovery.md produced by `oat project promote` after p06-t10.
+// scanArtifacts parses this provider-independent production artifact shape.
+const PROMOTED_DISCOVERY_FRONTMATTER = `---
+oat_status: in_progress
+oat_ready_for: oat-project-quick-start
+oat_last_updated: 2026-09-05
+---
+
+# Discovery: demo
+
+## Initial Request
+
+Ship safe behavior.
+`;
 
 function makeState(
   overrides: Partial<Omit<ProjectState, 'recommendation'>> = {},
@@ -127,19 +147,24 @@ describe('recommendSkill', () => {
     expect(recommendSkill(state).skill).toBe('oat-project-plan');
   });
 
-  it('routes a promoted quick project to quick-start', () => {
-    const state = makeState({
-      phaseStatus: 'complete',
-      workflowMode: 'quick',
-      artifacts: makeArtifacts({
-        type: 'discovery',
-        boundaryTier: 2,
-        isTemplate: false,
-        readyFor: 'oat-project-quick-start',
-      }),
-    });
+  it('routes a promoted quick project artifact to quick-start', async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), 'oat-router-promoted-'));
+    try {
+      await writeFile(
+        join(projectRoot, 'discovery.md'),
+        PROMOTED_DISCOVERY_FRONTMATTER,
+        'utf8',
+      );
+      const state = makeState({
+        phaseStatus: 'complete',
+        workflowMode: 'quick',
+        artifacts: await scanArtifacts(projectRoot),
+      });
 
-    expect(recommendSkill(state).skill).toBe('oat-project-quick-start');
+      expect(recommendSkill(state).skill).toBe('oat-project-quick-start');
+    } finally {
+      await rm(projectRoot, { recursive: true, force: true });
+    }
   });
 
   it('routes import plan tier 3 to import-plan', () => {

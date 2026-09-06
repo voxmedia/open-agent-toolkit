@@ -230,6 +230,12 @@ function renderDiscovery(
     nowUtc,
     'quick',
   );
+  const frontmatter = readObjectFrontmatter(rendered, 'rendered discovery.md');
+  frontmatter['oat_ready_for'] = 'oat-project-quick-start';
+  rendered = replaceFrontmatter(
+    rendered,
+    YAML.stringify(frontmatter).trimEnd(),
+  );
   for (const [heading, body] of [
     ['Initial Request', sections.summary],
     ['Key Decisions', sections.decisions],

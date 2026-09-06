@@ -21,6 +21,7 @@ import {
 import type { GitRunner } from '@commands/project/sync/git';
 import type { PushResult } from '@commands/project/sync/ref-sync';
 import { getFrontmatterBlock } from '@commands/shared/frontmatter';
+import { getProjectState } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
@@ -355,6 +356,10 @@ describe('oat project promote', () => {
         join(projectRoot, 'discovery.md'),
         'utf8',
       );
+      expect(YAML.parse(getFrontmatterBlock(discovery) ?? '')).toMatchObject({
+        oat_status: 'in_progress',
+        oat_ready_for: 'oat-project-quick-start',
+      });
       expect(discovery).toContain('## Initial Request\n\nShip safe behavior.');
       expect(discovery).toContain(
         '## Key Decisions\n\n- Keep the command mechanical.',
@@ -457,6 +462,28 @@ describe('oat project promote', () => {
     expect(gitRunner.run).not.toHaveBeenCalled();
     expect(pushSynced).not.toHaveBeenCalled();
   });
+
+  it.each(['shared', 'local'] as const)(
+    'routes a real promoted %s project to quick-start',
+    async (scope) => {
+      const repoRoot = await createRepo();
+      const { projectPath, projectRoot } = await seedRepo(repoRoot, { scope });
+      const { command } = createHarness(repoRoot, true);
+
+      await runCommand(command, projectPath, 'quick', true);
+
+      const promotedState = await getProjectState(projectRoot);
+      expect(promotedState.recommendation.skill).toBe(
+        'oat-project-quick-start',
+      );
+      expect(
+        promotedState.artifacts.find(({ type }) => type === 'discovery'),
+      ).toMatchObject({
+        status: 'in_progress',
+        readyFor: 'oat-project-quick-start',
+      });
+    },
+  );
 
   it('does not run git when the final project write fails', async () => {
     const repoRoot = await createRepo();
