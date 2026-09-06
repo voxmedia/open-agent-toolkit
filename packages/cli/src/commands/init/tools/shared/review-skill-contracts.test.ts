@@ -962,6 +962,35 @@ printf 'artifact-read\\n'`,
     expect(inheritedMaterializedCodexExamples).toEqual([]);
   });
 
+  it('accepts a project-disabled exit gate only with null launch provenance', () => {
+    const next = readRepoFile('.agents/skills/oat-project-next/SKILL.md');
+    const flat = next.replace(/\s+/g, ' ');
+
+    // The router must recognize the disposition the closeout can now persist,
+    // or a deliberate project override loops the operator back to implement.
+    expect(flat).toContain(
+      '`allowed/configured` with `disposition: project_disabled` is the third valid combination.',
+    );
+    expect(flat).toContain(
+      'Null gate-run and artifact provenance is required here, not merely tolerated',
+    );
+    expect(flat).toContain(
+      '`project_override` sub-record recording the disabled value and its `state.md:oat_skill_gate_overrides` source',
+    );
+    expect(flat).toContain(
+      'an override-era transition routes as stale and a fresh configured run is required',
+    );
+
+    // The closeout side must persist exactly what the router requires.
+    const closeout = readRepoFile(
+      '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+    ).replace(/\s+/g, ' ');
+    expect(closeout).toContain(
+      'A `configured_disabled_by_project` resolution persists `allowed/configured` with `disposition: project_disabled`.',
+    );
+    expect(closeout).toContain('keeps `launch_state: not_started`');
+  });
+
   it('routes phase-range review fixes into the last phase in the range', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-review-receive/SKILL.md',

@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.13
+version: 1.0.14
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -302,7 +302,8 @@ unresolved or stale — resume with `oat-project-implement` before
 post-implementation routing."
 
 Only an `allowed` and fresh exit-gate disposition falls through to the normal
-post-implementation checks.
+post-implementation checks. Every other combination keeps its current
+fail-closed routing.
 
 Validate freshness from the complete persisted transition, not from `status`
 alone:
@@ -316,6 +317,17 @@ alone:
   `implementation_fingerprint`, configured gate-run provenance, and any eligible
   receive durably completed. Qualified state also requires the complete rolling
   freshness fields.
+- `allowed/configured` with `disposition: project_disabled` is the third valid
+  combination. Null gate-run and artifact provenance is required here, not
+  merely tolerated: nothing launched, so any non-null launch provenance is
+  contradictory and fails closed. It additionally requires a matching
+  `config_fingerprint`, `reviewed_head`, and `implementation_fingerprint`, a
+  `project_override` sub-record recording the disabled value and its
+  `state.md:oat_skill_gate_overrides` source, and the same rolling-freshness
+  rules as every other allowed result. Because `config_fingerprint` covers the
+  resolved override state, removing the override from `state.md` changes the
+  fingerprint, so an override-era transition routes as stale and a fresh
+  configured run is required.
 - `pending`, `blocked`, malformed, contradictory, or legacy-absent state never
   falls through. Pending and blocked generations resume their persisted
   configuration; configuration-fingerprint mismatch fails closed.

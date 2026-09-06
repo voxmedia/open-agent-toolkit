@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.3.3
+version: 2.3.4
 description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'

@@ -268,6 +268,7 @@ describe('post-implementation sequence contracts', () => {
       'config_fingerprint',
       'resolved_command',
       'resolved_description',
+      'project_override',
       'on_failure',
       'max_attempts',
       'attempts_completed',
@@ -337,6 +338,7 @@ describe('post-implementation sequence contracts', () => {
       'config_fingerprint',
       'resolved_command',
       'resolved_description',
+      'project_override',
       'on_failure',
       'max_attempts',
       'attempts_completed',
@@ -443,6 +445,108 @@ describe('post-implementation sequence contracts', () => {
         /must not (?:contain|include|add) `?--target(?:\s|<)/i,
       );
     }
+  });
+
+  it('persists a project-disabled exit gate without launching anything', () => {
+    const gate = normalizeWhitespace(
+      requiredSlice(
+        readImplementSkill(),
+        '### Step 14: Gate Execution',
+        '### Step 15: Final HiLL Closeout Sequence',
+      ),
+    );
+
+    // Distinct disposition, retained configured resolution, zero launch.
+    expect(gate).toContain(
+      'A `configured_disabled_by_project` resolution persists `allowed/configured` with `disposition: project_disabled`.',
+    );
+    expect(gate).toContain(
+      'It sets `resolved_command` to the configured command as evidence that is never executed',
+    );
+    expect(gate).toContain(
+      'keeps null gate-run, artifact, and receive provenance because nothing launched',
+    );
+    expect(gate).toContain('keeps `launch_state: not_started`');
+    expect(gate).toContain(
+      'records a `project_override` sub-record with `value: disabled` and `source: state.md:oat_skill_gate_overrides`',
+    );
+    expect(gate).toContain(
+      'A project-disabled gate must never enter the passed, missing, or failed branches.',
+    );
+    // Completion stays allowed because the operator chose the override.
+    expect(gate).toContain(
+      'Completion stays allowed because the operator chose the project override; every other closeout freshness and snapshot rule is unchanged.',
+    );
+    // The resolve call is project-aware and branches on all three values.
+    expect(gate).toContain(
+      'oat gate resolve oat-project-implement --project "$PROJECT_PATH" --json',
+    );
+    expect(gate).toContain('handle all three `resolution` values explicitly');
+    expect(gate).toContain(
+      '`configured_disabled_by_project`: persist the allowed project-disabled transition described above without launching any process',
+    );
+    // The unchanged no-gate and configured paths must survive.
+    expect(gate).toContain(
+      '`not_configured`: persist the allowed no-gate transition; no gate is configured',
+    );
+    expect(gate).toContain(
+      '`configured`: continue with the launch steps below.',
+    );
+  });
+
+  it('covers the resolved override in the closeout configuration fingerprint', () => {
+    const gate = normalizeWhitespace(
+      requiredSlice(
+        readImplementSkill(),
+        '### Step 14: Gate Execution',
+        '### Step 15: Final HiLL Closeout Sequence',
+      ),
+    );
+
+    expect(gate).toContain(
+      'Canonically serialize the resolved command, description, `onFailure`, `maxAttempts`, and the resolved project override state to derive `config_fingerprint`',
+    );
+    expect(gate).toContain(
+      'Because `config_fingerprint` covers the resolved override state as well as the configured declaration, removing the override from `state.md` changes the fingerprint.',
+    );
+    expect(gate).toContain(
+      'can never be reused as a fresh `allowed` result once the gate is re-enabled',
+    );
+  });
+
+  it('routes a project-disabled closeout forward and a re-enabled one as stale', () => {
+    const next = normalizeWhitespace(readNextSkill());
+
+    expect(next).toContain(
+      '`allowed/configured` with `disposition: project_disabled` is the third valid combination.',
+    );
+    // Null launch provenance is required, not merely tolerated.
+    expect(next).toContain(
+      'Null gate-run and artifact provenance is required here, not merely tolerated',
+    );
+    expect(next).toContain(
+      'any non-null launch provenance is contradictory and fails closed',
+    );
+    expect(next).toContain(
+      'requires a matching `config_fingerprint`, `reviewed_head`, and `implementation_fingerprint`',
+    );
+    expect(next).toContain(
+      'the same rolling-freshness rules as every other allowed result',
+    );
+    // enabled -> disabled -> enabled must route as stale.
+    expect(next).toContain(
+      'removing the override from `state.md` changes the fingerprint, so an override-era transition routes as stale and a fresh configured run is required',
+    );
+    expect(next).toContain(
+      'Every other combination keeps its current fail-closed routing.',
+    );
+    // The pre-existing valid combinations must be unchanged.
+    expect(next).toContain(
+      '`allowed/no_gate` is valid only with `disposition: no_gate`',
+    );
+    expect(next).toContain(
+      '`allowed/configured` is valid only with `disposition: passed`, `warned`, or `prompt_approved`',
+    );
   });
 
   it('persists launch acceptance markers and reconciles before relaunch', () => {
