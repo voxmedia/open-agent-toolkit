@@ -71,12 +71,12 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:3b64830655dfae7ae030b9ef8adc522d2f1e6be0d07da253eaeb2ca7a8830040'
   freshness_head: eb3b726e7d77dc9c674df6aad39b2d3a4a4985a9 # closeout-only: fix-002 record
   freshness_fingerprint: 'sha256:effective-delta-v1:b8a4da69298b2d5cd353aae5bfc7f0b8d63e781bd4ff2a6a4aa87660d9f86ce9'
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: 'w3-exit-gate-20260906T142243Z'
   launch_started_at: '2026-09-06T14:22:43Z'
   launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w3/w3-exit-gate-20260906T142243Z.receipt.json'
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/226f2a4e-cc93-45f4-91e1-605f82a36404.json'
+  gate_run_id: '226f2a4e-cc93-45f4-91e1-605f82a36404'
   envelope_status: null
   artifact: null
   handoff: 'attempt 2 after w3-p01-fix-002'
@@ -90,7 +90,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-09-06T14:22:44Z'
+  updated_at: '2026-09-06T14:22:57Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -131,7 +131,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T10:56:52.547Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T14:22:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T14:22:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
