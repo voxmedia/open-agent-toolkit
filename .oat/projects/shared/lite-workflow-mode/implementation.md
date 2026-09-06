@@ -137,6 +137,27 @@ frontmatter stripping by the root session; no GitHub mutation has occurred.
   The test file was restored exactly and only the failed ledger transition was
   committed.
 
+### Recovery Event p-rev2-recovery-3-named-skill-matrix
+
+- Phase/task: p-rev2 / prev2-t01
+- Original request: 348bd412-b8a9-40e9-8d98-6aab9099cbeb
+- Original commit: 59d4254a59c8658ced67911e71bfffbf666a059f
+- Defect class: composition
+- Discovered by: `pnpm test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 3/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
+- Recovery commit: 8c9c56fcf2b3a63cb6bde5ef8d620a5dfa42514d
+- Verification: the focused named-skill contract passed 22 of 22 checks and
+  `pnpm test` passed before and after the committed correction.
+- Reason: the correction adds only the evidenced load-required classification
+  for Lite's separate plan-writing skill-load sentence.
+
+**Recovery volume:** p-rev2 reached three events. This elevated-volume warning
+is recorded; the third event restored passing phase verification without
+changing the accepted dispatch target or widening the bounded file scope.
+
 **Next:** `prev2-t03` must reproduce the SIGTERM cleanup subtest before any code
 change, run terminal repository verification, and record the results. A fresh
 required CI run for the exact pushed head and the focused p-rev2 re-review remain
