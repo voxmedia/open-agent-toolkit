@@ -249,6 +249,42 @@ journaled worktree that is already gone from disk is still recoverable; a
 contradictory or unjournaled resource fails closed with a refusal rather than
 guessing.
 
+### Reserved versus registered ownership
+
+The deterministic provider's nested phase worktrees are journaled as a
+transaction, so an interruption cannot leave one of them as a child cleanup
+has to refuse. Other nested creators still register directly after creation;
+their entries are read exactly the same way, but their creation window is not
+yet covered. The two states are:
+
+- **`reserved`** — the exact branch, worktree path, marker path, expected
+  baseline, shared Git directory, and run identity are written to the manifest
+  _before_ `git worktree add` runs. The entry is durable intent, not ownership.
+- **`registered`** — the child's marker, Git worktree registration, branch,
+  HEAD ancestry, and shared Git directory have all been corroborated.
+  Finalization only flips a matching reservation; it never rewrites what was
+  reserved, and a child contradicting its reservation is refused.
+
+Cleanup reconciles a reservation only against exactly matching state. If
+neither the branch nor the worktree was ever created, nothing is deleted and
+the reservation goes away with the manifest. If both exist exactly as reserved,
+they are removed after baseline, shared Git directory, and run-marker
+corroboration. If only the branch survives, its tip must equal the reserved
+baseline exactly. Anything else — an occupied path Git never registered, a
+different branch at the reserved path, a missing marker — fails closed.
+
+Manifests written before this transaction existed use ownership journal schema
+version 1. They stay readable and all of their entries read as already
+`registered`. Such a manifest is never rewritten to a newer schema version and
+never gains a reservation, and a v1 entry claiming reserved state is refused
+rather than treated as owned. Direct registration may still append a
+`registered` entry to one, which leaves its schema version untouched.
+
+Nothing is ever pruned by `smoke-*` name, path prefix, run age, or ancestry
+alone. Without an ownership lease the runner cannot tell a stale run from an
+active one, so it refuses instead of guessing and leaves the state for you to
+resolve.
+
 To finish a stalled run, re-run the matching `--stage collect` (collection-only
 triggers cleanup) or start a fresh run; the runner reconciles journaled
 resources on the next errored or collection-bearing invocation. If cleanup fails

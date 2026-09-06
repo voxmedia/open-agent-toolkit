@@ -13,10 +13,16 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
 import { promisify } from 'node:util';
 
+import { cleanupSmoke } from './cleanup.mjs';
+import {
+  OWNERSHIP_JOURNAL_SCHEMA_VERSION,
+  registerNestedSmokeResource,
+  reserveNestedSmokeResource,
+} from './journal.mjs';
 import {
   createBranchName,
   gateRuntimeForHarness,
@@ -53,7 +59,9 @@ async function git(args, { cwd } = {}) {
 }
 
 async function createRepository() {
-  const directory = await mkdtemp(join(tmpdir(), 'oat-smoke-provision-'));
+  const directory = await realpath(
+    await mkdtemp(join(tmpdir(), 'oat-smoke-provision-')),
+  );
   await git(['init', '--initial-branch=main'], { cwd: directory });
   await git(['config', 'user.email', 'smoke@example.test'], { cwd: directory });
   await git(['config', 'user.name', 'Smoke Test'], { cwd: directory });
@@ -290,8 +298,9 @@ test('provisions an isolated fixture, preset, manifest, and harness roots', asyn
     );
     assert.deepEqual(manifest.ownershipJournal, {
       resources: [],
-      schemaVersion: 1,
+      schemaVersion: OWNERSHIP_JOURNAL_SCHEMA_VERSION,
     });
+    assert.equal(OWNERSHIP_JOURNAL_SCHEMA_VERSION, 2);
     assert.equal(manifest.provisioningState, 'ready');
     assert.deepEqual(manifest.readiness, { status: 'ready' });
     assert.deepEqual(manifest.intendedCloseoutPolicy, {
@@ -586,6 +595,122 @@ test('preserves a partial manifest when fixture copying fails', async () => {
       join(manifest.worktreePath, '.oat/projects/smoke-fixture'),
     );
     await removeProvision(repository, manifest);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('drives a production-emitted manifest through the full ownership transaction', async () => {
+  // A hand-built journal fixture can encode a schema the emitter never writes,
+  // so this test starts from the production emitter and drives its manifest
+  // through reserve, create, finalize, and an interrupted cleanup.
+  const repository = await createRepository();
+  const runsDirectory = join(repository, '.smoke-runs');
+  let manifest;
+
+  try {
+    manifest = await provisionSmoke(
+      { harness: 'codex', scenario: 'implement' },
+      {
+        clock: () => new Date('2026-07-11T20:30:45.123Z'),
+        fixture: fixturePath,
+        git,
+        random: () => 'journal-transaction',
+        repository,
+        runsDirectory,
+      },
+    );
+    assert.equal(
+      manifest.ownershipJournal.schemaVersion,
+      OWNERSHIP_JOURNAL_SCHEMA_VERSION,
+    );
+
+    const runPath = dirname(manifest.manifestPath);
+    const finalized = {
+      branch: `${manifest.branch}-phase-p01`,
+      markerPath: join(runPath, 'phase-p01/.oat/smoke-bootstrap.json'),
+      worktreePath: join(runPath, 'phase-p01'),
+    };
+    const interrupted = {
+      branch: `${manifest.branch}-phase-p02`,
+      markerPath: join(runPath, 'phase-p02/.oat/smoke-bootstrap.json'),
+      worktreePath: join(runPath, 'phase-p02'),
+    };
+
+    await reserveNestedSmokeResource({
+      baselineCommitSha: manifest.baselineCommitSha,
+      branch: finalized.branch,
+      manifestPath: manifest.manifestPath,
+      markerPath: finalized.markerPath,
+      worktreePath: finalized.worktreePath,
+    });
+    const reserved = JSON.parse(
+      await readFile(manifest.manifestPath, 'utf8'),
+    ).ownershipJournal;
+    assert.equal(reserved.schemaVersion, OWNERSHIP_JOURNAL_SCHEMA_VERSION);
+    assert.equal(reserved.resources[0].state, 'reserved');
+    // Intent is durable before Git is touched.
+    assert.equal(
+      await git(['branch', '--list', finalized.branch], { cwd: repository }),
+      '',
+    );
+
+    await git(
+      [
+        '-c',
+        'core.hooksPath=/dev/null',
+        'worktree',
+        'add',
+        '-b',
+        finalized.branch,
+        finalized.worktreePath,
+        manifest.baselineCommitSha,
+      ],
+      { cwd: manifest.worktreePath },
+    );
+    await registerNestedSmokeResource({
+      manifestPath: manifest.manifestPath,
+      markerPath: finalized.markerPath,
+      worktreePath: finalized.worktreePath,
+    });
+
+    // The second phase is interrupted in the window before creation.
+    await reserveNestedSmokeResource({
+      baselineCommitSha: manifest.baselineCommitSha,
+      branch: interrupted.branch,
+      manifestPath: manifest.manifestPath,
+      markerPath: interrupted.markerPath,
+      worktreePath: interrupted.worktreePath,
+    });
+
+    const journal = JSON.parse(
+      await readFile(manifest.manifestPath, 'utf8'),
+    ).ownershipJournal;
+    assert.deepEqual(
+      journal.resources.map((entry) => [entry.branch, entry.state]),
+      [
+        [finalized.branch, 'registered'],
+        [interrupted.branch, 'reserved'],
+      ],
+    );
+
+    const result = await cleanupSmoke(manifest.manifestPath, {
+      git,
+      repository,
+      runsDirectory,
+    });
+    assert.equal(result.status, 'cleaned');
+    assert.ok(result.actions.includes(`worktree:${finalized.worktreePath}`));
+    assert.ok(result.actions.includes(`branch:${finalized.branch}`));
+    assert.ok(result.actions.includes(`reservation:${interrupted.branch}`));
+    assert.equal(
+      await git(['branch', '--list', 'smoke-*'], { cwd: repository }),
+      '',
+    );
+    assert.equal(
+      await readFile(join(repository, 'README.md'), 'utf8'),
+      'smoke fixture host\n',
+    );
   } finally {
     await rm(repository, { force: true, recursive: true });
   }

@@ -15,6 +15,28 @@ import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual, promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
+
+/**
+ * Schema version emitted for every newly provisioned manifest.
+ *
+ * Version 2 adds the explicit two-state ownership entry (`reserved` before the
+ * child worktree exists, `registered` once its materialized state is fully
+ * corroborated) plus the reserved `markerPath`. Version 1 manifests remain
+ * readable and every one of their entries is interpreted as `registered`; a v1
+ * manifest is never rewritten to a newer version in place, and a reservation is
+ * never written into one, because a v1 reader would read reserved intent as
+ * established ownership.
+ */
+export const OWNERSHIP_JOURNAL_SCHEMA_VERSION = 2;
+export const SUPPORTED_OWNERSHIP_JOURNAL_SCHEMA_VERSIONS = Object.freeze([
+  1, 2,
+]);
+export const OWNERSHIP_JOURNAL_ENTRY_STATES = Object.freeze([
+  'registered',
+  'reserved',
+]);
+const CHILD_MARKER_RELATIVE_PATH = '.oat/smoke-bootstrap.json';
+
 const defaultFileSystem = {
   lstat,
   mkdir,
@@ -78,6 +100,60 @@ export function requireCommitSha(value, label) {
     );
   }
   return value;
+}
+
+export function requireSafeBranchName(value, label) {
+  const hasUnsafeControlCharacter =
+    typeof value === 'string' &&
+    [...value].some((character) => {
+      const codePoint = character.codePointAt(0);
+      return codePoint <= 0x20 || codePoint === 0x7f;
+    });
+
+  if (
+    typeof value !== 'string' ||
+    value.length === 0 ||
+    value.startsWith('-') ||
+    value.startsWith('/') ||
+    value.startsWith('.') ||
+    value.endsWith('/') ||
+    value.endsWith('.') ||
+    value.endsWith('.lock') ||
+    value.includes('..') ||
+    value.includes('//') ||
+    value.includes('/.') ||
+    value.includes('@{') ||
+    hasUnsafeControlCharacter ||
+    /[~^:?*[\]\\]/u.test(value)
+  ) {
+    throw new OwnershipJournalError(`${label} is not a safe branch name.`);
+  }
+  return value;
+}
+
+/**
+ * Resolve the ownership state of a journal entry for the journal's schema
+ * version. Schema version 1 predates the reserved state, so its entries are
+ * always `registered`; a v1 entry that claims any other state is a
+ * contradiction rather than a reservation, and reading it as owned would
+ * manufacture ownership the writer never established.
+ */
+export function resolveJournalEntryState(entry, schemaVersion, label) {
+  const state = entry?.state;
+  if (schemaVersion === 1) {
+    if (state !== undefined && state !== 'registered') {
+      throw new OwnershipJournalError(
+        `${label} is not supported by ownership journal schema version 1.`,
+      );
+    }
+    return 'registered';
+  }
+  if (!OWNERSHIP_JOURNAL_ENTRY_STATES.includes(state)) {
+    throw new OwnershipJournalError(
+      `${label} must be one of ${OWNERSHIP_JOURNAL_ENTRY_STATES.join(', ')}.`,
+    );
+  }
+  return state;
 }
 
 async function requireRegularFile(path, label, fileSystem) {
@@ -358,12 +434,278 @@ function validateJournal(manifest) {
     manifest.ownershipJournal,
     'manifest.ownershipJournal',
   );
-  if (journal.schemaVersion !== 1 || !Array.isArray(journal.resources)) {
+  if (
+    !SUPPORTED_OWNERSHIP_JOURNAL_SCHEMA_VERSIONS.includes(
+      journal.schemaVersion,
+    ) ||
+    !Array.isArray(journal.resources)
+  ) {
     throw new OwnershipJournalError(
       'manifest ownership journal schema is invalid.',
     );
   }
   return journal;
+}
+
+/**
+ * Validate the ready-provisioning invariants every journal write depends on and
+ * return the manifest's own corroborated ownership facts.
+ */
+function requireReadyManifest(manifest, normalizedManifestPath) {
+  if (
+    manifest.provisioningState !== 'ready' ||
+    manifest.readiness?.status !== 'ready'
+  ) {
+    throw new OwnershipJournalError(
+      'manifest is not a ready smoke provisioning record.',
+    );
+  }
+  if (manifest.manifestPath !== normalizedManifestPath) {
+    throw new OwnershipJournalError(
+      'manifest path does not match its external location.',
+    );
+  }
+  if (
+    typeof manifest.runIdentity !== 'string' ||
+    manifest.runIdentity.length === 0 ||
+    manifest.runIdentity !== manifest.branch
+  ) {
+    throw new OwnershipJournalError(
+      'manifest run identity does not match its branch.',
+    );
+  }
+  return {
+    baselineCommitSha: requireCommitSha(
+      manifest.baselineCommitSha,
+      'manifest.baselineCommitSha',
+    ),
+    journal: validateJournal(manifest),
+    recordedCommonDirectory: requireAbsolutePath(
+      manifest.commonGitDir,
+      'manifest.commonGitDir',
+    ),
+  };
+}
+
+/**
+ * Durably reserve the exact branch, worktree path, marker path, baseline,
+ * shared Git directory, and run identity a smoke child is about to be created
+ * with, before any Git mutation happens.
+ *
+ * The reservation is intent, never ownership: cleanup may only act on it after
+ * corroborating the materialized Git and marker state against these recorded
+ * fields, and a reservation that never materialized authorizes no deletion at
+ * all.
+ */
+export async function reserveNestedSmokeResource(
+  { baselineCommitSha, branch, manifestPath, markerPath, worktreePath },
+  { fileSystem = defaultFileSystem, git = runGit, lockOptions } = {},
+) {
+  const normalizedManifestPath = requireAbsolutePath(
+    manifestPath,
+    'manifestPath',
+  );
+  const normalizedMarkerPath = requireAbsolutePath(markerPath, 'markerPath');
+  const normalizedWorktreePath = requireAbsolutePath(
+    worktreePath,
+    'worktreePath',
+  );
+  const requestedBranch = requireSafeBranchName(branch, 'branch');
+  const requestedBaseline = requireCommitSha(
+    baselineCommitSha,
+    'baselineCommitSha',
+  );
+  const releaseLock = await acquireManifestLock(normalizedManifestPath, {
+    ...lockOptions,
+    fileSystem,
+  });
+
+  try {
+    const manifest = await readManifest(normalizedManifestPath, fileSystem);
+    const {
+      baselineCommitSha: runBaseline,
+      journal,
+      recordedCommonDirectory,
+    } = requireReadyManifest(manifest, normalizedManifestPath);
+
+    if (journal.schemaVersion !== OWNERSHIP_JOURNAL_SCHEMA_VERSION) {
+      throw new OwnershipJournalError(
+        `reservations require ownership journal schema version ${OWNERSHIP_JOURNAL_SCHEMA_VERSION}.`,
+      );
+    }
+    if (requestedBaseline !== runBaseline) {
+      throw new OwnershipJournalError(
+        'reserved baseline is not the immutable run baseline.',
+      );
+    }
+    if (requestedBranch === manifest.branch) {
+      throw new OwnershipJournalError(
+        'a child cannot reserve the outer smoke branch.',
+      );
+    }
+
+    const outerWorktreePath = requireAbsolutePath(
+      manifest.worktreePath,
+      'manifest.worktreePath',
+    );
+    const runPath = dirname(normalizedManifestPath);
+    if (
+      normalizedWorktreePath === runPath ||
+      dirname(normalizedWorktreePath) !== runPath ||
+      normalizedWorktreePath === outerWorktreePath
+    ) {
+      throw new OwnershipJournalError(
+        'reserved worktree path must be a direct child of the manifest run directory.',
+      );
+    }
+    if (
+      normalizedMarkerPath !==
+      join(normalizedWorktreePath, CHILD_MARKER_RELATIVE_PATH)
+    ) {
+      throw new OwnershipJournalError(
+        'reserved markerPath is not the tracked marker in the intended child worktree.',
+      );
+    }
+
+    const existingPathEntry = journal.resources.find(
+      (entry) => entry.worktreePath === normalizedWorktreePath,
+    );
+    const existingBranchEntry = journal.resources.find(
+      (entry) => entry.branch === requestedBranch,
+    );
+    if (existingPathEntry || existingBranchEntry) {
+      if (
+        existingPathEntry !== existingBranchEntry ||
+        existingPathEntry.baselineCommitSha !== requestedBaseline ||
+        existingPathEntry.commonGitDir !== recordedCommonDirectory ||
+        existingPathEntry.markerPath !== normalizedMarkerPath ||
+        existingPathEntry.runIdentity !== manifest.runIdentity
+      ) {
+        throw new OwnershipJournalError(
+          'journal contains a conflicting child path or branch.',
+        );
+      }
+      // A replay is idempotent only over a well-formed entry; a seeded entry
+      // with a missing or unknown state would otherwise let creation proceed
+      // toward a child that neither registration nor cleanup can reconcile.
+      resolveJournalEntryState(
+        existingPathEntry,
+        journal.schemaVersion,
+        'journal entry state',
+      );
+      return existingPathEntry;
+    }
+
+    const canonicalRunPath = await fileSystem.realpath(runPath);
+    if (canonicalRunPath !== runPath) {
+      throw new OwnershipJournalError(
+        'manifest run directory must be its canonical real path.',
+      );
+    }
+    let existingPathState;
+    try {
+      existingPathState = await fileSystem.lstat(normalizedWorktreePath);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+    if (existingPathState) {
+      throw new OwnershipJournalError('reserved worktree path already exists.');
+    }
+
+    const actualCommonDirectory = await gitCommonDirectory(outerWorktreePath, {
+      fileSystem,
+      git,
+    });
+    if (actualCommonDirectory !== recordedCommonDirectory) {
+      throw new OwnershipJournalError(
+        'outer smoke worktree belongs to a different shared Git common directory.',
+      );
+    }
+
+    // Reserving a branch or worktree registration that already exists would
+    // record intent to own something this run did not create, and cleanup
+    // corroborates against that intent. Refuse instead of adopting it.
+    //
+    // `for-each-ref` exits zero whether or not the ref exists, so a failed
+    // probe propagates as an error instead of being misread as absence. The
+    // remaining window between this probe and `git worktree add -b` is closed
+    // by Git itself: `add -b` refuses an existing branch, and cleanup only
+    // deletes a branch-only reservation whose tip still equals the reserved
+    // baseline exactly. Reserving through a ref instead would require mutating
+    // Git before the intent is durable, which is what this transaction exists
+    // to prevent.
+    const existingBranchRef = await git(
+      ['for-each-ref', '--format=%(refname)', `refs/heads/${requestedBranch}`],
+      { cwd: outerWorktreePath },
+    );
+    if (existingBranchRef !== '') {
+      throw new OwnershipJournalError('reserved branch already exists.');
+    }
+    const registrations = parseWorktrees(
+      await git(['worktree', 'list', '--porcelain'], {
+        cwd: outerWorktreePath,
+      }),
+    );
+    if (
+      registrations.some(
+        (entry) =>
+          resolve(entry.worktree) === normalizedWorktreePath ||
+          entry.branch === `refs/heads/${requestedBranch}`,
+      )
+    ) {
+      throw new OwnershipJournalError(
+        'reserved branch or worktree path is already registered with Git.',
+      );
+    }
+
+    await requireRegularFile(
+      join(outerWorktreePath, CHILD_MARKER_RELATIVE_PATH),
+      'tracked marker',
+      fileSystem,
+    );
+    let marker;
+    try {
+      marker = JSON.parse(
+        await fileSystem.readFile(
+          join(outerWorktreePath, CHILD_MARKER_RELATIVE_PATH),
+          'utf8',
+        ),
+      );
+    } catch (error) {
+      throw new OwnershipJournalError(
+        `tracked marker is not valid JSON (${error.message}).`,
+      );
+    }
+    validateSmokeMarkerBinding(marker, manifest);
+    const baselineMarker = await readSmokeMarkerAtCommit(runBaseline, {
+      cwd: outerWorktreePath,
+      git,
+    });
+    validateSmokeMarkerBinding(baselineMarker, manifest);
+    if (!isDeepStrictEqual(marker, baselineMarker)) {
+      throw new OwnershipJournalError(
+        'outer marker differs from the immutable run marker.',
+      );
+    }
+
+    const entry = {
+      baselineCommitSha: requestedBaseline,
+      branch: requestedBranch,
+      commonGitDir: actualCommonDirectory,
+      markerPath: normalizedMarkerPath,
+      reservedAt: new Date().toISOString(),
+      runIdentity: manifest.runIdentity,
+      state: 'reserved',
+      worktreePath: normalizedWorktreePath,
+    };
+    journal.resources.push(entry);
+    await writeJsonAtomic(normalizedManifestPath, manifest, { fileSystem });
+    return entry;
+  } finally {
+    await releaseLock();
+  }
 }
 
 async function canonicalWorktrees(cwd, git, fileSystem) {
@@ -400,28 +742,8 @@ export async function registerNestedSmokeResource(
 
   try {
     const manifest = await readManifest(normalizedManifestPath, fileSystem);
-    if (
-      manifest.provisioningState !== 'ready' ||
-      manifest.readiness?.status !== 'ready'
-    ) {
-      throw new OwnershipJournalError(
-        'manifest is not a ready smoke provisioning record.',
-      );
-    }
-    if (manifest.manifestPath !== normalizedManifestPath) {
-      throw new OwnershipJournalError(
-        'manifest path does not match its external location.',
-      );
-    }
-    const baselineCommitSha = requireCommitSha(
-      manifest.baselineCommitSha,
-      'manifest.baselineCommitSha',
-    );
-    const recordedCommonDirectory = requireAbsolutePath(
-      manifest.commonGitDir,
-      'manifest.commonGitDir',
-    );
-    const journal = validateJournal(manifest);
+    const { baselineCommitSha, journal, recordedCommonDirectory } =
+      requireReadyManifest(manifest, normalizedManifestPath);
 
     await requireRegularFile(
       normalizedMarkerPath,
@@ -450,7 +772,7 @@ export async function registerNestedSmokeResource(
     }
     if (
       normalizedMarkerPath !==
-      join(canonicalWorktreePath, '.oat/smoke-bootstrap.json')
+      join(canonicalWorktreePath, CHILD_MARKER_RELATIVE_PATH)
     ) {
       throw new OwnershipJournalError(
         'markerPath is not the tracked marker in the child worktree.',
@@ -580,6 +902,27 @@ export async function registerNestedSmokeResource(
           'child HEAD diverged from its journaled ownership baseline.',
         );
       }
+      const recordedState = resolveJournalEntryState(
+        pathEntry,
+        journal.schemaVersion,
+        'journal entry state',
+      );
+      if (recordedState === 'registered') {
+        return pathEntry;
+      }
+      if (pathEntry.markerPath !== normalizedMarkerPath) {
+        throw new OwnershipJournalError(
+          'reserved marker path does not match the materialized child marker.',
+        );
+      }
+      // Finalize the reservation in place. Every field of the recorded intent
+      // has now been corroborated against materialized Git and marker state, so
+      // the transition only records that corroboration; it never rewrites the
+      // reserved branch, path, marker, baseline, shared Git directory, or run
+      // identity.
+      pathEntry.registeredAt = new Date().toISOString();
+      pathEntry.state = 'registered';
+      await writeJsonAtomic(normalizedManifestPath, manifest, { fileSystem });
       return pathEntry;
     }
 
@@ -587,8 +930,10 @@ export async function registerNestedSmokeResource(
       baselineCommitSha: headCommitSha,
       branch,
       commonGitDir: actualCommonDirectory,
+      markerPath: normalizedMarkerPath,
       registeredAt: new Date().toISOString(),
       runIdentity: manifest.runIdentity,
+      state: 'registered',
       worktreePath: canonicalWorktreePath,
     };
     journal.resources.push(entry);
