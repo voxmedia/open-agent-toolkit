@@ -380,6 +380,7 @@ git commit -m "feat(p03-t01): emit the canonical dispatch stamp with resolver JS
 | p03    | code     | passed      | 2026-09-06 | reviews/archived/p03-review-2026-09-06T185201Z.md           | 901a0f7aad41ae89acb606d5fc5f75170b9ed097 | manual     | -                   |
 | final  | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T194032Z.md         | 1dfdd1a831046b66b835a886ba93f74bd111a7a7 | manual     | -                   |
 | final  | code     | passed      | 2026-09-06 | reviews/archived/final-review-2026-09-06T201820Z.md         | 945d3e2d4395e1f492c61883436b49e77d29da28 | manual     | -                   |
+| final  | code     | received    | 2026-09-06 | reviews/final-review-2026-09-06T203008Z.md                  | f926f6d0f0e6b57fe6195413c95e176a48b87b5d | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
