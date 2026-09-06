@@ -1380,6 +1380,7 @@ git commit -m "docs(p06-t11): align brainstorming guidance with lite"
 | p06    | code     | fixes_completed | 2026-09-06 | reviews/archived/p06-review-2026-09-06T005620Z.md                               | cfcaae8fd81da49b1f75862be2260a65eec2c5e7 | manual     | -                             |
 | p06    | code     | passed          | 2026-09-06 | reviews/archived/p06-review-2026-09-06T011617Z.md                               | d79a58b1b0f8aff53a361b3e591f5cff510106d9 | auto       | -                             |
 | p-rev1 | code     | fixes_completed | 2026-09-06 | reviews/archived/p-rev1-review-2026-09-06T165618Z.md                            | 5e9e23fc90bf20da5735e8fd7b97bbbfe04fa0fa | auto       | -                             |
+| p-rev1 | code     | fixes_added     | 2026-09-06 | reviews/archived/p-rev1-review-2026-09-06T172704Z.md                            | bec28560621bd30126ecbd3d80fbb48181f12ed8 | auto       | -                             |
 | final  | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T012310Z.md                             | 919676d8623a4a4c9cf0654e76ba78ea593e1645 | auto       | -                             |
 | final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T015505Z.md                             | dfb7a8beb41c663d8bd327fa47c19f9ef28e393f | auto       | -                             |
 | spec   | artifact | pending         | -          | -                                                                               | -                                        | -          | -                             |
@@ -1753,6 +1754,40 @@ git commit -m "docs(prev1-t06): align lite design with revision contract"
 
 ---
 
+### Task prev1-t07: (review) Assert the complete carried-forward technical design
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/promote/promote.test.ts`
+
+**Step 1: Close the remaining preservation gap**
+
+Strengthen the `technical` and `both` promotion cases so the derived discovery
+artifact must preserve the complete Technical Design body, including the Data
+Flow line. Prefer deriving the expected body from `originalPlan` and comparing
+the carried-forward section exactly to the parsed source section. Preserve the
+existing Product Behavior, heading, placement, archive byte-equality, and
+whole-interpolation negative controls.
+
+Demonstrate that a tail-only truncation or omission of the Data Flow line makes
+the focused test fail, then restore the implementation. Report the exact
+negative-control result for root bookkeeping.
+
+**Step 2: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/promote/promote.test.ts`
+Expected: the complete Technical Design payload is proved for `technical` and
+`both`, and all promotion tests pass.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/src/commands/project/promote/promote.test.ts
+git commit -m "test(prev1-t07): assert complete technical design preservation"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -1763,9 +1798,9 @@ git commit -m "docs(prev1-t06): align lite design with revision contract"
 - Phase 4: 2 tasks - oat-project-lite skill, end-to-end integration test
 - Phase 5: 4 tasks - mode-aware skill branches, import-to-lite offer, checkpoint bypass, collapsed closeout
 - Phase 6: 11 tasks - docs and triage, manual run and sync, lockstep release gates, four lifecycle-final-review fixes, and four exit-gate fixes (last)
-- Phase p-rev1: 6 tasks - adaptive specification depth, proportionate proof, executable evidence, promotion preservation, autonomous proof boundaries, and design alignment
+- Phase p-rev1: 7 tasks - adaptive specification depth, proportionate proof, executable evidence, exact promotion preservation, autonomous proof boundaries, and design alignment
 
-**Total:** 33 tasks across 7 phases
+**Total:** 34 tasks across 7 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

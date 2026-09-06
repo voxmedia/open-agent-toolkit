@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: null
+oat_current_task_id: prev1-t07
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status         | Tasks | Completed |
-| ------------ | -------------- | ----- | --------- |
-| Phase 1      | complete       | 4     | 4/4       |
-| Phase 2      | complete       | 3     | 3/3       |
-| Phase 3      | complete       | 3     | 3/3       |
-| Phase 4      | complete       | 2     | 2/2       |
-| Phase 5      | complete       | 4     | 4/4       |
-| Phase 6      | complete       | 11    | 11/11     |
-| Phase p-rev1 | review pending | 6     | 6/6       |
+| Phase        | Status       | Tasks | Completed |
+| ------------ | ------------ | ----- | --------- |
+| Phase 1      | complete     | 4     | 4/4       |
+| Phase 2      | complete     | 3     | 3/3       |
+| Phase 3      | complete     | 3     | 3/3       |
+| Phase 4      | complete     | 2     | 2/2       |
+| Phase 5      | complete     | 4     | 4/4       |
+| Phase 6      | complete     | 11    | 11/11     |
+| Phase p-rev1 | fixes queued | 7     | 6/7       |
 
-**Total:** 33/33 tasks completed; fresh p-rev1 re-review is pending
+**Total:** 33/34 tasks completed; one p-rev1 re-review fix is queued
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -671,6 +671,11 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   `dispatch/7674a37f-36ea-471d-a80e-b4c08d897506.json`; target
   `oat-reviewer-gpt-5-6-sol-high`; returned blocking with 0 Critical,
   3 Important, 1 Medium, and 0 Minor findings.
+- **p-rev1 re-review 1:** accepted request
+  `08c64a32-bd59-4d10-8aba-8393fe236713`; durable record
+  `dispatch/08c64a32-bd59-4d10-8aba-8393fe236713.json`; fresh target
+  `oat-reviewer-gpt-5-6-sol-high`; returned blocking with 0 Critical,
+  1 Important, 0 Medium, and 0 Minor findings.
 - Dispatch policy: high; selected=medium; cap=high (codex, enforced — variant
   `oat-phase-implementer-gpt-5-6-sol-medium`).
 - Dispatch: scope=p-rev1 action=implementation role=implementer
@@ -680,14 +685,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Phase Outcomes
 
-| Phase  | Implementation | Review            | Fix Loops | Outcome         |
-| ------ | -------------- | ----------------- | --------- | --------------- |
-| p-rev1 | complete (6/6) | re-review pending | 1         | fixes completed |
+| Phase  | Implementation     | Review      | Fix Loops | Outcome                     |
+| ------ | ------------------ | ----------- | --------- | --------------------------- |
+| p-rev1 | fixes queued (6/7) | fixes_added | 2         | blocking re-review received |
 
 #### Outstanding Items
 
-- Run a fresh independent `p-rev1` review against the four committed review
-  fixes.
+- Execute `prev1-t07` on the exact original implementation target, then run a
+  fresh independent p-rev1 re-review.
 
 ---
 
@@ -1705,6 +1710,28 @@ overlapping post-return suite. Project sync is converged. All relevant
 repository gates passed; the full test command had one unrelated visual
 companion startup timeout, then passed without edits with 5,671 CLI tests.
 The review event is `fixes_completed` pending fresh re-review.
+
+### Review Received: p-rev1 re-review 1
+
+**Date:** 2026-09-06
+**Review artifact:** `reviews/archived/p-rev1-review-2026-09-06T172704Z.md`
+**Reviewed head:** `bec28560621bd30126ecbd3d80fbb48181f12ed8`
+**Invocation:** auto
+
+**Findings:** 0 Critical, 1 Important, 0 Medium, 0 Minor.
+
+The fresh reviewer closed I2, I3, and M1. Prior I1 remains partially open
+because the Technical Design assertion omits the fixture's final Data Flow
+line, so a tail-only truncation could pass despite the whole-interpolation
+controls.
+
+**New task added:** `prev1-t07`
+
+- I1 → `prev1-t07` (`code_fix_required`): compare the complete carried-forward
+  Technical Design body with its parsed source and prove a tail-only omission
+  fails.
+
+No finding is deferred. Review cycle 2 of 3 is blocking; fix loop 2 is queued.
 
 ---
 
