@@ -87,6 +87,32 @@ with six write-surface overlaps; full-SHA correction note). Artifact:
 `reviews/archived/artifact-plan-review-2026-09-05T224504Z.md`; verification
 records in `implementation.md` under "Review Received: plan".
 
+### 2026-09-05 · structural · oat-reviewer · p01
+
+Root review `reviews/p01-review-2026-09-05T235808Z.md` (opus, reconnaissance
+attempted): 0C / 2I / 2M / 5m; weaker-anywhere analysis clean; thirteen
+real-filesystem probes. Bounded fix round dispatched through the original
+implementer handle (`w1-p01-impl-001`, continuation `w1-p01-fix-001`): I1
+pinning test plus non-narrowing plan reconciliation (recorded in the Drift
+Refresh Record), I2 falsifiable MkDocs test, M1 refusal exit codes to 1, M2
+real-fs symlink case, m2–m4; m1 deferred (outside the lane surface), m5 no
+action.
+
+### 2026-09-05 · project · friction · reviewer artifact contract
+
+The p02 reviewer put the `**Reconnaissance:**` signal in its chat reply but not
+in the artifact; recovered through the accepted handle. The p01 reviewer brief
+was amended to say the line is validated in the file. **Skill signal (gap):**
+reviewer briefs should state where the signal must appear.
+
+### 2026-09-05 · project · friction · dispatch journal
+
+`oat project dispatch record` rejects a revision that changes `child_outcome`
+("Existing generic fields are immutable"), so a record written at acceptance
+cannot later carry the terminal outcome; outcomes live in `implementation.md`.
+**Skill signal (contradicts):** the lineage contract says record immediately
+after acceptance, but the journal cannot then be closed out.
+
 ### 2026-09-05 · project · friction · session
 
 The orchestrator session restarted during the drift-refresh recon dispatch; the

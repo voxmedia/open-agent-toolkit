@@ -191,6 +191,19 @@ that names it stays a forecast until it merges.
   write-surface overlaps (`commands/config/index.ts`, `config/index.test.ts`,
   `cli-utilities/configuration.md`, `oat-config.ts`, `oat-config.test.ts`,
   `oat-directory-structure.md`; `reference/cli-reference.md` is verify-only), and the fan-in bump is recomputed above the new main.
+- **Orchestrator reconciliation (non-narrowing, p01, recorded once here):** the
+  docs-index plan's `## Current state` carries two overlapping config-write
+  rules that conflict when `documentation.tooling` is `fumadocs` and
+  `documentation.config` is set (this repository's own live shape). The lane
+  resolved it in favor of the plan's `## Outcome` and step 1 (MkDocs never
+  writes; the Fumadocs bootstrap transition keeps updating
+  `documentation.index`), which the root review confirmed on the real
+  filesystem (probe P6) and which the fix round pins with a test. Nothing the
+  plan requires is waived: authored `docs/index.md` and `mkdocs.yml` are never
+  written, MkDocs configuration is never touched, and the config value written
+  is the generated app-root manifest. The plan's negative clause is the stale
+  artifact; its amendment is queued for wave-close plan corrections, not
+  edited mid-wave.
 - **Rule-1 coverage audit:** every lane's drift-check pathspec covers its write
   surface; no addendum needed.
 
@@ -341,16 +354,16 @@ git commit -m "feat(p04-t01): add exclusion patterns to docs index generation"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -                                                           | -                                        | -          | -           |
-| p02    | code     | passed  | 2026-09-05 | reviews/p02-review-2026-09-05T231204Z.md                    | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -           |
-| p03    | code     | pending | -          | -                                                           | -                                        | -          | -           |
-| p04    | code     | pending | -          | -                                                           | -                                        | -          | -           |
-| final  | code     | pending | -          | -                                                           | -                                        | -          | -           |
-| plan   | artifact | passed  | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -                                        | -          | -           |
-| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -           |
-| design | artifact | pending | -          | -                                                           | -                                        | -          | -           |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | fixes_added | 2026-09-05 | reviews/p01-review-2026-09-05T235808Z.md                    | 9b92d002c8c7e04fdb3d9858c3f5c18e308e1cea | manual     | -           |
+| p02    | code     | passed      | 2026-09-05 | reviews/p02-review-2026-09-05T231204Z.md                    | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -           |
+| p03    | code     | pending     | -          | -                                                           | -                                        | -          | -           |
+| p04    | code     | pending     | -          | -                                                           | -                                        | -          | -           |
+| final  | code     | pending     | -          | -                                                           | -                                        | -          | -           |
+| plan   | artifact | passed      | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -                                        | -          | -           |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
