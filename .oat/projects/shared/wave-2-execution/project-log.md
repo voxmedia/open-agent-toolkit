@@ -56,6 +56,10 @@ target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,m
 
 Gate-originated final review used two bounded read-only reconnaissance lanes; orchestration evidence and primary reconciliation are in reviews/final-review-2026-09-06T101616Z.md.
 
+### 2026-09-06 · structural · oat gate review · final
+
+target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:2,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T101616Z.md
+
 ## End-of-run synthesis
 
 Owned by `orchestration-log.md` for wave wrappers (convention verdicts, skill-signal rulings, adopted rules, graduated-entries ledger); see its `## End-of-run synthesis (2026-09-06)` section.
