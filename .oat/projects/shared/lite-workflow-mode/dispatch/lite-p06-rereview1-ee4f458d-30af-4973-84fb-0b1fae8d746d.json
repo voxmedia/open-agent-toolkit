@@ -43,13 +43,21 @@
     "worktree": "root"
   },
   "launch_status": "accepted",
-  "child_outcome": "pending",
+  "child_outcome": "passed",
+  "artifact": "reviews/p06-review-2026-09-06T011617Z.md",
+  "reviewed_head": "d79a58b1b0f8aff53a361b3e591f5cff510106d9",
+  "finding_counts": {
+    "critical": 0,
+    "important": 0,
+    "medium": 2,
+    "minor": 0
+  },
   "configured_invocation_evidence": [
     "dispatch-report-v1:p06-review",
     "native-spawn-accepted",
     "canonical-role:project"
   ],
-  "runtime_confirmation": "not-reported",
+  "runtime_confirmation": "configured-invocation-only",
   "diagnostics": [],
   "continuation_events": [],
   "fallback": {
