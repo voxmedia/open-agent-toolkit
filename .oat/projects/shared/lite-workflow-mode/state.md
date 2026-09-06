@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p06-t10
 oat_last_commit: 469141fba075371b9d6cd5dc075cb1f00fe9c6ff
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -80,13 +80,13 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-06T02:45:15Z'
+  updated_at: '2026-09-06T02:46:32Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T02:45:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T02:46:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +98,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Final lifecycle re-review passed; regenerating exit gate.
+Implementation - Final configured exit gate blocked; fix task p06-t10 queued.
 
 ## Artifacts
 
@@ -138,14 +138,17 @@ Implementation - Final lifecycle re-review passed; regenerating exit gate.
 - ✓ Fresh final re-review passed with no findings
 - ✓ Exit-gate fix tasks p06-t07 through p06-t09 completed (25/25 total)
 - ✓ Fresh final lifecycle review passed with no findings
-- ⧗ Regenerating configured implementation exit gate for attempt 2 of 2
+- ⧗ Exit gate attempt 2 found one Important production-path routing defect
+- ⧗ Fix task p06-t10 queued; configured attempt budget pending reconciliation
 
 ## Blockers
 
-None. Configured exit gate attempt 1 found one Important, one Medium, and one
-Minor finding; all three are fixed with passing terminal evidence. The
-historical p06-t02 header-wording Medium remains explicitly accepted for defer.
+Configured exit gate attempt 2 found that the p06-t08 fixture models readiness
+on an artifact the production path leaves null. Fix task p06-t10 is queued.
+The historical p06-t02 header-wording Medium remains explicitly accepted for
+defer.
 
 ## Next Milestone
 
-Regenerate and rerun the configured implementation exit gate for attempt 2 of 2.
+Complete receive reconciliation and persist the exhausted gate budget; request
+explicit direction before implementation or another gate launch.

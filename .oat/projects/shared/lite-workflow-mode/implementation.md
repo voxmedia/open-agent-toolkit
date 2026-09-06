@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: null
+oat_current_task_id: p06-t10
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | complete | 2     | 2/2       |
-| Phase 5 | complete | 4     | 4/4       |
-| Phase 6 | complete | 9     | 9/9       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 4     | 4/4       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 3     | 3/3       |
+| Phase 4 | complete    | 2     | 2/2       |
+| Phase 5 | complete    | 4     | 4/4       |
+| Phase 6 | in_progress | 10    | 9/10      |
 
-**Total:** 25/25 tasks completed
+**Total:** 25/26 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -305,7 +305,7 @@ retro, and reduced-artifact closeout paths passed the full contract suite.
 
 ## Phase 6: Documentation, Provider Sync, Smoke Run, and Release Gates
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-09-05
 **Reopened for final review fixes:** 2026-09-06
 **Completed:** 2026-09-06
@@ -488,6 +488,10 @@ required and supplemental gates at exit 0, including uncached tests, focused
 pre/post-commit controls, release checks, lint, format, bundle parity, and a
 no-op full-scope sync dry-run. No recovery attempt or flake retry was used.
 
+### Task p06-t10: Carry promoted readiness through a real artifact path
+
+**Status:** pending
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -557,6 +561,30 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 ## Implementation Log
 
 ### 2026-09-06
+
+#### Exit-gate review 2 received — final configured attempt
+
+**Review artifact:**
+`reviews/archived/final-review-2026-09-06T024254Z.md`.
+**Gate run:** `e1faf839-7cd8-4635-8d73-2196ade93c55`.
+**Reviewed head:** `c3a79f0589615b6f30760fc964bbe14d0007356e`.
+**Findings:** 0 Critical, 1 Important, 0 Medium, 0 Minor.
+
+**New task added:** p06-t10.
+
+- I1 → p06-t10 (`code_fix_required`): carry quick-start readiness on the
+  promoted discovery artifact, replace the impossible hand-built fixture with
+  production-derived provenance, and prove promote-then-recommend behavior for
+  real shared and local projects.
+
+The review independently reproduced the unchanged
+`oat-project-discover` recommendation and invalidated the earlier p06-t08
+fixture as a model no shipped path produces. The historical p06-t02 wording
+Medium remains explicitly accepted for defer.
+
+**Next:** the configured implementation exit gate has reached attempt 2 of 2.
+After receive reconciliation, stop with p06-t10 queued and request explicit
+direction before any implementation or further gate launch.
 
 #### Configured implementation exit gate generation 2 created
 

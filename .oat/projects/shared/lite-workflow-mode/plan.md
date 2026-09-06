@@ -1249,6 +1249,72 @@ git commit -m "fix(p06-t09): align lite template and release surfaces"
 
 ---
 
+### Task p06-t10: (review) Carry promoted readiness through a real artifact path
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/promote/promote.ts`
+- Modify: `packages/cli/src/commands/project/promote/promote.test.ts`
+- Modify: `packages/control-plane/src/recommender/router.test.ts`
+- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`,
+  `packages/docs-config/package.json`, `packages/docs-theme/package.json`,
+  `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Regenerate when source-derived: `.oat/sync/manifest.json`
+
+**Step 1: Write test (RED)**
+
+Replace the hand-built router fixture with one derived from the frontmatter of
+a real promoted `discovery.md`, and record that provenance in the test. Add a
+promote-then-recommend control that runs promotion in a temporary repository,
+parses the generated artifacts through the production control-plane path, and
+asserts `oat-project-quick-start`. Confirm the current code fails because the
+generated discovery artifact carries `oat_ready_for: null` and recommends
+`oat-project-discover`.
+
+**Step 2: Implement fix (GREEN)**
+
+Make `renderDiscovery` set the promoted discovery frontmatter readiness to
+`oat-project-quick-start`, keeping the existing in-progress status unless a
+production-derived test proves another change is required. Update the promote
+suite's discovery expectation. Preserve local/shared/synced persistence,
+content mapping, refusal behavior, and the explicit state readiness signal.
+
+Because this changes shipped CLI behavior, advance all five lockstep public
+packages and `public-package-versions.json` from `0.2.58` to `0.2.59`; refresh
+only source-derived bundle or sync metadata.
+
+**Step 3: Refactor and format**
+
+Format every non-generated file edited by the task with the repository's
+documented `pnpm exec oxfmt --write` command. Do not format generated sync or
+lockfile outputs.
+
+**Step 4: Verify**
+
+Run the focused promote and router suites and preserve a reproduction-grade
+negative control: the current generated artifact recommends
+`oat-project-discover`, neutralizing the fix makes the production-derived
+integration assertion fail the same way, and the restored code recommends
+`oat-project-quick-start` for both shared and local promoted projects.
+
+Then run the full AGENTS.md definition-of-done sequence in exact order with
+explicit exit codes, plus isolated-HOME forced tests, smoke, skills, release,
+skill validation, lint, format, version parity, and a full-scope sync dry-run.
+Expected: all gates exit 0, the sync dry-run reports no operations, and all
+lockstep versions equal `0.2.59`.
+
+**Step 5: Commit**
+
+Stage only the declared production/test files, lockstep package manifests,
+version asset, and source-derived generated outputs. Commit:
+
+```bash
+git commit -m "fix(p06-t10): carry promoted readiness through artifacts"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -1282,7 +1348,7 @@ git commit -m "fix(p06-t09): align lite template and release surfaces"
 | plan   | artifact | passed          | 2026-09-06 | dispatch/lite-plan-revision-rereview1-60cc80ff-7013-4da9-a678-45e17246b821.json | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
 | final  | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T021128Z.md                             | 5b2a6462c3b21f8e6f1383e796c3328bba18329d | gate       | claude-fable-skip-permissions |
 | final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T023254Z.md                             | 6ba4c38dd08d192fdb35840becbdf52b74f5d8a9 | auto       | -                             |
-| final  | code     | received        | 2026-09-06 | reviews/final-review-2026-09-06T024254Z.md                                      | c3a79f0589615b6f30760fc964bbe14d0007356e | gate       | claude-fable-skip-permissions |
+| final  | code     | fixes_added     | 2026-09-06 | reviews/archived/final-review-2026-09-06T024254Z.md                             | c3a79f0589615b6f30760fc964bbe14d0007356e | gate       | claude-fable-skip-permissions |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1318,9 +1384,9 @@ rows remain unchanged.
 - Phase 3: 3 tasks - split-detector guard, promote command, lite single-phase validator
 - Phase 4: 2 tasks - oat-project-lite skill, end-to-end integration test
 - Phase 5: 4 tasks - mode-aware skill branches, import-to-lite offer, checkpoint bypass, collapsed closeout
-- Phase 6: 9 tasks - docs and triage, manual run and sync, lockstep release gates, three lifecycle-final-review fixes, and three exit-gate fixes (last)
+- Phase 6: 10 tasks - docs and triage, manual run and sync, lockstep release gates, three lifecycle-final-review fixes, and four exit-gate fixes (last)
 
-**Total:** 25 tasks across 6 phases
+**Total:** 26 tasks across 6 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 
