@@ -7,7 +7,7 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260902-add-an-exclusion-mechanism.md
 oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
 oat_external_plan_date: '2026-09-02'
-oat_execution_status: BLOCKED
+oat_execution_status: READY
 oat_backlog_items:
   - BL-260902-add-an-exclusion-mechanism
 oat_issue_url: https://github.com/voxmedia/open-agent-toolkit/issues/239
