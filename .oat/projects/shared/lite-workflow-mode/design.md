@@ -274,7 +274,10 @@ oat project promote <project-path> --to quick [--json]
    Validation Criteria.
 3. Render `discovery.md` from the discovery template: Initial Request from
    Summary, Key Decisions from Decisions, Assumptions, Out of Scope, Success
-   Criteria from Validation Criteria.
+   Criteria from Validation Criteria. Keep the rendered artifact at
+   `oat_status: in_progress` and set
+   `oat_ready_for: oat-project-quick-start` so artifact consumers observe the
+   same quick-start readiness as project state.
 4. Move `plan.md` to `references/lite-plan.md`.
 5. Scaffold a fresh quick `plan.md`.
 6. Set `state.md` mode `quick`, phase `discovery`, status `complete`, ready
@@ -430,12 +433,13 @@ oat_import_reference: null # set when routed from import-plan
 
 ### Promote transitions
 
-| Before                                   | After                                              |
-| ---------------------------------------- | -------------------------------------------------- |
-| mode `lite`, phase `plan`                | mode `quick`, phase `discovery`, status `complete` |
-| `plan.md` (lite shape)                   | `references/lite-plan.md` + fresh quick `plan.md`  |
-| no `discovery.md`                        | `discovery.md` rendered from lite spec sections    |
-| `oat_workflow_origin` native or imported | unchanged                                          |
+| Before                                   | After                                               |
+| ---------------------------------------- | --------------------------------------------------- |
+| mode `lite`, phase `plan`                | mode `quick`, phase `discovery`, status `complete`  |
+| `plan.md` (lite shape)                   | `references/lite-plan.md` + fresh quick `plan.md`   |
+| no `discovery.md`                        | `discovery.md` rendered from lite spec sections     |
+| no discovery readiness                   | discovery status `in_progress`, ready `quick-start` |
+| `oat_workflow_origin` native or imported | unchanged                                           |
 
 ## Error Handling
 

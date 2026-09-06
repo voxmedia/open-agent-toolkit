@@ -706,6 +706,24 @@ The handoff is bound to run `0da02d5a-4d15-4c3c-97bf-94cf246ac945`, source
 `reviews/archived/final-review-2026-09-06T041855Z.md` at pre-receive HEAD
 `f167bb43a899976efac450c18b185db4eb514a42`. Receive has not yet run.
 
+#### Exit-gate review 3 received — passed
+
+**Review artifact:**
+`reviews/archived/final-review-2026-09-06T041855Z.md`.
+**Gate run:** `0da02d5a-4d15-4c3c-97bf-94cf246ac945`.
+**Reviewed head:** `1db941a63c0d2892c6686f4b2a3727ab0143bea0`.
+**Findings:** 0 Critical, 0 Important, 0 Medium, 1 Minor.
+
+The configured Important-threshold gate passed with different-family review.
+Minor m1 found that `design.md` still described promoted readiness as living
+only in project state even though the accepted implementation also stamps the
+rendered discovery artifact. The implementation is authoritative because real
+shared/local promotion controls and a fail-capable negative control verify that
+artifact path. Under the passing-gate judgment sweep and the user's explicit
+direction to fix wording without re-review, the receive aligned the two design
+sentences immediately. No runtime or shipped-package change was made, and no
+additional review or gate is required by the passing-sweep contract.
+
 #### Exit-gate review 2 received — final configured attempt
 
 **Review artifact:**
@@ -1497,6 +1515,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p06 review fix 1   | p06 initial review | Lifecycle docs described Lite review setup correctly                          | Corrected planning-time setup wording and added explicit exit ledger          | Independent review found two blocking evidence/docs defects                                                              | `3f5c8174` and passing p06 re-review      | Two Medium artifact wording notes remain non-blocking   |
 | final review defer | final review       | p06-t02 verification prose applies the variant header rule to all projections | Accept the historical wording without changing shipped behavior               | Base and variant headers are correct and sync is current; changing historical execution prose adds no release confidence | Current provider views and sync dry-run   | Revisit if projection ownership/header contracts change |
 | p06-t11 waiver     | final review M1    | Lifecycle brainstorming docs described only Quick and Spec-Driven seeds       | Aligned the guide to the accepted three-mode behavior without another review  | User waived redundant re-review for wording-only alignment; root verified canonical agreement                            | `oat-brainstorm` and task gate ledger     | Independent exit gate remains required                  |
+| exit gate 3 m1     | final gate review  | Promoted readiness appeared only on `state.md`                                | Aligned design with discovery-artifact readiness used by shipped routing      | Passing-gate Minor; user directed wording fixes without redundant review                                                 | Production controls and gate artifact     | None; addressed during receive                          |
 
 ## Test Results
 
