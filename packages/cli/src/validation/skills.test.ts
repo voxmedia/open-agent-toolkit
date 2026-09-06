@@ -11,6 +11,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
+import {
+  getPackMemberNames,
+  PACK_MANIFEST,
+} from '@commands/tools/shared/pack-manifest';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { validateChangedSkillVersionBumps, validateOatSkills } from './skills';
@@ -5286,7 +5290,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable research-pack callers to installed-root schema reads', async () => {
     const callers = [
-      ['.agents/skills/analyze/SKILL.md', '0.1.1'],
+      ['.agents/skills/analyze/SKILL.md', '0.2.0'],
       ['.agents/skills/compare/SKILL.md', '0.1.1'],
     ] as const;
 
@@ -6653,5 +6657,282 @@ describe('recon canonical contracts', () => {
     expect(skill).toMatch(/packet directory/i);
     expect(worker).toMatch(/never interact with the user/i);
     expect(worker).toMatch(/never dispatch/i);
+  });
+});
+
+describe('bundled skill contract truthfulness — doctor inventory', () => {
+  it("keeps doctor's declared bundled inventory identical to the pack manifest", async () => {
+    const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
+
+    const sectionStart = doctor.indexOf(
+      '**Bundled skill manifest (source of truth):**',
+    );
+    const sectionEnd = doctor.indexOf('For each pack, determine:');
+    expect(sectionStart, 'inventory section start').toBeGreaterThan(-1);
+    expect(sectionEnd, 'inventory section end').toBeGreaterThan(sectionStart);
+
+    const section = doctor.slice(sectionStart, sectionEnd);
+    const declared = new Map<string, string[]>();
+    let currentPack: string | undefined;
+    for (const line of section.split('\n')) {
+      const heading = line.match(/^`([a-z-]+)` pack skills:$/);
+      if (heading?.[1]) {
+        currentPack = heading[1];
+        // A repeated heading would let a later block silently discard the
+        // names declared under the earlier one.
+        expect(
+          declared.has(currentPack),
+          `duplicate ${currentPack} heading`,
+        ).toBe(false);
+        declared.set(currentPack, []);
+        continue;
+      }
+      const bullet = line.match(/^-\s+(.+)$/);
+      if (bullet?.[1] && currentPack) {
+        declared.get(currentPack)?.push(
+          ...bullet[1]
+            .split(',')
+            .map((name) => name.trim())
+            .filter((name) => name.length > 0),
+        );
+      }
+    }
+
+    const expected = new Map(
+      PACK_MANIFEST.map((pack) => [
+        pack.name,
+        [...getPackMemberNames(pack.name, 'skill')].sort(),
+      ]),
+    );
+
+    expect([...declared.keys()].sort(), 'declared pack headings').toEqual(
+      [...expected.keys()].sort(),
+    );
+    for (const [pack, expectedSkills] of expected) {
+      expect([...(declared.get(pack) ?? [])].sort(), `${pack} pack`).toEqual(
+        expectedSkills,
+      );
+    }
+  });
+
+  it("derives doctor's summary example counts from the pack manifest", async () => {
+    const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
+    const packSkills = new Map(
+      PACK_MANIFEST.map((pack) => [
+        pack.name,
+        [...getPackMemberNames(pack.name, 'skill')].sort(),
+      ]),
+    );
+
+    const installedTable = doctor.slice(
+      doctor.indexOf('## Installed Packs'),
+      doctor.indexOf('## Outdated Skills'),
+    );
+    const installedRows = [
+      ...installedTable.matchAll(
+        /^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/gm,
+      ),
+    ];
+    expect(installedRows.length, 'installed pack example rows').toBeGreaterThan(
+      0,
+    );
+    for (const [, pack, total] of installedRows) {
+      // Membership is asserted, never filtered: a row naming a pack that does
+      // not exist is itself the drift this case exists to catch.
+      expect(packSkills.has(pack ?? ''), `${pack} is a manifest pack`).toBe(
+        true,
+      );
+      expect(Number(total), `${pack} example denominator`).toBe(
+        packSkills.get(pack ?? '')?.length,
+      );
+    }
+
+    const availableSection = doctor.slice(
+      doctor.indexOf('## Available But Not Installed'),
+      doctor.indexOf('## Configuration'),
+    );
+    const availableRows = [
+      ...availableSection.matchAll(
+        /^- \*\*([a-z-]+)\*\* pack: (.+?) \((\d+) skills available\)$/gm,
+      ),
+    ];
+    expect(availableRows.length, 'available pack example rows').toBeGreaterThan(
+      0,
+    );
+    for (const [, pack, names, count] of availableRows) {
+      const listed = (names ?? '')
+        .split(',')
+        .map((name) => name.trim())
+        .sort();
+      expect(listed, `${pack} example skill list`).toEqual(
+        packSkills.get(pack ?? ''),
+      );
+      expect(Number(count), `${pack} example count`).toBe(listed.length);
+    }
+  });
+});
+
+describe('bundled skill contract truthfulness — brainstorm diagnostics', () => {
+  it('keeps the brainstorm node-missing note free of a later-doctor promise', async () => {
+    const brainstorm = await readRepoFile(
+      '.agents/skills/oat-brainstorm/SKILL.md',
+    );
+    const nodeMissing = brainstorm
+      .split('\n')
+      .find((line) => line.startsWith('- If `node` is **missing**:'));
+
+    expect(nodeMissing, 'node-missing branch').toBeDefined();
+
+    // The invariant is bounded, not keyword-blocked: exactly one sentence in
+    // this branch may refer to a later diagnostic reader, and it must be the
+    // sentence that denies the note survives at all. Any *additional*
+    // sentence promising a later run observes it therefore fails, even when
+    // the truthful wording is still present alongside it.
+    const readerSentences = (branch: string): string[] =>
+      branch
+        .split(/(?<=\.)\s+/)
+        .filter((sentence) =>
+          /\b(?:oat-)?doctor\b|\bdiagnostics?\b|\b(?:later|subsequent|future|another)\b[^.]*\brun\b/i.test(
+            sentence,
+          ),
+        );
+    const permitted = [
+      'Nothing persists that note, so no later diagnostic run can report it.',
+    ];
+
+    expect(readerSentences(nodeMissing ?? '')).toEqual(permitted);
+
+    // Permanent negative controls: the guard must reject a reinstated promise
+    // appended beside the truthful clause, and the original pre-fix phrasing.
+    expect(
+      readerSentences(
+        `${nodeMissing ?? ''} A subsequent \`oat-doctor\` run surfaces it under Configuration.`,
+      ),
+      'paraphrased promise appended beside the truthful clause',
+    ).not.toEqual(permitted);
+    expect(
+      readerSentences(
+        '- If `node` is **missing**: skip the offer entirely. Do not print the offer message. Log a one-line note in the conversation that the visual companion is unavailable in this environment (a state `oat-doctor` can pick up later: "visual companion suppressed — node not on PATH"). Proceed with `VISUAL_COMPANION = "unavailable"`.',
+      ),
+      'original pre-fix phrasing',
+    ).not.toEqual(permitted);
+
+    expect(nodeMissing).toMatch(/for this session only|conversation-only/i);
+    expect(nodeMissing).toMatch(/nothing persists/i);
+    // The immediate, supported behaviour stays intact.
+    expect(nodeMissing).toContain(
+      'visual companion suppressed — node not on PATH',
+    );
+    expect(nodeMissing).toContain('VISUAL_COMPANION = "unavailable"');
+    expect(nodeMissing).toContain('skip the offer entirely');
+  });
+});
+
+describe('bundled skill contract truthfulness — idea-summarize tools', () => {
+  it('declares Bash and Glob alongside its prior tools', async () => {
+    const skill = await readRepoFile(
+      '.agents/skills/oat-idea-summarize/SKILL.md',
+    );
+
+    const frontmatter = skill.match(/^---\n([\s\S]*?)\n---\n/)?.[1];
+    expect(frontmatter, 'idea-summarize frontmatter').toBeDefined();
+    const declaredTools = (
+      frontmatter?.match(/^allowed-tools:\s*(.+)$/m)?.[1] ?? ''
+    )
+      .split(',')
+      .map((tool) => tool.trim())
+      .filter((tool) => tool.length > 0);
+
+    // Declaration and usage are asserted together: the steps below invoke
+    // shell commands (Bash) and the Glob tool, so both must be declared, and
+    // the previously declared tools must survive.
+    expect(declaredTools).toEqual(
+      expect.arrayContaining([
+        'Read',
+        'Write',
+        'Bash',
+        'Glob',
+        'Grep',
+        'AskUserQuestion',
+      ]),
+    );
+
+    const resolveStep = skill.match(
+      /### Step 1: Resolve Active Idea[\s\S]*?(?=### Step 2:)/,
+    )?.[0];
+    expect(resolveStep, 'resolve-active-idea step').toBeDefined();
+    // Normal path: a shell command reads the pointer.
+    expect(resolveStep).toContain('oat config get activeIdea');
+    // Missing-active-idea fallback: Glob tool plus a shell write-back.
+    const fallback = resolveStep?.slice(
+      resolveStep.indexOf('**If missing or invalid:**'),
+    );
+    expect(fallback, 'missing-active-idea fallback').toBeDefined();
+    expect(fallback).toContain('Use the Glob tool');
+    expect(fallback).toContain('oat config set activeIdea');
+  });
+});
+
+describe('bundled skill contract truthfulness — analyze progress model', () => {
+  it('keeps analyze on a single ten-step progress model', async () => {
+    const analyze = await readRepoFile('.agents/skills/analyze/SKILL.md');
+
+    // No stale nine-step denominator survives anywhere in the skill.
+    expect(analyze).not.toMatch(/\[\d+\/9\]/);
+
+    const advertised = analyze.slice(
+      analyze.indexOf('## Progress Indicators (User-Facing)'),
+      analyze.indexOf('## Workflow'),
+    );
+    const advertisedSteps = [
+      ...advertised.matchAll(/^- `\[(\d+)\/(\d+)\] ([^`]+)`/gm),
+    ];
+
+    expect(advertisedSteps.map(([, index]) => index)).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+    ]);
+    expect([...new Set(advertisedSteps.map(([, , total]) => total))]).toEqual([
+      '10',
+    ]);
+    expect(
+      new Set(advertisedSteps.map(([, , , label]) => label)).size,
+      'distinct advertised step labels',
+    ).toBe(10);
+
+    // The workflow body emits the same ten-step model it advertises: same
+    // indices, same denominators, same labels, one heading each.
+    // Bounded at the next top-level heading so Examples, Troubleshooting, and
+    // Success Criteria may legitimately quote a progress marker.
+    const workflowStart = analyze.indexOf('## Workflow');
+    const headingOffset = analyze.slice(workflowStart + 1).search(/^## /m);
+    expect(headingOffset, 'heading after the workflow section').toBeGreaterThan(
+      -1,
+    );
+    const workflow = analyze.slice(
+      workflowStart,
+      workflowStart + 1 + headingOffset,
+    );
+    const emitted = [...workflow.matchAll(/\[(\d+)\/(\d+)\] ([^`\n]+)/g)];
+    expect(emitted.map(([, index]) => index)).toEqual(
+      advertisedSteps.map(([, index]) => index),
+    );
+    expect(emitted.map(([, , total]) => total)).toEqual(
+      advertisedSteps.map(([, , total]) => total),
+    );
+    expect(emitted.map(([, , , label]) => label.trim())).toEqual(
+      advertisedSteps.map(([, , , label]) => label.trim()),
+    );
+    expect(
+      [...workflow.matchAll(/^### Step (\d+):/gm)].map(([, index]) => index),
+    ).toEqual(advertisedSteps.map(([, index]) => index));
   });
 });
