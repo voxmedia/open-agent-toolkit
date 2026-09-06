@@ -211,6 +211,20 @@ rounds (0C/3I/7M/8m → 0C/1I/1M/5m → 0C/0I/0M/1m). Received and archived as
 
 ---
 
+### 2026-09-06 · project · review · Cursor Bugbot on PR #267
+
+Bugbot (default effort) found one High issue the wave's three root final-review
+rounds, the p05 reviewer's three rounds, and the cross-family exit gate all
+missed: the recover-mode contract committed the recovered patch before
+reconciling the pending attempt, stranding a retry after a failed reconcile.
+Fixed by the p05 handle (`3ee49fcad`); round 4 verifies; exit gate re-run.
+**Skill signal (gap):** reviewer briefs for contract prose should ask for a
+state-machine walk of every failure sequence (what is on the branch when each
+step blocks, and whether the next brief can still proceed), not only
+weaker-anywhere on inputs.
+
+---
+
 ## End-of-run synthesis (2026-09-06)
 
 **Convention verdicts (evidence: entries above and `implementation.md` Run 1):**

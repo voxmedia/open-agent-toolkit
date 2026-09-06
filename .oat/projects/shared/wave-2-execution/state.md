@@ -65,7 +65,7 @@ oat_dispatch_policy: # managed/high per operator routing preference
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
@@ -87,7 +87,7 @@ oat_implement_exit_gate:
   gate_run_id: '45ee23dc-b25b-462d-ab7e-451c518e7f18'
   envelope_status: ok
   artifact: '.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T093256Z.md'
-  handoff: 'Gate passed at the important threshold with no findings (0C/0I/0M/0m); run oat-project-review-receive for final-review-2026-09-06T093256Z.md'
+  handoff: 'Gate passed at run 45ee23dc on 15ec41133; product change 3ee49fcad (Bugbot PR 267 fix) after the gate → stale; re-run pending after review round 4'
   receive_state: completed
   receive_correlation: 'run=45ee23dc-b25b-462d-ab7e-451c518e7f18; handoff=receive; source=reviews/final-review-2026-09-06T093256Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T093256Z.md'
@@ -98,7 +98,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-06T09:37:19Z'
+  updated_at: '2026-09-06T10:03:15Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -154,7 +154,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/267' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T02:27:21.413Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-09-06T09:37:19.119Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T09:37:19.119Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T10:03:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_lifecycle: complete
 ---

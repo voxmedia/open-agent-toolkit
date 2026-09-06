@@ -322,6 +322,17 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - Decision: `approval: approved`, `approval_source: oat-autonomous`, `status: post_approval` → no post-approval steps → `complete`. Operator authorization: 2026-09-05 ("let it rip"), covering PR creation and merge by the root orchestrator once CI, Bugbot, and the final gate are green. This approval waives nothing.
 - Completion: `oat project complete-state` recorded before merge; the archive tail (`oat project archive`, pointer clear, completion bookkeeping commit) is `completion tail: deferred to program close`.
 
+## Review Received: PR #267 (Cursor Bugbot)
+
+**Date:** 2026-09-06
+**Source:** Cursor Bugbot review on PR #267 (comment `3943573356`, commit `cca79087b`), 1 potential issue, High severity. CI and release dry-run green on the same commit.
+
+**Finding:** recover mode applied and committed `recovered_patch` in step 2 and reconciled `pending_attempt` in step 3, so a failed reconcile left a new commit on the phase branch and the retry then failed the exact-HEAD == `recovery_base_head` check with no contract path to continue (`oat-phase-implementer.md:493-553`, `phase-execution.md:347-360`).
+
+**Disposition:** **fixed in code** — `w2-p05-fix-003`, commit `3ee49fcad129b7be41cf659b1b2e7fa927cc50d4` (both recovery contracts plus a `skills.test.ts` ordering case; 32 views regenerated; no bump or pin moved): every fail-closed precondition, including the read-only artifact verification and the pending-attempt reconciliation, now completes at the briefed base before the patch is applied and committed as the first action; a retry after a landed recovery commit is re-briefed from the reconciled current HEAD without the already-committed artifact, with the recovery commit carried as provenance. Four neutralizations reported (reorder, inverted ordering clause, negated first-action commit, dropped retry rule). The lane's Codex round found and fixed three Important refinements (retry base must include later candidate/ledger commits; later dirt travels as a new artifact; bounded slicing in the contract case). Pre-existing wrong cross-reference at `phase-execution.md:688` flagged for routing.
+
+**Verification:** disposition-verification round 4 on the original p05 reviewer handle (`w2-p05-review-004`) over `cca79087b..3ee49fcad`; because this is a product change after the configured exit gate passed, the gate is marked stale and re-run (attempt 2 of 2) once round 4 passes.
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)

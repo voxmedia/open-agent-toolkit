@@ -1,0 +1,86 @@
+{
+  "request_id": "w2-p05-fix-003",
+  "caller": "oat-project-implement",
+  "scope": "p05",
+  "objective": "Post-PR fix from Cursor Bugbot (PR 267, High): reconcile the pending attempt before the recovery commit in both recovery contracts",
+  "action": "fix",
+  "role_name": "oat-phase-implementer",
+  "role_class": "implementation",
+  "provider": "claude",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "opus",
+  "catalog_snapshot": {
+    "id": "claude-task-catalog-p05-fix",
+    "source": "tool-schema",
+    "observed_at": "2026-09-06T09:43:50.000Z"
+  },
+  "authority": "phase-files",
+  "role_selector": "oat-phase-implementer",
+  "model_selector": "opus",
+  "model_selector_granularity": "tier-alias",
+  "effort_selector": null,
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-claude.md",
+  "guidance_version": "2026-07-25",
+  "guidance_verified_at": "2026-09-05",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["opus"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 7200,
+  "retry_limit": 0,
+  "payload": {
+    "subagent_type": "oat-phase-implementer",
+    "model": "opus",
+    "scope": "p05",
+    "worktree": ".worktrees/wave-2/p05"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "running",
+  "configured_invocation_evidence": [
+    "dispatch ceiling resolver",
+    "Claude Code Task tool model argument"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [
+    {
+      "kind": "fix-round",
+      "original_request_id": "w2-p05-impl-001",
+      "round": "post-PR (Bugbot 3943573356)",
+      "mode": "fix"
+    }
+  ],
+  "task_class": "default-implementation",
+  "model_class_floor": "default-implementation",
+  "classification_source": "caller",
+  "classification_reason": "Bounded external-plan implementation reconciling dispersed context across CLI, tests, and docs.",
+  "floor_satisfaction": "satisfied",
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<project>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.2",
+      "contentDigest": "sha256:ce6e02e825aa2b57f28cfdaa894496132198bc16983bf8204da1a2e02afb2999",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
