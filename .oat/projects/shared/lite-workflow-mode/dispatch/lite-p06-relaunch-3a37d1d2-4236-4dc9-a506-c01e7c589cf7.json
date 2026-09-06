@@ -49,7 +49,8 @@
       "p06-t07",
       "p06-t08",
       "p06-t09",
-      "p06-t10"
+      "p06-t10",
+      "p06-t11"
     ],
     "plan": ".oat/projects/shared/lite-workflow-mode/plan.md",
     "worktree": "root"
@@ -135,6 +136,21 @@
       "verification_ledger": "/tmp/p06-t10-gates.ciI3Xq/exit-codes.txt",
       "recovery_attempts": 0,
       "flake_retries": 0
+    },
+    {
+      "event_id": "final-wording-fix-851b10c2-855c-4d37-ac5b-c1356d604378",
+      "reason": "Execute p06-t11 for the final lifecycle review Medium; the user waived another standard lifecycle re-review",
+      "status": "intent_persisted",
+      "authorized_at": "2026-09-06T03:54:50Z",
+      "authorization": "explicit-user",
+      "authorization_scope": "p06-t11 wording alignment plus mechanically required 0.2.60 release and sync metadata; no lifecycle re-review, push, PR, merge, or release",
+      "expected_base_sha": "047651de183dbe59286931bef1b10d810670b788",
+      "review_artifact": ".oat/projects/shared/lite-workflow-mode/reviews/archived/final-review-2026-09-06T032005Z.md",
+      "tasks": ["p06-t11"],
+      "dispatch_target": "oat-phase-implementer-gpt-5-6-sol-high",
+      "model_selector": "gpt-5.6-sol",
+      "effort_selector": "high",
+      "re_review": "waived-by-user"
     }
   ],
   "fallback": {

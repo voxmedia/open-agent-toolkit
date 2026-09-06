@@ -523,13 +523,48 @@ independent implementation exit gate remains required.
 
 ### Task p06-t11: Align lifecycle brainstorming documentation with Lite
 
-**Status:** pending
+**Status:** in_progress
 
 **Review source:**
 `reviews/archived/final-review-2026-09-06T032005Z.md` (M1,
 `artifact_alignment_required`). The shipped Lite implementation is accepted
 as authoritative; this task aligns the stale lifecycle guide and required
 lockstep release surfaces without changing runtime behavior.
+
+**Dispatch:** Continuation
+`final-wording-fix-851b10c2-855c-4d37-ac5b-c1356d604378` resumes the original
+Phase 6 implementer at base
+`047651de183dbe59286931bef1b10d810670b788`.
+
+OAT Dispatch: Phase p06-t11 fix
+
+- Host: Codex
+- Route: native; level=0
+- Requested controls: model=gpt-5.6-sol, effort=high,
+  target=oat-phase-implementer-gpt-5-6-sol-high
+- Configured defaults: effort=high
+- Runtime confirmation: not-observable
+- Preferred effort: high
+- Classified task class: default-implementation
+- OAT Dispatch Tier: high
+- Resolved cap: high
+- Selected effort: high
+- Policy source: invocation
+- Provider default effort: high
+- Selection mode: candidate
+- Model axis: selected:gpt-5.6-sol
+- Effort axis: selected:high
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Dispatch stamp: Dispatch: scope=p06-t11 action=fix role=fix producer=unknown
+  provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+  dispatch_policy=high dispatch_ceiling=high
+  target=oat-phase-implementer-gpt-5-6-sol-high
+  Rationale: This bounded documentation and release-metadata correction must
+  preserve the previously accepted Lite behavior while satisfying the shipped
+  content version contract.
+
+Dispatch policy: high; selected=high; cap=high (codex, enforced — variant
+oat-phase-implementer-gpt-5-6-sol-high)
 
 ## Orchestration Runs
 
