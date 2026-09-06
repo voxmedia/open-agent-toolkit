@@ -3413,12 +3413,16 @@ describe('validateOatSkills', () => {
 
     let cursor = -1;
     for (const step of [
-      'cannot still be writing',
       'capture-dirty-tree.mjs',
+      'capture-script-unavailable',
+      'cannot still be writing',
+      'node "$CAPTURE_SCRIPT"',
+      '--bounded-file',
       '`round-trip-failed`',
       'restore --staged',
       '`recovered_patch`',
       '--verify',
+      '--expected-head',
       'git apply --index',
       'commits it as its first',
       'continuation event',
@@ -3436,8 +3440,34 @@ describe('validateOatSkills', () => {
     ] as const;
 
     for (const [name, contract] of contracts) {
-      expect(contract, `${name} capture script path`).toContain(
-        '.agents/skills/oat-project-implement/scripts/capture-dirty-tree.mjs',
+      // Resolved through installed scope, never a repository-relative literal:
+      // a user-scope install has no `.agents/skills/...` under the process cwd,
+      // and a MODULE_NOT_FOUND there is not one of the named stop reasons the
+      // same prose requires the operator to report verbatim.
+      expect(contract, `${name} capture script`).toContain(
+        'scripts/capture-dirty-tree.mjs',
+      );
+      expect(contract, `${name} capture script resolution roots`).toMatch(
+        /(?:\$\{SKILL_DIR:-\}|\$\{HOME:-\}\/\.agents\/skills)[\s\S]{0,400}scripts\/capture-dirty-tree\.mjs/,
+      );
+      // The binding itself must come from the probed root, not from a literal
+      // that merely sits near the probe loop.
+      expect(
+        contract,
+        `${name} capture script binds the probed root`,
+      ).toContain(
+        'CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"',
+      );
+      // `node ""` exits zero, so a warn-and-continue miss guard would apply an
+      // unverified artifact.
+      expect(contract, `${name} capture script miss terminates`).toMatch(
+        /\[ -n "\$CAPTURE_SCRIPT" \] \|\| \{[\s\S]{0,160}capture-script-unavailable[\s\S]{0,80}exit 1/,
+      );
+      expect(
+        contract,
+        `${name} no repo-relative capture invocation`,
+      ).not.toMatch(
+        /node\s+"?\.agents\/skills\/oat-project-implement\/scripts\/capture-dirty-tree\.mjs/,
       );
       for (const reason of [
         'active-writer',
@@ -3459,7 +3489,10 @@ describe('validateOatSkills', () => {
         /`artifact`\s+is\s+a\s+readable\s+path\s+outside\s+the\s+worktree,\s+never\s+a\s+mutable\s+worktree\s+path/i,
       );
       expect(contract, `${name} verifies before applying`).toMatch(
-        /--verify[\s\S]{0,240}--manifest-digest[\s\S]{0,600}git apply --index/i,
+        /--verify[\s\S]{0,300}--manifest-digest[\s\S]{0,120}--size[\s\S]{0,160}--expected-head[\s\S]{0,900}git apply --index/i,
+      );
+      expect(contract, `${name} reconciles the artifact base`).toMatch(
+        /integrity is not base agreement/i,
       );
       expect(contract, `${name} refuses a best-effort restore`).toMatch(
         /(?:never|no)[\s\S]{0,120}best-effort restore/i,

@@ -16,6 +16,7 @@ import {
   lstat,
   mkdir,
   mkdtemp,
+  readdir,
   readFile,
   realpath,
   rm,
@@ -23,7 +24,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
@@ -54,6 +55,11 @@ export const EXIT_CODES = Object.freeze({
   'invalid-usage': 64,
 });
 
+const RENAME_DETECTION_CONFIG = Object.freeze([
+  'status.renames=true',
+  'diff.renames=true',
+]);
+
 const IN_PROGRESS_MARKERS = Object.freeze([
   'MERGE_HEAD',
   'CHERRY_PICK_HEAD',
@@ -73,7 +79,7 @@ function captureError(reason, message, details = {}) {
 async function git(
   cwd,
   args,
-  { binary = false, literalPathspecs = false } = {},
+  { binary = false, literalPathspecs = false, config = [] } = {},
 ) {
   // `--literal-pathspecs` exports GIT_LITERAL_PATHSPECS=1 to anything Git
   // spawns, including repository hooks, so it is scoped to the one call that
@@ -83,6 +89,7 @@ async function git(
     [
       '--no-optional-locks',
       ...(literalPathspecs ? ['--literal-pathspecs'] : []),
+      ...config.flatMap((setting) => ['-c', setting]),
       ...args,
     ],
     {
@@ -164,11 +171,17 @@ export function parsePorcelainStatus(buffer) {
   return entries;
 }
 
+/**
+ * Rename detection is forced on rather than inherited. With `status.renames`
+ * disabled a staged rename is reported as an ordinary delete plus an ordinary
+ * add, so whether the dirt is classified `unsupported-dirt` would otherwise
+ * depend on the repository's configuration rather than on the tree.
+ */
 async function statusBytes(worktree) {
   return await git(
     worktree,
     ['status', '--porcelain=v2', '-z', '--untracked-files=all'],
-    { binary: true },
+    { binary: true, config: RENAME_DETECTION_CONFIG },
   );
 }
 
@@ -292,7 +305,6 @@ async function assertNoInProgressOperation(worktree) {
 }
 
 function withinBounds(path, boundedFiles) {
-  if (boundedFiles.length === 0) return true;
   return boundedFiles.some(
     (bound) => path === bound || path.startsWith(`${bound}/`),
   );
@@ -566,7 +578,7 @@ async function replayInto({ worktree, artifactDir, manifest, snapshot }) {
  * to, and an existing directory could be silently overwritten. Require a fresh
  * directory whose resolved location is outside the worktree.
  */
-async function assertResolvesOutsideWorktree(worktreeRoot, artifactRoot) {
+export async function resolveArtifactLocation(artifactRoot) {
   let ancestor = artifactRoot;
   while (!(await pathExists(ancestor))) {
     const parent = dirname(ancestor);
@@ -574,11 +586,23 @@ async function assertResolvesOutsideWorktree(worktreeRoot, artifactRoot) {
     ancestor = parent;
   }
   const realAncestor = await realpath(ancestor);
+  // `resolve(realAncestor, relative(...))`, never `slice(ancestor.length + 1)`:
+  // when the nearest existing ancestor is the filesystem root the extra `+ 1`
+  // eats the first character of the next component, corrupting the path this
+  // containment check is about to judge.
+  return {
+    ancestor,
+    realAncestor,
+    realArtifact:
+      ancestor === artifactRoot
+        ? realAncestor
+        : resolve(realAncestor, relative(ancestor, artifactRoot)),
+  };
+}
+
+async function assertResolvesOutsideWorktree(worktreeRoot, artifactRoot) {
+  const { realArtifact } = await resolveArtifactLocation(artifactRoot);
   const realWorktree = await realpath(worktreeRoot);
-  const realArtifact =
-    ancestor === artifactRoot
-      ? realAncestor
-      : join(realAncestor, artifactRoot.slice(ancestor.length + 1));
   if (
     realArtifact === realWorktree ||
     realArtifact.startsWith(realWorktree + sep)
@@ -623,6 +647,16 @@ export async function captureDirtyTree({
     );
   }
 
+  // The phase file boundary is not optional. An empty list would capture — and
+  // therefore hand a continuation permission to re-commit — dirt from outside
+  // the phase, which the surrounding contract lists as a terminal stop.
+  if (!Array.isArray(boundedFiles) || boundedFiles.length === 0) {
+    throw captureError(
+      CAPTURE_REASONS.invalidUsage,
+      'At least one --bounded-file or --bounded-files value is required; capture never runs without the phase file boundary.',
+    );
+  }
+
   const worktreeRoot = resolve(worktree);
   const artifactRoot = await resolveArtifactRoot(worktreeRoot, artifactDir);
 
@@ -655,19 +689,18 @@ export async function captureDirtyTree({
   const indexPatch = await git(
     worktreeRoot,
     ['diff', '--cached', '--binary', '--no-color', '--no-ext-diff'],
-    { binary: true },
+    { binary: true, config: RENAME_DETECTION_CONFIG },
   );
   const worktreePatch = await git(
     worktreeRoot,
     ['diff', '--binary', '--no-color', '--no-ext-diff'],
-    { binary: true },
+    { binary: true, config: RENAME_DETECTION_CONFIG },
   );
-  const indexStat = await git(worktreeRoot, [
-    'diff',
-    '--cached',
-    '--stat',
-    '--no-color',
-  ]);
+  const indexStat = await git(
+    worktreeRoot,
+    ['diff', '--cached', '--stat', '--no-color'],
+    { config: RENAME_DETECTION_CONFIG },
+  );
   const untrackedBytes = new Map();
   for (const path of untrackedPaths) {
     untrackedBytes.set(path, await readFile(join(worktreeRoot, path)));
@@ -764,16 +797,35 @@ export async function captureDirtyTree({
 /**
  * Re-verify an artifact before it is applied: the round-trip seal, the
  * manifest, and every named file must be readable and must still match the
- * digest and size the continuation brief carries. A tampered, unreadable, or
- * unproven artifact stops here.
+ * digest and size the continuation brief carries, the artifact directory must
+ * hold nothing the manifest does not list, and the captured `HEAD` must equal
+ * the `HEAD` the caller is about to patch. A tampered, unreadable, unproven, or
+ * base-mismatched artifact stops here.
  */
-export async function verifyArtifact({ artifactDir, manifestDigest, size }) {
+export async function verifyArtifact({
+  artifactDir,
+  manifestDigest,
+  size,
+  expectedHead,
+}) {
   const artifactRoot = resolve(artifactDir);
 
-  if (!manifestDigest || size === undefined || Number.isNaN(size)) {
+  if (typeof manifestDigest !== 'string' || manifestDigest.length === 0) {
     throw captureError(
       CAPTURE_REASONS.artifactVerificationFailed,
-      'Both the expected --manifest-digest and --size from the continuation brief are required to verify an artifact.',
+      'The expected --manifest-digest from the continuation brief is required to verify an artifact.',
+    );
+  }
+  if (typeof size !== 'number' || !Number.isInteger(size) || size < 0) {
+    throw captureError(
+      CAPTURE_REASONS.artifactVerificationFailed,
+      `The expected --size from the continuation brief must be a non-negative integer; received ${JSON.stringify(size)}.`,
+    );
+  }
+  if (typeof expectedHead !== 'string' || expectedHead.length === 0) {
+    throw captureError(
+      CAPTURE_REASONS.artifactVerificationFailed,
+      'The --expected-head the artifact will be applied onto is required; an artifact captured at a different base cannot be replayed safely.',
     );
   }
 
@@ -874,6 +926,52 @@ export async function verifyArtifact({ artifactDir, manifestDigest, size }) {
     );
   }
 
+  // The aggregate size only covers what the manifest lists, so enumerate the
+  // directory as well: an artifact holding anything the manifest does not name
+  // is not the immutable artifact the capture sealed.
+  const listed = (manifest.files ?? []).map((file) => file.path);
+  const allowed = new Set([MANIFEST_FILE, PROOF_FILE, ...listed]);
+  // Directories only exist to hold listed files, so the permitted set is
+  // exactly the parent chain of those files. Anything else — including an empty
+  // directory — is not part of the artifact the capture sealed.
+  const allowedDirectories = new Set();
+  for (const path of listed) {
+    let parent = dirname(path);
+    while (parent !== '.' && parent !== sep && parent !== '') {
+      allowedDirectories.add(parent);
+      parent = dirname(parent);
+    }
+  }
+  const present = await readdir(artifactRoot, {
+    recursive: true,
+    withFileTypes: true,
+  });
+  for (const entry of present) {
+    const relativePath = relative(
+      artifactRoot,
+      join(entry.parentPath ?? entry.path, entry.name),
+    );
+    const permitted = entry.isDirectory()
+      ? allowedDirectories.has(relativePath)
+      : allowed.has(relativePath);
+    if (!permitted) {
+      throw captureError(
+        CAPTURE_REASONS.artifactVerificationFailed,
+        `Artifact holds ${relativePath}, which the manifest does not list.`,
+      );
+    }
+  }
+
+  // `git apply` matches on hunk context, not on base identity, so a patch can
+  // apply cleanly at the wrong commit and silently produce wrong content.
+  // Integrity is not base agreement; check both.
+  if (manifest.head !== expectedHead) {
+    throw captureError(
+      CAPTURE_REASONS.artifactVerificationFailed,
+      `Artifact base mismatch: captured at ${manifest.head}, but the target HEAD is ${expectedHead}.`,
+    );
+  }
+
   return {
     ok: true,
     artifact: artifactRoot,
@@ -907,13 +1005,15 @@ function parseArguments(argv) {
     else if (flag === '--artifact-dir') options.artifactDir = value;
     else if (flag === '--writer-identity') options.writerIdentity = value;
     else if (flag === '--manifest-digest') options.manifestDigest = value;
+    else if (flag === '--expected-head') options.expectedHead = value;
     else if (flag === '--size') options.size = Number(value);
     else if (flag === '--quiesce-interval-ms') {
       options.quiesceIntervalMs = Number(value);
+      // Repeated `--bounded-file` only: a delimited list would split a
+      // filename that legitimately contains the delimiter and could widen the
+      // boundary to a shorter prefix path.
     } else if (flag === '--bounded-file') options.boundedFiles.push(value);
-    else if (flag === '--bounded-files') {
-      options.boundedFiles.push(...value.split(',').filter(Boolean));
-    } else {
+    else {
       throw captureError(
         CAPTURE_REASONS.invalidUsage,
         `Unsupported argument: ${flag}.`,

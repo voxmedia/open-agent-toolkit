@@ -493,16 +493,54 @@ continuation.
    bounded diff inside `bounded_files`. Any other dirt or history change
    blocks. Beyond that reconciled reservation and its bounded diff, a supplied
    `recovered_patch` is the only permitted pre-existing dirt, and only after it
-   verifies: run
-   `node .agents/skills/oat-project-implement/scripts/capture-dirty-tree.mjs --verify --artifact-dir <artifact> --manifest-digest <manifest_digest> --size <size>`
-   before touching the tree, stop on any `artifact-verification-failed`
-   mismatch, then apply `git apply --index` for the `index` component,
-   `git apply` for the `worktree` component, and byte copies for the
-   `untracked` component, review the result, and commit it as your first
-   action. Report an `active-writer`, `unsupported-dirt`, `round-trip-failed`,
-   or `artifact-verification-failed` reason verbatim and stop; never improvise
-   a partial or best-effort restore. Without a verified `recovered_patch` you
-   start on a clean tree.
+   verifies. Resolve `capture-dirty-tree.mjs` through installed scope rather
+   than a repository-relative path, probing in order and binding the first
+   match:
+
+   ```bash
+   set -eu
+   CAPTURE_SCRIPT=""
+   REPO_ROOT=$(git -C "$PHASE_WORKTREE" rev-parse --show-toplevel 2>/dev/null || true)
+   for CAPTURE_ROOT in "${HOME:-}/.agents/skills/oat-project-implement" \
+     "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-implement}"; do
+     [ -n "$CAPTURE_ROOT" ] || continue
+     [ -f "$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs" ] || continue
+     CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"
+     break
+   done
+   [ -n "$CAPTURE_SCRIPT" ] || {
+     echo "capture-script-unavailable" >&2
+     exit 1
+   }
+
+   EXPECTED_HEAD=$(git -C "$PHASE_WORKTREE" rev-parse --verify HEAD)
+   node "$CAPTURE_SCRIPT" --verify \
+     --artifact-dir <artifact> \
+     --manifest-digest <manifest_digest> \
+     --size <size> \
+     --expected-head "$EXPECTED_HEAD"
+   ```
+
+   The guard terminates rather than warning: `node ""` exits zero, so a
+   fall-through would apply an unverified artifact. `--expected-head` and the
+   apply below both resolve against `$PHASE_WORKTREE`, never the ambient
+   working directory. An empty `CAPTURE_SCRIPT` is a
+   `capture-script-unavailable` stop: report it verbatim with the probed roots
+   and the recovery command
+   `oat tools install workflows --scope <user|project>` or
+   `oat tools update --pack workflows --scope <user|project>`, and never fall
+   back to a repository-relative path. Verify before touching the tree and stop
+   on any `artifact-verification-failed` mismatch, including the base mismatch
+   `--expected-head` catches: integrity is not base agreement, and a hunk whose
+   context happens to match applies cleanly at the wrong commit. On success
+   apply `git apply --index` for the `index` component, `git apply` for the
+   `worktree` component, and byte copies plus the manifest's recorded
+   executable bit for the `untracked` component, review the result, and commit
+   it as your first action. Report an `active-writer`, `unsupported-dirt`,
+   `round-trip-failed`, or `artifact-verification-failed` reason verbatim and
+   stop; never improvise a partial or best-effort restore. Without a verified
+   `recovered_patch` you start on a clean tree.
+
 3. Reconcile the authoritative `pending_attempt` and nonzero
    `phase_recovery_attempts_used` with `state.md`. Recover mode continues that
    same consumed attempt and must not increment usage again. Missing,

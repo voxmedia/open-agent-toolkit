@@ -23,6 +23,8 @@ import {
   captureDirtyTree,
   parsePorcelainStatus,
   proveArtifactRoundTrip,
+  resolveArtifactLocation,
+  verifyArtifact,
 } from '../scripts/capture-dirty-tree.mjs';
 
 const execFile = promisify(execFileCallback);
@@ -93,6 +95,15 @@ async function createDirtyRepository() {
     root,
     repo,
     artifactDir: join(root, 'artifact'),
+    // The phase file boundary this fixture's dirt is meant to stay inside.
+    boundedFiles: [
+      'text.txt',
+      'staged.bin',
+      'worktree.bin',
+      'added.txt',
+      'nested',
+      'tool.sh',
+    ],
     contentPaths: [
       'text.txt',
       'staged.bin',
@@ -142,9 +153,28 @@ async function capture(fixture, options = {}) {
     worktree: fixture.repo,
     artifactDir: fixture.artifactDir,
     writerIdentity: 'handle:phase-child-lost',
+    boundedFiles: fixture.boundedFiles,
     quiesceIntervalMs: 25,
     ...options,
   });
+}
+
+async function headOf(fixture) {
+  return (await git(fixture.repo, 'rev-parse', 'HEAD')).trim();
+}
+
+async function verifyArgsFor(fixture, result, overrides = {}) {
+  return [
+    '--verify',
+    '--artifact-dir',
+    overrides.artifactDir ?? fixture.artifactDir,
+    '--manifest-digest',
+    overrides.manifestDigest ?? result.manifestDigest,
+    '--size',
+    String(overrides.size ?? result.size),
+    '--expected-head',
+    overrides.expectedHead ?? (await headOf(fixture)),
+  ];
 }
 
 async function readManifest(fixture) {
@@ -348,15 +378,7 @@ test('captures untracked files, including their executable bit', async () => {
 test('rejects a tampered artifact in --verify mode', async () => {
   const fixture = await createDirtyRepository();
   const result = await capture(fixture);
-  const verifyArgs = [
-    '--verify',
-    '--artifact-dir',
-    fixture.artifactDir,
-    '--manifest-digest',
-    result.manifestDigest,
-    '--size',
-    String(result.size),
-  ];
+  const verifyArgs = await verifyArgsFor(fixture, result);
 
   const clean = await runScript(verifyArgs);
   assert.equal(clean.code, 0, clean.stderr);
@@ -383,15 +405,7 @@ test('rejects an unreadable artifact file in --verify mode', async () => {
   await rm(patchPath);
   await mkdir(patchPath);
 
-  const unreadable = await runScript([
-    '--verify',
-    '--artifact-dir',
-    fixture.artifactDir,
-    '--manifest-digest',
-    result.manifestDigest,
-    '--size',
-    String(result.size),
-  ]);
+  const unreadable = await runScript(await verifyArgsFor(fixture, result));
   assert.equal(unreadable.code, 5);
   assert.match(unreadable.stderr, /"reason":"artifact-verification-failed"/);
   assert.match(unreadable.stderr, /index\.patch is unreadable/);
@@ -402,15 +416,7 @@ test('refuses an artifact that carries no round-trip seal', async () => {
   const result = await capture(fixture);
   await rm(join(fixture.artifactDir, 'round-trip.proof'));
 
-  const unproven = await runScript([
-    '--verify',
-    '--artifact-dir',
-    fixture.artifactDir,
-    '--manifest-digest',
-    result.manifestDigest,
-    '--size',
-    String(result.size),
-  ]);
+  const unproven = await runScript(await verifyArgsFor(fixture, result));
   assert.equal(unproven.code, 5);
   assert.match(unproven.stderr, /never proven to replay/);
 });
@@ -418,15 +424,7 @@ test('refuses an artifact that carries no round-trip seal', async () => {
 test('rejects an artifact whose recorded executable bit was tampered with', async () => {
   const fixture = await createDirtyRepository();
   const result = await capture(fixture);
-  const verifyArgs = [
-    '--verify',
-    '--artifact-dir',
-    fixture.artifactDir,
-    '--manifest-digest',
-    result.manifestDigest,
-    '--size',
-    String(result.size),
-  ];
+  const verifyArgs = await verifyArgsFor(fixture, result);
   assert.equal((await runScript(verifyArgs)).code, 0);
 
   // Bytes are untouched; only the mode changes. A digest-only verifier would
@@ -438,43 +436,255 @@ test('rejects an artifact whose recorded executable bit was tampered with', asyn
   assert.match(tampered.stderr, /executable-bit mismatch/);
 });
 
-test('refuses to verify without both expected brief values', async () => {
+test('refuses to verify without every expected brief value', async () => {
   const fixture = await createDirtyRepository();
   const result = await capture(fixture);
+  const head = await headOf(fixture);
+  const complete = await verifyArgsFor(fixture, result);
 
-  for (const args of [
-    ['--verify', '--artifact-dir', fixture.artifactDir],
-    [
-      '--verify',
-      '--artifact-dir',
-      fixture.artifactDir,
-      '--manifest-digest',
-      result.manifestDigest,
-    ],
-    [
-      '--verify',
-      '--artifact-dir',
-      fixture.artifactDir,
-      '--size',
-      String(result.size),
-    ],
+  for (const [dropped, pattern] of [
+    ['--manifest-digest', /--manifest-digest[\s\S]*is required/],
+    ['--size', /--size[\s\S]*non-negative integer/],
+    ['--expected-head', /--expected-head[\s\S]*is required/],
   ]) {
+    const index = complete.indexOf(dropped);
+    const args = [...complete.slice(0, index), ...complete.slice(index + 2)];
     const incomplete = await runScript(args);
     assert.equal(incomplete.code, 5, args.join(' '));
-    assert.match(incomplete.stderr, /--manifest-digest and --size/);
+    assert.match(incomplete.stderr, /"reason":"artifact-verification-failed"/);
+    assert.match(incomplete.stderr, pattern);
   }
 
-  const wrongSize = await runScript([
-    '--verify',
-    '--artifact-dir',
-    fixture.artifactDir,
-    '--manifest-digest',
-    result.manifestDigest,
-    '--size',
-    String(result.size + 1),
-  ]);
+  const wrongSize = await runScript(
+    await verifyArgsFor(fixture, result, { size: result.size + 1 }),
+  );
   assert.equal(wrongSize.code, 5);
   assert.match(wrongSize.stderr, /sealed size mismatch/);
+
+  // The module is exported and imported directly, so a non-numeric size must
+  // fail with a diagnostic that names the real problem rather than reporting
+  // "expected 977, found 977" from a string/number comparison.
+  await assert.rejects(
+    verifyArtifact({
+      artifactDir: fixture.artifactDir,
+      manifestDigest: result.manifestDigest,
+      size: String(result.size),
+      expectedHead: head,
+    }),
+    (error) =>
+      error.reason === 'artifact-verification-failed' &&
+      /must be a non-negative integer; received "\d+"/.test(error.message),
+  );
+});
+
+test('refuses an artifact captured at a different base than the target HEAD', async () => {
+  const fixture = await createDirtyRepository();
+  const result = await capture(fixture);
+  const capturedHead = await headOf(fixture);
+
+  assert.equal(
+    (await runScript(await verifyArgsFor(fixture, result))).code,
+    0,
+    'the artifact verifies against the HEAD it was captured at',
+  );
+
+  // A patch whose hunk context still matches applies cleanly at the wrong
+  // commit, so integrity alone cannot establish base agreement.
+  const manifest = await readManifest(fixture);
+  await restoreToCleanBase(fixture, manifest);
+  await writeFile(join(fixture.repo, 'text.txt'), 'line1\nline2\nline3\nX\n');
+  await git(fixture.repo, 'commit', '--quiet', '-am', 'moves HEAD forward');
+  const movedHead = await headOf(fixture);
+  assert.notEqual(movedHead, capturedHead);
+
+  const mismatched = await runScript(await verifyArgsFor(fixture, result));
+  assert.equal(mismatched.code, 5);
+  assert.match(mismatched.stderr, /"reason":"artifact-verification-failed"/);
+  assert.match(
+    mismatched.stderr,
+    new RegExp(`Artifact base mismatch: captured at ${capturedHead}`),
+  );
+});
+
+test('refuses an artifact holding a file the manifest does not list', async () => {
+  const fixture = await createDirtyRepository();
+  const result = await capture(fixture);
+  const verifyArgs = await verifyArgsFor(fixture, result);
+  assert.equal((await runScript(verifyArgs)).code, 0);
+
+  await writeFile(join(fixture.artifactDir, 'smuggled.patch'), 'extra\n');
+  const smuggled = await runScript(verifyArgs);
+  assert.equal(smuggled.code, 5);
+  assert.match(smuggled.stderr, /"reason":"artifact-verification-failed"/);
+  assert.match(
+    smuggled.stderr,
+    /holds smuggled\.patch, which the manifest does not list/,
+  );
+  await rm(join(fixture.artifactDir, 'smuggled.patch'));
+  assert.equal((await runScript(verifyArgs)).code, 0);
+
+  // Nested, so a non-recursive enumeration would miss it entirely.
+  await writeFile(
+    join(fixture.artifactDir, 'untracked', 'nested', 'smuggled.txt'),
+    'extra\n',
+  );
+  const nested = await runScript(verifyArgs);
+  assert.equal(nested.code, 5);
+  assert.match(
+    nested.stderr,
+    /holds untracked\/nested\/smuggled\.txt, which the manifest does not list/,
+  );
+  await rm(join(fixture.artifactDir, 'untracked', 'nested', 'smuggled.txt'));
+  assert.equal((await runScript(verifyArgs)).code, 0);
+
+  // An empty directory is not part of the sealed artifact either.
+  await mkdir(join(fixture.artifactDir, 'stowaway'));
+  const stowaway = await runScript(verifyArgs);
+  assert.equal(stowaway.code, 5);
+  assert.match(
+    stowaway.stderr,
+    /holds stowaway, which the manifest does not list/,
+  );
+});
+
+test('treats a bounded path containing a comma as one literal path', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-capture-comma-'));
+  scratchRoots.push(root);
+  const repo = await initRepository(root, 'repo');
+  // `safe,dir/in.txt` must not be read as the two bounds `safe` and
+  // `dir/in.txt`, which would authorize everything under `safe/`.
+  await mkdir(join(repo, 'safe,dir'), { recursive: true });
+  await mkdir(join(repo, 'safe'), { recursive: true });
+  await writeFile(join(repo, 'safe,dir', 'in.txt'), 'bounded\n');
+  await writeFile(join(repo, 'safe', 'out.txt'), 'unbounded\n');
+  await git(repo, 'add', '-A', '.');
+  await git(repo, 'commit', '--quiet', '-m', 'base');
+  await writeFile(join(repo, 'safe,dir', 'in.txt'), 'bounded changed\n');
+  await writeFile(join(repo, 'safe', 'out.txt'), 'unbounded changed\n');
+
+  // Through the CLI, because the argument parser is where a delimited list
+  // would split the path.
+  const bounded = await runScript([
+    '--worktree',
+    repo,
+    '--artifact-dir',
+    join(root, 'artifact'),
+    '--writer-identity',
+    'handle:phase-child-lost',
+    '--bounded-file',
+    'safe,dir',
+    '--quiesce-interval-ms',
+    '25',
+  ]);
+  assert.equal(bounded.code, 3, bounded.stdout || bounded.stderr);
+  assert.match(bounded.stderr, /"reason":"unsupported-dirt"/);
+  assert.match(bounded.stderr, /safe\/out\.txt/);
+  assert.equal(
+    await lstat(join(root, 'artifact')).then(
+      () => 'present',
+      () => 'absent',
+    ),
+    'absent',
+  );
+
+  const result = await captureDirtyTree({
+    worktree: repo,
+    artifactDir: join(root, 'artifact'),
+    writerIdentity: 'handle:phase-child-lost',
+    boundedFiles: ['safe,dir', 'safe'],
+    quiesceIntervalMs: 25,
+  });
+  assert.deepEqual(result.affectedPaths, ['safe,dir/in.txt', 'safe/out.txt']);
+});
+
+test('refuses to capture without a phase file boundary', async () => {
+  const fixture = await createDirtyRepository();
+
+  for (const boundedFiles of [[], undefined]) {
+    await assert.rejects(
+      capture(fixture, { boundedFiles }),
+      (error) =>
+        error.reason === 'invalid-usage' &&
+        /At least one --bounded-file/.test(error.message),
+      `boundedFiles=${JSON.stringify(boundedFiles)}`,
+    );
+  }
+
+  const omitted = await runScript([
+    '--worktree',
+    fixture.repo,
+    '--artifact-dir',
+    fixture.artifactDir,
+    '--writer-identity',
+    'handle:phase-child-lost',
+    '--quiesce-interval-ms',
+    '25',
+  ]);
+  assert.equal(omitted.code, 64);
+  assert.match(omitted.stderr, /"reason":"invalid-usage"/);
+  assert.equal(
+    await lstat(fixture.artifactDir).then(
+      () => 'present',
+      () => 'absent',
+    ),
+    'absent',
+    'a bound-less invocation never creates an artifact',
+  );
+});
+
+test('never captures out-of-phase dirt alongside in-phase dirt', async () => {
+  const fixture = await createDirtyRepository();
+  await writeFile(join(fixture.repo, 'secrets.txt'), 'out-of-phase\n');
+
+  await assert.rejects(
+    capture(fixture),
+    (error) =>
+      error.reason === 'unsupported-dirt' &&
+      /outside the phase bounded_files/.test(error.message) &&
+      error.outOfBounds.includes('secrets.txt'),
+  );
+  assert.equal(
+    await lstat(fixture.artifactDir).then(
+      () => 'present',
+      () => 'absent',
+    ),
+    'absent',
+  );
+
+  // With the offending path removed the same capture succeeds, and nothing
+  // out of phase ever reaches the artifact's plans or path lists.
+  await rm(join(fixture.repo, 'secrets.txt'));
+  const result = await capture(fixture);
+  assert.ok(!result.affectedPaths.includes('secrets.txt'));
+  assert.ok(!result.restorePlan.some((entry) => entry.path === 'secrets.txt'));
+  const manifest = await readManifest(fixture);
+  assert.ok(!JSON.stringify(manifest.restorePlan).includes('secrets.txt'));
+});
+
+test('classifies a staged rename identically when rename detection is disabled', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-capture-renamecfg-'));
+  scratchRoots.push(root);
+  const repo = await initRepository(root, 'repo');
+  await writeFile(join(repo, 'old.txt'), 'a\nb\nc\nd\ne\nf\ng\nh\n');
+  await git(repo, 'add', 'old.txt');
+  await git(repo, 'commit', '--quiet', '-m', 'base');
+  await git(repo, 'mv', 'old.txt', 'new.txt');
+  // Repository configuration must not decide whether this is supported dirt.
+  await git(repo, 'config', 'status.renames', 'false');
+  await git(repo, 'config', 'diff.renames', 'false');
+
+  await assert.rejects(
+    captureDirtyTree({
+      worktree: repo,
+      artifactDir: join(root, 'artifact'),
+      writerIdentity: 'handle:phase-child-lost',
+      boundedFiles: ['old.txt', 'new.txt'],
+      quiesceIntervalMs: 25,
+    }),
+    (error) =>
+      error.reason === 'unsupported-dirt' &&
+      /staged rename or copy/.test(error.message),
+  );
 });
 
 test('refuses to capture while a writer is still touching the worktree', async () => {
@@ -560,6 +770,8 @@ test('refuses to capture during an in-progress merge', async () => {
     join(root, 'artifact'),
     '--writer-identity',
     'handle:phase-child-lost',
+    '--bounded-file',
+    'conflict.txt',
     '--quiesce-interval-ms',
     '25',
   ]);
@@ -586,6 +798,7 @@ test('refuses to capture a staged rename it could not restore per path', async (
       worktree: repo,
       artifactDir: join(root, 'artifact'),
       writerIdentity: 'handle:phase-child-lost',
+      boundedFiles: ['old.txt', 'new.txt'],
       quiesceIntervalMs: 25,
     }),
     (error) =>
@@ -618,6 +831,7 @@ test('refuses a path that is both a tracked change and an untracked file', async
       worktree: repo,
       artifactDir: join(root, 'artifact'),
       writerIdentity: 'handle:phase-child-lost',
+      boundedFiles: ['both.txt'],
       quiesceIntervalMs: 25,
     }),
     (error) =>
@@ -642,6 +856,7 @@ test('derives the restore plan from literal filenames, not Git pathspec magic', 
     worktree: repo,
     artifactDir: join(root, 'artifact'),
     writerIdentity: 'handle:phase-child-lost',
+    boundedFiles: [magic],
     quiesceIntervalMs: 25,
   });
   assert.deepEqual(result.restorePlan, [
@@ -681,7 +896,9 @@ test('refuses to capture an untracked entry that is not a regular file', async (
   await symlink('text.txt', join(fixture.repo, 'dangling-link'));
 
   await assert.rejects(
-    capture(fixture),
+    capture(fixture, {
+      boundedFiles: [...fixture.boundedFiles, 'dangling-link'],
+    }),
     (error) =>
       error.reason === 'unsupported-dirt' &&
       /dangling-link is not a regular file/.test(error.message),
@@ -739,6 +956,9 @@ test('refuses an artifact directory inside the worktree or on top of existing st
       /resolve outside the worktree/.test(error.message),
   );
 
+  // Two levels missing: the nearest existing ancestor is not the direct
+  // parent, so the containment check has to reconstruct the remaining path
+  // rather than slice it.
   await assert.rejects(
     capture(fixture, {
       artifactDir: join(fixture.root, 'absent-parent', 'artifact'),
@@ -746,6 +966,14 @@ test('refuses an artifact directory inside the worktree or on top of existing st
     (error) =>
       error.reason === 'invalid-usage' &&
       /exclusively beneath an existing parent/.test(error.message),
+  );
+  await assert.rejects(
+    capture(fixture, {
+      artifactDir: join(fixture.repo, 'absent', 'deeper', 'artifact'),
+    }),
+    (error) =>
+      error.reason === 'invalid-usage' &&
+      /resolve outside the worktree/.test(error.message),
   );
 
   await mkdir(join(fixture.root, 'preexisting'), { recursive: true });
@@ -762,6 +990,18 @@ test('refuses an artifact directory inside the worktree or on top of existing st
   );
 });
 
+test('reconstructs a containment path whose nearest existing ancestor is the filesystem root', async () => {
+  // Two levels missing below `/`, so the nearest existing ancestor is `/`
+  // itself. Slicing `ancestor.length + 1` here eats the first character of the
+  // next component and hands the containment check a path that exists nowhere
+  // on the filesystem.
+  const artifactRoot = `/nonexistent-top-${process.pid}/sub/artifact`;
+  const located = await resolveArtifactLocation(artifactRoot);
+
+  assert.equal(located.ancestor, '/');
+  assert.equal(located.realArtifact, artifactRoot);
+});
+
 test('reports a successful capture as JSON on stdout with exit 0', async () => {
   const fixture = await createDirtyRepository();
 
@@ -772,6 +1012,7 @@ test('reports a successful capture as JSON on stdout with exit 0', async () => {
     fixture.artifactDir,
     '--writer-identity',
     'handle:phase-child-lost',
+    ...fixture.boundedFiles.flatMap((path) => ['--bounded-file', path]),
     '--quiesce-interval-ms',
     '25',
   ]);
@@ -784,15 +1025,7 @@ test('reports a successful capture as JSON on stdout with exit 0', async () => {
   assert.ok(result.size > 0);
   assert.deepEqual(result.components, ['index', 'worktree', 'untracked']);
 
-  const verified = await runScript([
-    '--verify',
-    '--artifact-dir',
-    fixture.artifactDir,
-    '--manifest-digest',
-    result.manifestDigest,
-    '--size',
-    String(result.size),
-  ]);
+  const verified = await runScript(await verifyArgsFor(fixture, result));
   assert.equal(verified.code, 0, verified.stderr);
 });
 
