@@ -368,15 +368,15 @@ git commit -m "feat(p03-t01): emit the canonical dispatch stamp with resolver JS
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-09-06 | reviews/artifact-plan-review-2026-09-06T162416Z.md | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -                                                           | -             | -          | -           |
+| p02    | code     | pending | -          | -                                                           | -             | -          | -           |
+| p03    | code     | pending | -          | -                                                           | -             | -          | -           |
+| final  | code     | pending | -          | -                                                           | -             | -          | -           |
+| plan   | artifact | passed  | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T162416Z.md | -             | -          | -           |
+| spec   | artifact | pending | -          | -                                                           | -             | -          | -           |
+| design | artifact | pending | -          | -                                                           | -             | -          | -           |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 

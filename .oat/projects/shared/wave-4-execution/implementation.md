@@ -72,7 +72,15 @@ oat_generated: false
 
 ## Autonomy Gate Provenance
 
-_Gate-invoked review events (plan gate, configured exit gate) are recorded here as `### Review Received: <scope>` sections when they occur._
+### Review Received: plan
+
+**Date:** 2026-09-06
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-06T162416Z.md (gate-invoked artifact review, target `codex-5-6-sol-xhigh`, run `e89abdea-e24d-476f-8640-7bd848d13999`)
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 0 — no blocking findings; all eight contract areas satisfied (stable task IDs, disjoint group-1 write surfaces, p03 sequenced after fan-in, fan-in-owned release, companion artifacts consistent).
+
+**Verification record:** what — nothing to fix; how — the gate's own verification commands (`validate-plan`, `oxfmt --check`, section grep) re-run clean by the orchestrator; where — this section and the commit that carries it.
+
+**Plan row → `passed`** (gate-written row moved forward in place with the archived path).
 
 ## Orchestration Runs
 
@@ -88,7 +96,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-06
 
-- Wrapper authored from the program's Wave 4 section and the wave-boundary drift refresh; plan validated; plan gate pending.
+- Wrapper authored from the program's Wave 4 section and the wave-boundary drift refresh; plan validated (`5c2978916`); plan gate passed first time (0C/0I/0M/0m).
 
 ## Deviations from Plan / Design
 

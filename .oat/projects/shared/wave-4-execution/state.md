@@ -14,8 +14,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-the-loop lifecycle approval (workflow.hillCheckpointDefault=final)
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 10
 oat_dispatch_policy: # managed/high per operator routing preference
