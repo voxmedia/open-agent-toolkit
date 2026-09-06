@@ -234,16 +234,34 @@ function validateOwnershipJournal(
         `ownershipJournal.resources[${index}].markerPath is not the tracked marker in its journaled worktree.`,
       );
     }
+    // Every reservation the writer persists carries `reservedAt`, and
+    // finalization never removes it, so a `reserved` entry without one is
+    // malformed rather than exempt. Requiring it here stops an entry from
+    // escaping the re-derivation below by dropping the field it is keyed on.
+    if (state === 'reserved' && entry.reservedAt === undefined) {
+      throw new CleanupRefusalError(
+        `ownershipJournal.resources[${index}].reservedAt is required for a reserved entry.`,
+      );
+    }
     // Re-derive the invariants the reservation writer enforced. Cleanup must
     // not trust a manifest to have been written by that writer: an entry that
     // named a resource outside the run directory, or a baseline other than the
     // run's own, would otherwise enter the owned sets and skip the
     // unjournaled-run-descendant refusal.
     //
-    // These bind to reserved *origin*, not to the current state, because
-    // finalization never rewrites them. Scoping them to `state === 'reserved'`
-    // alone would let a forged `registered` transition shed them while keeping
-    // every other reservation field.
+    // These bind to reserved *origin* rather than to the current state,
+    // because finalization never rewrites them: a forged `registered`
+    // transition cannot shed them while keeping the rest of the reservation.
+    //
+    // SCOPE OF THIS GUARD: it covers reservation-origin entries only. An entry
+    // with neither `reserved` state nor `reservedAt` is shaped exactly like a
+    // legitimate direct registration, which the non-deterministic callers
+    // still in use produce and which may legitimately live outside the run
+    // directory. Those entries therefore retain the same manifest-integrity
+    // trust they had before reservations existed; no field-based test can
+    // separate a forged one from a real one, and tightening containment for
+    // all entries would break the direct-registration path this plan
+    // deliberately preserves until its creation transaction is migrated.
     if (state === 'reserved' || entry.reservedAt !== undefined) {
       if (
         dirname(nestedWorktreePath) !== runPath ||

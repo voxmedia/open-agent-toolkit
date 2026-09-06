@@ -252,10 +252,18 @@ guessing.
 ### Reserved versus registered ownership
 
 The deterministic provider's nested phase worktrees are journaled as a
-transaction, so an interruption cannot leave one of them as a child cleanup
-has to refuse. Other nested creators still register directly after creation;
-their entries are read exactly the same way, but their creation window is not
-yet covered. The two states are:
+transaction, so an interruption can no longer leave an _unjournaled_ child.
+It can still leave state cleanup refuses by design — an interruption inside
+`git worktree add` may leave a path with no Git registration, and that is
+refused rather than deleted.
+
+Other nested creators still register directly after creation. Their entries are
+read as ownership the same way, but they are validated more loosely: a
+directly-registered entry carries no reservation origin, so it is not subject
+to the run-directory containment and run-baseline checks a finalized
+reservation gets. Their creation transaction has not been migrated yet.
+
+The two reservation states are:
 
 - **`reserved`** — the exact branch, worktree path, marker path, expected
   baseline, shared Git directory, and run identity are written to the manifest

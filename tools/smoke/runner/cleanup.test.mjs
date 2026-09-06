@@ -1651,6 +1651,21 @@ test('refuses a tampered journal that widens reserved ownership', async () => {
         /markerPath must be an absolute path/,
       ],
       [
+        // A reserved entry cannot escape the re-derivation below by dropping
+        // the field that guard is keyed on: `reservedAt` is mandatory for a
+        // reserved entry, so its absence is refused rather than reclassified.
+        (current) => {
+          delete current.ownershipJournal.resources[0].reservedAt;
+          current.ownershipJournal.resources[0].worktreePath = outsidePath;
+          current.ownershipJournal.resources[0].markerPath = join(
+            outsidePath,
+            '.oat/smoke-bootstrap.json',
+          );
+          current.ownershipJournal.resources[0].branch = outsideBranch;
+        },
+        /reservedAt is required for a reserved entry/,
+      ],
+      [
         // Nor may it shed the containment a reservation was written under.
         // Reserved-origin entries keep those invariants after finalization, so
         // flipping `state` while retaining `reservedAt` and a well-formed

@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import {
+  lstat,
   mkdir,
   mkdtemp,
+  open,
   readFile,
   readdir,
   realpath,
+  rename,
   rm,
   writeFile,
 } from 'node:fs/promises';
@@ -631,6 +634,122 @@ test('serializes concurrent identical and conflicting reservations', async () =>
     const journal = await readJournal(manifest);
     assert.equal(journal.resources.length, 1);
     assert.equal(journal.resources[0].branch, child.branch);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('asserts the canonical run directory on replay as well as first reservation', async () => {
+  const repository = await createRepository('oat-smoke-journal-canonical-');
+
+  try {
+    const manifest = await provision(repository, 'journal-canonical');
+    const child = childOf(manifest, 'phase-p01');
+    await reserveNestedSmokeResource(reservationFor(manifest, child));
+
+    // The canonicality check sits ahead of the idempotent-replay return, so a
+    // replay over a run directory that does not resolve to itself is refused
+    // instead of returning the existing entry unchecked.
+    const runPath = dirname(manifest.manifestPath);
+    const lyingFileSystem = {
+      lstat,
+      mkdir,
+      open,
+      readFile,
+      realpath: async (path, ...rest) =>
+        path === runPath
+          ? join(repository, '.elsewhere')
+          : realpath(path, ...rest),
+      rename,
+      rm,
+      writeFile,
+    };
+
+    await assert.rejects(
+      () =>
+        reserveNestedSmokeResource(reservationFor(manifest, child), {
+          fileSystem: lyingFileSystem,
+        }),
+      /manifest run directory must be its canonical real path/,
+    );
+    const journal = await readJournal(manifest);
+    assert.equal(journal.resources.length, 1);
+    assert.equal(journal.resources[0].state, 'reserved');
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('pins the accepted probe-to-creation reservation residual', async () => {
+  // ACCEPTED RESIDUAL, pinned so any change to it is visible in review.
+  //
+  // The ref-absence probe in `reserveNestedSmokeResource` is not atomic with
+  // the `git worktree add -b` that follows it. A foreign branch created inside
+  // that window, at the reserved name and exactly the reserved baseline, is
+  // indistinguishable from the branch this run intended to create by any sound
+  // signal: Git gives `worktree add -b` and `git branch` identical reflog
+  // messages, object IDs, and creation timestamps, and every field that can
+  // differ is writable by whoever created the ref. Cleanup therefore deletes
+  // it. Closing the window
+  // would require creating the ref as part of the reservation, which is the
+  // Git mutation before durable intent that this transaction exists to
+  // prevent. This test records that behavior rather than endorsing it.
+  const repository = await createRepository('oat-smoke-journal-residual-');
+
+  try {
+    const manifest = await provision(repository, 'journal-residual');
+    const child = childOf(manifest, 'phase-p01');
+
+    // Reservation succeeds because the branch genuinely does not exist yet.
+    await reserveNestedSmokeResource(reservationFor(manifest, child));
+
+    // A foreign actor then wins the window. This run's `worktree add -b` would
+    // now refuse, so the child is never created and the entry stays reserved.
+    await git(['branch', child.branch, manifest.baselineCommitSha], {
+      cwd: repository,
+    });
+    await assert.rejects(
+      () => addReservedChild(manifest, child),
+      /already exists/,
+    );
+    assert.equal((await readJournal(manifest)).resources[0].state, 'reserved');
+
+    const result = await cleanup(repository, manifest.manifestPath);
+
+    // Accepted residual: the foreign branch is deleted under this run's
+    // reservation authority.
+    assert.equal(result.status, 'cleaned');
+    assert.ok(result.actions.includes(`branch:${child.branch}`));
+    assert.equal(
+      await git(['branch', '--list', child.branch], { cwd: repository }),
+      '',
+    );
+
+    // The bound on that residual: only a branch sitting at exactly the
+    // reserved baseline is affected. One commit away, cleanup fails closed.
+    const second = await provision(repository, 'journal-residual-two');
+    const secondChild = childOf(second, 'phase-p01');
+    await reserveNestedSmokeResource(reservationFor(second, secondChild));
+    const oneCommitOff = await git(
+      ['rev-parse', `${second.baselineCommitSha}^`],
+      { cwd: repository },
+    );
+    assert.equal(
+      oneCommitOff,
+      second.branchOwnership.baseCommitSha,
+      'the control must sit exactly one commit off the reserved baseline',
+    );
+    await git(['branch', secondChild.branch, oneCommitOff], {
+      cwd: repository,
+    });
+    await assert.rejects(
+      () => cleanup(repository, second.manifestPath),
+      /does not exactly match its reserved baseline/,
+    );
+    assert.match(
+      await git(['branch', '--list', secondChild.branch], { cwd: repository }),
+      new RegExp(secondChild.branch),
+    );
   } finally {
     await rm(repository, { force: true, recursive: true });
   }

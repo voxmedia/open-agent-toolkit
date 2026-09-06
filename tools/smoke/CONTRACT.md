@@ -113,9 +113,9 @@ The runner writes one JSON provisioning manifest before drive. It includes:
         "baselineCommitSha": "40-character child ownership baseline SHA",
         "branch": "actual child branch",
         "commonGitDir": "/canonical/shared/git/common-directory",
-        "markerPath": "/canonical/child/worktree/.oat/smoke-bootstrap.json",
+        "markerPath": "optional: absent only on a schema-v1 entry",
         "registeredAt": "ISO-8601 timestamp",
-        "reservedAt": "ISO-8601 timestamp when the entry began as a reservation",
+        "reservedAt": "optional: present only when this entry began reserved",
         "runIdentity": "same immutable identity as branch",
         "state": "registered",
         "worktreePath": "/canonical/child/worktree"
@@ -331,7 +331,10 @@ manifest; that leaves its schema version untouched.
 
 Cleanup validates the matching marker from every recorded ownership baseline.
 Current branch tips and worktree HEADs may advance through legitimate lifecycle
-commits, but each must remain a descendant of its immutable baseline. Cleanup
+commits, but each must remain a descendant of its immutable baseline -- except
+a reserved branch whose worktree is absent, whose tip must equal its reserved
+baseline exactly, because nothing can legitimately have committed on a child
+that never finished registering. Cleanup
 refuses divergent tips, mismatched shared Git directories, missing baseline
 markers, and run-descendant worktrees or branches absent from the journal. Once
 all resources are corroborated, it removes journaled child worktrees before the
@@ -350,11 +353,37 @@ recorded reservation exactly corroborates:
 - branch present without its worktree: its tip must equal the reserved baseline
   exactly, and that baseline must carry this run's marker.
 
+A reserved worktree path must be a direct child of the manifest run directory,
+and a reservation may only ever name the run's own baseline. Cleanup re-derives
+both invariants rather than trusting the manifest to have been written by the
+reservation writer, because an entry naming a resource outside the run
+directory would otherwise enter the owned set and skip the refusal that
+protects unjournaled run descendants. That containment is also what makes the
+recursive removal of the run directory safe: a reserved child is inside the
+directory this run created and owns.
+
 Every other shape fails closed and is left untouched: a reserved path without
 exact Git worktree registration, a worktree registered to a different branch or
 without its reserved branch, a mismatched HEAD or shared Git directory, a
 missing or non-regular run marker, a marker path outside its own journaled
 worktree, or a reserved branch checked out in an unreserved worktree.
+
+One residual is knowingly accepted. Reserving a branch first requires observing
+that it does not exist, and that observation is not atomic with the
+`git worktree add -b` that follows. If a foreign actor creates that exact
+branch name at exactly the reserved baseline inside the window, `add -b`
+refuses to let this run adopt it, but the reservation -- made while the branch
+genuinely did not exist -- is already durable and remains the deletion
+authority, so cleanup will delete that branch. At the reserved baseline the two
+are indistinguishable by any sound signal: `worktree add -b` and `git branch`
+produce identical reflog messages, object IDs, and creation timestamps, and
+the fields that can differ -- committer identity, reflog text, timestamps --
+are all writable by whoever created the ref, so none of them is ownership
+evidence. Closing the window would
+mean creating the ref as part of the reservation, which is the Git mutation
+before durable intent that this transaction exists to prevent. The collision
+requires reproducing a UUID-bearing run branch name and landing it on the exact
+run baseline within the window; one commit away, cleanup fails closed.
 
 No cleanup path ever prunes by `smoke-*` name, path prefix, run age, or
 ancestry alone, at startup or anywhere else. Without an ownership lease the

@@ -567,6 +567,17 @@ export async function reserveNestedSmokeResource(
       );
     }
 
+    // Hoisted above the idempotent-replay return below so the invariant holds
+    // for every reservation call, not only for the one that first created the
+    // entry. A replayed reservation over a non-canonical run directory would
+    // otherwise return without ever asserting it.
+    const canonicalRunPath = await fileSystem.realpath(runPath);
+    if (canonicalRunPath !== runPath) {
+      throw new OwnershipJournalError(
+        'manifest run directory must be its canonical real path.',
+      );
+    }
+
     const existingPathEntry = journal.resources.find(
       (entry) => entry.worktreePath === normalizedWorktreePath,
     );
@@ -596,12 +607,6 @@ export async function reserveNestedSmokeResource(
       return existingPathEntry;
     }
 
-    const canonicalRunPath = await fileSystem.realpath(runPath);
-    if (canonicalRunPath !== runPath) {
-      throw new OwnershipJournalError(
-        'manifest run directory must be its canonical real path.',
-      );
-    }
     let existingPathState;
     try {
       existingPathState = await fileSystem.lstat(normalizedWorktreePath);
@@ -629,13 +634,26 @@ export async function reserveNestedSmokeResource(
     // corroborates against that intent. Refuse instead of adopting it.
     //
     // `for-each-ref` exits zero whether or not the ref exists, so a failed
-    // probe propagates as an error instead of being misread as absence. The
-    // remaining window between this probe and `git worktree add -b` is closed
-    // by Git itself: `add -b` refuses an existing branch, and cleanup only
-    // deletes a branch-only reservation whose tip still equals the reserved
-    // baseline exactly. Reserving through a ref instead would require mutating
-    // Git before the intent is durable, which is what this transaction exists
-    // to prevent.
+    // probe propagates as an error instead of being misread as absence.
+    //
+    // ACCEPTED RESIDUAL: this probe is not atomic with the `git worktree add
+    // -b` that follows it. If a foreign actor creates this exact branch name
+    // at exactly the reserved baseline inside that window, `add -b` refuses to
+    // let this run adopt it -- but that refusal protects only the adoption.
+    // The reservation, made while the branch genuinely did not exist, is
+    // already durable and remains the deletion authority, so cleanup's
+    // branch-only reconciliation will delete that foreign branch: at exactly
+    // the reserved baseline it is indistinguishable from the branch this run
+    // intended to create. Git offers no *sound* discriminator: `worktree add
+    // -b` and `git branch` produce identical reflog messages, object IDs, and
+    // creation timestamps, and the signals that can differ -- committer
+    // identity, reflog text, timestamps -- are all attacker-controlled, so
+    // none is ownership evidence. The only way to close the window is to
+    // create the ref
+    // as part of the reservation, which is precisely the Git mutation before
+    // durable intent that this transaction exists to prevent. The collision
+    // requires reproducing a UUID-bearing run branch name and landing it on
+    // the exact run baseline within the window. See `tools/smoke/CONTRACT.md`.
     const existingBranchRef = await git(
       ['for-each-ref', '--format=%(refname)', `refs/heads/${requestedBranch}`],
       { cwd: outerWorktreePath },
