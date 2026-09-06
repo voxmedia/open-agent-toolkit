@@ -1,5 +1,5 @@
 ---
-oat_current_task: p01-t01
+oat_current_task: p03-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues:
@@ -106,7 +106,7 @@ oat_generated: false
 
 # Project State: wave-1-execution
 
-**Status:** Implementing — group 1 (p01, p02) dispatched
+**Status:** Implementing — group 1 lanes passed review; fan-in in progress
 **Started:** 2026-09-05
 **Last Updated:** 2026-09-05
 

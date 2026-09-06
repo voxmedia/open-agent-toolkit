@@ -243,6 +243,31 @@ disposition every finding in the phase report.
 git commit -m "fix(p01-t01): resolve docs index generation from configuration"
 ```
 
+### Task p01-t02: (review) Address p01 review findings
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/docs/index-generate/index.ts`, `packages/cli/src/commands/docs/index-generate/index.test.ts`, `apps/oat-docs/docs/docs-tooling/commands.md`
+
+**Step 1: Understand the issue**
+
+Review finding: root review `reviews/p01-review-2026-09-05T235808Z.md` (0C/2I/2M/5m): pin the Fumadocs-plus-config write (I1), make the MkDocs discriminator falsifiable (I2), split refusal exit codes from configuration exit codes (M1), add a real-filesystem end-to-end tier (M2), plus m2–m4.
+
+**Step 2: Implement fix**
+
+One append-only commit on top of the reviewed SHA; no lockstep release file; no file outside the declared surface.
+
+**Step 3: Verify**
+
+Run: focused `index.test.ts`, `pnpm check`, `pnpm type-check`, `pnpm run check:skill-bumps`, uncached CLI suite
+Expected: all exit 0; I2 neutralization fails exactly the two new tests
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p01-t02): address p01 review findings"
+```
+
 ---
 
 ## Phase 02: validate-assets-bundle-structure (group 1)
@@ -354,22 +379,22 @@ git commit -m "feat(p04-t01): add exclusion patterns to docs index generation"
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | fixes_added | 2026-09-05 | reviews/p01-review-2026-09-05T235808Z.md                    | 9b92d002c8c7e04fdb3d9858c3f5c18e308e1cea | manual     | -           |
-| p02    | code     | passed      | 2026-09-05 | reviews/p02-review-2026-09-05T231204Z.md                    | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -           |
-| p03    | code     | pending     | -          | -                                                           | -                                        | -          | -           |
-| p04    | code     | pending     | -          | -                                                           | -                                        | -          | -           |
-| final  | code     | pending     | -          | -                                                           | -                                        | -          | -           |
-| plan   | artifact | passed      | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -                                        | -          | -           |
-| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
-| design | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | passed  | 2026-09-06 | reviews/p01-review-2026-09-06T001443Z.md                    | 7dd086feafb9ba53dd25b5a77900ece5f4cb5cc3 | manual     | -           |
+| p02    | code     | passed  | 2026-09-05 | reviews/p02-review-2026-09-05T231204Z.md                    | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -           |
+| p03    | code     | pending | -          | -                                                           | -                                        | -          | -           |
+| p04    | code     | pending | -          | -                                                           | -                                        | -          | -           |
+| final  | code     | pending | -          | -                                                           | -                                        | -          | -           |
+| plan   | artifact | passed  | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -                                        | -          | -           |
+| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -           |
+| design | artifact | pending | -          | -                                                           | -                                        | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 ## Implementation Complete
 
-- [ ] 4/4 phases, 4/4 tasks complete
+- [ ] 4/4 phases, 5/5 tasks complete (4 planned + 1 review fix)
 - [ ] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
 - [ ] **Serialized backlog bookkeeping** (integration branch, after all merges):
       `oat backlog archive` with real outcome summaries for
