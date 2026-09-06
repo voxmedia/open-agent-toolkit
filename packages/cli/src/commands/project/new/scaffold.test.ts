@@ -162,6 +162,13 @@ function parseFrontmatter(content: string): Record<string, unknown> {
   return YAML.parse(match[1]) as Record<string, unknown>;
 }
 
+function expectSingleLiteCodeReviewPhase(plan: string): void {
+  const codeReviewPhases = [
+    ...plan.matchAll(/^\|\s+(p\d+)\s+\|\s+code\s+\|/gm),
+  ].map((match) => match[1]);
+  expect(codeReviewPhases).toEqual(['p01']);
+}
+
 async function writeMarkerTemplate(
   templateRoot: string,
   name: string,
@@ -1207,9 +1214,12 @@ describe('scaffoldProject', () => {
       today: '2026-07-13',
     });
 
-    await expect(
-      readFile(join(repoRoot, result.projectPath, 'plan.md'), 'utf8'),
-    ).resolves.toContain('## Validation Criteria');
+    const plan = await readFile(
+      join(repoRoot, result.projectPath, 'plan.md'),
+      'utf8',
+    );
+    expect(plan).toContain('## Validation Criteria');
+    expectSingleLiteCodeReviewPhase(plan);
   });
 
   it('resolves partial template tiers independently for every file', async () => {
@@ -1845,6 +1855,7 @@ describe('scaffoldProject', () => {
     const plan = await readFile(join(projectRoot, 'plan.md'), 'utf8');
     expect(plan).toContain('## Validation Criteria');
     expect(plan).toContain('oat_template: true');
+    expectSingleLiteCodeReviewPhase(plan);
 
     const state = await readFile(join(projectRoot, 'state.md'), 'utf8');
     expect(state).toContain('oat_workflow_mode: lite');
