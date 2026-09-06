@@ -1,14 +1,14 @@
 ---
 id: BL-260714-executable-backstops
 title: 'Executable backstops for contract claims — authoring guidance'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: medium # urgent | high | medium | low | none
 scope: task # idea | task | feature | initiative
 scope_estimate: S # XS | S | M | L | XL | XXL
 labels: [skill-authoring, contract-tests, guidance]
 assignee: null
 created: '2026-07-14T02:50:00Z'
-updated: '2026-08-31T00:11:26Z'
+updated: '2026-09-06T13:43:56Z'
 associated_issues:
   [
     { type: project, ref: 'cursor-cloud-autonomous-projects' },

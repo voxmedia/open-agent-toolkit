@@ -131,14 +131,31 @@ begins.
 
 ---
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis (2026-09-06)
 
-At project completion, BEFORE any archive step, the orchestrator writes:
-(1) verdicts on the conventions this wave exercised, with evidence entries cited;
-(2) a ruling on every "Skill signal"-tagged entry — what the `oat-wave-execute`
-skill should change; (3) adjustments adopted for later waves, stated as rules;
-(4) a graduated-entries ledger (backlog IDs / upstream refs / closed-with-evidence
-/ open-with-owner).
+**Convention verdicts (evidence: entries above and `implementation.md` Run 1):**
 
-Roll-up ordering (critical): `summary.md` `## Workflow Observations` and any
-repo-level ledger updates happen BEFORE `oat-project-complete` archives this file.
+1. Wave→project wrapper with pointer-only tasks: held, after the plan gate caught the wrapper carrying the previous wave's load-bearing scope statements (goal, constraints, out-of-scope) and three drift notes written in operative rather than descriptive voice. Both were in-artifact fixes; no lane narrowed its plan, and p01 reported two out-of-lane concerns instead of improvising them.
+2. Wave-boundary drift refresh plus per-lane pre-declaration: held. All three drift checks matched the pre-declaration; the recon's coverage audit correctly predicted the one file (`skills.test.ts`) p01 had to write outside its plan's stated surface.
+3. Lane mode vs fan-in mode verification: held, with the wave-2 rule applied — the group-1 bump commit carried the sync-manifest restamp, so no lane sync commit survived a rebase.
+4. Root-owned reviews with adversarial probes: held and load-bearing. Fix rounds: p01 one, p02 one, p03 an address-now sweep. No Critical this wave; the reviewers found five Important findings (p01 two, p02 one, p03 none, plus two the p01 reviewer's own probes surfaced after the Codex rounds had passed), and every round-2 disposition-verification passed. The dedicated deletion-safety review for the smoke lane ran sixteen adversarial probes and caught an undocumented residual the lane had labelled "documented".
+5. Cross-model in-lane review (Codex, two-round cap): held. Every lane's Codex rounds found real defects pre-commit (an internal contradiction in p01's boundary prose, a claimable pre-existing branch in p02, a false runtime example in p03); the cap forced p03 to prove its post-round-2 fixes locally, which the root reviewer then re-verified in a harness.
+6. Group composition from mechanical write-surface intersection: held. Group 1 was write-disjoint; the one cross-group seam (`skills.test.ts`) merged conflict-free in sequence.
+
+**Skill-signal rulings:**
+
+- Contradicts — `oat sync --scope all` in lane briefs and plan steps rewrites the operator's user-scope provider views and restamps `~/.oat/sync/manifest.json` to the invoking version. Rule: lanes and fan-in scripts sync `--scope project`; `--scope all` is operator-only.
+- Contradicts — "restore probe edits with `git checkout -- <file>`" destroys uncommitted work; rule: `mktemp -d` backups restored with `cp`, `git checkout --` only for committed content.
+- Strengthens — template the wrapper from the program section, never from the previous wave's artifacts (plan-gate finding class).
+- Strengthens — reviewer briefs must ask for the exact documentation location and a probe of any "documented residual"; and must tell reviewer-dispatched mechanical lanes to verify load-bearing claims (the p02 reviewer caught a false base-vs-head delta from its own recon lane).
+- Gap — `check:skill-bumps` ignores `.agents/agents/*.md`; the agent version is guarded only by explicit pins (follow-up item filed).
+- Gap — `scripts/worktree/init.test.mjs` runs under no gate (follow-up item filed).
+
+**Adjustments adopted as rules for later waves:**
+
+1. Lane briefs, reviewer briefs, fan-in gate scripts, and plan steps: `pnpm run cli -- sync --scope project` only.
+2. Probe hygiene in every brief: `mktemp -d` backup + `cp` restore; `git checkout --` only for already-committed content.
+3. Wrapper scaffolding: author from the program's wave section and the template assets; grep the finished wrapper for the previous wave's identifiers before the plan gate.
+4. Reviewer briefs: "documented residual" claims require location + probe; reviewer recon lanes carry the verify-load-bearing-claims rule.
+
+**Graduated-entries ledger:** follow-up backlog items filed at closeout (see `implementation.md` Deferred Findings); plan corrections applied at the wave-close program refresh; skill-signal rulings above are the `oat-wave-execute` change list.

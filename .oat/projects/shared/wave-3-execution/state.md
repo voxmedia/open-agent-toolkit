@@ -1,5 +1,5 @@
 ---
-oat_current_task: p03-t01
+oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
 associated_issues:
@@ -96,19 +96,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T10:56:52.547Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T12:47:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T13:45:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-3-execution
 
-**Status:** Implementing — plan gate passed after in-artifact fixes; group 1 (p01, p02) next
+**Status:** Implementation complete — all three phases merged; closeout (final review, exit gate, post-implement sequence) in progress
 **Started:** 2026-09-06
 **Last Updated:** 2026-09-06
 
 ## Current Phase
 
-Implementation — group 1 merged (lockstep 0.2.58); p03 dispatched at `9a19e64e6`.
+Implementation — all three phases merged on `wave-3-execution`; closeout in progress.
 
 ## Artifacts
 
@@ -125,7 +125,9 @@ Implementation — group 1 merged (lockstep 0.2.58); p03 dispatched at `9a19e64e
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
 - ✓ Plan gate received (3I/1M resolved in-artifact)
 - ✓ Group 1 (p01 + p02) merged (`388dd1c96`, `034486193`); lockstep 0.2.58 + manifest restamp; eight gates green
-- ⧗ p03 dispatched at `9a19e64e6`; review, fan-in, closeout
+- ✓ p03 merged (`0a460472d`); eight gates green
+- ✓ Backlog archived (3) and follow-ups filed (4); synthesis written
+- ⧗ Final review, configured exit gate, post-implement sequence
 
 ## Blockers
 
@@ -133,4 +135,4 @@ None
 
 ## Next Milestone
 
-Bootstrap group-1 worktrees at the post-gate commit; dispatch p01 and p02; root reviews; fan-in with the single lockstep bump (0.2.58) and manifest restamp.
+Final review passes; configured exit gate `allowed / passed`; summary → document → pr; `oat project complete-state`; PR to `main`.

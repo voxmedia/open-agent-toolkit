@@ -328,15 +328,15 @@ git commit -m "docs(p03-t01): require executable backstops for standing contract
 
 ## Implementation Complete
 
-- [ ] 3/3 phases, 3/3 tasks complete
-- [ ] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
-- [ ] **Serialized backlog bookkeeping** (integration branch, after all merges):
+- [x] 3/3 phases, 3/3 tasks complete
+- [x] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
+- [x] **Serialized backlog bookkeeping** (integration branch, after all merges):
       `oat backlog archive` with real outcome summaries for
       `BL-260818-require-repo-wide-call-site`, `BL-260826-deterministic-smoke-tier-leaks`,
       `BL-260714-executable-backstops`, one commit
-- [ ] Orchestration-log end-of-run synthesis written; roll-up into `summary.md`
-      before any archive step
-- [ ] Full DoD gates green on the integration branch (fan-in lockstep bump above
+- [ ] Orchestration-log end-of-run synthesis written (done); roll-up into `summary.md`
+      before any archive step — `summary.md` is produced by the post-implement sequence after the exit gate (archive tail deferred to program close)
+- [x] Full DoD gates green on the integration branch (fan-in lockstep bump above
       freshly fetched `origin/main`)
 
 ## References

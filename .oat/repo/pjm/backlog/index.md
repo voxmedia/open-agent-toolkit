@@ -249,11 +249,9 @@
 | BL-260830-decide-generic-oat-ownership   | Decide generic OAT ownership of Jira backlog refinement                                               | open   | medium   | idea       | L        |
 | BL-260902-decide-test-only-freshness     | Decide test-only freshness exception for the implement exit gate                                      | open   | medium   | idea       | S        |
 | BL-260902-defer-activeproject-clearing   | Defer activeProject clearing on shared and local archive completions                                  | open   | medium   | task       | S        |
-| BL-260826-deterministic-smoke-tier-leaks | Deterministic smoke tier leaks worktrees on interrupted runs                                          | open   | medium   | task       | S        |
 | BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap            | open   | medium   | task       | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                            | open   | medium   | feature    | M        |
 | BL-260817-drop-explainer-kit-publish     | Drop explainer-kit publish-request/v1 in a future minor                                               | open   | medium   | task       | S        |
-| BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance                                         | open   | medium   | task       | S        |
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                            | open   | medium   | feature    | M        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature    | L        |
 | BL-260906-guard-packed-asset-directories | Guard packed asset directories and document the OAT_ASSETS_DIR contract                               | open   | medium   | task       | S        |
@@ -270,7 +268,6 @@
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                | open   | medium   | idea       | L        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags | open   | medium   | task       | S        |
 | BL-260906-repair-the-stray-fence-in-oat  | Repair the stray fence in oat-project-review-provide and tighten the fence rule repo-wide             | open   | medium   | task       | S        |
-| BL-260818-require-repo-wide-call-site    | Require repo-wide call-site sweeps for cross-cutting options in phase-implementer guidance            | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                         | open   | medium   | feature    | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                            | open   | medium   | feature    | S        |
 | BL-260817-run-the-rc-explainer-end       | Run the RC explainer end-to-end test in CI with a provisioned browser                                 | open   | medium   | task       | M        |
@@ -298,12 +295,16 @@
 | BL-260906-docs-index-follow-ups-from     | Docs-index follow-ups from wave 1 reviews                                                             | open   | low      | task       | S        |
 | BL-260826-emit-the-dispatch-stamp-from   | Emit the dispatch stamp from the dispatch-ceiling resolver                                            | open   | low      | task       | XS       |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization                                | open   | low      | feature    | M        |
+| BL-260906-extend-check-skill-bumps       | Extend check:skill-bumps to canonical agent files                                                     | open   | low      | task       | XS       |
+| BL-260906-make-the-phase-implementer     | Make the phase-implementer sweep contract test negation-aware                                         | open   | low      | task       | S        |
 | BL-260830-memory-subsystem-ownership     | Memory subsystem ownership decision for OAT                                                           | open   | low      | idea       | XL       |
 | BL-260904-migrate-bundled-skills-from    | Migrate bundled skills from top-level version to metadata.version                                     | open   | low      | task       | M        |
 | BL-260903-preserve-proto-named-config    | Preserve **proto**-named config keys through jsonc parsing                                            | open   | low      | task       | S        |
+| BL-260906-project-journal-reservation    | Project journal reservation state into the smoke evidence bundle                                      | open   | low      | task       | S        |
 | BL-260906-reconcile-the-oat-doctor       | Reconcile the oat-doctor example table with its inventory sentence                                    | open   | low      | task       | XS       |
 | BL-260906-report-errno-for-asset-root    | Report errno for asset root stat failures and reset the statRedirects test seam                       | open   | low      | task       | XS       |
 | BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                        | open   | low      | task       | M        |
+| BL-260906-run-scripts-worktree-init-test | Run scripts/worktree/init.test.mjs under a repository gate                                            | open   | low      | task       | XS       |
 | BL-260904-stabilize-the-collection       | Stabilize the collection-detach engine integration test                                               | open   | low      | task       | S        |
 | BL-260903-verify-the-packs-inventory     | Verify the packs:inventory path-redaction claim in troubleshooting docs                               | open   | low      | task       | XS       |
 | BL-260903-project-document-should-prompt | project-document should prompt a re-run when review fixes change a shipped contract                   | open   | low      | task       | S        |

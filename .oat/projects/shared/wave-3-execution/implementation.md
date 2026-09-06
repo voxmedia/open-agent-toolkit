@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: p01-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,30 +24,30 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                                            | Status      | Tasks | Completed |
-| ---------------------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 01 (require-repo-wide-call-site-sweeps)                    | in_progress | 1     | 0/1       |
-| Phase 02 (journal-deterministic-smoke-worktrees-before-creation) | in_progress | 1     | 0/1       |
-| Phase 03 (require-executable-backstops-for-contract-claims)      | in_progress | 1     | 0/1       |
+| Phase                                                            | Status   | Tasks | Completed |
+| ---------------------------------------------------------------- | -------- | ----- | --------- |
+| Phase 01 (require-repo-wide-call-site-sweeps)                    | complete | 1     | 1/1       |
+| Phase 02 (journal-deterministic-smoke-worktrees-before-creation) | complete | 1     | 1/1       |
+| Phase 03 (require-executable-backstops-for-contract-claims)      | complete | 1     | 1/1       |
 
-**Total:** 0/3 tasks completed
+**Total:** 3/3 planned tasks completed (plus review-fix tasks p01-t02, p02-t02, p03-t02)
 
 ---
 
 ## Phase 01: require repo-wide call-site sweeps (p01)
 
-**Status:** in_progress · **Group:** 1 · **Task:** p01-t01
-**Outcome:** — **Verification:** — **Deviations:** —
+**Status:** complete · **Group:** 1 · **Tasks:** p01-t01 + p01-t02 (review fixes)
+**Outcome:** `oat-phase-implementer.md` 1.1.2 → 1.1.3 (cross-cutting option sweep, effective task boundary, stop-and-report), three pins moved, six negative probes and a scoped deny-list in `post-implement-sequence-contracts.test.ts`. **Verification:** forced CLI suite 5611, test:skills 833, focused 207; review rounds 1–2. **Deviations:** `oat-project-implement` not bumped (rule reachable through the dispatch contract); two out-of-lane concerns reported (`phase-execution.md:608`, docs mirror) and routed.
 
 ## Phase 02: journal deterministic smoke worktrees before creation (p02)
 
-**Status:** in_progress · **Group:** 1 · **Task:** p02-t01
-**Outcome:** — **Verification:** — **Deviations:** —
+**Status:** complete · **Group:** 1 · **Tasks:** p02-t01 + p02-t02 (deletion-safety review fixes)
+**Outcome:** reservation before `git worktree add`, reserved-origin invariants re-derived in cleanup, tip re-read before `git branch --delete --force`, `reservedAt` required for reserved entries, residual window documented and pinned; `tools/smoke/**` + CONTRACT.md + docs page. **Verification:** test:smoke 160/160 (from 141), focused 50/50, forced check/type-check; the dedicated deletion-safety review (sixteen probes) and round 2. **Deviations:** none from the plan; the evidence-bundle `state` projection deferred as out of scope.
 
 ## Phase 03: require executable backstops for standing contract claims (p03)
 
-**Status:** pending · **Group:** ungrouped, after group 1 · **Task:** p03-t01
-**Outcome:** — **Verification:** — **Deviations:** —
+**Status:** complete · **Group:** ungrouped, after group 1 · **Tasks:** p03-t01 + p03-t02 (address-now sweep)
+**Outcome:** `create-oat-skill` 1.5.0 → 1.5.1 and `oat-project-design` 2.3.2 → 2.3.3 (two pins) with the executable-backstop authoring rule and design echo; `skills.test.ts` contract group with fence-, comment-, and indent-aware extraction, `existsSync` precedent checks, weakening deny-list. **Verification:** forced CLI suite 5613, check:skill-bumps 2; review round 1 (pass) plus sweep. **Deviations:** none; a false runtime example was corrected before commit.
 
 ## Autonomy Gate Provenance
 
@@ -124,7 +124,8 @@ Wave base `e97954dd1e85287a41a59fe58730c606e00eb598`; plan gate blocked once (0C
 
 #### Outstanding Items
 
-- p01 and p02 reports and reviews; group-1 fan-in with the single lockstep bump (0.2.57 → 0.2.58) and manifest restamp; then p03.
+- None for implementation: all three lanes merged and gated. Closeout in progress: final review, configured exit gate, post-implement sequence.
+- Journal note: dispatch records are immutable after the first revision; terminal outcomes live in the Dispatch Notes above.
 
 <!-- orchestration-runs-end -->
 
@@ -134,23 +135,57 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-06
 
-- Scaffold, plan gate (see Review Received: plan above), group-1 dispatch. No task commits yet.
+- p01-t01 `ecf475686` (`d4bb8e1f4`), p01-t02 `f275a469b` (`b9215937d`); p02-t01 `dceaf63c5` (`8050817b9`), p02-t02 `e39046cf5` (`b00e00d84`); p03-t01 `a38435f25` (`31f1f22be`), p03-t02 `612040dc7` (`36ac53fb8`); merges `388dd1c96`, `034486193`, `0a460472d`; lockstep bump `eb767b3ed`.
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| —             | —               | —                    | —                 | —      | —               | —         |
+| Task / Review | Source Artifact                       | Planned / Documented                              | Actual / Accepted                                                                                                        | Reason                                                         | Source of Truth       | Follow-up                              |
+| ------------- | ------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- | --------------------- | -------------------------------------- |
+| p01-t01       | require-repo-wide-call-site-sweeps.md | In-scope list omits `skills.test.ts`              | three agent pins moved there                                                                                             | steps 4–5 move the pins; recon predicted it                    | implementation        | wave-close plan correction             |
+| p01 review    | require-repo-wide-call-site-sweeps.md | acceptance route consistent with the new boundary | `phase-execution.md:608` still says "only declared files" (`:493`/`:652` already say "declared or mechanically derived") | owner decision for `oat-project-implement` (bump + seven pins) | reported, not applied | wave-close plan correction; later lane |
+| all lanes     | plans' step "oat sync --scope all"    | sync all scopes                                   | `--scope project`                                                                                                        | `--scope all` rewrites user-scope views and manifest           | program rule          | wave-close plan correction             |
 
 ## Test Results
 
-| Phase | Focused / uncached evidence | Result | Exit | Where recorded |
-| ----- | --------------------------- | ------ | ---- | -------------- |
-| —     | —                           | —      | —    | —              |
+| Phase   | Focused / uncached evidence                                                 | Result | Exit | Where recorded               |
+| ------- | --------------------------------------------------------------------------- | ------ | ---- | ---------------------------- |
+| p01     | focused 207 + forced CLI suite 5611 + test:skills 833                       | all    | 0    | lane report + review rounds  |
+| p02     | test:smoke 160 + focused node --test 50; forced check/type-check            | all    | 0    | lane report + review rounds  |
+| p03     | focused 200 + forced CLI suite 5613; check:skill-bumps validated 2          | all    | 0    | lane report + review + sweep |
+| fan-ins | eight-gate definition-of-done sequence ×2 with `Cached: 0` forced test runs | all    | 0    | fan-in entries above         |
+
+## Deferred Findings
+
+### Deferred Findings (Medium)
+
+- p02 M3: evidence bundle drops the v2 `state` discriminator → `BL-260906-project-journal-reservation`.
+- p01 I1 (CONCERN 1): `phase-execution.md:608` owner decision → wave-close plan correction (`BL-260906-wave-2-external-plan` pattern; recorded in the program refresh).
+- p03 M3: plans' `oat sync --scope all` convention → wave-close plan correction (program rule).
+
+### Deferred Findings (Minor)
+
+- p01 m1: docs mirror `implementation-execution.md:91` → document step (this closeout).
+- p01 m2: source plan In-scope omits `skills.test.ts` → wave-close plan correction.
+- p01 m3: `check:skill-bumps` ignores `.agents/agents/*.md` → `BL-260906-extend-check-skill-bumps`.
+- p01 m4: bolded-negation lookbehind; synonym gap → `BL-260906-make-the-phase-implementer`.
+- p02 m5: `scripts/worktree/init.test.mjs` under no gate → `BL-260906-run-scripts-worktree-init-test`.
+- p03 m1–m3: fixed in the sweep (`612040dc7`).
 
 ## Final Summary (for PR/docs)
 
-_Written at closeout from the Phase Outcomes and fan-in records._
+**What shipped (three external plans, three backlog items closed):**
+
+- p01 — `oat-phase-implementer.md` (1.1.2 → 1.1.3) requires a repository-wide call-site sweep for cross-cutting options, defines the effective task boundary as declared files plus mechanical additions permitted by and reported under the sweep, and stops to report cross-owner expansions; pinned by `post-implement-sequence-contracts.test.ts` (six negative probes, scoped deny-list).
+- p02 — the deterministic smoke runner reserves nested resources before `git worktree add`, cleanup reconciles reserved entries with re-derived ownership invariants, every deletion path re-reads the tip; the reserve-to-create residual is documented in code, `CONTRACT.md`, and a pinning test; test:smoke 141 → 160.
+- p03 — `create-oat-skill` (1.5.0 → 1.5.1) and `oat-project-design` (2.3.2 → 2.3.3) require every standing claim to name its executable owner and ship its backstop in the same PR; `skills.test.ts` pins the rule with fence-, comment-, and indent-aware extraction, `existsSync` precedent checks, and a weakening deny-list.
+
+**Release:** lockstep 0.2.57 → 0.2.58 with `.oat/sync/manifest.json` restamped in the same commit; provider agent views regenerated for the agent bump.
+
+**Verification:** per lane focused suites, forced-turbo check/type-check, Codex read-only review (two-round cap), and a root-owned adversarial review (p02's being the program's dedicated deletion-safety review) with one fix round each for p01 and p02 and an address-now sweep for p03; two fan-ins with the eight-gate sequence and `Cached: 0` forced test runs; the final review and the configured exit gate are recorded in the sections that follow as they complete.
+
+**Process changes adopted:** lanes sync `--scope project` only (a lane's `--scope all` rewrote user-scope provider views); probe restores use `mktemp -d` backups; wrappers are authored from the program section, not the previous wave.
+
+**Bookkeeping:** archived `BL-260818-require-repo-wide-call-site`, `BL-260826-deterministic-smoke-tier-leaks`, `BL-260714-executable-backstops`; filed `BL-260906-extend-check-skill-bumps`, `BL-260906-make-the-phase-implementer`, `BL-260906-project-journal-reservation`, `BL-260906-run-scripts-worktree-init-test`; plan corrections for the wave-close refresh; completion tail and recap deferred to program close.
 
 ## References
 
