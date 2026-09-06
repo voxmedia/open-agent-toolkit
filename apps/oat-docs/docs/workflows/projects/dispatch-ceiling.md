@@ -486,6 +486,16 @@ also retain a parseable compatibility stamp for later review gates:
 Dispatch: scope=p06-t03 action=implementation role=implementer producer=gpt-5.6-sol provenance=declared model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
 ```
 
+`producer` is the runtime model slug when OAT can establish it; otherwise it is
+`unknown`. `provenance` is `declared`, `observed`, `inferred`, or `unknown`.
+Selected model and effort axes can remain exact even when runtime producer
+identity is not reported.
+
+Before launching an implementation, fix, or reviewer, surface the structured
+notices in `dispatchReport.notices` and render the report. Structured notices
+and runtime disclosure use the effective target returned by that resolver call,
+never a target inferred from the bundled recommendation version.
+
 ### The additive `dispatchStamp` field
 
 JSON responses that carry `dispatchReport` also carry `dispatchStamp`, a single
@@ -504,6 +514,13 @@ and only when `dispatchReport` is present, so non-report resolver calls and
 error envelopes never carry it. `DispatchReportV1`, its schema version, and the
 stamp grammar are unchanged; the field is purely additive.
 
+Eligibility tracks report presence, not dispatch authorization or exit code. A
+`status: blocked` response that was asked for report context therefore carries
+both `dispatchReport` and `dispatchStamp` while still exiting `1`: the stamp
+records what OAT resolved, and a blocked resolution is a resolved fact about an
+unusable route rather than a missing report. Only a call without report context,
+or an error envelope that never built a report, omits the field.
+
 Consumers read `dispatchStamp` directly, validate that it is a non-empty string
 beginning with the canonical `Dispatch:` prefix, and copy it byte-for-byte into
 dispatch and audit metadata. Reformatting the report through
@@ -512,18 +529,9 @@ corroboration where that library is already loaded; it is never the normal path,
 and no out-of-tree shim is required. Callers must not reconstruct the stamp from
 policy labels, role names, candidate strings, or target names.
 
-`producer` is the runtime model slug
-when OAT can establish it; otherwise it is `unknown`. `provenance` is
-`declared`, `observed`, `inferred`, or `unknown`. Selected model and effort axes
-can remain exact even when runtime producer identity is not reported. A stamp
-carrying `producer=unknown provenance=unknown` is truthful, not degraded: the
-resolver reports configured invocation, and it stays `unknown` until an
-independent runtime observation exists.
-
-Before launching an implementation, fix, or reviewer, surface the structured
-notices in `dispatchReport.notices` and render the report. Structured notices
-and runtime disclosure use the effective target returned by that resolver call,
-never a target inferred from the bundled recommendation version.
+A stamp carrying `producer=unknown provenance=unknown` is truthful, not
+degraded: the resolver reports configured invocation, and those fields stay
+`unknown` until an independent runtime observation exists.
 
 ## Legacy Compatibility
 

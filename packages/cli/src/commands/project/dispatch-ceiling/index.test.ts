@@ -2444,6 +2444,87 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(process.exitCode).toBe(1);
   });
 
+  it('emits the canonical dispatch stamp on a report-bearing blocked resolution', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              high: [
+                {
+                  harness: 'codex',
+                  effort: 'xhigh',
+                },
+              ],
+            },
+          },
+        },
+      },
+    });
+    await writeFile(
+      join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+      [
+        '---',
+        'oat_phase: implement',
+        'oat_dispatch_policy:',
+        '  mode: managed',
+        '  policy: high',
+        '  source: project-state',
+        '---',
+        '',
+        '# State',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+
+    // Eligibility tracks report presence, not dispatch authorization: a blocked
+    // resolution asked for report context still carries the stamp, and still
+    // exits 1.
+    const reported = createHarness({ cwd: root, home });
+    await runCommand(reported.command, [
+      '--provider',
+      'codex',
+      '--preflight',
+      '--non-interactive',
+      '--report-scope',
+      'p03-blocked',
+      '--report-action',
+      'implementation',
+      '--json',
+    ]);
+
+    expect(reported.capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      unresolved: true,
+    });
+    const stamp = expectCanonicalStamp(reported.capture.jsonPayloads[0]);
+    expect(stamp).toContain('scope=p03-blocked');
+    expect(process.exitCode).toBe(1);
+
+    const withoutReport = createHarness({ cwd: root, home });
+    await runCommand(withoutReport.command, [
+      '--provider',
+      'codex',
+      '--preflight',
+      '--non-interactive',
+      '--json',
+    ]);
+
+    expect(withoutReport.capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+    });
+    expect(withoutReport.capture.jsonPayloads[0]).not.toHaveProperty(
+      'dispatchReport',
+    );
+    expect(withoutReport.capture.jsonPayloads[0]).not.toHaveProperty(
+      'dispatchStamp',
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
   it('warns without failing when managed capped implementation selection is skipped', async () => {
     const { root, home } = await setup();
     await writeJson(join(root, '.oat', 'config.json'), {
