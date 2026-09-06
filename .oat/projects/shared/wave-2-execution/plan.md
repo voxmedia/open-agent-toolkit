@@ -412,6 +412,7 @@ git commit -m "docs(p05-t01): document fail-closed patch-and-restore recovery fo
 | p05   | code     | fixes_added | 2026-09-06 | reviews/archived/p05-review-2026-09-06T071018Z.md           | de0ba133a4fdf85d382c070e46e4519bb4b10219 | manual     | -                   |
 | p05   | code     | fixes_added | 2026-09-06 | reviews/archived/p05-review-2026-09-06T075406Z.md           | 27cc81e8e85c12475e6930dcb0fa72c9b0fb61d5 | manual     | -                   |
 | p05   | code     | passed      | 2026-09-06 | reviews/archived/p05-review-2026-09-06T082528Z.md           | 0f301c8e12451c66fe26c2fb79d2dedb8a60e30d | manual     | -                   |
+| p05   | code     | passed      | 2026-09-06 | reviews/archived/p05-review-2026-09-06T100810Z.md           | 3ee49fcad129b7be41cf659b1b2e7fa927cc50d4 | manual     | -                   |
 | final | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T085208Z.md         | bee72dd4d300762366475781f7d97ac76464948f | manual     | -                   |
 | final | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T091621Z.md         | c0210b9d32941133fa65f2bef9150acf6f6fbae6 | manual     | -                   |
 | final | code     | passed      | 2026-09-06 | reviews/archived/final-review-2026-09-06T092134Z.md         | 1e688a1e5de97a3a49ec3e069dd5afd11a1bd756 | manual     | -                   |
