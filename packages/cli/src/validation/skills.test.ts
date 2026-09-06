@@ -5237,7 +5237,7 @@ describe('validateOatSkills', () => {
     const progress = await readRepoFile(
       '.agents/skills/oat-project-progress/SKILL.md',
     );
-    expect(progress.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.0');
+    expect(progress.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.1');
 
     const modeSections = [
       [
