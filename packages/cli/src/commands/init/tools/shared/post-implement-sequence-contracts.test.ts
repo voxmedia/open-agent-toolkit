@@ -1090,6 +1090,71 @@ describe('post-implementation sequence contracts', () => {
       expect(() => assertSweepContract(silent)).toThrow();
     });
 
+    // The agent may widen the boundary, but the root workflow is what accepts
+    // the resulting report. Asserting only the agent side is exactly how the
+    // end-to-end break survived p01 and its first fix round.
+    function readPhaseExecutionRoute(): string {
+      return normalizeWhitespace(
+        readFileSync(
+          join(
+            import.meta.dirname,
+            '../../../../../../../.agents/skills/oat-project-implement/references/phase-execution.md',
+          ),
+          'utf8',
+        ),
+      );
+    }
+
+    function assertRootAcceptanceBoundary(route: string): void {
+      const clause = requiredSlice(
+        route,
+        'only for a Phase Implementation Report, verify each planned task commit is',
+        'never require a Phase Recovery Continuation Report',
+      );
+
+      expect(clause).toContain(
+        'changes only declared or mechanically derived in-phase files',
+      );
+      expect(clause).toContain(
+        "the task's declared files plus the mechanical additions permitted by, and reported under, the phase implementer's cross-cutting option sweep",
+      );
+      expect(clause).toContain(
+        'a plan-list-only file set is not the acceptance boundary',
+      );
+      // The specific regression guarded here is the original plan-list-only
+      // wording returning to the acceptance clause.
+      expect(clause).not.toMatch(/changes only declared files/i);
+    }
+
+    it('accepts a mechanically widened task commit at root report acceptance', () => {
+      const route = readPhaseExecutionRoute();
+
+      assertRootAcceptanceBoundary(route);
+
+      // Root acceptance and the implementer's own verify step must name the
+      // same boundary, or one of them rejects what the other permits.
+      expect(taskExecutionContract(readPhaseImplementerAgent())).toContain(
+        'permitted by, and reported under, the cross-cutting option sweep',
+      );
+
+      // Converged wording: the acceptance clause reuses the phrase the
+      // recover-scope and continuation-block rules already use.
+      expect(route).toContain(
+        'declared or mechanically derived in-phase files',
+      );
+      expect(route).toContain('declared/mechanically derived phase boundary');
+    });
+
+    it('rejects a root acceptance clause that regresses to plan-list-only files', () => {
+      const regressed = probe(
+        readPhaseExecutionRoute(),
+        "exactly one append-only commit in plan order, changes only declared or mechanically derived in-phase files, meaning the task's declared files plus the mechanical additions permitted by, and reported under, the phase implementer's cross-cutting option sweep, and has passing task verification; a plan-list-only file set is not the acceptance boundary;",
+        'exactly one append-only commit in plan order, changes only declared files, and has passing task verification;',
+      );
+
+      expect(() => assertRootAcceptanceBoundary(regressed)).toThrow();
+    });
+
     it('rejects a widen branch stripped of its mechanical precondition', () => {
       const unbounded = probe(
         taskExecutionContract(readPhaseImplementerAgent()),
