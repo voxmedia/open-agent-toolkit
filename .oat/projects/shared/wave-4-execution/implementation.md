@@ -145,7 +145,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-06
 
-- p01-t01 `71ec87be9`..`291234dc0` (`c4a810b86`..`a49e3e20e`), fix `e11d901b3` (`6b3a16872`); p02-t01 `9ad58ea48` (`d869acf4c`), fix `145adbed8` (`50483da4b`); p03-t01 `901a0f7aa` (`9f587b23a`), sweep `edbc76c94` (`131e65798`); merges `034780db0`, `6a09a6bd2`, `92da1d57b`; lockstep bump `0bb028ca2`; review-receive and closeout bookkeeping `a97aa6f7e`, `7075a7084`, `1db9f3fc6`, `efbcc6e91`, `1dfdd1a83`; post-final-review record repairs `f46465dd2`; post-merge fix round `w4-final-fix-001` `375c740ed`, `f6128f017`, `945d3e2d4`.
+- p01-t01 `71ec87be9`..`291234dc0` (`c4a810b86`..`a49e3e20e`), fix `e11d901b3` (`6b3a16872`); p02-t01 `9ad58ea48` (`d869acf4c`), fix `145adbed8` (`50483da4b`); p03-t01 `901a0f7aa` (`9f587b23a`), sweep `edbc76c94` (`131e65798`); merges `034780db0`, `6a09a6bd2`, `92da1d57b`; lockstep bump `0bb028ca2`; review-receive and closeout bookkeeping `a97aa6f7e`, `7075a7084`, `1db9f3fc6`, `efbcc6e91`, `1dfdd1a83`; post-final-review record repairs `f46465dd2`; post-merge fix round `w4-final-fix-001` `375c740ed`, `f6128f017`, `945d3e2d4`; final-review receive `0fbc7df1d`; exit-gate intent `f926f6d0f`; gate-written commits `26d424c8d` (artifact + project-log entry) and `f6560983f` (project-log gate entry); exit-gate receive + allowed/passed checkpoint `204cb0021`.
 - Wrapper authored from the program's Wave 4 section and the wave-boundary drift refresh; plan validated (`5c2978916`); plan gate passed first time (0C/0I/0M/0m).
 
 ## Deviations from Plan / Design
