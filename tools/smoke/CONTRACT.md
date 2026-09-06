@@ -97,14 +97,27 @@ The runner writes one JSON provisioning manifest before drive. It includes:
     "runIdentity": "same immutable identity as branch"
   },
   "ownershipJournal": {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "resources": [
+      {
+        "baselineCommitSha": "40-character intended baseline SHA",
+        "branch": "intended child branch",
+        "commonGitDir": "/canonical/shared/git/common-directory",
+        "markerPath": "/canonical/child/worktree/.oat/smoke-bootstrap.json",
+        "reservedAt": "ISO-8601 timestamp",
+        "runIdentity": "same immutable identity as branch",
+        "state": "reserved",
+        "worktreePath": "/canonical/child/worktree"
+      },
       {
         "baselineCommitSha": "40-character child ownership baseline SHA",
         "branch": "actual child branch",
         "commonGitDir": "/canonical/shared/git/common-directory",
+        "markerPath": "optional: absent only on a schema-v1 entry",
         "registeredAt": "ISO-8601 timestamp",
+        "reservedAt": "optional: present only when this entry began reserved",
         "runIdentity": "same immutable identity as branch",
+        "state": "registered",
         "worktreePath": "/canonical/child/worktree"
       }
     ]
@@ -296,15 +309,87 @@ source and immutable baseline SHAs bind cleanup authority to the created ref; a
 with invocation-scoped Git configuration for outer worktree creation and the
 baseline commit.
 
+The ownership journal records each nested child in one of two explicit states.
+A `reserved` entry is durable intent: the exact branch, worktree path, marker
+path, expected baseline, shared Git directory, and run identity are written
+under the manifest lock _before_ `git worktree add` mutates Git, so an
+interruption in that window leaves a reconcilable record instead of an
+unjournaled child. A `registered` entry is corroborated ownership: the child's
+marker, Git worktree registration, branch, HEAD ancestry, and shared Git
+directory have all been verified. Finalization only flips a matching
+reservation to `registered`; it never rewrites the reserved branch, path,
+marker, baseline, shared Git directory, or run identity, and a materialized
+child that contradicts its reservation is refused instead.
+
+Journal `schemaVersion` 2 is what new manifests emit. Version 1 manifests
+remain readable and every one of their entries is read as `registered`, because
+v1 predates reserved intent. A v1 manifest is never rewritten to a newer
+version in place, a reservation is never written into one, and a v1 entry that
+claims any other state is refused as a contradiction rather than read as
+ownership. Direct registration may still append a `registered` entry to a v1
+manifest; that leaves its schema version untouched.
+
 Cleanup validates the matching marker from every recorded ownership baseline.
 Current branch tips and worktree HEADs may advance through legitimate lifecycle
-commits, but each must remain a descendant of its immutable baseline. Cleanup
+commits, but each must remain a descendant of its immutable baseline -- except
+a reserved branch whose worktree is absent, whose tip must equal its reserved
+baseline exactly, because nothing can legitimately have committed on a child
+that never finished registering. Cleanup
 refuses divergent tips, mismatched shared Git directories, missing baseline
 markers, and run-descendant worktrees or branches absent from the journal. Once
 all resources are corroborated, it removes journaled child worktrees before the
 outer worktree, then child branches before the outer branch. Interrupted states
 where a journaled worktree is already absent remain recoverable; contradictory
 or unjournaled resources fail closed.
+
+A reservation is intent, never authority, so cleanup deletes only what the
+recorded reservation exactly corroborates:
+
+- neither branch nor worktree materialized: nothing is deleted and the
+  reservation is discharged with the run manifest;
+- branch and worktree registered exactly as reserved: the reserved baseline
+  must be an ancestor of the corroborated HEAD, the shared Git directory must
+  match, and the child's run marker must bind to this run;
+- branch present without its worktree: its tip must equal the reserved baseline
+  exactly, and that baseline must carry this run's marker.
+
+A reserved worktree path must be a direct child of the manifest run directory,
+and a reservation may only ever name the run's own baseline. Cleanup re-derives
+both invariants rather than trusting the manifest to have been written by the
+reservation writer, because an entry naming a resource outside the run
+directory would otherwise enter the owned set and skip the refusal that
+protects unjournaled run descendants. That containment is also what makes the
+recursive removal of the run directory safe: a reserved child is inside the
+directory this run created and owns.
+
+Every other shape fails closed and is left untouched: a reserved path without
+exact Git worktree registration, a worktree registered to a different branch or
+without its reserved branch, a mismatched HEAD or shared Git directory, a
+missing or non-regular run marker, a marker path outside its own journaled
+worktree, or a reserved branch checked out in an unreserved worktree.
+
+One residual is knowingly accepted. Reserving a branch first requires observing
+that it does not exist, and that observation is not atomic with the
+`git worktree add -b` that follows. If a foreign actor creates that exact
+branch name at exactly the reserved baseline inside the window, `add -b`
+refuses to let this run adopt it, but the reservation -- made while the branch
+genuinely did not exist -- is already durable and remains the deletion
+authority, so cleanup will delete that branch. At the reserved baseline the two
+are indistinguishable by any sound signal: `worktree add -b` and `git branch`
+produce identical reflog messages, object IDs, and creation timestamps, and
+the fields that can differ -- committer identity, reflog text, timestamps --
+are all writable by whoever created the ref, so none of them is ownership
+evidence. Closing the window would
+mean creating the ref as part of the reservation, which is the Git mutation
+before durable intent that this transaction exists to prevent. The collision
+requires reproducing a UUID-bearing run branch name and landing it on the exact
+run baseline within the window; one commit away, cleanup fails closed.
+
+No cleanup path ever prunes by `smoke-*` name, path prefix, run age, or
+ancestry alone, at startup or anywhere else. Without an ownership lease the
+runner cannot distinguish a stale run from an active one, and it does not
+guess: a resource it cannot bind to a validated manifest plus exact Git and
+marker corroboration is left for an operator to resolve.
 
 Both closeout policy lists are empty, so summary, documentation, PR, and other
 closeout child steps are ineligible without changing final verification,

@@ -10,6 +10,7 @@
 | ID | Date | Status | Title | Legacy |
 | --- | --- | --- | --- | --- |
 | DR-260906-anaphor-only-attachment | 2026-09-06 | accepted | Anaphor-only attachment for the codex-skill below-floor guard | - |
+| DR-260906-cross-cutting-option-changes | 2026-09-06 | accepted | Cross-cutting option changes sweep the repository and widen mechanically or stop | - |
 | DR-260906-dirty-tree-capture-fails | 2026-09-06 | accepted | Dirty-tree capture fails closed on anything it cannot restore faithfully | - |
 | DR-260906-docs-index-refusals-exit-1 | 2026-09-06 | accepted | Docs-index refusals exit 1 and configuration errors exit 2 | - |
 | DR-260906-fumadocs-config-write-survives | 2026-09-06 | accepted | Fumadocs config write survives a declared documentation config | - |
@@ -19,6 +20,8 @@
 | DR-260906-promote-oversized-lite-work | 2026-09-06 | accepted | Promote oversized Lite work in place | - |
 | DR-260906-retain-managed-implementation | 2026-09-06 | accepted | Retain managed implementation and independent review | - |
 | DR-260906-root-anchored-minimatch-style | 2026-09-06 | accepted | Root-anchored minimatch-style docs-index exclusion grammar | - |
+| DR-260906-smoke-worktrees-are-journaled | 2026-09-06 | accepted | Smoke worktrees are journaled before creation and cleanup refuses unproven ownership | - |
+| DR-260906-standing-claims-in-skills-name | 2026-09-06 | accepted | Standing claims in skills name an executable owner and ship a backstop in the same PR | - |
 | DR-260906-use-a-three-artifact-lite | 2026-09-06 | accepted | Use a three-artifact Lite project shape | - |
 | DR-260904-remove-dispatch-receipt-chain | 2026-09-04 | accepted | Remove dispatch receipt chain from recon packet validation | - |
 | DR-260831-approval-bound-homogeneous | 2026-08-31 | accepted | Approval-bound homogeneous dispatch | - |

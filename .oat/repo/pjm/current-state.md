@@ -37,7 +37,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.61` (`lite-workflow-mode`, implementation complete; pending
+- CLI `0.2.62` (`lite-workflow-mode`, implementation complete; pending
   PR/release) adds Lite as a first-class workflow mode for single-sitting
   changes that still need an approved plan, atomic task commits, managed
   dispatch, and independent review. Lite uses a three-artifact project shape
@@ -50,6 +50,18 @@ copying their content here. -->
   repository/release/docs gate sequence passed. The configured cross-family
   exit gate passed after the final design wording was aligned with the shipped
   artifact-level readiness behavior.
+- CLI `0.2.58` (wave 3 of the 2026-08-31 execution program, wrapper project
+  `wave-3-execution`, "workflow durability and containment", merged as PR #269) makes the
+  phase-implementer contract sweep the repository for every consumer of a
+  changed cross-cutting option (effective task boundary; stop-and-report for
+  cross-owner expansions; pinned in `post-implement-sequence-contracts.test.ts`),
+  journals deterministic smoke worktrees before `git worktree add` with
+  re-derived ownership invariants on every deletion path (`tools/smoke/**`,
+  residual window documented and pinned), and requires every standing claim in
+  a skill to name its executable owner and ship its backstop in the same PR
+  (`create-oat-skill`, `oat-project-design`, pinned in `skills.test.ts`).
+  Closed `BL-260818-require-repo-wide-call-site`,
+  `BL-260826-deterministic-smoke-tier-leaks`, `BL-260714-executable-backstops`.
 - CLI `0.2.57` (wave 2 of the 2026-08-31 execution program, wrapper project
   `wave-2-execution`, "skill contract truthfulness", merged as PR #267) repairs four bundled
   skills whose prose disagreed with what ships (`oat-doctor` inventory,

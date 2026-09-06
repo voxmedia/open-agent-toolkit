@@ -88,7 +88,7 @@ The phase implementer receives one `Phase Scope`, reads the relevant artifacts
 once, and directly executes each task in plan order. For every task it:
 
 1. records the pre-task HEAD;
-2. implements only the declared task files;
+2. implements the declared task files plus any mechanical additions permitted by, and reported under, the cross-cutting option sweep (a repository-wide sweep for every consumer of a changed option; cross-owner expansions stop and report instead);
 3. runs task verification;
 4. self-checks requirements and scope before commit;
 5. creates exactly one task commit; and

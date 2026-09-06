@@ -7,7 +7,10 @@ import { isDeepStrictEqual, promisify } from 'node:util';
 
 import { applyPresetToFixture } from '../fixture/presets/apply-preset.mjs';
 import { withSmokeGitIdentity } from './git-identity.mjs';
-import { gitCommonDirectory } from './journal.mjs';
+import {
+  gitCommonDirectory,
+  OWNERSHIP_JOURNAL_SCHEMA_VERSION,
+} from './journal.mjs';
 
 const execFileAsync = promisify(execFile);
 const runnerDirectory = fileURLToPath(new URL('.', import.meta.url));
@@ -242,7 +245,7 @@ function createManifest({
     manifestPath,
     ownershipJournal: {
       resources: [],
-      schemaVersion: 1,
+      schemaVersion: OWNERSHIP_JOURNAL_SCHEMA_VERSION,
     },
     provisioningState: 'initializing',
     reportRoot,

@@ -29,13 +29,13 @@ predecessor record and the operator.
 ## Status Ledger
 
 Execution approval: operator approved the composition and autonomous execution
-(including merges) on 2026-09-05. W1 and W2 merged 2026-09-06; W3 is next.
+(including merges) on 2026-09-05. W1, W2, and W3 merged 2026-09-06; W4 is next.
 
 | Wave | Theme                                | Lanes | Status   | Record                                                                                                                                                                                                                                                                                                                                        |
 | ---- | ------------------------------------ | ----- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | W1   | CLI resolution and asset correctness | 4     | merged   | PR #262 → `6db0457c095e4384e5ac2f464ee1c4d5a47d0179` (squash, 2026-09-06T02:19:50Z); wrapper project `.oat/projects/shared/wave-1-execution` (lifecycle complete 2026-09-06; completion record `summary.md` + `implementation.md` § Final Summary; CLI 0.2.56); completion tail: deferred to program close; recap: deferred to program close. |
 | W2   | Skill contract truthfulness          | 5     | merged   | PR #267 → `ca71c00a014a6eba00cb4cd4c46974fc6aa58139` (squash, 2026-09-06T10:47:59Z); wrapper project `.oat/projects/shared/wave-2-execution` (lifecycle complete 2026-09-06; completion record `summary.md` + `implementation.md` § Final Summary; CLI 0.2.57); completion tail: deferred to program close; recap: deferred to program close. |
-| W3   | Workflow durability and containment  | 3     | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
+| W3   | Workflow durability and containment  | 3     | merged   | PR #269 → `ed75370db9f7cf43cd884572bd58502aa71f22bd` (squash, 2026-09-06T16:06:38Z); wrapper project `.oat/projects/shared/wave-3-execution` (lifecycle complete 2026-09-06; completion record `summary.md` + `implementation.md` § Final Summary; CLI 0.2.58); completion tail: deferred to program close; recap: deferred to program close. |
 | W4   | Delivered-project follow-ups         | 3     | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
 | W5   | Program-intake follow-ups            | 11    | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
 | W6   | Truthfulness residue                 | 5     | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
@@ -52,9 +52,9 @@ Execution approval: operator approved the composition and autonomous execution
 | [Harden codex-skill anaphora guard](./2026-08-30-harden-codex-skill-anaphora-guard.md)                                                                    | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation                                                                                           | done    |
 | [Guard docs-app mirrors of skill prose](./2026-08-30-guard-docs-app-mirrors-of-skill-prose.md)                                                            | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation                                                                                           | done    |
 | [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                                                | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W2   | group 2; revalidate if draft PR #190 changes first                                                                                        | done    |
-| [Require repo-wide call-site sweeps](./2026-08-30-require-repo-wide-call-site-sweeps.md)                                                                  | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | parallel group 1                                                                                                                          | pending |
-| [Journal deterministic smoke worktrees](./2026-08-30-journal-deterministic-smoke-worktrees-before-creation.md)                                            | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | parallel group 1; dedicated safety review                                                                                                 | pending |
-| [Require executable backstops](./2026-08-30-require-executable-backstops-for-contract-claims.md)                                                          | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | group 2 after concrete guard examples and call-site sweep                                                                                 | pending |
+| [Require repo-wide call-site sweeps](./2026-08-30-require-repo-wide-call-site-sweeps.md)                                                                  | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | parallel group 1                                                                                                                          | done    |
+| [Journal deterministic smoke worktrees](./2026-08-30-journal-deterministic-smoke-worktrees-before-creation.md)                                            | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | parallel group 1; dedicated safety review                                                                                                 | done    |
+| [Require executable backstops](./2026-08-30-require-executable-backstops-for-contract-claims.md)                                                          | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | group 2 after concrete guard examples and call-site sweep                                                                                 | done    |
 | [Disable configured gates per project](./2026-08-30-disable-configured-gates-per-project.md)                                                              | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W4   | parallel group 1; preserve PR #246 contracts; owns the `oat-project-next` disposition consumer                                            | pending |
 | [Warn on non-sync manifest restamps](./2026-08-30-warn-on-non-sync-manifest-restamps.md)                                                                  | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W4   | parallel group 1; READY since PR #255 merged (refreshed 2026-09-03 against Manifest V2); preserve PR #249 diagnostics                     | pending |
 | [Recover committed review artifacts after post-selection gate failures](./2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md) | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1; land before the index-lock plan                                                                                                  | pending |
@@ -199,7 +199,7 @@ Execution approval: operator approved the composition and autonomous execution
 - **Group 2:** Emit the dispatch stamp with resolver JSON, after the
   gate-override lane: both write `review-skill-contracts.test.ts` and the
   version pins in `validation/skills.test.ts` (regrouped 2026-09-05).
-- **Cross-wave prerequisites:** W3 merged. The manifest-restamp and
+- **Cross-wave prerequisites:** W3 merged (PR #269, 2026-09-06) — satisfied. The manifest-restamp and
   dispatch-stamp plans were refreshed and set `READY` on 2026-09-03 after
   PR #255 merged; re-anchor the gate-override plan's `oat-project-plan-writing` and
   `user-sync-config.ts` citations. Revalidate all three against live
@@ -333,6 +333,26 @@ unset`; its optional seam keys live in `BL-260904-add-recap-seam-config-keys`.
   and #255 were refreshed. Review record:
   `.oat/repo/reference/reviews/2026-09-04-external-plan-independent-review.md`.
 
+- **2026-09-06 (W3 closed)** — Wave 3 executed as wrapper project
+  `wave-3-execution` (three lanes, two groups, one lockstep bump to 0.2.58 with
+  the sync-manifest restamp in the same commit) and merged as PR #269
+  (`ed75370db9f7cf43cd884572bd58502aa71f22bd`). All three W3 rows flip to `done`. Review economics: p01 and
+  p02 each needed one fix round (the deletion-safety review found an
+  undocumented residual the lane had labelled documented); p03 passed outright
+  with an address-now sweep. Program-wide rules adopted: lanes sync
+  `--scope project` only (`--scope all` rewrites the operator's user-scope
+  provider views — every plan step that says `oat sync --scope all` is read as
+  `--scope project`); probe restores use `mktemp -d` backups, never
+  `git checkout --` on uncommitted work; reviewer briefs demand the exact
+  documentation location for any "documented residual" and a probe of the
+  residual itself. Plan corrections applied in this refresh: the call-site
+  plan's In-scope list gains `packages/cli/src/validation/skills.test.ts`
+  (its steps 4–5 move the agent pins) and records the reported owner decision
+  for `phase-execution.md:608`; the sync-scope convention on all three plans.
+  Follow-ups filed: extend `check:skill-bumps` to canonical agent files;
+  negation-aware sweep-contract tests; project reservation state into the
+  smoke evidence bundle; run `scripts/worktree/init.test.mjs` under a gate.
+  W4 unblocked.
 - **2026-09-06 (W2 closed)** — Wave 2 executed as wrapper project
   `wave-2-execution` (five lanes, three groups, one lockstep bump to 0.2.57)
   and merged as PR #267 (`ca71c00a014a6eba00cb4cd4c46974fc6aa58139`). All five W2 rows flip to `done`. Review

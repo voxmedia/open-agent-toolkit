@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import {
+  lstat,
   mkdir,
   mkdtemp,
+  open,
   readFile,
   readdir,
   realpath,
+  rename,
   rm,
   writeFile,
 } from 'node:fs/promises';
@@ -16,7 +19,10 @@ import { promisify } from 'node:util';
 
 import { cleanupSmoke } from './cleanup.mjs';
 import {
+  OWNERSHIP_JOURNAL_SCHEMA_VERSION,
+  OwnershipJournalError,
   registerNestedSmokeResource,
+  reserveNestedSmokeResource,
   validateSmokeMarkerBinding,
 } from './journal.mjs';
 import { provisionSmoke } from './provision.mjs';
@@ -34,7 +40,7 @@ async function git(args, { cwd } = {}) {
 }
 
 async function createRepository(prefix) {
-  const directory = await mkdtemp(join(tmpdir(), prefix));
+  const directory = await realpath(await mkdtemp(join(tmpdir(), prefix)));
   await git(['init', '--initial-branch=main'], { cwd: directory });
   await git(['config', 'user.email', 'smoke@example.test'], { cwd: directory });
   await git(['config', 'user.name', 'Smoke Test'], { cwd: directory });
@@ -198,6 +204,551 @@ test('cleans a journaled branch left after interrupted child worktree removal', 
     assert.equal(
       await git(['branch', '--list', manifest.branch], { cwd: repository }),
       '',
+    );
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+function childOf(manifest, name) {
+  const worktreePath = join(dirname(manifest.manifestPath), name);
+  return {
+    branch: `${manifest.branch}-${name}`,
+    markerPath: join(worktreePath, '.oat/smoke-bootstrap.json'),
+    worktreePath,
+  };
+}
+
+function reservationFor(manifest, child) {
+  return {
+    baselineCommitSha: manifest.baselineCommitSha,
+    branch: child.branch,
+    manifestPath: manifest.manifestPath,
+    markerPath: child.markerPath,
+    worktreePath: child.worktreePath,
+  };
+}
+
+async function readJournal(manifest) {
+  return JSON.parse(await readFile(manifest.manifestPath, 'utf8'))
+    .ownershipJournal;
+}
+
+async function addReservedChild(manifest, child) {
+  await git(
+    [
+      '-c',
+      'core.hooksPath=/dev/null',
+      'worktree',
+      'add',
+      '-b',
+      child.branch,
+      child.worktreePath,
+      manifest.baselineCommitSha,
+    ],
+    { cwd: manifest.worktreePath },
+  );
+}
+
+test('persists reserved intent before creation and finalizes it afterwards', async () => {
+  const repository = await createRepository('oat-smoke-journal-reserve-');
+
+  try {
+    const manifest = await provision(repository, 'journal-reserve');
+    const child = childOf(manifest, 'phase-p01');
+
+    const reserved = await reserveNestedSmokeResource(
+      reservationFor(manifest, child),
+    );
+    assert.equal(reserved.state, 'reserved');
+
+    const afterReserve = await readJournal(manifest);
+    assert.equal(afterReserve.schemaVersion, OWNERSHIP_JOURNAL_SCHEMA_VERSION);
+    assert.equal(afterReserve.resources.length, 1);
+    assert.deepEqual(
+      {
+        baselineCommitSha: afterReserve.resources[0].baselineCommitSha,
+        branch: afterReserve.resources[0].branch,
+        commonGitDir: afterReserve.resources[0].commonGitDir,
+        markerPath: afterReserve.resources[0].markerPath,
+        runIdentity: afterReserve.resources[0].runIdentity,
+        state: afterReserve.resources[0].state,
+        worktreePath: afterReserve.resources[0].worktreePath,
+      },
+      {
+        baselineCommitSha: manifest.baselineCommitSha,
+        branch: child.branch,
+        commonGitDir: manifest.commonGitDir,
+        markerPath: child.markerPath,
+        runIdentity: manifest.runIdentity,
+        state: 'reserved',
+        worktreePath: child.worktreePath,
+      },
+    );
+    // The reservation is intent only: no Git state exists yet.
+    assert.equal(
+      await git(['branch', '--list', child.branch], { cwd: repository }),
+      '',
+    );
+
+    // An identical replay is idempotent and appends nothing.
+    assert.deepEqual(
+      await reserveNestedSmokeResource(reservationFor(manifest, child)),
+      afterReserve.resources[0],
+    );
+    assert.equal((await readJournal(manifest)).resources.length, 1);
+
+    await addReservedChild(manifest, child);
+    const finalized = await registerNestedSmokeResource({
+      manifestPath: manifest.manifestPath,
+      markerPath: child.markerPath,
+      worktreePath: child.worktreePath,
+    });
+    assert.equal(finalized.state, 'registered');
+
+    const afterFinalize = await readJournal(manifest);
+    assert.equal(afterFinalize.resources.length, 1);
+    const entry = afterFinalize.resources[0];
+    assert.equal(entry.state, 'registered');
+    assert.ok(entry.registeredAt);
+    assert.ok(entry.reservedAt);
+    // Finalization records corroboration; it never rewrites reserved intent.
+    assert.equal(entry.baselineCommitSha, manifest.baselineCommitSha);
+    assert.equal(entry.branch, child.branch);
+    assert.equal(entry.markerPath, child.markerPath);
+    assert.equal(entry.worktreePath, child.worktreePath);
+
+    // Re-registering a finalized entry stays idempotent.
+    await registerNestedSmokeResource({
+      manifestPath: manifest.manifestPath,
+      markerPath: child.markerPath,
+      worktreePath: child.worktreePath,
+    });
+    assert.equal((await readJournal(manifest)).resources.length, 1);
+
+    const result = await cleanup(repository, manifest.manifestPath);
+    assert.equal(result.status, 'cleaned');
+    assert.equal(
+      await git(['branch', '--list', 'smoke-*'], { cwd: repository }),
+      '',
+    );
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('refuses reservations that are unsafe, conflicting, or out of run scope', async () => {
+  const repository = await createRepository('oat-smoke-journal-refuse-');
+
+  try {
+    const manifest = await provision(repository, 'journal-refuse');
+    const child = childOf(manifest, 'phase-p01');
+    const base = reservationFor(manifest, child);
+
+    const refusals = [
+      // A different branch may not take the reserved path, and the reserved
+      // branch may not move to a different path.
+      { ...base, branch: `${manifest.branch}-other` },
+      {
+        ...base,
+        markerPath: join(
+          dirname(manifest.manifestPath),
+          'phase-p02/.oat/smoke-bootstrap.json',
+        ),
+        worktreePath: join(dirname(manifest.manifestPath), 'phase-p02'),
+      },
+    ];
+    const preReservation = [
+      // Escaping the run directory, in either direction.
+      {
+        ...base,
+        markerPath: join(repository, 'escape/.oat/smoke-bootstrap.json'),
+        worktreePath: join(repository, 'escape'),
+      },
+      {
+        ...base,
+        markerPath: join(
+          dirname(manifest.manifestPath),
+          'a/b/.oat/smoke-bootstrap.json',
+        ),
+        worktreePath: join(dirname(manifest.manifestPath), 'a/b'),
+      },
+      // The outer worktree and outer branch are never child resources.
+      {
+        ...base,
+        markerPath: join(manifest.worktreePath, '.oat/smoke-bootstrap.json'),
+        worktreePath: manifest.worktreePath,
+      },
+      { ...base, branch: manifest.branch },
+      // The marker must be the tracked marker inside the intended child.
+      { ...base, markerPath: join(child.worktreePath, 'smoke-bootstrap.json') },
+      // Unsafe branch syntax and non-run baselines.
+      { ...base, branch: '--upload-pack=touch' },
+      { ...base, branch: 'refs/heads/../../escape' },
+      { ...base, baselineCommitSha: manifest.sourceCommitSha },
+    ];
+
+    for (const attempt of preReservation) {
+      await assert.rejects(
+        () => reserveNestedSmokeResource(attempt),
+        OwnershipJournalError,
+      );
+      assert.deepEqual((await readJournal(manifest)).resources, []);
+    }
+
+    await reserveNestedSmokeResource(base);
+    for (const attempt of refusals) {
+      await assert.rejects(
+        () => reserveNestedSmokeResource(attempt),
+        /conflicting child path or branch/,
+      );
+    }
+    const journal = await readJournal(manifest);
+    assert.equal(journal.resources.length, 1);
+    assert.equal(journal.resources[0].branch, child.branch);
+
+    // A path that already exists is never a reservable creation target.
+    const occupied = childOf(manifest, 'phase-p03');
+    await mkdir(occupied.worktreePath, { recursive: true });
+    await assert.rejects(
+      () => reserveNestedSmokeResource(reservationFor(manifest, occupied)),
+      /reserved worktree path already exists/,
+    );
+    assert.equal((await readJournal(manifest)).resources.length, 1);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('serializes concurrent reservations and leaves no lock or temporary file', async () => {
+  const repository = await createRepository('oat-smoke-journal-reserve-race-');
+
+  try {
+    const manifest = await provision(repository, 'journal-reserve-race');
+    const children = ['phase-p01', 'phase-p02', 'phase-p03'].map((name) =>
+      childOf(manifest, name),
+    );
+
+    await Promise.all(
+      children.map((child) =>
+        reserveNestedSmokeResource(reservationFor(manifest, child)),
+      ),
+    );
+
+    const journal = await readJournal(manifest);
+    assert.deepEqual(
+      journal.resources.map((entry) => entry.branch).sort(),
+      children.map((child) => child.branch).sort(),
+    );
+    assert.deepEqual(
+      journal.resources.map((entry) => entry.state),
+      ['reserved', 'reserved', 'reserved'],
+    );
+    assert.deepEqual(
+      (await readdir(dirname(manifest.manifestPath))).filter(
+        (name) => name.includes('.tmp') || name.endsWith('.lock'),
+      ),
+      [],
+    );
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('refuses to finalize a reservation the materialized child contradicts', async () => {
+  const repository = await createRepository('oat-smoke-journal-mismatch-');
+
+  try {
+    const manifest = await provision(repository, 'journal-mismatch');
+    const child = childOf(manifest, 'phase-p01');
+    await reserveNestedSmokeResource(reservationFor(manifest, child));
+
+    // The reserved path materialized on a branch the reservation never named.
+    await git(
+      [
+        '-c',
+        'core.hooksPath=/dev/null',
+        'worktree',
+        'add',
+        '-b',
+        `${manifest.branch}-impostor`,
+        child.worktreePath,
+        manifest.baselineCommitSha,
+      ],
+      { cwd: manifest.worktreePath },
+    );
+
+    await assert.rejects(
+      () =>
+        registerNestedSmokeResource({
+          manifestPath: manifest.manifestPath,
+          markerPath: child.markerPath,
+          worktreePath: child.worktreePath,
+        }),
+      /conflicting child path or branch/,
+    );
+    const journal = await readJournal(manifest);
+    assert.equal(journal.resources.length, 1);
+    assert.equal(journal.resources[0].state, 'reserved');
+    assert.equal(journal.resources[0].branch, child.branch);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('reads schema version 1 manifests without manufacturing reserved ownership', async () => {
+  const repository = await createRepository('oat-smoke-journal-v1-');
+
+  try {
+    const manifest = await provision(repository, 'journal-v1');
+    const legacy = JSON.parse(await readFile(manifest.manifestPath, 'utf8'));
+    legacy.ownershipJournal = { resources: [], schemaVersion: 1 };
+    await writeFile(
+      manifest.manifestPath,
+      `${JSON.stringify(legacy, null, 2)}\n`,
+    );
+
+    // A v1 manifest never gains reserved intent: a v1 reader would read it as
+    // established ownership.
+    const child = childOf(manifest, 'phase-p01');
+    await assert.rejects(
+      () => reserveNestedSmokeResource(reservationFor(manifest, child)),
+      /reservations require ownership journal schema version 2/,
+    );
+    assert.equal(
+      (await readJournal(manifest)).schemaVersion,
+      1,
+      'a v1 manifest version is never rewritten in place',
+    );
+    assert.deepEqual((await readJournal(manifest)).resources, []);
+
+    // Direct registration still works and its entries read as registered.
+    const branch = 'smoke-child-legacy';
+    const worktreePath = join(repository, '.children/legacy');
+    await addChild(repository, manifest, branch, worktreePath);
+    await registerNestedSmokeResource({
+      manifestPath: manifest.manifestPath,
+      markerPath: join(worktreePath, '.oat/smoke-bootstrap.json'),
+      worktreePath,
+    });
+    const journal = await readJournal(manifest);
+    assert.equal(journal.schemaVersion, 1);
+    assert.equal(journal.resources.length, 1);
+
+    const result = await cleanup(repository, manifest.manifestPath);
+    assert.equal(result.status, 'cleaned');
+    assert.equal(
+      await git(['branch', '--list', 'smoke-*'], { cwd: repository }),
+      '',
+    );
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('refuses to reserve a branch or worktree registration that already exists', async () => {
+  const repository = await createRepository('oat-smoke-journal-preexisting-');
+
+  try {
+    const manifest = await provision(repository, 'journal-preexisting');
+    const child = childOf(manifest, 'phase-p01');
+
+    // A branch that already points at the run baseline was not created by this
+    // run. Reserving it would record intent to own someone else's ref, and
+    // branch-only reconciliation would then delete it on an exact tip match.
+    await git(['branch', child.branch, manifest.baselineCommitSha], {
+      cwd: repository,
+    });
+    await assert.rejects(
+      () => reserveNestedSmokeResource(reservationFor(manifest, child)),
+      /reserved branch already exists/,
+    );
+    assert.deepEqual((await readJournal(manifest)).resources, []);
+
+    // Cleanup then leaves it alone: it is an unjournaled run descendant.
+    await assert.rejects(
+      () => cleanup(repository, manifest.manifestPath),
+      /run-descendant branch .* is not journaled/,
+    );
+    assert.match(
+      await git(['branch', '--list', child.branch], { cwd: repository }),
+      new RegExp(child.branch),
+    );
+
+    // A stale Git worktree registration at the reserved path is equally
+    // disqualifying, even once the branch is gone.
+    await git(['branch', '--delete', '--force', '--', child.branch], {
+      cwd: repository,
+    });
+    await addReservedChild(manifest, child);
+    await git(['checkout', '--detach'], { cwd: child.worktreePath });
+    await git(['branch', '--delete', '--force', '--', child.branch], {
+      cwd: repository,
+    });
+    await rm(child.worktreePath, { force: true, recursive: true });
+    await assert.rejects(
+      () => reserveNestedSmokeResource(reservationFor(manifest, child)),
+      /already registered with Git/,
+    );
+    assert.deepEqual((await readJournal(manifest)).resources, []);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('serializes concurrent identical and conflicting reservations', async () => {
+  const repository = await createRepository(
+    'oat-smoke-journal-reserve-conflict-',
+  );
+
+  try {
+    const manifest = await provision(repository, 'journal-reserve-conflict');
+    const child = childOf(manifest, 'phase-p01');
+
+    // Identical concurrent requests collapse to exactly one reservation.
+    const identical = await Promise.all(
+      [0, 1, 2].map(() =>
+        reserveNestedSmokeResource(reservationFor(manifest, child)),
+      ),
+    );
+    assert.equal((await readJournal(manifest)).resources.length, 1);
+    assert.deepEqual(
+      identical.map((entry) => entry.branch),
+      [child.branch, child.branch, child.branch],
+    );
+
+    // A concurrent request for the same path under a different branch loses.
+    const conflicting = await Promise.allSettled([
+      reserveNestedSmokeResource(reservationFor(manifest, child)),
+      reserveNestedSmokeResource({
+        ...reservationFor(manifest, child),
+        branch: `${manifest.branch}-phase-p01-rival`,
+      }),
+    ]);
+    assert.equal(conflicting[0].status, 'fulfilled');
+    assert.equal(conflicting[1].status, 'rejected');
+    assert.match(
+      conflicting[1].reason.message,
+      /conflicting child path or branch/,
+    );
+    const journal = await readJournal(manifest);
+    assert.equal(journal.resources.length, 1);
+    assert.equal(journal.resources[0].branch, child.branch);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('asserts the canonical run directory on replay as well as first reservation', async () => {
+  const repository = await createRepository('oat-smoke-journal-canonical-');
+
+  try {
+    const manifest = await provision(repository, 'journal-canonical');
+    const child = childOf(manifest, 'phase-p01');
+    await reserveNestedSmokeResource(reservationFor(manifest, child));
+
+    // The canonicality check sits ahead of the idempotent-replay return, so a
+    // replay over a run directory that does not resolve to itself is refused
+    // instead of returning the existing entry unchecked.
+    const runPath = dirname(manifest.manifestPath);
+    const lyingFileSystem = {
+      lstat,
+      mkdir,
+      open,
+      readFile,
+      realpath: async (path, ...rest) =>
+        path === runPath
+          ? join(repository, '.elsewhere')
+          : realpath(path, ...rest),
+      rename,
+      rm,
+      writeFile,
+    };
+
+    await assert.rejects(
+      () =>
+        reserveNestedSmokeResource(reservationFor(manifest, child), {
+          fileSystem: lyingFileSystem,
+        }),
+      /manifest run directory must be its canonical real path/,
+    );
+    const journal = await readJournal(manifest);
+    assert.equal(journal.resources.length, 1);
+    assert.equal(journal.resources[0].state, 'reserved');
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('pins the accepted probe-to-creation reservation residual', async () => {
+  // ACCEPTED RESIDUAL, pinned so any change to it is visible in review.
+  //
+  // The ref-absence probe in `reserveNestedSmokeResource` is not atomic with
+  // the `git worktree add -b` that follows it. A foreign branch created inside
+  // that window, at the reserved name and exactly the reserved baseline, is
+  // indistinguishable from the branch this run intended to create by any sound
+  // signal: Git gives `worktree add -b` and `git branch` identical reflog
+  // messages, object IDs, and creation timestamps, and every field that can
+  // differ is writable by whoever created the ref. Cleanup therefore deletes
+  // it. Closing the window
+  // would require creating the ref as part of the reservation, which is the
+  // Git mutation before durable intent that this transaction exists to
+  // prevent. This test records that behavior rather than endorsing it.
+  const repository = await createRepository('oat-smoke-journal-residual-');
+
+  try {
+    const manifest = await provision(repository, 'journal-residual');
+    const child = childOf(manifest, 'phase-p01');
+
+    // Reservation succeeds because the branch genuinely does not exist yet.
+    await reserveNestedSmokeResource(reservationFor(manifest, child));
+
+    // A foreign actor then wins the window. This run's `worktree add -b` would
+    // now refuse, so the child is never created and the entry stays reserved.
+    await git(['branch', child.branch, manifest.baselineCommitSha], {
+      cwd: repository,
+    });
+    await assert.rejects(
+      () => addReservedChild(manifest, child),
+      /already exists/,
+    );
+    assert.equal((await readJournal(manifest)).resources[0].state, 'reserved');
+
+    const result = await cleanup(repository, manifest.manifestPath);
+
+    // Accepted residual: the foreign branch is deleted under this run's
+    // reservation authority.
+    assert.equal(result.status, 'cleaned');
+    assert.ok(result.actions.includes(`branch:${child.branch}`));
+    assert.equal(
+      await git(['branch', '--list', child.branch], { cwd: repository }),
+      '',
+    );
+
+    // The bound on that residual: only a branch sitting at exactly the
+    // reserved baseline is affected. One commit away, cleanup fails closed.
+    const second = await provision(repository, 'journal-residual-two');
+    const secondChild = childOf(second, 'phase-p01');
+    await reserveNestedSmokeResource(reservationFor(second, secondChild));
+    const oneCommitOff = await git(
+      ['rev-parse', `${second.baselineCommitSha}^`],
+      { cwd: repository },
+    );
+    assert.equal(
+      oneCommitOff,
+      second.branchOwnership.baseCommitSha,
+      'the control must sit exactly one commit off the reserved baseline',
+    );
+    await git(['branch', secondChild.branch, oneCommitOff], {
+      cwd: repository,
+    });
+    await assert.rejects(
+      () => cleanup(repository, second.manifestPath),
+      /does not exactly match its reserved baseline/,
+    );
+    assert.match(
+      await git(['branch', '--list', secondChild.branch], { cwd: repository }),
+      new RegExp(secondChild.branch),
     );
   } finally {
     await rm(repository, { force: true, recursive: true });

@@ -620,9 +620,13 @@ Both accepted success and accepted terminal-stop branches must:
 - for a Phase Implementation Report, verify task count; for a Phase Recovery
   Continuation Report, verify the original task and commit instead;
 - only for a Phase Implementation Report, verify each planned task commit is
-  exactly one append-only commit in plan order, changes only declared files, and
-  has passing task verification; never require a Phase Recovery Continuation
-  Report to replay or restate all planned task outcomes;
+  exactly one append-only commit in plan order, changes only declared or
+  mechanically derived in-phase files, meaning the task's declared files plus
+  the mechanical additions permitted by, and reported under, the phase
+  implementer's cross-cutting option sweep, and has passing task verification;
+  a plan-list-only file set is not the acceptance boundary; never require a
+  Phase Recovery Continuation Report to replay or restate all planned task
+  outcomes;
 - for each reported attempted recovery (`recovered` or `failed-attempt`), verify
   attempt accounting, the immutable original commit and original request,
   exact-target provenance, one in-scope append-only recovery commit when

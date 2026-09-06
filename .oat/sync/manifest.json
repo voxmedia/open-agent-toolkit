@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "oatVersion": "0.2.61",
+  "oatVersion": "0.2.62",
   "entries": [
     {
       "canonicalPath": ".agents/agents/oat-codebase-mapper.md",
@@ -919,10 +919,10 @@
       "contentType": "skill",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-09-06T13:04:42.513Z",
+      "lastSynced": "2026-09-06T19:03:02.814Z",
       "strategy": "symlink"
     }
   ],
   "collections": [],
-  "lastUpdated": "2026-09-06T13:04:42.513Z"
+  "lastUpdated": "2026-09-06T19:03:02.814Z"
 }
