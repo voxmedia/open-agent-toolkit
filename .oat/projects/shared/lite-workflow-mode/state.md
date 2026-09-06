@@ -1,7 +1,8 @@
 ---
 oat_current_task: p06-t10
 oat_last_commit: 469141fba075371b9d6cd5dc075cb1f00fe9c6ff
-oat_blockers: []
+oat_blockers:
+  - 'Implementation exit gate exhausted 2/2 blocked attempts; explicit override required before implementation or another gate launch.'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -47,7 +48,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: blocked
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
@@ -55,7 +56,7 @@ oat_implement_exit_gate:
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
-  attempts_completed: 1
+  attempts_completed: 2
   reviewed_head: 6ba4c38dd08d192fdb35840becbdf52b74f5d8a9
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:689ce3c9329c6143637d2c805a96d238bdf492bddab47b1dacab804247f5eb31'
@@ -70,23 +71,23 @@ oat_implement_exit_gate:
   envelope_status: blocked
   artifact: .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T024254Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T024254Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=e1faf839-7cd8-4635-8d73-2196ade93c55; handoff=Run oat-project-review-receive for .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T024254Z.md before treating this gate review as consumed.; source=.oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T024254Z.md; scope=final; type=code; filename=final-review-2026-09-06T024254Z.md'
   receive_source_artifact: .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T024254Z.md
   receive_archived_artifact: .oat/projects/shared/lite-workflow-mode/reviews/archived/final-review-2026-09-06T024254Z.md
   receive_event_identity: 'final|code|final-review-2026-09-06T024254Z.md'
   receive_pre_head: f282d1adfb059b4041bbf538ac8223e13154e84e
-  receive_commit: null
+  receive_commit: 439c6b7f277b5e46dea4ebb4c6c9c9e0336e0316
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-06T02:46:32Z'
+  updated_at: '2026-09-06T02:46:56Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T02:46:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T02:46:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +99,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Final configured exit gate blocked; fix task p06-t10 queued.
+Blocked - configured exit gate exhausted 2/2 attempts; p06-t10 is queued.
 
 ## Artifacts
 
@@ -139,16 +140,17 @@ Implementation - Final configured exit gate blocked; fix task p06-t10 queued.
 - ✓ Exit-gate fix tasks p06-t07 through p06-t09 completed (25/25 total)
 - ✓ Fresh final lifecycle review passed with no findings
 - ⧗ Exit gate attempt 2 found one Important production-path routing defect
-- ⧗ Fix task p06-t10 queued; configured attempt budget pending reconciliation
+- ⧗ Fix task p06-t10 queued; configured attempt budget exhausted (2/2)
 
 ## Blockers
 
 Configured exit gate attempt 2 found that the p06-t08 fixture models readiness
-on an artifact the production path leaves null. Fix task p06-t10 is queued.
-The historical p06-t02 header-wording Medium remains explicitly accepted for
-defer.
+on an artifact the production path leaves null. Fix task p06-t10 is queued,
+but the configured 2/2 attempt budget is exhausted and requires explicit user
+direction. The historical p06-t02 header-wording Medium remains explicitly
+accepted for defer.
 
 ## Next Milestone
 
-Complete receive reconciliation and persist the exhausted gate budget; request
-explicit direction before implementation or another gate launch.
+Obtain explicit direction on whether to override the exhausted gate budget and
+execute p06-t10.

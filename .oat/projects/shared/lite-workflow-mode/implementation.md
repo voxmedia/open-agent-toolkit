@@ -586,6 +586,14 @@ Medium remains explicitly accepted for defer.
 After receive reconciliation, stop with p06-t10 queued and request explicit
 direction before any implementation or further gate launch.
 
+**Receive receipt:** The archived artifact retains gate run
+`e1faf839-7cd8-4635-8d73-2196ade93c55`; the exact final/code event is
+`fixes_added`; and bookkeeping commit
+`439c6b7f277b5e46dea4ebb4c6c9c9e0336e0316` follows the persisted pre-receive
+HEAD and contains the bounded archive move plus plan, implementation, and state
+updates. Receive is complete. Attempt 2 of 2 is consumed, the gate is blocked,
+and no automatic remediation or relaunch is authorized.
+
 #### Configured implementation exit gate generation 2 created
 
 The configured declaration re-resolved byte-for-byte with fingerprint
