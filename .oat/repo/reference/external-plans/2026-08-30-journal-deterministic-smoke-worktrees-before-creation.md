@@ -327,6 +327,10 @@ Stop and report instead of improvising when:
 - an existing leaked resource would be modified; or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-06, wave 3)
+
+Executed as wave-3 p02 (PR wave-3-execution): reservation before `git worktree add`, reserved-origin invariants re-derived in cleanup, tip re-read before `git branch --delete --force`, `reservedAt` required for schema-v2 reserved entries; the dedicated deletion-safety review ran sixteen adversarial probes (all refuse) and required the probe→`worktree add -b` window to be documented honestly in code, CONTRACT.md, and a pinning test (a foreign branch created in that window at the exact reserved baseline is deleted; no sound Git discriminator exists). Direct registration keeps its looser containment for `scripts/worktree/init.sh`. Follow-ups: project reservation state into the evidence bundle; run `scripts/worktree/init.test.mjs` under a gate. Sync convention (program rule from wave 3): where this plan says `oat sync --scope all`, lanes run `pnpm run cli -- sync --scope project`; `--scope all` also rewrites the operator's user-scope provider views and manifest and is operator-only.
+
 ## Revalidation Before Execution
 
 Revalidate against current `origin/main`, the source backlog item, PR #215, the

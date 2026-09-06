@@ -246,6 +246,10 @@ Stop and report instead of improvising when:
 - a named verification gate fails twice after one bounded correction; or
 - scope expands beyond the two canonical skills and their contract test.
 
+## Execution record (2026-09-06, wave 3)
+
+Executed as wave-3 p03 (PR wave-3-execution): `create-oat-skill` 1.5.0 → 1.5.1 and `oat-project-design` 2.3.2 → 2.3.3 (two pins) with a fence- and comment-aware extraction in `skills.test.ts`; the runtime example was corrected to "a rollup never reports success when a required ledger write fails" (true against `rollup.ts:284`); the address-now sweep made both blocks name their executable owner, `existsSync`-checks cited precedent paths, drops indented code, and rejects weakening vocabulary. Sync convention (program rule from wave 3): where this plan says `oat sync --scope all`, lanes run `pnpm run cli -- sync --scope project`; `--scope all` also rewrites the operator's user-scope provider views and manifest and is operator-only.
+
 ## Revalidation Before Execution
 
 Revalidate against current `origin/main`, the source backlog item, both cited

@@ -38,7 +38,7 @@ copying their content here. -->
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
 - CLI `0.2.58` (wave 3 of the 2026-08-31 execution program, wrapper project
-  `wave-3-execution`, "workflow durability and containment") makes the
+  `wave-3-execution`, "workflow durability and containment", merged as PR #269) makes the
   phase-implementer contract sweep the repository for every consumer of a
   changed cross-cutting option (effective task boundary; stop-and-report for
   cross-owner expansions; pinned in `post-implement-sequence-contracts.test.ts`),
