@@ -412,7 +412,7 @@ git commit -m "docs(p05-t01): document fail-closed patch-and-restore recovery fo
 | p05    | code     | fixes_added | 2026-09-06 | reviews/archived/p05-review-2026-09-06T071018Z.md           | de0ba133a4fdf85d382c070e46e4519bb4b10219 | manual     | -           |
 | p05    | code     | fixes_added | 2026-09-06 | reviews/archived/p05-review-2026-09-06T075406Z.md           | 27cc81e8e85c12475e6930dcb0fa72c9b0fb61d5 | manual     | -           |
 | p05    | code     | passed      | 2026-09-06 | reviews/archived/p05-review-2026-09-06T082528Z.md           | 0f301c8e12451c66fe26c2fb79d2dedb8a60e30d | manual     | -           |
-| final  | code     | pending     | -          | -                                                           | -                                        | -          | -           |
+| final  | code     | fixes_added | 2026-09-06 | reviews/archived/final-review-2026-09-06T085208Z.md         | bee72dd4d300762366475781f7d97ac76464948f | manual     | -           |
 | plan   | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T023526Z.md | -                                        | -          | -           |
 | spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
 | design | artifact | pending     | -          | -                                                           | -                                        | -          | -           |

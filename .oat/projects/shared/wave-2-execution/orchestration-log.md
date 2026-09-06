@@ -102,8 +102,9 @@ filter.
 
 Merge `80491b10c`, lockstep bump 0.2.56 → 0.2.57, all eight gates exit 0 with
 `Cached: 0 cached, 10 total` on the forced test run (~9 minutes end to end).
-The lane's `git merge-base` was already the integration tip, so the rebase was
-a no-op and the five lane commits re-hashed only through the merge. Nothing to
+The lane was rebased across the post-review bookkeeping commits on the
+integration branch, and that rebase (not the merge) produced the five new
+hashes; the merge then landed them with `--no-ff`. Nothing to
 flip: every group-2 plan was already READY. p01 worktree and branch removed.
 
 ---
@@ -208,7 +209,7 @@ post-implement sequence.
 1. Wave→project wrapper with pointer-only tasks: held. Five lanes executed their immutable plans; the plan gate's only structural finding was the wrapper restating the p01 plan's commit granularity, fixed in-artifact. No lane narrowed its plan; two lanes deliberately widened within the plan's declared surface (p04's thirteen skills, p05's quiescence superset) and the reviewers ruled both in scope.
 2. Wave-boundary drift refresh plus per-lane cumulative-churn pre-declaration: held with one wrinkle. Every drift check matched the pre-declaration, but two briefs carried a stale lockstep version after the group-1 bump (harmless; fixed for p05).
 3. Lane mode vs fan-in mode verification: held. No lane touched a lockstep file; the single bump (0.2.56 → 0.2.57) at the group-1 fan-in was retained through group 2 and p05. Gap: the bump did not restamp `.oat/sync/manifest.json`, so every group-2 lane's sync commit carried the restamp and p02's survived the rebase.
-4. Root-owned reviews with adversarial probes: held and load-bearing. Every lane needed exactly one fix round; the reviewers found one Critical (p03's passage scoping narrowed a whole-document guard), nine Important findings across p01/p02/p04, and every round-2 disposition-verification passed. The p04 reviewer amended its own artifact twice after re-checking its published claims — the weaker-anywhere instruction is what caught the p03 Critical.
+4. Root-owned reviews with adversarial probes: held and load-bearing. Fix rounds per lane: p01 one, p02 one, p03 one, p04 one plus an address-now sweep, p05 two. The reviewers found two Criticals (p03 round 1: passage scoping had narrowed a whole-document guard; p05 round 2: the round-1 fix left `$CAPTURE_SCRIPT` unguarded in two shell blocks) and nine Important findings across all five lanes (p01 1, p02 1, p03 1, p04 4, p05 2). Every lane's last verification round passed; p05's round 2 did not (it found the Critical) and round 3 did. The p04 reviewer amended its own artifact twice after re-checking its published claims; the weaker-anywhere instruction caught the p03 Critical and verbatim snippet execution caught the p05 one.
 5. Cross-model in-lane review (Codex, read-only): held but expensive. p05's three rounds caught a real containment Critical pre-commit; p02's three rounds converged on regex edge cases (94 minutes for a one-file test change). Adopted: cap at two rounds, then disposition.
 6. Group composition from mechanical write-surface intersection: held. No merge conflicts; rebase dropped p03/p04's duplicate sync commits and kept p02's.
 

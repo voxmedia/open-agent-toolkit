@@ -44,6 +44,10 @@ Entries are chronological and append-only.
 
 target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:0,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/wave-2-execution/reviews/artifact-plan-review-2026-09-06T023526Z.md
 
+### 2026-09-06 · structural · oat-wave-execute · final
+
+End-of-run synthesis for this wave wrapper lives in orchestration-log.md (convention verdicts, skill-signal rulings, adopted rules, graduated-entries ledger); this project log carries structural events only.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
