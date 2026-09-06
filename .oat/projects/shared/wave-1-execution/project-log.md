@@ -52,6 +52,26 @@ Final gate code review recorded at reviews/final-review-2026-09-06T015333Z.md (0
 
 target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/wave-1-execution/reviews/final-review-2026-09-06T015333Z.md
 
+### 2026-09-06 · general · friction · wave wrapper slug and branch collision
+
+The oat-wave-execute fixed wave-N-execution slug and branch collided with the archived 2026-08 program wrapper and its stale remote branch; the wave kept the local name and pushed to origin/wave-1-execution-2026-09, deferring the archive-name collision to program close. The skill should qualify the slug or branch by program, or check archived wrappers and remote branches in preflight. (observed on oat 0.2.55)
+
+### 2026-09-06 · general · friction · duplicate orchestrator after session restart
+
+A session restart left the prior orchestrator instance alive on the same worktree, which scaffolded a second wrapper directory before standing down. Check ListAgents for a busy peer on the same path before scaffolding; the skill has no claim-the-tree step. (observed on oat 0.2.55)
+
+### 2026-09-06 · general · friction · reviewer reconnaissance signal placement
+
+A reviewer put the mandatory Reconnaissance signal in its chat reply rather than the artifact; the root validates the file, so the round was recovered through the accepted handle. Reviewer briefs should state that the line is validated in the artifact. (observed on oat 0.2.55)
+
+### 2026-09-06 · general · friction · dispatch journal cannot close out child outcome
+
+oat project dispatch record rejects a revision that changes child_outcome (generic fields are immutable), so a record written at acceptance never carries the terminal outcome; outcomes were recorded in implementation.md instead. Consider a terminal event kind or an outcome revision. (observed on oat 0.2.55)
+
+### 2026-09-06 · project · worked-well · readiness flip and address-now sweep rules
+
+Flipping successor plans to READY in the fan-in bookkeeping commit with cited evidence, and landing Medium/Minor review findings as address-now sweeps through the original implementer handle, kept both groups inside one fan-in each with zero merge conflicts. (observed on oat 0.2.55)
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
