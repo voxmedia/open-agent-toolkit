@@ -118,7 +118,9 @@ Read each required artifact once at phase start:
   present.
 - `lite`: read the whole plan.md requirements contract: the assigned phase
   section plus Summary, Decisions, Assumptions, Out of Scope, and Validation
-  Criteria. Discovery, spec, and design are absent by design.
+  Criteria, and the Product Behavior and/or Technical Design selected by its
+  recorded `minimal`, `product`, `technical`, or `both` content shape.
+  Discovery, spec, and design are absent by design.
 
 Extract all phase tasks, dependency order, file boundaries, verification
 commands, commit messages, and phase-wide verification before editing.
@@ -361,7 +363,9 @@ For every task:
 
 1. Record `PRE_TASK_HEAD`.
 2. Read the task steps and declared file boundary.
-3. Follow RED/GREEN/refactor ordering when specified.
+3. Execute the task's declared implementation and proof strategy without
+   silently substituting TDD. Follow RED/GREEN/refactor ordering only when the
+   selected strategy specifies it.
 4. Implement only that task. Optional nested help does not transfer task
    ownership or commit authority.
 5. Apply the Prevention and Post-Commit Recovery ordering: format, run every

@@ -26,7 +26,22 @@ oat_template_name: plan-lite
 
 ## Decisions
 
-- [Record the decisions made during the critical interview.]
+- **Content shape:** `[minimal | product | technical | both]` — [One-line rationale tied to the observable shape triggers.]
+- [Record the other decisions made during the critical interview.]
+
+## Product Behavior
+
+<!-- Include for product or both; omit this section for minimal or technical. -->
+
+1. **[Observable behavior]** — [State the testable user-visible outcome.]
+
+## Technical Design
+
+<!-- Include for technical or both; omit this section for minimal or product. -->
+
+- **Current operation:** [Describe how the affected modules and contracts work now.]
+- **Proposed changes:** [Describe the change with file-and-symbol references, not line numbers.]
+- **Data flow:** [When state or data crosses a boundary, describe its path and transformations. Omit this item otherwise.]
 
 ## Assumptions
 
@@ -54,19 +69,20 @@ This plan has one phase and executes sequentially.
 - Create: `[path/to/file.ts]`
 - Modify: `[path/to/existing.ts]`
 
-**Step 1: Write test (RED)**
+**Implementation and Proof Strategy:**
 
-[Describe the failing test and its expected failure.]
+- **Strategy:** `[test-first | characterization-first | implementation-then-regression | static-or-build | manual-or-visual]`
+- **Observable risk:** [Name the behavior, contract, or invariant this evidence covers.]
+- **Why proportionate:** [Explain why this is the smallest proof capable of detecting the relevant failure.]
 
-Run: `[exact focused test command]`
-Expected: Test fails for the intended missing behavior (RED)
+**Step 1: Implement**
 
-**Step 2: Implement (GREEN)**
+[Describe the bounded implementation in the order required by the selected strategy.]
 
-[Describe the smallest implementation that satisfies the test.]
+**Step 2: Prove**
 
-Run: `[exact focused test command]`
-Expected: Test passes (GREEN)
+Run: `[exact proof command or manual: instruction]`
+Expected: [State the observable passing result and, for behavior changes, how this proof fails without the change.]
 
 **Step 3: Refactor and format**
 
@@ -92,19 +108,20 @@ git commit -m "feat(p01-t01): [description]"
 
 - Modify: `[path/to/existing.ts]`
 
-**Step 1: Write test (RED)**
+**Implementation and Proof Strategy:**
 
-[Describe the failing test and its expected failure.]
+- **Strategy:** `[test-first | characterization-first | implementation-then-regression | static-or-build | manual-or-visual]`
+- **Observable risk:** [Name the behavior, contract, or invariant this evidence covers.]
+- **Why proportionate:** [Explain why this is the smallest proof capable of detecting the relevant failure.]
 
-Run: `[exact focused test command]`
-Expected: Test fails for the intended missing behavior (RED)
+**Step 1: Implement**
 
-**Step 2: Implement (GREEN)**
+[Describe the bounded implementation in the order required by the selected strategy.]
 
-[Describe the smallest implementation that satisfies the test.]
+**Step 2: Prove**
 
-Run: `[exact focused test command]`
-Expected: Test passes (GREEN)
+Run: `[exact proof command or manual: instruction]`
+Expected: [State the observable passing result and, for behavior changes, how this proof fails without the change.]
 
 **Step 3: Refactor and format**
 

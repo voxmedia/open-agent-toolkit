@@ -810,6 +810,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
       'oat-project-dispatch-subagents',
       'oat-project-document',
       'oat-project-implement',
+      'oat-project-lite',
       'oat-project-pr-final',
       'oat-project-review-provide',
       'oat-project-review-receive',

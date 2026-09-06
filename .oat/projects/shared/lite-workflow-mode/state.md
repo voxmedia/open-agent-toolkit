@@ -39,7 +39,7 @@ oat_phase_recovery_policy:
         discovered_by: pnpm test
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
         reservation_head: 605e839048ef578c5f11fc2ae6420d72a079fb1a
-        status: active
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
