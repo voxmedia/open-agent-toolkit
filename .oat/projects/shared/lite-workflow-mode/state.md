@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 3f5c8174bb74877e676e00dc78a1a1e2963f9b36
+oat_current_task: p06-t04
+oat_last_commit: 7ca7e64173bf8a59c90529629fa3c4cfd5eadb37
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -86,7 +86,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T01:21:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T01:31:39Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +98,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Tasks complete; awaiting final review.
+Implementation - Final review fixes in progress.
 
 ## Artifacts
 
@@ -130,15 +130,16 @@ Implementation - Tasks complete; awaiting final review.
   evidence
 - ✓ Fresh independent p06 re-review passed with 0 Critical and 0 Important
   findings
-- ✓ All 19 implementation tasks across 6 phases are complete
+- ✓ Original 19 implementation tasks across 6 phases are complete
 - ✓ Final closeout test, lint, type-check, and build verification passed
-- ⧗ Awaiting final lifecycle review
+- ⚠ Final review found 1 Important and 2 Medium fix-now findings
+- ⧗ Three bounded final-review fix tasks are pending (19/22 complete)
 
 ## Blockers
 
-None. The two Medium p06 review findings remain recorded as non-blocking
-artifact-alignment notes.
+None. The final review findings have been converted into runnable plan tasks.
+The historical p06-t02 header-wording Medium is explicitly accepted for defer.
 
 ## Next Milestone
 
-Run the final lifecycle code review against the committed closeout baseline.
+Execute p06-t04 through p06-t06, then run a fresh final re-review.

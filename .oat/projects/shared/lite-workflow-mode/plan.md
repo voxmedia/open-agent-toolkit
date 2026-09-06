@@ -939,6 +939,162 @@ git commit -m "chore(p06-t03): bump lockstep package versions for lite mode"
 
 ---
 
+### Task p06-t04: (review) Fix the Lite validator command
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-lite/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Write test (RED)**
+
+Extend the existing `oat-project-lite enforces the single-pause interaction
+contract` test to require the exact canonical invocation
+`oat project validate-plan --project-path "$PROJECT_PATH"` and reject the
+unsupported positional-path form. Run the focused test and confirm it fails
+against the current skill text.
+
+**Step 2: Implement (GREEN)**
+
+Change Step 3 of the Lite skill to use the supported `--project-path` option.
+Bump the canonical skill version from `1.0.0` to `1.0.1`; this is the single
+PR-scoped version bump for all final-review edits to this skill. Run the exact
+documented command against the active project's valid plan and require exit 0.
+
+**Step 3: Refactor and format**
+
+Run:
+`pnpm exec oxfmt --write .agents/skills/oat-project-lite/SKILL.md packages/cli/src/validation/skills.test.ts`
+
+**Step 4: Verify**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t 'oat-project-lite enforces the single-pause interaction contract'`
+
+Expected: the test exits 0. Prove the guard can fail once by restoring the
+positional form, observing the focused test fail, then restoring the fix.
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-project-lite/SKILL.md packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p06-t04): use the canonical lite plan validator command"
+```
+
+---
+
+### Task p06-t05: (review) Align Lite validation-criterion grammar
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-lite/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Write test (RED)**
+
+Extend the Lite skill contract test to require every non-manual validation
+proof to be a backticked command or test name. Confirm the new assertion fails
+while the skill still permits a bare test name that `validateLitePlan` rejects.
+
+**Step 2: Implement (GREEN)**
+
+Change the authoring rule to require `a backticked command or test name, or a
+manual: visual-proof instruction`. Keep validator behavior unchanged. The
+skill version was already bumped once for this PR in p06-t04; do not bump it a
+second time.
+
+**Step 3: Refactor and format**
+
+Run:
+`pnpm exec oxfmt --write .agents/skills/oat-project-lite/SKILL.md packages/cli/src/validation/skills.test.ts`
+
+**Step 4: Verify**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t 'oat-project-lite enforces the single-pause interaction contract'`
+
+Expected: the test exits 0. Prove the wording assertion fails once when the
+bare-test-name form is restored, then restore the fix.
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/oat-project-lite/SKILL.md packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p06-t05): align lite validation proof grammar"
+```
+
+---
+
+### Task p06-t06: (review) Correct Lite artifact docs and refresh release surfaces
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/projects/artifacts.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Regenerate: `apps/oat-docs/index.md`
+- Regenerate: `.oat/sync/manifest.json` and managed Lite skill/provider views
+- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`,
+  `packages/docs-config/package.json`, `packages/docs-theme/package.json`,
+  `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+
+**Step 1: Write test (RED)**
+
+Add a contract assertion that the Lite artifacts-table row names Summary,
+Decisions, Assumptions, Out of Scope, and Validation Criteria. Run the focused
+test and confirm it fails against the current `validation criteria only` text.
+
+**Step 2: Implement (GREEN)**
+
+Correct the Lite artifacts-table row to describe its complete five-section
+single-phase `plan.md` contract. Regenerate the docs index. Because the final
+review changes a bundled skill and docs, bump all five lockstep public packages
+and the public-package version asset from `0.2.56` to `0.2.57`, then run
+`pnpm run cli -- sync --scope all` after every canonical edit so managed views
+and `.oat/sync/manifest.json` are current. A full-scope sync dry-run must report
+no operations.
+
+**Step 3: Refactor and format**
+
+Format only the non-generated files edited by this task:
+`pnpm exec oxfmt --write apps/oat-docs/docs/workflows/projects/artifacts.md packages/cli/src/validation/skills.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json`.
+Do not format the generated docs index, sync manifest, managed provider views,
+or lockfile.
+
+**Step 4: Verify**
+
+Run the focused Lite skill-contract test and confirm it exits 0. Prove the docs
+guard fails once when the five-section wording is neutralized, then restore it.
+Run `pnpm run cli -- sync --scope all --dry-run` and require no operations.
+
+Then run the complete repository definition-of-done sequence in AGENTS.md
+order with each exit code captured explicitly:
+
+1. `pnpm check`
+2. `pnpm type-check`
+3. `pnpm test`
+4. `pnpm build`
+5. `pnpm run check:skill-bumps`
+6. `git fetch origin main` followed by `pnpm release:check-versions`
+7. `pnpm release:validate`
+8. `pnpm build:docs`
+
+Because this review fix changes a canonical skill, also run `pnpm test:skills`,
+`pnpm lint`, and `pnpm format`. Expected: every command exits 0, and the
+focused guard failures were observed before the restored passing controls.
+
+**Step 5: Commit**
+
+Stage only the task's docs, contract test, generated docs index, managed sync
+outputs, lockstep package manifests, public-package version asset, and lockfile
+when changed. Commit:
+
+```bash
+git commit -m "fix(p06-t06): align lite artifacts and release surfaces"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -954,7 +1110,7 @@ git commit -m "chore(p06-t03): bump lockstep package versions for lite mode"
 | p05    | code     | passed          | 2026-09-05 | reviews/p05-review-2026-09-05T231617Z.md                                        | c11a1150239dc179c60b0b82defc9c350999955d | manual     | -                             |
 | p06    | code     | fixes_completed | 2026-09-06 | reviews/p06-review-2026-09-06T005620Z.md                                        | cfcaae8fd81da49b1f75862be2260a65eec2c5e7 | manual     | -                             |
 | p06    | code     | passed          | 2026-09-06 | reviews/p06-review-2026-09-06T011617Z.md                                        | d79a58b1b0f8aff53a361b3e591f5cff510106d9 | auto       | -                             |
-| final  | code     | received        | 2026-09-06 | reviews/final-review-2026-09-06T012310Z.md                                      | 919676d8623a4a4c9cf0654e76ba78ea593e1645 | auto       | -                             |
+| final  | code     | fixes_added     | 2026-09-06 | reviews/archived/final-review-2026-09-06T012310Z.md                             | 919676d8623a4a4c9cf0654e76ba78ea593e1645 | auto       | -                             |
 | spec   | artifact | pending         | -          | -                                                                               | -                                        | -          | -                             |
 | design | artifact | pending         | -          | -                                                                               | -                                        | -          | -                             |
 | plan   | artifact | received        | 2026-09-04 | reviews/archived/artifact-plan-review-2026-09-04T231105Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
@@ -1004,9 +1160,9 @@ rows remain unchanged.
 - Phase 3: 3 tasks - split-detector guard, promote command, lite single-phase validator
 - Phase 4: 2 tasks - oat-project-lite skill, end-to-end integration test
 - Phase 5: 4 tasks - mode-aware skill branches, import-to-lite offer, checkpoint bypass, collapsed closeout
-- Phase 6: 3 tasks - docs and triage, manual run and sync, lockstep bump and gates (last)
+- Phase 6: 6 tasks - docs and triage, manual run and sync, lockstep release gates, and three final-review fixes (last)
 
-**Total:** 19 tasks across 6 phases
+**Total:** 22 tasks across 6 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

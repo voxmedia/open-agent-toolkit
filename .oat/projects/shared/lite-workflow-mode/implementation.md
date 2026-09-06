@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: null
+oat_current_task_id: p06-t04
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | complete | 3     | 3/3       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | complete | 2     | 2/2       |
-| Phase 5 | complete | 4     | 4/4       |
-| Phase 6 | complete | 3     | 3/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 4     | 4/4       |
+| Phase 2 | complete    | 3     | 3/3       |
+| Phase 3 | complete    | 3     | 3/3       |
+| Phase 4 | complete    | 2     | 2/2       |
+| Phase 5 | complete    | 4     | 4/4       |
+| Phase 6 | in_progress | 6     | 3/6       |
 
-**Total:** 19/19 tasks completed
+**Total:** 19/22 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -305,9 +305,9 @@ retro, and reduced-artifact closeout paths passed the full contract suite.
 
 ## Phase 6: Documentation, Provider Sync, Smoke Run, and Release Gates
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-09-05
-**Completed:** 2026-09-06
+**Reopened for final review fixes:** 2026-09-06
 
 ### Task p06-t01: Document lite workflow mode
 
@@ -418,6 +418,18 @@ tests, smoke tests, skills tests, lint, format, and post-commit checks. The
 first `pnpm test` hit the unrelated SIGTERM cleanup timeout; its single
 authorized no-edit rerun passed and consumed no recovery attempt.
 
+### Task p06-t04: Fix the Lite validator command
+
+**Status:** pending
+
+### Task p06-t05: Align Lite validation-criterion grammar
+
+**Status:** pending
+
+### Task p06-t06: Correct Lite artifact docs and refresh release surfaces
+
+**Status:** pending
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -476,15 +488,42 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Outstanding Items
 
-- Final lifecycle review is required before closeout.
-- The two Medium findings from the first p06 review remain recorded as
-  non-blocking and were deliberately excluded from fix loop 1.
+- Final review fix tasks p06-t04 through p06-t06 are pending.
+- The historical p06-t02 supported-catalogue header wording is explicitly
+  accepted for defer because current managed projections and sync evidence are
+  correct.
 
 ---
 
 ## Implementation Log
 
 ### 2026-09-06
+
+#### Final review received — fix loop 1
+
+**Review artifact:**
+`reviews/archived/final-review-2026-09-06T012310Z.md`.
+**Reviewed head:** `919676d8623a4a4c9cf0654e76ba78ea593e1645`.
+**Findings:** 0 Critical, 1 Important, 2 Medium, 0 Minor.
+
+**New tasks added:** p06-t04, p06-t05, p06-t06.
+
+- I1 → p06-t04 (`code_fix_required`): use the supported
+  `--project-path` validator invocation and add an executable contract guard.
+- M1 → p06-t06 (`artifact_alignment_required`): align the user-facing
+  artifacts guide with Lite's five-section requirements contract.
+- M2 → p06-t05 (`code_fix_required`): require command and test-name proofs to
+  be backticked so the authoring grammar matches `validateLitePlan`.
+
+**Deferred Medium disposition:** the prior p06-t02 header-verification wording
+is explicitly accepted for defer. It is historical project prose, while the
+shipped base/variant ownership headers and current no-op sync evidence are
+authoritative. Revisit only if provider projection ownership or sync header
+contracts change.
+
+**Next:** execute the three final-review fix tasks through
+`oat-project-implement`, rerun terminal verification, and request a fresh final
+re-review.
 
 #### Final closeout verification passed
 
@@ -1025,11 +1064,12 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review    | Source Artifact    | Planned / Documented                                      | Actual / Accepted                                                             | Reason                                                                                | Source of Truth                           | Follow-up                                             |
-| ---------------- | ------------------ | --------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------- |
-| p04-t01 recovery | plan.md            | Bundled autonomy reference available on first task commit | Missing generated reference was restored through bounded append-only recovery | Provider-view generation exposed a task-boundary omission                             | Canonical skill plus bundled asset tests  | None; recovered and independently reviewed            |
-| p06-t03 revision | plan.md            | Version, sync, and release-only terminal task             | Added three bounded contract-alignment repairs before release commit          | Terminal negative controls reproduced stale assertions outside the original file list | Contract tests and `cfcaae8f` task commit | None; authorized and plan-reviewed                    |
-| p06 review fix 1 | p06 initial review | Lifecycle docs described Lite review setup correctly      | Corrected planning-time setup wording and added explicit exit ledger          | Independent review found two blocking evidence/docs defects                           | `3f5c8174` and passing p06 re-review      | Two Medium artifact wording notes remain non-blocking |
+| Task / Review      | Source Artifact    | Planned / Documented                                                          | Actual / Accepted                                                             | Reason                                                                                                                   | Source of Truth                           | Follow-up                                               |
+| ------------------ | ------------------ | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- | ------------------------------------------------------- |
+| p04-t01 recovery   | plan.md            | Bundled autonomy reference available on first task commit                     | Missing generated reference was restored through bounded append-only recovery | Provider-view generation exposed a task-boundary omission                                                                | Canonical skill plus bundled asset tests  | None; recovered and independently reviewed              |
+| p06-t03 revision   | plan.md            | Version, sync, and release-only terminal task                                 | Added three bounded contract-alignment repairs before release commit          | Terminal negative controls reproduced stale assertions outside the original file list                                    | Contract tests and `cfcaae8f` task commit | None; authorized and plan-reviewed                      |
+| p06 review fix 1   | p06 initial review | Lifecycle docs described Lite review setup correctly                          | Corrected planning-time setup wording and added explicit exit ledger          | Independent review found two blocking evidence/docs defects                                                              | `3f5c8174` and passing p06 re-review      | Two Medium artifact wording notes remain non-blocking   |
+| final review defer | final review       | p06-t02 verification prose applies the variant header rule to all projections | Accept the historical wording without changing shipped behavior               | Base and variant headers are correct and sync is current; changing historical execution prose adds no release confidence | Current provider views and sync dry-run   | Revisit if projection ownership/header contracts change |
 
 ## Test Results
 
