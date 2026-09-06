@@ -570,6 +570,15 @@ findings cover promoted-project recommender routing and a phantom `p02` row in
 the single-phase Lite template. No policy disposition or remediation attempt
 has been consumed before receive.
 
+#### Configured implementation exit gate receive intent persisted
+
+The receive handoff is bound to run
+`bd618f54-927e-4994-8462-2eb7c3a5b33b`, the source artifact
+`reviews/final-review-2026-09-06T021128Z.md`, event identity
+`final|code|final-review-2026-09-06T021128Z.md`, and collision-free archive
+destination `reviews/archived/final-review-2026-09-06T021128Z.md` at pre-receive
+HEAD `653e033d3651e3c107558525d667303f4685dcef`. Receive has not yet run.
+
 #### Final re-review passed
 
 **Review artifact:**
