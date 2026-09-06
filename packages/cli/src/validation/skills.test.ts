@@ -3529,6 +3529,56 @@ describe('validateOatSkills', () => {
           /--[a-z-]+ <[a-z_]+>/,
         );
       }
+      // The verifier runs only for a briefed artifact. Unconditional again, the
+      // artifact variables sit in an artifact-free retry's path, where `set -u`
+      // exits before the ledger reconciliation that retry has to reach.
+      const verifyingBlocks = invokingBlocks.filter((block) =>
+        block.includes('--verify'),
+      );
+      expect(
+        verifyingBlocks.length,
+        `${name} blocks verifying an artifact`,
+      ).toBeGreaterThan(0);
+      for (const [index, block] of verifyingBlocks.entries()) {
+        const label = `${name} verify block ${index + 1}`;
+        // All three fields together, so a partial brief is a named stop rather
+        // than an unbound-variable death under `set -u`.
+        const guardAt = block.indexOf(
+          'if [ -z "${ARTIFACT_DIR:-}${MANIFEST_DIGEST:-}${ARTIFACT_SIZE:-}" ]; then',
+        );
+        expect(
+          guardAt,
+          `${label} is conditional on a complete briefed artifact`,
+        ).toBeGreaterThan(-1);
+        expect(block, `${label} names the partial-brief stop`).toMatch(
+          /artifact-verification-failed: a partial recovered_patch is unusable/,
+        );
+        // Bounded by this branch's own closer — the FIRST `fi` at the guard's
+        // indentation — not by the last `fi` in the block. Taking the last one
+        // would let a `fi` moved above the verifier pass unnoticed.
+        const lineStart = block.lastIndexOf('\n', guardAt) + 1;
+        const indent = block.slice(lineStart, guardAt);
+        const closeMatch = new RegExp(`^${indent}fi$`, 'm').exec(
+          block.slice(guardAt),
+        );
+        const closeAt = closeMatch ? guardAt + closeMatch.index : -1;
+        expect(closeAt, `${label} closes its branch`).toBeGreaterThan(guardAt);
+        for (const token of [
+          '--verify',
+          '"$ARTIFACT_DIR"',
+          '"$MANIFEST_DIGEST"',
+          '"$ARTIFACT_SIZE"',
+        ]) {
+          expect(
+            block.indexOf(token),
+            `${label} opens ${token} inside the branch`,
+          ).toBeGreaterThan(guardAt);
+          expect(
+            block.lastIndexOf(token),
+            `${label} closes ${token} inside the branch`,
+          ).toBeLessThan(closeAt);
+        }
+      }
       expect(
         contract,
         `${name} no repo-relative capture invocation`,
@@ -3609,7 +3659,7 @@ describe('validateOatSkills', () => {
       [
         'phase root',
         sequence,
-        /pending-attempt reconciliation/,
+        /pending-attempt\s+reconciliation/,
         /before it applies or commits anything/,
       ],
     ] as const;
@@ -3664,6 +3714,22 @@ describe('validateOatSkills', () => {
         contract,
         `${name} the retry brief drops the committed artifact`,
       ).toMatch(/(?:without|omits) the already-committed artifact/);
+      // And that artifact-free brief must still reach the reconciliation
+      // rather than parking on an unset artifact variable.
+      const skipAt = contract.search(
+        /skips verification and continues to the ledger\s+reconciliation/,
+      );
+      expect(
+        skipAt,
+        `${name} an artifact-free brief skips verification`,
+      ).toBeGreaterThan(-1);
+      expect(
+        skipAt,
+        `${name} skips verification before the reconciliation`,
+      ).toBeLessThan(reconcileAt);
+      expect(contract, `${name} the artifact-free apply is a no-op`).toMatch(
+        /(?:step 4|apply step) is a no-op/,
+      );
     }
   });
 

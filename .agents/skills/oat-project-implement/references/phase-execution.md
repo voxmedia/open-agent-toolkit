@@ -316,28 +316,42 @@ STOP rather than a best-effort restore:
 
    ```bash
    set -eu
-   CAPTURE_SCRIPT=""
-   REPO_ROOT=$(git -C "$PHASE_WORKTREE" rev-parse --show-toplevel 2>/dev/null || true)
-   for CAPTURE_ROOT in "${SKILL_DIR:-}" \
-     "${HOME:-}/.agents/skills/oat-project-implement" \
-     "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-implement}"; do
-     [ -n "$CAPTURE_ROOT" ] || continue
-     [ -f "$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs" ] || continue
-     CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"
-     break
-   done
-   [ -n "$CAPTURE_SCRIPT" ] || {
-     echo "capture-script-unavailable" >&2
+   # `recovered_patch` is optional and all-or-nothing. Without one there is
+   # nothing to verify and nothing to apply, so the verifier is skipped
+   # entirely; a partial brief is a named stop rather than an unbound-variable
+   # death. Never dereference an artifact variable outside the branch: under
+   # `set -u` an unset one exits here, and an empty one fails verification —
+   # either way an artifact-free retry parks before the ledger reconciliation
+   # it needs to reach.
+   if [ -z "${ARTIFACT_DIR:-}${MANIFEST_DIGEST:-}${ARTIFACT_SIZE:-}" ]; then
+     : # No recovered_patch: continue to the ledger reconciliation.
+   elif [ -z "${ARTIFACT_DIR:-}" ] || [ -z "${MANIFEST_DIGEST:-}" ] ||
+     [ -z "${ARTIFACT_SIZE:-}" ]; then
+     echo "artifact-verification-failed: a partial recovered_patch is unusable; artifact, manifest_digest and size travel together" >&2
      exit 1
-   }
+   else
+     CAPTURE_SCRIPT=""
+     REPO_ROOT=$(git -C "$PHASE_WORKTREE" rev-parse --show-toplevel 2>/dev/null || true)
+     for CAPTURE_ROOT in "${SKILL_DIR:-}" \
+       "${HOME:-}/.agents/skills/oat-project-implement" \
+       "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-implement}"; do
+       [ -n "$CAPTURE_ROOT" ] || continue
+       [ -f "$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs" ] || continue
+       CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"
+       break
+     done
+     [ -n "$CAPTURE_SCRIPT" ] || {
+       echo "capture-script-unavailable" >&2
+       exit 1
+     }
 
-   EXPECTED_HEAD=$(git -C "$PHASE_WORKTREE" rev-parse --verify HEAD)
-   node "$CAPTURE_SCRIPT" \
-     --verify \
-     --artifact-dir "$ARTIFACT_DIR" \
-     --manifest-digest "$MANIFEST_DIGEST" \
-     --size "$ARTIFACT_SIZE" \
-     --expected-head "$EXPECTED_HEAD"
+     EXPECTED_HEAD=$(git -C "$PHASE_WORKTREE" rev-parse --verify HEAD)
+     node "$CAPTURE_SCRIPT" --verify \
+       --artifact-dir "$ARTIFACT_DIR" \
+       --manifest-digest "$MANIFEST_DIGEST" \
+       --size "$ARTIFACT_SIZE" \
+       --expected-head "$EXPECTED_HEAD"
+   fi
    ```
 
    `--expected-head` is mandatory and reconciles the artifact's captured base
@@ -345,19 +359,27 @@ STOP rather than a best-effort restore:
    whose context happens to match applies cleanly at the wrong commit and
    silently produces wrong content, so a base mismatch is a STOP.
 
-   An `artifact-verification-failed` exit is a STOP. Verification is read-only.
-   The continuation completes every fail-closed precondition — input
-   validation, the base and immutable-history checks, artifact verification,
-   and pending-attempt reconciliation — before it applies or commits anything,
+   An `artifact-verification-failed` exit is a STOP. Verification is read-only
+   and conditional: it runs only when the brief carries a `recovered_patch`.
+   A continuation briefed without one has no artifact to resolve a script for,
+   so it skips verification and continues to the ledger reconciliation, and its
+   apply step is a no-op. The continuation completes every fail-closed
+   precondition — input validation, the base and immutable-history checks,
+   artifact verification when an artifact was briefed, and pending-attempt
+   reconciliation — before it applies or commits anything,
    so a precondition stop leaves the branch exactly at `recovery_base_head`
    with the artifact untouched and re-verifiable; re-brief from current
    authoritative state rather than assuming the earlier brief still holds. Only
-   then does it apply `git apply --index` for the `index` component,
-   `git apply` for the `worktree` component, and byte copies plus the
-   manifest's recorded executable bit for the `untracked` component, review the
-   result, and commit it as its first action. The artifact is immutable between
-   the verification and the application: nothing may write to it in between,
-   and a re-verification is required if anything might have.
+   then, and only when an artifact was briefed and verified, does it apply
+   `git apply --index` for the `index` component, `git apply` for the
+   `worktree` component, and byte copies plus the manifest's recorded
+   executable bit for the `untracked` component, review the result, and commit
+   it as its first action. The artifact is immutable between the verification
+   and the application: nothing may write to it in between, and a
+   re-verification is required if anything might have. A continuation briefed
+   without a `recovered_patch` applies nothing, commits nothing here, records
+   no artifact reference, and proceeds to its own work with the tree as it
+   found it.
 
 7. Record the artifact reference and manifest digest in the continuation event
    (`cont-<project>-<phase>-fix-N`). That first commit is a recovery commit,
@@ -369,7 +391,10 @@ STOP rather than a best-effort restore:
    which includes that recovery commit and any candidate or ledger-only commit
    already durably made — and without the already-committed artifact;
    re-supplying it would apply the same work twice, and holding the original
-   base would make the exact-HEAD check unsatisfiable. Carry the recovery
+   base would make the exact-HEAD check unsatisfiable. That retry runs no
+   verifier: with `recovered_patch` null there is nothing to verify, and a
+   contract that referenced the artifact variables anyway would park the retry
+   under `set -u` before it reached the reconciliation. Carry the recovery
    commit as provenance in the continuation event, and capture dirt that
    accumulated afterwards as its own new `recovered_patch`.
 

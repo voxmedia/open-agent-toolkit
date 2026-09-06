@@ -497,32 +497,53 @@ continuation.
    bounded diff, a supplied `recovered_patch` is the only permitted
    pre-existing dirt, and only after it verifies. Verification is read-only and
    happens here; the apply and the commit wait for step 4, so every precondition
-   that can park the phase resolves before anything is written. Resolve
+   that can park the phase resolves before anything is written. When the brief
+   carries no `recovered_patch` — an ordinary resume, or a retry after the
+   recovery commit already landed — the ordinary permitted-dirt invariant above
+   is the whole of this step: there is no artifact to resolve a script for, so
+   the continuation skips verification and continues to the ledger
+   reconciliation in step 3, and step 4 is a no-op. Resolve
    `capture-dirty-tree.mjs` through installed scope rather than a
-   repository-relative path, probing in order and binding the first match:
+   repository-relative path, probing in order and binding the first match, and
+   only when an artifact was briefed:
 
    ```bash
    set -eu
-   CAPTURE_SCRIPT=""
-   REPO_ROOT=$(git -C "$PHASE_WORKTREE" rev-parse --show-toplevel 2>/dev/null || true)
-   for CAPTURE_ROOT in "${HOME:-}/.agents/skills/oat-project-implement" \\
-     "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-implement}"; do
-     [ -n "$CAPTURE_ROOT" ] || continue
-     [ -f "$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs" ] || continue
-     CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"
-     break
-   done
-   [ -n "$CAPTURE_SCRIPT" ] || {
-     echo "capture-script-unavailable" >&2
+   # `recovered_patch` is optional and all-or-nothing. Without one there is
+   # nothing to verify and nothing to apply, so the verifier is skipped
+   # entirely; a partial brief is a named stop rather than an unbound-variable
+   # death. Never dereference an artifact variable outside the branch: under
+   # `set -u` an unset one exits here, and an empty one fails verification —
+   # either way an artifact-free retry parks before the ledger reconciliation
+   # it needs to reach.
+   if [ -z "${ARTIFACT_DIR:-}${MANIFEST_DIGEST:-}${ARTIFACT_SIZE:-}" ]; then
+     : # No recovered_patch: continue to the ledger reconciliation.
+   elif [ -z "${ARTIFACT_DIR:-}" ] || [ -z "${MANIFEST_DIGEST:-}" ] ||
+     [ -z "${ARTIFACT_SIZE:-}" ]; then
+     echo "artifact-verification-failed: a partial recovered_patch is unusable; artifact, manifest_digest and size travel together" >&2
      exit 1
-   }
+   else
+     CAPTURE_SCRIPT=""
+     REPO_ROOT=$(git -C "$PHASE_WORKTREE" rev-parse --show-toplevel 2>/dev/null || true)
+     for CAPTURE_ROOT in "${HOME:-}/.agents/skills/oat-project-implement" \\
+       "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-implement}"; do
+       [ -n "$CAPTURE_ROOT" ] || continue
+       [ -f "$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs" ] || continue
+       CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"
+       break
+     done
+     [ -n "$CAPTURE_SCRIPT" ] || {
+       echo "capture-script-unavailable" >&2
+       exit 1
+     }
 
-   EXPECTED_HEAD=$(git -C "$PHASE_WORKTREE" rev-parse --verify HEAD)
-   node "$CAPTURE_SCRIPT" --verify \\
-     --artifact-dir "$ARTIFACT_DIR" \\
-     --manifest-digest "$MANIFEST_DIGEST" \\
-     --size "$ARTIFACT_SIZE" \\
-     --expected-head "$EXPECTED_HEAD"
+     EXPECTED_HEAD=$(git -C "$PHASE_WORKTREE" rev-parse --verify HEAD)
+     node "$CAPTURE_SCRIPT" --verify \\
+       --artifact-dir "$ARTIFACT_DIR" \\
+       --manifest-digest "$MANIFEST_DIGEST" \\
+       --size "$ARTIFACT_SIZE" \\
+       --expected-head "$EXPECTED_HEAD"
+   fi
    ```
 
    `ARTIFACT_DIR`, `MANIFEST_DIGEST`, and `ARTIFACT_SIZE` are the
@@ -539,8 +560,8 @@ continuation.
    and the recovery command
    `oat tools install workflows --scope <user|project>` or
    `oat tools update --pack workflows --scope <user|project>`, and never fall
-   back to a repository-relative path. Verify before touching the tree and stop
-   on any `artifact-verification-failed` mismatch, including the base mismatch
+   back to a repository-relative path. With an artifact briefed, verify before
+   touching the tree and stop on any `artifact-verification-failed` mismatch, including the base mismatch
    `--expected-head` catches: integrity is not base agreement, and a hunk whose
    context happens to match applies cleanly at the wrong commit. Report an
    `active-writer`, `unsupported-dirt`, `round-trip-failed`, or
