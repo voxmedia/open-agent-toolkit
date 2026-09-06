@@ -15,6 +15,8 @@ import {
   getSkillVersion,
   parseFrontmatterField,
   parseGeneratedTime,
+  parseSkillGateOverrides,
+  SKILL_GATE_OVERRIDE_SOURCE,
 } from './frontmatter';
 
 describe('frontmatter', () => {
@@ -280,6 +282,141 @@ describe('frontmatter', () => {
         expect(preserved).toEqual(parsed);
       },
     );
+
+    describe('parseSkillGateOverrides', () => {
+      const STATE_PATH = '.oat/projects/shared/demo/state.md';
+
+      it('treats an absent map as "follow configuration"', () => {
+        expect(
+          parseSkillGateOverrides('oat_phase: implement', STATE_PATH),
+        ).toEqual({ present: false, overrides: {} });
+      });
+
+      it('parses a disabled override for each gate-aware skill', () => {
+        expect(
+          parseSkillGateOverrides(
+            [
+              'oat_phase: implement',
+              'oat_skill_gate_overrides:',
+              '  oat-project-implement: disabled',
+              '  oat-project-plan: disabled',
+            ].join('\n'),
+            STATE_PATH,
+          ),
+        ).toEqual({
+          present: true,
+          overrides: {
+            'oat-project-implement': 'disabled',
+            'oat-project-plan': 'disabled',
+          },
+        });
+      });
+
+      it('treats an explicitly empty map as present with no overrides', () => {
+        expect(
+          parseSkillGateOverrides('oat_skill_gate_overrides:', STATE_PATH),
+        ).toEqual({ present: true, overrides: {} });
+      });
+
+      it('keeps an override for a skill that has no configured gate', () => {
+        // Visible in progress, but it must never fabricate configuration.
+        expect(
+          parseSkillGateOverrides(
+            ['oat_skill_gate_overrides:', '  oat-project-spec: disabled'].join(
+              '\n',
+            ),
+            STATE_PATH,
+          ).overrides,
+        ).toEqual({ 'oat-project-spec': 'disabled' });
+      });
+
+      it('exposes the durable override source string', () => {
+        expect(SKILL_GATE_OVERRIDE_SOURCE).toBe(
+          'state.md:oat_skill_gate_overrides',
+        );
+      });
+
+      it.each([
+        ['a sequence', 'oat_skill_gate_overrides:\n  - oat-project-implement'],
+        ['a boolean', 'oat_skill_gate_overrides: true'],
+        ['a bare string', 'oat_skill_gate_overrides: disabled'],
+        [
+          'a boolean value',
+          'oat_skill_gate_overrides:\n  oat-project-implement: true',
+        ],
+        [
+          'an enabled value',
+          'oat_skill_gate_overrides:\n  oat-project-implement: enabled',
+        ],
+        [
+          'a null value',
+          'oat_skill_gate_overrides:\n  oat-project-implement: null',
+        ],
+        [
+          'a nested map value',
+          'oat_skill_gate_overrides:\n  oat-project-implement:\n    value: disabled',
+        ],
+        [
+          'a sequence value',
+          'oat_skill_gate_overrides:\n  oat-project-implement:\n    - disabled',
+        ],
+        [
+          'an unqualified key',
+          'oat_skill_gate_overrides:\n  implement: disabled',
+        ],
+        [
+          'a duplicate skill key',
+          'oat_skill_gate_overrides:\n  oat-project-implement: disabled\n  oat-project-implement: disabled',
+        ],
+        [
+          'a duplicate map key',
+          'oat_skill_gate_overrides:\n  oat-project-plan: disabled\noat_skill_gate_overrides:\n  oat-project-plan: disabled',
+        ],
+      ])('rejects %s with an actionable state path', (_name, frontmatter) => {
+        expect(() => parseSkillGateOverrides(frontmatter, STATE_PATH)).toThrow(
+          STATE_PATH,
+        );
+        expect(() => parseSkillGateOverrides(frontmatter, STATE_PATH)).toThrow(
+          /oat_skill_gate_overrides/,
+        );
+      });
+
+      it('round-trips through the preserved project-state field list', () => {
+        const frontmatter = [
+          'oat_phase: implement',
+          'oat_skill_gate_overrides:',
+          '  oat-project-implement: disabled',
+        ].join('\n');
+        const parsed = YAML.parse(frontmatter) as Record<string, unknown>;
+        const preserved = Object.fromEntries(
+          Object.entries(parsed).filter(([field]) =>
+            isProjectStateFrontmatterField(field),
+          ),
+        );
+
+        expect(isProjectStateFrontmatterField('oat_skill_gate_overrides')).toBe(
+          true,
+        );
+        expect(preserved).toEqual(parsed);
+        expect(
+          parseSkillGateOverrides(frontmatter, STATE_PATH).overrides,
+        ).toEqual({ 'oat-project-implement': 'disabled' });
+      });
+
+      it('preserves unrelated frontmatter fields alongside the map', () => {
+        const frontmatter = [
+          'oat_phase: implement',
+          'associated_issues: []',
+          'oat_skill_gate_overrides:',
+          '  oat-project-implement: disabled',
+        ].join('\n');
+
+        expect(
+          parseSkillGateOverrides(frontmatter, STATE_PATH).overrides,
+        ).toEqual({ 'oat-project-implement': 'disabled' });
+        expect(YAML.parse(frontmatter)).toHaveProperty('associated_issues');
+      });
+    });
 
     it('preserves legacy project state without adding an exit-gate field', () => {
       const parsed = YAML.parse('oat_phase: implement') as Record<

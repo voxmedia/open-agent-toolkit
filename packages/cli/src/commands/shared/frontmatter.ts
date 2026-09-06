@@ -33,6 +33,7 @@ export const PROJECT_STATE_FRONTMATTER_FIELDS = [
   'oat_hill_completed',
   'oat_parallel_execution',
   'oat_implement_exit_gate',
+  'oat_skill_gate_overrides',
   'oat_pr_status',
   'oat_pr_url',
   'oat_project_created',
@@ -63,6 +64,114 @@ export function isProjectStateFrontmatterField(
   return PROJECT_STATE_FRONTMATTER_FIELDS.includes(
     value as ProjectStateFrontmatterField,
   );
+}
+
+export const SKILL_GATE_OVERRIDE_FIELD = 'oat_skill_gate_overrides';
+export const SKILL_GATE_OVERRIDE_DISABLED = 'disabled';
+export const SKILL_GATE_OVERRIDE_SOURCE = `state.md:${SKILL_GATE_OVERRIDE_FIELD}`;
+
+/**
+ * Skill-name shape for an override key. Deliberately a shape test rather than
+ * the live `oat_gateable: true` set: an override for a skill that has no
+ * configured gate is inert but must stay visible to project progress, so this
+ * parser must not fabricate or reject configuration knowledge it does not own.
+ * A bare `implement` or an empty key is still a typo and is rejected.
+ */
+const SKILL_GATE_OVERRIDE_KEY = /^oat-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export type SkillGateOverrideValue = typeof SKILL_GATE_OVERRIDE_DISABLED;
+
+export interface ProjectSkillGateOverrides {
+  /** False when the key is absent entirely: absence means follow configuration. */
+  present: boolean;
+  overrides: Record<string, SkillGateOverrideValue>;
+}
+
+function skillGateOverrideError(statePath: string, detail: string): Error {
+  return new Error(
+    `${statePath}: \`${SKILL_GATE_OVERRIDE_FIELD}\` ${detail}. Use a map of gate-aware skill names to the literal value \`${SKILL_GATE_OVERRIDE_DISABLED}\`, or remove the key to follow configured gates.`,
+  );
+}
+
+/**
+ * Strict parser for the per-project gate override map.
+ *
+ * Absence is not an error and never fabricates configuration. Every rejection
+ * names the offending project state path so the operator can repair it.
+ */
+export function parseSkillGateOverrides(
+  frontmatter: string,
+  statePath: string,
+): ProjectSkillGateOverrides {
+  const document = YAML.parseDocument(frontmatter, { uniqueKeys: true });
+  if (document.errors.length > 0) {
+    throw skillGateOverrideError(
+      statePath,
+      `cannot be read because the frontmatter is malformed (${document.errors[0]?.message ?? 'YAML parse error'})`,
+    );
+  }
+
+  if (!isMap(document.contents)) {
+    return { present: false, overrides: {} };
+  }
+
+  const matches = document.contents.items.filter(
+    (pair) =>
+      isScalar(pair.key) && pair.key.value === SKILL_GATE_OVERRIDE_FIELD,
+  );
+  if (matches.length === 0) {
+    return { present: false, overrides: {} };
+  }
+  // `uniqueKeys` already rejects a duplicate top-level key above; this stays as
+  // a fail-closed guard rather than silently reading the first of several.
+  if (matches.length > 1) {
+    throw skillGateOverrideError(statePath, 'is declared more than once');
+  }
+
+  const value = matches[0]?.value;
+  // An explicitly null or empty map is a deliberate "no overrides" statement.
+  if (value === null || (isScalar(value) && value.value === null)) {
+    return { present: true, overrides: {} };
+  }
+  if (!isMap(value)) {
+    throw skillGateOverrideError(
+      statePath,
+      'must be a map of skill names to `disabled`',
+    );
+  }
+
+  const overrides: Record<string, SkillGateOverrideValue> = {};
+  for (const pair of value.items) {
+    if (!isScalar(pair.key) || typeof pair.key.value !== 'string') {
+      throw skillGateOverrideError(statePath, 'has a non-string skill key');
+    }
+    const skill = pair.key.value.trim();
+    if (!skill) {
+      throw skillGateOverrideError(statePath, 'has an empty skill key');
+    }
+    if (!SKILL_GATE_OVERRIDE_KEY.test(skill)) {
+      throw skillGateOverrideError(
+        statePath,
+        `has an invalid skill key \`${skill}\``,
+      );
+    }
+
+    const entry = pair.value;
+    if (
+      !isScalar(entry) ||
+      typeof entry.value !== 'string' ||
+      entry.value.trim() !== SKILL_GATE_OVERRIDE_DISABLED
+    ) {
+      throw skillGateOverrideError(
+        statePath,
+        `sets \`${skill}\` to an unsupported value`,
+      );
+    }
+
+    overrides[skill] = SKILL_GATE_OVERRIDE_DISABLED;
+  }
+
+  return { present: true, overrides };
 }
 
 export function getFrontmatterBlock(content: string): string | null {
