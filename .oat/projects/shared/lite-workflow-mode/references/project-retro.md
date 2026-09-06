@@ -23,7 +23,7 @@ oat_retro_evidence_sources:
   - source: spec
     status: unavailable
 oat_retro_promotions: proposed
-oat_retro_filing: proposed
+oat_retro_filing: complete
 oat_generated: true
 oat_template: false
 ---
@@ -73,8 +73,9 @@ hypothesis or inconclusive.
 ## Current State
 
 - **Promotions:** `proposed` — RP-01 and RP-02 await an apply decision.
-- **Filing:** `proposed` — UP-01 and UP-02 await a filing decision and destination.
-- **Unsettled items:** RP-01, RP-02, UP-01, and UP-02.
+- **Filing:** `complete` — UP-01 was filed as GitHub issue #265 and UP-02 as
+  GitHub issue #266; both are tracked by `BL-260906-harden-dispatch-launch`.
+- **Unsettled items:** RP-01 and RP-02 remain proposed for application.
 
 ## What Went Well
 
@@ -265,12 +266,13 @@ This extends the existing item rather than creating a duplicate.
 
 ### UP-01: Calculate execution baselines after mandatory launch journaling
 
-- **Status:** proposed
-- **Destination:** —
+- **Status:** filed
+- **Destination:** https://github.com/voxmedia/open-agent-toolkit/issues/265
 - **Destination-receipt:** —
 - **Remote-visibility:** —
 - **Sanitized:** yes
-- **Disposition-note:** —
+- **Disposition-note:** Filed as GitHub issue #265 and linked from
+  `BL-260906-harden-dispatch-launch`.
 
 Phase dispatch should not invalidate its own `expected_base_sha`. Persist all
 mandatory prelaunch journal commits before resolving the accepted base, or
@@ -282,12 +284,13 @@ the intended invariant.
 
 ### UP-02: Reconcile every accepted dispatch to a terminal outcome
 
-- **Status:** proposed
-- **Destination:** —
+- **Status:** filed
+- **Destination:** https://github.com/voxmedia/open-agent-toolkit/issues/266
 - **Destination-receipt:** —
 - **Remote-visibility:** —
 - **Sanitized:** yes
-- **Disposition-note:** —
+- **Disposition-note:** Filed as GitHub issue #266 and linked from
+  `BL-260906-harden-dispatch-launch`.
 
 Several accepted p01-p03 implementation and review records still report
 `child_outcome: in-progress` even though committed implementation and review
