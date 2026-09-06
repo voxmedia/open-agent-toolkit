@@ -242,6 +242,37 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p05     | node --test 30 + forced CLI suite 5602 + test:skills 832 + smoke 141 + release 39 | all    | 0    | lane report + review rounds |
 | fan-ins | eight-gate definition-of-done sequence ×3 with `Cached: 0` forced test runs       | all    | 0    | fan-in entries above        |
 
+## Review Received: final (round 1)
+
+**Date:** 2026-09-06
+**Review artifact:** reviews/archived/final-review-2026-09-06T085208Z.md (reviewed head `bee72dd4d300762366475781f7d97ac76464948f`, invocation manual, dispatch `w2-final-review-001`, reconnaissance attempted)
+
+**Findings:** Critical 0 · Important 3 · Medium 7 · Minor 8. Weaker-anywhere clean on all three safety surfaces (200-case differential on p02; 6/6 canonical and 7/7 mirror positions on p03; 21 adversarial probes on p05 all fail closed); 15/15 patch-id pairs identical; every skill bumped exactly once; every pin matches; the lockstep bump is the only release-file change; gates exit 0 with `Cached: 0`.
+
+**Dispositions:**
+
+- I1 — p03's whole-document guard was call-site-only (`source = passage` default; the pinning fixture called the helper directly): **fixed in code** — `w2-p03-fix-002`, commit `e82e2442f` on the integration branch (`contracts.test.mjs` only): `source` is required, the loop body is `assertGuardedCopy(copy, root)`, matrix paths are repo-root-relative, and the fixture drives the real matrix against injected copies of both guarded files. Neutralization: narrowing the source to the passage fails 1/54; deleting the third argument at the loop call fails 3/54 (previously 53/53 green).
+- I2 — plan-gate artifact absent from git (`reviews/archived/` is gitignored; `f631d1cd6` recorded a pure deletion): **fixed** — force-added in `604ddd10a`; every other archived review artifact was already tracked.
+- I3 — synthesis verdict 4 carried four false statements: **fixed** in `604ddd10a` (fix rounds per lane, two Criticals, nine Important across five lanes, p05 round 2 failed and round 3 passed).
+- M1 — Final Summary asserted a final review and exit gate that did not exist: **fixed** (`77c6fb164`; the paragraph now names this artifact and states the gate is recorded as it completes).
+- M2 — doctor backlog item misdescribed the deferred defect: **fixed** (`77c6fb164`; description and acceptance criteria rewritten around the both-installed-and-available contradiction).
+- M3 — the p03 "one sentence" property did not hold at terminators followed by closing punctuation: **fixed in code** (`e82e2442f`; splitter, three fixtures, both comments corrected; neutralization fails 1/54).
+- M4 — false no-op-rebase lesson in the group-1 fan-in record: **fixed** (`604ddd10a` log; `77c6fb164` implementation record).
+- M5 — project state files described a mid-p01 snapshot: **fixed** (`77c6fb164`; `oat_status`, `oat_current_task_id`, Outstanding Items, state prose, `oat_last_commit`).
+- M6 — Implementation Complete checklist unchecked; `summary.md` missing: **fixed / deferred by rule** (four items checked; `summary.md` is produced by the post-implement sequence below).
+- M7 — dispatch records frozen at `child_outcome: running`; Dispatch Note :125 task-class claim: **fixed by note** (records are immutable after the first revision; terminal outcomes live in the Dispatch Notes; the reviewer-record task class corrected to `consequential`).
+- m1 — plan-review ledger row `passed` against a blocking artifact: **fixed** (annotation beneath the row naming the gate-mode auto-disposition and fix commit `702500936`).
+- m2 — three wave-close plan corrections had no durable tracker: **fixed** — `BL-260906-wave-2-external-plan` filed.
+- m3 — p05 round-1 Minor count: **fixed** in the implementation record (5); the archived artifact is left as the reviewer wrote it.
+- m4 / m5 — p02 markup-set overstatement and `requiresConfirmation` comment: **fixed** — residual shapes appended to `BL-260827-span-based-prose-guards` (`77c6fb164`); comment relabels via `w2-p02-fix-002`, commit `e17532ded` (comment-only: non-comment lines byte-identical; the six synonym probes and four markup compositions reproduced and named as residuals).
+- m6 — `project-log.md` synthesis pending: **fixed** — structural entry appended stating that `orchestration-log.md` owns the wrapper synthesis.
+- m7 — stale prior-artifact pointers in archived review frontmatter: **rejected** — archived artifacts are the reviewers' immutable records; the archive step's pointer rewrite is a follow-up for the skill, not a record edit.
+- m8 — undisclosed lifecycle behavior change (`oat-project-plan` step 1 now stops instead of auto-chaining): **fixed** — Deviations row and Final Summary clause added; carried into the PR description.
+
+**Verification record:** what — the two code commits and the record repairs above; how — `node --test` 54/54 and `pnpm test:skills` 833/833 on `e82e2442f`, forced `turbo run check` (`Cached: 0`), `oat project validate-plan` exit 0, `git ls-files` shows the plan-gate artifact tracked; where — this section and the commits named.
+
+**Review row `final` (round 1) → `fixes_added`; a narrowed round 2 on the same reviewer handle verifies these dispositions.**
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)
