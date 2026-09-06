@@ -14,6 +14,7 @@ import {
   DECISION_INDEX_START,
   renderDecisionManagedSection,
 } from '@commands/decision/regenerate-index';
+import { expectDispatchStampFieldContract } from '@test-support/skills/dispatch-stamp-contract';
 import { describe, expect, it } from 'vitest';
 
 import { PACK_MANIFEST } from '../../../tools/shared/pack-manifest';
@@ -605,6 +606,7 @@ describe('bundle asset inventory consistency', () => {
           expect(content, `${skill} derived stamp`).toContain(
             'formatDispatchStamp(dispatchReport)',
           );
+          expectDispatchStampFieldContract(content, skill);
         }
       } finally {
         rmSync(assetsRoot, { recursive: true, force: true });

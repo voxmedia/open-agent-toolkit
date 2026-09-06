@@ -9,7 +9,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   addEntry,
   createEmptyManifest,
+  detectManifestVersionRestamp,
   findEntry,
+  formatManifestVersionRestampWarning,
   loadManifest,
   removeEntry,
   saveManifest,
@@ -294,6 +296,106 @@ describe('manifest manager', () => {
       const next = removeEntry(initial, '.agents/skills/missing', 'claude');
 
       expect(next.entries).toEqual([]);
+    });
+  });
+
+  describe('detectManifestVersionRestamp', () => {
+    it('reports nothing when the producing version matches the invoking version', () => {
+      const manifest = createEmptyManifest();
+
+      expect(detectManifestVersionRestamp('project', manifest)).toBeUndefined();
+    });
+
+    it('reports the producing and invoking versions for an older manifest', () => {
+      const manifest = { ...createEmptyManifest(), oatVersion: '0.0.1' };
+
+      expect(detectManifestVersionRestamp('project', manifest)).toEqual({
+        scope: 'project',
+        producingVersion: '0.0.1',
+        invokingVersion: OAT_VERSION,
+      });
+    });
+
+    it('reports a newer manifest too: the contract is identity, not ordering', () => {
+      const manifest = { ...createEmptyManifest(), oatVersion: '999.0.0' };
+
+      expect(detectManifestVersionRestamp('user', manifest)).toEqual({
+        scope: 'user',
+        producingVersion: '999.0.0',
+        invokingVersion: OAT_VERSION,
+      });
+    });
+
+    it('reports nothing for an absent manifest', async () => {
+      const loaded = await loadManifest(manifestPath);
+
+      expect(detectManifestVersionRestamp('project', loaded)).toBeUndefined();
+    });
+
+    it('ignores the in-memory V1 to V2 upgrade and compares only oatVersion', async () => {
+      // `loadManifest` silently rewrites `version` 1 -> 2 in memory. That
+      // schema migration is explicitly out of scope for the advisory: a V1
+      // file produced by the invoking CLI version reports no restamp.
+      await mkdir(join(workDir, '.agents'), { recursive: true });
+      await writeFile(
+        manifestPath,
+        JSON.stringify({
+          version: 1,
+          oatVersion: OAT_VERSION,
+          entries: [],
+          lastUpdated: '2026-02-13T00:00:00.000Z',
+        }),
+        'utf8',
+      );
+
+      const loaded = await loadManifest(manifestPath);
+
+      expect(loaded.version).toBe(2);
+      expect(detectManifestVersionRestamp('project', loaded)).toBeUndefined();
+    });
+
+    it('leaves invalid manifests to the loader rather than reclassifying them', async () => {
+      await mkdir(join(workDir, '.agents'), { recursive: true });
+      await writeFile(
+        manifestPath,
+        JSON.stringify({
+          version: 2,
+          oatVersion: '',
+          entries: [],
+          collections: [],
+          lastUpdated: '2026-02-13T00:00:00.000Z',
+        }),
+        'utf8',
+      );
+
+      await expect(loadManifest(manifestPath)).rejects.toBeInstanceOf(CliError);
+    });
+
+    it('still restamps after the diagnostic is taken, preserving save enforcement', async () => {
+      const manifest = { ...createEmptyManifest(), oatVersion: '0.0.1' };
+      const restamp = detectManifestVersionRestamp('project', manifest);
+
+      await saveManifest(manifestPath, manifest);
+
+      expect(restamp?.producingVersion).toBe('0.0.1');
+      expect((await loadManifest(manifestPath)).oatVersion).toBe(OAT_VERSION);
+    });
+  });
+
+  describe('formatManifestVersionRestampWarning', () => {
+    it('names the command, the scope, and both versions exactly once', () => {
+      const message = formatManifestVersionRestampWarning('init', {
+        scope: 'project',
+        producingVersion: '0.0.1',
+        invokingVersion: '9.9.9',
+      });
+
+      expect(message).toBe(
+        'Manifest version restamp [init project]: manifest produced by oat "0.0.1" will be restamped to oat "9.9.9".',
+      );
+      expect(message.match(/0\.0\.1/g)).toHaveLength(1);
+      expect(message.match(/9\.9\.9/g)).toHaveLength(1);
+      expect(message.match(/project/g)).toHaveLength(1);
     });
   });
 });

@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.22
+version: 1.2.23
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -403,6 +403,100 @@ This setup is independent from HiLL checkpoints. It must not read or change
 `oat_hill_completed`. The qualifying target only controls whether the setup
 choice is offered; normal lifecycle gate commands remain provider-neutral.
 They must not add a provider/model `--target` argument.
+
+## Shared Lifecycle Gate Posture Setup Contract
+
+Every plan-producing workflow invokes this procedure after the complete plan
+has stable phase IDs and before the plan artifact review begins, which is the
+same boundary the phase gate review setup uses. It runs adjacent to, but
+independently from, that setup: neither contract reads, writes, or
+satisfies the other's setting. The calling skill owns the prompt and the write
+to `"$PROJECT_PATH/state.md"`; this section owns the shared eligibility,
+preservation, validation, and non-interactive behavior.
+
+This contract governs the configured lifecycle gates declared with
+`oat_gateable: true` in skill frontmatter. It never reads or writes
+`oat_phase_review_gate`, HiLL policy, or any autonomous design-gate setting.
+
+### 1. Preserve an explicit existing map
+
+Inspect `"$PROJECT_PATH/state.md"` frontmatter before probing configuration. If
+an explicit `oat_skill_gate_overrides` key is present, preserve the complete
+value unchanged. Do not probe, prompt, or mutate it. This applies equally to
+resumed and imported projects. Report:
+
+```text
+Lifecycle gate posture: preserved existing oat_skill_gate_overrides setting.
+```
+
+A malformed map is never silently repaired, replaced, or dropped. Stop and
+report the offending project state path so the operator can correct it.
+
+### 2. Probe configured gate-aware skills
+
+When no explicit map exists, probe each gate-aware skill read-only. The probe
+resolves configuration and never launches a gate:
+
+```bash
+oat gate resolve <gate-aware-skill> --project "$PROJECT_PATH" --json
+```
+
+A gate qualifies for a choice only when `resolution` is literally `configured`.
+`not_configured` means no gate is configured for that skill: offer no choice and
+never fabricate configuration from an override alone.
+
+If the probe fails, emit exactly this concise warning and continue planning
+without writing a map:
+
+```text
+Warning: Lifecycle gate posture probe failed; configured gates remain enabled.
+```
+
+If no gate is configured, emit:
+
+```text
+Lifecycle gate posture: no configured lifecycle gates; nothing to disable.
+```
+
+### 3. Offer one choice per configured gate
+
+When at least one gate is configured and an interactive user-response channel is
+available, present each configured gate separately and let the user keep or
+disable it independently. Granularity is per skill; no single answer disables
+every gate at once.
+
+For each configured gate, show the skill name, its configured command, and the
+config source reported by the probe, then offer exactly these outcomes:
+
+1. **Keep** - run this configured gate for this project.
+2. **Disable** - skip this configured gate for this project only.
+
+Persist only the disabled choices, as a strict map whose sole permitted value is
+the literal `disabled`:
+
+```yaml
+oat_skill_gate_overrides:
+  oat-project-implement: disabled
+```
+
+Keeping every gate leaves the map absent; an explicitly empty map is equivalent.
+Never write an `enabled` value, a boolean, or a list. Write the map only to
+`"$PROJECT_PATH/state.md"`; the shared, local, and user configuration layers are
+never modified. Disabling here records project posture, not gate outcome: it
+never marks a gate passed, failed, or missing.
+
+### 4. Handle non-interactive planning
+
+Non-interactive mode includes `OAT_NON_INTERACTIVE=1` and any environment with
+no user-response channel. Never prompt in this mode, and never write a new map,
+even when configured gates exist. Leave the setting absent and emit:
+
+```text
+Lifecycle gate posture: configured gates unchanged (non-interactive; no selection recorded).
+```
+
+An explicit map that already exists is still preserved unchanged in this mode
+under section 1.
 
 ## Auto Artifact-Review Loop
 

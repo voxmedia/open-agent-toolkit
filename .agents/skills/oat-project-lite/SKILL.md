@@ -353,13 +353,19 @@ yet; the committed baseline remains resumable and `in_progress`.
 The lite exit-gate review scope is the committed `plan.md`, `state.md`, and
 `implementation.md` bundle. It runs after Step 6 and before Step 7.
 
-1. Resolve the gate:
+1. Resolve the gate for this skill with project context:
 
    ```bash
-   oat gate resolve <this-skill> --json
+   oat gate resolve <this-skill> --project "$PROJECT_PATH" --json
    ```
 
-   If no gate is configured; proceed directly to the completion steps in Step 7 below.
+   Handle all three `resolution` values explicitly:
+   - `not_configured`: no gate is configured; proceed directly to the completion steps in Step 7 below.
+   - `configured_disabled_by_project`: the operator disabled this configured gate for this project. Do not launch any process. Emit `configured but disabled by project override`, including the project path and the `projectOverride` source from the envelope, then proceed directly to the completion steps in Step 7 below. A project-disabled gate never enters the passed, missing, or failed branches, and its `configuredGate` is evidence only, never executed.
+   - `configured`: continue with the steps below, executing `effectiveGate` exactly as configured.
+
+   A null, missing, malformed, or unrecognized result is an operational failure
+   that fails closed as unresolved. Never treat it as "no gate configured."
 
 2. Export `PROJECT_PATH`. If the stored command invokes lifecycle gate review,
    its canonical form is:

@@ -280,6 +280,10 @@ Stop and report instead of improvising when:
 - a named verification gate fails twice after one bounded correction; or
 - scope expands into review/gate receipt provenance.
 
+## Execution record (2026-09-06, wave 4)
+
+Executed as wave-4 p03 (PR wave-4-execution, CLI 0.2.59): `dispatchStamp` emitted beside `dispatchReport` from the single `formatDispatchStamp` call (present iff the report is, including report-bearing `status: blocked` resolutions; absent on non-report and error envelopes); review-provide 1.5.3 → 1.5.4 (five pins — locate pins by version literal, not skill name), review-provide-remote 1.1.2 → 1.1.3; `oat-project-implement` was NOT re-bumped because the wave's p01 lane had already bumped it (one bump per skill per PR); the three skills' guidance is pinned by a shared bounded-window contract helper (`packages/cli/src/__tests__/skills/dispatch-stamp-contract.ts`) with negative fixtures; the documented prefix drops the grammar's trailing space in prose (markdownlint MD038) while tests keep it. Residual: the helper's lexical guards are a tripwire, not a proof — `BL-260906-make-the-dispatch-stamp` (exit-gate M1: bold-step boundaries and a direct normal-path shim sentence).
+
 ## Revalidation Before Execution
 
 Revalidate against current `origin/main`, the source backlog item, linked

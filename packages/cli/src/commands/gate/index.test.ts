@@ -791,6 +791,519 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  describe('project-aware gate resolution', () => {
+    const GATE = {
+      command: 'pnpm test',
+      description: 'Run the test suite before finishing.',
+      onFailure: 'block',
+      maxAttempts: 3,
+    } as const;
+
+    async function writeSharedGate(
+      root: string,
+      gate: unknown = GATE,
+    ): Promise<void> {
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: { gates: { skills: { 'oat-project-implement': gate } } },
+        })}\n`,
+        'utf8',
+      );
+    }
+
+    async function writeLocalGate(
+      root: string,
+      gate: unknown,
+      extra: Record<string, unknown> = {},
+    ): Promise<void> {
+      await writeFile(
+        join(root, '.oat', 'config.local.json'),
+        `${JSON.stringify({
+          version: 1,
+          ...extra,
+          workflow: { gates: { skills: { 'oat-project-implement': gate } } },
+        })}\n`,
+        'utf8',
+      );
+    }
+
+    async function writeUserGate(home: string, gate: unknown): Promise<void> {
+      await mkdir(join(home, '.oat'), { recursive: true });
+      await writeFile(
+        join(home, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: { gates: { skills: { 'oat-project-implement': gate } } },
+        })}\n`,
+        'utf8',
+      );
+    }
+
+    async function writeProjectState(
+      root: string,
+      projectPath: string,
+      lines: string[],
+    ): Promise<void> {
+      await mkdir(join(root, projectPath), { recursive: true });
+      await writeFile(
+        join(root, projectPath, 'state.md'),
+        [
+          '---',
+          'oat_kind: implementation',
+          ...lines,
+          '---',
+          '',
+          '# State',
+        ].join('\n'),
+        'utf8',
+      );
+    }
+
+    const DISABLED_OVERRIDE = [
+      'oat_skill_gate_overrides:',
+      '  oat-project-implement: disabled',
+    ];
+
+    it('reports a configured gate with its deciding config layer', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      const projectPath = await writeProject(root);
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toEqual({
+        skill: 'oat-project-implement',
+        resolution: 'configured',
+        configuredGate: GATE,
+        effectiveGate: GATE,
+        configSource: 'shared',
+        projectOverride: null,
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it.each([
+      ['local', 'oat-project-implement'],
+      ['shared', 'oat-project-implement'],
+      ['user', 'oat-project-implement'],
+    ])('reports %s as the configured source', async (layer, skill) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      if (layer === 'local') await writeLocalGate(root, GATE);
+      if (layer === 'shared') await writeSharedGate(root);
+      if (layer === 'user') await writeUserGate(home, GATE);
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        skill,
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        resolution: 'configured',
+        configSource: layer,
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('preserves layer precedence when project context is supplied', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeSharedGate(root);
+      await writeLocalGate(root, { command: 'local', onFailure: 'warn' });
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        resolution: 'configured',
+        configSource: 'local',
+        configuredGate: { command: 'local' },
+      });
+    });
+
+    it('retains the configured gate when the project disables it', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      const projectPath = '.oat/projects/shared/demo';
+      await writeProjectState(root, projectPath, DISABLED_OVERRIDE);
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toEqual({
+        skill: 'oat-project-implement',
+        resolution: 'configured_disabled_by_project',
+        configuredGate: GATE,
+        effectiveGate: null,
+        configSource: 'shared',
+        projectOverride: {
+          value: 'disabled',
+          source: 'state.md:oat_skill_gate_overrides',
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('never fabricates configuration from an override alone', async () => {
+      const { root, home } = await setup();
+      const projectPath = '.oat/projects/shared/demo';
+      await writeProjectState(root, projectPath, DISABLED_OVERRIDE);
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toEqual({
+        skill: 'oat-project-implement',
+        resolution: 'not_configured',
+        configuredGate: null,
+        effectiveGate: null,
+        configSource: null,
+        projectOverride: {
+          value: 'disabled',
+          source: 'state.md:oat_skill_gate_overrides',
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('reports not_configured for a project with no overrides', async () => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toEqual({
+        skill: 'oat-project-implement',
+        resolution: 'not_configured',
+        configuredGate: null,
+        effectiveGate: null,
+        configSource: null,
+        projectOverride: null,
+      });
+    });
+
+    it('treats a config layer that disables the gate as not configured', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root, null);
+      const projectPath = await writeProject(root);
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      // The layer that declared it null owns the decision and is reported;
+      // `configuredGate` stays null so nothing reads as configured.
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        resolution: 'not_configured',
+        configuredGate: null,
+        configSource: 'shared',
+      });
+    });
+
+    it('leaves a sibling skill unaffected by another skill override', async () => {
+      const { root, home } = await setup();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            gates: {
+              skills: {
+                'oat-project-implement': GATE,
+                'oat-project-plan': GATE,
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const projectPath = '.oat/projects/shared/demo';
+      await writeProjectState(root, projectPath, DISABLED_OVERRIDE);
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-plan',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        skill: 'oat-project-plan',
+        resolution: 'configured',
+        projectOverride: null,
+      });
+    });
+
+    it('resolves the project by bare name', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      await writeProjectState(root, '.oat/projects/shared/demo', [
+        ...DISABLED_OVERRIDE,
+      ]);
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        'demo',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        resolution: 'configured_disabled_by_project',
+      });
+    });
+
+    it('falls back to the active project for a bare --project flag', async () => {
+      const { root, home } = await setup();
+      const projectPath = '.oat/projects/shared/demo';
+      await writeProjectState(root, projectPath, DISABLED_OVERRIDE);
+      await writeFile(
+        join(root, '.oat', 'config.local.json'),
+        `${JSON.stringify({
+          version: 1,
+          activeProject: projectPath,
+          workflow: { gates: { skills: { 'oat-project-implement': GATE } } },
+        })}\n`,
+        'utf8',
+      );
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        resolution: 'configured_disabled_by_project',
+        configSource: 'local',
+      });
+    });
+
+    it('rejects an explicitly empty --project value', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      await writeProject(root);
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        '   ',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('fails closed on a malformed override map', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      const projectPath = '.oat/projects/shared/demo';
+      await writeProjectState(root, projectPath, [
+        'oat_skill_gate_overrides:',
+        '  oat-project-implement: enabled',
+      ]);
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(JSON.stringify(capture.jsonPayloads[0])).toContain(
+        'oat_skill_gate_overrides',
+      );
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('names gate resolve, not gate review, when no project resolves', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+
+      // Bare --project with no active project and no candidates.
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+      ]);
+
+      const message = JSON.stringify(capture.jsonPayloads[0]);
+      expect(message).toContain(
+        'No OAT project could be resolved for gate resolve.',
+      );
+      expect(message).not.toContain('gate review');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('names gate resolve when several projects are candidates', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      await writeProject(root, '.oat/projects/shared/alpha');
+      await writeProject(root, '.oat/projects/shared/beta');
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+      ]);
+
+      const message = JSON.stringify(capture.jsonPayloads[0]);
+      expect(message).toContain(
+        'Multiple OAT projects could be resolved for gate resolve:',
+      );
+      expect(message).not.toContain('gate review');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('fails closed on an unresolvable project', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        '.oat/projects/shared/missing',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('keeps the legacy no-project payload and key order unchanged', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      const projectPath = '.oat/projects/shared/demo';
+      await writeProjectState(root, projectPath, DISABLED_OVERRIDE);
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+      ]);
+
+      // An override must never reach a consumer that did not opt in, and the
+      // serialized shape (key order included) must be the legacy one.
+      expect(capture.jsonPayloads[0]).toEqual(GATE);
+      // Literal legacy serialization, including key order as normalized by
+      // the config layer. A reordered envelope would break naive consumers.
+      expect(JSON.stringify(capture.jsonPayloads[0])).toBe(
+        '{"command":"pnpm test","onFailure":"block","maxAttempts":3,"description":"Run the test suite before finishing."}',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('fails closed when project state has no readable frontmatter', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      const projectPath = '.oat/projects/shared/demo';
+      await mkdir(join(root, projectPath), { recursive: true });
+      // Present but unreadable: defaulting to "no overrides" here would launch
+      // a gate the operator disabled.
+      await writeFile(
+        join(root, projectPath, 'state.md'),
+        '# State without frontmatter\n',
+        'utf8',
+      );
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      const message = JSON.stringify(capture.jsonPayloads[0]);
+      expect(message).toContain('no readable YAML frontmatter');
+      // The actionable state path is the point of the error.
+      expect(message).toContain(`${projectPath}/state.md`);
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('reads an override from a CRLF project state file', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      const projectPath = '.oat/projects/shared/demo';
+      await mkdir(join(root, projectPath), { recursive: true });
+      await writeFile(
+        join(root, projectPath, 'state.md'),
+        [
+          '---',
+          'oat_kind: implementation',
+          ...DISABLED_OVERRIDE,
+          '---',
+          '',
+          '# State',
+        ].join('\r\n'),
+        'utf8',
+      );
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        resolution: 'configured_disabled_by_project',
+      });
+    });
+
+    it('reports not_configured when a local null shadows a shared gate', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      await writeLocalGate(root, null);
+      const projectPath = await writeProject(root);
+
+      // Precedence is reconciled, not overwritten: the nearer layer wins.
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+        projectPath,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        resolution: 'not_configured',
+        configuredGate: null,
+        effectiveGate: null,
+        configSource: 'local',
+      });
+    });
+  });
+
   it('sets, disables, and unsets skill gates', async () => {
     const { root, home } = await setup();
 
@@ -7961,7 +8474,10 @@ describe('oat gate', () => {
     expect(runner.calls).toHaveLength(0);
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'error',
-      message: expect.stringContaining('No OAT project could be resolved'),
+      // Exact legacy wording: the resolver's command label is parameterized,
+      // so `gate review` must keep naming itself in its own guidance.
+      message:
+        'No OAT project could be resolved for gate review. Set an active project or pass --project <path-or-name>.',
     });
     expect(process.exitCode).toBe(1);
   });

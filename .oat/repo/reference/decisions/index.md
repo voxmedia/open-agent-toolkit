@@ -17,13 +17,16 @@
 | DR-260906-fumadocs-config-write-survives | 2026-09-06 | accepted   | Fumadocs config write survives a declared documentation config                                         | -       |
 | DR-260906-keep-lite-single-phase         | 2026-09-06 | accepted   | Keep Lite single-phase and sequential                                                                  | -       |
 | DR-260906-lite-is-a-first-class-workflow | 2026-09-06 | accepted   | Lite is a first-class workflow mode                                                                    | -       |
+| DR-260906-manifest-restamp-advisories    | 2026-09-06 | accepted   | Manifest restamp advisories precede the save and never block                                           | -       |
 | DR-260906-one-version-bump-per-changed   | 2026-09-06 | accepted   | One version bump per changed skill per PR, carried across lanes                                        | -       |
+| DR-260906-project-scoped-gate-overrides  | 2026-09-06 | accepted   | Project-scoped gate overrides and fail-closed gate resolution                                          | -       |
 | DR-260906-promote-oversized-lite-work    | 2026-09-06 | accepted   | Promote oversized Lite work in place                                                                   | -       |
 | DR-260906-retain-managed-implementation  | 2026-09-06 | accepted   | Retain managed implementation and independent review                                                   | -       |
 | DR-260906-root-anchored-minimatch-style  | 2026-09-06 | accepted   | Root-anchored minimatch-style docs-index exclusion grammar                                             | -       |
 | DR-260906-scale-lite-specification-depth | 2026-09-06 | accepted   | Scale Lite specification depth from observable triggers                                                | -       |
 | DR-260906-smoke-worktrees-are-journaled  | 2026-09-06 | accepted   | Smoke worktrees are journaled before creation and cleanup refuses unproven ownership                   | -       |
 | DR-260906-standing-claims-in-skills-name | 2026-09-06 | accepted   | Standing claims in skills name an executable owner and ship a backstop in the same PR                  | -       |
+| DR-260906-the-dispatch-ceiling-resolver  | 2026-09-06 | accepted   | The dispatch-ceiling resolver is the only dispatch stamp producer                                      | -       |
 | DR-260906-use-a-three-artifact-lite      | 2026-09-06 | accepted   | Use a three-artifact Lite project shape                                                                | -       |
 | DR-260906-use-proportionate-proof        | 2026-09-06 | accepted   | Use proportionate proof instead of universal TDD                                                       | -       |
 | DR-260904-remove-dispatch-receipt-chain  | 2026-09-04 | accepted   | Remove dispatch receipt chain from recon packet validation                                             | -       |

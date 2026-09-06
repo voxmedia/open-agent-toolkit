@@ -315,10 +315,11 @@ generation as a sibling of `oat_post_implement_sequence`:
 oat_implement_exit_gate:
   status: pending # pending | allowed | blocked | stale
   resolution: configured # configured | no_gate
-  disposition: null # null | passed | warned | prompt_approved | no_gate
+  disposition: null # null | passed | warned | prompt_approved | project_disabled | no_gate
   config_fingerprint: '<stable hash of the resolved declaration>'
   resolved_command: null
   resolved_description: null
+  project_override: null # null or {value: disabled, source: state.md:oat_skill_gate_overrides}
   on_failure: block # block | prompt | warn | null
   max_attempts: 2
   attempts_completed: 0
@@ -352,12 +353,33 @@ oat_implement_exit_gate:
 At the start of a new closeout generation, require a current passed final
 lifecycle review, capture `reviewed_head`, and compute a deterministic
 `implementation_fingerprint` from the gate-reviewed basis. Resolve
-`workflow.gates.skills.oat-project-implement` once. Canonically serialize the
-resolved command, description, `onFailure`, and `maxAttempts` to derive
+`workflow.gates.skills.oat-project-implement` once with project context, so a
+configured gate this project disabled is never mistaken for absent
+configuration. Canonically serialize the resolved command, description,
+`onFailure`, `maxAttempts`, and the resolved project override state to derive
 `config_fingerprint`; persist the complete resolved inputs with `status:
 pending` before any gate launch. Missing state means unresolved, never no gate.
-A `null` resolution persists `allowed/no_gate` with `disposition: no_gate`,
-null run/artifact/receive provenance, and the current implementation basis.
+A `not_configured` resolution persists `allowed/no_gate` with
+`disposition: no_gate`, null run/artifact/receive provenance, and the current
+implementation basis. Only that resolution may produce a no-gate success: a
+null, missing, malformed, or unrecognized resolver result is an operational
+failure that fails closed as unresolved and never as no gate.
+
+A `configured_disabled_by_project` resolution persists `allowed/configured`
+with `disposition: project_disabled`. It sets `resolved_command` to the
+configured command as evidence that is never executed, keeps null gate-run,
+artifact, and receive provenance because nothing launched, keeps
+`launch_state: not_started`, and records a `project_override` sub-record with
+`value: disabled` and `source: state.md:oat_skill_gate_overrides`. Completion
+stays allowed because the operator chose the project override; every other
+closeout freshness and snapshot rule is unchanged. A project-disabled gate must
+never enter the passed, missing, or failed branches.
+
+Because `config_fingerprint` covers the resolved override state as well as the
+configured declaration, removing the override from `state.md` changes the
+fingerprint. A stored `project_disabled` transition is therefore invalidated
+and can never be reused as a fresh `allowed` result once the gate is
+re-enabled; the re-enabled gate requires a new configured generation.
 
 New generations persist `implementation_fingerprint` as
 `sha256:effective-delta-v1:<digest>`. Resolve the logical integration base from
@@ -520,6 +542,16 @@ disposition.
   configured-gate provenance when configured, an unchanged immutable
   implementation fingerprint, a valid rolling freshness checkpoint, and any
   eligible receive marked complete.
+- An `allowed/configured` result carrying `disposition: project_disabled` is
+  revalidated before it is reused, because the override lives in the state
+  carrier that the implementation fingerprint deliberately excludes. Re-resolve
+  the gate with project context, recompute `config_fingerprint` from that
+  current resolution, and require both that the current resolution is still
+  `configured_disabled_by_project` and that the recomputed fingerprint equals
+  the persisted one. Any other current resolution, including a re-enabled
+  `configured` gate, or any fingerprint mismatch marks the generation `stale`
+  and requires a new configured generation. Reproducing the fingerprint from
+  the persisted inputs alone never satisfies this check.
 - Closeout-only descendants include configured gate artifacts and receipts,
   project tracking, `project-log.md` appends, summary/documentation/PR sequence
   outputs, final HiLL bookkeeping, and completion bookkeeping. Classify
@@ -565,12 +597,14 @@ completion, or success output, run the configured gate:
    the gate for this skill:
 
    ```bash
-   oat gate resolve oat-project-implement --json
+   oat gate resolve oat-project-implement --project "$PROJECT_PATH" --json
    ```
 
-   Persist the resolution and configuration fingerprint before launch. If the
-   command returns JSON `null`, persist the allowed no-gate transition; no gate
-   is configured; proceed directly to the completion steps in Step 15 below.
+   Persist the resolution and configuration fingerprint before launch, then
+   handle all three `resolution` values explicitly:
+   - `not_configured`: persist the allowed no-gate transition; no gate is configured; proceed directly to the completion steps in Step 15 below.
+   - `configured_disabled_by_project`: persist the allowed project-disabled transition described above without launching any process, and proceed directly to the completion steps in Step 15 below.
+   - `configured`: continue with the launch steps below.
 
 2. Export the resolved project path into the command shell:
 

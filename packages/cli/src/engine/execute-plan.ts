@@ -676,6 +676,9 @@ async function executeCollectionTransaction(
       removedTransitionPlans.size > 0 ||
       absentTransitionPlans.size > 0;
     if (hasManifestMutation) {
+      // Sync-covered save site: this path is reached only through sync's
+      // `executeSyncPlan`, which emits the pre-mutation version-restamp
+      // advisory before dispatching the plan. It needs no advisory of its own.
       await dependencies.saveManifest(manifestPath, nextManifest);
     }
 
@@ -967,6 +970,9 @@ export async function executeSyncPlan(
   const successfulNoOperationApply =
     operations.length === 0 && !collectionTransaction.attempted;
   if (entryApplySucceeded || successfulNoOperationApply) {
+    // Sync-covered save site: see the collection save above. Sync owns the
+    // advisory because only the command layer knows the scope, the output
+    // ordering, and whether the run is in JSON mode.
     await saveManifest(manifestPath, nextManifest);
   }
   const collectionApplied = collectionTransaction.results.filter(

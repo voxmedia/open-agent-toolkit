@@ -12,6 +12,13 @@ const PROJECT_START_SKILLS = [
   'oat-project-import-plan',
 ] as const;
 
+/** Plan-producing workflows that must run the shared gate-posture setup. */
+const GATE_POSTURE_CALLER_SKILLS = [
+  'oat-project-quick-start',
+  'oat-project-plan',
+  'oat-project-import-plan',
+] as const;
+
 const PJM_WRITE_SKILLS = [
   'oat-pjm-add-backlog-item',
   'oat-pjm-decision',
@@ -225,6 +232,188 @@ describe('project-start preflight contracts', () => {
     const content = readSkill('oat-brainstorm');
     expect(content).toMatch(
       /`PJM_ADOPTION_STATE`\s+equal\s+to\s*\n?\s*`declared`\s+or\s+`inferred-legacy`/,
+    );
+  });
+
+  describe('lifecycle gate posture setup', () => {
+    /** Wrap-insensitive: hard line breaks must not decide contract coverage. */
+    function flat(value: string): string {
+      return value.replace(/\s+/g, ' ').trim();
+    }
+
+    function readPostureContract(): string {
+      const content = readSkill('oat-project-plan-writing');
+      const start = content.indexOf(
+        '## Shared Lifecycle Gate Posture Setup Contract',
+      );
+      expect(
+        start,
+        'plan-writing defines the shared gate-posture contract',
+      ).toBeGreaterThanOrEqual(0);
+      const end = content.indexOf('## Auto Artifact-Review Loop', start);
+      return content.slice(start, end > start ? end : undefined);
+    }
+
+    function readPostureStep(name: string): string {
+      const content = readSkill(name);
+      const start = content.indexOf(': Configure Lifecycle Gate Posture');
+      expect(
+        start,
+        `${name} has a lifecycle gate posture step`,
+      ).toBeGreaterThanOrEqual(0);
+      const end = content.indexOf('### Step', start + 1);
+      return content.slice(start, end > start ? end : undefined);
+    }
+
+    it('probes configured gate-aware skills without executing them', () => {
+      const contract = readPostureContract();
+
+      expect(contract).toContain(
+        'oat gate resolve <gate-aware-skill> --project "$PROJECT_PATH" --json',
+      );
+      expect(contract).toContain('never launches a gate');
+      expect(contract).toContain('oat_gateable: true');
+      // Only a configured gate is offerable; an override alone is not config.
+      expect(flat(contract)).toContain(
+        'A gate qualifies for a choice only when `resolution` is literally `configured`',
+      );
+      expect(contract).toContain('never fabricate configuration');
+    });
+
+    it('offers an independent keep-or-disable choice per configured gate', () => {
+      const contract = readPostureContract();
+
+      expect(flat(contract)).toContain(
+        'present each configured gate separately',
+      );
+      expect(contract).toContain('Granularity is per skill');
+      expect(contract).toContain('no single answer disables');
+      expect(contract).toMatch(/\*\*Keep\*\*/);
+      expect(contract).toMatch(/\*\*Disable\*\*/);
+    });
+
+    it('persists only disabled overrides and never touches config layers', () => {
+      const contract = readPostureContract();
+
+      expect(contract).toContain('Persist only the disabled choices');
+      expect(contract).toContain('oat_skill_gate_overrides:');
+      expect(contract).toContain('the literal `disabled`');
+      expect(contract).toContain('Keeping every gate leaves the map absent');
+      expect(flat(contract)).toContain(
+        'Never write an `enabled` value, a boolean, or a list',
+      );
+      expect(flat(contract)).toContain(
+        'the shared, local, and user configuration layers are never modified',
+      );
+      expect(flat(contract)).toContain(
+        'never marks a gate passed, failed, or missing',
+      );
+    });
+
+    it('preserves an explicit existing map without probing or prompting', () => {
+      const contract = readPostureContract();
+
+      expect(flat(contract)).toContain('preserve the complete value unchanged');
+      expect(contract).toContain('Do not probe, prompt, or mutate it');
+      expect(contract).toContain('resumed and imported projects');
+      expect(flat(contract)).toContain(
+        'A malformed map is never silently repaired, replaced, or dropped',
+      );
+    });
+
+    it('never prompts or writes a map in non-interactive mode', () => {
+      const contract = readPostureContract();
+
+      expect(contract).toContain('OAT_NON_INTERACTIVE=1');
+      expect(flat(contract)).toContain(
+        'Never prompt in this mode, and never write a new map',
+      );
+      expect(contract).toContain('even when configured gates exist');
+      expect(contract).toContain('Leave the setting absent');
+    });
+
+    it('stays independent from phase gate review and HiLL policy', () => {
+      const contract = readPostureContract();
+
+      expect(flat(contract)).toContain(
+        'after the complete plan has stable phase IDs and before the plan artifact review begins',
+      );
+      expect(flat(contract)).toContain(
+        'adjacent to, but independently from, that setup',
+      );
+      expect(flat(contract)).toContain(
+        "neither contract reads, writes, or satisfies the other's setting",
+      );
+      expect(flat(contract)).toContain(
+        'It never reads or writes `oat_phase_review_gate`, HiLL policy, or any autonomous design-gate setting',
+      );
+    });
+
+    it.each(GATE_POSTURE_CALLER_SKILLS)(
+      '%s runs gate-posture setup between phase-gate setup and artifact review',
+      (name) => {
+        const content = readSkill(name);
+        const phaseGate = content.indexOf(
+          ': Configure Optional Phase Gate Review',
+        );
+        const posture = content.indexOf(': Configure Lifecycle Gate Posture');
+        const artifactReview = content.indexOf('Plan Artifact Review Loop');
+
+        // Ordering, not mere presence: the posture choice must be persisted
+        // after the plan has stable phase IDs and before artifact review.
+        expect(phaseGate, `${name} has phase-gate setup`).toBeGreaterThan(0);
+        expect(posture, `${name} has posture setup`).toBeGreaterThan(phaseGate);
+        expect(artifactReview, `${name} has artifact review`).toBeGreaterThan(
+          posture,
+        );
+
+        const step = readPostureStep(name);
+
+        expect(step).toContain(
+          'invoke the `Shared Lifecycle Gate Posture Setup Contract` from',
+        );
+        expect(step).toContain('load the current');
+        expect(step).toContain('oat-project-plan-writing/SKILL.md');
+        expect(step).toContain('follow that contract as written');
+        expect(step).toContain('oat_skill_gate_overrides');
+        expect(flat(step)).toContain(
+          'preserve it through the shared contract without',
+        );
+        expect(step).toContain('Persist only disabled choices');
+        expect(flat(step)).toContain(
+          'Never modify the shared, local, or user configuration layers',
+        );
+        expect(step).toContain('non-interactive');
+      },
+    );
+
+    it.each(GATE_POSTURE_CALLER_SKILLS)(
+      '%s resolves its configured gate with project context',
+      (name) => {
+        const content = readSkill(name);
+
+        expect(content).toContain(
+          'oat gate resolve <this-skill> --project "$PROJECT_PATH" --json',
+        );
+        expect(content).not.toContain('oat gate resolve <this-skill> --json');
+        expect(content).toContain(
+          'Handle all three `resolution` values explicitly',
+        );
+        for (const resolution of [
+          'not_configured',
+          'configured_disabled_by_project',
+          'configured',
+        ]) {
+          expect(content, `${name} handles ${resolution}`).toContain(
+            `\`${resolution}\``,
+          );
+        }
+        expect(content).toContain('Do not launch any process');
+        expect(content).toContain(
+          'never enters the passed, missing, or failed branches',
+        );
+        expect(content).toContain('evidence only, never executed');
+      },
     );
   });
 

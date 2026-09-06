@@ -312,7 +312,8 @@ unresolved or stale — resume with `oat-project-implement` before
 post-implementation routing."
 
 Only an `allowed` and fresh exit-gate disposition falls through to the normal
-post-implementation checks.
+post-implementation checks. Every other combination keeps its current
+fail-closed routing.
 
 Validate freshness from the complete persisted transition, not from `status`
 alone:
@@ -326,6 +327,32 @@ alone:
   `implementation_fingerprint`, configured gate-run provenance, and any eligible
   receive durably completed. Qualified state also requires the complete rolling
   freshness fields.
+- `allowed/configured` with `disposition: project_disabled` is the third valid
+  combination. Null gate-run and artifact provenance is required here, not
+  merely tolerated: nothing launched, so any non-null launch provenance is
+  contradictory and fails closed. It additionally requires a matching
+  `config_fingerprint`, `reviewed_head`, and `implementation_fingerprint`, a
+  `project_override` sub-record recording the disabled value and its
+  `state.md:oat_skill_gate_overrides` source, and the same rolling-freshness
+  rules as every other allowed result. The complete accepted shape is
+  `resolved_command` set to the configured command, `launch_state:
+not_started`, null `launch_attempt_id`, `launch_started_at`,
+  `launch_result_receipt`, `gate_run_marker`, `gate_run_id`, `envelope_status`,
+  `artifact`, and `handoff`, plus `receive_state: not_started`,
+  `receive_correlation`, `receive_source_artifact`,
+  `receive_archived_artifact`, `receive_event_identity`, `receive_pre_head`,
+  and `receive_commit` all null, `receive_eligible: false`,
+  `receive_completed: false`, `attempts_completed: 0`, and `failure: null`.
+  Any populated launch, receive, attempt, or failure field contradicts a gate
+  that never ran and fails closed.
+- Because the override lives in the state carrier the implementation
+  fingerprint excludes, a persisted `project_disabled` result is never accepted
+  on its stored value alone. Re-resolve the gate with project context and
+  require that the current resolution is still `configured_disabled_by_project`
+  and that `config_fingerprint` recomputed from that current resolution equals
+  the persisted one. A re-enabled gate changes the resolution and the
+  fingerprint, so an override-era transition routes as stale and a fresh
+  configured run is required.
 - `pending`, `blocked`, malformed, contradictory, or legacy-absent state never
   falls through. Pending and blocked generations resume their persisted
   configuration; configuration-fingerprint mismatch fails closed.

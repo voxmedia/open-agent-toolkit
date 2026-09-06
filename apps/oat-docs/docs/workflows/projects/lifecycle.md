@@ -60,9 +60,10 @@ Implementation closeout has one authoritative order:
 
 The configured exit gate is independent from the mandatory lifecycle review,
 root-owned phase reviews, and optional `oat_phase_review_gate`. It must reach an
-allowed and fresh disposition before pre-approval work starts. A null
-configuration is recorded explicitly as `allowed/no_gate`; it is not inferred
-from missing state.
+allowed and fresh disposition before pre-approval work starts. A
+`not_configured` resolution is recorded explicitly as `allowed/no_gate`; it is
+not inferred from missing state, and a null, missing, or unrecognized resolver
+result fails closed as unresolved instead.
 
 After implementation closeout finishes:
 

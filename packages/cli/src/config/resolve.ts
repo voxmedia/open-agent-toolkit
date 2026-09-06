@@ -237,23 +237,51 @@ export async function resolveEffectiveConfig(
   };
 }
 
-export function resolveGate(
+/** Concrete config layer that declared a skill gate. */
+export type GateConfigSource = 'local' | 'shared' | 'user';
+
+export interface ResolvedGateWithSource {
+  gate: GateConfig | null;
+  /**
+   * Layer that decided the result, or null when no layer declares the skill.
+   * A layer that declares the skill as `null` still owns the decision, so the
+   * source is reported even though the effective gate is null.
+   */
+  source: GateConfigSource | null;
+}
+
+/**
+ * Source-aware gate resolution. Identifies the deciding layer without changing
+ * the precedence `resolveGate` has always used.
+ */
+export function resolveGateWithSource(
   effective: ResolvedConfig,
   skillName: string,
-): GateConfig | null {
-  for (const skills of [
-    effective.local.workflow?.gates?.skills,
-    effective.shared.workflow?.gates?.skills,
-    effective.user.workflow?.gates?.skills,
-  ]) {
+): ResolvedGateWithSource {
+  const layers: Array<
+    [GateConfigSource, Record<string, GateConfig | null> | undefined]
+  > = [
+    ['local', effective.local.workflow?.gates?.skills],
+    ['shared', effective.shared.workflow?.gates?.skills],
+    ['user', effective.user.workflow?.gates?.skills],
+  ];
+
+  for (const [source, skills] of layers) {
     if (!skills || !hasOwn(skills, skillName)) {
       continue;
     }
 
-    return skills[skillName] ?? null;
+    return { gate: skills[skillName] ?? null, source };
   }
 
-  return null;
+  return { gate: null, source: null };
+}
+
+export function resolveGate(
+  effective: ResolvedConfig,
+  skillName: string,
+): GateConfig | null {
+  return resolveGateWithSource(effective, skillName).gate;
 }
 
 export function resolveExecTargets(

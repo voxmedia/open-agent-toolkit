@@ -12,10 +12,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
+import { GATE_AWARE_SKILLS } from '@commands/shared/frontmatter';
 import {
   getPackMemberNames,
   PACK_MANIFEST,
 } from '@commands/tools/shared/pack-manifest';
+import { expectDispatchStampFieldContract } from '@test-support/skills/dispatch-stamp-contract';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { validateChangedSkillVersionBumps, validateOatSkills } from './skills';
@@ -1830,7 +1832,7 @@ describe('validateOatSkills', () => {
     } of [
       {
         skillName: 'oat-project-discover',
-        version: '2.2.4',
+        version: '2.2.5',
         finalizedHeading:
           '### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)',
         gateHeading: '### Step 12: Gate Execution',
@@ -1839,7 +1841,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-design',
-        version: '2.3.3',
+        version: '2.3.4',
         finalizedHeading:
           '### Step 6: User-Review Gate (commit-first ordering)',
         gateHeading: '### Step 7: Gate Execution',
@@ -1849,7 +1851,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.8',
+        version: '1.4.9',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -1857,7 +1859,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.8',
+        version: '2.3.9',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -1874,7 +1876,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.3.4',
+        version: '2.3.5',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -2357,7 +2359,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
   });
 
   it('requires classified resolver calls and effective terminal reviewer notices before launch', async () => {
@@ -2663,7 +2665,7 @@ describe('validateOatSkills', () => {
     );
     const combined = `${content}\n${dispatchReference}`;
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
     expect(dispatchReference).toContain(
       '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
     );
@@ -2737,7 +2739,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -2756,7 +2758,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.5');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -2843,7 +2845,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.22');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.23');
     expect(shared).toContain(
       '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
     );
@@ -2888,7 +2890,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.22');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.23');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -2918,12 +2920,12 @@ describe('validateOatSkills', () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.4'],
       ['.agents/agents/oat-reviewer.md', '1.2.2'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.4'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.5'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.2'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.2'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.2'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.8'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.9'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -3032,7 +3034,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.22');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.23');
   });
 
   it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
@@ -3231,7 +3233,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -4435,11 +4437,11 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.22'],
-      ['oat-project-review-provide', '1.5.4'],
+      ['oat-project-plan-writing', '1.2.23'],
+      ['oat-project-review-provide', '1.5.5'],
       ['oat-project-review-receive', '1.6.2'],
       ['oat-project-review-receive-remote', '1.5.1'],
-      ['oat-project-implement', '2.3.4'],
+      ['oat-project-implement', '2.3.5'],
       ['oat-project-pr-final', '1.6.2'],
       ['oat-project-pr-progress', '1.3.1'],
       ['oat-project-complete', '1.7.7'],
@@ -5519,13 +5521,41 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('pins the gate-aware skill set against live oat_gateable declarations', async () => {
+    // The override parser rejects keys outside GATE_AWARE_SKILLS. If a skill
+    // gains or loses `oat_gateable: true` without updating that constant, a
+    // legitimate override would be rejected or an inert one accepted.
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillsRoot = join(repoRoot, '.agents', 'skills');
+    const entries = await readdir(skillsRoot, { withFileTypes: true });
+    const declared: string[] = [];
+
+    for (const entry of entries.filter((candidate) =>
+      candidate.isDirectory(),
+    )) {
+      let content: string;
+      try {
+        content = await readRawRepoFile(
+          `.agents/skills/${entry.name}/SKILL.md`,
+        );
+      } catch {
+        continue;
+      }
+      if (/^oat_gateable:\s*true\s*$/m.test(content)) {
+        declared.push(entry.name);
+      }
+    }
+
+    expect(declared.sort()).toEqual([...GATE_AWARE_SKILLS].sort());
+  });
+
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.22'],
-      ['oat-project-plan', '1.4.8'],
-      ['oat-project-quick-start', '2.3.8'],
-      ['oat-project-import-plan', '1.4.13'],
-      ['oat-project-review-provide', '1.5.4'],
+      ['oat-project-plan-writing', '1.2.23'],
+      ['oat-project-plan', '1.4.9'],
+      ['oat-project-quick-start', '2.3.9'],
+      ['oat-project-import-plan', '1.4.14'],
+      ['oat-project-review-provide', '1.5.5'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -5540,9 +5570,9 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.3.4'],
-      ['oat-project-review-provide', '1.5.4'],
-      ['oat-project-review-provide-remote', '1.1.2'],
+      ['oat-project-implement', '2.3.5'],
+      ['oat-project-review-provide', '1.5.5'],
+      ['oat-project-review-provide-remote', '1.1.3'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -5582,6 +5612,7 @@ describe('validateOatSkills', () => {
       expect(content, `${skillName} report-derived stamp`).toContain(
         'formatDispatchStamp(dispatchReport)',
       );
+      expectDispatchStampFieldContract(content, skillName);
       expect(content, `${skillName} target retention`).toMatch(
         /providers\.<provider>\.dispatchArgs[\s\S]{0,220}providers\.<provider>\.selection\.target/,
       );
@@ -6525,7 +6556,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.8');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.9');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -6578,7 +6609,7 @@ describe('validateOatSkills', () => {
     expect(
       skillContent,
       'oat-project-design selective-mode contract version must stay explicit',
-    ).toMatch(/^version:\s*2\.3\.3$/m);
+    ).toMatch(/^version:\s*2\.3\.4$/m);
     expect(
       skillContent,
       'Step 4a heading must remain present for selective review-pass flow',
@@ -7142,7 +7173,7 @@ describe('lite mode skill contracts', () => {
     expect(stateWrite).toContain('oat_workflow_origin: imported');
     expect(stateWrite).toMatch(/oat_import_reference|oat_import_\*/);
     expect(stateWrite).toContain('oat_plan_source: imported');
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.13');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.14');
   });
 
   it('lite bypasses implementation checkpoints', async () => {
@@ -7539,7 +7570,7 @@ describe('lite mode skill contracts', () => {
       expect(executor).toMatch(/deferred-but-verified/i);
     }
     expect(implementWorkflow.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe(
-      '2.3.4',
+      '2.3.5',
     );
     expect(implementer.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.4');
   });

@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.4.8
+version: 1.4.9
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -495,6 +495,25 @@ This Phase gate review setup is independent from HiLL checkpoints. Do not read o
 change HiLL fields here, and do not add a provider/model `--target` to any
 lifecycle command.
 
+### Step 12.35: Configure Lifecycle Gate Posture
+
+After the confirmed plan has stable phase IDs and before Step 12.5 starts the
+plan artifact review, invoke the `Shared Lifecycle Gate Posture Setup Contract` from
+`oat-project-plan-writing`: load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written. This
+runs adjacent to, but independently from, the phase gate review setup above.
+
+If `"$PROJECT_PATH/state.md"` already contains an explicit
+`oat_skill_gate_overrides` map, preserve it through the shared contract without
+probing, prompting, or mutation. Otherwise let the contract probe the configured
+gate-aware skills and offer a keep-or-disable choice for each configured gate
+independently.
+
+Persist only disabled choices, and only in `"$PROJECT_PATH/state.md"`. Keeping
+every gate leaves the map absent. Never modify the shared, local, or user
+configuration layers, and never prompt or write a new map in non-interactive
+mode.
+
 ### Step 12.5: Run Plan Artifact Review Loop
 
 Before dispatching the artifact reviewer, invoke the `Managed Dispatch
@@ -552,13 +571,19 @@ Apply the shared loop exactly:
 After the plan artifact is finalized and reviewed, run the configured gate as
 the last check before the completion boundary:
 
-1. Resolve the gate for this skill:
+1. Resolve the gate for this skill with project context:
 
    ```bash
-   oat gate resolve <this-skill> --json
+   oat gate resolve <this-skill> --project "$PROJECT_PATH" --json
    ```
 
-   If the command returns JSON `null`, no gate is configured; proceed directly to the completion steps in Step 13 below.
+   Handle all three `resolution` values explicitly:
+   - `not_configured`: no gate is configured; proceed directly to the completion steps in Step 13 below.
+   - `configured_disabled_by_project`: the operator disabled this configured gate for this project. Do not launch any process. Emit `configured but disabled by project override`, including the project path and the `projectOverride` source from the envelope, then proceed directly to the completion steps in Step 13 below. A project-disabled gate never enters the passed, missing, or failed branches, and its `configuredGate` is evidence only, never executed.
+   - `configured`: continue with the steps below, executing `effectiveGate` exactly as configured.
+
+   A null, missing, malformed, or unrecognized result is an operational failure
+   that fails closed as unresolved. Never treat it as "no gate configured."
 
 2. Export the resolved project path into the command shell:
 

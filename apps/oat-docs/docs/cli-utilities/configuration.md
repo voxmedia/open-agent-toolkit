@@ -367,6 +367,22 @@ Repo-local and user config can also hold workflow defaults, including
 example, one user may prefer `claude -p` as a gate target while another prefers
 `codex exec`.
 
+### Per-project gate posture
+
+Project state is a separate surface from the five config layers. One project can
+disable a configured lifecycle gate for itself through
+`oat_skill_gate_overrides` in that project's `state.md`, keyed by gate-aware
+skill name with the single permitted value `disabled`.
+
+Config layers decide whether a gate exists; the project override then decides
+whether an existing gate runs for that project. An override never creates
+configuration, never mutates any config layer, and is never written by a
+non-interactive run. Resolve it with
+`oat gate resolve <skill> --project <path-or-name> --json`; without `--project`
+the command keeps its original raw output. See
+[Workflow gates](./workflow-gates.md) for the full resolution envelope and the
+phase-review and autonomous exclusions.
+
 In practice, you usually inspect these via:
 
 ```bash

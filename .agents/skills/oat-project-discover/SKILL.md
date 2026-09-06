@@ -1,6 +1,6 @@
 ---
 name: oat-project-discover
-version: 2.2.4
+version: 2.2.5
 description: Use when the user explicitly asks to continue discovery for an active spec-driven OAT project — e.g. "continue discovery", "run discovery", or confirms a previously offered discovery step. Do NOT auto-invoke for new ideas or quick/lite-mode projects. Gathers requirements and context before spec/design.
 disable-model-invocation: false
 user-invocable: true
@@ -430,14 +430,19 @@ If discovery is not configured as a HiLL checkpoint, or user explicitly approves
 After artifact finalization and any configured HiLL approval, run the configured
 gate as the last check before the completion boundary:
 
-1. Resolve the gate for this skill:
+1. Resolve the gate for this skill with project context:
 
    ```bash
-   oat gate resolve <this-skill> --json
+   oat gate resolve <this-skill> --project "$PROJECT_PATH" --json
    ```
 
-   If the command returns JSON `null`, no gate is configured; proceed directly
-   to the completion steps in Step 13 below.
+   Handle all three `resolution` values explicitly:
+   - `not_configured`: no gate is configured; proceed directly to the completion steps in Step 13 below.
+   - `configured`: continue with the steps below, executing `effectiveGate` exactly as configured.
+   - `configured_disabled_by_project`: unreachable for this skill. Per-project override keys are accepted only for `oat_gateable` skills, and this skill is not one, so a configured gate here applies to every project and no project override can disable it. Treat this value as an unexpected result and fail closed as unresolved.
+
+   A null, missing, malformed, or unrecognized result is an operational failure
+   that fails closed as unresolved. Never treat it as "no gate configured."
 
 2. Export the resolved project path into the command shell:
 

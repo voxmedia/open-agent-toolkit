@@ -1,6 +1,6 @@
 ---
 name: oat-project-design
-version: 2.3.3
+version: 2.3.4
 description: Use when discovery is complete and implementation-ready decisions are needed. Runs a collaborative, selective collaborative, or draft-and-review design flow, confirms requirements and produces both `spec.md` and `design.md`, and commits artifacts before the user-review gate.
 disable-model-invocation: true
 user-invocable: true
@@ -656,14 +656,19 @@ Wait for user response:
 After artifact finalization and any configured HiLL approval, run the configured
 gate as the last check before the completion boundary:
 
-1. Resolve the gate for this skill:
+1. Resolve the gate for this skill with project context:
 
    ```bash
-   oat gate resolve <this-skill> --json
+   oat gate resolve <this-skill> --project "$PROJECT_PATH" --json
    ```
 
-   If the command returns JSON `null`, no gate is configured; proceed directly
-   to the completion steps in Step 8 below.
+   Handle all three `resolution` values explicitly:
+   - `not_configured`: no gate is configured; proceed directly to the completion steps in Step 8 below.
+   - `configured`: continue with the steps below, executing `effectiveGate` exactly as configured.
+   - `configured_disabled_by_project`: unreachable for this skill. Per-project override keys are accepted only for `oat_gateable` skills, and this skill is not one, so a configured gate here applies to every project and no project override can disable it. Treat this value as an unexpected result and fail closed as unresolved.
+
+   A null, missing, malformed, or unrecognized result is an operational failure
+   that fails closed as unresolved. Never treat it as "no gate configured."
 
 2. Export the resolved project path into the command shell:
 
