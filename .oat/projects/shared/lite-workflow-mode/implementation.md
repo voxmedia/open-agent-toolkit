@@ -118,6 +118,25 @@ frontmatter stripping by the root session; no GitHub mutation has occurred.
   `.oat/**/pr` rule; the exact artifact was force-staged in an append-only
   recovery commit.
 
+### Recovery Event p-rev2-recovery-2-named-skill-matrix
+
+- Phase/task: p-rev2 / prev2-t01
+- Original request: 348bd412-b8a9-40e9-8d98-6aab9099cbeb
+- Original commit: 59d4254a59c8658ced67911e71bfffbf666a059f
+- Defect class: composition
+- Discovered by: `pnpm test`
+- Disposition: failed-attempt
+- Authorization: phase-standing
+- Attempt: 2/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
+- Recovery commit: -
+- Verification: the focused named-skill contract failed 3 of 22 checks before
+  a candidate commit; relevant phase verification did not run.
+- Reason: the first bounded matrix entry targeted the shared-contract invocation
+  sentence, but the scanner classifies the separate load-current-skill sentence.
+  The test file was restored exactly and only the failed ledger transition was
+  committed.
+
 **Next:** `prev2-t03` must reproduce the SIGTERM cleanup subtest before any code
 change, run terminal repository verification, and record the results. A fresh
 required CI run for the exact pushed head and the focused p-rev2 re-review remain
