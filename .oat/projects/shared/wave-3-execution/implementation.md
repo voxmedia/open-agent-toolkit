@@ -112,9 +112,15 @@ Wave base `e97954dd1e85287a41a59fe58730c606e00eb598`; plan gate blocked once (0C
 - Integration gates (group fan-in mode), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - p03 readiness on the merged tip: its source plan is READY; the base carries p01's agent bump (1.1.3, three pins) and no change to `create-oat-skill` or `oat-project-design`, so p03 bumps each once. Group-1 worktrees and branches removed after the merge.
 
+#### Group 2 fan-in — p03 (2026-09-06)
+
+- `wave-3/p03` rebased onto the integration tip and merged with `git merge --no-ff` as `0a460472d`. Lane commits re-hashed by the rebase (identical `git patch-id --stable` pairs; the Reviews table keeps the pre-rebase heads): p03 `a38435f25`→`31f1f22be`, `612040dc7`→`36ac53fb8`.
+- Lockstep retained at 0.2.58 (origin/main still 0.2.57); integration gates (group fan-in mode), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
+- All three lanes merged; p03 worktree and branch removed. Final-wave re-check: the closeout runs the final review over the whole integration diff and the configured exit gate.
+
 #### Parallel Groups
 
-- group 1: p01 + p02 (merged, fan-in complete); p03 ungrouped (running).
+- group 1: p01 + p02 (merged); p03 ungrouped (merged). All groups fanned in.
 
 #### Outstanding Items
 

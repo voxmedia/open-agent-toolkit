@@ -122,6 +122,15 @@ wave-4 briefs.
 
 ---
 
+### 2026-09-06 · project · fan-in · group 2 (p03)
+
+p03 merged (`0a460472d`) after a clean review and an address-now sweep;
+lockstep retained at 0.2.58; all eight gates exit 0 with a forced test run
+(`Cached: 0`). All three wave-3 lanes are on the integration branch. Closeout
+begins.
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:
