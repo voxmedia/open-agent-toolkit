@@ -622,6 +622,10 @@ test('refuses to capture without a phase file boundary', async () => {
   ]);
   assert.equal(omitted.code, 64);
   assert.match(omitted.stderr, /"reason":"invalid-usage"/);
+  // The diagnostic must only name flags that still exist; `--bounded-files`
+  // was removed and now reports `Unsupported argument`.
+  assert.match(omitted.stderr, /At least one --bounded-file value is required/);
+  assert.ok(!omitted.stderr.includes('--bounded-files'));
   assert.equal(
     await lstat(fixture.artifactDir).then(
       () => 'present',
@@ -1027,6 +1031,83 @@ test('reports a successful capture as JSON on stdout with exit 0', async () => {
 
   const verified = await runScript(await verifyArgsFor(fixture, result));
   assert.equal(verified.code, 0, verified.stderr);
+});
+
+test('runs, and fails closed, when reached through a symlinked install root', async () => {
+  const fixture = await createDirtyRepository();
+  const result = await capture(fixture);
+  const head = await headOf(fixture);
+
+  // A user-scope install is reached through a link, and `import.meta.url` is
+  // always the real path. A raw `process.argv[1]` comparison would make the CLI
+  // a silent no-op that exits 0 — indistinguishable from "verified".
+  const installRoot = join(fixture.root, 'user-scope', '.agents', 'skills');
+  await mkdir(installRoot, { recursive: true });
+  await symlink(
+    fileURLToPath(new URL('..', import.meta.url)),
+    join(installRoot, 'oat-project-implement'),
+  );
+  const linkedScript = join(
+    installRoot,
+    'oat-project-implement',
+    'scripts',
+    'capture-dirty-tree.mjs',
+  );
+
+  // `--preserve-symlinks-main` keeps the link in `import.meta.url`, so a guard
+  // that canonicalizes only one side is a no-op under it; `NODE_OPTIONS`
+  // carries the same flag in from the environment.
+  const linkedRun = async (args, { nodeArgs = [], env = {} } = {}) => {
+    try {
+      const { stdout } = await execFile(
+        'node',
+        [...nodeArgs, linkedScript, ...args],
+        { encoding: 'utf8', env: { ...process.env, ...env } },
+      );
+      return { code: 0, stdout, stderr: '' };
+    } catch (error) {
+      return { code: error.code, stdout: '', stderr: error.stderr ?? '' };
+    }
+  };
+  const invocations = [
+    ['plain', {}],
+    ['--preserve-symlinks-main', { nodeArgs: ['--preserve-symlinks-main'] }],
+    ['NODE_OPTIONS', { env: { NODE_OPTIONS: '--preserve-symlinks-main' } }],
+  ];
+
+  const verifyArgs = [
+    '--verify',
+    '--artifact-dir',
+    fixture.artifactDir,
+    '--manifest-digest',
+    result.manifestDigest,
+    '--size',
+    String(result.size),
+    '--expected-head',
+    head,
+  ];
+
+  for (const [label, options] of invocations) {
+    const clean = await linkedRun(verifyArgs, options);
+    assert.equal(clean.code, 0, `${label}: ${clean.stderr}`);
+    assert.match(
+      clean.stdout,
+      /"ok": true/,
+      `${label}: a symlinked invocation must actually run, not exit 0 in silence`,
+    );
+  }
+
+  const patchPath = join(fixture.artifactDir, 'worktree.patch');
+  await appendFile(patchPath, 'TAMPERED\n');
+  for (const [label, options] of invocations) {
+    const tampered = await linkedRun(verifyArgs, options);
+    assert.equal(tampered.code, 5, label);
+    assert.match(
+      tampered.stderr,
+      /"reason":"artifact-verification-failed"/,
+      label,
+    );
+  }
 });
 
 test('the root and child contracts describe the sequence this script implements', async () => {

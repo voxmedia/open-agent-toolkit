@@ -242,8 +242,13 @@ STOP rather than a best-effort restore:
    ```
 
    The guard terminates; it never falls through to an empty command, because
-   `node ""` exits zero and would let an unverified artifact through. An empty
-   `CAPTURE_SCRIPT` is a `capture-script-unavailable` STOP: report it verbatim
+   `node ""` reads its program from stdin and exits zero at EOF, which is what a
+   non-interactive harness always presents — an unverified artifact would sail
+   through as a pass. Shell variables do not survive across separate tool
+   invocations, so every block below that runs the script repeats this
+   resolution and this guard in the same block rather than relying on
+   `CAPTURE_SCRIPT` carrying over. An empty `CAPTURE_SCRIPT` is a
+   `capture-script-unavailable` STOP: report it verbatim
    with the probed roots and the recovery command
    `oat tools install workflows --scope <user|project>` or
    `oat tools update --pack workflows --scope <user|project>`, leave the
@@ -262,6 +267,22 @@ STOP rather than a best-effort restore:
    artifact can be verified later:
 
    ```bash
+   set -eu
+   CAPTURE_SCRIPT=""
+   REPO_ROOT=$(git -C "$PHASE_WORKTREE" rev-parse --show-toplevel 2>/dev/null || true)
+   for CAPTURE_ROOT in "${SKILL_DIR:-}" \
+     "${HOME:-}/.agents/skills/oat-project-implement" \
+     "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-implement}"; do
+     [ -n "$CAPTURE_ROOT" ] || continue
+     [ -f "$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs" ] || continue
+     CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"
+     break
+   done
+   [ -n "$CAPTURE_SCRIPT" ] || {
+     echo "capture-script-unavailable" >&2
+     exit 1
+   }
+
    node "$CAPTURE_SCRIPT" \
      --worktree "$PHASE_WORKTREE" \
      --artifact-dir "$ARTIFACT_DIR" \
@@ -294,6 +315,22 @@ STOP rather than a best-effort restore:
    artifact before it applies anything:
 
    ```bash
+   set -eu
+   CAPTURE_SCRIPT=""
+   REPO_ROOT=$(git -C "$PHASE_WORKTREE" rev-parse --show-toplevel 2>/dev/null || true)
+   for CAPTURE_ROOT in "${SKILL_DIR:-}" \
+     "${HOME:-}/.agents/skills/oat-project-implement" \
+     "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-implement}"; do
+     [ -n "$CAPTURE_ROOT" ] || continue
+     [ -f "$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs" ] || continue
+     CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"
+     break
+   done
+   [ -n "$CAPTURE_SCRIPT" ] || {
+     echo "capture-script-unavailable" >&2
+     exit 1
+   }
+
    EXPECTED_HEAD=$(git -C "$PHASE_WORKTREE" rev-parse --verify HEAD)
    node "$CAPTURE_SCRIPT" \
      --verify \

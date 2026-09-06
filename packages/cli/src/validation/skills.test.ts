@@ -185,6 +185,49 @@ function extractArtifactHygieneContract(content: string): string {
     .trim();
 }
 
+/**
+ * Fenced code blocks, in order. Contract snippets are executed one block at a
+ * time, so a safety preamble only protects the block it appears in.
+ */
+function fencedBlocks(markdown: string): string[] {
+  const blocks: string[] = [];
+  let current: string[] | null = null;
+  let fenceChar = '';
+  let fenceLength = 0;
+
+  for (const line of markdown.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    const marker = /^(`{3,}|~{3,})(.*)$/.exec(trimmed);
+    if (current === null) {
+      if (marker) {
+        fenceChar = marker[1]![0]!;
+        fenceLength = marker[1]!.length;
+        current = [];
+      }
+      continue;
+    }
+    // CommonMark: a closer is a line of only fence characters, of the same kind
+    // and at least as long as the opener. Requiring an exact length would let a
+    // longer closer merge a guarded block into an unguarded one.
+    const closes =
+      marker !== null &&
+      marker[1]![0] === fenceChar &&
+      marker[1]!.length >= fenceLength &&
+      marker[2]!.trim() === '';
+    if (closes) {
+      blocks.push(current.join('\n'));
+      current = null;
+      continue;
+    }
+    current.push(line);
+  }
+
+  // An unterminated block still carries instructions a runtime would execute.
+  if (current !== null) blocks.push(current.join('\n'));
+
+  return blocks;
+}
+
 describe('validateOatSkills', () => {
   const tempDirs: string[] = [];
 
@@ -3450,19 +3493,42 @@ describe('validateOatSkills', () => {
       expect(contract, `${name} capture script resolution roots`).toMatch(
         /(?:\$\{SKILL_DIR:-\}|\$\{HOME:-\}\/\.agents\/skills)[\s\S]{0,400}scripts\/capture-dirty-tree\.mjs/,
       );
-      // The binding itself must come from the probed root, not from a literal
-      // that merely sits near the probe loop.
+      // Per invoking block, not per file. `node ""` reads its program from
+      // stdin and exits zero at EOF, so a block that runs the script without
+      // resolving and guarding it in the same block reports an unverified
+      // artifact as verified — shell variables do not survive across separate
+      // tool invocations, and a guard in some other block does not protect it.
+      const invokingBlocks = fencedBlocks(contract).filter((block) =>
+        block.includes('node "$CAPTURE_SCRIPT"'),
+      );
       expect(
-        contract,
-        `${name} capture script binds the probed root`,
-      ).toContain(
-        'CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"',
-      );
-      // `node ""` exits zero, so a warn-and-continue miss guard would apply an
-      // unverified artifact.
-      expect(contract, `${name} capture script miss terminates`).toMatch(
-        /\[ -n "\$CAPTURE_SCRIPT" \] \|\| \{[\s\S]{0,160}capture-script-unavailable[\s\S]{0,80}exit 1/,
-      );
+        invokingBlocks.length,
+        `${name} blocks invoking the capture script`,
+      ).toBeGreaterThan(0);
+      for (const [index, block] of invokingBlocks.entries()) {
+        const label = `${name} capture invocation block ${index + 1}`;
+        // Before the invocation, not merely somewhere in the block.
+        expect(block, `${label} runs under set -eu`).toMatch(/^\s*set -eu$/m);
+        expect(
+          block.search(/^\s*set -eu$/m),
+          `${label} sets -eu before it runs`,
+        ).toBeLessThan(block.indexOf('node "$CAPTURE_SCRIPT"'));
+        expect(block, `${label} binds the probed root`).toContain(
+          'CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"',
+        );
+        expect(block, `${label} terminates on a miss`).toMatch(
+          /\[ -n "\$CAPTURE_SCRIPT" \] \|\| \{[\s\S]{0,160}capture-script-unavailable[\s\S]{0,80}exit 1/,
+        );
+        expect(
+          block.indexOf('capture-script-unavailable'),
+          `${label} guards before it runs`,
+        ).toBeLessThan(block.indexOf('node "$CAPTURE_SCRIPT"'));
+        // A bare `<placeholder>` after a flag is shell input redirection, not a
+        // placeholder, so a block carrying one is not runnable verbatim.
+        expect(block, `${label} has no unquoted placeholder`).not.toMatch(
+          /--[a-z-]+ <[a-z_]+>/,
+        );
+      }
       expect(
         contract,
         `${name} no repo-relative capture invocation`,
@@ -3489,7 +3555,7 @@ describe('validateOatSkills', () => {
         /`artifact`\s+is\s+a\s+readable\s+path\s+outside\s+the\s+worktree,\s+never\s+a\s+mutable\s+worktree\s+path/i,
       );
       expect(contract, `${name} verifies before applying`).toMatch(
-        /--verify[\s\S]{0,300}--manifest-digest[\s\S]{0,120}--size[\s\S]{0,160}--expected-head[\s\S]{0,900}git apply --index/i,
+        /--verify[\s\S]{0,300}--manifest-digest[\s\S]{0,120}--size[\s\S]{0,160}--expected-head[\s\S]{0,1600}git apply --index/i,
       );
       expect(contract, `${name} reconciles the artifact base`).toMatch(
         /integrity is not base agreement/i,

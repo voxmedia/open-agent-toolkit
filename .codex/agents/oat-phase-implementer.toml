@@ -511,14 +511,20 @@ continuation.
 
    EXPECTED_HEAD=$(git -C "$PHASE_WORKTREE" rev-parse --verify HEAD)
    node "$CAPTURE_SCRIPT" --verify \\
-     --artifact-dir <artifact> \\
-     --manifest-digest <manifest_digest> \\
-     --size <size> \\
+     --artifact-dir "$ARTIFACT_DIR" \\
+     --manifest-digest "$MANIFEST_DIGEST" \\
+     --size "$ARTIFACT_SIZE" \\
      --expected-head "$EXPECTED_HEAD"
    ```
 
-   The guard terminates rather than warning: `node ""` exits zero, so a
-   fall-through would apply an unverified artifact. `--expected-head` and the
+   `ARTIFACT_DIR`, `MANIFEST_DIGEST`, and `ARTIFACT_SIZE` are the
+   `recovered_patch` fields; bind them as shell variables rather than pasting
+   `<placeholder>` tokens, which a shell reads as input redirections. The guard
+   terminates rather than warning: `node ""` reads its program from stdin and
+   exits zero at EOF, so a fall-through would report an unverified artifact as
+   verified. Every block that runs the script repeats the resolution and the
+   guard, because shell variables do not survive across separate tool
+   invocations. `--expected-head` and the
    apply below both resolve against `$PHASE_WORKTREE`, never the ambient
    working directory. An empty `CAPTURE_SCRIPT` is a
    `capture-script-unavailable` stop: report it verbatim with the probed roots

@@ -10,6 +10,7 @@
  */
 import { execFile as execFileCallback } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { realpathSync } from 'node:fs';
 import {
   chmod,
   copyFile,
@@ -24,9 +25,9 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFile = promisify(execFileCallback);
@@ -653,7 +654,7 @@ export async function captureDirtyTree({
   if (!Array.isArray(boundedFiles) || boundedFiles.length === 0) {
     throw captureError(
       CAPTURE_REASONS.invalidUsage,
-      'At least one --bounded-file or --bounded-files value is required; capture never runs without the phase file boundary.',
+      'At least one --bounded-file value is required; repeat the flag once per in-phase path, because capture never runs without the phase file boundary.',
     );
   }
 
@@ -1009,10 +1010,11 @@ function parseArguments(argv) {
     else if (flag === '--size') options.size = Number(value);
     else if (flag === '--quiesce-interval-ms') {
       options.quiesceIntervalMs = Number(value);
-      // Repeated `--bounded-file` only: a delimited list would split a
-      // filename that legitimately contains the delimiter and could widen the
-      // boundary to a shorter prefix path.
-    } else if (flag === '--bounded-file') options.boundedFiles.push(value);
+    }
+    // Repeated `--bounded-file` only: a delimited list would split a filename
+    // that legitimately contains the delimiter and could widen the boundary to
+    // a shorter prefix path.
+    else if (flag === '--bounded-file') options.boundedFiles.push(value);
     else {
       throw captureError(
         CAPTURE_REASONS.invalidUsage,
@@ -1041,11 +1043,27 @@ async function main(argv) {
   }
 }
 
-const invokedPath = process.argv[1];
-if (
-  invokedPath &&
-  isAbsolute(invokedPath) &&
-  import.meta.url === pathToFileURL(invokedPath).href
-) {
+/**
+ * Direct invocation, compared as canonical paths on both sides. Comparing a raw
+ * `process.argv[1]` against `import.meta.url` makes the CLI a silent no-op that
+ * exits 0 whenever the skill is reached through a symlinked install root, and
+ * canonicalizing only one side has the same effect under
+ * `--preserve-symlinks-main`, which keeps the link in `import.meta.url`. Either
+ * way the caller reads "exited 0" as "verified" — the fail-open shape the
+ * contracts exist to prevent.
+ */
+function isDirectInvocation(invokedPath) {
+  if (!invokedPath) return false;
+  try {
+    return (
+      realpathSync(fileURLToPath(import.meta.url)) ===
+      realpathSync(resolve(invokedPath))
+    );
+  } catch {
+    return false;
+  }
+}
+
+if (isDirectInvocation(process.argv[1])) {
   process.exitCode = await main(process.argv.slice(2));
 }
