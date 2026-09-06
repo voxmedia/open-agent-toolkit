@@ -657,6 +657,20 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ### 2026-09-06
 
+#### Configured implementation exit gate generation 3 created
+
+The configured declaration re-resolved byte-for-byte with fingerprint
+`sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`.
+Generation 3 binds the current waiver-approved lifecycle basis
+`ac5ec22d3e6e32ae32e94c1e0d19ced98060ebcb` to the unique `origin/main`
+merge base `7c90b220a27449fa652c51af38388dd6fdcb73f4`. This basis records the user's
+wording-only re-review waiver; it does not claim the reviewer inspected a head
+after the artifact's real reviewed head. The state-carrier-excluded effective
+delta is
+`sha256:effective-delta-v1:623de2fbac73c21d619de38b076d351464925990233264fb80d1c073d970c605`.
+Attempts 1 and 2 remain consumed. The explicit one-attempt operator extension
+sets the effective limit to 3; no attempt-3 launch has occurred yet.
+
 #### Exit-gate review 2 received — final configured attempt
 
 **Review artifact:**
