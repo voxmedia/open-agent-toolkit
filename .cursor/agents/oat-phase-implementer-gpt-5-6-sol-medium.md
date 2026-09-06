@@ -40,7 +40,8 @@ The root supplies:
   candidates, and formal dispatch stamp;
 - `phase_recovery_limit`, `phase_recovery_attempts_used`,
   `original_request_id`, and the root-resolved recovery authorization source;
-- optional `parallel_group`, `expected_base_sha`, and smoke run metadata.
+- optional `parallel_group`, `expected_base_sha`, `recovered_patch`, and
+  smoke run metadata.
 
 Fix mode also supplies:
 
@@ -344,6 +345,15 @@ use ancestry from `expected_base_sha` as a substitute for the exact
 `phase_base_head` check. For a plan-declared parallel group, verify this before
 any task edit.
 
+A fresh child never starts on a dirty tree. The one exception is a supplied
+`recovered_patch`, which carries work a lost child left behind: verify it,
+apply it, review it, and commit it as your first action before task one,
+exactly as `## Mode: Recover` step 2 describes. That single commit is a
+recovery commit rather than a planned task commit, so it does not consume any
+task's one-commit budget; report it under `### Recovery Events` with the
+artifact reference and manifest digest. Without a verified `recovered_patch`,
+any dirt blocks.
+
 When smoke containment, ownership registration, expected base, or fixture
 readiness proves the run invalid, return `INVALID_RUN_ABORT` with the evidence.
 Do not launch a child, continue sequentially, review, or repair the invalid run.
@@ -465,7 +475,17 @@ phase_verification: { relevant phase command }
 dispatch_target: { exact original launcher-owned target }
 dispatch_axes: { unchanged original launcher-owned axes }
 dispatch_stamp: { original formal Dispatch line }
+recovered_patch: { artifact, manifest_digest, size, stat, components }
 ```
+
+`recovered_patch` is optional. It is present only when a lost child left
+uncommitted work that the lifecycle captured before restoring the worktree to
+its clean base. Its `artifact` is a readable path outside the worktree, never a
+mutable worktree path; `manifest_digest` and `size` are the capture's recorded
+values; `stat` is the captured `git diff --cached --stat` summary; and
+`components` lists the `index`, `worktree`, and `untracked` entries the
+artifact holds. The same field may arrive on a same-target `implement`
+continuation.
 
 1. Validate every recover input. Confirm the exact launcher-owned target equals
    the original target and the generic `continuation_events` record links
@@ -474,7 +494,62 @@ dispatch_stamp: { original formal Dispatch line }
    remains immutable at the same history position; and the worktree contains
    only the reconciled pending ledger reservation plus an optional mechanically
    bounded diff inside `bounded_files`. Any other dirt or history change
-   blocks.
+   blocks. Beyond that reconciled reservation and its bounded diff, a supplied
+   `recovered_patch` is the only permitted pre-existing dirt, and only after it
+   verifies. Resolve `capture-dirty-tree.mjs` through installed scope rather
+   than a repository-relative path, probing in order and binding the first
+   match:
+
+   ```bash
+   set -eu
+   CAPTURE_SCRIPT=""
+   REPO_ROOT=$(git -C "$PHASE_WORKTREE" rev-parse --show-toplevel 2>/dev/null || true)
+   for CAPTURE_ROOT in "${HOME:-}/.agents/skills/oat-project-implement" \
+     "${REPO_ROOT:+$REPO_ROOT/.agents/skills/oat-project-implement}"; do
+     [ -n "$CAPTURE_ROOT" ] || continue
+     [ -f "$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs" ] || continue
+     CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"
+     break
+   done
+   [ -n "$CAPTURE_SCRIPT" ] || {
+     echo "capture-script-unavailable" >&2
+     exit 1
+   }
+
+   EXPECTED_HEAD=$(git -C "$PHASE_WORKTREE" rev-parse --verify HEAD)
+   node "$CAPTURE_SCRIPT" --verify \
+     --artifact-dir "$ARTIFACT_DIR" \
+     --manifest-digest "$MANIFEST_DIGEST" \
+     --size "$ARTIFACT_SIZE" \
+     --expected-head "$EXPECTED_HEAD"
+   ```
+
+   `ARTIFACT_DIR`, `MANIFEST_DIGEST`, and `ARTIFACT_SIZE` are the
+   `recovered_patch` fields; bind them as shell variables rather than pasting
+   `<placeholder>` tokens, which a shell reads as input redirections. The guard
+   terminates rather than warning: `node ""` reads its program from stdin and
+   exits zero at EOF, so a fall-through would report an unverified artifact as
+   verified. Every block that runs the script repeats the resolution and the
+   guard, because shell variables do not survive across separate tool
+   invocations. `--expected-head` and the
+   apply below both resolve against `$PHASE_WORKTREE`, never the ambient
+   working directory. An empty `CAPTURE_SCRIPT` is a
+   `capture-script-unavailable` stop: report it verbatim with the probed roots
+   and the recovery command
+   `oat tools install workflows --scope <user|project>` or
+   `oat tools update --pack workflows --scope <user|project>`, and never fall
+   back to a repository-relative path. Verify before touching the tree and stop
+   on any `artifact-verification-failed` mismatch, including the base mismatch
+   `--expected-head` catches: integrity is not base agreement, and a hunk whose
+   context happens to match applies cleanly at the wrong commit. On success
+   apply `git apply --index` for the `index` component, `git apply` for the
+   `worktree` component, and byte copies plus the manifest's recorded
+   executable bit for the `untracked` component, review the result, and commit
+   it as your first action. Report an `active-writer`, `unsupported-dirt`,
+   `round-trip-failed`, or `artifact-verification-failed` reason verbatim and
+   stop; never improvise a partial or best-effort restore. Without a verified
+   `recovered_patch` you start on a clean tree.
+
 3. Reconcile the authoritative `pending_attempt` and nonzero
    `phase_recovery_attempts_used` with `state.md`. Recover mode continues that
    same consumed attempt and must not increment usage again. Missing,
