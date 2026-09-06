@@ -315,10 +315,20 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Gate row `final` (gate lineage) → `passed`; `oat_implement_exit_gate` → `allowed / passed` in the following state checkpoint.**
 
+## Review Received: final (configured exit gate, generation 2 attempt 2)
+
+**Date:** 2026-09-06
+**Gate:** run `1c033697-daac-4794-8c7a-7fd024f65bc7`, target `codex-5-6-sol-xhigh` (different-family), envelope `ok`, `receiveEligible: true`, threshold important, blocking false, attempt `w2-exit-gate-20260906T103358Z`.
+**Review artifact:** reviews/archived/final-review-2026-09-06T103833Z.md (reviewed head `f8b0222277147f438096f3c6af8ec1c69f5a5f2e`, invocation gate)
+
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 0. Both attempt-1 findings verified closed by the gate itself (artifact-free retry reaches reconciliation; ledger identity reconciled). The gate-written ledger row moved forward in place to `passed` with the archived path.
+
+**Gate row `final` (generation 2) → `passed`; `oat_implement_exit_gate` → `allowed / passed` in the following state checkpoint. Generation history: run `45ee23dc` passed on `15ec41133` (stale after `3ee49fcad`), run `ba8ff320` blocked on `1eb529916`, run `1c033697` passed on `f8b0222277147f438096f3c6af8ec1c69f5a5f2e`.**
+
 ## Final HiLL approval (IMPLEMENT-16, autonomous)
 
 - Pre-approval sequence (configured `workflow.postImplementSequence`): summary (`c8678126c`, with three promoted decisions), document (`68c26fd35`), pr (PR #267 on `origin/wave-2-execution-2026-09`) — all complete; no post-approval steps configured; recap intent `skip` (deferred to program close per the execution program).
-- Evidence: final review row `passed` (round 3 artifact `reviews/archived/final-review-2026-09-06T092134Z.md`, head `1e688a1e5`, dispatch `w2-final-review-003`); configured exit gate `allowed / passed` (run `45ee23dc`, artifact `reviews/archived/final-review-2026-09-06T093256Z.md`, different-family reviewer, zero findings); every descendant after the reviewed head is closeout-only bookkeeping plus one comment-only sweep.
+- Evidence: final review row `passed` (round 3 artifact `reviews/archived/final-review-2026-09-06T092134Z.md`, head `1e688a1e5`, dispatch `w2-final-review-003`); configured exit gate `allowed / passed` in generation 2 (run `1c033697`, artifact `reviews/archived/final-review-2026-09-06T103833Z.md`, different-family reviewer, zero findings) after generation 1 (run `45ee23dc`, zero findings) went stale on the Bugbot-driven p05 fix `3ee49fcad` and generation-2 attempt 1 (run `ba8ff320`) blocked and was fixed by `e8e25f780`; Bugbot re-review, CI, and the release dry-run green on the pushed head; every descendant after the gate's reviewed head is closeout-only bookkeeping.
 - Decision: `approval: approved`, `approval_source: oat-autonomous`, `status: post_approval` → no post-approval steps → `complete`. Operator authorization: 2026-09-05 ("let it rip"), covering PR creation and merge by the root orchestrator once CI, Bugbot, and the final gate are green. This approval waives nothing.
 - Completion: `oat project complete-state` recorded before merge; the archive tail (`oat project archive`, pointer clear, completion bookkeeping commit) is `completion tail: deferred to program close`.
 

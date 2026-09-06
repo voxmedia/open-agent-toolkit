@@ -68,6 +68,10 @@ Gate run 1c033697 final re-review used two bounded read-only reconnaissance lane
 
 target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T103833Z.md
 
+### 2026-09-06 · structural · oat-gate-review · final
+
+Exit gate generation 2 attempt 2 (run 1c033697-daac-4794-8c7a-7fd024f65bc7, codex-5-6-sol-xhigh) passed with zero findings on f8b0222277147f438096f3c6af8ec1c69f5a5f2e after generation 1 (run 45ee23dc) went stale on the Bugbot fix 3ee49fcad and generation-2 attempt 1 (run ba8ff320) blocked; artifact reviews/archived/final-review-2026-09-06T103833Z.md.
+
 ## End-of-run synthesis
 
 Owned by `orchestration-log.md` for wave wrappers (convention verdicts, skill-signal rulings, adopted rules, graduated-entries ledger); see its `## End-of-run synthesis (2026-09-06)` section.

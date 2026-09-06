@@ -114,6 +114,7 @@ child agent's staged work when its handle was lost.
 - **Dead assertions.** The wave-level final review found that the p03
   whole-source guard was only exercised at one direct call site; a fixture now
   drives the real matrix against injected copies of both guarded files.
+- **Findings after the gate.** Cursor Bugbot found a High ordering defect in the recover-mode contract that three root final-review rounds, three p05 rounds, and the first exit-gate pass had all missed; the fix then needed a second correction (the artifact-free retry path) caught by the exit gate's re-run.
 - **Hidden fences.** Four-backtick fences had turned whole lifecycle steps into
   code blocks invisible to every prose scan and every gate; three are repaired
   and a fourth is filed.
@@ -129,6 +130,10 @@ child agent's staged work when its handle was lost.
   closing punctuation; finer splitting also narrows what the negation marker
   can disqualify, so the guard stays a drift alarm rather than a proof of
   meaning (documented in the helper comment).
+
+## Exit Gate History
+
+- Configured cross-family exit gate (`codex-5-6-sol-xhigh`): generation 1 run `45ee23dc` passed with zero findings, then went stale when Cursor Bugbot's High finding on PR #267 (recover mode committed the recovered patch before reconciling the pending attempt) was fixed in `3ee49fcad`; generation 2 attempt 1 (run `ba8ff320`) blocked on two Important findings (the artifact-free retry still ran the verifier; duplicate gate ledger rows), fixed in `e8e25f780` and the record commits; generation 2 attempt 2 (run `1c033697`) passed with zero findings. Exit gate history: three runs, two passes.
 
 ## Follow-up Items
 
