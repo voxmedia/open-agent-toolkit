@@ -486,6 +486,58 @@ describe('createDocsGenerateIndexCommand', () => {
       );
     });
 
+    // I1: the plan's `## Current state` carries two overlapping rules that
+    // collide on `tooling: 'fumadocs'` + `documentation.config` set. The
+    // shipped predicate writes, matching the plan's `## Outcome` ("MkDocs
+    // configuration is never touched"), its step 1 (which names only the
+    // MkDocs and outside-root early returns), and this repository's own
+    // `.oat/config.json`, whose documented bootstrap transition depends on it.
+    // Pinned here so the reading is deliberate rather than incidental.
+    it('records the manifest for fumadocs even when documentation.config is set', async () => {
+      const { command, writtenConfigs } = createHarness({
+        config: {
+          version: 1,
+          documentation: {
+            root: 'apps/docs',
+            tooling: 'fumadocs',
+            config: 'apps/docs/next.config.js',
+            index: 'apps/docs/docs/index.md',
+          },
+        },
+      });
+
+      await runCommand(command);
+
+      expect(writtenConfigs).toHaveLength(1);
+      expect(writtenConfigs[0]!.config.documentation?.index).toBe(
+        'apps/docs/index.md',
+      );
+      // The tool config itself is untouched.
+      expect(writtenConfigs[0]!.config.documentation?.config).toBe(
+        'apps/docs/next.config.js',
+      );
+    });
+
+    // I2: the falsifiable guard for the P0 done-criterion "MkDocs runs never
+    // write .oat/config.json". Every scaffold-derived MkDocs fixture also sets
+    // `documentation.config`, so the tooling discriminator was previously
+    // unreachable evidence; this fixture omits `config` so only the
+    // discriminator can produce the zero-write result.
+    it('never writes config for mkdocs tooling when documentation.config is absent', async () => {
+      const { command, writeOatConfigMock, writtenFiles } = createHarness({
+        config: {
+          version: 1,
+          documentation: { root: 'apps/docs', tooling: 'mkdocs' },
+        },
+      });
+
+      await runCommand(command);
+
+      expect(writtenFiles).toHaveLength(1);
+      expect(writtenFiles[0]!.path).toBe(`${REPO_ROOT}/apps/docs/index.md`);
+      expect(writeOatConfigMock).toHaveBeenCalledTimes(0);
+    });
+
     it('does not persist a documentation.index that escapes the repository', async () => {
       const { command, writeOatConfigMock, writtenFiles } = createHarness({
         config: {
@@ -584,7 +636,7 @@ describe('createDocsGenerateIndexCommand', () => {
         expect(writtenFiles).toHaveLength(0);
         expect(writeOatConfigMock).not.toHaveBeenCalled();
         expect(capture.error.join('\n')).toContain(testCase.expectedMessage);
-        expect(process.exitCode).toBe(2);
+        expect(process.exitCode).toBe(1);
       });
     }
 
@@ -655,11 +707,11 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(generateIndexMock).not.toHaveBeenCalled();
       expect(writtenFiles).toHaveLength(0);
       expect(capture.error.join('\n')).toContain('inside the docs directory');
-      expect(process.exitCode).toBe(2);
+      expect(process.exitCode).toBe(1);
     });
 
-    it('narrows a source root that itself contains a nested docs directory', async () => {
-      const { command, indexedDirs, writtenFiles } = createHarness({
+    it('narrows a source root that itself contains a nested docs directory and reports the derivation', async () => {
+      const { capture, command, indexedDirs, writtenFiles } = createHarness({
         config: {
           version: 1,
           documentation: { root: 'apps/docs/docs', tooling: 'fumadocs' },
@@ -670,7 +722,7 @@ describe('createDocsGenerateIndexCommand', () => {
         ],
       });
 
-      await runCommand(command);
+      await runCommand(command, [], ['--json']);
 
       // The `<root>/docs` rule wins over the root itself; `--docs-dir` is the
       // escape hatch when that narrowing is wrong for a legacy layout.
@@ -678,6 +730,14 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(writtenFiles[0]!.path).toBe(
         `${REPO_ROOT}/apps/docs/docs/index.md`,
       );
+      // The plan requires the narrowed derivation to be reported, so the
+      // operator can see which directory was actually indexed.
+      const payload = capture.jsonPayloads[0] as {
+        docsDir: string;
+        docsDirSource: string;
+      };
+      expect(payload.docsDir).toBe(`${REPO_ROOT}/apps/docs/docs/docs`);
+      expect(payload.docsDirSource).toBe('config-docs-subdirectory');
     });
 
     it('reports the derived docs directory in JSON output', async () => {
@@ -734,30 +794,40 @@ describe('createDocsGenerateIndexCommand', () => {
     });
   });
 
-  describe('real filesystem safety', () => {
+  describe('real filesystem end-to-end', () => {
     /**
-     * Lexical containment is not enough: `<appRoot>/link` symlinked to
-     * `<appRoot>/docs` names a path outside the docs tree that resolves back
-     * into it, so the authored source would be overwritten.
+     * The only tier that runs the production `DEFAULT_FILE_DEPS`: real
+     * `realpath`, real `readlink`, real `readFile`, real `writeFile`, real
+     * `readOatConfig`/`writeOatConfig`, and the real recursive generator over a
+     * real `mkdtemp` repository. Everything else in this suite writes into an
+     * in-memory Map where symlinks are structurally invisible, so this tier is
+     * what keeps the fakes from drifting away from `fs` semantics.
      */
-    it('refuses an --output that reaches the docs tree through a symlink', async () => {
-      const repoRoot = await mkdtemp(
-        join(tmpdir(), 'oat-generate-index-link-'),
-      );
+    async function createRealRepo(documentation: Record<string, unknown>) {
+      const repoRoot = await mkdtemp(join(tmpdir(), 'oat-generate-index-e2e-'));
       createdDirs.push(repoRoot);
       const appRoot = join(repoRoot, 'apps', 'docs');
+
+      await mkdir(join(repoRoot, '.git'), { recursive: true });
+      await mkdir(join(repoRoot, '.oat'), { recursive: true });
       await mkdir(join(appRoot, 'docs'), { recursive: true });
-      const authored = '---\ntitle: Docs\n---\n\n# Docs\n';
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        `${JSON.stringify({ version: 1, documentation }, null, 2)}\n`,
+        'utf8',
+      );
+
+      const authored = '---\ntitle: Docs\n---\n\n# Docs\n\n## Contents\n';
       await writeFile(join(appRoot, 'docs', 'index.md'), authored, 'utf8');
-      await symlink(join(appRoot, 'docs'), join(appRoot, 'link'), 'dir');
+      await writeFile(
+        join(appRoot, 'docs', 'guide.md'),
+        '---\ntitle: Guide\ndescription: How to\n---\n\n# Guide\n',
+        'utf8',
+      );
 
       const capture = createLoggerCapture();
-      const generateIndexMock = vi.fn(async () => [
-        { title: 'Home', path: 'index.md', description: 'Welcome' },
-      ]);
-      const writeFileMock = vi.fn(async () => undefined);
-
-      const program = createDocsGenerateIndexCommand({
+      // No `fileDeps` override: the command runs against the real filesystem.
+      const command = createDocsGenerateIndexCommand({
         buildCommandContext: (
           globalOptions: GlobalOptions,
         ): CommandContext => ({
@@ -766,40 +836,99 @@ describe('createDocsGenerateIndexCommand', () => {
           verbose: globalOptions.verbose ?? false,
           json: globalOptions.json ?? false,
           cwd: repoRoot,
-          home: '/tmp/home',
+          home: join(repoRoot, 'home'),
           interactive: !(globalOptions.json ?? false),
           logger: capture.logger,
         }),
-        fileDeps: {
-          generateIndex: generateIndexMock,
-          renderIndex: vi.fn(() => '- [Home](index.md)\n'),
-          writeFile: writeFileMock,
-          readOatConfig: vi.fn(async () => fumadocsScaffoldConfig()),
-          writeOatConfig: vi.fn(async () => undefined),
-          resolveRepoRoot: vi.fn(async () => repoRoot),
-          dirExists,
-          readFileIfPresent: vi.fn(async (path: string) => {
-            try {
-              return await readFile(path, 'utf8');
-            } catch {
-              return null;
-            }
-          }),
-          realpath,
-          readLinkIfSymlink,
-        },
       });
 
-      await runCommand(program, ['--output', 'apps/docs/link/index.md']);
+      const readConfig = async () =>
+        JSON.parse(
+          await readFile(join(repoRoot, '.oat', 'config.json'), 'utf8'),
+        ) as { documentation?: Record<string, string> };
 
-      expect(generateIndexMock).not.toHaveBeenCalled();
-      expect(writeFileMock).not.toHaveBeenCalled();
-      expect(capture.error.join('\n')).toContain('inside the docs directory');
-      expect(process.exitCode).toBe(2);
-      // The authored page survives byte-for-byte.
+      return { appRoot, authored, capture, command, readConfig, repoRoot };
+    }
+
+    it('writes the real manifest, preserves authored bytes, and records a repo-relative index', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+        index: 'apps/docs/docs/index.md',
+      });
+
+      await runCommand(repo.command);
+
+      expect(process.exitCode).toBe(0);
+      const manifest = await readFile(join(repo.appRoot, 'index.md'), 'utf8');
+      expect(manifest.startsWith(GENERATED_INDEX_WARNING)).toBe(true);
+      expect(manifest.split(GENERATED_INDEX_WARNING)).toHaveLength(2);
+      expect(manifest).toContain('Guide');
+
+      // Real bytes on disk, not a harness Map entry.
       await expect(
-        readFile(join(appRoot, 'docs', 'index.md'), 'utf8'),
-      ).resolves.toBe(authored);
+        readFile(join(repo.appRoot, 'docs', 'index.md'), 'utf8'),
+      ).resolves.toBe(repo.authored);
+
+      // `mkdtemp` lives under the `/var` → `/private/var` alias on macOS, so
+      // this also proves the recorded value survives canonicalization.
+      const config = await repo.readConfig();
+      expect(config.documentation?.index).toBe('apps/docs/index.md');
+    });
+
+    it('refuses a real symlinked --output that resolves into the docs tree', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+        index: 'apps/docs/index.md',
+      });
+      await symlink(
+        join(repo.appRoot, 'docs'),
+        join(repo.appRoot, 'alias'),
+        'dir',
+      );
+
+      await runCommand(repo.command, ['--output', 'apps/docs/alias/index.md']);
+
+      expect(process.exitCode).toBe(1);
+      expect(repo.capture.error.join('\n')).toContain(
+        'inside the docs directory',
+      );
+      await expect(
+        readFile(join(repo.appRoot, 'docs', 'index.md'), 'utf8'),
+      ).resolves.toBe(repo.authored);
+      // Nothing was generated, so no manifest exists at the app root.
+      await expect(
+        readFile(join(repo.appRoot, 'index.md'), 'utf8'),
+      ).rejects.toThrow();
+      const config = await repo.readConfig();
+      expect(config.documentation?.index).toBe('apps/docs/index.md');
+    });
+
+    it('follows a real output symlink that points outside the docs tree', async () => {
+      const repo = await createRealRepo({
+        root: 'apps/docs',
+        tooling: 'fumadocs',
+        index: 'apps/docs/index.md',
+      });
+      const linkTarget = join(repo.repoRoot, 'generated', 'manifest.md');
+      await mkdir(join(repo.repoRoot, 'generated'), { recursive: true });
+      await symlink(linkTarget, join(repo.appRoot, 'index.md'));
+
+      await runCommand(repo.command);
+
+      expect(process.exitCode).toBe(0);
+      // The real `writeFile` followed the link, so the destination holds the
+      // manifest -- the behavior `canonicalize` is written to reason about.
+      const written = await readFile(linkTarget, 'utf8');
+      expect(written.startsWith(GENERATED_INDEX_WARNING)).toBe(true);
+      await expect(
+        readFile(join(repo.appRoot, 'docs', 'index.md'), 'utf8'),
+      ).resolves.toBe(repo.authored);
+      // The resolved destination sits outside `documentation.root`, so the
+      // manifest transition is ineligible and config is untouched.
+      const config = await repo.readConfig();
+      expect(config.documentation?.index).toBe('apps/docs/index.md');
     });
   });
 
@@ -894,7 +1023,7 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(harness.capture.error.join('\n')).toContain(
         'inside the docs directory',
       );
-      expect(process.exitCode).toBe(2);
+      expect(process.exitCode).toBe(1);
       await expect(
         readFile(join(harness.appRoot, 'docs', 'index.md'), 'utf8'),
       ).resolves.toBe(authored);
@@ -917,7 +1046,7 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(harness.capture.error.join('\n')).toContain(
         'inside the docs directory',
       );
-      expect(process.exitCode).toBe(2);
+      expect(process.exitCode).toBe(1);
       await expect(
         readFile(join(harness.appRoot, 'docs', 'new.md'), 'utf8'),
       ).rejects.toThrow();
@@ -947,7 +1076,7 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(harness.capture.error.join('\n')).toContain(
         'inside the docs directory',
       );
-      expect(process.exitCode).toBe(2);
+      expect(process.exitCode).toBe(1);
     });
 
     it('refuses a Markdown --output that is a symlink to a YAML file', async () => {
@@ -962,7 +1091,7 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(harness.generateIndexMock).not.toHaveBeenCalled();
       expect(harness.writeFileMock).not.toHaveBeenCalled();
       expect(harness.capture.error.join('\n')).toContain('YAML file');
-      expect(process.exitCode).toBe(2);
+      expect(process.exitCode).toBe(1);
       await expect(readFile(yamlPath, 'utf8')).resolves.toBe('nav: []\n');
     });
   });
@@ -1034,7 +1163,7 @@ describe('createDocsGenerateIndexCommand', () => {
       expect(generateIndexMock).not.toHaveBeenCalled();
       expect(writeFileMock).not.toHaveBeenCalled();
       expect(capture.error.join('\n')).toContain('symlink chain');
-      expect(process.exitCode).toBe(2);
+      expect(process.exitCode).toBe(1);
     });
 
     it('still writes when both paths are explicit and the configured root is unresolvable', async () => {
