@@ -69,8 +69,8 @@ oat_implement_exit_gate:
   reviewed_head: 1f09bb832f4db62a7c48f9b9b2b776f86973c380 # w3-p01-fix-002; attempt 226f2a4e (w3-exit-gate-20260906T142243Z) was killed by the host for memory pressure before any result — no receipt, no artifact; not counted as an attempt
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:3b64830655dfae7ae030b9ef8adc522d2f1e6be0d07da253eaeb2ca7a8830040'
-  freshness_head: 88535e77b7b052fa3e318baa41c4f4289d006874 # closeout-only: gate receive
-  freshness_fingerprint: 'sha256:effective-delta-v1:424044099a32bc6837343fd313064e6b9a21977b7da8bc70783e09ef7d2c48cc'
+  freshness_head: 3191ddcbb00d0c78938cb3c234c420b3c534978a # closeout-only: PR, approval, complete-state
+  freshness_fingerprint: 'sha256:effective-delta-v1:87f746181f2a4e8adb174c0a1b028add35a14ebd7ebdb3a694a8f6510ac955ad'
   launch_state: result_persisted
   launch_attempt_id: 'w3-exit-gate-20260906T155259Z'
   launch_started_at: '2026-09-06T15:52:59Z'
@@ -90,7 +90,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-06T15:57:59Z'
+  updated_at: '2026-09-06T15:59:20Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -145,20 +145,21 @@ oat_docs_updated: complete # null | skipped | complete — documentation sync st
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/269' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T10:56:52.547Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T15:59:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_completed: '2026-09-06T15:59:20.148Z' # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-09-06T15:59:20.148Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_lifecycle: complete
 ---
 
 # Project State: wave-3-execution
 
-**Status:** Complete — exit gate allowed/passed; PR #269 open; merge pending
+**Status:** Complete
 **Started:** 2026-09-06
 **Last Updated:** 2026-09-06
 
 ## Current Phase
 
-Implementation — PR #269 open; completion recorded before merge (archive tail deferred to program close).
+Lifecycle complete
 
 ## Artifacts
 
@@ -179,7 +180,7 @@ Implementation — PR #269 open; completion recorded before merge (archive tail 
 - ✓ Backlog archived (3) and follow-ups filed (4); synthesis written
 - ✓ Final review passed; exit gate attempt 2 allowed/passed (run `0c1ab7b5`, zero findings) after attempt 1 blocked and the acceptance-clause fix
 - ✓ Post-implement sequence: summary (three decisions), document, pr (PR #269)
-- ⧗ Awaiting CI and Bugbot; merge by the root orchestrator when green
+- ✓ Project lifecycle complete
 
 ## Blockers
 
@@ -187,4 +188,4 @@ None
 
 ## Next Milestone
 
-PR #269 is open for review. CI and Bugbot green → merge → `oat-wave-program wave-close` → W4.
+None. Project complete.
