@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: 87c10a81
+oat_current_task: null
+oat_last_commit: a6410ad0
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260718-fix-oat-docs-generate-index' }
@@ -100,22 +100,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-05T22:36:14.653Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T00:20:49.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T01:23:45.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-1-execution
 
-**Status:** Implementing — group 1 merged (0.2.56 bump, gates green); group 2 dispatching
+**Status:** Implementation tasks complete; awaiting final review and the configured exit gate
 **Started:** 2026-09-05
 **Last Updated:** 2026-09-05
 
 ## Current Phase
 
-Implement - group 1 lanes running in `.worktrees/wave-1/p01` and `p02`; plan gate passed (run `ace386d5`). Wave 1 wrapper (four external plans: docs-index paths, asset-bundle
-structure validation, then their two ordered successors) scaffolded from the
-`oat-wave-execute` templates; parallel groups composed from the wave-boundary
-drift refresh.
+Implement - all four lanes merged into `wave-1-execution` (two fan-ins, lockstep 0.2.56, eight-gate sequence green twice); awaiting final review, the configured exit gate, and the pre-approval sequence.
 
 ## Artifacts
 

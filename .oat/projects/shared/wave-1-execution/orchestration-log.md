@@ -117,6 +117,14 @@ after acceptance, but the journal cannot then be closed out.
 
 Merged p01 (`88ca7f9b1`) and p02 (`d9366de0f`) with `--no-ff` in plan order after rebase; lockstep bump 0.2.55 → 0.2.56 at `87c10a816a77d347e75a44c71c3d7a08cfdbe589`; all eight DoD gates exit 0 with an uncached test run; group-2 readiness checks passed. Worked well: the pre-declared cumulative churn made both lanes' drift checks trivial; the rebase dropped p02's duplicate sync commit automatically.
 
+### 2026-09-06 · structural · oat-wave-execute · group 2 fan-in
+
+Merged p03 (`9561caf19`) and p04 (`a6410ad0c`) with `--no-ff` in plan order after rebase; lockstep retained at 0.2.56; all eight DoD gates exit 0 with an uncached test run at `a6410ad0c4090ce061486c3ccad08a27d4c19c15`. Worked well: the readiness-check flip rule (adopted after the p03 review) and the address-now sweep on p04 kept the group inside one fan-in.
+
+### 2026-09-06 · structural · oat-reviewer · p03 and p04
+
+p03 `reviews/p03-review-2026-09-06T004322Z.md`: 0C/1I/1M/3m (Important = wrapper READY flip, fixed by root bookkeeping `cbaee759a`); p04 `reviews/p04-review-2026-09-06T011441Z.md`: 0C/0I/1M/4m (Medium + one Minor addressed in sweep `915c2a63f`; rest deferred). **Skill signal (strengthens):** reviewers' independent oracles (3.8M-case glob oracle, 24-probe asset harness) found no defects the lanes' own negative controls had missed, but they turned every P0 claim into reproducible evidence.
+
 ### 2026-09-05 · project · friction · session
 
 The orchestrator session restarted during the drift-refresh recon dispatch; the
@@ -124,14 +132,30 @@ recon agent was resumed from its transcript rather than relaunched.
 
 ---
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis (2026-09-06)
 
-At project completion, BEFORE any archive step, the orchestrator writes:
-(1) verdicts on the conventions this wave exercised, with evidence entries cited;
-(2) a ruling on every "Skill signal"-tagged entry — what the `oat-wave-execute`
-skill should change; (3) adjustments adopted for later waves, stated as rules;
-(4) a graduated-entries ledger (backlog IDs / upstream refs / closed-with-evidence
-/ open-with-owner).
+**Convention verdicts (evidence: entries above and `implementation.md` Run 1):**
 
-Roll-up ordering (critical): `summary.md` `## Workflow Observations` and any
-repo-level ledger updates happen BEFORE `oat-project-complete` archives this file.
+1. Wave→project wrapper with pointer-only tasks: held. Four lanes executed their immutable plans with zero narrowing; the one plan-internal contradiction (docs-index config-write clause) was resolved by a recorded non-narrowing reconciliation, not a plan edit.
+2. Wave-boundary drift refresh plus per-lane cumulative-churn pre-declaration: held. All four drift checks were trivial matches; zero false STOPs.
+3. Lane mode vs fan-in mode verification: held. No lane touched a lockstep release file; one bump (0.2.55 → 0.2.56) at the group-1 fan-in was retained through group 2 and re-checked above fresh main; both full DoD sequences green with uncached tests.
+4. Root-owned reviews with adversarial probes: held and load-bearing. Reviewers found two Important findings on p01 (a self-contradictory plan clause and a non-falsifiable P0 test), one process Important on p03 (the wrapper's own READY flip), and produced independent oracle/probe evidence on every lane; every fix landed append-only with a disposition-verification round where required.
+5. Cross-model in-lane review (Codex, read-only): held. p01's four rounds caught real containment and symlink defects before commit; p02/p03 clean; p04 caught a ReDoS and a circular golden.
+6. Group composition from mechanical write-surface intersection: held. No merge conflicts; the rebase step dropped duplicate sync commits automatically.
+
+**Skill-signal rulings:**
+
+- Gap — slug/branch collision with an earlier program's archived wrapper: the skill should qualify the wrapper slug or branch by program, or check `.oat/projects/archived/` and remote branches in preflight. Adopted for later waves: keep local `wave-N-execution`, push to `origin/wave-N-execution-2026-09`, and defer the archive-name collision to the program-close tail.
+- Gap — no "claim the tree" step: a session restart left a prior orchestrator active on the same worktree. Adopted: `ListAgents` check for a busy peer on the same path before scaffolding.
+- Gap — reviewer briefs must say the reconnaissance signal is validated in the artifact file. Adopted in the brief template from p01 onward.
+- Contradicts — dispatch journal records are immutable after the first revision, so `child_outcome` cannot be closed out; outcomes live in `implementation.md`. Upstream candidate: allow an outcome revision or a terminal event kind.
+- Strengthens — bootstrap-group.sh's sync commit is a benign manifest restamp (oatVersion advance) and merges cleanly; inspecting it before dispatch is cheap and should stay.
+
+**Adjustments adopted as rules for later waves:**
+
+1. Run each successor plan's readiness check on the merged tip and flip its frontmatter to READY in the fan-in bookkeeping commit, citing the evidence (the program's group gate requires the flip; p03's reviewer caught the omission).
+2. Address-now sweeps for Medium/Minor findings go through the original implementer handle without a re-review; anything Important gets a disposition-verification round on the original reviewer handle.
+3. Record lane-commit SHA mappings at every rebase in the fan-in entry, because the Reviews table's reviewed heads are pre-rebase.
+4. File the follow-up ledger as backlog items on the wave branch before the final gate so the PR carries them.
+
+**Graduated-entries ledger:** follow-up backlog items filed at closeout (see `implementation.md` Deferred Findings); plan corrections queued for the wave-close program refresh; upstream skill signals above are open-with-owner (program close).
