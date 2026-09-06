@@ -172,12 +172,15 @@ Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passe
 
 - `w2-p01-impl-001` — scope p01, target opus, model_axis selected:opus, effort_axis not-applicable, selection_reason native-catalog, candidates [opus], task_class default-implementation (plan dispatch profile). Stamp: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=opus`. Record `dispatch/w2-p01-impl-001.json`.
 - Dispatch policy enforcement log: `Dispatch policy: high; selected=opus; cap=opus (claude, enforced — Task model arg)`.
+- `w2-p01-review-001` — scope p01, role reviewer, target opus (native catalog, task_class default-implementation). Review of `70250093..dcccb72d7`: 0C/1I/1M/4m → `fixes_added`. Record `dispatch/w2-p01-review-001.json`.
+- `w2-p01-fix-001` — continuation of `w2-p01-impl-001` (mode fix) on the original implementer handle; one commit `848b8ef419e36f3a09c7a45e8cd69425af16e1f0` touching only `packages/cli/src/validation/skills.test.ts` (I1, M1, m1, m4 fixed with neutralization evidence; m2 → follow-up backlog item, m3 → wave close). Record `dispatch/w2-p01-fix-001.json`.
+- `w2-p01-review-002` — disposition-verification round 2 on the original reviewer handle, range `dcccb72d7..848b8ef41`: all four fixes resolved by probe re-run (P5 and P3 now fail against the strengthened guards, P2b passes, title renamed), deferrals accepted, SKILL.md blobs byte-identical, no lockstep file; verdict PASS, 0C/0I/0M/1m (new m5: `readerSentences()` vocabulary bound, non-blocking). Reviewer re-ran `check`/`type-check` forced (`Cached: 0`) because plain runs were full replays. Record `dispatch/w2-p01-review-002.json`.
 
 #### Phase Outcomes
 
-| Phase | Worktree                | Implementer outcome | Review outcome | Fix rounds |
-| ----- | ----------------------- | ------------------- | -------------- | ---------- |
-| p01   | `.worktrees/wave-2/p01` | in progress         | pending        | -          |
+| Phase | Worktree                | Implementer outcome                                                                         | Review outcome                                     | Fix rounds |
+| ----- | ----------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------- |
+| p01   | `.worktrees/wave-2/p01` | DONE (`848b8ef41`; 4 defect commits + 1 fix commit; lane gates + uncached suite 5579 green) | passed (round 1 0C/1I/1M/4m → round 2 0C/0I/0M/1m) | 1          |
 
 #### Parallel Groups
 
@@ -185,7 +188,8 @@ Wave base `90883f9bcfb0bc52a2fd58571542d194f71ee585`; plan gate `54c02cde` passe
 
 #### Outstanding Items
 
-- p01 report and review; fan-in with the single lockstep bump.
+- p01 fan-in with the single lockstep bump (0.2.56 → 0.2.57) and the eight fan-in gates; then group 2 (p02 + p03 + p04).
+- Deferred p01 findings: m2 (doctor example self-contradiction → follow-up backlog item at closeout), m3 (external-plan step-2 wording → wave-close plan correction), m5 (reader-vocabulary bound of `readerSentences()`; informational).
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 

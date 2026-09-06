@@ -82,6 +82,22 @@ for the reviewer's confirmation.
 
 ---
 
+### 2026-09-06 · project · review · p01 round 2
+
+The p01 disposition-verification round (same reviewer handle, narrowed to the
+one fix commit) passed: every round-1 probe that had bypassed a guard now
+fails against the rebuilt guard, and the fix embeds the reviewer's own probe
+string as a permanent inline negative control. Two brief defects surfaced:
+the review brief named a non-existent package filter (`@voxmedia/oat-cli`;
+the CLI package is `@open-agent-toolkit/cli`), and plain `pnpm check` /
+`pnpm type-check` in the lane worktree were full Turborepo replays, so the
+reviewer re-ran them with `HOME=$(mktemp -d) pnpm exec turbo run <gate> --force`.
+**Skill signal (gap):** lane briefs should give the forced-turbo form for every
+gate they cite as evidence, not only for `test`, and name the real package
+filter.
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:
