@@ -18,7 +18,7 @@ This skill is the plan authoring path for **spec-driven** projects only. Quick a
 
 Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`):
 
-- **`spec-driven`**: Complete design document required (`design.md` with `oat_status: complete`). If missing, run the `oat-project-design` skill first. Proceed with planning.
+- **`spec-driven`**: Complete design document required (`design.md` with `oat_status: complete`). If missing, **Stop.** Tell the user: "Run the `oat-project-design` skill first, then return to planning." Otherwise proceed with planning.
 - **`quick`**: **Stop.** Plan is already produced by the quick workflow. Tell the user: "Plan already produced by quick workflow. Run `oat-project-implement` to begin execution."
 - **`import`**: **Stop.** If a normalized `plan.md` exists, tell the user: "Imported plan is ready. Run `oat-project-implement` to begin execution." If no `plan.md` exists, tell the user: "Run `oat-project-import-plan` to import and normalize the external plan first."
 

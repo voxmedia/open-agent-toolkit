@@ -189,7 +189,7 @@ contract.
 
 ### Step 3: Normalize Into Canonical OAT plan.md
 
-Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md` and map imported content into the canonical structure. Apply `oat-project-plan-writing` invariants after mapping:
+Create/update `"$PROJECT_PATH/plan.md"` using `.oat/templates/plan.md` and map imported content into the canonical structure. Apply `oat-project-plan-writing` invariants after mapping — load the current `oat-project-plan-writing/SKILL.md` and follow its invariants as written:
 
 Restore the exact snapshot into the resulting `plan.md` frontmatter as part of
 the first normalized plan write, before any later frontmatter rewrite and

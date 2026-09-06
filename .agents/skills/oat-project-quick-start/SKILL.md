@@ -542,7 +542,7 @@ skill pauses, is interrupted, or cannot resolve dispatch before Step 3.7,
 persist and commit this state. `oat-project-next` must route it back to the
 current planning workflow and cannot advance it to implementation.
 
-Plan requirements — apply `oat-project-plan-writing` canonical format invariants:
+Plan requirements — apply `oat-project-plan-writing` canonical format invariants, loading the current `oat-project-plan-writing/SKILL.md` and following them as written:
 
 - Stable task IDs (`pNN-tNN`)
 - Verification step per task

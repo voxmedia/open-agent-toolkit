@@ -190,8 +190,6 @@ Fix tasks that edit synced artifacts use `oat project push` under the scope
 guard instead of the branch commit template above.
 ````
 
-````
-
 **Task naming:** Prefix with `(revision)` — following the `(review)` convention in review-receive.
 
 **Task IDs:** `prev{N}-t{NN}` format (e.g., `prev1-t01`, `prev1-t02`).
@@ -218,13 +216,14 @@ Add a "Revision Received" entry:
 **Source:** inline conversation
 
 **Changes requested:**
+
 - {item 1}
 - {item 2}
 
 **New tasks added:** {task_ids}
 
 **Next:** Execute revision tasks via the `oat-project-implement` skill.
-````
+```
 
 #### 4f: Update state.md
 
@@ -255,7 +254,7 @@ This is the key value revise adds: state transition management so agents know th
 
 - **GitHub PR feedback:** Delegate to `oat-project-review-receive-remote`
 - **Review artifact feedback:** Delegate to `oat-project-review-receive`
-- Delegating means loading the selected skill's current `SKILL.md` and following it, or dispatching a child that carries it; never act from a remembered delegation outcome.
+- Delegating means loading the selected skill's current `SKILL.md` and following it, or dispatching a child that carries it, if environment supports skill chaining; otherwise tell the user which skill to run and stop. Never act from a remembered delegation outcome.
 
 These skills use their existing conventions: `(review)` task prefix, severity classification, standard task IDs appended to the last plan phase. This is correct — structured review feedback should go through the structured triage model.
 
@@ -263,7 +262,7 @@ These skills use their existing conventions: `(review)` task prefix, severity cl
 
 After the delegated skill completes:
 
-- **If fix tasks were added:** State stays `in_progress`. Route to `oat-project-implement` by loading the current `oat-project-implement/SKILL.md` and following it, or by dispatching a child that carries it.
+- **If fix tasks were added:** State stays `in_progress`. Route to `oat-project-implement` by loading the current `oat-project-implement/SKILL.md` and following it, or by dispatching a child that carries it, if environment supports skill chaining; otherwise tell the user to run the `oat-project-implement` skill and stop.
 - **If no actionable findings:** Return to `pr_open`:
   - `oat_phase_status: pr_open`
   - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`

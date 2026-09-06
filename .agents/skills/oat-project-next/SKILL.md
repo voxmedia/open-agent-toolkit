@@ -329,8 +329,9 @@ alone:
   a valid `freshness_fingerprint`. Exactly one merge base and 64-character
   lowercase hexadecimal implementation/freshness digests are mandatory.
   Missing or malformed inputs route as stale. When HEAD differs from
-  `freshness_head`, use the full raw Git byte algorithm from
-  `oat-project-implement` with only its literal state-carrier exclusion. Verify
+  `freshness_head`, use the full raw Git byte algorithm read from the current
+  `oat-project-implement/SKILL.md`, with only its literal state-carrier
+  exclusion, rather than a remembered version of that algorithm. Verify
   and ignore state-only checkpoint commits before classification. An unchanged
   qualified fingerprint preserves freshness across a merge, rebase, or base
   update but routes to `oat-project-implement` to persist the advanced rolling

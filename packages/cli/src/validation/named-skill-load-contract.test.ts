@@ -48,8 +48,16 @@ interface CallSiteRow {
   classification: Classification;
   /**
    * Every `oat-project-*` skill this row accounts for. A candidate that names a
-   * skill outside its matched rows' union is unclassified, so a new pointer
-   * appended to an already-classified sentence cannot inherit its exemption.
+   * skill outside its matched rows' union is unclassified, so a pointer to a
+   * *different* skill appended to an already-classified sentence cannot inherit
+   * its exemption.
+   *
+   * Known residual: a second pointer to a skill the row already declares, added
+   * inside that same sentence, is still absorbed — `skillsIn` de-duplicates, so
+   * the declared set is unchanged. The offending prose would have to both
+   * mandate loading X and direct running X from memory in one sentence. The
+   * behaviour is pinned by 'absorbs a repeated pointer to a skill the row
+   * already declares' below; change it deliberately, not by accident.
    */
   skills: string[];
   /** Substrings that must be present for the row to be satisfied. */
@@ -69,7 +77,7 @@ interface Candidate {
 }
 
 const EXECUTION_VERB =
-  /\b(load|loads|loaded|loading|delegate|delegates|delegated|delegating|chain|chains|chained|chaining|invoke|invokes|invoked|invoking|dispatch|dispatches|dispatched|dispatching|route|routes|routed|routing|run|runs|ran|running|follow|follows|followed|following)\b/i;
+  /\b(load|loads|loaded|loading|delegate|delegates|delegated|delegating|chain|chains|chained|chaining|invoke|invokes|invoked|invoking|dispatch|dispatches|dispatched|dispatching|route|routes|routed|routing|run|runs|ran|running|follow|follows|followed|following|use|uses|used|using|apply|applies|applied|applying|execute|executes|executed|executing|call|calls|called|calling|perform|performs|performed|performing)\b/i;
 const SKILL_NAME = /oat-project-[a-z0-9]+(?:-[a-z0-9]+)*/;
 const SKILL_NAME_GLOBAL = new RegExp(SKILL_NAME.source, 'g');
 
@@ -89,28 +97,25 @@ interface Block {
   anchor: string;
 }
 
-/** Splits markdown prose into blank-line separated blocks, skipping fenced code. */
-function collectProseBlocks(content: string): Block[] {
-  const lines = content.split(/\r?\n/);
-  const blocks: Block[] = [];
-  let fence: string | null = null;
-  let buffer: string[] = [];
-  let bufferLine = 0;
-  let anchor = '(preamble)';
+type WalkedLine =
+  | { kind: 'heading'; heading: string; line: number }
+  | { kind: 'blank'; text: string; line: number }
+  | { kind: 'text'; text: string; line: number };
 
-  const flush = (): void => {
-    if (buffer.length === 0) return;
-    const text = normalize(buffer.join(' '));
-    if (text) blocks.push({ text, line: bufferLine, anchor });
-    buffer = [];
-  };
+/**
+ * Single fence-aware line walk over a markdown file. Fenced content is dropped,
+ * so a `#` comment inside a fenced block is never mistaken for a heading.
+ */
+function walkMarkdown(content: string): WalkedLine[] {
+  const lines = content.split(/\r?\n/);
+  const walked: WalkedLine[] = [];
+  let fence: string | null = null;
 
   for (const [index, line] of lines.entries()) {
     const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/);
     if (fenceMatch) {
       const marker = fenceMatch[1];
       if (fence === null) {
-        flush();
         fence = marker;
         continue;
       }
@@ -125,25 +130,63 @@ function collectProseBlocks(content: string): Block[] {
     }
     if (fence !== null) continue;
     if (/^#{1,6}\s/.test(line)) {
-      flush();
-      anchor = line.replace(/^#{1,6}\s+/, '').trim();
+      walked.push({
+        kind: 'heading',
+        heading: line.replace(/^#{1,6}\s+/, '').trim(),
+        line: index + 1,
+      });
       continue;
     }
-    if (line.trim() === '') {
+    walked.push({
+      kind: line.trim() === '' ? 'blank' : 'text',
+      text: line,
+      line: index + 1,
+    });
+  }
+
+  return walked;
+}
+
+/** Splits markdown prose into blank-line separated blocks, skipping fenced code. */
+function collectProseBlocks(content: string): Block[] {
+  const blocks: Block[] = [];
+  let buffer: string[] = [];
+  let bufferLine = 0;
+  let anchor = '(preamble)';
+
+  const flush = (): void => {
+    if (buffer.length === 0) return;
+    const text = normalize(buffer.join(' '));
+    if (text) blocks.push({ text, line: bufferLine, anchor });
+    buffer = [];
+  };
+
+  for (const walked of walkMarkdown(content)) {
+    if (walked.kind === 'heading') {
+      flush();
+      anchor = walked.heading;
+      continue;
+    }
+    if (walked.kind === 'blank') {
       flush();
       continue;
     }
-    if (buffer.length === 0) bufferLine = index + 1;
-    buffer.push(line.replace(/^\s*(?:[-*+]|\d+\.|>)\s+/, '').trim());
+    if (buffer.length === 0) bufferLine = walked.line;
+    buffer.push(walked.text.replace(/^\s*(?:[-*+]|\d+\.|>)\s+/, '').trim());
   }
   flush();
 
   return blocks;
 }
 
-/** Section text keyed by heading, used by `scope: 'section'` rows. */
+/**
+ * Section text keyed by heading, used by `scope: 'section'` rows.
+ *
+ * Shares `collectProseBlocks`'s fence-aware line walk: a `#` shell comment
+ * inside a fenced block is not a heading, so a section is never truncated at an
+ * in-fence comment.
+ */
 function collectSections(content: string): Map<string, string> {
-  const lines = content.split(/\r?\n/);
   const sections = new Map<string, string>();
   let anchor = '(preamble)';
   let buffer: string[] = [];
@@ -154,17 +197,106 @@ function collectSections(content: string): Map<string, string> {
     buffer = [];
   };
 
-  for (const line of lines) {
-    if (/^#{1,6}\s/.test(line)) {
+  for (const line of walkMarkdown(content)) {
+    if (line.kind === 'heading') {
       flush();
-      anchor = line.replace(/^#{1,6}\s+/, '').trim();
+      anchor = line.heading;
       continue;
     }
-    buffer.push(line);
+    buffer.push(line.text);
   }
   flush();
 
   return sections;
+}
+
+interface FenceDefect {
+  file: string;
+  line: number;
+  span: number;
+  detail: string;
+}
+
+/**
+ * Fence hygiene over the bounded surface.
+ *
+ * A stray fence silently removes an arbitrary span of directives from this
+ * scanner, so the defect class this contract was written to catch could hide
+ * itself. Two shapes fail here:
+ *
+ * 1. an unclosed fence at end of file; and
+ * 2. an "orphan" fence — a bare fence marker (no info string) opening
+ *    immediately after a closing fence with only blank lines between them, and
+ *    swallowing at least one `##`-or-deeper heading. That is exactly the
+ *    duplicated-closer shape found three times in this corpus
+ *    (`oat-project-plan`, `oat-project-review-receive`, `oat-project-revise`).
+ *
+ * Rule 2 deliberately does not fire on a bare fence that merely contains a
+ * heading: printed console templates legitimately do that.
+ */
+function findFenceDefects(file: string, content: string): FenceDefect[] {
+  const lines = content.split(/\r?\n/);
+  const defects: FenceDefect[] = [];
+  const closed: { open: number; close: number }[] = [];
+  let fence: string | null = null;
+  let openLine = 0;
+  let info = '';
+  let body: string[] = [];
+
+  for (const [index, raw] of lines.entries()) {
+    const fenceMatch = raw.match(/^\s*(`{3,}|~{3,})(.*)$/);
+    if (fenceMatch) {
+      const marker = fenceMatch[1];
+      if (fence === null) {
+        fence = marker;
+        openLine = index + 1;
+        info = fenceMatch[2].trim();
+        body = [];
+        continue;
+      }
+      if (
+        marker[0] === fence[0] &&
+        marker.length >= fence.length &&
+        raw.trim() === marker
+      ) {
+        const previous = closed.at(-1);
+        const gap =
+          previous === undefined
+            ? null
+            : lines.slice(previous.close, openLine - 1);
+        const orphan =
+          info === '' &&
+          gap !== null &&
+          gap.every((line) => line.trim() === '') &&
+          body.some((line) => /^#{2,6}\s/.test(line));
+        if (orphan) {
+          defects.push({
+            file,
+            line: openLine,
+            span: index + 1 - openLine,
+            detail:
+              'bare fence opens immediately after a closing fence and swallows a heading; likely a duplicated closing fence',
+          });
+        }
+        closed.push({ open: openLine, close: index + 1 });
+        fence = null;
+        body = [];
+      }
+      continue;
+    }
+    if (fence !== null) body.push(raw);
+  }
+
+  if (fence !== null) {
+    defects.push({
+      file,
+      line: openLine,
+      span: lines.length - openLine,
+      detail: 'fence is never closed',
+    });
+  }
+
+  return defects;
 }
 
 function splitSentences(block: string): string[] {
@@ -228,24 +360,28 @@ async function collectBoundedFiles(repoRoot: string): Promise<string[]> {
 }
 
 interface ScanResult {
+  files: string[];
   candidates: Candidate[];
   sections: Map<string, Map<string, string>>;
+  fenceDefects: FenceDefect[];
 }
 
 async function scanBoundedSurface(repoRoot: string): Promise<ScanResult> {
   const files = await collectBoundedFiles(repoRoot);
   const candidates: Candidate[] = [];
   const sections = new Map<string, Map<string, string>>();
+  const fenceDefects: FenceDefect[] = [];
 
   for (const file of files) {
     const content = await readFile(join(repoRoot, file), 'utf8');
     sections.set(file, collectSections(content));
+    fenceDefects.push(...findFenceDefects(file, content));
     for (const block of collectProseBlocks(content)) {
       candidates.push(...candidatesInBlock(block, file));
     }
   }
 
-  return { candidates, sections };
+  return { files, candidates, sections, fenceDefects };
 }
 
 function rowMatches(row: CallSiteRow, candidate: Candidate): boolean {
@@ -260,8 +396,11 @@ function rowMatches(row: CallSiteRow, candidate: Candidate): boolean {
 interface ContractReport {
   unclassified: Candidate[];
   deadRows: CallSiteRow[];
+  overMatchedRows: string[];
   missingClauses: string[];
   malformedRows: string[];
+  fenceDefects: FenceDefect[];
+  corpusShortfalls: string[];
 }
 
 function skillsIn(sentence: string): string[] {
@@ -286,11 +425,41 @@ function validateRowShape(row: CallSiteRow): string[] {
   return problems;
 }
 
+interface CorpusMinimums {
+  files: number;
+  candidates: number;
+}
+
+/**
+ * A glob or path regression that empties the corpus would otherwise surface
+ * only indirectly, as dead rows. Fail on the shrinkage itself.
+ */
+function corpusShortfalls(
+  files: readonly string[],
+  candidates: readonly Candidate[],
+  minimums: CorpusMinimums,
+): string[] {
+  const shortfalls: string[] = [];
+  if (files.length < minimums.files) {
+    shortfalls.push(
+      `bounded surface shrank to ${files.length} files (floor ${minimums.files})`,
+    );
+  }
+  if (candidates.length < minimums.candidates) {
+    shortfalls.push(
+      `candidate sweep shrank to ${candidates.length} sentences (floor ${minimums.candidates})`,
+    );
+  }
+  return shortfalls;
+}
+
 async function inspectContract(
   repoRoot: string,
   matrix: readonly CallSiteRow[],
+  minimums: CorpusMinimums = { files: 0, candidates: 0 },
 ): Promise<ContractReport> {
-  const { candidates, sections } = await scanBoundedSurface(repoRoot);
+  const { files, candidates, sections, fenceDefects } =
+    await scanBoundedSurface(repoRoot);
 
   const unclassified = candidates.filter((candidate) => {
     const matched = matrix.filter((row) => rowMatches(row, candidate));
@@ -306,6 +475,22 @@ async function inspectContract(
       return !sections.get(row.file)?.get(row.anchor);
     }
     return !candidates.some((candidate) => rowMatches(row, candidate));
+  });
+
+  // Enumerated, not pattern-wide: a `match` is a handle on exactly one
+  // enumerated sentence. A row that starts matching a second sentence has been
+  // widened into a pattern, so a new directive could be absorbed by an existing
+  // exemption. That is as much a defect as a dead row.
+  const overMatchedRows = matrix.flatMap((row) => {
+    if (row.match === undefined) return [];
+    const bound = candidates.filter((candidate) => rowMatches(row, candidate));
+    if (bound.length <= 1) return [];
+    const sentences = bound
+      .map((candidate) => `      L${candidate.line}: ${candidate.sentence}`)
+      .join('\n');
+    return [
+      `${row.file} [${row.anchor}] match="${row.match}" now matches ${bound.length} sentences:\n${sentences}`,
+    ];
   });
 
   const malformedRows = matrix.flatMap(validateRowShape);
@@ -332,7 +517,15 @@ async function inspectContract(
     }
   }
 
-  return { unclassified, deadRows, missingClauses, malformedRows };
+  return {
+    unclassified,
+    deadRows,
+    overMatchedRows,
+    missingClauses,
+    malformedRows,
+    fenceDefects,
+    corpusShortfalls: corpusShortfalls(files, candidates, minimums),
+  };
 }
 
 function formatReport(report: ContractReport): string {
@@ -355,6 +548,27 @@ function formatReport(report: ContractReport): string {
     lines.push('Malformed matrix rows:');
     for (const problem of report.malformedRows) lines.push(`  ${problem}`);
   }
+  if (report.fenceDefects.length > 0) {
+    lines.push(
+      'Fenced-code defects in the bounded surface (a stray fence hides directives from this scanner):',
+    );
+    for (const defect of report.fenceDefects) {
+      lines.push(
+        `  ${defect.file}:${defect.line} (+${defect.span} lines) — ${defect.detail}`,
+      );
+    }
+  }
+  if (report.corpusShortfalls.length > 0) {
+    lines.push('Bounded-surface corpus shrank below its floor:');
+    for (const shortfall of report.corpusShortfalls)
+      lines.push(`  ${shortfall}`);
+  }
+  if (report.overMatchedRows.length > 0) {
+    lines.push(
+      'Matrix rows that match more than one sentence (exemptions must stay enumerated):',
+    );
+    for (const row of report.overMatchedRows) lines.push(`  ${row}`);
+  }
   if (report.deadRows.length > 0) {
     lines.push('Matrix rows that no longer bind to a live call site:');
     for (const row of report.deadRows) {
@@ -370,17 +584,25 @@ function formatReport(report: ContractReport): string {
   return lines.join('\n');
 }
 
+function reportIsClean(report: ContractReport): boolean {
+  return (
+    report.unclassified.length === 0 &&
+    report.deadRows.length === 0 &&
+    report.overMatchedRows.length === 0 &&
+    report.missingClauses.length === 0 &&
+    report.malformedRows.length === 0 &&
+    report.fenceDefects.length === 0 &&
+    report.corpusShortfalls.length === 0
+  );
+}
+
 async function assertContractCurrent(
   repoRoot: string,
   matrix: readonly CallSiteRow[],
+  minimums?: CorpusMinimums,
 ): Promise<void> {
-  const report = await inspectContract(repoRoot, matrix);
-  if (
-    report.unclassified.length > 0 ||
-    report.deadRows.length > 0 ||
-    report.missingClauses.length > 0 ||
-    report.malformedRows.length > 0
-  ) {
+  const report = await inspectContract(repoRoot, matrix, minimums);
+  if (!reportIsClean(report)) {
     throw new Error(formatReport(report));
   }
 }
@@ -394,7 +616,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     file: '.agents/skills/oat-project-autonomous/SKILL.md',
     anchor: 'Step 0.5: Capability Detection and Tier Selection',
     match:
-      'load the current `oat-project-dispatch-subagents/SKILL.md` and follow it',
+      'Before artifact writes, external side effects, tests, or long-running work',
     classification: 'load-required',
     skills: ['oat-project-dispatch-subagents'],
     requires: [
@@ -440,8 +662,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-autonomous/SKILL.md',
     anchor: 'Step 5: Invoke Lifecycle Skills and Reviews',
-    match:
-      'loading the current `oat-project-dispatch-subagents/SKILL.md`, following it',
+    match: 'Resolve the route before launch',
     classification: 'load-required',
     skills: ['oat-project-dispatch-subagents'],
     requires: [
@@ -541,6 +762,19 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   // ------------------------------------------------------------------- capture
   {
     file: '.agents/skills/oat-project-capture/SKILL.md',
+    anchor: 'When NOT to Use',
+    match: 'use `oat-project-reconcile` instead',
+    classification: 'non-executing',
+    skills: [
+      'oat-project-new',
+      'oat-project-quick-start',
+      'oat-project-reconcile',
+    ],
+    reason:
+      'When-NOT-to-Use guidance naming the correct entry points for the user.',
+  },
+  {
+    file: '.agents/skills/oat-project-capture/SKILL.md',
     anchor: 'Step 8: Refresh Dashboard and Report',
     match: 'run a self-review before sharing',
     classification: 'non-executing',
@@ -553,6 +787,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
 
   // ------------------------------------------------------------------ complete
+  {
+    file: '.agents/skills/oat-project-complete/SKILL.md',
+    anchor: 'Step 2: Upfront User Questions (Batched)',
+    match: 'Also preflight summary status using the same freshness rules',
+    classification: 'non-executing',
+    skills: ['oat-project-summary'],
+    reason:
+      'Read-only preflight; the freshness rules are reproduced inline below and Step 3.5 is the summary execution boundary that carries the load clause.',
+  },
   {
     file: '.agents/skills/oat-project-complete/SKILL.md',
     anchor: '3.3: Documentation Sync Status',
@@ -576,7 +819,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-complete/SKILL.md',
     anchor: 'Step 3.5: Summary Gate',
-    match: 'If direct skill invocation is unavailable',
+    match: 'generate or update `summary.md` inline',
     classification: 'explicit-fallback',
     skills: ['oat-project-summary'],
     requires: [
@@ -614,9 +857,54 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     requires: [
       'Load the current `oat-project-pr-final/SKILL.md` and follow its Steps 0.5 through 4 as the authoritative source for the templates and policies this step applies',
       "then execute completion's adapted mapping below instead of pr-final's own step sequence",
-      "it must not re-prompt, re-check, regenerate a declined summary, or run pr-final's push, PR-opening, or state-transition steps",
+      "Apply only pr-final's templates and content policies; apply none of its gates, prompts, blocks, or state writes",
+      'Step 5 has already run `oat project complete-state`, so blocking or re-deciding a gate here would strand a completed project mid-lifecycle',
       'When skill loading is unavailable in the current host/runtime, the mapping below is the explicit inline fallback',
     ],
+  },
+  {
+    file: '.agents/skills/oat-project-complete/SKILL.md',
+    anchor: 'Step 7: Generate PR Description',
+    match:
+      '**Collect project summary** — if `summary.md` exists (from Step 3.5)',
+    classification: 'explicit-fallback',
+    skills: ['oat-project-pr-final'],
+    scope: 'section',
+    requires: [
+      'Load the current `oat-project-pr-final/SKILL.md` and follow its Steps 0.5 through 4 as the authoritative source',
+      "Apply only pr-final's templates and content policies; apply none of its gates, prompts, blocks, or state writes",
+    ],
+    reason:
+      "Adapted inline execution of pr-final Step 3.0, governed by Step 7's load-and-fallback clause.",
+  },
+  {
+    file: '.agents/skills/oat-project-complete/SKILL.md',
+    anchor: 'Step 7: Generate PR Description',
+    match: 'Use the **current/head branch** for the blob link',
+    classification: 'explicit-fallback',
+    skills: ['oat-project-pr-final'],
+    scope: 'section',
+    requires: [
+      'Load the current `oat-project-pr-final/SKILL.md` and follow its Steps 0.5 through 4 as the authoritative source',
+      "Apply only pr-final's templates and content policies; apply none of its gates, prompts, blocks, or state writes",
+    ],
+    reason:
+      "Adapted inline execution of pr-final Step 4's reference-link policy, governed by Step 7's load-and-fallback clause.",
+  },
+  {
+    file: '.agents/skills/oat-project-complete/SKILL.md',
+    anchor: 'Step 7: Generate PR Description',
+    match:
+      'Apply the existing `localPaths`-based exclusion rule from `oat-project-pr-final` Step 4',
+    classification: 'explicit-fallback',
+    skills: ['oat-project-pr-final'],
+    scope: 'section',
+    requires: [
+      'Load the current `oat-project-pr-final/SKILL.md` and follow its Steps 0.5 through 4 as the authoritative source',
+      "Apply only pr-final's templates and content policies; apply none of its gates, prompts, blocks, or state writes",
+    ],
+    reason:
+      "Adapted inline execution of pr-final Step 4's local-path exclusion, governed by Step 7's load-and-fallback clause.",
   },
   {
     file: '.agents/skills/oat-project-complete/SKILL.md',
@@ -659,6 +947,24 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     skills: ['oat-project-spec'],
     reason:
       'Provenance note; the ported steps are reproduced in full in this skill and are followed from here.',
+  },
+  {
+    file: '.agents/skills/oat-project-design/SKILL.md',
+    anchor: 'Step 4a: Selective Review Pass',
+    match:
+      'Use `.agents/skills/oat-project-design/references/selective-review-pass.md`',
+    classification: 'non-executing',
+    skills: ['oat-project-design'],
+    reason:
+      "Points at this skill's own reference file by path, not at another skill.",
+  },
+  {
+    file: '.agents/skills/oat-project-design/references/selective-review-pass.md',
+    anchor: 'Selective Review Pass',
+    match: 'This reference defines the prose-driven classification pass',
+    classification: 'non-executing',
+    skills: ['oat-project-design'],
+    reason: 'Self-describing reference header.',
   },
   {
     file: '.agents/skills/oat-project-design/references/selective-review-pass.md',
@@ -706,6 +1012,14 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: ['oat-project-new', 'oat-project-open'],
     reason: 'User-facing instructions printed before this skill stops.',
+  },
+  {
+    file: '.agents/skills/oat-project-discover/SKILL.md',
+    anchor: 'Step 15: Commit Discovery',
+    match: 'This shows what users will do when USING oat-project-discover',
+    classification: 'non-executing',
+    skills: ['oat-project-discover'],
+    reason: 'Self-referential note about the printed guidance.',
   },
   {
     file: '.agents/skills/oat-project-discover/SKILL.md',
@@ -925,6 +1239,16 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-implement/references/phase-execution.md',
     anchor: 'Step 8: Check Plan Phase Completion',
+    match: 'For the final implementation phase use',
+    classification: 'load-required',
+    skills: ['oat-project-review-provide'],
+    requires: [
+      'loading the current `oat-project-review-provide/SKILL.md` and following it, or dispatching a child that carries it',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-implement/references/phase-execution.md',
+    anchor: 'Step 8: Check Plan Phase Completion',
     match: 'run `oat-project-review-provide code final`',
     classification: 'load-required',
     skills: ['oat-project-review-provide'],
@@ -955,6 +1279,16 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
 
   // --------------------------------------------------------------- import-plan
+  {
+    file: '.agents/skills/oat-project-import-plan/SKILL.md',
+    anchor: 'Step 3: Normalize Into Canonical OAT plan.md',
+    match: 'Apply `oat-project-plan-writing` invariants after mapping',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [
+      'load the current `oat-project-plan-writing/SKILL.md` and follow its invariants as written',
+    ],
+  },
   {
     file: '.agents/skills/oat-project-import-plan/SKILL.md',
     anchor: 'Step 4: Update Plan Metadata',
@@ -1001,12 +1335,11 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-import-plan/SKILL.md',
     anchor: 'Step 4.5: Run Import-Aware Plan Artifact Review Loop',
-    match:
-      'Load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written',
+    match: 'follow that loop as written',
     classification: 'load-required',
     skills: ['oat-project-plan-writing'],
     requires: [
-      'Load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written',
+      'Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing`',
     ],
   },
   {
@@ -1049,6 +1382,16 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: ['oat-project-review-receive'],
     reason: 'Routing decision; Step 6 owns this router’s execution boundary.',
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 5: Post-Implementation Router',
+    match: 'use the full raw Git byte algorithm read from the current',
+    classification: 'load-required',
+    skills: ['oat-project-implement'],
+    requires: [
+      'read from the current `oat-project-implement/SKILL.md`, with only its literal state-carrier exclusion, rather than a remembered version of that algorithm',
+    ],
   },
   {
     file: '.agents/skills/oat-project-next/SKILL.md',
@@ -1202,10 +1545,11 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-plan/SKILL.md',
     anchor: 'Prerequisites',
-    match: 'If missing, run the `oat-project-design` skill first',
+    match: 'Run the `oat-project-design` skill first, then return to planning.',
     classification: 'non-executing',
     skills: ['oat-project-design'],
-    reason: 'Terminal handoff: plan stops when design is missing.',
+    reason:
+      'Terminal handoff, matching the sibling `quick` and `import` bullets: plan stops and tells the user to run design.',
   },
   {
     file: '.agents/skills/oat-project-plan/SKILL.md',
@@ -1226,8 +1570,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-plan/SKILL.md',
     anchor: 'Plan Format Contract',
-    match:
-      'load the current `oat-project-plan-writing/SKILL.md` and follow its canonical format rules',
+    match: 'When creating or editing `plan.md`',
     classification: 'load-required',
     skills: ['oat-project-plan-writing'],
     requires: [
@@ -1315,12 +1658,11 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-plan/SKILL.md',
     anchor: 'Step 12.5: Run Plan Artifact Review Loop',
-    match:
-      'Load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written',
+    match: 'follow that loop as written',
     classification: 'load-required',
     skills: ['oat-project-plan-writing'],
     requires: [
-      'Load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written',
+      'Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing`',
     ],
   },
 
@@ -1402,7 +1744,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-pr-final/SKILL.md',
     anchor: 'Step 3: Collect Project Summary',
-    match: 'If direct skill invocation is unavailable',
+    match: 'generate or update `summary.md` inline',
     classification: 'explicit-fallback',
     skills: ['oat-project-summary'],
     requires: [
@@ -1431,6 +1773,16 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-progress/SKILL.md',
+    anchor: 'Step 5: Determine Next Skill',
+    match:
+      'Recommend continuing the current phase skill to capture explicit approval',
+    classification: 'non-executing',
+    skills: ['oat-project-design', 'oat-project-discover'],
+    reason:
+      'Recommendation table naming the phase skill the user should run next.',
+  },
+  {
+    file: '.agents/skills/oat-project-progress/SKILL.md',
     anchor: 'Usage',
     match: 'Run `oat-project-progress` at any time to',
     classification: 'non-executing',
@@ -1439,6 +1791,26 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
 
   // --------------------------------------------------------------- quick-start
+  {
+    file: '.agents/skills/oat-project-quick-start/SKILL.md',
+    anchor: 'Step 0.5: Resolve Active Project',
+    match: 'Create project via the same scaffolding path used by',
+    classification: 'non-executing',
+    skills: ['oat-project-new'],
+    reason:
+      'Names the shared `oat project new` CLI scaffolding path shown below, not a directive to execute the named skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-quick-start/SKILL.md',
+    anchor: 'Step 3: Generate Plan Directly',
+    match:
+      'Plan requirements — apply `oat-project-plan-writing` canonical format invariants',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [
+      'loading the current `oat-project-plan-writing/SKILL.md` and following them as written',
+    ],
+  },
   {
     file: '.agents/skills/oat-project-quick-start/SKILL.md',
     anchor: 'Mode Assertion',
@@ -1502,12 +1874,11 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-quick-start/SKILL.md',
     anchor: 'Step 3.6: Run Plan Artifact Review Loop',
-    match:
-      'Load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written',
+    match: 'follow that loop as written',
     classification: 'load-required',
     skills: ['oat-project-plan-writing'],
     requires: [
-      'Load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written',
+      'Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing`',
     ],
   },
   {
@@ -1523,6 +1894,30 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-retro/SKILL.md',
     anchor: 'Step 4: Resolve Post-Generation Consent',
+    match: 'Filing remains owned by `oat-project-retro-file`',
+    classification: 'non-executing',
+    skills: ['oat-project-retro-file'],
+    reason: "Ownership statement bounding this skill's generate/apply modes.",
+  },
+  {
+    file: '.agents/skills/oat-project-retro/SKILL.md',
+    anchor: 'Step 5: Record the Run',
+    match: 'verify the generated structural heading uses producer',
+    classification: 'non-executing',
+    skills: ['oat-project-retro'],
+    reason: 'Self-reference inside a receipt verification instruction.',
+  },
+  {
+    file: '.agents/skills/oat-project-reconcile/SKILL.md',
+    anchor: 'Success Criteria',
+    match: 'produce correct results after reconciliation',
+    classification: 'non-executing',
+    skills: ['oat-project-progress', 'oat-project-review-provide'],
+    reason: 'Success checklist naming downstream skills.',
+  },
+  {
+    file: '.agents/skills/oat-project-retro/SKILL.md',
+    anchor: 'Step 4: Resolve Post-Generation Consent',
     match: 'Chain to `oat-project-retro-file`',
     classification: 'load-required',
     skills: ['oat-project-retro-file'],
@@ -1532,6 +1927,30 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
 
   // ------------------------------------------------------------ review-provide
+  {
+    file: '.agents/skills/oat-project-review-provide/SKILL.md',
+    anchor: 'Step 8: Write Review Artifact (if Tier 3)',
+    match: 'uses standard disposition behavior',
+    classification: 'non-executing',
+    skills: ['oat-project-review-receive'],
+    reason: 'Describes how the downstream receive skill dispositions findings.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-provide/SKILL.md',
+    anchor: 'Step 8: Write Review Artifact (if Tier 3)',
+    match: 'uses relaxed disposition',
+    classification: 'non-executing',
+    skills: ['oat-project-review-receive'],
+    reason: 'Describes how the downstream receive skill dispositions findings.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-provide/SKILL.md',
+    anchor: 'Success Criteria',
+    match: 'User guided to next step',
+    classification: 'non-executing',
+    skills: ['oat-project-review-receive'],
+    reason: 'Success checklist.',
+  },
   {
     file: '.agents/skills/oat-project-review-provide/SKILL.md',
     anchor: 'Model Invocation Gate',
@@ -1600,6 +2019,14 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: ['oat-project-review-provide'],
     reason: 'Blocks and asks the user to run the named skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-review-receive/SKILL.md',
+    anchor: 'Re-Review Scoping',
+    match: 'is called after fix tasks exist',
+    classification: 'non-executing',
+    skills: ['oat-project-review-provide'],
+    reason: "Describes the other skill's re-review scoping behavior.",
   },
   {
     file: '.agents/skills/oat-project-review-receive/SKILL.md',
@@ -1734,6 +2161,14 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
 
   {
     file: '.agents/skills/oat-project-spec/SKILL.md',
+    anchor: 'Step 20: Commit Specification',
+    match: 'This shows what users will do when USING oat-project-spec',
+    classification: 'non-executing',
+    skills: ['oat-project-spec'],
+    reason: 'Self-referential note about the printed guidance.',
+  },
+  {
+    file: '.agents/skills/oat-project-spec/SKILL.md',
     anchor: '(preamble)',
     match: 'oat-project-design confirms requirements automatically',
     classification: 'non-executing',
@@ -1766,6 +2201,13 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     reason: 'Frontmatter description listing example user phrasings.',
   },
 ];
+
+/**
+ * Floors, not exact counts: the corpus grows, but a glob or path regression that
+ * shrinks it must fail loudly rather than quietly widening every exemption.
+ * Recorded at 41 bounded files / 158 candidate sentences.
+ */
+const CORPUS_MINIMUMS: CorpusMinimums = { files: 38, candidates: 140 };
 
 const tempDirs: string[] = [];
 
@@ -1811,14 +2253,21 @@ const FIXTURE_MATRIX: readonly CallSiteRow[] = [
 describe('named-skill execution contract', () => {
   it('classifies every named-skill execution candidate at repository HEAD', async () => {
     const repoRoot = resolve(process.cwd(), '..', '..');
-    const report = await inspectContract(repoRoot, CALL_SITE_MATRIX);
+    const report = await inspectContract(
+      repoRoot,
+      CALL_SITE_MATRIX,
+      CORPUS_MINIMUMS,
+    );
 
     expect(
       formatReport({
         ...report,
         deadRows: [],
+        overMatchedRows: [],
         missingClauses: [],
         malformedRows: [],
+        fenceDefects: [],
+        corpusShortfalls: [],
       }),
     ).toBe('');
     expect(report.unclassified).toHaveLength(0);
@@ -1831,7 +2280,7 @@ describe('named-skill execution contract', () => {
     expect(report.missingClauses).toEqual([]);
   });
 
-  it('keeps every matrix row bound to a live call site', async () => {
+  it('keeps every matrix row bound to exactly one live call site', async () => {
     const repoRoot = resolve(process.cwd(), '..', '..');
     const report = await inspectContract(repoRoot, CALL_SITE_MATRIX);
 
@@ -1840,9 +2289,26 @@ describe('named-skill execution contract', () => {
         (row) => `${row.file} [${row.anchor}] ${row.match ?? ''}`,
       ),
     ).toEqual([]);
+    expect(report.overMatchedRows).toEqual([]);
   });
 
-  it('classifies the closeout and completion rows the outcome depends on', () => {
+  it('keeps the bounded surface free of stray fences that would hide directives', async () => {
+    const repoRoot = resolve(process.cwd(), '..', '..');
+    const report = await inspectContract(
+      repoRoot,
+      CALL_SITE_MATRIX,
+      CORPUS_MINIMUMS,
+    );
+
+    expect(
+      report.fenceDefects.map(
+        (defect) => `${defect.file}:${defect.line} — ${defect.detail}`,
+      ),
+    ).toEqual([]);
+    expect(report.corpusShortfalls).toEqual([]);
+  });
+
+  it('matrix integrity (no corpus read): keeps the closeout and completion classifications the outcome depends on', () => {
     const find = (file: string, anchor: string, match: string): CallSiteRow => {
       const row = CALL_SITE_MATRIX.find(
         (candidate) =>
@@ -2026,6 +2492,183 @@ describe('named-skill execution contract', () => {
         },
       ]),
     ).rejects.toThrowError(/no longer bind to a live call site/);
+  });
+
+  it('resolves a section-scoped clause across an in-fence `#` comment', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(
+      root,
+      [
+        '# Fixture',
+        '',
+        '## Step 1: Close Out',
+        '',
+        'Dispatch `oat-project-summary` to produce the summary.',
+        '',
+        '```bash',
+        '# Not a heading: a shell comment inside a fenced block.',
+        'echo build',
+        '```',
+        '',
+        'load the current `oat-project-summary/SKILL.md` and follow it.',
+        '',
+      ].join('\n'),
+    );
+
+    // The clause sits after a fenced block whose `#` comment would truncate the
+    // section if `collectSections` were not fence-aware.
+    await expect(
+      assertContractCurrent(root, [
+        {
+          file: '.agents/skills/oat-project-fixture/SKILL.md',
+          anchor: 'Step 1: Close Out',
+          match: 'Dispatch `oat-project-summary` to produce the summary',
+          classification: 'load-required',
+          skills: ['oat-project-summary'],
+          scope: 'section',
+          requires: [
+            'load the current `oat-project-summary/SKILL.md` and follow it',
+          ],
+        },
+        {
+          file: '.agents/skills/oat-project-fixture/SKILL.md',
+          anchor: 'Step 1: Close Out',
+          match:
+            'load the current `oat-project-summary/SKILL.md` and follow it.',
+          classification: 'load-required',
+          skills: ['oat-project-summary'],
+          requires: ['Dispatch `oat-project-summary` to produce the summary'],
+          scope: 'section',
+        },
+      ]),
+    ).resolves.toBeUndefined();
+  });
+
+  it('fails when an exemption starts matching a second sentence', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(
+      root,
+      [
+        COMPLIANT_FIXTURE,
+        'Now immediately Dispatch `oat-project-summary` to produce the summary,',
+        'from memory, without loading anything.',
+        '',
+      ].join('\n'),
+    );
+
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).rejects.toThrowError(
+      /match more than one sentence[\s\S]*from memory, without loading anything/,
+    );
+  });
+
+  it('absorbs a repeated pointer to a skill the row already declares (known residual)', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(
+      root,
+      [
+        '# Fixture',
+        '',
+        '## Step 1: Close Out',
+        '',
+        'Dispatch `oat-project-summary` to produce the summary: load the current',
+        '`oat-project-summary/SKILL.md` and follow it, or dispatch a child that',
+        'carries it, and then run `oat-project-summary` again from memory.',
+        '',
+      ].join('\n'),
+    );
+
+    // Pinned, not endorsed: one sentence that both mandates loading a skill and
+    // directs running that same skill from memory still passes, because the
+    // row's declared skill set is unchanged. See the `skills` doc comment.
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).resolves.toBeUndefined();
+  });
+
+  it('rejects a non-executing row that records no exemption reason', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(root, COMPLIANT_FIXTURE);
+
+    await expect(
+      assertContractCurrent(root, [
+        {
+          file: '.agents/skills/oat-project-fixture/SKILL.md',
+          anchor: 'Step 1: Close Out',
+          match: 'Dispatch `oat-project-summary` to produce the summary',
+          classification: 'non-executing',
+          skills: ['oat-project-summary'],
+        },
+      ]),
+    ).rejects.toThrowError(/is non-executing but records no exemption reason/);
+  });
+
+  it('fails on a stray fence that would hide directives from the scanner', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(
+      root,
+      [
+        '# Fixture',
+        '',
+        '## Step 1: Close Out',
+        '',
+        'Dispatch `oat-project-summary` to produce the summary: load the current',
+        '`oat-project-summary/SKILL.md` and follow it, or dispatch a child that',
+        'carries it.',
+        '',
+        '````markdown',
+        '## Sample',
+        '````',
+        '',
+        '````',
+        '',
+        '### Step 2: Hidden By The Stray Fence',
+        '',
+        'Run `oat-project-document` now.',
+        '````',
+        '',
+      ].join('\n'),
+    );
+
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).rejects.toThrowError(
+      /Fenced-code defects[\s\S]*oat-project-fixture\/SKILL\.md:13[\s\S]*duplicated closing fence/,
+    );
+  });
+
+  it('fails on an unclosed fence in a bounded file', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(
+      root,
+      [COMPLIANT_FIXTURE, '```bash', 'echo "never closed"', ''].join('\n'),
+    );
+
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).rejects.toThrowError(/Fenced-code defects[\s\S]*fence is never closed/);
+  });
+
+  it('fails when the bounded corpus shrinks below its floor', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(root, COMPLIANT_FIXTURE);
+
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX, {
+        files: 38,
+        candidates: 140,
+      }),
+    ).rejects.toThrowError(
+      /bounded surface shrank to 2 files \(floor 38\)[\s\S]*candidate sweep shrank to 1 sentences \(floor 140\)/,
+    );
   });
 
   it('fails when a classified pointer disappears, leaving a dead matrix row', async () => {

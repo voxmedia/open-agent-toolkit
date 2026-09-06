@@ -724,12 +724,12 @@ PR description generation is automatic — it always runs as part of project com
 Load the current `oat-project-pr-final/SKILL.md` and follow its Steps 0.5
 through 4 as the authoritative source for the templates and policies this step
 applies, then execute completion's adapted mapping below instead of pr-final's
-own step sequence. Completion continues past this step and has already
-dispositioned the review and summary gates, so it must not re-prompt, re-check,
-regenerate a declined summary, or run pr-final's push, PR-opening, or
-state-transition steps. When skill loading is unavailable in the current
-host/runtime, the mapping below is the explicit inline fallback that carries the
-same Steps 0.5 through 4 contract:
+own step sequence. Apply only pr-final's templates and content policies; apply
+none of its gates, prompts, blocks, or state writes. Step 5 has already run
+`oat project complete-state`, so blocking or re-deciding a gate here would
+strand a completed project mid-lifecycle. When skill loading is unavailable in
+the current host/runtime, the mapping below is the explicit inline fallback that
+carries the same Steps 0.5 through 4 contract:
 
 1. **Archive residual review artifacts** — already handled in Step 4.
 2. **Validate required artifacts** — read available project artifacts (`plan.md`, `implementation.md`, `spec.md`, `design.md`, `discovery.md`) based on workflow mode from `state.md`.
