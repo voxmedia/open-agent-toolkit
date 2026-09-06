@@ -15,6 +15,9 @@ import {
   getFrontmatterBlock,
   parseFrontmatterScalarFields,
   parseGeneratedTime,
+  parseSkillGateOverrides,
+  SKILL_GATE_OVERRIDE_DISABLED,
+  SKILL_GATE_OVERRIDE_SOURCE,
 } from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { parseJsonConfig } from '@config/json';
@@ -43,6 +46,8 @@ import {
   resolveExecTargetViews,
   resolveExecTargets,
   resolveGate,
+  resolveGateWithSource,
+  type GateConfigSource,
   type ResolvedConfig,
 } from '@config/resolve';
 import { dirExists, fileExists } from '@fs/io';
@@ -179,6 +184,14 @@ interface ReviewGateOptions extends CrossProviderExecOptions {
   reviewScope?: string;
   reviewType?: string;
   exitNonzeroOn?: string;
+}
+
+interface ResolveGateOptions {
+  /**
+   * Absent: legacy raw output. `true`: project-aware using the active project.
+   * String: project-aware using that explicit path or name.
+   */
+  project?: string | boolean;
 }
 
 type GateTimeoutSource =
@@ -2945,14 +2958,142 @@ async function updateConfigLayer(
   );
 }
 
+type GateResolution =
+  | 'configured'
+  | 'configured_disabled_by_project'
+  | 'not_configured';
+
+interface ProjectGateOverrideEvidence {
+  value: typeof SKILL_GATE_OVERRIDE_DISABLED;
+  source: string;
+}
+
+interface ProjectAwareGateResolution {
+  skill: string;
+  resolution: GateResolution;
+  configuredGate: GateConfig | null;
+  effectiveGate: GateConfig | null;
+  configSource: GateConfigSource | null;
+  projectOverride: ProjectGateOverrideEvidence | null;
+}
+
+/**
+ * Read the project's declared gate overrides. A project without frontmatter
+ * simply has none; a malformed map throws with its own state path so the
+ * caller fails closed instead of silently following configuration.
+ */
+async function readProjectGateOverrides(
+  repoRoot: string,
+  projectPath: string,
+): Promise<Record<string, typeof SKILL_GATE_OVERRIDE_DISABLED>> {
+  const statePath = normalizeToPosixPath(join(projectPath, 'state.md'));
+  const content = await readFile(join(repoRoot, statePath), 'utf8');
+  const frontmatter = getFrontmatterBlock(content);
+  if (!frontmatter) {
+    return {};
+  }
+
+  return parseSkillGateOverrides(frontmatter, statePath).overrides;
+}
+
+/**
+ * Project-aware resolution. `configuredGate` is retained even when an override
+ * makes the effective gate null, so project-disabled evidence can never be
+ * mistaken for absent configuration.
+ */
+async function resolveProjectAwareGate(options: {
+  skillName: string;
+  projectValue: string | boolean;
+  repoRoot: string;
+  effective: ResolvedConfig;
+}): Promise<ProjectAwareGateResolution> {
+  const project = await resolveReviewProject({
+    repoRoot: options.repoRoot,
+    effective: options.effective,
+    // A bare `--project` defers to the same active/single-candidate rules
+    // `oat gate review` uses when it is given no explicit project.
+    ...(typeof options.projectValue === 'string'
+      ? { project: options.projectValue }
+      : {}),
+  });
+  const overrides = await readProjectGateOverrides(
+    options.repoRoot,
+    project.path,
+  );
+  const projectOverride: ProjectGateOverrideEvidence | null =
+    overrides[options.skillName] === SKILL_GATE_OVERRIDE_DISABLED
+      ? {
+          value: SKILL_GATE_OVERRIDE_DISABLED,
+          source: SKILL_GATE_OVERRIDE_SOURCE,
+        }
+      : null;
+
+  const { gate, source } = resolveGateWithSource(
+    options.effective,
+    options.skillName,
+  );
+
+  // An override never fabricates configuration: with no configured gate the
+  // resolution stays `not_configured` while the override remains visible.
+  if (!gate) {
+    return {
+      skill: options.skillName,
+      resolution: 'not_configured',
+      configuredGate: null,
+      effectiveGate: null,
+      configSource: null,
+      projectOverride,
+    };
+  }
+
+  if (projectOverride) {
+    return {
+      skill: options.skillName,
+      resolution: 'configured_disabled_by_project',
+      configuredGate: gate,
+      effectiveGate: null,
+      configSource: source,
+      projectOverride,
+    };
+  }
+
+  return {
+    skill: options.skillName,
+    resolution: 'configured',
+    configuredGate: gate,
+    effectiveGate: gate,
+    configSource: source,
+    projectOverride: null,
+  };
+}
+
 async function runResolve(
   skillName: string,
+  options: ResolveGateOptions,
   context: CommandContext,
   dependencies: GateCommandDependencies,
 ): Promise<void> {
   try {
     const effective = await readEffectiveConfig(context, dependencies);
-    writeJsonValue(context, resolveGate(effective, skillName));
+
+    // Without project context this stays byte-identical to the legacy raw
+    // `GateConfig | null` output that external consumers already parse.
+    if (options.project === undefined) {
+      writeJsonValue(context, resolveGate(effective, skillName));
+      process.exitCode = 0;
+      return;
+    }
+
+    const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+    writeJsonValue(
+      context,
+      await resolveProjectAwareGate({
+        skillName,
+        projectValue: options.project,
+        repoRoot,
+        effective,
+      }),
+    );
     process.exitCode = 0;
   } catch (error) {
     writeError(context, error);
@@ -3747,12 +3888,22 @@ export function createGateCommand(
     .command('resolve')
     .description('Print the resolved gate configuration for a skill')
     .argument('<skill>', 'Gate-aware skill name')
-    .action(async (skillName: string, _options: unknown, command: Command) => {
-      const context = dependencies.buildCommandContext(
-        readGlobalOptions(command),
-      );
-      await runResolve(skillName, context, dependencies);
-    });
+    .option(
+      '--project [path-or-name]',
+      'Resolve with project gate overrides applied; defaults to the active project',
+    )
+    .action(
+      async (
+        skillName: string,
+        options: ResolveGateOptions,
+        command: Command,
+      ) => {
+        const context = dependencies.buildCommandContext(
+          readGlobalOptions(command),
+        );
+        await runResolve(skillName, options, context, dependencies);
+      },
+    );
 
   cmd
     .command('set')
