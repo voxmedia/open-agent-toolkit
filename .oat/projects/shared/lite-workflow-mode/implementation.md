@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | complete  | 4     | 4/4       |
-| Phase 2 | complete  | 3     | 3/3       |
-| Phase 3 | complete  | 3     | 3/3       |
-| Phase 4 | complete  | 2     | 2/2       |
-| Phase 5 | complete  | 4     | 4/4       |
-| Phase 6 | in_review | 3     | 3/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 2     | 2/2       |
+| Phase 5 | complete | 4     | 4/4       |
+| Phase 6 | complete | 3     | 3/3       |
 
 **Total:** 19/19 tasks completed
 
@@ -305,8 +305,9 @@ retro, and reduced-artifact closeout paths passed the full contract suite.
 
 ## Phase 6: Documentation, Provider Sync, Smoke Run, and Release Gates
 
-**Status:** in_review
+**Status:** complete
 **Started:** 2026-09-05
+**Completed:** 2026-09-06
 
 ### Task p06-t01: Document lite workflow mode
 
@@ -464,18 +465,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Phase Outcomes
 
-| Phase | Implementation | Review          | Fix Loops | Outcome   |
-| ----- | -------------- | --------------- | --------- | --------- |
-| p01   | DONE (4/4)     | passed          | 0         | pass      |
-| p02   | DONE (3/3)     | passed          | 1         | pass      |
-| p03   | DONE (3/3)     | passed          | 1         | pass      |
-| p04   | DONE (2/2)     | passed          | 0         | pass      |
-| p05   | DONE (4/4)     | passed          | 2         | pass      |
-| p06   | DONE (3/3)     | fixes completed | 1         | in review |
+| Phase | Implementation | Review | Fix Loops | Outcome |
+| ----- | -------------- | ------ | --------- | ------- |
+| p01   | DONE (4/4)     | passed | 0         | pass    |
+| p02   | DONE (3/3)     | passed | 1         | pass    |
+| p03   | DONE (3/3)     | passed | 1         | pass    |
+| p04   | DONE (2/2)     | passed | 0         | pass    |
+| p05   | DONE (4/4)     | passed | 2         | pass    |
+| p06   | DONE (3/3)     | passed | 1         | pass    |
 
 #### Outstanding Items
 
-- Fresh independent p06 re-review is required for the review-fix commit.
+- Final lifecycle review is required before closeout.
 - The two Medium findings from the first p06 review remain recorded as
   non-blocking and were deliberately excluded from fix loop 1.
 
@@ -484,6 +485,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 ## Implementation Log
 
 ### 2026-09-06
+
+#### Phase p06 passed fresh independent re-review
+
+**Review artifact:** `reviews/p06-review-2026-09-06T011617Z.md`.
+**Reviewed head:** `d79a58b1b0f8aff53a361b3e591f5cff510106d9`.
+**Findings:** 0 Critical, 0 Important, 2 Medium, 0 Minor.
+Both prior Important findings are resolved. The two artifact-alignment Medium
+findings remain recorded as non-blocking. Dispatch receipt:
+`dispatch/lite-p06-rereview1-ee4f458d-30af-4973-84fb-0b1fae8d746d.json`.
 
 #### p06 review fixes completed — awaiting fresh re-review
 
@@ -1007,44 +1017,80 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review    | Source Artifact    | Planned / Documented                                      | Actual / Accepted                                                             | Reason                                                                                | Source of Truth                           | Follow-up                                             |
+| ---------------- | ------------------ | --------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------- |
+| p04-t01 recovery | plan.md            | Bundled autonomy reference available on first task commit | Missing generated reference was restored through bounded append-only recovery | Provider-view generation exposed a task-boundary omission                             | Canonical skill plus bundled asset tests  | None; recovered and independently reviewed            |
+| p06-t03 revision | plan.md            | Version, sync, and release-only terminal task             | Added three bounded contract-alignment repairs before release commit          | Terminal negative controls reproduced stale assertions outside the original file list | Contract tests and `cfcaae8f` task commit | None; authorized and plan-reviewed                    |
+| p06 review fix 1 | p06 initial review | Lifecycle docs described Lite review setup correctly      | Corrected planning-time setup wording and added explicit exit ledger          | Independent review found two blocking evidence/docs defects                           | `3f5c8174` and passing p06 re-review      | Two Medium artifact wording notes remain non-blocking |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                                                            | Passed                            | Failed  | Coverage                                                |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- | ------- | ------------------------------------------------------- |
+| 1     | Focused control-plane/CLI, check, type-check, test, build                                                                            | Yes                               | 0       | Mode declaration, parsing, scaffold, help               |
+| 2     | Focused router/dashboard/closeout suites plus full phase gates                                                                       | Yes                               | 0       | Recommendation, progress routing, PR closeout           |
+| 3     | Focused split/promote/validator suites plus full phase gates                                                                         | Yes                               | 0       | Promotion safety and Lite plan validation               |
+| 4     | Skill contracts, end-to-end Lite integration, full phase gates                                                                       | Yes after bounded recovery        | 0 final | Dedicated Lite workflow and bundled assets              |
+| 5     | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops    | 0 final | Review, import, progress, recap bypass, PR flow         |
+| 6     | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes after one no-edit flake rerun | 0 final | Docs, provider sync, manual Lite path, release `0.2.56` |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- A fourth `lite` workflow mode with a dedicated three-artifact scaffold,
+  five-section single-phase plan contract, validation, and mode-aware routing.
+- The `oat-project-lite` planning skill with one batched interview, one plan
+  approval, automatic promotion to quick when scope outgrows Lite, managed
+  dispatch, phase/final reviews, and PR-first closeout.
+- Provider projections, docs, lifecycle integrations, and lockstep public
+  package release surfaces synchronized at `0.2.56`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Users can select `--mode lite` for a single-sitting project without
+  discovery, spec, or design artifacts while retaining tracked validation and
+  independent implementation reviews.
+- Oversized or unresolved Lite work promotes safely to quick mode without
+  losing the authored plan context.
+- Lite completion skips summary, documentation, recap, and final HiLL approval
+  by default, but still requires phase review, final review, the configured
+  implementation exit gate, and PR generation.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/control-plane/src/types.ts` and state parsing - canonical workflow
+  mode declaration and normalization.
+- `packages/cli/src/commands/project/new/`, `promote/`, and validation modules -
+  Lite scaffold, promotion, and plan enforcement.
+- `.agents/skills/oat-project-lite/` and shared lifecycle skills - planning,
+  implementation, review, and closeout contracts.
+- `.oat/templates/plan-lite.md` - bundled Lite plan scaffold.
+- `apps/oat-docs/docs/workflows/` - user-facing Lite workflow documentation.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Every repository definition-of-done gate passed in CI order with explicit
+  exit evidence: check, type-check, test, build, skill-version gate, release
+  version gate, release validation, and docs build.
+- Supplemental isolated-HOME forced tests, smoke tests, skills tests, lint,
+  format, focused negative controls, provider sync dry-run, and post-commit
+  checks passed.
+- A disposable manual Lite project completed one interview, one approval, one
+  implementation task, phase and final reviews, exit gate, and PR-description
+  generation without creating an external PR.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- No material product-design divergence. The implementation added bounded
+  contract and documentation repairs found by terminal tests and independent
+  review; these aligned the shipped behavior and artifacts with the approved
+  design.
 
 ## References
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Spec: N/A (quick workflow)
