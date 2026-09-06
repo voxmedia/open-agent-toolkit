@@ -65,40 +65,40 @@ oat_dispatch_policy: # managed/high per operator routing preference
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
-  disposition: passed
+  disposition: null
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: 1e688a1e5de97a3a49ec3e069dd5afd11a1bd756 # final review round 3 passed (reviews/archived/final-review-2026-09-06T092134Z.md)
+  reviewed_head: 3ee49fcad129b7be41cf659b1b2e7fa927cc50d4 # p05 round 4 passed on the Bugbot fix (reviews/archived/p05-review-2026-09-06T100810Z.md)
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v1:b15ed9200bc192b81817a8c885cf8b9864c884ee7724c5fdfbf6906093a8bffb'
-  freshness_head: b2e7d6215472cb220ec96f3f08a7d8d4572d946c # closeout-only: PR, approval, complete-state
-  freshness_fingerprint: 'sha256:effective-delta-v1:423a8f25a74055518ef527179c0966fd19945e2cf0a760d3bf71c813891d1191'
-  launch_state: result_persisted
-  launch_attempt_id: 'w2-exit-gate-20260906T092349Z'
-  launch_started_at: '2026-09-06T09:23:49Z'
-  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w2/w2-exit-gate-20260906T092349Z.receipt.json'
-  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/45ee23dc-b25b-462d-ab7e-451c518e7f18.json'
-  gate_run_id: '45ee23dc-b25b-462d-ab7e-451c518e7f18'
-  envelope_status: ok
-  artifact: '.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T093256Z.md'
-  handoff: 'Gate passed at run 45ee23dc on 15ec41133; product change 3ee49fcad (Bugbot PR 267 fix) after the gate → stale; re-run pending after review round 4'
-  receive_state: completed
-  receive_correlation: 'run=45ee23dc-b25b-462d-ab7e-451c518e7f18; handoff=receive; source=reviews/final-review-2026-09-06T093256Z.md; scope=final; type=code'
-  receive_source_artifact: '.oat/projects/shared/wave-2-execution/reviews/final-review-2026-09-06T093256Z.md'
-  receive_archived_artifact: '.oat/projects/shared/wave-2-execution/reviews/archived/final-review-2026-09-06T093256Z.md'
-  receive_event_identity: 'final | code | final-review-2026-09-06T093256Z.md'
-  receive_pre_head: 0f25bbee42fd1ff972c0cb85d0cc82583e55d718
-  receive_commit: 751e81c5afd97c7b76a398d3bca0221e47c0dd85
-  receive_eligible: true
-  receive_completed: true
+  implementation_fingerprint: 'sha256:effective-delta-v1:9d1d8345ca1ad25afa2fba8a7bf9185d052ec1c2aab7d2868e4df4e7633c6f7f'
+  freshness_head: 3fc69573fa1a4ad26dd18d149172239d2309b708 # closeout-only: round-4 receive
+  freshness_fingerprint: 'sha256:effective-delta-v1:86c6c7ec8f3cdc3cd22e6875d3330673691209738299d8b148619d74a0318dd9'
+  launch_state: intent_persisted
+  launch_attempt_id: 'w2-exit-gate-20260906T101022Z'
+  launch_started_at: '2026-09-06T10:10:22Z'
+  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w2/w2-exit-gate-20260906T101022Z.receipt.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: 'attempt 2 after the Bugbot fix 3ee49fcad'
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
   failure: null
-  updated_at: '2026-09-06T10:03:15Z'
+  updated_at: '2026-09-06T10:10:22Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -154,7 +154,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/267' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T02:27:21.413Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-09-06T09:37:19.119Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T10:03:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T10:10:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_lifecycle: complete
 ---
