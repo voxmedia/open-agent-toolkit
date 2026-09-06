@@ -47,8 +47,17 @@ oat_phase_recovery_policy:
       used_attempts: 1
       pending_attempt: null
     p07:
-      used_attempts: 0
-      pending_attempt: null
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p07-recovery-02-production-command-routing-20260906
+        original_request: p07-implementation-20260905-2dfc9275c
+        original_task: p07-t10
+        original_commit: 390f21157181e2b5cfd5d83ad582ed0aa00bba60
+        discovered_by: phase-wide production-dispatch inspection
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
+        reservation_head: 336db62601d9cbc962c6c17105cdca1c8dbc33f2
+        status: pending
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
