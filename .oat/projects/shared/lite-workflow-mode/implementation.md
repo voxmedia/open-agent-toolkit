@@ -508,6 +508,19 @@ supplemental, and post-commit check at exit 0, including forced uncached tests,
 release validation, version parity at `0.2.59`, and a no-op final sync dry-run.
 No recovery attempt or flake retry was used.
 
+#### Fresh final lifecycle review after p06-t10
+
+**Review artifact:** `reviews/final-review-2026-09-06T032005Z.md`.
+**Reviewed head:** `c4793585aee012ed134e1ba1eba0a819230a9c23`.
+**Findings:** 0 Critical, 0 Important, 1 Medium, 0 Minor. The production-path
+fix passed independent verification. The Medium identifies stale Lite wording
+in the lifecycle guide's brainstorming section.
+
+**Receive boundary:** This is non-gate final review cycle 4, beyond the
+three-cycle automatic receive limit. Processing is paused for explicit user
+direction on both the cycle override and whether to convert the Medium into a
+bounded documentation fix task or accept a documented deferral.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_

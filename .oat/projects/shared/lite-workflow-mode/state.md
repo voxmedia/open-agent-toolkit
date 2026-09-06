@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: f3abb7688f005353ebee472c3d4df36e3c99cd0c
-oat_blockers: []
+oat_blockers:
+  - 'Final review receive is paused at the 4th non-gate review cycle; explicit override and disposition of the new documentation Medium are required before another fix/review cycle or the exit gate.'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -92,7 +93,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T03:14:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T03:21:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -104,7 +105,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation tasks complete; awaiting a fresh final lifecycle review.
+Implementation tasks complete; final review receive awaits explicit direction.
 
 ## Artifacts
 
@@ -146,16 +147,20 @@ Implementation tasks complete; awaiting a fresh final lifecycle review.
 - ✓ Fresh final lifecycle review passed with no findings
 - ⧗ Exit gate attempt 2 found one Important production-path routing defect
 - ✓ Fix task p06-t10 completed with production-derived shared/local controls
-- ⧗ Fresh final lifecycle review required for the changed implementation basis
+- ✓ Fresh final lifecycle review found 0 Critical, 0 Important, 1 Medium
+- ⧗ Review cycle 4 receive and the new Medium require explicit direction
 
 ## Blockers
 
-None. The user explicitly authorized one additional exit-gate attempt beyond
-the configured 2/2 cap. This does not authorize a push, PR, merge, or release.
-The historical p06-t02 header-wording Medium remains explicitly accepted for
-defer.
+The fresh final lifecycle review is the fourth non-gate review cycle, so the
+review-receive contract requires an explicit override before processing it.
+It also found one new Medium documentation drift in the lifecycle guide's
+brainstorming section. The separate authorization for one additional exit-gate
+attempt remains recorded but cannot be used until this review is dispositioned.
+No push, PR, merge, or release is authorized.
 
 ## Next Milestone
 
-Run a fresh final lifecycle review for `f3abb7688f005353ebee472c3d4df36e3c99cd0c`,
-then run the single additionally authorized implementation exit-gate attempt.
+Obtain direction on whether to override the review-cycle cap and convert the
+new documentation Medium into a fix task, or explicitly defer it. Then receive
+the review and continue toward the authorized exit-gate attempt.
