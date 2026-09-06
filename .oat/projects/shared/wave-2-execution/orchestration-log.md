@@ -125,6 +125,26 @@ group-1 bump to 0.2.57 (harmless; fixed in the p05 brief).
 
 ---
 
+### 2026-09-06 · project · review · p04 round 1
+
+The p04 lane (13 lifecycle skills, new load-contract matrix) surfaced two
+repository defects nobody had seen: four-backtick fences in
+`oat-project-plan/SKILL.md` (Steps 8–13, 328 lines) and
+`oat-project-review-receive/SKILL.md` (Step 6, 49 lines) had been rendering
+whole steps as code, hiding six execution directives from every prose scan
+and, per the reviewer, from every gate (`oxfmt --check` accepts the defective
+base). Follow-up candidates: a repo-wide fence-balance check; the plan's named
+focused tests (`post-implement-sequence-contracts`, `skills.test.ts`) did not
+cover `review-skill-contracts.test.ts` or `autonomy-gate-inventory.test.ts`,
+which only the forced full suite surfaced. **Skill signal (gap):** plans that
+reword lifecycle-skill prose should name the autonomy-contract hash table and
+the review-skill-contracts pins as expected ripple. The review's four
+Important findings are all backstop-strength (substring exemptions, missing
+`use`/`apply` verbs, no fence gate, one mislabeled exemption), no regression;
+fix round dispatched on the original handle.
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:
