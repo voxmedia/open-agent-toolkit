@@ -2082,8 +2082,11 @@ async function resolveReviewProject(options: {
   repoRoot: string;
   effective: ResolvedConfig;
   project?: string;
+  /** Command named in resolution errors, so guidance matches the caller. */
+  commandLabel?: string;
 }): Promise<ResolvedReviewProject> {
   const projectsRoot = resolvedProjectsRoot(options.effective);
+  const commandLabel = options.commandLabel ?? 'gate review';
 
   if (options.project !== undefined) {
     return {
@@ -2110,12 +2113,12 @@ async function resolveReviewProject(options: {
   );
   if (candidates.length === 0) {
     throw new Error(
-      'No OAT project could be resolved for gate review. Set an active project or pass --project <path-or-name>.',
+      `No OAT project could be resolved for ${commandLabel}. Set an active project or pass --project <path-or-name>.`,
     );
   }
   if (candidates.length > 1) {
     throw new Error(
-      `Multiple OAT projects could be resolved for gate review: ${candidates.join(', ')}. Pass --project <path-or-name>.`,
+      `Multiple OAT projects could be resolved for ${commandLabel}: ${candidates.join(', ')}. Pass --project <path-or-name>.`,
     );
   }
 
@@ -3015,6 +3018,10 @@ async function resolveProjectAwareGate(options: {
   const project = await resolveReviewProject({
     repoRoot: options.repoRoot,
     effective: options.effective,
+    // Same active/name/path contract as `oat gate review`; only the guidance
+    // wording follows the caller, so a `gate resolve` failure does not tell the
+    // operator to fix a review command they never ran.
+    commandLabel: 'gate resolve',
     // A bare `--project` defers to the same active/single-candidate rules
     // `oat gate review` uses when it is given no explicit project.
     ...(typeof options.projectValue === 'string'
@@ -3040,13 +3047,17 @@ async function resolveProjectAwareGate(options: {
 
   // An override never fabricates configuration: with no configured gate the
   // resolution stays `not_configured` while the override remains visible.
+  // `configSource` still reports the layer that owned the decision when one
+  // explicitly declared the skill `null`, so an operator can tell a deliberate
+  // layer-level disable from a skill no layer mentions at all. It stays null in
+  // the latter case, and `configuredGate` is null either way.
   if (!gate) {
     return {
       skill: options.skillName,
       resolution: 'not_configured',
       configuredGate: null,
       effectiveGate: null,
-      configSource: null,
+      configSource: source,
       projectOverride,
     };
   }

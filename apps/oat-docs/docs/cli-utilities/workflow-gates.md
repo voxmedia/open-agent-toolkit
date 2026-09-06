@@ -118,6 +118,12 @@ deliberate opt-out can never be mistaken for absent configuration. It also
 carries `configSource` and a `projectOverride` record naming the
 `state.md:oat_skill_gate_overrides` source.
 
+`configSource` reports the layer that owned the decision. For
+`not_configured` it is the layer that explicitly declared the skill `null`, and
+`null` only when no layer mentions the skill at all, so a deliberate
+layer-level disable stays distinguishable from an absent declaration.
+`configuredGate` is `null` in both cases, so neither reads as configured.
+
 Disabled is a posture, not an outcome. A project-disabled gate launches no
 process and never enters the passed, missing, or failed branches. Project
 progress reports every active override by skill key so the deliberate posture

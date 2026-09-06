@@ -538,7 +538,10 @@ disposition.
   its generation. Continue from the first incomplete launch, envelope, receive,
   policy, or persistence boundary.
 - A fresh `allowed` result resumes after the gate without executing the gate or
-  receive a second time.
+  receive a second time. Reuse requires a valid disposition, complete
+  configured-gate provenance when configured, an unchanged immutable
+  implementation fingerprint, a valid rolling freshness checkpoint, and any
+  eligible receive marked complete.
 - An `allowed/configured` result carrying `disposition: project_disabled` is
   revalidated before it is reused, because the override lives in the state
   carrier that the implementation fingerprint deliberately excludes. Re-resolve
@@ -548,10 +551,7 @@ disposition.
   the persisted one. Any other current resolution, including a re-enabled
   `configured` gate, or any fingerprint mismatch marks the generation `stale`
   and requires a new configured generation. Reproducing the fingerprint from
-  the persisted inputs alone never satisfies this check. Reuse requires a valid disposition, complete
-  configured-gate provenance when configured, an unchanged immutable
-  implementation fingerprint, a valid rolling freshness checkpoint, and any
-  eligible receive marked complete.
+  the persisted inputs alone never satisfies this check.
 - Closeout-only descendants include configured gate artifacts and receipts,
   project tracking, `project-log.md` appends, summary/documentation/PR sequence
   outputs, final HiLL bookkeeping, and completion bookkeeping. Classify

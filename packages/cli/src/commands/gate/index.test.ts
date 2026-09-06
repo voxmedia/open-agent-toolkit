@@ -1020,10 +1020,12 @@ describe('oat gate', () => {
         projectPath,
       ]);
 
+      // The layer that declared it null owns the decision and is reported;
+      // `configuredGate` stays null so nothing reads as configured.
       expect(capture.jsonPayloads[0]).toMatchObject({
         resolution: 'not_configured',
         configuredGate: null,
-        configSource: null,
+        configSource: 'shared',
       });
     });
 
@@ -1145,6 +1147,45 @@ describe('oat gate', () => {
       expect(process.exitCode).toBe(1);
     });
 
+    it('names gate resolve, not gate review, when no project resolves', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+
+      // Bare --project with no active project and no candidates.
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+      ]);
+
+      const message = JSON.stringify(capture.jsonPayloads[0]);
+      expect(message).toContain(
+        'No OAT project could be resolved for gate resolve.',
+      );
+      expect(message).not.toContain('gate review');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('names gate resolve when several projects are candidates', async () => {
+      const { root, home } = await setup();
+      await writeSharedGate(root);
+      await writeProject(root, '.oat/projects/shared/alpha');
+      await writeProject(root, '.oat/projects/shared/beta');
+
+      const capture = await runGateCommand(root, home, [
+        'resolve',
+        'oat-project-implement',
+        '--project',
+      ]);
+
+      const message = JSON.stringify(capture.jsonPayloads[0]);
+      expect(message).toContain(
+        'Multiple OAT projects could be resolved for gate resolve:',
+      );
+      expect(message).not.toContain('gate review');
+      expect(process.exitCode).toBe(1);
+    });
+
     it('fails closed on an unresolvable project', async () => {
       const { root, home } = await setup();
       await writeSharedGate(root);
@@ -1258,6 +1299,7 @@ describe('oat gate', () => {
         resolution: 'not_configured',
         configuredGate: null,
         effectiveGate: null,
+        configSource: 'local',
       });
     });
   });
@@ -8432,7 +8474,10 @@ describe('oat gate', () => {
     expect(runner.calls).toHaveLength(0);
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'error',
-      message: expect.stringContaining('No OAT project could be resolved'),
+      // Exact legacy wording: the resolver's command label is parameterized,
+      // so `gate review` must keep naming itself in its own guidance.
+      message:
+        'No OAT project could be resolved for gate review. Set an active project or pass --project <path-or-name>.',
     });
     expect(process.exitCode).toBe(1);
   });

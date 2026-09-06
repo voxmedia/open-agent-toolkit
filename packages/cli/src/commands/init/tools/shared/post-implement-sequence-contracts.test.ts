@@ -531,6 +531,62 @@ describe('post-implementation sequence contracts', () => {
     );
   });
 
+  it('keeps the reuse preconditions on the fresh-allowed bullet', () => {
+    // Regression guard: inserting the project_disabled revalidation bullet once
+    // severed this sentence onto the new bullet, where "complete
+    // configured-gate provenance when configured" contradicts that bullet's
+    // required-null provenance and left the general rule with no preconditions.
+    const freshness = requiredSlice(
+      readImplementSkill(),
+      '**Interruption, resume, and freshness:**',
+      '\n\nBefore approval-aware sequencing',
+    );
+    // Membership must be structural. Splitting on the bullet marker alone
+    // would still pass if the sentence became an unindented paragraph sitting
+    // between the two bullets, which is not part of either bullet.
+    const bullets: string[] = [];
+    let current: string[] | null = null;
+    const flush = (): void => {
+      if (current) bullets.push(normalizeWhitespace(current.join(' ')));
+      current = null;
+    };
+    for (const line of freshness.split('\n')) {
+      if (line.startsWith('- ')) {
+        flush();
+        current = [line.slice(2)];
+        continue;
+      }
+      if (current && /^ {2}\S/.test(line)) {
+        current.push(line.trim());
+        continue;
+      }
+      flush();
+    }
+    flush();
+
+    const freshAllowed = bullets.find((bullet) =>
+      bullet.startsWith('A fresh `allowed` result resumes'),
+    );
+    const projectDisabled = bullets.find((bullet) =>
+      bullet.startsWith(
+        'An `allowed/configured` result carrying `disposition: project_disabled`',
+      ),
+    );
+
+    expect(freshAllowed, 'fresh allowed bullet is present').toBeDefined();
+    expect(projectDisabled, 'project_disabled bullet is present').toBeDefined();
+
+    const preconditions =
+      'Reuse requires a valid disposition, complete configured-gate provenance when configured, an unchanged immutable implementation fingerprint, a valid rolling freshness checkpoint, and any eligible receive marked complete.';
+
+    expect(freshAllowed).toContain(preconditions);
+    expect(projectDisabled).not.toContain('Reuse requires a valid disposition');
+    expect(projectDisabled).not.toContain(
+      'complete configured-gate provenance when configured',
+    );
+    expect(projectDisabled?.endsWith('never satisfies this check.')).toBe(true);
+  });
+
   it('routes a project-disabled closeout forward and a re-enabled one as stale', () => {
     const next = normalizeWhitespace(readNextSkill());
 
