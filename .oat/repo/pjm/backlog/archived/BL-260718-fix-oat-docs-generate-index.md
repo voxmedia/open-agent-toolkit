@@ -1,7 +1,7 @@
 ---
 id: BL-260718-fix-oat-docs-generate-index
 title: Fix oat docs generate-index cwd-relative defaults in monorepos
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: null
@@ -10,7 +10,7 @@ labels:
   - dx
 assignee: null
 created: 2026-07-18T18:04:04.413Z
-updated: 2026-08-30T23:49:30Z
+updated: '2026-09-06T01:23:55Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-30-use-configured-docs-index-paths.md

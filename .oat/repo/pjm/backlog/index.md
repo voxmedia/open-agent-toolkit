@@ -232,7 +232,6 @@
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature    | L        |
 | BL-260902-validate-every-shipped-skill   | Validate every shipped skill-to-script reference against its pack manifest                            | open   | high     | task       | M        |
-| BL-260902-add-an-exclusion-mechanism     | Add an exclusion mechanism to oat docs generate-index                                                 | open   | medium   | feature    | S        |
 | BL-260901-add-corrective-revision        | Add corrective-revision transition after review exhaustion                                            | open   | medium   | feature    | M        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                       | open   | medium   | feature    | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                                                    | open   | medium   | feature    | M        |
@@ -253,10 +252,9 @@
 | BL-260817-drop-explainer-kit-publish     | Drop explainer-kit publish-request/v1 in a future minor                                               | open   | medium   | task       | S        |
 | BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance                                         | open   | medium   | task       | S        |
 | BL-260818-extend-guarded-prose-contract  | Extend guarded-prose contract tests to docs-app mirrors                                               | open   | medium   | task       | S        |
-| BL-260827-fail-closed-on-partial-or      | Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles                                        | open   | medium   | task       | S        |
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                            | open   | medium   | feature    | M        |
-| BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                                        | open   | medium   | task       |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature    | L        |
+| BL-260906-guard-packed-asset-directories | Guard packed asset directories and document the OAT_ASSETS_DIR contract                               | open   | medium   | task       | S        |
 | BL-260904-honor-metadata-version         | Honor metadata.version as the canonical skill version                                                 | open   | medium   | feature    | M        |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                    | open   | medium   | feature    | M        |
@@ -294,13 +292,14 @@
 | BL-260830-decide-whether-oat-owns        | Decide whether OAT owns dependency intelligence                                                       | open   | low      | idea       | L        |
 | BL-260826-decide-whether-test-only-paths | Decide whether test-only paths under packages/cli/src count as publishable                            | open   | low      | task       | S        |
 | BL-260904-diagnose-canonical-skills      | Diagnose canonical skills missing from a provider view at resolution time                             | open   | low      | task       | S        |
+| BL-260906-docs-index-follow-ups-from     | Docs-index follow-ups from wave 1 reviews                                                             | open   | low      | task       | S        |
 | BL-260826-emit-the-dispatch-stamp-from   | Emit the dispatch stamp from the dispatch-ceiling resolver                                            | open   | low      | task       | XS       |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization                                | open   | low      | feature    | M        |
 | BL-260827-harden-the-codex-skill-below   | Harden the codex-skill below-floor guard against paraphrase and anaphora                              | open   | low      | task       | XS       |
 | BL-260830-memory-subsystem-ownership     | Memory subsystem ownership decision for OAT                                                           | open   | low      | idea       | XL       |
 | BL-260904-migrate-bundled-skills-from    | Migrate bundled skills from top-level version to metadata.version                                     | open   | low      | task       | M        |
-| BL-260827-override-aware-remedy-text     | Override-aware remedy text in assets-root fail-closed errors                                          | open   | low      | task       | XS       |
 | BL-260903-preserve-proto-named-config    | Preserve **proto**-named config keys through jsonc parsing                                            | open   | low      | task       | S        |
+| BL-260906-report-errno-for-asset-root    | Report errno for asset root stat failures and reset the statRedirects test seam                       | open   | low      | task       | XS       |
 | BL-260903-retire-deprecated-pack         | Retire deprecated pack placement and dead evidence diagnostics                                        | open   | low      | task       | M        |
 | BL-260904-stabilize-the-collection       | Stabilize the collection-detach engine integration test                                               | open   | low      | task       | S        |
 | BL-260903-verify-the-packs-inventory     | Verify the packs:inventory path-redaction claim in troubleshooting docs                               | open   | low      | task       | XS       |

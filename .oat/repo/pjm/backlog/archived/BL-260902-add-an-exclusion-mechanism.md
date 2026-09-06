@@ -1,7 +1,7 @@
 ---
 id: BL-260902-add-an-exclusion-mechanism
 title: Add an exclusion mechanism to oat docs generate-index
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: S
@@ -10,7 +10,7 @@ labels:
   - cli
 assignee: null
 created: 2026-09-02T23:48:37.046Z
-updated: 2026-09-03T00:08:42Z
+updated: '2026-09-06T01:23:56Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/239
