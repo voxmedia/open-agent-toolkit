@@ -208,7 +208,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Final HiLL approval (IMPLEMENT-16, autonomous)
 
-- Pre-approval sequence (configured `workflow.postImplementSequence`): summary, document, pr — recorded below as each completes; no post-approval steps configured; recap intent `skip` (deferred to program close per the execution program).
+- Pre-approval sequence (configured `workflow.postImplementSequence`): summary (`844e00152`, with three promoted decisions), document (`a3f2e009f`), pr (PR #269 on `origin/wave-3-execution-2026-09`) — all complete; no post-approval steps configured; recap intent `skip` (deferred to program close per the execution program).
 - Evidence: final review row `passed` (artifact `reviews/archived/final-review-2026-09-06T135731Z.md`, head `b1d50f5bf`, dispatch `w3-final-review-001`); configured exit gate `allowed / passed` (run `0c1ab7b5`, artifact `reviews/archived/final-review-2026-09-06T155523Z.md`, zero findings) after attempt 1 blocked and was fixed by `1f09bb832` and the record commits; every descendant after the gate's reviewed head is closeout-only bookkeeping.
 - Decision: `approval: approved`, `approval_source: oat-autonomous`, `status: post_approval` → no post-approval steps → `complete`. Operator authorization: 2026-09-05 ("let it rip"), covering PR creation and merge by the root orchestrator once CI, Bugbot, and the final gate are green. This approval waives nothing.
 - Completion: `oat project complete-state` recorded before merge; the archive tail is `completion tail: deferred to program close`.
