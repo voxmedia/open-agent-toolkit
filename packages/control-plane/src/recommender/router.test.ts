@@ -127,6 +127,21 @@ describe('recommendSkill', () => {
     expect(recommendSkill(state).skill).toBe('oat-project-plan');
   });
 
+  it('routes a promoted quick project to quick-start', () => {
+    const state = makeState({
+      phaseStatus: 'complete',
+      workflowMode: 'quick',
+      artifacts: makeArtifacts({
+        type: 'discovery',
+        boundaryTier: 2,
+        isTemplate: false,
+        readyFor: 'oat-project-quick-start',
+      }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-quick-start');
+  });
+
   it('routes import plan tier 3 to import-plan', () => {
     const state = makeState({
       phase: 'plan',

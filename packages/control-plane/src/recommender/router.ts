@@ -103,6 +103,15 @@ export function recommendSkill(
   }
 
   const currentArtifact = getCurrentArtifact(state);
+  if (
+    state.workflowMode === 'quick' &&
+    currentArtifact?.readyFor === 'oat-project-quick-start'
+  ) {
+    return {
+      skill: 'oat-project-quick-start',
+      reason: 'Promoted quick project is explicitly ready for quick-start',
+    };
+  }
   if (currentArtifact?.readyFor && currentArtifact.status === 'complete') {
     return {
       skill: normalizeImplementationSkill(currentArtifact.readyFor, state),
