@@ -47,14 +47,22 @@
     "deferred_minor_count": 0
   },
   "launch_status": "accepted",
-  "child_outcome": "pending",
+  "child_outcome": "passed",
+  "artifact": "reviews/final-review-2026-09-06T015505Z.md",
+  "reviewed_head": "dfb7a8beb41c663d8bd327fa47c19f9ef28e393f",
+  "finding_counts": {
+    "critical": 0,
+    "important": 0,
+    "medium": 0,
+    "minor": 0
+  },
   "configured_invocation_evidence": [
     "dispatch-report-v1:final-review",
     "native-spawn-accepted",
     "canonical-role:project",
     "workflow.reviewExecutionModel:subagent"
   ],
-  "runtime_confirmation": "not-reported",
+  "runtime_confirmation": "configured-invocation-only",
   "diagnostics": [],
   "continuation_events": [],
   "fallback": {
