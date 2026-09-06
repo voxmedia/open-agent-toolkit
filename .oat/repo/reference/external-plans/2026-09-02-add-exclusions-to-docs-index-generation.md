@@ -7,7 +7,7 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260902-add-an-exclusion-mechanism.md
 oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
 oat_external_plan_date: '2026-09-02'
-oat_execution_status: BLOCKED
+oat_execution_status: READY
 oat_backlog_items:
   - BL-260902-add-an-exclusion-mechanism
 oat_issue_url: https://github.com/voxmedia/open-agent-toolkit/issues/239
@@ -25,11 +25,13 @@ created: '2026-09-02T23:59:00Z'
 > If a STOP condition occurs, stop and report instead of improvising.
 
 > [!IMPORTANT]
-> **Execution status: BLOCKED.** Hard ordering dependency on the W1 plan
-> [Use configured docs index paths](./2026-08-30-use-configured-docs-index-paths.md),
-> which rewrites the same command's path resolution and its injected
-> `generateIndex` dependency type. Execute only after that plan has merged and
-> this plan's step 1 confirms the post-state; then set this plan `READY`.
+> **Execution status: READY (flipped 2026-09-06 by the wave-1 wrapper).** The
+> hard ordering dependency on the W1 plan
+> [Use configured docs index paths](./2026-08-30-use-configured-docs-index-paths.md)
+> merged into the `wave-1-execution` baseline (`88ca7f9b1`); this plan's step 1
+> confirmed the post-state on that tree (configuration-first default output,
+> `writeOatConfig` guarded by `isFumadocsManifestTransition`, path-resolution
+> commits named by `git log`). Executed as wave-1 phase p04.
 
 ## Outcome
 

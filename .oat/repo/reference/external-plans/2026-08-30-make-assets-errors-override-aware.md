@@ -8,7 +8,7 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260827-override-aware-remedy-text.md
 oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
 oat_external_plan_date: '2026-09-02'
-oat_execution_status: BLOCKED
+oat_execution_status: READY
 oat_backlog_items:
   - BL-260827-override-aware-remedy-text
 oat_issue_url: null
@@ -26,11 +26,14 @@ created: '2026-08-30T23:40:20Z'
 > If a STOP condition occurs, stop and report instead of improvising.
 
 > [!CAUTION]
-> **Execution status: BLOCKED. Do not import or execute this plan** until
+> **Execution status: READY (flipped 2026-09-06 by the wave-1 wrapper).** The
+> hard dependency
 > [Reject structurally incomplete CLI asset bundles](./2026-08-30-validate-assets-bundle-structure.md)
-> is merged into the execution baseline, or has completed earlier in the same
-> explicitly ordered tracked project with its focused tests green. Revalidate
-> all asset failure branches after that condition is satisfied.
+> merged into the `wave-1-execution` baseline (`d9366de0f`); readiness evidence
+> on that tree: `assets.ts` declares the seven-directory list and throws
+> `CliError(…, 2)` on a missing or non-directory entry, the focused
+> `assets.test.ts` suite passed 34/34, and the structural failure branch is
+> included in the source-aware remedy design. Executed as wave-1 phase p03.
 
 ## Outcome
 

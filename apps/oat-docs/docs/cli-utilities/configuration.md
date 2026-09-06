@@ -90,6 +90,7 @@ Common keys in `.oat/config.json`:
 - `worktrees.root` — where OAT-managed worktrees live
 - `git.defaultBranch` — base branch fallback for PR workflows
 - `documentation.root`, `documentation.tooling`, `documentation.config` — docs-surface ownership
+- `documentation.excludes` — a JSON array of globs, relative to the docs directory, that `oat docs generate-index` leaves out of the generated index. `oat config set` takes the list as one comma-separated value (`"a/**,b.md"`) and stores it as an array; repeated `--exclude` flags extend it, and an empty value clears the key
 - `documentation.requireForProjectCompletion` — whether docs sync is a completion gate
 - `archive.s3Uri` — base S3 archive prefix
 - `archive.s3SyncOnComplete` — upload archived projects to S3 during completion
@@ -242,8 +243,17 @@ packaged `assets/` directory next to the installed CLI. Setting a non-empty
   directory.
 - The override is validated exactly like the packaged root and fails closed:
   the path must be a directory containing bundle metadata whose version matches
-  the running CLI (`OAT_VERSION`). A missing, malformed, or version-mismatched
-  override is an error — the CLI never silently falls back to packaged assets.
+  the running CLI (`OAT_VERSION`) **and** the seven top-level directories the
+  bundle producer creates (`skills`, `agents`, `templates`, `scripts`, `docs`,
+  `migration`, `config`), each of which must be a directory. A missing,
+  malformed, version-mismatched, or structurally incomplete override is an
+  error with exit code 2 that names the first offending path — the CLI never
+  silently falls back to packaged assets, and a metadata-only directory is no
+  longer accepted as an empty installation.
+- Remedies are source-aware: an `OAT_ASSETS_DIR` failure tells you to fix or
+  unset the override, never to rebuild or reinstall the CLI; a packaged-bundle
+  failure keeps the rebuild/reinstall guidance. A directory that exists but
+  cannot be read reports the underlying error code.
 - Produce a matching bundle with `bash packages/cli/scripts/bundle-assets.sh`
   while `OAT_ASSETS_DIR` points at the target directory (the script already
   honors the variable as its destination).

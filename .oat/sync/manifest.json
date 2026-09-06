@@ -1,917 +1,918 @@
 {
-  "version": 1,
-  "oatVersion": "0.2.50",
+  "version": 2,
+  "oatVersion": "0.2.56",
   "entries": [
     {
       "canonicalPath": ".agents/agents/oat-codebase-mapper.md",
       "providerPath": ".claude/agents/oat-codebase-mapper.md",
       "provider": "claude",
       "contentType": "agent",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": true,
-      "lastSynced": "2026-02-18T03:14:26.691Z"
+      "lastSynced": "2026-02-18T03:14:26.691Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/agents/oat-reviewer.md",
       "providerPath": ".claude/agents/oat-reviewer.md",
       "provider": "claude",
       "contentType": "agent",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": true,
-      "lastSynced": "2026-02-18T03:14:26.692Z"
+      "lastSynced": "2026-02-18T03:14:26.692Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/agents/oat-codebase-mapper.md",
       "providerPath": ".cursor/agents/oat-codebase-mapper.md",
       "provider": "cursor",
       "contentType": "agent",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": true,
-      "lastSynced": "2026-02-18T03:14:26.704Z"
+      "lastSynced": "2026-02-18T03:14:26.704Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/agents/oat-reviewer.md",
       "providerPath": ".cursor/agents/oat-reviewer.md",
       "provider": "cursor",
       "contentType": "agent",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": true,
-      "lastSynced": "2026-02-18T03:14:26.704Z"
+      "lastSynced": "2026-02-18T03:14:26.704Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/codex-skill",
       "providerPath": ".claude/skills/codex-skill",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.268Z"
+      "lastSynced": "2026-02-21T19:45:11.268Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/create-oat-skill",
       "providerPath": ".claude/skills/create-oat-skill",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.269Z"
+      "lastSynced": "2026-02-21T19:45:11.269Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/create-pr-description",
       "providerPath": ".claude/skills/create-pr-description",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.269Z"
+      "lastSynced": "2026-02-21T19:45:11.269Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/create-ticket",
       "providerPath": ".claude/skills/create-ticket",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.269Z"
+      "lastSynced": "2026-02-21T19:45:11.269Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/docs-completed-projects-gap-review",
       "providerPath": ".claude/skills/docs-completed-projects-gap-review",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.270Z"
+      "lastSynced": "2026-02-21T19:45:11.270Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-agent-instructions-analyze",
       "providerPath": ".claude/skills/oat-agent-instructions-analyze",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.270Z"
+      "lastSynced": "2026-02-21T19:45:11.270Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-agent-instructions-apply",
       "providerPath": ".claude/skills/oat-agent-instructions-apply",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.270Z"
+      "lastSynced": "2026-02-21T19:45:11.270Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-idea-ideate",
       "providerPath": ".claude/skills/oat-idea-ideate",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.270Z"
+      "lastSynced": "2026-02-21T19:45:11.270Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-idea-new",
       "providerPath": ".claude/skills/oat-idea-new",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.270Z"
+      "lastSynced": "2026-02-21T19:45:11.270Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-idea-scratchpad",
       "providerPath": ".claude/skills/oat-idea-scratchpad",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.270Z"
+      "lastSynced": "2026-02-21T19:45:11.270Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-idea-summarize",
       "providerPath": ".claude/skills/oat-idea-summarize",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.270Z"
+      "lastSynced": "2026-02-21T19:45:11.270Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-clear-active",
       "providerPath": ".claude/skills/oat-project-clear-active",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.270Z"
+      "lastSynced": "2026-02-21T19:45:11.270Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-complete",
       "providerPath": ".claude/skills/oat-project-complete",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.270Z"
+      "lastSynced": "2026-02-21T19:45:11.270Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-design",
       "providerPath": ".claude/skills/oat-project-design",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.271Z"
+      "lastSynced": "2026-02-21T19:45:11.271Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-discover",
       "providerPath": ".claude/skills/oat-project-discover",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.271Z"
+      "lastSynced": "2026-02-21T19:45:11.271Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-implement",
       "providerPath": ".claude/skills/oat-project-implement",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.271Z"
+      "lastSynced": "2026-02-21T19:45:11.271Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-import-plan",
       "providerPath": ".claude/skills/oat-project-import-plan",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.271Z"
+      "lastSynced": "2026-02-21T19:45:11.271Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-new",
       "providerPath": ".claude/skills/oat-project-new",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.271Z"
+      "lastSynced": "2026-02-21T19:45:11.271Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-open",
       "providerPath": ".claude/skills/oat-project-open",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.271Z"
+      "lastSynced": "2026-02-21T19:45:11.271Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-plan",
       "providerPath": ".claude/skills/oat-project-plan",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.271Z"
+      "lastSynced": "2026-02-21T19:45:11.271Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-plan-writing",
       "providerPath": ".claude/skills/oat-project-plan-writing",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.271Z"
+      "lastSynced": "2026-02-21T19:45:11.271Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-pr-final",
       "providerPath": ".claude/skills/oat-project-pr-final",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.271Z"
+      "lastSynced": "2026-02-21T19:45:11.271Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-pr-progress",
       "providerPath": ".claude/skills/oat-project-pr-progress",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.272Z"
+      "lastSynced": "2026-02-21T19:45:11.272Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-progress",
       "providerPath": ".claude/skills/oat-project-progress",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.272Z"
+      "lastSynced": "2026-02-21T19:45:11.272Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-quick-start",
       "providerPath": ".claude/skills/oat-project-quick-start",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.272Z"
+      "lastSynced": "2026-02-21T19:45:11.272Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-review-provide",
       "providerPath": ".claude/skills/oat-project-review-provide",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.272Z"
+      "lastSynced": "2026-02-21T19:45:11.272Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-review-receive",
       "providerPath": ".claude/skills/oat-project-review-receive",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.272Z"
+      "lastSynced": "2026-02-21T19:45:11.272Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-spec",
       "providerPath": ".claude/skills/oat-project-spec",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.272Z"
+      "lastSynced": "2026-02-21T19:45:11.272Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-repo-knowledge-index",
       "providerPath": ".claude/skills/oat-repo-knowledge-index",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.272Z"
+      "lastSynced": "2026-02-21T19:45:11.272Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-review-provide",
       "providerPath": ".claude/skills/oat-review-provide",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.273Z"
+      "lastSynced": "2026-02-21T19:45:11.273Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-worktree-bootstrap",
       "providerPath": ".claude/skills/oat-worktree-bootstrap",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.273Z"
+      "lastSynced": "2026-02-21T19:45:11.273Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-worktree-bootstrap-auto",
       "providerPath": ".claude/skills/oat-worktree-bootstrap-auto",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.273Z"
+      "lastSynced": "2026-02-21T19:45:11.273Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/review-backlog",
       "providerPath": ".claude/skills/review-backlog",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.273Z"
+      "lastSynced": "2026-02-21T19:45:11.273Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/update-repo-reference",
       "providerPath": ".claude/skills/update-repo-reference",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T19:45:11.273Z"
+      "lastSynced": "2026-02-21T19:45:11.273Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-promote-spec-driven",
       "providerPath": ".claude/skills/oat-project-promote-spec-driven",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T23:41:10.862Z"
+      "lastSynced": "2026-02-21T23:41:10.862Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-review-receive-remote",
       "providerPath": ".claude/skills/oat-project-review-receive-remote",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T23:51:52.644Z"
+      "lastSynced": "2026-02-21T23:51:52.644Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-review-receive",
       "providerPath": ".claude/skills/oat-review-receive",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T23:51:52.645Z"
+      "lastSynced": "2026-02-21T23:51:52.645Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-review-receive-remote",
       "providerPath": ".claude/skills/oat-review-receive-remote",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-02-21T23:51:52.645Z"
+      "lastSynced": "2026-02-21T23:51:52.645Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-docs-analyze",
       "providerPath": ".claude/skills/oat-docs-analyze",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-06T23:48:55.754Z"
+      "lastSynced": "2026-03-06T23:48:55.754Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-docs-apply",
       "providerPath": ".claude/skills/oat-docs-apply",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-06T23:48:55.755Z"
+      "lastSynced": "2026-03-06T23:48:55.755Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-repo-maintainability-review",
       "providerPath": ".claude/skills/oat-repo-maintainability-review",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-06T23:48:55.755Z"
+      "lastSynced": "2026-03-06T23:48:55.755Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-reconcile",
       "providerPath": ".claude/skills/oat-project-reconcile",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-07T04:34:00.316Z"
+      "lastSynced": "2026-03-07T04:34:00.316Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-document",
       "providerPath": ".claude/skills/oat-project-document",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-08T03:00:46.985Z"
+      "lastSynced": "2026-03-08T03:00:46.985Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/create-agnostic-skill",
       "providerPath": ".claude/skills/create-agnostic-skill",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-09T17:44:45.667Z"
+      "lastSynced": "2026-03-09T17:44:45.667Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-capture",
       "providerPath": ".claude/skills/oat-project-capture",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-12T02:27:09.093Z"
+      "lastSynced": "2026-03-12T02:27:09.093Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/skeptic",
       "providerPath": ".claude/skills/skeptic",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-14T00:19:54.688Z"
+      "lastSynced": "2026-03-14T00:19:54.688Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/analyze",
       "providerPath": ".claude/skills/analyze",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-14T20:01:51.129Z"
+      "lastSynced": "2026-03-14T20:01:51.129Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/compare",
       "providerPath": ".claude/skills/compare",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-14T20:01:51.130Z"
+      "lastSynced": "2026-03-14T20:01:51.130Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/deep-research",
       "providerPath": ".claude/skills/deep-research",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-14T20:01:51.130Z"
+      "lastSynced": "2026-03-14T20:01:51.130Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/synthesize",
       "providerPath": ".claude/skills/synthesize",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-14T20:01:51.130Z"
+      "lastSynced": "2026-03-14T20:01:51.130Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/agents/skeptical-evaluator.md",
       "providerPath": ".claude/agents/skeptical-evaluator.md",
       "provider": "claude",
       "contentType": "agent",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": true,
-      "lastSynced": "2026-03-14T20:01:51.130Z"
+      "lastSynced": "2026-03-14T20:01:51.130Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/agents/skeptical-evaluator.md",
       "providerPath": ".cursor/agents/skeptical-evaluator.md",
       "provider": "cursor",
       "contentType": "agent",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": true,
-      "lastSynced": "2026-03-14T20:01:51.132Z"
+      "lastSynced": "2026-03-14T20:01:51.132Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-docs",
       "providerPath": ".claude/skills/oat-docs",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-16T17:37:53.290Z"
+      "lastSynced": "2026-03-16T17:37:53.290Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-doctor",
       "providerPath": ".claude/skills/oat-doctor",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-16T17:37:53.296Z"
+      "lastSynced": "2026-03-16T17:37:53.296Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-pjm-add-backlog-item",
       "providerPath": ".claude/skills/oat-pjm-add-backlog-item",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-21T14:51:12.220Z"
+      "lastSynced": "2026-03-21T14:51:12.220Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-pjm-review-backlog",
       "providerPath": ".claude/skills/oat-pjm-review-backlog",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-21T14:51:12.221Z"
+      "lastSynced": "2026-03-21T14:51:12.221Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-pjm-update-repo-reference",
       "providerPath": ".claude/skills/oat-pjm-update-repo-reference",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-21T14:51:12.221Z"
+      "lastSynced": "2026-03-21T14:51:12.221Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-revise",
       "providerPath": ".claude/skills/oat-project-revise",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-27T19:29:41.549Z"
+      "lastSynced": "2026-03-27T19:29:41.549Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-summary",
       "providerPath": ".claude/skills/oat-project-summary",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-27T19:29:41.550Z"
+      "lastSynced": "2026-03-27T19:29:41.550Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-next",
       "providerPath": ".claude/skills/oat-project-next",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-03-29T21:16:14.631Z"
+      "lastSynced": "2026-03-29T21:16:14.631Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-wrap-up",
       "providerPath": ".claude/skills/oat-wrap-up",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-04-10T17:49:13.731Z"
+      "lastSynced": "2026-04-10T17:49:13.731Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-docs-bootstrap",
       "providerPath": ".claude/skills/oat-docs-bootstrap",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-04-13T20:51:35.796Z"
+      "lastSynced": "2026-04-13T20:51:35.796Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/agents/oat-phase-implementer.md",
       "providerPath": ".claude/agents/oat-phase-implementer.md",
       "provider": "claude",
       "contentType": "agent",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": true,
-      "lastSynced": "2026-04-17T19:51:00.333Z"
+      "lastSynced": "2026-04-17T19:51:00.333Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/agents/oat-phase-implementer.md",
       "providerPath": ".cursor/agents/oat-phase-implementer.md",
       "provider": "cursor",
       "contentType": "agent",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": true,
-      "lastSynced": "2026-04-17T19:51:00.334Z"
+      "lastSynced": "2026-04-17T19:51:00.334Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-brainstorm",
       "providerPath": ".claude/skills/oat-brainstorm",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-05-02T01:02:30.377Z"
+      "lastSynced": "2026-05-02T01:02:30.377Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-split",
       "providerPath": ".claude/skills/oat-project-split",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-05-21T02:25:56.069Z"
+      "lastSynced": "2026-05-21T02:25:56.069Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-review-provide-remote",
       "providerPath": ".claude/skills/oat-project-review-provide-remote",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-05-29T14:55:56.751Z"
+      "lastSynced": "2026-05-29T14:55:56.751Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-review-provide-remote",
       "providerPath": ".claude/skills/oat-review-provide-remote",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-05-29T14:55:56.752Z"
+      "lastSynced": "2026-05-29T14:55:56.752Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/authoring-docs",
       "providerPath": ".claude/skills/authoring-docs",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-06-06T00:07:57.846Z"
+      "lastSynced": "2026-06-06T00:07:57.846Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-docs-authoring",
       "providerPath": ".claude/skills/oat-docs-authoring",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-06-06T00:07:57.847Z"
+      "lastSynced": "2026-06-06T00:07:57.847Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-pjm-decision",
       "providerPath": ".claude/skills/oat-pjm-decision",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-06-23T03:28:27.725Z"
+      "lastSynced": "2026-06-23T03:28:27.725Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-repo-improve",
       "providerPath": ".claude/skills/oat-repo-improve",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-07-12T14:39:29.327Z"
+      "lastSynced": "2026-07-12T14:39:29.327Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-dispatch-subagents",
       "providerPath": ".claude/skills/oat-dispatch-subagents",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-07-12T16:37:02.165Z"
+      "lastSynced": "2026-07-12T16:37:02.165Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-dispatch-subagents",
       "providerPath": ".claude/skills/oat-project-dispatch-subagents",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-07-12T16:37:02.167Z"
+      "lastSynced": "2026-07-12T16:37:02.167Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-cursor-cloud-projects",
       "providerPath": ".claude/skills/oat-cursor-cloud-projects",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-07-14T00:27:35.913Z"
+      "lastSynced": "2026-07-14T00:27:35.913Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-autonomous",
       "providerPath": ".claude/skills/oat-project-autonomous",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-07-14T00:27:35.913Z"
+      "lastSynced": "2026-07-14T00:27:35.913Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-wave-execute",
       "providerPath": ".claude/skills/oat-wave-execute",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-07-18T21:41:15.219Z"
+      "lastSynced": "2026-07-18T21:41:15.219Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-wave-program",
       "providerPath": ".claude/skills/oat-wave-program",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-07-18T21:41:15.220Z"
+      "lastSynced": "2026-07-18T21:41:15.220Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/explainer-kit",
       "providerPath": ".claude/skills/explainer-kit",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-07-20T01:39:50.384Z"
+      "lastSynced": "2026-07-20T01:39:50.384Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-explainer-kit",
       "providerPath": ".claude/skills/oat-explainer-kit",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-07-20T01:39:50.385Z"
+      "lastSynced": "2026-07-20T01:39:50.385Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/subagent-orchestration",
       "providerPath": ".claude/skills/subagent-orchestration",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-07-23T05:13:38.706Z"
+      "lastSynced": "2026-07-23T05:13:38.706Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-retro",
       "providerPath": ".claude/skills/oat-project-retro",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-08-06T02:04:21.258Z"
+      "lastSynced": "2026-08-06T02:04:21.258Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/oat-project-retro-file",
       "providerPath": ".claude/skills/oat-project-retro-file",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-08-06T02:04:21.260Z"
+      "lastSynced": "2026-08-06T02:04:21.260Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/triage-oat-issues",
       "providerPath": ".claude/skills/triage-oat-issues",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-08-27T01:35:23.287Z"
+      "lastSynced": "2026-08-27T01:35:23.287Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/skills/recon",
       "providerPath": ".claude/skills/recon",
       "provider": "claude",
       "contentType": "skill",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": false,
-      "lastSynced": "2026-08-31T18:05:27.318Z"
+      "lastSynced": "2026-08-31T18:05:27.318Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/agents/recon-worker.md",
       "providerPath": ".claude/agents/recon-worker.md",
       "provider": "claude",
       "contentType": "agent",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": true,
-      "lastSynced": "2026-08-31T18:05:27.318Z"
+      "lastSynced": "2026-08-31T18:05:27.318Z",
+      "strategy": "symlink"
     },
     {
       "canonicalPath": ".agents/agents/recon-worker.md",
       "providerPath": ".cursor/agents/recon-worker.md",
       "provider": "cursor",
       "contentType": "agent",
-      "strategy": "symlink",
       "contentHash": null,
       "isFile": true,
-      "lastSynced": "2026-08-31T18:05:27.318Z"
+      "lastSynced": "2026-08-31T18:05:27.318Z",
+      "strategy": "symlink"
     }
   ],
+  "collections": [],
   "lastUpdated": "2026-08-31T18:05:27.318Z"
 }

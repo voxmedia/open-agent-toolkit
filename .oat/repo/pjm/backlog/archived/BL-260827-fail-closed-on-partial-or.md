@@ -1,7 +1,7 @@
 ---
 id: BL-260827-fail-closed-on-partial-or
 title: Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - wave-3-follow-up
 assignee: null
 created: 2026-08-27T01:48:17.829Z
-updated: 2026-08-30T23:49:30Z
+updated: '2026-09-06T01:23:55Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-08-30-validate-assets-bundle-structure.md

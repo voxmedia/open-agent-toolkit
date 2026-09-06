@@ -116,6 +116,81 @@ describe('oat-config', () => {
     });
   });
 
+  describe('documentation.excludes', () => {
+    async function writeSharedConfig(
+      repoRoot: string,
+      documentation: unknown,
+    ): Promise<void> {
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({ version: 1, documentation }),
+        'utf8',
+      );
+    }
+
+    it('parses a trimmed, de-duplicated, order-preserving list', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeSharedConfig(repoRoot, {
+        root: 'apps/docs',
+        excludes: ['  **/CLAUDE.md  ', 'drafts/', '**/CLAUDE.md'],
+      });
+
+      await expect(readOatConfig(repoRoot)).resolves.toEqual({
+        version: 1,
+        documentation: {
+          root: 'apps/docs',
+          excludes: ['**/CLAUDE.md', 'drafts/'],
+        },
+      });
+    });
+
+    it('round-trips through writeOatConfig', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await writeOatConfig(repoRoot, {
+        version: 1,
+        documentation: { root: 'apps/docs', excludes: ['drafts/', '*.tmp.md'] },
+      });
+
+      await expect(readOatConfig(repoRoot)).resolves.toEqual({
+        version: 1,
+        documentation: {
+          root: 'apps/docs',
+          excludes: ['drafts/', '*.tmp.md'],
+        },
+      });
+    });
+
+    it('omits the key for an absent or empty list', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeSharedConfig(repoRoot, { root: 'apps/docs', excludes: [] });
+
+      await expect(readOatConfig(repoRoot)).resolves.toEqual({
+        version: 1,
+        documentation: { root: 'apps/docs' },
+      });
+    });
+
+    const invalidCases: Array<{ name: string; value: unknown }> = [
+      { name: 'a non-array value', value: 'drafts/' },
+      { name: 'a non-string entry', value: ['drafts/', 7] },
+      { name: 'an empty entry', value: ['drafts/', ''] },
+      { name: 'a whitespace-only entry', value: ['   '] },
+    ];
+
+    for (const testCase of invalidCases) {
+      it(`rejects ${testCase.name}`, async () => {
+        const repoRoot = await createRepoRoot();
+        await writeSharedConfig(repoRoot, { excludes: testCase.value });
+
+        await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
+          message: `Invalid documentation.excludes in ${join(repoRoot, '.oat', 'config.json')}: expected an array of non-empty strings. Repair it with oat config set documentation.excludes "<glob>,<glob>" (an empty value clears it).`,
+          exitCode: 2,
+        });
+      });
+    }
+  });
+
   it('accepts trailing commas in shared, local, and user config files', async () => {
     const repoRoot = await createRepoRoot();
     const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-config-'));

@@ -117,10 +117,11 @@ Current schema keys:
 | `projects.root`                                            | `string`                   | `".oat/projects/shared"` | Default root directory for OAT projects                                                                                                                                                                                                                                                                 |
 | `projects.defaultScope`                                    | `string`                   | `"synced"`               | Scope used by project creation when `--scope` is omitted: `shared`, `local`, or `synced`. Environment override: `OAT_PROJECTS_DEFAULT_SCOPE`.                                                                                                                                                           |
 | `localPaths`                                               | `string[]`                 | -                        | Gitignored directories to sync between main repo and worktrees. Supports glob patterns. Managed via `oat local add/remove`.                                                                                                                                                                             |
-| `documentation.root`                                       | `string`                   | -                        | Root directory containing documentation source files (e.g., `apps/docs/docs`)                                                                                                                                                                                                                           |
+| `documentation.root`                                       | `string`                   | -                        | Docs **app root** — the directory `oat docs init` scaffolds (e.g., `apps/docs`). Authored pages live under `<root>/docs`. See [Documentation path resolution](#documentation-path-resolution).                                                                                                          |
 | `documentation.tooling`                                    | `string`                   | -                        | Documentation framework identifier (`mkdocs` or `fumadocs`)                                                                                                                                                                                                                                             |
 | `documentation.config`                                     | `string`                   | -                        | Path to the documentation framework config file (e.g., `mkdocs.yml`, `next.config.js`)                                                                                                                                                                                                                  |
-| `documentation.index`                                      | `string`                   | -                        | Path to the docs surface entry point (e.g., `index.md` for Fumadocs, `mkdocs.yml` for MkDocs). Set by `oat docs init` and updated by `oat docs generate-index`.                                                                                                                                         |
+| `documentation.index`                                      | `string`                   | -                        | Path to the docs surface entry point: the generated app-root manifest `<root>/index.md` for Fumadocs, `mkdocs.yml` for MkDocs. Set by `oat docs init`. `oat docs generate-index` writes it only for the Fumadocs manifest transition and never for MkDocs.                                              |
+| `documentation.excludes`                                   | `string[]`                 | -                        | Globs, relative to the docs directory, that `oat docs generate-index` leaves out of the generated index. See [Excluding pages from the generated index](#excluding-pages-from-the-generated-index).                                                                                                     |
 | `documentation.requireForProjectCompletion`                | `boolean`                  | `false`                  | When `true`, OAT project completion gates require documentation to be updated                                                                                                                                                                                                                           |
 | `git.defaultBranch`                                        | `string`                   | `"main"`                 | Default branch for PR creation. Auto-detected during `oat init` via `gh repo view` or `origin/HEAD`. Used by `oat-project-pr-final` and `oat-project-pr-progress`.                                                                                                                                      |
 | `workflow.autoReviewAtHillCheckpoints`                     | `boolean`                  | unset                    | When `true`, completing a HiLL checkpoint automatically runs the extra lifecycle review. Does not control Tier 1 per-phase `oat-reviewer` gates. Can be overridden per-project via `oat_auto_review_at_hill_checkpoints` in `plan.md` frontmatter. Legacy `autoReviewAtCheckpoints` remains a fallback. |
@@ -157,12 +158,63 @@ Example:
     "root": ".worktrees"
   },
   "documentation": {
-    "root": "apps/docs/docs",
+    "root": "apps/docs",
     "tooling": "mkdocs",
-    "config": "mkdocs.yml",
+    "config": "apps/docs/mkdocs.yml",
+    "index": "apps/docs/mkdocs.yml",
     "requireForProjectCompletion": false
   }
 }
+```
+
+### Documentation path resolution
+
+`documentation.root` canonically names the docs **app root** — exactly the directory `oat docs init` scaffolds. Authored Markdown lives under `<root>/docs`, and the generated Fumadocs manifest is written to `<root>/index.md`, outside the tree it indexes.
+
+`oat docs generate-index` resolves omitted options from this configuration:
+
+| Option       | Omitted                                                                                  | Supplied                            |
+| ------------ | ---------------------------------------------------------------------------------------- | ----------------------------------- |
+| `--docs-dir` | `<documentation.root>/docs` when that directory exists, otherwise `<documentation.root>` | Resolved from the current directory |
+| `--output`   | `<documentation.root>/index.md`                                                          | Resolved from the current directory |
+
+If an omitted option has no non-empty `documentation.root` to resolve against, or the configured root is not a directory, the command fails with exit code `2` before generating or writing anything.
+
+**Compatibility behavior.** Preferring `<root>/docs` exists for legacy configs whose `root` names a docs _source_ directory rather than an app root; it is not a second meaning of the key. Because the rule is a plain directory-existence test, a source root that happens to contain its own `docs` subdirectory is narrowed to it. The command prints the directory it derived in both human and JSON output (`docsDir`, `docsDirSource`), and `--docs-dir` is the escape hatch when the derivation is wrong.
+
+A legacy source root with no `docs` child resolves `--docs-dir` and `--output` to the same tree, so a bare run is refused rather than allowed to overwrite an authored page. Pass an explicit `--output` outside the source tree, or repoint `documentation.root` at the app root.
+
+**Refused output targets.** Checked before generation for derived and explicit paths alike, the command refuses to write an output that is inside the docs directory it indexes, equals `documentation.config`, or ends in `.yml` / `.yaml`. A derived output whose existing file lacks the `AUTOGENERATED by oat docs generate-index` header is also refused; naming that same path with `--output` overwrites it explicitly.
+
+**Configuration writes.** The only configuration write generation performs is the Fumadocs manifest transition: when the written manifest lies inside `documentation.root` and `documentation.tooling` is `fumadocs`, the repo-relative output path is recorded in `documentation.index`. A config that declares neither `documentation.tooling` nor `documentation.config` is treated as the same Fumadocs-shaped case. Any other declared tooling — `mkdocs` included — is never written, and neither are `documentation.root` and `documentation.config`. The value is always repo-relative: when `documentation.root` points outside the repository, the manifest is still generated but the key is left untouched rather than recording a machine-specific path.
+
+### Excluding pages from the generated index
+
+`documentation.excludes` and the repeatable `--exclude <glob>` flag feed one matcher. Flags **extend** the configured list rather than replacing it, so a one-off exclusion cannot silently republish pages the repository deliberately excluded. A directory left empty by exclusion emits no heading, and an empty list produces byte-identical output to no exclusions at all.
+
+Patterns are matched against each candidate's path **relative to the docs directory being indexed** — the directory `--docs-dir` resolved to, not `documentation.root` and not the repository root.
+
+| Pattern        | Matches                                                  |
+| -------------- | -------------------------------------------------------- |
+| `CLAUDE.md`    | only the root-level `CLAUDE.md`; patterns are anchored   |
+| `**/CLAUDE.md` | `CLAUDE.md` at any depth, including the docs root        |
+| `*.md`         | root-level Markdown only; `*` never crosses `/`          |
+| `drafts/`      | the `drafts` directory and everything beneath it         |
+| `api/**/*.md`  | Markdown at any depth under `api/`, including `api/x.md` |
+
+A trailing `/` restricts a pattern to directories and never matches a file; without it, a pattern that matches a directory path still prunes that directory. `**` spans `/` only as a whole path segment — inside a segment (`a**b`) it is an ordinary single-segment wildcard. Matching is case-sensitive, `/` is the separator on every platform, and only `*` and `**` are metacharacters — every other character, `.` included, is literal. A leading `./` or `/` is stripped, so both spellings anchor at the docs root. Entries are trimmed and de-duplicated; a malformed `documentation.excludes` (a non-array, or an empty or non-string entry) is rejected rather than silently ignored. `oat docs generate-index` reports it with exit code `2`; `oat config` surfaces the same error as an ordinary exit-`1` user error. `oat config set documentation.excludes` can still replace or clear a malformed value, so the repair the error names always works.
+
+Set the list with the comma-separated grammar, and clear it with an empty value:
+
+```bash
+oat config set documentation.excludes "**/CLAUDE.md,**/AGENTS.md"
+oat config set documentation.excludes ""
+```
+
+This repository pins the invocation explicitly, which is the portable fallback anywhere the configured defaults are not what you want:
+
+```bash
+oat docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
 ```
 
 ### Worktree root precedence

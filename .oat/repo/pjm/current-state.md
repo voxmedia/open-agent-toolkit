@@ -37,6 +37,22 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.56` (wave 1 of the 2026-08-31 execution program, wrapper project
+  `wave-1-execution`, implementation complete; pending PR/release) resolves
+  `oat docs generate-index` from `documentation.root` (app root canonical,
+  `<root>/docs` precedence as compatibility behavior), defaults output to the
+  app-root manifest, never writes the scaffold's authored `docs/index.md` or
+  `mkdocs.yml`, refuses unsafe outputs before writing (exit 1; unusable
+  configuration exits 2), updates `documentation.index` only for the Fumadocs
+  bootstrap transition, and prunes generation through the new
+  `documentation.excludes` / `--exclude` root-anchored glob grammar backed by a
+  ReDoS-safe matcher. `validateAssetsBundle` fails closed on a partial or
+  malformed bundle (seven required directories, exit 2, first offender named,
+  errno-bearing unreadable diagnosis) and every asset remedy is source-aware
+  (`OAT_ASSETS_DIR` failures never advise a rebuild or reinstall). Closed
+  `BL-260718-fix-oat-docs-generate-index`, `BL-260827-fail-closed-on-partial-or`,
+  `BL-260827-override-aware-remedy-text`, and
+  `BL-260902-add-an-exclusion-mechanism`; filed three `BL-260906-*` follow-ups.
 - CLI `0.2.51` (retire-archived-synced-project, implementation complete;
   pending PR/release) retires a successfully archived synced project from its
   active JSON-record and discovery-ref namespaces only after local and every

@@ -10,6 +10,9 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-260906-docs-index-refusals-exit-1     | 2026-09-06 | accepted   | Docs-index refusals exit 1 and configuration errors exit 2                                             | -       |
+| DR-260906-fumadocs-config-write-survives | 2026-09-06 | accepted   | Fumadocs config write survives a declared documentation config                                         | -       |
+| DR-260906-root-anchored-minimatch-style  | 2026-09-06 | accepted   | Root-anchored minimatch-style docs-index exclusion grammar                                             | -       |
 | DR-260904-remove-dispatch-receipt-chain  | 2026-09-04 | accepted   | Remove dispatch receipt chain from recon packet validation                                             | -       |
 | DR-260831-approval-bound-homogeneous     | 2026-08-31 | accepted   | Approval-bound homogeneous dispatch                                                                    | -       |
 | DR-260831-canonical-validated-run        | 2026-08-31 | superseded | Canonical validated-run boundary                                                                       | -       |
