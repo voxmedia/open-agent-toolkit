@@ -569,6 +569,13 @@ effective delta is
 `sha256:effective-delta-v1:689ce3c9329c6143637d2c805a96d238bdf492bddab47b1dacab804247f5eb31`.
 Attempt 1 remains consumed; no attempt-2 launch has occurred yet.
 
+#### Configured implementation exit gate launch intent 2 persisted
+
+Attempt `f5f83ab8-0ae8-4aa8-ba13-6ed3d3549254` is reserved at
+`2026-09-06T02:38:11Z`. Its stdout receipt will be captured directly at
+`reviews/gate-receipts/implement-exit-f5f83ab8-0ae8-4aa8-ba13-6ed3d3549254.json`.
+The exact resolved command is still unexecuted at this checkpoint.
+
 #### Final lifecycle re-review 3 received — passed
 
 **Review artifact:**
