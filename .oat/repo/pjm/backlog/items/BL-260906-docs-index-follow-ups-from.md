@@ -21,5 +21,8 @@ Deferred p01/p04 review minors: docs/init/index.ts labels the authored docs/inde
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- `docs init` labels the authored `docs/index.md` consistently with the Fumadocs `documentation.index` seed (or documents the distinction), with the pinned test updated.
+- The symlink hop-cap refusal names the flag that owns the offending path (`--docs-dir` vs `--output`) and uses the configuration exit code when the chain is on the derived docs directory.
+- `oat docs generate-index` reports when exclusions leave the manifest empty, and its `--json` payload includes the effective `excludes`.
+- `DEFAULT_SHARED_CONFIG` carries `excludes: null` alongside the other `documentation.*` defaults.
+- A regression test asserts the bare-invocation refusal (exit 1) in `config-root` mode.

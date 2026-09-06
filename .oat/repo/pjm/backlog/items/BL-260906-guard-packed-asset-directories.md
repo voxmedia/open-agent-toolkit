@@ -22,5 +22,6 @@ Wave 1 p02 review follow-ups: requiredPackedPaths guards no packed path under ag
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- `requiredPackedPaths` (or its successor) guards at least one packed path under each of the seven required bundle directories, and `pnpm release:validate` fails when any of them is absent from the packed tarball.
+- A negative control that empties a conditionally populated directory before packing makes the release gate fail locally and in CI.
+- `apps/oat-docs/docs/cli-utilities/configuration.md` describes the structural `OAT_ASSETS_DIR` contract shipped in wave 1 (seven required directories, exit 2, source-aware remedies).

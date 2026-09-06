@@ -20,5 +20,5 @@ Wave 1 p03 review follow-ups: the outer stat catch in resolveAssetsRoot collapse
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- The root-level `stat` catch in `resolveAssetsRoot` reports the errno for non-`ENOENT` failures (for example `EACCES`) instead of "Assets directory not found", with a test that fails if the errno is dropped.
+- `assets.test.ts` resets the file-global `statRedirects` seam in an `afterEach` hook.

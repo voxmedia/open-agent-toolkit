@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: a6410ad0
+oat_last_commit: 2bfb39a5
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260718-fix-oat-docs-generate-index' }
@@ -100,7 +100,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-05T22:36:14.653Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T01:23:45.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T01:38:47.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
