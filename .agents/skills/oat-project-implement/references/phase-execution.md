@@ -691,14 +691,18 @@ Count only whole-phase scopes: `pNN` or `pNN-pMM`.
 - Example: no prior passed whole-phase review, current checkpoint `p03` → review `p01-p03`.
 
 For the final implementation phase use `oat-project-review-provide code final`
-and do not duplicate the already completed root-owned per-phase review.
+— loading the current `oat-project-review-provide/SKILL.md` and following it, or
+dispatching a child that carries it — and do not duplicate the already completed
+root-owned per-phase review.
 
 Example: `["p01", "p04"]` → pause after p01 completes and after p04 completes;
 skip p02, p03.
 
 If this is the final implementation phase checkpoint, run
-`oat-project-review-provide code final` and do not run a duplicate final
-phase-only lifecycle review.
+`oat-project-review-provide code final` — loading the current
+`oat-project-review-provide/SKILL.md` and following it, or dispatching a child
+that carries it — and do not run a duplicate final phase-only lifecycle
+review.
 
 Defer only a checkpoint on the final implementation phase; non-final checkpoint
 behavior remains unchanged. The final checkpoint continues through final

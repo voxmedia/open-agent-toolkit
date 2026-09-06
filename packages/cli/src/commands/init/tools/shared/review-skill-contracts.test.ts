@@ -610,7 +610,7 @@ printf 'artifact-read\\n'`,
       /If this is the final implementation phase checkpoint, run\s+`oat-project-review-provide code final`/,
     );
     expect(content).toMatch(
-      /do not run a duplicate final\s+phase-only lifecycle review/,
+      /do not run a duplicate final\s+phase-only lifecycle\s+review/,
     );
   });
 
@@ -1027,7 +1027,7 @@ printf 'artifact-read\\n'`,
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.6');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.7');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );
@@ -1057,7 +1057,7 @@ printf 'artifact-read\\n'`,
     );
     expect(content).toContain('When `SHOULD_GENERATE_RETRO="true"`, dispatch');
     expect(normalizedContent).toContain(
-      'dispatch `oat-project-retro` in generate mode before any lifecycle mutation.',
+      'dispatch `oat-project-retro` in generate mode before any lifecycle mutation: load the current `oat-project-retro/SKILL.md` and follow it, or dispatch a child that carries it.',
     );
     expect(content).toMatch(
       /construct exactly one brief-aware, provider-neutral\s+author seam/,
@@ -1548,7 +1548,7 @@ printf 'artifact-read\\n'`,
       'If `summary.md` is missing or stale, refresh it automatically before proceeding.',
     );
     expect(prFinalContent).toContain(
-      'Prefer running the `oat-project-summary` skill when skill-to-skill invocation is available in the current host/runtime.',
+      'When skill-to-skill invocation is available in the current host/runtime, load the current `oat-project-summary/SKILL.md` and follow it;',
     );
     expect(prFinalContent).toContain(
       'Do not assume `oat-project-summary` is a shell command on `PATH`.',
@@ -1557,7 +1557,7 @@ printf 'artifact-read\\n'`,
       'Do not ask whether to generate or refresh `summary.md` during pr-final.',
     );
     expect(completeContent).toContain(
-      'Also preflight summary status using the same freshness rules as `oat-project-summary`:',
+      'Also preflight summary status using the same freshness rules as `oat-project-summary`, read from the current `oat-project-summary/SKILL.md` rather than a remembered version of that step:',
     );
     expect(completeContent).toContain(
       'Would you like me to generate it now as part of completion?',
