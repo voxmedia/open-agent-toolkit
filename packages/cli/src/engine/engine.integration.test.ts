@@ -898,17 +898,14 @@ describe('sync engine integration', () => {
       join(root, '.claude', 'identity-reservation'),
       'dir',
     );
-    await symlink(join('..', '.agents', 'skills'), providerDir, 'dir');
-    // Deliberately not asserting that the replacement has a different inode.
-    // Filesystems make no guarantee about inode reuse: macOS/APFS hands out a
-    // fresh inode here, while Linux/ext4 frequently reuses the one just freed,
-    // so the assertion passed locally and failed in CI. The identity is not
-    // load-bearing either way — `removeCollectionSymlinkIfUnchanged` returns
-    // false unconditionally, so a matching inode cannot cause the user's
-    // symlink to be unlinked. What matters is the target, asserted below.
+    const replacementLinkText = '../.agents/./skills';
+    await symlink(replacementLinkText, providerDir, 'dir');
+    // Raw link text deterministically establishes replacement identity even if
+    // the filesystem reuses the deleted inode. This spelling still resolves to
+    // the same canonical skills directory as the stored link target.
     const replacementIdentity = await lstat(providerDir);
     expect(replacementIdentity.isSymbolicLink()).toBe(true);
-    expect(await readlink(providerDir)).toBe(join('..', '.agents', 'skills'));
+    expect(await readlink(providerDir)).toBe(replacementLinkText);
 
     const disablePlan = await computeSyncPlan({
       canonical,
