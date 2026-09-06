@@ -86,7 +86,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T01:53:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T01:59:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +98,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Final review fixes complete; awaiting re-review.
+Implementation - Final review passed; awaiting configured exit gate.
 
 ## Artifacts
 
@@ -135,7 +135,8 @@ Implementation - Final review fixes complete; awaiting re-review.
 - ✓ Final review fix tasks p06-t04 through p06-t06 completed (22/22 total)
 - ✓ Public package and bundled release surfaces advanced to `0.2.57`
 - ✓ Required terminal gates and supplemental checks passed
-- ⧗ Awaiting fresh final re-review
+- ✓ Fresh final re-review passed with no findings
+- ⧗ Awaiting configured implementation exit gate
 
 ## Blockers
 
@@ -144,4 +145,4 @@ for defer.
 
 ## Next Milestone
 
-Run a fresh final re-review over the completed review-fix commits.
+Resolve and execute the configured implementation exit gate.
