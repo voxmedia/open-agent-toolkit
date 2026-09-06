@@ -60,6 +60,14 @@
       "recovery_request_id": "348bd412-b8a9-40e9-8d98-6aab9099cbeb",
       "mode": "recover",
       "recovery_base_head": "315d532f925aa9e2d820d487f5a6318659644b93"
+    },
+    {
+      "id": "cont-lite-p-rev2-review-fix-1",
+      "kind": "same-handle-review-fix",
+      "original_request_id": "348bd412-b8a9-40e9-8d98-6aab9099cbeb",
+      "mode": "fix",
+      "review_artifact": "reviews/archived/final-review-2026-09-06T233432Z.md",
+      "task_id": "prev2-t04"
     }
   ],
   "fallback": {
