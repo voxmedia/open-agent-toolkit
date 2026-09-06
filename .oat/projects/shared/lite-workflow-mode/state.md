@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t07
-oat_last_commit: de3da96511d66325b36ced57dff2a34587e5fcfa
+oat_current_task: null
+oat_last_commit: 469141fba075371b9d6cd5dc075cb1f00fe9c6ff
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -47,7 +47,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
@@ -80,13 +80,13 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-06T02:17:00Z'
+  updated_at: '2026-09-06T02:32:08Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T02:17:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T02:32:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +98,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Exit gate blocked; three bounded Phase 6 fixes queued.
+Implementation - Exit-gate fixes complete; awaiting fresh final review.
 
 ## Artifacts
 
@@ -136,15 +136,16 @@ Implementation - Exit gate blocked; three bounded Phase 6 fixes queued.
 - ✓ Public package and bundled release surfaces advanced to `0.2.57`
 - ✓ Required terminal gates and supplemental checks passed
 - ✓ Fresh final re-review passed with no findings
-- ⧗ Exit-gate fix tasks p06-t07 through p06-t09 queued (22/25 complete)
+- ✓ Exit-gate fix tasks p06-t07 through p06-t09 completed (25/25 total)
+- ⧗ Awaiting fresh final lifecycle review of the changed implementation basis
 
 ## Blockers
 
-Configured exit gate attempt 1 found one Important, one Medium, and one Minor
-finding. All three are queued for autonomous remediation. The historical
-p06-t02 header-wording Medium remains explicitly accepted for defer.
+None. Configured exit gate attempt 1 found one Important, one Medium, and one
+Minor finding; all three are fixed with passing terminal evidence. The
+historical p06-t02 header-wording Medium remains explicitly accepted for defer.
 
 ## Next Milestone
 
-Execute p06-t07 through p06-t09, rerun final lifecycle review, then rerun the
-configured implementation exit gate.
+Run and receive a fresh final lifecycle review, then rerun the configured
+implementation exit gate for attempt 2 of 2.

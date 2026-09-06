@@ -95,10 +95,18 @@
     {
       "event_id": "exit-gate-fix1-e3c76f54-bcf2-4cff-bc82-4da67ff9fbd2",
       "reason": "Execute p06-t07 through p06-t09 for the blocking implementation exit-gate findings",
-      "status": "intent_persisted",
+      "status": "completed",
+      "accepted_at": "2026-09-06T02:18:00Z",
+      "completed_at": "2026-09-06T02:31:00Z",
       "expected_base_sha": "1b710eac16f44cd15044a996b8d4be2e1b0c94f8",
       "review_artifact": ".oat/projects/shared/lite-workflow-mode/reviews/archived/final-review-2026-09-06T021128Z.md",
       "tasks": ["p06-t07", "p06-t08", "p06-t09"],
+      "final_head": "469141fba075371b9d6cd5dc075cb1f00fe9c6ff",
+      "fix_commits": [
+        "231f749140779442abca4a03aefe0ff34f4c0ea4",
+        "1f0137644aaa8d73f470802cf98dc0058b6212ed",
+        "469141fba075371b9d6cd5dc075cb1f00fe9c6ff"
+      ],
       "findings": {
         "critical": 0,
         "important": 1,

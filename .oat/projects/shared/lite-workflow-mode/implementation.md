@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: p06-t07
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 4     | 4/4       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | complete    | 2     | 2/2       |
-| Phase 5 | complete    | 4     | 4/4       |
-| Phase 6 | in_progress | 9     | 6/9       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 2     | 2/2       |
+| Phase 5 | complete | 4     | 4/4       |
+| Phase 6 | complete | 9     | 9/9       |
 
-**Total:** 22/25 tasks completed
+**Total:** 25/25 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -305,7 +305,7 @@ retro, and reduced-artifact closeout paths passed the full contract suite.
 
 ## Phase 6: Documentation, Provider Sync, Smoke Run, and Release Gates
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-09-05
 **Reopened for final review fixes:** 2026-09-06
 **Completed:** 2026-09-06
@@ -454,15 +454,39 @@ no-edit rerun passed 141/141. No recovery attempt was consumed.
 
 ### Task p06-t07: Make local-scope Lite promotion report success atomically
 
-**Status:** pending
+**Status:** completed
+**Commit:** 231f749140779442abca4a03aefe0ff34f4c0ea4
+
+**Outcome:** Local-scope promotion now skips git persistence and returns the
+successful promoted result while shared and synced persistence remain intact.
+
+**Verification:** The pre-fix control reproduced `persistence-failed`; the
+restored focused promote suite passed 19/19.
 
 ### Task p06-t08: Route promoted quick projects to quick-start consistently
 
-**Status:** pending
+**Status:** completed
+**Commit:** 1f0137644aaa8d73f470802cf98dc0058b6212ed
+
+**Outcome:** The control-plane recommender now honors the explicit
+`oat-project-quick-start` readiness used by promoted quick projects.
+
+**Verification:** The neutralized branch reproduced an
+`oat-project-discover` recommendation; the restored router suite passed 26/26.
 
 ### Task p06-t09: Remove the phantom Lite phase and refresh release surfaces
 
-**Status:** pending
+**Status:** completed
+**Commit:** 469141fba075371b9d6cd5dc075cb1f00fe9c6ff
+
+**Outcome:** Canonical and bundled Lite templates seed only the valid `p01`
+review row. All five public packages and the bundled version asset are at
+`0.2.58`, with the sync manifest current.
+
+**Verification:** `/tmp/p06-t09-gates.simuul/exit-codes.txt` records all
+required and supplemental gates at exit 0, including uncached tests, focused
+pre/post-commit controls, release checks, lint, format, bundle parity, and a
+no-op full-scope sync dry-run. No recovery attempt or flake retry was used.
 
 ## Orchestration Runs
 
@@ -518,11 +542,12 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | p03   | DONE (3/3)     | passed | 1         | pass    |
 | p04   | DONE (2/2)     | passed | 0         | pass    |
 | p05   | DONE (4/4)     | passed | 2         | pass    |
-| p06   | DONE (3/3)     | passed | 1         | pass    |
+| p06   | DONE (9/9)     | passed | 3         | pass    |
 
 #### Outstanding Items
 
-- Execute and receive the configured implementation exit gate.
+- Run a fresh final lifecycle review for p06-t07 through p06-t09, then rerun
+  the configured implementation exit gate.
 - The historical p06-t02 supported-catalogue header wording is explicitly
   accepted for defer because current managed projections and sync evidence are
   correct.
