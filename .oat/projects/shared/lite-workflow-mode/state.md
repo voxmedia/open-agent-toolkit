@@ -80,13 +80,13 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-06T02:32:08Z'
+  updated_at: '2026-09-06T02:37:14Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T02:32:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T02:37:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +98,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Exit-gate fixes complete; awaiting fresh final review.
+Implementation - Final lifecycle re-review passed; regenerating exit gate.
 
 ## Artifacts
 
@@ -137,7 +137,8 @@ Implementation - Exit-gate fixes complete; awaiting fresh final review.
 - ✓ Required terminal gates and supplemental checks passed
 - ✓ Fresh final re-review passed with no findings
 - ✓ Exit-gate fix tasks p06-t07 through p06-t09 completed (25/25 total)
-- ⧗ Awaiting fresh final lifecycle review of the changed implementation basis
+- ✓ Fresh final lifecycle review passed with no findings
+- ⧗ Regenerating configured implementation exit gate for attempt 2 of 2
 
 ## Blockers
 
@@ -147,5 +148,4 @@ historical p06-t02 header-wording Medium remains explicitly accepted for defer.
 
 ## Next Milestone
 
-Run and receive a fresh final lifecycle review, then rerun the configured
-implementation exit gate for attempt 2 of 2.
+Regenerate and rerun the configured implementation exit gate for attempt 2 of 2.
