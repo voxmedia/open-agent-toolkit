@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: null
+oat_last_commit: 1dfdd1a83
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260712-per-project-override' }
@@ -85,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T16:15:50.821Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T18:06:30.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T19:46:15.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -97,7 +97,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — group 1 merged (lockstep 0.2.59); p03 dispatched alone after the fan-in.
+Implementation — all three lanes merged (lockstep 0.2.59); closeout: final review received, configured exit gate next, then the post-implement sequence.
 
 ## Artifacts
 
@@ -105,7 +105,7 @@ Implementation — group 1 merged (lockstep 0.2.59); p03 dispatched alone after 
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete; three pointer-only tasks, groups [p01, p02] then p03)
-- **Implementation:** `implementation.md` (instantiated; 0/3 tasks)
+- **Implementation:** `implementation.md` (3/3 tasks; three lanes merged; final review in progress)
 
 ## Progress
 
@@ -114,7 +114,9 @@ Implementation — group 1 merged (lockstep 0.2.59); p03 dispatched alone after 
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
 - ✓ Plan gate passed (0 findings)
 - ✓ Group 1 (p01 + p02) merged (`034780db0`, `6a09a6bd2`); lockstep 0.2.59 + manifest restamp (`0bb028ca2`); eight gates green
-- ⧗ p03, closeout
+- ✓ p03 merged (`92da1d57b`); eight gates green, lockstep retained
+- ✓ Backlog archived (3) and follow-ups filed (4); synthesis written
+- ⧗ Final review (fix round `w4-final-fix-001` in progress), configured exit gate, post-implement sequence
 
 ## Blockers
 
@@ -122,4 +124,4 @@ None
 
 ## Next Milestone
 
-p03 reviewed and fanned in; then final review, exit gate, post-implement sequence.
+Final review `passed`, then the configured exit gate (foreground), then summary / document / pr.

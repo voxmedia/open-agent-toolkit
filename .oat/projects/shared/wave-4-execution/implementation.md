@@ -28,7 +28,7 @@ oat_generated: false
 | ------------------------------------------------- | -------- | ----- | --------- |
 | Phase 01 (disable-configured-gates-per-project)   | complete | 1     | 1/1       |
 | Phase 02 (warn-on-non-sync-manifest-restamps)     | complete | 1     | 1/1       |
-| Phase 03 (emit-dispatch-stamp-with-resolver-json) | pending  | 1     | 0/1       |
+| Phase 03 (emit-dispatch-stamp-with-resolver-json) | complete | 1     | 1/1       |
 
 **Total:** 3/3 planned tasks completed
 
@@ -99,7 +99,7 @@ Wave base `0af558db80068649fb8858be7a98c635e6f12f3d`; plan gate passed first tim
 - `w4-p01-review-001` outcome: PASS with findings, 0C/2I/1M/3m, reconnaissance attempted (three read-only recon lanes; every load-bearing claim re-verified by the reviewer). Twenty live inputs against the built CLI in a scratch project: all three envelope branches per contract; every malformed shape (`true`, `"enabled"`, arrays, `!!str`, alias maps, merge keys, duplicate keys at both levels, non-gate-aware keys, non-map roots, missing frontmatter) exits 1 naming the state path; legacy output byte-identical; no input previously rejected now accepted. C1 fix confirmed by an independent fingerprint probe. Both Codex rejections upheld, I6 after driving `complete-state` and `pause` with the override present. I1: the reuse-precondition sentence was severed onto the new `project_disabled` bullet (`completion-and-closeout.md:551`, contradicting its null-provenance rule). I2: `contributing/skills.md:287-289` still taught `null` = no gate and omitted `--project`. M1: `PROJECT_STATE_FRONTMATTER_FIELDS` has zero production consumers — preserve-on-write is emergent. m1: `configSource` dropped for an explicit-null layer; m2: `gate resolve` errors say "gate review"; m3: report overstated the inventory delta. Fix round `w4-p01-fix-001` dispatched for I1, I2 (fixed in the wave because a contradiction inside the integration diff's own rule is what the W3 exit gate blocked on), M1, m1, m2.
 - `w4-p01-fix-001` outcome: one commit `e11d901b30b690ff459642aa76f48fe3b7dcb2c6` on `291234dc0` (7 files): sentence restored to the fresh-`allowed` bullet with a structural bullet-membership contract test (red against both relocation shapes after Codex found the first version bypassable); `contributing/skills.md:287-302` rewritten to the project-aware resolve, the three-value envelope, and the fail-closed rule with a cross-link to the per-project overrides section (plan-scope expansion, reported); executable preserve-on-write test driving the real `renderCompletedProjectState`; `configSource: source` for explicit-null layers (documented); `resolveReviewProject` gained `commandLabel` (legacy message pinned exactly). m3 restated accurately. Forced CLI suite 5682, check:skill-bumps still 8, sync no changes. One Codex round (0C/0I/1M/1m, both fixed). Record `dispatch/w4-p01-fix-001.json`.
 - `w4-p01-review-002` — disposition-verification round 2 on the original reviewer handle, range `291234dc0..e11d901b3`. Record `dispatch/w4-p01-review-002.json`.
-- `w4-p01-review-002` outcome: PASS (fan-in may proceed), 0C/0I/1M/1m. Both relocation shapes re-applied by the reviewer went red; `contributing/skills.md` now restates `completion-and-closeout.md:361-365` and no stale "no gate configured" instruction survives in the docs tree (anchor `id="per-project-gate-overrides"` present in the built page); the writer test went red under a neutralized writer and the real `oat project complete-state` preserved a two-key map plus an unrelated key; `configSource` probed live (explicit-null → `shared`, absent → `null`); legacy `gate review` strings byte-identical; two malformed-input probes and the legacy byte-for-byte check unchanged; forced suite 5682. The I2 scope expansion approved as a required-consequence edit. The reviewer withdrew its own round-1 m3 (inventory rows and prompt sites are different granularities) and confirmed deleting the `QS-13` row alone turns the inventory check red. New M1 (record-level): the I2 expansion creates cross-wave shared writes the plan's Dependencies table does not record — `contributing/skills.md` is a W6 group-2 deliverable and W5 group 4 cites `state-utils.ts` while this lane writes `state-utils.test.ts` → wave-close plan correction telling those lanes to re-anchor. New m1: the reviewer noted its own `rm -rf` on a scratch path (no prompt fired; switched to `mv`).
+- `w4-p01-review-002` outcome: PASS (fan-in may proceed), 0C/0I/1M/1m. Both relocation shapes re-applied by the reviewer went red; `contributing/skills.md` now restates `completion-and-closeout.md:361-365` and no stale "no gate configured" instruction survives in the docs tree (anchor `id="per-project-gate-overrides"` present in the built page); the writer test went red under a neutralized writer and the real `oat project complete-state` preserved a two-key map plus an unrelated key; `configSource` probed live (explicit-null → `shared`, absent → `null`); legacy `gate review` strings byte-identical; two malformed-input probes and the legacy byte-for-byte check unchanged; forced suite 5682. The I2 scope expansion approved as a required-consequence edit. The reviewer withdrew its own round-1 m3 (inventory rows and prompt sites are different granularities) and confirmed deleting the `QS-13` row alone turns the inventory check red. New M1 (record-level): the I2 expansion creates cross-wave shared writes the plan's Dependencies table does not record — `contributing/skills.md` is a W6 group-2 deliverable and W5 group 4 cites `state-utils.ts` while this lane writes `state-utils.test.ts` → wave-close plan correction telling those lanes to re-anchor. New m1: the rewritten gate-authoring docs step consumes `$PROJECT_PATH` one step before the list introduces it (`contributing/skills.md:287`, `:300`) — deferred to the wave-final fix round `w4-final-fix-001` (fixed there).
 
 - `w4-p03-impl-001` — p03 dispatched from group base `7075a70844d9cfbd2cf6cd53844ba25192f9a4d4` (worktree HEAD identical; no sync commit needed, manifest already 0.2.59); target opus, model_axis selected:opus, task_class default-implementation (plan dispatch profile); brief carries the two-skill bump rule, the no-second-bump rule for `oat-project-implement`, the load-contract hazard, and scratch hygiene. Record `dispatch/w4-p03-impl-001.json`.
 - `w4-p03-impl-001` outcome: DONE, one commit `901a0f7aad41ae89acb606d5fc5f75170b9ed097` (11 files, +472/−32): `dispatchStamp` emitted beside `dispatchReport` from the single `formatDispatchStamp` call; resolver tests for present/absent/error/byte-equality; a shared prose-contract helper `packages/cli/src/__tests__/skills/dispatch-stamp-contract.ts` with a 7-case negative-fixture suite; review-provide 1.5.3 → 1.5.4 (five pins — the brief said two; the lane grepped the version literal), review-provide-remote 1.1.2 → 1.1.3 (one pin), `dispatch-and-dry-run.md` rewritten to the field-based route with `oat-project-implement` left at 2.3.4; docs page gained an additive-field subsection. Two Codex rounds (R1 Medium: whole-document positive matches let unrelated clauses satisfy the contract → bounded, uniquely-anchored windows plus negatives; R2 Medium: negated copy and "permitted to hand-assemble" slipped past → negated-copy rejection, broadened pattern, fixture suite). Two negative controls red; real-artifact probe on the built CLI. Forced CLI suite 5721, check:skill-bumps 10, test:skills 833. MD038 forced the documented prefix to `Dispatch:` without the grammar's trailing space in prose (tests still assert `startsWith('Dispatch: ')`).
@@ -109,10 +109,11 @@ Wave base `0af558db80068649fb8858be7a98c635e6f12f3d`; plan gate passed first tim
 
 #### Phase Outcomes
 
-| Phase | Worktree                | Implementer outcome                                                                                     | Review outcome                                     | Fix rounds |
-| ----- | ----------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------- |
-| p01   | `.worktrees/wave-4/p01` | DONE (`71ec87be9..291234dc0` + fix `e11d901b3`; forced CLI suite 5682, check:skill-bumps 8, docs build) | passed (round 1 0C/2I/1M/3m → round 2 0C/0I/1M/1m) | 1          |
-| p02   | `.worktrees/wave-4/p02` | DONE (`9ad58ea48` + fix `145adbed8`; forced CLI suite 5643, check/type-check `Cached: 0`)               | passed (round 1 0C/1I/0M/2m → round 2 0C/0I/0M/1m) | 1          |
+| Phase | Worktree                | Implementer outcome                                                                                                             | Review outcome                                     | Fix rounds |
+| ----- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------- |
+| p01   | `.worktrees/wave-4/p01` | DONE (`71ec87be9..291234dc0` + fix `e11d901b3`; forced CLI suite 5682, check:skill-bumps 8, docs build)                         | passed (round 1 0C/2I/1M/3m → round 2 0C/0I/1M/1m) | 1          |
+| p02   | `.worktrees/wave-4/p02` | DONE (`9ad58ea48` + fix `145adbed8`; forced CLI suite 5643, check/type-check `Cached: 0`)                                       | passed (round 1 0C/1I/0M/2m → round 2 0C/0I/0M/1m) | 1          |
+| p03   | `.worktrees/wave-4/p03` | DONE (`901a0f7aa` + sweep `edbc76c94` → `9f587b23a`, `131e65798`; forced CLI suite 5728, check:skill-bumps 10, test:skills 833) | passed (0C/0I/2M/1m; address-now sweep)            | 0          |
 
 #### Group 1 fan-in — p01, p02 (2026-09-06)
 
@@ -124,7 +125,7 @@ Wave base `0af558db80068649fb8858be7a98c635e6f12f3d`; plan gate passed first tim
 #### Group 2 fan-in — p03 (2026-09-06)
 
 - `wave-4/p03` rebased onto the integration tip and merged with `git merge --no-ff` as `92da1d57b`. Lane commits re-hashed by the rebase (identical `git patch-id --stable` pairs; the Reviews table keeps the pre-rebase heads): p03 `901a0f7aa`→`9f587b23a`, `edbc76c94`→`131e65798`.
-- Lockstep retained at 0.2.58 (origin/main still 0.2.58); integration gates (group fan-in mode), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
+- Lockstep retained at 0.2.59 (`origin/main` still 0.2.58); integration gates (group fan-in mode), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - All three lanes merged; p03 worktree and branch removed. Final-wave re-check: the closeout runs the final review over the whole integration diff and the configured exit gate.
 
 #### Parallel Groups
@@ -144,14 +145,18 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-06
 
-- p01-t01 `71ec87be9`..`291234dc0` (`c4a810b86`..`a49e3e20e`), fix `e11d901b3` (`6b3a16872`); p02-t01 `9ad58ea48` (`d869acf4c`), fix `145adbed8` (`50483da4b`); merges `034780db0`, `6a09a6bd2`; lockstep bump ``.
+- p01-t01 `71ec87be9`..`291234dc0` (`c4a810b86`..`a49e3e20e`), fix `e11d901b3` (`6b3a16872`); p02-t01 `9ad58ea48` (`d869acf4c`), fix `145adbed8` (`50483da4b`); p03-t01 `901a0f7aa` (`9f587b23a`), sweep `edbc76c94` (`131e65798`); merges `034780db0`, `6a09a6bd2`, `92da1d57b`; lockstep bump `0bb028ca2`; review-receive and closeout bookkeeping `a97aa6f7e`, `7075a7084`, `1db9f3fc6`, `efbcc6e91`, `1dfdd1a83`.
 - Wrapper authored from the program's Wave 4 section and the wave-boundary drift refresh; plan validated (`5c2978916`); plan gate passed first time (0C/0I/0M/0m).
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review                  | Source Artifact                                     | Planned / Documented                             | Actual / Accepted                                  | Reason                                                                                      | Source of Truth | Follow-up                                                          |
+| ------------------------------ | --------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------ |
+| p01-t01 (fix `e11d901b3`)      | external plan §Scope (docs)                         | workflow-gates and project-configuration docs    | also `apps/oat-docs/docs/contributing/skills.md`   | the closeout rule made that page's gate-authoring step a self-contradiction inside the diff | shipped text    | wave-close plan correction (cross-wave rows for W6)                |
+| p01-t01 (recovery `84698ffd3`) | external plan §In scope (skills)                    | seven named skills                               | `oat-project-autonomous` also bumped               | autonomy inventory rows for the new prompt sites                                            | shipped text    | none                                                               |
+| p02-t01 (fix `145adbed8`)      | external plan step 4                                | restamp-only = zero planned operations with skew | additionally requires zero failed operations       | a rejected collection counts as failed but never as planned                                 | code            | `BL-260906-fix-sync-apply-branch` (pre-existing precedence corner) |
+| p03-t01                        | external plan steps 3–4 ("bump each changed skill") | `oat-project-implement` bumped by p03            | not re-bumped (stays 2.3.4 from p01)               | one bump per skill per PR; the gate is PR-scoped                                            | wrapper rule 6  | none                                                               |
+| p03-t01                        | external plan step 4 (docs)                         | `Dispatch: ` prefix with trailing space          | prose documents `Dispatch:` (tests keep the space) | markdownlint MD038                                                                          | code + docs     | none                                                               |
 
 ## Test Results
 
@@ -159,7 +164,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | ----- | ---------------------------------------------------------------- | ------ | ------ | -------- |
 | p01   | 5682 (forced CLI suite) + 348 gate + 41 post-implement contracts | all    | 0      | -        |
 | p02   | 5643 (forced CLI suite) + 314 focused                            | all    | 0      | -        |
-| p03   | -                                                                | -      | -      | -        |
+| p03   | 5728 (forced CLI suite at the tip) + test:skills 833             | all    | 0      | -        |
 
 ## Deferred Findings
 
@@ -174,7 +179,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 - p02 review round 2 m3 — `restampOnly` is a whole-run boolean under `--scope all` → `BL-260906-scope-the-restamp-only-sync`.
 - p03 sweep Codex residue — the lexical qualifier guards in `dispatch-stamp-contract.ts` are a tripwire, not a proof against adversarial prose (documented in the helper header); no item filed.
-- p01 review round 2 m1 — the reviewer's own `rm -rf` on a scratch path (process note; briefs already forbid it).
+- p01 review round 2 m1 — `contributing/skills.md` step 1 consumes `$PROJECT_PATH` before step 3 exports it → fixed in the wave-final fix round `w4-final-fix-001` (see Review Received: final).
 
 ## Final Summary (for PR/docs)
 

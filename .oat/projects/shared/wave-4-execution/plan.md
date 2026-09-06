@@ -368,17 +368,17 @@ git commit -m "feat(p03-t01): emit the canonical dispatch stamp with resolver JS
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| final  | code     | pending     | -          | -                                                           | -                                        | -          | -           |
-| plan   | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T162416Z.md | -                                        | -          | -           |
-| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
-| design | artifact | pending     | -          | -                                                           | -                                        | -          | -           |
-| p01    | code     | fixes_added | 2026-09-06 | reviews/archived/p01-review-2026-09-06T173547Z.md           | 291234dc0a2833543b405414e2ec7223c584e592 | manual     | -           |
-| p01    | code     | passed      | 2026-09-06 | reviews/archived/p01-review-2026-09-06T180051Z.md           | e11d901b30b690ff459642aa76f48fe3b7dcb2c6 | manual     | -           |
-| p02    | code     | fixes_added | 2026-09-06 | reviews/archived/p02-review-2026-09-06T170818Z.md           | 9ad58ea4858a58852d42c0c1682cf237abae2c00 | manual     | -           |
-| p02    | code     | passed      | 2026-09-06 | reviews/archived/p02-review-2026-09-06T173354Z.md           | 145adbed810d38f1c3a9f2abfa6c1237030af4be | manual     | -           |
-| p03    | code     | passed      | 2026-09-06 | reviews/archived/p03-review-2026-09-06T185201Z.md           | 901a0f7aad41ae89acb606d5fc5f75170b9ed097 | manual     | -           |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
+| final  | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| plan   | artifact | passed      | 2026-09-06 | reviews/archived/artifact-plan-review-2026-09-06T162416Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p01    | code     | fixes_added | 2026-09-06 | reviews/archived/p01-review-2026-09-06T173547Z.md           | 291234dc0a2833543b405414e2ec7223c584e592 | manual     | -                   |
+| p01    | code     | passed      | 2026-09-06 | reviews/archived/p01-review-2026-09-06T180051Z.md           | e11d901b30b690ff459642aa76f48fe3b7dcb2c6 | manual     | -                   |
+| p02    | code     | fixes_added | 2026-09-06 | reviews/archived/p02-review-2026-09-06T170818Z.md           | 9ad58ea4858a58852d42c0c1682cf237abae2c00 | manual     | -                   |
+| p02    | code     | passed      | 2026-09-06 | reviews/archived/p02-review-2026-09-06T173354Z.md           | 145adbed810d38f1c3a9f2abfa6c1237030af4be | manual     | -                   |
+| p03    | code     | passed      | 2026-09-06 | reviews/archived/p03-review-2026-09-06T185201Z.md           | 901a0f7aad41ae89acb606d5fc5f75170b9ed097 | manual     | -                   |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 

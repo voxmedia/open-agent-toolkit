@@ -111,3 +111,13 @@ p03's sweep round returned both "guards too loose" and "guards too tight" on the
 3. Wave close: add landing-event / dependency rows for any file a lane edited outside its plan's named scope.
 
 **Graduated-entries ledger:** follow-up backlog items filed at closeout (see `implementation.md` Deferred Findings); plan corrections applied at the wave-close program refresh; skill-signal rulings above are the `oat-wave-execute` change list.
+
+### 2026-09-06 · project · feedback · reviewer scratch hygiene
+
+The p01 round-2 reviewer reported in its reply (not in its artifact) that it had run `rm -rf` on a scratch path under its own `mktemp -d` sandbox; no prompt fired and nothing outside the sandbox was touched. Recorded here as a process note; the orchestrator had mis-filed it as the review's Minor (corrected after the final review caught it).
+
+### 2026-09-06 · structural · oat-wave-execute · final review
+
+Root final review `w4-final-review-001` (artifact `final-review-2026-09-06T194032Z.md`, head `1dfdd1a83`): 0C / 3I / 4M / 4m, all product gates green and every patch-id pair matched; the Importants are prose contradictions OUTSIDE the lanes' diff (discover/design gate steps still teaching `null` ⇒ no gate; `autonomy.md`) plus a misrecorded review finding, and the Mediums are record defects (a stale `state.md`, a wrong retained-lockstep line, a p03 row the oxfmt-repadded table swallowed). **Skill signal (strengthens):** post-merge bookkeeping scripts must assert every replacement (the p03 Phase Outcomes row replacement silently missed after oxfmt re-padded the table); and the final review must sweep the whole docs/skills tree for the retired rule, not just the diff.
+
+---
