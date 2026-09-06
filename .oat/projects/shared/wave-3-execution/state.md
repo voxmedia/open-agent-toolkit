@@ -1,5 +1,5 @@
 ---
-oat_current_task: p01-t01
+oat_current_task: p03-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues:
@@ -96,7 +96,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T10:56:52.547Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T11:14:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T12:47:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -108,7 +108,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — group 1 (p01, p02) dispatched at `31ac33d60`; p03 after the group-1 fan-in.
+Implementation — group 1 merged (lockstep 0.2.58); p03 dispatched at `9a19e64e6`.
 
 ## Artifacts
 
@@ -124,7 +124,8 @@ Implementation — group 1 (p01, p02) dispatched at `31ac33d60`; p03 after the g
 - ✓ Wave-boundary drift refresh (recon, non-authoritative) recorded in `plan.md`
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
 - ✓ Plan gate received (3I/1M resolved in-artifact)
-- ⧗ Group 1 (p01 + p02) dispatched at `31ac33d60`; reviews, fan-in, then p03
+- ✓ Group 1 (p01 + p02) merged (`388dd1c96`, `034486193`); lockstep 0.2.58 + manifest restamp; eight gates green
+- ⧗ p03 dispatched at `9a19e64e6`; review, fan-in, closeout
 
 ## Blockers
 

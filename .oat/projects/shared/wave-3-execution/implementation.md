@@ -28,7 +28,7 @@ oat_generated: false
 | ---------------------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 01 (require-repo-wide-call-site-sweeps)                    | in_progress | 1     | 0/1       |
 | Phase 02 (journal-deterministic-smoke-worktrees-before-creation) | in_progress | 1     | 0/1       |
-| Phase 03 (require-executable-backstops-for-contract-claims)      | pending     | 1     | 0/1       |
+| Phase 03 (require-executable-backstops-for-contract-claims)      | in_progress | 1     | 0/1       |
 
 **Total:** 0/3 tasks completed
 
@@ -91,6 +91,7 @@ Wave base `e97954dd1e85287a41a59fe58730c606e00eb598`; plan gate blocked once (0C
 - `w3-p02-fix-001` outcome: one commit `e39046cf5e7e5d9bd0714796479a2c31446e8ab4` on `dceaf63c5` (six files, +231/−24): the probe→create window residual is now stated honestly in code, CONTRACT.md, and a pinning test that reproduces P14 (measured: no sound Git discriminator exists — reflog message, OID, and creatordate are identical, differing fields attacker-writable); `reservedAt` required for every v2 `reserved` entry with a negative control (re-derivation deliberately not extended to direct registrations, which the plan preserves for `init.sh`); operator docs corrected; four doc/order minors folded in with a control for the hoisted canonicality check; M3 (evidence bundle `state`) out of lane → follow-up item. test:smoke 160/160, focused 50/50, forced check/type-check `Cached: 0`; worktree/branch parity byte-identical; one pre-existing 60 s SIGTERM timing flake on the first full run. Record `dispatch/w3-p02-fix-001.json`.
 - `w3-p02-review-002` — disposition-verification round 2 on the original reviewer handle, range `dceaf63c5..e39046cf5`, including the M1 scoping ruling and the suite-load question. Record `dispatch/w3-p02-review-002.json`.
 - `w3-p02-review-002` outcome: PASS (fan-in may proceed), 0C/0I/0M/1m; all sixteen round-1 probes re-run unchanged, P14 behavior now matches code comment, CONTRACT.md, and the pinning test; the reviewer independently measured the Git-discriminator claim (identical OID, creatordate, reflog); M1 scoping ruled correct (plan step 2 preserves direct registration; `journal.test.mjs:182/:527` register outside the run directory); no legitimate path regressed; SIGTERM flake not reproduced (968 ms against a 60 s bound, suite +6%) — no follow-up. New m5 (pre-existing, out of lane): `scripts/worktree/init.test.mjs` is run by no gate → repo-hygiene follow-up.
+- `w3-p03-impl-001` — p03 dispatched from group base `9a19e64e60ad79163c0761b1c417b1943f81a3a3` (worktree HEAD identical; sync commit skipped, manifest already 0.2.58); target opus, model_axis selected:opus, task_class default-implementation (plan dispatch profile); brief carries the two-skill bump rule (create-oat-skill 1.5.0 → 1.5.1 no pin; oat-project-design 2.3.2 → 2.3.3 pins :1839/:6467), the named-skill-load-contract hazard, fence hygiene, and scratch hygiene. Record `dispatch/w3-p03-impl-001.json`.
 
 #### Phase Outcomes
 
@@ -98,6 +99,7 @@ Wave base `e97954dd1e85287a41a59fe58730c606e00eb598`; plan gate blocked once (0C
 | ----- | ----------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- | ---------- |
 | p01   | `.worktrees/wave-3/p01` | DONE_WITH_CONCERNS (`ecf475686` + fix `f275a469b`; forced CLI suite 5611, test:skills 833 green) | passed (round 1 0C/2I/2M/3m → round 2 0C/0I/0M/1m; concerns routed to wave close) | 1          |
 | p02   | `.worktrees/wave-3/p02` | DONE (`dceaf63c5` + fix `e39046cf5`; test:smoke 160, forced check/type-check green)              | passed (round 1 0C/1I/3M/4m → round 2 0C/0I/0M/1m)                                | 1          |
+| p03   | `.worktrees/wave-3/p03` | in progress                                                                                      | pending                                                                           | -          |
 
 #### Group 1 fan-in — p01, p02 (2026-09-06)
 
