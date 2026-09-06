@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.4.12
+version: 1.4.13
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 oat_gateable: true
@@ -307,6 +307,25 @@ This Phase gate review setup is independent from HiLL checkpoints. Do not read o
 change HiLL fields here, and do not add a provider/model `--target` to any
 lifecycle command.
 
+### Step 4.35: Configure Lifecycle Gate Posture
+
+After normalization has produced stable phase IDs and before Step 4.5 starts
+the import-aware plan artifact review, invoke the `Shared Lifecycle Gate Posture Setup Contract` from
+`oat-project-plan-writing`: load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written. This
+runs adjacent to, but independently from, the phase gate review setup above.
+
+If `"$PROJECT_PATH/state.md"` already contains an explicit
+`oat_skill_gate_overrides` map, preserve it through the shared contract without
+probing, prompting, or mutation. Otherwise let the contract probe the configured
+gate-aware skills and offer a keep-or-disable choice for each configured gate
+independently.
+
+Persist only disabled choices, and only in `"$PROJECT_PATH/state.md"`. Keeping
+every gate leaves the map absent. Never modify the shared, local, or user
+configuration layers, and never prompt or write a new map in non-interactive
+mode.
+
 ### Step 4.5: Run Import-Aware Plan Artifact Review Loop
 
 Before dispatching the artifact reviewer, invoke the `Managed Dispatch
@@ -452,13 +471,16 @@ fi
 
 Before reporting this skill as complete, run the configured gate as the final step after artifact review, state sync, dashboard refresh, and the import artifact commit:
 
-1. Resolve the gate for this skill:
+1. Resolve the gate for this skill with project context:
 
    ```bash
-   oat gate resolve <this-skill> --json
+   oat gate resolve <this-skill> --project "$PROJECT_PATH" --json
    ```
 
-   If the command returns JSON `null`, no gate is configured; the skill is complete.
+   Handle all three `resolution` values explicitly:
+   - `not_configured`: no gate is configured; the skill is complete.
+   - `configured_disabled_by_project`: the operator disabled this configured gate for this project. Do not launch any process. Emit `configured but disabled by project override`, including the project path and the `projectOverride` source from the envelope, then the skill is complete. A project-disabled gate never enters the passed, missing, or failed branches, and its `configuredGate` is evidence only, never executed.
+   - `configured`: continue with the steps below, executing `effectiveGate` exactly as configured.
 
 2. Export the resolved project path into the command shell:
 
