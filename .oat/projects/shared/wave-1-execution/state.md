@@ -143,26 +143,27 @@ oat_post_implement_sequence:
   failure: null
 oat_project_recap:
   decision: skip
-  source: autonomous_policy
+  source: interactive # operator-approved program rule: recap deferred to program close
   decided_at: '2026-09-06T02:04:34Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/262' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-05T22:36:14.653Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T02:03:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_completed: '2026-09-06T02:05:21.122Z' # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-09-06T02:05:21.122Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_lifecycle: complete
 ---
 
 # Project State: wave-1-execution
 
-**Status:** Implementation tasks complete; awaiting final review and the configured exit gate
+**Status:** Complete
 **Started:** 2026-09-05
-**Last Updated:** 2026-09-05
+**Last Updated:** 2026-09-06
 
 ## Current Phase
 
-Implementation complete — PR #262 open; completion state recorded before merge; archive tail deferred to program close.
+Lifecycle complete
 
 ## Artifacts
 
@@ -181,7 +182,7 @@ Implementation complete — PR #262 open; completion state recorded before merge
 - ✓ Plan gate passed after three in-artifact fixes (run `ace386d5`)
 - ✓ Group 1 (p01, p02) merged; lockstep 0.2.56; integration gates green
 - ✓ Group 2 readiness checks passed on the merged tip (p03, p04 READY)
-- ⧗ Group 2 (p03, p04) dispatched from `87c10a816a77d347e75a44c71c3d7a08cfdbe589`
+- ✓ Project lifecycle complete
 
 ## Blockers
 
@@ -189,10 +190,4 @@ None
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
-
-Autonomous run: final HiLL approval is recorded next (IMPLEMENT-16); complete-state runs before merge; the archive tail is deferred to program close.
+None. Project complete.
