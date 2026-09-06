@@ -1,10 +1,7 @@
 ---
 oat_current_task: null
-oat_last_commit: 390f21157181e2b5cfd5d83ad582ed0aa00bba60
-oat_blockers:
-  [
-    'Phase 7 authorized production-routing recovery is pending reservation and execution through the original implementer',
-  ]
+oat_last_commit: 2ed83eb26862a4d5ebbd1b012d77edcfbfdbb720
+oat_blockers: ['Phase 7 recovery passed; root-owned review round 1 is pending']
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -48,21 +45,11 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p07:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: p07-recovery-02-production-command-routing-20260906
-        original_request: p07-implementation-20260905-2dfc9275c
-        original_task: p07-t10
-        original_commit: 390f21157181e2b5cfd5d83ad582ed0aa00bba60
-        discovered_by: phase-wide production-dispatch inspection
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 336db62601d9cbc962c6c17105cdca1c8dbc33f2
-        status: completed
-        verification: production routing 6/6 and Phase 7 union 218/218; remote, E2E, and help 746/746; smoke 141/141 and scoped smoke 1/1; CLI lint, type-check, build, and format passed
+      pending_attempt: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T20:16:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T20:32:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -76,11 +63,11 @@ oat_generated: false
 
 Phase 7 — Cross-Provider Convergence and Recovery. All 10 tasks are committed
 through `390f21157`; union 165/165, remote 665/665, and smoke 141/141 pass.
-Phase-wide production-dispatch inspection found that the new commands fall
-through to shared-storage handling and lack production store bridges. The
-operator authorized one same-target recovery into `service.ts`,
-`service.test.ts`, and mechanically required in-phase bridge consumers. No
-attempt has yet been consumed and Phase 7 review has not started.
+Operator-authorized recovery attempt 1/10 completed at `2ed83eb26`, adding
+production dispatch and store bridges in `service.ts` and `service.test.ts`.
+Phase 7 union 218/218, remote/E2E/help 746/746, smoke 141/141, and all requested
+static and boundary checks pass. The recovery ledger is settled with usage
+1/10 and no pending marker; root-owned review round 1 is pending.
 
 ## Artifacts
 
@@ -222,17 +209,19 @@ attempt has yet been consumed and Phase 7 review has not started.
   and `service.test.ts`; usage remains 0/10 and no edit was made
 - ✓ Operator authorized one bounded same-target Phase 7 production-routing
   recovery on 2026-09-06
+- ✓ Phase 7 recovery attempt 1/10 committed as `2ed83eb26`; production routing
+  6/6, union 218/218, remote/E2E/help 746/746, and smoke 141/141 passed
 - ⧗ After Phase 7 review passes, merge latest `origin/main` and re-establish
   the verification baseline before Phase 8
 
 ## Blockers
 
-Phase 7 is blocked only while the authorized production-routing recovery is
-reserved and executed. The branch-level lockstep version gate remains
-preserved for planned `p08-t05` release work after mainline reconciliation.
+Phase 7 is gated on root-owned review round 1. The branch-level lockstep version
+gate remains preserved for planned `p08-t05` release work after mainline
+reconciliation.
 
 ## Next Milestone
 
-Reserve and execute Phase 7 recovery attempt 1/10 through the original
-implementer, then run the root-owned Phase 7 review. After that review passes,
-merge latest `origin/main` and re-establish the phase baseline before Phase 8.
+Run root-owned Phase 7 review round 1 over the full implementation and recovery
+range. After that review passes, merge latest `origin/main` and re-establish the
+phase baseline before Phase 8.

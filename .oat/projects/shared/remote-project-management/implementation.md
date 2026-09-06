@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Phase 7 authorized production-routing recovery is pending reservation and execution through the original implementer.
+  - Phase 7 recovery passed; root-owned review round 1 is pending.
 oat_last_updated: 2026-09-06
 oat_current_task_id: null
 oat_generated: false
@@ -25,18 +25,18 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | completed | 10    | 10/10     |
-| Phase 2    | completed | 10    | 10/10     |
-| Phase 3    | blocked   | 12    | 12/12     |
-| Phase 4    | completed | 11    | 11/11     |
-| Phase 5    | completed | 9     | 9/9       |
-| Phase 6    | completed | 10    | 10/10     |
-| Phase 7    | blocked   | 10    | 10/10     |
-| Phase 8    | pending   | 6     | 0/6       |
-| Revision 1 | blocked   | 4     | 4/4       |
-| Revision 2 | completed | 2     | 2/2       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | completed   | 10    | 10/10     |
+| Phase 2    | completed   | 10    | 10/10     |
+| Phase 3    | blocked     | 12    | 12/12     |
+| Phase 4    | completed   | 11    | 11/11     |
+| Phase 5    | completed   | 9     | 9/9       |
+| Phase 6    | completed   | 10    | 10/10     |
+| Phase 7    | in_progress | 10    | 10/10     |
+| Phase 8    | pending     | 6     | 0/6       |
+| Revision 1 | blocked     | 4     | 4/4       |
+| Revision 2 | completed   | 2     | 2/2       |
 
 **Total:** 78/84 tasks completed
 
@@ -1025,9 +1025,8 @@ zero findings after fix loop 3/3.
 
 ## Phase 7: Cross-Provider Convergence and Recovery
 
-**Status:** blocked — all ten planned tasks are committed, but phase-wide
-production-dispatch self-review found a composition defect that requires an
-operator-authorized file-boundary expansion before recovery.
+**Status:** in progress — all ten planned tasks and recovery attempt 1/10 are
+complete; root-owned review round 1 is pending.
 **Started:** 2026-09-05
 
 ### Phase Boundary
@@ -1092,6 +1091,30 @@ operator-authorized file-boundary expansion before recovery.
   `reference/2026-09-06-wave-program-resume-handoff.md` as the bounded
   reconciliation guide. The operator explicitly selected this ordering over
   the handoff's earlier recommendation to merge before recovery.
+
+### Recovery Event p07-recovery-02-production-command-routing-20260906
+
+- Phase/task: p07 / p07-t10
+- Original request: p07-implementation-20260905-2dfc9275c
+- Original commit: 390f21157181e2b5cfd5d83ad582ed0aa00bba60
+- Defect class: composition
+- Discovered by: phase-wide production-dispatch inspection
+- Disposition: recovered
+- Authorization: operator-scope
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-high
+- Reservation commit: c1d755645dd172968d300c4fef0af6865b21c683
+- Active-marker correction: 7712ddd1b876e9d905dad9ee88f0eac6745f3090
+- Recovery commit: 2ed83eb26862a4d5ebbd1b012d77edcfbfdbb720
+- Verification: production routing 6/6; Phase 7 union 218/218; remote, E2E,
+  and help 746/746; smoke 141/141; scoped no-secret smoke 1/1; CLI lint,
+  type-check, format, build, diff integrity, file boundary, and
+  provider-neutrality passed before and after the recovery commit. Root
+  independently passed `service.test.ts` at 53/53.
+- Reason: explicit production dispatch and `RemoteSyncStore` bridges now serve
+  closeout, discussion, resolution, doctor, and migration without falling
+  through to shared-storage handling or weakening provider-neutral privacy and
+  authority boundaries.
 
 ---
 
@@ -2196,11 +2219,15 @@ child_outcome: direction-required
 continuation_events:
   - p07-recovery-01-production-command-routing-20260905
   - p07-recovery-02-production-command-routing-20260906
-recovery_usage: 0/10
+recovery_usage: 1/10
 pending_attempt: null
 review_rounds: 0/3
 fix_loops: 0/3
-phase_outcome: composition_defect_direction_required
+recovery_02_reservation_commit: c1d755645dd172968d300c4fef0af6865b21c683
+recovery_02_activation_commit: 7712ddd1b876e9d905dad9ee88f0eac6745f3090
+recovery_02_commit: 2ed83eb26862a4d5ebbd1b012d77edcfbfdbb720
+recovery_outcome: recovered
+phase_outcome: implementation_passed_review_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p07 action=implementation
@@ -2218,8 +2245,13 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   is not routed through production services. The implementer stopped before
   recovery reservation or edit because the correction requires a non-mechanical
   scope expansion into `service.ts` and `service.test.ts`.
-- Recovery usage remains 0/10 with no pending attempt. Phase review has not
-  started.
+- At the initial direction-required stop, recovery usage remained 0/10 with no
+  pending attempt and phase review had not started.
+- Operator-authorized recovery attempt 1/10 completed in `2ed83eb26`; the
+  product correction touches only `service.ts` and `service.test.ts`, and root
+  validated the terminal marker, immutable history, bounded range, and focused
+  53/53 service suite. The marker is settled to null in root bookkeeping;
+  review round 1 is next.
 
 <!-- orchestration-runs-end -->
 
