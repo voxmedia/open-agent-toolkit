@@ -404,17 +404,19 @@ git commit -m "fix(p04-t02): dedupe matcher grammar comment and correct config e
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
-| p01    | code     | passed  | 2026-09-06 | reviews/archived/p01-review-2026-09-06T001443Z.md           | 7dd086feafb9ba53dd25b5a77900ece5f4cb5cc3 | manual     | -                   |
-| p02    | code     | passed  | 2026-09-05 | reviews/archived/p02-review-2026-09-05T231204Z.md           | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -                   |
-| p03    | code     | passed  | 2026-09-06 | reviews/archived/p03-review-2026-09-06T004322Z.md           | f54cb43162ffad21543105fc8b9858f1e6cc6a68 | manual     | -                   |
-| p04    | code     | passed  | 2026-09-06 | reviews/archived/p04-review-2026-09-06T011441Z.md           | 4f1ada48d2e471cdf9391bed70d836527e90395d | manual     | -                   |
-| final  | code     | passed  | 2026-09-06 | reviews/archived/final-review-2026-09-06T014238Z.md         | 63ea98d28825ce0db7bc9e15047b223a794cb1ec | manual     | -                   |
-| final  | code     | passed  | 2026-09-06 | reviews/archived/final-review-2026-09-06T015333Z.md         | ecf1b8821a9de7b5c55b48d41215fdcb762b1972 | gate       | codex-5-6-sol-xhigh |
-| plan   | artifact | passed  | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -                                        | -          | -                   |
-| spec   | artifact | pending | -          | -                                                           | -                                        | -          | -                   |
-| design | artifact | pending | -          | -                                                           | -                                        | -          | -                   |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
+| p01    | code     | fixes_completed | 2026-09-05 | reviews/archived/p01-review-2026-09-05T235808Z.md           | 9b92d002c8c7e04fdb3d9858c3f5c18e308e1cea | manual     | -                   |
+| p01    | code     | passed          | 2026-09-06 | reviews/archived/p01-review-2026-09-06T001443Z.md           | 7dd086feafb9ba53dd25b5a77900ece5f4cb5cc3 | manual     | -                   |
+| p02    | code     | passed          | 2026-09-05 | reviews/archived/p02-review-2026-09-05T231204Z.md           | ffb9d54e58427ac2896969cbb226e209062f3c50 | manual     | -                   |
+| p03    | code     | passed          | 2026-09-06 | reviews/archived/p03-review-2026-09-06T004322Z.md           | f54cb43162ffad21543105fc8b9858f1e6cc6a68 | manual     | -                   |
+| p04    | code     | passed          | 2026-09-06 | reviews/archived/p04-review-2026-09-06T011441Z.md           | 4f1ada48d2e471cdf9391bed70d836527e90395d | manual     | -                   |
+| final  | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T013330Z.md         | 2bfb39a567640f9e83f6673c7b098f849cd6d93b | manual     | -                   |
+| final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T014238Z.md         | 63ea98d28825ce0db7bc9e15047b223a794cb1ec | manual     | -                   |
+| final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T015333Z.md         | ecf1b8821a9de7b5c55b48d41215fdcb762b1972 | gate       | codex-5-6-sol-xhigh |
+| plan   | artifact | passed          | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T224504Z.md | -                                        | -          | -                   |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                   |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
