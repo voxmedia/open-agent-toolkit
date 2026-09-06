@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: b96bbafe
+oat_last_commit: 7ff21e64
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260718-fix-oat-docs-generate-index' }
@@ -73,8 +73,8 @@ oat_implement_exit_gate:
   reviewed_head: 63ea98d28825ce0db7bc9e15047b223a794cb1ec # final review round 2 passed (reviews/final-review-2026-09-06T014238Z.md)
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:ec05b9d2172cd8aa80044a7e146260657d0378142f9200358149dae04a1a43a7'
-  freshness_head: b96bbafec4954977a23947d21bf39c94250d8ffd # closeout-only: summary step (summary.md, project-log, ledger, decision records)
-  freshness_fingerprint: 'sha256:effective-delta-v1:162dff2b1b1c7909d5073da97a574e3a6f18fafe3e4979b22ba78bf21f1de6fb'
+  freshness_head: 7ff21e6460babde832f44ef426c79ec6c65f425b # closeout-only: document step (docs page, pjm reference surfaces)
+  freshness_fingerprint: 'sha256:effective-delta-v1:543d77c79ea5be0fd303acd0b6b263f4935677c67e53f731309b5929104c67f9'
   launch_state: result_persisted
   launch_attempt_id: 'w1-exit-gate-20260906T014616Z'
   launch_started_at: '2026-09-06T01:46:16Z'
@@ -94,7 +94,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-06T01:59:21Z'
+  updated_at: '2026-09-06T02:01:06Z'
 # oat_implement_exit_gate (reference): optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -135,7 +135,7 @@ oat_post_implement_sequence:
   source: configured # workflow.postImplementSequence
   final_phase: p04
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending # pending | approved | not_required
   approval_source: null # null | user | oat-autonomous
   post_approval: []
@@ -143,12 +143,12 @@ oat_post_implement_sequence:
   failure: null
 oat_project_recap:
   decision: skip # deferred to program close per the execution program (recap: deferred to program close)
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-05T22:36:14.653Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T01:59:21Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T02:01:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
