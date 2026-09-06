@@ -1,3 +1,4 @@
+import type { PathLike, Stats } from 'node:fs';
 import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
@@ -8,7 +9,42 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { resolveAssetsRoot, validateAssetsBundle } from './assets';
 
+/**
+ * Redirects, keyed by requested path, which real path `stat` is asked about.
+ *
+ * This is a seam rather than a substitute: every `Stats` the validator sees is
+ * still produced by the filesystem from a real file or a real absence, so no
+ * fixture here can encode a wrong model of one. It exists because the packaged
+ * root is a genuine complete bundle during a test run, which leaves the
+ * packaged half of the two root-level failures unreachable otherwise.
+ */
+const { statRedirects } = vi.hoisted(() => ({
+  statRedirects: new Map<string, string>(),
+}));
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>();
+
+  return {
+    ...actual,
+    stat: (path: PathLike): Promise<Stats> =>
+      actual.stat(statRedirects.get(String(path)) ?? path),
+  };
+});
+
 const PACKAGED_ASSETS_PATTERN = /packages\/cli\/assets$/;
+
+// The three remedy sentences, restated rather than imported. A test that asked
+// the implementation for its own wording could never catch the override branch
+// silently reverting to packaged guidance, which is the regression this whole
+// change exists to prevent.
+const OVERRIDE_REMEDY =
+  'Check OAT_ASSETS_DIR and point it to a complete asset bundle built for this CLI version.';
+const PACKAGED_BUNDLE_REMEDY =
+  'Reinstall @open-agent-toolkit/cli or rebuild the CLI before updating tools.';
+const PACKAGED_ROOT_REMEDY = "Run 'pnpm build' to generate bundled assets.";
+
+const MISMATCHED_VERSION = '0.0.0-paired-mismatch';
 
 // The producer's top-level contract, restated here rather than imported from
 // the validator. A fixture built from the implementation's own list could
@@ -381,7 +417,12 @@ describe('validateAssetsBundle', () => {
   // a tolerable gap. A self-referential symlink raises ELOOP for every user,
   // including root, so it stands in for the permission and I/O failures that
   // would otherwise be silently reported as a missing directory.
-  it('fails closed when a required directory cannot be read', async () => {
+  //
+  // The errno is part of the diagnosis, not decoration: EACCES, ELOOP, and EIO
+  // need different operator responses, and none of them is the remedy this
+  // validator offers, so collapsing them into one "unreadable" verdict leaves
+  // the reader with advice that does not apply and no way to tell why.
+  it('fails closed, naming the errno, when a required directory cannot be read', async () => {
     const assetsRoot = await createBundle('1.2.3');
     const skillsPath = join(assetsRoot, 'skills');
 
@@ -394,7 +435,7 @@ describe('validateAssetsBundle', () => {
       );
 
       expect(error.message).toContain(
-        `Bundled assets are unreadable: required directory could not be read: ${skillsPath}.`,
+        `Bundled assets are unreadable: required directory could not be read (ELOOP): ${skillsPath}.`,
       );
       expect(error.exitCode).toBe(2);
     } finally {
@@ -442,4 +483,294 @@ describe('validateAssetsBundle', () => {
       await rm(assetsRoot, { recursive: true, force: true });
     }
   });
+});
+
+/**
+ * One fail-closed family, buildable twice so the same broken bundle can be
+ * offered to the CLI as an explicit override and to the validator directly.
+ *
+ * `factualPrefix` is everything the diagnosis states about the bundle. The
+ * remedy is deliberately not part of it: the contract under test is that this
+ * prefix and the exit code stay identical across sources while only the
+ * trailing advice changes.
+ */
+interface BundleFailureFamily {
+  readonly label: string;
+  readonly create: () => Promise<string>;
+  readonly factualPrefix: (assetsRoot: string) => string;
+}
+
+// Every family reachable once a root has been accepted as a directory. All
+// fixtures are built against OAT_VERSION so one fixture recipe produces the
+// same failure through `resolveAssetsRoot` (which validates against the
+// running CLI) and through a direct `validateAssetsBundle` call.
+const BUNDLE_FAILURE_FAMILIES: BundleFailureFamily[] = [
+  {
+    label: 'metadata is missing',
+    create: () => mkdtemp(join(tmpdir(), 'oat-assets-paired-no-metadata-')),
+    factualPrefix: (assetsRoot) =>
+      `Bundled asset metadata not found: ${join(assetsRoot, 'bundle-metadata.json')}.`,
+  },
+  {
+    label: 'metadata is not JSON',
+    create: async () => {
+      const assetsRoot = await mkdtemp(
+        join(tmpdir(), 'oat-assets-paired-bad-json-'),
+      );
+
+      await writeFile(
+        join(assetsRoot, 'bundle-metadata.json'),
+        '{ not json at all',
+        'utf8',
+      );
+
+      return assetsRoot;
+    },
+    factualPrefix: (assetsRoot) =>
+      `Bundled asset metadata is invalid: ${join(assetsRoot, 'bundle-metadata.json')}.`,
+  },
+  {
+    label: 'metadata has the wrong shape',
+    create: async () => {
+      const assetsRoot = await mkdtemp(
+        join(tmpdir(), 'oat-assets-paired-bad-shape-'),
+      );
+
+      await writeFile(
+        join(assetsRoot, 'bundle-metadata.json'),
+        '{"schemaVersion":2,"oatVersion":"1.2.3"}',
+        'utf8',
+      );
+
+      return assetsRoot;
+    },
+    factualPrefix: (assetsRoot) =>
+      `Bundled asset metadata is invalid: ${join(assetsRoot, 'bundle-metadata.json')}.`,
+  },
+  {
+    label: 'the bundle is built for another CLI version',
+    create: () => createBundle(MISMATCHED_VERSION),
+    factualPrefix: () =>
+      `Bundled assets version mismatch: CLI ${OAT_VERSION}, assets ${MISMATCHED_VERSION}.`,
+  },
+  {
+    label: 'a required directory is missing',
+    create: () => createMetadataOnlyBundle(OAT_VERSION),
+    factualPrefix: (assetsRoot) =>
+      `Bundled assets are incomplete: required directory not found: ${join(assetsRoot, 'skills')}.`,
+  },
+  {
+    label: 'a required directory is a file',
+    create: async () => {
+      const assetsRoot = await createBundle(OAT_VERSION);
+      const skillsPath = join(assetsRoot, 'skills');
+
+      await rm(skillsPath, { recursive: true, force: true });
+      await writeFile(skillsPath, 'not a directory', 'utf8');
+
+      return assetsRoot;
+    },
+    factualPrefix: (assetsRoot) =>
+      `Bundled assets are incomplete: required bundle path is not a directory: ${join(assetsRoot, 'skills')}.`,
+  },
+  {
+    label: 'a required directory cannot be read',
+    create: async () => {
+      const assetsRoot = await createBundle(OAT_VERSION);
+      const skillsPath = join(assetsRoot, 'skills');
+
+      await rm(skillsPath, { recursive: true, force: true });
+      await symlink(skillsPath, skillsPath);
+
+      return assetsRoot;
+    },
+    factualPrefix: (assetsRoot) =>
+      `Bundled assets are unreadable: required directory could not be read (ELOOP): ${join(assetsRoot, 'skills')}.`,
+  },
+];
+
+/**
+ * The remedy contract, asserted from both directions at once.
+ *
+ * Checking only that the override mentions OAT_ASSETS_DIR would pass a message
+ * that also still told the operator to rebuild the package, so each source
+ * asserts the presence of its own remedy and the absence of the other's.
+ */
+function expectOverrideRemedy(error: CliError): void {
+  expect(error.message).toContain(OVERRIDE_REMEDY);
+  expect(error.message).not.toContain(PACKAGED_BUNDLE_REMEDY);
+  expect(error.message).not.toContain(PACKAGED_ROOT_REMEDY);
+  expect(error.exitCode).toBe(2);
+}
+
+function expectPackagedRemedy(error: CliError, remedy: string): void {
+  expect(error.message).toContain(remedy);
+  expect(error.message).not.toContain(OVERRIDE_REMEDY);
+  expect(error.message).not.toContain('OAT_ASSETS_DIR');
+  expect(error.exitCode).toBe(2);
+}
+
+describe('source-aware remedies', () => {
+  // The whole point of the change: the same broken bundle, reported twice, must
+  // keep one factual diagnosis and one exit code while its advice follows the
+  // root it was actually read from. Both halves are asserted in one test so a
+  // future edit cannot satisfy one source by quietly breaking the other.
+  it.each(BUNDLE_FAILURE_FAMILIES)(
+    'gives each source its own remedy for the same diagnosis when $label',
+    async (family) => {
+      const overrideRoot = await family.create();
+      const packagedRoot = await family.create();
+
+      try {
+        const overrideError = await captureRejection(
+          resolveAssetsRoot({ OAT_ASSETS_DIR: overrideRoot }),
+        );
+        const packagedError = await captureRejection(
+          validateAssetsBundle(packagedRoot, OAT_VERSION),
+        );
+
+        expect(overrideError.message).toContain(
+          family.factualPrefix(overrideRoot),
+        );
+        expect(packagedError.message).toContain(
+          family.factualPrefix(packagedRoot),
+        );
+
+        expectOverrideRemedy(overrideError);
+        expectPackagedRemedy(packagedError, PACKAGED_BUNDLE_REMEDY);
+      } finally {
+        await rm(overrideRoot, { recursive: true, force: true });
+        await rm(packagedRoot, { recursive: true, force: true });
+      }
+    },
+  );
+
+  it('tells the operator to check OAT_ASSETS_DIR when the override root is missing', async () => {
+    const missingRoot = join(tmpdir(), 'oat-assets-paired-missing-root');
+
+    const error = await captureRejection(
+      resolveAssetsRoot({ OAT_ASSETS_DIR: missingRoot }),
+    );
+
+    expect(error.message).toContain(
+      `Assets directory not found: ${missingRoot}.`,
+    );
+    expectOverrideRemedy(error);
+  });
+
+  it('tells the operator to check OAT_ASSETS_DIR when the override root is a file', async () => {
+    const parent = await mkdtemp(
+      join(tmpdir(), 'oat-assets-paired-root-file-'),
+    );
+    const filePath = join(parent, 'assets');
+
+    try {
+      await writeFile(filePath, 'not a directory', 'utf8');
+
+      const error = await captureRejection(
+        resolveAssetsRoot({ OAT_ASSETS_DIR: filePath }),
+      );
+
+      expect(error.message).toContain(
+        `Assets path is not a directory: ${filePath}.`,
+      );
+      expectOverrideRemedy(error);
+    } finally {
+      await rm(parent, { recursive: true, force: true });
+    }
+  });
+
+  // The packaged half of the two root-level failures. The packaged root is a
+  // real complete bundle whenever these tests run, so its absence and its
+  // wrong-type failure are staged by pointing `stat` at a genuinely missing
+  // path and a genuine file; the message must still name the packaged root the
+  // CLI asked for, not the path that answered.
+  it('keeps build guidance when the packaged root is missing', async () => {
+    const packagedRoot = await resolveAssetsRoot({});
+    const missingRoot = join(
+      tmpdir(),
+      'oat-assets-paired-missing-packaged-root',
+    );
+
+    statRedirects.set(packagedRoot, missingRoot);
+
+    try {
+      const error = await captureRejection(resolveAssetsRoot({}));
+
+      expect(error.message).toContain(
+        `Assets directory not found: ${packagedRoot}.`,
+      );
+      expectPackagedRemedy(error, PACKAGED_ROOT_REMEDY);
+    } finally {
+      statRedirects.delete(packagedRoot);
+    }
+  });
+
+  it('keeps build guidance when the packaged root is not a directory', async () => {
+    const packagedRoot = await resolveAssetsRoot({});
+    const parent = await mkdtemp(
+      join(tmpdir(), 'oat-assets-paired-packaged-file-'),
+    );
+    const filePath = join(parent, 'assets');
+
+    await writeFile(filePath, 'not a directory', 'utf8');
+    statRedirects.set(packagedRoot, filePath);
+
+    try {
+      const error = await captureRejection(resolveAssetsRoot({}));
+
+      expect(error.message).toContain(
+        `Assets path is not a directory: ${packagedRoot}.`,
+      );
+      expectPackagedRemedy(error, PACKAGED_ROOT_REMEDY);
+    } finally {
+      statRedirects.delete(packagedRoot);
+      await rm(parent, { recursive: true, force: true });
+    }
+  });
+
+  // A direct validator call has no environment to read, so it must keep the
+  // guidance it had before this change rather than inheriting override wording
+  // from some ambient default.
+  it('defaults a direct validator call to packaged guidance', async () => {
+    const assetsRoot = await createMetadataOnlyBundle('1.2.3');
+
+    try {
+      const error = await captureRejection(
+        validateAssetsBundle(assetsRoot, '1.2.3'),
+      );
+
+      expectPackagedRemedy(error, PACKAGED_BUNDLE_REMEDY);
+    } finally {
+      await rm(assetsRoot, { recursive: true, force: true });
+    }
+  });
+
+  // Source awareness is remedy wording only. A complete, version-matching
+  // bundle is still accepted through either source, and a broken one is still
+  // rejected through either source — the rows above already prove the second
+  // half for every family.
+  it.each([
+    ['an explicit override', true],
+    ['the packaged default', false],
+  ])(
+    'still accepts a complete bundle through %s',
+    async (_label, viaOverride) => {
+      const assetsRoot = await createBundle(OAT_VERSION);
+
+      try {
+        if (viaOverride) {
+          await expect(
+            resolveAssetsRoot({ OAT_ASSETS_DIR: assetsRoot }),
+          ).resolves.toBe(assetsRoot);
+        } else {
+          await expect(
+            validateAssetsBundle(assetsRoot, OAT_VERSION),
+          ).resolves.toBeUndefined();
+        }
+      } finally {
+        await rm(assetsRoot, { recursive: true, force: true });
+      }
+    },
+  );
 });
