@@ -8,6 +8,7 @@
 
 ## Completed Items
 
+- 2026-09-06 — BL-260906-wave-2-external-plan — Wave 2 external-plan corrections for the program refresh — Applied in the wave-2 close program refresh: bundled-skill plan pin claim and step-2 wording; named-skill plan focused tests and PR #190 head; patch-and-restore step 5 conditional; anaphora plan execution record
 - 2026-09-06 — BL-260902-document-patch-and-restore — Document patch-and-restore recovery for lost child handles with staged work — Wave 2 p05: capture-dirty-tree.mjs plus the recovered_patch contract in phase-execution.md and oat-phase-implementer.md; fail-closed containment, mandatory bound, head reconciliation, guarded invocations
 - 2026-09-06 — BL-260718-mandatory-skill-load-clause — Mandatory skill-load clause for lifecycle steps that name skills — Wave 2 p04: thirteen lifecycle skills require loading named execution skills; named-skill-load-contract.test.ts sweeps the surface; three hidden-fence defects repaired
 - 2026-09-06 — BL-260818-extend-guarded-prose-contract — Extend guarded-prose contract tests to docs-app mirrors — Wave 2 p03: explainer-kit publication-boundary assertions run over the docs mirror with a whole-document forbidden-phrase guard and negation/mutation-aware patterns

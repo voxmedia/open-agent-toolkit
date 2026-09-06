@@ -1,7 +1,7 @@
 ---
 id: BL-260906-wave-2-external-plan
 title: Wave 2 external-plan corrections for the program refresh
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -10,7 +10,7 @@ labels:
   - external-plans
 assignee: null
 created: 2026-09-06T08:58:02.840Z
-updated: 2026-09-06T08:58:02.840Z
+updated: '2026-09-06T10:48:01Z'
 associated_issues: []
 external_plans: []
 ---

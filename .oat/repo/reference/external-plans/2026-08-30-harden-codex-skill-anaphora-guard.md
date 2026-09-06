@@ -217,6 +217,10 @@ Stop and report instead of improvising when:
 - implementation would change confirmation policy; or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-06, wave 2)
+
+Executed as wave-2 p02 (PR #267): the accepted shape is anaphor-only attachment — a continuation is attached to the non-blocking anchor only when it opens with an anaphor (demonstrative case/circumstance/scenario nouns, list-marker and blockquote forms), and a clause that classifies its own route is accepted as independent. A Codex-suggested 'classifies its own route' exemption was reverted because every workable form was an ordered-token heuristic that admitted real escapes. Documented fail-open boundary: a filler clause between the anchor and the anaphor breaks attachment (pinned as known-accepted; antecedent resolution belongs to `BL-260827-span-based-prose-guards`, where the confirmation-vocabulary and blockquoted-ordered-marker residuals are also recorded). Pinned: 15 rejected, 6 accepted controls, 6 known-accepted boundary cases.
+
 ## Revalidation Before Execution
 
 Revalidate against current `origin/main`, the source backlog item, PRs #222 and

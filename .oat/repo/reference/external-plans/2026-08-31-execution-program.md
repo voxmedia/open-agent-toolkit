@@ -29,12 +29,12 @@ predecessor record and the operator.
 ## Status Ledger
 
 Execution approval: operator approved the composition and autonomous execution
-(including merges) on 2026-09-05. W1 merged 2026-09-06; W2 is next.
+(including merges) on 2026-09-05. W1 and W2 merged 2026-09-06; W3 is next.
 
 | Wave | Theme                                | Lanes | Status   | Record                                                                                                                                                                                                                                                                                                                                        |
 | ---- | ------------------------------------ | ----- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | W1   | CLI resolution and asset correctness | 4     | merged   | PR #262 → `6db0457c095e4384e5ac2f464ee1c4d5a47d0179` (squash, 2026-09-06T02:19:50Z); wrapper project `.oat/projects/shared/wave-1-execution` (lifecycle complete 2026-09-06; completion record `summary.md` + `implementation.md` § Final Summary; CLI 0.2.56); completion tail: deferred to program close; recap: deferred to program close. |
-| W2   | Skill contract truthfulness          | 5     | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
+| W2   | Skill contract truthfulness          | 5     | merged   | PR #267 → `ca71c00a014a6eba00cb4cd4c46974fc6aa58139` (squash, 2026-09-06T10:47:59Z); wrapper project `.oat/projects/shared/wave-2-execution` (lifecycle complete 2026-09-06; completion record `summary.md` + `implementation.md` § Final Summary; CLI 0.2.57); completion tail: deferred to program close; recap: deferred to program close. |
 | W3   | Workflow durability and containment  | 3     | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
 | W4   | Delivered-project follow-ups         | 3     | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
 | W5   | Program-intake follow-ups            | 11    | composed | Awaiting operator composition approval; no execution started.                                                                                                                                                                                                                                                                                 |
@@ -48,10 +48,10 @@ Execution approval: operator approved the composition and autonomous execution
 | [Emit dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md)                                                          | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W4   | group 2 after gate override (shared contract tests and pins); moved from W1 on 2026-09-02; READY since PR #255 merged; issue #211 is soft | pending |
 | [Validate assets bundle structure](./2026-08-30-validate-assets-bundle-structure.md)                                                                      | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | parallel group 1; merge before asset-error successor                                                                                      | done    |
 | [Make asset errors override-aware](./2026-08-30-make-assets-errors-override-aware.md)                                                                     | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W1   | group 2 after dependency revalidation sets the plan READY                                                                                 | done    |
-| [Repair bundled skill contract drift](./2026-08-30-repair-bundled-skill-contract-drift.md)                                                                | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W2   | group 1; merge-first contract baseline                                                                                                    | pending |
-| [Harden codex-skill anaphora guard](./2026-08-30-harden-codex-skill-anaphora-guard.md)                                                                    | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation                                                                                           | pending |
-| [Guard docs-app mirrors of skill prose](./2026-08-30-guard-docs-app-mirrors-of-skill-prose.md)                                                            | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation                                                                                           | pending |
-| [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                                                | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W2   | group 2; revalidate if draft PR #190 changes first                                                                                        | pending |
+| [Repair bundled skill contract drift](./2026-08-30-repair-bundled-skill-contract-drift.md)                                                                | [Wave 1 index](./2026-08-30-backlog-review-wave-1-plan-index.md) | W2   | group 1; merge-first contract baseline                                                                                                    | done    |
+| [Harden codex-skill anaphora guard](./2026-08-30-harden-codex-skill-anaphora-guard.md)                                                                    | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation                                                                                           | done    |
+| [Guard docs-app mirrors of skill prose](./2026-08-30-guard-docs-app-mirrors-of-skill-prose.md)                                                            | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W2   | group 2 after bundled-skill repair revalidation                                                                                           | done    |
+| [Require named lifecycle skills to be loaded](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)                                                | [Wave 2 index](./2026-08-30-backlog-review-wave-2-plan-index.md) | W2   | group 2; revalidate if draft PR #190 changes first                                                                                        | done    |
 | [Require repo-wide call-site sweeps](./2026-08-30-require-repo-wide-call-site-sweeps.md)                                                                  | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | parallel group 1                                                                                                                          | pending |
 | [Journal deterministic smoke worktrees](./2026-08-30-journal-deterministic-smoke-worktrees-before-creation.md)                                            | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | parallel group 1; dedicated safety review                                                                                                 | pending |
 | [Require executable backstops](./2026-08-30-require-executable-backstops-for-contract-claims.md)                                                          | [Wave 3 index](./2026-08-30-backlog-review-wave-3-plan-index.md) | W3   | group 2 after concrete guard examples and call-site sweep                                                                                 | pending |
@@ -64,7 +64,7 @@ Execution approval: operator approved the composition and autonomous execution
 | [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md)     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2; before the readiness-contract lane                                                                                               | pending |
 | [Add an oat config unset command](./2026-09-02-add-oat-config-unset-command.md)                                                                           | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 2 after instruction-sync pointers                                                                                                   | pending |
 | [Route incomplete quick projects to quick-start from plan, progress, and next](./2026-09-02-route-incomplete-quick-projects-to-quick-start.md)            | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 1                                                                                                                                   | pending |
-| [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md)          | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W2   | group 3 after the named-skill loading lane                                                                                                | pending |
+| [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md)          | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W2   | group 3 after the named-skill loading lane                                                                                                | done    |
 | [Defer activeProject clearing on shared and local archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md)               | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 4 after the recap lane; before terminal-status and the consolidation plan                                                           | pending |
 | [Make consolidated-project retirement checks semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md)                                     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 5 after active-pointer and quick-resume                                                                                             | pending |
 | [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md)                     | [Wave 4 index](./2026-09-02-backlog-review-wave-4-plan-index.md) | W5   | group 3 after the readiness lane (shared pins file); no longer waits on `oat config unset`                                                | pending |
@@ -185,7 +185,7 @@ Execution approval: operator approved the composition and autonomous execution
   options; journal deterministic smoke worktrees before creation.
 - **Group 2:** Require executable backstops for standing contract claims after
   the call-site sweep and W2 guard work provide current concrete examples.
-- **Cross-wave prerequisites:** W2 merged. The smoke lane receives a dedicated
+- **Cross-wave prerequisites:** W2 merged (PR #267, 2026-09-06) — satisfied. The smoke lane receives a dedicated
   ownership and deletion-safety review before integration.
 - **Composition rationale:** The first two lanes have write-disjoint workflow
   policy and smoke-tooling surfaces. The authoring-policy lane is not product-
@@ -333,6 +333,28 @@ unset`; its optional seam keys live in `BL-260904-add-recap-seam-config-keys`.
   and #255 were refreshed. Review record:
   `.oat/repo/reference/reviews/2026-09-04-external-plan-independent-review.md`.
 
+- **2026-09-06 (W2 closed)** — Wave 2 executed as wrapper project
+  `wave-2-execution` (five lanes, three groups, one lockstep bump to 0.2.57)
+  and merged as PR #267 (`ca71c00a014a6eba00cb4cd4c46974fc6aa58139`). All five W2 rows flip to `done`. Review
+  economics: every lane needed at least one fix round (p05 two, plus two
+  post-PR rounds), two Criticals were introduced by fixes and caught by
+  disposition-verification rounds, the root final review took three rounds,
+  Cursor Bugbot found a High ordering defect in the recover-mode contract that
+  every earlier round had missed, and the configured exit gate ran three times
+  (pass → stale → blocked → pass). Rules adopted for later waves: the fan-in
+  bump commit restamps `.oat/sync/manifest.json`; lane and reviewer briefs
+  carry forced-turbo gate forms, the real package filter, the scratch-hygiene
+  rule, and a two-round cap on Codex pre-commit reviews; disposition rounds
+  execute prose shell snippets verbatim and walk every failure sequence of a
+  contract; `oat gate review` writes its own Reviews row, so receive moves it
+  forward in place. Plan corrections applied in this refresh (from
+  `BL-260906-wave-2-external-plan`): the bundled-skill plan's step-2 wording
+  and `analyze` pin; the named-skill plan's thirteen-skill list and two ripple
+  tests; the patch-and-restore plan's conditional step 5; the anaphora plan's
+  accepted anaphor-only shape. Follow-ups filed:
+  `BL-260906-repair-the-stray-fence-in-oat`,
+  `BL-260906-cover-skill-test-files-under`,
+  `BL-260906-reconcile-the-oat-doctor`. W3 unblocked.
 - **2026-09-06 (W1 closed)** — Wave 1 executed as wrapper project
   `wave-1-execution` (four lanes, two groups, one lockstep bump to 0.2.56) and
   merged as PR #262 (`6db0457c095e4384e5ac2f464ee1c4d5a47d0179`). Two of the four plans' rows flip to `done`

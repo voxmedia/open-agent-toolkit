@@ -140,8 +140,9 @@ test seam is a STOP condition until the plan is refreshed or superseded.
 - `packages/cli/src/commands/tools/shared/pack-manifest.ts` — read-only source
   of truth for the test; change only if live inventory itself is wrong.
 - Managed provider-view refresh required by repository policy.
-- Four skill frontmatter versions; none of the four is pinned in
-  `packages/cli/src/validation/skills.test.ts`.
+- Four skill frontmatter versions; `analyze` is pinned in
+  `packages/cli/src/validation/skills.test.ts` (the pin moves with the bump); the
+  other three are not pinned.
 - Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
@@ -204,7 +205,9 @@ skills validate and each has one required bump.
 ### 2. Add mechanically scoped regression assertions
 
 In `packages/cli/src/validation/skills.test.ts`, add one named contract group
-that:
+per repaired skill (the wave-2 execution shipped four sibling groups, one per
+defect commit, so each repair is independently revertible; a single group was
+the original wording) such that, taken together, they:
 
 - imports or otherwise reads `PACK_MANIFEST`, derives the per-pack set of
   `kind: 'skill'` asset names, extracts only doctor's declared
@@ -293,6 +296,10 @@ Stop and report instead of improvising when:
 - a changed canonical skill cannot receive a valid single PR-scoped bump;
 - a named verification gate fails twice after one bounded correction; or
 - the work expands into unrelated skill-corpus cleanup.
+
+## Execution record (2026-09-06, wave 2)
+
+Executed as wave-2 p01 (PR #267, CLI 0.2.57): four per-defect commits plus one review-fix commit; `analyze` pin moved with its bump. Review found the brainstorm guard bypassable by a present-tense paraphrase and the doctor example rows unbounded; both fixed with inline negative controls. Deferred: the doctor example's both-installed-and-available contradiction (`BL-260906-reconcile-the-oat-doctor`).
 
 ## Revalidation Before Execution
 
