@@ -559,6 +559,13 @@ and preserved that disposition.
 the required lifecycle final review for the changed implementation basis, then
 rerun the configured exit gate for attempt 2 of 2.
 
+**Receive receipt:** The archived artifact retains gate run
+`bd618f54-927e-4994-8462-2eb7c3a5b33b`; the exact final/code review event is
+`fixes_added`; and bookkeeping commit
+`287941659e43d3f14eb7d396eb77b63c490ce387` follows the persisted pre-receive
+HEAD and contains the bounded archive move plus plan, implementation, and state
+updates. Receive is complete and remediation attempt 1 of 2 is consumed.
+
 #### Configured implementation exit gate generated
 
 The configured `oat-project-implement` exit gate is resolved and durably
