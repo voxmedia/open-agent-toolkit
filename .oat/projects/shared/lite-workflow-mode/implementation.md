@@ -100,6 +100,24 @@ now name the reviewed Wave 4 merge and public lockstep `0.2.60` as authoritative
 Historical execution entries remain unchanged. The local artifact is ready for
 frontmatter stripping by the root session; no GitHub mutation has occurred.
 
+### Recovery Event p-rev2-recovery-1-pr-artifact
+
+- Phase/task: p-rev2 / prev2-t02
+- Original request: 348bd412-b8a9-40e9-8d98-6aab9099cbeb
+- Original commit: ef9ed9f852c1307b3d85b8e1558a70b6c9628b14
+- Defect class: composition
+- Discovered by: `git add .oat/projects/shared/lite-workflow-mode/pr/`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 1/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
+- Recovery commit: dbe7562e5a5629f58dca8eb18ee7942254e10d4e
+- Verification: focused closeout assertion, 237-test partial phase suite, and
+  `pnpm format` passed before and after the recovery commit.
+- Reason: the plan-declared final PR artifact was ignored by the repository's
+  `.oat/**/pr` rule; the exact artifact was force-staged in an append-only
+  recovery commit.
+
 **Next:** `prev2-t03` must reproduce the SIGTERM cleanup subtest before any code
 change, run terminal repository verification, and record the results. A fresh
 required CI run for the exact pushed head and the focused p-rev2 re-review remain

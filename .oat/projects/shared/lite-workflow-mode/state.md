@@ -32,16 +32,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p-rev2:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: p-rev2-recovery-1-pr-artifact
-        original_request_id: 348bd412-b8a9-40e9-8d98-6aab9099cbeb
-        original_task_id: prev2-t02
-        original_commit: ef9ed9f852c1307b3d85b8e1558a70b6c9628b14
-        discovered_by: git add .oat/projects/shared/lite-workflow-mode/pr/
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
-        reservation_head: ef9ed9f852c1307b3d85b8e1558a70b6c9628b14
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
