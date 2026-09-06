@@ -57,20 +57,20 @@ oat_dispatch_policy: # managed/high per operator routing preference
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
-  attempts_completed: 1
+  attempts_completed: 2
   reviewed_head: 1f09bb832f4db62a7c48f9b9b2b776f86973c380 # w3-p01-fix-002; attempt 226f2a4e (w3-exit-gate-20260906T142243Z) was killed by the host for memory pressure before any result — no receipt, no artifact; not counted as an attempt
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:3b64830655dfae7ae030b9ef8adc522d2f1e6be0d07da253eaeb2ca7a8830040'
-  freshness_head: 8f332444bc99578ee864974ac6d7dc5961204fe9 # closeout-only: acceptance checkpoint of the killed attempt
-  freshness_fingerprint: 'sha256:effective-delta-v1:b8a4da69298b2d5cd353aae5bfc7f0b8d63e781bd4ff2a6a4aa87660d9f86ce9'
+  freshness_head: 88535e77b7b052fa3e318baa41c4f4289d006874 # closeout-only: gate receive
+  freshness_fingerprint: 'sha256:effective-delta-v1:424044099a32bc6837343fd313064e6b9a21977b7da8bc70783e09ef7d2c48cc'
   launch_state: result_persisted
   launch_attempt_id: 'w3-exit-gate-20260906T155259Z'
   launch_started_at: '2026-09-06T15:52:59Z'
@@ -80,17 +80,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/wave-3-execution/reviews/final-review-2026-09-06T155523Z.md'
   handoff: 'Gate attempt 2 passed (0C/0I/0M/0m, run 0c1ab7b5); receive final-review-2026-09-06T155523Z.md'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=0c1ab7b5-c8d5-42ad-8b15-f832b05d8111; handoff=receive; source=reviews/final-review-2026-09-06T155523Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/wave-3-execution/reviews/final-review-2026-09-06T155523Z.md'
-  receive_archived_artifact: null
+  receive_archived_artifact: '.oat/projects/shared/wave-3-execution/reviews/archived/final-review-2026-09-06T155523Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-06T155523Z.md'
   receive_pre_head: 64c239d87e1061dfed58038e54eb1b701ab5814c
-  receive_commit: null
+  receive_commit: 88535e77b7b052fa3e318baa41c4f4289d006874
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-06T15:57:53Z'
+  updated_at: '2026-09-06T15:57:59Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -131,7 +131,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T10:56:52.547Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T15:57:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T15:57:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
