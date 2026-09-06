@@ -284,6 +284,9 @@ async function persistPromotion(
     }
     return;
   }
+  if (scope === 'local') {
+    return;
+  }
 
   const pathspecs = PROMOTED_FILES.map((file) =>
     repoRelativePath(repoRoot, join(projectRoot, file)),

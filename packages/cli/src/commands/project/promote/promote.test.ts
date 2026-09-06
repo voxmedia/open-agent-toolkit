@@ -148,12 +148,19 @@ interface Harness {
 function createHarness(
   repoRoot: string,
   json = false,
-  options: { failWriteFile?: string; liteTemplatePath?: string } = {},
+  options: {
+    failGit?: boolean;
+    failWriteFile?: string;
+    liteTemplatePath?: string;
+  } = {},
 ): Harness {
   const capture = createLoggerCapture();
   const events: string[] = [];
   const gitRun = vi.fn(async (args: string[]) => {
     events.push(`git:${args.join(' ')}`);
+    if (options.failGit) {
+      throw new Error('injected git persistence failure');
+    }
     return { code: 0, stdout: '', stderr: '' };
   });
   const gitRunner = { run: gitRun } as GitRunner & {
@@ -230,7 +237,7 @@ async function runCommand(
 async function seedRepo(
   repoRoot: string,
   options: {
-    scope?: 'shared' | 'synced' | 'outside';
+    scope?: 'shared' | 'local' | 'synced' | 'outside';
     mode?: string;
     origin?: 'native' | 'imported';
     plan?: string;
@@ -421,6 +428,34 @@ describe('oat project promote', () => {
         (event) => event.startsWith('write:') || event.startsWith('rename:'),
       ),
     );
+  });
+
+  it('promotes a local project without git persistence', async () => {
+    const repoRoot = await createRepo();
+    const { projectPath } = await seedRepo(repoRoot, { scope: 'local' });
+    const { capture, command, gitRunner, pushSynced } = createHarness(
+      repoRoot,
+      true,
+      { failGit: true },
+    );
+
+    await runCommand(command, projectPath, 'quick', true);
+
+    expect(capture.jsonPayloads).toEqual([
+      {
+        status: 'promoted',
+        reason: 'promoted',
+        files: [
+          'discovery.md',
+          'references/lite-plan.md',
+          'plan.md',
+          'state.md',
+        ],
+      },
+    ]);
+    expect(process.exitCode).toBe(0);
+    expect(gitRunner.run).not.toHaveBeenCalled();
+    expect(pushSynced).not.toHaveBeenCalled();
   });
 
   it('does not run git when the final project write fails', async () => {
