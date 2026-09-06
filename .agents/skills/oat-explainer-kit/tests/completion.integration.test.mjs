@@ -142,7 +142,7 @@ test('both lifecycle recap callers require author, critic, and unattended mode',
       name: 'implementation tail',
       text: sectionBetween(
         closeoutReference,
-        '**Implementation-Tail Project Recap:**',
+        '**Implementation-Tail Project Recap (non-lite only):**',
         '**Autonomous final HiLL approval:**',
       ),
     },

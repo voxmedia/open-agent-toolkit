@@ -768,7 +768,7 @@ describe('post-implementation sequence contracts', () => {
     const normalized = normalizeWhitespace(skill);
 
     expect(normalized).toContain(
-      'If the preference is unset and autonomy is inactive, do not create a sequence snapshot. Retain the existing next-step prompt only after final approval when a final checkpoint is configured.',
+      'For non-lite workflows, if the preference is unset and autonomy is inactive, do not create a sequence snapshot. Retain the existing next-step prompt only after final approval when a final checkpoint is configured.',
     );
   });
 
