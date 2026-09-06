@@ -1511,7 +1511,7 @@ surfaces so the selected shape is a self-contained implementation contract.
 
 **Step 2: Verify**
 
-Run: `pnpm exec vitest run packages/cli/src/commands/project/new/scaffold.test.ts packages/cli/src/commands/project/promote/promote.test.ts packages/cli/src/validation/skills.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts src/commands/project/promote/promote.test.ts src/validation/skills.test.ts`
 Expected: Lite scaffold, promotion, and instruction-contract coverage pass for all four adaptive shapes.
 
 Run: `pnpm oat:validate-skills`
@@ -1592,7 +1592,7 @@ advance.
 
 **Step 2: Verify**
 
-Run: `pnpm exec vitest run packages/cli/src/validation/skills.test.ts packages/cli/src/commands/project/validate-plan/validate-plan.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/project/validate-plan/validate-plan.test.ts`
 Expected: Instruction contracts reject unconditional test-first or proof-free wording, exact version pins match, and Lite proof-syntax validation remains green.
 
 Run: `pnpm lint && pnpm format && pnpm check && pnpm run check:skill-bumps`
