@@ -224,17 +224,32 @@ function coreHumanStatus(
   }
 }
 
+/** The sentence `formatSyncPlan` appends to its heading for an empty plan. */
+const EMPTY_PLAN_SUFFIX = '\nNo changes required.';
+
 function formatCoreResults(
   plan: SyncPlan,
   evidence: CoreApplyEvidence | undefined,
   dependencies: SyncCommandDependencies,
+  restampOnly: boolean,
 ): string {
   const operations = [...plan.entries, ...plan.removals];
   if (operations.length === 0) {
     if ((plan.collections?.length ?? 0) > 0) {
       return 'Core results\nNo per-entry operations.';
     }
-    return dependencies.formatSyncPlan(plan, true);
+    const planOutput = dependencies.formatSyncPlan(plan, true);
+    if (!restampOnly || !planOutput.endsWith(EMPTY_PLAN_SUFFIX)) {
+      return planOutput;
+    }
+    // `formatSyncPlan` appends "No changes required." to its heading for any
+    // empty plan, and it is shared with dry-run and other callers, so it stays
+    // untouched. On the restamp-only path that sentence would contradict the
+    // trailing message two lines later, so the command layer drops exactly that
+    // known suffix and lets the trailing message be the run's single claim.
+    // Removing only a matching suffix, rather than keeping the first line,
+    // means an injected formatter's other content is never truncated.
+    return planOutput.slice(0, -EMPTY_PLAN_SUFFIX.length);
   }
 
   const resultsByIdentity = new Map(
@@ -268,6 +283,11 @@ function formatAppliedOutput(
   scopePlans: ScopeSyncPlan[],
   coreApplyEvidence: readonly CoreApplyEvidence[],
   dependencies: SyncCommandDependencies,
+  // True when the run planned no operation at all and the manifest restamp is
+  // the only mutation. It is a whole-run state, matching the single trailing
+  // summary message, so with `--scope all` every scope's body is empty and at
+  // least one of them was restamped.
+  restampOnly: boolean,
 ): string {
   if (scopePlans.length === 0) {
     return dependencies.formatSyncPlan(
@@ -286,6 +306,7 @@ function formatAppliedOutput(
         scopePlan.plan,
         coreApplyEvidence.find((evidence) => evidence.plan === scopePlan.plan),
         dependencies,
+        restampOnly,
       );
       const collectionOutput = formatCollectionLifecycle(
         buildCollectionLifecycle(
@@ -492,11 +513,35 @@ export async function runSyncApply(
       providerRefreshAdvice,
     });
   } else {
+    // A restamp is a real mutation: it overwrites the producing-version
+    // evidence even though no file operation was planned. Reporting "no
+    // changes required" for that case would contradict the advisory this same
+    // run just emitted, so the state is resolved once and threaded through
+    // both the plan body and the trailing message.
+    //
+    // `failed === 0` is load-bearing rather than defensive: a rejected
+    // collection is counted as a failure but is not a *planned* operation
+    // (`countPlannedOperations` admits only the mutating collection actions),
+    // so a run can fail with `plannedOperations === 0`. That run is not
+    // restamp-only and must never be described as needing no content changes.
+    const restampOnly =
+      summary.plannedOperations === 0 &&
+      summary.failed === 0 &&
+      versionSkew.length > 0;
     context.logger.info(
-      formatAppliedOutput(scopePlans, coreApplyEvidence, dependencies),
+      formatAppliedOutput(
+        scopePlans,
+        coreApplyEvidence,
+        dependencies,
+        restampOnly,
+      ),
     );
     if (summary.plannedOperations === 0) {
-      context.logger.info('\nNo changes required.');
+      context.logger.info(
+        restampOnly
+          ? '\nManifest version refreshed; no content changes required.'
+          : '\nNo changes required.',
+      );
     } else if (summary.failed > 0) {
       context.logger.warn('\nSync completed with partial failures.');
     } else {

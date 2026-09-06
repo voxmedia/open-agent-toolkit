@@ -19,10 +19,13 @@ import {
 import { dirExists, fileExists } from '@fs/io';
 import { resolveProjectRoot, resolveScopeRoot, toPosixPath } from '@fs/paths';
 import {
+  detectManifestVersionRestamp,
+  formatManifestVersionRestampWarning,
   loadManifest,
   type Manifest,
   type ManifestEntry,
   type ManifestEntryV2,
+  type ManifestVersionRestamp,
   removeEntry,
   saveManifest,
 } from '@manifest/index';
@@ -63,6 +66,12 @@ interface ScopePlan {
   managedProviderViews: ProviderView[];
   unmanagedProviderViews: ProviderView[];
   manifestProvidersToRemove: string[];
+  /**
+   * Computed from the manifest as loaded, before `nextManifest` is derived and
+   * before the save restamps `oatVersion`. Holding it on the plan is what lets
+   * apply report the *original* producing version.
+   */
+  versionRestamp?: ManifestVersionRestamp<ConcreteScope>;
 }
 
 interface JsonScopeResult {
@@ -307,6 +316,7 @@ async function buildScopePlan(
     managedProviderViews: dedupeViews(managedProviderViews),
     unmanagedProviderViews: dedupeViews(unmanagedProviderViews),
     manifestProvidersToRemove: [...manifestProvidersToRemove],
+    versionRestamp: detectManifestVersionRestamp(scope, manifest),
   };
 }
 
@@ -362,6 +372,11 @@ async function applyPlan(
       nextManifest,
       plan.canonicalRelativePath,
       provider,
+    );
+  }
+  if (plan.versionRestamp && !context.json) {
+    context.logger.warn(
+      formatManifestVersionRestampWarning('remove skill', plan.versionRestamp),
     );
   }
   await dependencies.saveManifest(plan.manifestPath, nextManifest);
@@ -435,6 +450,11 @@ export async function runRemoveSkill(
       status: 'removed',
       skill: skillName,
       scopes: toJsonScopeResults(plans),
+      // Applied restamps only. The dry-run payload deliberately omits this
+      // field rather than naming a restamp that no save will perform.
+      manifestVersionRestamps: plans
+        .map((plan) => plan.versionRestamp)
+        .filter((restamp) => restamp !== undefined),
     });
   }
 

@@ -32,9 +32,10 @@ import {
   type ProviderAdapter,
 } from '@providers/shared';
 import { getAdoptionSources } from '@providers/shared/adapter.utils';
+import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createRemoveSkillCommand } from './remove-skill';
 
@@ -125,8 +126,12 @@ function createHarness(options: {
 }): {
   capture: LoggerCapture;
   command: Command;
+  saveManifest: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
+  // Wraps the real save so ordering assertions can observe the exact moment
+  // the producing version is overwritten.
+  const saveManifestSpy = vi.fn(saveManifest);
   const adapters = options.adapters ?? [
     createAdapter('claude', '.claude/skills'),
     createCursorAdapter(),
@@ -148,7 +153,7 @@ function createHarness(options: {
         ? options.projectRoot
         : (options.userRoot ?? options.projectRoot),
     loadManifest,
-    saveManifest,
+    saveManifest: saveManifestSpy,
     loadSyncConfig: async (configPath) =>
       defaultLoadSyncConfig(configPath, DEFAULT_SYNC_CONFIG),
     getAdapters: () => adapters,
@@ -162,7 +167,7 @@ function createHarness(options: {
     },
   });
 
-  return { capture, command };
+  return { capture, command, saveManifest: saveManifestSpy };
 }
 
 async function runRemoveSkillCommand(
@@ -257,6 +262,237 @@ describe('createRemoveSkillCommand', () => {
       }),
     );
     tempDirs.length = 0;
+  });
+
+  describe('manifest version restamp advisory', () => {
+    const restampWarning = (
+      producingVersion: string,
+      scope = 'project',
+    ): string =>
+      `Manifest version restamp [remove skill ${scope}]: manifest produced by oat "${producingVersion}" will be restamped to oat "${OAT_VERSION}".`;
+
+    async function seedStaleSkillInto(
+      root: string,
+      producingVersion: string,
+    ): Promise<{ root: string; skillName: string; manifestPath: string }> {
+      const skillName = 'oat-demo';
+      await mkdir(join(root, '.agents', 'skills', skillName), {
+        recursive: true,
+      });
+      await mkdir(join(root, '.claude', 'skills', skillName), {
+        recursive: true,
+      });
+
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      const manifest = withSkillEntry(
+        createEmptyManifest(),
+        skillName,
+        'claude',
+        `.claude/skills/${skillName}`,
+      );
+      // Written directly: `saveManifest` would restamp the fixture to the
+      // invoking version and erase the very condition under test.
+      await mkdir(join(root, '.oat', 'sync'), { recursive: true });
+      await writeFile(
+        manifestPath,
+        `${JSON.stringify({ ...manifest, oatVersion: producingVersion }, null, 2)}\n`,
+        'utf8',
+      );
+
+      return { root, skillName, manifestPath };
+    }
+
+    async function seedStaleSkill(
+      producingVersion: string,
+    ): Promise<{ root: string; skillName: string; manifestPath: string }> {
+      return seedStaleSkillInto(await makeTempDir(), producingVersion);
+    }
+
+    it('warns with the pre-removal producing version before the save', async () => {
+      const { root, skillName, manifestPath } = await seedStaleSkill('0.0.1');
+      const {
+        capture,
+        command,
+        saveManifest: saveSpy,
+      } = createHarness({
+        projectRoot: root,
+      });
+
+      // `nextManifest` is assembled before the save, so this proves the
+      // original producer survived plan derivation rather than being read back
+      // from the already-rewritten manifest.
+      let warningsWhenSaved: string[] = [];
+      saveSpy.mockImplementationOnce(async (path: string, next: Manifest) => {
+        warningsWhenSaved = [...capture.warn];
+        await saveManifest(path, next);
+      });
+
+      await runRemoveSkillCommand(command, ['--scope', 'project'], [skillName]);
+
+      const expected = restampWarning('0.0.1');
+      expect(warningsWhenSaved).toContain(expected);
+      expect(
+        capture.warn.filter((message) => message === expected),
+      ).toHaveLength(1);
+      expect((await loadManifest(manifestPath)).oatVersion).toBe(OAT_VERSION);
+    });
+
+    it('stays quiet when the manifest was produced by the invoking version', async () => {
+      const { root, skillName } = await seedStaleSkill(OAT_VERSION);
+      const { capture, command } = createHarness({ projectRoot: root });
+
+      await runRemoveSkillCommand(command, ['--scope', 'project'], [skillName]);
+
+      expect(
+        capture.warn.filter((message) =>
+          message.startsWith('Manifest version restamp'),
+        ),
+      ).toEqual([]);
+    });
+
+    it('emits structured JSON evidence and no warning text in JSON mode', async () => {
+      const { root, skillName } = await seedStaleSkill('0.0.1');
+      const { capture, command } = createHarness({ projectRoot: root });
+
+      await runRemoveSkillCommand(
+        command,
+        ['--json', '--scope', 'project'],
+        [skillName],
+      );
+
+      const payload = capture.jsonPayloads[0] as {
+        status: string;
+        manifestVersionRestamps: unknown[];
+      };
+      expect(payload.status).toBe('removed');
+      expect(payload.manifestVersionRestamps).toEqual([
+        {
+          scope: 'project',
+          producingVersion: '0.0.1',
+          invokingVersion: OAT_VERSION,
+        },
+      ]);
+      expect(
+        [...capture.warn, ...capture.info].filter((message) =>
+          message.includes('Manifest version restamp'),
+        ),
+      ).toEqual([]);
+    });
+
+    it('reports one diagnostic per affected scope across project and user', async () => {
+      const projectRoot = await makeTempDir();
+      const userRoot = await makeTempDir();
+      await seedStaleSkillInto(projectRoot, '0.0.1');
+      const { skillName } = await seedStaleSkillInto(userRoot, '0.0.2');
+      const { capture, command } = createHarness({
+        projectRoot,
+        userRoot,
+        scope: 'all',
+      });
+
+      await runRemoveSkillCommand(command, ['--scope', 'all'], [skillName]);
+
+      expect(
+        capture.warn.filter((message) =>
+          message.startsWith('Manifest version restamp'),
+        ),
+      ).toEqual([
+        restampWarning('0.0.1', 'project'),
+        restampWarning('0.0.2', 'user'),
+      ]);
+    });
+
+    it('carries one JSON entry per affected scope', async () => {
+      const projectRoot = await makeTempDir();
+      const userRoot = await makeTempDir();
+      await seedStaleSkillInto(projectRoot, '0.0.1');
+      const { skillName } = await seedStaleSkillInto(userRoot, '0.0.2');
+      const { capture, command } = createHarness({
+        projectRoot,
+        userRoot,
+        scope: 'all',
+      });
+
+      await runRemoveSkillCommand(
+        command,
+        ['--json', '--scope', 'all'],
+        [skillName],
+      );
+
+      const payload = capture.jsonPayloads[0] as {
+        manifestVersionRestamps: unknown[];
+      };
+      // Both scopes stale: dropping either one has to fail this assertion.
+      expect(payload.manifestVersionRestamps).toEqual([
+        {
+          scope: 'project',
+          producingVersion: '0.0.1',
+          invokingVersion: OAT_VERSION,
+        },
+        {
+          scope: 'user',
+          producingVersion: '0.0.2',
+          invokingVersion: OAT_VERSION,
+        },
+      ]);
+    });
+
+    it('omits scopes whose manifest is already current from the JSON evidence', async () => {
+      const projectRoot = await makeTempDir();
+      const userRoot = await makeTempDir();
+      await seedStaleSkillInto(projectRoot, '0.0.1');
+      const { skillName } = await seedStaleSkillInto(userRoot, OAT_VERSION);
+      const { capture, command } = createHarness({
+        projectRoot,
+        userRoot,
+        scope: 'all',
+      });
+
+      await runRemoveSkillCommand(
+        command,
+        ['--json', '--scope', 'all'],
+        [skillName],
+      );
+
+      const payload = capture.jsonPayloads[0] as {
+        manifestVersionRestamps: unknown[];
+      };
+      expect(payload.manifestVersionRestamps).toEqual([
+        {
+          scope: 'project',
+          producingVersion: '0.0.1',
+          invokingVersion: OAT_VERSION,
+        },
+      ]);
+    });
+
+    it('claims no restamp on dry-run, which performs no save', async () => {
+      const { root, skillName, manifestPath } = await seedStaleSkill('0.0.1');
+      const {
+        capture,
+        command,
+        saveManifest: saveSpy,
+      } = createHarness({
+        projectRoot: root,
+      });
+
+      await runRemoveSkillCommand(
+        command,
+        ['--json', '--scope', 'project'],
+        [skillName, '--dry-run'],
+      );
+
+      const payload = capture.jsonPayloads[0] as Record<string, unknown>;
+      expect(payload.status).toBe('dry_run');
+      expect(payload).not.toHaveProperty('manifestVersionRestamps');
+      expect(saveSpy).not.toHaveBeenCalled();
+      expect((await loadManifest(manifestPath)).oatVersion).toBe('0.0.1');
+      expect(
+        capture.warn.filter((message) =>
+          message.startsWith('Manifest version restamp'),
+        ),
+      ).toEqual([]);
+    });
   });
 
   it('shows a dry-run plan with managed and unmanaged provider views', async () => {
@@ -794,6 +1030,9 @@ describe('createRemoveSkillCommand', () => {
           unmanagedProviderViews: [],
         },
       ],
+      // Stable additive field: present and empty when the manifest was already
+      // produced by the invoking version.
+      manifestVersionRestamps: [],
     });
     expect(process.exitCode).toBe(0);
   });
