@@ -599,6 +599,14 @@ fixture therefore modeled a state no shipped path creates. The structured
 receipt is authoritative; no policy disposition has been applied before
 receive.
 
+#### Configured implementation exit gate receive intent 2 persisted
+
+The handoff is bound to run `e1faf839-7cd8-4635-8d73-2196ade93c55`, source
+`reviews/final-review-2026-09-06T024254Z.md`, event identity
+`final|code|final-review-2026-09-06T024254Z.md`, and collision-free destination
+`reviews/archived/final-review-2026-09-06T024254Z.md` at pre-receive HEAD
+`f282d1adfb059b4041bbf538ac8223e13154e84e`. Receive has not yet run.
+
 #### Final lifecycle re-review 3 received — passed
 
 **Review artifact:**
