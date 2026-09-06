@@ -61,6 +61,26 @@ previous wave's load-bearing scope statements.
 
 ---
 
+### 2026-09-06 · project · friction · probe-restore guidance
+
+The p01 implementer followed the brief's "restore probe edits with
+`git checkout -- <file>`" while the file's own change was still uncommitted, and
+lost the edit mid-proof (detected via a missing anchor, re-applied, re-verified).
+Briefs for p03 and the reviewer template now say: back the file up into a
+`mktemp -d` directory before mutating and restore with `cp`; `git checkout --`
+only for already-committed content. **Skill signal (contradicts):** the
+wave-skill's probe-restore guidance must distinguish committed from
+uncommitted targets.
+
+### 2026-09-06 · project · feedback · agent version guard
+
+`pnpm run check:skill-bumps` covers `.agents/skills/*/SKILL.md` only; an edit to
+`.agents/agents/oat-phase-implementer.md` without a bump passes the CI gate and
+is caught only by the three explicit pins in `skills.test.ts`. Follow-up
+candidate: extend the bump gate to canonical agent files.
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:

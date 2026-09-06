@@ -79,13 +79,15 @@ Wave base `e97954dd1e85287a41a59fe58730c606e00eb598`; plan gate blocked once (0C
 - `w3-p01-impl-001`, `w3-p02-impl-001` — group 1 dispatched together; each target opus, model_axis selected:opus, effort_axis not-applicable, selection_reason native-catalog, task_class default-implementation (plan dispatch profile). Stamps: `Dispatch: scope=p0N action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=opus`. Records `dispatch/w3-p0{1,2}-impl-001.json`.
 - Dispatch policy enforcement log: `Dispatch policy: high; selected=opus; cap=opus (claude, enforced — Task model arg)`.
 - Journal note: generic record fields are immutable after the first revision, so `child_outcome` stays at its launch value; terminal outcomes are recorded here.
+- `w3-p01-impl-001` outcome: DONE_WITH_CONCERNS, one commit `ecf4756860bbf82ca5ecdb89ffa42e56a5a27ce1` (agent 1.1.2 → 1.1.3 with three pins moved, contract assertions plus five negative probes in `post-implement-sequence-contracts.test.ts`, 32 regenerated views; `oat-project-implement` untouched; manifest did not restamp — symlink strategy). Two Codex rounds (R1 Important: effective-boundary wording contradicted the per-task verify step → fixed; R2 SHIP). Concerns reported, not improvised: `phase-execution.md:608` root acceptance check still reads "only declared files" (owner-choice decision, cost = `oat-project-implement` bump + seven pins); docs page `implementation-execution.md:91` drift. Friction: `git checkout --` probe-restore guidance wiped uncommitted work once (brief amended to mktemp backups); `check:skill-bumps` ignores `.agents/agents/*.md`.
+- `w3-p01-review-001` — reviewer, target opus, range `31ac33d60..ecf475686`, rulings on the two concerns, the bump/pins, the five probes, and weaker-anywhere on the effective boundary. Record `dispatch/w3-p01-review-001.json`.
 
 #### Phase Outcomes
 
-| Phase | Worktree                | Implementer outcome | Review outcome | Fix rounds |
-| ----- | ----------------------- | ------------------- | -------------- | ---------- |
-| p01   | `.worktrees/wave-3/p01` | in progress         | pending        | -          |
-| p02   | `.worktrees/wave-3/p02` | in progress         | pending        | -          |
+| Phase | Worktree                | Implementer outcome                                                            | Review outcome | Fix rounds |
+| ----- | ----------------------- | ------------------------------------------------------------------------------ | -------------- | ---------- |
+| p01   | `.worktrees/wave-3/p01` | DONE_WITH_CONCERNS (`ecf475686`; forced CLI suite 5609, test:skills 833 green) | review running | -          |
+| p02   | `.worktrees/wave-3/p02` | in progress                                                                    | pending        | -          |
 
 #### Parallel Groups
 
