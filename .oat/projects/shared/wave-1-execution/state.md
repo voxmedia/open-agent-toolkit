@@ -145,7 +145,6 @@ oat_project_recap:
   decision: skip
   source: autonomous_policy
   decided_at: '2026-09-06T02:04:34Z'
-  reason: 'deferred to program close per the 2026-08-31 execution program (recap: deferred to program close)'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/262' # null | string — tracked PR URL when a PR exists
