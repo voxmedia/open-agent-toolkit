@@ -97,6 +97,17 @@ lane returned a false base-vs-head delta; it re-ran the search itself.
 
 ---
 
+### 2026-09-06 · project · fan-in · group 1 (p01, p02)
+
+Merges `388dd1c96` and `034486193`; lockstep 0.2.57 → 0.2.58 with the
+`.oat/sync/manifest.json` restamp in the same bump commit (`eb767b3ed`, the rule
+adopted after wave 2); all eight gates exit 0 with `Cached: 0` on the forced
+test run. Every rebased commit is patch-identical to its reviewed lane commit.
+Nothing to flip: p03's plan was already READY. Group-1 worktrees and branches
+removed.
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:
