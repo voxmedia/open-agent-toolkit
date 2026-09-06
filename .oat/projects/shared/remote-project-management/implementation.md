@@ -2195,6 +2195,7 @@ launch_status: accepted
 child_outcome: direction-required
 continuation_events:
   - p07-recovery-01-production-command-routing-20260905
+  - p07-recovery-02-production-command-routing-20260906
 recovery_usage: 0/10
 pending_attempt: null
 review_rounds: 0/3
