@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 4     | 4/4       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | complete    | 2     | 2/2       |
-| Phase 5 | complete    | 4     | 4/4       |
-| Phase 6 | in_progress | 3     | 2/3       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | complete  | 4     | 4/4       |
+| Phase 2 | complete  | 3     | 3/3       |
+| Phase 3 | complete  | 3     | 3/3       |
+| Phase 4 | complete  | 2     | 2/2       |
+| Phase 5 | complete  | 4     | 4/4       |
+| Phase 6 | in_review | 3     | 3/3       |
 
-**Total:** 18/19 tasks completed
+**Total:** 19/19 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -398,7 +398,8 @@ lite-smoke-note.md` validation.
 
 ### Task p06-t03: Bump lockstep public package versions and run release gates
 
-**Status:** pending
+**Status:** completed
+**Commit:** cfcaae8fd81da49b1f75862be2260a65eec2c5e7
 **Authorized revision:** On 2026-09-06 the user authorized bounded ownership
 of the autonomy inventory mappings and the two stale contract assertions. The
 task may resume without changing runtime behavior.
@@ -473,6 +474,28 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 ## Implementation Log
 
 ### 2026-09-06
+
+#### p06 phase review received — fix loop 1
+
+**Review artifact:** `reviews/p06-review-2026-09-06T005620Z.md`
+**Reviewed head:** `cfcaae8fd81da49b1f75862be2260a65eec2c5e7`
+**Findings:** 0 Critical, 2 Important, 2 Medium, 0 Minor.
+**Reconnaissance:** not-attempted; the artifact contains no Review
+Orchestration section.
+
+**Blocking disposition:** resume the original accepted Phase 6 handle to fix
+the lifecycle guide's false phase-review-setup claim and rerun every terminal
+gate with an explicit exit-code ledger. The same exact managed-high target and
+original request remain authoritative.
+
+**Non-blocking findings recorded:** the artifacts table understates the five
+required lite plan sections, and the p06-t02 plan verification text applies a
+variant-only supported-catalogue header requirement to base Codex roles. These
+Medium findings are not included in the automatic blocking fix scope.
+
+**Dispatch:**
+`dispatch/lite-p06-review-451cf606-4ce2-4bb2-af45-bd290f82a27c.json`;
+target `oat-reviewer-gpt-5-6-sol-high`; verdict blocked.
 
 #### p06-t03 plan revision authorized
 
