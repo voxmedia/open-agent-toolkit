@@ -16,8 +16,13 @@ import {
   parseWorktrees,
   readSmokeMarkerAtCommit,
   requireCommitSha as requireJournalCommitSha,
+  requireSafeBranchName,
+  resolveJournalEntryState,
+  SUPPORTED_OWNERSHIP_JOURNAL_SCHEMA_VERSIONS,
   validateSmokeMarkerBinding,
 } from './journal.mjs';
+
+const CHILD_MARKER_RELATIVE_PATH = '.oat/smoke-bootstrap.json';
 
 const execFileAsync = promisify(execFile);
 
@@ -149,38 +154,35 @@ function validateBranchOwnership(manifest, branch) {
 }
 
 function requireJournalBranch(value, field) {
-  const hasUnsafeControlCharacter =
-    typeof value === 'string' &&
-    [...value].some((character) => {
-      const codePoint = character.codePointAt(0);
-      return codePoint <= 0x20 || codePoint === 0x7f;
-    });
-
-  if (
-    typeof value !== 'string' ||
-    value.length === 0 ||
-    value.startsWith('-') ||
-    value.startsWith('/') ||
-    value.endsWith('/') ||
-    value.endsWith('.') ||
-    value.includes('..') ||
-    value.includes('//') ||
-    value.includes('@{') ||
-    hasUnsafeControlCharacter ||
-    /[~^:?*[\]\\]/u.test(value)
-  ) {
-    throw new CleanupRefusalError(`${field} is not a safe branch name.`);
+  try {
+    return requireSafeBranchName(value, field);
+  } catch (error) {
+    throw new CleanupRefusalError(error.message);
   }
-  return value;
 }
 
-function validateOwnershipJournal(manifest, worktreePath, commonGitDir) {
+function requireJournalEntryState(entry, schemaVersion, field) {
+  try {
+    return resolveJournalEntryState(entry, schemaVersion, field);
+  } catch (error) {
+    throw new CleanupRefusalError(error.message);
+  }
+}
+
+function validateOwnershipJournal(
+  manifest,
+  worktreePath,
+  commonGitDir,
+  runPath,
+) {
   const journal = manifest.ownershipJournal;
   if (
     !journal ||
     typeof journal !== 'object' ||
     Array.isArray(journal) ||
-    journal.schemaVersion !== 1 ||
+    !SUPPORTED_OWNERSHIP_JOURNAL_SCHEMA_VERSIONS.includes(
+      journal.schemaVersion,
+    ) ||
     !Array.isArray(journal.resources)
   ) {
     throw new CleanupRefusalError(
@@ -208,6 +210,73 @@ function validateOwnershipJournal(manifest, worktreePath, commonGitDir) {
       entry.baselineCommitSha,
       `ownershipJournal.resources[${index}].baselineCommitSha`,
     );
+    const state = requireJournalEntryState(
+      entry,
+      journal.schemaVersion,
+      `ownershipJournal.resources[${index}].state`,
+    );
+    // Every schema-v2 entry carries its own marker path, so a missing one is
+    // only ever legitimate for a schema-v1 entry written before the field
+    // existed. Accepting it more widely would let a forged state transition
+    // shed the corroboration a reservation depends on.
+    const markerPath =
+      entry.markerPath === undefined && journal.schemaVersion === 1
+        ? null
+        : requireAbsolutePath(
+            entry.markerPath,
+            `ownershipJournal.resources[${index}].markerPath`,
+          );
+    if (
+      markerPath !== null &&
+      markerPath !== join(nestedWorktreePath, CHILD_MARKER_RELATIVE_PATH)
+    ) {
+      throw new CleanupRefusalError(
+        `ownershipJournal.resources[${index}].markerPath is not the tracked marker in its journaled worktree.`,
+      );
+    }
+    // Every reservation the writer persists carries `reservedAt`, and
+    // finalization never removes it, so a `reserved` entry without one is
+    // malformed rather than exempt. Requiring it here stops an entry from
+    // escaping the re-derivation below by dropping the field it is keyed on.
+    if (state === 'reserved' && entry.reservedAt === undefined) {
+      throw new CleanupRefusalError(
+        `ownershipJournal.resources[${index}].reservedAt is required for a reserved entry.`,
+      );
+    }
+    // Re-derive the invariants the reservation writer enforced. Cleanup must
+    // not trust a manifest to have been written by that writer: an entry that
+    // named a resource outside the run directory, or a baseline other than the
+    // run's own, would otherwise enter the owned sets and skip the
+    // unjournaled-run-descendant refusal.
+    //
+    // These bind to reserved *origin* rather than to the current state,
+    // because finalization never rewrites them: a forged `registered`
+    // transition cannot shed them while keeping the rest of the reservation.
+    //
+    // SCOPE OF THIS GUARD: it covers reservation-origin entries only. An entry
+    // with neither `reserved` state nor `reservedAt` is shaped exactly like a
+    // legitimate direct registration, which the non-deterministic callers
+    // still in use produce and which may legitimately live outside the run
+    // directory. Those entries therefore retain the same manifest-integrity
+    // trust they had before reservations existed; no field-based test can
+    // separate a forged one from a real one, and tightening containment for
+    // all entries would break the direct-registration path this plan
+    // deliberately preserves until its creation transaction is migrated.
+    if (state === 'reserved' || entry.reservedAt !== undefined) {
+      if (
+        dirname(nestedWorktreePath) !== runPath ||
+        nestedWorktreePath === runPath
+      ) {
+        throw new CleanupRefusalError(
+          `ownershipJournal.resources[${index}] reserves a worktree outside the manifest run directory.`,
+        );
+      }
+      if (baselineCommitSha !== manifest.baselineCommitSha) {
+        throw new CleanupRefusalError(
+          `ownershipJournal.resources[${index}] reserves a baseline other than the run baseline.`,
+        );
+      }
+    }
     if (
       nestedWorktreePath === worktreePath ||
       branch === manifest.branch ||
@@ -226,7 +295,9 @@ function validateOwnershipJournal(manifest, worktreePath, commonGitDir) {
       baselineCommitSha,
       branch,
       commonGitDir,
+      markerPath,
       runIdentity: entry.runIdentity,
+      state,
       worktreePath: nestedWorktreePath,
     };
   });
@@ -273,6 +344,7 @@ function validateManifest(manifest, runsDirectory) {
     manifest,
     worktreePath,
     commonGitDir,
+    runPath,
   );
 
   if (manifest.fixtureProjectPath !== undefined) {
@@ -527,6 +599,195 @@ async function validateOwnedResource(
   };
 }
 
+async function requireReservedChildMarker(resource, { fileSystem, manifest }) {
+  if (
+    resource.markerPath !==
+    join(resource.worktreePath, CHILD_MARKER_RELATIVE_PATH)
+  ) {
+    throw new CleanupRefusalError(
+      `reserved worktree ${resource.worktreePath} no longer resolves to its recorded marker path.`,
+    );
+  }
+  let stats;
+  try {
+    stats = await fileSystem.lstat(resource.markerPath);
+  } catch {
+    throw new CleanupRefusalError(
+      `reserved worktree ${resource.worktreePath} is missing its run marker.`,
+    );
+  }
+  if (!stats.isFile() || stats.isSymbolicLink()) {
+    throw new CleanupRefusalError(
+      `reserved worktree ${resource.worktreePath} marker is not a real regular file.`,
+    );
+  }
+  let marker;
+  try {
+    marker = JSON.parse(await fileSystem.readFile(resource.markerPath, 'utf8'));
+  } catch (error) {
+    throw new CleanupRefusalError(
+      `reserved worktree ${resource.worktreePath} marker is not valid JSON: ${error.message}`,
+    );
+  }
+  try {
+    validateSmokeMarkerBinding(marker, manifest);
+  } catch (error) {
+    throw asCleanupRefusal(error);
+  }
+  return marker;
+}
+
+/**
+ * Reconcile a reservation that may or may not have materialized.
+ *
+ * A reservation is durable intent, not established ownership, so this refuses
+ * every state it cannot corroborate exactly rather than inferring ownership
+ * from the reserved branch name, the reserved path prefix, or the age of the
+ * run. Deletion is authorized only for state that matches the recorded
+ * reservation exactly:
+ *
+ * - neither branch nor worktree materialized: nothing is deleted and only the
+ *   manifest reservation goes away with the run manifest;
+ * - branch and worktree both registered exactly as reserved: the reserved
+ *   baseline must be an ancestor of the corroborated HEAD, the shared Git
+ *   directory must match, and the child's run marker must bind to this run;
+ * - branch present without a worktree: its tip must equal the reserved
+ *   baseline exactly and that baseline must carry this run's marker.
+ *
+ * Anything else — a path without exact Git registration, a mismatched branch,
+ * HEAD, or shared Git directory, a missing marker, or a worktree without its
+ * reserved branch — fails closed and is left untouched.
+ */
+async function validateReservedResource(
+  resource,
+  {
+    canonicalWorktrees,
+    fileSystem,
+    git,
+    manifest,
+    repository,
+    branchMap,
+    commonGitDir,
+  },
+) {
+  const branchRef = `refs/heads/${resource.branch}`;
+  const registeredAtPath = canonicalWorktrees.find(
+    (entry) => entry.canonicalPath === resource.worktreePath,
+  );
+  const branchRegistrations = canonicalWorktrees.filter(
+    (entry) => entry.branch === branchRef,
+  );
+  const branchTip = branchMap.get(resource.branch);
+  const pathOnDisk = await pathExists(resource.worktreePath, fileSystem);
+
+  if (!branchTip && !registeredAtPath) {
+    if (pathOnDisk) {
+      throw new CleanupRefusalError(
+        `reserved worktree path ${resource.worktreePath} exists without Git worktree registration.`,
+      );
+    }
+    if (branchRegistrations.length > 0) {
+      throw new CleanupRefusalError(
+        `reserved branch ${resource.branch} is checked out in an unreserved worktree.`,
+      );
+    }
+    return { branchExists: false, branchTip: null, registered: false };
+  }
+
+  if (!branchTip) {
+    throw new CleanupRefusalError(
+      `reserved worktree ${resource.worktreePath} is registered without its reserved branch.`,
+    );
+  }
+  if (
+    branchRegistrations.some(
+      (entry) => entry.canonicalPath !== resource.worktreePath,
+    )
+  ) {
+    throw new CleanupRefusalError(
+      `reserved branch ${resource.branch} is checked out in an unreserved worktree.`,
+    );
+  }
+
+  try {
+    const baselineMarker = await readSmokeMarkerAtCommit(
+      resource.baselineCommitSha,
+      { cwd: repository, git },
+    );
+    validateSmokeMarkerBinding(baselineMarker, manifest);
+  } catch (error) {
+    throw asCleanupRefusal(error);
+  }
+
+  if (!registeredAtPath) {
+    if (pathOnDisk) {
+      throw new CleanupRefusalError(
+        `reserved worktree path ${resource.worktreePath} exists without Git worktree registration.`,
+      );
+    }
+    if (branchTip !== resource.baselineCommitSha) {
+      throw new CleanupRefusalError(
+        `reserved branch ${resource.branch} does not exactly match its reserved baseline.`,
+      );
+    }
+    return { branchExists: true, branchTip, registered: false };
+  }
+
+  if (registeredAtPath.branch !== branchRef) {
+    throw new CleanupRefusalError(
+      `reserved worktree ${resource.worktreePath} is registered to a different branch.`,
+    );
+  }
+  if (!pathOnDisk) {
+    throw new CleanupRefusalError(
+      `reserved worktree ${resource.worktreePath} is registered but missing from disk.`,
+    );
+  }
+  if (registeredAtPath.HEAD !== branchTip) {
+    throw new CleanupRefusalError(
+      `reserved worktree ${resource.worktreePath} no longer corroborates its reserved branch.`,
+    );
+  }
+  if (
+    !(await isCommitAncestor(
+      resource.baselineCommitSha,
+      registeredAtPath.HEAD,
+      {
+        cwd: repository,
+        git,
+      },
+    ))
+  ) {
+    throw new CleanupRefusalError(
+      `reserved worktree ${resource.worktreePath} diverged from its reserved baseline.`,
+    );
+  }
+
+  let actualCommonDirectory;
+  try {
+    actualCommonDirectory = await gitCommonDirectory(resource.worktreePath, {
+      fileSystem,
+      git,
+    });
+  } catch (error) {
+    throw new CleanupRefusalError(
+      `could not corroborate the shared Git directory for ${resource.worktreePath}: ${error.message}`,
+    );
+  }
+  if (
+    actualCommonDirectory !== commonGitDir ||
+    actualCommonDirectory !== resource.commonGitDir
+  ) {
+    throw new CleanupRefusalError(
+      `reserved worktree ${resource.worktreePath} belongs to a mismatched shared Git directory.`,
+    );
+  }
+
+  await requireReservedChildMarker(resource, { fileSystem, manifest });
+
+  return { branchExists: true, branchTip, registered: true };
+}
+
 async function validatePreBaselineResource(
   resource,
   { canonicalWorktrees, fileSystem, git, branchMap, commonGitDir },
@@ -710,9 +971,13 @@ export async function cleanupSmoke(
   const ownedResources = [...nestedOwnedResources, outerResource];
   const resourceStates = new Map();
   for (const resource of nestedOwnedResources) {
+    const validate =
+      resource.state === 'reserved'
+        ? validateReservedResource
+        : validateOwnedResource;
     resourceStates.set(
       resource.branch,
-      await validateOwnedResource(resource, {
+      await validate(resource, {
         branchMap,
         canonicalWorktrees,
         commonGitDir: resources.commonGitDir,
@@ -810,18 +1075,54 @@ export async function cleanupSmoke(
     actions.push(`worktree:${resources.worktreePath}`);
   }
   for (const resource of nestedOwnedResources) {
-    if (resourceStates.get(resource.branch).branchExists) {
-      await git(['branch', '--delete', '--force', '--', resource.branch], {
-        cwd: repository,
-      });
-      actions.push(`branch:${resource.branch}`);
+    const state = resourceStates.get(resource.branch);
+    if (!state.branchExists) {
+      continue;
     }
+    if (resource.state === 'reserved') {
+      // Re-read the tip immediately before deleting so a ref that moved since
+      // validation is refused rather than discarded. `git branch --delete` is
+      // kept rather than a lower-level compare-and-delete because it also
+      // preserves Git's own refusal to delete a branch that some other
+      // worktree has checked out.
+      const currentTip = await git(
+        [
+          'for-each-ref',
+          '--format=%(objectname)',
+          `refs/heads/${resource.branch}`,
+        ],
+        { cwd: repository },
+      );
+      if (currentTip !== state.branchTip) {
+        throw new CleanupRefusalError(
+          `reserved branch ${resource.branch} moved after it was corroborated.`,
+        );
+      }
+    }
+    await git(['branch', '--delete', '--force', '--', resource.branch], {
+      cwd: repository,
+    });
+    actions.push(`branch:${resource.branch}`);
   }
   if (resourceStates.get(resources.branch).branchExists) {
     await git(['branch', '--delete', '--force', '--', resources.branch], {
       cwd: repository,
     });
     actions.push(`branch:${resources.branch}`);
+  }
+  // A reservation whose branch and worktree never materialized has no Git or
+  // filesystem resource to remove; it is discharged when the run manifest is
+  // removed below. Record it so an interrupted run reports the window it
+  // stopped in.
+  for (const resource of nestedOwnedResources) {
+    const state = resourceStates.get(resource.branch);
+    if (
+      resource.state === 'reserved' &&
+      !state.registered &&
+      !state.branchExists
+    ) {
+      actions.push(`reservation:${resource.branch}`);
+    }
   }
 
   const removablePaths = [
