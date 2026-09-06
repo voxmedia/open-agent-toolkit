@@ -1565,6 +1565,14 @@ this project's journal. The separately authorized backlog commit then advanced
 HEAD, so the invalid launch cannot be resumed or replaced automatically. A
 fresh explicitly authorized dispatch must use the current HEAD.
 
+**Revision-plan feedback incorporated (2026-09-06):** Inline review identified
+four blocking gaps and several ambiguity/overengineering risks before code was
+written. The existing two tasks now own promotion preservation, reviewer-proof
+alignment, explicit syntactic-versus-semantic enforcement, autonomy behavior,
+observable section triggers, version pins, and representative change-class
+guidance. The phase remains Lite-only pending
+`BL-260906-re-evaluate-universal-plan`.
+
 ---
 
 ## Deviations from Plan / Design

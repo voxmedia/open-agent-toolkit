@@ -1430,6 +1430,37 @@ rows remain unchanged.
 
 Source: inline feedback (2026-09-06)
 
+### Revision Decisions
+
+- **Source fidelity:** Restore the user-provided Warp rules that a larger plan
+  carries numbered, testable Product Behavior and a Technical Design covering
+  current operation, proposed changes, conditional data flow, and
+  ambiguity-removing code references. The Warp prompt is not vendored, so
+  these rules are stated here and in the shipped contract rather than cited as
+  a repository file.
+- **Selected shape for this revision:** `both`. It changes user-visible Lite
+  planning behavior and a contract consumed across the template, promotion,
+  agents, documentation, and tests.
+- **Observable shape triggers:** Require Product Behavior for user-visible
+  behavior changes. Require Technical Design when work crosses module
+  boundaries, changes a data or state format, or changes a contract consumed
+  by another surface. Use `minimal` only when neither trigger applies.
+- **Promotion mapping:** On Lite-to-Quick promotion, preserve Product Behavior
+  under discovery Success Criteria and preserve Technical Design in a labeled
+  carried-forward section before discovery Next Steps. Continue archiving the
+  complete Lite source as `references/lite-plan.md`.
+- **Proof enforcement:** Keep `validate-plan` syntactic. It continues to require
+  an executable command, test name, or `manual:` instruction for every Lite
+  validation criterion. The Lite skill selects and justifies the strategy;
+  artifact and code review judge whether it matches the risk. Do not add a
+  semantic validator that rewards formulaic proof wording.
+- **Autonomy:** Use computer-use visual proof when the capability is available.
+  If a required manual or visual criterion has no autonomous executor, stop at
+  an explicit proof boundary. Never mark the criterion deferred-but-verified.
+- **Decision boundary:** This phase changes Lite only. The accepted
+  `DR-260714-flexible-plan-task-bodies` remains the cross-workflow policy until
+  `BL-260906-re-evaluate-universal-plan` re-evaluates it.
+
 ### Task prev1-t01: (revision) Restore adaptive product and technical specification content
 
 **Files:**
@@ -1439,6 +1470,8 @@ Source: inline feedback (2026-09-06)
 - Modify: `.agents/agents/oat-reviewer.md`
 - Modify: `.agents/agents/oat-phase-implementer.md`
 - Modify: `packages/cli/src/commands/project/new/scaffold.test.ts`
+- Modify: `packages/cli/src/commands/project/promote/promote.ts`
+- Modify: `packages/cli/src/commands/project/promote/promote.test.ts`
 - Modify: `packages/cli/src/validation/skills.test.ts`
 - Modify: `apps/oat-docs/docs/workflows/projects/artifacts.md`
 - Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
@@ -1447,22 +1480,38 @@ Source: inline feedback (2026-09-06)
 
 Update the template and Lite authoring contract to select one explicit content
 shape from `minimal`, `product`, `technical`, or `both` during the interview.
-Keep Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria in
-every plan. Require numbered, testable Product Behavior when behavioral
-ambiguity exists. Require Technical Design when implementation ambiguity
-exists, including current operation, proposed changes, data flow, and precise
-code references or short snippets only when they remove ambiguity. Permit the
-minimal shape only for mechanical work with no material product or technical
-design decision.
+Record the shape and a one-line rationale in Decisions so artifact review can
+challenge it. Keep Summary, Decisions, Assumptions, Out of Scope, and
+Validation Criteria in every plan.
+
+Require numbered, testable Product Behavior whenever user-visible behavior
+changes. Require Technical Design when work crosses module boundaries, changes
+a data or state format, or changes a contract consumed by another surface. It
+describes current operation, proposed changes, and data flow only when state or
+data crosses a boundary. Use file-and-symbol references instead of line
+numbers. Use a short snippet only to establish a proposed interface shape.
+
+Permit `minimal` only when neither trigger applies. Give examples: typo or
+copy-only documentation, a version/pin update, and a semantics-preserving
+mechanical rename. Give a counterexample: a configuration edit that changes
+runtime behavior is not minimal. Keep each optional section to roughly one
+screen; promote when either needs more space to remove ambiguity.
+
+Extend Lite promotion parsing without making the optional sections mandatory.
+Test `minimal`, `product`, `technical`, and `both`. Preserve Product Behavior
+under `## Success Criteria` as `### Product Behavior (from Lite plan)`.
+Preserve Technical Design as `## Carried-Forward Technical Design` immediately
+before `## Next Steps`, labeled as prior implementation context rather than a
+new discovery deliverable. Keep the full original plan in
+`references/lite-plan.md`.
 
 Align reviewer, implementer, documentation, scaffold, and skill-contract
-surfaces so the selected shape is a self-contained implementation contract and
-promotion preserves it.
+surfaces so the selected shape is a self-contained implementation contract.
 
 **Step 2: Verify**
 
-Run: `pnpm exec vitest run packages/cli/src/commands/project/new/scaffold.test.ts packages/cli/src/validation/skills.test.ts`
-Expected: Lite scaffold and contract coverage pass for all four adaptive shapes.
+Run: `pnpm exec vitest run packages/cli/src/commands/project/new/scaffold.test.ts packages/cli/src/commands/project/promote/promote.test.ts packages/cli/src/validation/skills.test.ts`
+Expected: Lite scaffold, promotion, and instruction-contract coverage pass for all four adaptive shapes.
 
 Run: `pnpm oat:validate-skills`
 Expected: Canonical skill structure and references remain valid.
@@ -1470,7 +1519,7 @@ Expected: Canonical skill structure and references remain valid.
 **Step 3: Commit**
 
 ```bash
-git add .oat/templates/plan-lite.md .agents/skills/oat-project-lite/SKILL.md .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md packages/cli/src/commands/project/new/scaffold.test.ts packages/cli/src/validation/skills.test.ts apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/lifecycle.md
+git add .oat/templates/plan-lite.md .agents/skills/oat-project-lite/SKILL.md .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md packages/cli/src/commands/project/new/scaffold.test.ts packages/cli/src/commands/project/promote/promote.ts packages/cli/src/commands/project/promote/promote.test.ts packages/cli/src/validation/skills.test.ts apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/lifecycle.md
 git commit -m "feat(prev1-t01): restore adaptive lite specification depth"
 ```
 
@@ -1484,6 +1533,7 @@ git commit -m "feat(prev1-t01): restore adaptive lite specification depth"
 - Modify: `.agents/skills/oat-project-lite/SKILL.md`
 - Modify: `.agents/agents/oat-reviewer.md`
 - Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `.agents/docs/autonomy-contract.md`
 - Modify: `packages/cli/src/validation/skills.test.ts`
 - Modify: `apps/oat-docs/docs/workflows/projects/artifacts.md`
 - Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
@@ -1494,31 +1544,63 @@ Replace the fixed RED/GREEN/refactor steps with a task-level implementation and
 proof strategy chosen for the change. Allow test-first development,
 characterization-first work, implementation followed by a focused regression,
 static or build checks, and manual or computer-use visual proof. Require the
-plan to name the selected strategy, the observable risk it covers, and the
-exact command or manual proof. When no automated test adds useful confidence,
-require a short rationale instead of a ceremonial fixture or harness.
+plan to name the strategy, the observable risk it covers, why it is
+proportionate, and the exact command or manual proof.
 
-Preserve stricter evidence where it is load-bearing: bug fixes normally retain
-a pre-fix reproduction; user-interface changes require visual proof; and
-security, provenance, approval, receipt, or publication contracts retain
-reproduction-grade negative and valid controls.
+Use these tiebreakers:
 
-Align Lite reviewer and implementer guidance and add focused contract coverage
-that rejects both unconditional test-first wording and plans that provide no
-meaningful proof.
+- Static or build checks alone are sufficient only when the change cannot
+  alter runtime behavior.
+- Every behavioral change has at least one proof that fails without the
+  change. A lightweight assertion in the existing `skills.test.ts` suite is
+  proportionate for reusable skill, template, or agent wording when removing
+  the contract makes it fail; do not create a new fixture or harness solely to
+  test prose.
+- A bug fix preserves a pre-fix reproduction. Waive this only after a bounded
+  attempt proves the original environment or state is unavailable; record the
+  evidence, use the strongest alternate regression control, and require
+  reviewer acceptance.
+- A user-interface change requires visual proof. In autonomy, use available
+  computer-use capability or stop at a proof boundary.
+- Security, provenance, approval, receipt, publication, and other
+  assurance-sensitive contracts retain reproduction-grade negative and valid
+  controls.
+- Refactors default to characterization-first unless existing tests already
+  cover the behavior being preserved. Documentation-only work may use link,
+  spelling, formatting, or build proof. Configuration changes that affect
+  behavior require behavioral proof. Deletions require a negative search plus
+  the relevant build or composition check.
+
+Reword the reviewer contract from tests matching verification intent to
+evidence matching the declared proof strategy. Grade a missing or unjustified
+strategy, not the absence of an automated test. Update the implementer contract
+to execute the declared strategy without silently substituting TDD.
+
+Keep enforcement boundaries explicit. `skills.test.ts` verifies the reusable
+instruction wording and version pins. `validateLitePlan` continues to enforce
+proof syntax for Validation Criteria; it does not judge semantic adequacy.
+Artifact review challenges shape and strategy selection. Code review verifies
+that the declared evidence exists and is capable of proving the claim.
+
+Update the autonomy inventory for the visual-proof boundary. Compare final
+versions against `origin/main`: bump any edited canonical skill or agent whose
+version does not already advance in this PR, and update every exact pin. At
+minimum, `oat-phase-implementer` currently requires a bump from `1.1.2`; do not
+double-bump files whose final PR diff already carries the required version
+advance.
 
 **Step 2: Verify**
 
-Run: `pnpm exec vitest run packages/cli/src/validation/skills.test.ts`
-Expected: Lite contract tests accept proportionate proof choices and reject unconditional test-first or proof-free guidance.
+Run: `pnpm exec vitest run packages/cli/src/validation/skills.test.ts packages/cli/src/commands/project/validate-plan/validate-plan.test.ts`
+Expected: Instruction contracts reject unconditional test-first or proof-free wording, exact version pins match, and Lite proof-syntax validation remains green.
 
-Run: `pnpm lint && pnpm format && pnpm check`
+Run: `pnpm lint && pnpm format && pnpm check && pnpm run check:skill-bumps`
 Expected: Skill, template, documentation, and repository checks pass.
 
 **Step 3: Commit**
 
 ```bash
-git add .oat/templates/plan-lite.md .agents/skills/oat-project-lite/SKILL.md .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md packages/cli/src/validation/skills.test.ts apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/lifecycle.md
+git add .oat/templates/plan-lite.md .agents/skills/oat-project-lite/SKILL.md .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md .agents/docs/autonomy-contract.md packages/cli/src/validation/skills.test.ts apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/workflows/projects/lifecycle.md
 git commit -m "feat(prev1-t02): make lite proof strategy proportionate"
 ```
 

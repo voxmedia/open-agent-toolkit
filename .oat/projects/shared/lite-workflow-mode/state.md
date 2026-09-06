@@ -104,7 +104,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T13:29:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T14:12:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -166,6 +166,7 @@ Implementation — revision 1 in progress from post-PR inline feedback.
   threshold with one addressed Minor finding
 - ✓ PR created
 - ⧗ Revision tasks `prev1-t01` and `prev1-t02` queued for implementation
+- ✓ Revision-plan review feedback incorporated before implementation
 
 ## Blockers
 
