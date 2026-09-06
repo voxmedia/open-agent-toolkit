@@ -16,12 +16,19 @@ oat_template: false
 
 Lite becomes a fourth workflow mode value alongside `spec-driven`, `quick`,
 and `import`. Its footprint is a project directory with three files: an
-authored `plan.md` that carries spec sections (summary, decisions,
-assumptions, out of scope, validation criteria) ahead of a single-phase task
-list, plus machine-owned `state.md` and `implementation.md`. No discovery,
-spec, or design file exists. The mode is registered like any other, so the
+authored `plan.md` that carries the core contract sections (summary, decisions,
+assumptions, out of scope, validation criteria), plus Product Behavior and/or
+Technical Design when the interview selects those adaptive content shapes,
+ahead of a single-phase task list. Machine-owned `state.md` and
+`implementation.md` complete the project footprint. No discovery, spec, or
+design file exists. The mode is registered like any other, so the
 recommender, dashboard, progress, next, implement, review, and PR flows all
 see it.
+
+The accepted `p-rev1` revision plan is the refinement source for the adaptive
+content, proportionate proof, promotion-preservation, and autonomous proof
+boundary contracts below. Unrelated historical design decisions remain in
+force.
 
 Three architectural decisions shape the work:
 
@@ -35,9 +42,10 @@ Three architectural decisions shape the work:
 2. **A dedicated lite plan template, standard plan grammar.** The scaffold
    gains a source-to-destination mapping so `plan-lite.md` lands as
    `plan.md`. The template keeps every plan-writing invariant (task IDs,
-   review table, required sections) and adds the spec sections above the task
-   list. Parsers ignore unknown sections, so implement, validate-plan, and
-   progress need no parser changes.
+   review table, required sections) and adds the core contract sections plus
+   the selected adaptive content above the task list. Implement and promotion
+   consumers explicitly preserve those optional sections, while validate-plan
+   enforces the single-phase and proof contracts.
 3. **Promotion as a CLI command driven by the skill.**
    `oat project promote <path> --to quick` does the mechanics: writes
    `discovery.md` from the lite plan's spec sections, preserves the lite plan
@@ -219,10 +227,12 @@ export type WorkflowMode = (typeof WORKFLOW_MODES)[number];
 
 **Responsibilities:**
 
-- Sections in order: title, goal line, `## Summary`, `## Decisions`,
+- Sections in order: title, goal line, `## Summary`, `## Decisions`, optional
+  `## Product Behavior` and/or `## Technical Design` according to the selected
+  `minimal`, `product`, `technical`, or `both` content shape, then
   `## Assumptions`, `## Out of Scope`, `## Validation Criteria`,
   `## Parallelism` (one sentence: single phase, sequential), `## Phase 1`,
-  tasks, `## Reviews`, `## Implementation Complete`, `## References`.
+  tasks, `## Reviews`, `## Implementation Complete`, and `## References`.
 - Frontmatter: `oat_plan_source: lite`, `oat_plan_parallel_groups: []`,
   import fields null. The plan-writing enum for `oat_plan_source` gains
   `lite`.
@@ -270,8 +280,9 @@ oat project promote <project-path> --to quick [--json]
 
 1. Read and validate `state.md` mode is `lite` (origin may be native or
    imported).
-2. Parse the lite plan's Summary, Decisions, Assumptions, Out of Scope,
-   Validation Criteria.
+2. Parse the lite plan's Summary, Decisions, Assumptions, Out of Scope, and
+   Validation Criteria, plus Product Behavior and/or Technical Design when
+   present.
 3. Render `discovery.md` from the discovery template: Initial Request from
    Summary, Key Decisions from Decisions, Assumptions, Out of Scope, Success
    Criteria from Validation Criteria. Keep the rendered artifact at
@@ -289,8 +300,10 @@ oat project promote <project-path> --to quick [--json]
 - Only `lite` to `quick` is accepted in this project. Other pairs error with
   a pointer to the spec-driven promotion skill.
 - Refuses if `references/lite-plan.md` already exists, the mode is not
-  lite, or any of the five spec sections is missing or still holds a
-  scaffold placeholder. The `oat_template` flag is ignored: lite keeps it
+  lite, or any core contract section is missing or still holds a scaffold
+  placeholder. Promotion carries Product Behavior into discovery success
+  criteria and Technical Design into clearly labeled carried-forward context,
+  and archives the original Lite plan byte-for-byte. The `oat_template` flag is ignored: lite keeps it
   set until completion so routing stays with the entry skill. Runs
   no git operations before every file write has succeeded.
 - A CLI command because every step is mechanical and the skill-level
@@ -358,8 +371,9 @@ One line or branch each:
 - Agent contracts: `oat-reviewer` and `oat-phase-implementer` consume
   `workflow_mode` at runtime and enumerate three modes today. Both gain
   `lite` (reviewer: input enum, Mode Contract line, read rule,
-  requirement-source line, plan-review upstream set; implementer: input enum and an Artifact Reads bullet covering the phase
-  section plus all five contract sections). Without this, a lite project's plan review,
+  requirement-source line, plan-review upstream set; implementer: input enum
+  and an Artifact Reads bullet covering the phase section, all core contract
+  sections, and any selected Product Behavior or Technical Design). Without this, a lite project's plan review,
   final review, and phase dispatch fall to the spec-driven default and record
   spurious artifact-missing gaps.
 - Progress and next routing tables.
@@ -379,9 +393,14 @@ One line or branch each:
   check so it never conjures a discovery file for import or lite projects.
 - `oat project validate-plan` becomes mode-aware: a lite plan must have
   exactly one phase, no parallel groups, and a command, test name, or
-  `manual:` instruction on every validation criterion. The implement preflight already
-  runs validate-plan, so the single-phase invariant is enforced before any
-  checkpoint bypass can apply.
+  `manual:` instruction on every validation criterion. Task proof strategies
+  are proportionate to observable risk rather than universally test-first.
+  The implement preflight already runs validate-plan, so these invariants are
+  enforced before any checkpoint bypass can apply. When required manual or
+  visual proof reaches phase execution, the executor inspects its effective
+  runtime tool catalog, uses available computer-use, and otherwise stops at
+  the `IMPLEMENT-20` proof boundary before commit or completion; unavailable
+  proof is never recorded as deferred-but-verified.
 
 ### 9. Docs and triage
 
