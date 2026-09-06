@@ -153,15 +153,15 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 
 ### 2026-09-05 · structural · oat-project-implement · p01
 
-verdict=pass; fix_loops=0; review=reviews/code-p01-review-2026-09-05T204609Z.md; reviewed_head=3427d2176a86b3f6a95219f6557b4d4798a6f1a2
+verdict=pass; fix_loops=0; review=reviews/archived/code-p01-review-2026-09-05T204609Z.md; reviewed_head=3427d2176a86b3f6a95219f6557b4d4798a6f1a2
 
 ### 2026-09-05 · structural · oat-project-implement · p02
 
-verdict=pass; fix_loops=1; review=reviews/code-p02-review-2026-09-05T210504Z.md; reviewed_head=948434796085b5c537542213fd562194827a822c; merge=d8e94966424e10b5616a09abc62d758e15ac672c
+verdict=pass; fix_loops=1; review=reviews/archived/code-p02-review-2026-09-05T210504Z.md; reviewed_head=948434796085b5c537542213fd562194827a822c; merge=d8e94966424e10b5616a09abc62d758e15ac672c
 
 ### 2026-09-05 · structural · oat-project-implement · p03
 
-verdict=pass; fix_loops=1; review=reviews/code-p03-review-2026-09-05T210747Z.md; reviewed_head=4b1eb65a41ffe179793cd9eca7e7f3d963ec6766; merge=2e922483f
+verdict=pass; fix_loops=1; review=reviews/archived/code-p03-review-2026-09-05T210747Z.md; reviewed_head=4b1eb65a41ffe179793cd9eca7e7f3d963ec6766; merge=2e922483f
 
 ### 2026-09-05 · structural · oat-project-implement · p04-recovery-1
 
@@ -169,7 +169,7 @@ disposition=failed-attempt; attempt=1/10; event=p04-recovery-1-bundled-autonomy-
 
 ### 2026-09-05 · structural · oat-project-implement · p04
 
-Phase p04 passed independent review with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings; artifact reviews/code-p04-review-2026-09-05T223510Z.md; fix loops 0.
+Phase p04 passed independent review with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings; artifact reviews/archived/code-p04-review-2026-09-05T223510Z.md; fix loops 0.
 
 ### 2026-09-06 · structural · oat-project-implement · p06
 
@@ -177,7 +177,7 @@ verdict=blocked; tasks=2/3; request=lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c0
 
 ### 2026-09-06 · structural · oat-project-implement · p06
 
-verdict=pass; tasks=3/3; fix_loops=1; review=reviews/p06-review-2026-09-06T011617Z.md; reviewed_head=d79a58b1b0f8aff53a361b3e591f5cff510106d9; findings=critical:0,important:0,medium:2,minor:0; next=final-review
+verdict=pass; tasks=3/3; fix_loops=1; review=reviews/archived/p06-review-2026-09-06T011617Z.md; reviewed_head=d79a58b1b0f8aff53a361b3e591f5cff510106d9; findings=critical:0,important:0,medium:2,minor:0; next=final-review
 
 ### 2026-09-06 · structural · oat-project-review-provide · final
 

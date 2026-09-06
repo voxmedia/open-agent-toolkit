@@ -144,7 +144,7 @@ Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are seque
 Added lite-specific recommender and dashboard planning routes, plus direct
 post-review closeout to `oat-project-pr-final`. Review loop 1 added the missing
 explicit lite implement-in-progress regression guard. The passing re-review is
-`reviews/code-p02-review-2026-09-05T210504Z.md`.
+`reviews/archived/code-p02-review-2026-09-05T210504Z.md`.
 
 ### Task p02-t01: Add LITE_ROUTES to the recommender
 
@@ -184,7 +184,7 @@ Guarded split recommendations from creating absent discovery artifacts, added
 transactional lite-to-quick promotion, and enforced lite plan invariants.
 Review loop 1 aligned authored-plan detection with the real canonical lite
 template. The passing re-review is
-`reviews/code-p03-review-2026-09-05T210747Z.md`.
+`reviews/archived/code-p03-review-2026-09-05T210747Z.md`.
 
 ### Task p03-t01: Guard the split detector's discovery.md append
 
@@ -254,7 +254,7 @@ The implementation is the source of truth; the plan's Step 2 already authorizes
 this bounded adaptation, so no plan rewrite is required.
 
 **Independent review:**
-`reviews/code-p04-review-2026-09-05T223510Z.md` passed with 0 Critical,
+`reviews/archived/code-p04-review-2026-09-05T223510Z.md` passed with 0 Critical,
 0 Important, 0 Medium, and 0 Minor findings. Fix loops: 0.
 
 ---
@@ -613,7 +613,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **p01 implementation:** accepted request `lite-p01-79fa27c2-d4a0-4a15-bcdb-40fc08dfaf47`; durable record `dispatch/lite-p01-79fa27c2-d4a0-4a15-bcdb-40fc08dfaf47.json`; target `oat-phase-implementer-gpt-5-6-sol-medium`; returned `DONE` at `3427d2176a86b3f6a95219f6557b4d4798a6f1a2`.
 - Dispatch policy: high; selected=medium; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-medium`).
 - Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium
-- **p01 review:** accepted request `lite-p01-review-aeaf28f9-3de3-4c74-bae0-7dc61c31fa26`; durable record `dispatch/lite-p01-review-aeaf28f9-3de3-4c74-bae0-7dc61c31fa26.json`; target `oat-reviewer-gpt-5-6-sol-high`; artifact `reviews/code-p01-review-2026-09-05T204609Z.md`; verdict passed with no findings.
+- **p01 review:** accepted request `lite-p01-review-aeaf28f9-3de3-4c74-bae0-7dc61c31fa26`; durable record `dispatch/lite-p01-review-aeaf28f9-3de3-4c74-bae0-7dc61c31fa26.json`; target `oat-reviewer-gpt-5-6-sol-high`; artifact `reviews/archived/code-p01-review-2026-09-05T204609Z.md`; verdict passed with no findings.
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-reviewer-gpt-5-6-sol-high`).
 - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 - **p02:** implementation, initial review, one fix, and passing re-review are recorded under `dispatch/lite-p02-*.json`; final reviewed head `948434796085b5c537542213fd562194827a822c`.
@@ -621,13 +621,13 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **p04 implementation:** accepted request `lite-p04-550bf449-aa50-43a8-a343-6cbeac822e36`; durable record `dispatch/lite-p04-550bf449-aa50-43a8-a343-6cbeac822e36.json`; target `oat-phase-implementer-gpt-5-6-sol-high`; returned `DONE` at `3e89f14de30836512bb5aa16e46b7a68323503bd` after one failed and one successful append-only recovery attempt.
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
 - Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
-- **p04 review:** accepted request `lite-p04-review-67b6a043-6869-4507-845a-4fb66f4fd117`; durable record `dispatch/lite-p04-review-67b6a043-6869-4507-845a-4fb66f4fd117.json`; target `oat-reviewer-gpt-5-6-sol-high`; artifact `reviews/code-p04-review-2026-09-05T223510Z.md`; verdict passed with no findings.
+- **p04 review:** accepted request `lite-p04-review-67b6a043-6869-4507-845a-4fb66f4fd117`; durable record `dispatch/lite-p04-review-67b6a043-6869-4507-845a-4fb66f4fd117.json`; target `oat-reviewer-gpt-5-6-sol-high`; artifact `reviews/archived/code-p04-review-2026-09-05T223510Z.md`; verdict passed with no findings.
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-reviewer-gpt-5-6-sol-high`).
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 - **p05 implementation:** accepted request `lite-p05-13f2f3c2-336d-4ca0-b20f-ae369ddcc4e4`; durable record `dispatch/lite-p05-13f2f3c2-336d-4ca0-b20f-ae369ddcc4e4.json`; target `oat-phase-implementer-gpt-5-6-sol-high`; returned `DONE` at `1612122f03d605b9062f7b50b0806b1882f87714` with four task commits and no recovery attempts.
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
 - Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
-- **p05 review lifecycle:** initial review plus two same-handle fixes and two fresh re-reviews are recorded under `dispatch/lite-p05-*.json`; passing reviewed head `c11a1150239dc179c60b0b82defc9c350999955d`; passing artifact `reviews/p05-review-2026-09-05T231617Z.md`.
+- **p05 review lifecycle:** initial review plus two same-handle fixes and two fresh re-reviews are recorded under `dispatch/lite-p05-*.json`; passing reviewed head `c11a1150239dc179c60b0b82defc9c350999955d`; passing artifact `reviews/archived/p05-review-2026-09-05T231617Z.md`.
 - **p06 implementation:** accepted request `lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7`; durable record `dispatch/lite-p06-relaunch-3a37d1d2-4236-4dc9-a506-c01e7c589cf7.json`; target `oat-phase-implementer-gpt-5-6-sol-high`; the same handle completed all eleven planned and review-derived tasks through `daca23b157c2cec331434052d721372455106218`.
 - Dispatch policy: high; selected=high; cap=high (codex, enforced — variant `oat-phase-implementer-gpt-5-6-sol-high`).
 - Dispatch: scope=p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
@@ -1014,7 +1014,7 @@ code of 0. Evidence directory:
 
 #### Phase p06 passed fresh independent re-review
 
-**Review artifact:** `reviews/p06-review-2026-09-06T011617Z.md`.
+**Review artifact:** `reviews/archived/p06-review-2026-09-06T011617Z.md`.
 **Reviewed head:** `d79a58b1b0f8aff53a361b3e591f5cff510106d9`.
 **Findings:** 0 Critical, 0 Important, 2 Medium, 0 Minor.
 Both prior Important findings are resolved. The two artifact-alignment Medium
@@ -1041,7 +1041,7 @@ fix commit. The two Medium findings remain non-blocking and deferred.
 
 #### p06 phase review received — fix loop 1
 
-**Review artifact:** `reviews/p06-review-2026-09-06T005620Z.md`
+**Review artifact:** `reviews/archived/p06-review-2026-09-06T005620Z.md`
 **Reviewed head:** `cfcaae8fd81da49b1f75862be2260a65eec2c5e7`
 **Findings:** 0 Critical, 2 Important, 2 Medium, 0 Minor.
 **Reconnaissance:** not-attempted; the artifact contains no Review
@@ -1132,17 +1132,17 @@ launch HEAD.
 #### Phase p05 completed and reviewed
 
 **Implementation range:** `2565cb77a3067fb1dbfd44cce2af391582787e4e..c11a1150239dc179c60b0b82defc9c350999955d`
-**Review artifact:** `reviews/p05-review-2026-09-05T231617Z.md`
+**Review artifact:** `reviews/archived/p05-review-2026-09-05T231617Z.md`
 **Verdict:** passed — 0 Critical, 0 Important, 0 Medium, 0 Minor; fix loops 2.
 **Review orchestration:** the initial review attempted reconnaissance; its
 required evidence is preserved in
-`reviews/code-p05-review-2026-09-05T225758Z.md`. Both re-reviews reported
+`reviews/archived/code-p05-review-2026-09-05T225758Z.md`. Both re-reviews reported
 reconnaissance not attempted and therefore contain no orchestration section.
 **Next:** execute `p06`.
 
 #### p05 review received — fix loop 1
 
-**Review artifact:** `reviews/code-p05-review-2026-09-05T225758Z.md`
+**Review artifact:** `reviews/archived/code-p05-review-2026-09-05T225758Z.md`
 **Reviewed head:** `1612122f03d605b9062f7b50b0806b1882f87714`
 **Findings:** 0 Critical, 3 Important, 2 Medium, 0 Minor.
 **Disposition:** fixes added for the bounded brainstorm lite handoff,
@@ -1157,7 +1157,7 @@ skill validation, bump checks, lint, and format passed. Awaiting re-review.
 
 #### p05 re-review 1 received — fix loop 2
 
-**Review artifact:** `reviews/code-p05-review-2026-09-05T230902Z.md`
+**Review artifact:** `reviews/archived/code-p05-review-2026-09-05T230902Z.md`
 **Reviewed head:** `3e250f86c64ffa424467a066ef1664d4465fea50`
 **Findings:** 0 Critical, 1 Important, 0 Medium, 0 Minor.
 **Disposition:** queue a bounded fix that makes the implementation-tail
@@ -1175,7 +1175,7 @@ re-review 2.
 #### Phase p04 completed and reviewed
 
 **Implementation range:** `90824ab273eb75612b5abfd00462413c010e26da..3e89f14de30836512bb5aa16e46b7a68323503bd`
-**Review artifact:** `reviews/code-p04-review-2026-09-05T223510Z.md`
+**Review artifact:** `reviews/archived/code-p04-review-2026-09-05T223510Z.md`
 **Verdict:** passed — 0 Critical, 0 Important, 0 Medium, 0 Minor; fix loops 0.
 **Next:** execute `p05`.
 
@@ -1223,18 +1223,18 @@ include the canonical autonomy wildcard row.
 #### Phase p01 completed and reviewed
 
 **Implementation range:** `2e998b0c12969130fc85d9873e02014904ac6798..3427d2176a86b3f6a95219f6557b4d4798a6f1a2`
-**Review artifact:** `reviews/code-p01-review-2026-09-05T204609Z.md`
+**Review artifact:** `reviews/archived/code-p01-review-2026-09-05T204609Z.md`
 **Verdict:** passed — 0 Critical, 0 Important, 0 Medium, 0 Minor; fix loops 0.
 **Next:** execute the declared parallel group `p02 + p03`.
 
 #### Parallel group p02 + p03 completed, reviewed, and merged
 
 **p02:** reviewed head `948434796085b5c537542213fd562194827a822c`;
-passing artifact `reviews/code-p02-review-2026-09-05T210504Z.md`; fix loops 1;
+passing artifact `reviews/archived/code-p02-review-2026-09-05T210504Z.md`; fix loops 1;
 merged at `d8e94966424e10b5616a09abc62d758e15ac672c`.
 
 **p03:** reviewed head `4b1eb65a41ffe179793cd9eca7e7f3d963ec6766`;
-passing artifact `reviews/code-p03-review-2026-09-05T210747Z.md`; fix loops 1;
+passing artifact `reviews/archived/code-p03-review-2026-09-05T210747Z.md`; fix loops 1;
 merged at `2e922483fe01afce019a77a38e632abb87c17eb5`.
 
 **Fan-in verification:** p02 focused suites and both package type-checks passed;
