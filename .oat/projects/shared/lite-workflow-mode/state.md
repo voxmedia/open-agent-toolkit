@@ -41,7 +41,7 @@ oat_phase_recovery_policy:
         discovered_by: git add .oat/projects/shared/lite-workflow-mode/pr/
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
         reservation_head: ef9ed9f852c1307b3d85b8e1558a70b6c9628b14
-        status: pending
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
