@@ -733,6 +733,14 @@ implementation updates. Receive is complete. The allowed gate generation
 advances its rolling freshness checkpoint to that commit with effective delta
 `sha256:effective-delta-v1:2640c9f34644a23447ccfd45fa8a5e7b9616ee7d26b2f71f6a2792a3260a0732`.
 
+#### Approval-aware closeout sequence created
+
+The shared configured preference resolves to pre-approval steps `summary`,
+`document`, then `pr`, with no post-approval steps. Final phase `p06` is a HiLL
+checkpoint, so approval remains pending until all three stored pre-approval
+steps complete. The snapshot is immutable for this closeout. The external PR
+step remains subject to the user's explicit no-PR authorization boundary.
+
 #### Exit-gate review 2 received — final configured attempt
 
 **Review artifact:**
