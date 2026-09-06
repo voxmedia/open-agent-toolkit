@@ -1,8 +1,8 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-05
+oat_last_updated: 2026-09-06
 oat_current_task_id: null
 oat_generated: false
 ---
@@ -355,6 +355,13 @@ oat_generated: false
 **Verification record:** what — the record repairs above; how — `oat project validate-plan` exit 0, `grep -c '{' implementation.md` shows no template placeholders in the log/test sections, `git diff --stat` touches only project artifacts; where — this section and the receive commit.
 
 **Gate row `final` (gate lineage) → `passed`; `oat_implement_exit_gate` → `allowed / passed` in the following state checkpoint.**
+
+## Final HiLL approval (IMPLEMENT-16, autonomous)
+
+- Pre-approval sequence (configured `workflow.postImplementSequence`): summary (`b96bbafec`), document (`7ff21e646`), pr (PR #262, head `826bc46ed`) — all complete; no post-approval steps configured; recap intent `skip` (deferred to program close per the execution program).
+- Evidence: final review row `passed` (round 2 artifact `reviews/archived/final-review-2026-09-06T014238Z.md`, head `63ea98d28`, dispatch `w1-final-review-002`); configured exit gate `allowed / passed` (run `5d03a6ac`, artifact `reviews/archived/final-review-2026-09-06T015333Z.md`, different-family reviewer); every descendant after the reviewed head is closeout-only (review archival, gate log, receive bookkeeping, summary, document, PR metadata) and the rolling freshness checkpoint was advanced at each committed step.
+- Decision: `approval: approved`, `approval_source: oat-autonomous`, `status: post_approval` → no post-approval steps → `complete`. Operator authorization: 2026-09-05 ("let it rip"), covering PR creation and merge by the root orchestrator once CI, Bugbot, and the final gate are green. This approval waives nothing.
+- Completion: `oat project complete-state` recorded before merge; the archive tail (`oat project archive`, S3, pointer clear, completion bookkeeping commit) is `completion tail: deferred to program close`.
 
 ## Deferred Findings
 
