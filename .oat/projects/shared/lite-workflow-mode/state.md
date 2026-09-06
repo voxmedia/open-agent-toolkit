@@ -47,9 +47,9 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -65,8 +65,8 @@ oat_implement_exit_gate:
   reviewed_head: ac5ec22d3e6e32ae32e94c1e0d19ced98060ebcb
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:623de2fbac73c21d619de38b076d351464925990233264fb80d1c073d970c605'
-  freshness_head: ac5ec22d3e6e32ae32e94c1e0d19ced98060ebcb
-  freshness_fingerprint: 'sha256:effective-delta-v1:623de2fbac73c21d619de38b076d351464925990233264fb80d1c073d970c605'
+  freshness_head: 87cd91a62a5343ebb6350d7bfbb0ea74257f4086
+  freshness_fingerprint: 'sha256:effective-delta-v1:2640c9f34644a23447ccfd45fa8a5e7b9616ee7d26b2f71f6a2792a3260a0732'
   launch_state: result_persisted
   launch_attempt_id: 28685555-67c7-4bdf-a909-3689a0531ec9
   launch_started_at: '2026-09-06T04:11:39Z'
@@ -76,23 +76,23 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T041855Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=1). Run oat-project-review-receive for .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T041855Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=0da02d5a-4d15-4c3c-97bf-94cf246ac945; handoff=Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=1). Run oat-project-review-receive for .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T041855Z.md to disposition them before marking the final review row passed.; source=.oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T041855Z.md; scope=final; type=code; filename=final-review-2026-09-06T041855Z.md'
   receive_source_artifact: .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T041855Z.md
   receive_archived_artifact: .oat/projects/shared/lite-workflow-mode/reviews/archived/final-review-2026-09-06T041855Z.md
   receive_event_identity: 'final|code|final-review-2026-09-06T041855Z.md'
   receive_pre_head: f167bb43a899976efac450c18b185db4eb514a42
-  receive_commit: null
+  receive_commit: 87cd91a62a5343ebb6350d7bfbb0ea74257f4086
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-06T04:20:48Z'
+  updated_at: '2026-09-06T04:21:48Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T04:20:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T04:21:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -104,8 +104,8 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation tasks complete; awaiting the configured implementation exit
-gate.
+Implementation tasks and configured exit gate complete; preparing the
+approval-aware closeout sequence.
 
 ## Artifacts
 
@@ -151,17 +151,18 @@ gate.
 - ✓ Review cycle 4 override received; M1 converted to p06-t11
 - ✓ p06-t11 wording alignment and release-surface refresh complete (27/27)
 - ✓ User waiver recorded; no redundant lifecycle re-review will run
-- ⧗ One additionally authorized implementation exit-gate attempt remains
+- ✓ Additional implementation exit-gate attempt passed at the Important
+  threshold with one addressed Minor finding
 
 ## Blockers
 
 None. The documentation Medium is fixed and root-verified against the canonical
 brainstorm contract. The user explicitly waived a redundant standard lifecycle
-re-review because the change is wording-only. The separate authorization for
-one additional exit-gate attempt remains active. No push, PR, merge, or release
-is authorized.
+re-review because the change is wording-only. The additionally authorized exit
+gate passed; its Minor design wording drift was aligned during receive under
+the same instruction. No push, PR, merge, or release is authorized.
 
 ## Next Milestone
 
-Prepare and run the single additionally authorized implementation exit-gate
-attempt against the completed `0.2.60` implementation basis.
+Resolve the approval-aware closeout sequence without crossing the external PR,
+push, merge, or release authorization boundary.

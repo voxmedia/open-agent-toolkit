@@ -724,6 +724,15 @@ direction to fix wording without re-review, the receive aligned the two design
 sentences immediately. No runtime or shipped-package change was made, and no
 additional review or gate is required by the passing-sweep contract.
 
+**Receive receipt:** The archived artifact retains gate run
+`0da02d5a-4d15-4c3c-97bf-94cf246ac945`; the exact final/code Reviews event is
+`passed`; and bookkeeping commit
+`87cd91a62a5343ebb6350d7bfbb0ea74257f4086` follows the persisted pre-receive
+HEAD and contains the bounded archive move, design alignment, plan, and
+implementation updates. Receive is complete. The allowed gate generation
+advances its rolling freshness checkpoint to that commit with effective delta
+`sha256:effective-delta-v1:2640c9f34644a23447ccfd45fa8a5e7b9616ee7d26b2f71f6a2792a3260a0732`.
+
 #### Exit-gate review 2 received — final configured attempt
 
 **Review artifact:**
