@@ -108,6 +108,20 @@ removed.
 
 ---
 
+### 2026-09-06 · general · bug · oat sync --scope all writes user scope
+
+The p03 lane's `pnpm run cli -- sync --scope all` (the wrapper contract's own
+instruction) rewrote user-scope provider role files under `~/.cursor/agents`
+and `~/.codex/agents` and restamped `~/.oat/sync/manifest.json` from 0.2.61
+down to 0.2.58 with a version-skew warning — a write outside the repository
+by a lane that is supposed to be worktree-contained. The user manifest is back
+at 0.2.61 (another session restamped it). **Skill signal (contradicts):** the
+wrapper contract and lane briefs must say `sync --scope project`; `--scope
+all` belongs to the operator. Adopted for the remaining wave-3 work and the
+wave-4 briefs.
+
+---
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 At project completion, BEFORE any archive step, the orchestrator writes:
