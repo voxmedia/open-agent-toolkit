@@ -146,6 +146,18 @@ pending with a durable tracker, never as applied.
 
 ---
 
+### 2026-09-06 · general · bug · host killed the exit-gate run
+
+Exit-gate attempt 2 (run `226f2a4e`) was killed by the host for memory
+pressure after 4 minutes, leaving a run marker but no receipt or artifact; a
+wedged `node ""` probe from a wave-2 reviewer (inherited stdin) had also just
+been reclaimed. Recorded as a failed launch (not an attempt) and relaunched.
+**Skill signal (gap):** the gate state machine needs an explicit
+`not_accepted`/killed transition that relaunches without consuming
+`max_attempts`.
+
+---
+
 ## End-of-run synthesis (2026-09-06)
 
 **Convention verdicts (evidence: entries above and `implementation.md` Run 1):**

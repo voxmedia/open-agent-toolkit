@@ -66,20 +66,20 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: 1f09bb832f4db62a7c48f9b9b2b776f86973c380 # w3-p01-fix-002 (phase-execution.md:608 alignment); attempt 872d498a blocked and received
+  reviewed_head: 1f09bb832f4db62a7c48f9b9b2b776f86973c380 # w3-p01-fix-002; attempt 226f2a4e (w3-exit-gate-20260906T142243Z) was killed by the host for memory pressure before any result — no receipt, no artifact; not counted as an attempt
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:3b64830655dfae7ae030b9ef8adc522d2f1e6be0d07da253eaeb2ca7a8830040'
-  freshness_head: eb3b726e7d77dc9c674df6aad39b2d3a4a4985a9 # closeout-only: fix-002 record
+  freshness_head: 8f332444bc99578ee864974ac6d7dc5961204fe9 # closeout-only: acceptance checkpoint of the killed attempt
   freshness_fingerprint: 'sha256:effective-delta-v1:b8a4da69298b2d5cd353aae5bfc7f0b8d63e781bd4ff2a6a4aa87660d9f86ce9'
-  launch_state: accepted
-  launch_attempt_id: 'w3-exit-gate-20260906T142243Z'
-  launch_started_at: '2026-09-06T14:22:43Z'
-  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w3/w3-exit-gate-20260906T142243Z.receipt.json'
-  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/226f2a4e-cc93-45f4-91e1-605f82a36404.json'
-  gate_run_id: '226f2a4e-cc93-45f4-91e1-605f82a36404'
+  launch_state: intent_persisted
+  launch_attempt_id: 'w3-exit-gate-20260906T142749Z'
+  launch_started_at: '2026-09-06T14:27:49Z'
+  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w3/w3-exit-gate-20260906T142749Z.receipt.json'
+  gate_run_marker: null
+  gate_run_id: null
   envelope_status: null
   artifact: null
-  handoff: 'attempt 2 after w3-p01-fix-002'
+  handoff: 'attempt 2 relaunched after the host killed run 226f2a4e (low memory)'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -89,8 +89,8 @@ oat_implement_exit_gate:
   receive_commit: null
   receive_eligible: false
   receive_completed: false
-  failure: null
-  updated_at: '2026-09-06T14:22:57Z'
+  failure: 'run 226f2a4e killed by the host (low memory) before result; relaunched'
+  updated_at: '2026-09-06T14:27:49Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -131,7 +131,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T10:56:52.547Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T14:22:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T14:27:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
