@@ -118,7 +118,7 @@
     {
       "event_id": "exit-gate-override-fix-27405c06-126e-40b9-9b28-e56922cd916a",
       "reason": "Execute p06-t10 and permit one additional implementation exit-gate attempt under explicit user authorization",
-      "status": "intent_persisted",
+      "status": "completed",
       "authorized_at": "2026-09-06T02:59:17Z",
       "authorization": "explicit-user",
       "authorization_scope": "p06-t10 plus exactly one additional implementation exit-gate attempt; no push, PR, merge, or release",
@@ -127,7 +127,14 @@
       "tasks": ["p06-t10"],
       "dispatch_target": "oat-phase-implementer-gpt-5-6-sol-high",
       "model_selector": "gpt-5.6-sol",
-      "effort_selector": "high"
+      "effort_selector": "high",
+      "accepted_head": "bc352b61e7d23a69876e82359f0d660e4856a914",
+      "completed_at": "2026-09-06T03:14:06Z",
+      "final_head": "f3abb7688f005353ebee472c3d4df36e3c99cd0c",
+      "fix_commit": "f3abb7688f005353ebee472c3d4df36e3c99cd0c",
+      "verification_ledger": "/tmp/p06-t10-gates.ciI3Xq/exit-codes.txt",
+      "recovery_attempts": 0,
+      "flake_retries": 0
     }
   ],
   "fallback": {

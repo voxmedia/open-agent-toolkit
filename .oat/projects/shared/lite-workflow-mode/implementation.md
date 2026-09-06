@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
-oat_current_task_id: p06-t10
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 4     | 4/4       |
-| Phase 2 | complete    | 3     | 3/3       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | complete    | 2     | 2/2       |
-| Phase 5 | complete    | 4     | 4/4       |
-| Phase 6 | in_progress | 10    | 9/10      |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | complete | 3     | 3/3       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 2     | 2/2       |
+| Phase 5 | complete | 4     | 4/4       |
+| Phase 6 | complete | 10    | 10/10     |
 
-**Total:** 25/26 tasks completed
+**Total:** 26/26 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -490,11 +490,23 @@ no-op full-scope sync dry-run. No recovery attempt or flake retry was used.
 
 ### Task p06-t10: Carry promoted readiness through a real artifact path
 
-**Status:** pending
+**Status:** completed
+**Commit:** f3abb7688f005353ebee472c3d4df36e3c99cd0c
 
 **Authorization (2026-09-06):** The user explicitly authorized this bounded
 fix and one additional implementation exit-gate attempt beyond the configured
 2/2 cap. No push, PR, merge, or release authority was granted.
+
+**Outcome:** Promoted discovery artifacts preserve `oat_status: in_progress`
+and now carry `oat_ready_for: oat-project-quick-start`. Production-derived
+shared and local promotion controls both route to quick-start.
+
+**Verification:** The original and deliberately neutralized paths both
+reproduced `oat-project-discover`; restored focused suites passed 21/21 and
+26/26. `/tmp/p06-t10-gates.ciI3Xq/exit-codes.txt` records every required,
+supplemental, and post-commit check at exit 0, including forced uncached tests,
+release validation, version parity at `0.2.59`, and a no-op final sync dry-run.
+No recovery attempt or flake retry was used.
 
 ## Orchestration Runs
 
@@ -1361,14 +1373,14 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                                            | Passed                            | Failed  | Coverage                                                |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- | ------- | ------------------------------------------------------- |
-| 1     | Focused control-plane/CLI, check, type-check, test, build                                                                            | Yes                               | 0       | Mode declaration, parsing, scaffold, help               |
-| 2     | Focused router/dashboard/closeout suites plus full phase gates                                                                       | Yes                               | 0       | Recommendation, progress routing, PR closeout           |
-| 3     | Focused split/promote/validator suites plus full phase gates                                                                         | Yes                               | 0       | Promotion safety and Lite plan validation               |
-| 4     | Skill contracts, end-to-end Lite integration, full phase gates                                                                       | Yes after bounded recovery        | 0 final | Dedicated Lite workflow and bundled assets              |
-| 5     | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops    | 0 final | Review, import, progress, recap bypass, PR flow         |
-| 6     | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes after one no-edit flake rerun | 0 final | Docs, provider sync, manual Lite path, release `0.2.56` |
+| Phase | Tests Run                                                                                                                            | Passed                         | Failed  | Coverage                                                      |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ | ------- | ------------------------------------------------------------- |
+| 1     | Focused control-plane/CLI, check, type-check, test, build                                                                            | Yes                            | 0       | Mode declaration, parsing, scaffold, help                     |
+| 2     | Focused router/dashboard/closeout suites plus full phase gates                                                                       | Yes                            | 0       | Recommendation, progress routing, PR closeout                 |
+| 3     | Focused split/promote/validator suites plus full phase gates                                                                         | Yes                            | 0       | Promotion safety and Lite plan validation                     |
+| 4     | Skill contracts, end-to-end Lite integration, full phase gates                                                                       | Yes after bounded recovery     | 0 final | Dedicated Lite workflow and bundled assets                    |
+| 5     | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops | 0 final | Review, import, progress, recap bypass, PR flow               |
+| 6     | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes; p06-t10 used no retries   | 0 final | Docs, provider sync, real promotion routing, release `0.2.59` |
 
 ## Final Summary (for PR/docs)
 
@@ -1380,7 +1392,7 @@ Track test execution during implementation.
   approval, automatic promotion to quick when scope outgrows Lite, managed
   dispatch, phase/final reviews, and PR-first closeout.
 - Provider projections, docs, lifecycle integrations, and lockstep public
-  package release surfaces synchronized at `0.2.56`.
+  package release surfaces synchronized at `0.2.59`.
 
 **Behavioral changes (user-facing):**
 
@@ -1388,7 +1400,8 @@ Track test execution during implementation.
   discovery, spec, or design artifacts while retaining tracked validation and
   independent implementation reviews.
 - Oversized or unresolved Lite work promotes safely to quick mode without
-  losing the authored plan context.
+  losing the authored plan context, and the resulting real discovery artifact
+  routes both shared and local projects directly to quick-start.
 - Lite completion skips summary, documentation, recap, and final HiLL approval
   by default, but still requires phase review, final review, the configured
   implementation exit gate, and PR generation.

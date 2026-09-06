@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t10
-oat_last_commit: 469141fba075371b9d6cd5dc075cb1f00fe9c6ff
+oat_current_task: null
+oat_last_commit: f3abb7688f005353ebee472c3d4df36e3c99cd0c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -47,7 +47,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
@@ -56,6 +56,12 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 2
+  operator_extension:
+    additional_attempts: 1
+    effective_attempt_limit: 3
+    authorization: explicit-user
+    authorized_at: '2026-09-06T02:59:17Z'
+    scope: 'p06-t10 plus exactly one additional implementation exit-gate attempt'
   reviewed_head: 6ba4c38dd08d192fdb35840becbdf52b74f5d8a9
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:689ce3c9329c6143637d2c805a96d238bdf492bddab47b1dacab804247f5eb31'
@@ -86,7 +92,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T02:59:17Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T03:14:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +104,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementing p06-t10 under the user's bounded exit-gate override.
+Implementation tasks complete; awaiting a fresh final lifecycle review.
 
 ## Artifacts
 
@@ -139,16 +145,17 @@ Implementing p06-t10 under the user's bounded exit-gate override.
 - ✓ Exit-gate fix tasks p06-t07 through p06-t09 completed (25/25 total)
 - ✓ Fresh final lifecycle review passed with no findings
 - ⧗ Exit gate attempt 2 found one Important production-path routing defect
-- ⧗ Fix task p06-t10 authorized; one additional exit-gate attempt permitted
+- ✓ Fix task p06-t10 completed with production-derived shared/local controls
+- ⧗ Fresh final lifecycle review required for the changed implementation basis
 
 ## Blockers
 
-None. The user explicitly authorized executing p06-t10 and one additional
-exit-gate attempt beyond the configured 2/2 cap. This does not authorize a
-push, PR, merge, or release. The historical p06-t02 header-wording Medium
-remains explicitly accepted for defer.
+None. The user explicitly authorized one additional exit-gate attempt beyond
+the configured 2/2 cap. This does not authorize a push, PR, merge, or release.
+The historical p06-t02 header-wording Medium remains explicitly accepted for
+defer.
 
 ## Next Milestone
 
-Complete p06-t10, re-establish lifecycle review evidence as required, and run
-the single additionally authorized implementation exit-gate attempt.
+Run a fresh final lifecycle review for `f3abb7688f005353ebee472c3d4df36e3c99cd0c`,
+then run the single additionally authorized implementation exit-gate attempt.
