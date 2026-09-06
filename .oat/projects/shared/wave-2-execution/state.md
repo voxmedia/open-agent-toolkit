@@ -17,7 +17,7 @@ oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_phase_recovery_policy:
   default_attempt_limit: 10
@@ -135,22 +135,26 @@ oat_implement_exit_gate:
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_post_implement_sequence:
-  status: pre_approval # pre_approval | awaiting_approval | post_approval | complete
+  status: complete # pre_approval | awaiting_approval | post_approval | complete (autonomous approval 2026-09-06; no post-approval steps)
   source: configured # workflow.postImplementSequence
   final_phase: p05
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
-  approval: pending # pending | approved | not_required
-  approval_source: null # null | user | oat-autonomous
+  pre_approval_completed: [summary, document, pr]
+  approval: approved # pending | approved | not_required
+  approval_source: oat-autonomous # null | user | oat-autonomous
   post_approval: []
   post_approval_completed: []
   failure: null
+oat_project_recap:
+  decision: skip
+  source: interactive # operator-approved program rule: recap deferred to program close
+  decided_at: '2026-09-06T09:37:14Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/267' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-06T02:27:21.413Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T09:36:08Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-06T09:37:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -162,7 +166,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all five phases merged on `wave-2-execution`; closeout (final review, configured exit gate, post-implement sequence) in progress.
+Implementation — PR #267 open; completion recorded before merge (archive tail deferred to program close).
 
 ## Artifacts
 
@@ -183,7 +187,9 @@ Implementation — all five phases merged on `wave-2-execution`; closeout (final
 - ✓ Group 2 p02/p03/p04 merged (`d22e29058`, `67f747e74`, `7b9e379a8`), eight gates green
 - ✓ p05 merged (`eecd58fc3`), eight gates green
 - ✓ Backlog archived (5) and follow-ups filed; synthesis written
-- ⧗ Final review dispositions, configured exit gate, post-implement sequence
+- ✓ Final review passed (three rounds) and configured exit gate allowed/passed (run `45ee23dc`, zero findings)
+- ✓ Post-implement sequence: summary, document, pr (PR #267)
+- ⧗ Awaiting CI and Bugbot; merge by the root orchestrator when green
 
 ## Blockers
 
@@ -191,4 +197,4 @@ None
 
 ## Next Milestone
 
-Final review round 2 (narrowed) passes; configured exit gate `allowed / passed`; summary → document → pr; `oat project complete-state`; PR to `main`.
+PR #267 is open for review. CI and Bugbot green → merge → `oat-wave-program wave-close` → W3.
