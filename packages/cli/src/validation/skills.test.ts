@@ -6793,3 +6793,48 @@ describe('bundled skill contract truthfulness — brainstorm diagnostics', () =>
     expect(nodeMissing).toContain('skip the offer entirely');
   });
 });
+
+describe('bundled skill contract truthfulness — idea-summarize tools', () => {
+  it('declares every tool the idea-summarize steps invoke', async () => {
+    const skill = await readRepoFile(
+      '.agents/skills/oat-idea-summarize/SKILL.md',
+    );
+
+    const frontmatter = skill.match(/^---\n([\s\S]*?)\n---\n/)?.[1];
+    expect(frontmatter, 'idea-summarize frontmatter').toBeDefined();
+    const declaredTools = (
+      frontmatter?.match(/^allowed-tools:\s*(.+)$/m)?.[1] ?? ''
+    )
+      .split(',')
+      .map((tool) => tool.trim())
+      .filter((tool) => tool.length > 0);
+
+    // Declaration and usage are asserted together: the steps below invoke
+    // shell commands (Bash) and the Glob tool, so both must be declared, and
+    // the previously declared tools must survive.
+    expect(declaredTools).toEqual(
+      expect.arrayContaining([
+        'Read',
+        'Write',
+        'Bash',
+        'Glob',
+        'Grep',
+        'AskUserQuestion',
+      ]),
+    );
+
+    const resolveStep = skill.match(
+      /### Step 1: Resolve Active Idea[\s\S]*?(?=### Step 2:)/,
+    )?.[0];
+    expect(resolveStep, 'resolve-active-idea step').toBeDefined();
+    // Normal path: a shell command reads the pointer.
+    expect(resolveStep).toContain('oat config get activeIdea');
+    // Missing-active-idea fallback: Glob tool plus a shell write-back.
+    const fallback = resolveStep?.slice(
+      resolveStep.indexOf('**If missing or invalid:**'),
+    );
+    expect(fallback, 'missing-active-idea fallback').toBeDefined();
+    expect(fallback).toContain('Use the Glob tool');
+    expect(fallback).toContain('oat config set activeIdea');
+  });
+});
