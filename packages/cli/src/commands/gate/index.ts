@@ -19,9 +19,9 @@ import {
 import {
   appendProjectLog,
   commitProjectLog,
+  committedProjectLogIdentityState,
   GATE_RECEIPTS_DIRNAME,
   PROJECT_LOG_FILENAME,
-  projectLogContainsIdempotencyKey,
   type GateProjectLogReceipt,
   type ProjectLogCommitResult,
 } from '@commands/project/log/append';
@@ -2997,10 +2997,18 @@ function composeGateProjectLogRecoveryCommand(input: {
 /**
  * Warns once per pending gate project-log receipt at the start of a run.
  *
- * A receipt whose run id the log already carries is reported as `stale`: the
- * append landed, so the recovery command will observe `already-appended` and
- * clear the receipt. Anything else is `pending` finalization work. The
- * staleness question is answered by the log module, so the gate never reads
+ * A receipt is `stale` only once the *committed* log carries its run id: the
+ * append landed and was committed, so the recovery command will observe
+ * `already-appended` and clear the receipt. Anything else is `pending`
+ * finalization work.
+ *
+ * Reading the working tree instead is what made this wrong. A run whose commit
+ * retries were exhausted leaves its entry in the working tree and nowhere else
+ * — that is precisely the state the receipt exists to describe — so a
+ * working-tree reader calls every unfinished finalization finished, and the
+ * receipt that would have completed it is dismissed as leftovers.
+ *
+ * The staleness question is answered by the log module, so the gate never reads
  * `project-log.md` itself.
  */
 async function warnPendingGateProjectLogReceipts(options: {
@@ -3042,13 +3050,18 @@ async function warnPendingGateProjectLogReceipts(options: {
         : undefined;
     // A receipt that names another tree's log cannot be shown to be stale
     // here, so it stays pending and the disagreement is reported.
+    //
+    // `present` is required, not merely "not absent": a log the committed tree
+    // cannot answer for leaves the work pending, because an unfinished
+    // finalization that is reported as stale is one nobody will finish.
     const stale =
       foreignLogPath === undefined &&
-      (await projectLogContainsIdempotencyKey(
+      (await committedProjectLogIdentityState(
+        options.repoRoot,
         projectLogPath,
         receipt.runId,
         receipt.body,
-      ));
+      )) === 'present';
     const state = stale ? 'stale' : 'pending';
     if (options.context.json) {
       options.dependencies.writeDiagnostic(

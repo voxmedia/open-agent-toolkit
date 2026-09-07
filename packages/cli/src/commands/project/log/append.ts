@@ -1069,28 +1069,6 @@ export function findProjectLogEntryByIdempotencyKey(
 }
 
 /**
- * True when the log at `logPath` already carries an entry for `key`. A missing
- * or unreadable log is reported as absent rather than throwing.
- */
-export async function projectLogContainsIdempotencyKey(
-  logPath: string,
-  key: string,
-  body?: string,
-): Promise<boolean> {
-  try {
-    return (
-      findProjectLogEntryByIdempotencyKey(
-        await readFile(logPath, 'utf8'),
-        key,
-        body,
-      ) !== undefined
-    );
-  } catch {
-    return false;
-  }
-}
-
-/**
  * Durable record of a gate project-log append that was written but could not be
  * committed. It carries everything the recovery command needs to finish the
  * finalization from a later process, and enough identity to refuse when the
