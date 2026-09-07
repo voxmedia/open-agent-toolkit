@@ -2,7 +2,14 @@ import { execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, dirname, isAbsolute, join, relative } from 'node:path';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from 'node:path';
 
 import {
   buildCommandContext,
@@ -13,6 +20,7 @@ import {
   appendProjectLog,
   commitProjectLog,
   GATE_RECEIPTS_DIRNAME,
+  PROJECT_LOG_FILENAME,
   projectLogContainsIdempotencyKey,
   type GateProjectLogReceipt,
   type ProjectLogCommitResult,
@@ -489,11 +497,49 @@ async function writeGateProjectLogReceipt(
   try {
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, `${JSON.stringify(receipt, null, 2)}\n`, 'utf8');
-    return true;
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     warn(`Unable to write gate project log receipt ${path}: ${detail}`);
     return false;
+  }
+  warnWhenReceiptIsTracked(path, warn);
+  return true;
+}
+
+/**
+ * Warns when the receipt just written is not ignored by git.
+ *
+ * "Untracked" is a property of the repository's ignore rules, not of this
+ * module: a repository that relocates `projects.root`, or drops the shipped
+ * repository-wide gate-receipts ignore rule, gets a receipt that the next
+ * `git add -A` would commit — the exact dirty worktree finalization exists to
+ * prevent. The
+ * receipt is still written, because losing the finalization would be worse
+ * than a tracked file; the operator is told instead. A repository this path
+ * cannot interrogate stays silent rather than warning speculatively.
+ */
+function warnWhenReceiptIsTracked(
+  path: string,
+  warn: (message: string) => void,
+): void {
+  try {
+    execFileSync('git', ['check-ignore', '--quiet', '--', path], {
+      cwd: dirname(path),
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+  } catch (error) {
+    // Exit 1 means "not ignored"; anything else (not a repository, git
+    // missing) is not evidence either way.
+    const status =
+      error && typeof error === 'object' && 'status' in error
+        ? (error as { status?: number }).status
+        : undefined;
+    if (status !== 1) {
+      return;
+    }
+    warn(
+      `Gate project log receipt ${path} is not ignored by git. Add a gate-receipts ignore rule for this projects root, or the receipt will be committed by the next repository-wide add.`,
+    );
   }
 }
 
@@ -2963,10 +3009,13 @@ async function warnPendingGateProjectLogReceipts(options: {
   repoRoot: string;
   project: string;
 }): Promise<void> {
-  const receiptsDir = join(
-    resolveGateProjectPath(options.repoRoot, options.project),
-    GATE_RECEIPTS_DIRNAME,
-  );
+  const projectDir = resolveGateProjectPath(options.repoRoot, options.project);
+  const receiptsDir = join(projectDir, GATE_RECEIPTS_DIRNAME);
+  // The staleness question is about the log of the project being gated. A
+  // receipt that travelled with a copied project directory records the other
+  // tree's absolute path, and reading that would make the verdict a statement
+  // about a log this run does not own.
+  const projectLogPath = join(projectDir, PROJECT_LOG_FILENAME);
   let entries: string[];
   try {
     entries = await readdir(receiptsDir);
@@ -2986,11 +3035,20 @@ async function warnPendingGateProjectLogReceipts(options: {
     } catch {
       continue;
     }
-    const stale = await projectLogContainsIdempotencyKey(
-      receipt.logPath,
-      receipt.runId,
-      receipt.body,
-    );
+    const foreignLogPath =
+      typeof receipt.logPath === 'string' &&
+      resolve(receipt.logPath) !== resolve(projectLogPath)
+        ? receipt.logPath
+        : undefined;
+    // A receipt that names another tree's log cannot be shown to be stale
+    // here, so it stays pending and the disagreement is reported.
+    const stale =
+      foreignLogPath === undefined &&
+      (await projectLogContainsIdempotencyKey(
+        projectLogPath,
+        receipt.runId,
+        receipt.body,
+      ));
     const state = stale ? 'stale' : 'pending';
     if (options.context.json) {
       options.dependencies.writeDiagnostic(
@@ -2999,6 +3057,10 @@ async function warnPendingGateProjectLogReceipts(options: {
           state,
           project: options.project,
           receiptPath,
+          logPath: projectLogPath,
+          ...(foreignLogPath !== undefined
+            ? { recordedLogPath: foreignLogPath }
+            : {}),
           runId: receipt.runId,
           recovery: receipt.recovery?.command,
         })}\n`,
@@ -3006,7 +3068,11 @@ async function warnPendingGateProjectLogReceipts(options: {
       continue;
     }
     options.context.logger.warn(
-      `Warning: a ${state} gate project log receipt exists at ${receiptPath}. Complete it with: ${receipt.recovery?.command ?? 'oat project log append --commit'}`,
+      `Warning: a ${state} gate project log receipt exists at ${receiptPath}${
+        foreignLogPath !== undefined
+          ? ` (it records another tree's log at ${foreignLogPath})`
+          : ''
+      }. Complete it with: ${receipt.recovery?.command ?? 'oat project log append --commit'}`,
     );
   }
 }
@@ -3067,7 +3133,23 @@ async function emitGateProjectLogPartialFinalization(options: {
   const written = await dependencies.writeGateProjectLogReceipt(
     receiptPath,
     receipt,
-    (message) => context.logger.warn(message),
+    // `logger.warn` is suppressed in JSON mode, and a receipt warning is
+    // exactly what automation needs to see, so route it the same way the
+    // finalization diagnostics go.
+    (message) => {
+      if (context.json) {
+        dependencies.writeDiagnostic(
+          `${JSON.stringify({
+            type: 'gate-project-log-receipt-warning',
+            project: finalization.project,
+            receiptPath,
+            message,
+          })}\n`,
+        );
+        return;
+      }
+      context.logger.warn(message);
+    },
   );
   if (!written) {
     return;

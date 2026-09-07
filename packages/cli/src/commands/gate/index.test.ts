@@ -5703,6 +5703,8 @@ describe('oat gate', () => {
    */
   async function runGateWithProjectLog(
     options: {
+      gitignore?: string;
+      projectDir?: string;
       holdIndexLock?: boolean;
       onSleep?: (input: {
         call: number;
@@ -5716,8 +5718,11 @@ describe('oat gate', () => {
     } = {},
   ): Promise<GateProjectLogRun> {
     const { root, home } = await setup();
-    const projectPath = await writeProject(root);
+    const projectPath = await writeProject(root, options.projectDir);
     await writeActiveProject(root, projectPath);
+    if (options.gitignore !== undefined) {
+      await writeFile(join(root, '.gitignore'), options.gitignore, 'utf8');
+    }
     const git = initGitRepo(root);
     await options.seedReceipt?.({ root, projectPath });
     if (options.holdIndexLock) {
@@ -5892,6 +5897,79 @@ describe('oat gate', () => {
         recovery: receipt.recovery.command,
       }),
     );
+  });
+
+  const LEGACY_RECEIPT_IGNORE_RULE = '.oat/projects/**/gate-receipts/\n';
+  const RELOCATED_PROJECT_DIR = 'docs/oat-projects/shared/demo';
+
+  it('ignores gate receipts under any projects root', () => {
+    // `projects.root` is a settable key, so the receipt path follows the
+    // resolved project rather than `.oat/projects`. The shipped rule has to
+    // cover both, or a relocated-root repository commits its receipts.
+    const repoRoot = join(process.cwd(), '..', '..');
+    const ignored = (candidate: string): number => {
+      try {
+        execFileSync('git', ['check-ignore', '--quiet', '--', candidate], {
+          cwd: repoRoot,
+          stdio: ['ignore', 'ignore', 'ignore'],
+        });
+        return 0;
+      } catch (error) {
+        return (error as { status?: number }).status ?? -1;
+      }
+    };
+
+    expect(ignored('.oat/projects/shared/demo/gate-receipts/x.json')).toBe(0);
+    expect(ignored(`${RELOCATED_PROJECT_DIR}/gate-receipts/r.json`)).toBe(0);
+    // The rule stays narrow: it must not swallow the log it protects.
+    expect(ignored('.oat/projects/shared/demo/project-log.md')).toBe(1);
+    expect(ignored('packages/cli/src/index.ts')).toBe(1);
+  });
+
+  it('warns when a written receipt is not ignored by git', async () => {
+    const run = await runGateWithProjectLog({
+      holdIndexLock: true,
+      projectDir: RELOCATED_PROJECT_DIR,
+      // The rule this lane replaced: rooted at `.oat/projects`, so it misses a
+      // relocated projects root entirely.
+      gitignore: LEGACY_RECEIPT_IGNORE_RULE,
+    });
+
+    expect(run.diagnostics).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-receipt-warning',
+        project: RELOCATED_PROJECT_DIR,
+        message: expect.stringContaining('is not ignored by git'),
+      }),
+    );
+    // The receipt is still written: losing the finalization would be worse
+    // than a tracked file.
+    await expect(readGateReceipt(run)).resolves.toMatchObject({
+      commitStatus: 'blocked-by-index-lock',
+    });
+    expect(run.capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+  });
+
+  it('stays silent when the repository ignores the receipt under a relocated projects root', async () => {
+    const run = await runGateWithProjectLog({
+      holdIndexLock: true,
+      projectDir: RELOCATED_PROJECT_DIR,
+      gitignore: '**/gate-receipts/\n',
+    });
+
+    expect(run.diagnostics).not.toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-receipt-warning',
+      }),
+    );
+    expect(run.diagnostics).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-partial-finalization',
+      }),
+    );
+    expect(
+      run.git(['status', '--porcelain', '--', RELOCATED_PROJECT_DIR]),
+    ).not.toContain('gate-receipts');
   });
 
   it('warns at gate start when a receipt is pending for the project', async () => {
@@ -6083,6 +6161,54 @@ describe('oat gate', () => {
     await expect(readFile(logPath, 'utf8')).resolves.toBe(content);
     expect(countRunHeadings(content, run.runId)).toBe(1);
   }, 120_000);
+
+  it("keeps a receipt pending when it records another tree's log", async () => {
+    let pendingReceiptPath = '';
+    let foreignLogPath = '';
+    const run = await runGateWithProjectLog({
+      seedReceipt: async ({ root, projectPath }) => {
+        // A receipt that travelled with a copied project directory: the log it
+        // names carries the run id, but it is not this project's log.
+        foreignLogPath = join(root, 'elsewhere', 'project-log.md');
+        await mkdir(join(root, 'elsewhere'), { recursive: true });
+        await writeFile(
+          foreignLogPath,
+          '# Project Log: elsewhere\n\n## Entries\n\n### 2026-07-17 · structural · oat gate review · p01\n\nstatus=ok run=travelled-run\n',
+          'utf8',
+        );
+        pendingReceiptPath = join(
+          root,
+          projectPath,
+          'gate-receipts',
+          'travelled-run.json',
+        );
+        await mkdir(join(root, projectPath, 'gate-receipts'), {
+          recursive: true,
+        });
+        await writeFile(
+          pendingReceiptPath,
+          `${JSON.stringify({
+            runId: 'travelled-run',
+            logPath: foreignLogPath,
+            body: 'status=ok run=travelled-run',
+            recovery: { command: 'oat project log append --commit' },
+          })}\n`,
+          'utf8',
+        );
+      },
+    });
+
+    const pending = run.diagnostics.find(
+      (entry) => entry.type === 'gate-project-log-receipt-pending',
+    );
+    // Staleness is a statement about the log of the project being gated, so a
+    // receipt naming another tree's log cannot be called stale.
+    expect(pending).toMatchObject({
+      state: 'pending',
+      recordedLogPath: foreignLogPath,
+      logPath: join(run.root, run.projectPath, 'project-log.md'),
+    });
+  });
 
   it('reports a receipt as stale once its run id is already in the log', async () => {
     let pendingReceiptPath = '';

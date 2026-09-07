@@ -40,7 +40,7 @@ import {
   type ProjectLogType,
 } from './grammar';
 
-const PROJECT_LOG_FILENAME = 'project-log.md';
+export const PROJECT_LOG_FILENAME = 'project-log.md';
 const SYNTHESIS_HEADING_PREFIX = '\n## End-of-run synthesis';
 
 /**
@@ -136,6 +136,17 @@ const GIT_CONTENTION_ADVICE_RE =
   /another git process seems to be running in this repository/i;
 const INDEX_LOCK_MENTION_RE = /index\.lock/i;
 
+/**
+ * Accepted residual: a hook that reproduces git's advice sentence *and* names
+ * an index lock in the same output is read as contention and retried three
+ * times. That costs one wasted retry window and a misleading `lockClass`, but
+ * it is not a swallowed failure — the exit status stays non-zero, the raw
+ * stderr is preserved in `error`, nothing is left staged, and the gate still
+ * emits `gate-project-log-commit-failed`. Demanding the fatal line for the
+ * advice branch too would reject nothing git actually emits, but it would also
+ * make the branch redundant with the primary regex, so the branch is kept for
+ * git output shapes that lead with the advice.
+ */
 function isIndexLockContention(stderr: string): boolean {
   return (
     INDEX_LOCK_CREATE_RE.test(stderr) ||
@@ -225,15 +236,6 @@ function readHead(run: (args: string[]) => string): string | undefined {
 }
 
 /**
- * True when another writer already committed the entry we were trying to
- * commit.
- *
- * All three conditions are required. A clean log means the working tree matches
- * HEAD, a moved HEAD means someone committed, and — when the caller named the
- * entry's identity — that identity still being in the clean file means the
- * committed content is the content we appended, not a rewrite that dropped it.
- */
-/**
  * True when the log on disk still carries the entry this commit is finalizing.
  * An absent identity means the caller did not name an entry, so there is
  * nothing to contradict.
@@ -257,6 +259,15 @@ function logCarriesIdentity(input: CommitProjectLogInput): boolean {
   }
 }
 
+/**
+ * True when another writer already committed the entry we were trying to
+ * commit.
+ *
+ * All three conditions are required. A clean log means the working tree matches
+ * HEAD, a moved HEAD means someone committed, and — when the caller named the
+ * entry's identity — that identity still being in the clean file means the
+ * committed content is the content we appended, not a rewrite that dropped it.
+ */
 function settledByAnotherWriter(
   run: (args: string[]) => string,
   snapshot: ProjectLogCommitSnapshot,

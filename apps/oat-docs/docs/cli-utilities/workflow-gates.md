@@ -503,9 +503,16 @@ When the retries are exhausted the append has landed but the commit has not, so
 the gate writes a durable receipt to
 `<project>/gate-receipts/<runId>.json` and emits a
 `gate-project-log-partial-finalization` diagnostic naming the receipt and
-printing its recovery command verbatim. The receipt directory is gitignored, so
-a receipt never dirties the worktree. The gate result is unchanged: a passing
+printing its recovery command verbatim. The gate result is unchanged: a passing
 review still exits `ok`.
+
+The receipt must not dirty the worktree, so this repository ignores
+`**/gate-receipts/` repository-wide rather than under `.oat/projects` alone:
+`projects.root` is settable, and the receipt follows the resolved project. A
+repository whose ignore rules do not cover the receipt still gets the receipt —
+losing the finalization would be worse than a tracked file — plus a
+`gate-project-log-receipt-warning` diagnostic naming the path, so the gap
+surfaces before the next repository-wide `git add`.
 
 The receipt completes the finalization from a later process, with no reviewer
 and no second gate run:
@@ -519,7 +526,11 @@ oat project log append --project <projectPath> --structural \
 Before appending anything, that command validates the receipt against the live
 tree: the project path must resolve to the same project, `worktreeRoot` must
 match `git rev-parse --show-toplevel`, and the review artifact must still exist
-with its recorded sha256 signature. The replayed entry must also be the entry
+with its recorded sha256 signature. A receipt that names no artifact — the gate
+correlated none, so `artifactPath` and `artifactSignature` are both `null` — is
+bound by run id, project, worktree, and the entry fields alone; a receipt that
+names an artifact _without_ a signature is malformed and refused. The replayed
+entry must also be the entry
 the receipt describes — `--producer`, `--ref`, and `--body` are compared against
 the receipt, and the receipt's own run id must be the `--idempotency-key` that
 names its file — so a receipt can never be consumed while some other entry is

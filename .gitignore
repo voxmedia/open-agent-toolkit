@@ -89,5 +89,7 @@ yarn-error.log*
 # END OAT local paths
 
 # OAT gate partial-finalization receipts. Written when a gate appended to the
-# project log but could not commit it; deleted by the recovery command.
-.oat/projects/**/gate-receipts/
+# project log but could not commit it; deleted by the recovery command. The
+# rule is repository-wide rather than rooted at .oat/projects because the
+# receipt follows the resolved project, and projects.root is settable.
+**/gate-receipts/

@@ -997,6 +997,49 @@ describe('oat project log append', () => {
       expect(git(['status', '--porcelain', '--', logPath])).toBe('');
     });
 
+    it('accepts a hook that reproduces both the advice and a lock mention as contention', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath, '\n### seed\n\nseed entry\n');
+      initGitRepo(root);
+      await writeFile(
+        join(root, '.git', 'hooks', 'pre-commit'),
+        '#!/bin/sh\necho "Another git process seems to be running in this repository, see .git/index.lock" >&2\nexit 1\n',
+        { encoding: 'utf8', mode: 0o755 },
+      );
+      await writeFile(
+        logPath,
+        `${await readFile(logPath, 'utf8')}\nedit\n`,
+        'utf8',
+      );
+      const git = (args: string[]): string =>
+        execFileSync('git', args, {
+          cwd: root,
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'pipe'],
+        }).trim();
+      const sleep = vi.fn(async () => {});
+
+      const result = await commitProjectLog(
+        { repoRoot: root, logPath, message: 'chore(oat): residual probe' },
+        { sleep },
+      );
+
+      // Accepted residual, pinned so it cannot drift silently: output carrying
+      // git's advice *and* an index-lock mention is read as contention and
+      // retried. The cost is one wasted retry window and a misleading
+      // `lockClass` — never a swallowed failure.
+      expect(result).toMatchObject({
+        outcome: 'blocked-by-index-lock',
+        committed: false,
+        attempts: 3,
+      });
+      expect(result.error).toContain('Another git process seems to be running');
+      expect(sleep).toHaveBeenCalledTimes(2);
+      // Nothing is swallowed and nothing is left staged.
+      expect(git(['diff', '--cached', '--name-only'])).toBe('');
+      expect(git(['status', '--porcelain', '--', logPath])).not.toBe('');
+    });
+
     it('reports already-committed when a competing writer clears the lock and commits first', async () => {
       const { root, logPath } = await createRepo();
       const identity = 'c0ffee00-3333-4000-8000-0123456789ab';
