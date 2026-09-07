@@ -1,6 +1,6 @@
 ---
 name: oat-repo-improve
-version: 2.1.2
+version: 2.1.3
 description: Use when auditing a repository or turning maintainability reviews, backlog reviews, backlog directories, or backlog items into self-contained external implementation plans.
 argument-hint: '[repo-audit|maintainability-review|backlog-review|backlog-directory|backlog-item] [path-or-id] [quick|standard|deep] [focus] [--backlog-items] [--issues]'
 disable-model-invocation: false
@@ -162,7 +162,14 @@ Do not treat review rankings or backlog wording as verified code facts. Preserve
 
 ### Step 4: Vet and Select Plan Candidates
 
-For audit and review sources, present a concise vetted candidate table with impact/value, effort, risk, confidence, dependencies, and evidence. Keep rejected or stale candidates out of plans and explain material rejections.
+For audit and review sources, present a concise vetted candidate table with impact/value, effort, risk, confidence, `plan_ready`, `execution_ready`, dependencies, and evidence. Keep rejected or stale candidates out of plans and explain material rejections.
+
+Score the two readiness axes separately; they answer different questions:
+
+- **`plan_ready`** — is the candidate understood well enough to write a self-contained, executable plan? Its evidence is verified live, it has one coherent outcome, and its verification boundary is known.
+- **`execution_ready`** — could an executor start today? Every hard dependency the plan would name is already satisfied.
+
+Dependency state alone does not disqualify a candidate. A candidate that is `plan_ready` but not `execution_ready` is still planned: its plan records `oat_execution_status: BLOCKED`, types the blocking row `Hard` in `## Dependencies`, and names the state that would unblock it. Reject a candidate for not being `plan_ready`, never for being blocked.
 
 Ask which candidates to plan. Recommend a bounded set of 3–5 when several are viable. In a non-interactive run, select the top 3–5 by leverage and record that default in the generated index.
 
@@ -179,7 +186,18 @@ For `backlog-item`, the selected candidate is the item itself unless investigati
 
 ### Step 5: Write External Plans
 
-Read `references/plan-template.md` before writing the first plan. Record `git rev-parse --short HEAD` and write only under:
+Read `references/plan-template.md` before writing the first plan. Record plan provenance with this block before writing anything:
+
+```bash
+git rev-parse HEAD                                   # inspected baseline → oat_external_plan_commit
+git fetch origin main && git rev-parse origin/main   # comparison evidence → oat_external_plan_main_commit
+git merge-base HEAD origin/main                      # comparison evidence when HEAD is a branch
+git status --porcelain                               # must be empty, or name every dirty path in the plan
+```
+
+`oat_external_plan_commit` is the full SHA of the `HEAD` whose content was actually inspected. Never stamp it with a fetched tip that was not read: fetching `origin/main` and recording its SHA as the planned-at commit claims evidence the plan never inspected. The fetched `origin/main` or merge-base SHA is comparison evidence and belongs in `oat_external_plan_main_commit`; the two may differ, and they normally do when planning from a branch. If `git status --porcelain` is not empty, name every dirty path in the plan's evidence section so a later executor knows what the inspected tree contained.
+
+Then write only under:
 
 `.oat/repo/reference/external-plans/`
 
@@ -196,12 +214,20 @@ The index records source artifacts, selection rationale, execution order, depend
 Each plan must:
 
 - be self-contained for an executor with no session context;
-- carry external-plan frontmatter identifying source mode, source paths, planned-at commit, and related backlog IDs;
+- carry external-plan frontmatter identifying source mode, source paths, and related backlog IDs;
+- record the full inspected `HEAD` in `oat_external_plan_commit`, the compared `origin/main` or merge-base SHA in `oat_external_plan_main_commit`, and the planning date in `oat_external_plan_date`;
+- carry `oat_execution_status: READY|BLOCKED` that agrees with its own `## Dependencies` table;
+- include a typed `## Dependencies` table whose rows are `Hard`, `Soft`, or `Satisfied` and whose `Hard` rows name an unblock state, a `## Landing-event impact` table, and a `## Revalidation Before Execution` section;
+- link back to its source backlog item or artifact from the plan body, so the link runs in both directions;
 - state explicitly that it is not a canonical OAT `plan.md`;
 - include exact paths, live-state evidence, relevant conventions, hard scope boundaries, ordered steps, tests, machine-checkable verification, done criteria, and specific STOP conditions;
-- avoid OAT phase/task IDs and lifecycle metadata;
+- avoid canonical OAT phase/task IDs and lifecycle bookkeeping, while carrying the external execution-readiness metadata above;
 - preserve source intent without copying unverified claims;
 - never contain secret values.
+
+Plans written before this contract landed on 2026-09-07 are read in legacy mode and are never retrofitted. The 31 plans in the 2026-08-31 execution program stamped `oat_external_plan_commit` with the `origin/main` SHA whose content they inspected from a planning branch; legacy mode accepts that provenance as-is. Apply the full provenance rule only to plans written from now on.
+
+A plan executed inside a wave refreshes its drift check against the exact execution `HEAD` after predecessor lanes integrate, not only from the authored SHA to `origin/main`. Record that refreshed comparison rather than re-stamping the authored provenance.
 
 Before writing, apply the project-size threshold. If a candidate contains multiple independently shippable outcomes, spans subsystems that need separate design decisions, has no single coherent verification boundary, or is otherwise project-sized:
 
@@ -218,6 +244,8 @@ After every plan write succeeds, update each source backlog item:
 - add the repo-relative plan path once, without removing existing links;
 - update `updated` to the current ISO 8601 UTC timestamp;
 - preserve all unrelated frontmatter and body content.
+
+Links must run in both directions: the item's `external_plans` array points at the plan, and the plan body's source section links back to the item. A plan that no source links to, or that links to no source, is only half-tracked; verify both directions before reporting the plan as written.
 
 If safe YAML mutation cannot be established, leave the item unchanged and report the missing reverse link. Never leave a reverse link to a failed or partial plan write.
 
@@ -298,9 +326,14 @@ Audit the repository for security and test improvements, then let me choose what
 
 **A candidate is project-sized:** Split it when possible; otherwise recommend the appropriate OAT project/import route instead of writing a mega-plan.
 
+**A candidate's dependency has not landed:** Plan it anyway when it is `plan_ready`. Record `oat_execution_status: BLOCKED`, type the blocking row `Hard` in `## Dependencies`, and name the state that unblocks it. Do not silently drop the candidate, and do not mark it `READY` to keep the table tidy — an unsatisfied hard dependency with a `READY` status is exactly the contradiction this contract exists to prevent.
+
 ## Success Criteria
 
 - Exactly one source mode and source boundary are explicit.
+- Candidates are scored for plan readiness and execution readiness separately, and a plan-ready but blocked candidate is planned as `BLOCKED` rather than dropped.
+- Every plan records the full inspected `HEAD` SHA, a separate comparison SHA, the planning date, and an `oat_execution_status` that agrees with its dependency table.
+- Every plan carries typed dependencies, landing-event impact, and revalidation triggers, and links back to its source item.
 - Repo audits disclose and lock agent-directory inclusion plus any additional user exclusions before reconnaissance.
 - Substantive repo audits use managed read-only delegation or stop for narrowing/authorization.
 - Artifact-backed modes remain scoped to their source material plus bounded verification.

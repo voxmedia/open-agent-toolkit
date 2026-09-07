@@ -17,6 +17,7 @@ import { resolveCanonicalRole } from '@agents/canonical';
 import type { PackDefinition } from '@commands/tools/shared/pack-manifest';
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
 import { describe, expect, it } from 'vitest';
+import YAML from 'yaml';
 
 import {
   classifyCanonicalSkillDir,
@@ -51,6 +52,436 @@ const SHARED_DOC_REF = /\.agents\/docs\/([a-zA-Z0-9_-]+)\.md/g;
 // A line carrying this marker is opting out: the reference is intentionally
 // monorepo-internal and not expected to resolve in consumer repos.
 const MONOREPO_ONLY_MARKER = /monorepo only/i;
+
+// ── External-plan readiness contract ────────────────────────────────────
+//
+// Plan readiness and execution readiness are separate questions. A plan is
+// plan-ready when it is well formed; it is execution-ready when its hard
+// dependencies have merged. The rules below make that split checkable, and
+// the legacy branch keeps every plan authored before the contract readable
+// exactly as written.
+
+const EXTERNAL_PLANS_DIR = join(
+  REPO_ROOT,
+  '.oat',
+  'repo',
+  'reference',
+  'external-plans',
+);
+const REPO_IMPROVE_SKILL = join(SKILLS_DIR, 'oat-repo-improve', 'SKILL.md');
+const PLAN_TEMPLATE = join(
+  SKILLS_DIR,
+  'oat-repo-improve',
+  'references',
+  'plan-template.md',
+);
+
+// The date this contract landed. A plan dated before it, or carrying no date
+// at all, is read in legacy mode. Keep this in step with the "Legacy plans"
+// paragraph in `plan-template.md`.
+const CONTRACT_LANDING_DATE = '2026-09-07';
+
+// A `Hard` row records one of these named unblock states, so "is this plan
+// blocked?" is answerable without reading prose.
+const SATISFIED_UNBLOCK_STATES = ['satisfied', 'landed', 'merged', 'accepted'];
+const UNSATISFIED_UNBLOCK_STATES = ['pending', 'blocked', 'in flight'];
+const DEPENDENCY_TYPES = ['hard', 'soft', 'satisfied'];
+
+const DEPENDENCY_COLUMNS = [
+  'type',
+  'dependency',
+  'required state',
+  'current state',
+];
+const LANDING_EVENT_COLUMNS = [
+  'event',
+  'affected',
+  'files in common',
+  'required update',
+];
+
+const FULL_SHA = /^[0-9a-f]{40}$/;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+// CommonMark: an opener may be indented up to three spaces and may carry an
+// info string; a closer carries none.
+const FENCE_OPENER = /^ {0,3}(`{3,}|~{3,})/;
+const FENCE_CLOSER = /^ {0,3}(`{3,}|~{3,})\s*$/;
+
+const SHORT_SHA_VIOLATION =
+  'oat_external_plan_commit must be the full 40-character SHA of the inspected HEAD';
+const MISSING_MAIN_COMMIT_VIOLATION =
+  'oat_external_plan_main_commit must record the compared origin/main SHA';
+const CONTRADICTORY_STATUS_VIOLATION =
+  'an unsatisfied hard dependency contradicts oat_execution_status: READY';
+const UNJUSTIFIED_BLOCK_VIOLATION =
+  'oat_execution_status: BLOCKED names no unsatisfied hard dependency';
+const MISSING_STATUS_VIOLATION =
+  'oat_execution_status must be READY or BLOCKED';
+const MISSING_DEPENDENCY_TABLE_VIOLATION =
+  '## Dependencies must declare a Type / Dependency / Required state / Current state table';
+const MISSING_LANDING_EVENT_TABLE_VIOLATION =
+  '## Landing-event impact must declare an Event / Affected / Files in common / Required update table';
+const EMPTY_REVALIDATION_VIOLATION =
+  '## Revalidation Before Execution must name at least one revalidation trigger';
+const MALFORMED_DATE_VIOLATION =
+  'oat_external_plan_date must be an ISO YYYY-MM-DD date';
+
+type PlanReadinessMode = 'legacy' | 'prospective';
+type PlanDocumentKind = 'plan' | 'index' | 'program';
+
+interface PlanReadiness {
+  mode: PlanReadinessMode;
+  kind: PlanDocumentKind;
+  status: 'READY' | 'BLOCKED';
+  violations: string[];
+}
+
+function parsePlanFrontmatter(text: string): Record<string, unknown> {
+  const block = /^---\n([\s\S]*?)\n---(?:\n|$)/.exec(text)?.[1];
+  if (block === undefined) return {};
+  const parsed: unknown = YAML.parse(block);
+  return typeof parsed === 'object' && parsed !== null
+    ? (parsed as Record<string, unknown>)
+    : {};
+}
+
+/**
+ * Body of a top-level section, skipping headings that only appear inside a
+ * fenced example. A plain `indexOf` would treat a quoted `## Dependencies` in
+ * a code fence as the real section, and a multiline `$` in a regex would match
+ * at every line end and truncate the body to its first line.
+ */
+function planSection(text: string, heading: string): string | undefined {
+  const lines = text.split('\n');
+  let fence: string | undefined;
+  let start = -1;
+  let end = lines.length;
+
+  for (const [index, line] of lines.entries()) {
+    if (fence === undefined) {
+      const opener = FENCE_OPENER.exec(line)?.[1];
+      if (opener !== undefined) {
+        fence = opener;
+        continue;
+      }
+    } else {
+      // A closer carries no info string and is at least as long as its
+      // opener, so ```bash nested in a ``` block does not end it.
+      const closer = FENCE_CLOSER.exec(line)?.[1];
+      if (
+        closer !== undefined &&
+        closer[0] === fence[0] &&
+        closer.length >= fence.length
+      ) {
+        fence = undefined;
+      }
+      continue;
+    }
+
+    if (start === -1) {
+      if (line.trimEnd() === `## ${heading}`) start = index + 1;
+      continue;
+    }
+    if (line.startsWith('## ')) {
+      end = index;
+      break;
+    }
+  }
+
+  return start === -1 ? undefined : lines.slice(start, end).join('\n');
+}
+
+/**
+ * Cells of one Markdown table row. Outer pipes are optional and an escaped
+ * `\|` is content rather than a cell boundary.
+ */
+function tableCells(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\|/, '')
+    .replace(/(?<!\\)\|$/, '')
+    .split(/(?<!\\)\|/)
+    .map((cell) => cell.trim().replaceAll('\\|', '|'));
+}
+
+function isTableRow(line: string): boolean {
+  return line.includes('|') && line.trim() !== '';
+}
+
+/**
+ * A required table must declare its exact columns, so an empty, prose-only, or
+ * differently-shaped section cannot pass by having nothing to check.
+ */
+function hasTableHeader(section: string, columns: string[]): boolean {
+  for (const line of section.split('\n')) {
+    if (!isTableRow(line)) continue;
+    const cells = tableCells(line).map((cell) => cell.toLowerCase());
+    if (cells.length !== columns.length) continue;
+    if (columns.every((column, index) => cells[index] === column)) return true;
+  }
+
+  return false;
+}
+
+/**
+ * Classify a dependency by the first word of its Type cell. Matching whole
+ * tokens rather than prefixes keeps `Hardly` and `Software` from reading as
+ * `Hard` and `Soft`.
+ */
+function dependencyClass(type: string): string | undefined {
+  const first = type
+    .trim()
+    .toLowerCase()
+    .split(/[\s,]+/)[0];
+
+  return first !== undefined && DEPENDENCY_TYPES.includes(first)
+    ? first
+    : undefined;
+}
+
+/** Whether a Current state cell opens with one of the named unblock states. */
+function namesState(value: string, states: string[]): boolean {
+  const normalized = value.trim().toLowerCase();
+
+  return states.some(
+    (state) =>
+      normalized === state ||
+      (normalized.startsWith(state) &&
+        !/[a-z]/.test(normalized.charAt(state.length))),
+  );
+}
+
+/** Type and current-state cells of each real row in a dependency table. */
+function dependencyRows(
+  section: string,
+): { type: string; currentState: string }[] {
+  const rows: { type: string; currentState: string }[] = [];
+
+  for (const line of section.split('\n')) {
+    if (!isTableRow(line)) continue;
+    const cells = tableCells(line);
+    const type = cells[0];
+    const currentState = cells.at(-1);
+    if (type === undefined || currentState === undefined) continue;
+    if (cells.length < 4) continue;
+    if (type.toLowerCase() === 'type') continue;
+    if (/^:?-+:?$/.test(type)) continue;
+    rows.push({ type, currentState });
+  }
+
+  return rows;
+}
+
+// Every dated file in `external-plans/` is swept. Anything else must be named
+// here, so a new artifact cannot quietly fall outside the corpus check.
+const DATED_PLAN_FILE = /^\d{4}-\d{2}-\d{2}-.+\.md$/;
+const NON_CONTRACT_PLAN_FILES = ['docs-readability-reorg-plan.md'];
+
+const PROSPECTIVE_HEAD_SHA = 'a'.repeat(40);
+const PROSPECTIVE_MAIN_SHA = 'b'.repeat(40);
+const PROSPECTIVE_DATE = '2026-09-10';
+
+const DEFAULT_DEPENDENCY_TABLE = [
+  '| Type | Dependency | Required state | Current state |',
+  '| ---- | ---------- | -------------- | ------------- |',
+  '| Soft ordering | [Plan](./x.md) | Land first. | Landed. |',
+].join('\n');
+
+const DEFAULT_LANDING_EVENT_TABLE = [
+  '| Event | Affected | Files in common | Required update |',
+  '| ----- | -------- | --------------- | --------------- |',
+  '| PR lands | Minor | `x.ts` | Re-anchor. |',
+].join('\n');
+
+const DEFAULT_REVALIDATION = 'Revalidate when `origin/main` advances.';
+
+interface ProspectivePlanOverrides {
+  commit?: string;
+  mainCommit?: string | null;
+  date?: string;
+  status?: string | null;
+  dependencies?: string | null;
+  landingEvents?: string | null;
+  revalidation?: string | null;
+}
+
+/** A minimal plan that satisfies every prospective rule unless overridden. */
+function buildProspectivePlan(
+  overrides: ProspectivePlanOverrides = {},
+): string {
+  const {
+    commit = PROSPECTIVE_HEAD_SHA,
+    mainCommit = PROSPECTIVE_MAIN_SHA,
+    date = PROSPECTIVE_DATE,
+    status = 'READY',
+    dependencies = DEFAULT_DEPENDENCY_TABLE,
+    landingEvents = DEFAULT_LANDING_EVENT_TABLE,
+    revalidation = DEFAULT_REVALIDATION,
+  } = overrides;
+
+  const frontmatter = [
+    'oat_generated: true',
+    'oat_external_plan: true',
+    `oat_external_plan_commit: ${commit}`,
+    ...(mainCommit === null
+      ? []
+      : [`oat_external_plan_main_commit: ${mainCommit}`]),
+    `oat_external_plan_date: '${date}'`,
+    ...(status === null ? [] : [`oat_execution_status: ${status}`]),
+  ];
+
+  const body = ['# Title', ''];
+  if (dependencies !== null) body.push('## Dependencies', '', dependencies, '');
+  if (landingEvents !== null) {
+    body.push('## Landing-event impact', '', landingEvents, '');
+  }
+  if (revalidation !== null) {
+    body.push('## Revalidation Before Execution', '', revalidation, '');
+  }
+
+  return ['---', ...frontmatter, '---', '', ...body].join('\n');
+}
+
+/**
+ * Read one external plan under the mode its date selects. Legacy plans are
+ * accepted exactly as written; prospective plans must carry full provenance,
+ * a status, the three contract sections, and a status that agrees with their
+ * own dependency table.
+ */
+function evaluateExternalPlan(text: string): PlanReadiness {
+  const frontmatter = parsePlanFrontmatter(text);
+  const violations: string[] = [];
+
+  const kind: PlanDocumentKind =
+    frontmatter.oat_execution_program === true
+      ? 'program'
+      : frontmatter.oat_external_plan_index === true
+        ? 'index'
+        : 'plan';
+
+  const date =
+    typeof frontmatter.oat_external_plan_date === 'string'
+      ? frontmatter.oat_external_plan_date
+      : undefined;
+  // Dates are compared lexically, which is only sound for ISO dates. A present
+  // but malformed date fails closed into prospective mode rather than sorting
+  // its way into the permissive branch.
+  const malformedDate = date !== undefined && !ISO_DATE.test(date);
+  const mode: PlanReadinessMode =
+    !malformedDate && (date === undefined || date < CONTRACT_LANDING_DATE)
+      ? 'legacy'
+      : 'prospective';
+
+  const declaredStatus =
+    typeof frontmatter.oat_execution_status === 'string'
+      ? frontmatter.oat_execution_status
+      : undefined;
+  // A missing status reads as READY. Legacy plans rely on this and are never
+  // rewritten to add one.
+  const status = declaredStatus === 'BLOCKED' ? 'BLOCKED' : 'READY';
+
+  // Narrowing this branch is precisely what would make the durable corpus
+  // unimportable, so legacy plans return accepted before any further rule.
+  if (mode === 'legacy') return { mode, kind, status, violations };
+
+  // A program document sequences other plans and has no execution readiness.
+  if (kind === 'program') return { mode, kind, status, violations };
+
+  if (malformedDate) violations.push(MALFORMED_DATE_VIOLATION);
+
+  const commit = frontmatter.oat_external_plan_commit;
+  if (typeof commit !== 'string' || !FULL_SHA.test(commit)) {
+    violations.push(SHORT_SHA_VIOLATION);
+  }
+
+  const mainCommit = frontmatter.oat_external_plan_main_commit;
+  if (typeof mainCommit !== 'string' || !FULL_SHA.test(mainCommit)) {
+    violations.push(MISSING_MAIN_COMMIT_VIOLATION);
+  }
+
+  // An index carries the same provenance but no readiness of its own; each
+  // plan it lists answers that question for itself.
+  if (kind === 'index') return { mode, kind, status, violations };
+
+  if (declaredStatus !== 'READY' && declaredStatus !== 'BLOCKED') {
+    violations.push(MISSING_STATUS_VIOLATION);
+  }
+
+  for (const heading of [
+    'Dependencies',
+    'Landing-event impact',
+    'Revalidation Before Execution',
+  ]) {
+    if (planSection(text, heading) === undefined) {
+      violations.push(`missing ## ${heading}`);
+    }
+  }
+
+  const landingEvents = planSection(text, 'Landing-event impact');
+  if (
+    landingEvents !== undefined &&
+    !hasTableHeader(landingEvents, LANDING_EVENT_COLUMNS)
+  ) {
+    violations.push(MISSING_LANDING_EVENT_TABLE_VIOLATION);
+  }
+
+  const revalidation = planSection(text, 'Revalidation Before Execution');
+  if (revalidation !== undefined && revalidation.trim() === '') {
+    violations.push(EMPTY_REVALIDATION_VIOLATION);
+  }
+
+  const dependencies = planSection(text, 'Dependencies');
+  if (dependencies !== undefined) {
+    let unsatisfiedHard = false;
+
+    if (!hasTableHeader(dependencies, DEPENDENCY_COLUMNS)) {
+      violations.push(MISSING_DEPENDENCY_TABLE_VIOLATION);
+    }
+
+    for (const { type, currentState } of dependencyRows(dependencies)) {
+      const dependencyType = dependencyClass(type);
+      if (dependencyType === undefined) {
+        violations.push(
+          `dependency type "${type}" is not Hard, Soft, or Satisfied`,
+        );
+        continue;
+      }
+
+      // A `Satisfied` row asserts its dependency is met, so its state must say
+      // so; only a `Hard` row can leave the plan blocked.
+      if (dependencyType === 'satisfied') {
+        if (!namesState(currentState, SATISFIED_UNBLOCK_STATES)) {
+          violations.push(
+            `satisfied dependency current state "${currentState}" names no satisfied state`,
+          );
+        }
+        continue;
+      }
+      if (dependencyType !== 'hard') continue;
+
+      if (namesState(currentState, UNSATISFIED_UNBLOCK_STATES)) {
+        unsatisfiedHard = true;
+      } else if (!namesState(currentState, SATISFIED_UNBLOCK_STATES)) {
+        violations.push(
+          `hard dependency current state "${currentState}" names no unblock state`,
+        );
+      }
+    }
+
+    // The status and the table must agree in both directions: claiming READY
+    // while blocked hides the block, and claiming BLOCKED with nothing
+    // unsatisfied parks work for no recorded reason.
+    if (unsatisfiedHard && status === 'READY') {
+      violations.push(CONTRADICTORY_STATUS_VIOLATION);
+    }
+    if (!unsatisfiedHard && status === 'BLOCKED') {
+      violations.push(UNJUSTIFIED_BLOCK_VIOLATION);
+    }
+  }
+
+  return { mode, kind, status, violations };
+}
 
 interface Violation {
   file: string;
@@ -1623,6 +2054,388 @@ describe('skills bundled docs contract', () => {
     expect(content).not.toMatch(
       /\$\{SKILLS_ROOT\}\/(?:oat-dispatch-subagents|subagent-orchestration)/,
     );
+  });
+
+  // ── External-plan readiness contract ──────────────────────────────────
+  //
+  // `oat-repo-improve` separates plan readiness (the plan is well formed)
+  // from execution readiness (its prerequisites have merged). These cases are
+  // the executable backstop for that split. They pin the skill and template
+  // prose, and they run the readiness rules over the real durable plan corpus
+  // so that a rule which would invalidate an existing plan fails here rather
+  // than after the plans stop being importable.
+
+  it('requires plan readiness to be evaluated separately from execution readiness', () => {
+    const skill = readFileSync(REPO_IMPROVE_SKILL, 'utf8');
+
+    expect(skill).toContain('`plan_ready`');
+    expect(skill).toContain('`execution_ready`');
+    // The operative rule: a blocked candidate is planned, not dropped.
+    expect(skill).toContain(
+      'Dependency state alone does not disqualify a candidate',
+    );
+    expect(skill).toMatch(
+      /`plan_ready` but not `execution_ready` is still planned/,
+    );
+    expect(skill).toContain('oat_execution_status: BLOCKED');
+  });
+
+  it('plan template carries typed dependencies, landing events, execution status, and revalidation', () => {
+    const template = readFileSync(PLAN_TEMPLATE, 'utf8');
+
+    // Each heading must exist as a real section. A `toContain` check would
+    // pass on the prose and Quality Gate lines that merely name these
+    // sections, so deleting the sections themselves would go unnoticed.
+    for (const heading of [
+      'Dependencies',
+      'Landing-event impact',
+      'Revalidation Before Execution',
+    ]) {
+      expect(
+        template
+          .split('\n')
+          .filter((line) => line.trimEnd() === `## ${heading}`),
+        `## ${heading} must exist as a section, not only as prose`,
+      ).toHaveLength(1);
+    }
+
+    // The plan frontmatter block specifically, not any placeholder that also
+    // appears in the multi-plan index block further down the file.
+    const planFrontmatter = /```yaml\n([\s\S]*?)\n```/.exec(template)?.[1];
+    expect(planFrontmatter).toBeDefined();
+    expect(planFrontmatter).toContain(
+      'oat_external_plan_commit: <full 40-character SHA of the inspected HEAD>',
+    );
+    expect(planFrontmatter).toContain('oat_external_plan_main_commit:');
+    expect(planFrontmatter).toContain('oat_external_plan_date:');
+    expect(planFrontmatter).toContain('oat_execution_status: READY|BLOCKED');
+
+    // Named unblock states are what make a `Hard` row machine-checkable.
+    for (const state of [
+      ...SATISFIED_UNBLOCK_STATES,
+      ...UNSATISFIED_UNBLOCK_STATES,
+    ]) {
+      expect(template.toLowerCase(), state).toContain(`\`${state}\``);
+    }
+
+    expect(template).toMatch(
+      /unsatisfied hard dependency in `## Dependencies`/,
+    );
+    // The rewritten permission boundary: canonical lifecycle state stays
+    // forbidden while external readiness metadata is explicitly allowed.
+    expect(template).toContain('must not carry canonical OAT lifecycle state');
+    expect(template).toContain('External execution-readiness metadata');
+    // The legacy branch is what keeps the durable corpus readable.
+    expect(template).toContain('### Legacy plans');
+    expect(template).toContain(CONTRACT_LANDING_DATE);
+  });
+
+  it('plan provenance pins the full inspected HEAD SHA and a separate comparison SHA', () => {
+    const skill = readFileSync(REPO_IMPROVE_SKILL, 'utf8');
+    const template = readFileSync(PLAN_TEMPLATE, 'utf8');
+
+    // A working-tree short SHA cannot identify the inspected tree later, so
+    // the command the contract replaces must be gone from both files.
+    expect(skill).not.toContain('git rev-parse --short HEAD');
+    expect(template).not.toContain('git rev-parse --short HEAD');
+
+    expect(skill).toContain('git rev-parse HEAD');
+    expect(skill).toContain(
+      'git fetch origin main && git rev-parse origin/main',
+    );
+    expect(skill).toContain('git merge-base HEAD origin/main');
+    expect(skill).toContain('git status --porcelain');
+    expect(skill).toMatch(
+      /[Nn]ever stamp it with a fetched tip that was not read/,
+    );
+
+    expect(skill).toContain('oat_external_plan_main_commit');
+    expect(template).toContain('oat_external_plan_main_commit');
+    expect(template).toContain('<full 40-character SHA of the inspected HEAD>');
+  });
+
+  it('legacy plans without a date are read in legacy mode and default to READY', () => {
+    // A real durable plan rather than a synthetic fixture: short SHA, no
+    // date, no status, and none of the three contract sections.
+    const text = readFileSync(
+      join(EXTERNAL_PLANS_DIR, '2026-08-19-hermetic-cli-assets-root.md'),
+      'utf8',
+    );
+    const frontmatter = parsePlanFrontmatter(text);
+
+    expect(frontmatter.oat_external_plan_commit).toBe('6f443c08');
+    expect(frontmatter.oat_external_plan_date).toBeUndefined();
+    expect(frontmatter.oat_execution_status).toBeUndefined();
+    expect(text).not.toContain('\n## Dependencies\n');
+
+    const readiness = evaluateExternalPlan(text);
+
+    expect(readiness.mode).toBe('legacy');
+    expect(readiness.status).toBe('READY');
+    expect(readiness.violations).toEqual([]);
+  });
+
+  it('every current external plan is accepted under its date-selected mode', () => {
+    const markdown = readdirSync(EXTERNAL_PLANS_DIR)
+      .filter((name) => name.endsWith('.md'))
+      .sort();
+    const plans = markdown.filter((name) => DATED_PLAN_FILE.test(name));
+    const skipped = markdown.filter((name) => !DATED_PLAN_FILE.test(name));
+
+    // Every artifact in the directory is either swept or explicitly declared a
+    // non-contract file, so a new plan cannot fall outside the sweep silently.
+    expect(skipped).toEqual(NON_CONTRACT_PLAN_FILES);
+    expect(plans).toHaveLength(
+      markdown.length - NON_CONTRACT_PLAN_FILES.length,
+    );
+    // Guards against the sweep quietly shrinking and proving less over time.
+    expect(plans.length).toBeGreaterThanOrEqual(44);
+
+    const rejected: string[] = [];
+    const modes = new Map<string, PlanReadinessMode>();
+
+    for (const name of plans) {
+      const readiness = evaluateExternalPlan(
+        readFileSync(join(EXTERNAL_PLANS_DIR, name), 'utf8'),
+      );
+      modes.set(name, readiness.mode);
+      if (readiness.violations.length > 0) {
+        rejected.push(`${name}: ${readiness.violations.join('; ')}`);
+      }
+    }
+
+    // No rule may make a durable plan unreadable; retrofitting the corpus is
+    // explicitly not a prerequisite for this contract.
+    expect(rejected).toEqual([]);
+
+    // The whole corpus predates the contract today. New prospective plans may
+    // join it later without disturbing this: they are accepted on their own
+    // terms by the sweep above.
+    expect(modes.get('2026-08-19-hermetic-cli-assets-root.md')).toBe('legacy');
+    expect(modes.get('2026-09-04-honor-metadata-version-for-skills.md')).toBe(
+      'legacy',
+    );
+  });
+
+  it('a post-contract plan with a short SHA is rejected; HEAD and origin/main may differ', () => {
+    // Planning from a branch: the inspected HEAD is deliberately not the
+    // fetched tip, and recording both is the point of the second field.
+    const differing = evaluateExternalPlan(buildProspectivePlan());
+
+    expect(differing.mode).toBe('prospective');
+    expect(differing.violations).toEqual([]);
+    expect(PROSPECTIVE_HEAD_SHA).not.toBe(PROSPECTIVE_MAIN_SHA);
+
+    const shortSha = evaluateExternalPlan(
+      buildProspectivePlan({ commit: '6f443c08' }),
+    );
+
+    expect(shortSha.mode).toBe('prospective');
+    expect(shortSha.violations).toEqual([SHORT_SHA_VIOLATION]);
+  });
+
+  it('every prospective contract rule rejects its own violation', () => {
+    // One isolated fixture per rule, each differing from an accepted plan by
+    // exactly the thing under test, so no rule can be deleted while the suite
+    // stays green.
+    const cases: [string, ProspectivePlanOverrides, string][] = [
+      ['short inspected SHA', { commit: '6f443c08' }, SHORT_SHA_VIOLATION],
+      [
+        'missing comparison SHA',
+        { mainCommit: null },
+        MISSING_MAIN_COMMIT_VIOLATION,
+      ],
+      ['missing status', { status: null }, MISSING_STATUS_VIOLATION],
+      ['unrecognized status', { status: 'MAYBE' }, MISSING_STATUS_VIOLATION],
+      [
+        'missing dependencies section',
+        { dependencies: null },
+        'missing ## Dependencies',
+      ],
+      [
+        'missing landing events',
+        { landingEvents: null },
+        'missing ## Landing-event impact',
+      ],
+      [
+        'missing revalidation',
+        { revalidation: null },
+        'missing ## Revalidation Before Execution',
+      ],
+      [
+        'landing events present but empty',
+        { landingEvents: 'Nothing in flight.' },
+        MISSING_LANDING_EVENT_TABLE_VIOLATION,
+      ],
+      [
+        'revalidation present but empty',
+        { revalidation: '' },
+        EMPTY_REVALIDATION_VIOLATION,
+      ],
+      [
+        'malformed planning date',
+        { date: 'september' },
+        MALFORMED_DATE_VIOLATION,
+      ],
+      [
+        'dependency table with the wrong columns',
+        {
+          dependencies: [
+            '| Kind | Thing | Needs | Status |',
+            '| ---- | ----- | ----- | ------ |',
+            '| Soft ordering | [Plan](./x.md) | Land first. | Landed. |',
+          ].join('\n'),
+        },
+        MISSING_DEPENDENCY_TABLE_VIOLATION,
+      ],
+      [
+        'type that merely starts with a keyword',
+        {
+          dependencies: [
+            '| Type | Dependency | Required state | Current state |',
+            '| ---- | ---------- | -------------- | ------------- |',
+            '| Software ordering | [Plan](./x.md) | Land first. | Landed. |',
+          ].join('\n'),
+        },
+        'dependency type "Software ordering" is not Hard, Soft, or Satisfied',
+      ],
+      [
+        'satisfied row that is not actually satisfied',
+        {
+          dependencies: [
+            '| Type | Dependency | Required state | Current state |',
+            '| ---- | ---------- | -------------- | ------------- |',
+            '| Satisfied predecessor | [Plan](./x.md) | Land first. | Pending. |',
+          ].join('\n'),
+        },
+        'satisfied dependency current state "Pending." names no satisfied state',
+      ],
+      [
+        'prose-only dependencies section',
+        { dependencies: 'No dependencies worth typing.' },
+        MISSING_DEPENDENCY_TABLE_VIOLATION,
+      ],
+      [
+        'untyped dependency row',
+        {
+          dependencies: [
+            '| Type | Dependency | Required state | Current state |',
+            '| ---- | ---------- | -------------- | ------------- |',
+            '| Downstream | [Plan](./x.md) | Land first. | Landed. |',
+          ].join('\n'),
+        },
+        'dependency type "Downstream" is not Hard, Soft, or Satisfied',
+      ],
+      [
+        'hard row with no named unblock state',
+        {
+          dependencies: [
+            '| Type | Dependency | Required state | Current state |',
+            '| ---- | ---------- | -------------- | ------------- |',
+            '| Hard ordering | [Plan](./x.md) | Land first. | Written, not shipped. |',
+          ].join('\n'),
+        },
+        'hard dependency current state "Written, not shipped." names no unblock state',
+      ],
+      [
+        'READY despite an unsatisfied hard dependency',
+        {
+          dependencies: [
+            '| Type | Dependency | Required state | Current state |',
+            '| ---- | ---------- | -------------- | ------------- |',
+            '| Hard ordering | [Plan](./x.md) | Land first. | Pending in W1. |',
+          ].join('\n'),
+        },
+        CONTRADICTORY_STATUS_VIOLATION,
+      ],
+      [
+        'BLOCKED with nothing unsatisfied',
+        { status: 'BLOCKED' },
+        UNJUSTIFIED_BLOCK_VIOLATION,
+      ],
+    ];
+
+    for (const [name, overrides, expected] of cases) {
+      const readiness = evaluateExternalPlan(buildProspectivePlan(overrides));
+      expect(readiness.mode, name).toBe('prospective');
+      expect(readiness.violations, name).toContain(expected);
+    }
+
+    // Outer pipes are optional in Markdown; a table written without them must
+    // still be read rather than silently contributing no rows.
+    const withoutOuterPipes = evaluateExternalPlan(
+      buildProspectivePlan({
+        status: 'BLOCKED',
+        dependencies: [
+          'Type | Dependency | Required state | Current state',
+          '---- | ---------- | -------------- | -------------',
+          'Hard ordering | [Plan](./x.md) | Land first. | Pending in W1.',
+        ].join('\n'),
+      }),
+    );
+
+    expect(withoutOuterPipes.violations).toEqual([]);
+  });
+
+  it('rejects a post-contract plan whose unsatisfied hard dependency claims READY', () => {
+    // Negative control derived from a real artifact, not an invented one.
+    // This plan carries `oat_execution_status: READY` while its `Hard
+    // ordering` row still reads "Pending in W1; this plan is BLOCKED until
+    // then." It is accepted today only because its date selects legacy mode.
+    // Re-dating that exact content is the reproduction: the same bytes that
+    // legacy mode accepts are rejected once the contract applies.
+    const fixture = join(
+      EXTERNAL_PLANS_DIR,
+      '2026-09-02-add-exclusions-to-docs-index-generation.md',
+    );
+    const real = readFileSync(fixture, 'utf8');
+
+    expect(
+      real,
+      `${fixture} is the recorded negative control: it must keep an unsatisfied hard dependency alongside a READY status`,
+    ).toContain('| Hard ordering ');
+    expect(real).toContain('oat_execution_status: READY');
+
+    const asWritten = evaluateExternalPlan(real);
+    expect(asWritten.mode).toBe('legacy');
+    expect(asWritten.violations).toEqual([]);
+
+    // The planning date is the only mutation; the file on disk is untouched.
+    const redated = real.replace(
+      "oat_external_plan_date: '2026-09-02'",
+      "oat_external_plan_date: '2026-09-10'",
+    );
+    expect(redated).not.toBe(real);
+
+    const prospective = evaluateExternalPlan(redated);
+    expect(prospective.mode).toBe('prospective');
+    expect(prospective.violations).toContain(CONTRADICTORY_STATUS_VIOLATION);
+
+    // Normalize the fields this plan never had to carry as a legacy artifact,
+    // so the accepted control below differs from the rejected one by the
+    // status alone rather than by unrelated legacy gaps.
+    const normalized = redated
+      .replace(
+        `oat_external_plan_date: '${PROSPECTIVE_DATE}'`,
+        `oat_external_plan_main_commit: ${PROSPECTIVE_MAIN_SHA}\noat_external_plan_date: '${PROSPECTIVE_DATE}'`,
+      )
+      .replace('| Related, distinct |', '| Soft adjacency |');
+
+    expect(evaluateExternalPlan(normalized).violations).toEqual([
+      CONTRADICTORY_STATUS_VIOLATION,
+    ]);
+
+    // Being blocked is not the defect; claiming READY while blocked is. The
+    // same plan recorded honestly is accepted with no violations at all.
+    const blocked = evaluateExternalPlan(
+      normalized.replace(
+        'oat_execution_status: READY',
+        'oat_execution_status: BLOCKED',
+      ),
+    );
+
+    expect(blocked.status).toBe('BLOCKED');
+    expect(blocked.violations).toEqual([]);
   });
 
   it('anchors dispatch short-form provider reads to an already bound root', () => {
