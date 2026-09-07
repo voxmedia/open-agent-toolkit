@@ -1,13 +1,13 @@
 ---
 oat_current_task: null
-oat_last_commit: a47664112ae87330bca4ad12bf94fb8761a09d79
+oat_last_commit: 11e0d0e7b7dbb8ea0bbdbe8ecb00ee532a21dfdd
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_orchestration_retry_limit: 3
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: pr_open # Status: in_progress | complete
+oat_phase_status: complete # Status: in_progress | complete
 oat_pr_status: open
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/273
 oat_execution_mode: single-thread # single-thread | subagent-driven
@@ -107,7 +107,7 @@ oat_post_implement_sequence:
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T12:19:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T12:17:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -117,13 +117,14 @@ oat_project_recap:
 
 # Project State: remote-project-management
 
-**Status:** PR open; post-implementation sequence complete
+**Status:** Implementation complete; PR open
 **Started:** 2026-03-15
 **Last Updated:** 2026-09-07
 
 ## Current Phase
 
-Implementation — PR open; no final HiLL checkpoint is configured for p09.
+Implementation complete — final review, exit gate, and closeout sequence passed;
+PR remains open.
 
 ## Artifacts
 
@@ -131,7 +132,8 @@ Implementation — PR open; no final HiLL checkpoint is configured for p09.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 3 artifact review passed)
-- **Implementation:** implementation.md (90/90 tasks complete; final review and exit gate passed)
+- **Implementation:** implementation.md (complete; 90/90 tasks, final review,
+  exit gate, and closeout sequence passed)
 
 ## Progress
 
@@ -328,6 +330,7 @@ Implementation — PR open; no final HiLL checkpoint is configured for p09.
 - ✓ No final HiLL approval is required because the final phase p09 is not a
   configured implementation checkpoint
 - ✓ Stored post-implementation sequence complete
+- ✓ Implementation marked complete
 
 ## Blockers
 
@@ -336,7 +339,7 @@ fresh.
 
 ## Next Milestone
 
-Mark implementation complete, preserving the open PR handoff.
+PR #273 is open for review and merge.
 
-- Resume command: `oat-project-implement`
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+- To incorporate feedback: run `oat-project-revise`
+- To complete/archive the project lifecycle: run `oat-project-complete`
