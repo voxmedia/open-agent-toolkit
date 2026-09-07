@@ -18,13 +18,13 @@ For the deep file-by-file reference, see:
 
 ## The five config surfaces
 
-| Surface                   | File                      | Typical contents                                                                                                                                      | Primary CLI surface                            |
-| ------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Shared repo config        | `.oat/config.json`        | Repo-wide non-sync settings such as `projects.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, `tools.*`, and shared `workflow.*` defaults | `oat config get/set/list/describe`, `oat gate` |
-| Repo-local config         | `.oat/config.local.json`  | Per-developer state for this checkout, such as `activeProject`, `lastPausedProject`, repo-local `activeIdea`, and local `workflow.*` overrides        | `oat config get/set/list/describe`, `oat gate` |
-| User config               | `~/.oat/config.json`      | User-level state such as global `activeIdea` fallback and personal `workflow.*` defaults                                                              | `oat config describe`, `oat gate`              |
-| Project sync config       | `.oat/sync/config.json`   | Provider enablement, sync strategy, and repo-level known stray settings                                                                               | `oat providers set`, `oat config describe`     |
-| User provider sync config | `~/.oat/sync/config.json` | User sync strategy and personal known provider strays                                                                                                 | Provider-sync commands, `oat config describe`  |
+| Surface                   | File                      | Typical contents                                                                                                                                      | Primary CLI surface                                  |
+| ------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Shared repo config        | `.oat/config.json`        | Repo-wide non-sync settings such as `projects.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, `tools.*`, and shared `workflow.*` defaults | `oat config get/set/unset/list/describe`, `oat gate` |
+| Repo-local config         | `.oat/config.local.json`  | Per-developer state for this checkout, such as `activeProject`, `lastPausedProject`, repo-local `activeIdea`, and local `workflow.*` overrides        | `oat config get/set/unset/list/describe`, `oat gate` |
+| User config               | `~/.oat/config.json`      | User-level state such as global `activeIdea` fallback and personal `workflow.*` defaults                                                              | `oat config get/set/unset/describe`, `oat gate`      |
+| Project sync config       | `.oat/sync/config.json`   | Provider enablement, sync strategy, and repo-level known stray settings                                                                               | `oat providers set`, `oat config describe`           |
+| User provider sync config | `~/.oat/sync/config.json` | User sync strategy and personal known provider strays                                                                                                 | Provider-sync commands, `oat config describe`        |
 
 The main split is:
 
@@ -51,6 +51,7 @@ What each command is for:
 - `oat config list` shows the currently resolved command-surface values for shared and repo-local keys.
 - `oat config get <key>` reads one supported key value.
 - `oat config set <key> <value>` updates supported shared or repo-local keys.
+- `oat config unset <key>` removes a supported key from one surface, using the same `--shared`/`--local`/`--user` flags and per-key restrictions as `set`. The resolved value then falls back to the next surface down, or to the built-in default.
 - `oat config describe` shows the supported config catalog across shared repo, repo-local, user, and sync/provider surfaces.
 - `oat config describe <key>` shows file, scope, default, mutability, owning command, and description for one key.
 

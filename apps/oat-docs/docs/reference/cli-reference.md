@@ -159,15 +159,17 @@ Notable commands introduced in the current CLI surface:
 
 ## `oat config` surface flags
 
-`oat config set` supports mutually exclusive surface flags that control which config file receives the write:
+`oat config set` and `oat config unset` support the same mutually exclusive surface flags, which control the config file the write or removal lands in:
 
-- `--shared` — write to `.oat/config.json` (committed team repo settings)
-- `--local` — write to `.oat/config.local.json` (per-developer repo state, gitignored)
-- `--user` — write to `~/.oat/config.json` (user-level fallback, applies across all repos)
+- `--shared` — write to or remove from `.oat/config.json` (committed team repo settings)
+- `--local` — write to or remove from `.oat/config.local.json` (per-developer repo state, gitignored)
+- `--user` — write to or remove from `~/.oat/config.json` (user-level fallback, applies across all repos)
 
 When no flag is passed, the CLI picks a sensible default per key type: structural keys (`projects.root`, `documentation.*`, etc.) go to shared, state keys (`activeProject`, etc.) go to local, workflow preferences (`workflow.*`) go to local. Pass at most one flag — the command rejects multiple surface flags.
 
-Per-key restrictions apply: structural keys can only be written at shared scope, most state keys can only be written at local scope (`activeIdea` is the exception — it accepts both local and user), and workflow preference keys accept any non-auto surface. Legacy `autoReviewAtCheckpoints` remains shared-only; prefer `workflow.autoReviewAtHillCheckpoints`.
+Per-key restrictions apply identically to `set` and `unset`: structural keys can only be written at shared scope, most state keys can only be written at local scope (`activeIdea` is the exception — it accepts both local and user), and workflow preference keys accept any non-auto surface. Legacy `autoReviewAtCheckpoints` remains shared-only; prefer `workflow.autoReviewAtHillCheckpoints`.
+
+`oat config unset <key>` removes the key from the selected surface and prunes any parent object it empties, so the resolved value falls back through the remaining surfaces to the built-in default. Removing an absent key is not an error: it reports an already-unset outcome and exits 0, while an unknown key exits 1. A value coming from an environment variable is reported as not unsettable. Two families keep their existing removal paths instead: lifecycle state (`activeProject`, `lastPausedProject`) is cleared with `oat config set <key> ''`, and pack intent (`tools.*`) is removed with `oat tools remove --pack <name>`, which also removes the installed pack files.
 
 ## `workflow.*` preference keys
 

@@ -120,6 +120,7 @@ Use `oat config` for repo runtime config inspection and supported key mutation.
 
 - `oat config get <key>` - read one resolved config value
 - `oat config set <key> <value>` - update a supported shared or repo-local key
+- `oat config unset <key>` - remove a supported key from one surface, with the same `--shared`/`--local`/`--user` flags and per-key restrictions as `set`. Pruning removes any parent object the removal empties, and the resolved value falls back to the next surface or the built-in default. Absent keys report an explicit already-unset outcome and exit 0; unknown keys exit 1. Values supplied by an environment variable are reported as not unsettable. Lifecycle state (`activeProject`, `lastPausedProject`) is still cleared with `oat config set <key> ''`, and pack intent (`tools.*`) is still removed with `oat tools remove`
 - `oat config list` - show the resolved command-surface values with source information
 - `oat config dump --json` - emit the full merged config payload with per-key source attribution, suitable for automation and debugging
 - `oat config describe` - list supported config surfaces and keys across shared repo, repo-local, user, and sync/provider config
