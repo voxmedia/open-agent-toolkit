@@ -119,8 +119,9 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 9 and the complete local gate ledger passed. Summary and PR artifacts are
-current through `p09-t04` and release `0.2.62`. Final review is next.
+Phase 9 and the complete local gate ledger passed. The final lifecycle review's
+two wording-only Medium findings are corrected under the user's standing
+no-re-review direction. The regenerated configured exit gate is next.
 
 ## Artifacts
 
@@ -222,6 +223,8 @@ current through `p09-t04` and release `0.2.62`. Final review is next.
 - ✓ Fresh `p09-t04` review passed with no findings
 - ✓ Full current-head Definition of Done, lint, and format ledger passed
 - ✓ Summary and PR artifact refreshed through Phase 9 and `0.2.62`
+- ✓ Final lifecycle review received with two wording-only Medium findings
+- ✓ Closeout wording corrected without redundant lifecycle re-review
 
 ## Blockers
 
@@ -230,5 +233,5 @@ exact-head CI/Bugbot waiting, project completion, and merge.
 
 ## Next Milestone
 
-Run fresh final lifecycle review and the regenerated exit gate, then complete
-the authorized push, exact-head remote checks, merge, and lifecycle archive.
+Run the regenerated exit gate, then complete the authorized lifecycle archive,
+push, exact-head remote checks, and merge.

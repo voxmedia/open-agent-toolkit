@@ -123,7 +123,7 @@ contract.
   0 Important, 0 Medium, and 0 Minor findings.
 - Wave 4 integrated from current `main`; its additive execution contracts
   compose with the revised Lite proof strategy, and public release surfaces are
-  authoritative at `0.2.61`.
+  currently authoritative at `0.2.62` after the Phase 9 promotion hardening.
 - The post-Wave-4 final review's three Important findings are closed. The
   stabilized p-rev2 re-review found one wording-only Medium alignment issue,
   resolved in the fourth p-rev2 task under the user's no-re-review waiver. A
@@ -154,7 +154,7 @@ contract.
   `8d365186a`.
 - Live PR #264 remains at
   `df9f720edd85b99b9dc691b123b98a6bbbefcb7e`. CI and Release Dry Run are green
-  for that exact remote head only; they do not cover the local Phase 7/8 source.
+  for that exact remote head only; they do not cover the current local source.
 - Push and merge are authorized but remain root-owned. Fresh exact-head CI,
   Release Dry Run, and Bugbot results are pending until the final reviewed head
   is pushed.

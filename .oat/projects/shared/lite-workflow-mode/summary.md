@@ -187,7 +187,7 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   bounded integration-fixture recovery.
 - Live PR #264 remains at
   `df9f720edd85b99b9dc691b123b98a6bbbefcb7e`. Its green CI and Release Dry Run
-  results cover only that exact remote head, not the local Phase 7/8 source.
+  results cover only that exact remote head, not the current local source.
 - Push and merge are authorized but remain root-owned. Fresh exact-head CI,
   Release Dry Run, and Bugbot results remain pending until the local branch is
   pushed.

@@ -36,8 +36,9 @@ oat_generated: false
 | Phase p-rev2 | complete | 5     | 5/5       |
 | Phase 7      | complete | 4     | 4/4       |
 | Phase 8      | complete | 2     | 2/2       |
+| Phase 9      | complete | 4     | 4/4       |
 
-**Total:** 45/45 tasks completed
+**Total:** 49/49 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -1267,6 +1268,19 @@ and format. The CLI test task was a cache miss and genuinely executed 330 test
 files and 5,804 tests. Summary and PR artifacts were incrementally refreshed
 through `p09-t04` and public release `0.2.62`. Fresh final lifecycle review and
 the regenerated implementation exit gate remain.
+
+#### Final lifecycle re-review received — wording corrections complete
+
+The independent review at
+`reviews/archived/final-review-2026-09-07T033513Z.md` found 0 Critical, 0
+Important, 2 Medium, and 0 Minor findings. Both findings were confined to
+closeout wording: the progress overview and final summary stopped before Phase
+9, and the summary/PR artifact mixed the then-current `0.2.61` Wave 4 state
+with the current `0.2.62` release while understating the local-only source
+coverage. Those artifacts now consistently record 49/49 tasks, Phase 9,
+release `0.2.62`, and the current local source. Under the user's standing
+direction, no redundant lifecycle re-review is required for wording-only
+alignment; the configured cross-family exit gate remains mandatory.
 
 #### Configured implementation exit gate generation 4 created
 
@@ -2616,8 +2630,11 @@ Track test execution during implementation.
   dispatch, shared lifecycle-gate posture setup, phase/final reviews, and
   PR-first closeout.
 - Provider projections, docs, lifecycle integrations, and lockstep public
-  package release surfaces synchronized at `0.2.61` after integrating Wave 4
-  and the final remote-review fixes.
+  package release surfaces synchronized at `0.2.62` after integrating Wave 4,
+  the final remote-review fixes, and Phase 9 promotion hardening. Phase 9
+  rejects unresolved adaptive placeholders and shipped instructional comments
+  while preserving authored comments; its bounded integration recovery authors
+  and verifies both adaptive sections end to end.
 
 **Behavioral changes (user-facing):**
 
