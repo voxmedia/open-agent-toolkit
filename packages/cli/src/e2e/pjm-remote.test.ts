@@ -882,10 +882,8 @@ describe('pjm remote end-to-end command workflows', () => {
     const detachEnvelope = JSON.parse(
       detachPreview.stdout,
     ) as RemoteCommandEnvelope;
-    const detachOperationId = detachEnvelope.recovery[0]!.instruction.match(
-      /preview (op_[A-Za-z0-9_-]+)/,
-    )![1]!;
-    const detachOperation = await store.readOperation(detachOperationId);
+    const detachApprovalPreview = detachEnvelope.approvalPreview!;
+    const detachOperationId = detachApprovalPreview.operationId;
     await writeFile(
       authorityPath,
       JSON.stringify({
@@ -901,7 +899,7 @@ describe('pjm remote end-to-end command workflows', () => {
           evidenceDigest: 'sha256:e2e-detach-instruction',
         },
         approval: {
-          previewDigest: detachOperation!.preview.digest,
+          previewDigest: detachApprovalPreview.digest,
           operationClass: 'detach',
           approvedAt: '2026-09-05T12:00:00.000Z',
           actor: 'e2e-operator',
@@ -937,10 +935,9 @@ describe('pjm remote end-to-end command workflows', () => {
     const approveResolution = async (
       kind: 'relink' | 'recreate',
       bindingId: string,
-      operationId: string,
+      preview: { operationId: string; digest: string },
       suffix: string,
     ) => {
-      const operation = await store.readOperation(operationId);
       await writeFile(
         authorityPath,
         JSON.stringify({
@@ -956,7 +953,7 @@ describe('pjm remote end-to-end command workflows', () => {
             evidenceDigest: `sha256:e2e-${suffix}-instruction`,
           },
           approval: {
-            previewDigest: operation!.preview.digest,
+            previewDigest: preview.digest,
             operationClass: kind,
             approvedAt: '2026-09-05T12:00:00.000Z',
             actor: 'e2e-operator',
@@ -964,7 +961,6 @@ describe('pjm remote end-to-end command workflows', () => {
           },
         }),
       );
-      return operation!;
     };
 
     const relinkPreview = await runRemoteCommand(
@@ -976,16 +972,22 @@ describe('pjm remote end-to-end command workflows', () => {
         'bnd_linear_e2e_001',
       ],
       'needs-review',
-      true,
+      false,
       { projectRoot: repository, run: runner },
     );
-    const relinkOperationId = (
-      JSON.parse(relinkPreview.stdout) as RemoteCommandEnvelope
-    ).recovery[0]!.instruction.match(/preview (op_[A-Za-z0-9_-]+)/)![1]!;
+    const relinkPublicMatch = relinkPreview.stdout.match(
+      /preview (op_[A-Za-z0-9_-]+): relink; digest=(sha256:[^;]+);/,
+    );
+    expect(relinkPublicMatch).not.toBeNull();
+    const relinkApprovalPreview = {
+      operationId: relinkPublicMatch![1]!,
+      digest: relinkPublicMatch![2]!,
+    };
+    const relinkOperationId = relinkApprovalPreview.operationId;
     await approveResolution(
       'relink',
       'bnd_linear_e2e_001',
-      relinkOperationId,
+      relinkApprovalPreview,
       'relink',
     );
     runnerInput = capabilities.find(
@@ -1056,6 +1058,9 @@ describe('pjm remote end-to-end command workflows', () => {
       purposes: ['planning'],
     });
     let recreateOperationId = '';
+    let recreateCreateApprovalPreview:
+      | { operationId: string; digest: string }
+      | undefined;
     for (const lifecycleCondition of [
       'archived',
       'moved',
@@ -1088,11 +1093,14 @@ describe('pjm remote end-to-end command workflows', () => {
       );
       recreateOperationId = (
         JSON.parse(recreatePreview.stdout) as RemoteCommandEnvelope
-      ).recovery[0]!.instruction.match(/preview (op_[A-Za-z0-9_-]+)/)![1]!;
+      ).approvalPreview!.operationId;
+      const recreateSearchApprovalPreview = (
+        JSON.parse(recreatePreview.stdout) as RemoteCommandEnvelope
+      ).approvalPreview!;
       await approveResolution(
         'recreate',
         'bnd_linear_e2e_001',
-        recreateOperationId,
+        recreateSearchApprovalPreview,
         `recreate-search-${lifecycleCondition}`,
       );
       runnerInput = capabilities.find(
@@ -1149,15 +1157,19 @@ describe('pjm remote end-to-end command workflows', () => {
         true,
         { projectRoot: repository, run: runner },
       );
-      expect(JSON.parse(createPreview.stdout)).toMatchObject({
+      const createPreviewEnvelope = JSON.parse(
+        createPreview.stdout,
+      ) as RemoteCommandEnvelope;
+      expect(createPreviewEnvelope).toMatchObject({
         status: 'needs-review',
         approvalPreview: { operationClass: 'recreate' },
       });
+      recreateCreateApprovalPreview = createPreviewEnvelope.approvalPreview!;
     }
     await approveResolution(
       'recreate',
       'bnd_linear_e2e_001',
-      recreateOperationId,
+      recreateCreateApprovalPreview!,
       'recreate-create',
     );
     const createHandoff = await runRemoteCommand(

@@ -399,6 +399,7 @@ async function prepareCloseout(
             nextReview.operation.operationId,
             nextReview.step.approvalPreview,
             nextReview.step.authority.effective,
+            nextReview.step.authority.sourceDigest,
             nextReview.operation.preview.revisionDigest,
           ),
         }
@@ -830,16 +831,7 @@ async function prepareResolution(
   });
   const now = dependencies.now();
   const operationId = durableId('op', dependencies.randomId());
-  const previewDigest = semanticDigest({
-    bindingId: metadata.bindingId,
-    provider: metadata.provider,
-    providerContext: metadata.remoteIdentity.context,
-    remoteIdentity: metadata.remoteIdentity,
-    lifecycleOperation: request.resolutionKind,
-    providerRef: request.providerRef ?? null,
-    revision: state.snapshot?.revision.contentHash ?? null,
-  });
-  const operation: RemoteOperationRecord = {
+  const operationWithoutApproval: RemoteOperationRecord = {
     recordType: 'operation',
     schemaVersion: 2,
     operationId,
@@ -857,12 +849,13 @@ async function prepareResolution(
     },
     lastSafeStep: 'planned',
     preview: {
-      digest: previewDigest,
+      digest: 'pending-resolution-preview',
       bindingId: metadata.bindingId,
       provider: metadata.provider,
       providerContext: metadata.remoteIdentity.context,
       capabilityEvidenceDigest: 'unprobed',
       revisionDigest: state.snapshot?.revision.contentHash ?? 'unobserved',
+      revisionEvidence: revisionEvidenceFromState(state),
       policyDigest: semanticDigest(effective),
     },
     authority: {
@@ -883,6 +876,20 @@ async function prepareResolution(
       message: 'fresh approval and verified evidence required',
       verifiedAt: null,
     },
+  };
+  const approvalPreview = resolutionApprovalPreview(
+    operationWithoutApproval,
+    metadata,
+    state,
+    request.providerRef,
+  );
+  const operation: RemoteOperationRecord = {
+    ...operationWithoutApproval,
+    preview: {
+      ...operationWithoutApproval.preview,
+      digest: approvalPreview.digest,
+    },
+    approvalPreview,
   };
   await store.createOperation(operation);
   return resolutionPreviewEnvelope(request, metadata, operation);
@@ -1006,39 +1013,60 @@ async function applyResolutionPreview(
     await store.writeCurrentAction(operation.operationId, action);
     return envelopeFrom(request, updated, metadata, action);
   }
-  const currentPreviewDigest = semanticDigest({
-    bindingId: metadata.bindingId,
-    provider: metadata.provider,
-    providerContext: metadata.remoteIdentity.context,
-    remoteIdentity: metadata.remoteIdentity,
-    lifecycleOperation: operation.lifecycleOperation,
-    providerRef: request.providerRef ?? null,
-    revision: state.snapshot?.revision.contentHash ?? null,
-  });
   const persistedBindingTransition = operation.verification.some(
     (entry) =>
       entry.field === 'binding-transition' && entry.status === 'verified',
   );
-  if (
-    currentPreviewDigest !== operation.preview.digest &&
-    !persistedBindingTransition
-  ) {
-    throw new Error(
-      'Resolution apply no longer matches the exact persisted preview.',
-    );
-  }
   const invocation = await readCurrentMutationInvocation(request);
   const effective = await effectivePolicyForBinding(
     request.projectRoot,
     metadata,
   );
+  const expectedAuthority: NonNullable<RemoteOperationRecord['authority']> = {
+    effective:
+      effective.authority[
+        operation.lifecycleOperation as 'relink' | 'detach' | 'recreate'
+      ],
+    sourceDigest: semanticDigest(effective.authorityTrace),
+  };
+  const expectedPreviewInputs: RemoteOperationRecord['preview'] = {
+    ...operation.preview,
+    revisionDigest: state.snapshot?.revision.contentHash ?? 'unobserved',
+    revisionEvidence: revisionEvidenceFromState(state),
+    policyDigest: semanticDigest(effective),
+  };
+  const expectedOperationInputs: RemoteOperationRecord = {
+    ...operation,
+    preview: expectedPreviewInputs,
+    authority: expectedAuthority,
+  };
+  const expectedApprovalPreview = resolutionApprovalPreview(
+    expectedOperationInputs,
+    metadata,
+    state,
+    request.providerRef,
+  );
+  const expectedPreview: RemoteOperationRecord['preview'] = {
+    ...expectedPreviewInputs,
+    digest: expectedApprovalPreview.digest,
+  };
+  if (
+    !persistedBindingTransition &&
+    (!isDeepStrictEqual(operation.preview, expectedPreview) ||
+      !isDeepStrictEqual(operation.authority, expectedAuthority) ||
+      !isDeepStrictEqual(operation.approvalPreview, expectedApprovalPreview))
+  ) {
+    throw new Error(
+      'Resolution policy, authority, revision, or public approval preview drifted.',
+    );
+  }
   const authority = validateProductionMutationAuthority({
     effective:
       effective.authority[
         operation.lifecycleOperation as 'relink' | 'detach' | 'recreate'
       ],
     invocation,
-    preview: resolutionApprovalPreview(operation),
+    preview: persistedBindingPreview(operation.approvalPreview!),
     expected: {
       operationClass: operation.lifecycleOperation as
         | 'relink'
@@ -1638,37 +1666,79 @@ async function effectivePolicyForBinding(
 
 function resolutionApprovalPreview(
   operation: RemoteOperationRecord,
-): BindingPreview {
-  const digest = (value: string) =>
+  metadata: RemoteBindingMetadata,
+  state: RemoteBindingState,
+  providerRef: string | undefined,
+): PersistedApprovalPreview {
+  const revisionEvidence = operation.preview.revisionEvidence;
+  if (!revisionEvidence) {
+    throw new Error('Resolution preview lacks revision freshness evidence.');
+  }
+  const digest = (value: string, evidence: unknown = null) =>
     semanticDigest({
       operationId: operation.operationId,
       component: value,
+      evidence,
     });
+  const operationClass = operation.lifecycleOperation as
+    | 'relink'
+    | 'detach'
+    | 'recreate';
+  const fieldMask = ['title'] as const;
+  const componentDigests = {
+    target: digest('target', {
+      target: metadata.target,
+      remoteIdentity: metadata.remoteIdentity,
+      providerRef: providerRef ?? null,
+    }),
+    baseline: digest('baseline', state.baseline),
+    revision: digest('revision', {
+      digest: operation.preview.revisionDigest,
+      revisionEvidence,
+    }),
+    capability: digest(
+      'capability',
+      operation.preview.capabilityEvidenceDigest,
+    ),
+    policy: operation.preview.policyDigest,
+    projection: digest('projection', {
+      lifecycleOperation: operation.lifecycleOperation,
+      localTarget: metadata.target,
+      providerRef: providerRef ?? null,
+    }),
+    outboundSafety: digest('outbound-safety', {
+      operation: operation.lifecycleOperation,
+      outboundMutation: false,
+    }),
+  };
   return {
     schemaVersion: 1,
-    digest: operation.preview.digest,
+    digest: semanticDigest({
+      schemaVersion: 1,
+      bindingId: operation.bindingId,
+      provider: operation.provider,
+      operationClass,
+      fieldMask,
+      createdAt: operation.createdAt,
+      componentDigests,
+      authority: {
+        effective: operation.authority?.effective ?? 'read-only',
+        evidenceDigest:
+          operation.authority?.sourceDigest ?? 'unbound-authority',
+      },
+    }),
     bindingId: operation.bindingId,
     provider: operation.provider,
-    operationClass: operation.lifecycleOperation as
-      | 'relink'
-      | 'detach'
-      | 'recreate',
-    fieldMask: ['title'],
+    operationClass,
+    fieldMask: [...fieldMask],
     createdAt: operation.createdAt,
-    componentDigests: {
-      target: digest('target'),
-      baseline: digest('baseline'),
-      revision: operation.preview.revisionDigest,
-      capability: operation.preview.capabilityEvidenceDigest,
-      policy: operation.preview.policyDigest,
-      projection: digest('projection'),
-      outboundSafety: digest('outbound-safety'),
-    },
+    componentDigests,
     renderedFields: {
       title: { kind: 'value', value: operation.lifecycleOperation },
       description: { kind: 'value', value: null },
       priority: { kind: 'value', value: null },
     },
+    revisionEvidence,
   };
 }
 
@@ -1806,6 +1876,13 @@ function resolutionPreviewEnvelope(
       },
     ],
     externalAction: null,
+    approvalPreview: publicApprovalPreview(
+      operation.operationId,
+      operation.approvalPreview!,
+      operation.authority!.effective,
+      operation.authority!.sourceDigest,
+      operation.preview.revisionDigest,
+    ),
     recovery: [
       {
         code: 'fresh-approval-and-evidence-required',
@@ -3800,6 +3877,7 @@ async function continueCloseoutOperation(
               updated.operationId,
               next.approvalPreview!,
               next.authority.effective,
+              next.authority.sourceDigest,
               updated.preview.revisionDigest,
             ),
           };
@@ -5011,6 +5089,7 @@ function approvalPreviewEnvelope(
       operation.operationId,
       operation.approvalPreview!,
       operation.authority?.effective ?? 'user-approved',
+      operation.authority?.sourceDigest ?? 'unbound-authority',
       operation.preview.revisionDigest,
     ),
     recovery: [
@@ -5035,6 +5114,7 @@ function publicApprovalPreview(
   operationId: string,
   preview: NonNullable<RemoteOperationRecord['approvalPreview']>,
   authority: string,
+  authorityEvidenceDigest: string,
   revisionDigest: string,
 ): NonNullable<RemoteCommandEnvelope['approvalPreview']> {
   if (!preview.revisionEvidence) {
@@ -5049,6 +5129,15 @@ function publicApprovalPreview(
     fieldMask: preview.fieldMask,
     renderedFields: preview.renderedFields,
     authority,
+    componentDigests: {
+      target: preview.componentDigests.target,
+      baseline: preview.componentDigests.baseline,
+      capability: preview.componentDigests.capability,
+      authority: authorityEvidenceDigest,
+      policy: preview.componentDigests.policy,
+      projection: preview.componentDigests.projection,
+      outboundSafety: preview.componentDigests.outboundSafety,
+    },
     revision: {
       digest: revisionDigest,
       evidenceDigest: preview.componentDigests.revision,

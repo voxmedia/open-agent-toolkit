@@ -1278,6 +1278,18 @@ const CurrentRemoteOperationRecordSchema = z
       });
     }
     if (
+      record.approvalPreview &&
+      ['relink', 'detach', 'recreate'].includes(record.lifecycleOperation) &&
+      !record.approvalPreview.revisionEvidence
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['approvalPreview', 'revisionEvidence'],
+        message:
+          'Resolution approval preview requires revision freshness evidence.',
+      });
+    }
+    if (
       record.approval &&
       record.approval.previewDigest !== record.preview.digest
     ) {

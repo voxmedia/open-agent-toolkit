@@ -103,6 +103,15 @@ describe('remote command output', () => {
         },
       },
       authority: 'user-approved',
+      componentDigests: {
+        target: 'sha256:target',
+        baseline: 'sha256:baseline',
+        capability: 'sha256:capability',
+        authority: 'sha256:authority',
+        policy: 'sha256:policy',
+        projection: 'sha256:projection',
+        outboundSafety: 'sha256:safety',
+      },
       revision: {
         digest: 'sha256:revision',
         evidenceDigest: 'sha256:revision-evidence',
@@ -120,7 +129,10 @@ describe('remote command output', () => {
 
     const human = renderRemoteCommand(value, { json: false }).stdout;
     expect(human).toContain(
-      'preview op_preview_001: update-fields; fields=title,description; authority=user-approved',
+      'preview op_preview_001: update-fields; digest=sha256:preview; fields=title,description; authority=user-approved',
+    );
+    expect(human).toContain(
+      'components target=sha256:target; baseline=sha256:baseline; capability=sha256:capability; authority=sha256:authority; policy=sha256:policy; projection=sha256:projection; safety=sha256:safety',
     );
     expect(human).toContain(
       'revision=sha256:revision; revision-evidence=sha256:revision-evidence',

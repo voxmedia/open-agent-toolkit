@@ -36,6 +36,15 @@ export interface RemoteCommandEnvelope {
     fieldMask: BindingPreview['fieldMask'];
     renderedFields: Partial<BindingPreview['renderedFields']>;
     authority: string;
+    componentDigests: {
+      target: string;
+      baseline: string;
+      capability: string;
+      authority: string;
+      policy: string;
+      projection: string;
+      outboundSafety: string;
+    };
     revision: {
       digest: string;
       evidenceDigest: string;
@@ -91,7 +100,10 @@ export function renderRemoteCommand(
   if (envelope.approvalPreview) {
     const preview = envelope.approvalPreview;
     lines.push(
-      `preview ${preview.operationId}: ${preview.operationClass}; fields=${preview.fieldMask.join(',')}; authority=${preview.authority}; revision=${preview.revision.digest}; revision-evidence=${preview.revision.evidenceDigest}; revision-source=${preview.revision.source}; strength=${preview.revision.strength}; updated=${preview.revision.updatedAt ?? 'unobserved'}; observed=${preview.revision.observedAt ?? 'unobserved'}`,
+      `preview ${preview.operationId}: ${preview.operationClass}; digest=${preview.digest}; fields=${preview.fieldMask.join(',')}; authority=${preview.authority}; revision=${preview.revision.digest}; revision-evidence=${preview.revision.evidenceDigest}; revision-source=${preview.revision.source}; strength=${preview.revision.strength}; updated=${preview.revision.updatedAt ?? 'unobserved'}; observed=${preview.revision.observedAt ?? 'unobserved'}`,
+    );
+    lines.push(
+      `components target=${preview.componentDigests.target}; baseline=${preview.componentDigests.baseline}; capability=${preview.componentDigests.capability}; authority=${preview.componentDigests.authority}; policy=${preview.componentDigests.policy}; projection=${preview.componentDigests.projection}; safety=${preview.componentDigests.outboundSafety}`,
     );
     for (const field of preview.fieldMask) {
       const rendered = preview.renderedFields[field];

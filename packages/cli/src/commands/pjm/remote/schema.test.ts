@@ -931,6 +931,23 @@ describe('remote record schemas', () => {
       updatedAt: null,
       observedAt: '2026-08-31T11:58:00.000Z',
     });
+
+    const { revisionEvidence: _previewRevision, ...previewWithoutRevision } =
+      operation.preview;
+    const { revisionEvidence: _approvalRevision, ...approvalWithoutRevision } =
+      operation.approvalPreview!;
+    expect(() =>
+      RemoteOperationRecordSchema.parse({
+        ...operation,
+        lifecycleOperation: 'recreate',
+        operationClass: 'recreate',
+        preview: previewWithoutRevision,
+        approvalPreview: {
+          ...approvalWithoutRevision,
+          operationClass: 'recreate',
+        },
+      }),
+    ).toThrow(/resolution.*revision freshness/i);
   });
 
   it('defines pre-create intent without a remote identity and explicit publication projection', () => {

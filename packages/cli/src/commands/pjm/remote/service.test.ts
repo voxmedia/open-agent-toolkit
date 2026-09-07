@@ -591,6 +591,18 @@ describe('production lifecycle composition', () => {
       status: 'needs-review',
       persisted: true,
       results: [{ diagnosticCode: 'fresh-approval-and-evidence-required' }],
+      approvalPreview: {
+        operationClass: 'detach',
+        componentDigests: {
+          target: expect.stringMatching(/^sha256:/),
+          baseline: expect.stringMatching(/^sha256:/),
+          capability: expect.stringMatching(/^sha256:/),
+          authority: expect.stringMatching(/^sha256:/),
+          policy: expect.stringMatching(/^sha256:/),
+          projection: expect.stringMatching(/^sha256:/),
+          outboundSafety: expect.stringMatching(/^sha256:/),
+        },
+      },
     });
     const resolutionOperationId = resolution.recovery[0]?.instruction.match(
       /preview (op_[A-Za-z0-9_-]+)/,
@@ -598,6 +610,9 @@ describe('production lifecycle composition', () => {
     expect(resolutionOperationId).toBeTruthy();
     const resolutionOperation = await store.readOperation(
       resolutionOperationId!,
+    );
+    expect(resolutionOperation!.approvalPreview?.digest).toBe(
+      resolution.approvalPreview!.digest,
     );
     await writeFile(
       authorityPath,
@@ -649,6 +664,13 @@ describe('production lifecycle composition', () => {
       bindingId: migrationBinding.bindingId,
       resolutionKind: 'relink',
       providerRef: 'linear:issue-relocated',
+    });
+    expect(relinkPreview).toMatchObject({
+      approvalPreview: {
+        operationClass: 'relink',
+        operationId: expect.stringMatching(/^op_/),
+        digest: expect.stringMatching(/^sha256:/),
+      },
     });
     const relinkOperationId = relinkPreview.recovery[0]?.instruction.match(
       /preview (op_[A-Za-z0-9_-]+)/,
@@ -866,6 +888,13 @@ describe('production lifecycle composition', () => {
         projectRoot: repository,
         bindingId: migrationBinding.bindingId,
         resolutionKind: 'recreate',
+      });
+      expect(recreatePreview).toMatchObject({
+        approvalPreview: {
+          operationClass: 'recreate',
+          operationId: expect.stringMatching(/^op_/),
+          digest: expect.stringMatching(/^sha256:/),
+        },
       });
       recreateOperationId = recreatePreview.recovery[0]?.instruction.match(
         /preview (op_[A-Za-z0-9_-]+)/,
