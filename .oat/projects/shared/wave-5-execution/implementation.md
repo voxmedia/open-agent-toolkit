@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: null
+oat_current_task_id: p12-t01
 oat_generated: false
 ---
 
@@ -173,6 +173,48 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** `0bd2a2815`; sweep `a61e42b52`
+
+## Phase 12: exit-gate fixes (p12)
+
+**Status:** in_progress · **Group:** exit-gate fix round (three parallel worktrees: A = p12-t01/t02/t03, B = p12-t05/t06/t07, C = p12-t04) · **Tasks:** p12-t01 … p12-t07
+**Outcome:** -
+**Verification:** -
+**Deviations:** -
+
+### Task p12-t01: (review) Make gate project-log finalization concurrency-safe and identity-verified
+
+**Status:** pending
+**Commit:** -
+
+### Task p12-t02: (review) Classify a gate receipt as stale only against the committed log
+
+**Status:** pending
+**Commit:** -
+
+### Task p12-t03: (review) Catalog documentation.instructionPointerExcludes for oat config set/unset
+
+**Status:** pending
+**Commit:** -
+
+### Task p12-t04: (review) Give the control-plane recommender the quick-plan readiness predicate
+
+**Status:** pending
+**Commit:** -
+
+### Task p12-t05: (review) Measure fence indentation in columns in the quick-start readiness guard
+
+**Status:** pending
+**Commit:** -
+
+### Task p12-t06: (review) Re-resolve PROJECT_PATH after quick-start scaffolds and prove the absorbed fields land
+
+**Status:** pending
+**Commit:** -
+
+### Task p12-t07: (review) Backstop the external-plan source backlink in the readiness contract
+
+**Status:** pending
+**Commit:** -
 
 ## Autonomy Gate Provenance
 
@@ -435,6 +477,27 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 **Findings (round 2):** Critical 0 · Important 0 · Medium 0 · Minor 1 — PASS. All seven dispositions verified fixed at source; `git diff --stat 5aa2f5ab4..9386be825` is seven wrapper/backlog files and the product trees (`packages`, `apps`, `tools`, `.agents`, lockfile, `.gitignore`, `turbo.json`) are tree-hash identical to the head where round 1 ran the twelve gates; forced `check` (`Cached: 0`), `check:skill-bumps`, `release:check-versions`, `pjm doctor` (declared, 0 warnings), and `validate-plan` re-run green. New m1: the orchestration-log synthesis counted twelve follow-ups (nine at closeout) where git shows thirteen (two at the p09 park, one at the p10 fix round, ten at closeout) — fixed in the receive commit.
 
 **Review row `final` → `passed`.** The configured exit gate runs next on the closeout head.
+
+## Review Received: final (configured exit gate, attempt 1 — blocked)
+
+**Date:** 2026-09-07
+**Gate:** run `33895672-bac5-4cb4-9a9e-474e440a9bc5`, target `codex-5-6-sol-xhigh` (diversity: unknown-producer), envelope `ok`, outcome `review_completed_blocking_findings`, `receiveEligible: true`, threshold important, blocking true, attempt `w5-exit-gate-20260907T143533Z` (launched in the foreground; the harness moved it to the background after ten minutes and it completed with a receipt).
+**Review artifact:** reviews/archived/final-review-2026-09-07T144442Z.md (reviewed head `c9ad23b69d13eb47da7340a6f26c48271af04a98`, invocation gate)
+
+**Findings:** Critical 0 · Important 3 · Medium 4 · Minor 0 — blocking; auto-disposition mode (every finding converted to a fix task in Phase 12; no deferrals).
+
+**Dispositions:**
+
+- I1 — concurrent gate finalizations can both settle while one `runId` is absent (`append.ts` rewrites the log without coordination; a successful commit never verifies the caller's identity): **convert → `p12-t01`**.
+- I2 — the control-plane recommender bypasses the quick-plan readiness predicate (`oat project status` tells a not-ready quick plan to implement): **convert → `p12-t04`** (the p03 plan's out-of-scope note said "no routing code exists" — false for `packages/control-plane`; the plan's own Outcome says the predicate is "referenced everywhere").
+- I3 — `oat config unset` omits `documentation.instructionPointerExcludes` although p05's dependency row and refresh clause require covering p02's key: **convert → `p12-t03`**.
+- M1 — a pending receipt is labeled stale against the working-tree log: **convert → `p12-t02`**.
+- M2 — the readiness guard treats a tab-indented fence marker as a CommonMark fence: **convert → `p12-t05`**.
+- M3 — the readiness contract does not backstop the plan-to-source backlink: **convert → `p12-t07`**.
+- M4 — a newly scaffolded consolidation writes `absorbed_*` through the pre-creation `PROJECT_PATH` (the deferred Minor elevated): **convert → `p12-t06`**; closes `BL-260907-re-resolve-project-path-after` in this wave.
+- The gate's Deferred Findings Disposition table accepts all five deferred Mediums as filed.
+
+**Gate row `final` (attempt 1) → `fixes_added`** (gate-written row moved forward in place with the archived path); `oat_implement_exit_gate` → `blocked`, `attempts_completed: 1`, receive completed in the following state checkpoint. Attempt 2 runs after Phase 12 lands.
 
 ## Deferred Findings
 

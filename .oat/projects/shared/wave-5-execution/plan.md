@@ -718,6 +718,194 @@ git commit -m "fix(p11-t01): make consolidated-project retirement checks semanti
 
 ---
 
+## Phase 12: exit-gate fixes (p12)
+
+**Milestone:** the configured exit gate's blocking findings (attempt 1, run `33895672`) resolved with negative controls, the gate re-run passes.
+
+### Task p12-t01: (review) Make gate project-log finalization concurrency-safe and identity-verified
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/log/append.ts` (and `gate/index.ts` wrapper), `append.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Exit-gate I1: `appendEntry` reads and rewrites the whole log without coordinating with another writer and the idempotency scan is separate from the mutation; a nominally successful `commitProjectLog` never verifies the caller's identity in HEAD, so two overlapping writers can both settle while one `runId` is absent.
+Location: `reviews/archived/final-review-2026-09-07T144442Z.md`
+
+**Step 2: Implement fix**
+
+Serialize the append+commit mutation with a project-local lock (never delete another process's Git lock), verify the caller's identity in `HEAD:project-log.md` after every nominally successful commit and retry/recover when absent, and add a deterministic overlapping-writer control (two distinct run IDs both survive; a same-ID replay stays singular; a log carrying an end-of-run synthesis section).
+
+**Step 3: Verify**
+
+Run: `pnpm exec vitest run src/commands/project/log src/commands/gate/index.test.ts` (from `packages/cli` unless the command names another package), then the lane-mode gates.
+Expected: the new control is red before the fix and green after; all gates green.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p12-t01): make gate project-log finalization concurrency-safe and identity-verified"
+```
+
+### Task p12-t02: (review) Classify a gate receipt as stale only against the committed log
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`, `index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Exit-gate M1: the stale-receipt warning checks the working-tree `project-log.md`, which is exactly the state after exhausted commit retries, so the next gate labels an unfinished finalization stale; the existing test seeds a committed entry.
+Location: `reviews/archived/final-review-2026-09-07T144442Z.md`
+
+**Step 2: Implement fix**
+
+Classify staleness against `HEAD:project-log.md` with exact identity; add a control whose log entry is dirty and whose receipt stays `pending` until recovery commits it.
+
+**Step 3: Verify**
+
+Run: `pnpm exec vitest run src/commands/gate/index.test.ts -t receipt` (from `packages/cli` unless the command names another package), then the lane-mode gates.
+Expected: the new control is red before the fix and green after; all gates green.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p12-t02): classify a gate receipt as stale only against the committed log"
+```
+
+### Task p12-t03: (review) Catalog documentation.instructionPointerExcludes for oat config set/unset
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`, `index.test.ts`, docs `configuration.md`/`config-and-local-state.md`
+
+**Step 1: Understand the issue**
+
+Review finding: Exit-gate I3: p05's dependency row and refresh clause require the family-coverage test to include p02's `documentation.*` opt-out; `KEY_ORDER`/the union/the descriptor list omit `documentation.instructionPointerExcludes` and the test codifies the omission, so operators cannot `unset` the new key.
+Location: `reviews/archived/final-review-2026-09-07T144442Z.md`
+
+**Step 2: Implement fix**
+
+Register the key in the config catalog with set/unset validation (array of repo-relative POSIX paths, the same normalization `oat-config.ts` applies), include it in family coverage, document it, and add a negative control that fails when the key is removed from `KEY_ORDER`.
+
+**Step 3: Verify**
+
+Run: `pnpm exec vitest run src/commands/config/index.test.ts src/config src/commands/help-snapshots.test.ts` (from `packages/cli` unless the command names another package), then the lane-mode gates.
+Expected: the new control is red before the fix and green after; all gates green.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p12-t03): catalog documentation.instructionpointerexcludes for oat config set/unset"
+```
+
+### Task p12-t04: (review) Give the control-plane recommender the quick-plan readiness predicate
+
+**Files:**
+
+- Modify: `packages/control-plane/src/recommender/{router,boundary}.ts`, artifact reader, tests`
+
+**Step 1: Understand the issue**
+
+Review finding: Exit-gate I2: the control-plane router maps every quick plan at boundary tier 2 straight to `oat-project-implement` and follows `oat_ready_for` without the review-disposition and substantive-task checks, so `oat project status` recommends implement for a plan all four lifecycle skills reject.
+Location: `reviews/archived/final-review-2026-09-07T144442Z.md`
+
+**Step 2: Implement fix**
+
+Add a shared executable equivalent of the skills' Quick Plan Readiness predicate (frontmatter incl. `oat_template` absent-or-false, a fence-aware `## Reviews` disposition, a substantive `### Task` under a `## Phase`) to the control-plane artifact reader; route not-ready quick plans to `oat-project-quick-start`; add public `project status` controls for a substantive-but-unreviewed plan and for ready frontmatter missing either a disposition or a substantive task; keep lite and spec-driven routes byte-identical.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run && pnpm exec vitest run src/commands/project/status` (from `packages/cli` unless the command names another package), then the lane-mode gates.
+Expected: the new control is red before the fix and green after; all gates green.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p12-t04): give the control-plane recommender the quick-plan readiness predicate"
+```
+
+### Task p12-t05: (review) Measure fence indentation in columns in the quick-start readiness guard
+
+**Files:**
+
+- Modify: ``.agents/skills/oat-project-quick-start/SKILL.md` (already bumped this PR), `review-skill-contracts.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Exit-gate M2: the guard counts raw leading whitespace characters, so a tab-indented apparent fence closer ends the guard's fence while remaining example code; example review rows or tasks can then make a non-ready plan pass (same logic duplicated for review and task extraction).
+Location: `reviews/archived/final-review-2026-09-07T144442Z.md`
+
+**Step 2: Implement fix**
+
+Measure indentation in columns with tab expansion (or reject leading tabs as indented code) in every copy of the fence logic; add tab-indented opener/closer fixtures proving example dispositions and tasks cannot satisfy readiness.
+
+**Step 3: Verify**
+
+Run: `pnpm exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts -t readiness` (from `packages/cli` unless the command names another package), then the lane-mode gates.
+Expected: the new control is red before the fix and green after; all gates green.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p12-t05): measure fence indentation in columns in the quick-start readiness guard"
+```
+
+### Task p12-t06: (review) Re-resolve PROJECT_PATH after quick-start scaffolds and prove the absorbed fields land
+
+**Files:**
+
+- Modify: ``.agents/skills/oat-project-quick-start/SKILL.md`, `review-skill-contracts.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Exit-gate M4 (elevated from the deferred Minor): quick-start resolves `PROJECT_PATH` before `oat project new` and never re-resolves it, so the new consolidation branch writes `absorbed_projects`/`absorbed_backlog_ids` through the pre-creation path and completion can skip the sweep for lack of inputs.
+Location: `reviews/archived/final-review-2026-09-07T144442Z.md`
+
+**Step 2: Implement fix**
+
+Re-resolve and validate `PROJECT_PATH` from the scaffold's reported path immediately after `oat project new` and before any Step 1 or consolidation write; add an executable create-path control that scaffolds a quick project and reads both fields back from the created `state.md`. Closes `BL-260907-re-resolve-project-path-after` in this wave.
+
+**Step 3: Verify**
+
+Run: `pnpm exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts -t 'absorbed|PROJECT_PATH'` (from `packages/cli` unless the command names another package), then the lane-mode gates.
+Expected: the new control is red before the fix and green after; all gates green.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p12-t06): re-resolve project_path after quick-start scaffolds and prove the absorbed fields land"
+```
+
+### Task p12-t07: (review) Backstop the external-plan source backlink in the readiness contract
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Exit-gate M3: p07 requires bidirectional plan↔source links and says its executable backstop covers the contract, but the template assertions and `evaluateExternalPlan` check no backlink, so a template regression can remove half the relationship with all p07 tests green.
+Location: `reviews/archived/final-review-2026-09-07T144442Z.md`
+
+**Step 2: Implement fix**
+
+Add a template assertion and a prospective-fixture rule for the plan-body source link, with a mutation control that removes the link and fails.
+
+**Step 3: Verify**
+
+Run: `pnpm exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts -t readiness` (from `packages/cli` unless the command names another package), then the lane-mode gates.
+Expected: the new control is red before the fix and green after; all gates green.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p12-t07): backstop the external-plan source backlink in the readiness contract"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
@@ -748,7 +936,7 @@ git commit -m "fix(p11-t01): make consolidated-project retirement checks semanti
 | p11    | code     | passed      | 2026-09-07 | reviews/archived/p11-review-2026-09-07T135325Z.md           | 0bd2a2815334fece741a4f8297dee3d63feb693b | manual     | -                   |
 | final  | code     | fixes_added | 2026-09-07 | reviews/archived/final-review-2026-09-07T142545Z.md         | 5aa2f5ab4813fcf76bb877258fda9929a3a0bb7e | manual     | -                   |
 | final  | code     | passed      | 2026-09-07 | reviews/archived/final-review-2026-09-07T143255Z.md         | 9386be8253f7b88abc65e04106a724c14ac55a2f | manual     | -                   |
-| final  | code     | fixes_added | 2026-09-07 | reviews/final-review-2026-09-07T144442Z.md                  | c9ad23b69d13eb47da7340a6f26c48271af04a98 | gate       | codex-5-6-sol-xhigh |
+| final  | code     | fixes_added | 2026-09-07 | reviews/archived/final-review-2026-09-07T144442Z.md         | c9ad23b69d13eb47da7340a6f26c48271af04a98 | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
