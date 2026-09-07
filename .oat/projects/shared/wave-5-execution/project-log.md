@@ -68,6 +68,10 @@ review=final status=fixes_added artifact=reviews/final-review-2026-09-07T144442Z
 
 target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:2,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/wave-5-execution/reviews/final-review-2026-09-07T174812Z.md run=a720129c-9808-4d43-8ae6-4b8de92e8fdb
 
+### 2026-09-07 · structural · oat gate review · final
+
+target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:2,minor:1 exit=0 status=ok artifact=.oat/projects/shared/wave-5-execution/reviews/final-review-2026-09-07T214334Z.md run=905419ec-75d0-4ea0-9881-5425c6c54e9d
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
