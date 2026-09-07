@@ -18,6 +18,9 @@ interface HarnessOptions {
   entries?: InstructionEntry[];
   json?: boolean;
   commandError?: Error;
+  excludedPaths?: string[];
+  effectiveExcludedPaths?: string[];
+  exclusionWarnings?: string[];
 }
 
 function createHarness(options: HarnessOptions = {}): {
@@ -26,19 +29,43 @@ function createHarness(options: HarnessOptions = {}): {
   lstat: ReturnType<typeof vi.fn>;
   readFile: ReturnType<typeof vi.fn>;
   removeFile: ReturnType<typeof vi.fn>;
+  resolveInstructionPointerExcludes: ReturnType<typeof vi.fn>;
   scanInstructionFiles: ReturnType<typeof vi.fn>;
   symlinkFile: ReturnType<typeof vi.fn>;
   writeFile: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const entries = options.entries ?? [];
+  const excludedPaths = options.excludedPaths ?? [];
 
-  const scanInstructionFiles = vi.fn(async () => {
-    if (options.commandError) {
-      throw options.commandError;
-    }
-    return entries;
-  });
+  // Injected rather than left to the real implementation: the harness cwd is a
+  // fake path, and letting the production resolver read `/tmp/workspace` would
+  // make the wiring assertions depend on the developer's filesystem.
+  const resolveInstructionPointerExcludes = vi.fn(async () => ({
+    configured: excludedPaths,
+    effective: options.effectiveExcludedPaths ?? excludedPaths,
+    warnings: options.exclusionWarnings ?? [],
+  }));
+
+  // Applies the exclusions the command hands it, so a test that asserts "no
+  // create for an excluded directory" is exercising the real pass-through
+  // rather than a pre-filtered entry list.
+  const scanInstructionFiles = vi.fn(
+    async (_repoRoot: string, scanOptions?: { excludedPaths?: string[] }) => {
+      if (options.commandError) {
+        throw options.commandError;
+      }
+      const excluded = scanOptions?.excludedPaths ?? [];
+      return entries.filter(
+        (entry) =>
+          !excluded.some((excludedPath) =>
+            (entry.agentsPath ?? entry.claudePath).startsWith(
+              `/tmp/workspace/${excludedPath}/`,
+            ),
+          ),
+      );
+    },
+  );
 
   const writeFile = vi.fn(async () => undefined);
   const lstat = vi.fn(async () => {
@@ -62,6 +89,7 @@ function createHarness(options: HarnessOptions = {}): {
     lstat,
     readFile,
     removeFile,
+    resolveInstructionPointerExcludes,
     resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
     scanInstructionFiles,
     symlinkFile,
@@ -74,6 +102,7 @@ function createHarness(options: HarnessOptions = {}): {
     lstat,
     readFile,
     removeFile,
+    resolveInstructionPointerExcludes,
     scanInstructionFiles,
     symlinkFile,
     writeFile,
@@ -122,6 +151,84 @@ describe('createInstructionsSyncCommand', () => {
     expect(remove).toHaveBeenCalledWith('/tmp/workspace/CLAUDE.md', {
       force: true,
     });
+  });
+
+  // Wiring only: this harness's scanner mock applies the exclusion itself, so
+  // deleting the production predicate leaves this test green. The behavioral
+  // proof is in instructions.integration.test.ts against the real scanner.
+  it('forwards resolved exclusions to the scanner, planning no create for an excluded directory', async () => {
+    const {
+      command,
+      capture,
+      resolveInstructionPointerExcludes,
+      scanInstructionFiles,
+    } = createHarness({
+      json: true,
+      excludedPaths: ['apps/oat-docs/docs'],
+      entries: [
+        {
+          agentsPath: '/tmp/workspace/apps/oat-docs/docs/AGENTS.md',
+          claudePath: '/tmp/workspace/apps/oat-docs/docs/CLAUDE.md',
+          status: 'missing',
+          detail: 'CLAUDE.md missing',
+        },
+        {
+          agentsPath: '/tmp/workspace/apps/oat-docs/AGENTS.md',
+          claudePath: '/tmp/workspace/apps/oat-docs/CLAUDE.md',
+          status: 'missing',
+          detail: 'CLAUDE.md missing',
+        },
+        {
+          agentsPath: '/tmp/workspace/.oat/repo/AGENTS.md',
+          claudePath: '/tmp/workspace/.oat/repo/CLAUDE.md',
+          status: 'missing',
+          detail: 'CLAUDE.md missing',
+        },
+      ],
+    });
+
+    await runSyncCommand(command, { commandArgs: ['--dry-run'] });
+
+    expect(resolveInstructionPointerExcludes).toHaveBeenCalledWith(
+      '/tmp/workspace',
+    );
+    expect(scanInstructionFiles).toHaveBeenCalledWith('/tmp/workspace', {
+      excludedPaths: ['apps/oat-docs/docs'],
+      strategy: 'pointer',
+    });
+
+    const payload = capture.jsonPayloads[0] as {
+      actions: Array<{ target: string }>;
+      excludedPaths?: string[];
+    };
+    const targets = payload.actions.map((action) => action.target);
+
+    expect(targets).not.toContain(
+      '/tmp/workspace/apps/oat-docs/docs/CLAUDE.md',
+    );
+    // The app-level instruction file is a sibling of the excluded content root,
+    // not a page inside it, so it still gets a pointer.
+    expect(targets).toContain('/tmp/workspace/apps/oat-docs/CLAUDE.md');
+    expect(targets).toContain('/tmp/workspace/.oat/repo/CLAUDE.md');
+    expect(payload.excludedPaths).toEqual(['apps/oat-docs/docs']);
+  });
+
+  it('omits excludedPaths from the payload when nothing is excluded', async () => {
+    const { command, capture } = createHarness({
+      json: true,
+      entries: [
+        {
+          agentsPath: '/tmp/workspace/AGENTS.md',
+          claudePath: '/tmp/workspace/CLAUDE.md',
+          status: 'missing',
+          detail: 'CLAUDE.md missing',
+        },
+      ],
+    });
+
+    await runSyncCommand(command, { commandArgs: ['--dry-run'] });
+
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('excludedPaths');
   });
 
   it('dry-run plans create actions and prints apply guidance', async () => {
@@ -628,6 +735,7 @@ describe('createInstructionsSyncCommand', () => {
     });
 
     expect(scanInstructionFiles).toHaveBeenCalledWith('/tmp/workspace', {
+      excludedPaths: [],
       strategy: 'copy',
     });
   });
