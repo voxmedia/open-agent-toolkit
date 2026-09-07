@@ -23,5 +23,6 @@ Wave-5 p10 (2026-09-04-make-terminal-project-status-agree-with-revision-plans.md
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] `.oat/templates/implementation.md` states the completion-record contract (task headings with `**Status:**`, or a documented phase-level completion record) and which source wins when the Progress Overview table and task bodies disagree
+- [ ] The control-plane task parser reports `workflow-friction`-shaped archives (Progress Overview table + review-log bullets, no `## Revision Phase` section) with the completion counts their record claims, using a provenance-headed snapshot fixture
+- [ ] The pinned `router.test.ts` case from wave-5 p10 is updated deliberately (the follow-up landing must flip it, not silently pass)

@@ -24,5 +24,6 @@ finalize-synced-archive.mjs:94 (PR #254) reads stdin via readFile(0, 'utf8') imp
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] `finalize-synced-archive.mjs` reads stdin with an fd-capable API and the Step 12 pipe form succeeds
+- [ ] A test drives the script's CLI entry point through a pipe (not only the exported function)
+- [ ] A synced deferred clear completes end-to-end in a scratch project (pointer cleared)

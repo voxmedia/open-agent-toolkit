@@ -23,5 +23,6 @@ Wave-5 p09 (2026-09-02-defer-activeproject-clearing-on-archive-completions.md) p
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] `oat project log check` (or `append`) can detect an existing completion seal so a repeated seal append is a no-op reported as already-appended
+- [ ] The `2026-09-02-defer-activeproject-clearing-on-archive-completions.md` plan is refreshed or superseded so its pre-archive resume path rests on the new seal idempotence (or on the Step 3.65 router covering shared archive completions)
+- [ ] Wave-5 p09's parked patch (steps 1, 2, 3, 5) is re-applied and the plan's seven test cases pass, including exactly one seal entry after a pre-archive interruption
