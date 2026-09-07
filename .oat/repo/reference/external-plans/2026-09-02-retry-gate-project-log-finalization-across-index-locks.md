@@ -333,6 +333,8 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
+**Refresh applied 2026-09-07 (wave-5 boundary, per the execution program's pre-dispatch refresh clause; drift re-run against `0f47bf700` after waves 1–4 and the Lite workflow PR #264 merged):** Anchors on the wave-5 base `0f47bf700`: `commitReviewGateProjectLog` `:2807`, `finalizeReviewGateProjectLog` `:2864`, `runId = randomUUID()` `:3316`, the `projectLogFinalized` guard `:3872-3873`; `append.ts:187-196` → `:177-208` (`appendProjectLog` at `:329`); `gate/index.test.ts` is 8506 lines (re-locate by name). `.oat/repo/reference/decisions/**` joins the drift check (this plan writes a decision record after the wave-5 p01 lane writes one; the fan-in preserves both index rows). This lane runs after p01 in the same wave.
+
 Revalidate against current `origin/main`, the backlog item, issue #213, the
 decision records above, and the gate and log tests when substantial time
 passes, main advances materially from

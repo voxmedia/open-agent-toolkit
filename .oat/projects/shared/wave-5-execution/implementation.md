@@ -202,6 +202,18 @@ oat_generated: false
 
 **Plan row (attempt 3) → `fixes_added`**; the gate re-runs (attempt 4).
 
+### Review Received: plan (attempt 4)
+
+**Date:** 2026-09-07
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-07T044657Z.md (gate-invoked, run `e8b7c6c5-d7ce-41d5-839d-0da79edeccee`, blocked)
+**Findings:** Critical 0 · Important 1 · Medium 0 · Minor 0 — resolved:
+
+- I1 — the governing `oat-wave-execute` brief rule still says the external plan is the lane's entire contract, contradicting the wrapper's plan-plus-addendum model: **fixed by taking the finding's alternative** — the refreshes were applied to the source plans themselves as dated `Refresh applied 2026-09-07 (wave-5 boundary)` entries in eight plans' `## Revalidation Before Execution` sections (the program's own pre-dispatch mechanism, used on 2026-09-03 and 2026-09-04), the wrapper's addenda section became a pointer list, Architecture and rules 1–2 returned to the single-contract model, and the lane-brief sentence matches the skill again. No skill change, no bump.
+
+**Verification record:** what — eight plan refresh entries plus the wrapper rewrite; how — `oat project validate-plan` exit 0; `grep -c "Refresh applied 2026-09-07"` returns one per refreshed plan; the wrapper contains no addenda section; where — this section and the commit that carries it.
+
+**Plan row (attempt 4) → `fixes_added`**; the gate re-runs (attempt 5).
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->

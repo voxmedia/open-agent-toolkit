@@ -224,6 +224,8 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
+**Refresh applied 2026-09-07 (wave-5 boundary, per the execution program's pre-dispatch refresh clause; drift re-run against `0f47bf700` after waves 1–4 and the Lite workflow PR #264 merged):** On the wave-5 base `0f47bf700`: no `unset` subcommand, `runUnset`, or `unsetConfigValue` exists; `runGet` `:2692`, `runSet` `:2731`, `KEY_ORDER` `:224`, `validateSurfaceForKey` `:1387`, `setConfigValue` `:2034`; `KEY_ORDER` already includes `documentation.excludes` (W1, PR #262), so the `documentation.excludes` dependency row is satisfied and the family-coverage test includes it plus any key the wave-5 p02 lane adds before this lane. `packages/cli/src/commands/help-snapshots.test.ts` (the literal `oat config --help` snapshot, `:423-446`) and `apps/oat-docs/docs/cli-utilities/configuration.md` (`:23-24,52-53` → `:22-26`, `:52-56`, +30 since authoring) are write surfaces and join the drift check; `config-and-local-state.md:117-128` exact; `cli-reference.md:152-162` → the `## oat config surface flags` heading at `:158`.
+
 Revalidate against current `origin/main`, the backlog item, `KEY_ORDER`, and
 the config tests when substantial time passes, main advances materially from
 `49aeb5075971180b48c131bbd2b21b82d455bfc9`, PR #190 or the docs-index

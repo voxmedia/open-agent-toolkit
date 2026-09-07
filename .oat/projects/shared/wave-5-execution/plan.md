@@ -38,17 +38,17 @@ retirement checks semantic) through the wave→project wrapper pattern
 (DR-260713-wave-project-wrapper-over), per the 2026-08-31 execution program
 (`.oat/repo/reference/external-plans/2026-08-31-execution-program.md`, Wave 5).
 
-**Architecture:** Thin wrapper. Each task's **complete implementation contract** is exactly two documents: its immutable external plan under `.oat/repo/reference/external-plans/` plus, when one is named in the task body, its explicitly named, non-narrowing wave-boundary refresh addendum under `## Wave-Boundary Refresh Addenda` (the program's pre-dispatch refresh applied in the wrapper because the plan files do not change during a wave). Where the two disagree on a current-state fact (a line anchor, a pin, a live consumer), the addendum governs; on every requirement, the plan governs and the addendum may only add. Tasks below otherwise carry wrapper-owned metadata exclusively: the source-plan path, the addendum pointer, ordering/dependencies, wrapper-level verification gates, the commit convention, and review mapping. Nothing else in this file — in particular the Parallelism observations and the Drift Refresh Record — is contract text; those sections are evidence and pointers only.
+**Architecture:** Thin wrapper. Each task's **entire and only implementation contract** is its external plan under `.oat/repo/reference/external-plans/`, including the dated **Refresh applied 2026-09-07 (wave-5 boundary)** entry that the program's pre-dispatch refresh clause placed in eight plans' `## Revalidation Before Execution` sections before dispatch (commit recorded in `implementation.md`). Tasks below carry wrapper-owned metadata exclusively: the source-plan path, ordering/dependencies, wrapper-level verification gates, the commit convention, and review mapping. Nothing in this file restates, narrows, or overrides a source plan; the Parallelism observations and the Drift Refresh Record are evidence, not contract text.
 
 **Commit Convention:** `{type}(p{NN}-t{NN}): {description}` — the external plan
 governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
 
 **Wrapper execution contract (applies to every task):**
 
-1. **Drift check first.** Run the source plan's `## Drift check` (extended by any files the task's addendum adds) against current HEAD. A material mismatch (per that plan's own definition) is a STOP. The
+1. **Drift check first.** Run the source plan's `## Drift check` (including any files its 2026-09-07 refresh entry adds) against current HEAD. A material mismatch (per that plan's own definition) is a STOP. The
    wave-boundary drift refresh (see record below) does not replace the in-worktree
    re-check — the integration tip advances as groups merge.
-2. **Execute the source plan's `## Implementation steps`** in order with each step's embedded Verify gate, applying the task's addendum where it names a current-state fact; honor the plan's `## STOP conditions` verbatim.
+2. **Execute the source plan's `## Implementation steps`** in order with each step's embedded Verify gate; honor its `## STOP conditions` verbatim.
 3. **Confirm the source plan's `## Done criteria`**, then run the lane-mode DoD
    gates: the plan's focused tests, then `pnpm check`, `pnpm type-check`,
    `pnpm run check:skill-bumps`, `pnpm lint`, `pnpm format`, and
@@ -200,82 +200,30 @@ documentation config seam and the config catalog; p06 and p07 add validators
 change lifecycle-skill prose and the completion/next routers, reviewed with
 verbatim snippet execution and live CLI probes._
 
-## Wave-Boundary Refresh Addenda (authoritative)
+## Refreshes Applied to the Source Plans (2026-09-07)
 
 The program's Wave 5 cross-wave prerequisite instructs the wrapper, before
-dispatch, to "re-read every W5 plan's `## Landing-event impact` table against
-the then-current state … and apply the listed refreshes", and each source
-plan's `## Revalidation Before Execution` section requires a refresh when main
-advances materially or another PR implements part of the surface. The
-external-plan files are immutable inputs during the wave (corrections land at
-the wave-close refresh), so the refreshes are applied here as task addenda.
-Each addendum below is the second half of the named task's contract (see Architecture): it governs current-state facts, adds requirements the plan's authored commit could not see, never removes or weakens a source-plan requirement, and is reproduced verbatim in the lane brief. This section is the only place in the wrapper that carries such text.
-
-- **All skill-editing lanes (p03, p08, p09, p10, p11):**
-  `packages/cli/src/validation/named-skill-load-contract.test.ts` is a write
-  surface and a verification gate: any new sentence pairing an execution verb
-  with a named `oat-project-*` skill carries a load clause and a matrix row;
-  no anchored heading is reworded without moving its rows; the corpus floor is
-  not lowered. Add the file to the in-worktree drift check.
-- **Shared-skill bump rule (wrapper-owned, PR-scoped):** the first lane in
-  plan order that edits a skill bumps it once; later lanes (`oat-project-next`:
-  p03 then p10; `oat-project-quick-start`: p03 then p11;
-  `oat-project-complete`: p08 then p09 then p11) edit prose only and leave the
-  pins at the earlier lane's value. Editing
-  `oat-project-implement/references/completion-and-closeout.md` (p08) is one
-  `oat-project-implement` bump (2.3.5 → 2.3.6) with its eight pins.
-- **p03 addendum — pin set:** the source plan's "`oat-project-progress` has no
-  pin" and "three pins" statements are superseded: four bumps (plan 1.4.9,
-  progress 1.4.0, next 1.1.0, quick-start 2.3.9 → next patch each) with eight
-  pins located by version literal — plan `skills.test.ts:1854`, `:5555`;
-  progress `:5348`; next `:4448`, `:5341`; quick-start `:1862`, `:2928`,
-  `:5556`, `:6559`. `skills.test.ts` and `named-skill-load-contract.test.ts`
-  join the drift command. The base has four workflow modes: the readiness
-  definition and routing rows are written for quick mode as the plan says, and
-  the existing Lite tables in `oat-project-progress:295+` and
-  `oat-project-next:260` are left intact unless the plan's own sweep rule
-  requires a mechanical widening, which is then reported.
-- **p08 addendum — Lite recap carve-out:** the Lite PR inserted a non-lite
-  recap carve-out at `completion-and-closeout.md:886-889` ("this entire
-  project-recap subsection applies only to non-lite workflows"). The
-  capability-aware recap (skip reasons, non-blocking probe) is implemented for
-  non-lite workflows inside that carve-out; the lite carve-out is preserved
-  verbatim and its contract test (if any) stays green. Pins: `skills.test.ts:1247`
-  (explainer-kit), `:4447` (complete), `:2925`/`:7435` (summary), the eight
-  `oat-project-implement` pins, and `review-skill-contracts.test.ts:1089`.
-- **p09 / p11 addendum — pins:** `oat-project-complete` is pinned at
-  `skills.test.ts:4447` and `review-skill-contracts.test.ts:1089` (not `:4002`);
-  p08 owns the wave's `oat-project-complete` bump; p09 and p11 do not re-bump.
-  p11's `oat-project-quick-start` pins are `:1862`, `:2928`, `:5556`, `:6559`
-  at p03's value.
-- **p10 addendum — Lite mode and the current router:** the terminal-status
-  guard is written against the current recommender ladder
-  (`packages/control-plane/src/recommender/router.ts`: `LITE_ROUTES` `:79-85`,
-  the early quick return `:106-115`, `getPostImplementationRecommendation`
-  `:170` with `hasIncompleteRevisionPhase` `:173-178`, the
-  `workflowMode !== 'lite'` branch `:218-224`) and `WORKFLOW_MODES` in
-  `types.ts:11-17` (four members). The guard applies uniformly to every
-  workflow mode including `lite`: a project whose plan still carries an
-  incomplete revision phase is not terminal in any mode. The behavior/test
-  matrix gains a positive and a negative control for `workflowMode: 'lite'`
-  (an incomplete `p-revN` in a lite plan → not terminal / routed to the
-  revision; all revision phases complete → terminal). `oat-project-next`
-  Step 1's field table (`:124-140`) gains the `oat_lifecycle` row the
-  discriminator reads, and Step 5.2 is at `:393-398`. Pins `skills.test.ts:4448`
-  and `:5341` stay at p03's value (no re-bump).
-- **p05 addendum — scope:** `packages/cli/src/commands/help-snapshots.test.ts`
-  (the literal `oat config --help` snapshot) and
-  `apps/oat-docs/docs/cli-utilities/configuration.md` are write surfaces and
-  join the drift command; the `documentation.excludes` dependency row is
-  satisfied (W1, PR #262), so the family-coverage test includes it and any key
-  p02 adds.
-- **p01 / p04 addendum — decision records:** both lanes create a decision
-  record with `pnpm run cli -- decision new` and regenerate the index; the
-  fan-in preserves both index rows.
+dispatch, to re-read every W5 plan's landing-event table against the
+then-current state and apply the listed refreshes, and each plan's
+`## Revalidation Before Execution` section requires a refresh when main
+advances materially. Those refreshes were applied to the plan files themselves
+(the same mechanism the program used on 2026-09-03 and 2026-09-04), as a dated
+**Refresh applied 2026-09-07 (wave-5 boundary)** entry at the top of each
+affected plan's Revalidation section, so every task's contract stays a single
+document. Plans refreshed: p01 (anchors, decision-record drift scope), p03
+(pin set — eight pins including the `oat-project-progress` pin; four-mode
+base; Lite tables as separate consumers), p04 (anchors, decision-record drift
+scope), p05 (help-snapshot and configuration-docs write surfaces; satisfied
+`documentation.excludes` row), p08 (the Lite recap carve-out; implement and
+summary pins), p09 (pins; no re-bump), p10 (the current recommender ladder,
+Lite-mode controls, the `oat_lifecycle` field row; no re-bump), p11 (pins; no
+re-bump). Plans p02, p06, and p07 needed no refresh. Each refreshed plan also
+carries the `named-skill-load-contract.test.ts` write-surface rule and the
+wave's shared-skill bump rule where it applies.
 
 ## Drift Refresh Record (2026-09-07, vs `0f47bf7004166d420758d1bcd77d253007174332`)
 
-**2 PASS / 9 MINOR-DRIFT / 0 STOP** (two current-contract refreshes carried as authoritative addenda in the next section). This record is non-authoritative recon evidence (one bounded read-only recon agent, Opus, native dispatch, run against
+**2 PASS / 9 MINOR-DRIFT / 0 STOP** (the two current-contract refreshes, p03 and p10, plus six anchor refreshes were applied to the plans' own `## Revalidation Before Execution` sections on 2026-09-07 before dispatch). This record is non-authoritative recon evidence (one bounded read-only recon agent, Opus, native dispatch, run against
 the wave base, the Lite PR #264 merge commit; 349 commits and the W1–W4,
 #255, and #264 merges sit between the plans' authored commit `49aeb5075`
 (`6b9a15841` for p10) and the base). Draft PR #190 is still open at
@@ -378,7 +326,7 @@ commit.
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md`
 
-**Refresh addendum (the second half of this task's contract, see Architecture):** the `p01` items under `## Wave-Boundary Refresh Addenda`.
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p01`).
 
 **Ordering:** group 1; runs at the wave base in parallel with p02 and p03 and merges first within the group. Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p01-t01` prefix.
@@ -450,7 +398,7 @@ git commit -m "fix(p02-t01): keep instruction-sync pointer files out of document
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-route-incomplete-quick-projects-to-quick-start.md`
 
-**Refresh addendum (the second half of this task's contract, see Architecture):** the `p03` items under `## Wave-Boundary Refresh Addenda`.
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p03`).
 
 **Ordering:** group 1; runs at the wave base in parallel with p01 and p02 and merges third within the group. Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p03-t01` prefix.
@@ -487,7 +435,7 @@ git commit -m "fix(p03-t01): route incomplete quick projects to quick-start from
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-retry-gate-project-log-finalization-across-index-locks.md`
 
-**Refresh addendum (the second half of this task's contract, see Architecture):** the `p04` items under `## Wave-Boundary Refresh Addenda`.
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p04`).
 
 **Ordering:** group 2; runs after the group-1 fan-in in parallel with p05 and p06 (after group 1's gate plan p01) and merges first within the group. Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p04-t01` prefix.
@@ -524,7 +472,7 @@ git commit -m "fix(p04-t01): retry gate project-log finalization across transien
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-add-oat-config-unset-command.md`
 
-**Refresh addendum (the second half of this task's contract, see Architecture):** the `p05` items under `## Wave-Boundary Refresh Addenda`.
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p05`).
 
 **Ordering:** group 2; runs after the group-1 fan-in in parallel with p04 and p06 (after the instruction-sync plan p02 so its family-coverage test includes the new documentation key) and merges second within the group. Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p05-t01` prefix.
@@ -631,7 +579,7 @@ git commit -m "feat(p07-t01): enforce plan-readiness versus execution-readiness 
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-make-autonomous-project-recap-capability-aware.md`
 
-**Refresh addendum (the second half of this task's contract, see Architecture):** the `p08` items under `## Wave-Boundary Refresh Addenda`.
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p08`).
 
 **Ordering:** group 3 (sequential pair, second); runs alone after p07 merges (both write `validation/skills.test.ts`). Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p08-t01` prefix.
@@ -668,7 +616,7 @@ git commit -m "feat(p08-t01): make the autonomous project recap capability-aware
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-defer-activeproject-clearing-on-archive-completions.md`
 
-**Refresh addendum (the second half of this task's contract, see Architecture):** the `p09` items under `## Wave-Boundary Refresh Addenda`.
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p09`).
 
 **Ordering:** group 4 (sequential pair, first); runs alone after p08 merges (p08 releases `oat-project-complete/SKILL.md`). Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p09-t01` prefix.
@@ -705,7 +653,7 @@ git commit -m "fix(p09-t01): defer activeProject clearing on shared archive comp
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-04-make-terminal-project-status-agree-with-revision-plans.md`
 
-**Refresh addendum (the second half of this task's contract, see Architecture):** the `p10` items under `## Wave-Boundary Refresh Addenda`.
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p10`).
 
 **Ordering:** group 4 (sequential pair, second); runs alone after p09 merges (shares `validation/skills.test.ts` with p09 and `oat-project-next/SKILL.md` with p03). Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p10-t01` prefix.
@@ -742,7 +690,7 @@ git commit -m "fix(p10-t01): make terminal project status agree with completed r
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-make-consolidated-project-retirement-semantic.md`
 
-**Refresh addendum (the second half of this task's contract, see Architecture):** the `p11` items under `## Wave-Boundary Refresh Addenda`.
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p11`).
 
 **Ordering:** group 5; runs alone after p10 merges (after the active-pointer and quick-resume lanes; its sweep runs before the project-log seal). Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p11-t01` prefix.
@@ -791,7 +739,7 @@ git commit -m "fix(p11-t01): make consolidated-project retirement checks semanti
 | design | artifact | pending     | -          | -                                                           | -             | -          | -                   |
 | plan   | artifact | superseded  | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T043343Z.md | -             | gate       | codex-5-6-sol-xhigh |
 | plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T044034Z.md | -             | gate       | codex-5-6-sol-xhigh |
-| plan   | artifact | received    | 2026-09-07 | reviews/artifact-plan-review-2026-09-07T044657Z.md          | -             | -          | -                   |
+| plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T044657Z.md | -             | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
