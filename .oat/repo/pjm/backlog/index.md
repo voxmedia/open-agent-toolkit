@@ -277,6 +277,7 @@
 | BL-260903-populate-provider-reachability | Populate provider reachability evidence across pack and lifecycle surfaces                                      | open   | medium   | feature    | M        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                          | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                               | open   | medium   | feature    | L        |
+| BL-260907-recognize-phase-level          | Recognize phase-level completion records so bullet-list revision phases do not read as incomplete               | open   | medium   | task       | S        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags           | open   | medium   | task       | S        |
 | BL-260906-repair-the-stray-fence-in-oat  | Repair the stray fence in oat-project-review-provide and tighten the fence rule repo-wide                       | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                                   | open   | medium   | feature    | M        |
