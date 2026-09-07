@@ -24,14 +24,17 @@ import type { QuickPlanReadiness, QuickPlanReadinessFailure } from '../types';
  *    outside fenced examples, whose title still reads as text once every
  *    `{placeholder}` is removed.
  *
- * Two deliberate divergences from the shell text, both toward the CommonMark
- * reading the guard's own comments describe:
+ * Indentation is measured the same way on both sides: in columns, with tab
+ * stops of four, so a tab-indented example is indented code here exactly as a
+ * four-space one is. The guard computes this with its own `indent_columns()`
+ * function; `TAB_WIDTH` and `INDENTED_CODE_COLUMNS` below are its counterpart.
  *
- * - Indentation is measured in columns with tab stops of four, so a
- *   tab-indented example is indented code here exactly as a four-space one is.
- *   The guard's `/^    /` test counts characters and misses a leading tab.
- * - A substantive title is any letter or digit, not only an ASCII one, which
- *   is what `grep -E '[[:alnum:]]'` does under the UTF-8 locales CI runs.
+ * One deliberate divergence from the shell text remains: a substantive title
+ * is any Unicode letter or number here, unconditionally, while the guard asks
+ * `grep -E '[[:alnum:]]'`, which stays locale-defined and is narrower even
+ * under a UTF-8 locale. Letters of any script and decimal digits satisfy both;
+ * numerals outside `Nd`, such as `²` or `Ⅷ`, satisfy only this side. Nothing
+ * pins a locale for the guard, so this side simply never depends on one.
  */
 
 /** Horizontal whitespace, mirroring `[[:space:]]` inside a single line. */

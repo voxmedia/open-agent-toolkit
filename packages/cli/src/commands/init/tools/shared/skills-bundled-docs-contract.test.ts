@@ -252,9 +252,176 @@ function planSection(text: string, heading: string): string | undefined {
 const SOURCE_DECLARATION_LABEL =
   /^-[ \t]*(?:Source backlog item|Source issue|Source artifact or scope|Related backlog items)[ \t]*:/i;
 // Inline, reference-style, and autolink forms all satisfy "link" as the skill
-// and the template use the word.
-const MARKDOWN_LINK =
-  /\[[^\]]+\]\(\s*\S[^)]*\)|\[[^\]]+\]\[[^\]]*\]|<[a-z][a-z0-9+.-]*:[^>\s]+>/i;
+// and the template use the word. The inline destination allows one level of
+// balanced parentheses and never overlaps its optional title, so a real path
+// like `a_(b)/x.ts` survives and an unterminated link cannot backtrack.
+const INLINE_LINK =
+  /(!)?\[([^\]]*)\]\(\s*([^()\s]*(?:\([^()]*\)[^()\s]*)*)(?:\s+"[^"]*")?\s*\)/g;
+const REFERENCE_LINK = /(!)?\[([^\]]*)\]\[([^\]]*)\]/g;
+const AUTOLINK = /<([a-z][a-z0-9+.-]*:[^>\s]+)>/gi;
+const LINK_DEFINITION = /^[ \t]{0,3}\[([^\]]+)\]:[ \t]*(\S+)/gm;
+
+// What a declaration can name in its own words. A backticked value counts as a
+// path only when it looks like one; otherwise the declaration may still name a
+// scope in prose, and its longer words are what a link has to pick up.
+const BACKLOG_ID = /\bBL-[A-Za-z0-9][A-Za-z0-9-]*/g;
+const ISSUE_REFERENCE = /#\d+(?!\d)/g;
+const BACKTICKED_VALUE = /`([^`]+)`/g;
+const SCOPE_WORD = /[\p{L}\p{N}][\p{L}\p{N}._/-]{3,}/gu;
+
+type NamedSourceKind = 'backlog' | 'issue' | 'path' | 'scope';
+
+interface NamedSource {
+  kind: NamedSourceKind;
+  value: string;
+}
+
+interface DeclarationLink {
+  label: string;
+  destination: string;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** CommonMark folds case and collapses whitespace in a reference label. */
+function normalizeReferenceLabel(label: string): string {
+  return label.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+/** Inline code spans and HTML comments render no navigable link. */
+function withoutInlineCode(text: string): string {
+  return text.replace(/<!--[\s\S]*?-->/g, ' ').replace(/(`+)[\s\S]*?\1/g, ' ');
+}
+
+function linkDefinitions(section: string): Map<string, string> {
+  const definitions = new Map<string, string>();
+  // A definition inside a fence is an example, and the first definition is the
+  // one Markdown resolves against.
+  for (const match of withoutFences(section).matchAll(LINK_DEFINITION)) {
+    const name = normalizeReferenceLabel(match[1] as string);
+    if (!definitions.has(name)) definitions.set(name, match[2] as string);
+  }
+  return definitions;
+}
+
+/** Every link one declaration actually renders. */
+function declarationLinks(
+  declaration: string,
+  section: string,
+): DeclarationLink[] {
+  const definitions = linkDefinitions(section);
+  const text = withoutInlineCode(declaration);
+  const links: DeclarationLink[] = [];
+
+  for (const match of text.matchAll(INLINE_LINK)) {
+    // An image is not a backlink: nothing navigates to its source.
+    if (match[1] === '!') continue;
+    links.push({ label: match[2] as string, destination: match[3] as string });
+  }
+  for (const match of text.matchAll(REFERENCE_LINK)) {
+    if (match[1] === '!') continue;
+    const label = match[2] as string;
+    const destination = definitions.get(
+      normalizeReferenceLabel((match[3] as string) || label),
+    );
+    // An unresolved reference renders as literal text, not a link.
+    if (destination === undefined) continue;
+    links.push({ label, destination });
+  }
+  for (const match of text.matchAll(AUTOLINK)) {
+    const url = match[1] as string;
+    links.push({ label: url, destination: url });
+  }
+
+  return links;
+}
+
+/**
+ * The sources a declaration names outside its own links: the backlog IDs,
+ * issue references, and paths a reader sees without following anything, or
+ * failing those, the words of the scope it names in prose. Only a declaration
+ * whose value *is* the link names nothing here.
+ */
+function namedSources(declaration: string): NamedSource[] {
+  const residual = declaration
+    .replace(SOURCE_DECLARATION_LABEL, ' ')
+    .replace(INLINE_LINK, ' ')
+    .replace(REFERENCE_LINK, ' ')
+    .replace(AUTOLINK, ' ');
+
+  const named: NamedSource[] = [];
+  for (const match of residual.matchAll(BACKLOG_ID)) {
+    named.push({ kind: 'backlog', value: match[0] });
+  }
+  for (const match of residual.matchAll(ISSUE_REFERENCE)) {
+    named.push({ kind: 'issue', value: match[0].slice(1) });
+  }
+  for (const match of residual.matchAll(BACKTICKED_VALUE)) {
+    const value = (match[1] as string).trim();
+    if (value.includes('/')) named.push({ kind: 'path', value });
+  }
+  if (named.length > 0) return named;
+
+  for (const match of residual
+    .replace(BACKTICKED_VALUE, ' $1 ')
+    .matchAll(SCOPE_WORD)) {
+    named.push({ kind: 'scope', value: match[0] });
+  }
+  return named;
+}
+
+/**
+ * Does this link identify that named source? Matching is bounded per kind, so
+ * a link to `BL-1234` never satisfies a declared `BL-123`, `x.tsx` never
+ * satisfies `x.ts`, and `/posts/239` never satisfies issue `#239`.
+ */
+function identifiesSource(link: DeclarationLink, named: NamedSource): boolean {
+  const haystack = `${link.label} ${link.destination}`.toLowerCase();
+  const destination = link.destination.toLowerCase();
+  const value = named.value.toLowerCase();
+
+  switch (named.kind) {
+    case 'backlog':
+      // `BL-260902` may name `BL-260902-add-...`: an ID extends by a new
+      // segment, never by more digits.
+      return new RegExp(`(?<![a-z0-9-])${escapeRegExp(value)}(?![0-9])`).test(
+        haystack,
+      );
+    case 'issue':
+      return (
+        new RegExp(`#${value}(?![0-9])`).test(haystack) ||
+        new RegExp(`/(?:issues|pull)/${value}(?![0-9])`).test(destination)
+      );
+    case 'path':
+      // The path has to end where it ends.
+      return new RegExp(`${escapeRegExp(value)}(?![a-z0-9])`).test(haystack);
+    default:
+      return haystack.includes(value);
+  }
+}
+
+/**
+ * A declaration links back to its own source, rather than merely containing a
+ * link. `- Source backlog item: BL-123 — see [unrelated](https://example.com)`
+ * names `BL-123` and links somewhere else, so it proves no relationship; some
+ * link's label or destination has to identify the source the declaration
+ * names. Several links pass if any one of them identifies it.
+ */
+function linksToItsSource(declaration: string, section: string): boolean {
+  if (recordsNoSource(declaration)) return true;
+
+  const links = declarationLinks(declaration, section);
+  if (links.length === 0) return false;
+
+  const named = namedSources(declaration);
+  if (named.length === 0) return true;
+
+  return named.some((source) =>
+    links.some((link) => identifiesSource(link, source)),
+  );
+}
 
 /** Drop fenced blocks so an example bullet cannot stand in for the record. */
 function withoutFences(section: string): string {
@@ -752,9 +919,8 @@ function evaluateExternalPlan(text: string): PlanReadiness {
   const declarations =
     sourceEvidence === undefined ? [] : sourceDeclarations(sourceEvidence);
   if (
-    !declarations.some(
-      (declaration) =>
-        MARKDOWN_LINK.test(declaration) || recordsNoSource(declaration),
+    !declarations.some((declaration) =>
+      linksToItsSource(declaration, sourceEvidence ?? ''),
     )
   ) {
     violations.push(MISSING_SOURCE_BACKLINK_VIOLATION);
@@ -2572,6 +2738,140 @@ describe('skills bundled docs contract', () => {
         '[item]: ../../pjm/backlog/items/BL-260907-example.md',
       ].join('\n'),
       'a reference-style link',
+    );
+
+    // A link is only the backlink when it links back to THIS plan's source.
+    // A declaration that names its item and then links somewhere else proves
+    // no relationship at all, which is the whole point of the contract.
+    rejected(
+      '- Source backlog item: BL-260907-example — see [unrelated](https://example.com)',
+      'a declared backlog ID beside an unrelated link',
+    );
+    rejected(
+      '- Source issue: #239 discussed in [a blog post](https://example.com/post)',
+      'a declared issue number beside an unrelated link',
+    );
+    rejected(
+      '- Source artifact or scope: `packages/cli/src/x.ts` — see [docs](https://example.com)',
+      'a declared artifact path beside an unrelated link',
+    );
+    // Issue numbers are matched bounded, so a link to a different issue whose
+    // number merely contains the declared digits is not the backlink.
+    rejected(
+      '- Source issue: #239 — [#2391](https://github.com/voxmedia/open-agent-toolkit/issues/2391)',
+      'a link to an issue whose number only contains the declared one',
+    );
+
+    // Identifying the named source satisfies it, by destination or by label,
+    // and one identifying link among several is enough.
+    accepted(
+      '- Source backlog item: BL-260907-example — [the item](../../pjm/backlog/items/BL-260907-example.md)',
+      'a declared backlog ID whose link destination names it',
+    );
+    accepted(
+      '- Source backlog item: BL-260907-example — [BL-260907-example](https://example.com/x)',
+      'a declared backlog ID whose link label names it',
+    );
+    accepted(
+      '- Source issue: #239 — [#239](https://github.com/voxmedia/open-agent-toolkit/issues/239)',
+      'a declared issue number whose link names it',
+    );
+    accepted(
+      '- Source artifact or scope: `packages/cli/src/x.ts` — [the file](../../../packages/cli/src/x.ts)',
+      'a declared artifact path whose link names it',
+    );
+    accepted(
+      [
+        '- Source backlog item: BL-260907-example — [unrelated](https://example.com) and',
+        '  [the item](../../pjm/backlog/items/BL-260907-example.md)',
+      ].join('\n'),
+      'one identifying link among several',
+    );
+    accepted(
+      [
+        '- Source backlog item: BL-260907-example — [the item][item]',
+        '',
+        '[item]: ../../pjm/backlog/items/BL-260907-example.md',
+      ].join('\n'),
+      'a reference-style link resolved to a destination naming the source',
+    );
+    accepted(
+      '- Source issue: #239 — <https://github.com/voxmedia/open-agent-toolkit/issues/239>',
+      'an autolink naming the declared issue',
+    );
+    // A scope named in prose is still a named source: the link has to pick it
+    // up, not merely exist beside it.
+    accepted(
+      '- Source artifact or scope: the docs app — [the docs app](../../../apps/oat-docs)',
+      'a prose scope whose link names it',
+    );
+    rejected(
+      '- Source artifact or scope: the docs app — [unrelated](https://example.com)',
+      'a prose scope beside an unrelated link',
+    );
+
+    // Identity is bounded per kind, so a near-miss is not the source. Each of
+    // these links resolves to a real but different thing.
+    rejected(
+      '- Source backlog item: BL-123 — [x](../../pjm/backlog/items/BL-1234.md)',
+      'a link to a backlog ID that merely extends the declared one by a digit',
+    );
+    rejected(
+      '- Source artifact or scope: `packages/cli/src/x.ts` — [x](../../../packages/cli/src/x.tsx)',
+      'a link to a path that merely extends the declared one',
+    );
+    rejected(
+      '- Source issue: #239 — [x](https://example.com/posts/239)',
+      'a link whose path merely ends in the declared issue number',
+    );
+    rejected(
+      '- Source issue: #239 — [239 reasons](https://example.com/z)',
+      'a link whose label merely contains the declared issue number',
+    );
+    // The extending-segment case is the one that must keep working.
+    accepted(
+      '- Source backlog item: BL-260902 — [the item](../../pjm/backlog/items/BL-260902-add-an-exclusion-mechanism.md)',
+      'a link to the full ID the declaration abbreviates',
+    );
+
+    // Markdown that renders no navigable link cannot be the backlink.
+    rejected(
+      '- Source backlog item: BL-260907-example — [item][BL-260907-example]',
+      'a reference link with no definition to resolve',
+    );
+    rejected(
+      '- Source backlog item: BL-260907-example — ![BL-260907-example](image.png)',
+      'an image whose alt text names the source',
+    );
+    rejected(
+      [
+        '- Source backlog item: BL-260907-example — `[BL-260907-example](../../pjm/backlog/items/BL-260907-example.md)`',
+      ].join('\n'),
+      'a link inside an inline code span',
+    );
+    rejected(
+      [
+        '- Source backlog item: BL-260907-example — [the item][item]',
+        '',
+        '```markdown',
+        '[item]: ../../pjm/backlog/items/BL-260907-example.md',
+        '```',
+      ].join('\n'),
+      'a reference definition that only exists inside a fenced example',
+    );
+
+    // Valid Markdown the parser must not reject.
+    accepted(
+      '- Source artifact or scope: `packages/a_(b)/x.ts` — [f](../../../packages/a_(b)/x.ts)',
+      'a destination containing balanced parentheses',
+    );
+    accepted(
+      [
+        '- Source backlog item: BL-260907-example — [the item][ITEM   REF]',
+        '',
+        '[item ref]: ../../pjm/backlog/items/BL-260907-example.md',
+      ].join('\n'),
+      'a reference label matched with folded case and collapsed whitespace',
     );
 
     // Legacy plans are never retrofitted, so the rule must not reach them.
