@@ -158,6 +158,8 @@ const EMPTY_STATUS_LEDGER_VIOLATION =
   '## Status Ledger must record at least one wave';
 const EMPTY_WAVE_TABLE_VIOLATION =
   '## Wave Table must record at least one plan';
+const MISSING_SOURCE_BACKLINK_VIOLATION =
+  '## Source and live evidence must link the plan back to its source item, or record it as none';
 
 // `oat-wave-program` documents `composed → in-progress → merged` for a wave's
 // ledger row (SKILL.md:66) and also instructs the final row to flip to `done`
@@ -240,6 +242,78 @@ function findSection(
 
 function planSection(text: string, heading: string): string | undefined {
   return findSection(text, (candidate) => candidate === heading);
+}
+
+// The bullets that name a plan's source. Only these four labels carry the
+// contract: `oat-repo-improve/SKILL.md:216,221` and its `plan-template.md`
+// define them, and no plan in the durable corpus names a source any other
+// way. A `Related history` or `Related decisions` bullet is context, so a link
+// there must not stand in for the source backlink.
+const SOURCE_DECLARATION_LABEL =
+  /^-[ \t]*(?:Source backlog item|Source issue|Source artifact or scope|Related backlog items)[ \t]*:/i;
+// Inline, reference-style, and autolink forms all satisfy "link" as the skill
+// and the template use the word.
+const MARKDOWN_LINK =
+  /\[[^\]]+\]\(\s*\S[^)]*\)|\[[^\]]+\]\[[^\]]*\]|<[a-z][a-z0-9+.-]*:[^>\s]+>/i;
+
+/** Drop fenced blocks so an example bullet cannot stand in for the record. */
+function withoutFences(section: string): string {
+  const kept: string[] = [];
+  let fence: string | undefined;
+
+  for (const line of section.split('\n')) {
+    if (fence === undefined) {
+      const opener = FENCE_OPENER.exec(line)?.[1];
+      if (opener === undefined) kept.push(line);
+      else fence = opener;
+      continue;
+    }
+    const closer = FENCE_CLOSER.exec(line)?.[1];
+    if (
+      closer !== undefined &&
+      closer[0] === fence[0] &&
+      closer.length >= fence.length
+    ) {
+      fence = undefined;
+    }
+  }
+
+  return kept.join('\n');
+}
+
+/**
+ * Every source declaration in the section, each as its bullet plus the
+ * indented continuation lines below it. The template puts the link on that
+ * continuation line, and its canonical bullet order puts an unlinked
+ * `Source artifact or scope` above the linked `Related backlog items`, so
+ * reading only the first match would reject the template's own shape.
+ */
+function sourceDeclarations(section: string): string[] {
+  const lines = withoutFences(section).split('\n');
+  const declarations: string[] = [];
+
+  for (const [index, line] of lines.entries()) {
+    if (!SOURCE_DECLARATION_LABEL.test(line)) continue;
+    const declaration = [line];
+    for (const next of lines.slice(index + 1)) {
+      if (!/^\s+\S/.test(next)) break;
+      declaration.push(next);
+    }
+    declarations.push(declaration.join('\n'));
+  }
+
+  return declarations;
+}
+
+/** `none` as the declaration's whole value, not the word loose in its prose. */
+function recordsNoSource(declaration: string): boolean {
+  const value = declaration
+    .replace(SOURCE_DECLARATION_LABEL, '')
+    .replaceAll('`', '')
+    .trim()
+    .replace(/[.,;]$/, '')
+    .toLowerCase();
+  return value === 'none';
 }
 
 /**
@@ -413,6 +487,18 @@ const DEFAULT_LANDING_EVENT_TABLE = [
 
 const DEFAULT_REVALIDATION = 'Revalidate when `origin/main` advances.';
 
+// The template's canonical bullet order: an unlinked `Source artifact or
+// scope` first, the linked item further down, and the link itself on the
+// continuation line below its label.
+const DEFAULT_SOURCE_EVIDENCE = [
+  '- Source artifact or scope: `packages/cli/src/x.ts`',
+  '- Planning date: `2026-09-10`',
+  '- Related backlog items:',
+  '  [BL-260907-example — Example item](../../pjm/backlog/items/BL-260907-example.md)',
+  '- Verified evidence:',
+  '  - `src/x.ts:1` — what it establishes',
+].join('\n');
+
 interface ProspectivePlanOverrides {
   commit?: string;
   mainCommit?: string | null;
@@ -421,6 +507,7 @@ interface ProspectivePlanOverrides {
   dependencies?: string | null;
   landingEvents?: string | null;
   revalidation?: string | null;
+  sourceEvidence?: string | null;
 }
 
 /** A minimal plan that satisfies every prospective rule unless overridden. */
@@ -435,6 +522,7 @@ function buildProspectivePlan(
     dependencies = DEFAULT_DEPENDENCY_TABLE,
     landingEvents = DEFAULT_LANDING_EVENT_TABLE,
     revalidation = DEFAULT_REVALIDATION,
+    sourceEvidence = DEFAULT_SOURCE_EVIDENCE,
   } = overrides;
 
   const frontmatter = [
@@ -449,6 +537,9 @@ function buildProspectivePlan(
   ];
 
   const body = ['# Title', ''];
+  if (sourceEvidence !== null) {
+    body.push('## Source and live evidence', '', sourceEvidence, '');
+  }
   if (dependencies !== null) body.push('## Dependencies', '', dependencies, '');
   if (landingEvents !== null) {
     body.push('## Landing-event impact', '', landingEvents, '');
@@ -649,6 +740,24 @@ function evaluateExternalPlan(text: string): PlanReadiness {
   const revalidation = planSection(text, 'Revalidation Before Execution');
   if (revalidation !== undefined && revalidation.trim() === '') {
     violations.push(EMPTY_REVALIDATION_VIOLATION);
+  }
+
+  // The plan -> item half of the bidirectional link. The item -> plan half
+  // lives in the backlog item's `external_plans` list, which nothing here can
+  // see, so without this rule a template regression can delete one direction
+  // of the tracking relationship with every other assertion still green. A
+  // plan with genuinely no source item says so, exactly as the template's
+  // `<ID and title, or none>` placeholder allows.
+  const sourceEvidence = planSection(text, 'Source and live evidence');
+  const declarations =
+    sourceEvidence === undefined ? [] : sourceDeclarations(sourceEvidence);
+  if (
+    !declarations.some(
+      (declaration) =>
+        MARKDOWN_LINK.test(declaration) || recordsNoSource(declaration),
+    )
+  ) {
+    violations.push(MISSING_SOURCE_BACKLINK_VIOLATION);
   }
 
   const dependencies = planSection(text, 'Dependencies');
@@ -2350,6 +2459,132 @@ describe('skills bundled docs contract', () => {
     expect(template).toContain(CONTRACT_LANDING_DATE);
   });
 
+  it('plan readiness requires the plan body to link back to its source item', () => {
+    const skill = readFileSync(REPO_IMPROVE_SKILL, 'utf8');
+    const template = readFileSync(PLAN_TEMPLATE, 'utf8');
+
+    // The authoring rule, in the skill that states it and the template that
+    // renders it. Both halves of the tracking relationship are named, so
+    // deleting either one fails here rather than silently shipping a plan that
+    // its source item points at but that points nowhere back.
+    expect(skill).toContain(
+      'link back to its source backlog item or artifact from the plan body',
+    );
+    // The item -> plan half. Guarding only the plan -> item half would leave
+    // exactly the same "half the relationship can be deleted silently" gap
+    // one direction over.
+    expect(skill).toContain('ensure frontmatter contains `external_plans`');
+    expect(skill).toContain(
+      "Links must run in both directions: the item's `external_plans` array points at the plan, and the plan body's source section links back to the item.",
+    );
+    expect(
+      template
+        .split('\n')
+        .filter((line) => line.trimEnd() === '## Source and live evidence'),
+      '## Source and live evidence must exist as a section',
+    ).toHaveLength(1);
+    expect(template).toContain(
+      'link the item from this plan body so the link runs in both directions',
+    );
+    // The Quality Gate is what an author actually checks before shipping.
+    expect(template).toContain('the plan body links back to its source item');
+
+    // Accepted control: the template's own shape, link and all.
+    expect(evaluateExternalPlan(buildProspectivePlan()).violations).toEqual([]);
+
+    // Mutation control: the same plan with the link stripped off the source
+    // bullet. The item is still named, so every other rule still passes and
+    // only this one can catch it.
+    const rejected = (sourceEvidence: string | null, why: string): void => {
+      expect(
+        evaluateExternalPlan(buildProspectivePlan({ sourceEvidence }))
+          .violations,
+        why,
+      ).toEqual([MISSING_SOURCE_BACKLINK_VIOLATION]);
+    };
+    const accepted = (sourceEvidence: string, why: string): void => {
+      expect(
+        evaluateExternalPlan(buildProspectivePlan({ sourceEvidence }))
+          .violations,
+        why,
+      ).toEqual([]);
+    };
+
+    rejected(
+      [
+        '- Source artifact or scope: `packages/cli/src/x.ts`',
+        '- Related backlog items: BL-260907-example — Example item',
+        '- Verified evidence:',
+        '  - `src/x.ts:1` — what it establishes',
+      ].join('\n'),
+      'a named but unlinked source item',
+    );
+
+    // Dropping the whole section fails the same way.
+    rejected(null, 'no ## Source and live evidence section at all');
+
+    // `none` is an escape hatch for the value, not a word that may appear
+    // anywhere in the bullet's prose.
+    rejected(
+      '- Source backlog item: BL-260907-example — none of its prior links survived',
+      'the word none inside an unlinked declaration',
+    );
+
+    // Context bullets are not source declarations, so a link in one of them
+    // cannot stand in for the missing backlink.
+    rejected(
+      [
+        '- Source backlog item: BL-260907-example — Example item',
+        '- Related history: [an earlier plan](./2026-08-19-example.md)',
+      ].join('\n'),
+      'a link in an unrelated Related history bullet',
+    );
+
+    // A fenced example of a source bullet is an example, not the record.
+    rejected(
+      [
+        '- Source backlog item: BL-260907-example — Example item',
+        '',
+        '```markdown',
+        '- Source backlog item: [BL-260907-example](../../pjm/backlog/items/BL-260907-example.md)',
+        '```',
+      ].join('\n'),
+      'a fenced example of a linked declaration',
+    );
+
+    // A plan with genuinely no source item records that, which the template's
+    // `<ID and title, or none>` placeholder explicitly allows.
+    accepted('- Related backlog items: none', 'an explicit none');
+    accepted(
+      '- Related backlog items: `none`',
+      'an explicit none in backticks',
+    );
+
+    // The skill and template say "link", not "inline Markdown link".
+    accepted(
+      '- Source issue: <https://github.com/voxmedia/open-agent-toolkit/issues/239>',
+      'an autolinked source issue',
+    );
+    accepted(
+      [
+        '- Source backlog item: [BL-260907-example][item]',
+        '',
+        '[item]: ../../pjm/backlog/items/BL-260907-example.md',
+      ].join('\n'),
+      'a reference-style link',
+    );
+
+    // Legacy plans are never retrofitted, so the rule must not reach them.
+    expect(
+      evaluateExternalPlan(
+        readFileSync(
+          join(EXTERNAL_PLANS_DIR, '2026-08-19-hermetic-cli-assets-root.md'),
+          'utf8',
+        ),
+      ).violations,
+    ).toEqual([]);
+  });
+
   it('plan provenance pins the full inspected HEAD SHA and a separate comparison SHA', () => {
     const skill = readFileSync(REPO_IMPROVE_SKILL, 'utf8');
     const template = readFileSync(PLAN_TEMPLATE, 'utf8');
@@ -2590,6 +2825,9 @@ describe('skills bundled docs contract', () => {
         dependencies: null,
         landingEvents: null,
         revalidation: null,
+        // Dropped too, so this control still proves the exemption if the
+        // source-backlink rule ever moves above the index return.
+        sourceEvidence: null,
       }).replace('oat_external_plan: true', 'oat_external_plan_index: true'),
     );
 
@@ -2603,6 +2841,7 @@ describe('skills bundled docs contract', () => {
         dependencies: null,
         landingEvents: null,
         revalidation: null,
+        sourceEvidence: null,
       }).replace('oat_external_plan: true', 'oat_external_plan_index: true'),
     );
 
@@ -2804,12 +3043,23 @@ describe('skills bundled docs contract', () => {
     // Normalize the fields this plan never had to carry as a legacy artifact,
     // so the accepted control below differs from the rejected one by the
     // status alone rather than by unrelated legacy gaps.
-    const normalized = redated
-      .replace(
-        `oat_external_plan_date: '${PROSPECTIVE_DATE}'`,
-        `oat_external_plan_main_commit: ${PROSPECTIVE_MAIN_SHA}\noat_external_plan_date: '${PROSPECTIVE_DATE}'`,
-      )
-      .replace('| Related, distinct |', '| Soft adjacency |');
+    const normalized = [
+      redated
+        .replace(
+          `oat_external_plan_date: '${PROSPECTIVE_DATE}'`,
+          `oat_external_plan_main_commit: ${PROSPECTIVE_MAIN_SHA}\noat_external_plan_date: '${PROSPECTIVE_DATE}'`,
+        )
+        .replace('| Related, distinct |', '| Soft adjacency |'),
+      // The snapshot keeps only the frontmatter and the three sections its
+      // assertion needs, so it has no `## Source and live evidence`. The real
+      // source carries one at `:45-48`, with exactly this backlink; restoring
+      // it verbatim is part of the same legacy-gap normalization.
+      '',
+      '## Source and live evidence',
+      '',
+      '- Source backlog item:',
+      '  [BL-260902-add-an-exclusion-mechanism — Add an exclusion mechanism to oat docs generate-index](../../pjm/backlog/items/BL-260902-add-an-exclusion-mechanism.md)',
+    ].join('\n');
 
     expect(evaluateExternalPlan(normalized).violations).toEqual([
       CONTRADICTORY_STATUS_VIOLATION,
