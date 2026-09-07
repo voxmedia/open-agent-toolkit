@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p07-t01
+oat_current_task_id: p08-t01
 oat_generated: false
 ---
 
@@ -32,13 +32,13 @@ oat_generated: false
 | Phase 04 (retry-gate-project-log-finalization-across-index-locks)           | complete | 1     | 1/1       |
 | Phase 05 (add-oat-config-unset-command)                                     | complete | 1     | 1/1       |
 | Phase 06 (validate-skill-script-references-against-pack-manifests)          | complete | 1     | 1/1       |
-| Phase 07 (enforce-external-plan-readiness-contract)                         | pending  | 1     | 0/1       |
+| Phase 07 (enforce-external-plan-readiness-contract)                         | complete | 1     | 1/1       |
 | Phase 08 (make-autonomous-project-recap-capability-aware)                   | pending  | 1     | 0/1       |
 | Phase 09 (defer-activeproject-clearing-on-archive-completions)              | pending  | 1     | 0/1       |
 | Phase 10 (make-terminal-project-status-agree-with-revision-plans)           | pending  | 1     | 0/1       |
 | Phase 11 (make-consolidated-project-retirement-semantic)                    | pending  | 1     | 0/1       |
 
-**Total:** 6/11 planned tasks completed
+**Total:** 7/11 planned tasks completed
 
 ---
 
@@ -116,15 +116,15 @@ oat_generated: false
 
 ## Phase 07: enforce external plan readiness contract (p07)
 
-**Status:** pending · **Group:** group 3 (sequential pair, first) · **Tasks:** p07-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 3 (sequential pair, first) · **Tasks:** p07-t01 (+ one review-fix commit)
+**Outcome:** `oat-repo-improve` (2.1.2 → 2.1.3) and its plan template now distinguish plan-readiness from execution-readiness: `READY` ⇔ no unsatisfied hard dependency and `BLOCKED` ⇔ at least one (the template's biconditional), with a `## Dependencies` four-column table contract (Hard/Soft/Satisfied classes, token-boundary type matching, escaped pipes), landing-event and revalidation non-vacuity, ISO dates, and comparison-SHA wording; `skills-bundled-docs-contract.test.ts` enforces it prospectively (plans dated after the contract) and sweeps all 44 dated plans in legacy mode with an explicit allowlist; docs mirror updated.
+**Verification:** focused 286, forced check/type-check/test `Cached: 0` (6006), check:skill-bumps; the parser validated against all 44 real plans (131 dependency rows, zero structure failures); review round 1 (0C/1I/2M/5m) plus round 2 (0C/0I/0M/2m).
+**Deviations:** readiness rules implemented as local test helpers rather than a shipped module (the plan's In-scope names only the test file; consumers deferred); a real plan with a stale BLOCKED row serves as the negative-control fixture (left unedited per Out of scope; wave-close correction filed); the pre-existing stray template fence stays tracked as `BL-260906-repair-the-stray-fence-in-oat`.
 
 ### Task p07-t01: Execute external plan — Enforce plan-readiness versus execution-readiness in oat-repo-improve
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `e4dfa0e27`; review fix `9c2f96ca5`
 
 ## Phase 08: make autonomous project recap capability aware (p08)
 
@@ -266,6 +266,13 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - `w5-p04-review-001` — reviewer, target opus, eight rulings, real held `.git/index.lock` probes. Record `dispatch/w5-p04-review-001.json`.
 - `w5-p04-review-001` outcome: PASS, 0C/0I/1M/5m. Real-lock probes on the built `dist` CLI (transient → attempts 2, committed once; persistent → attempts 3, exit 1, lock untouched with unchanged mtime; hook mentions and git's advice alone → not retried); fresh-process recovery through `dist` via `sh -c` with no `oat-gate-runs` marker; seven receipt-mismatch probes all refuse and keep the receipt; four controls re-run red; weaker-anywhere clean (the old commit-failed diagnostic still fires). Module-placement deviation ruled correct (a genuine import cycle; DR-260718 honoured; the gate never opens `project-log.md`). M1: the `.gitignore` stanza is hard-coded to the default projects root, so a relocated `projects.root` tracks the receipt (inherited from the plan's In-scope wording). Address-now sweep `w5-p04-fix-001`.
 - `w5-p04-fix-001` outcome (address-now sweep, no re-review): one commit `09de4c92fefe8649f1fb038692ed163e80433e6a` (seven files): `.gitignore` now carries a repository-wide `**/gate-receipts/` rule outside both managed blocks (red-then-green against the legacy stanza; controls prove the log and source files are not ignored; `git ls-files` shows no tracked receipt), `writeGateProjectLogReceipt` runs `git check-ignore` on the written path and warns only on exit status 1 through the diagnostic seam (`gate-project-log-receipt-warning`, also visible in JSON — a latent gap closed), the pending-receipt scan derives `logPath` from the gated project and reports a disagreeing recorded path as `pending`, the null-artifact receipt case documented in docs and DR, the contrived-hook residual pinned as accepted, the settlement doc comment moved. The DR's Decision paragraph had one literal glob token corrected to the repository-wide rule (reported); the index did not change. Focused 335, CLI 5903, forced gates `Cached: 0`. Record `dispatch/w5-p04-fix-001.json`.
+- `w5-p07-impl-001` — p07 dispatched alone at the group-3 base `56e05aeb6f264e4d0ef51da7c8c61a652cd0e039` (no sync commit needed); target opus, task_class default-implementation. Record `dispatch/w5-p07-impl-001.json`.
+- `w5-p07-impl-001` outcome: DONE, one commit `e4dfa0e27c6c092a7f0968af6cc735dd2e40828c` (five files; repo-improve 2.1.2 → 2.1.3, one pin). Two Codex rounds (R1 0C/6I/3M: self-satisfying template assertions — the heading appears in prose four times — fixed with line-anchored exact-count sections; dependency parsing, one-directional status agreement, failure-proved branches, corpus sweep, accepted control, fence-tracked sections, SHA wording; R2 four more Importants fixed; two rejections: the pre-existing stray fence tracked as a backlog item, and a full CommonMark table parser as disproportionate). Eleven neutralization probes; parser validated against all 44 dated plans. Real negative control: a READY plan with a stale BLOCKED row (`2026-09-02-add-exclusions-to-docs-index-generation.md`), accepted today only by legacy dating → wave-close correction.
+- `w5-p07-review-001` — reviewer, target opus, eight rulings (biconditional fixtures, the real-file fixture, corpus sweep, test helpers vs shipped module, the rejections, bump/pin, the p06 seam, weaker-anywhere). Record `dispatch/w5-p07-review-001.json`.
+- `w5-p07-review-001` outcome: PASS with findings, 0C/1I/2M/5m. Gates re-run forced `Cached: 0` (6006); the contract test is purely additive (813 insertions, 0 deletions) so no prior assertion weakened; all 44 dated plans still accepted; six biconditional fixtures behave in both directions, a piped code-span row is not false-rejected, the 2026-09-07 boundary exact; a post-contract plan dropped into `external-plans/` fails the sweep naming six violations; five neutralizations red. I1 (the reviewer's probe): a document with `oat_execution_program: true` and a post-contract date bypassed every prospective rule — vocabulary owned by `oat-wave-program`, undocumented in this contract, untested, unreachable today. M1: the negative control read the live defective plan, so repairing it would break CI; M2: the `index` branch untested. Rulings: leaving the live READY/BLOCKED contradiction unedited is correct (retrofit is a STOP trigger); test helpers rather than a shipped module explicitly permitted; both Codex rejections valid; no named-skill obligation; `check:skill-bumps` prints 5 branch-wide with one skill in this lane. Fix round `w5-p07-fix-001`.
+- `w5-p07-fix-001` outcome: one commit `9c2f96ca5c7acaf387961b98b386f143590f0cee` (seven files incl. a new provenance-headed fixture and an `.oxfmtrc.jsonc` ignore for `__fixtures__/**`): execution programs are held to their own ledger contract (indexes, five-column status ledger with producer vocabulary tolerating `merged`/`done`, wave table), mode selected from `created` for programs since the producer template emits no plan date (Codex catch: the rules were otherwise unreachable), both real programs pass as legacy and when re-dated; the live-file control replaced by the snapshot fixture (proven by simulating the wave-close repair: old test exit 1, new test exit 0); index branch tested; docs mirror and the stray-fence scope note. One Codex round (1I/2M fixed; the `oat-wave-program` `merged` vs `done` self-contradiction tolerated and logged as a follow-up). Focused 287, CLI 6007. Record `dispatch/w5-p07-fix-001.json`.
+- `w5-p07-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w5-p07-review-002.json`.
+- `w5-p07-review-002` outcome: PASS (fan-in may proceed), 0C/0I/0M/2m. The round-1 P1 bypass probe now rejected on all three ledger rules; both real programs pass as written and re-dated; the fixture byte-compared against `git show 6db0457c0:<source>` (identical; the only surviving live-plan reference is the fixture's `Source:` header); index branch covered; rulings: ledger contract instead of SHA rules is the correct reading (the producer template emits none of the SHA fields), the `created` fallback is necessary and gated on programs, the `merged`/`done` tolerance correct; nine adversarial program probes and four neutralizations (incl. stripping the fixture's provenance header); corpus sweep 44 dated / 0 rejected; `oat-repo-improve` 2.1.3, no pin moved; gates forced `Cached: 0` (287 / 6007). Minors: the program `created` fallback fails OPEN for an unparseable or missing date (follow-up); the `oat-wave-program` vocabulary contradiction had no tracked item (both now in the wave's follow-up list).
 
 #### Phase Outcomes
 
@@ -291,13 +298,15 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - Merge order p04 → p05 → p06 with `git merge --no-ff` after rebasing each lane on the integration tip (no worktree-init sync commits this time; the manifest was already 0.2.63). Merge commits `af42eba0e` (p04), `4aeea4536` (p05), `6b419ef7c` (p06). Lane commits re-hashed by the rebase (identical `git patch-id --stable` pairs; the Reviews table keeps the pre-rebase heads): 09de4c92f→7792f7583; 48837edf0→c055d5acf; d779ea634→3631ba9aa; 3fd3aaa62→98fac8ccf; 970aedccc→1eaa49997; 8432f1d4d→6db97567b.
 - Lockstep retained at 0.2.63 (`origin/main` still 0.2.62); integration gates (group fan-in mode, sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - Group-3 readiness on the merged tip: p07's plan is READY and its seams (`skills-bundled-docs-contract.test.ts`, `pack-manifest.ts`) carry p06's additions (`pack-manifest.ts` byte-identical to base; the contract test gained a contiguous block); p07 owns the `oat-repo-improve` bump; p08 follows with the `oat-project-complete` bump. Group-2 worktrees and branches removed after the merge.
+  | p07 | `.worktrees/wave-5/p07` | DONE (`e4dfa0e27` + fix `9c2f96ca5`; forced CLI suite 6006, check:skill-bumps 1) | passed (round 1 0C/1I/2M/5m → round 2 0C/0I/0M/2m) | 1 |
 
 #### Parallel Groups
 
-- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged, fan-in complete); p07 → p08, p09 → p10, p11 (sequential, next).
+- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08, p09 → p10, p11 (sequential, next).
 
 #### Outstanding Items
 
+- p08 (group 3, second), then p09 → p10 (group 4), p11 (group 5); then closeout.
 - p07 → p08 (group 3), p09 → p10 (group 4), p11 (group 5), each alone after the previous merge; then closeout.
 - Group 2 (p04 + p05 + p06) after the group-1 fan-in; then p07 → p08, p09 → p10, p11; closeout.
 - Journal note: dispatch records are immutable after the first revision; terminal outcomes live in the Dispatch Notes above.
@@ -330,7 +339,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p04   | 5898 (forced CLI suite) + 330 focused         | all    | 0      | -        |
 | p05   | forced CLI suite + 202 focused + 59 snapshots | all    | 0      | -        |
 | p06   | 5924 (forced CLI suite) + 139 focused         | all    | 0      | -        |
-| p07   | -                                             | -      | -      | -        |
+| p07   | 6006 (forced CLI suite) + 286 focused         | all    | 0      | -        |
 | p08   | -                                             | -      | -      | -        |
 | p09   | -                                             | -      | -      | -        |
 | p10   | -                                             | -      | -      | -        |

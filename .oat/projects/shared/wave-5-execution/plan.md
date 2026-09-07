@@ -722,7 +722,6 @@ git commit -m "fix(p11-t01): make consolidated-project retirement checks semanti
 
 | Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
 | ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
-| p07    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
 | p08    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
 | p09    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
 | p10    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
@@ -744,6 +743,8 @@ git commit -m "fix(p11-t01): make consolidated-project retirement checks semanti
 | p05    | code     | passed      | 2026-09-07 | reviews/archived/p05-review-2026-09-07T073016Z.md           | 3fd3aaa6267f5e8d70d8b624d9aa7e4b6a441a33 | manual     | -                   |
 | p06    | code     | fixes_added | 2026-09-07 | reviews/archived/p06-review-2026-09-07T073255Z.md           | 8432f1d4d2933516a393956d7ee68b9c6957866e | manual     | -                   |
 | p06    | code     | passed      | 2026-09-07 | reviews/archived/p06-review-2026-09-07T080428Z.md           | 970aedccc569a48cceba1878e9e6283ebaf1dd49 | manual     | -                   |
+| p07    | code     | fixes_added | 2026-09-07 | reviews/archived/p07-review-2026-09-07T085937Z.md           | e4dfa0e27c6c092a7f0968af6cc735dd2e40828c | manual     | -                   |
+| p07    | code     | passed      | 2026-09-07 | reviews/archived/p07-review-2026-09-07T092849Z.md           | 9c2f96ca5c7acaf387961b98b386f143590f0cee | manual     | -                   |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
