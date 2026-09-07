@@ -2918,7 +2918,7 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.4'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.5'],
       ['.agents/agents/oat-reviewer.md', '1.2.3'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.5'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
@@ -3228,7 +3228,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.4');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.5');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
@@ -5719,7 +5719,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.4'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.5'],
       ['.agents/agents/oat-reviewer.md', '1.2.3'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.1'],
     ] as const;
@@ -7507,6 +7507,25 @@ describe('lite mode skill contracts', () => {
     expect(implementer).toMatch(
       /Product Behavior and\/or Technical Design selected by its[\s\S]{0,120}`minimal`, `product`, `technical`, or `both`/i,
     );
+    const selfReview = implementer.slice(
+      implementer.indexOf('### 3. Phase-Wide Self-Review'),
+      implementer.indexOf('### 4. Return Implementation Report'),
+    );
+    expect(selfReview).toMatch(
+      /requirements source selected by workflow[\s\S]{0,80}mode/i,
+    );
+    expect(selfReview).toMatch(
+      /`lite`:[^\n]*complete `plan\.md` requirements contract loaded at phase start/i,
+    );
+    expect(selfReview).toMatch(
+      /`spec-driven`:[^\n]*`plan\.md`[^\n]*`design\.md`[^\n]*`spec\.md`/i,
+    );
+    expect(selfReview).toMatch(
+      /`quick`:[^\n]*`plan\.md`[^\n]*`discovery\.md`[^\n]*design\/spec when present/i,
+    );
+    expect(selfReview).toMatch(
+      /`import`:[^\n]*`plan\.md`[^\n]*imported plan[^\n]*design\/spec when present/i,
+    );
     expect(phaseExecution).toContain(
       'workflow_mode: {spec-driven|quick|import|lite}',
     );
@@ -7631,7 +7650,7 @@ describe('lite mode skill contracts', () => {
     expect(implementWorkflow.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe(
       '2.3.5',
     );
-    expect(implementer.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.4');
+    expect(implementer.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.5');
   });
 
   it('keeps lite review and PR prerequisites reduced but explicit', async () => {

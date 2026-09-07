@@ -178,12 +178,17 @@ Then verify:
    - Check acceptance criteria are met
    - If missing: add to Critical findings
 
-2. **Is the declared proof strategy satisfied?**
-   - Check whether the evidence matches the declared strategy, covers its
-     observable risk, and is capable of failing when the claim is false
-   - If `design.md` exists, cross-reference Requirement-to-Test Mapping
-   - A missing or unjustified strategy is a finding; the absence of an automated
-     test alone is not
+2. **Is the applicable verification intent satisfied?**
+   - First identify the verification intent declared by the applicable workflow
+     artifacts. When that contract declares an `Implementation and Proof
+Strategy`, check whether the evidence matches the declared strategy, covers
+     its observable risk, and is capable of failing when the claim is false.
+   - A missing or unjustified proof strategy is a finding only when the
+     applicable workflow artifact declares that strategy. When it does not,
+     review the plan's existing verification commands and produced evidence
+     without inventing a missing strategy field.
+   - If `design.md` exists, cross-reference Requirement-to-Test Mapping.
+   - The absence of an automated test alone is not a finding.
 
 3. **Is there extra work?**
    - Code that doesn't map to any requirement
@@ -225,7 +230,7 @@ Treat the artifact as a product deliverable. Verify it is:
    - Stable task IDs: task headings use `pNN-tNN`, IDs are monotonic within each phase, and review-generated tasks do not reuse prior IDs.
    - Required sections: the plan includes Reviews, Implementation Complete, and References sections without placeholder-only critical content.
    - Review-table preservation: existing review rows are preserved; never require deleting rows to "clean up" the table.
-   - Task atomicity and verifiability: each task is independently committable, has bounded file scope, and declares a proportionate implementation and proof strategy that can actually be executed.
+   - Task atomicity and verifiability: each task is independently committable, has bounded file scope, and has executable verification intent. Require a proportionate implementation and proof strategy only when the applicable workflow plan contract declares it; otherwise review the task's existing verification commands and evidence.
    - Coverage of design/discovery: every in-scope design component or discovery decision is mapped to at least one task or explicitly deferred/out of scope.
    - Parallelism-claim sanity: any parallel phase group or parallelism statement is consistent with declared file boundaries and dependency order.
 

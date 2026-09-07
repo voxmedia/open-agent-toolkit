@@ -1,6 +1,6 @@
 ---
 name: oat-phase-implementer
-version: 1.1.4
+version: 1.1.5
 description: Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement.
 tools: Read, Write, Edit, Bash, Grep, Glob, Task
 color: cyan
@@ -458,7 +458,12 @@ After all task commits:
 - apply the same post-commit recovery contract to an eligible phase-level
   composition failure;
 - verify task outputs compose correctly;
-- compare the phase result with design/spec/discovery;
+- compare the phase result with the requirements source selected by workflow
+  mode:
+  - `lite`: the complete `plan.md` requirements contract loaded at phase start;
+  - `spec-driven`: `plan.md`, `design.md`, and `spec.md`;
+  - `quick`: `plan.md` and `discovery.md`, plus design/spec when present; and
+  - `import`: `plan.md` and the imported plan, plus design/spec when present;
 - confirm no task boundary or dependency was missed; and
 - report Medium/Minor concerns without launching a reviewer.
 
