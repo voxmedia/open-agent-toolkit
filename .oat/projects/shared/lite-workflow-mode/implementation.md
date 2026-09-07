@@ -1241,6 +1241,15 @@ ordered repository gates, lint, and format exited 0. Recovery task `p09-t04`
 updates only the successful integration fixture and strengthens its promoted
 content assertions; production behavior is not relaxed.
 
+#### Phase 9 verification recovery 1 complete
+
+`p09-t04` committed as `18767ee4eb3b9e2cfae23cda75cba2cf04e60baf`.
+The successful CLI integration fixture now authors both adaptive sections,
+records `Content shape: both`, and asserts both payloads in the derived
+discovery. Production code did not change. The targeted integration case
+passed 1/1, promotion passed 33/33, and CLI check/type-check passed. Root
+inspected the one-file diff and reran the integration case successfully.
+
 #### Configured implementation exit gate generation 4 created
 
 The configured declaration resolved with canonical configuration fingerprint

@@ -44,7 +44,7 @@
     "dispatch_stamp": "Dispatch: scope=p09 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium"
   },
   "launch_status": "accepted",
-  "child_outcome": "pending",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "dispatch-report-v1:p09",
     "native-followup-accepted",
@@ -55,7 +55,8 @@
   "diagnostics": [
     "Completed two ordered task commits through 620656d8f with no recovery attempts or nested dispatch.",
     "The shipped-scaffold regression passed 30/30 after a fail-capable guard-neutralization control; docs and release/version gates passed at lockstep 0.2.62.",
-    "Fix-loop task p09-t03 committed as 9448bfb1a; its comment-specific neutralization failed both new cases and restoration passed 33/33."
+    "Fix-loop task p09-t03 committed as 9448bfb1a; its comment-specific neutralization failed both new cases and restoration passed 33/33.",
+    "Verification recovery p09-t04 committed as 18767ee4e; the one-file integration fixture now authors both adaptive sections and the focused integration case passes."
   ],
   "continuation_events": [
     {
@@ -70,11 +71,13 @@
     },
     {
       "event_id": "p09-recovery-1",
-      "status": "accepted",
+      "status": "completed",
       "accepted_at": "2026-09-07T03:23:17Z",
       "base_sha": "8fd41974fe0e6bbacc3268de2be500c9ca4f49af",
       "task": "p09-t04",
-      "reason": "Full workspace test exposed a stale successful-promotion integration fixture after the production guard tightened."
+      "reason": "Full workspace test exposed a stale successful-promotion integration fixture after the production guard tightened.",
+      "commit": "18767ee4eb3b9e2cfae23cda75cba2cf04e60baf",
+      "completed_at": "2026-09-07T03:25:06Z"
     }
   ],
   "oat": {
