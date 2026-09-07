@@ -1173,6 +1173,52 @@ The repeated focused, smoke, skills, release, skill-validation, and forced
 workspace test commands are live evidence. Cache replay in `check`,
 `type-check`, and `build` is recorded rather than represented as fresh work.
 
+### Task p08-t06: Complete CI-equivalent release gate
+
+The first release-gate sequence ran in CI order. `origin/main` was fetched at
+`f83463e64353f7ca04b4abcecbeb7e59c2135ba3` immediately before the version
+gate. Every command recorded an explicit zero exit:
+
+| Command                       | Exit | Evidence                                                                                                                                                                                      |
+| ----------------------------- | ---: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm check`                  |    0 | Turbo 10/10 tasks, 5 cached; markdownlint live over 71 docs; 64 skills validated live                                                                                                         |
+| `pnpm type-check`             |    0 | Turbo 10/10 tasks, 5 cached                                                                                                                                                                   |
+| `pnpm test`                   |    0 | Turbo 10/10 tasks, 5 cached; package totals included CLI 6,470, control plane 78, docs config 10, and docs transforms 31; live smoke 161/161, skills 836/836, release 39 passed and 1 skipped |
+| `pnpm build`                  |    0 | Turbo 5/5 tasks, 5 cached (`FULL TURBO`)                                                                                                                                                      |
+| `pnpm run check:skill-bumps`  |    0 | One changed canonical-skill bump set validated against current `origin/main`                                                                                                                  |
+| `git fetch origin main`       |    0 | Refreshed `origin/main` immediately before the version gate                                                                                                                                   |
+| `pnpm release:check-versions` |    0 | Lockstep `0.2.60` is strictly greater than main's `0.2.59`                                                                                                                                    |
+| `pnpm release:validate`       |    0 | Five public `0.2.60` tarballs and 65 visual measurements validated                                                                                                                            |
+| `pnpm build:docs`             |    0 | Turbo 6/6 tasks, 6 cached (`FULL TURBO`)                                                                                                                                                      |
+| `pnpm lint`                   |    0 | Turbo 10/10 tasks, 5 cached; root tools/skill lint ran live                                                                                                                                   |
+| `pnpm format`                 |    0 | Turbo 10/10 tasks, 5 cached; root tools/skill format check ran live                                                                                                                           |
+
+Cache replay is recorded explicitly. The uncached evidence-grade package suite
+from p08-t04 remains the live full-test baseline immediately preceding this
+release gate.
+
+`pnpm format:fix` then exited 0 (Turbo 10/10 tasks, 10 cached), and the complete
+gate sequence was repeated. The second `origin/main` fetch again resolved
+`f83463e64353f7ca04b4abcecbeb7e59c2135ba3` immediately before version
+validation:
+
+| Command                       | Exit | Evidence after formatting                                                                                        |
+| ----------------------------- | ---: | ---------------------------------------------------------------------------------------------------------------- |
+| `pnpm check`                  |    0 | Turbo 10/10 tasks, 10 cached (`FULL TURBO`); 64 skills validated live                                            |
+| `pnpm type-check`             |    0 | Turbo 10/10 tasks, 10 cached (`FULL TURBO`)                                                                      |
+| `pnpm test`                   |    0 | Turbo 10/10 tasks, 10 cached (`FULL TURBO`); live smoke 161/161, skills 836/836, release 39 passed and 1 skipped |
+| `pnpm build`                  |    0 | Turbo 5/5 tasks, 5 cached (`FULL TURBO`)                                                                         |
+| `pnpm run check:skill-bumps`  |    0 | One changed canonical-skill bump set validated against current `origin/main`                                     |
+| `git fetch origin main`       |    0 | Refreshed `origin/main` immediately before the version gate                                                      |
+| `pnpm release:check-versions` |    0 | Lockstep version check passed                                                                                    |
+| `pnpm release:validate`       |    0 | Five public `0.2.60` tarballs and 65 visual measurements validated                                               |
+| `pnpm build:docs`             |    0 | Turbo 6/6 tasks, 6 cached (`FULL TURBO`); 74 static routes retained                                              |
+| `pnpm lint`                   |    0 | Turbo 10/10 tasks, 10 cached (`FULL TURBO`); root tools/skill lint ran live                                      |
+| `pnpm format`                 |    0 | Turbo 10/10 tasks, 10 cached (`FULL TURBO`); root tools/skill format check ran live                              |
+
+Both ordered release-gate passes completed without a repair, recovery attempt,
+or additional scope expansion.
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
