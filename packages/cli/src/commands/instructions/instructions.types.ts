@@ -52,11 +52,29 @@ export interface InstructionsJsonPayload {
   summary: InstructionsSummary;
   entries: InstructionEntry[];
   actions: InstructionActionRecord[];
+  /**
+   * The normalized repo-relative exclusions applied to this scan, in the order
+   * they were resolved. These are the configured exclusions, not a record of
+   * directories actually skipped: the `.oat/repo` carve-in is queued before the
+   * exclusion predicate runs, so listing `.oat` here still leaves `.oat/repo`
+   * scanned.
+   *
+   * Additive and omitted entirely when nothing was excluded, so payloads from
+   * repositories without a documentation root are byte-identical to the
+   * pre-exclusion shape.
+   */
+  excludedPaths?: string[];
 }
 
 export interface InstructionsScanOptions {
   strategy?: InstructionSyncStrategy;
   debug?: (message: string) => void;
+  /**
+   * Repo-root-relative directories whose subtrees are left out of the scan.
+   * Applied after the excluded-root carve-in, so excluding a directory can
+   * never strand a subtree the carve-in re-entered (`.oat/repo/**`).
+   */
+  excludedPaths?: string[];
 }
 
 export interface InstructionsScanDependencies {
@@ -74,6 +92,12 @@ export interface InstructionsScanDependencies {
 export interface InstructionsValidateCommandDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveProjectRoot: (cwd: string) => Promise<string>;
+  /**
+   * The single exclusion path both commands resolve through. Sync inherits it
+   * from this interface rather than resolving its own, so validate can never
+   * report drift that sync would refuse to fix.
+   */
+  resolveInstructionPointerExcludes: (repoRoot: string) => Promise<string[]>;
   scanInstructionFiles: (
     repoRoot: string,
     options?: InstructionsScanOptions,

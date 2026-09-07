@@ -23,7 +23,64 @@ Instruction sync is currently project-only.
 - It supports nested directories all the way down the tree.
 - It skips provider-irrelevant or local-only roots such as `.git`, `.oat`, `.worktrees`, and `node_modules`.
 - Exception: `.oat/repo/**` is scanned even though the rest of `.oat/` is skipped, so the curated `AGENTS.md` files there (repo root guidance, `pjm/`, `reference/`) get their sibling `CLAUDE.md` shims managed and validated like any other directory. The rest of `.oat/` (`templates/`, `projects/`, `sync/`) stays excluded.
+- It skips the documentation content tree by default, and any path you add to `documentation.instructionPointerExcludes`. See [Documentation trees](#documentation-trees) below.
 - It does not scan user-level provider roots such as `~/.claude` in this release.
+
+## Documentation Trees
+
+A documentation tree holds authored pages, not instructions for agents. A
+`CLAUDE.md` written into one becomes a published page, and a page legitimately
+named `CLAUDE.md` is content that must not be treated as a pointer. Both
+`oat instructions validate` and `oat instructions sync` therefore skip the
+documentation content root, so validate never reports drift that sync refuses
+to fix.
+
+The content root is derived from `documentation.root` in `.oat/config.json`:
+
+- `<documentation.root>/docs` when that path is a directory;
+- otherwise `documentation.root` itself.
+
+This is the same derivation `oat docs generate-index` uses to pick its default
+docs directory, so the excluded tree and the indexed tree agree by
+construction. (`oat docs generate-index --docs-dir` overrides the index side
+only; it does not change what instruction sync excludes.)
+
+**App-level instruction files are still synced.** `documentation.root`
+canonically names the docs _app_ root, and a file like
+`apps/oat-docs/AGENTS.md` is instructions for working on the docs app rather
+than a documentation page. When the app root has a `docs` child, only that
+child is skipped, and the app root keeps receiving its `CLAUDE.md` pointer. Opt
+the app root out explicitly if you do not want it synced.
+
+Add further paths with `documentation.instructionPointerExcludes`, a list of
+repository-relative directories:
+
+```json
+{
+  "documentation": {
+    "root": "apps/oat-docs",
+    "instructionPointerExcludes": ["vendor", "third_party/docs"]
+  }
+}
+```
+
+Each entry excludes that directory and everything beneath it. Entries are
+repository-relative and normalized, so `apps/./docs`, `apps//docs`, and
+`apps/docs/` all name the same tree; absolute paths and paths escaping the
+repository are ignored, and the repository root itself cannot be excluded. A
+malformed value (anything other than an array of non-empty strings) is
+rejected with an error rather than silently ignored.
+
+The list is additive to the derived content root, and it is applied after the
+`.oat/repo` carve-in, so excluding a tree can never leave `.oat/repo/**`
+unscanned.
+
+Exclusion only stops a directory from being scanned. Nothing is deleted: a
+`CLAUDE.md` that already exists inside an excluded tree is left exactly as it
+is. When any exclusion is active, `--json` output carries an additional
+`excludedPaths` field listing the exclusions that were applied. It reports the
+configured exclusions rather than a per-directory skip log, so `.oat` appearing
+there does not contradict `.oat/repo` still being scanned.
 
 ## Canonical Model
 

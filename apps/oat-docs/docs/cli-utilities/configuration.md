@@ -91,6 +91,7 @@ Common keys in `.oat/config.json`:
 - `git.defaultBranch` — base branch fallback for PR workflows
 - `documentation.root`, `documentation.tooling`, `documentation.config` — docs-surface ownership
 - `documentation.excludes` — a JSON array of globs, relative to the docs directory, that `oat docs generate-index` leaves out of the generated index. `oat config set` takes the list as one comma-separated value (`"a/**,b.md"`) and stores it as an array; repeated `--exclude` flags extend it, and an empty value clears the key
+- `documentation.instructionPointerExcludes` — a JSON array of repository-relative directories that `oat instructions sync` and `oat instructions validate` must not treat as pointer sites, additive to the documentation content root they already skip by default (see [Instruction Sync](../provider-sync/instruction-sync.md#documentation-trees)). Edit it directly in `.oat/config.json`; it has no `oat config set` key yet. A malformed value is rejected with an error rather than silently ignored, so an exclusion you asked for is never quietly dropped
 - `documentation.requireForProjectCompletion` — whether docs sync is a completion gate
 - `archive.s3Uri` — base S3 archive prefix
 - `archive.s3SyncOnComplete` — upload archived projects to S3 during completion

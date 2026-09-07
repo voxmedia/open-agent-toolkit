@@ -14,6 +14,7 @@ import {
   DEFAULT_INSTRUCTION_SYNC_STRATEGY,
   EXPECTED_CLAUDE_CONTENT,
   formatInstructionsReport,
+  resolveInstructionPointerExcludes,
   resolveInstructionSyncStrategy,
   scanInstructionFiles,
 } from '@commands/instructions/instructions.utils';
@@ -41,6 +42,7 @@ function defaultDependencies(): InstructionsSyncCommandDependencies {
     lstat,
     readFile,
     removeFile: removeInstructionFile,
+    resolveInstructionPointerExcludes,
     resolveProjectRoot,
     scanInstructionFiles,
     symlinkFile: async (target: string, path: string) => {
@@ -371,7 +373,10 @@ export function createInstructionsSyncCommand(
         try {
           const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
           const strategy = resolveInstructionSyncStrategy(options.strategy);
+          const excludedPaths =
+            await dependencies.resolveInstructionPointerExcludes(repoRoot);
           const entries = await dependencies.scanInstructionFiles(repoRoot, {
+            excludedPaths,
             strategy,
           });
           const plannedActions = planSyncActions({
@@ -396,6 +401,7 @@ export function createInstructionsSyncCommand(
               ? entries
               : getPostSyncEntries(entries, actions, strategy),
             actions,
+            excludedPaths,
           });
 
           if (context.json) {

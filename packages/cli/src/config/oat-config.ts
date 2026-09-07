@@ -45,6 +45,13 @@ export interface OatDocumentationConfig {
    * and order-preserving.
    */
   excludes?: string[];
+  /**
+   * Repo-relative directories `oat instructions sync` and
+   * `oat instructions validate` must not treat as pointer sites, additive to
+   * the derived documentation content root they skip by default. Trimmed,
+   * de-duplicated, and order-preserving.
+   */
+  instructionPointerExcludes?: string[];
 }
 
 export interface OatGitConfig {
@@ -1162,6 +1169,55 @@ function normalizeDocumentationExcludes(
   return normalized;
 }
 
+/**
+ * Parse `documentation.instructionPointerExcludes` into a trimmed,
+ * de-duplicated, order-preserving list.
+ *
+ * Fails closed, exactly like its `documentation.excludes` sibling above and for
+ * the same reason: a key whose whole job is to keep files out of a tree must
+ * never silently protect less than the operator asked for. An absent key and an
+ * empty array are both "no extra exclusions"; a present-but-malformed value is
+ * an error.
+ *
+ * The repair instruction names the config file rather than an `oat config set`
+ * command, because this key has no `oat config` catalog entry — telling an
+ * operator to run a command that does not exist would be worse than telling
+ * them nothing.
+ */
+function normalizeInstructionPointerExcludes(
+  value: unknown,
+  configPath: string,
+): string[] {
+  if (value === undefined) {
+    return [];
+  }
+
+  const invalid = (): never => {
+    throw new CliError(
+      `Invalid documentation.instructionPointerExcludes in ${configPath}: expected an array of non-empty strings. ` +
+        'Repair it by editing documentation.instructionPointerExcludes in that file (remove the key to clear it).',
+      2,
+    );
+  };
+
+  if (!Array.isArray(value)) {
+    invalid();
+  }
+
+  const normalized: string[] = [];
+  for (const entry of value as unknown[]) {
+    if (typeof entry !== 'string' || !entry.trim()) {
+      invalid();
+    }
+    const trimmedEntry = (entry as string).trim();
+    if (!normalized.includes(trimmedEntry)) {
+      normalized.push(trimmedEntry);
+    }
+  }
+
+  return normalized;
+}
+
 function normalizeOatConfig(
   parsed: unknown,
   configPath = '.oat/config.json',
@@ -1326,6 +1382,13 @@ function normalizeOatConfig(
     if (excludes.length > 0) {
       doc.excludes = excludes;
     }
+    const instructionPointerExcludes = normalizeInstructionPointerExcludes(
+      parsed.documentation.instructionPointerExcludes,
+      configPath,
+    );
+    if (instructionPointerExcludes.length > 0) {
+      doc.instructionPointerExcludes = instructionPointerExcludes;
+    }
     if (Object.keys(doc).length > 0) {
       next.documentation = doc;
     }
@@ -1438,6 +1501,55 @@ export async function readOatConfigForDefaultScopeRepair(
 
     throw error;
   }
+}
+
+/**
+ * The documentation *content* root: `<documentation.root>/docs` when that path
+ * is a directory, otherwise `documentation.root` itself.
+ *
+ * `documentation.root` canonically names the docs **app root** written by
+ * `oat docs init`; the `<root>/docs` preference is compatibility behavior for
+ * legacy configs whose `root` names a docs source directory. This is the same
+ * rule `oat docs generate-index` applies when `--docs-dir` is omitted
+ * (`resolveIndexGeneratePaths` in `commands/docs/index-generate/index.ts`),
+ * stated here so the index generator, `oat instructions sync`, and
+ * `oat instructions validate` cannot drift into two different meanings of
+ * "the docs tree"; `oat-config.test.ts` asserts the two agree on shared
+ * fixtures.
+ *
+ * The app root is deliberately not the answer when a `docs` child exists:
+ * `apps/oat-docs/AGENTS.md` is an instruction file, not a documentation page,
+ * and must keep receiving pointers.
+ *
+ * Returns a repo-relative POSIX path, or null when `documentation.root` is
+ * unset, empty, resolves to the repository root, or escapes the repository.
+ */
+export async function resolveDocumentationContentRoot(
+  repoRoot: string,
+  config: OatConfig,
+): Promise<string | null> {
+  const configuredRoot = config.documentation?.root?.trim();
+  if (!configuredRoot) {
+    return null;
+  }
+
+  const absoluteRoot = resolve(repoRoot, configuredRoot);
+  const docsChild = join(absoluteRoot, 'docs');
+  const contentRoot = (await dirExists(docsChild)) ? docsChild : absoluteRoot;
+  const relativeContentRoot = normalizeToPosixPath(
+    relative(repoRoot, contentRoot),
+  );
+
+  if (
+    !relativeContentRoot ||
+    relativeContentRoot === '.' ||
+    relativeContentRoot === '..' ||
+    relativeContentRoot.startsWith('../')
+  ) {
+    return null;
+  }
+
+  return relativeContentRoot;
 }
 
 /**

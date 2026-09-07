@@ -6,7 +6,12 @@ import {
   realpath,
   stat,
 } from 'node:fs/promises';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, posix, relative, resolve } from 'node:path';
+
+import {
+  readOatConfig,
+  resolveDocumentationContentRoot,
+} from '@config/oat-config';
 
 import type {
   InstructionSyncStrategy,
@@ -40,6 +45,7 @@ interface BuildInstructionsPayloadArgs {
   mode: InstructionsMode;
   entries: InstructionEntry[];
   actions: InstructionActionRecord[];
+  excludedPaths?: string[];
 }
 
 interface InstructionDirectoryEntry {
@@ -152,10 +158,85 @@ function recordInstructionFile(
   directoryEntries.set(directoryPath, current);
 }
 
+/**
+ * Canonicalize repo-relative exclusion entries into the exact form the scan
+ * compares against: POSIX separators, collapsed `.` and `..` segments and
+ * duplicate slashes, no trailing slash, de-duplicated, order-preserving.
+ *
+ * Full normalization is what makes the comparison trustworthy. The scan tests
+ * an exclusion against `relative(repoRoot, entryPath)`, which is always
+ * already-normalized, so an un-normalized entry like `apps/./docs` or
+ * `apps//docs` would silently never match and quietly fail open.
+ *
+ * Two classes of entry are dropped rather than normalized:
+ *
+ * - anything resolving to the repository root (`.`, `` , `./`), because
+ *   excluding the root would silence the entire scan — including the
+ *   `.oat/repo` carve-in — from one stray config value; and
+ * - absolute paths and entries escaping the repository (`..`, `../x`), which
+ *   can never name a directory inside the tree being scanned. Dropping them
+ *   keeps a malformed value from masquerading as a matchable exclusion.
+ */
+export function normalizeExcludedPaths(
+  excludedPaths: readonly string[] = [],
+): string[] {
+  const normalized: string[] = [];
+
+  for (const candidate of excludedPaths) {
+    const trimmed = toPosixPath(candidate.trim());
+    if (!trimmed || posix.isAbsolute(trimmed)) {
+      continue;
+    }
+
+    const posixPath = posix.normalize(trimmed).replace(/\/+$/, '');
+    if (
+      !posixPath ||
+      posixPath === '.' ||
+      posixPath === '..' ||
+      posixPath.startsWith('../')
+    ) {
+      continue;
+    }
+
+    if (!normalized.includes(posixPath)) {
+      normalized.push(posixPath);
+    }
+  }
+
+  return normalized;
+}
+
+/**
+ * The directories `oat instructions sync` and `oat instructions validate` skip:
+ * the derived documentation content root first, then the explicit
+ * `documentation.instructionPointerExcludes` opt-outs.
+ *
+ * Both commands resolve exclusions through this one function. That is the
+ * property that matters: if they computed exclusions separately, validate
+ * could report drift in a directory sync refuses to touch, and the repository
+ * would have no clean state to reach.
+ *
+ * Nothing here deletes or rewrites an existing pointer. Excluding a directory
+ * only stops it being reported and written; a `CLAUDE.md` already inside an
+ * excluded tree is left exactly as it is.
+ */
+export async function resolveInstructionPointerExcludes(
+  repoRoot: string,
+): Promise<string[]> {
+  const config = await readOatConfig(repoRoot);
+  const contentRoot = await resolveDocumentationContentRoot(repoRoot, config);
+
+  return normalizeExcludedPaths([
+    ...(contentRoot ? [contentRoot] : []),
+    ...(config.documentation?.instructionPointerExcludes ?? []),
+  ]);
+}
+
 async function scanInstructionDirectories(
   repoRoot: string,
   dependencies: InstructionsScanDependencies,
   debug?: (message: string) => void,
+  excludedPaths: ReadonlySet<string> = new Set<string>(),
 ): Promise<Map<string, InstructionDirectoryEntry>> {
   const queue = [repoRoot];
   const directoryEntries = new Map<string, InstructionDirectoryEntry>();
@@ -196,6 +277,19 @@ async function scanInstructionDirectories(
             }
           }
           continue;
+        }
+        // Deliberately after the carve-in above, never before it: the carve-in
+        // path is already queued by the time a configured exclusion is tested,
+        // so excluding `.oat` (or any documentation root that happens to
+        // contain one) still leaves `.oat/repo/**` scanned. Skipping the
+        // directory here also skips its whole subtree, because a directory
+        // that is never queued is never read.
+        if (excludedPaths.size > 0) {
+          const relativePath = toPosixPath(relative(repoRoot, entryPath));
+          if (excludedPaths.has(relativePath)) {
+            debug?.(`Skipping excluded directory ${relativePath}`);
+            continue;
+          }
         }
         queue.push(entryPath);
         continue;
@@ -284,6 +378,7 @@ export async function scanInstructionFiles(
     repoRoot,
     dependencies,
     options.debug,
+    new Set(normalizeExcludedPaths(options.excludedPaths)),
   );
   const entries: InstructionEntry[] = [];
 
@@ -538,9 +633,11 @@ export function buildInstructionsPayload({
   mode,
   entries,
   actions,
+  excludedPaths,
 }: BuildInstructionsPayloadArgs): InstructionsJsonPayload {
   const normalizedEntries = normalizeEntries(entries);
   const normalizedActions = normalizeActions(actions);
+  const normalizedExcludedPaths = normalizeExcludedPaths(excludedPaths);
 
   return {
     mode,
@@ -548,6 +645,11 @@ export function buildInstructionsPayload({
     summary: buildInstructionsSummary(normalizedEntries, normalizedActions),
     entries: normalizedEntries,
     actions: normalizedActions,
+    // Omitted rather than emitted empty, so a repository with no documentation
+    // root keeps its existing payload shape exactly.
+    ...(normalizedExcludedPaths.length > 0
+      ? { excludedPaths: normalizedExcludedPaths }
+      : {}),
   };
 }
 
