@@ -153,6 +153,22 @@ touches `tools/smoke` or `.agents/skills`, since nothing else covers them.
 
 ## Feature Planning Triage
 
+### Workflow Mode Change Inventory
+
+Treat a workflow-mode change as a cross-surface compatibility change. Before
+implementation and again before final review, enumerate the applicable:
+
+- canonical mode declaration and state parsing;
+- recommender, router, progress, resume, and closeout consumers;
+- project scaffolds, templates, validators, split detectors, and promotion;
+- lifecycle skills, agent contracts, and named-skill call sites;
+- documentation, help text, bundled release assets, and provider projections;
+- existing shared contracts introduced or changed on the integration base.
+
+Test each changed producer with its real consumers. Review an integration for
+semantic composition even when Git reports no conflict. Preserve intentionally
+separate routing tables unless the change explicitly owns their consolidation.
+
 **Pre-implementation gate:** Before making any code changes, confirm that either a workflow option has been selected or the user has explicitly opted out. If neither has happened, present the workflow options below. This applies even if the task seems small — the user decides scope, not the agent.
 
 ### Workflow Options

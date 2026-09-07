@@ -24,7 +24,7 @@ oat_retro_evidence_sources:
     status: used
   - source: spec
     status: unavailable
-oat_retro_promotions: proposed
+oat_retro_promotions: partial
 oat_retro_filing: complete
 oat_generated: true
 oat_template: false
@@ -75,10 +75,10 @@ inconclusive.
 
 ## Current State
 
-- **Promotions:** `proposed` — RP-01 through RP-03 await an apply decision.
+- **Promotions:** `partial` — RP-01 is applied; RP-02 and RP-03 remain.
 - **Filing:** `complete` — RP-04 and UP-01/UP-02 are already filed and tracked.
-- **Unsettled items:** RP-01, RP-02, and RP-03 require an explicit apply
-  decision. No filing item is unsettled.
+- **Unsettled items:** RP-02 and RP-03 remain proposed under the current apply
+  authorization. No filing item is unsettled.
 
 ## What Went Well
 
@@ -237,9 +237,9 @@ made valid work look incomplete and consumed recovery attention. GitHub issues
 
 - **Type:** agents-instruction
 - **Disposition:** apply
-- **Status:** proposed
+- **Status:** applied
 - **Target:** `AGENTS.md`
-- **Applied-ref:** —
+- **Applied-ref:** `AGENTS.md`
 - **Disposition-note:** —
 
 Add a compact checklist requiring workflow-mode changes to enumerate and test
