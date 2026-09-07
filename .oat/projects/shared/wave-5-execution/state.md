@@ -24,7 +24,7 @@ oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 10
 oat_dispatch_policy: # managed/high per operator routing preference
@@ -124,12 +124,27 @@ oat_implement_exit_gate:
 #   receive_completed: false
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
-oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_post_implement_sequence:
+  status: complete # pre_approval | awaiting_approval | post_approval | complete (autonomous approval 2026-09-07; no post-approval steps)
+  source: configured # workflow.postImplementSequence
+  final_phase: p12
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: [summary, document, pr]
+  approval: approved # pending | approved | not_required
+  approval_source: oat-autonomous # null | user | oat-autonomous
+  post_approval: []
+  post_approval_completed: []
+  failure: null
+oat_project_recap:
+  decision: skip
+  source: interactive # operator-approved program rule: recap deferred to program close
+  decided_at: '2026-09-07T21:51:36Z'
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/275' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T21:49:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T21:51:36.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -141,7 +156,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all lanes dispositioned (10 merged, p09 parked); root final review passed; the configured exit gate blocked on attempt 1 (three Important, four Medium) and its findings were fixed as Phase 12, merged, gated, and root-reviewed (passed); attempt 2 blocked on a stale record sentence plus two backlink-rule Mediums; attempts are exhausted, so p12-t09 landed with every finding fixed on the tip; attempt 3 (operator-authorized) passed.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -175,7 +190,9 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 - ✓ p12-t09 merged (`0811e7bb6`); eight gates + smoke + skills + root test green — every exit-gate finding is now fixed on the tip
 - ✓ Operator authorized one further gate attempt (2026-09-07, "authorize")
 - ✓ Exit gate attempt 3 allowed/passed (run `905419ec`, 0C/0I/2M/1m; both Mediums deferred to `BL-260907-harden-the-external-plan` class follow-up, Minor fixed)
-- ⧗ Post-implement sequence (summary, document, pr), PR
+- ✓ Post-implement sequence: summary (`394159d3b`, with the promoted decision), document (`394159d3b`), pr (PR #275)
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -183,4 +200,10 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 
 ## Next Milestone
 
-Post-implement sequence (summary, document, pr) on the passed-gate head, then the post-implement sequence (summary, document, pr) and the wave PR.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
+
+(Program rule: the completion tail is deferred to program close; the orchestrator merges after CI, Bugbot, and the recorded gates.) Previous milestone text: then the post-implement sequence (summary, document, pr) and the wave PR.

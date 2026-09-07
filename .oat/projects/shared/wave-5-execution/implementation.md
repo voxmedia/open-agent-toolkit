@@ -577,6 +577,13 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Gate row `final` (attempt 3 (operator-authorized)) → `passed`** (gate-written row moved forward in place with the archived path); `oat_implement_exit_gate` → `allowed / passed` in the following state checkpoint.
 
+## Final HiLL approval (IMPLEMENT-16, autonomous)
+
+- Pre-approval sequence (configured `workflow.postImplementSequence`): summary (`summary.md` with the project-log roll-up and the promoted decision `DR-260907-pre-dispatch-refreshes-live`; carried in `394159d3b` after commitlint rejected the standalone commit's body), document (`394159d3b`: PJM current-state bullet for 0.2.63 and the roadmap line), pr (PR #275 on `origin/wave-5-execution-2026-09`; artifact `pr/project-pr-2026-09-07.md`, local-only) — all complete; no post-approval steps configured; recap intent `skip` (deferred to program close per the execution program).
+- Evidence: final review row `passed` (round 2 artifact `reviews/archived/final-review-2026-09-07T143255Z.md`, head `9386be825`); fix-round review `passed` (`reviews/archived/p12-review-2026-09-07T163054Z.md`, head `368d8b8d0`); configured exit gate `allowed / passed` on attempt 3 (operator-authorized; run `905419ec`, artifact `reviews/archived/final-review-2026-09-07T214334Z.md`, 0C/0I/2M/1m, Mediums deferred to `BL-260907-harden-the-external-plan`); every descendant after the gate's reviewed head `34e89bbc9` is closeout-only bookkeeping.
+- Decision: `approval: approved`, `approval_source: oat-autonomous`, `status: post_approval` → no post-approval steps → `complete`. Operator authorization: 2026-09-05 ("let it rip"), covering PR creation and merge by the root orchestrator once CI, Bugbot, and the final gate are green; the exhausted gate was escalated and the operator authorized attempt 3 on 2026-09-07 ("authorize"). This approval waives nothing.
+- Completion: `oat project complete-state` recorded before merge; the archive tail is `completion tail: deferred to program close`.
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)
