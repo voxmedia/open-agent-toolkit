@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 4d5341be8c6f7e8da83f2a3b86aa493bd3671deb
+oat_current_task: p09-t04
+oat_last_commit: 861cc9f3576a30309c04787d1aaf2c734f3d6472
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -58,24 +58,23 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T05:08:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T05:11:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: remote-project-management
 
-**Status:** Implementation and p09 review complete; final re-review pending
+**Status:** Final review status-alignment fix in progress
 **Started:** 2026-03-15
 **Last Updated:** 2026-09-07
 
 ## Current Phase
 
-Implementation — All 89 planned tasks are complete. p09-t03 corrected the three
-ineffective negative-control selectors; each now selects 2/2, fails under
-guard neutralization, and passes after restoration. Independent p09 review
-round 2 passed with zero findings. The next milestone is a fresh final
-lifecycle re-review. Current main `0f47bf7004166d420758d1bcd77d253007174332`
-remains merged through `6c73da33cf64fa2221def42a0b2fc6f7960ced73`.
+Implementation — 89/90 planned tasks are complete. Final review round 2 closed
+the security proof but found one Medium current-status contradiction; p09-t04
+is the bounded artifact-alignment fix. Current main
+`0f47bf7004166d420758d1bcd77d253007174332` remains merged through
+`6c73da33cf64fa2221def42a0b2fc6f7960ced73`.
 
 ## Artifacts
 
@@ -83,7 +82,7 @@ remains merged through `6c73da33cf64fa2221def42a0b2fc6f7960ced73`.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 3 artifact review passed)
-- **Implementation:** implementation.md (89/89 tasks and p09 review complete; final re-review pending)
+- **Implementation:** implementation.md (89/90 tasks complete; p09-t04 pending)
 
 ## Progress
 
@@ -267,13 +266,15 @@ remains merged through `6c73da33cf64fa2221def42a0b2fc6f7960ced73`.
   preserving chronological failure and review evidence
 - ✓ p09-t03 corrected all three ineffective selectors; each exact probe now
   selects 2/2 and passes after a failing neutralized control
-- ✓ Phase 9 completed 3/3 tasks; all 89/89 implementation tasks are complete
+- ✓ Phase 9 completed its first 3 tasks and p09 review round 2 passed
 - ✓ Phase 9 independent re-review round 2 passed with zero findings
+- ⚠ Final review round 2 found one Medium active-status contradiction; p09-t04
+  is the remaining bounded fix (89/90 complete)
 
 ## Blockers
 
-No active implementation blocker. Fresh final code re-review remains pending.
+No external blocker. p09-t04 is the active implementation task.
 
 ## Next Milestone
 
-Run the fresh final lifecycle code re-review at the current exact head.
+Execute p09-t04, then run final review round 3.

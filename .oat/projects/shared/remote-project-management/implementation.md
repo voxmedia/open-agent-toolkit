@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: null
+oat_current_task_id: p09-t04
 oat_generated: false
 ---
 
@@ -24,22 +24,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | completed | 10    | 10/10     |
-| Phase 2    | completed | 10    | 10/10     |
-| Phase 3    | completed | 12    | 12/12     |
-| Phase 4    | completed | 11    | 11/11     |
-| Phase 5    | completed | 9     | 9/9       |
-| Phase 6    | completed | 10    | 10/10     |
-| Phase 7    | completed | 10    | 10/10     |
-| Phase 8    | completed | 6     | 6/6       |
-| Phase 9    | completed | 3     | 3/3       |
-| Revision 1 | completed | 4     | 4/4       |
-| Revision 2 | completed | 2     | 2/2       |
-| Revision 3 | completed | 2     | 2/2       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | completed   | 10    | 10/10     |
+| Phase 2    | completed   | 10    | 10/10     |
+| Phase 3    | completed   | 12    | 12/12     |
+| Phase 4    | completed   | 11    | 11/11     |
+| Phase 5    | completed   | 9     | 9/9       |
+| Phase 6    | completed   | 10    | 10/10     |
+| Phase 7    | completed   | 10    | 10/10     |
+| Phase 8    | completed   | 6     | 6/6       |
+| Phase 9    | in_progress | 4     | 3/4       |
+| Revision 1 | completed   | 4     | 4/4       |
+| Revision 2 | completed   | 2     | 2/2       |
+| Revision 3 | completed   | 2     | 2/2       |
 
-**Total:** 89/89 tasks completed
+**Total:** 89/90 tasks completed
 
 ---
 
@@ -2822,6 +2822,25 @@ finding is closed.
 
 **Next:** Run the fresh final lifecycle code re-review at the current exact
 head.
+
+### Review Received: final (round 2)
+
+**Date:** 2026-09-07
+**Review artifact:** reviews/archived/final-review-2026-09-07T050851Z.md
+
+**Findings:** 0 Critical, 0 Important, 1 Medium, 0 Minor
+
+**New task added:** p09-t04
+
+**Finding disposition:** M1 -> p09-t04 (`artifact_alignment_required`). The
+security/functional proof is accepted and both prior final findings are closed;
+only the current Phase 9 status line still routes to its already-passed p09
+re-review. Align that line while preserving the chronological review history.
+
+**Deferred Findings (Medium):** none. M1 is converted to p09-t04.
+
+**Next:** Resume the original p09 implementer for p09-t04, mark this event
+`fixes_completed`, and run final review round 3.
 
 <!-- orchestration-runs-end -->
 

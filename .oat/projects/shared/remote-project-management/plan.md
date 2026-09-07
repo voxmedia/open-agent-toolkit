@@ -1577,6 +1577,22 @@ restore each exact production guard before continuing or committing.
 5. Run: `git diff --check` plus bounded status and task-file boundary checks.
 6. Commit: docs(p09-t03): correct negative-control probes
 
+### Task p09-t04: (review) Align the current Phase 9 status
+
+**Files:** Modify
+.oat/projects/shared/remote-project-management/implementation.md.
+
+1. Change the current Phase 9 status to state that all 3 prior tasks are
+   complete, p09 independent review round 2 passed, and the fresh final
+   lifecycle re-review is the pending milestone.
+2. Preserve the chronological p09 round-1 failure, p09-t03 fix, and round-2
+   passing review evidence. Confirm no other current summary or next-action
+   text routes to an already completed p09 review.
+3. Format: pnpm format:fix
+4. Run: `git diff --check` and a bounded search of implementation.md's current
+   Phase 9 status, review-received notes, and next-action text.
+5. Commit: docs(p09-t04): align Phase 9 review status
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                              | Reviewed Head                            | Invocation          | Gate Target              |
@@ -1619,7 +1635,7 @@ restore each exact production guard before continuing or committing.
 | p-rev2 | code     | fixes_completed | 2026-09-01 | reviews/p-rev2-rereview-2026-09-01T210901Z.md                         | e79732b6cef1b996a54334e308860a121cdd989d | review-2            | codex:sol-high           |
 | p-rev2 | code     | passed          | 2026-09-01 | reviews/p-rev2-final-rereview-2026-09-01T213136Z.md                   | 5a15f738df8e7d5ab467b94a1e28a77ca5df420c | review-3            | codex:sol-high           |
 | final  | code     | fixes_completed | 2026-09-07 | reviews/archived/final-review-2026-09-07T043133Z.md                   | e9b1d0f2d12f4a24acb261972a85409b4cef1521 | auto                | -                        |
-| final  | code     | received        | 2026-09-07 | reviews/final-review-2026-09-07T050851Z.md                            | 3c407b85cc00d3502649497560b6e9692300d2af | auto                | -                        |
+| final  | code     | fixes_added     | 2026-09-07 | reviews/archived/final-review-2026-09-07T050851Z.md                   | 3c407b85cc00d3502649497560b6e9692300d2af | auto                | -                        |
 | spec   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | boundary-revision-3 | codex:sol-high           |
 | design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md                  | -                                        | manual-1            | cursor                   |
 | design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md                  | -                                        | manual-2            | cursor                   |
@@ -1853,12 +1869,12 @@ authoritative in `implementation.md`.
 - Phase 6: 10 tasks - Jira semantic intents, observations, ADF, and duplicate search
 - Phase 7: 10 tasks - batches, closeout, recovery, doctor, E2E, security
 - Phase 8: 6 tasks - docs, skill references, versions, CI/release gates
-- Phase 9: 3 tasks - P0 negative controls, durable state, and executable proof repair
+- Phase 9: 4 tasks - P0 negative controls, durable state, executable proof repair, and status alignment
 - Revision 1: 4 tasks - caller authority, action safety, production lifecycle, resumable materialization
 - Revision 2: 2 tasks - verification-handoff restart safety and incomplete-intent provenance
 - Revision 3: 2 tasks - recreate anomaly resolution and public lifecycle approval evidence
 
-**Total: 89 tasks**
+**Total: 90 tasks**
 
 ## References
 
