@@ -2,9 +2,9 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-06
+oat_last_updated: 2026-09-07
 oat_generated: true
-oat_summary_last_task: p07-t04
+oat_summary_last_task: p09-t04
 oat_summary_revision_count: 2
 oat_summary_includes_revisions: [p-rev1, p-rev2]
 ---
@@ -38,8 +38,8 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   now carry artifact-level quick-start readiness.
 - Added validation, fail-capable integration coverage, provider projections,
   lifecycle documentation, a disposable end-to-end Lite run, and synchronized
-  public release surfaces at `0.2.61` after integrating Wave 4 and the Phase 7
-  remote-review fixes.
+  public release surfaces at `0.2.62` after integrating Wave 4, the Phase 7
+  remote-review fixes, and the final promotion hardening.
 - Replaced mandatory test-first task wording with a declared, risk-proportionate
   proof strategy. Behavioral changes retain fail-capable evidence, while prose
   and mechanical changes can use focused static or composition checks instead
@@ -48,6 +48,10 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   lineage, scoping proof-strategy requirements to workflows that declare them,
   blocking unexecutable proof boundaries, and routing Lite self-review to the
   complete `plan.md` requirements contract.
+- Hardened Lite-to-Quick promotion so untouched adaptive placeholders and the
+  shipped instructional comments cannot leak into discovery. Production-path
+  tests cover Product Behavior and Technical Design while preserving unrelated
+  authored comments.
 
 ## Key Decisions
 
@@ -105,6 +109,10 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   lifecycle review found a generated manifest producer stamp and stale closeout
   prose. Phase 8 regenerated the manifest through the source CLI and refreshed
   these artifacts; a fresh final review still governs closeout.
+- The final exit gate reproduced two adaptive-section placeholder leaks. Phase 9
+  closed both, then a full-suite failure exposed one stale success fixture. A
+  one-file verification recovery authored both adaptive sections in that fixture;
+  the full CLI suite then passed 5,804/5,804.
 
 ## Tradeoffs Made
 
@@ -154,6 +162,13 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   to its complete plan contract. Four ordered task commits passed the full
   Definition of Done and an independent review with no findings; public package
   and bundled release surfaces advanced to `0.2.61`.
+- **Phase 8 — Closeout provenance.** Regenerated the project sync manifest with
+  the source CLI and refreshed the summary and PR artifact through Phase 7.
+- **Phase 9 — Promotion hardening.** Rejected bracket, brace, and exact shipped
+  instructional-comment markers in adaptive sections while preserving authored
+  comments. Four tasks completed after one review-fix loop and one bounded
+  test-fixture recovery; both independent re-reviews passed with no findings,
+  and public release surfaces advanced to `0.2.62`.
 
 ## Follow-up Items
 
@@ -161,22 +176,21 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   projection ownership or header contracts change.
 - Re-evaluate universal plan-template proof and testing guidance under
   `BL-260906-re-evaluate-universal-plan`.
-- The refreshed project retrospective is complete in propose-only mode. Phase 8
-  fixes are local, but final re-review, the configured exit gate, and exact-head
-  remote checks remain required. PR merge and release remain separate
-  authorization boundaries.
+- The refreshed project retrospective is complete in propose-only mode. Phase 9
+  fixes and full local gates are complete, but final re-review, the regenerated
+  exit gate, and exact-head remote checks remain required.
 
 ## Closeout Status
 
-- The local source baseline for this refresh is
-  `59fd7f31f29e5f6db2f3b44778d7d38ba7efdd47`, which includes Phase 7 and the
-  p08-t01 source-derived manifest correction. This artifact-only task advances
-  local HEAD when committed.
+- The local implementation baseline for this refresh is
+  `18767ee4eb3b9e2cfae23cda75cba2cf04e60baf`, which includes Phase 9 and its
+  bounded integration-fixture recovery.
 - Live PR #264 remains at
   `df9f720edd85b99b9dc691b123b98a6bbbefcb7e`. Its green CI and Release Dry Run
   results cover only that exact remote head, not the local Phase 7/8 source.
-- Push is authorized but remains root-owned. Fresh exact-head CI, Release Dry
-  Run, and Bugbot results remain pending until the local branch is pushed.
+- Push and merge are authorized but remain root-owned. Fresh exact-head CI,
+  Release Dry Run, and Bugbot results remain pending until the local branch is
+  pushed.
 
 ## Workflow Observations
 
@@ -283,3 +297,67 @@ BLOCKED after 2/2 task commits and failed recovery attempt 1/10; see implementat
 ### 2026-09-06 · structural · oat-project-implement · p-rev1
 
 verdict=pass; tasks=7/7; fix_loops=2; recovery_attempts=2; review=reviews/archived/p-rev1-review-2026-09-06T173547Z.md; reviewed_head=1ad8e44b9b83c7d887085c04c6afafb2bb7e5056; final_task=f6504815b2e175a4d1e2af0a03baf45a59baa412; findings=critical:0,important:0,medium:0,minor:0; next=authorized-push-pr-refresh
+
+### 2026-09-06 · structural · oat-project-review-provide · final-wave4-integration
+
+review artifact=.oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-06T225347Z.md range=3d3759a372378220cf389cb91f8fcb0bbf3fade2..55a724468eb48f89e49850392f831127a0c2852c findings=critical:0,important:3,medium:0,minor:0 reconnaissance=attempted
+
+### 2026-09-06 · structural · oat-project-implement · p-rev2
+
+Completed 3/3 p-rev2 tasks at 6db21410ff85bdc01632154784c9f4baa815ddaa; three governed recovery events are recorded, local Definition of Done gates pass, and final re-review plus exact-remote-head CI remain.
+
+### 2026-09-06 · structural · oat-project-review-provide · reviews/final-review-2026-09-06T233432Z.md
+
+Final re-review used one mechanical reconnaissance wave plus primary inline semantic reconciliation; see the review artifact for target, acceptance, floor, fallback, and reconciliation evidence.
+
+### 2026-09-06 · structural · oat-project-review-receive · final-review-2026-09-06T233432Z.md
+
+Closed the review's wording-only Medium in prev2-t04 at 5465524e53c33bd870cb89e3b8ce30f0d5a4a49d; the review already met the Critical/Important threshold, and the user waived redundant re-review for this alignment class.
+
+### 2026-09-07 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/lite-workflow-mode/references/project-retro.md evidence_used=archived-review-markdown,dispatch-records,gate-receipts,git-history,github-actions,github-pr-state,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings,spec promotions=4 upstream=2 apply=deferred filing=skipped
+
+### 2026-09-07 · structural · oat-project-implement · p07
+
+verdict=pass; tasks=4/4; fix_loops=0; recovery_attempts=0; review=reviews/archived/p07-review-2026-09-07T020835Z.md; reviewed_head=c362ffc5cb8d90e582dc47ffb7b301e2318311a2; findings=critical:0,important:0,medium:0,minor:0; next=final-review
+
+### 2026-09-07 · structural · oat-project-review-provide · final
+
+review artifact=.oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-07T022638Z.md range=de3a673edf5bbfb3c234a761c7eba9c695b82539..5503200465229688ed45b352856d2714821eaeb6 findings=critical:0,important:1,medium:1,minor:0 reconnaissance=attempted
+
+### 2026-09-07 · structural · oat-project-implement · p08
+
+verdict=pass; tasks=2/2; fix_loops=0; recovery_attempts=0; review=reviews/archived/p08-review-2026-09-07T023910Z.md; reviewed_head=609d6b5297c474a9f62b6546f028999fb6416e68; findings=critical:0,important:0,medium:0,minor:0; next=final-rereview
+
+### 2026-09-07 · structural · oat gate review · final
+
+target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:1,minor:2 exit=0 status=ok artifact=.oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-07T030022Z.md
+
+### 2026-09-07 · structural · oat-project-implement · p09
+
+verdict=implementation-complete; tasks=2/2; recovery_attempts=0; final_task=620656d8f32c3c7752b0b9fa01303ec9bda644c6; verification=pass; next=p09-review
+
+### 2026-09-07 · structural · oat-project-review-receive · p09
+
+verdict=fixes-added; review=reviews/archived/p09-review-2026-09-07T031008Z.md; reviewed_head=620656d8f32c3c7752b0b9fa01303ec9bda644c6; findings=critical:0,important:0,medium:1,minor:0; task=p09-t03
+
+### 2026-09-07 · structural · oat-project-implement · p09-fix-loop-1
+
+verdict=fixes-completed; task=p09-t03; commit=9448bfb1ae97b3843316b875ffdd178e2aefad8f; verification=pass; next=p09-rereview
+
+### 2026-09-07 · structural · oat-project-implement · p09
+
+verdict=pass; tasks=3/3; fix_loops=1; recovery_attempts=0; review=reviews/archived/p09-review-2026-09-07T031728Z.md; reviewed_head=9448bfb1ae97b3843316b875ffdd178e2aefad8f; findings=critical:0,important:0,medium:0,minor:0; next=final-review
+
+### 2026-09-07 · structural · oat-project-implement · p09-recovery-1
+
+verdict=reserved; trigger=full-test-gate; failing_test=commands.integration project promote --to quick converts a lite project; task=p09-t04; production_change=none
+
+### 2026-09-07 · structural · oat-project-implement · p09-recovery-1
+
+verdict=recovered; task=p09-t04; commit=18767ee4eb3b9e2cfae23cda75cba2cf04e60baf; verification=pass; production_change=none; next=p09-rereview
+
+### 2026-09-07 · structural · oat-project-implement · p09
+
+verdict=pass; tasks=4/4; fix_loops=1; recovery_attempts=1; review=reviews/archived/p09-review-2026-09-07T032525Z.md; reviewed_head=18767ee4eb3b9e2cfae23cda75cba2cf04e60baf; findings=critical:0,important:0,medium:0,minor:0; next=full-test-rerun
