@@ -14,7 +14,7 @@ The oat gate review command wrapped all post-selection work in one catch that re
 
 ## Decision
 
-Recover by re-validating the immutable content/signature snapshot selected at correlation time through the single eligibility function the normal path uses, returning the real ok or blocked status with an additive postSelectionRecovery marker; when nothing recovers, keep review_failed and add postSelection.step and postSelection.code to name the failing sub-step and cause. Add no terminal status, never re-read the artifact path, and never re-dispatch the reviewer.
+Recover by re-validating the immutable content/signature snapshot selected at correlation time through the single eligibility function the normal path uses, returning the real ok or blocked status with an additive postSelectionRecovery marker; when nothing recovers, keep review_failed and add postSelection.step and postSelection.code to name the failing sub-step and cause. Add no terminal status, re-validate the snapshot rather than re-parsing whatever the path now holds (the artifact must still be present and unchanged for re-validation to succeed), and never re-dispatch the reviewer.
 
 ## Consequences
 

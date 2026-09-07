@@ -6553,6 +6553,10 @@ describe('oat gate', () => {
     onRecoveryCall?: () => Promise<
       Awaited<ReturnType<typeof parseReviewGateVerdictFromDisk>>
     >;
+    transformRecoveryVerdict?: (
+      verdict: Awaited<ReturnType<typeof parseReviewGateVerdictFromDisk>>,
+    ) => Awaited<ReturnType<typeof parseReviewGateVerdictFromDisk>>;
+    throwOnEveryCall?: boolean;
   }): {
     parse: typeof parseReviewGateVerdictFromDisk;
     calls: {
@@ -6577,10 +6581,17 @@ describe('oat gate', () => {
             }
           : undefined,
       });
-      if (calls.length > 1) {
-        return options?.onRecoveryCall
-          ? await options.onRecoveryCall()
-          : await parseReviewGateVerdictFromDisk(absolutePath, parseOptions);
+      if (calls.length > 1 && !options?.throwOnEveryCall) {
+        if (options?.onRecoveryCall) {
+          return await options.onRecoveryCall();
+        }
+        const recovered = await parseReviewGateVerdictFromDisk(
+          absolutePath,
+          parseOptions,
+        );
+        return options?.transformRecoveryVerdict
+          ? options.transformRecoveryVerdict(recovered)
+          : recovered;
       }
       const verdict = await parseReviewGateVerdictFromDisk(
         absolutePath,
@@ -6769,6 +6780,109 @@ describe('oat gate', () => {
     expect(
       runner.calls.filter((call) => call.purpose === 'execute'),
     ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('reports a distinct cause and diagnostic when recovery re-validation itself fails', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const diagnostics: string[] = [];
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+    // The same fault recurs during re-validation, so recovery throws too.
+    const transient = createTransientPostSelectionParse({
+      throwOnEveryCall: true,
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeDiagnostic: (message) => {
+        diagnostics.push(message);
+      },
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    // The envelope names the recovery attempt as the blocker rather than the
+    // transient error that triggered it, and leaves a diagnostic behind.
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      postSelection: { code: 'recovery_revalidation_failed' },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
+    expect(
+      diagnostics.map(
+        (message) => JSON.parse(message) as Record<string, unknown>,
+      ),
+    ).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-recovery-failed',
+        target: 'codex-default',
+        project: projectPath,
+        message: expect.stringContaining(
+          'transient post-selection corroboration failure',
+        ),
+      }),
+    );
+    expect(transient.calls).toHaveLength(2);
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('does not half-print a recovered result when human-mode emission fails', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+    const transient = createTransientPostSelectionParse({
+      transformRecoveryVerdict: (verdict) =>
+        ({
+          ...verdict,
+          // Rendering the normalization line throws partway through the
+          // human-mode result, after its first lines would have printed.
+          normalization: {
+            persisted: false,
+            get insertedSeverities(): never {
+              throw new Error('normalization rendering failed');
+            },
+          },
+        }) as Awaited<ReturnType<typeof parseReviewGateVerdictFromDisk>>,
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+      globalArgs: [],
+    });
+
+    // Exactly one terminal statement reaches the operator: no half-printed
+    // recovered result ahead of the failure line.
+    expect(
+      capture.info.filter((line) => line.startsWith('Review completed')),
+    ).toEqual([]);
+    expect(
+      capture.info.filter((line) => line.startsWith('Review artifact:')),
+    ).toEqual([]);
+    expect(
+      capture.error.filter((line) =>
+        line.includes('Review failed after target selection'),
+      ),
+    ).toHaveLength(1);
+    expect(capture.error.at(-1)).toContain('(post-selection step:');
     expect(process.exitCode).toBe(1);
   });
 

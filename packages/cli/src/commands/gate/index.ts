@@ -2648,7 +2648,7 @@ function writeReviewGateUnexpectedFailure(
     gateInvocation: GateInvocationMetadata;
     dispatchReport: DispatchReportV1;
     step: PostSelectionStep;
-    ineligibility?: ReviewArtifactIneligibilityCause;
+    ineligibility?: PostSelectionRecoveryCause;
     error: unknown;
   },
 ): void {
@@ -3384,6 +3384,60 @@ type ReviewArtifactIneligibilityCause =
   | 'gate_invocation_metadata_mismatched'
   | 'gate_invocation_marker_missing';
 
+/**
+ * What `postSelection.code` reports when a committed artifact was found: either
+ * why it was ineligible, or that the recovery re-validation itself failed.
+ */
+type PostSelectionRecoveryCause =
+  | ReviewArtifactIneligibilityCause
+  | 'recovery_revalidation_failed';
+
+/**
+ * Collects the result envelope before any of it reaches the real logger.
+ *
+ * `writeReviewGateResult` makes several human-mode calls, so a failure partway
+ * through would otherwise leave a half-printed success followed by the
+ * `review_failed` line. Buffering keeps the recovery emission all-or-nothing.
+ */
+function createBufferedResultContext(context: CommandContext): {
+  context: CommandContext;
+  flush: () => void;
+} {
+  const pending: (() => void)[] = [];
+  return {
+    context: {
+      ...context,
+      logger: {
+        ...context.logger,
+        debug: (message: string) => {
+          pending.push(() => context.logger.debug(message));
+        },
+        info: (message: string) => {
+          pending.push(() => context.logger.info(message));
+        },
+        warn: (message: string) => {
+          pending.push(() => context.logger.warn(message));
+        },
+        error: (message: string) => {
+          pending.push(() => context.logger.error(message));
+        },
+        success: (message: string) => {
+          pending.push(() => context.logger.success(message));
+        },
+        json: (payload: unknown) => {
+          pending.push(() => context.logger.json(payload));
+        },
+      },
+    },
+    flush: () => {
+      for (const emit of pending) {
+        emit();
+      }
+      pending.length = 0;
+    },
+  };
+}
+
 type ReviewArtifactDisposition =
   | {
       eligible: true;
@@ -4046,11 +4100,13 @@ async function runReviewGate(
     if (postSelectionContext) {
       const snapshot = postSelectionContext.artifact;
       const identity = postSelectionContext.dispositionIdentity;
-      let ineligibility: ReviewArtifactIneligibilityCause | undefined;
+      let ineligibility: PostSelectionRecoveryCause | undefined;
       if (snapshot && identity) {
-        // Recovery is re-validation of the already-committed snapshot through
-        // the same eligibility function the normal path uses. It never
-        // re-reads the artifact path and never re-dispatches the reviewer.
+        // Recovery re-validates the already-committed snapshot through the same
+        // eligibility function the normal path uses, rather than re-parsing
+        // whatever the artifact path now holds, and never re-dispatches the
+        // reviewer. The path is still read to assert the artifact is present
+        // and unchanged, so a deleted or rewritten artifact fails closed.
         let disposition: ReviewArtifactDisposition | undefined;
         try {
           disposition = await disposeValidatedReviewArtifact(
@@ -4058,15 +4114,37 @@ async function runReviewGate(
             identity,
             dependencies,
           );
-        } catch {
+        } catch (revalidationError) {
+          // The recovery attempt itself failed. Report that distinctly instead
+          // of letting the envelope blame the transient error that triggered
+          // recovery, and leave a diagnostic behind for the same reason.
           disposition = undefined;
+          ineligibility = 'recovery_revalidation_failed';
+          try {
+            dependencies.writeDiagnostic(
+              `${JSON.stringify({
+                type: 'gate-recovery-failed',
+                runId: identity.runId,
+                target: identity.target,
+                project: identity.project,
+                step: postSelectionContext.step,
+                message:
+                  revalidationError instanceof Error
+                    ? revalidationError.message
+                    : String(revalidationError),
+              })}\n`,
+            );
+          } catch {
+            // Diagnostics are best effort and must never mask the terminal
+            // review_failed envelope written below.
+          }
         }
         if (disposition?.eligible) {
-          // Emission is the last thing that can fail. Keep the project-log
-          // status at its pre-recovery `review_failed` value until the
-          // envelope is actually written, and fall through to the
-          // `review_failed` envelope if it is not, so an emission failure
-          // cannot leave a recovered log entry with no recovered result.
+          // Emission is the last thing that can fail. Build the human-mode
+          // lines into a buffer first so a mid-construction failure cannot
+          // half-print a recovered result and then print `review_failed` after
+          // it, and keep the project-log status at its pre-recovery
+          // `review_failed` value until the envelope is actually written.
           let recoveryEmitted = false;
           try {
             const recoveredHandoff = buildReviewGateHandoff({
@@ -4075,7 +4153,8 @@ async function runReviewGate(
               threshold: identity.threshold,
               blocking: disposition.blocking,
             });
-            writeReviewGateResult(context, {
+            const buffered = createBufferedResultContext(context);
+            writeReviewGateResult(buffered.context, {
               status: disposition.blocking ? 'blocked' : 'ok',
               runId: identity.runId,
               target: identity.target,
@@ -4100,6 +4179,7 @@ async function runReviewGate(
                 : {}),
               postSelectionRecovery: true,
             });
+            buffered.flush();
             recoveryEmitted = true;
           } catch {
             recoveryEmitted = false;
