@@ -1370,41 +1370,42 @@ git commit -m "docs(p06-t11): align brainstorming guidance with lite"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                                                        | Reviewed Head                            | Invocation | Gate Target                   |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
-| p01    | code     | passed          | 2026-09-05 | reviews/archived/code-p01-review-2026-09-05T204609Z.md                          | 3427d2176a86b3f6a95219f6557b4d4798a6f1a2 | manual     | -                             |
-| p02    | code     | passed          | 2026-09-05 | reviews/archived/code-p02-review-2026-09-05T210504Z.md                          | 948434796085b5c537542213fd562194827a822c | manual     | -                             |
-| p03    | code     | passed          | 2026-09-05 | reviews/archived/code-p03-review-2026-09-05T210747Z.md                          | 4b1eb65a41ffe179793cd9eca7e7f3d963ec6766 | manual     | -                             |
-| p04    | code     | passed          | 2026-09-05 | reviews/archived/code-p04-review-2026-09-05T223510Z.md                          | 3e89f14de30836512bb5aa16e46b7a68323503bd | manual     | -                             |
-| p05    | code     | passed          | 2026-09-05 | reviews/archived/p05-review-2026-09-05T231617Z.md                               | c11a1150239dc179c60b0b82defc9c350999955d | manual     | -                             |
-| p06    | code     | fixes_completed | 2026-09-06 | reviews/archived/p06-review-2026-09-06T005620Z.md                               | cfcaae8fd81da49b1f75862be2260a65eec2c5e7 | manual     | -                             |
-| p06    | code     | passed          | 2026-09-06 | reviews/archived/p06-review-2026-09-06T011617Z.md                               | d79a58b1b0f8aff53a361b3e591f5cff510106d9 | auto       | -                             |
-| p-rev1 | code     | fixes_completed | 2026-09-06 | reviews/archived/p-rev1-review-2026-09-06T165618Z.md                            | 5e9e23fc90bf20da5735e8fd7b97bbbfe04fa0fa | auto       | -                             |
-| p-rev1 | code     | fixes_completed | 2026-09-06 | reviews/archived/p-rev1-review-2026-09-06T172704Z.md                            | bec28560621bd30126ecbd3d80fbb48181f12ed8 | auto       | -                             |
-| p-rev1 | code     | passed          | 2026-09-06 | reviews/archived/p-rev1-review-2026-09-06T173547Z.md                            | 1ad8e44b9b83c7d887085c04c6afafb2bb7e5056 | auto       | -                             |
-| final  | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T012310Z.md                             | 919676d8623a4a4c9cf0654e76ba78ea593e1645 | auto       | -                             |
-| final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T015505Z.md                             | dfb7a8beb41c663d8bd327fa47c19f9ef28e393f | auto       | -                             |
-| spec   | artifact | pending         | -          | -                                                                               | -                                        | -          | -                             |
-| design | artifact | pending         | -          | -                                                                               | -                                        | -          | -                             |
-| plan   | artifact | received        | 2026-09-04 | reviews/archived/artifact-plan-review-2026-09-04T231105Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T141656Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T150544Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T151613Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T152744Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T181952Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T185313Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T190345Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T195731Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T200630Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| plan   | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T201454Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
-| plan   | artifact | passed          | 2026-09-06 | dispatch/lite-plan-revision-rereview1-60cc80ff-7013-4da9-a678-45e17246b821.json | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
-| final  | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T021128Z.md                             | 5b2a6462c3b21f8e6f1383e796c3328bba18329d | gate       | claude-fable-skip-permissions |
-| final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T023254Z.md                             | 6ba4c38dd08d192fdb35840becbdf52b74f5d8a9 | auto       | -                             |
-| final  | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T024254Z.md                             | c3a79f0589615b6f30760fc964bbe14d0007356e | gate       | claude-fable-skip-permissions |
-| final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T032005Z.md                             | c4793585aee012ed134e1ba1eba0a819230a9c23 | auto       | -                             |
-| final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T041855Z.md                             | 1db941a63c0d2892c6686f4b2a3727ab0143bea0 | gate       | claude-fable-skip-permissions |
-| final  | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T225347Z.md                             | 55a724468eb48f89e49850392f831127a0c2852c | manual     | -                             |
-| final  | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T233432Z.md                             | 6543c0d31372df5dd0305938c78cb8e50ff3e033 | auto       | -                             |
+| Scope         | Type     | Status          | Date       | Artifact                                                                        | Reviewed Head                            | Invocation | Gate Target                   |
+| ------------- | -------- | --------------- | ---------- | ------------------------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------------------------- |
+| p01           | code     | passed          | 2026-09-05 | reviews/archived/code-p01-review-2026-09-05T204609Z.md                          | 3427d2176a86b3f6a95219f6557b4d4798a6f1a2 | manual     | -                             |
+| p02           | code     | passed          | 2026-09-05 | reviews/archived/code-p02-review-2026-09-05T210504Z.md                          | 948434796085b5c537542213fd562194827a822c | manual     | -                             |
+| p03           | code     | passed          | 2026-09-05 | reviews/archived/code-p03-review-2026-09-05T210747Z.md                          | 4b1eb65a41ffe179793cd9eca7e7f3d963ec6766 | manual     | -                             |
+| p04           | code     | passed          | 2026-09-05 | reviews/archived/code-p04-review-2026-09-05T223510Z.md                          | 3e89f14de30836512bb5aa16e46b7a68323503bd | manual     | -                             |
+| p05           | code     | passed          | 2026-09-05 | reviews/archived/p05-review-2026-09-05T231617Z.md                               | c11a1150239dc179c60b0b82defc9c350999955d | manual     | -                             |
+| p06           | code     | fixes_completed | 2026-09-06 | reviews/archived/p06-review-2026-09-06T005620Z.md                               | cfcaae8fd81da49b1f75862be2260a65eec2c5e7 | manual     | -                             |
+| p06           | code     | passed          | 2026-09-06 | reviews/archived/p06-review-2026-09-06T011617Z.md                               | d79a58b1b0f8aff53a361b3e591f5cff510106d9 | auto       | -                             |
+| p-rev1        | code     | fixes_completed | 2026-09-06 | reviews/archived/p-rev1-review-2026-09-06T165618Z.md                            | 5e9e23fc90bf20da5735e8fd7b97bbbfe04fa0fa | auto       | -                             |
+| p-rev1        | code     | fixes_completed | 2026-09-06 | reviews/archived/p-rev1-review-2026-09-06T172704Z.md                            | bec28560621bd30126ecbd3d80fbb48181f12ed8 | auto       | -                             |
+| p-rev1        | code     | passed          | 2026-09-06 | reviews/archived/p-rev1-review-2026-09-06T173547Z.md                            | 1ad8e44b9b83c7d887085c04c6afafb2bb7e5056 | auto       | -                             |
+| final         | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T012310Z.md                             | 919676d8623a4a4c9cf0654e76ba78ea593e1645 | auto       | -                             |
+| final         | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T015505Z.md                             | dfb7a8beb41c663d8bd327fa47c19f9ef28e393f | auto       | -                             |
+| spec          | artifact | pending         | -          | -                                                                               | -                                        | -          | -                             |
+| design        | artifact | pending         | -          | -                                                                               | -                                        | -          | -                             |
+| plan          | artifact | received        | 2026-09-04 | reviews/archived/artifact-plan-review-2026-09-04T231105Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan          | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T141656Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan          | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T150544Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan          | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T151613Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan          | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T152744Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan          | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T181952Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan          | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T185313Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan          | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T190345Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan          | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T195731Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan          | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T200630Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan          | artifact | received        | 2026-09-05 | reviews/archived/artifact-plan-review-2026-09-05T201454Z.md                     | -                                        | gate       | cursor-gpt-5-6-sol-xhigh      |
+| plan          | artifact | passed          | 2026-09-06 | dispatch/lite-plan-revision-rereview1-60cc80ff-7013-4da9-a678-45e17246b821.json | -                                        | auto       | oat-reviewer-gpt-5-6-sol-high |
+| final         | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T021128Z.md                             | 5b2a6462c3b21f8e6f1383e796c3328bba18329d | gate       | claude-fable-skip-permissions |
+| final         | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T023254Z.md                             | 6ba4c38dd08d192fdb35840becbdf52b74f5d8a9 | auto       | -                             |
+| final         | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T024254Z.md                             | c3a79f0589615b6f30760fc964bbe14d0007356e | gate       | claude-fable-skip-permissions |
+| final         | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T032005Z.md                             | c4793585aee012ed134e1ba1eba0a819230a9c23 | auto       | -                             |
+| final         | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T041855Z.md                             | 1db941a63c0d2892c6686f4b2a3727ab0143bea0 | gate       | claude-fable-skip-permissions |
+| final         | code     | fixes_completed | 2026-09-06 | reviews/archived/final-review-2026-09-06T225347Z.md                             | 55a724468eb48f89e49850392f831127a0c2852c | manual     | -                             |
+| final         | code     | passed          | 2026-09-06 | reviews/archived/final-review-2026-09-06T233432Z.md                             | 6543c0d31372df5dd0305938c78cb8e50ff3e033 | auto       | -                             |
+| remote-pr-264 | code     | fixes_added     | 2026-09-07 | reviews/archived/remote-pr-264-review-2026-09-07T012843Z.md                     | -                                        | -          | -                             |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -1995,6 +1996,168 @@ git commit -m "docs(prev2-t05): align SIGTERM disposition"
 
 ---
 
+## Phase 7: Remote Review Fixes
+
+### Task p07-t01: (review) Restore the missing stabilization review event
+
+**Files:**
+
+- Modify: `.oat/projects/shared/lite-workflow-mode/plan.md`
+
+**Step 1: Analyze failure context**
+
+Read `reviews/archived/final-review-2026-09-07T002708Z.md`, the `prev2-t05`
+implementation record, and the Reviews table by header name. Confirm the
+distinct final review event and its reviewed head are absent.
+
+**Step 2: Implement fix**
+
+Insert the missing final code-review event immediately before the later remote
+receive event without rewriting prior rows. Record the artifact, reviewed head
+`de3a673edf5bbfb3c234a761c7eba9c695b82539`, and the terminal status supported
+by the wording-only waiver and `prev2-t05`. Preserve every column and existing
+event.
+
+**Step 3: Verify targeted behavior**
+
+Run a focused table parser or assertion that selects the event by scope, type,
+and artifact filename. Prove the distinct stabilization event is present and
+the remote-review event remains the append-ordered latest event.
+
+**Step 4: Verify and commit**
+
+Run `pnpm format`. Commit with:
+
+```bash
+git add .oat/projects/shared/lite-workflow-mode/plan.md
+git commit -m "fix(p07-t01): restore stabilization review event"
+```
+
+---
+
+### Task p07-t02: (review) Scope proof-strategy requirements by workflow contract
+
+**Files:**
+
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Analyze failure context**
+
+Compare Lite's declared `Implementation and Proof Strategy` with the existing
+spec-driven, quick, and import plan contracts. Preserve the requirement that
+every mode has evidence for its declared verification intent.
+
+**Step 2: Implement fix**
+
+Require a missing or unjustified proof strategy only when the applicable
+workflow artifact declares that strategy. For other modes, review their
+existing verification commands and evidence without inventing a missing field.
+Bump the reviewer agent version once and update its exact contract pins.
+
+**Step 3: Verify targeted behavior**
+
+Add fail-capable contract cases for a Lite plan missing its declared strategy
+and for a valid non-Lite plan that has verification but no Lite-only strategy
+block. Run the focused reviewer-contract suite.
+
+**Step 4: Verify and commit**
+
+Run `pnpm test:skills`, `pnpm lint`, and `pnpm format`. Commit with:
+
+```bash
+git add .agents/agents/oat-reviewer.md packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p07-t02): scope reviewer proof strategy checks"
+```
+
+---
+
+### Task p07-t03: (review) Block every unexecutable proof boundary
+
+**Files:**
+
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Analyze failure context**
+
+Reconcile the task-execution proof paragraph with `IMPLEMENT-20`. Cover
+interactive and autonomous runs where required manual or visual proof has no
+available computer-use executor.
+
+**Step 2: Implement fix**
+
+Stop before task commit or completion whenever required proof lacks an
+executor. Autonomous runs return the existing blocked boundary. Interactive
+runs wait for operator execution or direction. Neither path may mark the proof
+deferred-but-verified.
+
+**Step 3: Verify targeted behavior**
+
+Add contract assertions for both interactive and autonomous missing-capability
+paths and a control where an available executor performs the proof. Run the
+focused implementer-contract suite.
+
+**Step 4: Verify and commit**
+
+Run `pnpm test:skills`, `pnpm lint`, and `pnpm format`. Commit with:
+
+```bash
+git add .agents/agents/oat-phase-implementer.md packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p07-t03): block unexecutable proof boundaries"
+```
+
+---
+
+### Task p07-t04: (review) Route Lite self-review to the plan contract
+
+**Files:**
+
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: the exact `oat-reviewer` and `oat-phase-implementer` projections
+  produced by project sync and asset bundling under `.claude/agents/`,
+  `.cursor/agents/`, and `.codex/agents/`, plus `.oat/sync/manifest.json`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+
+**Step 1: Analyze failure context**
+
+Locate phase-wide self-review language that assumes discovery, design, or spec.
+Confirm Lite already loaded its complete requirements contract from `plan.md`.
+
+**Step 2: Implement fix**
+
+Make self-review select requirements by workflow mode. Lite compares against
+the complete plan contract; other modes keep their existing artifact sources.
+Bump the phase-implementer agent version once and update exact pins. Synchronize
+provider projections with project scope, then advance the public package
+lockstep to the next version greater than `origin/main` (expected `0.2.61` if
+the integration base is unchanged).
+
+**Step 3: Verify targeted behavior**
+
+Add a Lite self-review contract assertion and non-Lite regression controls.
+Run `pnpm test:skills`, project sync dry-run, skill/version gates, and release
+validation.
+
+**Step 4: Verify and commit**
+
+Run every Definition of Done gate from `AGENTS.md` in order, plus `pnpm lint`
+and `pnpm format`. Commit only the canonical agent, tests, exact generated
+projections/manifest, and lockstep version files with:
+
+```bash
+git add .agents/agents/oat-phase-implementer.md packages/cli/src/validation/skills.test.ts .oat/sync/manifest.json .codex/agents .cursor/agents .claude/agents packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json pnpm-lock.yaml
+git commit -m "fix(p07-t04): align lite self-review requirements"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -2007,8 +2170,9 @@ git commit -m "docs(prev2-t05): align SIGTERM disposition"
 - Phase 6: 11 tasks - docs and triage, manual run and sync, lockstep release gates, four lifecycle-final-review fixes, and four exit-gate fixes (last)
 - Phase p-rev1: 7 tasks - adaptive specification depth, proportionate proof, executable evidence, exact promotion preservation, autonomous proof boundaries, and design alignment
 - Phase p-rev2: 5 tasks - Lite lifecycle-gate posture composition, Wave 4 closeout alignment, terminal CI evidence, and two current closeout wording corrections
+- Phase 7: 4 tasks - remote review ledger, proof-strategy scope, executable proof boundaries, and Lite self-review source
 
-**Total:** 39 tasks across 8 phases
+**Total:** 43 tasks across 9 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p07-t01
 oat_last_commit: 15ad3374cc5a20e805258bae4c6dba9fb65dc3da
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -109,7 +109,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T00:38:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T01:28:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -121,10 +121,8 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation and retrospective are complete. The focused stabilization
-review accepted both test-only fixes. The stabilized source head `15ad3374c`
-passed exact-head CI and Release Dry Run before the final project-bookkeeping
-commits.
+Implementation reopened for Phase 7 remote review fixes. PR #264 supplied three
+Medium and one Minor actionable finding. The next task is `p07-t01`.
 
 ## Artifacts
 
@@ -206,14 +204,15 @@ commits.
   publishing readiness; focused stress, smoke, and workspace tests passed
 - ✓ `prev2-t05` aligned the active SIGTERM disposition under the user's
   wording-only no-re-review direction; all five p-rev2 tasks are complete
+- ⏳ Remote PR #264 review received with four actionable findings converted
+  to `p07-t01` through `p07-t04`
 
 ## Blockers
 
-None. The bounded corrections, independent review, publication, source-head
-verification, and retrospective are complete. Lifecycle approval remains
-closeout work; live PR checks govern subsequent bookkeeping commits.
+None. Phase 7 contains four executable review-fix tasks. GitHub replies remain
+optional and require separate authorization.
 
 ## Next Milestone
 
-Resolve the configured lifecycle approval. PR merge and release remain
-separate authorization boundaries.
+Implement `p07-t01` through `p07-t04`, rerun review, and restore exact-head CI.
+PR merge and release remain separate authorization boundaries.
