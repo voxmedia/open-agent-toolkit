@@ -276,10 +276,27 @@ function assertSeamProbe(seamProbe) {
   if (
     !Array.isArray(seamProbe.missing) ||
     !Array.isArray(seamProbe.invalid) ||
-    !Array.isArray(seamProbe.resolved) ||
-    ![...seamProbe.missing, ...seamProbe.resolved].every((seam) =>
-      RECAP_SEAM_IDS.includes(seam),
-    )
+    !Array.isArray(seamProbe.resolved)
+  ) {
+    throw new TypeError(
+      'seamProbe must partition the canonical recap seams into missing, invalid, and resolved.',
+    );
+  }
+  // Enforce the partition this message promises: every canonical seam appears
+  // in exactly one bucket. Without the disjointness and coverage checks, a
+  // forged result can claim a seam is both missing and resolved (yielding a
+  // capability skip the probe would never emit), or pad `resolved` with
+  // duplicates of one seam to fake full availability and force a generate.
+  const claimed = [
+    ...seamProbe.missing,
+    ...seamProbe.invalid.map((entry) => entry?.seam),
+    ...seamProbe.resolved,
+  ];
+  const distinct = new Set(claimed);
+  if (
+    distinct.size !== claimed.length ||
+    distinct.size !== RECAP_SEAM_IDS.length ||
+    !RECAP_SEAM_IDS.every((seam) => distinct.has(seam))
   ) {
     throw new TypeError(
       'seamProbe must partition the canonical recap seams into missing, invalid, and resolved.',

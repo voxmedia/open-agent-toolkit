@@ -77,6 +77,13 @@ recordable only as the probe-driven `skip/capability_probe`, and that pair is
 product-scoped to `projectRecap`. `generate/capability_probe` is invalid too,
 because a probe can only withhold a run, never authorize one.
 
+The pair is product-scoped but not mode-scoped, and that is deliberate. Only
+autonomous resolution can _produce_ a `skip/capability_probe`, but once one is
+persisted a later interactive resolution reads it back as a valid recorded
+decision and honors it, exactly as it honors `skip/interactive`. A resumed
+project therefore neither re-prompts nor fails validation on a legitimately
+recorded capability skip.
+
 ## Safe persistence
 
 `hashStateContent(content)` creates the optimistic concurrency token used by

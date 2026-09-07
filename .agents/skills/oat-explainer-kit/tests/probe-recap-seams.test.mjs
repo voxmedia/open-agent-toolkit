@@ -47,6 +47,20 @@ test('reports every unattended seam missing with actionable guidance', () => {
   assert.match(result.guidance, /skip \/ capability_probe/);
 });
 
+test('guidance offers a capability skip only where autonomy can record one', () => {
+  // Only autonomous resolution produces `skip / capability_probe`, so the
+  // interactive branch must not offer it as a remedy.
+  const interactive = probeRecapSeams({ mode: 'interactive' });
+  assert.equal(interactive.code, 'seams-unavailable');
+  assert.doesNotMatch(interactive.guidance, /capability_probe/);
+  assert.match(interactive.guidance, /record an interactive skip decision/);
+  assert.match(interactive.message, /an interactive project recap/);
+
+  const unattended = probeRecapSeams({ mode: 'unattended' });
+  assert.match(unattended.guidance, /skip \/ capability_probe/);
+  assert.match(unattended.message, /an unattended project recap/);
+});
+
 test('is ok when all five unattended seams resolve', () => {
   const result = probeRecapSeams(allFiveSeams());
 

@@ -72,7 +72,22 @@ function classifyAuthor({ author, authorModulePath }, coreOptions) {
   return supplied();
 }
 
-/** Mirrors `run.mjs#resolveLifecycleCritic`. */
+/**
+ * Mirrors `run.mjs#resolveLifecycleCritic`.
+ *
+ * `resolveLifecycleCritic` returns `null` rather than throwing when no critic is
+ * supplied, so treating the critic as required looks stricter than the adapter
+ * resolver in isolation. It is not, for the runs this probe serves: an
+ * artifact-bound lifecycle closeout recap passes no `suppliedFactBasePath`, so
+ * `bindProjectSources` binds it `factBase.mode: 'federated'`
+ * (`bind-project-sources.mjs`), and the core throws for a federated fact base
+ * with no critic (`explainer-kit/scripts/lib/fact-base.mjs`). Such a host cannot
+ * produce a recap today; probing the critic turns that mid-run core failure into
+ * a pre-flight capability skip. (A `supplied` fact base is a different
+ * invocation path and does skip the core's critic check, but no lifecycle recap
+ * caller uses it.) Do not "fix" this to match `resolveLifecycleCritic` — that
+ * would reintroduce an unrunnable recap.
+ */
 function classifyCritic({ critic, criticModulePath }, coreOptions) {
   // The runtime counts only candidates that already look usable, so a
   // non-function callback beside a module path is a type error rather than a
@@ -325,8 +340,11 @@ export function probeRecapSeams(inputs = {}) {
       missing,
       invalid: invalidSeams,
       resolved,
-      message: `No provider is configured for ${formatList(missing)}, so a ${mode} project recap cannot run on this host.`,
-      guidance: `Configure ${formatList(missing)} to generate a ${mode} project recap, or record the recap as skip / capability_probe.`,
+      message: `No provider is configured for ${formatList(missing)}, so ${article(mode)} ${mode} project recap cannot run on this host.`,
+      guidance:
+        mode === 'unattended'
+          ? `Configure ${formatList(missing)} to generate an unattended project recap, or let autonomous resolution record the recap as skip / capability_probe.`
+          : `Configure ${formatList(missing)} to generate an interactive project recap, or record an interactive skip decision.`,
     };
   }
 
@@ -340,6 +358,11 @@ export function probeRecapSeams(inputs = {}) {
     message: `Every ${mode} project recap seam resolves on this host.`,
     guidance: null,
   };
+}
+
+/** `unattended` and `interactive` both take "an"; keep the surface grammatical. */
+function article(mode) {
+  return /^[aeiou]/i.test(mode) ? 'an' : 'a';
 }
 
 function formatList(values) {

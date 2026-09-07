@@ -507,7 +507,15 @@ batched prompt and does not pass one.
 In autonomy, a probe result of `seams-unavailable` means no provider is
 configured for a required seam. Autonomous resolution then returns a recordable
 `skip` with source `capability_probe`: record it with the warning, leave
-`SELECTED_PROJECT_RECAP_RUN` empty, and complete without a recap. An interactive
+`SELECTED_PROJECT_RECAP_RUN` empty, and complete without a recap. That
+probe-driven skip record supersedes the intent resolved and persisted earlier in
+this run for the remainder of the run: persist it through the same
+`oat-explainer-kit` intent-persistence helper with a freshly captured state hash,
+treat any `SHOULD_GENERATE_RECAP="true"` set from the earlier resolution as
+stale, and pass the skip — not the earlier `generate` — to the terminal-outcome
+guard as `--intent skip --skip-reason capability_probe`. Passing the superseded
+`generate` with no manifest raises `E_RECAP_OUTCOME` and blocks completion,
+which is the exact failure this gate exists to prevent. An interactive
 completion is unchanged: the decision recorded at the batched prompt governs, a
 recorded `generate` still attempts the recap, and a run that fails for a missing
 seam is still the `failed` outcome it is today. A probe result
@@ -516,7 +524,9 @@ report the configuration error and fail closed. Never convert a
 configured-but-invalid seam, or a run that failed after a passing probe, into a
 skip; that run stays `failed`.
 
-When the probe resolves every seam, invoke `scripts/run.mjs#runOatExplainer` exactly once with recipe `project-recap`, project invocation, the active project, and unattended lifecycle mode so approved OAT artifacts do not trigger a second content prompt. A returned `failed` outcome warns but does not block completion. An invocation that returns no terminal outcome blocks lifecycle mutation. Use a returned valid terminal `project-recap` manifest as the selected run; do not rerun to improve its outcome.
+In autonomy, attempt the adapter run exactly once and only when the probe resolves every seam; an interactive `generate` still attempts the run regardless of the probe result, and a seam-less interactive attempt is still the `failed` outcome it is today. The autonomy gate and the interactive rule are two separate rules and are never read as one.
+
+When the gate above allows the attempt, invoke `scripts/run.mjs#runOatExplainer` exactly once with recipe `project-recap`, project invocation, the active project, and unattended lifecycle mode so approved OAT artifacts do not trigger a second content prompt. A returned `failed` outcome warns but does not block completion. An invocation that returns no terminal outcome blocks lifecycle mutation. Use a returned valid terminal `project-recap` manifest as the selected run; do not rerun to improve its outcome.
 Before that invocation, construct exactly one brief-aware, provider-neutral
 author seam as documented by
 `oat-explainer-kit/references/author-callback.md`. In-process callers pass

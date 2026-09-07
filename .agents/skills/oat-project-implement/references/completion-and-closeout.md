@@ -902,12 +902,18 @@ result to autonomous intent resolution as `seamProbe`. The resolver accepts a
 `seamProbe` only for autonomous `projectRecap`, so interactive resolution keeps
 its existing inputs and its recorded human decision.
 
-Resolve recap intent through `oat-explainer-kit`. When `OAT_AUTONOMOUS=1` and no fresh recap exists, run this recap gate exactly once; missing or stale persisted intent cannot suppress this autonomous gate. Attempt the adapter run exactly once, and only when the seam probe resolves every required seam and intent resolves to `generate`. Interactive mode honors the adapter's resolved persisted or workflow intent.
+Resolve recap intent through `oat-explainer-kit`. When `OAT_AUTONOMOUS=1` and no fresh recap exists, run this recap gate exactly once; missing or stale persisted intent cannot suppress this autonomous gate. In autonomy, attempt the adapter run exactly once and only when the seam probe resolves every required seam and intent resolves to `generate`; an interactive `generate` still attempts the run regardless of the probe result, and a seam-less interactive attempt is still the `failed` outcome it is today. The autonomy gate and the interactive rule are two separate rules and are never read as one. Interactive mode honors the adapter's resolved persisted or workflow intent.
 
 In autonomy, a probe result of `seams-unavailable` means no provider is
 configured for a required seam. Autonomous resolution then returns a recordable
 `skip` with source `capability_probe`: record it with the warning, do not invoke
-the adapter, and continue closeout. Interactive closeout is unchanged: a
+the adapter, and continue closeout. That probe-driven skip record supersedes the
+intent resolved and persisted earlier in this run for the remainder of the run:
+persist it through the same `oat-explainer-kit` intent-persistence helper with a
+freshly captured state hash, and pass the skip — not the earlier `generate` — to
+the terminal-outcome guard as `--intent skip --skip-reason capability_probe`.
+Passing the superseded `generate` with no manifest raises `E_RECAP_OUTCOME` and
+blocks approval, which is the exact failure this gate exists to prevent. Interactive closeout is unchanged: a
 recorded interactive `generate` still attempts the recap and a run that fails
 for a missing seam is still the `failed` outcome it is today. An unattended completion on a host with no explainer seams
 configured never blocks final HiLL approval on a missing recap, and this skip is

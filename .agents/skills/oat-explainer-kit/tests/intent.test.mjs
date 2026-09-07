@@ -376,7 +376,13 @@ test('capability_probe is scoped to autonomous projectRecap skips', () => {
           resolved: ['author'],
         },
       }),
-    /must list the seams its code claims/,
+    // A short `resolved` list fails the partition's coverage requirement first;
+    // either rejection keeps the forged success out of the generate path.
+    (error) =>
+      error instanceof TypeError &&
+      /must partition the canonical recap seams|must list the seams its code claims/.test(
+        error.message,
+      ),
   );
 
   // An interactive probe checks only the author and critic, so it would report
@@ -410,6 +416,64 @@ test('capability_probe is scoped to autonomous projectRecap skips', () => {
         },
       }),
     /must partition the canonical recap seams/,
+  );
+
+  // The partition must be disjoint and cover the canonical set, because the
+  // error message promises exactly that. Both shapes below were accepted before
+  // the coverage/disjointness checks existed: the first claims `planSet` is
+  // both missing and resolved and yielded a capability skip, the second pads
+  // `resolved` with one seam repeated five times and forced a generate.
+  // `probeRecapSeams` can emit neither: every seam lands in exactly one bucket.
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectRecap',
+        mode: 'autonomous',
+        seamProbe: {
+          ok: false,
+          mode: 'unattended',
+          code: 'seams-unavailable',
+          missing: ['planSet'],
+          invalid: [],
+          resolved: [
+            'planSet',
+            'author',
+            'critic',
+            'browserSession',
+            'visualCritic',
+          ],
+        },
+      }),
+    /must partition the canonical recap seams/,
+    'a seam claimed both missing and resolved must not yield a capability skip',
+  );
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectRecap',
+        mode: 'autonomous',
+        seamProbe: {
+          ok: true,
+          mode: 'unattended',
+          code: 'seams-ok',
+          missing: [],
+          invalid: [],
+          resolved: ['author', 'author', 'author', 'author', 'author'],
+        },
+      }),
+    /must partition the canonical recap seams/,
+    'duplicate resolved entries must not fake full seam availability',
+  );
+  // An invalid seam counts toward the partition, so a well-formed
+  // `seams-invalid` result still validates and fails closed on its own path.
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectRecap',
+        mode: 'autonomous',
+        seamProbe: probeRecapSeams(allFiveSeams({ planSet: 'not-a-function' })),
+      }),
+    (error) => error?.code === 'E_RECAP_SEAMS_INVALID',
   );
   assert.throws(
     () =>
