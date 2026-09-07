@@ -61,6 +61,41 @@ function makeState(
   };
 }
 
+/**
+ * One ordinary phase (complete) plus one two-task revision phase. Pass
+ * `completedRevisionTasks: 1` for an incomplete revision phase, `2` for a
+ * complete one.
+ */
+function makeRevisionProgress({
+  completedRevisionTasks,
+  currentTaskId = 'prev1-t02',
+}: {
+  completedRevisionTasks: number;
+  currentTaskId?: string | null;
+}): ProjectState['progress'] {
+  return {
+    total: 3,
+    completed: 1 + completedRevisionTasks,
+    currentTaskId,
+    phases: [
+      {
+        phaseId: 'p01',
+        name: 'Foundation',
+        total: 1,
+        completed: 1,
+        isRevision: false,
+      },
+      {
+        phaseId: 'p-rev1',
+        name: 'Revision 1',
+        total: 2,
+        completed: completedRevisionTasks,
+        isRevision: true,
+      },
+    ],
+  };
+}
+
 function makeArtifacts(
   currentArtifact?: Partial<ArtifactStatus> & { type: ArtifactStatus['type'] },
 ): ArtifactStatus[] {
@@ -307,6 +342,104 @@ describe('recommendSkill', () => {
     });
 
     expect(recommendSkill(state).skill).toBe('oat-project-implement');
+  });
+
+  it('does not resume implement for a complete-lifecycle project even when revision counts are incomplete or stale', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      lifecycle: 'complete',
+      progress: makeRevisionProgress({ completedRevisionTasks: 1 }),
+    });
+
+    // The pre-guard router returned implement here purely on the stale
+    // revision count. Lifecycle, not the count, decides terminality.
+    expect(recommendSkill(state).skill).not.toBe('oat-project-implement');
+    expect(recommendSkill(state).skill).toBe('oat-project-review-provide');
+  });
+
+  it('still resumes implement when revision tasks remain and lifecycle is active', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      lifecycle: 'active',
+      progress: makeRevisionProgress({ completedRevisionTasks: 1 }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-implement');
+    expect(recommendSkill(state).reason).toBe(
+      'Revision work remains incomplete',
+    );
+  });
+
+  it('keeps revision routing for an active project with a null current task and complete or pr_open phase status', () => {
+    for (const phaseStatus of ['complete', 'pr_open'] as const) {
+      const state = makeState({
+        phase: 'implement',
+        phaseStatus,
+        lifecycle: 'active',
+        progress: makeRevisionProgress({
+          completedRevisionTasks: 1,
+          currentTaskId: null,
+        }),
+      });
+
+      expect(recommendSkill(state).skill).toBe('oat-project-implement');
+    }
+  });
+
+  it('still resumes implement for a paused project with incomplete revision work', () => {
+    // The terminal rule is exactly `lifecycle === 'complete'`, not "not
+    // active". Without this case a guard written as `lifecycle === 'active'`
+    // would pass every other test while silently stranding paused projects.
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      lifecycle: 'paused',
+      progress: makeRevisionProgress({ completedRevisionTasks: 1 }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-implement');
+  });
+
+  // Lite controls. The terminal guard is keyed on lifecycle alone and carries
+  // no workflow-mode branch, so lite must behave exactly like every other mode.
+  it('keeps revision routing for an active lite project with incomplete revision work', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      workflowMode: 'lite',
+      lifecycle: 'active',
+      progress: makeRevisionProgress({ completedRevisionTasks: 1 }),
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-implement');
+  });
+
+  it('does not resume implement for a complete-lifecycle lite project with incomplete revision work', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      workflowMode: 'lite',
+      lifecycle: 'complete',
+      progress: makeRevisionProgress({ completedRevisionTasks: 1 }),
+    });
+
+    expect(recommendSkill(state).skill).not.toBe('oat-project-implement');
+    expect(recommendSkill(state).skill).toBe('oat-project-review-provide');
+  });
+
+  it('does not resume implement for an active lite project whose revision phases are all complete', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      workflowMode: 'lite',
+      lifecycle: 'active',
+      progress: makeRevisionProgress({ completedRevisionTasks: 2 }),
+    });
+
+    expect(recommendSkill(state).skill).not.toBe('oat-project-implement');
+    expect(recommendSkill(state).skill).toBe('oat-project-review-provide');
   });
 
   it('routes active top-level review artifacts to review-receive', () => {

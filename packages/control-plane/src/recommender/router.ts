@@ -170,7 +170,14 @@ function getHillOverride(
 function getPostImplementationRecommendation(
   state: Omit<ProjectState, 'recommendation'>,
 ): SkillRecommendation {
-  if (hasIncompleteRevisionPhase(state)) {
+  // Terminal guard. `state.lifecycle === 'complete'` is the only terminal
+  // signal, and it applies in every workflow mode. Neither a null current task
+  // nor a `complete`/`pr_open` phase status is terminal: an active project
+  // legitimately reaches both while it still owns pending revision tasks, so
+  // keying the guard on either would swallow a genuine revision resume. For a
+  // completed project the revision phases are historical, and a stale or
+  // incomplete revision count must not reopen implementation.
+  if (state.lifecycle !== 'complete' && hasIncompleteRevisionPhase(state)) {
     return {
       skill: normalizeImplementationSkill('oat-project-implement', state),
       reason: 'Revision work remains incomplete',

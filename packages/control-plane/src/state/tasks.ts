@@ -1,21 +1,42 @@
 import { parseFrontmatterRecord } from '../shared/utils/frontmatter';
 import type { TaskProgress } from '../types';
 
-const PHASE_HEADING_PATTERN = /^## Phase (\d+): (.+)$/;
-const CANONICAL_REVISION_PHASE_HEADING_PATTERN = /^## Phase (p-rev\d+): (.+)$/;
-const LEGACY_REVISION_PHASE_HEADING_PATTERN = /^## Revision Phase (\d+): (.+)$/;
+/**
+ * Phase and task headings are authored in several spellings across real OAT
+ * plans. Every spelling normalizes to exactly one declared phase id plus one
+ * phase kind (ordinary or revision), so a phase and its tasks are matched on
+ * normalized identity rather than on raw heading spelling:
+ *
+ * | Heading                                        | Phase id | Kind      |
+ * | ---------------------------------------------- | -------- | --------- |
+ * | `## Phase 1:`                                  | `p01`    | ordinary  |
+ * | `## Phase p1:` / `## Phase p01:`               | `p01`    | ordinary  |
+ * | `## Phase p-rev1:` / `## Phase p-rev01:`       | `p-rev1` | revision  |
+ * | `## Revision Phase 1:`                         | `p-rev1` | revision  |
+ * | `## Revision Phase p-rev1:`                    | `p-rev1` | revision  |
+ *
+ * | Task heading                                   | Phase id | Kind      |
+ * | ---------------------------------------------- | -------- | --------- |
+ * | `### Task p1-t01:` / `### Task p01-t01:`       | `p01`    | ordinary  |
+ * | `### Task prev1-t01:`                          | `p-rev1` | revision  |
+ * | `### Task p-rev1-t01:`                         | `p-rev1` | revision  |
+ *
+ * Ordinary and revision ids can never collide: ordinary ids are `p<digits>`
+ * and revision ids are `p-rev<digits>`.
+ */
+const ORDINARY_PHASE_HEADING_PATTERN = /^## Phase p?(\d+): (.+)$/;
+const CANONICAL_REVISION_PHASE_HEADING_PATTERN = /^## Phase p-rev(\d+): (.+)$/;
+const LEGACY_REVISION_PHASE_HEADING_PATTERN =
+  /^## Revision Phase (?:p-rev)?(\d+): (.+)$/;
 const ORDINARY_TASK_HEADING_PATTERN = /^### Task (p(\d+)-t\d+): (.+)$/;
 const CANONICAL_REVISION_TASK_HEADING_PATTERN =
   /^### Task (prev(\d+)-t\d+): (.+)$/;
 const LEGACY_REVISION_TASK_HEADING_PATTERN =
   /^### Task (p-rev(\d+)-t\d+): (.+)$/;
 
-type HeadingDialect = 'ordinary' | 'canonical-revision' | 'legacy-revision';
-
 interface MutablePhaseProgress {
   phaseId: string | null;
   declaredPhaseId: string | null;
-  dialect: HeadingDialect;
   name: string;
   total: number;
   completed: number;
@@ -25,7 +46,30 @@ interface MutablePhaseProgress {
 interface ParsedTaskHeading {
   taskId: string;
   phaseId: string;
-  dialect: HeadingDialect;
+  isRevision: boolean;
+}
+
+/**
+ * Collapse an authored ordinal to its canonical form: leading zeros are
+ * stripped, then the value is padded to `width`. Ordinary phase ids use
+ * width 2 (`1` and `01` both become `01`); revision phase ids use width 1
+ * (`1` and `01` both become `1`).
+ *
+ * The normalization is string-only on purpose. Routing the digits through
+ * `Number.parseInt` would collapse ordinals past `Number.MAX_SAFE_INTEGER`
+ * onto the same value, so two genuinely different phases could normalize to
+ * one id and a task could be attributed to the wrong phase.
+ */
+function normalizeOrdinal(digits: string, width: number): string {
+  return digits.replace(/^0+(?=\d)/, '').padStart(width, '0');
+}
+
+function ordinaryPhaseId(digits: string): string {
+  return `p${normalizeOrdinal(digits, 2)}`;
+}
+
+function revisionPhaseId(digits: string): string {
+  return `p-rev${normalizeOrdinal(digits, 1)}`;
 }
 
 export function parseTaskProgress(
@@ -64,7 +108,6 @@ function parsePhaseProgress(
       currentPhase = {
         phaseId: null,
         declaredPhaseId: phaseHeading.declaredPhaseId,
-        dialect: phaseHeading.dialect,
         name: phaseHeading.name,
         total: 0,
         completed: 0,
@@ -79,8 +122,13 @@ function parsePhaseProgress(
       continue;
     }
 
+    // Cross-phase guard on normalized identity: a task counts only when its
+    // normalized phase id and phase kind both match the enclosing phase. Two
+    // spellings of the same phase now agree here; a task id belonging to a
+    // different phase, or an ordinary task under a revision phase (and vice
+    // versa), is still dropped.
     if (
-      currentPhase.dialect !== taskHeading.dialect ||
+      currentPhase.isRevision !== taskHeading.isRevision ||
       currentPhase.declaredPhaseId !== taskHeading.phaseId
     ) {
       continue;
@@ -125,15 +173,17 @@ function parsePhaseHeading(
   line: string,
 ): Pick<
   MutablePhaseProgress,
-  'declaredPhaseId' | 'dialect' | 'name' | 'isRevision'
+  'declaredPhaseId' | 'name' | 'isRevision'
 > | null {
+  // Revision spellings are matched first; `## Phase p-rev1:` cannot satisfy
+  // the ordinary pattern (`p?` must be followed by digits), so the order is
+  // defensive rather than load-bearing.
   const canonicalRevisionMatch = line.match(
     CANONICAL_REVISION_PHASE_HEADING_PATTERN,
   );
   if (canonicalRevisionMatch?.[1] && canonicalRevisionMatch[2]) {
     return {
-      declaredPhaseId: canonicalRevisionMatch[1],
-      dialect: 'canonical-revision',
+      declaredPhaseId: revisionPhaseId(canonicalRevisionMatch[1]),
       name: canonicalRevisionMatch[2],
       isRevision: true,
     };
@@ -142,18 +192,16 @@ function parsePhaseHeading(
   const legacyRevisionMatch = line.match(LEGACY_REVISION_PHASE_HEADING_PATTERN);
   if (legacyRevisionMatch?.[1] && legacyRevisionMatch[2]) {
     return {
-      declaredPhaseId: `p-rev${legacyRevisionMatch[1]}`,
-      dialect: 'legacy-revision',
+      declaredPhaseId: revisionPhaseId(legacyRevisionMatch[1]),
       name: legacyRevisionMatch[2],
       isRevision: true,
     };
   }
 
-  const phaseMatch = line.match(PHASE_HEADING_PATTERN);
+  const phaseMatch = line.match(ORDINARY_PHASE_HEADING_PATTERN);
   return phaseMatch?.[1] && phaseMatch[2]
     ? {
-        declaredPhaseId: `p${phaseMatch[1].padStart(2, '0')}`,
-        dialect: 'ordinary',
+        declaredPhaseId: ordinaryPhaseId(phaseMatch[1]),
         name: phaseMatch[2],
         isRevision: false,
       }
@@ -167,8 +215,8 @@ function parseTaskHeading(line: string): ParsedTaskHeading | null {
   if (canonicalRevisionMatch?.[1] && canonicalRevisionMatch[2]) {
     return {
       taskId: canonicalRevisionMatch[1],
-      phaseId: `p-rev${canonicalRevisionMatch[2]}`,
-      dialect: 'canonical-revision',
+      phaseId: revisionPhaseId(canonicalRevisionMatch[2]),
+      isRevision: true,
     };
   }
 
@@ -176,8 +224,8 @@ function parseTaskHeading(line: string): ParsedTaskHeading | null {
   if (legacyRevisionMatch?.[1] && legacyRevisionMatch[2]) {
     return {
       taskId: legacyRevisionMatch[1],
-      phaseId: `p-rev${legacyRevisionMatch[2]}`,
-      dialect: 'legacy-revision',
+      phaseId: revisionPhaseId(legacyRevisionMatch[2]),
+      isRevision: true,
     };
   }
 
@@ -185,8 +233,8 @@ function parseTaskHeading(line: string): ParsedTaskHeading | null {
   return ordinaryMatch?.[1] && ordinaryMatch[2]
     ? {
         taskId: ordinaryMatch[1],
-        phaseId: `p${ordinaryMatch[2]}`,
-        dialect: 'ordinary',
+        phaseId: ordinaryPhaseId(ordinaryMatch[2]),
+        isRevision: false,
       }
     : null;
 }

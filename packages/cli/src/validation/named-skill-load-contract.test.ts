@@ -1588,6 +1588,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-next/SKILL.md',
     anchor: 'Step 5: Post-Implementation Router',
+    match: 'revision phases are historical',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Read-only terminal-status guard that suppresses a route; Step 6 loads and follows the selected target.',
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 5: Post-Implementation Router',
     match: 'Revision tasks pending',
     classification: 'non-executing',
     skills: ['oat-project-implement'],

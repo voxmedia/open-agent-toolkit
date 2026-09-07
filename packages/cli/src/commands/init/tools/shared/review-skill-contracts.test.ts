@@ -2851,4 +2851,50 @@ printf '%s\\n' "$EVENTS"`;
       'does not license a template rewrite of existing content',
     );
   });
+
+  it('oat-project-next skips revision resume for a complete lifecycle and keeps it for an active one', () => {
+    const next = readRepoFile('.agents/skills/oat-project-next/SKILL.md');
+
+    // The discriminator has to be readable at Step 1, or Step 5.2 has nothing
+    // to read.
+    expect(next).toContain('| `oat_lifecycle`');
+    expect(normalizeProse(next)).toContain(
+      '`complete` is the terminal signal Step 5.2 reads',
+    );
+
+    const stepFiveTwo = next.slice(
+      next.indexOf('**5.2: Incomplete revision tasks**'),
+      next.indexOf('**5.3: Unprocessed reviews**'),
+    );
+
+    // Terminal branch: lifecycle complete suppresses the revision resume.
+    expect(normalizeProse(stepFiveTwo)).toContain(
+      'Read `oat_lifecycle` from `state.md` before grepping anything.',
+    );
+    expect(normalizeProse(stepFiveTwo)).toContain(
+      'When `oat_lifecycle` is `complete`, revision phases are historical: skip this check and fall through to 5.3, and do not route to `oat-project-implement` even when `p-revN` tasks are still marked incomplete.',
+    );
+    // Lifecycle, not phase status or a null current task, is the terminal
+    // signal — the same rule the control-plane recommender applies.
+    expect(normalizeProse(stepFiveTwo)).toContain(
+      'neither a null current task nor a `complete` or `pr_open` `oat_phase_status` is terminal',
+    );
+    // The guard carries no workflow-mode branch.
+    expect(normalizeProse(stepFiveTwo)).toContain(
+      'applies identically to `spec-driven`, `quick`, `import`, and `lite` projects',
+    );
+
+    // Active branch: the pre-existing route text survives byte for byte.
+    expect(stepFiveTwo).toContain(
+      'Grep plan.md for `p-revN` phases. If any `p-revN` tasks exist with status != completed in implementation.md:\n→ Route to `oat-project-implement`\n→ Announce: "Revision tasks pending — continuing implementation"',
+    );
+    expect(normalizeProse(stepFiveTwo)).toContain(
+      'For every other `oat_lifecycle` value the check below is unchanged.',
+    );
+
+    // The guard is read before the grep, not after it.
+    expect(
+      stepFiveTwo.indexOf('Read `oat_lifecycle` from `state.md`'),
+    ).toBeLessThan(stepFiveTwo.indexOf('Grep plan.md for `p-revN` phases'));
+  });
 });
