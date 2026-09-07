@@ -167,7 +167,11 @@ function containsUnresolvedTemplateContent(
       templateContent
         .match(/\[[^\]\n]+\]|\{[^{}\n]+\}/g)
         ?.filter((marker) => !/^\[\s*\]$/.test(marker)) ?? [];
-    return markers.some((marker) => content.includes(marker));
+    const instructionalComments =
+      templateContent.match(/<!--[\s\S]*?-->/g) ?? [];
+    return [...markers, ...instructionalComments].some((marker) =>
+      content.includes(marker),
+    );
   };
 
   return (

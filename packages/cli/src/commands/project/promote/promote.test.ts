@@ -104,6 +104,15 @@ function replacePlanSection(
   );
 }
 
+function getPlanSection(plan: string, heading: string): string {
+  const match = new RegExp(
+    `^## ${heading}\\n\\n([\\s\\S]*?)(?=\\n## )`,
+    'm',
+  ).exec(plan);
+  if (!match?.[1]) throw new Error(`Missing ## ${heading}`);
+  return match[1].trim();
+}
+
 function authorCoreLiteSections(plan: string): string {
   return [
     ['Summary', 'Ship safe behavior.'],
@@ -733,6 +742,96 @@ describe('oat project promote', () => {
       expect(plan).toContain(`## ${unresolvedHeading}`);
     },
   );
+
+  it.each(['Product Behavior', 'Technical Design'] as const)(
+    'refuses the shipped lite scaffold when %s retains only its instructional comment',
+    async (unresolvedHeading) => {
+      const shippedTemplatePath = resolve(
+        process.cwd(),
+        'assets',
+        'templates',
+        'plan-lite.md',
+      );
+      const shippedTemplate = await readFile(shippedTemplatePath, 'utf8');
+      const instructionalComment = getPlanSection(
+        shippedTemplate,
+        unresolvedHeading,
+      ).match(/<!--[\s\S]*?-->/)?.[0];
+      expect(instructionalComment).toBeDefined();
+
+      const productBody = [
+        ...(unresolvedHeading === 'Product Behavior'
+          ? [instructionalComment, '']
+          : []),
+        '1. **Visible result** — Users see the promoted behavior.',
+      ].join('\n');
+      const technicalBody = [
+        ...(unresolvedHeading === 'Technical Design'
+          ? [instructionalComment, '']
+          : []),
+        '- **Current operation:** `promoteLite()` reads the plan.',
+        '- **Proposed changes:** Reject unresolved adaptive content.',
+        '- **Data flow:** Lite content flows into discovery.',
+      ].join('\n');
+      const plan = replacePlanSection(
+        replacePlanSection(
+          authorCoreLiteSections(shippedTemplate),
+          'Product Behavior',
+          productBody,
+        ),
+        'Technical Design',
+        technicalBody,
+      );
+      expect(getPlanSection(plan, unresolvedHeading)).toContain(
+        instructionalComment,
+      );
+      expect(plan).not.toContain('**[Observable behavior]**');
+      expect(plan).not.toContain(
+        '[Describe how the affected modules and contracts work now.]',
+      );
+
+      const repoRoot = await createRepo();
+      const { projectPath, projectRoot } = await seedRepo(repoRoot, { plan });
+      const originalState = await readFile(
+        join(projectRoot, 'state.md'),
+        'utf8',
+      );
+      const { capture, command, gitRunner, pushSynced } = createHarness(
+        repoRoot,
+        true,
+        { liteTemplatePath: shippedTemplatePath },
+      );
+
+      await runCommand(command, projectPath, 'quick', true);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.jsonPayloads).toEqual([
+        { status: 'refused', reason: 'invalid-lite-plan', files: [] },
+      ]);
+      await expectNoPromotionWrites(projectRoot, plan, originalState);
+      expect(gitRunner.run).not.toHaveBeenCalled();
+      expect(pushSynced).not.toHaveBeenCalled();
+    },
+  );
+
+  it('preserves arbitrary authored comments in adaptive sections', async () => {
+    const repoRoot = await createRepo();
+    const authoredComment =
+      '<!-- Preserve this authored implementation note. -->';
+    const plan = litePlanContent('both').replace(
+      '## Product Behavior\n',
+      `## Product Behavior\n\n${authoredComment}\n`,
+    );
+    const { projectPath, projectRoot } = await seedRepo(repoRoot, { plan });
+    const { command } = createHarness(repoRoot);
+
+    await runCommand(command, projectPath);
+
+    expect(process.exitCode).toBe(0);
+    await expect(
+      readFile(join(projectRoot, 'discovery.md'), 'utf8'),
+    ).resolves.toContain(authoredComment);
+  });
 
   it('emits the promoted JSON contract', async () => {
     const repoRoot = await createRepo();
