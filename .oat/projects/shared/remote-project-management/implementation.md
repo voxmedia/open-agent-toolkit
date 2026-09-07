@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p09-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,22 +24,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 10    | 10/10     |
-| Phase 2    | completed   | 10    | 10/10     |
-| Phase 3    | completed   | 12    | 12/12     |
-| Phase 4    | completed   | 11    | 11/11     |
-| Phase 5    | completed   | 9     | 9/9       |
-| Phase 6    | completed   | 10    | 10/10     |
-| Phase 7    | completed   | 10    | 10/10     |
-| Phase 8    | completed   | 6     | 6/6       |
-| Phase 9    | in_progress | 4     | 3/4       |
-| Revision 1 | completed   | 4     | 4/4       |
-| Revision 2 | completed   | 2     | 2/2       |
-| Revision 3 | completed   | 2     | 2/2       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 10    | 10/10     |
+| Phase 2    | completed | 10    | 10/10     |
+| Phase 3    | completed | 12    | 12/12     |
+| Phase 4    | completed | 11    | 11/11     |
+| Phase 5    | completed | 9     | 9/9       |
+| Phase 6    | completed | 10    | 10/10     |
+| Phase 7    | completed | 10    | 10/10     |
+| Phase 8    | completed | 6     | 6/6       |
+| Phase 9    | completed | 4     | 4/4       |
+| Revision 1 | completed | 4     | 4/4       |
+| Revision 2 | completed | 2     | 2/2       |
+| Revision 3 | completed | 2     | 2/2       |
 
-**Total:** 89/90 tasks completed
+**Total:** 90/90 tasks completed
 
 ---
 
@@ -1234,8 +1234,8 @@ or additional scope expansion.
 
 ## Phase 9: Final Review Fixes
 
-**Status:** in progress — prior tasks p09-t01 through p09-t03 complete; p09
-independent review round 2 passed; final lifecycle review round 3 pending
+**Status:** completed — 4/4 tasks complete; p09 independent review round 2
+passed; final lifecycle review round 3 pending
 **Started:** 2026-09-07
 
 ### Task p09-t01: P0 guard-neutralization proof
@@ -1286,6 +1286,12 @@ external-action, and preview production files retained their exact pre-probe
 SHA-256 values (`d74e4007...a73`, `d47f0df4...c27`, and
 `7f4f1111...dcc4`), and the restored five-file union passed 82/82 with no
 production diff.
+
+### Task p09-t04: Align the current Phase 9 status
+
+The active Phase 9 status now records all four tasks complete, the passing p09
+review round 2, and final lifecycle review round 3 as the next milestone. The
+chronological round-1 failure, p09-t03 fix, and round-2 pass remain preserved.
 
 ## Orchestration Runs
 
@@ -2751,11 +2757,17 @@ launch_status: accepted
 child_outcome: done
 continuation_events:
   - p09-review-fix-1-20260907-c2207d2ef
+  - p09-review-fix-2-20260907-52c1e1588
 recovery_usage: 0/10
 pending_attempt: null
 phase_verification: five expected guard-neutralization failures; three corrected probes selected 2/2 and passed after restoration; restored focused union 82/82; CI-order gates passed
 review_fix_1_commit: 681e69905b2f6d63d1e62f164f06c6c8aa19971b
-phase_outcome: fixes-complete; fresh root-owned p09 re-review pending
+review_fix_2_commit: f2489c00c5719d309e45eb4cfa41c437be9d6d73
+phase_outcome: p09-review-passed; final-review-round-3-pending
+review_1_artifact: reviews/archived/p09-review-2026-09-07T045515Z.md
+review_1_findings: 0 critical, 1 important, 0 medium, 0 minor
+review_2_artifact: reviews/archived/p09-review-2026-09-07T050520Z.md
+review_2_findings: 0 critical, 0 important, 0 medium, 0 minor
 ```
 
 **Implementation dispatch:** Dispatch: scope=p09 action=implementation
@@ -2827,6 +2839,7 @@ head.
 
 **Date:** 2026-09-07
 **Review artifact:** reviews/archived/final-review-2026-09-07T050851Z.md
+**Status:** fixes_completed — p09-t04 complete; final review round 3 pending
 
 **Findings:** 0 Critical, 0 Important, 1 Medium, 0 Minor
 
@@ -2839,8 +2852,7 @@ re-review. Align that line while preserving the chronological review history.
 
 **Deferred Findings (Medium):** none. M1 is converted to p09-t04.
 
-**Next:** Resume the original p09 implementer for p09-t04, mark this event
-`fixes_completed`, and run final review round 3.
+**Next:** Run final lifecycle review round 3 at the current exact head.
 
 <!-- orchestration-runs-end -->
 

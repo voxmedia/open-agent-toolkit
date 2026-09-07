@@ -188,6 +188,10 @@ p09 review fix 1 corrected three ineffective test selectors in 681e69905; each r
 
 p09 review round 2 passed at d2193de6077237abe3fcc823e7d4672fcb0ae345 with 0 critical, 0 important, 0 medium, and 0 minor findings; corrected probes selected 2/2 each and restored union passed 82/82.
 
+### 2026-09-07 · structural · oat-project-implement · final-review-fix-2
+
+Final review round 2 Medium status drift was corrected by p09-t04 in f2489c00c; current Phase 9 status now routes to final review round 3 while preserving prior review history.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
