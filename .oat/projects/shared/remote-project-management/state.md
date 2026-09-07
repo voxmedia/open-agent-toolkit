@@ -1,6 +1,6 @@
 ---
-oat_current_task: p09-t01
-oat_last_commit: 3e04439f7f2cef95b024e07af4aa422a7b5fe29a
+oat_current_task: null
+oat_last_commit: 818647f11d2c08986741aae4bf5df4a1f5b0bea5
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -58,23 +58,24 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T04:41:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T04:49:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: remote-project-management
 
-**Status:** Implementation in progress
+**Status:** Implementation tasks complete; final re-review pending
 **Started:** 2026-03-15
 **Last Updated:** 2026-09-07
 
 ## Current Phase
 
-Implementation — The first final lifecycle review is received with one
-Important evidence finding and one Medium durable-state finding. All original
-86 tasks and Phase 8 review are complete; p09-t01 and p09-t02 are the bounded
-final-review fixes. Current main is merged without rebasing reviewed history,
-and the public release boundary remains `0.2.63` above main's `0.2.62`.
+Implementation — All 88 planned tasks are complete, including both Phase 9
+final-review fixes. The next lifecycle milestone is a fresh final code
+re-review. Current main `0f47bf7004166d420758d1bcd77d253007174332` is merged
+without rebasing reviewed history through
+`6c73da33cf64fa2221def42a0b2fc6f7960ced73`; the public release boundary
+remains `0.2.63` above main's `0.2.62`.
 
 ## Artifacts
 
@@ -82,7 +83,7 @@ and the public release boundary remains `0.2.63` above main's `0.2.62`.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 3 artifact review passed)
-- **Implementation:** implementation.md (in progress; final review fixes p09-t01 and p09-t02 pending)
+- **Implementation:** implementation.md (88/88 tasks complete; fresh final re-review pending)
 
 ## Progress
 
@@ -252,13 +253,24 @@ and the public release boundary remains `0.2.63` above main's `0.2.62`.
 - ✓ Merged `origin/main` at `f83463e64` through merge commit `c20df4331`
 - ✓ Re-established collision 477/477, remote/E2E/help 768/768, smoke
   161/161, and uncached build baselines
-- ⧗ Phase 8 begins at `p08-t01`
+- ✓ Phase 8 completed all six tasks and passed independent review round 3 at
+  `a9004ccfd`
+- ✓ Merged current `origin/main`
+  `0f47bf7004166d420758d1bcd77d253007174332` without rebasing through
+  `6c73da33cf64fa2221def42a0b2fc6f7960ced73`
+- ⚠ First final lifecycle review found one Important evidence gap and one
+  Medium durable-state gap; both were converted to bounded Phase 9 tasks
+- ✓ p09-t01 recorded reproduction-grade negative controls for all five
+  NFR1-NFR3 release-assurance clauses; every neutralized guard failed its
+  synthetic test and the restored focused union passed 82/82
+- ✓ p09-t02 reconciled durable terminal rollups and resume directions while
+  preserving chronological failure and review evidence
+- ✓ Phase 9 completed 2/2 tasks; all 88/88 implementation tasks are complete
 
 ## Blockers
 
-No active implementation blocker. The branch-level lockstep version gate
-remains preserved for planned `p08-t05` release work against the merged main.
+No active implementation blocker. Fresh final code re-review remains pending.
 
 ## Next Milestone
 
-Begin Phase 8 at `p08-t01` under the merged workflow contract.
+Run the fresh final code re-review at the Phase 9 completion head.

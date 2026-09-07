@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p09-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,22 +24,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 10    | 10/10     |
-| Phase 2    | completed   | 10    | 10/10     |
-| Phase 3    | completed   | 12    | 12/12     |
-| Phase 4    | completed   | 11    | 11/11     |
-| Phase 5    | completed   | 9     | 9/9       |
-| Phase 6    | completed   | 10    | 10/10     |
-| Phase 7    | completed   | 10    | 10/10     |
-| Phase 8    | completed   | 6     | 6/6       |
-| Phase 9    | in_progress | 2     | 0/2       |
-| Revision 1 | completed   | 4     | 4/4       |
-| Revision 2 | completed   | 2     | 2/2       |
-| Revision 3 | completed   | 2     | 2/2       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 10    | 10/10     |
+| Phase 2    | completed | 10    | 10/10     |
+| Phase 3    | completed | 12    | 12/12     |
+| Phase 4    | completed | 11    | 11/11     |
+| Phase 5    | completed | 9     | 9/9       |
+| Phase 6    | completed | 10    | 10/10     |
+| Phase 7    | completed | 10    | 10/10     |
+| Phase 8    | completed | 6     | 6/6       |
+| Phase 9    | completed | 2     | 2/2       |
+| Revision 1 | completed | 4     | 4/4       |
+| Revision 2 | completed | 2     | 2/2       |
+| Revision 3 | completed | 2     | 2/2       |
 
-**Total:** 86/88 tasks completed
+**Total:** 88/88 tasks completed
 
 ---
 
@@ -1136,17 +1136,15 @@ findings; bounded fix loop 1/3 is pending.
 
 ## Phase 8: Documentation, Packaging, and Release Validation
 
-**Status:** in_progress — review fixes required
+**Status:** completed — review round 3 passed with zero findings
 **Started:** 2026-09-07
 
-All six planned tasks are committed in `d78efc897..3a083ed92`. The docs guide,
-CLI/file-location references, workflow-skill reference, evidence-grade test
-ledger, lockstep `0.2.60` package bump, and twice-run release gate are complete.
-Review round 1 found two Important documentation/contract defects: provider
-authority was described as tightening-only, and the host loop discovered live
-capability after the first command even though production requires bounded
-capability evidence before initial action preparation. Bounded fix loop 1/3 is
-next through the original Phase 8 implementer handle.
+All six planned tasks are committed in `d78efc897..3a083ed92`. Two bounded
+fixes followed the initial review, and independent review round 3 passed at
+`a9004ccfd3b62157a72088ba92e26f5194a6aad2`. Current main
+`0f47bf7004166d420758d1bcd77d253007174332` was merged without rebasing through
+`6c73da33cf64fa2221def42a0b2fc6f7960ced73`; the final public release boundary
+is lockstep `0.2.63` above main's `0.2.62`.
 
 ### Task p08-t04: Evidence-grade focused and full verification
 
@@ -1236,8 +1234,8 @@ or additional scope expansion.
 
 ## Phase 9: Final Review Fixes
 
-**Status:** in_progress — p09-t01 proof complete; p09-t02 durable-state
-reconciliation pending
+**Status:** completed — 2/2 final-review fixes complete; fresh final re-review
+pending
 **Started:** 2026-09-07
 
 ### Task p09-t01: P0 guard-neutralization proof
@@ -1262,6 +1260,13 @@ SHA-256 values: `snapshot.ts` `d74e4007...a73`, `external-action.ts`
 `d4085faf...e3f`, and `closeout.ts` `419413b9...2bb`. The focused union,
 formatting, diff validation, and bounded status proof are recorded with the
 task commit; only this implementation artifact remains in the task diff.
+
+### Task p09-t02: Durable closeout reconciliation
+
+The terminal rollups now preserve every chronological failure while reflecting
+their later passing review outcomes. Phase 8, both Phase 9 fixes, and all 88
+planned tasks are complete. No implementation task remains; the next lifecycle
+milestone is a fresh final code re-review of the Phase 9 completion head.
 
 ## Orchestration Runs
 
@@ -2670,6 +2675,8 @@ target=oat-reviewer-gpt-5-6-sol-high
 
 **Date:** 2026-09-07
 **Review artifact:** reviews/archived/final-review-2026-09-07T043133Z.md
+**Status:** fixes_completed — p09-t01 and p09-t02 complete; fresh final
+re-review pending
 
 **Findings:**
 
@@ -2693,9 +2700,7 @@ target=oat-reviewer-gpt-5-6-sol-high
 **Deferred Findings (Medium):** none. The supplied final-review ledger contained
 no prior deferred Medium findings, and M1 is converted to p09-t02.
 
-**Next:** Execute p09-t01 and p09-t02 via `oat-project-implement`, update this
-artifact-identified review event to `fixes_completed`, and run a fresh final
-code re-review.
+**Next:** Run a fresh final code re-review at the Phase 9 completion head.
 
 <!-- orchestration-runs-end -->
 
@@ -2789,18 +2794,19 @@ Document any deviations from the original plan.
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                            | Passed                                 | Failed | Coverage                   |
-| ----- | ------------------------------------------------------------------------------------ | -------------------------------------- | ------ | -------------------------- |
-| 1     | Focused, format, types, lint, build, post-merge full CLI and review-fix verification | 444 focused; full CLI 4,715; all gates | 0      | passed                     |
-| 2     | Focused safety/schema/store and combined Phase 2 verification                        | 77 focused; 142 combined; all gates    | 0      | passed                     |
-| 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks | 0      | blocked by review findings |
-| rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                    | 0      | blocked by round-4 review  |
-| rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed            | 0      | re-review pending          |
-| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 116/116; remote 451/451; checks passed | 0      | review passed              |
-| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 93/93; remote 544/544; checks passed   | 0      | operator review passed     |
-| 6     | Jira adapter, ADF, conformance, integration, and duplicate-search suite              | 42/42; remote 586/586; checks passed   | 0      | review round 1 pending     |
-| rev3  | Recreate anomaly and public lifecycle approval evidence union                        | 120/120; boundary and diff passed      | 0      | review passed              |
-| main  | Mainline collision, remote/E2E/help, smoke, build, and project sync transition       | 477/477; 768/768; 161/161; build 5/5   | 0      | transition passed          |
+| Phase | Tests Run                                                                            | Passed                                             | Failed              | Coverage                          |
+| ----- | ------------------------------------------------------------------------------------ | -------------------------------------------------- | ------------------- | --------------------------------- |
+| 1     | Focused, format, types, lint, build, post-merge full CLI and review-fix verification | 444 focused; full CLI 4,715; all gates             | 0                   | passed                            |
+| 2     | Focused safety/schema/store and combined Phase 2 verification                        | 77 focused; 142 combined; all gates                | 0                   | passed                            |
+| 3     | Focused remote/config, skill, type-check, managed-view, and diff verification        | 147 final focused; 3 skill; all checks             | 0                   | closed by passing rev2 review     |
+| rev1  | Exact corrective union, CLI types/build/check, formatting, and diff verification     | 236/236; all checks                                | 0                   | superseded by passing rev2 review |
+| rev2  | Exact corrective union, CLI check/type/build, and diff verification                  | 138/138; core checks passed                        | 0                   | review passed                     |
+| 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 116/116; remote 451/451; checks passed             | 0                   | review passed                     |
+| 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 93/93; remote 544/544; checks passed               | 0                   | operator review passed            |
+| 6     | Jira adapter, ADF, conformance, integration, and duplicate-search suite              | 42/42; remote 586/586; checks passed               | 0                   | review passed                     |
+| rev3  | Recreate anomaly and public lifecycle approval evidence union                        | 120/120; boundary and diff passed                  | 0                   | review passed                     |
+| main  | Mainline collision, remote/E2E/help, smoke, build, and project sync transition       | 477/477; 768/768; 161/161; build 5/5               | 0                   | transition passed                 |
+| 9     | Five clause-specific guard-neutralization probes and restored focused union          | 5 expected negative failures; 82/82 restored union | 0 after restoration | final re-review pending           |
 
 ## Final Summary (for PR/docs)
 
@@ -2860,6 +2866,13 @@ Track test execution during implementation.
   fresh-main fetch, version, release validation, docs build, lint, format,
   uncached workspace tests, smoke, skills, release tests, and skill validation;
   every command exited zero.
+- Phase 9 proved the five NFR1-NFR3 release-assurance clauses with independent
+  production-guard neutralization, expected synthetic-test failure, immediate
+  restoration, bad-state rejection, and valid accepted controls. The restored
+  focused union passed 82/82 with no production diff remaining.
+- The final integration baseline is current main
+  `0f47bf7004166d420758d1bcd77d253007174332` merged through
+  `6c73da33cf64fa2221def42a0b2fc6f7960ced73` without rebasing reviewed history.
 
 **Design deltas (if any):**
 
