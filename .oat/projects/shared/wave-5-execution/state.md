@@ -2,7 +2,7 @@
 oat_current_task: null
 oat_last_commit: null
 oat_blockers:
-  - 'p09 parked on its plan STOP: the completion seal append is not idempotent and the status probe cannot see a seal, so the plan\'s pre-archive resume design cannot be implemented without a CLI change (BL-260907-make-the-completion-seal)'
+  - 'p09 parked on its plan STOP: the completion seal append is not idempotent and the status probe cannot see a seal, so the pre-archive resume design of the plan cannot be implemented without a CLI change (BL-260907-make-the-completion-seal)'
 associated_issues:
   - { type: backlog, ref: 'BL-260902-recover-committed-review' }
   - { type: backlog, ref: 'BL-260902-keep-pjm-init-provider' }
@@ -94,7 +94,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: "2026-09-07T11:54:55.000Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T11:54:55.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
