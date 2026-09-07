@@ -1,8 +1,15 @@
+import { RECAP_PROBE_CODES, RECAP_SEAM_IDS } from './probe-recap-seams.mjs';
+
 const PRODUCTS = new Set(['projectExplainer', 'projectRecap']);
 const MODES = new Set(['interactive', 'autonomous']);
 const PREFERENCES = new Set(['always', 'ask', 'never']);
 const DECISIONS = new Set(['generate', 'skip']);
-const SOURCES = new Set(['interactive', 'kickoff_prompt', 'autonomous_policy']);
+const SOURCES = new Set([
+  'interactive',
+  'kickoff_prompt',
+  'autonomous_policy',
+  'capability_probe',
+]);
 const ALLOWED_PAIRS = Object.freeze({
   projectExplainer: new Set([
     'generate:interactive',
@@ -13,6 +20,7 @@ const ALLOWED_PAIRS = Object.freeze({
     'generate:interactive',
     'skip:interactive',
     'generate:autonomous_policy',
+    'skip:capability_probe',
   ]),
 });
 const ISO_TIMESTAMP_PATTERN =
@@ -25,6 +33,7 @@ export function resolveIntent({
   preference,
   kickoffRequest = false,
   answer,
+  seamProbe,
   now = new Date().toISOString(),
 }) {
   assertProduct(product);
@@ -39,6 +48,19 @@ export function resolveIntent({
   if (typeof kickoffRequest !== 'boolean') {
     throw new TypeError('kickoffRequest must be a boolean.');
   }
+  if (seamProbe !== undefined) {
+    assertSeamProbe(seamProbe);
+    if (product !== 'projectRecap') {
+      throw new Error(
+        'Seam probe results apply only to projectRecap resolution.',
+      );
+    }
+    if (mode !== 'autonomous') {
+      throw new Error(
+        'Seam probe results apply only to autonomous projectRecap resolution.',
+      );
+    }
+  }
 
   if (mode === 'autonomous') {
     if (answer !== undefined) {
@@ -49,6 +71,7 @@ export function resolveIntent({
       state,
       preference,
       kickoffRequest,
+      seamProbe,
       now,
     });
   }
@@ -149,10 +172,30 @@ function resolveAutonomous({
   state,
   preference,
   kickoffRequest,
+  seamProbe,
   now,
 }) {
   if (product === 'projectRecap') {
     const warnings = [];
+    if (seamProbe !== undefined && seamProbe.ok !== true) {
+      if (seamProbe.code !== 'seams-unavailable') {
+        const error = new Error(
+          `Project recap seams are configured but invalid, so the recap fails closed rather than resolving a capability skip: ${seamProbe.message ?? seamProbe.code}`,
+        );
+        error.code = 'E_RECAP_SEAMS_INVALID';
+        throw error;
+      }
+      warnings.push(
+        `Autonomous project recap skipped: no provider is configured for ${formatSeams(seamProbe.missing)}.`,
+      );
+      return result(
+        product,
+        'skip',
+        'capability_probe',
+        createRecord(product, 'skip', 'capability_probe', now),
+        warnings,
+      );
+    }
     if (state?.decision === 'skip') {
       warnings.push(
         'Autonomous project recap policy overrode a lower-precedence skip decision.',
@@ -204,6 +247,68 @@ function result(
     record,
     warnings,
   };
+}
+
+/**
+ * A seam probe result is a decision input, so a malformed one must fail rather
+ * than silently degrade into either a skip or a forced generate.
+ */
+function assertSeamProbe(seamProbe) {
+  if (
+    !seamProbe ||
+    typeof seamProbe !== 'object' ||
+    Array.isArray(seamProbe) ||
+    typeof seamProbe.ok !== 'boolean' ||
+    !RECAP_PROBE_CODES.includes(seamProbe.code)
+  ) {
+    throw new TypeError(
+      'seamProbe must be a probeRecapSeams result with ok and a known code.',
+    );
+  }
+  // A recap that runs from this decision runs unattended, so an interactive
+  // probe is the wrong evidence: it checks only the author and critic and would
+  // report a host with no set planner as fully available.
+  if (seamProbe.mode !== 'unattended') {
+    throw new TypeError(
+      'seamProbe must come from an unattended probe of the recap seams.',
+    );
+  }
+  if (
+    !Array.isArray(seamProbe.missing) ||
+    !Array.isArray(seamProbe.invalid) ||
+    !Array.isArray(seamProbe.resolved) ||
+    ![...seamProbe.missing, ...seamProbe.resolved].every((seam) =>
+      RECAP_SEAM_IDS.includes(seam),
+    )
+  ) {
+    throw new TypeError(
+      'seamProbe must partition the canonical recap seams into missing, invalid, and resolved.',
+    );
+  }
+  // The result is a discriminated union, so each code must carry exactly the
+  // evidence it claims. A half-populated object must never reach the skip
+  // branch and forge a capability skip out of an invalid seam.
+  const consistent =
+    seamProbe.code === 'seams-ok'
+      ? seamProbe.ok === true &&
+        seamProbe.missing.length === 0 &&
+        seamProbe.invalid.length === 0 &&
+        seamProbe.resolved.length === RECAP_SEAM_IDS.length
+      : seamProbe.ok === false &&
+        (seamProbe.code === 'seams-unavailable'
+          ? seamProbe.missing.length > 0 && seamProbe.invalid.length === 0
+          : seamProbe.invalid.length > 0);
+  if (!consistent) {
+    throw new TypeError(
+      'An unsatisfied seamProbe must list the seams its code claims.',
+    );
+  }
+}
+
+function formatSeams(seams) {
+  if (!Array.isArray(seams) || seams.length === 0) return 'a required seam';
+  if (seams.length === 1) return seams[0];
+  return `${seams.slice(0, -1).join(', ')} and ${seams.at(-1)}`;
 }
 
 function assertProduct(product) {

@@ -892,7 +892,30 @@ sequence completion.
 
 Before generating, inspect the active project's explainer runs. A fresh `project-recap` manifest for the current completed implementation deduplicates the lifecycle-tail run: reuse it and do not invoke the adapter again. Fresh means the manifest identifies recipe `project-recap`, belongs to this project, has a terminal outcome, and its recorded source hashes match the current approved implementation inputs. A merely present, incomplete, wrong-recipe, or stale manifest does not satisfy this check.
 
-Resolve recap intent through `oat-explainer-kit`. When `OAT_AUTONOMOUS=1` and no fresh recap exists, attempt `project-recap` exactly once; missing or stale persisted intent cannot suppress this autonomous attempt. Interactive mode honors the adapter's resolved persisted or workflow intent.
+Probe seam availability before resolving intent. Call
+`oat-explainer-kit/scripts/probe-recap-seams.mjs#probeRecapSeams` in
+`mode: unattended` with the exact seam inputs this tail would pass. The probe is
+pure and covers all five required seams — author, fact critic, browser session,
+visual critic, and set planner — so a host missing only the set planner is
+detected here instead of at the adapter's `E_SET_PLANNER_REQUIRED`. Pass the
+result to autonomous intent resolution as `seamProbe`. The resolver accepts a
+`seamProbe` only for autonomous `projectRecap`, so interactive resolution keeps
+its existing inputs and its recorded human decision.
+
+Resolve recap intent through `oat-explainer-kit`. When `OAT_AUTONOMOUS=1` and no fresh recap exists, run this recap gate exactly once; missing or stale persisted intent cannot suppress this autonomous gate. Attempt the adapter run exactly once, and only when the seam probe resolves every required seam and intent resolves to `generate`. Interactive mode honors the adapter's resolved persisted or workflow intent.
+
+In autonomy, a probe result of `seams-unavailable` means no provider is
+configured for a required seam. Autonomous resolution then returns a recordable
+`skip` with source `capability_probe`: record it with the warning, do not invoke
+the adapter, and continue closeout. Interactive closeout is unchanged: a
+recorded interactive `generate` still attempts the recap and a run that fails
+for a missing seam is still the `failed` outcome it is today. An unattended completion on a host with no explainer seams
+configured never blocks final HiLL approval on a missing recap, and this skip is
+resolved before any run, never from a failed one. A probe result of
+`seams-invalid` means a seam is supplied but violates a resolution rule: report
+the configuration error and fail closed exactly as an invalid seam does today.
+Never convert a configured-but-invalid seam, or a run that failed after a
+passing probe, into a skip; that run stays `failed`.
 
 Invoke the `oat-explainer-kit` adapter first, then run its shared tracked-run finalizer in `dedicated` mode for a successful build. Use the adapter result and finalizer result as returned; do not improvise commits, durability evidence, or reruns. Outcomes `failed` and `built-not-durable` are recorded warnings, never blockers for final HiLL approval, completion reporting, or later PR steps.
 For an adapter invocation, construct exactly one brief-aware,
@@ -904,10 +927,12 @@ alongside the existing `critic` callback (or validated
 `mode: unattended`.
 
 Always include the selected or attempted recap's outcome and run path in the
-implementation completion report. If `summary.md` exists, append or refresh its
-single concise `Explainer Outcome` section using the manifest and build record;
-never append a second outcome section. If no recap was attempted or reused,
-leave the summary unchanged.
+implementation completion report. Report a probe-driven skip as `skipped` with
+its reason and the unavailable seams instead of an outcome and run path. If
+`summary.md` exists, append or refresh its single concise `Explainer Outcome`
+section using the manifest and build record, or the recorded skip when no run
+exists; never append a second outcome section. If no recap was attempted,
+reused, or recorded as skipped, leave the summary unchanged.
 
 Before recording final approval, invoke the shared
 `oat-explainer-kit/scripts/check-terminal-outcome.mjs` guard with the resolved
@@ -915,7 +940,8 @@ intent and, for `generate`, the selected or attempted manifest. The only
 terminal generated outcomes are `built-durable`, `built-not-durable`,
 `built-needs-review`, and `failed`. Missing records and `incomplete` block
 approval; do not substitute a warning or infer an outcome from filesystem
-presence. A `skip` intent requires no manifest.
+presence. A `skip` intent requires no manifest; pass its recorded source as
+`--skip-reason` so the receipt states why no recap exists.
 
 **Lite completion algorithm:** Dispatch incomplete `pre_approval` steps in
 stored order, retain `approval: not_required`, keep both approval reachability

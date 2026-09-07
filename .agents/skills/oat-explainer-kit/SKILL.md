@@ -1,6 +1,6 @@
 ---
 name: oat-explainer-kit
-version: 1.0.6
+version: 1.0.7
 description: Use when building project explainers or recaps from OAT configuration, state, and lifecycle artifacts.
 disable-model-invocation: false
 user-invocable: true
@@ -18,6 +18,7 @@ Adapt OAT project context into the versioned request consumed by the canonical
 - Resolve typed OAT configuration with source attribution.
 - Derive canonical project or repository output roots.
 - Bind OAT lifecycle artifacts to generic recipe source roles.
+- Probe recap seam availability before an unattended run is attempted.
 - Resolve project explainer and recap intent before invoking the core.
 - Resolve one provider-neutral set planner for unattended project recaps.
 - Require lifecycle callers to construct a brief-aware author seam.
@@ -78,6 +79,18 @@ is selected only when the planner can state its distinct reader question,
 source evidence, and medium rationale. The installed core continues reading
 `project-recap@1` for replay; the adapter never rewrites a retained request's
 recipe selector.
+
+Before an unattended `project-recap`, call
+`scripts/probe-recap-seams.mjs#probeRecapSeams` with the seam inputs you are
+about to pass. The probe is pure and checks all five required seams — author,
+fact critic, browser session, visual critic, and set planner — using the same
+rules `run.mjs` applies. `seams-unavailable` means no provider is configured
+for a required seam: pass the probe result to the intent resolver as
+`seamProbe`, which returns a recordable `skip` with source `capability_probe`
+and a warning. `seams-invalid` means a supplied seam violates a resolution
+rule: fail closed and report the configuration error; it is never a skip. When
+the probe returns `ok: true`, invoke the adapter with unchanged behavior, and
+treat any later failure as `failed` rather than as a skip.
 
 Before invocation, read `references/author-callback.md`. Unattended
 `project-recap` runs require exactly one provider-neutral set planner:

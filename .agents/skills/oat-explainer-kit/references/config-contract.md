@@ -27,6 +27,18 @@ do not write config. Recipe, slug, fact-base path, output root, per-run art
 direction, and private wrapper lanes are invocation inputs rather than config
 keys and are rejected from the runtime config-override map.
 
+## Seams are invocation inputs, not configuration
+
+No supported key names an author, fact critic, browser session, visual critic,
+or set planner. Every seam is supplied per invocation as a callback or a module
+entry point, so seam availability is discovered by
+`scripts/probe-recap-seams.mjs#probeRecapSeams` against the inputs a caller is
+about to pass, not read from stored config. A host on which those inputs are
+absent has no configuration to correct: the probe reports `seams-unavailable`
+and the lifecycle caller records a `skip / capability_probe` recap intent. The
+`workflow.explainers.projectRecap` preference expresses whether a host _wants_
+a recap and cannot make an unavailable seam available.
+
 ## Source-sensitive paths
 
 A shared theme bundle path is repository-relative and must remain inside the

@@ -1244,7 +1244,7 @@ describe('validateOatSkills', () => {
   it('tracks the current explainer skill family versions', async () => {
     for (const [skillName, expectedVersion] of [
       ['explainer-kit', '2.1.0'],
-      ['oat-explainer-kit', '1.0.6'],
+      ['oat-explainer-kit', '1.0.7'],
     ]) {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
@@ -1876,7 +1876,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.3.5',
+        version: '2.3.6',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -2359,7 +2359,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.6');
   });
 
   it('requires classified resolver calls and effective terminal reviewer notices before launch', async () => {
@@ -2665,7 +2665,7 @@ describe('validateOatSkills', () => {
     );
     const combined = `${content}\n${dispatchReference}`;
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.6');
     expect(dispatchReference).toContain(
       '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
     );
@@ -2739,7 +2739,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.6');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -2922,7 +2922,7 @@ describe('validateOatSkills', () => {
       ['.agents/agents/oat-reviewer.md', '1.2.3'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.5'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.2'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.3'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.2'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.10'],
@@ -3233,7 +3233,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.6');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -4441,10 +4441,10 @@ describe('validateOatSkills', () => {
       ['oat-project-review-provide', '1.5.5'],
       ['oat-project-review-receive', '1.6.2'],
       ['oat-project-review-receive-remote', '1.5.1'],
-      ['oat-project-implement', '2.3.5'],
+      ['oat-project-implement', '2.3.6'],
       ['oat-project-pr-final', '1.6.2'],
       ['oat-project-pr-progress', '1.3.1'],
-      ['oat-project-complete', '1.7.7'],
+      ['oat-project-complete', '1.7.8'],
       ['oat-project-next', '1.1.1'],
     ] as const;
 
@@ -5570,7 +5570,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.3.5'],
+      ['oat-project-implement', '2.3.6'],
       ['oat-project-review-provide', '1.5.5'],
       ['oat-project-review-provide-remote', '1.1.3'],
     ] as const;
@@ -7432,7 +7432,7 @@ describe('lite mode skill contracts', () => {
     expect(liteSummarySources.replace('`Assumptions`', '')).not.toContain(
       '`Assumptions`',
     );
-    expect(summary.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.2');
+    expect(summary.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.3');
     expect(document.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.8.2');
   });
 
@@ -7648,7 +7648,7 @@ describe('lite mode skill contracts', () => {
     expect(proofDisposition(false, false)).toBe('NEEDS_CONTEXT');
     expect(proofDisposition(true, true)).toBe('performed');
     expect(implementWorkflow.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe(
-      '2.3.5',
+      '2.3.6',
     );
     expect(implementer.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.5');
   });
