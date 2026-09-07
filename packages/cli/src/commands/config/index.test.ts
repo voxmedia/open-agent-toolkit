@@ -3750,6 +3750,213 @@ describe('oat config', () => {
     });
   });
 
+  describe('documentation.instructionPointerExcludes', () => {
+    async function writeShared(
+      root: string,
+      documentation: Record<string, unknown>,
+    ): Promise<void> {
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({ version: 1, documentation })}\n`,
+        'utf8',
+      );
+    }
+
+    async function readShared(root: string): Promise<unknown> {
+      return JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      ) as unknown;
+    }
+
+    it('stores the normalized repository-relative list and reads it back', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'documentation.instructionPointerExcludes',
+        'apps/oat-docs/docs/, vendor/generated , apps/oat-docs/docs',
+      ]);
+
+      // Exactly the normalization `oat instructions sync` and
+      // `oat instructions validate` apply when they read the key: trimmed,
+      // trailing slash dropped, de-duplicated, order preserved. What `set`
+      // writes is what those commands will honour.
+      expect(await readShared(root)).toEqual({
+        version: 1,
+        documentation: {
+          instructionPointerExcludes: [
+            'apps/oat-docs/docs',
+            'vendor/generated',
+          ],
+        },
+      });
+      expect(capture.info[0]).toBe(
+        'documentation.instructionPointerExcludes=apps/oat-docs/docs,vendor/generated',
+      );
+      expect(process.exitCode).toBe(0);
+
+      const json = createHarness({ cwd: root });
+      await runCommand(
+        json.command,
+        ['get', 'documentation.instructionPointerExcludes'],
+        ['--json'],
+      );
+      expect(json.capture.jsonPayloads[0]).toMatchObject({
+        key: 'documentation.instructionPointerExcludes',
+        value: ['apps/oat-docs/docs', 'vendor/generated'],
+        source: 'shared',
+      });
+    });
+
+    const unusableEntries = [
+      { name: 'an absolute path', value: '/etc/secrets' },
+      { name: 'a path escaping the repository', value: '../outside' },
+      { name: 'a bare parent reference', value: '..' },
+      // POSIX normalization reads this as the relative `C:/secrets`, so it has
+      // to be refused explicitly or the contract would not hold on Windows.
+      { name: 'a Windows drive-letter path', value: String.raw`C:\secrets` },
+    ];
+
+    for (const testCase of unusableEntries) {
+      it(`rejects ${testCase.name} instead of storing it`, async () => {
+        const root = await createRepoRoot();
+        await writeShared(root, {
+          instructionPointerExcludes: ['vendor/generated'],
+        });
+        const { command, capture } = createHarness({ cwd: root });
+
+        await runCommand(command, [
+          'set',
+          'documentation.instructionPointerExcludes',
+          testCase.value,
+        ]);
+
+        // The consumer drops these entries, so storing one would report
+        // protection that never applies. The stored value is untouched.
+        expect(capture.error[0]).toContain(
+          'Invalid documentation.instructionPointerExcludes entry',
+        );
+        expect(process.exitCode).toBe(1);
+        expect(await readShared(root)).toEqual({
+          version: 1,
+          documentation: { instructionPointerExcludes: ['vendor/generated'] },
+        });
+      });
+    }
+
+    it('clears the key with an empty value and leaves its siblings', async () => {
+      const root = await createRepoRoot();
+      await writeShared(root, {
+        root: 'apps/docs',
+        instructionPointerExcludes: ['vendor/generated'],
+      });
+      const { command } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'documentation.instructionPointerExcludes',
+        '',
+      ]);
+
+      expect(await readShared(root)).toEqual({
+        version: 1,
+        documentation: { root: 'apps/docs' },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('unsets the key and reports the removal', async () => {
+      const root = await createRepoRoot();
+      await writeShared(root, {
+        root: 'apps/docs',
+        instructionPointerExcludes: ['vendor/generated'],
+      });
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(
+        command,
+        ['unset', 'documentation.instructionPointerExcludes'],
+        ['--json'],
+      );
+
+      expect(capture.jsonPayloads[0]).toEqual({
+        status: 'ok',
+        key: 'documentation.instructionPointerExcludes',
+        value: null,
+        source: 'shared',
+        removed: true,
+      });
+      expect(await readShared(root)).toEqual({
+        version: 1,
+        documentation: { root: 'apps/docs' },
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('repairs a malformed stored value instead of failing closed on it', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          documentation: { instructionPointerExcludes: [7] },
+        })}\n`,
+        'utf8',
+      );
+      const { command } = createHarness({ cwd: root });
+
+      // A strict read would refuse to load the very value being replaced, which
+      // would leave the operator with no command-driven way out of a malformed
+      // key -- the situation the catalog entry exists to end.
+      await runCommand(command, [
+        'set',
+        'documentation.instructionPointerExcludes',
+        'vendor/generated',
+      ]);
+
+      expect(process.exitCode).toBe(0);
+      expect(await readShared(root)).toEqual({
+        version: 1,
+        documentation: { instructionPointerExcludes: ['vendor/generated'] },
+      });
+    });
+
+    it('refuses a non-shared surface like every other documentation key', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'set',
+        'documentation.instructionPointerExcludes',
+        'vendor/generated',
+        '--local',
+      ]);
+
+      expect(capture.error[0]).toContain('structural key');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('describe surfaces the array catalog entry', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'describe',
+        'documentation.instructionPointerExcludes',
+      ]);
+
+      expect(capture.info[0]).toContain(
+        'Key: documentation.instructionPointerExcludes',
+      );
+      expect(capture.info[0]).toContain('Type: string[]');
+      expect(capture.info[0]).toContain(
+        'Owning command: oat config set documentation.instructionPointerExcludes <path[,path...]>',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+  });
+
   it('sets archive.wrapUpExportPath in config.json', async () => {
     const root = await createRepoRoot();
     const { command } = createHarness({ cwd: root });
@@ -4467,15 +4674,15 @@ describe('oat config', () => {
       });
     });
 
-    it('unset does not prune a documentation parent that still holds an uncatalogued sibling', async () => {
+    it('unset does not prune a documentation parent that still holds a sibling', async () => {
       const root = await createRepoRoot();
-      // `documentation.instructionPointerExcludes` is parsed by
-      // config/oat-config.ts but is deliberately not an `oat config` catalog
-      // key, so `unset` can never reach it -- and must never delete it as
-      // collateral while pruning the parent.
+      // Unsetting one documentation key must never take a sibling with it,
+      // whether that sibling is catalogued (`instructionPointerExcludes`) or
+      // read-only (`index`, which `oat config` still does not expose).
       await writeSharedConfig(root, {
         documentation: {
           root: 'apps/oat-docs/docs',
+          index: 'apps/oat-docs/index.md',
           instructionPointerExcludes: ['apps/oat-docs/docs'],
         },
       });
@@ -4486,6 +4693,7 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(0);
       const shared = await readSharedConfig(root);
       expect(shared.documentation).toEqual({
+        index: 'apps/oat-docs/index.md',
         instructionPointerExcludes: ['apps/oat-docs/docs'],
       });
     });
@@ -4595,6 +4803,11 @@ describe('oat config', () => {
       const keys = listed.values.map((entry) => entry.key);
       expect(keys.length).toBeGreaterThan(50);
       expect(keys).toContain('documentation.excludes');
+      // p02's opt-out is part of the documentation family this test covers.
+      // Removing it from `KEY_ORDER` drops it from the catalog listing and
+      // fails here, which is the point: an operator who cannot unset a key OAT
+      // reads has no way to remove it at all.
+      expect(keys).toContain('documentation.instructionPointerExcludes');
 
       // Families with a deliberate non-removal outcome; every other key must
       // reach a removal path.

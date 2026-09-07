@@ -274,22 +274,24 @@ describe('oat-config', () => {
         });
 
         await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
-          message: `Invalid documentation.instructionPointerExcludes in ${join(repoRoot, '.oat', 'config.json')}: expected an array of non-empty strings. Repair it by editing documentation.instructionPointerExcludes in that file (remove the key to clear it).`,
+          message: `Invalid documentation.instructionPointerExcludes in ${join(repoRoot, '.oat', 'config.json')}: expected an array of non-empty strings. Repair it with \`oat config set documentation.instructionPointerExcludes <path[,path...]>\` (an empty value clears the key), or by editing that file.`,
           exitCode: 2,
         });
       });
     }
 
-    it('names the config file rather than a nonexistent oat config set command', async () => {
+    it('names the oat config set command that repairs the key', async () => {
       const repoRoot = await createRepoRoot();
       await writeSharedConfig(repoRoot, {
         instructionPointerExcludes: 'vendor',
       });
 
-      // The key has no `oat config` catalog entry, so the repair instruction
-      // must not tell the operator to run a command that does not exist.
+      // The key is catalogued, so the repair instruction names the validated
+      // write path. A repair message that only said "edit the file" would send
+      // operators around a command that exists -- and this assertion fails if
+      // the catalog entry is ever removed and the message is not restored.
       await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
-        message: expect.not.stringContaining(
+        message: expect.stringContaining(
           'oat config set documentation.instructionPointerExcludes',
         ),
       });
