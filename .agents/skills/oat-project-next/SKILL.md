@@ -125,15 +125,16 @@ projects, and synced records whose detached checkout is absent.
 
 Read `"$PROJECT_PATH/state.md"` frontmatter and extract:
 
-| Field                     | Used For                                                                           |
-| ------------------------- | ---------------------------------------------------------------------------------- |
-| `oat_phase`               | Current lifecycle position (discovery, spec, design, plan, implement)              |
-| `oat_phase_status`        | Phase completion state (in_progress, complete, pr_open)                            |
-| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import, lite). Default: `spec-driven` |
-| `oat_hill_checkpoints`    | Which phases require HiLL approval                                                 |
-| `oat_hill_completed`      | Which HiLL gates have been passed                                                  |
-| `oat_blockers`            | Informational warnings (not routing gates)                                         |
-| `oat_implement_exit_gate` | Whether the implementation exit gate is allowed and fresh                          |
+| Field                     | Used For                                                                                     |
+| ------------------------- | -------------------------------------------------------------------------------------------- |
+| `oat_phase`               | Current lifecycle position (discovery, spec, design, plan, implement)                        |
+| `oat_phase_status`        | Phase completion state (in_progress, complete, pr_open)                                      |
+| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import, lite). Default: `spec-driven`           |
+| `oat_hill_checkpoints`    | Which phases require HiLL approval                                                           |
+| `oat_hill_completed`      | Which HiLL gates have been passed                                                            |
+| `oat_blockers`            | Informational warnings (not routing gates)                                                   |
+| `oat_implement_exit_gate` | Whether the implementation exit gate is allowed and fresh                                    |
+| `oat_lifecycle`           | Terminal status (active, paused, complete). `complete` is the terminal signal Step 5.2 reads |
 
 **If state.md is missing or unreadable:** Report error and suggest running the relevant phase skill directly. STOP.
 
@@ -422,6 +423,17 @@ in project state. When the snapshot exists and is incomplete, route to
 or a summary exists. A completed snapshot falls through to the normal router.
 
 **5.2: Incomplete revision tasks**
+
+Read `oat_lifecycle` from `state.md` before grepping anything. When
+`oat_lifecycle` is `complete`, revision phases are historical: skip this check
+and fall through to 5.3, and do not route to `oat-project-implement` even when
+`p-revN` tasks are still marked incomplete. Lifecycle is the only terminal
+signal here — neither a null current task nor a `complete` or `pr_open`
+`oat_phase_status` is terminal, because an active project reaches both while it
+still owns pending revision work. The guard is workflow-mode independent: it
+applies identically to `spec-driven`, `quick`, `import`, and `lite` projects.
+
+For every other `oat_lifecycle` value the check below is unchanged.
 
 Grep plan.md for `p-revN` phases. If any `p-revN` tasks exist with status != completed in implementation.md:
 → Route to `oat-project-implement`

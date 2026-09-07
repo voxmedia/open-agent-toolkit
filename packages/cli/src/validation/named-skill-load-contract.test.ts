@@ -1588,6 +1588,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-next/SKILL.md',
     anchor: 'Step 5: Post-Implementation Router',
+    match: 'revision phases are historical',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Read-only terminal-status guard that suppresses a route; Step 6 loads and follows the selected target.',
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 5: Post-Implementation Router',
     match: 'Revision tasks pending',
     classification: 'non-executing',
     skills: ['oat-project-implement'],
@@ -2435,7 +2444,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
 /**
  * Floors, not exact counts: the corpus grows, but a glob or path regression that
  * shrinks it must fail loudly rather than quietly widening every exemption.
- * Recorded at 41 bounded files / 158 candidate sentences, so losing a single
+ * Recorded at 42 bounded files / 179 candidate sentences, so losing a single
  * scanned file or one reference file's worth of candidates breaches the floor.
  * The negative control below reads these values rather than restating them, so
  * lowering them cannot silently disarm the guard.
