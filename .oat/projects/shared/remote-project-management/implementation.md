@@ -2627,6 +2627,12 @@ target=oat-reviewer-gpt-5-6-sol-high
   ancestry, merge, and boundary checks. Reconnaissance was not attempted.
   Phase 8 is complete after 3/3 reviews and 2/3 fix loops; final lifecycle
   verification and review are next.
+- Final lifecycle verification at closeout baseline `ed56d9b1f` passed every
+  CI-order gate with explicit zero exits: check, type-check, test, build,
+  skill-bump, fresh-main fetch, version, release validation, and docs build.
+  Lint and format passed. The separate forced workspace run passed 375 files
+  and 6,545 tests with 0/10 cached tasks; smoke passed 161/161, skills 837/837,
+  release tests 39/39, and canonical skill validation passed for 65 skills.
 
 <!-- orchestration-runs-end -->
 
@@ -2778,14 +2784,19 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Focused remote/E2E verification passed 708/708 tests; the evidence-grade
-  forced workspace run passed 6,470/6,470 tests with zero cached tasks.
+- Focused remote/E2E verification passed 708/708 tests; the final
+  evidence-grade forced workspace run passed 6,545/6,545 tests across 375 files
+  with zero cached tasks after the current-main merge.
 - Phase and review-fix contracts, skill validation/version gates, smoke and
   release suites, docs lint/format, plan validation, type checking, and package
   builds passed.
 - The complete CI-equivalent release sequence passed twice before the final
   review; independent Phase 8 review reproduced the focused, release, version,
   skill, merge, and forced zero-cache docs checks with zero findings.
+- Final closeout verification reran check, type-check, test, build, skill-bump,
+  fresh-main fetch, version, release validation, docs build, lint, format,
+  uncached workspace tests, smoke, skills, release tests, and skill validation;
+  every command exited zero.
 
 **Design deltas (if any):**
 
