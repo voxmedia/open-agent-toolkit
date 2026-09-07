@@ -1250,6 +1250,15 @@ discovery. Production code did not change. The targeted integration case
 passed 1/1, promotion passed 33/33, and CLI check/type-check passed. Root
 inspected the one-file diff and reran the integration case successfully.
 
+#### Phase 9 verification recovery review passed
+
+The independent review at
+`reviews/archived/p09-review-2026-09-07T032525Z.md` found 0 Critical, 0
+Important, 0 Medium, and 0 Minor findings. It confirmed the fixture authors and
+asserts both adaptive payloads and that production validation is unchanged.
+Phase 9 is complete after four tasks, one review-fix loop, and one bounded
+verification recovery.
+
 #### Configured implementation exit gate generation 4 created
 
 The configured declaration resolved with canonical configuration fingerprint
