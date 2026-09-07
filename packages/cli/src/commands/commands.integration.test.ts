@@ -77,12 +77,25 @@ function replaceMarkdownSection(
   return `${content.slice(0, bodyStart)}\n\n${body.trim()}\n${content.slice(nextHeading)}`;
 }
 
+const AUTHORED_PRODUCT_BEHAVIOR =
+  '1. **Visible result** — The promoted discovery preserves the Lite behavior.';
+const AUTHORED_TECHNICAL_DESIGN = [
+  '- **Current operation:** Lite promotion reads the authored plan.',
+  '- **Proposed changes:** Carry adaptive sections into quick discovery.',
+  '- **Data flow:** Product and technical context flows from the Lite plan into discovery.',
+].join('\n');
+
 async function authorLitePlan(projectPath: string): Promise<string> {
   const planPath = join(projectPath, 'plan.md');
   let plan = await readFile(planPath, 'utf8');
   for (const [heading, body] of [
     ['Summary', 'Ship the exact lite workflow behavior.'],
-    ['Decisions', '- Keep promotion mechanical and lossless.'],
+    [
+      'Decisions',
+      '- **Content shape:** `both` — Exercise adaptive promotion.\n- Keep promotion mechanical and lossless.',
+    ],
+    ['Product Behavior', AUTHORED_PRODUCT_BEHAVIOR],
+    ['Technical Design', AUTHORED_TECHNICAL_DESIGN],
     ['Assumptions', '- The bundle tier is the template source.'],
     ['Out of Scope', '- Spec-driven planning.'],
     [
@@ -1212,6 +1225,8 @@ describe('CLI command integration', () => {
       for (const answer of [
         'Ship the exact lite workflow behavior.',
         '- Keep promotion mechanical and lossless.',
+        AUTHORED_PRODUCT_BEHAVIOR,
+        AUTHORED_TECHNICAL_DESIGN,
         '- The bundle tier is the template source.',
         '- Spec-driven planning.',
         '- [ ] The promoted discovery preserves every interview answer — Check: `pnpm test`',
