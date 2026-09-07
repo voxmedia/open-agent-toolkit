@@ -173,7 +173,7 @@ Per-key restrictions apply identically to `set` and `unset`: structural keys can
 
 `unset` refuses five classes of key, each with exit code 1:
 
-- **Unknown keys**, including keys OAT reads but does not expose in the `oat config` catalog (`documentation.index`, `documentation.instructionPointerExcludes`). These are not removable by any `oat config` command.
+- **Unknown keys**, including keys OAT reads but does not expose in the `oat config` catalog (`documentation.index`). These are not removable by any `oat config` command.
 - **Lifecycle state** (`activeProject`, `lastPausedProject`) — cleared with `oat config set <key> ''` instead.
 - **Pack intent** (`tools.*`) — removed with `oat tools remove --pack <pack> --scope project`, which also removes the installed pack files. Clearing the intent alone would leave them behind.
 - **Aggregate read views** (`workflow.dispatchCeiling`, `workflow.dispatchCeiling.providers`) — these are assembled for `get` from the leaf keys and are not stored as such. Unset `workflow.dispatchCeiling.preset` or `workflow.dispatchCeiling.providers.<provider>` instead.

@@ -53,7 +53,10 @@ child is skipped, and the app root keeps receiving its `CLAUDE.md` pointer. Opt
 the app root out explicitly if you do not want it synced.
 
 Add further paths with `documentation.instructionPointerExcludes`, a list of
-repository-relative directories:
+repository-relative directories. Set it with
+`oat config set documentation.instructionPointerExcludes "vendor,third_party/docs"`
+(an empty value clears it, and `oat config unset` removes it), or write it
+directly:
 
 ```json
 {
@@ -69,7 +72,8 @@ directory path exactly rather than by prefix — excluding `apps/docs` leaves a
 sibling `apps/docs-legacy` scanned. Entries are repository-relative and
 normalized, so `apps/./docs`, `apps//docs`, and `apps/docs/` all name the same
 tree; absolute paths and paths escaping the repository are dropped with a
-warning, and the repository root itself cannot be excluded. A structurally malformed value
+warning when they are already stored — and refused outright by
+`oat config set` — and the repository root itself cannot be excluded. A structurally malformed value
 (anything other than an array of non-empty strings) is rejected with exit code
 `2` rather than silently ignored.
 

@@ -542,10 +542,14 @@ is safe: the second run appends nothing and creates no commit.
 
 At the start of a run, a receipt still sitting under the project produces a
 `gate-project-log-receipt-pending` diagnostic naming the receipt and its
-recovery command. Its `state` is `stale` when the log already carries that run
-id — the append landed, so recovery will observe `already-appended` and clear
-the receipt — and `pending` otherwise. The warning is discovery only; the gate
-still runs.
+recovery command. Its `state` is `stale` only when the _committed_ log
+(`HEAD:project-log.md`) already carries that run id and entry — the append
+landed and was committed, so recovery will observe `already-appended` and clear
+the receipt. Everything else is `pending`, including the ordinary case where
+the entry is in the working tree but no commit succeeded: that is precisely
+what the receipt exists to finish, so it is never reported as leftovers. A
+receipt naming another tree's log, or a committed log that cannot be read back,
+also stays `pending`. The warning is discovery only; the gate still runs.
 
 ## Exec targets
 

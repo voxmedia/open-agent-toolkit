@@ -1,6 +1,15 @@
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import { readFileSync, statSync } from 'node:fs';
+import { createHash, randomUUID } from 'node:crypto';
+import {
+  closeSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+  unlinkSync,
+  writeSync,
+} from 'node:fs';
 import {
   appendFile,
   readFile,
@@ -8,8 +17,16 @@ import {
   rm,
   writeFile,
 } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import { basename, isAbsolute, join, resolve } from 'node:path';
+import { homedir, hostname, tmpdir } from 'node:os';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 
 import {
   buildCommandContext,
@@ -61,6 +78,380 @@ export const PROJECT_LOG_COMMIT_RETRY_DELAYS_MS: readonly number[] = [250, 500];
 
 const COMMIT_MESSAGE = 'chore(oat): record project log entry';
 
+/**
+ * Directory, under the OS temp root, that holds the advisory locks serializing
+ * project-log mutations.
+ *
+ * The lock is deliberately *not* stored beside the log. A tracked project
+ * directory would gain an untracked file for the duration of every append, and
+ * a crashed writer would leave one behind for review to trip over. A lock must
+ * also not outlive the machine that took it, which is exactly what a temp root
+ * gives: the receipt needed durability across processes and therefore rejected
+ * `tmpdir()` (DR-260907), while a lock needs the opposite.
+ *
+ * This serializes writers on one machine, which is the condition the gate
+ * actually meets: overlapping `oat` processes in one worktree. It is advisory,
+ * so a writer that cannot take it still proceeds — the identity verification in
+ * `commitProjectLog` is the assurance that a lost entry is never reported as
+ * settled work.
+ */
+const PROJECT_LOG_LOCK_DIRNAME = 'oat-project-log-locks';
+
+/**
+ * Bounded wait for the advisory lock. Declared rather than inline so the bound
+ * is reviewable: a writer waits at most `WAIT_MS`, polling every `POLL_MS`, and
+ * treats a lock whose owner is gone — or that is older than `STALE_MS` — as
+ * abandoned.
+ */
+export const PROJECT_LOG_LOCK_WAIT_MS = 5_000;
+export const PROJECT_LOG_LOCK_POLL_MS = 25;
+export const PROJECT_LOG_LOCK_STALE_MS = 30_000;
+
+export interface ProjectLogLockDependencies {
+  waitMs: number;
+  pollMs: number;
+  staleMs: number;
+  sleep: (ms: number) => Promise<void>;
+  now: () => number;
+}
+
+const DEFAULT_LOCK_DEPENDENCIES: ProjectLogLockDependencies = {
+  waitMs: PROJECT_LOG_LOCK_WAIT_MS,
+  pollMs: PROJECT_LOG_LOCK_POLL_MS,
+  staleMs: PROJECT_LOG_LOCK_STALE_MS,
+  sleep: async (ms: number): Promise<void> => {
+    await new Promise((settle) => setTimeout(settle, ms));
+  },
+  now: () => Date.now(),
+};
+
+interface ProjectLogLockHolder {
+  token?: unknown;
+  pid?: unknown;
+  host?: unknown;
+  acquiredAt?: unknown;
+}
+
+interface ProjectLogLockHandle {
+  path: string;
+  token: string;
+  /** False when the bounded wait elapsed and the caller proceeded unlocked. */
+  held: boolean;
+}
+
+/**
+ * The lock file for one log, keyed by the log's resolved location so two
+ * processes naming the same file through different relative paths — or through
+ * a symlinked temp root — contend on the same lock.
+ */
+/**
+ * The real, symlink-free location of `target`, falling back to the plain
+ * resolution when the path cannot be canonicalized.
+ *
+ * This matters everywhere two spellings of one path must compare equal: a
+ * macOS temp root is `/var/...` to the caller and `/private/var/...` to git, so
+ * a raw `relative()` between the two reads as "outside the repository".
+ */
+function canonicalPath(target: string): string {
+  try {
+    return realpathSync(target);
+  } catch {
+    return resolve(target);
+  }
+}
+
+export function projectLogLockPath(logPath: string): string {
+  const resolvedDirectory = canonicalPath(dirname(resolve(logPath)));
+  const digest = createHash('sha256')
+    .update(join(resolvedDirectory, basename(logPath)))
+    .digest('hex');
+  return join(tmpdir(), PROJECT_LOG_LOCK_DIRNAME, `${digest}.lock`);
+}
+
+function isProcessAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    // EPERM means the process exists but belongs to another user, which is
+    // still a live owner; only ESRCH proves it is gone.
+    return (
+      error != null &&
+      typeof error === 'object' &&
+      (error as { code?: string }).code === 'EPERM'
+    );
+  }
+}
+
+function readLockHolder(lockPath: string): ProjectLogLockHolder | undefined {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(lockPath, 'utf8'));
+    return parsed != null && typeof parsed === 'object'
+      ? (parsed as ProjectLogLockHolder)
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Creates the lock file exclusively and confirms the file still names us.
+ *
+ * `wx` is the primitive: the create either wins or fails with `EEXIST`, in this
+ * process exactly as in any other. The confirming read is what makes a stale
+ * takeover safe. POSIX has no compare-and-unlink, so a contender that judged a
+ * lock abandoned can still remove a *live* lock created in the gap between its
+ * decision and its unlink. When that happens the loser's token is no longer in
+ * the file, so it reports a failed acquire and retries instead of entering the
+ * critical section alongside the winner. Exactly one writer sees its own token.
+ */
+function tryCreateProjectLogLock(lockPath: string, token: string): boolean {
+  let descriptor: number;
+  try {
+    descriptor = openSync(lockPath, 'wx');
+  } catch {
+    return false;
+  }
+  try {
+    writeSync(
+      descriptor,
+      `${JSON.stringify({
+        token,
+        pid: process.pid,
+        host: hostname(),
+        acquiredAt: new Date().toISOString(),
+      })}\n`,
+    );
+  } catch {
+    // A lock we cannot identify ourselves in is a lock we must not claim.
+    try {
+      closeSync(descriptor);
+    } catch {
+      // Nothing to recover.
+    }
+    return false;
+  }
+  try {
+    closeSync(descriptor);
+  } catch {
+    // Nothing to recover: the exclusive create already succeeded.
+  }
+  return readLockHolder(lockPath)?.token === token;
+}
+
+/**
+ * Takes the single-winner right to reclaim an abandoned lock.
+ *
+ * Reclamation is the one operation that removes a file this process did not
+ * create, so it is itself serialized. With the slot held there is no second
+ * reclaimer, and an ordinary acquirer cannot slip in either: its `wx` create
+ * fails for as long as the abandoned lock is still on disk. The lock the
+ * reclaimer unlinks is therefore provably the lock it inspected.
+ *
+ * A slot whose owner died mid-reclamation is itself reclaimed once it is older
+ * than `staleMs`. That fallback is the only place two reclaimers can meet, and
+ * it costs a 30-second stall rather than a lost entry.
+ */
+function acquireReclaimSlot(
+  reclaimPath: string,
+  staleMs: number,
+  nowMs: number,
+): boolean {
+  if (tryCreateReclaimSlot(reclaimPath)) {
+    return true;
+  }
+  const mtime = lockMtimeMs(reclaimPath);
+  if (mtime === undefined) {
+    return tryCreateReclaimSlot(reclaimPath);
+  }
+  if (nowMs - mtime < staleMs) {
+    return false;
+  }
+  try {
+    unlinkSync(reclaimPath);
+  } catch {
+    return false;
+  }
+  return tryCreateReclaimSlot(reclaimPath);
+}
+
+function tryCreateReclaimSlot(reclaimPath: string): boolean {
+  try {
+    closeSync(openSync(reclaimPath, 'wx'));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether a lock's owner can be shown to be gone.
+ *
+ * A same-host lock whose recorded pid no longer exists was abandoned by a
+ * crashed writer. Anything else — an unreadable body, or a lock recorded by
+ * another host — counts as abandoned only once it is older than `staleMs`, so
+ * a live owner is never evicted on a guess.
+ */
+function lockIsAbandoned(
+  holder: ProjectLogLockHolder | undefined,
+  mtimeMs: number,
+  staleMs: number,
+  nowMs: number,
+): boolean {
+  if (holder?.host === hostname() && typeof holder.pid === 'number') {
+    return !isProcessAlive(holder.pid);
+  }
+  return nowMs - mtimeMs >= staleMs;
+}
+
+/**
+ * Removes a lock whose owner can be shown to be gone.
+ *
+ * This only ever removes *this module's own* advisory lock. It never touches
+ * `.git/index.lock`, which belongs to git and to whichever process took it.
+ *
+ * A same-host lock whose recorded pid no longer exists is abandoned by a
+ * crashed writer and is cleared immediately; anything else — an unreadable
+ * body, or a lock recorded by another host — is cleared only once it is older
+ * than `staleMs`, so a live owner is never evicted on a guess.
+ */
+function clearStaleProjectLogLock(
+  lockPath: string,
+  staleMs: number,
+  nowMs: number,
+): boolean {
+  const mtime = lockMtimeMs(lockPath);
+  if (mtime === undefined) {
+    // Already gone: the next exclusive create is the retry.
+    return true;
+  }
+  if (!lockIsAbandoned(readLockHolder(lockPath), mtime, staleMs, nowMs)) {
+    return false;
+  }
+
+  const reclaimPath = `${lockPath}.reclaim`;
+  if (!acquireReclaimSlot(reclaimPath, staleMs, nowMs)) {
+    return false;
+  }
+  try {
+    // Re-decided under the slot, against the file as it is now. Nothing can
+    // have replaced it: a competing reclaimer would need this slot, and an
+    // ordinary acquirer cannot create a lock that still exists.
+    const currentMtime = lockMtimeMs(lockPath);
+    if (currentMtime === undefined) {
+      return true;
+    }
+    if (
+      !lockIsAbandoned(readLockHolder(lockPath), currentMtime, staleMs, nowMs)
+    ) {
+      return false;
+    }
+    unlinkSync(lockPath);
+    return true;
+  } catch {
+    return false;
+  } finally {
+    try {
+      unlinkSync(reclaimPath);
+    } catch {
+      // A slot we cannot remove is reclaimed by the staleness fallback above.
+    }
+  }
+}
+
+/**
+ * Takes the advisory lock for `logPath`, waiting a bounded time.
+ *
+ * Returns a handle whose `held` is false when the wait elapsed. What that means
+ * is the caller's to decide: see `withProjectLogLock`, where a file-rewriting
+ * mutation refuses and a commit proceeds.
+ */
+async function acquireProjectLogLock(
+  logPath: string,
+  overrides: Partial<ProjectLogLockDependencies> = {},
+): Promise<ProjectLogLockHandle> {
+  const dependencies = { ...DEFAULT_LOCK_DEPENDENCIES, ...overrides };
+  const lockPath = projectLogLockPath(logPath);
+  const token = randomUUID();
+  try {
+    mkdirSync(dirname(lockPath), { recursive: true });
+  } catch {
+    return { path: lockPath, token, held: false };
+  }
+
+  const deadline = dependencies.now() + dependencies.waitMs;
+  for (;;) {
+    if (tryCreateProjectLogLock(lockPath, token)) {
+      return { path: lockPath, token, held: true };
+    }
+    if (
+      clearStaleProjectLogLock(
+        lockPath,
+        dependencies.staleMs,
+        dependencies.now(),
+      ) &&
+      tryCreateProjectLogLock(lockPath, token)
+    ) {
+      return { path: lockPath, token, held: true };
+    }
+    if (dependencies.now() >= deadline) {
+      return { path: lockPath, token, held: false };
+    }
+    await dependencies.sleep(dependencies.pollMs);
+  }
+}
+
+/**
+ * Releases a lock this process still owns. A lock that was stolen as stale now
+ * belongs to its new holder, so the token is checked before the unlink.
+ */
+function releaseProjectLogLock(handle: ProjectLogLockHandle): void {
+  if (!handle.held) {
+    return;
+  }
+  const holder = readLockHolder(handle.path);
+  if (holder !== undefined && holder.token !== handle.token) {
+    return;
+  }
+  try {
+    unlinkSync(handle.path);
+  } catch {
+    // Already released or never created; there is nothing to report.
+  }
+}
+
+/**
+ * Runs `mutate` with the log's advisory lock held, releasing it on every path.
+ *
+ * `required` is for mutations that rewrite the file. Running one of those
+ * without the lock is exactly the read/modify/write race this exists to close,
+ * so an unavailable lock refuses rather than proceeding: a loud, retryable
+ * failure that the caller reports is strictly better than a silent clobber of
+ * another writer's entry, and the recovery command replays the append safely.
+ *
+ * `best-effort` is for work that cannot lose an entry — committing does not
+ * rewrite the log — where holding the lock only keeps this process from racing
+ * its own sibling into `.git/index.lock`.
+ */
+async function withProjectLogLock<T>(
+  logPath: string,
+  overrides: Partial<ProjectLogLockDependencies>,
+  policy: 'required' | 'best-effort',
+  mutate: () => Promise<T>,
+): Promise<T> {
+  const handle = await acquireProjectLogLock(logPath, overrides);
+  if (!handle.held && policy === 'required') {
+    throw new Error(
+      `Timed out waiting for the project log lock at ${handle.path}. Another writer is holding it; retry once it finishes.`,
+    );
+  }
+  try {
+    return await mutate();
+  } finally {
+    releaseProjectLogLock(handle);
+  }
+}
+
 export type GitLockFailureClass =
   | 'transient-index-lock'
   | 'persistent-index-lock'
@@ -72,6 +463,8 @@ export type ProjectLogCommitOutcome =
   | 'nothing-to-commit'
   | 'not-a-repo'
   | 'blocked-by-index-lock'
+  | 'entry-missing-after-commit'
+  | 'commit-unverified'
   | 'failed';
 
 export interface ProjectLogCommitResult {
@@ -100,6 +493,18 @@ export interface CommitProjectLogDependencies {
   attempts: number;
   retryDelaysMs: readonly number[];
   sleep: (ms: number) => Promise<void>;
+  /**
+   * Advisory-lock overrides. Kept separate from `sleep` above, which is the
+   * index-lock retry delay: the two waits are different bounds and a caller
+   * that observes one must not be told about the other.
+   */
+  lock: Partial<ProjectLogLockDependencies>;
+  /**
+   * Git runner for this path. Injectable so a control can make one command
+   * fail — the committed-log read back is allowed to be unavailable, and what
+   * happens then has to be provable rather than asserted.
+   */
+  runGit: (repoRoot: string, args: string[]) => string;
 }
 
 const DEFAULT_COMMIT_DEPENDENCIES: CommitProjectLogDependencies = {
@@ -108,6 +513,8 @@ const DEFAULT_COMMIT_DEPENDENCIES: CommitProjectLogDependencies = {
   sleep: async (ms: number): Promise<void> => {
     await new Promise((settle) => setTimeout(settle, ms));
   },
+  lock: {},
+  runGit,
 };
 
 /**
@@ -162,6 +569,9 @@ function runGit(repoRoot: string, args: string[]): string {
     // Capture stderr rather than inheriting it so skip and failure probes do
     // not leak raw `git fatal:` lines into command output.
     stdio: ['ignore', 'pipe', 'pipe'],
+    // Reading the committed log back is one of these calls, and a long-lived
+    // project log outgrows the 1 MiB default.
+    maxBuffer: 64 * 1024 * 1024,
   }).trim();
 }
 
@@ -260,13 +670,133 @@ function logCarriesIdentity(input: CommitProjectLogInput): boolean {
 }
 
 /**
+ * Whether the log *as committed at HEAD* carries a given entry identity.
+ *
+ * `unknown` is a first-class answer, and it is never read as `absent`: a
+ * repository with no HEAD, a log that has never been committed, or a git
+ * invocation that fails for an environmental reason all say nothing about the
+ * entry, and turning that silence into "the entry is gone" would manufacture
+ * failures out of missing evidence.
+ */
+export type CommittedLogIdentityState = 'present' | 'absent' | 'unknown';
+
+/**
+ * The content of `logPath` as committed at HEAD, or undefined when HEAD does
+ * not have it.
+ *
+ * The working tree is deliberately not consulted. A dirty entry is precisely
+ * the state an exhausted commit retry leaves behind, so a reader that answers
+ * from the working tree cannot tell finished finalization from unfinished
+ * finalization — which is the whole question both callers here are asking.
+ */
+function readCommittedProjectLog(
+  run: (args: string[]) => string,
+  logPath: string,
+): string | undefined {
+  try {
+    const top = canonicalPath(run(['rev-parse', '--show-toplevel']));
+    const relativePath = relative(top, canonicalPath(logPath))
+      .split(sep)
+      .join('/');
+    if (relativePath === '' || relativePath.startsWith('..')) {
+      return undefined;
+    }
+    return run(['show', `HEAD:${relativePath}`]);
+  } catch {
+    return undefined;
+  }
+}
+
+function committedIdentityState(
+  run: (args: string[]) => string,
+  logPath: string,
+  key: string,
+  body?: string,
+): CommittedLogIdentityState {
+  const committed = readCommittedProjectLog(run, logPath);
+  if (committed === undefined) {
+    return 'unknown';
+  }
+  return findProjectLogEntryByIdempotencyKey(committed, key, body) !== undefined
+    ? 'present'
+    : 'absent';
+}
+
+/**
+ * Whether the committed log carries `key`.
+ *
+ * Exported for callers that must distinguish finished finalization from
+ * unfinished finalization — the gate's receipt classifier among them — so that
+ * question is answered by this module rather than by a caller opening
+ * `project-log.md` itself (DR-260718).
+ */
+export async function committedProjectLogIdentityState(
+  repoRoot: string,
+  logPath: string,
+  key: string,
+  body?: string,
+): Promise<CommittedLogIdentityState> {
+  return committedIdentityState(
+    (args: string[]): string => runGit(repoRoot, args),
+    logPath,
+    key,
+    body,
+  );
+}
+
+/**
+ * The committed-log verdict for the entry this commit names, or `unknown` when
+ * the caller named no entry.
+ */
+function committedInputIdentityState(
+  run: (args: string[]) => string,
+  input: CommitProjectLogInput,
+): CommittedLogIdentityState {
+  if (input.identity === undefined) {
+    return 'unknown';
+  }
+  return committedIdentityState(
+    run,
+    input.logPath,
+    input.identity.key,
+    input.identity.body,
+  );
+}
+
+/**
+ * True when the entry this commit names survives: present at HEAD, or — when
+ * HEAD cannot answer — still present in the file on disk.
+ *
+ * The working-tree reading is a fallback for `unknown`, never an override of
+ * `absent`: HEAD is the authority whenever it can speak.
+ */
+function identitySurvives(
+  run: (args: string[]) => string,
+  input: CommitProjectLogInput,
+): boolean {
+  const state = committedInputIdentityState(run, input);
+  if (state === 'present') {
+    return true;
+  }
+  if (state === 'absent') {
+    return false;
+  }
+  return logCarriesIdentity(input);
+}
+
+function entryMissingMessage(input: CommitProjectLogInput): string {
+  return `the committed project log does not carry this entry (${input.identity?.key ?? 'unknown'}); another writer rewrote it`;
+}
+
+/**
  * True when another writer already committed the entry we were trying to
  * commit.
  *
  * All three conditions are required. A clean log means the working tree matches
  * HEAD, a moved HEAD means someone committed, and — when the caller named the
- * entry's identity — that identity still being in the clean file means the
- * committed content is the content we appended, not a rewrite that dropped it.
+ * entry's identity — that identity still being in the *committed* log means the
+ * content that landed is the content we appended, not a rewrite that dropped
+ * it.
  */
 function settledByAnotherWriter(
   run: (args: string[]) => string,
@@ -280,52 +810,24 @@ function settledByAnotherWriter(
     if (readHead(run) === snapshot.head) {
       return false;
     }
-    return logCarriesIdentity(input);
+    return identitySurvives(run, input);
   } catch {
     return false;
   }
 }
 
 /**
- * Stages and commits `project-log.md`, retrying a bounded number of times when
- * the failure is a transient `.git/index.lock`.
- *
- * The log is tracked, so an uncommitted append leaves the worktree dirty for
- * whatever runs next — including a dispatched subagent whose preflight requires
- * a clean tree. The commit is pathspec-scoped to the log alone so unrelated
- * working-tree changes are never swept in.
- *
- * Scope note: this commits the whole log file, so a log that was already dirty
- * before the caller ran is committed along with this entry. That is deliberate
- * — leaving the earlier append uncommitted would reproduce the dirty tree this
- * exists to prevent — but it does mean the commit is not always exactly one
- * entry.
- *
- * Never throws, and never deletes, moves, or forces an index lock: a lock this
- * process did not take is another process's, and only its owner may clear it.
- * Git failures are reported to the caller, which degrades to a diagnostic
- * rather than altering any exit status. On failure the index is restored so a
- * partially staged log is not left behind.
- *
- * Exactly one outcome is derived from a single pre-action snapshot (entry HEAD
- * plus entry dirtiness) rather than from eligibility re-sampled after the
- * action, so a log another writer committed mid-retry reads as
- * `already-committed` instead of a spurious failure.
+ * The locked half of `commitProjectLog`: snapshot, bounded retry, and the
+ * committed-identity verification, all with the advisory lock held so this
+ * process never races its own sibling into `.git/index.lock` and never reads a
+ * snapshot another local writer is about to invalidate.
  */
-export async function commitProjectLog(
+async function commitLockedProjectLog(
   input: CommitProjectLogInput,
-  overrides: Partial<CommitProjectLogDependencies> = {},
+  dependencies: CommitProjectLogDependencies,
+  run: (args: string[]) => string,
+  message: string,
 ): Promise<ProjectLogCommitResult> {
-  const dependencies = { ...DEFAULT_COMMIT_DEPENDENCIES, ...overrides };
-  const run = (args: string[]): string => runGit(input.repoRoot, args);
-  const message = input.message ?? COMMIT_MESSAGE;
-
-  try {
-    run(['rev-parse', '--is-inside-work-tree']);
-  } catch {
-    return { outcome: 'not-a-repo', committed: false, attempts: 0 };
-  }
-
   let snapshot: ProjectLogCommitSnapshot;
   try {
     snapshot = {
@@ -341,15 +843,16 @@ export async function commitProjectLog(
     };
   }
   if (!snapshot.dirty) {
-    if (!logCarriesIdentity(input)) {
-      // A clean log that no longer carries this entry is a lost entry, not
+    if (!identitySurvives(run, input)) {
+      // A committed log that no longer carries this entry is a lost entry, not
       // finished work: reporting it as settled would consume the receipt while
-      // the finalization never happened.
+      // the finalization never happened. The recovery command re-appends it
+      // idempotently and commits.
       return {
-        outcome: 'failed',
+        outcome: 'entry-missing-after-commit',
         committed: false,
         attempts: 0,
-        error: `the project log is committed but no longer carries this entry (${input.identity?.key ?? 'unknown'})`,
+        error: entryMissingMessage(input),
       };
     }
     return { outcome: 'nothing-to-commit', committed: false, attempts: 0 };
@@ -368,6 +871,31 @@ export async function commitProjectLog(
       run(['add', '--', input.logPath]);
       staged = true;
       run(['commit', '-m', message, '--', input.logPath]);
+      // A nominally successful commit is not a successful finalization. A
+      // caller that named its entry gets `committed` only when HEAD is read and
+      // positively carries that entry: `absent` means an overlapping writer
+      // clobbered the append before it was staged, and `unknown` means the
+      // verification could not be performed at all. Settling on unread evidence
+      // is what would let both writers succeed with one run id missing, so
+      // neither state settles — both route to the same idempotent recovery.
+      const verified =
+        input.identity === undefined
+          ? 'present'
+          : committedInputIdentityState(run, input);
+      if (verified !== 'present') {
+        return {
+          outcome:
+            verified === 'absent'
+              ? 'entry-missing-after-commit'
+              : 'commit-unverified',
+          committed: false,
+          attempts: attempt,
+          error:
+            verified === 'absent'
+              ? entryMissingMessage(input)
+              : `the commit succeeded but the committed project log could not be read back to confirm this entry (${input.identity?.key ?? 'unknown'})`,
+        };
+      }
       return { outcome: 'committed', committed: true, attempts: attempt };
     } catch (error) {
       if (staged) {
@@ -434,6 +962,55 @@ export async function commitProjectLog(
 }
 
 /**
+ * Stages and commits `project-log.md`, retrying a bounded number of times when
+ * the failure is a transient `.git/index.lock`.
+ *
+ * The log is tracked, so an uncommitted append leaves the worktree dirty for
+ * whatever runs next — including a dispatched subagent whose preflight requires
+ * a clean tree. The commit is pathspec-scoped to the log alone so unrelated
+ * working-tree changes are never swept in.
+ *
+ * Scope note: this commits the whole log file, so a log that was already dirty
+ * before the caller ran is committed along with this entry. That is deliberate
+ * — leaving the earlier append uncommitted would reproduce the dirty tree this
+ * exists to prevent — but it does mean the commit is not always exactly one
+ * entry.
+ *
+ * Never throws, and never deletes, moves, or forces an index lock: a lock this
+ * process did not take is another process's, and only its owner may clear it.
+ * Git failures are reported to the caller, which degrades to a diagnostic
+ * rather than altering any exit status. On failure the index is restored so a
+ * partially staged log is not left behind.
+ *
+ * Exactly one outcome is derived from a single pre-action snapshot (entry HEAD
+ * plus entry dirtiness) rather than from eligibility re-sampled after the
+ * action, so a log another writer committed mid-retry reads as
+ * `already-committed` instead of a spurious failure.
+ */
+export async function commitProjectLog(
+  input: CommitProjectLogInput,
+  overrides: Partial<CommitProjectLogDependencies> = {},
+): Promise<ProjectLogCommitResult> {
+  const dependencies = { ...DEFAULT_COMMIT_DEPENDENCIES, ...overrides };
+  const run = (args: string[]): string =>
+    dependencies.runGit(input.repoRoot, args);
+  const message = input.message ?? COMMIT_MESSAGE;
+
+  try {
+    run(['rev-parse', '--is-inside-work-tree']);
+  } catch {
+    return { outcome: 'not-a-repo', committed: false, attempts: 0 };
+  }
+
+  return withProjectLogLock(
+    input.logPath,
+    dependencies.lock,
+    'best-effort',
+    async () => commitLockedProjectLog(input, dependencies, run, message),
+  );
+}
+
+/**
  * The whole whitespace-delimited word of `body` that carries `key` — for a gate
  * finalization body that is `run=<runId>`, not the bare run id.
  *
@@ -489,28 +1066,6 @@ export function findProjectLogEntryByIdempotencyKey(
     }
   }
   return undefined;
-}
-
-/**
- * True when the log at `logPath` already carries an entry for `key`. A missing
- * or unreadable log is reported as absent rather than throwing.
- */
-export async function projectLogContainsIdempotencyKey(
-  logPath: string,
-  key: string,
-  body?: string,
-): Promise<boolean> {
-  try {
-    return (
-      findProjectLogEntryByIdempotencyKey(
-        await readFile(logPath, 'utf8'),
-        key,
-        body,
-      ) !== undefined
-    );
-  } catch {
-    return false;
-  }
 }
 
 /**
@@ -579,6 +1134,16 @@ export interface AppendProjectLogDependencies {
   ) => Promise<ResolvedConfig>;
   resolveAssetsRoot: () => Promise<string>;
   now: () => Date;
+  /**
+   * The log's own read/modify/write primitives. Injectable so a test can hold
+   * one writer inside the window while another enters it, which is the only way
+   * to prove the serialization rather than assert it.
+   */
+  readLog: (path: string) => Promise<string>;
+  writeLog: (path: string, content: string) => Promise<void>;
+  appendLog: (path: string, content: string) => Promise<void>;
+  /** Advisory-lock overrides for the append window. */
+  lock: Partial<ProjectLogLockDependencies>;
 }
 
 const DEFAULT_APPEND_DEPENDENCIES: AppendProjectLogDependencies = {
@@ -586,6 +1151,14 @@ const DEFAULT_APPEND_DEPENDENCIES: AppendProjectLogDependencies = {
   resolveEffectiveConfig,
   resolveAssetsRoot,
   now: () => new Date(),
+  readLog: async (path: string): Promise<string> => readFile(path, 'utf8'),
+  writeLog: async (path: string, content: string): Promise<void> => {
+    await writeFile(path, content, 'utf8');
+  },
+  appendLog: async (path: string, content: string): Promise<void> => {
+    await appendFile(path, content, 'utf8');
+  },
+  lock: {},
 };
 
 interface AppendCommandOptions {
@@ -835,37 +1408,54 @@ export function instantiateProjectLogTemplate(
   return instantiated.endsWith('\n') ? instantiated : `${instantiated}\n`;
 }
 
+/**
+ * Inserts one entry, before the end-of-run synthesis section when the log has
+ * one.
+ *
+ * The synthesis branch is a read/modify/write, so two overlapping writers would
+ * lose an entry; every caller therefore runs this with the log's advisory lock
+ * held. The plain branch still appends rather than rewriting, which keeps a
+ * writer that could not take the lock strictly additive.
+ */
 async function appendEntry(
   logPath: string,
   heading: string,
   body: string,
   versionNote: string | undefined,
+  dependencies: AppendProjectLogDependencies,
 ): Promise<void> {
   const bodyWithVersion = versionNote?.trim()
     ? `${body} (observed on ${versionNote.trim()})`
     : body;
   const entry = `\n${heading}\n\n${bodyWithVersion}\n`;
-  const content = await readFile(logPath, 'utf8');
+  const content = await dependencies.readLog(logPath);
   const synthesisIndex = content.indexOf(SYNTHESIS_HEADING_PREFIX);
 
   if (synthesisIndex >= 0) {
-    await writeFile(
+    await dependencies.writeLog(
       logPath,
       `${content.slice(0, synthesisIndex)}${entry}${content.slice(
         synthesisIndex,
       )}`,
-      'utf8',
     );
     return;
   }
 
-  await appendFile(
+  await dependencies.appendLog(
     logPath,
     `${content.endsWith('\n') ? '' : '\n'}${entry}`,
-    'utf8',
   );
 }
 
+/**
+ * Appends one entry to the project log, at most once per idempotency key.
+ *
+ * The existence check, the idempotency scan, the template instantiation, and
+ * the write are one critical section under the log's advisory lock. Separating
+ * the scan from the mutation is what let two overlapping writers both pass the
+ * scan and then lose one entry to the other's stale rewrite, so they are not
+ * separable here.
+ */
 export async function appendProjectLog(
   input: AppendProjectLogInput,
   overrides: Partial<AppendProjectLogDependencies> = {},
@@ -873,6 +1463,17 @@ export async function appendProjectLog(
   const dependencies = { ...DEFAULT_APPEND_DEPENDENCIES, ...overrides };
   const projectPath = await resolveTargetProject(input, dependencies);
   const logPath = join(projectPath, PROJECT_LOG_FILENAME);
+
+  return withProjectLogLock(logPath, dependencies.lock, 'required', async () =>
+    appendLockedProjectLog(input, dependencies, logPath),
+  );
+}
+
+async function appendLockedProjectLog(
+  input: AppendProjectLogInput,
+  dependencies: AppendProjectLogDependencies,
+  logPath: string,
+): Promise<ProjectLogAppendResult> {
   const logExists = await fileExists(logPath);
 
   if (!logExists) {
@@ -892,7 +1493,7 @@ export async function appendProjectLog(
 
   if (logExists && idempotencyKey !== undefined) {
     const existing = findProjectLogEntryByIdempotencyKey(
-      await readFile(logPath, 'utf8'),
+      await dependencies.readLog(logPath),
       idempotencyKey,
       body,
     );
@@ -914,15 +1515,14 @@ export async function appendProjectLog(
       join(assetsRoot, 'templates', PROJECT_LOG_FILENAME),
       'utf8',
     );
-    await writeFile(
+    await dependencies.writeLog(
       logPath,
-      instantiateProjectLogTemplate(template, basename(projectPath), date),
-      'utf8',
+      instantiateProjectLogTemplate(template, basename(dirname(logPath)), date),
     );
     created = true;
   }
 
-  await appendEntry(logPath, heading, body, versionNote);
+  await appendEntry(logPath, heading, body, versionNote, dependencies);
   return { status: 'appended', logPath, heading, created };
 }
 

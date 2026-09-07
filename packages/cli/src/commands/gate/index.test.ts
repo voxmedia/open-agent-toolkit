@@ -6210,6 +6210,97 @@ describe('oat gate', () => {
     });
   });
 
+  it('keeps a receipt pending while its entry is only in the working tree', async () => {
+    let pendingReceiptPath = '';
+    // The index lock is held for this whole run, so the seeded entry stays in
+    // the working tree and reaches no commit: the exact state an exhausted
+    // commit retry leaves behind, and the state the receipt exists to describe.
+    const run = await runGateWithProjectLog({
+      holdIndexLock: true,
+      seedReceipt: async ({ root, projectPath }) => {
+        const logPath = await writeExistingProjectLog(root, projectPath);
+        await writeFile(
+          logPath,
+          `${await readFile(logPath, 'utf8')}\n### 2026-07-17 · structural · oat gate review · p01\n\nstatus=ok run=earlier-run\n`,
+          'utf8',
+        );
+        pendingReceiptPath = join(
+          root,
+          projectPath,
+          'gate-receipts',
+          'earlier-run.json',
+        );
+        await mkdir(join(root, projectPath, 'gate-receipts'), {
+          recursive: true,
+        });
+        await writeFile(
+          pendingReceiptPath,
+          `${JSON.stringify({
+            runId: 'earlier-run',
+            logPath,
+            body: 'status=ok run=earlier-run',
+            recovery: { command: 'oat project log append --commit' },
+          })}\n`,
+          'utf8',
+        );
+      },
+    });
+
+    const logRelative = join(run.projectPath, 'project-log.md');
+    expect(() => run.git(['show', `HEAD:${logRelative}`])).toThrow();
+    expect(
+      run.diagnostics.filter(
+        (entry) => entry.receiptPath === pendingReceiptPath,
+      ),
+    ).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-receipt-pending',
+        state: 'pending',
+        runId: 'earlier-run',
+      }),
+    );
+
+    // Recovery's commit is the transition. Once the entry is in the committed
+    // log, the same receipt is finished work and reads as stale.
+    await rm(join(run.root, '.git', 'index.lock'), { force: true });
+    run.git(['add', '--', logRelative]);
+    run.git(['commit', '-q', '-m', 'chore(oat): recover finalization']);
+    expect(run.git(['show', `HEAD:${logRelative}`])).toContain(
+      'run=earlier-run',
+    );
+
+    const secondDiagnostics: string[] = [];
+    const secondRunner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root: run.root,
+          projectPath: run.projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+    await runReviewGate({
+      root: run.root,
+      home: run.home,
+      runProcess: secondRunner.runProcess,
+      writeDiagnostic: (message) => secondDiagnostics.push(message),
+      appendProjectLog: appendProjectLogFromDisk,
+      args: ['--target', 'codex-default', '--review-scope', 'p03', 'Review'],
+    });
+
+    expect(
+      secondDiagnostics
+        .map((line) => JSON.parse(line) as Record<string, unknown>)
+        .filter((entry) => entry.receiptPath === pendingReceiptPath),
+    ).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-receipt-pending',
+        state: 'stale',
+        runId: 'earlier-run',
+      }),
+    );
+  });
+
   it('reports a receipt as stale once its run id is already in the log', async () => {
     let pendingReceiptPath = '';
     const run = await runGateWithProjectLog({
@@ -6219,6 +6310,17 @@ describe('oat gate', () => {
           logPath,
           `${await readFile(logPath, 'utf8')}\n### 2026-07-17 · structural · oat gate review · p01\n\nstatus=ok run=earlier-run\n`,
           'utf8',
+        );
+        // Staleness is a statement about the committed log, so the entry has
+        // to be committed for this to be the stale case at all.
+        execFileSync('git', ['add', '--', logPath], {
+          cwd: root,
+          stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        execFileSync(
+          'git',
+          ['commit', '-q', '-m', 'chore(oat): record earlier run'],
+          { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] },
         );
         pendingReceiptPath = join(
           root,

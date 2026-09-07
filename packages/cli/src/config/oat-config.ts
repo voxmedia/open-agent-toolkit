@@ -1179,10 +1179,10 @@ function normalizeDocumentationExcludes(
  * empty array are both "no extra exclusions"; a present-but-malformed value is
  * an error.
  *
- * The repair instruction names the config file rather than an `oat config set`
- * command, because this key has no `oat config` catalog entry — telling an
- * operator to run a command that does not exist would be worse than telling
- * them nothing.
+ * The repair instruction names `oat config set` first and the file second: the
+ * command is catalogued (`oat config set documentation.instructionPointerExcludes`),
+ * and an operator repairing a malformed value should reach for the validated
+ * write path before hand-editing JSON.
  */
 function normalizeInstructionPointerExcludes(
   value: unknown,
@@ -1195,7 +1195,7 @@ function normalizeInstructionPointerExcludes(
   const invalid = (): never => {
     throw new CliError(
       `Invalid documentation.instructionPointerExcludes in ${configPath}: expected an array of non-empty strings. ` +
-        'Repair it by editing documentation.instructionPointerExcludes in that file (remove the key to clear it).',
+        'Repair it with `oat config set documentation.instructionPointerExcludes <path[,path...]>` (an empty value clears the key), or by editing that file.',
       2,
     );
   };
@@ -1570,6 +1570,40 @@ export async function readOatConfigForDocumentationExcludesRepair(
     if (isRecord(parsed) && isRecord(parsed.documentation)) {
       const { excludes: _invalidExcludes, ...documentation } =
         parsed.documentation;
+      return normalizeOatConfig({ ...parsed, documentation }, configPath);
+    }
+    return normalizeOatConfig(parsed, configPath);
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return { ...DEFAULT_OAT_CONFIG };
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Read the shared config with a malformed
+ * `documentation.instructionPointerExcludes` dropped.
+ *
+ * The sibling of `readOatConfigForDocumentationExcludesRepair`, and it exists
+ * for the same reason: this key's own validation error now names
+ * `oat config set` as the repair, and a strict read would refuse to load the
+ * very value the operator is trying to replace or remove.
+ */
+export async function readOatConfigForInstructionPointerExcludesRepair(
+  repoRoot: string,
+): Promise<OatConfig> {
+  const configPath = getConfigPath(repoRoot);
+
+  try {
+    const raw = await readFile(configPath, 'utf8');
+    const parsed = parseJsonConfig(raw, configPath);
+    if (isRecord(parsed) && isRecord(parsed.documentation)) {
+      const {
+        instructionPointerExcludes: _invalidInstructionPointerExcludes,
+        ...documentation
+      } = parsed.documentation;
       return normalizeOatConfig({ ...parsed, documentation }, configPath);
     }
     return normalizeOatConfig(parsed, configPath);

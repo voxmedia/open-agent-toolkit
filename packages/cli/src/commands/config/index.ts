@@ -2,6 +2,7 @@ import { readFile as readFileDefault } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { normalizeExcludedPaths } from '@commands/instructions/instructions.utils';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { PROJECT_SCOPES } from '@commands/shared/project-scope';
 import {
@@ -49,6 +50,7 @@ import {
   readOatConfig,
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
+  readOatConfigForInstructionPointerExcludesRepair,
   readOatLocalConfig,
   readUserConfig,
   writeOatConfig,
@@ -79,6 +81,9 @@ import { createConfigDumpCommand } from './dump';
 
 const DISPATCH_CEILING_PROVIDER_KEY_PREFIX =
   'workflow.dispatchCeiling.providers.';
+
+/** `C:\path`, `c:/path`, and the bare `C:` drive reference. */
+const WINDOWS_DRIVE_PATH_RE = /^[A-Za-z]:/;
 const DISPATCH_MATRIX_TIERS = [
   'economy',
   'balanced',
@@ -107,6 +112,7 @@ type ConfigKey =
   | 'lastPausedProject'
   | 'documentation.config'
   | 'documentation.excludes'
+  | 'documentation.instructionPointerExcludes'
   | 'documentation.requireForProjectCompletion'
   | 'documentation.root'
   | 'documentation.tooling'
@@ -190,6 +196,9 @@ interface ConfigCommandDependencies {
   readOatConfigForDocumentationExcludesRepair: (
     repoRoot: string,
   ) => Promise<OatConfig>;
+  readOatConfigForInstructionPointerExcludesRepair: (
+    repoRoot: string,
+  ) => Promise<OatConfig>;
   writeOatConfig: (repoRoot: string, config: OatConfig) => Promise<void>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
   writeOatLocalConfig: (
@@ -237,6 +246,7 @@ const KEY_ORDER: ConfigKey[] = [
   'documentation.tooling',
   'documentation.config',
   'documentation.excludes',
+  'documentation.instructionPointerExcludes',
   'documentation.requireForProjectCompletion',
   'explainers.defaults.style',
   'explainers.defaults.palette',
@@ -392,6 +402,19 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat config set documentation.excludes <glob[,glob...]>',
     description:
       'Comma-separated globs, relative to the docs directory, excluded from `oat docs generate-index`. Repeated `--exclude` flags extend this list; an empty value clears the key.',
+  },
+  {
+    key: 'documentation.instructionPointerExcludes',
+    group: 'Shared Repo (.oat/config.json)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'string[]',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set documentation.instructionPointerExcludes <path[,path...]>',
+    description:
+      'Comma-separated repository-relative directories that `oat instructions sync` and `oat instructions validate` must not treat as pointer sites, additive to the documentation content root they already skip. Absolute paths and paths escaping the repository are rejected; an empty value clears the key.',
   },
   {
     key: 'documentation.requireForProjectCompletion',
@@ -1138,6 +1161,7 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   readOatConfig,
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
+  readOatConfigForInstructionPointerExcludesRepair,
   writeOatConfig,
   readOatLocalConfig,
   writeOatLocalConfig,
@@ -1233,6 +1257,48 @@ function normalizeSharedRoot(value: string): string {
  * an empty (or all-blank) value yields an empty list, which the caller treats
  * as "clear the key" rather than as an error.
  */
+/**
+ * Parse `documentation.instructionPointerExcludes` from one comma-separated
+ * value into the shape the loader and the consumer already agree on.
+ *
+ * Every entry goes through `normalizeExcludedPaths`, the same function
+ * `oat instructions sync` and `oat instructions validate` resolve exclusions
+ * with, so what `set` writes is exactly what those commands will read back:
+ * trimmed, de-duplicated, order-preserving, repository-relative POSIX paths.
+ *
+ * An entry that function drops -- an absolute path, or one escaping the
+ * repository with `..` -- is rejected here rather than stored. Such an entry
+ * can never name a directory inside the tree being scanned, so storing it would
+ * write a value the consumer only warns about and never honours, and an
+ * operator would have every reason to believe a tree was protected when it was
+ * not. An empty value clears the key, as it does for `documentation.excludes`.
+ *
+ * A Windows drive-letter path is rejected here too. `normalizeExcludedPaths`
+ * judges absoluteness with POSIX rules, so `C:\secrets` survives it as the
+ * relative-looking `C:/secrets`; accepting that would store an absolute path
+ * under a contract that says absolute paths are refused.
+ */
+function parseInstructionPointerExcludes(rawValue: string): string[] {
+  const normalized: string[] = [];
+  for (const entry of rawValue
+    .split(',')
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0)) {
+    const [normalizedEntry] = normalizeExcludedPaths([entry]);
+    if (normalizedEntry === undefined || WINDOWS_DRIVE_PATH_RE.test(entry)) {
+      throw new Error(
+        `Invalid documentation.instructionPointerExcludes entry ${JSON.stringify(
+          entry,
+        )}: entries must be repository-relative paths inside the repository. Absolute paths and paths escaping the repository cannot exclude anything.`,
+      );
+    }
+    if (!normalized.includes(normalizedEntry)) {
+      normalized.push(normalizedEntry);
+    }
+  }
+  return normalized;
+}
+
 function parseDocumentationExcludes(rawValue: string): string[] {
   const parsed = rawValue
     .split(',')
@@ -2253,7 +2319,11 @@ async function setConfigValue(
   const config =
     key === 'documentation.excludes'
       ? await dependencies.readOatConfigForDocumentationExcludesRepair(repoRoot)
-      : await dependencies.readOatConfig(repoRoot);
+      : key === 'documentation.instructionPointerExcludes'
+        ? await dependencies.readOatConfigForInstructionPointerExcludesRepair(
+            repoRoot,
+          )
+        : await dependencies.readOatConfig(repoRoot);
 
   if (key.startsWith('documentation.')) {
     const doc = { ...config.documentation };
@@ -2273,6 +2343,13 @@ async function setConfigValue(
       } else {
         doc.excludes = excludes;
       }
+    } else if (key === 'documentation.instructionPointerExcludes') {
+      const excludes = parseInstructionPointerExcludes(rawValue);
+      if (excludes.length === 0) {
+        delete doc.instructionPointerExcludes;
+      } else {
+        doc.instructionPointerExcludes = excludes;
+      }
     } else if (key === 'documentation.requireForProjectCompletion') {
       doc.requireForProjectCompletion =
         rawValue.trim().toLowerCase() === 'true';
@@ -2288,9 +2365,11 @@ async function setConfigValue(
         ? String(doc.requireForProjectCompletion ?? false)
         : key === 'documentation.excludes'
           ? (doc.excludes ?? null)
-          : ((doc[
-              key.replace('documentation.', '') as keyof typeof doc
-            ] as string) ?? null);
+          : key === 'documentation.instructionPointerExcludes'
+            ? (doc.instructionPointerExcludes ?? null)
+            : ((doc[
+                key.replace('documentation.', '') as keyof typeof doc
+              ] as string) ?? null);
 
     return {
       key,
@@ -2730,9 +2809,13 @@ async function removeFromSurface(
   const sharedConfig =
     key === 'documentation.excludes'
       ? await dependencies.readOatConfigForDocumentationExcludesRepair(repoRoot)
-      : key === 'projects.defaultScope'
-        ? await dependencies.readOatConfigForDefaultScopeRepair(repoRoot)
-        : await dependencies.readOatConfig(repoRoot);
+      : key === 'documentation.instructionPointerExcludes'
+        ? await dependencies.readOatConfigForInstructionPointerExcludesRepair(
+            repoRoot,
+          )
+        : key === 'projects.defaultScope'
+          ? await dependencies.readOatConfigForDefaultScopeRepair(repoRoot)
+          : await dependencies.readOatConfig(repoRoot);
   const { next, removed } = removeConfigPath(
     sharedConfig as unknown as Record<string, unknown>,
     path,
