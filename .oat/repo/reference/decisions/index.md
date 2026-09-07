@@ -12,6 +12,7 @@
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
 | DR-260907-additive-post-selection        | 2026-09-07 | accepted   | Additive post-selection recovery envelopes                                                             | -       |
 | DR-260907-gate-log-receipts-live-under   | 2026-09-07 | accepted   | Gate log receipts live under the project                                                               | -       |
+| DR-260907-pre-dispatch-refreshes-live    | 2026-09-07 | accepted   | Pre-dispatch refreshes live in the source plans                                                        | -       |
 | DR-260906-anaphor-only-attachment        | 2026-09-06 | accepted   | Anaphor-only attachment for the codex-skill below-floor guard                                          | -       |
 | DR-260906-cross-cutting-option-changes   | 2026-09-06 | accepted   | Cross-cutting option changes sweep the repository and widen mechanically or stop                       | -       |
 | DR-260906-dirty-tree-capture-fails       | 2026-09-06 | accepted   | Dirty-tree capture fails closed on anything it cannot restore faithfully                               | -       |
