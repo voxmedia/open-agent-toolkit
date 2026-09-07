@@ -1,6 +1,6 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-review-provide
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
 oat_current_task_id: null
@@ -91,6 +91,18 @@ green remote head.
 The independent reviewer verified the exact two-commit range, source-derived
 manifest stamp, zero sync skew or drift, and current closeout artifacts. No fix
 loop was needed.
+
+### Final Lifecycle Re-review
+
+**Status:** passed
+**Artifact:** `reviews/archived/final-review-2026-09-07T024344Z.md`
+**Reviewed head:** `ff2bf38e008317f34636a2ad588ebac8e030f631`
+**Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+The fresh final re-review confirmed both prior findings are closed and found no
+regression. The historical p06-t02 Medium defer was resurfaced and remains
+accepted under the user's prior explicit disposition; its revisit condition
+was not triggered. The configured implementation exit gate is next.
 
 ---
 

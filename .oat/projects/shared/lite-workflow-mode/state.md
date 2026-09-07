@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 609d6b5297c474a9f62b6546f028999fb6416e68
+oat_last_commit: ff2bf38e008317f34636a2ad588ebac8e030f631
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -109,7 +109,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T02:42:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T02:47:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -121,8 +121,8 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 8 closed both final-review findings and passed independent review with no
-findings. A fresh final lifecycle re-review is next.
+Phase 8 and the fresh final lifecycle re-review passed with no findings. The
+configured implementation exit gate is next.
 
 ## Artifacts
 
@@ -213,6 +213,7 @@ findings. A fresh final lifecycle re-review is next.
 - ⧗ Fresh final lifecycle review found 1 Important and 1 Medium finding
 - ✓ Phase 8 fix tasks `p08-t01` and `p08-t02` completed in two bounded commits
 - ✓ Independent Phase 8 review passed with no findings
+- ✓ Fresh final lifecycle re-review passed with no findings
 
 ## Blockers
 
@@ -221,5 +222,5 @@ exact-head CI/Bugbot waiting, project completion, and merge.
 
 ## Next Milestone
 
-Rerun the final lifecycle review and configured exit gate, then push and
-require exact-head CI and Bugbot before project completion and merge.
+Run the configured implementation exit gate, then push and require exact-head
+CI and Bugbot before project completion and merge.
