@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { expectDispatchStampFieldContract } from '@test-support/skills/dispatch-stamp-contract';
@@ -91,6 +92,127 @@ function expectValidReportContext(command: string): void {
     expect(command).toMatch(/--report-action\s+(?:implementation|fix)(?:\s|$)/);
   }
 }
+
+const QUICK_PLAN_READINESS_HEADING =
+  '### Quick Plan Readiness (Named Predicate)';
+const QUICK_PLAN_READINESS_DEFINITION =
+  'A quick `plan.md` is implementation-ready only when all of the following hold';
+const QUICK_ROUTING_SKILLS = [
+  '.agents/skills/oat-project-plan/SKILL.md',
+  '.agents/skills/oat-project-progress/SKILL.md',
+  '.agents/skills/oat-project-next/SKILL.md',
+] as const;
+
+/**
+ * The readiness predicate is prose plus one executable guard, so the fixture
+ * classifications below run the skill's own guard rather than a second model of
+ * it living in this test.
+ */
+function extractQuickPlanReadinessGuard(content: string): string {
+  const start = content.indexOf(QUICK_PLAN_READINESS_HEADING);
+  const end = content.indexOf('### Step 4: Sync Project State', start);
+  if (start < 0 || end <= start) {
+    throw new Error('Missing quick plan readiness section in quick-start.');
+  }
+  const guard = content.slice(start, end).match(/```bash\n([\s\S]*?)\n```/);
+  if (!guard?.[1]?.includes('quick_plan_ready()')) {
+    throw new Error('Missing quick_plan_ready guard in quick-start.');
+  }
+  return guard[1];
+}
+
+function normalizeProse(value: string): string {
+  return value.replace(/\s+/g, ' ');
+}
+
+function quickPlanFixture(parts: {
+  frontmatter: readonly string[];
+  reviews: readonly string[];
+  tasks: readonly string[];
+}): string {
+  return [
+    '---',
+    ...parts.frontmatter,
+    '---',
+    '',
+    '# Implementation Plan: Example',
+    '',
+    '## Phase 1: Example',
+    '',
+    ...parts.tasks,
+    '',
+    '## Reviews',
+    '',
+    ...parts.reviews,
+    '',
+    '## Implementation Complete',
+    '',
+    '## References',
+    '',
+  ].join('\n');
+}
+
+function classifyQuickPlan(guard: string, plan: string): string {
+  const directory = mkdtempSync(join(tmpdir(), 'quick-plan-readiness-'));
+  try {
+    const planPath = join(directory, 'plan.md');
+    writeFileSync(planPath, plan);
+    return execFileSync(
+      '/bin/bash',
+      [
+        '-c',
+        `${guard}\nif quick_plan_ready "$1"; then printf ready; else printf not-ready; fi`,
+        'quick-plan-readiness',
+        planPath,
+      ],
+      { encoding: 'utf8' },
+    );
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+const PRE_REVIEW_FRONTMATTER = [
+  'oat_status: in_progress',
+  'oat_ready_for: null',
+  'oat_plan_source: quick',
+  'oat_template: true',
+] as const;
+const REVIEWED_FRONTMATTER = [
+  'oat_status: complete',
+  'oat_ready_for: oat-project-implement',
+  'oat_plan_source: quick',
+  'oat_template: false',
+] as const;
+const REVIEW_TABLE_HEADER = [
+  '| Scope | Type     | Status  | Date | Artifact |',
+  '| ----- | -------- | ------- | ---- | -------- |',
+] as const;
+const PASSED_PLAN_ROW = [
+  ...REVIEW_TABLE_HEADER,
+  '| plan  | artifact | passed  | 2026-09-07 | reviews/2026-09-07-plan.md |',
+] as const;
+const PENDING_PLAN_ROW = [
+  ...REVIEW_TABLE_HEADER,
+  '| plan  | artifact | pending | -    | -        |',
+] as const;
+const POLICY_SKIP_DISPOSITION = [
+  'Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)',
+] as const;
+const SUBSTANTIVE_TASKS = [
+  '### Task p01-t01: Add the quick resume branch',
+  '',
+  '**Files:**',
+  '',
+  '- Modify: `src/index.ts`',
+] as const;
+const TEMPLATE_TASKS = [
+  '### Task p01-t01: {Task Name}',
+  '',
+  '**Files:**',
+  '',
+  '- Create: `{path/to/file.ts}`',
+] as const;
 
 describe('review skill contracts', () => {
   it('keeps reviewer timestamps aligned and next-step guidance inside the artifact template', () => {
@@ -1929,6 +2051,716 @@ printf '%s\\n' "$EVENTS"`;
     );
     expect(transaction).toMatch(
       /After both commits[\s\S]*?project-ref writeback receipt/,
+    );
+  });
+
+  it('routes incomplete quick projects to quick-start from plan, progress, and next', () => {
+    const plan = readRepoFile('.agents/skills/oat-project-plan/SKILL.md');
+    const progress = readRepoFile(
+      '.agents/skills/oat-project-progress/SKILL.md',
+    );
+    const next = readRepoFile('.agents/skills/oat-project-next/SKILL.md');
+
+    // plan: the dead end is gone and both branches load their target.
+    expect(plan).not.toContain(
+      'Plan already produced by quick workflow. Run `oat-project-implement` to begin execution.',
+    );
+    // Branch association, not mere presence: swapping the two targets fails.
+    const planNotReadyBranch = plan.slice(
+      plan.indexOf('**Not implementation-ready**'),
+      plan.indexOf('**Implementation-ready**'),
+    );
+    const planReadyBranch = plan.slice(
+      plan.indexOf('**Implementation-ready**'),
+      plan.indexOf('**Mode: `lite`**'),
+    );
+    expect(normalizeProse(planNotReadyBranch)).toContain(
+      'Then load `oat-project-quick-start/SKILL.md` and follow its Step 0.5 resume branch.',
+    );
+    expect(planNotReadyBranch).not.toContain('oat-project-implement');
+    expect(normalizeProse(planReadyBranch)).toContain(
+      'Then load `oat-project-implement/SKILL.md` and follow it to begin execution.',
+    );
+    expect(planReadyBranch).not.toContain('oat-project-quick-start');
+    expect(planNotReadyBranch).toContain(
+      'Continue with: oat-project-quick-start',
+    );
+    expect(planReadyBranch).toContain('Continue with: oat-project-implement');
+
+    // progress: the two-hop dead end row now targets quick-start.
+    const progressQuick = progress.slice(
+      progress.indexOf('**Quick mode'),
+      progress.indexOf('**Import mode'),
+    );
+    expect(progressQuick).not.toMatch(
+      /\|\s*plan\s*\|\s*in_progress\s*\|\s*Continue `oat-project-plan`\s*\|/,
+    );
+    expect(progressQuick).toMatch(
+      /\|\s*plan\s*\|\s*in_progress\s*\|\s*Continue `oat-project-quick-start` when the plan is not implementation-ready/,
+    );
+    expect(progressQuick).toMatch(
+      /\|\s*plan\s*\|\s*complete\s*\|\s*`oat-project-implement` when the plan is implementation-ready; otherwise `oat-project-quick-start`/,
+    );
+    const progressPlanRows = progressQuick
+      .split('\n')
+      .filter((line) => line.startsWith('| plan '))
+      .map((line) => normalizeProse(line.split('|')[3] ?? '').trim());
+    expect(progressPlanRows).toEqual([
+      'Continue `oat-project-quick-start` when the plan is not implementation-ready; otherwise `oat-project-implement`',
+      '`oat-project-implement` when the plan is implementation-ready; otherwise `oat-project-quick-start`',
+    ]);
+    expect(normalizeProse(progressQuick)).toContain(
+      'load `oat-project-quick-start/SKILL.md` and follow its Step 0.5 resume branch',
+    );
+
+    // next: a readiness column, not an overloaded tier.
+    const nextQuick = next.slice(
+      next.indexOf('**Quick Mode:**'),
+      next.indexOf('**Import Mode:**'),
+    );
+    const quickPlanRows = nextQuick
+      .split('\n')
+      .filter((line) => line.startsWith('| plan '));
+    expect(nextQuick).toContain('| Quick Plan Readiness |');
+    // The exact tuple set, not aggregate counts: every plan-phase boundary
+    // classification Step 2 can produce — tier 3, tier 2, tier 1, and tier 1b —
+    // has exactly one route, and a duplicated row cannot stand in for a missing
+    // one. Tier 1b is `oat_status: complete` with a null `oat_ready_for`, which
+    // readiness condition 2 can never satisfy, so it carries a single
+    // always-not-ready row rather than a pair.
+    expect(
+      quickPlanRows.map((row) =>
+        row
+          .split('|')
+          .slice(1, 6)
+          .map((cell) => cell.trim()),
+      ),
+    ).toEqual([
+      [
+        'plan',
+        'in_progress',
+        'tier 3',
+        'not ready',
+        '`oat-project-quick-start`',
+      ],
+      [
+        'plan',
+        'in_progress',
+        'tier 2',
+        'not ready',
+        '`oat-project-quick-start`',
+      ],
+      [
+        'plan',
+        'in_progress',
+        'tier 1',
+        'not ready',
+        '`oat-project-quick-start`',
+      ],
+      ['plan', 'in_progress', 'tier 1', 'ready', '`oat-project-implement` \\*'],
+      ['plan', 'complete', 'tier 1', 'not ready', '`oat-project-quick-start`'],
+      ['plan', 'complete', 'tier 1', 'ready', '`oat-project-implement` \\*'],
+      [
+        'plan',
+        'any',
+        'tier 1b',
+        'not ready (always)',
+        '`oat-project-quick-start`',
+      ],
+    ]);
+    // Tier 1b must not keep Step 2's own "advance to the next phase" arrow.
+    expect(normalizeProse(next)).toContain(
+      'Exception: in quick mode at the `plan` phase, a tier-1b artifact is evaluated against **quick plan readiness**',
+    );
+    expect(normalizeProse(next)).toContain(
+      'readiness always fails, so it returns to the quick workflow instead of advancing to the next phase',
+    );
+    // The generic tier-1 rule must not silently outrank the readiness column.
+    expect(normalizeProse(next)).toContain(
+      "Exception: in quick mode at the `plan` phase, the Quick Mode table's `Quick Plan Readiness` column decides the target.",
+    );
+    expect(normalizeProse(nextQuick)).toContain(
+      'load `oat-project-quick-start/SKILL.md` and follow its Step 0.5 resume branch',
+    );
+    // Tier semantics are preserved, not repurposed.
+    expect(next).toMatch(
+      /\*\*Tier 3 \(Template\/Empty\):\*\*[\s\S]{0,220}`oat_template == true`/,
+    );
+    expect(normalizeProse(nextQuick)).toContain(
+      'applies to the `plan` phase only, and only after the boundary tier has already been classified by Step 2, so tier semantics are unchanged',
+    );
+  });
+
+  it('defines quick plan readiness once and applies it in plan, progress, and next', () => {
+    const quickStart = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+
+    // Defined exactly once, in quick-start.
+    const definitionOwners = [
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+      ...QUICK_ROUTING_SKILLS,
+    ].filter((file) =>
+      readRepoFile(file).includes(QUICK_PLAN_READINESS_DEFINITION),
+    );
+    expect(definitionOwners).toEqual([
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    ]);
+    expect(quickStart.split(QUICK_PLAN_READINESS_DEFINITION)).toHaveLength(2);
+
+    // The four recorded conditions plus the task condition, stated once.
+    const predicate = quickStart.slice(
+      quickStart.indexOf(QUICK_PLAN_READINESS_HEADING),
+      quickStart.indexOf('### Step 4: Sync Project State'),
+    );
+    for (const condition of [
+      '`oat_status: complete`',
+      '`oat_ready_for: oat-project-implement`',
+      '`oat_template: false`',
+      'The `## Reviews` section records the Step 3.7 disposition',
+      '`Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)`',
+      'At least one phase carries a substantive task',
+    ]) {
+      expect(predicate, condition).toContain(condition);
+    }
+    expect(predicate).toContain(
+      'Substantive tasks alone never make a plan ready.',
+    );
+
+    // Referenced by name from the other three, which never restate it.
+    for (const file of QUICK_ROUTING_SKILLS) {
+      const content = readRepoFile(file);
+      expect(content, `${file} references the predicate`).toMatch(
+        /\*\*quick plan readiness\*\*/i,
+      );
+      expect(content, `${file} points at the definition`).toContain(
+        '`oat-project-quick-start/SKILL.md`',
+      );
+    }
+    const restatementRegions = [
+      readRepoFile('.agents/skills/oat-project-plan/SKILL.md').slice(
+        readRepoFile('.agents/skills/oat-project-plan/SKILL.md').indexOf(
+          '**Mode: `quick`**',
+        ),
+        readRepoFile('.agents/skills/oat-project-plan/SKILL.md').indexOf(
+          '**Mode: `lite`**',
+        ),
+      ),
+      readRepoFile('.agents/skills/oat-project-progress/SKILL.md').slice(
+        readRepoFile('.agents/skills/oat-project-progress/SKILL.md').indexOf(
+          '**Quick mode',
+        ),
+        readRepoFile('.agents/skills/oat-project-progress/SKILL.md').indexOf(
+          '**Import mode',
+        ),
+      ),
+      readRepoFile('.agents/skills/oat-project-next/SKILL.md').slice(
+        readRepoFile('.agents/skills/oat-project-next/SKILL.md').indexOf(
+          '**Quick Mode:**',
+        ),
+        readRepoFile('.agents/skills/oat-project-next/SKILL.md').indexOf(
+          '**Import Mode:**',
+        ),
+      ),
+    ];
+    for (const region of restatementRegions) {
+      for (const restatement of [
+        '`oat_status: complete`',
+        '`oat_ready_for: oat-project-implement`',
+        '`oat_template: false`',
+        'Plan artifact review: skipped',
+        'At least one phase carries a substantive task',
+      ]) {
+        expect(region, restatement).not.toContain(restatement);
+      }
+      expect(normalizeProse(region)).toMatch(
+        /load `oat-project-quick-start\/SKILL\.md` and (?:apply|follow)/i,
+      );
+    }
+
+    // The predicate classifies real plan fixtures, executed as written.
+    const guard = extractQuickPlanReadinessGuard(quickStart);
+
+    // Substantive tasks with Step 3 pre-review frontmatter: NOT ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: PRE_REVIEW_FRONTMATTER,
+          reviews: PENDING_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // Reviewed completion: ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
+    // Explicit policy skip: ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: POLICY_SKIP_DISPOSITION,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
+    // Negative control: complete frontmatter and real tasks, but the Step 3.7
+    // disposition was never recorded. Readiness is frontmatter plus review, so
+    // this must fail even though every task is substantive.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PENDING_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // Negative control: reviewed and complete, but only template placeholders.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PASSED_PLAN_ROW,
+          tasks: TEMPLATE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // Per-clause negative controls: each frontmatter field is proved
+    // independently load-bearing by flipping exactly one of the three while the
+    // other two, the review disposition, and the tasks all stay ready.
+    for (const [field, replacement] of [
+      ['oat_status', 'oat_status: in_progress'],
+      ['oat_ready_for', 'oat_ready_for: null'],
+      ['oat_template', 'oat_template: true'],
+    ] as const) {
+      expect(
+        classifyQuickPlan(
+          guard,
+          quickPlanFixture({
+            frontmatter: REVIEWED_FRONTMATTER.map((line) =>
+              line.startsWith(`${field}:`) ? replacement : line,
+            ),
+            reviews: PASSED_PLAN_ROW,
+            tasks: SUBSTANTIVE_TASKS,
+          }),
+        ),
+        field,
+      ).toBe('not-ready');
+    }
+
+    // A contradictory duplicate key is never read as ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: [...REVIEWED_FRONTMATTER, 'oat_template: true'],
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // An unterminated frontmatter block must not let body text satisfy the
+    // readiness fields.
+    expect(
+      classifyQuickPlan(
+        guard,
+        [
+          '---',
+          'oat_plan_source: quick',
+          '',
+          '# Implementation Plan: Example',
+          '',
+          ...REVIEWED_FRONTMATTER,
+          '',
+          '## Phase 1: Example',
+          '',
+          ...SUBSTANTIVE_TASKS,
+          '',
+          '## Reviews',
+          '',
+          ...PASSED_PLAN_ROW,
+          '',
+        ].join('\n'),
+      ),
+    ).toBe('not-ready');
+
+    // The skip disposition counts only as its own line, not as quoted prose.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            'A policy skip would be recorded as `Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)` here.',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // A policy-skip line inside a fenced example does not dispose of a pending
+    // review row.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '```text',
+            'Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)',
+            '```',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // Tilde fences hide example task headings too.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PASSED_PLAN_ROW,
+          tasks: [
+            '~~~markdown',
+            '### Task p01-t01: Example task heading in a tilde-fenced sample',
+            '~~~',
+          ],
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // A task heading outside every phase does not satisfy condition 5.
+    expect(
+      classifyQuickPlan(
+        guard,
+        [
+          '---',
+          ...REVIEWED_FRONTMATTER,
+          '---',
+          '',
+          '# Implementation Plan: Example',
+          '',
+          '## Appendix',
+          '',
+          ...SUBSTANTIVE_TASKS,
+          '',
+          '## Reviews',
+          '',
+          ...PASSED_PLAN_ROW,
+          '',
+        ].join('\n'),
+      ),
+    ).toBe('not-ready');
+
+    // A title made only of placeholders and punctuation is not real text.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PASSED_PLAN_ROW,
+          tasks: ['### Task p01-t01: {Task Name} — {Details}'],
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // A backtick fence nested inside a tilde fence stays fenced: an example
+    // `passed` row after the real pending row must not dispose of it.
+    const nestedFenceExample = [
+      '~~~text',
+      'Example of a dispositioned review section:',
+      '',
+      '```',
+      '| plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+      '```',
+      '~~~',
+    ];
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [...PENDING_PLAN_ROW, '', ...nestedFenceExample],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+    // Order-independence, proved without leaning on `tail -1`: the fenced
+    // `passed` row is the ONLY plan row in the document, so a parser that leaks
+    // it returns ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [...nestedFenceExample, '', ...REVIEW_TABLE_HEADER],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // CommonMark nesting: an example that nests correctly (outer marker run
+    // longer than the inner one) stays fenced through the inner closer.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '~~~~text',
+            '~~~yaml',
+            'nested: true',
+            '~~~',
+            '',
+            '| plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+            '~~~~',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // A four-space-indented example row is indented code, not the record.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '    | plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // An indented (non-fenced) code block is still an example, not the record.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '    Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // `oat_template` follows the repository's absent-or-false convention, so a
+    // plan that predates the field is still ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER.filter(
+            (line) => !line.startsWith('oat_template:'),
+          ),
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
+    // An unpaired quote is a different scalar to YAML, and fails closed here.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER.map((line) =>
+            line.startsWith('oat_status:') ? "oat_status: complete'" : line,
+          ),
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // An explicit null `oat_template` is "not a template", like an absent key.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER.map((line) =>
+            line.startsWith('oat_template:') ? 'oat_template:' : line,
+          ),
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
+    // Alternate key spellings must not smuggle a real template past the check.
+    for (const templateLine of [
+      'oat_template : true',
+      '"oat_template": true',
+      'oat_template: maybe',
+    ]) {
+      expect(
+        classifyQuickPlan(
+          guard,
+          quickPlanFixture({
+            frontmatter: REVIEWED_FRONTMATTER.map((line) =>
+              line.startsWith('oat_template:') ? templateLine : line,
+            ),
+            reviews: PASSED_PLAN_ROW,
+            tasks: SUBSTANTIVE_TASKS,
+          }),
+        ),
+        templateLine,
+      ).toBe('not-ready');
+    }
+
+    // Quoted YAML scalars are the same values.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: [
+            "oat_status: 'complete'",
+            "oat_ready_for: 'oat-project-implement'",
+            'oat_plan_source: quick',
+            'oat_template: "false"',
+          ],
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
+    // A task heading that only appears inside a fenced example is not a task.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PASSED_PLAN_ROW,
+          tasks: [
+            '```markdown',
+            '### Task p01-t01: Example task heading in a fenced sample',
+            '```',
+          ],
+        }),
+      ),
+    ).toBe('not-ready');
+  });
+
+  it('explains why spec-driven planning stops and names a recoverable continuation', () => {
+    const plan = readRepoFile('.agents/skills/oat-project-plan/SKILL.md');
+    const planQuickBranch = plan.slice(
+      plan.indexOf('**Mode: `quick`**'),
+      plan.indexOf('**Mode: `lite`**'),
+    );
+
+    expect(normalizeProse(planQuickBranch)).toContain(
+      'Spec-driven planning does not apply: the quick workflow owns `plan.md` from discovery through the review disposition it records at its Step 3.7',
+    );
+    expect(planQuickBranch).toContain('Continue with: oat-project-quick-start');
+    expect(planQuickBranch).toContain('Continue with: oat-project-implement');
+    expect(plan).toContain(
+      '- **`quick`**: **Stop.** Spec-driven planning does not apply here: the quick workflow authors `plan.md` itself',
+    );
+
+    const progress = readRepoFile(
+      '.agents/skills/oat-project-progress/SKILL.md',
+    );
+    expect(normalizeProse(progress)).toContain(
+      'A not-ready quick plan is not a dead end and does not need spec-driven planning',
+    );
+
+    const next = readRepoFile('.agents/skills/oat-project-next/SKILL.md');
+    expect(normalizeProse(next)).toContain(
+      'Spec-driven planning is not the recovery path for a quick project.',
+    );
+  });
+
+  it('documents quick-start resume for an existing incomplete quick project', () => {
+    const quickStart = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const stepZeroFive = quickStart.slice(
+      quickStart.indexOf('### Step 0.5: Resolve Active Project'),
+      quickStart.indexOf('### Step 1: Set Quick Workflow Metadata'),
+    );
+
+    expect(stepZeroFive).toContain(
+      '**Resume in place (existing incomplete quick project).**',
+    );
+    expect(normalizeProse(stepZeroFive)).toContain(
+      'this skill resumes that project and never re-scaffolds it: `oat project new` is not re-run',
+    );
+    // The resume path must not let Step 3 rewrite an existing plan body.
+    expect(normalizeProse(stepZeroFive)).toContain(
+      'Step 3 updates the existing `plan.md` in place: it reads `.oat/templates/plan.md` only when `plan.md` is missing',
+    );
+    expect(normalizeProse(stepZeroFive)).toContain(
+      'never replaces phases, tasks, or `## Reviews` rows that the earlier run already wrote',
+    );
+    expect(stepZeroFive).toContain('Evaluate **quick plan readiness**');
+
+    // The resume branch is decided before the create-a-new-project branch.
+    expect(
+      stepZeroFive.indexOf('**Resume in place (existing incomplete quick'),
+    ).toBeLessThan(stepZeroFive.indexOf('If no valid active project exists:'));
+    // Re-scaffolding stays on the no-active-project branch only.
+    expect(
+      stepZeroFive.indexOf('oat project new "{project-name}" --mode quick'),
+    ).toBeGreaterThan(
+      stepZeroFive.indexOf('If no valid active project exists:'),
+    );
+
+    expect(quickStart).toContain(
+      '- ✅ An existing incomplete quick project resumed in place against **quick plan readiness** instead of being re-scaffolded.',
+    );
+
+    // The in-place constraint must live in Step 3 itself, not only remotely in
+    // Step 0.5: Step 3 is where the template would otherwise be read.
+    const stepThree = quickStart.slice(
+      quickStart.indexOf('### Step 3: Generate Plan Directly'),
+      quickStart.indexOf(
+        '### Step 3.5: Resolve Dispatch Policy Before Implementation Readiness',
+      ),
+    );
+    expect(normalizeProse(stepThree)).toContain(
+      '`.oat/templates/plan.md` is read only when `"$PROJECT_PATH/plan.md"` is missing.',
+    );
+    expect(normalizeProse(stepThree)).toContain(
+      'never replaces phases, tasks, or `## Reviews` rows an earlier run already wrote',
+    );
+    expect(normalizeProse(stepThree)).toContain(
+      'does not license a template rewrite of existing content',
     );
   });
 });
