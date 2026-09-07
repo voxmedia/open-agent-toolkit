@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 6564df3627b1ec7f1ed36cf3d8a4d54fe3b797c8
+oat_last_commit: 1128360a2a6d753ae10cf639fc2162044b47ab8a
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -71,15 +71,15 @@ oat_implement_exit_gate:
   implementation_fingerprint: sha256:effective-delta-v1:d63c164c8eb0c7ca7c219f690d3aea1b635f5ad56bb614b5d4b9afcfa8aa9b83
   freshness_head: 527ce8bc0b5eb7a420cc62a740dbf3d4f8ff893c
   freshness_fingerprint: sha256:effective-delta-v1:d63c164c8eb0c7ca7c219f690d3aea1b635f5ad56bb614b5d4b9afcfa8aa9b83
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 095bcd9f-c430-4b99-8a61-024258a586bc
   launch_started_at: '2026-09-07T05:19:08Z'
   launch_result_receipt: .oat/projects/shared/remote-project-management/reviews/gate-result-095bcd9f-c430-4b99-8a61-024258a586bc.json
   gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/bee16cdf-2649-4445-baaf-fe7827c841c2.json
   gate_run_id: bee16cdf-2649-4445-baaf-fe7827c841c2
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: .oat/projects/shared/remote-project-management/reviews/final-review-2026-09-07T053105Z.md
+  handoff: Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=1). Run oat-project-review-receive for .oat/projects/shared/remote-project-management/reviews/final-review-2026-09-07T053105Z.md to disposition them before marking the final review row passed.
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -87,14 +87,14 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-07T05:19:36Z'
+  updated_at: '2026-09-07T05:34:44Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T05:19:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T05:34:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
