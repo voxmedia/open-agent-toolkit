@@ -1,6 +1,6 @@
 ---
-oat_current_task: p09-t03
-oat_last_commit: 65bea7f5561b10b99422da88a5b1be59cb3fa25a
+oat_current_task: null
+oat_last_commit: 681e69905b2f6d63d1e62f164f06c6c8aa19971b
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -58,23 +58,23 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T04:59:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T05:04:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: remote-project-management
 
-**Status:** Phase 9 review fix in progress
+**Status:** Implementation tasks complete; p09 re-review pending
 **Started:** 2026-03-15
 **Last Updated:** 2026-09-07
 
 ## Current Phase
 
-Implementation — 88/89 planned tasks are complete. The first p09 review found
-that three recorded negative-control commands selected zero tests; p09-t03 is
-the bounded executable-proof correction. Current main
-`0f47bf7004166d420758d1bcd77d253007174332` remains merged without rebasing
-reviewed history through `6c73da33cf64fa2221def42a0b2fc6f7960ced73`.
+Implementation — All 89 planned tasks are complete. p09-t03 corrected the three
+ineffective negative-control selectors; each now selects 2/2, fails under
+guard neutralization, and passes after restoration. The next milestone is a
+fresh p09 re-review. Current main `0f47bf7004166d420758d1bcd77d253007174332`
+remains merged through `6c73da33cf64fa2221def42a0b2fc6f7960ced73`.
 
 ## Artifacts
 
@@ -82,7 +82,7 @@ reviewed history through `6c73da33cf64fa2221def42a0b2fc6f7960ced73`.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 3 artifact review passed)
-- **Implementation:** implementation.md (88/89 tasks complete; p09-t03 pending)
+- **Implementation:** implementation.md (89/89 tasks complete; p09 re-review pending)
 
 ## Progress
 
@@ -264,7 +264,9 @@ reviewed history through `6c73da33cf64fa2221def42a0b2fc6f7960ced73`.
   synthetic test and the restored focused union passed 82/82
 - ✓ p09-t02 reconciled durable terminal rollups and resume directions while
   preserving chronological failure and review evidence
-- ✓ Phase 9 completed 2/2 tasks; all 88/88 implementation tasks are complete
+- ✓ p09-t03 corrected all three ineffective selectors; each exact probe now
+  selects 2/2 and passes after a failing neutralized control
+- ✓ Phase 9 completed 3/3 tasks; all 89/89 implementation tasks are complete
 
 ## Blockers
 
@@ -272,4 +274,4 @@ No active implementation blocker. Fresh final code re-review remains pending.
 
 ## Next Milestone
 
-Run the fresh final code re-review at the Phase 9 completion head.
+Run the fresh p09 code re-review at the corrected proof head.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p09-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,22 +24,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 10    | 10/10     |
-| Phase 2    | completed   | 10    | 10/10     |
-| Phase 3    | completed   | 12    | 12/12     |
-| Phase 4    | completed   | 11    | 11/11     |
-| Phase 5    | completed   | 9     | 9/9       |
-| Phase 6    | completed   | 10    | 10/10     |
-| Phase 7    | completed   | 10    | 10/10     |
-| Phase 8    | completed   | 6     | 6/6       |
-| Phase 9    | in_progress | 3     | 2/3       |
-| Revision 1 | completed   | 4     | 4/4       |
-| Revision 2 | completed   | 2     | 2/2       |
-| Revision 3 | completed   | 2     | 2/2       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 10    | 10/10     |
+| Phase 2    | completed | 10    | 10/10     |
+| Phase 3    | completed | 12    | 12/12     |
+| Phase 4    | completed | 11    | 11/11     |
+| Phase 5    | completed | 9     | 9/9       |
+| Phase 6    | completed | 10    | 10/10     |
+| Phase 7    | completed | 10    | 10/10     |
+| Phase 8    | completed | 6     | 6/6       |
+| Phase 9    | completed | 3     | 3/3       |
+| Revision 1 | completed | 4     | 4/4       |
+| Revision 2 | completed | 2     | 2/2       |
+| Revision 3 | completed | 2     | 2/2       |
 
-**Total:** 88/89 tasks completed
+**Total:** 89/89 tasks completed
 
 ---
 
@@ -1234,8 +1234,8 @@ or additional scope expansion.
 
 ## Phase 9: Final Review Fixes
 
-**Status:** in progress — 2/3 final-review fixes complete; p09-t03 corrects
-three ineffective negative-control probes
+**Status:** completed — 3/3 final-review fixes complete; fresh p09 re-review
+pending
 **Started:** 2026-09-07
 
 ### Task p09-t01: P0 guard-neutralization proof
@@ -1271,10 +1271,10 @@ task commit; only this implementation artifact remains in the task diff.
 
 ### Task p09-t02: Durable closeout reconciliation
 
-The terminal rollups now preserve every chronological failure while reflecting
-their later passing review outcomes. Phase 8, both Phase 9 fixes, and all 88
-planned tasks are complete. No implementation task remains; the next lifecycle
-milestone is a fresh final code re-review of the Phase 9 completion head.
+At the p09-t02 checkpoint, the terminal rollups preserved every chronological
+failure while reflecting their later passing review outcomes. Phase 8 and the
+first two Phase 9 fixes were complete; p09-t03 later corrected the review's
+executable-proof finding.
 
 ### Task p09-t03: Correct ineffective negative-control probes
 
@@ -2749,11 +2749,13 @@ task_commits:
   - dda462ea6cd35e8cb03e8f7aeebaf7c00658cb7c
 launch_status: accepted
 child_outcome: done
-continuation_events: []
+continuation_events:
+  - p09-review-fix-1-20260907-c2207d2ef
 recovery_usage: 0/10
 pending_attempt: null
-phase_verification: five expected guard-neutralization failures; restored focused union 82/82; CI-order gates passed
-phase_outcome: implementation-complete; fresh root-owned review pending
+phase_verification: five expected guard-neutralization failures; three corrected probes selected 2/2 and passed after restoration; restored focused union 82/82; CI-order gates passed
+review_fix_1_commit: 681e69905b2f6d63d1e62f164f06c6c8aa19971b
+phase_outcome: fixes-complete; fresh root-owned p09 re-review pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p09 action=implementation
@@ -2775,11 +2777,18 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   additionally reported every CI-order gate passing.
 - No recovery attempt, optional nested dispatch, deviation, or implementation
   concern was reported.
+- Review round 1 blocked with one Important finding: three exact probe commands
+  escaped regex alternation and selected zero tests. Bounded fix loop 1/3
+  resumed the original accepted implementer through
+  `p09-review-fix-1-20260907-c2207d2ef` and committed `681e69905`. Root
+  reproduced all three corrected 2/2 probes and the restored 82/82 union; no
+  production diff remains.
 
 ### Review Received: p09
 
 **Date:** 2026-09-07
 **Review artifact:** reviews/archived/p09-review-2026-09-07T045515Z.md
+**Status:** fixes_completed — p09-t03 complete; fresh p09 re-review pending
 
 **Findings:**
 
@@ -2796,8 +2805,7 @@ not reproducible from the artifact. Repeat those three guard-neutralization
 controls with commands that select exactly 2 tests each, restore the guards,
 and retain the 82/82 restored union.
 
-**Next:** Resume the original p09 implementer for p09-t03, update this event to
-`fixes_completed`, and run a fresh p09 re-review.
+**Next:** Run a fresh p09 code re-review at the corrected proof head.
 
 <!-- orchestration-runs-end -->
 

@@ -180,6 +180,10 @@ Final code review used attempted reconnaissance; complete orchestration evidence
 
 Phase p09 completed two bounded final-review fixes in 818647f11 and dda462ea6; five guard neutralizations failed as expected, restored focused union passed 82/82, all CI-order gates passed, and no optional nested dispatch occurred.
 
+### 2026-09-07 · structural · oat-project-implement · p09-review-fix-1
+
+p09 review fix 1 corrected three ineffective test selectors in 681e69905; each restored probe selected and passed 2/2, the five-file union passed 82/82, and temporary guard mutations were restored byte-for-byte.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
