@@ -1,6 +1,6 @@
 ---
-oat_current_task: p08-t01
-oat_last_commit: c20df4331299beeabcb8f4998c9e9788a369ec78
+oat_current_task: null
+oat_last_commit: 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -55,7 +55,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T03:12:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T03:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -63,26 +63,16 @@ oat_generated: false
 
 **Status:** Implementation in progress
 **Started:** 2026-03-15
-**Last Updated:** 2026-09-06
+**Last Updated:** 2026-09-07
 
 ## Current Phase
 
-Phase 7 — Cross-Provider Convergence and Recovery. All 10 tasks are committed
-through `390f21157`; union 165/165, remote 665/665, and smoke 141/141 pass.
-Operator-authorized recovery attempt 1/10 completed at `2ed83eb26`.
-Independent review round 1 found five Critical, three Important, and one Medium
-finding; bounded fix loop 1/3 completed at `56ee775cb`. Root independently
-reproduced the 759/759 remote/E2E/help suite. Independent review round 2/3 found
-five Critical and two Important findings. Bounded fix loop 2/3 completed at
-`a0adeeeec`; root independently reproduced the 761/761 remote/E2E/help suite.
-Independent review round 3/3 found four Critical and one Important finding.
-Normal review governance is exhausted. The authorized bounded extension fix
-loop 3/3 completed at `af095f3c0`; root independently reproduced the 762/762
-remote/E2E/help suite. Independent review 4/4 found one Critical and one
-Important finding. The operator extension is exhausted, and Phase 7 has not
-passed. The operator authorized a separate two-task Corrective Revision 3; its
-structured plan artifact review passed and implementation starts at
-`prev3-t01`.
+Phase 8 — Documentation, Packaging, and Release Validation. All six planned
+tasks are committed through `3a083ed92`; evidence-grade focused and forced
+workspace tests passed, the five public packages are at `0.2.60`, and the
+CI-equivalent release gate passed twice. Independent review round 1 found two
+Important documentation/contract defects. Bounded fix loop 1/3 through the
+original Phase 8 implementer is next.
 
 ## Artifacts
 
@@ -90,7 +80,7 @@ structured plan artifact review passed and implementation starts at
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 3 artifact review passed)
-- **Implementation:** implementation.md (in progress; latest-main transition pending)
+- **Implementation:** implementation.md (in progress; Phase 8 review fixes required)
 
 ## Progress
 

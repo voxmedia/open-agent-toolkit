@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p08-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -33,12 +33,12 @@ oat_generated: false
 | Phase 5    | completed   | 9     | 9/9       |
 | Phase 6    | completed   | 10    | 10/10     |
 | Phase 7    | in_progress | 10    | 10/10     |
-| Phase 8    | pending     | 6     | 0/6       |
+| Phase 8    | in_progress | 6     | 6/6       |
 | Revision 1 | blocked     | 4     | 4/4       |
 | Revision 2 | completed   | 2     | 2/2       |
 | Revision 3 | completed   | 2     | 2/2       |
 
-**Total:** 80/86 tasks completed
+**Total:** 86/86 tasks completed
 
 ---
 
@@ -1134,6 +1134,18 @@ findings; bounded fix loop 1/3 is pending.
 ---
 
 ## Phase 8: Documentation, Packaging, and Release Validation
+
+**Status:** in_progress — review fixes required
+**Started:** 2026-09-07
+
+All six planned tasks are committed in `d78efc897..3a083ed92`. The docs guide,
+CLI/file-location references, workflow-skill reference, evidence-grade test
+ledger, lockstep `0.2.60` package bump, and twice-run release gate are complete.
+Review round 1 found two Important documentation/contract defects: provider
+authority was described as tightening-only, and the host loop discovered live
+capability after the first command even though production requires bounded
+capability evidence before initial action preparation. Bounded fix loop 1/3 is
+next through the original Phase 8 implementer handle.
 
 ### Task p08-t04: Evidence-grade focused and full verification
 
@@ -2506,6 +2518,74 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   `oat-pjm-remote` entry. Root passed the 477/477 collision suites, 768/768
   remote/E2E/help suite, 161/161 smoke suite, and uncached five-package build.
   Phase 8 begins at `p08-t01`.
+
+### Run 12 — Phase p08
+
+```yaml
+request_id: remote-project-management-p08-implementation-1
+caller: oat-project-implement
+scope: p08
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+model_axis: selected:gpt-5.6-sol
+effort_axis: selected:high
+task_class: consequential
+model_class_floor: consequential
+floor_satisfaction: satisfied
+selection_source: native-default
+selection_reason: native-catalog
+candidates_considered:
+  - gpt-5.6-sol/medium
+  - gpt-5.6-sol/high
+selected_route: native
+phase_base_head: 283bc57694b0e9f4d9504ae036ff028624b5eaef
+phase_head: 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae
+task_commits:
+  - d78efc897b4bdcb2ccdd25fe3fb686686298aa3b
+  - 2f4f53dc2ec777360c220df2130b34a3b0eebce7
+  - 9f4c1c09ef5d30ace684979b5e1163bd653516fb
+  - 7c32ddbde145b28b331cfd0db1ed674bdafad7ed
+  - e4eec29842775abcd5d32684ed65a3b5785e5be3
+  - 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae
+launch_status: accepted
+child_outcome: done
+continuation_events: []
+recovery_usage: 0/10
+pending_attempt: null
+review_rounds: 1/3
+fix_loops: 0/3
+phase_verification: focused 708/708; forced workspace 6470/6470 with 0 cached; CI-equivalent gates passed twice
+review_1_artifact: reviews/p08-review-2026-09-07T035129Z.md
+review_1_head: 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae
+review_1_findings: 0 critical, 2 important, 0 medium, 0 minor
+review_1_reconnaissance: not-attempted
+phase_outcome: fixes-required
+```
+
+**Implementation dispatch:** Dispatch: scope=p08 action=implementation
+role=implementer producer=unknown provenance=unknown
+model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+dispatch_policy=high dispatch_ceiling=high
+target=oat-phase-implementer-gpt-5-6-sol-high
+
+**Review dispatch:** Dispatch: scope=p08 action=review role=reviewer
+producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol
+effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high
+target=oat-reviewer-gpt-5-6-sol-high
+
+- The exact six-commit range and task boundaries passed root validation.
+- `packages/cli/assets/public-package-versions.json` was the only mechanically
+  derived boundary expansion; the current release generator requires it.
+- Root independently passed fresh-main fetch, check, version, release, and docs
+  gates. Turbo check/docs tasks replayed cache and were retained only as
+  corroboration; the forced Phase 8 suite is the live package-test evidence.
+- Review round 1 blocked with two Important findings. Reconnaissance was not
+  attempted, and no review orchestration log entry is required.
 
 <!-- orchestration-runs-end -->
 
