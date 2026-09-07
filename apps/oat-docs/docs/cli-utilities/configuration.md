@@ -51,7 +51,7 @@ What each command is for:
 - `oat config list` shows the currently resolved command-surface values for shared and repo-local keys.
 - `oat config get <key>` reads one supported key value.
 - `oat config set <key> <value>` updates supported shared or repo-local keys.
-- `oat config unset <key>` removes a supported key from one surface, using the same `--shared`/`--local`/`--user` flags and per-key restrictions as `set`. The resolved value then falls back to the next surface down, or to the built-in default.
+- `oat config unset <key>` removes a supported key from one surface, using the same `--shared`/`--local`/`--user` flags and per-key restrictions as `set`. The resolved value then falls back to the next surface down, or to the built-in default. A key the surface does not hold exits 0 as already-unset (`--json` adds a `removed` boolean to tell the two apart). Unknown keys, lifecycle state, `tools.*` pack intent, the `workflow.dispatchCeiling` aggregate read views, and environment-shadowed keys with nothing stored are refused with exit 1 — see [CLI Reference](../reference/cli-reference.md#oat-config-surface-flags).
 - `oat config describe` shows the supported config catalog across shared repo, repo-local, user, and sync/provider surfaces.
 - `oat config describe <key>` shows file, scope, default, mutability, owning command, and description for one key.
 
@@ -770,7 +770,7 @@ Workflow preferences resolve through three config surfaces, with `local > shared
 
 ### Setting preferences
 
-`oat config set` supports mutually exclusive surface flags for workflow keys:
+`oat config set` and `oat config unset` support the same mutually exclusive surface flags for workflow keys:
 
 ```bash
 # User-level: applies to all repos on this machine

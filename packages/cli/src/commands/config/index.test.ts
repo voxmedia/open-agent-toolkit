@@ -4277,7 +4277,24 @@ describe('oat config', () => {
       expect(capture.error[0]).toContain('Unknown config key: unknown.key');
     });
 
-    it('unset reports env-sourced values as not unsettable', async () => {
+    it('unset reports env-sourced values as not unsettable when the surface holds nothing', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {});
+      const { command, capture } = createHarness({
+        cwd: root,
+        env: { OAT_PROJECTS_ROOT: '.oat/projects/from-env' },
+      });
+
+      await runCommand(command, ['unset', 'projects.root', '--shared']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('environment variable');
+      // Reporting "already unset" here would imply the effective value is gone.
+      expect(capture.error[0]).toContain('nothing is stored there');
+      expect(capture.info).toHaveLength(0);
+    });
+
+    it('unset removes a stored value the env var only shadows, and warns', async () => {
       const root = await createRepoRoot();
       await writeSharedConfig(root, {
         projects: { root: '.oat/projects/from-config' },
@@ -4287,13 +4304,64 @@ describe('oat config', () => {
         env: { OAT_PROJECTS_ROOT: '.oat/projects/from-env' },
       });
 
-      await runCommand(command, ['unset', 'projects.root']);
+      // `set` rewrites this stored value under the same override, so `unset`
+      // must be able to remove it. The override stays live, so the removal is
+      // never reported as making the effective value unset.
+      await runCommand(command, ['unset', 'projects.root', '--shared']);
 
-      expect(process.exitCode).toBe(1);
-      expect(capture.error[0]).toContain('environment variable');
-      // The shared value the env var shadows is left exactly as it was.
+      expect(process.exitCode).toBe(0);
       const shared = await readSharedConfig(root);
-      expect(shared.projects).toEqual({ root: '.oat/projects/from-config' });
+      expect(shared.projects).toBeUndefined();
+      expect(capture.warn[0]).toContain(
+        'environment variable override still supplies its effective value',
+      );
+    });
+
+    it('unset removes an invalid stored value the normalizing reader drops', async () => {
+      const root = await createRepoRoot();
+      // `normalizeExplainersConfig` drops this value instead of throwing, so a
+      // normalized read cannot see it. `set` repairs the same file, so `unset`
+      // must be able to clean it rather than claiming already-unset.
+      await writeSharedConfig(root, {
+        explainers: { defaults: { style: 'totally-bogus-style' } },
+      });
+      const { command, capture } = createHarness({ cwd: root });
+
+      // This key's auto surface is local, so target shared explicitly.
+      await runCommand(command, [
+        'unset',
+        'explainers.defaults.style',
+        '--shared',
+      ]);
+
+      expect(process.exitCode).toBe(0);
+      expect(capture.info[0]).toBe(
+        'explainers.defaults.style unset from shared config',
+      );
+      const shared = await readSharedConfig(root);
+      expect(shared.explainers).toBeUndefined();
+    });
+
+    it('unset still reports already-unset when the key is absent from disk', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        explainers: { defaults: { palette: 'muted' } },
+      });
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'unset',
+        'explainers.defaults.style',
+        '--shared',
+      ]);
+
+      expect(process.exitCode).toBe(0);
+      expect(capture.info[0]).toBe(
+        'explainers.defaults.style is already unset in shared config',
+      );
+      // The raw-disk fallback must not disturb a valid sibling.
+      const shared = await readSharedConfig(root);
+      expect(shared.explainers).toEqual({ defaults: { palette: 'muted' } });
     });
 
     it('get falls back to the shared value after a local unset', async () => {

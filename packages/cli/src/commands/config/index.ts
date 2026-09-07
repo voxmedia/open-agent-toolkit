@@ -26,6 +26,7 @@ import {
   dispatchPolicyPolicyDescription,
   managedDispatchPolicyValueList,
 } from '@config/dispatch-policy-options';
+import { parseJsonConfig } from '@config/json';
 import {
   VALID_DISPATCH_POLICY_MODES,
   VALID_MANAGED_DISPATCH_POLICIES,
@@ -2580,6 +2581,7 @@ async function unsetConfigValue(
   key: ConfigKey,
   surface: ConfigSurface,
   dependencies: ConfigCommandDependencies,
+  warn: (message: string) => void,
 ): Promise<ConfigUnsetResult> {
   validateSurfaceForKey(key, surface);
 
@@ -2588,11 +2590,7 @@ async function unsetConfigValue(
     userConfigDir,
     dependencies.processEnv,
   );
-  if (resolved.resolved[key]?.source === 'env') {
-    throw new Error(
-      `Cannot unset '${key}': its effective value comes from an environment variable override (source: env). Unset the environment variable instead.`,
-    );
-  }
+  const envShadowed = resolved.resolved[key]?.source === 'env';
 
   if (key === 'activeProject' || key === 'lastPausedProject') {
     throw new Error(
@@ -2627,7 +2625,59 @@ async function unsetConfigValue(
       : surface;
   const path = configPathForKey(key);
 
+  const removed = await removeFromSurface(
+    repoRoot,
+    userConfigDir,
+    key,
+    effectiveSurface,
+    path,
+    dependencies,
+  );
+
+  // The env guard is scoped to the targeted surface, not to the effective
+  // value, so that `unset` mirrors `set`: `set` happily rewrites a stored value
+  // an env var currently shadows, so `unset` must be able to remove that same
+  // stored value. It only refuses when the surface holds nothing to remove and
+  // the env override is what the caller is actually seeing -- reporting
+  // "already unset" there would imply the effective value is gone when it is
+  // not. When a stored value was removed while an override is active, the
+  // removal is reported and the still-live override is warned about, so an
+  // env-sourced value is never reported as unset.
+  if (envShadowed) {
+    if (!removed) {
+      throw new Error(
+        `Cannot unset '${key}' at '${effectiveSurface}' scope: nothing is stored there, and its effective value comes from an environment variable override (source: env). Clear the environment variable in your shell to stop overriding it.`,
+      );
+    }
+    warn(
+      `${key} was removed from ${effectiveSurface} config, but an environment variable override still supplies its effective value.`,
+    );
+  }
+
+  return { key, removed, source: effectiveSurface };
+}
+
+/**
+ * Remove `path` from one surface, falling back to the file on disk.
+ *
+ * The normalizing readers silently drop a stored value that fails validation
+ * instead of throwing, so such a key is invisible to `removeConfigPath` and
+ * would be reported as already-unset while still physically present in the
+ * file. `set` repairs the same file by rewriting it, so `unset` must be able to
+ * clean it too. The normalized read stays the primary path -- it preserves the
+ * lenient readers for the two keys whose strict read throws -- and the raw read
+ * runs only when the normalized pass found nothing to remove.
+ */
+async function removeFromSurface(
+  repoRoot: string,
+  userConfigDir: string,
+  key: ConfigKey,
+  effectiveSurface: Exclude<ConfigSurface, 'auto'>,
+  path: string[],
+  dependencies: ConfigCommandDependencies,
+): Promise<boolean> {
   if (effectiveSurface === 'user') {
+    const configPath = join(userConfigDir, 'config.json');
     const userConfig = await dependencies.readUserConfig(userConfigDir);
     const { next, removed } = removeConfigPath(
       userConfig as unknown as Record<string, unknown>,
@@ -2638,11 +2688,21 @@ async function unsetConfigValue(
         userConfigDir,
         next as unknown as UserConfig,
       );
+      return true;
     }
-    return { key, removed, source: 'user' };
+    const repaired = await removeConfigPathOnDisk(configPath, path);
+    if (repaired) {
+      await dependencies.writeUserConfig(
+        userConfigDir,
+        repaired as unknown as UserConfig,
+      );
+      return true;
+    }
+    return false;
   }
 
   if (effectiveSurface === 'local') {
+    const configPath = join(repoRoot, '.oat', 'config.local.json');
     const localConfig = await dependencies.readOatLocalConfig(repoRoot);
     const { next, removed } = removeConfigPath(
       localConfig as unknown as Record<string, unknown>,
@@ -2653,10 +2713,20 @@ async function unsetConfigValue(
         repoRoot,
         next as unknown as OatLocalConfig,
       );
+      return true;
     }
-    return { key, removed, source: 'local' };
+    const repaired = await removeConfigPathOnDisk(configPath, path);
+    if (repaired) {
+      await dependencies.writeOatLocalConfig(
+        repoRoot,
+        repaired as unknown as OatLocalConfig,
+      );
+      return true;
+    }
+    return false;
   }
 
+  const configPath = join(repoRoot, '.oat', 'config.json');
   const sharedConfig =
     key === 'documentation.excludes'
       ? await dependencies.readOatConfigForDocumentationExcludesRepair(repoRoot)
@@ -2669,8 +2739,45 @@ async function unsetConfigValue(
   );
   if (removed) {
     await dependencies.writeOatConfig(repoRoot, next as unknown as OatConfig);
+    return true;
   }
-  return { key, removed, source: 'shared' };
+  const repaired = await removeConfigPathOnDisk(configPath, path);
+  if (repaired) {
+    await dependencies.writeOatConfig(
+      repoRoot,
+      repaired as unknown as OatConfig,
+    );
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Remove `path` from the raw JSON on disk, ignoring normalization.
+ *
+ * Returns the rewritten object when the path was physically present, or `null`
+ * when the file is missing, unreadable as an object, or simply does not hold
+ * the path. A `null` stored value counts as absent, matching `isResolvedValue`
+ * in `config/resolve.ts` and the leaf rule in `removeConfigPath`.
+ */
+async function removeConfigPathOnDisk(
+  configPath: string,
+  path: string[],
+): Promise<Record<string, unknown> | null> {
+  let raw: string;
+  try {
+    raw = await readFileDefault(configPath, 'utf8');
+  } catch {
+    return null;
+  }
+
+  const parsed = parseJsonConfig(raw, configPath);
+  if (!isRecord(parsed)) {
+    return null;
+  }
+
+  const { next, removed } = removeConfigPath(parsed, path);
+  return removed ? next : null;
 }
 
 interface AdoptDispatchMatrixOptions {
@@ -3080,6 +3187,7 @@ async function runUnset(
       keyArg,
       surface,
       dependencies,
+      context.logger.warn,
     );
     if (context.json) {
       context.logger.json({
