@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p04-t01
+oat_current_task_id: p07-t01
 oat_generated: false
 ---
 
@@ -29,16 +29,16 @@ oat_generated: false
 | Phase 01 (recover-committed-review-artifacts-after-post-selection-failures) | complete | 1     | 1/1       |
 | Phase 02 (keep-instruction-sync-pointers-out-of-docs-trees)                 | complete | 1     | 1/1       |
 | Phase 03 (route-incomplete-quick-projects-to-quick-start)                   | complete | 1     | 1/1       |
-| Phase 04 (retry-gate-project-log-finalization-across-index-locks)           | pending  | 1     | 0/1       |
-| Phase 05 (add-oat-config-unset-command)                                     | pending  | 1     | 0/1       |
-| Phase 06 (validate-skill-script-references-against-pack-manifests)          | pending  | 1     | 0/1       |
+| Phase 04 (retry-gate-project-log-finalization-across-index-locks)           | complete | 1     | 1/1       |
+| Phase 05 (add-oat-config-unset-command)                                     | complete | 1     | 1/1       |
+| Phase 06 (validate-skill-script-references-against-pack-manifests)          | complete | 1     | 1/1       |
 | Phase 07 (enforce-external-plan-readiness-contract)                         | pending  | 1     | 0/1       |
 | Phase 08 (make-autonomous-project-recap-capability-aware)                   | pending  | 1     | 0/1       |
 | Phase 09 (defer-activeproject-clearing-on-archive-completions)              | pending  | 1     | 0/1       |
 | Phase 10 (make-terminal-project-status-agree-with-revision-plans)           | pending  | 1     | 0/1       |
 | Phase 11 (make-consolidated-project-retirement-semantic)                    | pending  | 1     | 0/1       |
 
-**Total:** 3/11 planned tasks completed
+**Total:** 6/11 planned tasks completed
 
 ---
 
@@ -80,39 +80,39 @@ oat_generated: false
 
 ## Phase 04: retry gate project log finalization across index locks (p04)
 
-**Status:** pending · **Group:** group 2 · **Tasks:** p04-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 2 · **Tasks:** p04-t01 (+ one address-now sweep commit)
+**Outcome:** gate project-log finalization retries bounded attempts only on git's own index-lock contention evidence (never deleting the lock; persistent vs transient classification), finalizes exactly once per `runId` across retries and competing writers (identity = `{key, body}` exact token; settlement requires a clean log carrying the entry and a moved HEAD), writes a durable receipt whose printed `recovery.command` completes finalization from a fresh process via `oat project log append --commit --idempotency-key` with no review or gate re-run (receipts refused on any runId/producer/ref/body/artifact-signature mismatch), receipts ignored by git under any projects root with a check-ignore warning, a decision record `DR-260907-gate-log-receipts-live-under`, docs on workflow-gates and project-log.
+**Verification:** forced check/type-check/test `Cached: 0` (5898), focused gate + log 330; the reviewer held a real `.git/index.lock` and ran fresh-process recovery through `dist` with seven receipt-mismatch probes; review round 1 (PASS) plus an address-now sweep.
+**Deviations:** the retry/classification/dedupe live in `project/log/append.ts` with `commitReviewGateProjectLog` as a thin gate-side wrapper (the plan's literal step 3 would create a `gate ↔ log` import cycle; DR-260718 is honoured); `project-log.md` widened mechanically (it enumerates the append flags); the plan's In-scope `.gitignore` wording was tied to the default projects root (review M1).
 
 ### Task p04-t01: Execute external plan — Retry gate project-log finalization across transient Git index locks
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `48837edf0`; sweep `09de4c92f`
 
 ## Phase 05: add oat config unset command (p05)
 
-**Status:** pending · **Group:** group 2 · **Tasks:** p05-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 2 · **Tasks:** p05-t01 (+ one address-now sweep commit)
+**Outcome:** `oat config unset <key>` with the same surface flags as `set`, sharing its key parser and validation (byte-identical refusals for malformed keys; aggregate read views, `tools.*` pack intent, lifecycle state, and env-shadowed-with-nothing-stored are refused; an env-shadowed stored value is removed with a warning as `set` would rewrite it), pruning empty parents (indistinguishable from absent to every consumer), removing invalid stored values the normalizing reader would drop, `--json` `removed` field, family coverage derived from the live catalog (the two deliberately uncatalogued documentation keys stay untouched on disk), help snapshot regenerated, three docs pages.
+**Verification:** forced check/type-check/test `Cached: 0`, focused config 202, help snapshots 59; the reviewer constructed all eight `set` refusal classes and nine aggregate shapes on the built CLI; review round 1 (PASS) plus an address-now sweep.
+**Deviations:** `unset tools.<pack>` refuses (pinned; upheld by the review on weaker-anywhere grounds); `oat config adopt` keeps its duplicate surface-flag block (out of the plan's scope) — follow-up.
 
 ### Task p05-t01: Execute external plan — Add an oat config unset command
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `3fd3aaa62`; sweep `d779ea634`
 
 ## Phase 06: validate skill script references against pack manifests (p06)
 
-**Status:** pending · **Group:** group 2 · **Tasks:** p06-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 2 · **Tasks:** p06-t01 (+ one review-fix commit)
+**Outcome:** a fail-closed contract in `skills-bundled-docs-contract.test.ts` backed by the new `skill-script-references` module: every `.oat/scripts/<file>` reference in a shipped skill's authored Markdown must resolve to a script some owning pack ships (shipped surface derived from the pack manifests: 74 shipped, 8 canonical-unshipped); a lossless two-stage extractor (no prefix truncation, one trailing prose mark stripped, emphasis-adjacent references caught, fragments and placeholders handled fail-closed); unshipped skills reported, never failed.
+**Verification:** focused 139+, forced check/type-check/test `Cached: 0` (5924), live apply-and-restore controls on shipped skills; review rounds 1–2.
+**Deviations:** the optional `findPackForAsset` in `pack-manifest.ts` was not added (`resolveOwningPack` lives in the new module), leaving `pack-manifest.ts` byte-identical for p07; scan scope is authored Markdown only (documented). The fix round deliberately replaced the orchestrator's prescribed unconditional `*` strip with paired-delimiter stripping (measured fail-open and false-positive evidence); the reviewer's round-2 ruling records the verdict.
 
 ### Task p06-t01: Execute external plan — Validate every shipped skill-to-script reference against its pack manifest
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8432f1d4d`; review fix `970aedccc`
 
 ## Phase 07: enforce external plan readiness contract (p07)
 
@@ -251,6 +251,21 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - `w5-p03-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w5-p03-review-002.json`.
 - `w5-p03-review-002` outcome: PASS (fan-in may proceed), 0C/0I/0M/1m. The single tier-1b row ruled correct (three fixtures with null/absent/non-implement `oat_ready_for` all not-ready); the fence rejection confirmed six-for-six against `micromark@4.0.2`; the corpus measurement reproduced (47→59 ready, 12 up, 0 down; scaffold still not-ready); NC6 now fails; no version or pin moved. m: the ≥4-space rules are redundant given the column-0 anchors (untested; no change).
 - `w5-p02-fix-002` outcome (address-now docs sweep, no re-review): one docs-only commit `96a5d94800a809ebad10d400fd12eeb248fb87b3` (three docs pages): the three JSON exclusion fields documented with the per-mode warning channel (0 stderr lines under `--json` re-measured), the `.oat/repo` sentence reworded to the invariant that holds (carve-in never collaterally stranded; `.oat/repo` itself never excludable; deliberate descendant opt-outs honoured), three minors; the misleading symlink-warning reason deferred (code-message change). markdownlint 0 errors, docs pins 187. Record `dispatch/w5-p02-fix-002.json`.
+- `w5-p04-impl-001`, `w5-p05-impl-001`, `w5-p06-impl-001` — group 2 dispatched together at the group-2 base `290590f00e25bb66f5c22ed1ad3551b37b2217fd` (no worktree-init sync commit needed; manifest already 0.2.63); each target opus, model_axis selected:opus, task_class default-implementation (plan dispatch profile). Records `dispatch/w5-p0{4,5,6}-impl-001.json`. Briefs carry the sequential-gates rule and the paste-SHAs rule adopted after group 1.
+- `w5-p05-impl-001` outcome: DONE, one commit `3fd3aaa6267f5e8d70d8b624d9aa7e4b6a441a33` (six files, +906/−26). Two Codex rounds; one real defect fixed (aggregate keys permitted bulk deletion), four findings rejected with tests (`tools.*` refusal, dotted provider names, provider-root removal, `__proto__` end-to-end). Two negative controls red; real-artifact smoke through the repo-local CLI incl. the p02 uncatalogued key surviving `unset documentation.root`.
+- `w5-p05-review-001` — reviewer, target opus, eight rulings incl. the three rejections and the `tools.*` refusal, recon attempted. Record `dispatch/w5-p05-review-001.json`.
+- `w5-p05-review-001` outcome: PASS, 0C/0I/3M/5m. Weaker-anywhere clean (all eight `set` refusal classes refused identically by `unset`; `unset` stricter in two places); all three Codex rejections upheld by reproducing `set`'s semantics; `config list --json` emits exactly the 63 `KEY_ORDER` keys (coverage total); nine aggregate shapes rejected; `{}` and absent indistinguishable. Mediums: an INVALID stored value made `unset` claim already-unset while the key stayed on disk; the env-override guard tested the effective source not the targeted surface (and its message was wrong); the aggregate refusal was undocumented behind an exhaustive-sounding count. Address-now sweep `w5-p05-fix-001`.
+- `w5-p05-fix-001` outcome (address-now sweep, no re-review): one commit `d779ea634448f81c59f4a0a234e670c492db5d05` (five files): raw-read fallback removes invalid stored values (red-then-green on a real file); env guard surface-scoped with a warning (red-then-green: the shared-surface asymmetry); five refusal classes enumerated on all three pages; `--json` `removed` documented; `oat tools remove` spelling aligned; `adopt` duplicate deferred (out of plan scope); set-worded refusal strings kept (a plan STOP forbids changing pinned messages). Focused 202, forced gates `Cached: 0`. Record `dispatch/w5-p05-fix-001.json`.
+- `w5-p06-impl-001` outcome: DONE, one commit `8432f1d4d2933516a393956d7ee68b9c6957866e` (three files, +1003; `pack-manifest.ts` untouched). Two Codex rounds (fail-open extraction rewritten as a lossless two-stage scan; sharedOwner membership proven; unshipped fixture; four Markdown-boundary sub-claims fixed, the `#fragment` sub-claim rejected). Live negative controls three times; shipped surface 74/8/82 measured; `oat-project-lite` not falsely flagged.
+- `w5-p06-review-001` — reviewer, target opus, eight rulings, adversarial reference corpus. Record `dispatch/w5-p06-review-001.json`.
+- `w5-p06-review-001` outcome: PASS with findings, 0C/1I/0M/2m. I1 (the reviewer's own probe): Markdown emphasis adjoining a reference (`**…**`, `*…*`, `_…_`, bare trailing `**`) made the extractor fail open — proven live on `oat-docs-analyze`; graded Important not Critical (every plan-named shape caught in plain spelling; nothing previously rejected now accepted; zero live instances). Rulings: `#fragment` rejection correct; non-fence-aware scan is a win (8 of 11 live references sit in fenced shell blocks); Markdown-only scope not required wider; the tsc/type-aware-lint blind spot for test files is a wave follow-up. Fix round `w5-p06-fix-001`.
+- `w5-p06-fix-001` outcome: one commit `970aedccc569a48cceba1878e9e6283ebaf1dd49` (+206/−11, same three files). The orchestrator's prescribed fix (strip a boundary run of `*` unconditionally) was implemented, measured, and reverted: it normalized `resolve-tracking.sh*` into the shipped name and truncated `generate-*` into a false positive; shipped instead is paired-delimiter stripping for `*` and `_` (a trailing run is decoration only when an opening run paired it), so `**x**`, `*x*`, `_x_`, nested `_**x**_` extract, a bare unpaired trailing `**` is skipped as a glob, and `resolve-tracking.sh_` still fails. Red-then-green: eight fixtures against the pre-fix module, two on the glue rejection, three on the pairing budget. Live probes after: the reviewer's verbatim bold probe now red; italic, nested, and the `_` typo red; bold-valid, italic-valid, and suffix-glob green. One Codex round (1I/2M: the unconditional strip fail-open accepted; the identifier character class widened to Unicode letters/digits plus `._-`; escaped/flanking underscores and raw HTML wrappers deferred with evidence). Scan boundary documented. Focused 152, CLI 5937, `pack-manifest.ts` still byte-identical. Record `dispatch/w5-p06-fix-001.json`.
+- `w5-p06-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w5-p06-review-002.json`.
+- `w5-p06-review-002` outcome: PASS (fan-in may proceed), 0C/0I/0M/2m. The reviewer built three modules side by side (round 1, its own round-1 prescription, the shipped round 2) and measured: the prescription silently accepted `resolve-tracking.sh*` as the shipped name and flagged `generate-*` on correct docs — the implementer was right; skipping a bare unpaired trailing `**` is acceptable (no local evidence separates emphasis from glob; it also renders visibly wrong on the page). Weaker-anywhere clean: of 38 round-1 corpus cases, 5 moved skipped → reported (the fix), 1 moved reported → skipped (`myrepo*.oat/…`, a false positive corrected), 32 unchanged. Neutralizations reproduced (8 / 2 / 3, plus a stronger 4); the verbatim bold probe red at `SKILL.md:517`; gates forced `Cached: 0` (5937). New m1: an escaped-underscore reference (`\_.oat/scripts/x.sh\_`) now yields a trailing backslash and a false positive (zero live instances; one-line fix: return null from `readOpeningEmphasis` when the run is preceded by `\`) → deferred to a follow-up; m2: raw HTML wrappers and intraword `**` are silent misses identical to round 1 (deferrals accepted).
+- `w5-p04-impl-001` outcome: DONE, one commit `48837edf0be8bd42e208e7afa3ab273fb04fbf53` (nine files, +2408/−72). Two Codex rounds (lock detection narrowed to git's own contention evidence; competing-writer settlement made sound; receipt recovery bound to runId/producer/ref/body/signature; dedupe by exact token; fresh-process test through `tsx` with a private TMPDIR asserting no gate marker; six round-2 fixes). Ten negative probes red. Deviation reported: retry/classification/dedupe placed in the log module to avoid a `gate ↔ log` import cycle; `project-log.md` widened mechanically.
+- `w5-p04-review-001` — reviewer, target opus, eight rulings, real held `.git/index.lock` probes. Record `dispatch/w5-p04-review-001.json`.
+- `w5-p04-review-001` outcome: PASS, 0C/0I/1M/5m. Real-lock probes on the built `dist` CLI (transient → attempts 2, committed once; persistent → attempts 3, exit 1, lock untouched with unchanged mtime; hook mentions and git's advice alone → not retried); fresh-process recovery through `dist` via `sh -c` with no `oat-gate-runs` marker; seven receipt-mismatch probes all refuse and keep the receipt; four controls re-run red; weaker-anywhere clean (the old commit-failed diagnostic still fires). Module-placement deviation ruled correct (a genuine import cycle; DR-260718 honoured; the gate never opens `project-log.md`). M1: the `.gitignore` stanza is hard-coded to the default projects root, so a relocated `projects.root` tracks the receipt (inherited from the plan's In-scope wording). Address-now sweep `w5-p04-fix-001`.
+- `w5-p04-fix-001` outcome (address-now sweep, no re-review): one commit `09de4c92fefe8649f1fb038692ed163e80433e6a` (seven files): `.gitignore` now carries a repository-wide `**/gate-receipts/` rule outside both managed blocks (red-then-green against the legacy stanza; controls prove the log and source files are not ignored; `git ls-files` shows no tracked receipt), `writeGateProjectLogReceipt` runs `git check-ignore` on the written path and warns only on exit status 1 through the diagnostic seam (`gate-project-log-receipt-warning`, also visible in JSON — a latent gap closed), the pending-receipt scan derives `logPath` from the gated project and reports a disagreeing recorded path as `pending`, the null-artifact receipt case documented in docs and DR, the contrived-hook residual pinned as accepted, the settlement doc comment moved. The DR's Decision paragraph had one literal glob token corrected to the repository-wide rule (reported); the index did not change. Focused 335, CLI 5903, forced gates `Cached: 0`. Record `dispatch/w5-p04-fix-001.json`.
 
 #### Phase Outcomes
 
@@ -267,13 +282,17 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - Fan-in-owned lockstep bump 0.2.62 → 0.2.63 above freshly fetched `origin/main` (`0f47bf700`), commit `fdcb6c3ed`; `public-package-versions.json` regenerated by the build; `.oat/sync/manifest.json` restamped in the same commit (`pnpm run cli -- sync --scope project` printed the wave-4 advisory: manifest produced by 0.2.62, invoked by 0.2.63; `Manifest version refreshed; no content changes required.`).
 - Integration gates (group fan-in mode), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present. Gates run sequentially (the p02 lane showed that concurrent asset-mutating gates in one tree produce spurious failures).
 - Group-2 readiness on the merged tip: p04, p05, p06 plans are READY; p04 re-anchors on p01's gate-module changes and appends to the same docs tables (merge p01 first was honoured; p04 rebases its docs hunk), p05's family-coverage test must include p02's `documentation.instructionPointerExcludes` (parsed only in `oat-config.ts`, absent from the catalog) — its plan's refresh entry covers this. Group-1 worktrees and branches removed after the merge.
+  | p04 | `.worktrees/wave-5/p04` | DONE (`48837edf0` + sweep `09de4c92f`; forced CLI suite 5898) | passed (0C/0I/1M/5m; address-now sweep) | 0 |
+  | p05 | `.worktrees/wave-5/p05` | DONE (`3fd3aaa62` + sweep `d779ea634`; forced CLI suite, focused 202) | passed (0C/0I/3M/5m; address-now sweep) | 0 |
+  | p06 | `.worktrees/wave-5/p06` | DONE (`8432f1d4d` + fix `970aedccc`; forced CLI suite 5924) | passed (round 1 0C/1I/0M/2m → round 2 0C/0I/0M/2m) | 1 |
 
 #### Parallel Groups
 
-- group 1: p01 + p02 + p03 (merged, fan-in complete); group 2: p04 + p05 + p06 (next).
+- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged, fan-in complete); p07 → p08, p09 → p10, p11 (sequential, next).
 
 #### Outstanding Items
 
+- p07 → p08 (group 3), p09 → p10 (group 4), p11 (group 5), each alone after the previous merge; then closeout.
 - Group 2 (p04 + p05 + p06) after the group-1 fan-in; then p07 → p08, p09 → p10, p11; closeout.
 - Journal note: dispatch records are immutable after the first revision; terminal outcomes live in the Dispatch Notes above.
 
@@ -296,19 +315,19 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Test Results
 
-| Phase | Tests Run                             | Passed | Failed | Coverage |
-| ----- | ------------------------------------- | ------ | ------ | -------- |
-| p01   | 5815 (forced CLI suite) + 361 gate    | all    | 0      | -        |
-| p02   | 5848 (forced CLI suite) + 231 focused | all    | 0      | -        |
-| p03   | 5808 (forced CLI suite) + 322 focused | all    | 0      | -        |
-| p04   | -                                     | -      | -      | -        |
-| p05   | -                                     | -      | -      | -        |
-| p06   | -                                     | -      | -      | -        |
-| p07   | -                                     | -      | -      | -        |
-| p08   | -                                     | -      | -      | -        |
-| p09   | -                                     | -      | -      | -        |
-| p10   | -                                     | -      | -      | -        |
-| p11   | -                                     | -      | -      | -        |
+| Phase | Tests Run                                     | Passed | Failed | Coverage |
+| ----- | --------------------------------------------- | ------ | ------ | -------- |
+| p01   | 5815 (forced CLI suite) + 361 gate            | all    | 0      | -        |
+| p02   | 5848 (forced CLI suite) + 231 focused         | all    | 0      | -        |
+| p03   | 5808 (forced CLI suite) + 322 focused         | all    | 0      | -        |
+| p04   | 5898 (forced CLI suite) + 330 focused         | all    | 0      | -        |
+| p05   | forced CLI suite + 202 focused + 59 snapshots | all    | 0      | -        |
+| p06   | 5924 (forced CLI suite) + 139 focused         | all    | 0      | -        |
+| p07   | -                                             | -      | -      | -        |
+| p08   | -                                             | -      | -      | -        |
+| p09   | -                                             | -      | -      | -        |
+| p10   | -                                             | -      | -      | -        |
+| p11   | -                                             | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
