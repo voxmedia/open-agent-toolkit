@@ -3,7 +3,7 @@ oat_current_task: null
 oat_last_commit: a9c86aab6ee0d21f923f9e602a8f3e5ed55215ab
 oat_blockers:
   [
-    'Corrective Revision 3 implementation is complete; root-owned code review is pending',
+    'Revision 3 review 1 found 2 Important findings; bounded fix loop 1/3 is pending',
   ]
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -55,7 +55,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T02:38:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T02:43:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -250,17 +250,18 @@ structured plan artifact review passed and implementation starts at
 - ✓ prev3-t02 exposed and validated public lifecycle approval previews in
   `a9c86aab6`
 - ✓ Revision 3 phase verification passed 120/120
-- ⧗ Root-owned Revision 3 code review pending
+- ⚠ Root-owned Revision 3 review 1 blocked with 2 Important findings
+- ⧗ Bounded Revision 3 fix loop 1/3 pending
 - ⧗ After p-rev3 code review passes, merge latest `origin/main` and re-establish
   the verification baseline before Phase 8
 
 ## Blockers
 
-Revision 3 implementation is complete and blocked only on its mandatory fresh
-root-owned code review. The branch-level lockstep version gate remains
+Revision 3 review 1 found two Important findings. Bounded fix loop 1/3 and a
+fresh re-review are required. The branch-level lockstep version gate remains
 preserved for planned `p08-t05` release work after mainline reconciliation.
 
 ## Next Milestone
 
-Run the fresh p-rev3 code review. After it passes, merge latest `origin/main`
-before Phase 8.
+Complete bounded Revision 3 fix loop 1/3 and re-review. After p-rev3 passes,
+merge latest `origin/main` before Phase 8.
