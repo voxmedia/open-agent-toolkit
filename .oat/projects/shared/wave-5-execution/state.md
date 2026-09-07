@@ -64,20 +64,20 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: d3f098549a13c606377457442e4f80a81daafaae
+  reviewed_head: c66a2fdc5afc1ebb0bfe9e8ed4093826a614873b
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v1:2ba0e5b5b1bec101b13d17faacf460b8616df81c4258676c295a0a95f9a80d99'
+  implementation_fingerprint: 'sha256:effective-delta-v1:f88f4315c3cdde393aa9fe1b2616da9c06dd2e576e116c9a6dbf39443fb372f2'
   freshness_head: null
   freshness_fingerprint: null
   launch_state: intent_persisted
-  launch_attempt_id: 'w5-exit-gate-20260907T163516Z'
-  launch_started_at: '2026-09-07T16:35:16Z'
-  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w5/w5-exit-gate-20260907T163516Z.receipt.json'
+  launch_attempt_id: 'w5-exit-gate-20260907T173426Z'
+  launch_started_at: '2026-09-07T17:34:26Z'
+  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w5/w5-exit-gate-20260907T173426Z.receipt.json'
   gate_run_marker: null
   gate_run_id: null
   envelope_status: null
   artifact: null
-  handoff: 'Attempt 1 blocked (run 33895672) and received as Phase 12; attempt 2 (the last allowed) launches on the fix-round-reviewed head'
+  handoff: 'Attempt 1 blocked (run 33895672, received as Phase 12); launch w5-exit-gate-20260907T163516Z (run c21ea64d) killed before its receipt after a passing review — superseded; this launch re-runs attempt 2 (the last allowed) on the p12-t08 tip'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -88,7 +88,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-09-07T16:35:16Z'
+  updated_at: '2026-09-07T17:34:26Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -129,7 +129,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T16:35:16Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T17:34:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
