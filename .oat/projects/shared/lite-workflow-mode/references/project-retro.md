@@ -24,7 +24,7 @@ oat_retro_evidence_sources:
     status: used
   - source: spec
     status: unavailable
-oat_retro_promotions: partial
+oat_retro_promotions: complete
 oat_retro_filing: complete
 oat_generated: true
 oat_template: false
@@ -75,10 +75,9 @@ inconclusive.
 
 ## Current State
 
-- **Promotions:** `partial` — RP-01 and RP-02 are applied; RP-03 remains.
+- **Promotions:** `complete` — RP-01 through RP-03 are applied.
 - **Filing:** `complete` — RP-04 and UP-01/UP-02 are already filed and tracked.
-- **Unsettled items:** RP-03 remains proposed under the current apply
-  authorization. No filing item is unsettled.
+- **Unsettled items:** None.
 
 ## What Went Well
 
@@ -267,9 +266,9 @@ losing the destination or presenting a false failure.
 
 - **Type:** docs
 - **Disposition:** apply
-- **Status:** proposed
+- **Status:** applied
 - **Target:** `.oat/repo/pjm/backlog/items/BL-260904-stabilize-the-collection.md`
-- **Applied-ref:** —
+- **Applied-ref:** `.oat/repo/pjm/backlog/items/BL-260904-stabilize-the-collection.md`
 - **Disposition-note:** —
 
 Record required CI run `34067919653` and recovery commit `ddddba079` as evidence
