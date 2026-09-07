@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p09-t04
 oat_last_commit: 9448bfb1ae97b3843316b875ffdd178e2aefad8f
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -33,6 +33,18 @@ oat_phase_recovery_policy:
     p-rev2:
       used_attempts: 5
       pending_attempt: null
+    p09:
+      used_attempts: 1
+      pending_attempt:
+        attempt: 1
+        event_id: p09-recovery-1
+        original_request_id: lite-p09-55642d87-26a7-4015-acd2-05def9281e75
+        original_task_id: p09-t03
+        original_commit: 9448bfb1ae97b3843316b875ffdd178e2aefad8f
+        discovered_by: root-final-verification
+        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
+        reservation_head: 8fd41974fe0e6bbacc3268de2be500c9ca4f49af
+        status: reserved
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -87,7 +99,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-07T03:20:15Z'
+  updated_at: '2026-09-07T03:23:17Z'
 oat_post_implement_sequence:
   status: awaiting_approval
   source: configured
@@ -104,7 +116,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T03:20:15Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T03:23:17Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -116,8 +128,8 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 9 passed fresh independent re-review with no findings. Final lifecycle
-review and exit-gate regeneration are next.
+Final verification exposed one stale successful-promotion integration fixture.
+Recovery task `p09-t04` is reserved; production behavior remains unchanged.
 
 ## Artifacts
 
@@ -214,6 +226,7 @@ review and exit-gate regeneration are next.
 - ⧗ Phase 9 review queued one comment-only scaffold-marker fix
 - ✓ `p09-t03` precisely rejects shipped instructional comments
 - ✓ Fresh Phase 9 re-review passed with no findings
+- ⧗ Full test gate exposed a stale adaptive-section integration fixture
 
 ## Blockers
 
@@ -222,5 +235,5 @@ exact-head CI/Bugbot waiting, project completion, and merge.
 
 ## Next Milestone
 
-Run fresh final lifecycle review, regenerate the exit gate against the new
-substantive head, then push and require exact-head CI and Bugbot.
+Complete and re-review `p09-t04`, rerun the test gate, then run fresh final
+lifecycle review and the regenerated exit gate.

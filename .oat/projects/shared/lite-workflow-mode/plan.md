@@ -2352,6 +2352,36 @@ git commit -m "fix(p09-t03): reject lite scaffold comments"
 
 ---
 
+### Task p09-t04: (verification recovery) Author adaptive sections in the CLI promotion integration fixture
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/commands.integration.test.ts`
+
+**Step 1: Preserve the production contract**
+
+Keep production promotion validation unchanged. Update `authorLitePlan()` so
+the successful CLI integration fixture authors the shipped Product Behavior
+and Technical Design sections instead of retaining their instructional
+comments.
+
+**Step 2: Strengthen end-to-end assertions**
+
+Require the promoted discovery artifact to contain the authored adaptive
+content as well as the existing five core interview answers.
+
+**Step 3: Verify and commit**
+
+Run the focused integration test, the focused promotion suite, CLI check, and
+CLI type-check. Commit with:
+
+```bash
+git add packages/cli/src/commands/commands.integration.test.ts
+git commit -m "test(p09-t04): author adaptive promote fixture"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -2366,9 +2396,9 @@ git commit -m "fix(p09-t03): reject lite scaffold comments"
 - Phase p-rev2: 5 tasks - Lite lifecycle-gate posture composition, Wave 4 closeout alignment, terminal CI evidence, and two current closeout wording corrections
 - Phase 7: 4 tasks - remote review ledger, proof-strategy scope, executable proof boundaries, and Lite self-review source
 - Phase 8: 2 tasks - project sync producer stamp and Phase 7 closeout artifact refresh
-- Phase 9: 3 tasks - promotion placeholder/comment rejection and reference wording alignment
+- Phase 9: 4 tasks - promotion placeholder/comment rejection, integration fixture alignment, and reference wording alignment
 
-**Total:** 48 tasks across 11 phases
+**Total:** 49 tasks across 11 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

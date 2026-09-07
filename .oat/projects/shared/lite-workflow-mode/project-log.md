@@ -196,6 +196,10 @@ verdict=fixes-completed; task=p09-t03; commit=9448bfb1ae97b3843316b875ffdd178e2a
 
 verdict=pass; tasks=3/3; fix_loops=1; recovery_attempts=0; review=reviews/archived/p09-review-2026-09-07T031728Z.md; reviewed_head=9448bfb1ae97b3843316b875ffdd178e2aefad8f; findings=critical:0,important:0,medium:0,minor:0; next=final-review
 
+### 2026-09-07 · structural · oat-project-implement · p09-recovery-1
+
+verdict=reserved; trigger=full-test-gate; failing_test=commands.integration project promote --to quick converts a lite project; task=p09-t04; production_change=none
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

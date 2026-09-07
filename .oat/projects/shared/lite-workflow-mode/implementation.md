@@ -1230,6 +1230,17 @@ unrelated authored comment remains accepted and preserved. Phase 9 is complete
 after one fix loop; the originating gate event is `fixes_completed` pending a
 fresh final lifecycle review and regenerated exit-gate generation.
 
+#### Phase 9 verification recovery 1 reserved
+
+The ordered closeout ledger passed check and type-check, then `pnpm test`
+failed one CLI integration case. `authorLitePlan()` authored only the five core
+sections and retained the shipped adaptive instructional comments, so the new
+production guard correctly returned `invalid-lite-plan` where the stale test
+expected promotion. Every other test passed (5,803/5,804), and the remaining
+ordered repository gates, lint, and format exited 0. Recovery task `p09-t04`
+updates only the successful integration fixture and strengthens its promoted
+content assertions; production behavior is not relaxed.
+
 #### Configured implementation exit gate generation 4 created
 
 The configured declaration resolved with canonical configuration fingerprint
