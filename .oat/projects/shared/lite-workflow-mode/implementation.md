@@ -1230,6 +1230,16 @@ The receive handoff is bound to gate run
 `reviews/archived/final-review-2026-09-07T030022Z.md`, and pre-receive HEAD
 `f11ca8ea0f09d552bb6156873edad1116d4e9488`.
 
+#### Exit-gate review 4 received — remediation queued
+
+The passing-threshold gate review has 0 Critical, 0 Important, 1 Medium, and 2
+Minor findings. The Medium is a reproduced production-path defect, so it maps
+to `p09-t01` (`code_fix_required`). The two documentation drifts are tightly
+coupled release-surface wording corrections and map together to `p09-t02`
+(`artifact_alignment_required`). No finding is deferred. The gate review is
+archived and its event is `fixes_added`; Phase 9 is queued for implementation
+and fresh independent review.
+
 ### 2026-09-06
 
 #### Configured implementation exit gate generation 3 created

@@ -1411,7 +1411,7 @@ git commit -m "docs(p06-t11): align brainstorming guidance with lite"
 | final         | code     | fixes_completed | 2026-09-07 | reviews/archived/final-review-2026-09-07T022638Z.md                             | 5503200465229688ed45b352856d2714821eaeb6 | auto       | -                             |
 | p08           | code     | passed          | 2026-09-07 | reviews/archived/p08-review-2026-09-07T023910Z.md                               | 609d6b5297c474a9f62b6546f028999fb6416e68 | auto       | -                             |
 | final         | code     | passed          | 2026-09-07 | reviews/archived/final-review-2026-09-07T024344Z.md                             | ff2bf38e008317f34636a2ad588ebac8e030f631 | auto       | -                             |
-| final         | code     | received        | 2026-09-07 | reviews/final-review-2026-09-07T030022Z.md                                      | c479493d521c9c3036c5f165af5ebe7277cd8d31 | gate       | claude-fable-skip-permissions |
+| final         | code     | fixes_added     | 2026-09-07 | reviews/archived/final-review-2026-09-07T030022Z.md                             | c479493d521c9c3036c5f165af5ebe7277cd8d31 | gate       | claude-fable-skip-permissions |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -2234,6 +2234,85 @@ git commit -m "docs(p08-t02): refresh lite closeout artifacts"
 
 ---
 
+## Phase 9: Exit-Gate Review Fixes
+
+### Task p09-t01: (review) Reject unresolved adaptive-section placeholders during promotion
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/promote/promote.ts`
+- Modify: `packages/cli/src/commands/project/promote/promote.test.ts`
+
+**Step 1: Reproduce the production scaffold defect**
+
+Seed a Lite project from the shipped `plan-lite.md` scaffold. Author only the
+five core sections and leave Product Behavior and Technical Design untouched.
+Confirm promotion currently succeeds and carries scaffold markers into the
+derived discovery artifact.
+
+**Step 2: Extend unresolved-template validation**
+
+Apply the existing template-marker guard to optional Product Behavior and
+Technical Design content whenever those sections are present. Refuse promotion
+with `invalid-lite-plan` rather than emitting scaffold placeholders.
+
+**Step 3: Add fail-capable production-path coverage**
+
+Add a test derived from the real Lite scaffold. Require promotion to refuse
+when either optional section retains template markers. Neutralize the extended
+guard, confirm the test fails, restore it, and confirm the focused suite passes.
+
+**Step 4: Verify and commit**
+
+Run the focused promotion suite and the CLI package checks. Commit with:
+
+```bash
+git add packages/cli/src/commands/project/promote/promote.ts packages/cli/src/commands/project/promote/promote.test.ts
+git commit -m "fix(p09-t01): reject optional lite placeholders"
+```
+
+---
+
+### Task p09-t02: (review) Align promote and HiLL reference wording
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/hill-checkpoints.md`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: `pnpm-lock.yaml`
+
+**Step 1: Correct the CLI reference**
+
+State that Lite promotion carries Product Behavior into Success Criteria and
+Technical Design into its carried-forward discovery section.
+
+**Step 2: Correct HiLL ownership wording**
+
+Attribute the Lite checkpoint-bypass state write to `oat-project-implement`,
+not to Lite planning.
+
+**Step 3: Refresh release surfaces**
+
+Advance the public-package lockstep to the next version strictly greater than
+current `origin/main`. Regenerate the public version asset through the
+repository command rather than editing generated data by hand.
+
+**Step 4: Verify and commit**
+
+Run docs formatting/build, version gates, and release validation. Commit with:
+
+```bash
+git commit -m "docs(p09-t02): align lite promotion references"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -2248,8 +2327,9 @@ git commit -m "docs(p08-t02): refresh lite closeout artifacts"
 - Phase p-rev2: 5 tasks - Lite lifecycle-gate posture composition, Wave 4 closeout alignment, terminal CI evidence, and two current closeout wording corrections
 - Phase 7: 4 tasks - remote review ledger, proof-strategy scope, executable proof boundaries, and Lite self-review source
 - Phase 8: 2 tasks - project sync producer stamp and Phase 7 closeout artifact refresh
+- Phase 9: 2 tasks - promotion placeholder rejection and reference wording alignment
 
-**Total:** 45 tasks across 10 phases
+**Total:** 47 tasks across 11 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 
