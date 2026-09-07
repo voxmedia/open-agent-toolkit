@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.1.0
+version: 1.1.1
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -125,15 +125,16 @@ projects, and synced records whose detached checkout is absent.
 
 Read `"$PROJECT_PATH/state.md"` frontmatter and extract:
 
-| Field                     | Used For                                                                           |
-| ------------------------- | ---------------------------------------------------------------------------------- |
-| `oat_phase`               | Current lifecycle position (discovery, spec, design, plan, implement)              |
-| `oat_phase_status`        | Phase completion state (in_progress, complete, pr_open)                            |
-| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import, lite). Default: `spec-driven` |
-| `oat_hill_checkpoints`    | Which phases require HiLL approval                                                 |
-| `oat_hill_completed`      | Which HiLL gates have been passed                                                  |
-| `oat_blockers`            | Informational warnings (not routing gates)                                         |
-| `oat_implement_exit_gate` | Whether the implementation exit gate is allowed and fresh                          |
+| Field                     | Used For                                                                                     |
+| ------------------------- | -------------------------------------------------------------------------------------------- |
+| `oat_phase`               | Current lifecycle position (discovery, spec, design, plan, implement)                        |
+| `oat_phase_status`        | Phase completion state (in_progress, complete, pr_open)                                      |
+| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import, lite). Default: `spec-driven`           |
+| `oat_hill_checkpoints`    | Which phases require HiLL approval                                                           |
+| `oat_hill_completed`      | Which HiLL gates have been passed                                                            |
+| `oat_blockers`            | Informational warnings (not routing gates)                                                   |
+| `oat_implement_exit_gate` | Whether the implementation exit gate is allowed and fresh                                    |
+| `oat_lifecycle`           | Terminal status (active, paused, complete). `complete` is the terminal signal Step 5.2 reads |
 
 **If state.md is missing or unreadable:** Report error and suggest running the relevant phase skill directly. STOP.
 
@@ -165,12 +166,22 @@ Apply the following tiers in order:
 
 - `oat_status == "complete"` AND `oat_ready_for` is not null
 - → Use `oat_ready_for` as the target skill
+- Exception: in quick mode at the `plan` phase, the Quick Mode table's
+  `Quick Plan Readiness` column decides the target. A tier-1 quick plan that
+  fails readiness returns to the quick workflow, and `oat_ready_for` is not
+  followed on its own.
 
 **Tier 1b (Complete without target):**
 
 - `oat_status == "complete"` AND `oat_ready_for` is null
 - → Route to the NEXT phase's skill (the artifact is complete, so advance)
 - This handles cases where a phase skill completed the artifact but didn't set `oat_ready_for`.
+- Exception: in quick mode at the `plan` phase, a tier-1b artifact is evaluated
+  against **quick plan readiness** like every other plan-phase classification.
+  Tier 1b means `oat_ready_for` is null, so readiness always fails, so it
+  returns to the quick workflow instead of advancing to the next phase's skill.
+  This state is reachable when the Step 3.7 frontmatter write is interrupted or
+  after a hand edit, and it must not reach implementation unchecked.
 
 **Tier 2 (Substantive content):**
 
@@ -238,15 +249,36 @@ Otherwise, look up the target skill from the routing table for the current `oat_
 
 **Quick Mode:**
 
-| Current Phase | Phase Status | Boundary Tier | Target Skill               |
-| ------------- | ------------ | ------------- | -------------------------- |
-| discovery     | in_progress  | tier 3        | `oat-project-discover`     |
-| discovery     | in_progress  | tier 2        | `oat-project-plan`         |
-| discovery     | complete     | tier 1        | `oat-project-plan`         |
-| plan          | in_progress  | tier 3        | `oat-project-quick-start`  |
-| plan          | in_progress  | tier 2        | `oat-project-implement` \* |
-| plan          | complete     | tier 1        | `oat-project-implement` \* |
-| implement     | in_progress  | —             | `oat-project-implement` \* |
+| Current Phase | Phase Status | Boundary Tier | Quick Plan Readiness | Target Skill               |
+| ------------- | ------------ | ------------- | -------------------- | -------------------------- |
+| discovery     | in_progress  | tier 3        | —                    | `oat-project-discover`     |
+| discovery     | in_progress  | tier 2        | —                    | `oat-project-plan`         |
+| discovery     | complete     | tier 1        | —                    | `oat-project-plan`         |
+| plan          | in_progress  | tier 3        | not ready            | `oat-project-quick-start`  |
+| plan          | in_progress  | tier 2        | not ready            | `oat-project-quick-start`  |
+| plan          | in_progress  | tier 1        | not ready            | `oat-project-quick-start`  |
+| plan          | in_progress  | tier 1        | ready                | `oat-project-implement` \* |
+| plan          | complete     | tier 1        | not ready            | `oat-project-quick-start`  |
+| plan          | complete     | tier 1        | ready                | `oat-project-implement` \* |
+| plan          | any          | tier 1b       | not ready (always)   | `oat-project-quick-start`  |
+| implement     | in_progress  | —             | —                    | `oat-project-implement` \* |
+
+The `Quick Plan Readiness` column applies to the `plan` phase only, and only
+after the boundary tier has already been classified by Step 2, so tier semantics
+are unchanged: it discriminates the two `plan` outcomes that would otherwise
+share one tier. A tier-2 or tier-1 quick plan is no longer assumed ready, and a
+tier-1 plan whose readiness fails is returned to the quick workflow rather than
+advanced. Both recorded phase statuses carry a tier-1 pair of rows, so a plan
+artifact that has already advanced past the `state.md` phase status still
+matches a route instead of falling through the table. Tier 1b carries one row
+under either phase status because a null `oat_ready_for` can never satisfy
+readiness. Readiness is the named **quick plan readiness** predicate: load
+`oat-project-quick-start/SKILL.md` and apply it as written to
+`{PROJECT_PATH}/plan.md` instead of restating its conditions here, and never
+infer readiness from the presence of substantive tasks. A `not ready` result
+resumes the quick workflow in place: load `oat-project-quick-start/SKILL.md` and
+follow its Step 0.5 resume branch. Spec-driven planning is not the recovery path
+for a quick project.
 
 **Import Mode:**
 
@@ -391,6 +423,17 @@ in project state. When the snapshot exists and is incomplete, route to
 or a summary exists. A completed snapshot falls through to the normal router.
 
 **5.2: Incomplete revision tasks**
+
+Read `oat_lifecycle` from `state.md` before grepping anything. When
+`oat_lifecycle` is `complete`, revision phases are historical: skip this check
+and fall through to 5.3, and do not route to `oat-project-implement` even when
+`p-revN` tasks are still marked incomplete. Lifecycle is the only terminal
+signal here — neither a null current task nor a `complete` or `pr_open`
+`oat_phase_status` is terminal, because an active project reaches both while it
+still owns pending revision work. The guard is workflow-mode independent: it
+applies identically to `spec-driven`, `quick`, `import`, and `lite` projects.
+
+For every other `oat_lifecycle` value the check below is unchanged.
 
 Grep plan.md for `p-revN` phases. If any `p-revN` tasks exist with status != completed in implementation.md:
 → Route to `oat-project-implement`

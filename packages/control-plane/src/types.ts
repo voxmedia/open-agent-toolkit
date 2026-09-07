@@ -36,6 +36,21 @@ export type ArtifactType =
 
 export type BoundaryTier = 1 | 2 | 3;
 
+/**
+ * The first unmet clause of the named **quick plan readiness** predicate, in
+ * the predicate's own evaluation order.
+ */
+export type QuickPlanReadinessFailure =
+  | 'plan-missing'
+  | 'frontmatter-not-ready'
+  | 'review-disposition-missing'
+  | 'substantive-task-missing';
+
+export interface QuickPlanReadiness {
+  ready: boolean;
+  failure: QuickPlanReadinessFailure | null;
+}
+
 export interface ArtifactStatus {
   type: ArtifactType;
   exists: boolean;
@@ -44,6 +59,13 @@ export interface ArtifactStatus {
   readyFor: string | null;
   isTemplate: boolean;
   boundaryTier: BoundaryTier;
+  /**
+   * Quick plan readiness, evaluated for the `plan` artifact only and absent on
+   * every other artifact type. The predicate is quick-workflow policy, so only
+   * the quick route consults it; it is reported for any workflow mode because
+   * the reader has no mode of its own.
+   */
+  quickPlanReadiness?: QuickPlanReadiness;
 }
 
 export interface PhaseProgress {

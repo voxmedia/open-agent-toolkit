@@ -71,6 +71,22 @@ oat project log append \
 Structural entries require `--structural`, `--producer`, `--ref`, and `--body`.
 Do not combine structural flags with judgment flags.
 
+### Idempotent append and commit
+
+Two optional flags let an interrupted append be replayed safely:
+
+- `--idempotency-key <key>` — skip the append when an existing entry body
+  already carries `key`, reporting `already-appended` instead of writing a
+  duplicate. The key must appear in `--body`, since that is how a replay
+  recognizes the entry it already wrote.
+- `--commit` — stage and commit the log after appending, retrying a bounded
+  three attempts when the failure is a transient `.git/index.lock`.
+
+Together they are the recovery entry point for a gate whose project-log
+finalization could not commit. See
+[Workflow Gates](./workflow-gates.md#project-log-finalization) for the receipt
+and the exact recovery command.
+
 The helper produces these heading grammars in UTC:
 
 ```text

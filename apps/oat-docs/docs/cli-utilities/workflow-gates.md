@@ -375,14 +375,14 @@ once an artifact exists, its `generatedAt` (the artifact's seconds-precision
 `oat_generated_at`), so a caller can correlate the result to the exact artifact
 and disambiguate re-gate rounds:
 
-| `status`                       | Exit | Meaning                                                      |
-| ------------------------------ | ---- | ------------------------------------------------------------ |
-| `ok`                           | 0    | Review completed; gate passed at the threshold.              |
-| `blocked`                      | 1    | Review completed; findings at/above the threshold.           |
-| `review_failed`                | ≠0   | The provider target exited non-zero; no verdict.             |
-| `artifact_missing`             | 1    | The child exited cleanly without producing an artifact.      |
-| `artifact_validation_failed`   | 1    | Artifact format or configured invocation fields are invalid. |
-| `targeting_correlation_failed` | 1    | Identity did not correlate; do not run review-receive.       |
+| `status`                       | Exit | Meaning                                                         |
+| ------------------------------ | ---- | --------------------------------------------------------------- |
+| `ok`                           | 0    | Review completed; gate passed at the threshold.                 |
+| `blocked`                      | 1    | Review completed; findings at/above the threshold.              |
+| `review_failed`                | ≠0   | No validated verdict: the target or post-selection work failed. |
+| `artifact_missing`             | 1    | The child exited cleanly without producing an artifact.         |
+| `artifact_validation_failed`   | 1    | Artifact format or configured invocation fields are invalid.    |
+| `targeting_correlation_failed` | 1    | Identity did not correlate; do not run review-receive.          |
 
 Only `ok` and `blocked` are positive, receive-eligible review outcomes: both
 follow successful identity corroboration and carry a non-null `handoff`.
@@ -399,6 +399,37 @@ review artifact. It sets `receiveEligible: false`, `remediable: false`, and
 bookkeeping finish inline or through a synchronously awaited child, then start
 a new gate run. Do not use review-fix retries or review-receive for the failed
 run.
+
+Post-selection recovery covers work that fails _after_ the reviewer already
+committed a run-correlated artifact: corroboration, the threshold, handoff
+construction, or result writing. Recovery means re-validation, never re-review.
+The gate re-runs the same eligibility pipeline the normal path uses (project
+containment, `oat_generated_at` validity, verdict parsing, gate-invocation
+corroboration, the `oat_review_invocation: gate` marker, and the threshold)
+against the immutable content/signature snapshot selected at correlation time.
+It re-validates that snapshot rather than re-parsing whatever the path now
+holds, and it never dispatches a second reviewer. The artifact must still be
+present and unchanged for re-validation to succeed: a deleted or rewritten
+artifact fails re-validation and the run stays failed.
+When that re-validation succeeds the gate returns the ordinary `ok` or
+`blocked` envelope with an additive `postSelectionRecovery: true`. Like
+`lateCompletion`, that is recovery telemetry rather than a new status: route
+review-receive from `status`, `receiveEligible`, and `handoff` as usual.
+
+When no artifact was selected, or the selected snapshot does not re-validate,
+the run stays `review_failed` with `outcome:
+unexpected_post_selection_failure`. That envelope names the failing sub-step in
+`postSelection.step` (`target-dispatch`, `artifact-scan`,
+`artifact-correlation`, `artifact-validation`, `verdict-parse`,
+`invocation-corroboration`, or `verdict-disposition`) and a routable
+`postSelection.code`: the thrown error's own `code` or constructor name, the
+eligibility cause when a committed artifact failed re-validation, or
+`recovery_revalidation_failed` when the re-validation attempt itself threw. That
+last case also emits a `gate-recovery-failed` diagnostic, so a persistent
+non-recovery stays distinguishable from the transient failure that triggered it.
+Replacement bytes at the artifact path, a missing artifact, a non-gate
+invocation marker, and an artifact targeting another project never recover. Route deterministically on those
+fields instead of re-dispatching the reviewer.
 
 `ok` and `blocked` also include `receiveEligible: true`, `outcome`,
 `artifactPath`, `counts`, `scope`, `handoff`, `gateInvocation`, and
@@ -444,6 +475,81 @@ oat --json gate review \
 
 Read the resulting envelope and exit code; that is the whole completion
 contract.
+
+### Project log finalization
+
+After the envelope is written, the gate appends one structural entry to the
+project's `project-log.md` and commits it, so the run does not leave a dirty
+worktree for whatever executes next. The entry body ends with
+`run=<runId>` — the same run id the envelope carries. That token is the entry's
+stable identity: a retry or a later recovery recognizes the entry it already
+wrote instead of appending a second one.
+
+Staging and committing the log retries **three attempts** separated by two
+waits (250 ms, then 500 ms) when, and only when, git itself reports index-lock
+contention: `Unable to create '…/index.lock': File exists`, or git's `Another
+git process seems to be running in this repository` advice in output that also
+names an index lock. Every other failure — a hook,
+signing, identity, or pathspec error — is reported immediately rather than
+retried, including one whose output merely mentions `index.lock`. The gate never
+deletes, moves, or forces a lock it did not take. A lock whose mtime is
+unchanged across the whole retry window is reported as `persistent-index-lock`;
+one that moves is `transient-index-lock`. If a competing writer commits the same
+entry while the gate retries, the gate reports the work as already committed
+instead of a failure — but only when the committed log still carries this run's
+entry.
+
+When the retries are exhausted the append has landed but the commit has not, so
+the gate writes a durable receipt to
+`<project>/gate-receipts/<runId>.json` and emits a
+`gate-project-log-partial-finalization` diagnostic naming the receipt and
+printing its recovery command verbatim. The gate result is unchanged: a passing
+review still exits `ok`.
+
+The receipt must not dirty the worktree, so this repository ignores
+`**/gate-receipts/` repository-wide rather than under `.oat/projects` alone:
+`projects.root` is settable, and the receipt follows the resolved project. A
+repository whose ignore rules do not cover the receipt still gets the receipt —
+losing the finalization would be worse than a tracked file — plus a
+`gate-project-log-receipt-warning` diagnostic naming the path, so the gap
+surfaces before the next repository-wide `git add`.
+
+The receipt completes the finalization from a later process, with no reviewer
+and no second gate run:
+
+```bash
+oat project log append --project <projectPath> --structural \
+  --producer 'oat gate review' --ref <ref> --body <body> \
+  --idempotency-key <runId> --commit
+```
+
+Before appending anything, that command validates the receipt against the live
+tree: the project path must resolve to the same project, `worktreeRoot` must
+match `git rev-parse --show-toplevel`, and the review artifact must still exist
+with its recorded sha256 signature. A receipt that names no artifact — the gate
+correlated none, so `artifactPath` and `artifactSignature` are both `null` — is
+bound by run id, project, worktree, and the entry fields alone; a receipt that
+names an artifact _without_ a signature is malformed and refused. The replayed
+entry must also be the entry
+the receipt describes — `--producer`, `--ref`, and `--body` are compared against
+the receipt, and the receipt's own run id must be the `--idempotency-key` that
+names its file — so a receipt can never be consumed while some other entry is
+written. Any mismatch exits non-zero with a
+`gate-project-log-receipt-mismatch` diagnostic and touches nothing. On a match
+it appends (or reports `already-appended` when the entry is already there),
+commits with the same bounded retry, and deletes the receipt. Running it twice
+is safe: the second run appends nothing and creates no commit.
+
+At the start of a run, a receipt still sitting under the project produces a
+`gate-project-log-receipt-pending` diagnostic naming the receipt and its
+recovery command. Its `state` is `stale` only when the _committed_ log
+(`HEAD:project-log.md`) already carries that run id and entry — the append
+landed and was committed, so recovery will observe `already-appended` and clear
+the receipt. Everything else is `pending`, including the ordinary case where
+the entry is in the working tree but no commit succeeded: that is precisely
+what the receipt exists to finish, so it is never reported as leftovers. A
+receipt naming another tree's log, or a committed log that cannot be read back,
+also stays `pending`. The warning is discovery only; the gate still runs.
 
 ## Exec targets
 
@@ -884,14 +990,16 @@ those artifacts; correct the project/run correlation and start a new gate run.
 
 ### Incident-to-regression mapping
 
-| Observed failure                                         | Regression coverage                                                                                                    |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Headless reviewer could not complete an async delegation | route unit matrix plus canonical checkout-local command, strict receipt, headless inline, and structured-refusal cases |
-| Large final review exceeded the old 15-minute budget     | scope-aware resolver tests plus scaled final-scope fake-runtime case                                                   |
-| Silent child looked idle while transcripts grew          | metadata-probe tests plus timeout-with-advancing-transcript fixture                                                    |
-| Timeout or child failure produced no artifact            | fail-closed `noOutputProduced` fixture                                                                                 |
-| Artifact carried the wrong gate run ID                   | provenance-mismatch fixture                                                                                            |
-| Passing artifact lost receive routing                    | handoff and `receiveEligible` fixture                                                                                  |
+| Observed failure                                                      | Regression coverage                                                                                                    |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Headless reviewer could not complete an async delegation              | route unit matrix plus canonical checkout-local command, strict receipt, headless inline, and structured-refusal cases |
+| Large final review exceeded the old 15-minute budget                  | scope-aware resolver tests plus scaled final-scope fake-runtime case                                                   |
+| Silent child looked idle while transcripts grew                       | metadata-probe tests plus timeout-with-advancing-transcript fixture                                                    |
+| Timeout or child failure produced no artifact                         | fail-closed `noOutputProduced` fixture                                                                                 |
+| Artifact carried the wrong gate run ID                                | provenance-mismatch fixture                                                                                            |
+| Passing artifact lost receive routing                                 | handoff and `receiveEligible` fixture                                                                                  |
+| Passing review reported as a failed gate after a post-selection error | post-selection recovery cases plus snapshot-replacement, non-gate-marker, and foreign-target controls                  |
+| Transient index lock turned a completed review into a failed gate     | index-lock retry cases plus persistent/transient classification, receipt fixture, and fresh-process recovery control   |
 
 ## Current limits
 

@@ -9,6 +9,9 @@ import {
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 
+import { createDocsGenerateIndexCommand } from '@commands/docs/index-generate/index';
+import { dirExists } from '@fs/io';
+import { Command } from 'commander';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -19,6 +22,7 @@ import {
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
+  resolveDocumentationContentRoot,
   resolveActiveIdea,
   resolveActiveProject,
   resolveLocalPaths,
@@ -189,6 +193,281 @@ describe('oat-config', () => {
         });
       });
     }
+  });
+
+  describe('documentation.instructionPointerExcludes', () => {
+    async function writeSharedConfig(
+      repoRoot: string,
+      documentation: unknown,
+    ): Promise<void> {
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({ version: 1, documentation }),
+        'utf8',
+      );
+    }
+
+    it('parses a trimmed, de-duplicated, order-preserving list', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeSharedConfig(repoRoot, {
+        root: 'apps/docs',
+        instructionPointerExcludes: ['  vendor  ', 'apps/docs', 'vendor'],
+      });
+
+      await expect(readOatConfig(repoRoot)).resolves.toEqual({
+        version: 1,
+        documentation: {
+          root: 'apps/docs',
+          instructionPointerExcludes: ['vendor', 'apps/docs'],
+        },
+      });
+    });
+
+    it('round-trips through writeOatConfig', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await writeOatConfig(repoRoot, {
+        version: 1,
+        documentation: {
+          root: 'apps/docs',
+          instructionPointerExcludes: ['vendor', 'third_party'],
+        },
+      });
+
+      await expect(readOatConfig(repoRoot)).resolves.toEqual({
+        version: 1,
+        documentation: {
+          root: 'apps/docs',
+          instructionPointerExcludes: ['vendor', 'third_party'],
+        },
+      });
+    });
+
+    it('omits the key for an absent or empty list', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeSharedConfig(repoRoot, {
+        root: 'apps/docs',
+        instructionPointerExcludes: [],
+      });
+
+      await expect(readOatConfig(repoRoot)).resolves.toEqual({
+        version: 1,
+        documentation: { root: 'apps/docs' },
+      });
+    });
+
+    // Fails closed like `documentation.excludes`: a key that exists to keep
+    // files out of a tree must never silently protect less than was asked for.
+    const invalidCases: Array<{ name: string; value: unknown }> = [
+      { name: 'a non-array value', value: 'vendor' },
+      { name: 'a non-string entry', value: ['vendor', 7] },
+      { name: 'an empty entry', value: ['vendor', ''] },
+      { name: 'a whitespace-only entry', value: ['   '] },
+    ];
+
+    for (const testCase of invalidCases) {
+      it(`rejects ${testCase.name}`, async () => {
+        const repoRoot = await createRepoRoot();
+        await writeSharedConfig(repoRoot, {
+          root: 'apps/docs',
+          instructionPointerExcludes: testCase.value,
+        });
+
+        await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
+          message: `Invalid documentation.instructionPointerExcludes in ${join(repoRoot, '.oat', 'config.json')}: expected an array of non-empty strings. Repair it with \`oat config set documentation.instructionPointerExcludes <path[,path...]>\` (an empty value clears the key), or by editing that file.`,
+          exitCode: 2,
+        });
+      });
+    }
+
+    it('names the oat config set command that repairs the key', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeSharedConfig(repoRoot, {
+        instructionPointerExcludes: 'vendor',
+      });
+
+      // The key is catalogued, so the repair instruction names the validated
+      // write path. A repair message that only said "edit the file" would send
+      // operators around a command that exists -- and this assertion fails if
+      // the catalog entry is ever removed and the message is not restored.
+      await expect(readOatConfig(repoRoot)).rejects.toMatchObject({
+        message: expect.stringContaining(
+          'oat config set documentation.instructionPointerExcludes',
+        ),
+      });
+    });
+  });
+
+  describe('resolveDocumentationContentRoot', () => {
+    it('prefers the docs child when it is a directory', async () => {
+      const repoRoot = await createRepoRoot();
+      await mkdir(join(repoRoot, 'apps', 'oat-docs', 'docs'), {
+        recursive: true,
+      });
+
+      await expect(
+        resolveDocumentationContentRoot(repoRoot, {
+          version: 1,
+          documentation: { root: 'apps/oat-docs' },
+        }),
+      ).resolves.toBe('apps/oat-docs/docs');
+    });
+
+    it('falls back to the root itself when it has no docs child', async () => {
+      const repoRoot = await createRepoRoot();
+      await mkdir(join(repoRoot, 'content'), { recursive: true });
+
+      await expect(
+        resolveDocumentationContentRoot(repoRoot, {
+          version: 1,
+          documentation: { root: 'content' },
+        }),
+      ).resolves.toBe('content');
+    });
+
+    it('ignores a docs child that is a file rather than a directory', async () => {
+      const repoRoot = await createRepoRoot();
+      await mkdir(join(repoRoot, 'content'), { recursive: true });
+      await writeFile(join(repoRoot, 'content', 'docs'), 'not a dir\n', 'utf8');
+
+      await expect(
+        resolveDocumentationContentRoot(repoRoot, {
+          version: 1,
+          documentation: { root: 'content' },
+        }),
+      ).resolves.toBe('content');
+    });
+
+    it('returns null when documentation.root is unset or empty', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await expect(
+        resolveDocumentationContentRoot(repoRoot, { version: 1 }),
+      ).resolves.toBeNull();
+      await expect(
+        resolveDocumentationContentRoot(repoRoot, {
+          version: 1,
+          documentation: { root: '   ' },
+        }),
+      ).resolves.toBeNull();
+    });
+
+    it('returns null rather than excluding the repository root itself', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await expect(
+        resolveDocumentationContentRoot(repoRoot, {
+          version: 1,
+          documentation: { root: '.' },
+        }),
+      ).resolves.toBeNull();
+    });
+
+    it('returns null for a root outside the repository', async () => {
+      const repoRoot = await createRepoRoot();
+
+      await expect(
+        resolveDocumentationContentRoot(repoRoot, {
+          version: 1,
+          documentation: { root: '../elsewhere' },
+        }),
+      ).resolves.toBeNull();
+    });
+
+    // The plan forbids encoding a second content-root rule. Rather than
+    // restating the generator's ternary here (a mirror cannot detect
+    // divergence, because it drifts with nobody), this drives the real
+    // `oat docs generate-index` command and observes the docs directory its own
+    // `resolveIndexGeneratePaths` selected. If either rule changes
+    // independently, this fails.
+    it('agrees with the docs-index generator on the directory it actually indexes', async () => {
+      const repoRoot = await createRepoRoot();
+      await mkdir(join(repoRoot, 'apps', 'with-child', 'docs'), {
+        recursive: true,
+      });
+      await mkdir(join(repoRoot, 'apps', 'bare-root'), { recursive: true });
+
+      async function generatorDocsDir(root: string): Promise<string> {
+        let observedDocsDir = '';
+        const errors: string[] = [];
+        const command = createDocsGenerateIndexCommand({
+          buildCommandContext: () => ({
+            scope: 'project',
+            dryRun: false,
+            verbose: false,
+            json: true,
+            cwd: repoRoot,
+            home: join(repoRoot, 'home'),
+            interactive: false,
+            logger: {
+              debug() {},
+              info() {},
+              warn() {},
+              error(message: string) {
+                errors.push(message);
+              },
+              success() {},
+              json() {},
+            },
+          }),
+          fileDeps: {
+            generateIndex: async (docsDir: string) => {
+              observedDocsDir = docsDir;
+              return [];
+            },
+            renderIndex: () => '',
+            writeFile: async () => undefined,
+            readOatConfig: async () => ({
+              version: 1,
+              documentation: { root },
+            }),
+            writeOatConfig: async () => undefined,
+            resolveRepoRoot: async () => repoRoot,
+            dirExists,
+            readFileIfPresent: async () => null,
+            realpath: async (path: string) => path,
+            readLinkIfSymlink: async () => null,
+          },
+        });
+
+        const program = new Command().name('oat').exitOverride();
+        program.addCommand(command);
+        // `--output` is explicit only to dodge an unrelated safety refusal (a
+        // derived `<root>/index.md` would sit inside a bare content root).
+        // `--docs-dir` stays omitted, so the derivation under test is the
+        // generator's own.
+        await program.parseAsync(
+          ['generate-index', '--output', join(repoRoot, 'generated-index.md')],
+          { from: 'user' },
+        );
+
+        if (!observedDocsDir) {
+          throw new Error(
+            `generator did not index anything: ${errors.join(' | ')}`,
+          );
+        }
+        return relative(repoRoot, observedDocsDir);
+      }
+
+      for (const root of ['apps/with-child', 'apps/bare-root']) {
+        const expected = await generatorDocsDir(root);
+        await expect(
+          resolveDocumentationContentRoot(repoRoot, {
+            version: 1,
+            documentation: { root },
+          }),
+        ).resolves.toBe(expected);
+      }
+
+      // Guards the assertion itself: the two fixtures must exercise both
+      // branches, or the parity claim would be vacuous.
+      await expect(generatorDocsDir('apps/with-child')).resolves.toBe(
+        'apps/with-child/docs',
+      );
+      await expect(generatorDocsDir('apps/bare-root')).resolves.toBe(
+        'apps/bare-root',
+      );
+    });
   });
 
   it('accepts trailing commas in shared, local, and user config files', async () => {

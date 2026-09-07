@@ -1,6 +1,6 @@
 ---
 name: oat-project-progress
-version: 1.4.0
+version: 1.4.1
 description: Use when the user explicitly asks to check OAT project progress — e.g. "check progress", "what's next", "where are we", or confirms a previously offered progress check. Do NOT auto-invoke just because a workflow step completed. Reads project status and offers the next route.
 disable-model-invocation: false
 user-invocable: true
@@ -276,11 +276,20 @@ Routing matrix by mode:
 | --------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | discovery | in_progress      | Continue `oat-project-discover`                                                                                                     |
 | discovery | complete         | `oat-project-plan`                                                                                                                  |
-| plan      | in_progress      | Continue `oat-project-plan`                                                                                                         |
-| plan      | complete         | `oat-project-implement`                                                                                                             |
+| plan      | in_progress      | Continue `oat-project-quick-start` when the plan is not implementation-ready; otherwise `oat-project-implement`                     |
+| plan      | complete         | `oat-project-implement` when the plan is implementation-ready; otherwise `oat-project-quick-start`                                  |
 | implement | in_progress      | Continue `oat-project-implement`. If drift detected (see drift detection above), also mention `oat-project-reconcile` as an option. |
 | implement | complete         | Ready for final review / PR                                                                                                         |
 | implement | pr_open          | `oat-project-complete`                                                                                                              |
+
+**Quick plan readiness.** "Implementation-ready" in the two `plan` rows above is
+the named **quick plan readiness** predicate, defined once beside Step 3.7 of the
+quick workflow. Load `oat-project-quick-start/SKILL.md` and apply that predicate
+as written to `{PROJECT_PATH}/plan.md`; do not restate or re-derive its
+conditions here, and never read the presence of substantive tasks as readiness on
+its own. A not-ready quick plan is not a dead end and does not need spec-driven
+planning: load `oat-project-quick-start/SKILL.md` and follow its Step 0.5 resume
+branch, which finishes the plan in place without re-scaffolding the project.
 
 **Import mode (`oat_workflow_mode: import`):**
 

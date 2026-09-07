@@ -18,11 +18,31 @@ now })` is pure. Its result contains the effective `decision`, the
 `resolutionSource`, whether a prompt is needed, an optional state `record`, and
 warnings.
 
-In autonomous mode, `projectRecap` always resolves to `generate` with source
-`autonomous_policy`. A lower-precedence skip or `never` preference is overridden
-and reported as a warning. Autonomous `projectExplainer` resolves to `generate`
-only when the kickoff prompt explicitly requested it; otherwise it resolves to
-`skip` without writing an invalid prompt-source skip record.
+In autonomous mode, `projectRecap` resolves to `generate` with source
+`autonomous_policy` on any host whose recap seams resolve. A lower-precedence
+skip or `never` preference is overridden and reported as a warning. Autonomous
+`projectExplainer` resolves to `generate` only when the kickoff prompt
+explicitly requested it; otherwise it resolves to `skip` without writing an
+invalid prompt-source skip record.
+
+Autonomous `projectRecap` resolution accepts an optional `seamProbe`, the
+result of `scripts/probe-recap-seams.mjs#probeRecapSeams`. It is a pre-flight
+capability input, never a post-hoc reaction to a failed run:
+
+- `ok: true` leaves resolution unchanged, so a configured host still forces
+  `generate / autonomous_policy`.
+- `seams-unavailable` — no callback and no module path is supplied for a seam
+  this mode requires — resolves `skip` with source `capability_probe` and a
+  warning naming the unavailable seams.
+- `seams-invalid` — a seam is supplied but violates a resolution rule — throws
+  `E_RECAP_SEAMS_INVALID` and fails closed exactly as the runtime would. A
+  configured-but-invalid seam is a configuration error, never a capability
+  skip.
+
+A seam probe is scoped to autonomous `projectRecap`; supplying one for
+`projectExplainer` or for interactive resolution is an error. A recap that
+fails after a passing probe stays `failed` and is never reinterpreted as a
+skip.
 
 In interactive mode, an existing valid project record prevents another prompt.
 Preferences `always` and `never` resolve directly but are not copied into
@@ -47,12 +67,22 @@ oat_project_recap:
 
 Allowed decision/source pairs are:
 
-| Product            | Allowed pairs                                                            |
-| ------------------ | ------------------------------------------------------------------------ |
-| `projectExplainer` | `generate/interactive`, `skip/interactive`, `generate/kickoff_prompt`    |
-| `projectRecap`     | `generate/interactive`, `skip/interactive`, `generate/autonomous_policy` |
+| Product            | Allowed pairs                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------- |
+| `projectExplainer` | `generate/interactive`, `skip/interactive`, `generate/kickoff_prompt`                             |
+| `projectRecap`     | `generate/interactive`, `skip/interactive`, `generate/autonomous_policy`, `skip/capability_probe` |
 
-In particular, `skip/autonomous_policy` is invalid.
+In particular, `skip/autonomous_policy` is invalid: an autonomous skip is
+recordable only as the probe-driven `skip/capability_probe`, and that pair is
+product-scoped to `projectRecap`. `generate/capability_probe` is invalid too,
+because a probe can only withhold a run, never authorize one.
+
+The pair is product-scoped but not mode-scoped, and that is deliberate. Only
+autonomous resolution can _produce_ a `skip/capability_probe`, but once one is
+persisted a later interactive resolution reads it back as a valid recorded
+decision and honors it, exactly as it honors `skip/interactive`. A resumed
+project therefore neither re-prompts nor fails validation on a legitimately
+recorded capability skip.
 
 ## Safe persistence
 
@@ -119,6 +149,23 @@ object verification, and public verification evidence. A
 the relative path and public URL. Neither summary contract is mutated in place.
 
 ## Browser and visual-review execution
+
+Lifecycle callers probe seam availability before attempting an unattended
+`project-recap`. `scripts/probe-recap-seams.mjs#probeRecapSeams({ mode, ...
+seams })` is pure: it applies the same resolution and exclusivity rules this
+adapter applies at run time, but never imports a module, calls a callback,
+validates a session brand, or touches the filesystem. Unattended runs require
+all five seams — author, fact critic, browser session, visual critic, and set
+planner — and interactive runs require the author and fact critic. A probe that
+checks only four of the five passes on a host with no set planner and the
+adapter still throws `E_SET_PLANNER_REQUIRED`, so the planner is probed with
+the rest.
+
+The probe classifies each seam as resolved, `missing`, or `invalid` and never
+conflates them. Only `missing` may become a recorded skip. Requirements below
+are unchanged for every run that is actually attempted: the probe gates whether
+a run is attempted, and never weakens the evidence a run that happens must
+produce.
 
 Every unattended `project-recap` must provide exactly one browser-evidence
 session and exactly one whole-set visual critic through the adapter's

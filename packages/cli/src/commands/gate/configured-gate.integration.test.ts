@@ -233,6 +233,9 @@ describe('configured gate headless execution', { timeout: 15_000 }, () => {
       corroboration: { run: 'matched', invocation: 'matched' },
     });
     expect(payload.handoff).toContain('oat-project-review-receive');
+    // Post-selection recovery is additive: an ordinary pass never carries the
+    // marker, so consumers keyed on status/outcome are unaffected.
+    expect(payload).not.toHaveProperty('postSelectionRecovery');
   });
 
   it('returns artifact_missing when the child exits cleanly without an artifact', async () => {
@@ -247,6 +250,30 @@ describe('configured gate headless execution', { timeout: 15_000 }, () => {
       remediable: false,
       handoff: null,
     });
+    // Byte-stable PR #246 envelope: exact wording plus exact key set.
+    expect(payload.message).toBe(
+      'Review target fake-runtime completed without producing the required correlated review artifact.',
+    );
+    expect(payload.recovery).toBe(
+      'Fix the accepted headless target so it can write and finalize the review artifact before the process exits, then start a new gate run.',
+    );
+    expect(Object.keys(payload).sort()).toEqual([
+      'artifactPath',
+      'dispatchReport',
+      'gateInvocation',
+      'generatedAt',
+      'handoff',
+      'message',
+      'outcome',
+      'project',
+      'projectResolutionSource',
+      'receiveEligible',
+      'recovery',
+      'remediable',
+      'runId',
+      'status',
+      'target',
+    ]);
   });
 
   it('keeps wrong-run artifacts distinct as targeting correlation failures', async () => {
@@ -262,5 +289,23 @@ describe('configured gate headless execution', { timeout: 15_000 }, () => {
       handoff: null,
       corroboration: { run: 'mismatched' },
     });
+    // Byte-stable PR #246 envelope: recovery adds no key here either.
+    expect(Object.keys(payload).sort()).toEqual([
+      'artifactPath',
+      'corroboration',
+      'dispatchReport',
+      'gateInvocation',
+      'generatedAt',
+      'handoff',
+      'message',
+      'outcome',
+      'project',
+      'projectResolutionSource',
+      'receiveEligible',
+      'remediable',
+      'runId',
+      'status',
+      'target',
+    ]);
   });
 });

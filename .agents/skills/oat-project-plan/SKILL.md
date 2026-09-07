@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.4.9
+version: 1.4.10
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -21,7 +21,7 @@ directly.
 Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md` (default: `spec-driven`):
 
 - **`spec-driven`**: Complete design document required (`design.md` with `oat_status: complete`). If missing, **Stop.** Tell the user: "Run the `oat-project-design` skill first, then return to planning." Otherwise proceed with planning.
-- **`quick`**: **Stop.** Plan is already produced by the quick workflow. Tell the user: "Plan already produced by quick workflow. Run `oat-project-implement` to begin execution."
+- **`quick`**: **Stop.** Spec-driven planning does not apply here: the quick workflow authors `plan.md` itself and owns it through its own review disposition. Step 1 routes the project by the named **quick plan readiness** predicate instead of assuming the plan is finished.
 - **`import`**: **Stop.** If a normalized `plan.md` exists, tell the user: "Imported plan is ready. Run `oat-project-implement` to begin execution." If no `plan.md` exists, tell the user: "Run `oat-project-import-plan` to import and normalize the external plan first."
 - **`lite`**: **Stop.** Tell the user: "Lite planning is owned by `oat-project-lite`; run it to author or resume the combined plan contract."
 
@@ -113,13 +113,39 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 WORKFLOW_MODE=$(oat project status --field project.workflowMode 2>/dev/null || echo null)
 ```
 
-**Mode: `quick`** — **STOP.** Print:
+**Mode: `quick`** — **STOP.** Spec-driven planning does not apply: the quick
+workflow owns `plan.md` from discovery through the review disposition it records
+at its Step 3.7, so this skill never authors, finishes, or reviews a quick plan.
+It still has to say where the project continues, and a quick plan that is not
+implementation-ready must not be handed to implementation. Decide the
+continuation with the named **quick plan readiness** predicate: load
+`oat-project-quick-start/SKILL.md` and apply that predicate as written to
+`"$PROJECT_PATH/plan.md"`, rather than restating or re-deriving its conditions
+here.
+
+**Not implementation-ready** (the predicate fails; substantive tasks alone never
+satisfy it). Print:
 
 ```
-⚠️  This project uses quick mode. Plan is produced by the quick workflow.
-    Run the `oat-project-implement` skill to begin execution.
+⚠️  This project uses quick mode and its plan is not implementation-ready.
+    Spec-driven planning does not apply — the quick workflow finishes its own
+    plan in place, without re-scaffolding the project.
+
+    Continue with: oat-project-quick-start
 ```
 
+Then load `oat-project-quick-start/SKILL.md` and follow its Step 0.5 resume
+branch. Exit skill.
+
+**Implementation-ready** (every predicate condition holds). Print:
+
+```
+⚠️  This project uses quick mode and its plan is implementation-ready.
+
+    Continue with: oat-project-implement
+```
+
+Then load `oat-project-implement/SKILL.md` and follow it to begin execution.
 Exit skill.
 
 **Mode: `lite`** — **STOP.** Print:

@@ -1588,6 +1588,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   {
     file: '.agents/skills/oat-project-next/SKILL.md',
     anchor: 'Step 5: Post-Implementation Router',
+    match: 'revision phases are historical',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Read-only terminal-status guard that suppresses a route; Step 6 loads and follows the selected target.',
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 5: Post-Implementation Router',
     match: 'Revision tasks pending',
     classification: 'non-executing',
     skills: ['oat-project-implement'],
@@ -1669,6 +1678,27 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     reason: 'Anchor contract for the router execution boundary.',
   },
 
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 3b: Phase Routing Tables',
+    match: 'Readiness is the named **quick plan readiness** predicate',
+    classification: 'load-required',
+    skills: ['oat-project-quick-start'],
+    requires: [
+      'load `oat-project-quick-start/SKILL.md` and apply it as written to `{PROJECT_PATH}/plan.md`',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 3b: Phase Routing Tables',
+    match: 'A `not ready` result resumes the quick workflow in place',
+    classification: 'load-required',
+    skills: ['oat-project-quick-start'],
+    requires: [
+      'load `oat-project-quick-start/SKILL.md` and follow its Step 0.5 resume branch',
+    ],
+  },
+
   // ---------------------------------------------------------------------- plan
   {
     file: '.agents/skills/oat-project-plan/SKILL.md',
@@ -1678,14 +1708,6 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     skills: ['oat-project-design'],
     reason:
       'Terminal handoff, matching the sibling `quick` and `import` bullets: plan stops and tells the user to run design.',
-  },
-  {
-    file: '.agents/skills/oat-project-plan/SKILL.md',
-    anchor: 'Prerequisites',
-    match: 'to begin execution." **`import`**',
-    classification: 'non-executing',
-    skills: ['oat-project-implement'],
-    reason: 'Quoted message telling the user which skill to run next.',
   },
   {
     file: '.agents/skills/oat-project-plan/SKILL.md',
@@ -1712,6 +1734,39 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: ['oat-project-plan'],
     reason: 'Self-reference inside user-facing STOP guidance.',
+  },
+  {
+    file: '.agents/skills/oat-project-plan/SKILL.md',
+    anchor: 'Step 1: Determine Workflow Mode and Route',
+    match:
+      'Decide the continuation with the named **quick plan readiness** predicate',
+    classification: 'load-required',
+    skills: ['oat-project-quick-start'],
+    requires: [
+      'load `oat-project-quick-start/SKILL.md` and apply that predicate as written',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-plan/SKILL.md',
+    anchor: 'Step 1: Determine Workflow Mode and Route',
+    match:
+      'Then load `oat-project-quick-start/SKILL.md` and follow its Step 0.5 resume branch',
+    classification: 'load-required',
+    skills: ['oat-project-quick-start'],
+    requires: [
+      'Then load `oat-project-quick-start/SKILL.md` and follow its Step 0.5 resume branch',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-plan/SKILL.md',
+    anchor: 'Step 1: Determine Workflow Mode and Route',
+    match:
+      'Then load `oat-project-implement/SKILL.md` and follow it to begin execution',
+    classification: 'load-required',
+    skills: ['oat-project-implement'],
+    requires: [
+      'Then load `oat-project-implement/SKILL.md` and follow it to begin execution',
+    ],
   },
   {
     file: '.agents/skills/oat-project-plan/SKILL.md',
@@ -1919,6 +1974,27 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-progress/SKILL.md',
+    anchor: 'Step 5: Determine Next Skill',
+    match:
+      'Load `oat-project-quick-start/SKILL.md` and apply that predicate as written',
+    classification: 'load-required',
+    skills: ['oat-project-quick-start'],
+    requires: [
+      'Load `oat-project-quick-start/SKILL.md` and apply that predicate as written to `{PROJECT_PATH}/plan.md`',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-progress/SKILL.md',
+    anchor: 'Step 5: Determine Next Skill',
+    match: 'A not-ready quick plan is not a dead end',
+    classification: 'load-required',
+    skills: ['oat-project-quick-start'],
+    requires: [
+      'load `oat-project-quick-start/SKILL.md` and follow its Step 0.5 resume branch',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-progress/SKILL.md',
     anchor: 'Usage',
     match: 'Run `oat-project-progress` at any time to',
     classification: 'non-executing',
@@ -1935,6 +2011,25 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     skills: ['oat-project-new'],
     reason:
       'Names the shared `oat project new` CLI scaffolding path shown below, not a directive to execute the named skill.',
+  },
+  {
+    file: '.agents/skills/oat-project-quick-start/SKILL.md',
+    anchor: 'Quick Plan Readiness (Named Predicate)',
+    match: 'the same absent-or-false convention',
+    classification: 'non-executing',
+    skills: ['oat-project-next'],
+    reason:
+      'Cites the boundary-tier convention that router documents for the same field; nothing is executed here.',
+  },
+  {
+    file: '.agents/skills/oat-project-quick-start/SKILL.md',
+    anchor: 'Step 0.5: Resolve Active Project',
+    match: 'Ready → there is nothing left to author here',
+    classification: 'load-required',
+    skills: ['oat-project-implement'],
+    requires: [
+      'load `oat-project-implement/SKILL.md` and follow it to begin execution',
+    ],
   },
   {
     file: '.agents/skills/oat-project-quick-start/SKILL.md',
@@ -2349,7 +2444,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
 /**
  * Floors, not exact counts: the corpus grows, but a glob or path regression that
  * shrinks it must fail loudly rather than quietly widening every exemption.
- * Recorded at 41 bounded files / 158 candidate sentences, so losing a single
+ * Recorded at 42 bounded files / 179 candidate sentences, so losing a single
  * scanned file or one reference file's worth of candidates breaches the floor.
  * The negative control below reads these values rather than restating them, so
  * lowering them cannot silently disarm the guard.

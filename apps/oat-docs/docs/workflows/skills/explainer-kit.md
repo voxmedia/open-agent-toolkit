@@ -420,10 +420,16 @@ Interactive project explainer and recap preferences resolve independently from
 the built-in default is `ask`. A resolved project decision in `state.md`
 outranks those preferences.
 
-Autonomous mode has stricter policy: it always attempts a project recap, while
-a project explainer runs only when the kickoff request explicitly asks for
-one. Lifecycle-triggered runs do not publish automatically, and recap failure
-does not block project completion.
+Autonomous mode has stricter policy: it always runs the project-recap gate,
+while a project explainer runs only when the kickoff request explicitly asks
+for one. The gate probes the five seams an unattended recap needs — author,
+fact critic, browser session, visual critic, and set planner — before
+generating. It attempts the recap only when all five resolve; when a seam has
+no provider configured at all, it records a `skip` with source
+`capability_probe` and a warning instead. A seam that is configured but invalid
+is a configuration error and still fails closed. Lifecycle-triggered runs do
+not publish automatically, and neither recap failure nor an unavailable seam
+blocks project completion.
 
 See [Project Artifacts](../projects/artifacts.md) for active and durable output
 locations, and [Configuration](../../cli-utilities/configuration.md) for the

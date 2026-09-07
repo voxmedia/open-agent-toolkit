@@ -35,7 +35,26 @@ test('implementation closeout accepts only terminal generated recap outcomes', (
     ok: true,
     intent: 'skip',
     outcome: null,
+    reason: null,
   });
+  assert.deepEqual(
+    checkTerminalOutcome({ intent: 'skip', reason: 'capability_probe' }),
+    {
+      ok: true,
+      intent: 'skip',
+      outcome: null,
+      reason: 'capability_probe',
+    },
+  );
+  for (const invalid of [
+    { intent: 'skip', reason: 'seams-unavailable' },
+    { intent: 'generate', outcome: 'failed', reason: 'capability_probe' },
+  ]) {
+    assert.throws(
+      () => checkTerminalOutcome(invalid),
+      (error) => error?.code === 'E_RECAP_OUTCOME',
+    );
+  }
 });
 
 test('implementation closeout invokes the shared guard before final approval', async () => {

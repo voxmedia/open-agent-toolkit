@@ -25,6 +25,8 @@ import {
   buildInstructionsSummary,
   EXPECTED_CLAUDE_CONTENT,
   formatInstructionsReport,
+  normalizeExcludedPaths,
+  resolveInstructionPointerExcludes,
   scanInstructionFiles,
 } from './instructions.utils';
 
@@ -188,6 +190,288 @@ describe('instructions utils', () => {
     expect(paths).not.toContain('.oat/templates/AGENTS.md');
     expect(paths).not.toContain('.oat/projects/AGENTS.md');
     expect(paths).not.toContain('.oat/sync/AGENTS.md');
+  });
+
+  it('skips directories under the derived content root', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, 'apps', 'oat-docs', 'docs', 'guides'), {
+      recursive: true,
+    });
+
+    await writeFile(
+      join(repoRoot, 'apps', 'oat-docs', 'docs', 'AGENTS.md'),
+      '# docs page\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, 'apps', 'oat-docs', 'docs', 'guides', 'AGENTS.md'),
+      '# nested docs page\n',
+      'utf8',
+    );
+
+    const entries = await scanInstructionFiles(repoRoot, {
+      excludedPaths: ['apps/oat-docs/docs'],
+    });
+
+    expect(entries).toHaveLength(0);
+  });
+
+  it('keeps syncing the app-level instruction file when the content root is a docs child', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, 'apps', 'oat-docs', 'docs'), {
+      recursive: true,
+    });
+
+    await writeFile(
+      join(repoRoot, 'apps', 'oat-docs', 'AGENTS.md'),
+      '# docs app instructions\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, 'apps', 'oat-docs', 'docs', 'AGENTS.md'),
+      '# docs page\n',
+      'utf8',
+    );
+
+    const entries = await scanInstructionFiles(repoRoot, {
+      excludedPaths: ['apps/oat-docs/docs'],
+    });
+    const paths = entries.map((entry) =>
+      relative(repoRoot, entry.agentsPath ?? entry.claudePath),
+    );
+
+    expect(paths).toEqual(['apps/oat-docs/AGENTS.md']);
+    expect(entries[0]?.status).toBe('missing');
+  });
+
+  it('excludes the whole root when it has no docs child', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, 'content', 'guides'), { recursive: true });
+    await mkdir(join(repoRoot, 'packages', 'app'), { recursive: true });
+
+    await writeFile(
+      join(repoRoot, 'content', 'AGENTS.md'),
+      '# content root page\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, 'content', 'guides', 'AGENTS.md'),
+      '# nested content page\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, 'packages', 'app', 'AGENTS.md'),
+      '# app instructions\n',
+      'utf8',
+    );
+
+    const entries = await scanInstructionFiles(repoRoot, {
+      excludedPaths: ['content'],
+    });
+    const paths = entries.map((entry) =>
+      relative(repoRoot, entry.agentsPath ?? entry.claudePath),
+    );
+
+    expect(paths).toEqual(['packages/app/AGENTS.md']);
+  });
+
+  it('honors an explicit opt-out list, including the app root', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, 'apps', 'oat-docs', 'docs'), {
+      recursive: true,
+    });
+    await mkdir(join(repoRoot, 'vendor'), { recursive: true });
+    await mkdir(join(repoRoot, 'packages', 'app'), { recursive: true });
+
+    await writeFile(
+      join(repoRoot, 'apps', 'oat-docs', 'AGENTS.md'),
+      '# docs app instructions\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, 'apps', 'oat-docs', 'docs', 'AGENTS.md'),
+      '# docs page\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, 'vendor', 'AGENTS.md'),
+      '# vendored\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, 'packages', 'app', 'AGENTS.md'),
+      '# app instructions\n',
+      'utf8',
+    );
+
+    const entries = await scanInstructionFiles(repoRoot, {
+      excludedPaths: ['apps/oat-docs/docs', 'apps/oat-docs', './vendor/'],
+    });
+    const paths = entries.map((entry) =>
+      relative(repoRoot, entry.agentsPath ?? entry.claudePath),
+    );
+
+    expect(paths).toEqual(['packages/app/AGENTS.md']);
+  });
+
+  it('still scans the .oat/repo carve-in when .oat is excluded', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, '.oat', 'repo', 'pjm'), { recursive: true });
+    await mkdir(join(repoRoot, '.oat', 'templates'), { recursive: true });
+
+    await writeFile(
+      join(repoRoot, '.oat', 'repo', 'AGENTS.md'),
+      '# repo instructions\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, '.oat', 'repo', 'pjm', 'AGENTS.md'),
+      '# repo pjm instructions\n',
+      'utf8',
+    );
+    await writeFile(
+      join(repoRoot, '.oat', 'templates', 'AGENTS.md'),
+      '# ignored\n',
+      'utf8',
+    );
+
+    // The carve-in runs before the exclusion predicate, so naming `.oat` (or
+    // `.oat/repo` itself) in the opt-out list must not strand the carve-in.
+    const entries = await scanInstructionFiles(repoRoot, {
+      excludedPaths: ['.oat', '.oat/repo'],
+    });
+    const paths = entries.map((entry) =>
+      relative(repoRoot, entry.agentsPath ?? entry.claudePath),
+    );
+
+    expect(paths).toContain('.oat/repo/AGENTS.md');
+    expect(paths).toContain('.oat/repo/pjm/AGENTS.md');
+    expect(paths).not.toContain('.oat/templates/AGENTS.md');
+  });
+
+  it('matches the excluded directory exactly, not by shared prefix', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, 'apps', 'docs'), { recursive: true });
+    await mkdir(join(repoRoot, 'apps', 'docs-legacy'), { recursive: true });
+    await mkdir(join(repoRoot, 'apps', 'docsite'), { recursive: true });
+
+    for (const directory of ['docs', 'docs-legacy', 'docsite']) {
+      await writeFile(
+        join(repoRoot, 'apps', directory, 'AGENTS.md'),
+        `# ${directory}\n`,
+        'utf8',
+      );
+    }
+
+    // A regression to `startsWith` semantics would silently swallow both
+    // siblings, and the command harnesses' own mocks use prefix matching, so
+    // nothing else in the suite would object.
+    const entries = await scanInstructionFiles(repoRoot, {
+      excludedPaths: ['apps/docs'],
+    });
+    const paths = entries
+      .map((entry) => relative(repoRoot, entry.agentsPath ?? entry.claudePath))
+      .sort();
+
+    expect(paths).toEqual([
+      'apps/docs-legacy/AGENTS.md',
+      'apps/docsite/AGENTS.md',
+    ]);
+  });
+
+  it('normalizes dot segments and duplicate separators in exclusion entries', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, 'apps', 'oat-docs', 'docs'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(repoRoot, 'apps', 'oat-docs', 'docs', 'AGENTS.md'),
+      '# docs page\n',
+      'utf8',
+    );
+
+    // The scan compares against an already-normalized relative path, so an
+    // un-normalized entry must be canonicalized or it would silently miss.
+    for (const entry of [
+      'apps/./oat-docs/docs',
+      'apps//oat-docs//docs',
+      'apps/oat-docs/nested/../docs',
+      'apps/oat-docs/docs/',
+    ]) {
+      const entries = await scanInstructionFiles(repoRoot, {
+        excludedPaths: [entry],
+      });
+      expect(entries, `entry ${entry} should exclude the docs tree`).toEqual(
+        [],
+      );
+    }
+  });
+
+  it('ignores absolute and escaping exclusion entries', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, 'packages', 'app'), { recursive: true });
+    await writeFile(
+      join(repoRoot, 'packages', 'app', 'AGENTS.md'),
+      '# app instructions\n',
+      'utf8',
+    );
+
+    const rejected = [
+      '..',
+      '../packages',
+      '/packages/app',
+      join(repoRoot, 'packages'),
+    ];
+
+    // Asserted on the normalizer directly: a retained absolute entry could not
+    // match a relative traversal path anyway, so a scan-only assertion would
+    // pass whether or not these are actually dropped.
+    expect(normalizeExcludedPaths(rejected)).toEqual([]);
+
+    const entries = await scanInstructionFiles(repoRoot, {
+      excludedPaths: rejected,
+    });
+    const paths = entries.map((entry) =>
+      relative(repoRoot, entry.agentsPath ?? entry.claudePath),
+    );
+
+    expect(paths).toEqual(['packages/app/AGENTS.md']);
+  });
+
+  it('never lets an exclusion entry silence the repository root', async () => {
+    // Asserted on the normalizer, not only through the scan: the scan compares
+    // `relative(repoRoot, <child>)`, which always has at least one segment and
+    // so can never equal '.' or ''. A scan-only assertion therefore passes with
+    // the guard deleted, leaving the documented guarantee untested.
+    expect(normalizeExcludedPaths(['.', '', '   ', './'])).toEqual([]);
+
+    const repoRoot = await createRepoRoot();
+
+    await mkdir(join(repoRoot, 'packages', 'app'), { recursive: true });
+    await writeFile(join(repoRoot, 'AGENTS.md'), '# root\n', 'utf8');
+    await writeFile(
+      join(repoRoot, 'packages', 'app', 'AGENTS.md'),
+      '# app instructions\n',
+      'utf8',
+    );
+
+    const entries = await scanInstructionFiles(repoRoot, {
+      excludedPaths: ['.', '', '   ', './'],
+    });
+    const paths = entries.map((entry) =>
+      relative(repoRoot, entry.agentsPath ?? entry.claudePath),
+    );
+
+    expect(paths).toContain('AGENTS.md');
+    expect(paths).toContain('packages/app/AGENTS.md');
   });
 
   it('leaves the scan unchanged when .oat/repo does not exist', async () => {
@@ -638,6 +922,155 @@ describe('instructions utils', () => {
     expect(debugLogs).toContain(
       `Skipping symlink target stat for ${join(repoRoot, 'broken-link').replaceAll('\\', '/')} (EACCES)`,
     );
+  });
+
+  describe('resolveInstructionPointerExcludes', () => {
+    async function writeConfig(
+      repoRoot: string,
+      documentation: Record<string, unknown>,
+    ): Promise<void> {
+      await mkdir(join(repoRoot, '.oat'), { recursive: true });
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({ version: 1, documentation }),
+        'utf8',
+      );
+    }
+
+    it('reports a real content root and explicit opt-out as effective', async () => {
+      const repoRoot = await createRepoRoot();
+      await mkdir(join(repoRoot, 'apps', 'docsapp', 'docs'), {
+        recursive: true,
+      });
+      await mkdir(join(repoRoot, 'vendor'), { recursive: true });
+      await writeConfig(repoRoot, {
+        root: 'apps/docsapp',
+        instructionPointerExcludes: ['vendor'],
+      });
+
+      const exclusions = await resolveInstructionPointerExcludes(repoRoot);
+
+      expect(exclusions.configured).toEqual(['apps/docsapp/docs', 'vendor']);
+      expect(exclusions.effective).toEqual(['apps/docsapp/docs', 'vendor']);
+      expect(exclusions.warnings).toEqual([]);
+    });
+
+    it('warns and withholds effect for an entry naming no directory', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeConfig(repoRoot, {
+        instructionPointerExcludes: ['nonexistent-dir'],
+      });
+
+      const exclusions = await resolveInstructionPointerExcludes(repoRoot);
+
+      expect(exclusions.configured).toEqual(['nonexistent-dir']);
+      expect(exclusions.effective).toEqual([]);
+      expect(exclusions.warnings).toHaveLength(1);
+      expect(exclusions.warnings[0]).toContain('nonexistent-dir');
+      expect(exclusions.warnings[0]).toContain('excludes nothing');
+    });
+
+    it('warns and withholds effect for an entry dropped during normalization', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeConfig(repoRoot, {
+        instructionPointerExcludes: ['/etc', '../outside'],
+      });
+
+      const exclusions = await resolveInstructionPointerExcludes(repoRoot);
+
+      expect(exclusions.configured).toEqual([]);
+      expect(exclusions.effective).toEqual([]);
+      expect(exclusions.warnings).toHaveLength(2);
+      expect(exclusions.warnings[0]).toContain('/etc');
+      expect(exclusions.warnings[0]).toContain('Ignoring');
+    });
+
+    it('warns that an explicit .oat/repo opt-out can never take effect', async () => {
+      const repoRoot = await createRepoRoot();
+      await mkdir(join(repoRoot, '.oat', 'repo'), { recursive: true });
+      await writeConfig(repoRoot, {
+        instructionPointerExcludes: ['.oat/repo'],
+      });
+
+      const exclusions = await resolveInstructionPointerExcludes(repoRoot);
+
+      expect(exclusions.configured).toEqual(['.oat/repo']);
+      expect(exclusions.effective).toEqual([]);
+      expect(exclusions.warnings[0]).toContain('always scanned');
+    });
+
+    it('treats a case-mismatched content root as ineffective, deterministically', async () => {
+      const repoRoot = await createRepoRoot();
+      await mkdir(join(repoRoot, 'apps', 'docsapp', 'docs'), {
+        recursive: true,
+      });
+      await writeConfig(repoRoot, { root: 'Apps/Docsapp' });
+
+      // The case-insensitive filesystem is simulated through the injected
+      // realpath rather than depending on the host: on a case-sensitive runner
+      // the directory would not resolve at all and the test would pass for the
+      // wrong reason, leaving the realpath comparison unproven. Here `stat`
+      // accepts the mis-cased path (as APFS/NTFS would) while realpath reports
+      // the true on-disk casing the scan actually compares against.
+      const exclusions = await resolveInstructionPointerExcludes(repoRoot, {
+        stat: async (path: string) =>
+          fsStat(
+            path.replace(
+              `${repoRoot}/Apps/Docsapp`,
+              `${repoRoot}/apps/docsapp`,
+            ),
+          ),
+        realpath: async (path: string) =>
+          fsRealpath(
+            path.replace(
+              `${repoRoot}/Apps/Docsapp`,
+              `${repoRoot}/apps/docsapp`,
+            ),
+          ),
+      });
+
+      expect(exclusions.configured).toEqual(['Apps/Docsapp/docs']);
+      expect(exclusions.effective).toEqual([]);
+      expect(exclusions.warnings[0]).toContain('case-sensitive');
+    });
+
+    it('keeps a carve-in descendant excludable while the carve-in root is not', async () => {
+      const repoRoot = await createRepoRoot();
+      await mkdir(join(repoRoot, '.oat', 'repo', 'pjm'), { recursive: true });
+      await writeConfig(repoRoot, {
+        instructionPointerExcludes: ['.oat/repo/pjm'],
+      });
+
+      // `.oat/repo` is queued directly by the carve-in and so bypasses the
+      // predicate, but its children are reached by ordinary traversal. Marking
+      // descendants inert would warn about an exclusion that genuinely works.
+      const exclusions = await resolveInstructionPointerExcludes(repoRoot);
+
+      expect(exclusions.effective).toEqual(['.oat/repo/pjm']);
+      expect(exclusions.warnings).toEqual([]);
+    });
+
+    it('reports an exclusion nested under another as effective', async () => {
+      const repoRoot = await createRepoRoot();
+      await mkdir(join(repoRoot, 'apps', 'docsapp', 'docs', 'guide'), {
+        recursive: true,
+      });
+      await writeConfig(repoRoot, {
+        root: 'apps/docsapp',
+        instructionPointerExcludes: ['apps/docsapp/docs/guide'],
+      });
+
+      // Shadowed by the content root, so the predicate never fires for it, but
+      // the tree is protected and the operator's intent holds. Warning here
+      // would be a false alarm.
+      const exclusions = await resolveInstructionPointerExcludes(repoRoot);
+
+      expect(exclusions.effective).toEqual([
+        'apps/docsapp/docs',
+        'apps/docsapp/docs/guide',
+      ]);
+      expect(exclusions.warnings).toEqual([]);
+    });
   });
 
   it('builds summary and payload counts deterministically', () => {

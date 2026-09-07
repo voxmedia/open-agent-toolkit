@@ -18,13 +18,13 @@ For the deep file-by-file reference, see:
 
 ## The five config surfaces
 
-| Surface                   | File                      | Typical contents                                                                                                                                      | Primary CLI surface                            |
-| ------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Shared repo config        | `.oat/config.json`        | Repo-wide non-sync settings such as `projects.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, `tools.*`, and shared `workflow.*` defaults | `oat config get/set/list/describe`, `oat gate` |
-| Repo-local config         | `.oat/config.local.json`  | Per-developer state for this checkout, such as `activeProject`, `lastPausedProject`, repo-local `activeIdea`, and local `workflow.*` overrides        | `oat config get/set/list/describe`, `oat gate` |
-| User config               | `~/.oat/config.json`      | User-level state such as global `activeIdea` fallback and personal `workflow.*` defaults                                                              | `oat config describe`, `oat gate`              |
-| Project sync config       | `.oat/sync/config.json`   | Provider enablement, sync strategy, and repo-level known stray settings                                                                               | `oat providers set`, `oat config describe`     |
-| User provider sync config | `~/.oat/sync/config.json` | User sync strategy and personal known provider strays                                                                                                 | Provider-sync commands, `oat config describe`  |
+| Surface                   | File                      | Typical contents                                                                                                                                      | Primary CLI surface                                  |
+| ------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Shared repo config        | `.oat/config.json`        | Repo-wide non-sync settings such as `projects.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, `tools.*`, and shared `workflow.*` defaults | `oat config get/set/unset/list/describe`, `oat gate` |
+| Repo-local config         | `.oat/config.local.json`  | Per-developer state for this checkout, such as `activeProject`, `lastPausedProject`, repo-local `activeIdea`, and local `workflow.*` overrides        | `oat config get/set/unset/list/describe`, `oat gate` |
+| User config               | `~/.oat/config.json`      | User-level state such as global `activeIdea` fallback and personal `workflow.*` defaults                                                              | `oat config get/set/unset/describe`, `oat gate`      |
+| Project sync config       | `.oat/sync/config.json`   | Provider enablement, sync strategy, and repo-level known stray settings                                                                               | `oat providers set`, `oat config describe`           |
+| User provider sync config | `~/.oat/sync/config.json` | User sync strategy and personal known provider strays                                                                                                 | Provider-sync commands, `oat config describe`        |
 
 The main split is:
 
@@ -51,6 +51,7 @@ What each command is for:
 - `oat config list` shows the currently resolved command-surface values for shared and repo-local keys.
 - `oat config get <key>` reads one supported key value.
 - `oat config set <key> <value>` updates supported shared or repo-local keys.
+- `oat config unset <key>` removes a supported key from one surface, using the same `--shared`/`--local`/`--user` flags and per-key restrictions as `set`. The resolved value then falls back to the next surface down, or to the built-in default. A key the surface does not hold exits 0 as already-unset (`--json` adds a `removed` boolean to tell the two apart). Unknown keys, lifecycle state, `tools.*` pack intent, the `workflow.dispatchCeiling` aggregate read views, and environment-shadowed keys with nothing stored are refused with exit 1 — see [CLI Reference](../reference/cli-reference.md#oat-config-surface-flags).
 - `oat config describe` shows the supported config catalog across shared repo, repo-local, user, and sync/provider surfaces.
 - `oat config describe <key>` shows file, scope, default, mutability, owning command, and description for one key.
 
@@ -91,6 +92,7 @@ Common keys in `.oat/config.json`:
 - `git.defaultBranch` — base branch fallback for PR workflows
 - `documentation.root`, `documentation.tooling`, `documentation.config` — docs-surface ownership
 - `documentation.excludes` — a JSON array of globs, relative to the docs directory, that `oat docs generate-index` leaves out of the generated index. `oat config set` takes the list as one comma-separated value (`"a/**,b.md"`) and stores it as an array; repeated `--exclude` flags extend it, and an empty value clears the key
+- `documentation.instructionPointerExcludes` — a JSON array of repository-relative directories that `oat instructions sync` and `oat instructions validate` must not treat as pointer sites, additive to the documentation content root they already skip by default (see [Instruction Sync](../provider-sync/instruction-sync.md#documentation-trees)). `oat config set` takes the list as one comma-separated value (`"vendor/generated,apps/oat-docs/docs"`) and stores it as an array of repository-relative POSIX paths, trimmed and de-duplicated; an empty value clears the key, and `oat config unset documentation.instructionPointerExcludes` removes it. An entry that could never exclude anything — an absolute path, or one escaping the repository with `..` — is rejected with exit code `1` rather than stored. A structurally malformed value already on disk (a non-array, or an empty or non-string entry) is rejected with exit code `2` and a repair message, and `oat config set` can still replace it. Entries that are well formed but cannot exclude anything — among them absolute paths, paths escaping the repository, paths that match no directory (matching is case-sensitive), and the unexcludable `.oat/repo` carve-in root — never abort the command; they are reported as warnings and are not counted as protection. Warnings go to stderr in human mode and to the `exclusionWarnings` field under `--json`
 - `documentation.requireForProjectCompletion` — whether docs sync is a completion gate
 - `archive.s3Uri` — base S3 archive prefix
 - `archive.s3SyncOnComplete` — upload archived projects to S3 during completion
@@ -768,7 +770,7 @@ Workflow preferences resolve through three config surfaces, with `local > shared
 
 ### Setting preferences
 
-`oat config set` supports mutually exclusive surface flags for workflow keys:
+`oat config set` and `oat config unset` support the same mutually exclusive surface flags for workflow keys:
 
 ```bash
 # User-level: applies to all repos on this machine

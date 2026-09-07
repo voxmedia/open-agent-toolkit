@@ -32,7 +32,26 @@ test('project completion accepts only terminal generated recap outcomes', () => 
     ok: true,
     intent: 'skip',
     outcome: null,
+    reason: null,
   });
+  assert.deepEqual(
+    checkTerminalOutcome({ intent: 'skip', reason: 'capability_probe' }),
+    {
+      ok: true,
+      intent: 'skip',
+      outcome: null,
+      reason: 'capability_probe',
+    },
+  );
+  for (const invalid of [
+    { intent: 'skip', reason: 'seams-unavailable' },
+    { intent: 'generate', outcome: 'failed', reason: 'capability_probe' },
+  ]) {
+    assert.throws(
+      () => checkTerminalOutcome(invalid),
+      (error) => error?.code === 'E_RECAP_OUTCOME',
+    );
+  }
 });
 
 test('project completion invokes the shared guard before lifecycle mutation', async () => {

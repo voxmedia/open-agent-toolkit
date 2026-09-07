@@ -9,9 +9,24 @@ import {
   persistIntent,
   updateStateFrontmatter,
 } from '../scripts/persist-intent.mjs';
+import { probeRecapSeams } from '../scripts/probe-recap-seams.mjs';
 import { resolveIntent } from '../scripts/resolve-intent.mjs';
 
 const NOW = '2026-07-18T02:30:00Z';
+
+const noop = () => {};
+
+function allFiveSeams(overrides = {}) {
+  return {
+    mode: 'unattended',
+    author: noop,
+    critic: noop,
+    browserSession: { brand: 'launched-chromium' },
+    visualCritic: noop,
+    planSet: noop,
+    ...overrides,
+  };
+}
 
 function resolve(overrides = {}) {
   return resolveIntent({
@@ -135,6 +150,18 @@ test('autonomous mode forces recap and only generates an explainer from kickoff 
   assert.equal(recap.decision, 'generate');
   assert.equal(recap.record.source, 'autonomous_policy');
 
+  const probedRecap = resolve({
+    product: 'projectRecap',
+    mode: 'autonomous',
+    preference: 'never',
+    seamProbe: probeRecapSeams(allFiveSeams()),
+  });
+  assert.equal(probedRecap.decision, 'generate');
+  assert.equal(probedRecap.record.source, 'autonomous_policy');
+  assert.deepEqual(probedRecap.warnings, [
+    'Autonomous project recap policy overrode workflow preference never.',
+  ]);
+
   const skippedExplainer = resolve({
     mode: 'autonomous',
     state: {
@@ -191,6 +218,278 @@ test('rejects invalid intent combinations including autonomous skip', () => {
         decided_at: NOW,
       }),
     /invalid projectRecap decision\/source pair/i,
+  );
+});
+
+test('an unavailable seam resolves a recordable autonomous capability skip', () => {
+  const unavailable = resolve({
+    product: 'projectRecap',
+    mode: 'autonomous',
+    seamProbe: probeRecapSeams({ mode: 'unattended', author: noop }),
+  });
+
+  assert.deepEqual(unavailable, {
+    product: 'projectRecap',
+    decision: 'skip',
+    resolutionSource: 'capability_probe',
+    needsPrompt: false,
+    record: {
+      decision: 'skip',
+      source: 'capability_probe',
+      decided_at: NOW,
+    },
+    warnings: [
+      'Autonomous project recap skipped: no provider is configured for critic, browserSession, visualCritic and planSet.',
+    ],
+  });
+
+  // A host with four seams and no set planner is the case the runtime would
+  // have thrown E_SET_PLANNER_REQUIRED on.
+  const noPlanner = resolve({
+    product: 'projectRecap',
+    mode: 'autonomous',
+    seamProbe: probeRecapSeams(allFiveSeams({ planSet: undefined })),
+  });
+  assert.equal(noPlanner.decision, 'skip');
+  assert.match(noPlanner.warnings[0], /planSet/);
+
+  // The persisted record round-trips through interactive validation.
+  assert.equal(
+    resolve({
+      product: 'projectRecap',
+      mode: 'interactive',
+      state: noPlanner.record,
+    }).resolutionSource,
+    'project_state',
+  );
+});
+
+test('a configured-but-invalid seam is an error rather than a capability skip', () => {
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectRecap',
+        mode: 'autonomous',
+        seamProbe: probeRecapSeams(allFiveSeams({ planSet: 'planner' })),
+      }),
+    (error) =>
+      error?.code === 'E_RECAP_SEAMS_INVALID' &&
+      /planSet must be a function when supplied/.test(error.message),
+  );
+});
+
+test('capability_probe is scoped to autonomous projectRecap skips', () => {
+  const probe = probeRecapSeams({ mode: 'unattended' });
+
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectExplainer',
+        mode: 'autonomous',
+        seamProbe: probe,
+      }),
+    /apply only to projectRecap resolution/,
+  );
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectRecap',
+        mode: 'interactive',
+        seamProbe: probe,
+      }),
+    /apply only to autonomous projectRecap resolution/,
+  );
+  assert.throws(
+    () =>
+      updateStateFrontmatter(
+        '---\noat_phase: plan\n---\n',
+        'projectExplainer',
+        { decision: 'skip', source: 'capability_probe', decided_at: NOW },
+      ),
+    /invalid projectExplainer decision\/source pair/i,
+  );
+  assert.throws(
+    () =>
+      updateStateFrontmatter('---\noat_phase: plan\n---\n', 'projectRecap', {
+        decision: 'generate',
+        source: 'capability_probe',
+        decided_at: NOW,
+      }),
+    /invalid projectRecap decision\/source pair/i,
+  );
+
+  // A half-populated probe object must never forge a capability skip out of an
+  // invalid seam, and an `ok` claim must carry the matching code.
+  for (const forged of [
+    { ok: false, mode: 'unattended', code: 'seams-unavailable' },
+    {
+      ok: false,
+      mode: 'unattended',
+      code: 'seams-unavailable',
+      missing: [],
+      invalid: [{ seam: 'planSet', reason: 'multiple-sources', message: 'x' }],
+      resolved: [],
+    },
+    {
+      ok: true,
+      mode: 'unattended',
+      code: 'seams-unavailable',
+      missing: ['planSet'],
+      invalid: [],
+      resolved: [],
+    },
+    {
+      ok: false,
+      mode: 'unattended',
+      code: 'seams-invalid',
+      missing: [],
+      invalid: [],
+      resolved: [],
+    },
+  ]) {
+    assert.throws(
+      () =>
+        resolve({
+          product: 'projectRecap',
+          mode: 'autonomous',
+          seamProbe: forged,
+        }),
+      (error) =>
+        error instanceof TypeError &&
+        /must partition the canonical recap seams|must list the seams its code claims/.test(
+          error.message,
+        ),
+      JSON.stringify(forged),
+    );
+  }
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectRecap',
+        mode: 'autonomous',
+        seamProbe: {
+          ok: true,
+          mode: 'unattended',
+          code: 'seams-ok',
+          missing: [],
+          invalid: [],
+          resolved: ['author'],
+        },
+      }),
+    // A short `resolved` list fails the partition's coverage requirement first;
+    // either rejection keeps the forged success out of the generate path.
+    (error) =>
+      error instanceof TypeError &&
+      /must partition the canonical recap seams|must list the seams its code claims/.test(
+        error.message,
+      ),
+  );
+
+  // An interactive probe checks only the author and critic, so it would report
+  // a host with no set planner as fully available. It is the wrong evidence for
+  // a decision whose recap runs unattended.
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectRecap',
+        mode: 'autonomous',
+        seamProbe: probeRecapSeams({
+          mode: 'interactive',
+          author: noop,
+          critic: noop,
+        }),
+      }),
+    /must come from an unattended probe/,
+  );
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectRecap',
+        mode: 'autonomous',
+        seamProbe: {
+          ok: false,
+          mode: 'unattended',
+          code: 'seams-unavailable',
+          missing: ['notASeam'],
+          invalid: [],
+          resolved: [],
+        },
+      }),
+    /must partition the canonical recap seams/,
+  );
+
+  // The partition must be disjoint and cover the canonical set, because the
+  // error message promises exactly that. Both shapes below were accepted before
+  // the coverage/disjointness checks existed: the first claims `planSet` is
+  // both missing and resolved and yielded a capability skip, the second pads
+  // `resolved` with one seam repeated five times and forced a generate.
+  // `probeRecapSeams` can emit neither: every seam lands in exactly one bucket.
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectRecap',
+        mode: 'autonomous',
+        seamProbe: {
+          ok: false,
+          mode: 'unattended',
+          code: 'seams-unavailable',
+          missing: ['planSet'],
+          invalid: [],
+          resolved: [
+            'planSet',
+            'author',
+            'critic',
+            'browserSession',
+            'visualCritic',
+          ],
+        },
+      }),
+    /must partition the canonical recap seams/,
+    'a seam claimed both missing and resolved must not yield a capability skip',
+  );
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectRecap',
+        mode: 'autonomous',
+        seamProbe: {
+          ok: true,
+          mode: 'unattended',
+          code: 'seams-ok',
+          missing: [],
+          invalid: [],
+          resolved: ['author', 'author', 'author', 'author', 'author'],
+        },
+      }),
+    /must partition the canonical recap seams/,
+    'duplicate resolved entries must not fake full seam availability',
+  );
+  // An invalid seam counts toward the partition, so a well-formed
+  // `seams-invalid` result still validates and fails closed on its own path.
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectRecap',
+        mode: 'autonomous',
+        seamProbe: probeRecapSeams(allFiveSeams({ planSet: 'not-a-function' })),
+      }),
+    (error) => error?.code === 'E_RECAP_SEAMS_INVALID',
+  );
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectRecap',
+        mode: 'autonomous',
+        seamProbe: {
+          ok: false,
+          mode: 'unattended',
+          code: 'not-a-code',
+          missing: ['planSet'],
+          invalid: [],
+          resolved: [],
+        },
+      }),
+    /ok and a known code/,
   );
 });
 

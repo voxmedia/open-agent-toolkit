@@ -27,6 +27,9 @@
     "packages/cli/assets/templates/**/*.yml",
     ".oat/templates/**/*.yml",
     "packages/cli/src/commands/docs/migrate/fixtures/**",
+    // Captured fixtures reproduce real artifacts byte for byte; reformatting
+    // one would silently break the provenance its header records.
+    "packages/cli/src/commands/init/tools/shared/__fixtures__/**",
     // Explainer-kit run packages are immutable, hash-attested artifacts; a
     // formatter rewrite on commit breaks their durability attestation.
     ".oat/**/explainers/**",

@@ -1,5 +1,13 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { expectDispatchStampFieldContract } from '@test-support/skills/dispatch-stamp-contract';
@@ -91,6 +99,203 @@ function expectValidReportContext(command: string): void {
     expect(command).toMatch(/--report-action\s+(?:implementation|fix)(?:\s|$)/);
   }
 }
+
+const QUICK_SCAFFOLD_ANCHOR =
+  '- Create project via the same scaffolding path used by `oat-project-new`';
+
+/**
+ * The scaffold branch is prose plus one executable block, so the consolidation
+ * control below runs the block the skill actually ships against a real
+ * `oat project new` instead of asserting that the prose exists.
+ */
+function extractQuickScaffoldBlock(content: string): string {
+  const start = content.indexOf(QUICK_SCAFFOLD_ANCHOR);
+  const end = content.indexOf('### Step 1: Set Quick Workflow Metadata', start);
+  if (start < 0 || end <= start) {
+    throw new Error('Missing quick-start scaffold branch.');
+  }
+  const block = content.slice(start, end).match(/```bash\n([\s\S]*?)\n```/);
+  if (!block?.[1]?.includes('oat project new')) {
+    throw new Error('Missing `oat project new` block in quick-start.');
+  }
+  return block[1];
+}
+
+function builtCliEntry(): string {
+  const entry = repoFilePath('packages/cli/dist/index.js');
+  if (!existsSync(entry)) {
+    throw new Error(
+      `Missing built CLI at ${entry}. This control runs the real scaffolder; ` +
+        'run `pnpm --filter @open-agent-toolkit/cli build` first (turbo already ' +
+        'orders build before test).',
+    );
+  }
+  return entry;
+}
+
+interface ScaffoldWorkspace {
+  readonly workspace: string;
+  readonly repository: string;
+  readonly env: NodeJS.ProcessEnv;
+}
+
+/**
+ * A scratch repository with `oat` on PATH and an isolated HOME, so the skill
+ * block runs verbatim and nothing resolves against the maintainer's
+ * `~/.oat/templates`.
+ */
+function createScaffoldWorkspace(cliEntry: string): ScaffoldWorkspace {
+  const workspace = mkdtempSync(join(tmpdir(), 'quick-start-scaffold-'));
+  const binDirectory = join(workspace, 'bin');
+  const home = join(workspace, 'home');
+  const repository = join(workspace, 'repo');
+  for (const directory of [binDirectory, home, repository]) {
+    mkdirSync(directory, { recursive: true });
+  }
+  const shellQuote = (value: string): string =>
+    `'${value.replaceAll("'", `'\\''`)}'`;
+  writeFileSync(
+    join(binDirectory, 'oat'),
+    `#!/bin/sh\nexec ${shellQuote(process.execPath)} ${shellQuote(cliEntry)} "$@"\n`,
+    { mode: 0o755 },
+  );
+  // Inherited `OAT_*` settings (notably `OAT_PROJECTS_ROOT`) outrank the
+  // scratch repository's own config and can place the scaffolded projects
+  // outside `workspace`, where the cleanup below never reaches them.
+  const inherited = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => !key.startsWith('OAT_')),
+  );
+  return {
+    workspace,
+    repository,
+    env: {
+      ...inherited,
+      HOME: home,
+      PATH: `${binDirectory}:${process.env.PATH ?? ''}`,
+    },
+  };
+}
+
+const QUICK_PLAN_READINESS_HEADING =
+  '### Quick Plan Readiness (Named Predicate)';
+const QUICK_PLAN_READINESS_DEFINITION =
+  'A quick `plan.md` is implementation-ready only when all of the following hold';
+const QUICK_ROUTING_SKILLS = [
+  '.agents/skills/oat-project-plan/SKILL.md',
+  '.agents/skills/oat-project-progress/SKILL.md',
+  '.agents/skills/oat-project-next/SKILL.md',
+] as const;
+
+/**
+ * The readiness predicate is prose plus one executable guard, so the fixture
+ * classifications below run the skill's own guard rather than a second model of
+ * it living in this test.
+ */
+function extractQuickPlanReadinessGuard(content: string): string {
+  const start = content.indexOf(QUICK_PLAN_READINESS_HEADING);
+  const end = content.indexOf('### Step 4: Sync Project State', start);
+  if (start < 0 || end <= start) {
+    throw new Error('Missing quick plan readiness section in quick-start.');
+  }
+  const guard = content.slice(start, end).match(/```bash\n([\s\S]*?)\n```/);
+  if (!guard?.[1]?.includes('quick_plan_ready()')) {
+    throw new Error('Missing quick_plan_ready guard in quick-start.');
+  }
+  return guard[1];
+}
+
+function normalizeProse(value: string): string {
+  return value.replace(/\s+/g, ' ');
+}
+
+function quickPlanFixture(parts: {
+  frontmatter: readonly string[];
+  reviews: readonly string[];
+  tasks: readonly string[];
+}): string {
+  return [
+    '---',
+    ...parts.frontmatter,
+    '---',
+    '',
+    '# Implementation Plan: Example',
+    '',
+    '## Phase 1: Example',
+    '',
+    ...parts.tasks,
+    '',
+    '## Reviews',
+    '',
+    ...parts.reviews,
+    '',
+    '## Implementation Complete',
+    '',
+    '## References',
+    '',
+  ].join('\n');
+}
+
+function classifyQuickPlan(guard: string, plan: string): string {
+  const directory = mkdtempSync(join(tmpdir(), 'quick-plan-readiness-'));
+  try {
+    const planPath = join(directory, 'plan.md');
+    writeFileSync(planPath, plan);
+    return execFileSync(
+      '/bin/bash',
+      [
+        '-c',
+        `${guard}\nif quick_plan_ready "$1"; then printf ready; else printf not-ready; fi`,
+        'quick-plan-readiness',
+        planPath,
+      ],
+      { encoding: 'utf8' },
+    );
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+const PRE_REVIEW_FRONTMATTER = [
+  'oat_status: in_progress',
+  'oat_ready_for: null',
+  'oat_plan_source: quick',
+  'oat_template: true',
+] as const;
+const REVIEWED_FRONTMATTER = [
+  'oat_status: complete',
+  'oat_ready_for: oat-project-implement',
+  'oat_plan_source: quick',
+  'oat_template: false',
+] as const;
+const REVIEW_TABLE_HEADER = [
+  '| Scope | Type     | Status  | Date | Artifact |',
+  '| ----- | -------- | ------- | ---- | -------- |',
+] as const;
+const PASSED_PLAN_ROW = [
+  ...REVIEW_TABLE_HEADER,
+  '| plan  | artifact | passed  | 2026-09-07 | reviews/2026-09-07-plan.md |',
+] as const;
+const PENDING_PLAN_ROW = [
+  ...REVIEW_TABLE_HEADER,
+  '| plan  | artifact | pending | -    | -        |',
+] as const;
+const POLICY_SKIP_DISPOSITION = [
+  'Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)',
+] as const;
+const SUBSTANTIVE_TASKS = [
+  '### Task p01-t01: Add the quick resume branch',
+  '',
+  '**Files:**',
+  '',
+  '- Modify: `src/index.ts`',
+] as const;
+const TEMPLATE_TASKS = [
+  '### Task p01-t01: {Task Name}',
+  '',
+  '**Files:**',
+  '',
+  '- Create: `{path/to/file.ts}`',
+] as const;
 
 describe('review skill contracts', () => {
   it('keeps reviewer timestamps aligned and next-step guidance inside the artifact template', () => {
@@ -204,6 +409,18 @@ describe('review skill contracts', () => {
     expect(content).toContain(
       'Reassert this forced recap intent on resume; a stale lower-precedence skip is overridden, warned, and recorded.',
     );
+    expect(content).toMatch(
+      /Kickoff persists the forced `generate` intent without probing seams/,
+    );
+    expect(content).toMatch(
+      /may resolve a recordable\s+`skip` with source `capability_probe`/,
+    );
+    expect(content).toMatch(
+      /it is decided before any run rather than from a failed one, and\s+it never blocks unattended completion/,
+    );
+    expect(content).toMatch(
+      /Do not reassert `generate` over a\s+recorded `capability_probe` skip within the same closeout\./,
+    );
     expect(content).toContain(
       'Resolve and persist `projectExplainer` as `generate` with source `kickoff_prompt` only when the kickoff request explicitly asks for a project explainer.',
     );
@@ -272,7 +489,7 @@ printf 'artifact-read\\n'`,
       'A fresh `project-recap` manifest for the current completed implementation deduplicates the lifecycle-tail run: reuse it and do not invoke the adapter again.',
     );
     expect(content).toContain(
-      'When `OAT_AUTONOMOUS=1` and no fresh recap exists, attempt `project-recap` exactly once; missing or stale persisted intent cannot suppress this autonomous attempt.',
+      'When `OAT_AUTONOMOUS=1` and no fresh recap exists, run this recap gate exactly once; missing or stale persisted intent cannot suppress this autonomous gate. In autonomy, attempt the adapter run exactly once and only when the seam probe resolves every required seam and intent resolves to `generate`; an interactive `generate` still attempts the run regardless of the probe result, and a seam-less interactive attempt is still the `failed` outcome it is today.',
     );
     expect(content).toContain(
       'Invoke the `oat-explainer-kit` adapter first, then run its shared tracked-run finalizer in `dedicated` mode for a successful build.',
@@ -295,6 +512,42 @@ printf 'artifact-read\\n'`,
     expect(content).toMatch(
       /always invoke this implementation-tail recap with\s+`mode: unattended`\./,
     );
+    expect(content).toMatch(
+      /Probe seam availability before resolving intent\. Call\s+`oat-explainer-kit\/scripts\/probe-recap-seams\.mjs#probeRecapSeams` in\s+`mode: unattended`/,
+    );
+    expect(content).toMatch(
+      /covers all five required seams — author, fact critic, browser session,\s+visual critic, and set planner/,
+    );
+    expect(content).toMatch(
+      /a host missing only the set planner is\s+detected here instead of at the adapter's `E_SET_PLANNER_REQUIRED`/,
+    );
+    expect(content).toMatch(
+      /In autonomy, a probe result of `seams-unavailable` means no provider is\s+configured for a required seam\. Autonomous resolution then returns a recordable\s+`skip` with source `capability_probe`: record it with the warning, do not invoke\s+the adapter, and continue closeout\./,
+    );
+    expect(content).toMatch(
+      /Interactive closeout is unchanged: a\s+recorded interactive `generate` still attempts the recap and a run that fails\s+for a missing seam is still the `failed` outcome it is today\./,
+    );
+    expect(content).toMatch(
+      /never blocks final HiLL approval on a missing recap, and this skip is\s+resolved before any run, never from a failed one/,
+    );
+    expect(content).toMatch(
+      /Never convert a configured-but-invalid seam, or a run that failed after a\s+passing probe, into a skip; that run stays `failed`\./,
+    );
+    expect(content).toMatch(
+      /A `skip` intent requires no manifest; pass its recorded source as\s+`--skip-reason` so the receipt states why no recap exists\./,
+    );
+    expect(content).toContain(
+      'The autonomy gate and the interactive rule are two separate rules and are never read as one.',
+    );
+    expect(content).toMatch(
+      /an interactive `generate` still attempts the run regardless of the probe result, and a seam-less interactive attempt is still the `failed` outcome it is today/,
+    );
+    expect(content).toMatch(
+      /That probe-driven skip record supersedes the\s+intent resolved and persisted earlier in this run for the remainder of the run/,
+    );
+    expect(content).toMatch(
+      /pass the skip — not the earlier `generate` — to\s+the terminal-outcome guard as `--intent skip --skip-reason capability_probe`/,
+    );
 
     const normalizedContent = content.replace(/\s+/g, ' ');
     const finalReviewIndex = normalizedContent.indexOf(
@@ -315,14 +568,21 @@ printf 'artifact-read\\n'`,
 
     expect(content).toContain('## Explainer Outcome');
     expect(content).toContain(
-      'When a project-recap attempt exists, include exactly one concise outcome item with its recipe, outcome (`built-durable`, `built-not-durable`, or `failed`), run path, and warning or recovery note when applicable.',
+      'Include exactly one concise item with its recipe, state (`generated`, `degraded`, or `skipped`), and either its outcome (`built-durable`, `built-not-durable`, `built-needs-review`, or `failed`) with run path, or its skip reason.',
     );
     expect(content).toContain(
-      'Use `manifest.json` and `build-record.json` as the source of truth; refresh the existing item instead of appending a duplicate.',
+      'Use `generated` for `built-durable`, `degraded` for any other terminal outcome, and `skipped` only for a recap whose intent resolved to skip.',
     );
     expect(content).toContain(
-      'Omit `Explainer Outcome` when no project-recap attempt exists.',
+      'Use `manifest.json` and `build-record.json` as the source of truth for a run, and the recorded recap intent for a skip; refresh the existing item instead of appending a duplicate.',
     );
+    expect(content).toContain(
+      'Omit `Explainer Outcome` only when no project-recap attempt and no recorded recap skip exist.',
+    );
+    expect(content).toContain(
+      'A `capability_probe` skip means the host had no provider configured for a required seam, not that the recap failed.',
+    );
+    expect(content).toContain('- **project-recap:** skipped — {skip reason}');
   });
 
   it('allows quick/import design artifact reviews without spec.md', () => {
@@ -1086,7 +1346,7 @@ printf 'artifact-read\\n'`,
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.7');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.8');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );
@@ -1128,6 +1388,39 @@ printf 'artifact-read\\n'`,
       /Supply it\s+alongside the existing `critic` callback \(or validated\s+`criticModulePath`\)/,
     );
     expect(content).toMatch(/invoke the recap with `mode: unattended`\./);
+    expect(content).toMatch(
+      /If no fresh recap exists, probe seam availability before invoking the adapter\.\s+Call `oat-explainer-kit\/scripts\/probe-recap-seams\.mjs#probeRecapSeams` in\s+`mode: unattended`/,
+    );
+    expect(content).toMatch(
+      /covers all five required seams — author, fact critic, browser session,\s+visual critic, and set planner/,
+    );
+    expect(content).toMatch(
+      /In autonomy, a probe result of `seams-unavailable` means no provider is\s+configured for a required seam\. Autonomous resolution then returns a recordable\s+`skip` with source `capability_probe`: record it with the warning, leave\s+`SELECTED_PROJECT_RECAP_RUN` empty, and complete without a recap\./,
+    );
+    expect(content).toMatch(
+      /An interactive\s+completion is unchanged: the decision recorded at the batched prompt governs, a\s+recorded `generate` still attempts the recap, and a run that fails for a missing\s+seam is still the `failed` outcome it is today\./,
+    );
+    expect(content).toMatch(
+      /Never convert a\s+configured-but-invalid seam, or a run that failed after a passing probe, into a\s+skip; that run stays `failed`\./,
+    );
+    expect(content).toMatch(
+      /This covers both an interactive skip and a\s+probe-driven `capability_probe` skip; neither prompts, and neither blocks\s+completion\./,
+    );
+    expect(content).toContain(
+      'The autonomy gate and the interactive rule are two separate rules and are never read as one.',
+    );
+    expect(content).toMatch(
+      /In autonomy, attempt the adapter run exactly once and only when the probe resolves every seam; an interactive `generate` still attempts the run regardless of the probe result/,
+    );
+    expect(content).toMatch(
+      /When the gate above allows the attempt, invoke `scripts\/run\.mjs#runOatExplainer` exactly once with recipe `project-recap`/,
+    );
+    expect(content).toMatch(
+      /That\s+probe-driven skip record supersedes the intent resolved and persisted earlier in\s+this run for the remainder of the run/,
+    );
+    expect(content).toMatch(
+      /treat any `SHOULD_GENERATE_RECAP="true"` set from the earlier resolution as\s+stale, and pass the skip — not the earlier `generate` — to the terminal-outcome\s+guard as `--intent skip --skip-reason capability_probe`/,
+    );
 
     const resolveIndex = normalizedContent.indexOf(
       'Resolve `projectRecap` intent before presenting the batched completion prompt.',
@@ -1246,6 +1539,216 @@ printf 'artifact-read\\n'`,
       /status: "failed"[\s\S]*?stop and surface the roll-up failure[\s\S]*?Never continue to seal or\s+archive/,
     );
     expect(content).toContain('No project-log append may follow the seal');
+  });
+
+  it('records absorbed project slugs and backlog IDs at quick-start consolidation', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+
+    const consolidationIndex = content.indexOf(
+      '**Consolidating earlier scaffolds.**',
+    );
+    const stepOneIndex = content.indexOf(
+      '### Step 1: Set Quick Workflow Metadata',
+    );
+
+    expect(consolidationIndex).toBeGreaterThanOrEqual(0);
+    expect(stepOneIndex).toBeGreaterThan(consolidationIndex);
+
+    const branch = content
+      .slice(consolidationIndex, stepOneIndex)
+      .replace(/\s+/g, ' ');
+
+    expect(branch).toContain('absorbed_projects: [<slug>]');
+    expect(branch).toContain('absorbed_backlog_ids: [<BL-id>]');
+    expect(branch).toContain('"$PROJECT_PATH/state.md"` frontmatter');
+    expect(branch, 'names the retired scaffold directories').toMatch(
+      /names the scaffold directory[\s\S]{0,120}supersedes/i,
+    );
+    expect(branch, 'consolidation is conditional, not unconditional').toContain(
+      'only when a consolidation actually happened',
+    );
+    expect(branch, 'the two fields are the sweep inputs').toContain(
+      'only inputs the absorbed-project retirement sweep reads at completion',
+    );
+    expect(branch, 'retirement is semantic, not physical').toContain(
+      'semantic claim about the planning surfaces rather than the physical removal of a directory',
+    );
+  });
+
+  it('sweeps and dispositions absorbed ownership before the project-log roll-up and seal', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+
+    const checkIndex = content.indexOf(
+      'oat project log check --project "$PROJECT_PATH" --json',
+    );
+    const sweepIndex = content.indexOf(
+      '**Absorbed-project retirement sweep.**',
+    );
+    const rollupIndex = content.indexOf(
+      'oat project log rollup --project "$PROJECT_PATH" --json',
+    );
+    const sealIndex = content.indexOf(
+      '--producer oat-project-complete \\\n  --ref seal',
+    );
+    const completeStateIndex = content.indexOf(
+      'oat project complete-state "${COMPLETE_STATE_ARGS[@]}"',
+    );
+    const archiveIndex = content.indexOf(
+      'ARCHIVE_OUTPUT=$(oat project archive "${ARCHIVE_ARGS[@]}" --json 2>&1)',
+    );
+
+    expect(checkIndex).toBeGreaterThanOrEqual(0);
+    expect(
+      sweepIndex,
+      'the sweep runs after the status probe it depends on',
+    ).toBeGreaterThan(checkIndex);
+    expect(rollupIndex).toBeGreaterThan(sweepIndex);
+    expect(sealIndex).toBeGreaterThan(rollupIndex);
+    expect(completeStateIndex).toBeGreaterThan(sealIndex);
+    expect(archiveIndex).toBeGreaterThan(completeStateIndex);
+
+    const sweep = content.slice(sweepIndex, rollupIndex).replace(/\s+/g, ' ');
+
+    expect(sweep, 'reads both recorded inputs').toContain(
+      'read `absorbed_projects` and `absorbed_backlog_ids` from',
+    );
+    expect(sweep, 'those two fields are the only inputs').toContain(
+      'These two fields are the only inputs the sweep takes',
+    );
+    expect(sweep, 'degrades without PJM adoption').toContain(
+      'adoption.state` other than `declared` or `inferred-legacy`',
+    );
+    expect(sweep, 'a missing surface never fails closeout').toContain(
+      'degrades this sweep and never fails closeout',
+    );
+    expect(sweep, 'advisory, not a mechanical block').toContain(
+      'advisory: a raw match is never a hard block on closeout',
+    );
+
+    for (const surface of [
+      '.oat/repo/pjm/roadmap.md',
+      '.oat/repo/pjm/current-state.md',
+      '.oat/repo/pjm/backlog/index.md',
+      '.oat/projects/*/*/state.md',
+    ]) {
+      expect(sweep, `sweeps ${surface}`).toContain(surface);
+    }
+
+    expect(
+      sweep,
+      'the project glob matches the real scope-nested layout',
+    ).toContain(
+      'scope-nested as `<projects-root-parent>/<scope>/<project>/state.md`',
+    );
+    expect(
+      sweep,
+      'the configured projects root is resolved, not hardcoded',
+    ).toContain('oat config get projects.root');
+    expect(sweep, 'the archive tree is excluded').toContain(
+      'Skip the sibling `archived` tree',
+    );
+    expect(
+      sweep,
+      'terminal projects in an active scope are not live claims',
+    ).toContain('already records a terminal `oat_lifecycle: complete`');
+    expect(sweep, 'searches per slug and per backlog ID').toContain(
+      'For each absorbed slug and each absorbed backlog ID',
+    );
+    expect(sweep, 'matches future-oriented ownership language').toContain(
+      'Match a slug or backlog ID only where it carries future-oriented ownership language',
+    );
+    expect(sweep, 'a bare mention is not a finding').toContain(
+      'A bare mention that makes no such claim is not a finding',
+    );
+    expect(
+      sweep,
+      "the completing project's own recorded fields are input, never a finding",
+    ).toContain(
+      "The completing project's own `absorbed_projects` and `absorbed_backlog_ids` fields are the sweep's input, never a finding",
+    );
+    expect(sweep, 'names what a stale ownership claim looks like').toContain(
+      'still claims the absorbed work as planned, owned, scheduled, or in flight',
+    );
+    expect(sweep, 'historical prose is exempt').toContain(
+      'clearly describes past state is exempt',
+    );
+    expect(sweep, 'each finding carries a disposition').toContain(
+      'named finding carrying a recorded disposition',
+    );
+    expect(sweep, 'both in-run dispositions are named').toMatch(
+      /either fixed now[\s\S]{0,140}accepted as historical/i,
+    );
+    expect(sweep, 'dispositions are appended before the roll-up').toContain(
+      'Append the dispositions to the project log before the roll-up runs',
+    );
+    expect(sweep, 'sweep appends are structural log entries').toContain(
+      '--producer oat-project-complete \\ --ref retirement-sweep',
+    );
+    expect(sweep, 'summary regenerates before the roll-up').toContain(
+      'regenerate the summary before the roll-up',
+    );
+    expect(sweep, 'autonomous completion warns and continues').toContain(
+      'advisory warning entry with the disposition `deferred advisory` and continue',
+    );
+    expect(sweep, 'an absent log is reported, never created').toContain(
+      'never create a project log for them',
+    );
+  });
+
+  it('never appends retirement findings after an existing seal on resume', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+
+    const sweepIndex = content.indexOf(
+      '**Absorbed-project retirement sweep.**',
+    );
+    const rollupIndex = content.indexOf(
+      'oat project log rollup --project "$PROJECT_PATH" --json',
+    );
+    const resumeIndex = content.indexOf(
+      '**Resumed completion whose log already carries a seal.**',
+    );
+
+    expect(sweepIndex).toBeGreaterThanOrEqual(0);
+    expect(
+      resumeIndex,
+      'the resume clause sits inside the sweep, before the roll-up',
+    ).toBeGreaterThan(sweepIndex);
+    expect(resumeIndex).toBeLessThan(rollupIndex);
+
+    const resumeClause = content
+      .slice(resumeIndex, rollupIndex)
+      .replace(/\s+/g, ' ');
+
+    expect(
+      resumeClause,
+      'the seal is detected directly, since the probe reports no seal state',
+    ).toContain('The status probe above reports no seal state');
+    expect(
+      resumeClause,
+      'detection reads a real field of the probe result',
+    ).toContain('read `logPath` from `PROJECT_LOG_CHECK`');
+    expect(resumeClause, 'names the detectable seal heading').toContain(
+      '### <date> · structural · oat-project-complete · seal',
+    );
+    expect(resumeClause, 'report-only on a sealed log').toContain(
+      'runs in report-only mode',
+    );
+    expect(resumeClause, 'appends nothing to a sealed log').toContain(
+      'append nothing to the sealed log',
+    );
+    expect(resumeClause, 'never re-enters the roll-up or seal').toContain(
+      'never re-enter the roll-up or the seal',
+    );
+    expect(
+      resumeClause,
+      'the resume clause itself restates the no-post-seal invariant',
+    ).toContain('No project-log append may follow the seal');
   });
 
   it('delegates project completion archive side effects to the CLI command', () => {
@@ -1930,5 +2433,1019 @@ printf '%s\\n' "$EVENTS"`;
     expect(transaction).toMatch(
       /After both commits[\s\S]*?project-ref writeback receipt/,
     );
+  });
+
+  it('routes incomplete quick projects to quick-start from plan, progress, and next', () => {
+    const plan = readRepoFile('.agents/skills/oat-project-plan/SKILL.md');
+    const progress = readRepoFile(
+      '.agents/skills/oat-project-progress/SKILL.md',
+    );
+    const next = readRepoFile('.agents/skills/oat-project-next/SKILL.md');
+
+    // plan: the dead end is gone and both branches load their target.
+    expect(plan).not.toContain(
+      'Plan already produced by quick workflow. Run `oat-project-implement` to begin execution.',
+    );
+    // Branch association, not mere presence: swapping the two targets fails.
+    const planNotReadyBranch = plan.slice(
+      plan.indexOf('**Not implementation-ready**'),
+      plan.indexOf('**Implementation-ready**'),
+    );
+    const planReadyBranch = plan.slice(
+      plan.indexOf('**Implementation-ready**'),
+      plan.indexOf('**Mode: `lite`**'),
+    );
+    expect(normalizeProse(planNotReadyBranch)).toContain(
+      'Then load `oat-project-quick-start/SKILL.md` and follow its Step 0.5 resume branch.',
+    );
+    expect(planNotReadyBranch).not.toContain('oat-project-implement');
+    expect(normalizeProse(planReadyBranch)).toContain(
+      'Then load `oat-project-implement/SKILL.md` and follow it to begin execution.',
+    );
+    expect(planReadyBranch).not.toContain('oat-project-quick-start');
+    expect(planNotReadyBranch).toContain(
+      'Continue with: oat-project-quick-start',
+    );
+    expect(planReadyBranch).toContain('Continue with: oat-project-implement');
+
+    // progress: the two-hop dead end row now targets quick-start.
+    const progressQuick = progress.slice(
+      progress.indexOf('**Quick mode'),
+      progress.indexOf('**Import mode'),
+    );
+    expect(progressQuick).not.toMatch(
+      /\|\s*plan\s*\|\s*in_progress\s*\|\s*Continue `oat-project-plan`\s*\|/,
+    );
+    expect(progressQuick).toMatch(
+      /\|\s*plan\s*\|\s*in_progress\s*\|\s*Continue `oat-project-quick-start` when the plan is not implementation-ready/,
+    );
+    expect(progressQuick).toMatch(
+      /\|\s*plan\s*\|\s*complete\s*\|\s*`oat-project-implement` when the plan is implementation-ready; otherwise `oat-project-quick-start`/,
+    );
+    const progressPlanRows = progressQuick
+      .split('\n')
+      .filter((line) => line.startsWith('| plan '))
+      .map((line) => normalizeProse(line.split('|')[3] ?? '').trim());
+    expect(progressPlanRows).toEqual([
+      'Continue `oat-project-quick-start` when the plan is not implementation-ready; otherwise `oat-project-implement`',
+      '`oat-project-implement` when the plan is implementation-ready; otherwise `oat-project-quick-start`',
+    ]);
+    expect(normalizeProse(progressQuick)).toContain(
+      'load `oat-project-quick-start/SKILL.md` and follow its Step 0.5 resume branch',
+    );
+
+    // next: a readiness column, not an overloaded tier.
+    const nextQuick = next.slice(
+      next.indexOf('**Quick Mode:**'),
+      next.indexOf('**Import Mode:**'),
+    );
+    const quickPlanRows = nextQuick
+      .split('\n')
+      .filter((line) => line.startsWith('| plan '));
+    expect(nextQuick).toContain('| Quick Plan Readiness |');
+    // The exact tuple set, not aggregate counts: every plan-phase boundary
+    // classification Step 2 can produce — tier 3, tier 2, tier 1, and tier 1b —
+    // has exactly one route, and a duplicated row cannot stand in for a missing
+    // one. Tier 1b is `oat_status: complete` with a null `oat_ready_for`, which
+    // readiness condition 2 can never satisfy, so it carries a single
+    // always-not-ready row rather than a pair.
+    expect(
+      quickPlanRows.map((row) =>
+        row
+          .split('|')
+          .slice(1, 6)
+          .map((cell) => cell.trim()),
+      ),
+    ).toEqual([
+      [
+        'plan',
+        'in_progress',
+        'tier 3',
+        'not ready',
+        '`oat-project-quick-start`',
+      ],
+      [
+        'plan',
+        'in_progress',
+        'tier 2',
+        'not ready',
+        '`oat-project-quick-start`',
+      ],
+      [
+        'plan',
+        'in_progress',
+        'tier 1',
+        'not ready',
+        '`oat-project-quick-start`',
+      ],
+      ['plan', 'in_progress', 'tier 1', 'ready', '`oat-project-implement` \\*'],
+      ['plan', 'complete', 'tier 1', 'not ready', '`oat-project-quick-start`'],
+      ['plan', 'complete', 'tier 1', 'ready', '`oat-project-implement` \\*'],
+      [
+        'plan',
+        'any',
+        'tier 1b',
+        'not ready (always)',
+        '`oat-project-quick-start`',
+      ],
+    ]);
+    // Tier 1b must not keep Step 2's own "advance to the next phase" arrow.
+    expect(normalizeProse(next)).toContain(
+      'Exception: in quick mode at the `plan` phase, a tier-1b artifact is evaluated against **quick plan readiness**',
+    );
+    expect(normalizeProse(next)).toContain(
+      'readiness always fails, so it returns to the quick workflow instead of advancing to the next phase',
+    );
+    // The generic tier-1 rule must not silently outrank the readiness column.
+    expect(normalizeProse(next)).toContain(
+      "Exception: in quick mode at the `plan` phase, the Quick Mode table's `Quick Plan Readiness` column decides the target.",
+    );
+    expect(normalizeProse(nextQuick)).toContain(
+      'load `oat-project-quick-start/SKILL.md` and follow its Step 0.5 resume branch',
+    );
+    // Tier semantics are preserved, not repurposed.
+    expect(next).toMatch(
+      /\*\*Tier 3 \(Template\/Empty\):\*\*[\s\S]{0,220}`oat_template == true`/,
+    );
+    expect(normalizeProse(nextQuick)).toContain(
+      'applies to the `plan` phase only, and only after the boundary tier has already been classified by Step 2, so tier semantics are unchanged',
+    );
+  });
+
+  it('defines quick plan readiness once and applies it in plan, progress, and next', () => {
+    const quickStart = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+
+    // Defined exactly once, in quick-start.
+    const definitionOwners = [
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+      ...QUICK_ROUTING_SKILLS,
+    ].filter((file) =>
+      readRepoFile(file).includes(QUICK_PLAN_READINESS_DEFINITION),
+    );
+    expect(definitionOwners).toEqual([
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    ]);
+    expect(quickStart.split(QUICK_PLAN_READINESS_DEFINITION)).toHaveLength(2);
+
+    // The four recorded conditions plus the task condition, stated once.
+    const predicate = quickStart.slice(
+      quickStart.indexOf(QUICK_PLAN_READINESS_HEADING),
+      quickStart.indexOf('### Step 4: Sync Project State'),
+    );
+    for (const condition of [
+      '`oat_status: complete`',
+      '`oat_ready_for: oat-project-implement`',
+      '`oat_template: false`',
+      'The `## Reviews` section records the Step 3.7 disposition',
+      '`Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)`',
+      'At least one phase carries a substantive task',
+    ]) {
+      expect(predicate, condition).toContain(condition);
+    }
+    expect(predicate).toContain(
+      'Substantive tasks alone never make a plan ready.',
+    );
+
+    // Referenced by name from the other three, which never restate it.
+    for (const file of QUICK_ROUTING_SKILLS) {
+      const content = readRepoFile(file);
+      expect(content, `${file} references the predicate`).toMatch(
+        /\*\*quick plan readiness\*\*/i,
+      );
+      expect(content, `${file} points at the definition`).toContain(
+        '`oat-project-quick-start/SKILL.md`',
+      );
+    }
+    const restatementRegions = [
+      readRepoFile('.agents/skills/oat-project-plan/SKILL.md').slice(
+        readRepoFile('.agents/skills/oat-project-plan/SKILL.md').indexOf(
+          '**Mode: `quick`**',
+        ),
+        readRepoFile('.agents/skills/oat-project-plan/SKILL.md').indexOf(
+          '**Mode: `lite`**',
+        ),
+      ),
+      readRepoFile('.agents/skills/oat-project-progress/SKILL.md').slice(
+        readRepoFile('.agents/skills/oat-project-progress/SKILL.md').indexOf(
+          '**Quick mode',
+        ),
+        readRepoFile('.agents/skills/oat-project-progress/SKILL.md').indexOf(
+          '**Import mode',
+        ),
+      ),
+      readRepoFile('.agents/skills/oat-project-next/SKILL.md').slice(
+        readRepoFile('.agents/skills/oat-project-next/SKILL.md').indexOf(
+          '**Quick Mode:**',
+        ),
+        readRepoFile('.agents/skills/oat-project-next/SKILL.md').indexOf(
+          '**Import Mode:**',
+        ),
+      ),
+    ];
+    for (const region of restatementRegions) {
+      for (const restatement of [
+        '`oat_status: complete`',
+        '`oat_ready_for: oat-project-implement`',
+        '`oat_template: false`',
+        'Plan artifact review: skipped',
+        'At least one phase carries a substantive task',
+      ]) {
+        expect(region, restatement).not.toContain(restatement);
+      }
+      expect(normalizeProse(region)).toMatch(
+        /load `oat-project-quick-start\/SKILL\.md` and (?:apply|follow)/i,
+      );
+    }
+
+    // The predicate classifies real plan fixtures, executed as written.
+    const guard = extractQuickPlanReadinessGuard(quickStart);
+
+    // Substantive tasks with Step 3 pre-review frontmatter: NOT ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: PRE_REVIEW_FRONTMATTER,
+          reviews: PENDING_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // Reviewed completion: ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
+    // Explicit policy skip: ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: POLICY_SKIP_DISPOSITION,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
+    // Negative control: complete frontmatter and real tasks, but the Step 3.7
+    // disposition was never recorded. Readiness is frontmatter plus review, so
+    // this must fail even though every task is substantive.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PENDING_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // Negative control: reviewed and complete, but only template placeholders.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PASSED_PLAN_ROW,
+          tasks: TEMPLATE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // Per-clause negative controls: each frontmatter field is proved
+    // independently load-bearing by flipping exactly one of the three while the
+    // other two, the review disposition, and the tasks all stay ready.
+    for (const [field, replacement] of [
+      ['oat_status', 'oat_status: in_progress'],
+      ['oat_ready_for', 'oat_ready_for: null'],
+      ['oat_template', 'oat_template: true'],
+    ] as const) {
+      expect(
+        classifyQuickPlan(
+          guard,
+          quickPlanFixture({
+            frontmatter: REVIEWED_FRONTMATTER.map((line) =>
+              line.startsWith(`${field}:`) ? replacement : line,
+            ),
+            reviews: PASSED_PLAN_ROW,
+            tasks: SUBSTANTIVE_TASKS,
+          }),
+        ),
+        field,
+      ).toBe('not-ready');
+    }
+
+    // A contradictory duplicate key is never read as ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: [...REVIEWED_FRONTMATTER, 'oat_template: true'],
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // An unterminated frontmatter block must not let body text satisfy the
+    // readiness fields.
+    expect(
+      classifyQuickPlan(
+        guard,
+        [
+          '---',
+          'oat_plan_source: quick',
+          '',
+          '# Implementation Plan: Example',
+          '',
+          ...REVIEWED_FRONTMATTER,
+          '',
+          '## Phase 1: Example',
+          '',
+          ...SUBSTANTIVE_TASKS,
+          '',
+          '## Reviews',
+          '',
+          ...PASSED_PLAN_ROW,
+          '',
+        ].join('\n'),
+      ),
+    ).toBe('not-ready');
+
+    // The skip disposition counts only as its own line, not as quoted prose.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            'A policy skip would be recorded as `Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)` here.',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // A policy-skip line inside a fenced example does not dispose of a pending
+    // review row.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '```text',
+            'Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)',
+            '```',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // Tilde fences hide example task headings too.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PASSED_PLAN_ROW,
+          tasks: [
+            '~~~markdown',
+            '### Task p01-t01: Example task heading in a tilde-fenced sample',
+            '~~~',
+          ],
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // A task heading outside every phase does not satisfy condition 5.
+    expect(
+      classifyQuickPlan(
+        guard,
+        [
+          '---',
+          ...REVIEWED_FRONTMATTER,
+          '---',
+          '',
+          '# Implementation Plan: Example',
+          '',
+          '## Appendix',
+          '',
+          ...SUBSTANTIVE_TASKS,
+          '',
+          '## Reviews',
+          '',
+          ...PASSED_PLAN_ROW,
+          '',
+        ].join('\n'),
+      ),
+    ).toBe('not-ready');
+
+    // A title made only of placeholders and punctuation is not real text.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PASSED_PLAN_ROW,
+          tasks: ['### Task p01-t01: {Task Name} — {Details}'],
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // A backtick fence nested inside a tilde fence stays fenced: an example
+    // `passed` row after the real pending row must not dispose of it.
+    const nestedFenceExample = [
+      '~~~text',
+      'Example of a dispositioned review section:',
+      '',
+      '```',
+      '| plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+      '```',
+      '~~~',
+    ];
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [...PENDING_PLAN_ROW, '', ...nestedFenceExample],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+    // Order-independence, proved without leaning on `tail -1`: the fenced
+    // `passed` row is the ONLY plan row in the document, so a parser that leaks
+    // it returns ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [...nestedFenceExample, '', ...REVIEW_TABLE_HEADER],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // CommonMark nesting: an example that nests correctly (outer marker run
+    // longer than the inner one) stays fenced through the inner closer.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '~~~~text',
+            '~~~yaml',
+            'nested: true',
+            '~~~',
+            '',
+            '| plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+            '~~~~',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // A four-space-indented example row is indented code, not the record.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '    | plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // An indented (non-fenced) code block is still an example, not the record.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '    Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // CommonMark measures indentation in columns, so one leading tab is
+    // already a four-column code indentation. A tab-indented apparent CLOSER
+    // never ends the example: the `passed` row below stays fenced, and the
+    // real pending row remains the only disposition. Counting the tab as a
+    // single character closed the fence and published the example row.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '```text',
+            'Example of a dispositioned review section:',
+            '\t```',
+            '| plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+            '```',
+            '```',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // The same column rule applies to an OPENER. A tab-indented marker is
+    // indented code, not a fence, so the bare marker after it opens the
+    // example that hides the `passed` row. Reading the tab as one column
+    // instead desynchronized the scan: it opened on the tab and closed on the
+    // bare marker, leaving the example row exposed as the record.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '\t```',
+            '```',
+            '| plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+            '```',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // Task extraction carries the identical fence logic, so it gets the
+    // identical control: a tab-indented apparent closer must not promote an
+    // example task heading into the substantive-task condition.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PASSED_PLAN_ROW,
+          tasks: [
+            '```markdown',
+            'Example task shape:',
+            '\t```',
+            '### Task p01-t01: Example task heading in a fenced sample',
+            '```',
+            '```',
+          ],
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // `oat_template` follows the repository's absent-or-false convention, so a
+    // plan that predates the field is still ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER.filter(
+            (line) => !line.startsWith('oat_template:'),
+          ),
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
+    // An unpaired quote is a different scalar to YAML, and fails closed here.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER.map((line) =>
+            line.startsWith('oat_status:') ? "oat_status: complete'" : line,
+          ),
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // An explicit null `oat_template` is "not a template", like an absent key.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER.map((line) =>
+            line.startsWith('oat_template:') ? 'oat_template:' : line,
+          ),
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
+    // Alternate key spellings must not smuggle a real template past the check.
+    for (const templateLine of [
+      'oat_template : true',
+      '"oat_template": true',
+      'oat_template: maybe',
+    ]) {
+      expect(
+        classifyQuickPlan(
+          guard,
+          quickPlanFixture({
+            frontmatter: REVIEWED_FRONTMATTER.map((line) =>
+              line.startsWith('oat_template:') ? templateLine : line,
+            ),
+            reviews: PASSED_PLAN_ROW,
+            tasks: SUBSTANTIVE_TASKS,
+          }),
+        ),
+        templateLine,
+      ).toBe('not-ready');
+    }
+
+    // Quoted YAML scalars are the same values.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: [
+            "oat_status: 'complete'",
+            "oat_ready_for: 'oat-project-implement'",
+            'oat_plan_source: quick',
+            'oat_template: "false"',
+          ],
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
+    // A task heading that only appears inside a fenced example is not a task.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PASSED_PLAN_ROW,
+          tasks: [
+            '```markdown',
+            '### Task p01-t01: Example task heading in a fenced sample',
+            '```',
+          ],
+        }),
+      ),
+    ).toBe('not-ready');
+  });
+
+  it('re-resolves PROJECT_PATH after scaffolding so the absorbed consolidation fields land in the created project', () => {
+    const quickStart = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const scaffoldBlock = extractQuickScaffoldBlock(quickStart).replace(
+      '{project-name}',
+      'absorbing-project',
+    );
+    const { workspace, repository, env } =
+      createScaffoldWorkspace(builtCliEntry());
+
+    try {
+      // The skill's own block, run verbatim between a real Step 0.5 resolve and
+      // a real Step 1 + consolidation frontmatter write. `retired-scaffold` is
+      // the active project when quick-start starts, which is exactly the
+      // consolidation case: this run absorbs it rather than continuing it.
+      const driver = [
+        'set -eu',
+        'git init -q .',
+        'git config user.email quick-start@example.invalid',
+        'git config user.name "Quick Start Control"',
+        "printf '# scratch\\n' > README.md",
+        'git add -A',
+        'git commit -q -m init',
+        'oat config set projects.defaultScope shared --shared > /dev/null',
+        'oat project new "retired-scaffold" --mode quick --json > /dev/null',
+        'PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)',
+        `printf 'step0.5:%s\\n' "$PROJECT_PATH"`,
+        scaffoldBlock,
+        // Step 1 and the consolidation fields, written through PROJECT_PATH
+        // exactly as the skill directs. Nothing here names the project
+        // directory, so the resolved variable alone decides where they land.
+        `awk 'NR == 1 && /^---$/ { print; print "absorbed_projects: [retired-scaffold]"; print "absorbed_backlog_ids: [BL-260907-example]"; next } { print }' "$PROJECT_PATH/state.md" > "$PROJECT_PATH/state.md.tmp"`,
+        'mv "$PROJECT_PATH/state.md.tmp" "$PROJECT_PATH/state.md"',
+        `printf 'resolved:%s\\n' "$PROJECT_PATH"`,
+      ].join('\n');
+
+      const stdout = execFileSync('/bin/bash', ['-c', driver], {
+        cwd: repository,
+        encoding: 'utf8',
+        env,
+      });
+      const reported = (prefix: string): string | undefined =>
+        stdout
+          .split('\n')
+          .filter((line) => line.startsWith(prefix))
+          .map((line) => line.slice(prefix.length))
+          .at(-1);
+      const stale = reported('step0.5:');
+      const resolved = reported('resolved:');
+
+      // Scaffolding repoints `activeProject`, so the Step 0.5 value is stale
+      // from the moment `oat project new` returns.
+      expect(stale).toBe('.oat/projects/shared/retired-scaffold');
+      expect(resolved).toBe('.oat/projects/shared/absorbing-project');
+
+      const created = readFileSync(
+        join(repository, '.oat/projects/shared/absorbing-project/state.md'),
+        'utf8',
+      );
+      const retired = readFileSync(
+        join(repository, '.oat/projects/shared/retired-scaffold/state.md'),
+        'utf8',
+      );
+
+      // Read the fields back out of the project the scaffolder actually
+      // created. Completion's absorbed-project sweep reads these two fields
+      // there and nowhere else.
+      expect(created).toContain('absorbed_projects: [retired-scaffold]');
+      expect(created).toContain('absorbed_backlog_ids: [BL-260907-example]');
+      // Without the re-resolve they landed in the scaffold being retired.
+      expect(retired).not.toContain('absorbed_projects:');
+      expect(retired).not.toContain('absorbed_backlog_ids:');
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it('stops the quick-start scaffold branch when the real scaffolder fails and leaves a valid stale PROJECT_PATH', () => {
+    const quickStart = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    // A real `oat project new` failure: the CLI rejects the name, reports
+    // `status: error` with no `projectPath`, and leaves `activeProject`
+    // pointing at the project that is being retired -- whose `state.md` is
+    // perfectly valid, so an existence check alone would wave it through.
+    const scaffoldBlock = extractQuickScaffoldBlock(quickStart).replace(
+      '{project-name}',
+      'bad name!',
+    );
+    const { workspace, repository, env } =
+      createScaffoldWorkspace(builtCliEntry());
+
+    try {
+      const setup = [
+        'set -eu',
+        'git init -q .',
+        'git config user.email quick-start@example.invalid',
+        'git config user.name "Quick Start Control"',
+        "printf '# scratch\\n' > README.md",
+        'git add -A',
+        'git commit -q -m init',
+        'oat config set projects.defaultScope shared --shared > /dev/null',
+        'oat project new "retired-scaffold" --mode quick --json > /dev/null',
+      ].join('\n');
+      execFileSync('/bin/bash', ['-c', setup], {
+        cwd: repository,
+        encoding: 'utf8',
+        env,
+      });
+
+      const retiredState = join(
+        repository,
+        '.oat/projects/shared/retired-scaffold/state.md',
+      );
+      const before = readFileSync(retiredState, 'utf8');
+
+      let exitCode = 0;
+      try {
+        execFileSync('/bin/bash', ['-c', scaffoldBlock], {
+          cwd: repository,
+          encoding: 'utf8',
+          env,
+          stdio: 'pipe',
+        });
+      } catch (error) {
+        exitCode = (error as { status?: number }).status ?? -1;
+      }
+
+      // Falling back to `activeProject` unconditionally would resolve back to
+      // the retired scaffold and let Step 1 write into it.
+      expect(exitCode).toBe(1);
+      expect(readFileSync(retiredState, 'utf8')).toBe(before);
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it('stops the quick-start scaffold branch when the reported PROJECT_PATH has no state.md', () => {
+    const quickStart = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const scaffoldBlock = extractQuickScaffoldBlock(quickStart).replace(
+      '{project-name}',
+      'absorbing-project',
+    );
+    const workspace = mkdtempSync(join(tmpdir(), 'quick-start-validate-'));
+
+    try {
+      const binDirectory = join(workspace, 'bin');
+      mkdirSync(binDirectory, { recursive: true });
+      // A scaffolder that reports a path it did not create. The block must
+      // stop here rather than let Step 1 and the consolidation write pick
+      // some other target.
+      writeFileSync(
+        join(binDirectory, 'oat'),
+        [
+          '#!/bin/sh',
+          'if [ "$1" = "project" ]; then',
+          '  printf \'{\\n  "status": "ok",\\n  "projectPath": ".oat/projects/shared/never-created"\\n}\\n\'',
+          '  exit 0',
+          'fi',
+          'exit 0',
+        ].join('\n'),
+        { mode: 0o755 },
+      );
+
+      let exitCode = 0;
+      try {
+        execFileSync('/bin/bash', ['-c', scaffoldBlock], {
+          cwd: workspace,
+          encoding: 'utf8',
+          env: {
+            ...process.env,
+            HOME: workspace,
+            PATH: `${binDirectory}:${process.env.PATH ?? ''}`,
+          },
+          stdio: 'pipe',
+        });
+      } catch (error) {
+        exitCode = (error as { status?: number }).status ?? -1;
+      }
+
+      expect(exitCode).toBe(1);
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it('explains why spec-driven planning stops and names a recoverable continuation', () => {
+    const plan = readRepoFile('.agents/skills/oat-project-plan/SKILL.md');
+    const planQuickBranch = plan.slice(
+      plan.indexOf('**Mode: `quick`**'),
+      plan.indexOf('**Mode: `lite`**'),
+    );
+
+    expect(normalizeProse(planQuickBranch)).toContain(
+      'Spec-driven planning does not apply: the quick workflow owns `plan.md` from discovery through the review disposition it records at its Step 3.7',
+    );
+    expect(planQuickBranch).toContain('Continue with: oat-project-quick-start');
+    expect(planQuickBranch).toContain('Continue with: oat-project-implement');
+    expect(plan).toContain(
+      '- **`quick`**: **Stop.** Spec-driven planning does not apply here: the quick workflow authors `plan.md` itself',
+    );
+
+    const progress = readRepoFile(
+      '.agents/skills/oat-project-progress/SKILL.md',
+    );
+    expect(normalizeProse(progress)).toContain(
+      'A not-ready quick plan is not a dead end and does not need spec-driven planning',
+    );
+
+    const next = readRepoFile('.agents/skills/oat-project-next/SKILL.md');
+    expect(normalizeProse(next)).toContain(
+      'Spec-driven planning is not the recovery path for a quick project.',
+    );
+  });
+
+  it('documents quick-start resume for an existing incomplete quick project', () => {
+    const quickStart = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const stepZeroFive = quickStart.slice(
+      quickStart.indexOf('### Step 0.5: Resolve Active Project'),
+      quickStart.indexOf('### Step 1: Set Quick Workflow Metadata'),
+    );
+
+    expect(stepZeroFive).toContain(
+      '**Resume in place (existing incomplete quick project).**',
+    );
+    expect(normalizeProse(stepZeroFive)).toContain(
+      'this skill resumes that project and never re-scaffolds it: `oat project new` is not re-run',
+    );
+    // The resume path must not let Step 3 rewrite an existing plan body.
+    expect(normalizeProse(stepZeroFive)).toContain(
+      'Step 3 updates the existing `plan.md` in place: it reads `.oat/templates/plan.md` only when `plan.md` is missing',
+    );
+    expect(normalizeProse(stepZeroFive)).toContain(
+      'never replaces phases, tasks, or `## Reviews` rows that the earlier run already wrote',
+    );
+    expect(stepZeroFive).toContain('Evaluate **quick plan readiness**');
+
+    // The resume branch is decided before the create-a-new-project branch.
+    expect(
+      stepZeroFive.indexOf('**Resume in place (existing incomplete quick'),
+    ).toBeLessThan(stepZeroFive.indexOf('If no valid active project exists:'));
+    // Re-scaffolding stays on the no-active-project branch only.
+    expect(
+      stepZeroFive.indexOf('oat project new "{project-name}" --mode quick'),
+    ).toBeGreaterThan(
+      stepZeroFive.indexOf('If no valid active project exists:'),
+    );
+
+    expect(quickStart).toContain(
+      '- ✅ An existing incomplete quick project resumed in place against **quick plan readiness** instead of being re-scaffolded.',
+    );
+
+    // The in-place constraint must live in Step 3 itself, not only remotely in
+    // Step 0.5: Step 3 is where the template would otherwise be read.
+    const stepThree = quickStart.slice(
+      quickStart.indexOf('### Step 3: Generate Plan Directly'),
+      quickStart.indexOf(
+        '### Step 3.5: Resolve Dispatch Policy Before Implementation Readiness',
+      ),
+    );
+    expect(normalizeProse(stepThree)).toContain(
+      '`.oat/templates/plan.md` is read only when `"$PROJECT_PATH/plan.md"` is missing.',
+    );
+    expect(normalizeProse(stepThree)).toContain(
+      'never replaces phases, tasks, or `## Reviews` rows an earlier run already wrote',
+    );
+    expect(normalizeProse(stepThree)).toContain(
+      'does not license a template rewrite of existing content',
+    );
+  });
+
+  it('oat-project-next skips revision resume for a complete lifecycle and keeps it for an active one', () => {
+    const next = readRepoFile('.agents/skills/oat-project-next/SKILL.md');
+
+    // The discriminator has to be readable at Step 1, or Step 5.2 has nothing
+    // to read.
+    expect(next).toContain('| `oat_lifecycle`');
+    expect(normalizeProse(next)).toContain(
+      '`complete` is the terminal signal Step 5.2 reads',
+    );
+
+    const stepFiveTwo = next.slice(
+      next.indexOf('**5.2: Incomplete revision tasks**'),
+      next.indexOf('**5.3: Unprocessed reviews**'),
+    );
+
+    // Terminal branch: lifecycle complete suppresses the revision resume.
+    expect(normalizeProse(stepFiveTwo)).toContain(
+      'Read `oat_lifecycle` from `state.md` before grepping anything.',
+    );
+    expect(normalizeProse(stepFiveTwo)).toContain(
+      'When `oat_lifecycle` is `complete`, revision phases are historical: skip this check and fall through to 5.3, and do not route to `oat-project-implement` even when `p-revN` tasks are still marked incomplete.',
+    );
+    // Lifecycle, not phase status or a null current task, is the terminal
+    // signal — the same rule the control-plane recommender applies.
+    expect(normalizeProse(stepFiveTwo)).toContain(
+      'neither a null current task nor a `complete` or `pr_open` `oat_phase_status` is terminal',
+    );
+    // The guard carries no workflow-mode branch.
+    expect(normalizeProse(stepFiveTwo)).toContain(
+      'applies identically to `spec-driven`, `quick`, `import`, and `lite` projects',
+    );
+
+    // Active branch: the pre-existing route text survives byte for byte.
+    expect(stepFiveTwo).toContain(
+      'Grep plan.md for `p-revN` phases. If any `p-revN` tasks exist with status != completed in implementation.md:\n→ Route to `oat-project-implement`\n→ Announce: "Revision tasks pending — continuing implementation"',
+    );
+    expect(normalizeProse(stepFiveTwo)).toContain(
+      'For every other `oat_lifecycle` value the check below is unchanged.',
+    );
+
+    // The guard is read before the grep, not after it.
+    expect(
+      stepFiveTwo.indexOf('Read `oat_lifecycle` from `state.md`'),
+    ).toBeLessThan(stepFiveTwo.indexOf('Grep plan.md for `p-revN` phases'));
   });
 });

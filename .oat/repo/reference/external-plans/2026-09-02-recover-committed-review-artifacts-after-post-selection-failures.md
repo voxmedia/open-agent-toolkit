@@ -342,6 +342,8 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
+**Refresh applied 2026-09-07 (wave-5 boundary, per the execution program's pre-dispatch refresh clause; drift re-run against `0f47bf700` after waves 1–4 and the Lite workflow PR #264 merged):** Anchors on the wave-5 base `0f47bf700` (uniform +157 in `gate/index.ts`): `runReviewGate` `:3310`, `postSelectionContext` declaration `:3322` and assignment `:3381`, the catch `:3851` with `writeReviewGateUnexpectedFailure` at `:3853`, `ReviewGateTerminalStatus` `:242-248` (still six values). `.oat/repo/reference/decisions/**` joins the drift check (this plan writes a decision record with `oat decision new` and regenerates the index; the wave-5 p04 lane also writes one after this plan). PR #190 is still open, so its landing row does not apply.
+
 Revalidate against current `origin/main`, the backlog item, issue #232, the
 decision records above, and the gate tests when substantial time passes, main
 advances materially from `49aeb5075971180b48c131bbd2b21b82d455bfc9`, PR #190

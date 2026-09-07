@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.7.7
+version: 1.7.8
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -493,7 +493,40 @@ mutation. Initialize `SELECTED_PROJECT_RECAP_RUN=""`.
 When `SHOULD_GENERATE_RECAP="true"`, inspect manifests under
 `{PROJECT_PATH}/explainers/` before generating. A fresh `project-recap` manifest for the current completed implementation is reused without invoking the adapter again. Fresh means the manifest identifies recipe `project-recap`, belongs to this project, has a terminal outcome, and its recorded source hashes match the current approved implementation inputs, including the refreshed summary when present.
 
-If no fresh recap exists, invoke `scripts/run.mjs#runOatExplainer` exactly once with recipe `project-recap`, project invocation, the active project, and unattended lifecycle mode so approved OAT artifacts do not trigger a second content prompt. A returned `failed` outcome warns but does not block completion. An invocation that returns no terminal outcome blocks lifecycle mutation. Use a returned valid terminal `project-recap` manifest as the selected run; do not rerun to improve its outcome.
+If no fresh recap exists, probe seam availability before invoking the adapter.
+Call `oat-explainer-kit/scripts/probe-recap-seams.mjs#probeRecapSeams` in
+`mode: unattended` with the exact seam inputs this step would pass. The probe is
+pure and covers all five required seams — author, fact critic, browser session,
+visual critic, and set planner — so a host missing only the set planner is
+detected here instead of at the adapter's `E_SET_PLANNER_REQUIRED`. When
+`OAT_AUTONOMOUS=1`, pass the result to autonomous intent resolution as
+`seamProbe`. The resolver accepts a `seamProbe` only for autonomous
+`projectRecap`, so an interactive completion keeps the decision recorded at the
+batched prompt and does not pass one.
+
+In autonomy, a probe result of `seams-unavailable` means no provider is
+configured for a required seam. Autonomous resolution then returns a recordable
+`skip` with source `capability_probe`: record it with the warning, leave
+`SELECTED_PROJECT_RECAP_RUN` empty, and complete without a recap. That
+probe-driven skip record supersedes the intent resolved and persisted earlier in
+this run for the remainder of the run: persist it through the same
+`oat-explainer-kit` intent-persistence helper with a freshly captured state hash,
+treat any `SHOULD_GENERATE_RECAP="true"` set from the earlier resolution as
+stale, and pass the skip — not the earlier `generate` — to the terminal-outcome
+guard as `--intent skip --skip-reason capability_probe`. Passing the superseded
+`generate` with no manifest raises `E_RECAP_OUTCOME` and blocks completion,
+which is the exact failure this gate exists to prevent. An interactive
+completion is unchanged: the decision recorded at the batched prompt governs, a
+recorded `generate` still attempts the recap, and a run that fails for a missing
+seam is still the `failed` outcome it is today. A probe result
+of `seams-invalid` means a seam is supplied but violates a resolution rule:
+report the configuration error and fail closed. Never convert a
+configured-but-invalid seam, or a run that failed after a passing probe, into a
+skip; that run stays `failed`.
+
+In autonomy, attempt the adapter run exactly once and only when the probe resolves every seam; an interactive `generate` still attempts the run regardless of the probe result, and a seam-less interactive attempt is still the `failed` outcome it is today. The autonomy gate and the interactive rule are two separate rules and are never read as one.
+
+When the gate above allows the attempt, invoke `scripts/run.mjs#runOatExplainer` exactly once with recipe `project-recap`, project invocation, the active project, and unattended lifecycle mode so approved OAT artifacts do not trigger a second content prompt. A returned `failed` outcome warns but does not block completion. An invocation that returns no terminal outcome blocks lifecycle mutation. Use a returned valid terminal `project-recap` manifest as the selected run; do not rerun to improve its outcome.
 Before that invocation, construct exactly one brief-aware, provider-neutral
 author seam as documented by
 `oat-explainer-kit/references/author-callback.md`. In-process callers pass
@@ -520,10 +553,13 @@ intent and, for `generate`, the selected or attempted manifest. The only
 terminal generated outcomes are `built-durable`, `built-not-durable`,
 `built-needs-review`, and `failed`. Missing records and `incomplete` block
 completion; do not substitute a warning or infer an outcome from filesystem
-presence. A `skip` intent requires no manifest.
+presence. A `skip` intent requires no manifest; pass its recorded source as
+`--skip-reason` so the receipt states why no recap exists.
 
 When recap intent resolves to `skip`, leave `SELECTED_PROJECT_RECAP_RUN` empty
-and complete without a recap. A terminal `failed` recap attempt is recorded as
+and complete without a recap. This covers both an interactive skip and a
+probe-driven `capability_probe` skip; neither prompts, and neither blocks
+completion. A terminal `failed` recap attempt is recorded as
 a warning rather than changing project completion status.
 
 `project-explainer` runs are active-project working artifacts, not durable post-completion reference products. Do not export, re-attest, or add archive-aware PR or summary reference links for a `project-explainer` run.
@@ -613,6 +649,96 @@ Route on the structured result:
   summary generation: load the current `oat-project-summary/SKILL.md` and follow
   it; only when skill loading is unavailable in the current host/runtime, author
   a complete summary inline before continuing.
+
+**Absorbed-project retirement sweep.** Run this sweep here — after the status
+probe above and before the roll-up below — so that every finding it produces is dispositioned in the project log while
+appends are still allowed. Retiring an absorbed scaffold is a semantic claim
+about the active planning surfaces, not the physical removal of a directory, so
+this sweep checks the claim. It is advisory: a raw match is never a hard block
+on closeout.
+
+```bash
+PJM_DOCTOR=$(oat pjm doctor --json 2>/dev/null || true)
+```
+
+Skip the sweep, record the single note
+`Retirement sweep skipped: no PJM adoption.`, and continue when `PJM_DOCTOR` is
+empty, is not parseable JSON, or reports an `adoption.state` other than
+`declared` or `inferred-legacy`. This skill ships to repositories that never
+adopted PJM and to repositories where the planning surfaces do not exist; a
+missing surface degrades this sweep and never fails closeout.
+
+Otherwise read `absorbed_projects` and `absorbed_backlog_ids` from
+`"$PROJECT_PATH/state.md"` frontmatter. These two fields are the only inputs the
+sweep takes. When both are absent or empty, nothing was consolidated: record
+`Retirement sweep: no absorbed projects recorded.` and continue.
+
+For each absorbed slug and each absorbed backlog ID, search the active planning
+surfaces:
+
+- `.oat/repo/pjm/roadmap.md` — the Now/Next/Later lanes and the sequencing map
+- `.oat/repo/pjm/current-state.md`
+- `.oat/repo/pjm/backlog/index.md` — the Curated Overview
+- the `state.md` of projects that are still active. Project states are
+  scope-nested as `<projects-root-parent>/<scope>/<project>/state.md`, so
+  resolve the configured root first — `oat config get projects.root`, default
+  `.oat/projects/shared` — and scan its sibling scope directories, which are
+  `shared`, `local`, and `synced` under the default layout
+  (`.oat/projects/*/*/state.md`). Skip the sibling `archived` tree, which holds
+  durable evidence rather than an active claim, and skip any project whose own
+  `state.md` already records a terminal `oat_lifecycle: complete` — a completed
+  project left in an active scope directory is not a live ownership claim
+  either
+
+Match a slug or backlog ID only where it carries future-oriented ownership
+language — an active surface that still claims the absorbed work as planned,
+owned, scheduled, or in flight. A bare mention that makes no such claim is not a
+finding. The completing project's own `absorbed_projects` and
+`absorbed_backlog_ids` fields are the sweep's input, never a finding. Prose that
+clearly describes past state is exempt: a dated history entry, a retro, a decision record, a changelog line,
+or any sentence whose tense reports what already happened is evidence, not a
+stale claim.
+
+Each remaining hit becomes a named finding carrying a recorded disposition,
+either fixed now — edit the stale surface in this run — or accepted as
+historical with the reason it is exempt. An autonomous run records the third
+disposition, `deferred advisory`, described below. Append the dispositions to the project
+log before the roll-up runs, so the roll-up summarizes them and the seal remains
+the final entry:
+
+```bash
+oat project log append \
+  --project "$PROJECT_PATH" \
+  --structural \
+  --producer oat-project-complete \
+  --ref retirement-sweep \
+  --body "Retirement sweep: <surface>:<finding> — <fixed|accepted as historical>; <reason>."
+```
+
+If a disposition edits inputs that `summary.md` reflects, regenerate the summary
+before the roll-up, exactly as this step already requires for a log with
+entries.
+
+Three bounded variations change where the dispositions land, never whether the
+sweep runs:
+
+- **Autonomous completion.** No new interactive gate may be opened here, so
+  record every finding as an advisory warning entry with the disposition
+  `deferred advisory` and continue, mirroring the warn-and-continue precedent
+  for non-blocking completion warnings in
+  `oat-project-implement/references/completion-and-closeout.md`.
+- **No project log** (`status: "absent"` from the probe above). Record the
+  findings and their dispositions in the Step 12 completion summary
+  instead, and never create a project log for them.
+- **Resumed completion whose log already carries a seal.** The status probe
+  above reports no seal state, so detect the seal directly before appending
+  anything: read `logPath` from `PROJECT_LOG_CHECK` and treat the log as sealed
+  when it already contains a structural seal heading of the form
+  `### <date> · structural · oat-project-complete · seal`. On a sealed log the
+  sweep runs in report-only mode: surface the findings and dispositions in the
+  Step 12 completion summary, append nothing to the sealed log, and never
+  re-enter the roll-up or the seal. No project-log append may follow the seal,
+  on a resume as much as on a first run.
 
 For a log with entries, reuse the summary flow's structured roll-up result only
 when this completion run has that exact result in memory and it reports
@@ -1505,6 +1631,10 @@ Show user:
 - Report the final recap outcome and tracked reference root. A failed
   attestation is a warning with `built-not-durable`, not a project-completion
   failure.
+- Report every absorbed-project retirement finding from the Step 3.7 sweep with
+  its disposition. This is the required destination whenever the sweep could not
+  append them to the project log — an absent log, or a resume whose log is
+  already sealed — and it stays a report, never a completion failure.
 - If PR was opened: include the PR URL.
 - If `oat_pr_url` is present, show it in the completion summary even when PR creation was skipped because the project already tracked an open PR.
 - If Step 11.5 ran, report whether the PR description was synced (e.g. `PR description synced: <PR URL>`) or warn that the sync failed and surface the artifact path so the user can update it manually.

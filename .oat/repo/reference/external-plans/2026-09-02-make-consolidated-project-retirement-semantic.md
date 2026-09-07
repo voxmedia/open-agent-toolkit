@@ -266,6 +266,8 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
+**Refresh applied 2026-09-07 (wave-5 boundary, per the execution program's pre-dispatch refresh clause; drift re-run against `0f47bf700` after waves 1–4 and the Lite workflow PR #264 merged):** On the wave-5 base `0f47bf700`: `skills.test.ts:4002` → `:4447` (`oat-project-complete`) plus `review-skill-contracts.test.ts:1089`; the quick-start pin `:5071` → four pins `:1862`, `:2928`, `:5556`, `:6559`; `review-skill-contracts.test.ts:1134` → use the `it(` titles at `:1038/:1053/:1083`; `lifecycle.md` +138 (Lite prose at `:330-340`); `autonomy-gate-inventory.test.ts` +20. The wave-5 p08 lane bumps `oat-project-complete` and the p03 lane bumps `oat-project-quick-start` before this lane; this lane edits prose only and leaves those pins at their values. `packages/cli/src/validation/named-skill-load-contract.test.ts` is a write surface and a verification gate for this plan: any new sentence pairing an execution verb with a named `oat-project-*` skill carries a load clause and a matrix row; no anchored heading is reworded without moving its rows; the corpus floor is not lowered; add the file to the drift check. Shared-skill bump rule (PR-scoped, wave-owned): the first wave-5 lane in plan order that edits a skill bumps it once; later lanes edit prose only and leave the pins at that value.
+
 Revalidate against current `origin/main`, the backlog item, issue #250, the
 gate-execution-contract-hardening retro, and the contract tests when
 substantial time passes, main advances materially from
