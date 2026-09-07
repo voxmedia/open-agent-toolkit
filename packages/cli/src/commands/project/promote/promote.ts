@@ -157,9 +157,10 @@ function containsUnresolvedTemplateContent(
   sections: LitePlanSections,
   templateSections: LitePlanSections,
 ): boolean {
-  return LITE_SECTION_HEADINGS.some(([, key]) => {
+  const containsTemplateMarkers = (key: keyof LitePlanSections): boolean => {
     const content = sections[key];
     const templateContent = templateSections[key];
+    if (!content || !templateContent) return false;
     if (content === templateContent) return true;
 
     const markers =
@@ -167,7 +168,14 @@ function containsUnresolvedTemplateContent(
         .match(/\[[^\]\n]+\]|\{[^{}\n]+\}/g)
         ?.filter((marker) => !/^\[\s*\]$/.test(marker)) ?? [];
     return markers.some((marker) => content.includes(marker));
-  });
+  };
+
+  return (
+    LITE_SECTION_HEADINGS.some(([, key]) => containsTemplateMarkers(key)) ||
+    (['productBehavior', 'technicalDesign'] as const).some((key) =>
+      containsTemplateMarkers(key),
+    )
+  );
 }
 
 export function parseLitePlanSections(

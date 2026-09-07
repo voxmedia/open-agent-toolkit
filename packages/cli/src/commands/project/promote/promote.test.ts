@@ -93,6 +93,36 @@ function litePlanContent(shape: LiteContentShape = 'minimal'): string {
   ].join('\n');
 }
 
+function replacePlanSection(
+  plan: string,
+  heading: string,
+  body: string,
+): string {
+  return plan.replace(
+    new RegExp(`(^## ${heading}\\n\\n)[\\s\\S]*?(?=\\n## )`, 'm'),
+    `$1${body}\n`,
+  );
+}
+
+function authorCoreLiteSections(plan: string): string {
+  return [
+    ['Summary', 'Ship safe behavior.'],
+    [
+      'Decisions',
+      '- **Content shape:** `both` — Exercise both adaptive sections.\n- Keep the command mechanical.',
+    ],
+    ['Assumptions', '- The project is already registered.'],
+    ['Out of Scope', '- Spec-driven promotion.'],
+    [
+      'Validation Criteria',
+      '- [ ] Promotion preserves provenance — Check: `pnpm test`',
+    ],
+  ].reduce(
+    (content, [heading, body]) => replacePlanSection(content, heading, body),
+    plan,
+  );
+}
+
 function stateContent(
   mode = 'lite',
   origin: 'native' | 'imported' = 'native',
@@ -647,6 +677,62 @@ describe('oat project promote', () => {
     expect(gitRunner.run).not.toHaveBeenCalled();
     expect(pushSynced).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ['Product Behavior', 'Technical Design'],
+    ['Technical Design', 'Product Behavior'],
+  ] as const)(
+    'refuses the shipped lite scaffold when %s retains template markers',
+    async (unresolvedHeading, authoredHeading) => {
+      const shippedTemplatePath = resolve(
+        process.cwd(),
+        'assets',
+        'templates',
+        'plan-lite.md',
+      );
+      const shippedTemplate = await readFile(shippedTemplatePath, 'utf8');
+      const authoredBody =
+        authoredHeading === 'Product Behavior'
+          ? '1. **Visible result** — Users see the promoted behavior.'
+          : [
+              '- **Current operation:** `promoteLite()` reads the plan.',
+              '- **Proposed changes:** Reject unresolved adaptive content.',
+              '- **Data flow:** Lite content flows into discovery.',
+            ].join('\n');
+      const plan = replacePlanSection(
+        authorCoreLiteSections(shippedTemplate),
+        authoredHeading,
+        authoredBody,
+      );
+      expect(plan).toContain(
+        unresolvedHeading === 'Product Behavior'
+          ? '**[Observable behavior]**'
+          : '[Describe how the affected modules and contracts work now.]',
+      );
+      const repoRoot = await createRepo();
+      const { projectPath, projectRoot } = await seedRepo(repoRoot, { plan });
+      const originalState = await readFile(
+        join(projectRoot, 'state.md'),
+        'utf8',
+      );
+      const { capture, command, gitRunner, pushSynced } = createHarness(
+        repoRoot,
+        true,
+        { liteTemplatePath: shippedTemplatePath },
+      );
+
+      await runCommand(command, projectPath, 'quick', true);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.jsonPayloads).toEqual([
+        { status: 'refused', reason: 'invalid-lite-plan', files: [] },
+      ]);
+      await expectNoPromotionWrites(projectRoot, plan, originalState);
+      expect(gitRunner.run).not.toHaveBeenCalled();
+      expect(pushSynced).not.toHaveBeenCalled();
+      expect(plan).toContain(`## ${unresolvedHeading}`);
+    },
+  );
 
   it('emits the promoted JSON contract', async () => {
     const repoRoot = await createRepo();
