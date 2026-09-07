@@ -1,0 +1,99 @@
+{
+  "request_id": "lite-p07-3be3351e-c8eb-45f3-87cc-48d9c60d6bd8",
+  "caller": "oat-project-implement",
+  "scope": "p07",
+  "objective": "Implement Phase 7 remote review fixes in four ordered task commits",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-native-p07-20260907",
+    "source": "tool-schema",
+    "observed_at": "2026-09-07T02:00:00.000Z"
+  },
+  "authority": "phase-implementation",
+  "role_selector": "oat-phase-implementer-gpt-5-6-sol-medium",
+  "model_selector": "gpt-5.6-sol",
+  "model_selector_granularity": "materialized-role",
+  "effort_selector": "medium",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": "priority",
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-07-25",
+  "guidance_verified_at": "2026-07-25",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["oat-phase-implementer-gpt-5-6-sol-medium"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 7200,
+  "retry_limit": 0,
+  "payload": {
+    "mode": "implementation",
+    "agent_type": "oat-phase-implementer-gpt-5-6-sol-medium",
+    "fork_turns": "none",
+    "phase": "p07",
+    "phase_scope_delivery": "post-journal-continuation",
+    "tasks": ["p07-t01", "p07-t02", "p07-t03", "p07-t04"],
+    "plan": ".oat/projects/shared/lite-workflow-mode/plan.md",
+    "worktree": "root",
+    "dispatch_stamp": "Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "in-progress",
+  "configured_invocation_evidence": [
+    "dispatch-report-v1:p07",
+    "native-spawn-accepted",
+    "canonical-role:project",
+    "same-handle-post-journal-scope"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "fallback": {
+    "mode": "block",
+    "allow_below_task_class_floor": false
+  },
+  "task_class": "default-implementation",
+  "model_class_floor": "default-implementation",
+  "classification_source": "caller",
+  "classification_reason": "Phase 7 reconciles four review findings across project ledger, two agent contracts, contract tests, generated provider views, and release surfaces.",
+  "floor_satisfaction": "satisfied",
+  "authorization_scope": "lite-workflow-mode-p07",
+  "expected_output": "Four ordered verified task commits and a clean Phase 7 report",
+  "verification_evidence": "Focused contract tests per task, full repository Definition of Done in p07-t04, exact commit range, and clean worktree",
+  "escalate_when": [
+    "a fix requires scope outside p07",
+    "required verification cannot execute",
+    "release version cannot be established",
+    "a post-commit defect is not mechanically recoverable"
+  ],
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<project>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.4",
+      "contentDigest": "sha256:1bc90a0e55817750e23be7e05684a651db185d370bcdf7ef1e12c0ce80204e31",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}
