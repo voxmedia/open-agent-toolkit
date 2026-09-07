@@ -314,6 +314,12 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - p08 readiness on the merged tip: its plan is READY; the base carries p07's `oat-repo-improve` bump and no change to the five skills p08 bumps; p07's worktree and branch removed.
   | p08 | `.worktrees/wave-5/p08` | DONE (`049783897` + fix `d7f8a6ff8`; forced CLI suite 6007, test:skills 856, check:skill-bumps 10) | passed (round 1 1C/2I/1M/3m → round 2 0C/0I/0M/0m) | 1 |
 
+#### p08 fan-in — group 3, second (2026-09-07)
+
+- `wave-5/p08` rebased onto the integration tip and merged with `git merge --no-ff` as `28d99dbaf`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `049783897`→`b4c4d879b`, `d7f8a6ff8`→`6f670166a`.
+- Lockstep retained at 0.2.63; integration gates (sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
+- p09 readiness on the merged tip: its plan is READY; the base carries p08's `oat-project-complete` bump (1.7.8, pins at `skills.test.ts` and `review-skill-contracts.test.ts`) — p09 edits that skill's prose without re-bumping; p08's worktree and branch removed.
+
 #### Parallel Groups
 
 - group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08 (merged); p09 → p10, p11 (sequential, next).
@@ -334,6 +340,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-07
 
+- p08-t01 `049783897`→`b4c4d879b`, fix `d7f8a6ff8`→`6f670166a`; merge `28d99dbaf`; lockstep retained 0.2.63.
 - p07-t01 `e4dfa0e27`→`b09dbd49c`, fix `9c2f96ca5`→`1f097db93`; merge `a59e0d24f`; lockstep retained 0.2.63.
 - p04-t01 `48837edf0`→`c055d5acf`, sweep `09de4c92f`→`7792f7583`; p05-t01 `3fd3aaa62`→`98fac8ccf`, sweep `d779ea634`→`3631ba9aa`; p06-t01 `8432f1d4d`→`6db97567b`, fix `970aedccc`→`1eaa49997`; merges `af42eba0e`, `4aeea4536`, `6b419ef7c`; lockstep retained 0.2.63.
 - p01-t01 `7c1988b63`→`1f6b1c9fe`, sweep `06de22c7d`→`d862ecb47`; p02-t01 `78f1279df`→`82898f9dc`, fix `f1790effd`→`6ed220954`, docs sweep `96a5d9480`→`3ff67384d`; p03-t01 `36a56cb64`→`8f4be3270`, fix `fcc6c0f26`→`ea25e45e7`; merges `9c932c262`, `ef4fc6b69`, `d77063b96`; hygiene `74e37e6e2`; lockstep bump `fdcb6c3ed`.

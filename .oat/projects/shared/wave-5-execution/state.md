@@ -93,7 +93,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T09:33:26.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T11:39:47.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -105,7 +105,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 merged; p08 (capability-aware recap) dispatched alone at the integration tip.
+Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 and p08 merged; p09 (defer activeProject clearing) dispatched alone at the integration tip.
 
 ## Artifacts
 
@@ -124,7 +124,8 @@ Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 merged; p08 (cap
 - ✓ Group 1 (p01 + p02 + p03) merged (`9c932c262`, `ef4fc6b69`, `d77063b96`); lockstep 0.2.63 + manifest restamp; eight gates green
 - ✓ Group 2 (p04 + p05 + p06) merged (`af42eba0e`, `4aeea4536`, `6b419ef7c`); eight gates green, lockstep retained
 - ✓ p07 merged (`a59e0d24f`); eight gates green
-- ⧗ p08, p09 → p10, p11, closeout
+- ✓ p08 merged (`28d99dbaf`); eight gates green
+- ⧗ p09 → p10, p11, closeout
 
 ## Blockers
 
@@ -132,4 +133,4 @@ None
 
 ## Next Milestone
 
-p08 reviewed and merged; then p09 → p10, p11.
+p09 reviewed and merged; then p10, p11.
