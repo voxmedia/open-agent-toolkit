@@ -271,6 +271,10 @@ Stop and report instead of improvising when:
 - sync and validate cannot share one exclusion path; or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-07, wave 5)
+
+Executed as wave-5 p02 (PR #275 `wave-5-execution`, CLI 0.2.63): `documentation.instructionPointerExcludes` (parsed only in `oat-config.ts`, deliberately NOT registered in `commands/config/index.ts` — `documentation.index` is the precedent; the p05 lane's family-coverage test excludes it as uncatalogued) with `posix.normalize` plus absolute-path and `..`-escape rejection; malformed values fail CLOSED with a repair message naming the config file (no `oat config set` path exists for the key); the `.oat/repo` carve-in takes precedence; W1's content-root rule from `index-generate/index.ts` is reused, not re-encoded; `excludedPaths` documents configured (not effective) exclusions; four docs pages (the plan named two; `cli-utilities/configuration.md` and `reference/oat-directory-structure.md` were widened so the `documentation.*` catalog is not silently incomplete). Issue #238 reproduced live on this repository and closed by the exclusion. Fix round: the review's inert-exclusion warnings; a wrong-TYPED `documentation.root` is still silently dropped in both modes (pre-existing) — `BL-260907` follow-up filed at wave close (see the wrapper's implementation.md). After the exit gate, CI on Linux failed the case-mismatched content-root test (the resolver probed the real filesystem while the test injected `stat`); fixed as `7aed651ce` (an injectable directory probe in `resolveDocumentationContentRoot`, threaded from the exclusion resolver's injected `stat`), accepted by the operator without a gate re-run.
+
 ## Revalidation Before Execution
 
 Revalidate against current `origin/main`, the backlog item, issue #238, and

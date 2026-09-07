@@ -247,6 +247,10 @@ Stop and report instead of improvising when:
 - the `script()` destination shape changed; or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-07, wave 5)
+
+Executed as wave-5 p06 (PR #275 `wave-5-execution`, CLI 0.2.63): new `skill-script-references.ts` (two-stage lossless scan of `.oat/scripts/` references through the closing Markdown construct, dropping exactly one trailing `[.:!?]` before the placeholder test; `resolveOwningPack` lives here — `pack-manifest.ts` untouched so the p07 lane stayed free) plus one contiguous block in `skills-bundled-docs-contract.test.ts` (74 shipped, 8 canonical-unshipped surfaced as `it.each`); membership-in-any-owner accepted for shared skills; angle-wrapped, question-form, and `_`-typo references each yield exactly one violation naming skill, reference, and pack. Rejected on the merits: `helper.sh#usage` fragments (no installed destination; `#` as a terminator would reintroduce prefix truncation). Follow-up filed at wave close: test files are excluded from tsc and type-aware oxlint (the lane type-checked its two test files explicitly).
+
 ## Revalidation Before Execution
 
 Revalidate against current `origin/main`, the backlog item, issue #199, the
