@@ -94,7 +94,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T13:10:52.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T14:29:32.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -106,7 +106,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 and p08 merged; p10 merged; p11 (semantic consolidated-project retirement) dispatched alone at the integration tip — the last lane.
+Implementation — all lanes dispositioned (10 merged, p09 parked); closeout records written; final review received and its record corrections applied; the configured exit gate runs next.
 
 ## Artifacts
 
@@ -114,7 +114,7 @@ Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 and p08 merged; 
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete; eleven pointer-only tasks, groups [p01, p02, p03], [p04, p05, p06], then p07 → p08, p09 → p10, p11)
-- **Implementation:** `implementation.md` (instantiated; 0/11 tasks)
+- **Implementation:** `implementation.md` (10/11 tasks complete; p09 parked)
 
 ## Progress
 
@@ -128,7 +128,11 @@ Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 and p08 merged; 
 - ✓ p08 merged (`28d99dbaf`); eight gates green
 - ⚠ p09 parked (plan STOP: seal append not idempotent) — `BL-260907-make-the-completion-seal`
 - ✓ p10 merged (`098efc30b`); eight gates green
-- ⧗ p11, closeout
+- ✓ p11 merged (`b59bbe804`); eight gates green plus test:smoke and test:skills
+- ✓ Ten backlog items archived (`55ee7e360`); ten closeout follow-ups filed (`497eab7b5`)
+- ✓ Closeout records (Deviations, Deferred Findings, Final Summary, synthesis) `5aa2f5ab4`
+- ✓ Final review round 1 PASS with record corrections (0C/1I/3M/3m); corrections applied
+- ⧗ Exit gate, post-implement sequence, PR
 
 ## Blockers
 
@@ -136,4 +140,4 @@ Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 and p08 merged; 
 
 ## Next Milestone
 
-p11 reviewed and merged; then closeout (final review, exit gate, post-implement sequence, PR).
+Exit gate on the closeout head, then the post-implement sequence (summary, document, pr) and the wave PR.

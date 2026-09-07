@@ -278,7 +278,7 @@
 | BL-260906-repair-the-stray-fence-in-oat  | Repair the stray fence in oat-project-review-provide and tighten the fence rule repo-wide                       | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                                   | open   | medium   | feature    | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                                      | open   | medium   | feature    | S        |
-| BL-260907-route-quick-mode-discovery     | Route quick-mode discovery rows in oat-project-next straight to quick-start                                     | open   | medium   | task       | XS       |
+| BL-260907-route-quick-mode-discovery     | Route quick-mode discovery rows in oat-project-next and oat-project-progress straight to quick-start            | open   | medium   | task       | XS       |
 | BL-260817-run-the-rc-explainer-end       | Run the RC explainer end-to-end test in CI with a provisioned browser                                           | open   | medium   | task       | M        |
 | BL-260907-settle-the-oat-wave-program    | Settle the oat-wave-program ledger status vocabulary                                                            | open   | medium   | task       | XS       |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests             | open   | medium   | task       | S        |

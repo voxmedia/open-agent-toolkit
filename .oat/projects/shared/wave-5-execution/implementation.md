@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p11-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -165,7 +165,7 @@ oat_generated: false
 ## Phase 11: make consolidated project retirement semantic (p11)
 
 **Status:** complete · **Group:** 5 (HiLL lane; ran last on the tip after p10) · **Tasks:** p11-t01 (+ one address-now sweep commit)
-**Outcome:** consolidated-project retirement is semantic: `oat-project-complete` sweeps the `absorbed_projects` / `absorbed_backlog_ids` a quick-start consolidation recorded, requires each child to prove a terminal state before retirement, records unproven children (and the `deferred advisory` disposition) in the project log INSIDE Step 3.7 — before the roll-up and seal, never after — detects an already-sealed log on a resumed completion by reading the log at `logPath`, resolves the configured `projects.root` for the still-active-project glob (93 matches here where the plan's literal glob matched zero) and excludes terminal `oat_lifecycle: complete` projects; `oat-project-quick-start` records the two fields; `lifecycle.md` documents the sweep; strictly append-only (353 added, 0 deleted).
+**Outcome:** consolidated-project retirement is semantic: `oat-project-complete` sweeps the `absorbed_projects` / `absorbed_backlog_ids` a quick-start consolidation recorded, sweeps the active planning surfaces (roadmap, current-state, open backlog items, still-active project states under the configured `projects.root`) for future-oriented ownership language naming an absorbed slug or backlog ID and records a disposition per finding (advisory — a raw match is never a hard block on closeout; the completing project's own `absorbed_*` fields are input, never a finding), recording each disposition (incl. `deferred advisory`) in the project log INSIDE Step 3.7 — before the roll-up and seal, never after — detects an already-sealed log on a resumed completion by reading the log at `logPath`, resolves the configured `projects.root` for the still-active-project glob (93 matches here where the plan's literal glob matched zero) and excludes terminal `oat_lifecycle: complete` projects; `oat-project-quick-start` records the two fields; `lifecycle.md` documents the sweep; strictly append-only (353 added, 0 deleted).
 **Verification:** forced check/type-check/test `Cached: 0` (CLI 6011), check:skill-bumps, lint, format, validate-skills, test:smoke 160; five red proofs re-run by the reviewer (all non-vacuous) plus two reviewer probes (terminal-complete exclusion vs a live claim; ordering anchors unique); review 0C/0I/1M/3m PASS; address-now sweep `w5-p11-sweep-001` (self-exemption clause, ownership-language match sentence, quick-mode-only qualifier in the docs).
 **Deviations:** no re-bumps (complete 1.7.8 from p08, quick-start 2.3.10 from p03); a Lite consolidation records no `absorbed_*` fields (PR #264 in the base; plan scoped to quick-start) → follow-up filed at closeout; quick-start's pre-existing stale `PROJECT_PATH` after `oat project new` → follow-up filed; the plan's `-t 'absorbed'` verify filter skips the resume test → wave-close correction.
 
@@ -232,7 +232,7 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 
 #### Dispatch Notes
 
-- `w5-p01-impl-001`, `w5-p02-impl-001`, `w5-p03-impl-001` — group 1 dispatched together; each target opus, model_axis selected:opus, effort_axis not-applicable, selection_reason native-catalog, task_class hard-reasoning (p01) / default-implementation (p02, p03) (plan dispatch profile). Stamps: `Dispatch: scope=p0N action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=opus`. Records `dispatch/w5-p0{1,2,3}-impl-001.json`. Briefs point the lane at its plan INCLUDING the dated `Refresh applied 2026-09-07` entry.
+- `w5-p01-impl-001`, `w5-p02-impl-001`, `w5-p03-impl-001` — group 1 dispatched together; each target opus, model_axis selected:opus, effort_axis not-applicable, selection_reason native-catalog, task_class hard-reasoning (p01) / default-implementation (p02, p03) (plan dispatch profile). Stamps: `Dispatch: scope=p0N action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:opus effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=opus target=opus`. Records `dispatch/w5-p0{1,2,3}-impl-001.json`. Briefs point the lane at its plan including the dated `Refresh applied 2026-09-07` entry where the plan carries one (p01 and p03; p02 needed no refresh).
 - Journal note: generic record fields are immutable after the first revision, so `child_outcome` stays at its launch value; terminal outcomes are recorded here.
 - `w5-p01-impl-001` outcome: DONE_WITH_CONCERNS, one commit `7c1988b6380d3893b6c74e1f545e1580b4032566` (gate module + tests, two docs pages, decision record). Two Codex rounds: a Critical ("replacement bytes should recover the original verdict") rejected on the plan's Done criteria; two Importants fixed (emission guard; envelope-equivalence test); a round-2 Important (`review_did_not_complete` envelopes lack `postSelection`) rejected as out of plan scope. Five negative controls red. Concerns reported: a plan-internal inconsistency (Test plan vs Done criteria) resolved fail-closed.
 - `w5-p01-review-001` — reviewer, target opus, eight rulings incl. the two rejections and the inconsistency, live probes on the built CLI. Record `dispatch/w5-p01-review-001.json`.
@@ -425,7 +425,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 - p06 review — `packages/cli` test files are excluded from tsc and type-aware oxlint → `BL-260907-type-check-cli-test-files`.
 - p05 review — `oat config adopt` keeps an inline copy of the surface-flag block → `BL-260907-fold-oat-config-adopt-onto`.
-- p03 review (deferred) — quick-mode `discovery` rows in `oat-project-next` still route through `oat-project-plan` (two-hop) → `BL-260907-route-quick-mode-discovery`.
+- p03 review (deferred) — quick-mode `discovery` rows in `oat-project-next` (and the matching row in `oat-project-progress`'s routing table) still route through `oat-project-plan` (two-hop) → `BL-260907-route-quick-mode-discovery`.
 - p02 review round 2 — the inert-exclusion warning's case-sensitivity hint is wrong when a symlink resolved the target elsewhere → `BL-260907-name-the-resolved-target`.
 - p06 review round 2 m1 — an escaped-underscore reference yields a trailing backslash and a false positive (zero live instances) → `BL-260907-ignore-backslash-escaped`.
 - p07 fix round (Codex) — `oat-wave-program` contradicts itself on the ledger's terminal vocabulary (`merged` vs `done`) → `BL-260907-settle-the-oat-wave-program`.
@@ -442,7 +442,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 - Gate resilience: a committed review artifact that survives a post-selection failure is re-validated through the normal path's own eligibility function and returned with its real disposition (no reviewer re-dispatch; replacement bytes never recover; envelopes name `postSelection.step` / `code`); gate project-log finalization retries transient index locks on git's own contention evidence, settles only on proven identity, and leaves a durable, idempotent recovery receipt (`DR-260907-gate-log-receipts-live-under`).
 - Configuration: `documentation.instructionPointerExcludes` keeps instruction-sync pointer files out of docs content trees (fail-closed on malformed values; issue #238 reproduced and closed on this repository); `oat config unset <key>` with `set`-parity refusals, aggregate-key rejection, and empty-parent pruning.
-- Lifecycle routing and closeout: one quick-plan readiness predicate shared by plan 1.4.10 / progress 1.4.1 / next 1.1.1 / quick-start 2.3.10, with incomplete quick projects resuming in quick-start rather than dead-ending; the recommender treats a project as terminal only when `oat_lifecycle` is complete AND no revision phase is incomplete, on a task parser that normalizes heading dialects; the autonomous recap is capability-aware and non-blocking (explainer-kit 1.0.7 seam probe; complete 1.7.8, implement 2.3.6, summary 1.5.3, autonomous 1.0.13); consolidated-project retirement is semantic (each absorbed child must prove a terminal state; the sweep runs before the roll-up and seal; quick-start records `absorbed_*`).
+- Lifecycle routing and closeout: one quick-plan readiness predicate shared by plan 1.4.10 / progress 1.4.1 / next 1.1.1 / quick-start 2.3.10, with incomplete quick projects resuming in quick-start rather than dead-ending; the recommender treats a project as terminal only when `oat_lifecycle` is complete AND no revision phase is incomplete, on a task parser that normalizes heading dialects; the autonomous recap is capability-aware and non-blocking (explainer-kit 1.0.7 seam probe; complete 1.7.8, implement 2.3.6, summary 1.5.3, autonomous 1.0.13); consolidated-project retirement is semantic (an advisory sweep of the active planning surfaces for ownership language still naming an absorbed slug or backlog ID, each hit dispositioned before the roll-up and seal; quick-start records `absorbed_*`).
 - Contracts: every `.oat/scripts` reference in shipped skill Markdown is validated against pack manifests; the repo-improve plan template (2.1.3) carries the external-plan readiness contract and the contract test sweeps all 44 dated plans.
 
 **Behavioral changes (user-facing):**
@@ -455,7 +455,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Key files / modules:**
 
-- `packages/cli/src/commands/gate/index.ts`, `project/log/append.ts`, `.oat/gate-runs/` receipts — recovery and retry.
+- `packages/cli/src/commands/gate/index.ts`, `project/log/append.ts`, `<project>/gate-receipts/` receipts — recovery and retry.
 - `packages/cli/src/config/oat-config.ts`, `commands/instructions/*`, `commands/config/index.ts` — exclusions and `unset`.
 - `.agents/skills/oat-project-{plan,progress,next,quick-start,complete,implement,summary,autonomous}`, `oat-explainer-kit/scripts/probe-recap-seams.mjs`, `oat-repo-improve/references/plan-template.md` — routing, recap, retirement, readiness.
 - `packages/control-plane/src/state/tasks.ts`, `recommender/router.ts` — terminal status.

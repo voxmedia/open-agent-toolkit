@@ -756,7 +756,7 @@ git commit -m "fix(p11-t01): make consolidated-project retirement checks semanti
 - [ ] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
 - [ ] **Serialized backlog bookkeeping** (integration branch, after all merges):
       `oat backlog archive` with real outcome summaries for
-      `BL-260902-recover-committed-review`, `BL-260902-keep-pjm-init-provider`, `BL-260830-clarify-quick-mode-resume`, `BL-260902-retry-gate-project-log`, `BL-260830-add-oat-config-unset-command`, `BL-260902-validate-every-shipped-skill`, `BL-260830-distinguish-external-plan`, `BL-260902-make-autonomous-project-recap`, `BL-260902-defer-activeproject-clearing`, `BL-260901-make-terminal-project-status`, `BL-260902-make-consolidated-project`, one commit
+      `BL-260902-recover-committed-review`, `BL-260902-keep-pjm-init-provider`, `BL-260830-clarify-quick-mode-resume`, `BL-260902-retry-gate-project-log`, `BL-260830-add-oat-config-unset-command`, `BL-260902-validate-every-shipped-skill`, `BL-260830-distinguish-external-plan`, `BL-260902-make-autonomous-project-recap`, `BL-260901-make-terminal-project-status`, `BL-260902-make-consolidated-project`, one commit (ten items; `BL-260902-defer-activeproject-clearing` stays open because p09 parked, pending `BL-260907-make-the-completion-seal`)
 - [ ] Orchestration-log end-of-run synthesis written; roll-up into `summary.md`
       before any archive step — `summary.md` is produced by the post-implement sequence after the exit gate (archive tail deferred to program close)
 - [ ] Full DoD gates green on the integration branch (fan-in lockstep bump above
