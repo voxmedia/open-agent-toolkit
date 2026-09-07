@@ -1,6 +1,6 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-review-provide
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
 oat_current_task_id: null
@@ -2337,16 +2337,17 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase  | Tests Run                                                                                                                            | Passed                                      | Failed  | Coverage                                                      |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------- | ------- | ------------------------------------------------------------- |
-| 1      | Focused control-plane/CLI, check, type-check, test, build                                                                            | Yes                                         | 0       | Mode declaration, parsing, scaffold, help                     |
-| 2      | Focused router/dashboard/closeout suites plus full phase gates                                                                       | Yes                                         | 0       | Recommendation, progress routing, PR closeout                 |
-| 3      | Focused split/promote/validator suites plus full phase gates                                                                         | Yes                                         | 0       | Promotion safety and Lite plan validation                     |
-| 4      | Skill contracts, end-to-end Lite integration, full phase gates                                                                       | Yes after bounded recovery                  | 0 final | Dedicated Lite workflow and bundled assets                    |
-| 5      | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops              | 0 final | Review, import, progress, recap bypass, PR flow               |
-| 6      | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes; p06-t10 and p06-t11 used no retries    | 0 final | Docs, provider sync, real promotion routing, release `0.2.60` |
-| p-rev1 | Focused revision suites, promotion negative controls, full repository gates, post-fix contract tests, project sync dry-run           | Yes after recovery and two review fix loops | 0 final | Adaptive Lite depth, proportionate proof, executor boundary   |
-| p-rev2 | SIGTERM reproduction, ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, release validation  | Yes after five recovery events              | 0 final | Wave 4 composition, closeout alignment, local terminal proof  |
+| Phase  | Tests Run                                                                                                                            | Passed                                          | Failed  | Coverage                                                      |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------- | ------- | ------------------------------------------------------------- |
+| 1      | Focused control-plane/CLI, check, type-check, test, build                                                                            | Yes                                             | 0       | Mode declaration, parsing, scaffold, help                     |
+| 2      | Focused router/dashboard/closeout suites plus full phase gates                                                                       | Yes                                             | 0       | Recommendation, progress routing, PR closeout                 |
+| 3      | Focused split/promote/validator suites plus full phase gates                                                                         | Yes                                             | 0       | Promotion safety and Lite plan validation                     |
+| 4      | Skill contracts, end-to-end Lite integration, full phase gates                                                                       | Yes after bounded recovery                      | 0 final | Dedicated Lite workflow and bundled assets                    |
+| 5      | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops                  | 0 final | Review, import, progress, recap bypass, PR flow               |
+| 6      | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes; p06-t10 and p06-t11 used no retries        | 0 final | Docs, provider sync, real promotion routing, release `0.2.60` |
+| p-rev1 | Focused revision suites, promotion negative controls, full repository gates, post-fix contract tests, project sync dry-run           | Yes after recovery and two review fix loops     | 0 final | Adaptive Lite depth, proportionate proof, executor boundary   |
+| p-rev2 | SIGTERM reproduction, ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, release validation  | Yes after five recovery events                  | 0 final | Wave 4 composition, closeout alignment, local terminal proof  |
+| 7      | Focused contract suites, fail-capability mutations, ordered definition-of-done gates, skills, lint, format, project sync dry-run     | Yes; independent review passed with no findings | 0       | Remote-review fixes and release `0.2.61`                      |
 
 ## Final Summary (for PR/docs)
 
@@ -2363,7 +2364,8 @@ Track test execution during implementation.
   dispatch, shared lifecycle-gate posture setup, phase/final reviews, and
   PR-first closeout.
 - Provider projections, docs, lifecycle integrations, and lockstep public
-  package release surfaces synchronized at `0.2.60` after integrating Wave 4.
+  package release surfaces synchronized at `0.2.61` after integrating Wave 4
+  and the final remote-review fixes.
 
 **Behavioral changes (user-facing):**
 
@@ -2396,6 +2398,9 @@ Track test execution during implementation.
 - Supplemental isolated-HOME forced tests, smoke tests, skills tests, lint,
   format, focused negative controls, provider sync dry-run, and post-commit
   checks passed.
+- Phase 7 closed all four actionable PR #264 findings. The independent review
+  of its exact four-commit range found no Critical, Important, Medium, or Minor
+  findings.
 - A disposable manual Lite project completed one interview, one approval, one
   implementation task, phase and final reviews, exit gate, and PR-description
   generation without creating an external PR.
