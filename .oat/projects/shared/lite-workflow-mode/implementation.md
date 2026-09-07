@@ -35,7 +35,7 @@ oat_generated: false
 | Phase p-rev1 | complete | 7     | 7/7       |
 | Phase p-rev2 | complete | 4     | 4/4       |
 
-**Total:** 38/38 tasks completed
+**Total:** 39/39 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -273,6 +273,31 @@ as complete. Historical execution records remain unchanged. The refreshed local
 PR body has not been published; root-owned publication, push, and required CI
 for the exact remote head remain pending. The user waived another review for
 this wording-only alignment.
+
+### Review Received: final — test-only stabilization
+
+**Date:** 2026-09-07
+**Review artifact:** `reviews/archived/final-review-2026-09-07T002708Z.md`
+
+The focused review accepted both substantive test-only corrections with no
+code findings. It reported one Medium artifact-alignment finding: two active
+closeout statements still called the reproduced SIGTERM readiness race
+inconclusive.
+
+**New task added:** `prev2-t05`
+
+**Disposition:** `artifact_alignment_required`. Apply the wording-only fix
+without another review under the user's standing direction for this class.
+
+### Task prev2-t05: Align the active SIGTERM disposition
+
+**Status:** complete
+
+The initial isolated attempt remains recorded as inconclusive. The active
+closeout now also records the later full-smoke negative control, which
+reproduced the timeout and isolated the test-local listener/readiness race.
+Recovery attempt 5 corrected that harness race. Required CI for the eventual
+pushed head remains external evidence.
 
 ---
 
@@ -2260,10 +2285,11 @@ Track test execution during implementation.
   generation without creating an external PR.
 - The p-rev2 shared-posture focused suite, autonomy inventory, project sync
   dry-run, skill-bump gate, lint, format, ordered terminal gates, and uncached
-  isolated-HOME test run passed. The exact SIGTERM subtest passed 10/10 locally,
-  so the prior CI mechanism remains inconclusive rather than classified as
-  flaky. Required CI for the eventual pushed head remains root-owned and
-  pending.
+  isolated-HOME test run passed. The initial isolated SIGTERM attempt was
+  inconclusive, but the later full-smoke negative control reproduced the
+  timeout and isolated the test-local listener/readiness race. Recovery attempt
+  5 corrected that harness race; required CI for the eventual pushed head
+  remains root-owned and pending.
 
 **Design deltas (if any):**
 

@@ -107,9 +107,11 @@ contract.
   authoritative at `0.2.60`.
 - The post-Wave-4 final review's three Important findings are closed. The
   stabilized p-rev2 re-review found one wording-only Medium alignment issue,
-  resolved in `prev2-t04` under the user's no-re-review waiver. All four p-rev2
-  tasks and five governed recovery events are complete. The final two test-only
-  recoveries made the symlink replacement control deterministic across hosts
+  resolved in `prev2-t04` under the user's no-re-review waiver. A focused review
+  then accepted both test-only stabilizations and found one stale SIGTERM
+  disposition, corrected in `prev2-t05` under the same wording-only direction.
+  All five p-rev2 tasks and five governed recovery events are complete. The two
+  final test-only recoveries made the symlink replacement control deterministic across hosts
   and removed a reproduced SIGTERM readiness race without changing production
   behavior. Focused review, publication, push, and required CI for the exact
   remote head remain pending. This refreshed local body has not been published

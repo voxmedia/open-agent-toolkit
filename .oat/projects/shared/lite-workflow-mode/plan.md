@@ -1967,6 +1967,34 @@ git commit -m "docs(prev2-t04): align current closeout wording"
 
 ---
 
+### Task prev2-t05: (review) Correct the active SIGTERM disposition
+
+**Files:**
+
+- Modify: `.oat/projects/shared/lite-workflow-mode/state.md`
+- Modify: `.oat/projects/shared/lite-workflow-mode/implementation.md`
+
+**Step 1: Align active evidence wording**
+
+Record that the initial isolated reproduction was inconclusive, but the later
+full-smoke negative control reproduced the timeout and isolated the test-local
+readiness race. Record recovery attempt 5 as the correction. Keep exact-head CI
+as pending external evidence.
+
+**Step 2: Verify**
+
+Run the final review artifact's stale-wording search and require no active
+match. Run `pnpm format`.
+
+**Step 3: Commit**
+
+```bash
+git add .oat/projects/shared/lite-workflow-mode/plan.md .oat/projects/shared/lite-workflow-mode/state.md .oat/projects/shared/lite-workflow-mode/implementation.md
+git commit -m "docs(prev2-t05): align SIGTERM disposition"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -1978,9 +2006,9 @@ git commit -m "docs(prev2-t04): align current closeout wording"
 - Phase 5: 4 tasks - mode-aware skill branches, import-to-lite offer, checkpoint bypass, collapsed closeout
 - Phase 6: 11 tasks - docs and triage, manual run and sync, lockstep release gates, four lifecycle-final-review fixes, and four exit-gate fixes (last)
 - Phase p-rev1: 7 tasks - adaptive specification depth, proportionate proof, executable evidence, exact promotion preservation, autonomous proof boundaries, and design alignment
-- Phase p-rev2: 4 tasks - Lite lifecycle-gate posture composition, Wave 4 closeout alignment, terminal CI evidence, and current closeout wording
+- Phase p-rev2: 5 tasks - Lite lifecycle-gate posture composition, Wave 4 closeout alignment, terminal CI evidence, and two current closeout wording corrections
 
-**Total:** 38 tasks across 8 phases
+**Total:** 39 tasks across 8 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

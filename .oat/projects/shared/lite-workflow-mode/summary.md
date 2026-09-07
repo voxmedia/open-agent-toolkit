@@ -133,7 +133,7 @@ heavy for this class of work while retaining OAT's safety and handoff value.
 - **p-rev2 — Wave 4 integration and closeout.** Composed native Lite planning
   with the complete shared lifecycle-gate posture contract, registered
   `LITE-10`, and aligned local closeout and PR artifacts to Wave 4 and `0.2.60`.
-  All four p-rev2 tasks and five bounded recovery events are complete. The two
+  All five p-rev2 tasks and five bounded recovery events are complete. The two
   final test-only recoveries made the symlink replacement control portable and
   removed a reproduced SIGTERM readiness race without changing production
   behavior. Focused review, publication, and required CI for the exact remote

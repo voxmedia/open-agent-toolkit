@@ -121,7 +121,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all four p-rev2 tasks and five bounded recovery events are
+Implementation — all five p-rev2 tasks and five bounded recovery events are
 complete. The latest test-only stabilization remains pending focused review,
 publication, and required CI for its exact remote head.
 
@@ -193,16 +193,17 @@ publication, and required CI for its exact remote head.
   contract and registered `LITE-10`
 - ✓ `prev2-t02` aligned the local closeout artifacts to Wave 4 and public
   package version `0.2.60`
-- ✓ `prev2-t03` completed local terminal verification; the SIGTERM mechanism
-  remains honestly classified as inconclusive rather than flaky
+- ✓ `prev2-t03` completed local terminal verification; a later full-smoke
+  negative control reproduced the SIGTERM readiness race
 - ✓ Final p-rev2 re-review closed all prior Important findings and identified
   one wording-only Medium alignment finding
-- ✓ `prev2-t04` aligned current closeout wording; all four p-rev2 tasks are
-  complete
+- ✓ `prev2-t04` aligned current closeout wording
 - ✓ p-rev2 recovery attempt 4 made the same-target symlink replacement
   negative control deterministic across macOS and Ubuntu
 - ✓ p-rev2 recovery attempt 5 armed the test-local SIGTERM listener before
   publishing readiness; focused stress, smoke, and workspace tests passed
+- ✓ `prev2-t05` aligned the active SIGTERM disposition under the user's
+  wording-only no-re-review direction; all five p-rev2 tasks are complete
 
 ## Blockers
 

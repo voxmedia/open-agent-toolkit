@@ -1,0 +1,86 @@
+{
+  "request_id": "lite-p-rev2-stabilization-review-5c33fd2c-96e5-414f-b5a9-d744b923c261",
+  "caller": "oat-project-review-provide",
+  "scope": "p-rev2-test-stabilization",
+  "objective": "Independently review the two post-review test-only stabilization corrections before publication and retrospective closeout",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "authority": "review-artifact-only",
+  "role_selector": "oat-reviewer-gpt-5-6-sol-high",
+  "model_selector": "gpt-5.6-sol",
+  "model_selector_granularity": "materialized-role",
+  "effort_selector": "high",
+  "selection_source": "policy-resolved",
+  "candidates_considered": ["oat-reviewer-gpt-5-6-sol-high"],
+  "selection_reason": "consequential final evidence review",
+  "selected_route": "native",
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-5-6-sol-high",
+    "fork_turns": "all",
+    "scope": "final",
+    "range_base": "6543c0d31372df5dd0305938c78cb8e50ff3e033",
+    "range_head": "de3a673edf5bbfb3c234a761c7eba9c695b82539",
+    "output_mode": "artifact",
+    "worktree": "root",
+    "review_invocation": "manual",
+    "expected_artifact": "reviews/archived/final-review-2026-09-07T002708Z.md"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "completed",
+  "configured_invocation_evidence": [
+    "Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high",
+    "native-spawn-accepted",
+    "canonical-role:project"
+  ],
+  "runtime_confirmation": "review artifact returned",
+  "diagnostics": [
+    "0 Critical, 0 Important, 1 Medium, 0 Minor",
+    "Both substantive test-only corrections accepted; Medium is wording-only artifact alignment"
+  ],
+  "continuation_events": [],
+  "fallback": {
+    "mode": "block",
+    "allow_below_task_class_floor": false
+  },
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "This is the final load-bearing review of test evidence before publication and retrospective closeout.",
+  "floor_satisfaction": "satisfied",
+  "authorization_scope": "lite-workflow-mode-stabilization-review",
+  "expected_output": "One timestamped final review artifact and brief artifact-mode confirmation",
+  "verification_evidence": "Exact post-review range, two test-only corrections, recovery ledger, negative controls, focused stress, smoke, and full local gates",
+  "escalate_when": [
+    "authoritative range is invalid",
+    "review artifact contract cannot be satisfied",
+    "unexpected source mutation is observed"
+  ],
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<project>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.2"
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "reported"
+    }
+  }
+}
