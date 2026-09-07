@@ -817,7 +817,7 @@ Add a shared executable equivalent of the skills' Quick Plan Readiness predicate
 
 **Step 3: Verify**
 
-Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run && pnpm exec vitest run src/commands/project/status` (from `packages/cli` unless the command names another package), then the lane-mode gates.
+Run: `pnpm --filter @open-agent-toolkit/control-plane build && pnpm --filter @open-agent-toolkit/control-plane exec vitest run && pnpm exec vitest run src/commands/project/status` (from `packages/cli` unless the command names another package; the CLI half resolves control-plane through its `dist`, so build first), then the lane-mode gates.
 Expected: the new control is red before the fix and green after; all gates green.
 
 **Step 4: Commit**
@@ -937,12 +937,13 @@ git commit -m "fix(p12-t07): backstop the external-plan source backlink in the r
 | final  | code     | fixes_added | 2026-09-07 | reviews/archived/final-review-2026-09-07T142545Z.md         | 5aa2f5ab4813fcf76bb877258fda9929a3a0bb7e | manual     | -                   |
 | final  | code     | passed      | 2026-09-07 | reviews/archived/final-review-2026-09-07T143255Z.md         | 9386be8253f7b88abc65e04106a724c14ac55a2f | manual     | -                   |
 | final  | code     | fixes_added | 2026-09-07 | reviews/archived/final-review-2026-09-07T144442Z.md         | c9ad23b69d13eb47da7340a6f26c48271af04a98 | gate       | codex-5-6-sol-xhigh |
+| p12    | code     | passed      | 2026-09-07 | reviews/archived/p12-review-2026-09-07T163054Z.md           | 368d8b8d0ff8d695677a506ee8867d1e04f01798 | manual     | -                   |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
 ## Implementation Complete
 
-- [ ] 11/11 phases, 11/11 tasks complete
+- [ ] 12/12 phases, 18/18 tasks complete (p09 parked: 11/12 phases, 17/18 tasks is the reachable figure until its plan is refreshed)
 - [ ] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
 - [ ] **Serialized backlog bookkeeping** (integration branch, after all merges):
       `oat backlog archive` with real outcome summaries for

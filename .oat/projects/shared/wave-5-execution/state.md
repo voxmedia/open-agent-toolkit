@@ -64,7 +64,7 @@ oat_implement_exit_gate:
   on_failure: block
   max_attempts: 2
   attempts_completed: 1
-  reviewed_head: 3d0e4776cfccca9fae7c95a14800509fd4002ff0
+  reviewed_head: c9ad23b69d13eb47da7340a6f26c48271af04a98
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:fcefbe4b6e537ab9aa7a1c4f70826756c5398316020c50db808969152ed523bd'
   freshness_head: null
@@ -76,7 +76,7 @@ oat_implement_exit_gate:
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/33895672-bac5-4cb4-9a9e-474e440a9bc5.json'
   gate_run_id: '33895672-bac5-4cb4-9a9e-474e440a9bc5'
   envelope_status: ok
-  artifact: '.oat/projects/shared/wave-5-execution/reviews/final-review-2026-09-07T144442Z.md'
+  artifact: '.oat/projects/shared/wave-5-execution/reviews/archived/final-review-2026-09-07T144442Z.md' # written to reviews/ by the gate; archived on receive
   handoff: 'Gate attempt 1 blocked at the important threshold (0C/3I/4M/0m, run 33895672); received as Phase 12 fix tasks p12-t01..t07; attempt 2 after they land'
   receive_state: completed
   receive_correlation: 'run=33895672-bac5-4cb4-9a9e-474e440a9bc5; handoff=receive; source=reviews/final-review-2026-09-07T144442Z.md; scope=final; type=code'
@@ -129,7 +129,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T16:06:49.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T16:34:45.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -141,7 +141,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all lanes dispositioned (10 merged, p09 parked); root final review passed; the configured exit gate blocked on attempt 1 (three Important, four Medium) and its findings are Phase 12 fix tasks in flight; attempt 2 follows.
+Implementation — all lanes dispositioned (10 merged, p09 parked); root final review passed; the configured exit gate blocked on attempt 1 (three Important, four Medium) and its findings were fixed as Phase 12 in three parallel lanes, merged, gated, and root-reviewed (passed); exit gate attempt 2 runs next.
 
 ## Artifacts
 
@@ -149,7 +149,7 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete; eleven pointer-only tasks, groups [p01, p02, p03], [p04, p05, p06], then p07 → p08, p09 → p10, p11)
-- **Implementation:** `implementation.md` (10/11 tasks complete; p09 parked)
+- **Implementation:** `implementation.md` (17/18 tasks complete; p09 parked)
 
 ## Progress
 
@@ -169,7 +169,8 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 - ✓ Final review round 1 PASS with record corrections (0C/1I/3M/3m); corrections applied
 - ✗ Exit gate attempt 1 blocked (run `33895672`, 0C/3I/4M/0m) — received as Phase 12 fix tasks p12-t01..t07 (three parallel fix worktrees)
 - ✓ Phase 12 fix lanes merged (`ddeabab1e`, `bcf907526`, `368d8b8d0`); eight gates + smoke + skills + root test green
-- ⧗ Fix-round root review, exit gate attempt 2, post-implement sequence, PR
+- ✓ Fix-round root review passed (0C/0I/2M/6m; record fixes applied)
+- ⧗ Exit gate attempt 2, post-implement sequence, PR
 
 ## Blockers
 
@@ -177,4 +178,4 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 
 ## Next Milestone
 
-Phase 12 (exit-gate fixes) merged and gated, then exit gate attempt 2, then the post-implement sequence (summary, document, pr) and the wave PR.
+Exit gate attempt 2 on the reviewed closeout head, then the post-implement sequence (summary, document, pr) and the wave PR.

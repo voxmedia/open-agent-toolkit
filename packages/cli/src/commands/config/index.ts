@@ -2534,10 +2534,9 @@ function withoutOwnKey(
  *
  * Pruning is strictly "the object has no remaining own keys". That is what
  * keeps a prune from destroying a sibling the `oat config` catalog does not
- * expose — `documentation.index` and `documentation.instructionPointerExcludes`
- * are parsed by `config/oat-config.ts` but are not `ConfigKey`s, so an unset of
- * the last catalogued `documentation.*` key leaves the parent in place while
- * either one is still present.
+ * expose — `documentation.index` is parsed by `config/oat-config.ts` but is
+ * not a `ConfigKey`, so an unset of the last catalogued `documentation.*` key
+ * leaves the parent in place while it is still present.
  *
  * A missing path, a `null`/`undefined` leaf, or a non-object in the middle of
  * the path all report `removed: false`, which the caller surfaces as the
