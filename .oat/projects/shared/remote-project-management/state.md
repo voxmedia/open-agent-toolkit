@@ -3,7 +3,7 @@ oat_current_task: null
 oat_last_commit: af095f3c0c338b7d571a86a4b70f498b758537ee
 oat_blockers:
   [
-    'Phase 7 operator extension is exhausted at 4/4 reviews and 3/3 fixes with 1 Critical and 1 Important finding; new operator authorization is required',
+    'Corrective Revision 3 is authorized and drafted; fresh plan artifact review is pending before prev3-t01',
   ]
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -52,7 +52,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T01:59:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T02:21:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -77,15 +77,16 @@ Normal review governance is exhausted. The authorized bounded extension fix
 loop 3/3 completed at `af095f3c0`; root independently reproduced the 762/762
 remote/E2E/help suite. Independent review 4/4 found one Critical and one
 Important finding. The operator extension is exhausted, and Phase 7 has not
-passed.
+passed. The operator authorized a separate two-task Corrective Revision 3;
+its plan artifact review is pending before implementation.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
-- **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (blocked; Phase 7 extension exhausted)
+- **Plan:** plan.md (in progress; Revision 3 artifact review pending)
+- **Implementation:** implementation.md (blocked; Revision 3 plan review pending)
 
 ## Progress
 
@@ -238,16 +239,19 @@ passed.
 - ⚠ Independent Phase 7 operator-extension review 4/4 blocked with 1 Critical
   and 1 Important finding
 - ⛔ Phase 7 operator extension is exhausted at 4/4 reviews and 3/3 fix loops
+- ✓ Operator authorized separate two-task Corrective Revision 3
+- ⧗ Corrective Revision 3 plan artifact review pending
 - ⧗ After Phase 7 review passes, merge latest `origin/main` and re-establish
   the verification baseline before Phase 8
 
 ## Blockers
 
-Phase 7 is blocked pending new explicit operator authorization. The branch-
-level lockstep version gate remains preserved for planned `p08-t05` release
-work after mainline reconciliation.
+Implementation is blocked pending the mandatory Corrective Revision 3 plan
+artifact review. The branch-level lockstep version gate remains preserved for
+planned `p08-t05` release work after mainline reconciliation.
 
 ## Next Milestone
 
-Obtain operator direction for the remaining Critical and Important findings.
-After a passing Phase 7 review, merge latest `origin/main` before Phase 8.
+Run the structured plan artifact review, then implement `prev3-t01` and
+`prev3-t02` in order. After a passing p-rev3 code review, merge latest
+`origin/main` before Phase 8.

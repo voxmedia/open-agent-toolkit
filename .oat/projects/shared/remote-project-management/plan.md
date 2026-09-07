@@ -1,8 +1,8 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-implement
+oat_status: in_progress
+oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-06
+oat_last_updated: 2026-09-07
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_source: spec-driven
@@ -63,15 +63,22 @@ canonical OAT Markdown skills, and injected process/filesystem/tool seams.
 2. p04 GitHub, p05 Linear, and p06 Jira are peer lanes after p-rev2 passes its
    fresh code review.
 3. p07 Cross-provider convergence depends on all three provider lanes.
-4. p08 Documentation and release validation depends on p07.
+4. p-rev3 closes the two residual Phase 7 anomaly and approval defects after
+   the exhausted Phase 7 operator extension.
+5. p08 Documentation and release validation depends on a passing p-rev3 review
+   and the latest-main transition gate.
 
 - **Hard dependencies:** p02 depends on p01; p03 depends on p01-p02; p-rev1
   depends on p03; p-rev2 depends on the completed p-rev1 implementation and
   its received round-4 review; p04-p06 depend on a passing p-rev2 code review;
-  p07 depends on p04-p06; p08 depends on p07.
+  p07 depends on p04-p06; p-rev3 depends on the completed p07 implementation
+  and its received operator-extension review; p08 depends on a passing p-rev3
+  code review and the latest-main transition gate.
 - **Revision sequencing:** prev1-t01 through prev1-t04 and then prev2-t01
   through prev2-t02 execute sequentially because they share operation,
-  service, schema, action, persistence, and command surfaces.
+  service, schema, action, persistence, and command surfaces. After p07,
+  prev3-t01 and prev3-t02 execute sequentially because both touch production
+  lifecycle composition and E2E approval evidence.
 - **Peer lanes:** p04, p05, and p06 may proceed independently only after
   p-rev2 passes. Their numbering does not imply serial execution.
 - **Shared-file coordination:** p04-p06 own distinct provider semantic adapters.
@@ -1341,9 +1348,60 @@ additional fixes, reviews, scope expansion, or Phase 8 work.
    Phase 7 passes only with zero Critical and zero Important findings; otherwise
    stop with the extension exhausted.
 
+## Phase p-rev3: Revision 3 — Phase 7 Anomaly and Approval Closure
+
+> Separate corrective revision authorized after Phase 7 operator-extension
+> review 4/4. Preserve all four Phase 7 review events and three fix loops as
+> immutable historical evidence. This revision has a fresh root-owned code
+> review budget and must pass with zero Critical and zero Important findings
+> before the latest-main transition gate or Phase 8.
+
+### Task prev3-t01: (review) Restore recreate from non-active anomalies
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/service.ts and
+service.test.ts, and packages/cli/src/e2e/pjm-remote.test.ts.
+
+1. Add failing production-runner and isolated-CLI cases proving explicit
+   recreate works from every supported non-active lifecycle anomaly, including
+   `missing-or-invisible`, without weakening ordinary mutation blocking.
+2. Add a recreate-specific new-record projection planner that intersects
+   `composePurposePolicies()` with current effective description and priority
+   policy while treating the retained former snapshot and lifecycle anomaly as
+   immutable resolution evidence rather than an ordinary update block.
+3. Preserve apply-time current policy, projection, universal safety, full
+   binding-preimage, approval, action, and authoritative read-back validation.
+   Keep ordinary update paths fail-closed for non-active lifecycle conditions.
+4. Format: pnpm format:fix
+5. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/service.test.ts src/e2e/pjm-remote.test.ts
+6. Commit: fix(prev3-t01): restore recreate anomaly resolution
+
+### Task prev3-t02: (review) Expose exact lifecycle approval previews
+
+**Files:** Modify packages/cli/src/commands/pjm/remote/output.ts and
+output.test.ts, packages/cli/src/commands/pjm/remote/schema.ts and
+schema.test.ts, packages/cli/src/commands/pjm/remote/service.ts and
+service.test.ts, and packages/cli/src/e2e/pjm-remote.test.ts. Modify
+packages/cli/src/commands/pjm/remote/store.ts and store.test.ts only when strict
+compatibility parsing or atomic persistence requires it.
+
+1. Add failing relink, detach, and recreate-search CLI tests that construct
+   fresh approval solely from public JSON and human command output, with no
+   direct `RemoteSyncStore` or operation-file read.
+2. Persist and return the standard inspectable `approvalPreview` envelope for
+   every initial resolution operation and expose bounded target, baseline,
+   capability, authority, policy, projection, safety, rendered-field/hash, and
+   revision-freshness evidence in JSON and human rendering.
+3. Validate submitted approval against that exact persisted public preview and
+   reject missing, stale, or mismatched component evidence before any action.
+   Preserve closeout and recreate-create preview behavior and never expose
+   suppressed values, provider-native payloads, or host execution details.
+4. Format: pnpm format:fix
+5. Run: pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/output.test.ts src/commands/pjm/remote/schema.test.ts src/commands/pjm/remote/service.test.ts src/commands/pjm/remote/store.test.ts src/e2e/pjm-remote.test.ts
+6. Commit: fix(prev3-t02): expose lifecycle approval evidence
+
 ### Transition Gate: Reconcile Latest Main Before Phase 8
 
-After Phase 7 passes its root-owned review, fetch and merge latest
+After p-rev3 passes its fresh root-owned review, fetch and merge latest
 `origin/main` before beginning `p08-t01`. Follow
 `reference/2026-09-06-wave-program-resume-handoff.md`: preserve reviewed commit
 reachability with a merge rather than rebase; take main's V2 sync manifest and
@@ -1474,6 +1532,7 @@ in-scope implementation files when a gate exposes a project defect.
 | p07    | code     | fixes_completed | 2026-09-06 | reviews/p07-review-2026-09-06T211250Z.md                              | 56ee775cb4418c2b2bf2fbd29a9de1d820da2829 | review-2            | codex:sol-high           |
 | p07    | code     | fixes_completed | 2026-09-06 | reviews/p07-review-2026-09-06T213110Z.md                              | a0adeeeec8f2869a9d718ea21580f7b37e49c0d1 | review-3            | codex:sol-high           |
 | p07    | code     | received        | 2026-09-07 | reviews/p07-review-2026-09-07T015809Z.md                              | af095f3c0c338b7d571a86a4b70f498b758537ee | operator-extension  | codex:sol-high           |
+| p-rev3 | code     | pending         | -          | -                                                                     | -                                        | review-1            | -                        |
 | p08    | code     | pending         | -          | -                                                                     | -                                        | -                   | -                        |
 | p-rev1 | code     | fixes_added     | 2026-09-01 | reviews/archived/p-rev1-round-4-operator-review-2026-09-01T180520Z.md | 83ae7a9c160afdf4e6e4d08ff26268469403df0a | operator-extension  | -                        |
 | p-rev2 | code     | fixes_completed | 2026-09-01 | reviews/p-rev2-review-2026-09-01T202947Z.md                           | 1af99a23b5cb67142cd06f37c3b3b0bc648e941e | review-1            | codex:sol-high           |
@@ -1492,6 +1551,7 @@ in-scope implementation files when a gate exposes a project defect.
 | plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | revision-1-review-2 | codex:sol-high           |
 | plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | revision-1-review-3 | codex:sol-high           |
 | plan   | artifact | passed          | 2026-09-01 | -                                                                     | -                                        | revision-2-review-2 | codex:sol-high           |
+| plan   | artifact | pending         | 2026-09-07 | -                                                                     | -                                        | revision-3-review-1 | codex:sol-high           |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
@@ -1714,8 +1774,9 @@ authoritative in `implementation.md`.
 - Phase 8: 6 tasks - docs, skill references, versions, CI/release gates
 - Revision 1: 4 tasks - caller authority, action safety, production lifecycle, resumable materialization
 - Revision 2: 2 tasks - verification-handoff restart safety and incomplete-intent provenance
+- Revision 3: 2 tasks - recreate anomaly resolution and public lifecycle approval evidence
 
-**Total: 84 tasks**
+**Total: 86 tasks**
 
 ## References
 

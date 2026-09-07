@@ -2268,7 +2268,7 @@ review_4_artifact: reviews/p07-review-2026-09-07T015809Z.md
 review_4_head: af095f3c0c338b7d571a86a4b70f498b758537ee
 review_4_findings: 1 critical, 1 important, 0 medium, 0 minor
 review_4_reconnaissance: not-attempted
-phase_outcome: operator_extension_exhausted
+phase_outcome: revision_3_plan_review_pending
 ```
 
 **Implementation dispatch:** Dispatch: scope=p07 action=implementation
@@ -2312,8 +2312,9 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   reproduced the 762/762 remote/E2E/help suite. Independent review 4/4 then
   blocked with one Critical and one Important finding at exact reviewed head
   `af095f3c0`. The operator extension is exhausted at 4/4 reviews and 3/3 fix
-  loops; no further fix, review, mainline reconciliation, or Phase 8 work is
-  authorized.
+  loops. The operator then authorized a separate two-task Corrective Revision
+  3 with fresh review governance. Its plan artifact review must pass before
+  `prev3-t01`; mainline reconciliation and Phase 8 remain blocked.
 
 <!-- orchestration-runs-end -->
 
