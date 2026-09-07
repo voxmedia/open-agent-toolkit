@@ -149,7 +149,7 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete; eleven pointer-only tasks, groups [p01, p02, p03], [p04, p05, p06], then p07 → p08, p09 → p10, p11)
-- **Implementation:** `implementation.md` (17/18 tasks complete; p09 parked)
+- **Implementation:** `implementation.md` (18/19 tasks complete; p09 parked)
 
 ## Progress
 
@@ -170,7 +170,8 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 - ✗ Exit gate attempt 1 blocked (run `33895672`, 0C/3I/4M/0m) — received as Phase 12 fix tasks p12-t01..t07 (three parallel fix worktrees)
 - ✓ Phase 12 fix lanes merged (`ddeabab1e`, `bcf907526`, `368d8b8d0`); eight gates + smoke + skills + root test green
 - ✓ Fix-round root review passed (0C/0I/2M/6m; record fixes applied)
-- ⧗ Exit gate attempt 2, post-implement sequence, PR
+- ✗ Exit gate attempt-2 launch `w5-exit-gate-20260907T163516Z` killed by the harness (low memory) after the reviewer passed (0C/0I/1M/1m) — superseded, no receipt; its findings fixed as p12-t08 (`c66a2fdc5`)
+- ⧗ Exit gate attempt 2 (re-run), post-implement sequence, PR
 
 ## Blockers
 
