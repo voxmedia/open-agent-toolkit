@@ -2558,7 +2558,7 @@ continuation_events:
   - p08-review-fix-1-20260907-7cc214e03
 recovery_usage: 0/10
 pending_attempt: null
-review_rounds: 1/3
+review_rounds: 2/3
 fix_loops: 1/3
 review_fix_commits:
   - 19356eaf9fbb57f0116075f05edf4e093b2cb558
@@ -2569,7 +2569,11 @@ review_1_artifact: reviews/p08-review-2026-09-07T035129Z.md
 review_1_head: 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae
 review_1_findings: 0 critical, 2 important, 0 medium, 0 minor
 review_1_reconnaissance: not-attempted
-phase_outcome: awaiting-review-2
+review_2_artifact: reviews/p08-review-2026-09-07T041040Z.md
+review_2_head: 96096ade106ac2278ee7aba174ad88933036d9c8
+review_2_findings: 0 critical, 1 important, 0 medium, 0 minor
+review_2_reconnaissance: not-attempted
+phase_outcome: fixes-required
 ```
 
 **Implementation dispatch:** Dispatch: scope=p08 action=implementation
@@ -2604,7 +2608,10 @@ target=oat-reviewer-gpt-5-6-sol-high
   retained both `oat-pjm-remote` and `oat-project-lite` sync entries, and
   resolved all five public packages plus the bundled version asset to 0.2.63.
   The current-main version gate and focused `oat-pjm-remote` contract pass.
-  Independent review round 2 is next.
+  Independent review round 2 found the original two findings resolved and all
+  integration/release checks passing, but blocked on one Important stale
+  capability-discovery sequence in the independently linked troubleshooting
+  page. Reconnaissance was not attempted. Bounded fix loop 2/3 is next.
 
 <!-- orchestration-runs-end -->
 
