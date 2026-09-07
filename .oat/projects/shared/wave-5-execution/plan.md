@@ -748,6 +748,7 @@ git commit -m "fix(p11-t01): make consolidated-project retirement checks semanti
 | p11    | code     | passed      | 2026-09-07 | reviews/archived/p11-review-2026-09-07T135325Z.md           | 0bd2a2815334fece741a4f8297dee3d63feb693b | manual     | -                   |
 | final  | code     | fixes_added | 2026-09-07 | reviews/archived/final-review-2026-09-07T142545Z.md         | 5aa2f5ab4813fcf76bb877258fda9929a3a0bb7e | manual     | -                   |
 | final  | code     | passed      | 2026-09-07 | reviews/archived/final-review-2026-09-07T143255Z.md         | 9386be8253f7b88abc65e04106a724c14ac55a2f | manual     | -                   |
+| final  | code     | fixes_added | 2026-09-07 | reviews/final-review-2026-09-07T144442Z.md                  | c9ad23b69d13eb47da7340a6f26c48271af04a98 | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
