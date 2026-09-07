@@ -1,6 +1,6 @@
 ---
-oat_current_task: p09-t03
-oat_last_commit: 620656d8f32c3c7752b0b9fa01303ec9bda644c6
+oat_current_task: null
+oat_last_commit: 9448bfb1ae97b3843316b875ffdd178e2aefad8f
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -87,7 +87,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-07T03:14:33Z'
+  updated_at: '2026-09-07T03:16:44Z'
 oat_post_implement_sequence:
   status: awaiting_approval
   source: configured
@@ -104,7 +104,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T03:14:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T03:16:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -116,8 +116,8 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 9 review found one Medium residual in comment-only scaffold marker
-detection. Fix task `p09-t03` is queued.
+Phase 9 fix loop 1 closed the comment-only scaffold-marker gap. Fresh
+independent Phase 9 re-review is next.
 
 ## Artifacts
 
@@ -212,6 +212,7 @@ detection. Fix task `p09-t03` is queued.
 - ⧗ Exit-gate review 4 passed its threshold and queued two Phase 9 fix tasks
 - ✓ Phase 9 fixed adaptive placeholder rejection and reference wording
 - ⧗ Phase 9 review queued one comment-only scaffold-marker fix
+- ✓ `p09-t03` precisely rejects shipped instructional comments
 
 ## Blockers
 
@@ -220,6 +221,5 @@ exact-head CI/Bugbot waiting, project completion, and merge.
 
 ## Next Milestone
 
-Implement and independently re-review `p09-t03`, regenerate the exit gate
-against the new substantive head, then push and require exact-head CI and
-Bugbot.
+Independently re-review Phase 9, regenerate the exit gate against the new
+substantive head, then push and require exact-head CI and Bugbot.

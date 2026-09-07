@@ -1210,6 +1210,16 @@ field is authored. The finding maps to `p09-t03` (`code_fix_required`). It
 requires precise shipped-comment detection and a comment-specific negative
 control; no finding is deferred.
 
+#### Phase 9 fix loop 1 complete
+
+`p09-t03` committed as `9448bfb1ae97b3843316b875ffdd178e2aefad8f`.
+Marker detection now derives the shipped instructional HTML comments from each
+section template while preserving unrelated authored comments. Neutralizing
+the comment guard failed both new comment-only cases; restoration passed the
+33-test promotion suite. CLI check and type-check passed. Root independently
+inspected the exact diff and reran the focused suite (33/33). The prior review
+event is `fixes_completed` pending fresh re-review.
+
 #### Configured implementation exit gate generation 4 created
 
 The configured declaration resolved with canonical configuration fingerprint
