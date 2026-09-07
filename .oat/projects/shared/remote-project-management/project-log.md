@@ -196,6 +196,10 @@ Final review round 2 Medium status drift was corrected by p09-t04 in f2489c00c; 
 
 Final review round 3/3 passed at 527ce8bc0b5eb7a420cc62a740dbf3d4f8ff893c with zero findings; deferred Medium and Minor ledgers are empty, so final review gates are satisfied.
 
+### 2026-09-07 · structural · oat-project-implement · exit-gate-generation
+
+Resolved the implementation exit gate as configured and persisted its immutable configuration plus final-review effective-delta basis before launch.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

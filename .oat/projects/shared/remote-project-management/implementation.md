@@ -3060,3 +3060,13 @@ Track test execution during implementation.
 - Plan: `plan.md`
 - Design: `design.md`
 - Spec: `spec.md`
+
+### Implementation Exit Gate: configured generation initialized
+
+- Resolved the live `oat-project-implement` gate as configured with blocking
+  policy and two remediation attempts.
+- Bound the immutable gate-reviewed basis to final review round 3 at
+  `527ce8bc0b5eb7a420cc62a740dbf3d4f8ff893c`, `origin/main`, and qualified
+  effective-delta fingerprint
+  `sha256:effective-delta-v1:d63c164c8eb0c7ca7c219f690d3aea1b635f5ad56bb614b5d4b9afcfa8aa9b83`.
+- Persisted the complete resolved configuration before any gate launch.

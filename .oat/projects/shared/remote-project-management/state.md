@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 55ddded02ae974e2369fe19639d8181a2c1d462b
+oat_last_commit: 768d311c993b1fc1d701dc7081540399e9798f42
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -55,10 +55,46 @@ oat_phase_recovery_policy:
     p09:
       used_attempts: 0
       pending_attempt: null
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: sha256:94671d8d5f24560ccaac19595added0c71a89defa8b2a3f4be1d1027b96581e5
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
+  project_override: null
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: 527ce8bc0b5eb7a420cc62a740dbf3d4f8ff893c
+  implementation_base_ref: origin/main
+  implementation_fingerprint: sha256:effective-delta-v1:d63c164c8eb0c7ca7c219f690d3aea1b635f5ad56bb614b5d4b9afcfa8aa9b83
+  freshness_head: 527ce8bc0b5eb7a420cc62a740dbf3d4f8ff893c
+  freshness_fingerprint: sha256:effective-delta-v1:d63c164c8eb0c7ca7c219f690d3aea1b635f5ad56bb614b5d4b9afcfa8aa9b83
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-09-07T05:18:26Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T05:16:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T05:18:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
