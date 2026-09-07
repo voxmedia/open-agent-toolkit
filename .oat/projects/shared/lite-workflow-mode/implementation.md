@@ -1224,6 +1224,14 @@ finding. The receipt is receive eligible and hands off
 `oat-project-review-receive`; no terminal allowance is recorded before that
 receive completes.
 
+#### Configured implementation exit gate receive intent 5 persisted
+
+Receive correlation `fbe945ef-837c-4b08-89c3-3351a5b06110` binds source
+`reviews/final-review-2026-09-07T034726Z.md`, collision-free destination
+`reviews/archived/final-review-2026-09-07T034726Z.md`, and pre-receive HEAD
+`eacf235758c54fc9971a68bdfea32b2700294074`. The review event identity is
+`final:code:gate:b69da3fc6ea945a43f90ba08643610ae25a70c65:fbe945ef-837c-4b08-89c3-3351a5b06110`.
+
 #### Phase 9 implementation complete
 
 `p09-t01` committed as `2fc015fc9186ab8f585f67a4a845f0d9e4c98fea`.
