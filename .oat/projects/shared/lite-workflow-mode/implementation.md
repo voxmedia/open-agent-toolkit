@@ -1222,6 +1222,14 @@ findings. The receipt is receive eligible and hands off
 `oat-project-review-receive`; no terminal allowance is recorded before that
 receive completes.
 
+#### Configured implementation exit gate receive intent 4 persisted
+
+The receive handoff is bound to gate run
+`93818858-2e0d-4a1f-a8e7-d8536ca4b6c2`, source artifact
+`reviews/final-review-2026-09-07T030022Z.md`, collision-free destination
+`reviews/archived/final-review-2026-09-07T030022Z.md`, and pre-receive HEAD
+`f11ca8ea0f09d552bb6156873edad1116d4e9488`.
+
 ### 2026-09-06
 
 #### Configured implementation exit gate generation 3 created

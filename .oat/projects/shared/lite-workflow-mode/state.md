@@ -77,17 +77,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-07T030022Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=1, minor=2). Run oat-project-review-receive for .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-07T030022Z.md to disposition them before marking the final review row passed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 93818858-2e0d-4a1f-a8e7-d8536ca4b6c2
+  receive_source_artifact: .oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-07T030022Z.md
+  receive_archived_artifact: .oat/projects/shared/lite-workflow-mode/reviews/archived/final-review-2026-09-07T030022Z.md
+  receive_event_identity: 'final:code:gate:c479493d521c9c3036c5f165af5ebe7277cd8d31:93818858-2e0d-4a1f-a8e7-d8536ca4b6c2'
+  receive_pre_head: f11ca8ea0f09d552bb6156873edad1116d4e9488
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-07T03:00:22Z'
+  updated_at: '2026-09-07T03:02:27Z'
 oat_post_implement_sequence:
   status: awaiting_approval
   source: configured
@@ -104,7 +104,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/264' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-04T20:29:18.141Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T03:00:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T03:02:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
