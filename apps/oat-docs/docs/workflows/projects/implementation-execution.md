@@ -32,6 +32,9 @@ and updates project state.
   third tier.
 - **Parallelism:** plan-declared phases may run concurrently in separate
   worktrees. Tasks inside one phase remain serial.
+- **Dispatch evidence:** project-aware launches persist one generic request
+  record plus namespaced OAT native dispatch lineage without changing native
+  model or provider selection.
 
 Tasks execute serially in one worktree for the phase.
 
@@ -69,13 +72,23 @@ The root:
 The root does not implement phase tasks while an accepted phase launch owns
 that scope.
 
+Before a native launch, the root constructs and redacts the complete generic
+dispatch record and OAT role event. Immediately after the host returns, it runs
+`oat project dispatch record --project <project-path> --event-file - --json`
+with the accepted or `blocked-before-start` result. An accepted launch closes
+replacement. Only an explicit rejection proving no child started permits one
+fresh request that preserves the exact target and controls and is labeled as
+an approximation. Timeout, `BLOCKED`, refusal after acceptance, runtime
+mismatch, missing telemetry, and malformed output are terminal evidence, not
+fallback triggers.
+
 ### Phase implementer
 
 The phase implementer receives one `Phase Scope`, reads the relevant artifacts
 once, and directly executes each task in plan order. For every task it:
 
 1. records the pre-task HEAD;
-2. implements only the declared task files;
+2. implements the declared task files plus any mechanical additions permitted by, and reported under, the cross-cutting option sweep (a repository-wide sweep for every consumer of a changed option; cross-owner expansions stop and report instead);
 3. runs task verification;
 4. self-checks requirements and scope before commit;
 5. creates exactly one task commit; and
@@ -139,7 +152,11 @@ by the phase's standing authority. The important distinctions are:
   boundary, not for every eligible defect;
 - a **continuation** preserves the original request and exact target, either in
   the accepted handle or through an explicitly linked fresh same-target
-  recovery launch; and
+  recovery launch, and never starts on a dirty tree: uncommitted work a lost
+  child left behind is first captured into a digest-verified artifact,
+  restored out of the worktree, handed forward as `recovered_patch`, and
+  committed by the continuation as its first action, while unverified or
+  unsupported dirt still blocks; and
 - a **successful repair** produces one immutable append-only recovery commit.
 
 This recovery is not accepted-launch fallback. After a launch is accepted,
@@ -233,8 +250,11 @@ for another.
 
 Resolution and policy outcomes are explicit:
 
-- A null resolution persists `allowed/no_gate` for the current implementation
-  basis.
+- A `not_configured` resolution persists `allowed/no_gate` for the current
+  implementation basis; a null, missing, or unrecognized resolver result fails
+  closed as unresolved instead.
+- A gate the project disabled persists `allowed/configured` with
+  `disposition: project_disabled` and never launches.
 - A configured passing review persists `allowed/passed` after any eligible
   review receive is durably completed.
 - `warn` persists `allowed/warned`; `prompt` proceeds only after explicit

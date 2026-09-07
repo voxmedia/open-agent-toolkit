@@ -1,6 +1,6 @@
 ---
 name: create-oat-skill
-version: 1.4.0
+version: 1.5.1
 description: Use when adding a new oat-* workflow skill or lifecycle action. Scaffolds the skill with OAT conventions like mode assertions, progress banners, and project-root resolution.
 argument-hint: '[skill-name]'
 disable-model-invocation: true
@@ -106,6 +106,27 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
   - Fallback: ask in plain conversational text
 - Do not hard-code a specific Codex question tool name in the skill text unless the host/runtime contract is guaranteed.
 
+**Named-skill execution (required when a step names another OAT project skill):**
+
+- When a step directs the agent running this skill to execute a named
+  `oat-project-*` skill, require loading that skill's current `SKILL.md` and
+  following its current steps, or dispatching a child that carries it.
+- Achieving a remembered outcome, paraphrasing what the named skill used to do,
+  or relying on ambient discovery to locate it is not compliant.
+- Place the clause at the execution boundary itself, not in a remote preface the
+  orchestrator may skip.
+- Three exemption classes need no load clause:
+  - **user advice** — text the skill prints or tells the user, where the user
+    runs the named skill in their own turn or session;
+  - **non-executing reference** — examples, self-references, owner or provenance
+    pointers, inventories, and routing decisions whose invocation boundary lives
+    in a different step;
+  - **explicit capability fallback** — a clause that states why skill loading is
+    unavailable in the current host/runtime and then executes the same contract
+    inline.
+- Classify rather than blanket-rewrite: adding the clause to an exempt mention is
+  as wrong as omitting it at a real execution boundary.
+
 **Autonomy gate inventory (required for inventoried lifecycle skills):**
 
 - Before adding, removing, or rewriting prompt behavior in an inventoried
@@ -118,6 +139,49 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
 - Run
   `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts`
   before considering the skill complete.
+
+**Executable backstops for contract claims (required when the skill states a standing invariant):**
+
+- Classify the claim before writing it:
+  - **point-in-time observation** — evidence at a named baseline, such as "at
+    commit `abc1234` three of the five lifecycle skills had no capability
+    probe". Cite the evidence and the revalidation trigger; no permanent
+    backstop is required.
+  - **repository-static standing invariant** — decidable from tracked files
+    alone, such as "every inventoried lifecycle skill maps each reachable
+    prompt site to a gate ID". Back it with a contract test.
+  - **runtime/lifecycle standing invariant** — depends on execution state,
+    ordering, or live results, such as "a rollup never reports success when a
+    required ledger write fails". Enforce it in the CLI or runtime code that owns
+    the operation, and expose a structured result that callers and tests can
+    assert on.
+- Give a repository-static backstop a stable identity: key it to file paths
+  plus semantic anchors, such as heading text, an ID, or an exact quoted
+  phrase. Never key a guard to a physical line number; an edit above the claim
+  would silently retarget or break it.
+- A prose assertion is not enforcement for a runtime claim: keep the
+  enforcement in the owning code. Pinning the prose that documents the claim is
+  still useful and is not a substitute. Do not add a CLI command when a
+  repository-static contract test already decides the claim.
+- Ship the claim and its backstop in the same PR. Splitting them, or deferring
+  the backstop to follow-up work, is not allowed: write the backstop now, or
+  downgrade the sentence to a point-in-time observation.
+- State the maintenance rule inside the guarded artifact, beside the claim, so
+  the next author learns the obligation from the artifact rather than from
+  review. This block does that for itself: its own claims are guarded by
+  `packages/cli/src/validation/skills.test.ts`, so adding, removing, or
+  reweakening a requirement here means updating that contract case in the same
+  PR.
+- Leave rationale, examples, troubleshooting notes, and deliberately
+  non-normative guidance unguarded. Demanding a test for explanatory prose is
+  as wrong as leaving a standing claim unbacked.
+- Reuse the existing mechanisms instead of inventing another one:
+  `packages/cli/src/validation/autonomy-gate-inventory.test.ts` for a
+  repository-static inventory,
+  `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`
+  for shipped-copy consistency, and
+  `packages/cli/src/commands/project/log/rollup.ts` for runtime enforcement at
+  the owning boundary with a structured result.
 
 **Subagent/worker availability (required when the skill delegates):**
 

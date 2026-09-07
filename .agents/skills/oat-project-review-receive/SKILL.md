@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.6.1
+version: 1.6.2
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
@@ -404,9 +404,8 @@ Fix tasks that edit synced artifacts use `oat project push` under the scope
 guard instead of the branch commit template above.
 ````
 
-````
-
 **Task naming:**
+
 - Prefix with `(review)` to indicate review-generated task
 - Use active verb: "Fix...", "Add...", "Update..."
 
@@ -415,6 +414,7 @@ guard instead of the branch commit template above.
 Add new tasks to plan.md in the target phase. When adding or editing tasks, preserve/restore shared `plan.md` invariants per the `oat-project-plan-writing` contract (stable task IDs, required sections, review table preservation, accurate `## Implementation Complete` totals).
 
 **Review-fix bookkeeping (required):**
+
 - When you add review-generated fix tasks:
   - Locate the Reviews event matching the selected review's Scope, Type, and `SOURCE_REVIEW_FILENAME`, then update it to `fixes_added` (work queued), set the Date, and replace its Artifact with `reviews/archived/$REVIEW_FILENAME`.
   - For code events, populate or preserve `Reviewed Head`, `Invocation`, and
@@ -432,18 +432,22 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
   - If the plan includes any phase rollups that reference task counts, update those too.
 
 **Keep plan runnable:**
+
 - Do NOT leave plan.md in a state that blocks `oat-project-implement`.
 - Ensure plan.md frontmatter remains:
   - `oat_status: complete`
   - `oat_ready_for: oat-project-implement`
 
 **Keep plan internally consistent:**
+
 - If the plan contains an `## Implementation Complete` summary (phase counts, total task count), update it to reflect any newly added review fix tasks.
 - If the plan has phase headings that include task counts (or other rollups), update those rollups as well.
 
 **Update Reviews section:**
+
 ```markdown
 ## Reviews
+
 - Find the existing event by `{scope}`, review Type, and
   `$SOURCE_REVIEW_FILENAME`, then update only that row:
   - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/Important/Medium and no unresolved final-scope gates)
@@ -452,7 +456,7 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
   - Reviewed Head: validated full `oat_review_head_sha` for code reviews
   - Invocation: `oat_review_invocation` for code reviews
   - Gate Target: exact `oat_gate_target` for gate code reviews; `-` otherwise
-````
+```
 
 **Status semantics (v1):**
 
@@ -682,7 +686,7 @@ Choose:
 
 - Update state.md: `oat_phase_status: in_progress`, `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
 - Tell user: "Run the `oat-project-implement` skill to execute fix tasks starting from {first_fix_task_id}"
-- Or directly invoke `oat-project-implement` if environment supports skill chaining
+- Or directly invoke `oat-project-implement` if environment supports skill chaining, loading the current `oat-project-implement/SKILL.md` and following it
 
 **If review first:**
 

@@ -23,6 +23,7 @@ import {
   pullSynced,
   pushSynced as pushSyncedReal,
 } from '@commands/project/sync/ref-sync';
+import { generateStateDashboard } from '@commands/state/generate';
 import { CliError } from '@errors/cli-error';
 import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
@@ -57,6 +58,24 @@ function createHarness(options: HarnessOptions): {
       'pushed',
     sha: 'a'.repeat(40),
   }));
+  const gitRunner = {
+    run: vi.fn(async (args: string[]) => {
+      if (
+        args[0] === 'ls-remote' &&
+        args.some((arg) => arg.startsWith('refs/oat/completed/'))
+      ) {
+        return { code: 2, stdout: '', stderr: '' };
+      }
+      if (args[0] === 'rev-parse') {
+        return { code: 0, stdout: 'pre-pause-head', stderr: '' };
+      }
+      return {
+        code: 1,
+        stdout: '',
+        stderr: `Unsupported test Git command: ${args.join(' ')}`,
+      };
+    }),
+  } satisfies GitRunner;
 
   const command = createProjectPauseCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -72,13 +91,9 @@ function createHarness(options: HarnessOptions): {
     resolveProjectRoot: vi.fn(async () => options.cwd),
     now: () => new Date('2026-02-21T12:00:00.000Z'),
     pushSynced,
-    gitRunner: {
-      run: vi.fn(async () => ({
-        stdout: 'pre-pause-head',
-        stderr: '',
-        code: 0,
-      })),
-    } satisfies GitRunner,
+    gitRunner,
+    generateStateDashboard: async ({ repoRoot }) =>
+      generateStateDashboard({ repoRoot, gitRunner }),
     ...(options.resolveError
       ? {
           resolveSyncedTarget: vi.fn(async () => {

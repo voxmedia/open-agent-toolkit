@@ -1,6 +1,6 @@
 ---
 name: oat-doctor
-version: 1.1.0
+version: 1.2.0
 description: Use when you need to diagnose your OAT setup, check for outdated skills, identify misconfigurations, or get a summary of installed tools and config. Runs health checks and recommends corrective actions.
 argument-hint: '[--summary]'
 disable-model-invocation: true
@@ -151,47 +151,60 @@ For summary mode, compare installed skills against the full manifest to identify
 
 **Bundled skill manifest (source of truth):**
 
-Core pack skills:
+Each heading below names a pack exactly as `oat tools install <pack>` expects
+it, and lists every skill that pack ships.
+
+`core` pack skills:
 
 - oat-docs, oat-doctor
 
-Workflow pack skills:
-
-- oat-project-capture, oat-project-clear-active, oat-project-complete
-- oat-project-design, oat-project-discover, oat-project-document
-- oat-project-implement, oat-project-import-plan, oat-project-new
-- oat-project-open, oat-project-plan, oat-project-plan-writing
-- oat-project-pr-final, oat-project-pr-progress, oat-project-progress
-- oat-project-promote-spec-driven, oat-project-quick-start
-- oat-project-reconcile, oat-project-revise, oat-project-review-provide
-- oat-project-review-receive, oat-project-review-receive-remote
-- oat-project-spec, oat-project-summary
-- oat-repo-knowledge-index, oat-worktree-bootstrap, oat-worktree-bootstrap-auto
-
-Ideas pack skills:
+`ideas` pack skills:
 
 - oat-idea-new, oat-idea-ideate, oat-idea-summarize, oat-idea-scratchpad
 
-Docs pack skills:
+`docs` pack skills:
 
-- oat-agent-instructions-analyze, oat-agent-instructions-apply
-- oat-docs-analyze, oat-docs-apply
+- authoring-docs, oat-agent-instructions-analyze
+- oat-agent-instructions-apply, oat-docs-analyze
+- oat-docs-apply, oat-docs-authoring, oat-docs-bootstrap
 
-Utility pack skills:
+`workflows` pack skills:
 
-- create-agnostic-skill
-- oat-repo-maintainability-review, oat-review-provide
-- oat-review-receive, oat-review-receive-remote
+- oat-cursor-cloud-projects, oat-explainer-kit, oat-project-autonomous
+- oat-project-capture, oat-project-clear-active, oat-project-complete
+- oat-project-design, oat-project-dispatch-subagents, oat-project-discover
+- oat-project-document, oat-project-implement, oat-project-import-plan
+- oat-project-new, oat-project-next, oat-project-open
+- oat-project-plan, oat-project-plan-writing, oat-project-pr-final
+- oat-project-pr-progress, oat-project-progress, oat-project-promote-spec-driven
+- oat-project-quick-start, oat-project-reconcile, oat-project-retro
+- oat-project-retro-file, oat-project-revise, oat-project-review-provide
+- oat-project-review-provide-remote, oat-project-review-receive
+- oat-project-review-receive-remote, oat-project-spec, oat-project-split
+- oat-project-summary, oat-repo-knowledge-index, oat-worktree-bootstrap
+- oat-worktree-bootstrap-auto, oat-wave-execute, oat-wave-program
+- oat-wrap-up
 
-Project management pack skills:
+`utility` pack skills:
 
-- oat-pjm-add-backlog-item, oat-pjm-update-repo-reference
-- oat-pjm-review-backlog
+- create-agnostic-skill, explainer-kit, oat-dispatch-subagents
+- subagent-orchestration, oat-repo-improve, oat-repo-maintainability-review
+- oat-review-provide, oat-review-provide-remote, oat-review-receive
+- oat-review-receive-remote
 
-Research pack skills:
+`project-management` pack skills:
+
+- oat-pjm-add-backlog-item, oat-pjm-decision
+- oat-pjm-update-repo-reference, oat-pjm-review-backlog
+
+`research` pack skills:
 
 - analyze, compare, deep-research
-- skeptic, synthesize
+- recon, skeptic, synthesize
+
+`brainstorm` pack skills:
+
+- oat-brainstorm
 
 For each pack, determine:
 
@@ -224,12 +237,12 @@ OAT ▸ DOCTOR SUMMARY
 | Pack      | Scope   | Skills | Status   |
 | --------- | ------- | ------ | -------- |
 | core      | user    | 2/2    | current  |
-| docs      | project | 4/4    | current  |
-| workflows | project | 26/26  | current  |
+| docs      | project | 7/7    | current  |
+| workflows | project | 39/39  | current  |
 | ideas     | user    | 4/4    | current  |
-| project-management | project | 3/3 | current |
-| research  | project | 5/5    | current  |
-| utility   | project | 5/5    | outdated |
+| project-management | project | 4/4 | current |
+| research  | project | 6/6    | current  |
+| utility   | project | 10/10  | outdated |
 
 ## Outdated Skills
 
@@ -239,11 +252,11 @@ OAT ▸ DOCTOR SUMMARY
 
 ## Available But Not Installed
 
-- **docs** pack: oat-docs-analyze, oat-docs-apply, oat-agent-instructions-analyze, oat-agent-instructions-apply (4 skills available)
+- **docs** pack: authoring-docs, oat-agent-instructions-analyze, oat-agent-instructions-apply, oat-docs-analyze, oat-docs-apply, oat-docs-authoring, oat-docs-bootstrap (7 skills available)
   → Run: oat tools install docs --scope {scope}
-- **project-management** pack: oat-pjm-add-backlog-item, oat-pjm-update-repo-reference, oat-pjm-review-backlog (3 skills available)
+- **project-management** pack: oat-pjm-add-backlog-item, oat-pjm-decision, oat-pjm-update-repo-reference, oat-pjm-review-backlog (4 skills available)
   → Run: oat tools install project-management --scope {scope}
-- **research** pack: analyze, compare, deep-research, skeptic, synthesize (5 skills available)
+- **research** pack: analyze, compare, deep-research, recon, skeptic, synthesize (6 skills available)
   → Run: oat tools install research --scope {scope}
 
 ## Configuration

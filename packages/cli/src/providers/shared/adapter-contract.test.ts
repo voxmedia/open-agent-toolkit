@@ -10,6 +10,7 @@ import { geminiAdapter } from '@providers/gemini';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import type { PathMapping, ProviderAdapter } from './adapter.types';
+import { getProviderRegistrations } from './registry';
 
 const ADAPTERS: ProviderAdapter[] = [
   claudeAdapter,
@@ -18,6 +19,12 @@ const ADAPTERS: ProviderAdapter[] = [
   copilotAdapter,
   geminiAdapter,
 ];
+
+it('keeps adapter-contract coverage aligned with the central registry', () => {
+  expect(getProviderRegistrations().map(({ adapter }) => adapter)).toEqual(
+    ADAPTERS,
+  );
+});
 
 function assertMappingsValid(
   mappings: PathMapping[],

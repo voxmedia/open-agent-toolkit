@@ -37,6 +37,26 @@ export interface MaterializationApplyResult {
   applied: number;
   failed: number;
   skipped: number;
+  /** Additive per-operation evidence; optional for legacy extensions. */
+  operations?: MaterializationOperationResult[];
+}
+
+export type MaterializationOperationStatus =
+  | 'changed'
+  | 'current'
+  | 'missing'
+  | 'failed'
+  | 'unsupported'
+  | 'unknown';
+
+export interface MaterializationOperationResult {
+  provider: string;
+  target: string;
+  path: string;
+  entryName?: string;
+  action: MaterializationAction;
+  status: MaterializationOperationStatus;
+  failure?: string;
 }
 
 export interface MaterializationContext<TOptions = undefined> {

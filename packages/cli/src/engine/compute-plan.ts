@@ -19,7 +19,12 @@ import {
 import type { SyncConfig } from '@config/sync-config';
 import { computeContentHash, computeStringHash } from '@manifest/hash';
 import { findEntry } from '@manifest/manager';
-import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
+import type {
+  Manifest,
+  ManifestEntry,
+  ManifestEntryV2,
+  ManifestV2,
+} from '@manifest/manifest.types';
 import type {
   PathMapping,
   ProviderAdapter,
@@ -27,7 +32,9 @@ import type {
 import { getSyncMappings } from '@providers/shared/adapter.utils';
 import type { ContentType } from '@shared/types';
 
+import { proveCollectionIdentity } from './collection-sync';
 import type {
+  CollectionProjectionPlan,
   EngineScope,
   RemovalSyncPlanEntry,
   SyncPlan,
@@ -45,6 +52,14 @@ interface ComputeSyncPlanArgs {
   config: SyncConfig;
   scopeRoot?: string;
   allowedCanonicalPaths?: string[];
+  extensionOwnedCanonicalPathsByProvider?: Readonly<
+    Record<string, readonly string[]>
+  >;
+  collectionAliasEligibleMappings?: readonly {
+    provider: string;
+    contentType: ContentType;
+  }[];
+  collectionAliasCreationAvailable?: boolean;
 }
 
 function buildUpLevels(depth: number): string[] {
@@ -143,6 +158,54 @@ function resolveStrategy(
   return 'symlink';
 }
 
+function resolveConfiguredStrategy(
+  adapter: ProviderAdapter,
+  config: SyncConfig,
+): 'auto' | 'symlink' | 'copy' | null {
+  const providerConfig = config.providers[adapter.name];
+  if (providerConfig?.enabled === false) {
+    return null;
+  }
+
+  return (
+    providerConfig?.strategy ??
+    config.defaultStrategy ??
+    adapter.defaultStrategy
+  );
+}
+
+function relativeManifestPath(scopeRoot: string, path: string): string {
+  return relative(scopeRoot, path).replaceAll('\\', '/');
+}
+
+function collectionFallbackReason(
+  reason: CollectionIdentityProofReason,
+): string {
+  if (reason === 'real-directory') {
+    return 'provider collection is a real directory; use per-entry sync';
+  }
+  return `collection identity is ${reason}; preserve the provider collection without child mutation`;
+}
+
+function collectionCreationIdentityMatches(
+  collection: ManifestV2['collections'][number],
+  proof: CollectionProjectionPlan['proof'],
+): boolean {
+  return (
+    collection.ownership === 'oat-created' &&
+    collection.createdLink !== undefined &&
+    proof.status === 'exact-link' &&
+    collection.createdLink.device === proof.providerLink.device &&
+    collection.createdLink.inode === proof.providerLink.inode &&
+    collection.createdLink.linkText === proof.linkText
+  );
+}
+
+type CollectionIdentityProofReason = Extract<
+  CollectionProjectionPlan['proof'],
+  { status: 'ineligible' }
+>['reason'];
+
 async function pathExists(path: string): Promise<boolean> {
   try {
     await access(path);
@@ -183,6 +246,26 @@ function createRetirementEntry(
     ...createRemovalEntry(manifestEntry, scopeRoot),
     operation,
     reason,
+  };
+}
+
+function createCollectionDetachmentEntry(
+  manifestEntry: ManifestEntryV2,
+  scopeRoot: string,
+): RemovalSyncPlanEntry {
+  const canonicalRelative = manifestEntry.canonicalPath;
+  return {
+    canonical: {
+      name: basename(canonicalRelative),
+      type: manifestEntry.contentType,
+      canonicalPath: resolve(scopeRoot, canonicalRelative),
+      isFile: manifestEntry.isFile,
+    },
+    provider: manifestEntry.provider,
+    providerPath: resolve(scopeRoot, manifestEntry.providerPath),
+    operation: 'detach',
+    strategy: 'symlink',
+    reason: 'collection inheritance no longer includes canonical entry',
   };
 }
 
@@ -527,13 +610,23 @@ export async function computeSyncPlan({
   config,
   scopeRoot: explicitScopeRoot,
   allowedCanonicalPaths,
+  extensionOwnedCanonicalPathsByProvider,
+  collectionAliasEligibleMappings = [],
+  collectionAliasCreationAvailable = false,
 }: ComputeSyncPlanArgs): Promise<SyncPlan> {
   const entries: SyncPlanEntry[] = [];
   const removals: RemovalSyncPlanEntry[] = [];
+  const collections: CollectionProjectionPlan[] = [];
   const scopeRoot = resolveScopeRoot(canonical, explicitScopeRoot);
   const seenCanonicalKeys = new Set<string>();
   const activeProviderNames = new Set<string>();
   const activeMappingsByProvider = new Map<string, PathMapping[]>();
+  const manifestV2 = manifest as unknown as ManifestV2;
+  const collectionAliasEligibility = new Set(
+    collectionAliasEligibleMappings.map(
+      ({ provider, contentType }) => `${provider}::${contentType}`,
+    ),
+  );
   const canonicalFilter = allowedCanonicalPaths
     ? new Set(
         allowedCanonicalPaths.map((canonicalPath) => normalize(canonicalPath)),
@@ -559,12 +652,244 @@ export async function computeSyncPlan({
       activeMappings.push(mapping);
       activeMappingsByProvider.set(adapter.name, activeMappings);
 
+      const configuredStrategy = resolveConfiguredStrategy(adapter, config);
+      const collectionCandidates = canonical.filter((canonicalEntry) => {
+        if (!entryContentTypeMatches(canonicalEntry, mapping.contentType)) {
+          return false;
+        }
+        const relativeCanonicalPath = canonicalRelativePath(canonicalEntry);
+        const extensionOwnedPaths =
+          extensionOwnedCanonicalPathsByProvider?.[adapter.name] ?? [];
+        return (
+          !extensionOwnedPaths.some(
+            (ownedPath) =>
+              normalize(ownedPath) === normalize(relativeCanonicalPath),
+          ) &&
+          canonicalPathAllowed(relativeCanonicalPath, canonicalFilter) &&
+          entryInsideMapping(canonicalEntry, mapping.canonicalDir)
+        );
+      });
+      let inheritCollection = false;
+      let deferredCollectionTransition = false;
+      const canonicalDir = scopeRoot
+        ? resolve(scopeRoot, mapping.canonicalDir)
+        : null;
+      const providerDir = scopeRoot
+        ? resolve(scopeRoot, mapping.providerDir)
+        : null;
+      const existingCollection =
+        scopeRoot && canonicalDir && providerDir
+          ? manifest.collections.find(
+              (collection) =>
+                collection.provider === adapter.name &&
+                collection.contentType === mapping.contentType &&
+                collection.canonicalDir ===
+                  relativeManifestPath(scopeRoot, canonicalDir) &&
+                collection.providerDir ===
+                  relativeManifestPath(scopeRoot, providerDir),
+            )
+          : undefined;
+      const existingInheritedEntries = existingCollection
+        ? manifestV2.entries
+            .filter(
+              (entry) =>
+                entry.strategy === 'collection' &&
+                entry.collectionId === existingCollection.id,
+            )
+            .map((entry) => entry.canonicalPath)
+            .sort()
+        : [];
+      const collectionEligible =
+        configuredStrategy === 'auto' &&
+        mapping.contentType === 'skill' &&
+        collectionAliasEligibility.has(
+          `${adapter.name}::${mapping.contentType}`,
+        ) &&
+        adapter.defaultStrategy !== 'copy' &&
+        !mapping.transformCanonical &&
+        !mapping.providerExtension &&
+        canonicalDir !== null &&
+        providerDir !== null &&
+        collectionCandidates.length > 0;
+
+      if (
+        existingCollection !== undefined &&
+        !collectionEligible &&
+        canonicalDir !== null &&
+        providerDir !== null
+      ) {
+        const proof = await proveCollectionIdentity({
+          root: scopeRoot!,
+          canonicalDir,
+          providerDir,
+        });
+        const safelyClear =
+          proof.status === 'absent' ||
+          collectionCreationIdentityMatches(existingCollection, proof);
+        if (safelyClear) {
+          collections.push({
+            provider: adapter.name,
+            scope,
+            contentType: mapping.contentType,
+            canonicalDir,
+            providerDir,
+            action: 'detach-collection',
+            ownership: existingCollection.ownership,
+            configuredStrategy: configuredStrategy ?? 'auto',
+            proof,
+            createdLink: existingCollection.createdLink,
+            transitionToPerEntry: true,
+            inheritedEntries: existingInheritedEntries,
+            reason:
+              proof.status === 'absent'
+                ? 'collection alias is absent in this plan; revalidate absence before transitioning to explicit per-entry sync'
+                : 'collection alias requires guarded removal before transitioning to explicit per-entry sync',
+          });
+          deferredCollectionTransition = true;
+        } else {
+          collections.push({
+            provider: adapter.name,
+            scope,
+            contentType: mapping.contentType,
+            canonicalDir,
+            providerDir,
+            action: 'reject-collection',
+            ownership: existingCollection.ownership,
+            configuredStrategy: configuredStrategy ?? 'auto',
+            proof,
+            createdLink: existingCollection.createdLink,
+            inheritedEntries: existingInheritedEntries,
+            reason:
+              'collection alias cannot be safely cleared with durable creation identity; preserve it and resolve the collection path before retrying per-entry sync',
+          });
+          inheritCollection = true;
+        }
+      }
+
+      if (collectionEligible && canonicalDir !== null && providerDir !== null) {
+        const proof = await proveCollectionIdentity({
+          root: scopeRoot!,
+          canonicalDir,
+          providerDir,
+        });
+        const inheritedEntries = collectionCandidates.map((entry) =>
+          relativeManifestPath(scopeRoot!, entry.canonicalPath),
+        );
+        const inheritedEntriesUnchanged =
+          existingCollection !== undefined &&
+          existingInheritedEntries.length === inheritedEntries.length &&
+          existingInheritedEntries.every(
+            (entry, index) => entry === [...inheritedEntries].sort()[index],
+          );
+
+        if (proof.status === 'absent') {
+          collections.push({
+            provider: adapter.name,
+            scope,
+            contentType: mapping.contentType,
+            canonicalDir,
+            providerDir,
+            action: collectionAliasCreationAvailable
+              ? 'create-collection-link'
+              : 'fallback-per-entry',
+            ownership: collectionAliasCreationAvailable
+              ? 'oat-created'
+              : 'none',
+            configuredStrategy: 'auto',
+            proof,
+            inheritedEntries,
+            reason: collectionAliasCreationAvailable
+              ? 'provider collection is absent and a guarded creation primitive is available'
+              : 'provider collection is absent, but this runtime has no securely guarded parent-relative collection-link primitive; use safe per-entry sync',
+          });
+          inheritCollection = collectionAliasCreationAvailable;
+        } else if (proof.status === 'exact-link') {
+          if (!inheritedEntriesUnchanged) {
+            collections.push({
+              provider: adapter.name,
+              scope,
+              contentType: mapping.contentType,
+              canonicalDir,
+              providerDir,
+              action:
+                existingCollection === undefined
+                  ? 'adopt-collection-link'
+                  : 'inherit-collection',
+              ownership: existingCollection?.ownership ?? 'adopted-exact',
+              configuredStrategy: 'auto',
+              createdLink: existingCollection?.createdLink,
+              proof,
+              inheritedEntries,
+              reason:
+                existingCollection === undefined
+                  ? 'existing collection alias exactly matches canonical target'
+                  : 'owned collection alias inheritance changed',
+            });
+          }
+          inheritCollection = true;
+        } else {
+          if (existingCollection !== undefined) {
+            collections.push({
+              provider: adapter.name,
+              scope,
+              contentType: mapping.contentType,
+              canonicalDir,
+              providerDir,
+              action: 'detach-collection',
+              ownership: existingCollection.ownership,
+              configuredStrategy: 'auto',
+              createdLink: existingCollection.createdLink,
+              proof,
+              inheritedEntries: existingInheritedEntries,
+              reason:
+                'owned collection alias changed or became unverifiable; preserve and detach ownership',
+            });
+            inheritCollection = true;
+            continue;
+          }
+          const fallback = proof.reason === 'real-directory';
+          collections.push({
+            provider: adapter.name,
+            scope,
+            contentType: mapping.contentType,
+            canonicalDir,
+            providerDir,
+            action: fallback ? 'fallback-per-entry' : 'reject-collection',
+            ownership: 'none',
+            configuredStrategy: 'auto',
+            proof,
+            inheritedEntries,
+            reason: collectionFallbackReason(proof.reason),
+          });
+          inheritCollection = !fallback;
+        }
+      }
+
+      if (inheritCollection) {
+        for (const canonicalEntry of collectionCandidates) {
+          seenCanonicalKeys.add(
+            `${normalize(canonicalRelativePath(canonicalEntry))}::${adapter.name}`,
+          );
+        }
+        continue;
+      }
+
       for (const canonicalEntry of canonical) {
         if (!entryContentTypeMatches(canonicalEntry, mapping.contentType)) {
           continue;
         }
 
         const relativeCanonicalPath = canonicalRelativePath(canonicalEntry);
+        const extensionOwnedPaths =
+          extensionOwnedCanonicalPathsByProvider?.[adapter.name] ?? [];
+        if (
+          extensionOwnedPaths.some(
+            (ownedPath) =>
+              normalize(ownedPath) === normalize(relativeCanonicalPath),
+          )
+        ) {
+          continue;
+        }
         if (!canonicalPathAllowed(relativeCanonicalPath, canonicalFilter)) {
           continue;
         }
@@ -599,15 +924,32 @@ export async function computeSyncPlan({
         );
         const entryStrategy = mapping.transformCanonical
           ? 'copy'
-          : (manifestEntry?.strategy ?? mappingStrategy);
+          : manifestEntry?.strategy === 'symlink' ||
+              manifestEntry?.strategy === 'copy'
+            ? manifestEntry.strategy
+            : mappingStrategy;
 
-        await assertSafeProviderMutationPath(entryScopeRoot, providerPath);
-        const operation = await classifyOperation(
-          canonicalEntry,
-          providerPath,
-          entryStrategy,
-          renderedContent,
-        );
+        const operation = deferredCollectionTransition
+          ? {
+              operation:
+                entryStrategy === 'copy'
+                  ? ('create_copy' as const)
+                  : ('create_symlink' as const),
+              reason:
+                'collection alias will be safely detached before per-entry reconciliation',
+            }
+          : await (async () => {
+              await assertSafeProviderMutationPath(
+                entryScopeRoot,
+                providerPath,
+              );
+              return classifyOperation(
+                canonicalEntry,
+                providerPath,
+                entryStrategy,
+                renderedContent,
+              );
+            })();
 
         entries.push({
           canonical: canonicalEntry,
@@ -617,6 +959,9 @@ export async function computeSyncPlan({
           strategy: entryStrategy,
           reason: operation.reason,
           renderedContent,
+          ...(deferredCollectionTransition
+            ? { deferredUntilCollectionDetached: true }
+            : {}),
         });
 
         seenCanonicalKeys.add(
@@ -627,17 +972,60 @@ export async function computeSyncPlan({
   }
 
   if (!scopeRoot) {
-    return { scope, entries, removals };
+    return { scope, entries, removals, collections };
   }
 
-  for (const manifestEntry of manifest.entries) {
+  for (const collection of manifest.collections) {
+    if (activeProviderNames.has(collection.provider)) {
+      continue;
+    }
+    const canonicalDir = resolve(scopeRoot, collection.canonicalDir);
+    const providerDir = resolve(scopeRoot, collection.providerDir);
+    const proof = await proveCollectionIdentity({
+      root: scopeRoot,
+      canonicalDir,
+      providerDir,
+    });
+    collections.push({
+      provider: collection.provider,
+      scope,
+      contentType: collection.contentType,
+      canonicalDir,
+      providerDir,
+      action: 'detach-collection',
+      ownership: collection.ownership,
+      configuredStrategy: 'auto',
+      proof,
+      createdLink: collection.createdLink,
+      inheritedEntries: manifestV2.entries
+        .filter(
+          (entry) =>
+            entry.strategy === 'collection' &&
+            entry.collectionId === collection.id,
+        )
+        .map((entry) => entry.canonicalPath),
+      reason: 'provider is disabled; reconcile collection ownership',
+    });
+  }
+
+  for (const manifestEntry of manifestV2.entries) {
+    if (manifestEntry.strategy === 'collection') {
+      if (!activeProviderNames.has(manifestEntry.provider)) {
+        continue;
+      }
+      const canonicalKey = `${normalize(manifestEntry.canonicalPath)}::${manifestEntry.provider}`;
+      if (!seenCanonicalKeys.has(canonicalKey)) {
+        removals.push(
+          createCollectionDetachmentEntry(manifestEntry, scopeRoot),
+        );
+      }
+      continue;
+    }
     if (!activeProviderNames.has(manifestEntry.provider)) {
       continue;
     }
 
-    if (scope === 'user' && manifestEntry.contentType === 'agent') {
-      continue;
-    }
+    const perEntryManifestEntry = manifestEntry as ManifestEntry;
 
     const canonicalKey = `${normalize(manifestEntry.canonicalPath)}::${manifestEntry.provider}`;
     if (seenCanonicalKeys.has(canonicalKey)) {
@@ -652,16 +1040,21 @@ export async function computeSyncPlan({
 
     const mappingStillExists = (
       activeMappingsByProvider.get(manifestEntry.provider) ?? []
-    ).some((mapping) => manifestEntryInsideMapping(manifestEntry, mapping));
+    ).some((mapping) =>
+      manifestEntryInsideMapping(perEntryManifestEntry, mapping),
+    );
 
     const removal = mappingStillExists
-      ? createRemovalEntry(manifestEntry, scopeRoot)
-      : await classifyObsoleteMappingRetirement(manifestEntry, scopeRoot);
+      ? createRemovalEntry(perEntryManifestEntry, scopeRoot)
+      : await classifyObsoleteMappingRetirement(
+          perEntryManifestEntry,
+          scopeRoot,
+        );
     if (removal.operation === 'remove') {
       await assertSafeProviderMutationPath(scopeRoot, removal.providerPath);
     }
     removals.push(removal);
   }
 
-  return { scope, entries, removals };
+  return { scope, entries, removals, collections };
 }

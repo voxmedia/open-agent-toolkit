@@ -28,10 +28,15 @@ rebases it on the fetched project ref, and pushes only that ref. Arrival skills
 run `oat project pull` before reading artifacts so a record or remote ref can
 materialize the checkout first.
 
-The tracked JSON record is routing metadata, not a copy of the project. It
-identifies the slug, `origin`, ref, status, and archive snapshot when present.
-The project ref remains the source of truth for active artifact content and
-history.
+The tracked JSON record is active routing metadata, not a copy of the project.
+It identifies the slug, `origin`, active ref, and status. The active project ref
+remains the source of truth for active artifact content and history.
+
+Archived closeout transitions terminal identity to
+`refs/oat/completed/<project>`, deletes the active record and checkout, and
+persists source-ref identity in local archive metadata. Arrival and pull flows
+never rematerialize a completed project as active state: the completed ref and
+archive metadata own terminal reachability and retry identity.
 
 ## Core artifacts
 

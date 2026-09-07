@@ -14,6 +14,7 @@ import { writeDispatchRecord } from '../evidence/record.mjs';
 import { withSmokeGitIdentity } from '../runner/git-identity.mjs';
 import {
   registerNestedSmokeResource,
+  reserveNestedSmokeResource,
   updateSmokeManifest,
 } from '../runner/journal.mjs';
 
@@ -107,11 +108,39 @@ async function recordDispatch({
   }
 }
 
-async function createPhaseWorktree(manifest, phase) {
+/**
+ * Create one nested phase worktree as a durable ownership transaction.
+ *
+ * The branch, worktree path, marker path, baseline, shared Git directory, and
+ * run identity are reserved in the run manifest before `git worktree add`
+ * mutates Git, so an interruption in that window leaves reserved intent that
+ * cleanup can reconcile instead of an unjournaled child it must refuse. The
+ * reservation is finalized only after registration corroborates the
+ * materialized child. Interruption is never caught here to delete paths
+ * directly: the runner's cleanup consumes the manifest and applies the same
+ * ownership checks as every other recovery path.
+ */
+export async function createPhaseWorktree(
+  manifest,
+  phase,
+  {
+    createWorktree = git,
+    register = registerNestedSmokeResource,
+    reserve = reserveNestedSmokeResource,
+  } = {},
+) {
   const runPath = dirname(manifest.manifestPath);
   const worktreePath = join(runPath, `phase-${phase}`);
+  const markerPath = join(worktreePath, '.oat/smoke-bootstrap.json');
   const branch = `${manifest.branch}-${phase}`;
-  await git(
+  await reserve({
+    baselineCommitSha: manifest.baselineCommitSha,
+    branch,
+    manifestPath: manifest.manifestPath,
+    markerPath,
+    worktreePath,
+  });
+  await createWorktree(
     [
       '-c',
       'core.hooksPath=/dev/null',
@@ -124,9 +153,9 @@ async function createPhaseWorktree(manifest, phase) {
     ],
     manifest.worktreePath,
   );
-  await registerNestedSmokeResource({
+  await register({
     manifestPath: manifest.manifestPath,
-    markerPath: join(worktreePath, '.oat/smoke-bootstrap.json'),
+    markerPath,
     worktreePath,
   });
   return { branch, phase, worktreePath };

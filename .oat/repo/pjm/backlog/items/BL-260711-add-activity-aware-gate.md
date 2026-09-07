@@ -8,7 +8,7 @@ scope_estimate: M # XS | S | M | L | XL | XXL
 labels: [gates, timeout, reliability, dispatch]
 assignee: null
 created: '2026-07-11T16:55:00Z'
-updated: '2026-08-20T00:51:38.943Z'
+updated: 2026-09-04T21:32:37Z
 associated_issues: []
 ---
 
@@ -76,3 +76,5 @@ idle-kill versus hard-cap outcomes.
 - Behavior is covered by gate command tests (idle reset, idle kill, cap kill,
   recovery path) and verifiable via the live smoke fixture
   (`oat-project-fixture` project) once available.
+- Where a provider supports it, offer a non-mutating operational preflight before starting the review (GitHub issue #197, second failure mode).
+- When a selected target becomes unavailable after selection but before an artifact exists, emit a structured `blocked` terminal envelope that preserves the selected target, the failure stage, whether an artifact exists, receive eligibility, and a bounded reason category such as provider unavailable or usage limited, without exposing account details.

@@ -1,13 +1,133 @@
 import type { CommandContext } from '@app/command-context';
+import type { SyncOperationResult } from '@engine/engine.types';
+import type { CollectionOperationResult } from '@engine/execute-plan';
+import type { SyncPlan, SyncResult } from '@engine/index';
+import type { MaterializationOperationResult } from '@providers/shared/materialization-extension';
+import {
+  getProviderRegistrations,
+  type ManagedContentKind,
+  type ProviderRegistration,
+} from '@providers/shared/registry';
+import {
+  adviseProviderRefresh,
+  type ProviderMaterializationState,
+  type ProviderVisibilityEvidence,
+} from '@providers/shared/restart-adviser';
+import type { ConcreteScope } from '@shared/types';
 
 import type {
   ScopeSyncPlan,
   SyncCommandDependencies,
   SyncSummary,
 } from './sync.types';
-import { countPlannedOperations } from './sync.utils';
+import {
+  buildCollectionLifecycle,
+  countPlannedOperations,
+  formatCollectionLifecycle,
+  toSyncOutputPlan,
+} from './sync.utils';
 
-function countSkippedEntries(scopePlans: ScopeSyncPlan[]): number {
+interface ProviderRefreshAdvice {
+  scope: ConcreteScope;
+  provider: string;
+  contentKind: ManagedContentKind;
+  materialization: ProviderMaterializationState;
+  visibility: ProviderVisibilityEvidence;
+}
+
+interface CoreApplyEvidence {
+  plan: SyncPlan;
+  operationResults: readonly SyncOperationResult[];
+  aggregateOnly: boolean;
+  aggregate: Pick<SyncResult, 'applied' | 'failed' | 'skipped'>;
+  collectionResults: readonly CollectionOperationResult[];
+}
+
+function extensionResultContentKind(
+  registrations: readonly ProviderRegistration[],
+  result: MaterializationOperationResult & { scope: ConcreteScope },
+): ManagedContentKind | undefined {
+  const registration = registrations.find(
+    ({ adapter }) => adapter.name === result.provider,
+  );
+  const candidates = registration?.capabilities.filter(
+    ({ scope, support, projectionModes }) =>
+      scope === result.scope &&
+      support === 'supported' &&
+      projectionModes.includes('materialization-extension'),
+  );
+  // Extension operation identities do not carry a canonical asset kind.
+  // Attribute only when provider capability evidence gives one unambiguous
+  // content kind; otherwise leave the exact result unattributed.
+  return candidates?.length === 1 ? candidates[0]!.contentKind : undefined;
+}
+
+function buildProviderRefreshAdvice(input: {
+  operationResults: readonly SyncOperationResult[];
+  extensionResults: readonly (MaterializationOperationResult & {
+    scope: ConcreteScope;
+  })[];
+}): ProviderRefreshAdvice[] {
+  const registrations = getProviderRegistrations();
+  const changed = [
+    ...input.operationResults
+      .filter(({ status }) => status === 'changed')
+      .map(({ scope, provider, contentKind }) => ({
+        scope,
+        provider,
+        contentKind,
+      })),
+    ...input.extensionResults
+      .filter(({ status }) => status === 'changed')
+      .flatMap((result) => {
+        const contentKind = extensionResultContentKind(registrations, result);
+        return contentKind === undefined
+          ? []
+          : [{ scope: result.scope, provider: result.provider, contentKind }];
+      }),
+  ];
+  const seen = new Set<string>();
+
+  return changed.flatMap(({ scope, provider, contentKind }) => {
+    const key = `${scope}:${provider}:${contentKind}`;
+    if (seen.has(key)) return [];
+    seen.add(key);
+    const policy = registrations
+      .find(({ adapter }) => adapter.name === provider)
+      ?.capabilities.find(
+        (capability) =>
+          capability.scope === scope && capability.contentKind === contentKind,
+      )?.catalogRefresh ?? {
+      state: 'unknown' as const,
+      reason: 'Provider or capability is not registered',
+    };
+    return [
+      {
+        scope,
+        provider,
+        contentKind,
+        materialization: 'changed' as const,
+        visibility: adviseProviderRefresh({
+          policy,
+          materialization: 'changed',
+        }),
+      },
+    ];
+  });
+}
+
+function formatProviderRefreshAdvice(
+  advice: readonly ProviderRefreshAdvice[],
+): string {
+  return advice
+    .map(({ scope, provider, contentKind, visibility }) => {
+      const recovery = visibility.recovery[0]?.message;
+      return `Provider visibility [${scope}] ${provider}/${contentKind}: ${visibility.state} — ${recovery ?? visibility.reason}`;
+    })
+    .join('\n');
+}
+
+function countSkippedExtensionEntries(scopePlans: ScopeSyncPlan[]): number {
   return scopePlans.reduce((total, scopePlan) => {
     const extensionSkipped = scopePlan.materializationExtensions.reduce(
       (count, extension) =>
@@ -16,31 +136,158 @@ function countSkippedEntries(scopePlans: ScopeSyncPlan[]): number {
           .length,
       0,
     );
-    return (
-      total +
-      scopePlan.plan.entries.filter((entry) => entry.operation === 'skip')
-        .length +
-      extensionSkipped
-    );
+    return total + extensionSkipped;
   }, 0);
 }
 
 function buildSummary(
   scopePlans: ScopeSyncPlan[],
-  applied: number,
-  failed: number,
+  coreApplied: number,
+  coreFailed: number,
+  coreSkipped: number,
+  extensionApplied: number,
+  extensionFailed: number,
 ): SyncSummary {
   return {
     plannedOperations: countPlannedOperations(scopePlans),
-    applied,
-    failed,
-    skipped: countSkippedEntries(scopePlans),
+    applied: coreApplied + extensionApplied,
+    failed: coreFailed + extensionFailed,
+    skipped: coreSkipped + countSkippedExtensionEntries(scopePlans),
   };
+}
+
+function normalizeOperationResults(
+  plan: SyncPlan,
+  result: SyncResult,
+): SyncOperationResult[] {
+  if (result.operations) {
+    return result.operations;
+  }
+
+  const plannedOperations = [...plan.entries, ...plan.removals];
+  return plannedOperations.map((operation) => {
+    return {
+      scope: plan.scope,
+      provider: operation.provider,
+      contentKind: operation.canonical.type,
+      asset: operation.canonical.name,
+      action: operation.operation,
+      status: operation.operation === 'skip' ? 'current' : 'unknown',
+    };
+  });
+}
+
+function materializationOperationIdentity(operation: {
+  provider: string;
+  target: string;
+  path: string;
+  action: string;
+  entryName?: string;
+}): string {
+  return JSON.stringify([
+    operation.provider,
+    operation.target,
+    operation.path,
+    operation.action,
+    operation.entryName ?? null,
+  ]);
+}
+
+function syncOperationIdentity(operation: {
+  scope: string;
+  provider: string;
+  contentKind: string;
+  asset: string;
+  action: string;
+}): string {
+  return JSON.stringify([
+    operation.scope,
+    operation.provider,
+    operation.contentKind,
+    operation.asset,
+    operation.action,
+  ]);
+}
+
+function coreHumanStatus(
+  status: SyncOperationResult['status'] | undefined,
+): 'changed' | 'current' | 'failed' | 'missing' | 'unknown' {
+  switch (status) {
+    case 'changed':
+    case 'current':
+    case 'failed':
+    case 'missing':
+    case 'unknown':
+      return status;
+    default:
+      return 'unknown';
+  }
+}
+
+/** The sentence `formatSyncPlan` appends to its heading for an empty plan. */
+const EMPTY_PLAN_SUFFIX = '\nNo changes required.';
+
+function formatCoreResults(
+  plan: SyncPlan,
+  evidence: CoreApplyEvidence | undefined,
+  dependencies: SyncCommandDependencies,
+  restampOnly: boolean,
+): string {
+  const operations = [...plan.entries, ...plan.removals];
+  if (operations.length === 0) {
+    if ((plan.collections?.length ?? 0) > 0) {
+      return 'Core results\nNo per-entry operations.';
+    }
+    const planOutput = dependencies.formatSyncPlan(plan, true);
+    if (!restampOnly || !planOutput.endsWith(EMPTY_PLAN_SUFFIX)) {
+      return planOutput;
+    }
+    // `formatSyncPlan` appends "No changes required." to its heading for any
+    // empty plan, and it is shared with dry-run and other callers, so it stays
+    // untouched. On the restamp-only path that sentence would contradict the
+    // trailing message two lines later, so the command layer drops exactly that
+    // known suffix and lets the trailing message be the run's single claim.
+    // Removing only a matching suffix, rather than keeping the first line,
+    // means an injected formatter's other content is never truncated.
+    return planOutput.slice(0, -EMPTY_PLAN_SUFFIX.length);
+  }
+
+  const resultsByIdentity = new Map(
+    (evidence?.operationResults ?? []).map((result) => [
+      syncOperationIdentity(result),
+      result,
+    ]),
+  );
+  const lines = operations.map((operation) => {
+    const result = resultsByIdentity.get(
+      syncOperationIdentity({
+        scope: plan.scope,
+        provider: operation.provider,
+        contentKind: operation.canonical.type,
+        asset: operation.canonical.name,
+        action: operation.operation,
+      }),
+    );
+    const status = coreHumanStatus(result?.status);
+    const failure = result?.failure ? ` — ${result.failure}` : '';
+    return `- ${plan.scope}:${operation.provider}:${operation.canonical.type}:${operation.operation} ${operation.canonical.name}\n  reason: ${operation.reason}\n  result: ${status}${failure}`;
+  });
+  const aggregate = evidence?.aggregateOnly
+    ? `\nCore aggregate result: applied ${evidence.aggregate.applied}, failed ${evidence.aggregate.failed}, skipped ${evidence.aggregate.skipped}; non-skip named outcomes remain unknown.`
+    : '';
+
+  return `Core results${aggregate}\n${lines.join('\n')}`;
 }
 
 function formatAppliedOutput(
   scopePlans: ScopeSyncPlan[],
+  coreApplyEvidence: readonly CoreApplyEvidence[],
   dependencies: SyncCommandDependencies,
+  // True when the run planned no operation at all and the manifest restamp is
+  // the only mutation. It is a whole-run state, matching the single trailing
+  // summary message, so with `--scope all` every scope's body is empty and at
+  // least one of them was restamped.
+  restampOnly: boolean,
 ): string {
   if (scopePlans.length === 0) {
     return dependencies.formatSyncPlan(
@@ -55,24 +302,55 @@ function formatAppliedOutput(
 
   return scopePlans
     .map((scopePlan) => {
-      const syncOutput = dependencies.formatSyncPlan(scopePlan.plan, true);
+      const syncOutput = formatCoreResults(
+        scopePlan.plan,
+        coreApplyEvidence.find((evidence) => evidence.plan === scopePlan.plan),
+        dependencies,
+        restampOnly,
+      );
+      const collectionOutput = formatCollectionLifecycle(
+        buildCollectionLifecycle(
+          scopePlan,
+          coreApplyEvidence.find((evidence) => evidence.plan === scopePlan.plan)
+            ?.collectionResults,
+        ),
+      );
       if (scopePlan.materializationExtensions.length === 0) {
-        return `Scope: ${scopePlan.scope}\n${syncOutput}`;
+        return [`Scope: ${scopePlan.scope}\n${syncOutput}`, collectionOutput]
+          .filter(Boolean)
+          .join('\n\n');
       }
 
       const extensionSections = scopePlan.materializationExtensions.map(
         (extension) => {
+          const resultsByIdentity = new Map(
+            (extension.operationResults ?? []).map((result) => [
+              materializationOperationIdentity(result),
+              result,
+            ]),
+          );
           const lines = extension.operations.map((operation) => {
             const entry = operation.entryName
               ? ` (${operation.entryName})`
               : '';
-            return `- ${operation.provider}:${operation.target}:${operation.action} ${operation.path}${entry} (${operation.reason})`;
+            const result = resultsByIdentity.get(
+              materializationOperationIdentity(operation),
+            );
+            const status = result?.status ?? 'unknown';
+            const failure = result?.failure ? ` — ${result.failure}` : '';
+            return `- ${operation.provider}:${operation.target}:${operation.action} ${operation.path}${entry}\n  reason: ${operation.reason}\n  result: ${status}${failure}`;
           });
-          return `${extension.provider} extension (applied)\n${lines.join('\n')}`;
+          return `${extension.provider} extension results\n${lines.join('\n')}`;
         },
       );
 
-      return `Scope: ${scopePlan.scope}\n${syncOutput}\n\n${extensionSections.join('\n\n')}`;
+      return [
+        `Scope: ${scopePlan.scope}\n${syncOutput}`,
+        collectionOutput,
+        extensionSections.join('\n\n'),
+      ]
+        .filter(Boolean)
+        .join('\n\n');
     })
     .join('\n\n');
 }
@@ -82,12 +360,22 @@ export async function runSyncApply(
   scopePlans: ScopeSyncPlan[],
   dependencies: SyncCommandDependencies,
 ): Promise<void> {
-  let applied = 0;
-  let failed = 0;
+  let extensionApplied = 0;
+  let extensionFailed = 0;
+  let coreApplied = 0;
+  let coreFailed = 0;
+  let coreSkipped = 0;
+  const operationResults: SyncOperationResult[] = [];
+  const coreApplyEvidence: CoreApplyEvidence[] = [];
+  const extensionOperationResults: Array<
+    MaterializationOperationResult & { scope: ConcreteScope }
+  > = [];
 
   for (const scopePlan of scopePlans) {
     const hasSyncEntries =
-      scopePlan.plan.entries.length > 0 || scopePlan.plan.removals.length > 0;
+      scopePlan.plan.entries.length > 0 ||
+      scopePlan.plan.removals.length > 0 ||
+      (scopePlan.plan.collections?.length ?? 0) > 0;
     const hasExtensionPlannedOperations =
       scopePlan.materializationExtensionPlans.some((plan) =>
         plan.operations.some((operation) => operation.action !== 'skip'),
@@ -112,8 +400,21 @@ export async function runSyncApply(
         scopePlan.manifest,
         scopePlan.manifestPath,
       );
-      applied += result.applied;
-      failed += result.failed;
+      coreApplied += result.applied;
+      coreFailed += result.failed;
+      coreSkipped += result.skipped;
+      const normalizedResults = normalizeOperationResults(
+        scopePlan.plan,
+        result,
+      );
+      operationResults.push(...normalizedResults);
+      coreApplyEvidence.push({
+        plan: scopePlan.plan,
+        operationResults: normalizedResults,
+        aggregateOnly: result.operations === undefined,
+        aggregate: result,
+        collectionResults: result.collectionResults ?? [],
+      });
     }
 
     for (const plan of scopePlan.materializationExtensionPlans) {
@@ -133,18 +434,34 @@ export async function runSyncApply(
         scopePlan.scopeRoot,
         plan,
       );
-      applied += result.applied;
-      failed += result.failed;
+      extensionApplied += result.applied;
+      extensionFailed += result.failed;
+      extensionOperationResults.push(
+        ...(result.operations ?? []).map((operation) => ({
+          ...operation,
+          scope: scopePlan.scope,
+        })),
+      );
       const summary = scopePlan.materializationExtensions.find(
         (candidate) => candidate.provider === plan.provider,
       );
       if (summary) {
-        Object.assign(summary, result);
+        summary.applied = result.applied;
+        summary.failed = result.failed;
+        summary.skipped = result.skipped;
+        summary.operationResults = result.operations;
       }
     }
   }
 
-  const summary = buildSummary(scopePlans, applied, failed);
+  const summary = buildSummary(
+    scopePlans,
+    coreApplied,
+    coreFailed,
+    coreSkipped,
+    extensionApplied,
+    extensionFailed,
+  );
   const providerMismatches = scopePlans
     .map((scopePlan) => scopePlan.providerMismatches)
     .filter((mismatch) => mismatch !== undefined);
@@ -170,27 +487,72 @@ export async function runSyncApply(
       failed: extension.failed,
       skipped: extension.skipped,
     }));
+  const providerRefreshAdvice = buildProviderRefreshAdvice({
+    operationResults,
+    extensionResults: extensionOperationResults,
+  });
+  const collectionOperations = scopePlans.flatMap((scopePlan) =>
+    buildCollectionLifecycle(
+      scopePlan,
+      coreApplyEvidence.find((evidence) => evidence.plan === scopePlan.plan)
+        ?.collectionResults,
+    ),
+  );
   if (context.json) {
     context.logger.json({
       scope: context.scope,
       dryRun: false,
-      plans: scopePlans.map((scopePlan) => scopePlan.plan),
+      plans: scopePlans.map(toSyncOutputPlan),
+      collectionOperations,
       summary,
       providerMismatches,
       versionSkew,
       materializationExtensions,
+      operationResults,
       codexExtensions,
+      providerRefreshAdvice,
     });
   } else {
-    context.logger.info(formatAppliedOutput(scopePlans, dependencies));
+    // A restamp is a real mutation: it overwrites the producing-version
+    // evidence even though no file operation was planned. Reporting "no
+    // changes required" for that case would contradict the advisory this same
+    // run just emitted, so the state is resolved once and threaded through
+    // both the plan body and the trailing message.
+    //
+    // `failed === 0` is load-bearing rather than defensive: a rejected
+    // collection is counted as a failure but is not a *planned* operation
+    // (`countPlannedOperations` admits only the mutating collection actions),
+    // so a run can fail with `plannedOperations === 0`. That run is not
+    // restamp-only and must never be described as needing no content changes.
+    const restampOnly =
+      summary.plannedOperations === 0 &&
+      summary.failed === 0 &&
+      versionSkew.length > 0;
+    context.logger.info(
+      formatAppliedOutput(
+        scopePlans,
+        coreApplyEvidence,
+        dependencies,
+        restampOnly,
+      ),
+    );
     if (summary.plannedOperations === 0) {
-      context.logger.info('\nNo changes required.');
-    } else if (failed > 0) {
+      context.logger.info(
+        restampOnly
+          ? '\nManifest version refreshed; no content changes required.'
+          : '\nNo changes required.',
+      );
+    } else if (summary.failed > 0) {
       context.logger.warn('\nSync completed with partial failures.');
     } else {
       context.logger.success('\nSync applied successfully.');
     }
+    if (providerRefreshAdvice.length > 0) {
+      context.logger.info(
+        `\n${formatProviderRefreshAdvice(providerRefreshAdvice)}`,
+      );
+    }
   }
 
-  process.exitCode = failed > 0 ? 1 : 0;
+  process.exitCode = summary.failed > 0 ? 1 : 0;
 }

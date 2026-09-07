@@ -6,7 +6,12 @@ import { join } from 'node:path';
 import { CliError } from '@errors/cli-error';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createGitRunner, defaultGitRunner } from './git';
+import {
+  createGitRunner,
+  defaultGitRunner,
+  isAtomicPushUnsupported,
+  pushAtomicRefTransition,
+} from './git';
 
 const tempDirs: string[] = [];
 
@@ -182,4 +187,72 @@ describe('GitRunner', () => {
       });
     },
   );
+});
+
+describe('remote ref transition primitives', () => {
+  it('requests one atomic push for completed-ref creation and active-ref deletion', async () => {
+    const run = vi.fn(async () => ({ code: 0, stdout: '', stderr: '' }));
+
+    await expect(
+      pushAtomicRefTransition({ run }, '/repo', {
+        remote: 'origin',
+        sourceSha: '1234567890123456789012345678901234567890',
+        activeRef: 'refs/oat/projects/demo',
+        completedRef: 'refs/oat/completed/demo',
+        completedExpectedSha: null,
+      }),
+    ).resolves.toEqual({ code: 0, stdout: '', stderr: '' });
+    expect(run).toHaveBeenCalledWith(
+      [
+        'push',
+        '--atomic',
+        '--force-with-lease=refs/oat/projects/demo:1234567890123456789012345678901234567890',
+        '--force-with-lease=refs/oat/completed/demo:',
+        'origin',
+        '1234567890123456789012345678901234567890:refs/oat/completed/demo',
+        ':refs/oat/projects/demo',
+      ],
+      { cwd: '/repo', allowFailure: true },
+    );
+  });
+
+  it('leases an existing completed ref to the previously verified SHA', async () => {
+    const run = vi.fn(async () => ({ code: 0, stdout: '', stderr: '' }));
+    const sourceSha = '1234567890123456789012345678901234567890';
+
+    await pushAtomicRefTransition({ run }, '/repo', {
+      remote: 'origin',
+      sourceSha,
+      activeRef: 'refs/oat/projects/demo',
+      completedRef: 'refs/oat/completed/demo',
+      completedExpectedSha: sourceSha,
+    });
+
+    expect(run).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        `--force-with-lease=refs/oat/completed/demo:${sourceSha}`,
+      ]),
+      { cwd: '/repo', allowFailure: true },
+    );
+  });
+
+  it.each([
+    'fatal: the receiving end does not support --atomic push',
+    'fatal: atomic push is not supported on this transport',
+  ])('recognizes an unsupported atomic transport: %s', (stderr) => {
+    expect(isAtomicPushUnsupported({ code: 128, stdout: '', stderr })).toBe(
+      true,
+    );
+  });
+
+  it('does not misclassify an ordinary remote rejection as unsupported atomic push', () => {
+    expect(
+      isAtomicPushUnsupported({
+        code: 1,
+        stdout: '',
+        stderr:
+          'remote rejected refs/oat/completed/demo (pre-receive hook declined)',
+      }),
+    ).toBe(false);
+  });
 });

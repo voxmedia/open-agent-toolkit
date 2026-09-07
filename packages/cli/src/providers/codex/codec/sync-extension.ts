@@ -16,7 +16,10 @@ import {
   type WorkflowDispatchRouteTarget,
 } from '@config/oat-config';
 import { resolveEffectiveConfig } from '@config/resolve';
-import type { CanonicalEntry } from '@engine/index';
+import {
+  materializationCanonicalPathAllowed,
+  type CanonicalEntry,
+} from '@engine/index';
 import { CliError } from '@errors/index';
 import { ensureDir, fileExists } from '@fs/io';
 import { validateRealPathWithinScope } from '@fs/paths';
@@ -31,6 +34,7 @@ import {
   type MaterializationPlan,
   type MaterializationWriteOperation,
 } from '@providers/shared';
+import type { MaterializationOperationResult } from '@providers/shared/materialization-extension';
 import YAML from 'yaml';
 
 import {
@@ -92,6 +96,7 @@ interface DesiredCodexRole {
   configFile: string;
   rolePath: string;
   content: string;
+  sourcePath: string;
 }
 
 interface CodexMaterializationTarget {
@@ -127,16 +132,11 @@ function canonicalPathAllowed(
   canonicalEntry: CanonicalEntry,
   allowedCanonicalPaths?: string[],
 ): boolean {
-  if (!allowedCanonicalPaths?.length) {
-    return true;
-  }
-
-  const allowedSet = new Set(allowedCanonicalPaths);
-  const relativeCanonicalPath = toRelativePath(
+  return materializationCanonicalPathAllowed(
     scopeRoot,
-    canonicalEntry.canonicalPath,
+    canonicalEntry,
+    allowedCanonicalPaths,
   );
-  return allowedSet.has(relativeCanonicalPath);
 }
 
 async function readOptionalFile(path: string): Promise<string | null> {
@@ -182,6 +182,7 @@ async function desiredRolesFromCanonical(
       configFile: exported.configFile,
       rolePath: join(scopeRoot, '.codex', exported.configFile),
       content: exported.content,
+      sourcePath: entry.canonicalPath,
     });
 
     if (CODEX_MATERIALIZED_BASE_ROLES.has(exported.roleName)) {
@@ -200,20 +201,23 @@ async function desiredRolesFromCanonical(
             materialized.content,
             target.owner,
           ),
+          sourcePath: entry.canonicalPath,
         });
       }
     }
   }
 
   const roleContents = new Map<string, string>();
+  const sourceByRoleName = new Map<string, string>();
   for (const role of roles) {
     const existing = roleContents.get(role.roleName);
     if (existing !== undefined && existing !== role.content) {
       throw new CliError(
-        `Distinct Codex targets produced the same role name ${role.roleName}. Refusing ambiguous role writes.`,
+        `Duplicate Codex role name ${role.roleName} from ${sourceByRoleName.get(role.roleName) ?? 'an earlier canonical agent'} and ${role.sourcePath}. Refusing ambiguous role writes.`,
       );
     }
     roleContents.set(role.roleName, role.content);
+    sourceByRoleName.set(role.roleName, role.sourcePath);
   }
 
   return roles.sort((left, right) =>
@@ -842,15 +846,18 @@ export async function applyCodexProjectExtensionPlan(
   scopeRoot: string,
   plan: CodexExtensionPlan,
 ): Promise<CodexExtensionApplyResult> {
-  const result: CodexExtensionApplyResult = {
-    applied: 0,
-    failed: 0,
-    skipped: 0,
-  };
+  const operationResults: MaterializationOperationResult[] = [];
 
   for (const operation of plan.operations) {
     if (operation.action === 'skip') {
-      result.skipped += 1;
+      operationResults.push({
+        provider: operation.provider,
+        target: operation.target,
+        path: operation.path,
+        entryName: operation.entryName,
+        action: operation.action,
+        status: 'current',
+      });
       continue;
     }
 
@@ -863,13 +870,44 @@ export async function applyCodexProjectExtensionPlan(
         await ensureDir(dirname(absolutePath));
         await writeFile(absolutePath, operation.content ?? '', 'utf8');
       }
-      result.applied += 1;
-    } catch {
-      result.failed += 1;
+      operationResults.push({
+        provider: operation.provider,
+        target: operation.target,
+        path: operation.path,
+        entryName: operation.entryName,
+        action: operation.action,
+        status: 'changed',
+      });
+    } catch (error) {
+      const missing =
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'ENOENT';
+      operationResults.push({
+        provider: operation.provider,
+        target: operation.target,
+        path: operation.path,
+        entryName: operation.entryName,
+        action: operation.action,
+        status: missing ? 'missing' : 'failed',
+        failure: missing
+          ? 'Materialization input was missing; restore it and retry sync.'
+          : 'Materialization failed; inspect local verbose diagnostics and retry sync.',
+      });
     }
   }
 
-  return result;
+  return {
+    applied: operationResults.filter(({ status }) => status === 'changed')
+      .length,
+    failed: operationResults.filter(
+      ({ status }) => status === 'failed' || status === 'missing',
+    ).length,
+    skipped: operationResults.filter(({ status }) => status === 'current')
+      .length,
+    operations: operationResults,
+  };
 }
 
 export function hasCodexExtensionChanges(plan: CodexExtensionPlan): boolean {

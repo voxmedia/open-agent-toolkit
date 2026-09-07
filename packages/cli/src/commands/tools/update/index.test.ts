@@ -243,6 +243,83 @@ describe('createToolsUpdateCommand target validation', () => {
       ),
     ).toHaveLength(1);
   });
+
+  it('emits pack lifecycle evidence as a sibling while preserving the legacy result', async () => {
+    const dependencies = createUpdateDependencies();
+    updateTools.mockResolvedValue(
+      createResult({
+        lifecycle: [
+          {
+            schemaVersion: 1,
+            selection: {
+              pack: 'docs',
+              requested: 'user',
+              retainedRealizedScopes: ['user'],
+              targetScopes: ['user'],
+            },
+            canonical: { status: 'unchanged', results: [] },
+            sync: { scopes: [], status: 'not-run', providers: [] },
+            finalEvidence: null,
+            status: 'complete',
+            recovery: [],
+          },
+        ],
+      }),
+    );
+
+    await runUpdateCommand(
+      createToolsUpdateCommand(dependencies),
+      ['--pack', 'docs', '--dry-run', '--no-sync'],
+      ['--json'],
+    );
+
+    const payload = loggerCapture.jsonPayloads[0] as {
+      result: Record<string, unknown>;
+      lifecycle?: Array<{ selection: { pack: string } }>;
+    };
+    expect(payload.result).not.toHaveProperty('lifecycle');
+    expect(payload.lifecycle?.[0]?.selection.pack).toBe('docs');
+  });
+
+  it('omits pack lifecycle evidence for a named tool update', async () => {
+    const dependencies = createUpdateDependencies();
+    updateTools.mockResolvedValue(createResult());
+
+    await runUpdateCommand(
+      createToolsUpdateCommand(dependencies),
+      ['oat-docs-analyze', '--dry-run', '--no-sync'],
+      ['--json'],
+    );
+
+    expect(loggerCapture.jsonPayloads[0]).not.toHaveProperty('lifecycle');
+  });
+
+  it('returns structured failed lifecycle evidence for a pack apply failure', async () => {
+    const dependencies = createUpdateDependencies();
+    updateTools.mockRejectedValue(new Error('canonical copy failed'));
+
+    await runUpdateCommand(
+      createToolsUpdateCommand(dependencies),
+      ['--pack', 'docs'],
+      ['--json'],
+    );
+
+    expect(process.exitCode).toBe(1);
+    expect(loggerCapture.jsonPayloads[0]).toMatchObject({
+      target: 'pack:docs',
+      lifecycle: [
+        {
+          status: 'failed',
+          recovery: [
+            {
+              code: 'canonical-apply-failed',
+              message: 'canonical copy failed',
+            },
+          ],
+        },
+      ],
+    });
+  });
 });
 
 function createResult(overrides: Partial<UpdateResult> = {}): UpdateResult {

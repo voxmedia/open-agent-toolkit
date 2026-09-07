@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-final
-version: 1.6.0
+version: 1.6.1
 description: Use when the user requests or confirms opening the final PR for an active OAT project — e.g. "open the final PR", "ship it", "run oat-project-pr-final", or confirms a previously offered final-PR step. Do NOT auto-invoke when phases are marked complete. Generates the final lifecycle PR description from artifacts and creates the PR.
 disable-model-invocation: false
 user-invocable: true
@@ -217,7 +217,7 @@ sequence step.
 Check if `{PROJECT_PATH}/summary.md` exists:
 
 - If `summary.md` is missing or stale, refresh it automatically before proceeding.
-- Prefer running the `oat-project-summary` skill when skill-to-skill invocation is available in the current host/runtime.
+- When skill-to-skill invocation is available in the current host/runtime, load the current `oat-project-summary/SKILL.md` and follow it; never synthesize the summary from a remembered version of that skill.
 - If direct skill invocation is unavailable, generate or update `summary.md` inline by following the same synthesis rules as `oat-project-summary` (validate implementation state, read the same project artifacts, apply the same freshness checks, update the same frontmatter tracking fields, and write a complete `summary.md` before continuing).
 - Do not assume `oat-project-summary` is a shell command on `PATH`. Only execute a shell command with that name if the environment explicitly provides a real executable.
 - Do not ask whether to generate or refresh `summary.md` during pr-final.

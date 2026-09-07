@@ -401,7 +401,16 @@ function renderTemplate(
   );
 }
 
-function buildDocumentationConfig(
+/**
+ * Seed `documentation.*` for a freshly scaffolded app.
+ *
+ * For Fumadocs, `index` names the generated app-root manifest that
+ * `oat docs generate-index` writes (`<root>/index.md`), not the authored source
+ * page at `<root>/docs/index.md`: the scaffold must be correct before the first
+ * build rather than depending on a later config mutation. The MkDocs seed keeps
+ * pointing at the nav/config YAML, which is that framework's entry point.
+ */
+export function buildDocumentationConfig(
   framework: DocsFramework,
   targetDir: string,
 ): OatDocumentationConfig {
@@ -409,7 +418,7 @@ function buildDocumentationConfig(
     return {
       root: targetDir,
       tooling: 'fumadocs',
-      index: join(targetDir, 'docs', 'index.md'),
+      index: join(targetDir, 'index.md'),
     };
   }
 

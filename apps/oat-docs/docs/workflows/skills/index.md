@@ -14,6 +14,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - [Explainer Kit](explainer-kit.md) - Core and OAT adapter usage, recipes and expansion profiles, the two authoring paths, warnings and QA severity, themes, lifecycle policy, durability, and publishing.
 - [Explainer Provider Integration](explainer-kit-providers.md) - Provider-neutral planner, author, trusted browser-session, and visual-critic contracts.
 - [Repo Improve](repo-improve.md) - Source modes, external-plan boundaries, optional tracking, and OAT import handoff.
+- [Recon Evidence Packets](recon.md) - Approved worker profiles, validated claim states, packet layout, partial outcomes, and directory-only handoff.
 
 ## Key Skills by Use Case
 
@@ -37,6 +38,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Generate a shipping digest or scheduled recap: `oat-wrap-up`
 - Run a wave program over a corpus of external plans: `oat-wave-program` (durable program artifact: new/refresh/wave-close) and `oat-wave-execute` (one wave as a wrapper project) — see [Wave Workflows](../wave-workflows.md)
 - Research a topic in depth: `deep-research`
+- Acquire and validate bounded evidence for another workflow: `recon`
 - Analyze an artifact, codebase, or document: `analyze`
 - Compare options with domain-aware dimensions: `compare`
 - Verify a claim adversarially: `skeptic`
@@ -123,6 +125,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 
 === "Research"
 
+    - `recon`
     - `deep-research`
     - `analyze`
     - `compare`

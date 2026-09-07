@@ -17,6 +17,7 @@ async function makeTempDir(): Promise<string> {
 async function seedAssets(assetsRoot: string): Promise<void> {
   await mkdir(join(assetsRoot, 'skills', 'analyze'), { recursive: true });
   await mkdir(join(assetsRoot, 'skills', 'deep-research'), { recursive: true });
+  await mkdir(join(assetsRoot, 'skills', 'recon'), { recursive: true });
   await mkdir(join(assetsRoot, 'agents'), { recursive: true });
   await writeFile(
     join(assetsRoot, 'skills', 'analyze', 'SKILL.md'),
@@ -24,8 +25,18 @@ async function seedAssets(assetsRoot: string): Promise<void> {
     'utf8',
   );
   await writeFile(
+    join(assetsRoot, 'skills', 'recon', 'SKILL.md'),
+    '---\nname: recon\nversion: 1.0.0\n---\n',
+    'utf8',
+  );
+  await writeFile(
     join(assetsRoot, 'skills', 'deep-research', 'SKILL.md'),
     '---\nname: deep-research\nversion: 1.0.0\n---\n',
+    'utf8',
+  );
+  await writeFile(
+    join(assetsRoot, 'agents', 'recon-worker.md'),
+    '---\nname: recon-worker\nversion: 1.0.0\n---\n',
     'utf8',
   );
   await writeFile(
@@ -58,7 +69,10 @@ describe('installResearch', () => {
     });
 
     expect(result.copiedSkills).toEqual(['analyze']);
-    expect(result.copiedAgents).toEqual(['skeptical-evaluator.md']);
+    expect(result.copiedAgents).toEqual([
+      'skeptical-evaluator.md',
+      'recon-worker.md',
+    ]);
     expect(result.outdatedSkills).toEqual([]);
     await expect(
       readFile(
@@ -72,6 +86,12 @@ describe('installResearch', () => {
         'utf8',
       ),
     ).resolves.toContain('skeptical-evaluator');
+    await expect(
+      readFile(
+        join(targetRoot, '.agents', 'agents', 'recon-worker.md'),
+        'utf8',
+      ),
+    ).resolves.toContain('recon-worker');
   });
 
   it('skips on idempotent re-run', async () => {
@@ -94,7 +114,10 @@ describe('installResearch', () => {
     expect(second.copiedSkills).toEqual([]);
     expect(second.updatedSkills).toEqual([]);
     expect(second.skippedSkills).toEqual(['analyze']);
-    expect(second.skippedAgents).toEqual(['skeptical-evaluator.md']);
+    expect(second.skippedAgents).toEqual([
+      'skeptical-evaluator.md',
+      'recon-worker.md',
+    ]);
     expect(second.outdatedSkills).toEqual([]);
   });
 

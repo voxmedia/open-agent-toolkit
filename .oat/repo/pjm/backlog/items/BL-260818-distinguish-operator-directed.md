@@ -12,8 +12,10 @@ labels:
   - skills
 assignee: null
 created: 2026-08-18T00:01:02.918Z
-updated: 2026-08-20T00:51:38.943Z
-associated_issues: []
+updated: 2026-09-02T23:49:54Z
+associated_issues:
+  - type: github
+    ref: https://github.com/voxmedia/open-agent-toolkit/issues/207
 external_plans: []
 ---
 
@@ -47,3 +49,4 @@ linked during the 2026-08-19 issue-triage pass.
   state and preserves an auditable record of every granted extra cycle.
 - Focused fixtures cover authorization, bounded consumption, unrelated findings,
   exhaustion, and closeout validation.
+- At the review cap, the receive step presents one consolidated scope decision (GitHub issue #207) that classifies cumulative findings as accepted-requirement, regression, or new-hardening and asks for a single operator disposition instead of another round.

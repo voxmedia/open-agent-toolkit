@@ -12,9 +12,10 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:30:42.099Z
-updated: 2026-08-30T22:30:42.099Z
+updated: 2026-09-03T00:08:42Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-02-route-incomplete-quick-projects-to-quick-start.md
 ---
 
 ## Description

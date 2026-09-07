@@ -4,7 +4,10 @@ import { dirname, join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { assertSafeProviderMutationPath } from './provider-path-safety';
+import {
+  assertSafeProviderCollectionPath,
+  assertSafeProviderMutationPath,
+} from './provider-path-safety';
 
 describe('assertSafeProviderMutationPath', () => {
   const tempDirs: string[] = [];
@@ -102,5 +105,25 @@ describe('assertSafeProviderMutationPath', () => {
     await expect(
       assertSafeProviderMutationPath(root, provider),
     ).resolves.toBeUndefined();
+  });
+
+  it('allows a final collection symlink but rejects nested collection paths', async () => {
+    const root = await createRoot();
+    const canonical = join(root, '.agents', 'skills');
+    const provider = join(root, '.claude', 'skills');
+    await mkdir(canonical, { recursive: true });
+    await mkdir(dirname(provider), { recursive: true });
+    await symlink(canonical, provider, 'dir');
+
+    await expect(
+      assertSafeProviderCollectionPath(root, canonical, provider),
+    ).resolves.toBeUndefined();
+    await expect(
+      assertSafeProviderCollectionPath(
+        root,
+        canonical,
+        join(canonical, 'provider'),
+      ),
+    ).rejects.toThrow(/must not be nested/i);
   });
 });

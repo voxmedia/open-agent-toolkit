@@ -4,8 +4,18 @@ import type {
   PromptContext,
 } from '@commands/shared/shared.prompts';
 import type { SyncConfig } from '@config/index';
-import type { CanonicalEntry, SyncPlan, SyncResult } from '@engine/index';
-import type { Manifest } from '@manifest/index';
+import type {
+  CollectionProjectionPlan,
+  SyncOperationResult,
+} from '@engine/engine.types';
+import type { CollectionOperationResult } from '@engine/execute-plan';
+import type {
+  CanonicalEntry,
+  ScanBundledManagedAgentsOptions,
+  SyncPlan,
+  SyncResult,
+} from '@engine/index';
+import type { Manifest, ManifestVersionRestamp } from '@manifest/index';
 import type {
   ConfigAwareAdaptersResult,
   MaterializationApplyResult,
@@ -14,6 +24,7 @@ import type {
   MaterializationPlan,
   ProviderAdapter,
 } from '@providers/shared';
+import type { MaterializationOperationResult } from '@providers/shared/materialization-extension';
 import type { ConcreteScope, Scope } from '@shared/types';
 
 export interface SyncProviderMismatches {
@@ -30,12 +41,12 @@ export interface CanonicalSyncFilter {
  * Advisory diagnostic emitted when the CLI version that produced a scope's sync
  * manifest differs from the CLI version invoking sync. Comparison is symmetric
  * string inequality: the contract is version identity, not which side is newer.
+ *
+ * Sync's scoped view of the shared manifest diagnostic. It is an alias rather
+ * than a parallel declaration so sync's semantics cannot drift from the
+ * comparison every other save site uses.
  */
-export interface SyncVersionSkew {
-  scope: ConcreteScope;
-  producingVersion: string;
-  invokingVersion: string;
-}
+export type SyncVersionSkew = ManifestVersionRestamp<ConcreteScope>;
 
 export interface ScopeSyncPlan {
   scope: ConcreteScope;
@@ -58,14 +69,49 @@ export interface SyncSummary {
   skipped: number;
 }
 
+export type CollectionProofSummary = Pick<
+  CollectionProjectionPlan['proof'],
+  'status'
+> & {
+  reason?: Extract<
+    CollectionProjectionPlan['proof'],
+    { status: 'ineligible' }
+  >['reason'];
+};
+
+export type CollectionOutputPlan = Omit<CollectionProjectionPlan, 'proof'> & {
+  proof: CollectionProofSummary;
+};
+
+export type SyncOutputPlan = Omit<SyncPlan, 'collections'> & {
+  collections?: CollectionOutputPlan[];
+};
+
+export interface CollectionLifecycleOutput {
+  scope: ConcreteScope;
+  provider: string;
+  contentType: CollectionProjectionPlan['contentType'];
+  action: CollectionProjectionPlan['action'];
+  ownership: CollectionProjectionPlan['ownership'];
+  canonicalDir: string;
+  providerDir: string;
+  reason: string;
+  result: {
+    status: 'planned' | CollectionOperationResult['status'];
+    reason: string;
+  };
+}
+
 export interface SyncJsonPayload {
   scope: Scope;
   dryRun: boolean;
-  plans: SyncPlan[];
+  plans: SyncOutputPlan[];
+  collectionOperations: CollectionLifecycleOutput[];
   summary: SyncSummary;
   providerMismatches?: SyncProviderMismatches[];
   versionSkew?: SyncVersionSkew[];
   materializationExtensions?: MaterializationExtensionSummary[];
+  operationResults: SyncOperationResult[];
   /** Retained for compatibility with existing Codex JSON consumers. */
   codexExtensions?: CodexExtensionSummary[];
 }
@@ -93,6 +139,7 @@ export interface CodexExtensionSummary {
 export interface MaterializationExtensionSummary {
   provider: string;
   operations: MaterializationOperation[];
+  operationResults?: MaterializationOperationResult[];
   managedEntries: string[];
   aggregateHash: string;
   applied?: number;
@@ -129,7 +176,9 @@ export interface SyncCommandDependencies {
     scopeRoot: string,
     scope: ConcreteScope,
   ) => Promise<CanonicalEntry[]>;
-  scanBundledManagedAgents: () => Promise<CanonicalEntry[]>;
+  scanBundledManagedAgents: (
+    options?: ScanBundledManagedAgentsOptions,
+  ) => Promise<CanonicalEntry[]>;
   getAdapters: () => ProviderAdapter[];
   getConfigAwareAdapters: (
     adapters: ProviderAdapter[],
@@ -149,12 +198,18 @@ export interface SyncCommandDependencies {
     config: SyncConfig;
     scopeRoot: string;
     allowedCanonicalPaths?: string[];
+    collectionAliasEligibleMappings?: readonly {
+      provider: string;
+      contentType: CanonicalEntry['type'];
+    }[];
   }) => Promise<SyncPlan>;
   executeSyncPlan: (
     plan: SyncPlan,
     manifest: Manifest,
     manifestPath: string,
-  ) => Promise<SyncResult>;
+  ) => Promise<
+    SyncResult & { collectionResults?: CollectionOperationResult[] }
+  >;
   getMaterializationExtensions: () => SyncMaterializationExtension[];
   applyMaterializationExtensionPlan: (
     extension: SyncMaterializationExtension,

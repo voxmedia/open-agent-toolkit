@@ -5,6 +5,7 @@ import {
   summarizeMaterializationPlan,
   toMaterializationOperations,
   type MaterializationContext,
+  type MaterializationApplyResult,
   type MaterializationExtension,
   type MaterializationPlan,
   type MaterializationWriteOperation,
@@ -33,6 +34,37 @@ function plan(
 }
 
 describe('materialization extension contract', () => {
+  it('reports source-qualified evidence for every applied operation', () => {
+    const result: MaterializationApplyResult = {
+      applied: 1,
+      failed: 0,
+      skipped: 1,
+      operations: [
+        {
+          provider: 'test-provider',
+          target: 'role',
+          path: '.test/roles/example-role.md',
+          entryName: 'example-role',
+          action: 'create',
+          status: 'changed',
+        },
+        {
+          provider: 'test-provider',
+          target: 'role',
+          path: '.test/roles/current-role.md',
+          entryName: 'current-role',
+          action: 'skip',
+          status: 'current',
+        },
+      ],
+    };
+
+    expect(result.operations?.map(({ status }) => status)).toEqual([
+      'changed',
+      'current',
+    ]);
+  });
+
   it('provides typed provider-neutral compute and apply hooks', async () => {
     type TestPlan = MaterializationPlan<'test-provider', 'role', TestMetadata>;
     type TestContext = MaterializationContext<TestOptions>;

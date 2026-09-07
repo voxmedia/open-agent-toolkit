@@ -109,6 +109,17 @@ describe('codex sync extension', () => {
     const applyResult = await applyCodexProjectExtensionPlan(root, firstPlan);
     expect(applyResult.failed).toBe(0);
     expect(applyResult.applied).toBeGreaterThan(0);
+    expect(applyResult.operations).toHaveLength(firstPlan.operations.length);
+    expect(applyResult.operations).toEqual(
+      firstPlan.operations.map((operation) =>
+        expect.objectContaining({
+          provider: 'codex',
+          target: operation.target,
+          action: operation.action,
+          status: operation.action === 'skip' ? 'current' : 'changed',
+        }),
+      ),
+    );
 
     const roleFile = await readFile(
       join(root, '.codex', 'agents', 'oat-reviewer.toml'),

@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260714-executable-backstops.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260714-executable-backstops
@@ -43,7 +43,7 @@ for runtime/lifecycle truth. The guidance is itself contract-tested.
 - Source backlog item:
   [BL-260714-executable-backstops — Executable backstops for contract claims](../../pjm/backlog/items/BL-260714-executable-backstops.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `.agents/skills/create-oat-skill/SKILL.md:109-120` has a specific autonomy
     inventory maintenance rule, but no general rule for standing claims.
@@ -62,11 +62,22 @@ for runtime/lifecycle truth. The guidance is itself contract-tested.
 
 ## Dependencies
 
-| Type          | Dependency                                                             | Required state                                                                            | Current state                     |
-| ------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------- |
-| Soft evidence | Autonomy gate inventory, bundled-docs contract, and project-log rollup | Keep as illustrative implementations; revalidate names and behavior if any changes first. | Present on the planning baseline. |
+| Type          | Dependency                                                                                                                                                       | Required state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Current state                                                                                              |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| Soft evidence | Autonomy gate inventory, bundled-docs contract, and project-log rollup                                                                                           | Keep as illustrative implementations; revalidate names and behavior if any changes first.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Present on the planning baseline.                                                                          |
+| Soft ordering | W2 group 2 plan [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md)               | Runs before this plan; both edit `create-oat-skill/SKILL.md`, so never in one parallel group.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Pending.                                                                                                   |
+| Soft ordering | W2 group 1 plan [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md)                                          | Runs before this plan; both edit `packages/cli/src/validation/skills.test.ts`, so never in one parallel group.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Pending.                                                                                                   |
+| Soft ordering | W2 group 3 plan [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md) | Runs before this plan; both edit `packages/cli/src/validation/skills.test.ts`, so never in one parallel group.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Pending.                                                                                                   |
+| Soft ordering | Shared write: the skill version pins and contract cases in `packages/cli/src/validation/skills.test.ts` (2026-09-05 audit)                                       | Never in one parallel group with any other plan that writes this file; the program serializes them by group. The other writers are: W4 group 1 [Let one project disable configured lifecycle gates explicitly](./2026-08-30-disable-configured-gates-per-project.md); W4 group 2 [Emit the canonical dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md); W2 group 1 [Repair four bundled-skill truthfulness contracts](./2026-08-30-repair-bundled-skill-contract-drift.md); W2 group 2 [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md); W5 group 4 [Defer activeProject clearing on shared archive completions](./2026-09-02-defer-activeproject-clearing-on-archive-completions.md); W2 group 3 [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md); W5 group 3 [Make the autonomous project recap capability-aware and non-blocking](./2026-09-02-make-autonomous-project-recap-capability-aware.md); W5 group 5 [Make consolidated-project retirement checks semantic](./2026-09-02-make-consolidated-project-retirement-semantic.md); W5 group 1 [Route incomplete quick projects to quick-start from plan, progress, and next](./2026-09-02-route-incomplete-quick-projects-to-quick-start.md); W6 group 1 [Validate review-ledger paths and archive only terminal reviews before the final PR](./2026-09-03-validate-review-ledger-paths-before-final-pr.md); W6 group 2 [Honor metadata.version as the canonical skill version](./2026-09-04-honor-metadata-version-for-skills.md); W5 group 4 [Make terminal project status agree with completed revision plans](./2026-09-04-make-terminal-project-status-agree-with-revision-plans.md); W5 group 3 [Enforce plan-readiness versus execution-readiness in oat-repo-improve](./2026-09-02-enforce-external-plan-readiness-contract.md); W5 group 2 [Validate every shipped skill-to-script reference against its pack manifest](./2026-09-02-validate-skill-script-references-against-pack-manifests.md). | Pending; the execution program orders every group so at most one of these lanes writes the file at a time. |
 
 There are no unsatisfied hard dependencies.
+
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                                                                                                 | Required update                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections.                                                                         | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted.                                                                                                                               |
+| `review-plan-workflow` (draft PR #190) merges                                        | Minor            | `packages/cli/src/validation/skills.test.ts` (this plan adds assertions and updates pins; #190 head `63161897dd4` rewrites it). | If #190 merges first: re-read the merged file, re-anchor the pin tuple block and the section-extraction helpers, and add the new cases beside the merged content; if this lands first, #190 rebases. |
 
 ## Drift check
 
@@ -74,7 +85,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- .agents/skills/create-oat-skill .agents/skills/oat-project-design packages/cli/src/validation/autonomy-gate-inventory.test.ts packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/commands/project/log packages/cli/src/validation/skills.test.ts
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- .agents/skills/create-oat-skill .agents/skills/oat-project-design packages/cli/src/validation/autonomy-gate-inventory.test.ts packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts packages/cli/src/commands/project/log packages/cli/src/validation/skills.test.ts
 ```
 
 If the authoring or design section moved, remap the semantic insertion point.
@@ -89,9 +100,10 @@ stale name.
   never guard prose by physical line number.
 - Run `oat sync --scope all` after canonical edits and inspect managed views.
 - Run `pnpm lint && pnpm format` because canonical skill files are touched.
-- Bundled skill changes require all five public package versions and
-  `pnpm-lock.yaml` to move together.
-- Run the complete repository Definition of Done in its documented order.
+- Release bookkeeping is mode-dependent: under the execution program the
+  wave fan-in owns the lockstep five-package bump; only a standalone execution
+  bumps the five public packages and `pnpm-lock.yaml` itself.
+- Run the mode-appropriate gates in step 5.
 - Do not push or open a PR unless instructed.
 
 ## Scope
@@ -102,8 +114,10 @@ stale name.
 - `.agents/skills/oat-project-design/SKILL.md` — concise design-time echo in
   Error Handling/Testing Strategy.
 - `packages/cli/src/validation/skills.test.ts` — stable contract assertions.
-- Skill versions, managed provider views, five public package versions, and
-  `pnpm-lock.yaml`.
+- Skill versions and their pins in `packages/cli/src/validation/skills.test.ts`
+  (both `create-oat-skill` and `oat-project-design` are bumped; add a pin only
+  where one already exists), and managed provider views.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -175,19 +189,29 @@ stable identity to physical line matching fails the focused assertion.
 **Verify:** the focused validation test fails under each mutation, then passes
 after restoration.
 
-### 4. Refresh shipped views and release bookkeeping
+### 4. Refresh shipped views and skill bookkeeping
 
-Run `oat sync --scope all`, inspect generated changes, update exact skill-version
-pins, bump all five public packages together, and update `pnpm-lock.yaml`.
+Run `oat sync --scope all`, inspect generated changes, and update exact
+skill-version pins where they exist.
 
 **Verify:** `pnpm oat:validate-skills`, `pnpm run check:skill-bumps`,
 `pnpm lint`, and `pnpm format` all exit zero.
 
-### 5. Run complete gates
+### 5. Run the mode-appropriate gates
 
-Run the repository Definition of Done in documented order. Fetch `origin/main`
-immediately before version validation and run the focused validation test
-independently so Turbo cache replay is not the only evidence.
+**Lane mode (default under the execution program):** bump changed skill
+`version:` fields and update their pins in
+`packages/cli/src/validation/skills.test.ts` where a pin exists; run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes, plus `pnpm lint`, `pnpm format`, and
+`pnpm oat:validate-skills` because this plan changes `.agents/skills`. Do not edit
+lockstep release files or run `pnpm release:check-versions` /
+`pnpm release:validate`; the wave fan-in owns the lockstep bump and the full
+definition-of-done sequence. **Standalone mode only:** bump the five public
+packages above freshly fetched `origin/main` and run the eight AGENTS.md gates
+in order.
+Run the focused validation test independently so Turbo cache replay is not
+the only evidence.
 
 ## Test plan
 
@@ -195,7 +219,7 @@ independently so Turbo cache replay is not the only evidence.
 - Red/green mutation for same-PR timing and no-line-number identity.
 - Skill structure and exact version-bump validation.
 - Managed-view consistency after `oat sync --scope all`.
-- Complete repository gates, including release validation and docs build.
+- The lane-mode or standalone gate set from step 5.
 
 ## Done criteria
 
@@ -204,8 +228,11 @@ independently so Turbo cache replay is not the only evidence.
 - [ ] Stable identity, in-artifact maintenance, and same-PR timing are explicit.
 - [ ] Project designs echo the obligation without duplicating the full rule.
 - [ ] The guidance has a non-vacuous red/green contract test.
-- [ ] Both skill versions and all five public package versions are correct.
-- [ ] Managed views and all repository gates pass.
+- [ ] Both skill versions and their existing pins are correct.
+- [ ] Managed views pass.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions
@@ -219,12 +246,16 @@ Stop and report instead of improvising when:
 - a named verification gate fails twice after one bounded correction; or
 - scope expands beyond the two canonical skills and their contract test.
 
+## Execution record (2026-09-06, wave 3)
+
+Executed as wave-3 p03 (PR wave-3-execution): `create-oat-skill` 1.5.0 → 1.5.1 and `oat-project-design` 2.3.2 → 2.3.3 (two pins) with a fence- and comment-aware extraction in `skills.test.ts`; the runtime example was corrected to "a rollup never reports success when a required ledger write fails" (true against `rollup.ts:284`); the address-now sweep made both blocks name their executable owner, `existsSync`-checks cited precedent paths, drops indented code, and rejects weakening vocabulary. Sync convention (program rule from wave 3): where this plan says `oat sync --scope all`, lanes run `pnpm run cli -- sync --scope project`; `--scope all` also rewrites the operator's user-scope provider views and manifest and is operator-only.
+
 ## Revalidation Before Execution
 
 Revalidate against current `origin/main`, the source backlog item, both cited
 skills, all three precedent mechanisms, and the focused validation test when
 main advances materially from
-`845462e78468265c7e2e2b2f6c64731472731ecb`, cited paths or intent change,
+`49aeb5075971180b48c131bbd2b21b82d455bfc9`, cited paths or intent change,
 another PR implements this guidance, or a load-bearing absence cannot be
 reproduced. Refresh or supersede the plan before executing stale evidence.
 

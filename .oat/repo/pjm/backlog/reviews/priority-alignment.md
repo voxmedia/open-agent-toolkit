@@ -119,10 +119,11 @@ The legacy tree has been retired. Eighteen reviewed records now have canonical
 `BL-260830-*` identities:
 
 - Ready for bounded `oat-repo-improve` verification and planning when unowned:
-  quick-mode resume routing, config unset, live brainstorm dogfood, live
-  project-split dogfood, persisted instruction-sync strategy, strict YAML skill
-  validation, remote respond/summarize skills, and the provide-remote helper
-  CLI wiring.
+  quick-mode resume routing, config unset, live brainstorm dogfood,
+  persisted instruction-sync strategy, strict YAML skill validation, remote
+  respond/summarize skills, and the provide-remote helper CLI wiring. (The
+  project-split dogfood item was closed on 2026-09-02 after the operator ran
+  both entry paths repeatedly with no defects.)
 - Plan now when scope is coherent, even if execution is dependency-blocked:
   per-CLAUDE adoption opt-out (soft-depends on persisted strategy) and the
   documentation-aware discovery policy from #205. Record dependency links,
@@ -149,9 +150,15 @@ The legacy tree has been retired. Eighteen reviewed records now have canonical
 
 ## Changelog
 
-| Date       | Update                                                                                                                                                                                                                     |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-08-30 | Separated plan readiness from execution readiness for the upcoming improve pass and captured the missing skill/template enforcement in `BL-260830-distinguish-external-plan`.                                              |
-| 2026-08-30 | Promoted 18 reviewed legacy records into the canonical backlog, folded six terminal records into completed history, removed the parallel legacy tree, and separated improve-ready work from needs-discussion decisions.    |
-| 2026-08-30 | Archived the PR #242 provider-root prerequisite, recorded active project ownership, moved legacy PJM cleanup into the direct administrative lane, and reserved future oat-repo-improve work for unowned well-scoped items. |
-| 2026-08-29 | Replaced the stale 2026-08-19 alignment with a post-PR #231 grouping and sequencing view.                                                                                                                                  |
+| Date       | Update                                                                                                                                                                                                                                                                                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-04 | Planned `BL-260901-make-terminal-project-status` (W5 group 4) and `BL-260904-diagnose-canonical-skills` (W6 group 2); the program now schedules 31 plans across W1–W6. The completion-format class the status recon surfaced (projects that never write per-task `**Status:** completed`) is a candidate follow-up item, not planned.                   |
+| 2026-09-04 | Issue #258 (skill versioning against the Agent Skills spec) triaged into `BL-260904-honor-metadata-version` with a plan in W6 group 2, plus `BL-260904-migrate-bundled-skills-from` for the bulk migration outside the program.                                                                                                                         |
+| 2026-09-03 | PR #253 merged; post-merge triage resume applied (twenty issues labeled, #204 and #228 closed). Wave 5 index adds three `BL-260903-*` plans as W6; the program now schedules 28 plans across W1–W6. `BL-260904-stabilize-the-collection` filed for a CI flake in the collection-detach path.                                                            |
+| 2026-09-03 | PR #255 (truthfulness) and #256 landed; the two blocked W4 plans were refreshed to READY and every intake plan's landing-event row marked landed. The eight `BL-260903-*` items from PR #255 are unplanned; `BL-260903-populate-provider-reachability` (medium/M) and `BL-260903-pr-final-archives-reviews` (medium/S) are the next improve candidates. |
+| 2026-09-02 | Program-intake triage created twelve `BL-260902-*` items and a Wave 4 plan index (12 plans, every plan with a landing-event table for the truthfulness merge and PR #190); the execution program now schedules 25 plans across W1–W5.                                                                                                                   |
+| 2026-09-02 | Archived `BL-260830-live-dogfood-oat-project-split` as closed without implementation; the operator already exercised both split entry paths.                                                                                                                                                                                                            |
+| 2026-08-30 | Separated plan readiness from execution readiness for the upcoming improve pass and captured the missing skill/template enforcement in `BL-260830-distinguish-external-plan`.                                                                                                                                                                           |
+| 2026-08-30 | Promoted 18 reviewed legacy records into the canonical backlog, folded six terminal records into completed history, removed the parallel legacy tree, and separated improve-ready work from needs-discussion decisions.                                                                                                                                 |
+| 2026-08-30 | Archived the PR #242 provider-root prerequisite, recorded active project ownership, moved legacy PJM cleanup into the direct administrative lane, and reserved future oat-repo-improve work for unowned well-scoped items.                                                                                                                              |
+| 2026-08-29 | Replaced the stale 2026-08-19 alignment with a post-PR #231 grouping and sequencing view.                                                                                                                                                                                                                                                               |

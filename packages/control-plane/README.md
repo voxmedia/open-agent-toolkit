@@ -53,9 +53,18 @@ Reads all projects under a configured projects root and returns lightweight `Pro
 
 `ProjectSummary.scope` is an additive optional field (`shared`, `local`, or
 `synced`). The CLI's cross-scope list surface returns `ProjectListRow[]`, a
-discriminated union: materialized rows carry normal lifecycle state, while
-recorded-but-absent and remote rows use `null` lifecycle fields and an explicit
-pull recommendation instead of inventing project state.
+discriminated union:
+
+- `materialized` rows carry normal lifecycle state.
+- `recorded-absent` and `remote` rows use `null` lifecycle fields and an
+  explicit pull recommendation instead of inventing project state.
+- `recorded-terminal` rows represent legacy or authoritative completion. They
+  carry `lifecycle: 'complete'`, a `terminalState`, a nullable `archiveSnapshot`,
+  and no pull recommendation; their checkout may still be present when a
+  completed ref supersedes stale local state.
+- `terminal-invalid` rows represent differing active and completed ref SHAs.
+  They carry the conflicting refs and SHAs, use `checkout: 'invalid'`, and
+  return a repair diagnosis rather than workflow guidance.
 
 ### `recommendSkill(projectState)`
 

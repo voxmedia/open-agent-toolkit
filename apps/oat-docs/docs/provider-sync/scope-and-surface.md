@@ -33,6 +33,7 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - Canonical `.agents/rules` is source of truth for rules; provider rule files are derived rendered copies
 - Each scope syncs independently. When the same canonical asset exists at both project and user scope, OAT reports the duplication with both paths and versions and does **not** infer which copy a provider executes; resolve it explicitly with `oat tools migrate`
 - Pack removal and migration drive a symmetric removal sync: the exact canonical paths that were removed are pruned from provider views in that scope only, and only after the canonical source is confirmed absent
+- A successful provider write proves materialization only. Catalog refresh policy and current-session visibility are separate evidence; without a provider catalog observation, OAT does not claim the asset is visible.
 
 ## Implemented command surface
 
@@ -42,6 +43,8 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - `oat providers inspect`
 - `oat providers set`
 - `oat providers codex materialize`
+- `oat project dispatch record` (project-aware dispatch evidence only; never a
+  provider launcher)
 
 ## Adjacent CLI commands (commonly used with provider interop)
 
@@ -52,6 +55,8 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 ## Provider enablement model
 
 - Project provider enablement is stored in `.oat/sync/config.json` (`providers.<name>.enabled`).
+- User provider enablement is stored in `~/.oat/sync/config.json`. `oat providers set --scope user --enabled claude` and `oat providers set --scope user --disabled claude` update this canonical user config while preserving unrelated fields.
+- `oat providers list` and `oat providers inspect` show configuration-owned activation separately from filesystem detection, plus registered scope/content capability, projection modes, native reads, materialization, and visibility evidence.
 - `oat init --scope project` (interactive) prompts for supported providers and persists explicit true/false values.
 - `oat sync --scope project` uses config-aware provider activation and can prompt to remediate detected mismatches.
 - Cursor provider enablement still controls agents, rules, migration discovery, and legacy cleanup even though Cursor reads canonical skills without a generated skill view.
@@ -61,6 +66,36 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - Missing depth or depth `1` does not block default phase execution. Invalid values or explicit values below `1` fail managed implementation preflight. `oat doctor` reports whether optional depth-two nesting is available and gives a scope-specific repair when the configured value is unusable.
 - Codex aggregate config drift is reported via sync/status extension metadata (`aggregateConfigHash`); it is not persisted as a separate manifest schema entry.
 - Codex user-config materialization writes user-owned implementer and reviewer roles under the user provider directory, `~/.codex`; it does not write those roles into the repository.
+
+## Provider refresh evidence
+
+Refresh advice is emitted only for a successful, relevant current-run change.
+For every supported provider-visible capability without a stronger sourced
+policy, the registry records the OAT repository decision approved on
+2026-08-31: start a new provider session so it has an opportunity to load the
+changed asset. This is conservative safety guidance, not a provider hot-reload
+guarantee, an application-process restart requirement, or proof that the new
+session loaded or exposed the asset. Current/no-op, planned-only, failed,
+missing, inactive, and unsupported materialization receive no such advice;
+unsupported capabilities keep an `unknown` policy.
+
+The compatibility schema names this session boundary `restart-required`. When
+its provenance is `repository-decision`, the recovery text means “start a new
+provider session,” not “restart the application.”
+
+A truthful provider/content-specific policy takes precedence over the generic
+repository decision. The official Claude Code subagent contract, verified on
+2026-08-31, says existing agent directories are watched and changes load within
+seconds. It describes a conditional restart for the first agent added to a
+directory absent at session start, for agents added through `--add-dir`, and
+when Claude starts with `--disable-slash-commands`. OAT cannot observe those
+runtime conditions and does not claim they occurred; it applies only the
+generic new-session guidance after a successful file change.
+
+`oat status`, `oat doctor`, and `oat init` expose that their running-provider
+catalog observation is `not-reported`. They inspect filesystem/configuration
+state, not the provider's active catalog. Only an actual current-session probe
+can establish `visible`.
 
 ## Codex managed dispatch
 
@@ -72,6 +107,15 @@ A fresh pinned child is allowed only after explicit pre-start native
 role-selection rejection. Missing runtime telemetry, missing self-report, or a
 child accepted by the native route that later returns `BLOCKED` are not
 role-selection rejection and do not permit fallback.
+
+Project workflows construct and redact the complete dispatch payload before
+the native call, then persist its accepted or `blocked-before-start` result
+immediately under the active project's `dispatch/` directory. The generic
+record remains provider-neutral. OAT-specific canonical role, rejection,
+fallback, and runtime facts live only under its `oat` namespace. A qualifying
+fallback is a fresh request that preserves exact target and controls and is
+explicitly labeled an approximation; timeout, refusal after acceptance,
+runtime mismatch, malformed output, and missing telemetry never authorize it.
 
 ## Non-interop namespaces in the same CLI
 

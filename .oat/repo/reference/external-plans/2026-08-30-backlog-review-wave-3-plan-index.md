@@ -5,8 +5,8 @@ oat_external_plan_source: backlog-review
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 created: '2026-08-31T00:01:21Z'
 ---
 
@@ -65,6 +65,6 @@ not an `oat-project-import-plan` target.
 - The smoke plan deliberately narrows the source item's unsafe prefix-pruning
   suggestion. Existing residue is administrative evidence, not cleanup
   authority; only manifest-reserved and corroborated resources are removable.
-- Every selected plan was authored against full `origin/main` SHA
-  `845462e78468265c7e2e2b2f6c64731472731ecb` and contains its own drift and
+- Every selected plan was revalidated against full `origin/main` SHA
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` and contains its own drift and
   revalidation contract.

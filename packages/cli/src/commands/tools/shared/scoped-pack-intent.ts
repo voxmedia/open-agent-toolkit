@@ -16,11 +16,19 @@ import { getPackDefinition } from './pack-manifest';
 import type { PackName } from './types';
 
 export type PackIntentSource = 'declared' | 'inferred-legacy' | 'none';
+export type PackIntentState =
+  | 'direct'
+  | 'transitive'
+  | 'legacy-inferred'
+  | 'absent';
 
 export interface ScopedPackIntent {
   pack: PackName;
   scope: ConcreteScope;
   enabled: boolean;
+  direct: boolean;
+  requiredBy: PackName[];
+  state: PackIntentState;
   source: PackIntentSource;
   configPath: string;
   diagnostics: PackIntentDiagnostic[];
@@ -40,6 +48,10 @@ export interface IntentReadInput {
 
 export interface IntentWriteInput extends IntentReadInput {
   enabled: boolean;
+}
+
+export interface LeaseWriteInput extends IntentWriteInput {
+  requiredBy: PackName;
 }
 
 function configPathForScope(scopeRoot: string): string {
@@ -102,7 +114,10 @@ export async function hasScopedPackOwnershipEvidence(
   input: IntentReadInput,
 ): Promise<boolean> {
   const config = await readConcreteConfig(input);
-  if (config.tools?.[input.pack] === true) {
+  if (
+    config.tools?.[input.pack] === true ||
+    (config.tools?.requiredBy?.[input.pack]?.length ?? 0) > 0
+  ) {
     return true;
   }
 
@@ -123,8 +138,12 @@ export async function readScopedPackIntent(
 ): Promise<ScopedPackIntent> {
   const config = await readConcreteConfig(input);
   const declared = config.tools?.[input.pack] === true;
+  const requiredBy = [...(config.tools?.requiredBy?.[input.pack] ?? [])].sort();
   const legacyFalse = config.tools?.[input.pack] === false;
-  const physicalAssets = declared ? [] : await findPhysicalManagedAssets(input);
+  const physicalAssets =
+    declared || requiredBy.length > 0
+      ? []
+      : await findPhysicalManagedAssets(input);
   const inferred = physicalAssets.length > 0;
   const diagnostics: PackIntentDiagnostic[] = [];
   if (legacyFalse && inferred) {
@@ -137,8 +156,22 @@ export async function readScopedPackIntent(
   return {
     pack: input.pack,
     scope: input.scope,
-    enabled: declared || inferred,
-    source: declared ? 'declared' : inferred ? 'inferred-legacy' : 'none',
+    enabled: declared || requiredBy.length > 0 || inferred,
+    direct: declared,
+    requiredBy,
+    state: declared
+      ? 'direct'
+      : requiredBy.length > 0
+        ? 'transitive'
+        : inferred
+          ? 'legacy-inferred'
+          : 'absent',
+    source:
+      declared || requiredBy.length > 0
+        ? 'declared'
+        : inferred
+          ? 'inferred-legacy'
+          : 'none',
     configPath: configPathForScope(input.scopeRoot),
     diagnostics,
   };
@@ -158,30 +191,72 @@ function updateTools(
   return Object.keys(next).length > 0 ? next : undefined;
 }
 
-export async function writeScopedPackIntent(
-  input: IntentWriteInput,
+function updateRequiredBy(
+  tools: OatToolsConfig | undefined,
+  pack: PackName,
+  requiredBy: PackName,
+  enabled: boolean,
+): OatToolsConfig | undefined {
+  const next: OatToolsConfig = { ...tools };
+  const leases = new Set(next.requiredBy?.[pack] ?? []);
+  if (enabled) {
+    leases.add(requiredBy);
+  } else {
+    leases.delete(requiredBy);
+  }
+
+  const requiredByConfig = { ...next.requiredBy };
+  if (leases.size > 0) {
+    requiredByConfig[pack] = [...leases].sort();
+  } else {
+    delete requiredByConfig[pack];
+  }
+  if (Object.keys(requiredByConfig).length > 0) {
+    next.requiredBy = requiredByConfig;
+  } else {
+    delete next.requiredBy;
+  }
+  return Object.keys(next).length > 0 ? next : undefined;
+}
+
+async function writeToolsConfig(
+  input: IntentReadInput,
+  update: (tools: OatToolsConfig | undefined) => OatToolsConfig | undefined,
 ): Promise<void> {
   if (input.scope === 'project') {
     const config = await readOatConfig(input.scopeRoot);
-    const tools = updateTools(config.tools, input.pack, input.enabled);
+    const tools = update(config.tools);
     const next: OatConfig = { ...config };
-    if (tools) {
-      next.tools = tools;
-    } else {
-      delete next.tools;
-    }
+    if (tools) next.tools = tools;
+    else delete next.tools;
     await writeOatConfig(input.scopeRoot, next);
     return;
   }
 
   const configDir = userConfigDir(input.scopeRoot);
   const config = await readUserConfig(configDir);
-  const tools = updateTools(config.tools, input.pack, input.enabled);
+  const tools = update(config.tools);
   const next: UserConfig = { ...config };
-  if (tools) {
-    next.tools = tools;
-  } else {
-    delete next.tools;
-  }
+  if (tools) next.tools = tools;
+  else delete next.tools;
   await writeUserConfig(configDir, next);
+}
+
+export async function writeScopedPackIntent(
+  input: IntentWriteInput,
+): Promise<void> {
+  await writeToolsConfig(input, (tools) =>
+    updateTools(tools, input.pack, input.enabled),
+  );
+}
+
+export async function writeScopedPackLease(
+  input: LeaseWriteInput,
+): Promise<void> {
+  if (input.pack === input.requiredBy) {
+    throw new Error(`Pack ${input.pack} cannot require itself`);
+  }
+  await writeToolsConfig(input, (tools) =>
+    updateRequiredBy(tools, input.pack, input.requiredBy, input.enabled),
+  );
 }

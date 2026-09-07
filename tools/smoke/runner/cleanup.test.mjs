@@ -18,6 +18,7 @@ import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 import { CleanupRefusalError, cleanupSmoke } from './cleanup.mjs';
+import { reserveNestedSmokeResource } from './journal.mjs';
 import { provisionSmoke } from './provision.mjs';
 import { main } from './run-smoke.mjs';
 
@@ -34,7 +35,7 @@ async function git(args, { cwd } = {}) {
 }
 
 async function createRepository(prefix = 'oat-smoke-cleanup-') {
-  const directory = await mkdtemp(join(tmpdir(), prefix));
+  const directory = await realpath(await mkdtemp(join(tmpdir(), prefix)));
   await git(['init', '--initial-branch=main'], { cwd: directory });
   await git(['config', 'user.email', 'smoke@example.test'], { cwd: directory });
   await git(['config', 'user.name', 'Smoke Test'], { cwd: directory });
@@ -1209,4 +1210,514 @@ test('a detached child still reports its diagnostic and still removes both temp 
   );
   assert.equal(await exists(directories.harnessDirectory), false);
   assert.equal(await exists(directories.repository), false);
+});
+
+// --- Reserved-ownership reconciliation -------------------------------------
+//
+// A reservation records durable intent before `git worktree add` runs, so
+// cleanup must reconcile all three interruption windows without ever deleting
+// state it cannot corroborate against the recorded reservation.
+
+function childOf(manifest, name) {
+  const worktreePath = join(dirname(manifest.manifestPath), name);
+  return {
+    branch: `${manifest.branch}-${name}`,
+    markerPath: join(worktreePath, '.oat/smoke-bootstrap.json'),
+    worktreePath,
+  };
+}
+
+async function reserveChild(manifest, name) {
+  const child = childOf(manifest, name);
+  await reserveNestedSmokeResource({
+    baselineCommitSha: manifest.baselineCommitSha,
+    branch: child.branch,
+    manifestPath: manifest.manifestPath,
+    markerPath: child.markerPath,
+    worktreePath: child.worktreePath,
+  });
+  return child;
+}
+
+async function materializeChild(manifest, child) {
+  await git(
+    [
+      '-c',
+      'core.hooksPath=/dev/null',
+      'worktree',
+      'add',
+      '-b',
+      child.branch,
+      child.worktreePath,
+      manifest.baselineCommitSha,
+    ],
+    { cwd: manifest.worktreePath },
+  );
+}
+
+async function readManifestFile(manifest) {
+  return JSON.parse(await readFile(manifest.manifestPath, 'utf8'));
+}
+
+async function tamperManifest(manifest, mutate) {
+  const current = await readManifestFile(manifest);
+  mutate(current);
+  await writeFile(
+    manifest.manifestPath,
+    `${JSON.stringify(current, null, 2)}\n`,
+  );
+  return current;
+}
+
+async function branchTip(repository, branch) {
+  return git(['rev-parse', '--verify', '--quiet', `refs/heads/${branch}`], {
+    cwd: repository,
+  }).catch(() => '');
+}
+
+test('discharges a reservation interrupted before the worktree was created', async () => {
+  const repository = await createRepository();
+  const baselineWorktrees = await git(['worktree', 'list', '--porcelain'], {
+    cwd: repository,
+  });
+  let manifest;
+
+  try {
+    manifest = await provision(repository, 'reserved-window-one');
+    const child = await reserveChild(manifest, 'phase-p01');
+    assert.equal(await branchTip(repository, child.branch), '');
+
+    const result = await cleanup(repository, manifest);
+
+    assert.equal(result.status, 'cleaned');
+    // Nothing was materialized, so nothing is deleted: the reservation is
+    // discharged with the run manifest and no Git resource is touched.
+    assert.ok(result.actions.includes(`reservation:${child.branch}`));
+    assert.equal(
+      result.actions.some((action) => action === `branch:${child.branch}`),
+      false,
+    );
+    assert.equal(
+      result.actions.some(
+        (action) => action === `worktree:${child.worktreePath}`,
+      ),
+      false,
+    );
+    assert.equal(await exists(child.worktreePath), false);
+    assert.equal(await exists(manifest.manifestPath), false);
+    await assertNoSmokeGitResources(repository, baselineWorktrees);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('reconciles a reservation interrupted between creation and registration', async () => {
+  const repository = await createRepository();
+  const baselineWorktrees = await git(['worktree', 'list', '--porcelain'], {
+    cwd: repository,
+  });
+  let manifest;
+
+  try {
+    manifest = await provision(repository, 'reserved-window-two');
+    const child = await reserveChild(manifest, 'phase-p01');
+    // Interruption after `git worktree add`, before finalization: the entry is
+    // still `reserved` but the branch and worktree now exist.
+    await materializeChild(manifest, child);
+    assert.equal(
+      (await readManifestFile(manifest)).ownershipJournal.resources[0].state,
+      'reserved',
+    );
+
+    const result = await cleanup(repository, manifest);
+
+    assert.equal(result.status, 'cleaned');
+    assert.ok(result.actions.includes(`worktree:${child.worktreePath}`));
+    assert.ok(result.actions.includes(`branch:${child.branch}`));
+    assert.equal(await exists(child.worktreePath), false);
+    await assertNoSmokeGitResources(repository, baselineWorktrees);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('reconciles a reserved branch left after its worktree was removed', async () => {
+  const repository = await createRepository();
+  const baselineWorktrees = await git(['worktree', 'list', '--porcelain'], {
+    cwd: repository,
+  });
+  let manifest;
+
+  try {
+    manifest = await provision(repository, 'reserved-branch-only');
+    const child = await reserveChild(manifest, 'phase-p01');
+    await materializeChild(manifest, child);
+    await git(['worktree', 'remove', '--force', child.worktreePath], {
+      cwd: repository,
+    });
+    assert.equal(
+      await branchTip(repository, child.branch),
+      manifest.baselineCommitSha,
+    );
+
+    const result = await cleanup(repository, manifest);
+
+    assert.equal(result.status, 'cleaned');
+    assert.ok(result.actions.includes(`branch:${child.branch}`));
+    await assertNoSmokeGitResources(repository, baselineWorktrees);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('refuses a reserved branch whose tip no longer matches its reserved baseline', async () => {
+  const repository = await createRepository();
+  let manifest;
+
+  try {
+    manifest = await provision(repository, 'reserved-divergent');
+    const child = await reserveChild(manifest, 'phase-p01');
+    await materializeChild(manifest, child);
+    await writeFile(join(child.worktreePath, 'child-work.txt'), 'work\n');
+    await git(['add', 'child-work.txt'], { cwd: child.worktreePath });
+    await git(['commit', '-m', 'test: advance reserved child'], {
+      cwd: child.worktreePath,
+    });
+    await git(['worktree', 'remove', '--force', child.worktreePath], {
+      cwd: repository,
+    });
+    const advancedTip = await branchTip(repository, child.branch);
+    assert.notEqual(advancedTip, manifest.baselineCommitSha);
+
+    // A reservation was never corroborated against a materialized child, so a
+    // tip that advanced past the reserved baseline is a contradiction rather
+    // than legitimate lifecycle progress.
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /does not exactly match its reserved baseline/,
+    );
+    assert.equal(await branchTip(repository, child.branch), advancedTip);
+    assert.equal(await exists(manifest.worktreePath), true);
+    assert.equal(await exists(manifest.manifestPath), true);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('refuses every contradicted reserved state and leaves it untouched', async () => {
+  const repository = await createRepository();
+  let manifest;
+
+  try {
+    manifest = await provision(repository, 'reserved-contradictions');
+    const child = await reserveChild(manifest, 'phase-p01');
+    const pristine = await readManifestFile(manifest);
+
+    // 1. A reserved path occupied by something Git never registered.
+    await mkdir(child.worktreePath, { recursive: true });
+    await writeFile(join(child.worktreePath, 'squatter.txt'), 'not ours\n');
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /exists without Git worktree registration/,
+    );
+    assert.equal(
+      await readFile(join(child.worktreePath, 'squatter.txt'), 'utf8'),
+      'not ours\n',
+    );
+    await rm(child.worktreePath, { force: true, recursive: true });
+
+    // 2. The reserved branch checked out in a worktree the run never reserved.
+    const strayPath = join(repository, '.stray/child');
+    await git(['branch', child.branch, manifest.baselineCommitSha], {
+      cwd: repository,
+    });
+    await mkdir(dirname(strayPath), { recursive: true });
+    await git(
+      [
+        '-c',
+        'core.hooksPath=/dev/null',
+        'worktree',
+        'add',
+        strayPath,
+        child.branch,
+      ],
+      { cwd: repository },
+    );
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /checked out in an unreserved worktree/,
+    );
+    assert.equal(await exists(strayPath), true);
+    await git(['worktree', 'remove', '--force', strayPath], {
+      cwd: repository,
+    });
+    await git(['branch', '--delete', '--force', '--', child.branch], {
+      cwd: repository,
+    });
+
+    // 3. The reserved path registered on a branch the reservation never named.
+    await materializeChild(manifest, child);
+    await git(['checkout', '-b', `${child.branch}-renamed`], {
+      cwd: child.worktreePath,
+    });
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /registered to a different branch/,
+    );
+    assert.equal(await exists(child.worktreePath), true);
+    assert.equal(
+      await branchTip(repository, `${child.branch}-renamed`),
+      manifest.baselineCommitSha,
+    );
+
+    // 4. The reserved worktree registered without its reserved branch.
+    await git(['checkout', '--detach'], { cwd: child.worktreePath });
+    await git(
+      ['branch', '--delete', '--force', '--', `${child.branch}-renamed`],
+      { cwd: repository },
+    );
+    await git(['branch', '--delete', '--force', '--', child.branch], {
+      cwd: repository,
+    });
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /registered without its reserved branch/,
+    );
+    assert.equal(await exists(child.worktreePath), true);
+
+    // 5. A materialized reservation whose run marker is gone.
+    await git(['checkout', '-B', child.branch, manifest.baselineCommitSha], {
+      cwd: child.worktreePath,
+    });
+    await rm(child.markerPath, { force: true });
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /is missing its run marker/,
+    );
+    assert.equal(await exists(child.worktreePath), true);
+    assert.equal(
+      await branchTip(repository, child.branch),
+      manifest.baselineCommitSha,
+    );
+
+    // 6. A journal entry whose marker path points outside its own worktree.
+    await tamperManifest(manifest, (current) => {
+      current.ownershipJournal.resources[0].markerPath = join(
+        manifest.worktreePath,
+        '.oat/smoke-bootstrap.json',
+      );
+    });
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /is not the tracked marker in its journaled worktree/,
+    );
+    assert.equal(await exists(child.worktreePath), true);
+
+    // 7. Schema-v1 compatibility never reinterprets reserved intent as owned.
+    await tamperManifest(manifest, (current) => {
+      current.ownershipJournal = {
+        resources: pristine.ownershipJournal.resources,
+        schemaVersion: 1,
+      };
+    });
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /is not supported by ownership journal schema version 1/,
+    );
+    assert.equal(await exists(child.worktreePath), true);
+    assert.equal(
+      await branchTip(repository, child.branch),
+      manifest.baselineCommitSha,
+    );
+    assert.equal(await exists(manifest.manifestPath), true);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('refuses prefix-matching and unjournaled run descendants beside a reservation', async () => {
+  const repository = await createRepository();
+  let manifest;
+
+  try {
+    manifest = await provision(repository, 'reserved-prefix-control');
+    const child = await reserveChild(manifest, 'phase-p01');
+    await materializeChild(manifest, child);
+
+    // A prefix-matching sibling is never owned by name or path prefix.
+    const prefixPath = `${child.worktreePath}-lookalike`;
+    const prefixBranch = `${child.branch}-lookalike`;
+    await git(
+      [
+        '-c',
+        'core.hooksPath=/dev/null',
+        'worktree',
+        'add',
+        '-b',
+        prefixBranch,
+        prefixPath,
+        manifest.baselineCommitSha,
+      ],
+      { cwd: repository },
+    );
+
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /run-descendant worktree .* is not journaled/,
+    );
+    assert.equal(await exists(prefixPath), true);
+    assert.equal(
+      await branchTip(repository, prefixBranch),
+      manifest.baselineCommitSha,
+    );
+    assert.equal(await exists(child.worktreePath), true);
+    assert.equal(await exists(manifest.worktreePath), true);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
+});
+
+test('refuses a tampered journal that widens reserved ownership', async () => {
+  // Cleanup never trusts the manifest to have been written by the reservation
+  // writer: it re-derives containment, baseline, marker, and shared-Git-
+  // directory invariants before a reserved entry can authorize any deletion.
+  const repository = await createRepository();
+  let manifest;
+
+  try {
+    manifest = await provision(repository, 'reserved-tampered');
+    const child = await reserveChild(manifest, 'phase-p01');
+    await materializeChild(manifest, child);
+    const pristineJournal = structuredClone(
+      (await readManifestFile(manifest)).ownershipJournal,
+    );
+
+    // An unjournaled run descendant that a tampered entry tries to adopt.
+    const outsidePath = join(repository, '.outside/child');
+    const outsideBranch = 'smoke-outside-descendant';
+    await mkdir(dirname(outsidePath), { recursive: true });
+    await git(
+      [
+        '-c',
+        'core.hooksPath=/dev/null',
+        'worktree',
+        'add',
+        '-b',
+        outsideBranch,
+        outsidePath,
+        manifest.baselineCommitSha,
+      ],
+      { cwd: repository },
+    );
+
+    const tampering = [
+      [
+        // Reserving outside the run directory would put an unjournaled
+        // descendant into the owned set and skip the refusal that protects it.
+        (current) => {
+          current.ownershipJournal.resources[0].branch = outsideBranch;
+          current.ownershipJournal.resources[0].worktreePath = outsidePath;
+          current.ownershipJournal.resources[0].markerPath = join(
+            outsidePath,
+            '.oat/smoke-bootstrap.json',
+          );
+        },
+        /reserves a worktree outside the manifest run directory/,
+      ],
+      [
+        // A reservation may only ever name the run's own baseline.
+        (current) => {
+          current.ownershipJournal.resources[0].baselineCommitSha =
+            current.sourceCommitSha;
+        },
+        /reserves a baseline other than the run baseline/,
+      ],
+      [
+        // Wrong shared Git directory.
+        (current) => {
+          current.ownershipJournal.resources[0].commonGitDir = join(
+            repository,
+            '.other-git',
+          );
+        },
+        /conflicts with run ownership/,
+      ],
+      [
+        // A forged `registered` transition may not shed its marker path.
+        (current) => {
+          current.ownershipJournal.resources[0].state = 'registered';
+          delete current.ownershipJournal.resources[0].markerPath;
+        },
+        /markerPath must be an absolute path/,
+      ],
+      [
+        // A reserved entry cannot escape the re-derivation below by dropping
+        // the field that guard is keyed on: `reservedAt` is mandatory for a
+        // reserved entry, so its absence is refused rather than reclassified.
+        (current) => {
+          delete current.ownershipJournal.resources[0].reservedAt;
+          current.ownershipJournal.resources[0].worktreePath = outsidePath;
+          current.ownershipJournal.resources[0].markerPath = join(
+            outsidePath,
+            '.oat/smoke-bootstrap.json',
+          );
+          current.ownershipJournal.resources[0].branch = outsideBranch;
+        },
+        /reservedAt is required for a reserved entry/,
+      ],
+      [
+        // Nor may it shed the containment a reservation was written under.
+        // Reserved-origin entries keep those invariants after finalization, so
+        // flipping `state` while retaining `reservedAt` and a well-formed
+        // marker path must not reach the registered validation path.
+        (current) => {
+          current.ownershipJournal.resources[0].state = 'registered';
+          current.ownershipJournal.resources[0].branch = outsideBranch;
+          current.ownershipJournal.resources[0].worktreePath = outsidePath;
+          current.ownershipJournal.resources[0].markerPath = join(
+            outsidePath,
+            '.oat/smoke-bootstrap.json',
+          );
+        },
+        /reserves a worktree outside the manifest run directory/,
+      ],
+    ];
+
+    for (const [mutate, expected] of tampering) {
+      await tamperManifest(manifest, mutate);
+      await assert.rejects(() => cleanup(repository, manifest), expected);
+      assert.equal(await exists(outsidePath), true);
+      assert.equal(await exists(child.worktreePath), true);
+      assert.equal(await exists(manifest.worktreePath), true);
+      assert.match(
+        await git(['branch', '--list', outsideBranch], { cwd: repository }),
+        new RegExp(outsideBranch),
+      );
+      await tamperManifest(manifest, (current) => {
+        current.ownershipJournal = structuredClone(pristineJournal);
+      });
+    }
+
+    // Even with the untampered reservation restored, the unjournaled
+    // descendant beside it still fails the run closed rather than becoming
+    // collateral.
+    await assert.rejects(
+      () => cleanup(repository, manifest),
+      /run-descendant worktree .* is not journaled/,
+    );
+    assert.equal(await exists(outsidePath), true);
+
+    // Once the operator resolves that resource, the honest reservation cleans.
+    await git(['worktree', 'remove', '--force', outsidePath], {
+      cwd: repository,
+    });
+    await git(['branch', '--delete', '--force', '--', outsideBranch], {
+      cwd: repository,
+    });
+    const result = await cleanup(repository, manifest);
+    assert.equal(result.status, 'cleaned');
+    assert.equal(await exists(child.worktreePath), false);
+  } finally {
+    await rm(repository, { force: true, recursive: true });
+  }
 });

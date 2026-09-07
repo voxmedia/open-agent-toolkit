@@ -5,8 +5,8 @@ oat_external_plan_source: backlog-review
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 created: '2026-08-30T23:49:30Z'
 ---
 
@@ -17,9 +17,8 @@ not an `oat-project-import-plan` target.
 
 ## Selection
 
-- Selected: three self-contained outcomes. Mandatory named-skill loading and
-  dispatch-stamp emission are ready. The per-project gate override is planned
-  now but execution-blocked on the consolidated gate-contract project.
+- Selected: three self-contained outcomes. All three are execution-ready after
+  revalidation against the merged gate-contract project and current main.
 - Deferred/rejected:
   - [BL-260806-fail-closed-when-configured](../../pjm/backlog/items/BL-260806-fail-closed-when-configured.md)
     is materially implemented by the immutable closeout snapshot/terminal
@@ -38,23 +37,35 @@ not an `oat-project-import-plan` target.
 
 ## Recommended order
 
-| Order | Plan                                                                                                                               | Source item                              | Execution | Depends on                                                                       | Rationale                                                                                |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | --------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| 1     | [Emit the canonical dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md)                     | `BL-260826-emit-the-dispatch-stamp-from` | READY     | Accepted additive-report policy; issue #211 is soft                              | Smallest independent CLI/skill contract and no active project collision.                 |
-| 2     | [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md) | `BL-260718-mandatory-skill-load-clause`  | READY     | PR #190 and gate project are revalidation dependencies                           | Independent policy/corpus fix; repeat its sweep if either integration tip changes first. |
-| 3     | [Let one project disable configured lifecycle gates explicitly](./2026-08-30-disable-configured-gates-per-project.md)              | `BL-260712-per-project-override`         | BLOCKED   | `gate-execution-contract-hardening` completed, reviewed, merged, and revalidated | Same CLI/lifecycle surfaces must be planned against the consolidated delivered contract. |
+| Order | Plan                                                                                                                               | Source item                              | Execution | Depends on                                                                                           | Rationale                                                                                               |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 1     | [Emit the canonical dispatch stamp with resolver JSON](./2026-08-30-emit-dispatch-stamp-with-resolver-json.md)                     | `BL-260826-emit-the-dispatch-stamp-from` | READY     | Accepted additive-report policy; PR #255 merged and anchors refreshed 2026-09-03; issue #211 is soft | Smallest independent CLI/skill contract; scheduled in W4 beside the other delivered-project follow-ups. |
+| 2     | [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md) | `BL-260718-mandatory-skill-load-clause`  | READY     | PR #246 revalidation satisfied; PR #190 remains soft                                                 | Independent policy/corpus fix; repeat its sweep if PR #190's integration tip changes first.             |
+| 3     | [Let one project disable configured lifecycle gates explicitly](./2026-08-30-disable-configured-gates-per-project.md)              | `BL-260712-per-project-override`         | READY     | PR #246 merged and delivered gate contracts revalidated                                              | Additive project resolution preserves the consolidated delivered contract.                              |
 
 ## Dependency notes
 
 - Plans 1 and 2 are peer lanes, not a serial chain. They share release/version
   files and may touch review skill guidance, so concurrent branches must
   coordinate or rebase before merge.
-- Plan 2 must re-sweep lifecycle call sites if
-  [PR #190](https://github.com/voxmedia/open-agent-toolkit/pull/190) or the
-  consolidated gate project lands first.
-- Plan 3 must not be imported or executed while blocked. The old separate
+- Plan 1 was revalidated on 2026-09-02 and refreshed on 2026-09-03 after the
+  `tool-pack-scope-provider-truthfulness` project merged as PR #255: resolver,
+  report, and stamp code are unchanged, no stamp was implemented, the three
+  cited skills were bumped with dispatch-lineage prose, and
+  `oat project dispatch record` is recorded as a separate out-of-scope surface.
+  It is execution-ready and scheduled in W4.
+- Plan 2 was re-swept after PR #246 and after PR #254 (no new bare execution
+  pointers). Re-sweep lifecycle call sites again if
+  [PR #190](https://github.com/voxmedia/open-agent-toolkit/pull/190) changes
+  before execution, and after the `tool-pack-scope-provider-truthfulness`
+  merge, which edits `dispatch-and-dry-run.md` and the review-provide skills
+  inside the sweep set.
+- Plan 3 was revalidated against PR #246's merged result. The old separate
   headless/structured project dossiers are no longer authoritative ownership;
-  use the consolidated project's merged result.
+  preserve the consolidated project's delivered contracts. The
+  `tool-pack-scope-provider-truthfulness` merge also edits
+  `oat-project-plan-writing/SKILL.md` (cited at `:271-392`) and
+  `config/user-sync-config.ts`; re-anchor those citations before execution.
 - The rejected review/gate items should be normalized in backlog administration
   after their existing owners reproduce/archive the historical claims. This
   planning mode does not authorize those status changes.

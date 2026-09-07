@@ -1,5 +1,19 @@
 import { join } from 'node:path';
 
+import {
+  packScopeFactsFromInventory,
+  projectPackEvidence,
+} from '@commands/tools/shared/pack-evidence';
+import {
+  hasScopedPackPlacementEvidence,
+  type InventoryScopedPackInput,
+  type ScopedPackInventory,
+} from '@commands/tools/shared/pack-inventory';
+import {
+  type PackLifecycleRequest,
+  type PackLifecycleResult,
+} from '@commands/tools/shared/pack-lifecycle';
+import type { PackLifecycleOutcome } from '@commands/tools/shared/pack-lifecycle-outcome';
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
 import { resolveSharedOwnerRetentions } from '@commands/tools/shared/pack-reconcile';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
@@ -36,6 +50,19 @@ export interface RemoveToolsDependencies {
     scope: ConcreteScope,
     scopeRoot: string,
   ) => Promise<boolean>;
+  reconcilePacks?: (
+    requests: readonly PackLifecycleRequest[],
+    options?: { dryRun?: boolean },
+  ) => Promise<PackLifecycleResult[]>;
+  inventoryScopedPack?: (
+    input: InventoryScopedPackInput,
+  ) => Promise<ScopedPackInventory>;
+  writeScopedPackIntent?: (input: {
+    pack: PackName;
+    scope: ConcreteScope;
+    scopeRoot: string;
+    enabled: boolean;
+  }) => Promise<unknown>;
 }
 
 interface RemovedTool {
@@ -71,6 +98,7 @@ export interface RemoveResult {
   }>;
   packOutcomes: PackRemovalOutcome[];
   notInstalled: string[];
+  lifecycle?: PackLifecycleOutcome[];
 }
 
 function matchesTarget(tool: ToolInfo, target: RemoveTarget): boolean {
@@ -117,6 +145,7 @@ interface ScopeRemovalPlan {
   managedTargets: ManagedRemovalTarget[];
   retainedOwnerData: Array<{ path: string; reason: string }>;
   presentPacks: PackName[];
+  beforeInventories: ScopedPackInventory[];
 }
 
 interface ManagedPackRemovalPlan {
@@ -131,7 +160,7 @@ interface ManagedPackRemovalPlan {
   presentPacks: PackName[];
 }
 
-function selectedPacks(target: Exclude<RemoveTarget, { kind: 'name' }>) {
+export function selectedPacks(target: Exclude<RemoveTarget, { kind: 'name' }>) {
   return target.kind === 'pack'
     ? [target.pack]
     : PACK_MANIFEST.map(({ name }) => name);
@@ -288,6 +317,7 @@ export async function removeTools(
   const removed: RemovedTool[] = [];
   const removedAssets: RemoveResult['removedAssets'] = [];
   const retainedOwnerData: RemoveResult['retainedOwnerData'] = [];
+  const packOutcomes: PackRemovalOutcome[] = [];
   const assetsRoot = await deps.resolveAssetsRoot();
 
   if (target.kind === 'name') {
@@ -310,7 +340,99 @@ export async function removeTools(
     };
   }
 
-  const packOutcomes: PackRemovalOutcome[] = [];
+  if (deps.reconcilePacks) {
+    const packs = selectedPacks(target);
+    const requests: PackLifecycleRequest[] = [];
+    const roots = new Map<ConcreteScope, string>();
+    for (const scope of scopes) {
+      const scopeRoot = await deps.resolveScopeRoot(scope, cwd, home);
+      roots.set(scope, scopeRoot);
+      for (const pack of packs) {
+        const definition = PACK_MANIFEST.find(({ name }) => name === pack)!;
+        if (!definition.allowedScopes.includes(scope)) continue;
+        requests.push({
+          pack,
+          scope,
+          scopeRoot,
+          assetsRoot,
+          action: 'remove',
+        });
+      }
+    }
+    const lifecycle = await deps.reconcilePacks(requests, { dryRun });
+    for (const entry of lifecycle) {
+      for (const operation of entry.plan.operations) {
+        if (
+          operation.kind !== 'remove-dir' &&
+          operation.kind !== 'remove-file'
+        ) {
+          continue;
+        }
+        removedAssets.push({
+          path: operation.path,
+          scope: entry.request.scope,
+        });
+        const asset = entry.before.assets.find(
+          ({ definition }) => definition.id === operation.assetId,
+        )?.definition;
+        if (asset?.kind === 'skill' || asset?.kind === 'agent') {
+          removed.push({
+            name: asset.destination.split('/').at(-1)!.replace(/\.md$/, ''),
+            type: asset.kind,
+            scope: entry.request.scope,
+          });
+        }
+      }
+      retainedOwnerData.push(
+        ...entry.plan.retainedAssets.map(({ path }) => ({
+          path,
+          scope: entry.request.scope,
+          reason: 'retained shared owner data',
+        })),
+        ...entry.plan.retainedDependencyAssetIds.map((assetId) => ({
+          path:
+            entry.before.assets.find(
+              ({ definition }) => definition.id === assetId,
+            )?.path ?? assetId,
+          scope: entry.request.scope,
+          reason: 'retained dependency lease',
+        })),
+      );
+    }
+    for (const request of requests) {
+      const entry = lifecycle.find(
+        ({ request: candidate }) =>
+          !candidate.dependency &&
+          candidate.pack === request.pack &&
+          candidate.scope === request.scope,
+      );
+      packOutcomes.push({
+        pack: request.pack,
+        scope: request.scope,
+        removed: entry ? hasScopedPackPlacementEvidence(entry.before) : false,
+      });
+    }
+
+    if (target.kind === 'all') {
+      for (const scope of scopes) {
+        const scopeRoot = roots.get(scope)!;
+        const tools = await deps.scanTools({ scope, scopeRoot, assetsRoot });
+        for (const tool of tools.filter(({ pack }) => pack === 'custom')) {
+          await removeTool(tool, scopeRoot, dryRun, deps);
+          removed.push({ name: tool.name, type: tool.type, scope: tool.scope });
+        }
+      }
+    }
+
+    return {
+      removed,
+      removedAssets,
+      retainedOwnerData,
+      packOutcomes,
+      notInstalled: [],
+    };
+  }
+
   const plans: ScopeRemovalPlan[] = [];
   for (const scope of scopes) {
     const scopeRoot = await deps.resolveScopeRoot(scope, cwd, home);
@@ -323,6 +445,18 @@ export async function removeTools(
       dryRun,
       deps,
     );
+    const beforeInventories = deps.inventoryScopedPack
+      ? await Promise.all(
+          selectedPacks(target).map((pack) =>
+            deps.inventoryScopedPack!({
+              pack,
+              scope,
+              scopeRoot,
+              assetsRoot,
+            }),
+          ),
+        )
+      : [];
     const seedData = PACK_MANIFEST.filter(({ name }) =>
       selectedPacks(target).includes(name),
     ).flatMap(({ assets }) =>
@@ -344,6 +478,7 @@ export async function removeTools(
       managedTargets: managedPlan.targets,
       retainedOwnerData: [...managedPlan.retained, ...seedData],
       presentPacks: managedPlan.presentPacks,
+      beforeInventories,
     });
   }
 
@@ -379,11 +514,166 @@ export async function removeTools(
     );
   }
 
+  const finalInventories = dryRun
+    ? plans.flatMap(({ beforeInventories }) => beforeInventories)
+    : [];
+
   return {
     removed,
     removedAssets,
     retainedOwnerData,
     packOutcomes,
     notInstalled: [],
+    lifecycle: removalLifecycleOutcomes(
+      selectedPacks(target),
+      scopes,
+      packOutcomes,
+      dryRun,
+      finalInventories,
+    ),
   };
+}
+
+export function removalLifecycleOutcomes(
+  packs: readonly PackName[],
+  scopes: readonly ConcreteScope[],
+  outcomes: readonly PackRemovalOutcome[],
+  dryRun: boolean,
+  finalInventories: readonly ScopedPackInventory[],
+): PackLifecycleOutcome[] {
+  if (finalInventories.length === 0) return [];
+  return packs.map((pack) => {
+    const packInventories = finalInventories.filter(
+      (inventory) => inventory.pack === pack,
+    );
+    const finalEvidence =
+      packInventories.length === 0
+        ? null
+        : projectPackEvidence({
+            canonical: null,
+            scopes: packInventories.map(packScopeFactsFromInventory),
+          });
+    const removed = outcomes.some(
+      (outcome) => outcome.pack === pack && outcome.removed,
+    );
+    const inventoriedScopes = new Set(
+      packInventories.map(({ scope }) => scope),
+    );
+    const inventoryVerified =
+      finalEvidence !== null &&
+      finalEvidence.unknownScopes.length === 0 &&
+      scopes.every((scope) => inventoriedScopes.has(scope));
+    const remainingScopes = finalEvidence
+      ? scopes.filter((scope) =>
+          finalEvidence.knownRealizedScopes.includes(scope),
+        )
+      : [...scopes];
+    const verified =
+      inventoryVerified && (dryRun || remainingScopes.length === 0);
+    const recovery = !inventoryVerified
+      ? [
+          {
+            code: 'final-inventory-unverified' as const,
+            message: `Re-run status for ${pack}; final removal state could not be verified`,
+          },
+        ]
+      : !dryRun && remainingScopes.length > 0
+        ? remainingScopes.map((scope) => ({
+            code: 'canonical-verification-failed' as const,
+            message: `Removal remains incomplete for ${pack} at ${scope} scope; rerun oat tools remove --pack ${pack} --scope ${scope}`,
+          }))
+        : [];
+    return {
+      schemaVersion: 1,
+      selection: {
+        pack,
+        requested:
+          scopes.includes('project') && scopes.includes('user')
+            ? 'both'
+            : scopes[0]!,
+        retainedRealizedScopes: finalEvidence?.knownRealizedScopes ?? [],
+        targetScopes: scopes,
+      },
+      canonical: {
+        status: removed && !dryRun ? 'applied' : 'unchanged',
+        results: [],
+      },
+      sync: { scopes: [], status: 'not-run', providers: [] },
+      finalEvidence,
+      status: verified ? 'complete' : inventoryVerified ? 'partial' : 'failed',
+      recovery,
+    };
+  });
+}
+
+export function failedRemovalLifecycleOutcomes(
+  target: Exclude<RemoveTarget, { kind: 'name' }>,
+  scopes: readonly ConcreteScope[],
+  error: unknown,
+): PackLifecycleOutcome[] {
+  const message = error instanceof Error ? error.message : String(error);
+  return selectedPacks(target).map((pack) => ({
+    schemaVersion: 1,
+    selection: {
+      pack,
+      requested:
+        scopes.includes('project') && scopes.includes('user')
+          ? 'both'
+          : scopes[0]!,
+      retainedRealizedScopes: [],
+      targetScopes: scopes,
+    },
+    canonical: { status: 'failed', results: [] },
+    sync: { scopes: [], status: 'not-run', providers: [] },
+    finalEvidence: null,
+    status: 'failed',
+    recovery: [{ code: 'canonical-apply-failed', message }],
+  }));
+}
+
+export function failedPostRemovalLifecycleOutcomes(
+  target: Exclude<RemoveTarget, { kind: 'name' }>,
+  scopes: readonly ConcreteScope[],
+  outcomes: readonly PackRemovalOutcome[],
+  stage: 'intent-write' | 'final-inventory',
+  failedPack: PackName,
+  failedScope: ConcreteScope,
+  error: unknown,
+): PackLifecycleOutcome[] {
+  const detail = error instanceof Error ? error.message : String(error);
+  return selectedPacks(target).map((pack) => {
+    const canonicalApplied = outcomes.some(
+      (outcome) => outcome.pack === pack && outcome.removed,
+    );
+    const stageLabel =
+      stage === 'intent-write'
+        ? 'durable intent update failed'
+        : 'final inventory failed';
+    const canonicalSummary = canonicalApplied
+      ? `Canonical removal was applied for ${pack}, but final state is unverified`
+      : `No canonical removal was observed for ${pack}; final state remains unverified`;
+    return {
+      schemaVersion: 1,
+      selection: {
+        pack,
+        requested:
+          scopes.includes('project') && scopes.includes('user')
+            ? 'both'
+            : scopes[0]!,
+        retainedRealizedScopes: [],
+        targetScopes: scopes,
+      },
+      canonical: {
+        status: canonicalApplied ? 'applied' : 'unchanged',
+        results: [],
+      },
+      sync: { scopes: [], status: 'not-run', providers: [] },
+      finalEvidence: null,
+      status: 'failed',
+      recovery: scopes.map((scope) => ({
+        code: 'final-inventory-unverified',
+        message: `${canonicalSummary} because ${stageLabel} for ${failedPack} at ${failedScope} scope: ${detail}. Rerun oat tools remove --pack ${pack} --scope ${scope}`,
+      })),
+    };
+  });
 }

@@ -53,3 +53,27 @@ Observation: the exit-gate reviewer's pnpm test failed once in tools/smoke/deter
 ### 2026-08-26 · general · feedback · closeout ordering
 
 Observation: wave-2 archived its backlog item before summary.md existed, contradicting the wrapper plan's strictly ordered Implementation Complete checklist (synthesis + summary roll-up before archival). Impact: a final-review Medium and a recorded deviation; no data loss. Recommendation: generate summary.md immediately after the orchestration-log synthesis and before oat backlog archive; add this to the wave skill's closeout sequence wording.
+
+### 2026-08-31 · general · feedback · HiLL checkpoint phase timing
+
+The implement workflow misread oat_hill_checkpoints: [p04] as a gate before p04 and paused before the final phase. The intended contract is that a phase-listed HiLL checkpoint is evaluated after that phase completes. Strengthen the skill, template comments, and user-facing prose to say explicitly that pNN means after pNN, not before it. (observed on Observed on OAT 0.2.50)
+
+### 2026-08-31 · general · feedback · HiLL checkpoint timing correction
+
+Correction to the immediately preceding HiLL checkpoint phase timing entry: the intended observed version is OAT 0.2.50; the CLI rendered the supplied version-note prefix redundantly. The checkpoint-timing recommendation is unchanged.
+
+### 2026-09-06 · general · friction · wave wrapper slug and branch collision
+
+The oat-wave-execute fixed wave-N-execution slug and branch collided with the archived 2026-08 program wrapper and its stale remote branch; the wave kept the local name and pushed to origin/wave-1-execution-2026-09, deferring the archive-name collision to program close. The skill should qualify the slug or branch by program, or check archived wrappers and remote branches in preflight. (observed on oat 0.2.55)
+
+### 2026-09-06 · general · friction · duplicate orchestrator after session restart
+
+A session restart left the prior orchestrator instance alive on the same worktree, which scaffolded a second wrapper directory before standing down. Check ListAgents for a busy peer on the same path before scaffolding; the skill has no claim-the-tree step. (observed on oat 0.2.55)
+
+### 2026-09-06 · general · friction · reviewer reconnaissance signal placement
+
+A reviewer put the mandatory Reconnaissance signal in its chat reply rather than the artifact; the root validates the file, so the round was recovered through the accepted handle. Reviewer briefs should state that the line is validated in the artifact. (observed on oat 0.2.55)
+
+### 2026-09-06 · general · friction · dispatch journal cannot close out child outcome
+
+oat project dispatch record rejects a revision that changes child_outcome (generic fields are immutable), so a record written at acceptance never carries the terminal outcome; outcomes were recorded in implementation.md instead. Consider a terminal event kind or an outcome revision. (observed on oat 0.2.55)

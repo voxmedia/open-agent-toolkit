@@ -2,6 +2,10 @@ import { resolve } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { resolvePjmAdoption } from '@commands/pjm/adoption';
+import {
+  formatAgentsMdGuidanceResult,
+  formatAgentsMdMutationFailure,
+} from '@commands/shared/agents-md';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/index';
 import { resolveAssetsRoot } from '@fs/assets';
@@ -153,19 +157,33 @@ export function createDecisionCommand(
             decisionsRoot,
           });
         } catch (error) {
-          const message =
-            error instanceof Error ? error.message : String(error);
           throw new Error(
-            `Decision index initialized at ${result.decisionsRoot}, but AGENTS.md guidance could not be written: ${message}. Fix the guidance write error and rerun \`oat decision init\`.`,
+            `Decision scaffold completed, but AGENTS.md guidance could not be written: ${formatAgentsMdMutationFailure(error)} Fix the guidance write error and rerun \`oat decision init\`.`,
             { cause: error },
           );
         }
 
+        const guidanceIncomplete = [guidance.root, guidance.scoped].some(
+          ({ action }) => action === 'manual-required' || action === 'blocked',
+        );
+
         if (context.json) {
-          context.logger.json({ status: 'ok', ...result, guidance });
+          context.logger.json(
+            guidanceIncomplete
+              ? {
+                  status: 'partial',
+                  scaffold: { status: 'complete' },
+                  created: result.created,
+                  skipped: result.skipped,
+                  guidance,
+                }
+              : { status: 'ok', ...result, guidance },
+          );
         } else {
           context.logger.info(
-            `Initialized decision scaffold at ${result.decisionsRoot}`,
+            guidanceIncomplete
+              ? 'Initialized decision scaffold.'
+              : `Initialized decision scaffold at ${result.decisionsRoot}`,
           );
           if (result.created.length > 0) {
             context.logger.info(`Created: ${result.created.join(', ')}`);
@@ -176,10 +194,20 @@ export function createDecisionCommand(
             );
           }
           context.logger.info(
-            `AGENTS.md guidance: root=${guidance.root}, decisions=${guidance.scoped}`,
+            `AGENTS.md guidance: root=${guidance.root.action}, decisions=${guidance.scoped.action}`,
           );
+          if (guidanceIncomplete) {
+            context.logger.warn(
+              'Decision scaffold completed; AGENTS.md guidance requires manual action.',
+            );
+            for (const guidanceResult of [guidance.root, guidance.scoped]) {
+              for (const line of formatAgentsMdGuidanceResult(guidanceResult)) {
+                context.logger.info(line);
+              }
+            }
+          }
         }
-        process.exitCode = 0;
+        process.exitCode = guidanceIncomplete ? 1 : 0;
       } catch (error) {
         reportError(context, error);
       }

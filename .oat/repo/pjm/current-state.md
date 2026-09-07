@@ -37,6 +37,109 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.59` (wave 4 of the 2026-08-31 execution program, wrapper project
+  `wave-4-execution`, "delivered-project follow-ups", merged as PR #271) lets one project disable a
+  configured lifecycle gate through a strict `oat_skill_gate_overrides` map in
+  its own `state.md` (`oat gate resolve --project` reports `configured`,
+  `configured_disabled_by_project`, or `not_configured`; a `project_disabled`
+  closeout disposition whose fingerprint covers the override; every lifecycle
+  gate step now resolves with project context and fails closed on a null or
+  malformed result; `DR-260906-project-scoped-gate-overrides`), makes init,
+  remove-skill, interactive status adoption, and restamp-only sync report a
+  manifest `oatVersion` restamp before `saveManifest` replaces the producer
+  version (`manifestVersionRestamps` in init/remove-skill JSON), and emits
+  `dispatchStamp` beside `dispatchReport` from the dispatch-ceiling resolver so
+  orchestrators copy the canonical stamp instead of assembling it. Closed
+  `BL-260712-per-project-override`, `BL-260826-warn-on-silent-oatversion`,
+  `BL-260826-emit-the-dispatch-stamp-from`.
+- CLI `0.2.58` (wave 3 of the 2026-08-31 execution program, wrapper project
+  `wave-3-execution`, "workflow durability and containment", merged as PR #269) makes the
+  phase-implementer contract sweep the repository for every consumer of a
+  changed cross-cutting option (effective task boundary; stop-and-report for
+  cross-owner expansions; pinned in `post-implement-sequence-contracts.test.ts`),
+  journals deterministic smoke worktrees before `git worktree add` with
+  re-derived ownership invariants on every deletion path (`tools/smoke/**`,
+  residual window documented and pinned), and requires every standing claim in
+  a skill to name its executable owner and ship its backstop in the same PR
+  (`create-oat-skill`, `oat-project-design`, pinned in `skills.test.ts`).
+  Closed `BL-260818-require-repo-wide-call-site`,
+  `BL-260826-deterministic-smoke-tier-leaks`, `BL-260714-executable-backstops`.
+- CLI `0.2.57` (wave 2 of the 2026-08-31 execution program, wrapper project
+  `wave-2-execution`, "skill contract truthfulness", merged as PR #267) repairs four bundled
+  skills whose prose disagreed with what ships (`oat-doctor` inventory,
+  `oat-brainstorm`, `oat-idea-summarize` tools, `analyze` step model), makes
+  the codex-skill below-floor guard reject anaphoric confirmation
+  reinstatements, runs the explainer-kit publication-boundary assertions over
+  the docs page with a whole-document forbidden-phrase guard, requires
+  thirteen lifecycle skills to load the current `SKILL.md` of every OAT skill
+  they direct an orchestrator to execute (backed by
+  `validation/named-skill-load-contract.test.ts`, which also detects stray
+  fences; three hidden-fence defects repaired), and ships
+  `oat-project-implement/scripts/capture-dirty-tree.mjs` plus the
+  `recovered_patch` contract so a lost child handle's staged work has a
+  verified, fail-closed path into the next attempt. Closed
+  `BL-260819-repair-verified-bundled-skill`, `BL-260827-harden-the-codex-skill-below`,
+  `BL-260818-extend-guarded-prose-contract`, `BL-260718-mandatory-skill-load-clause`,
+  `BL-260902-document-patch-and-restore`.
+- CLI `0.2.56` (wave 1 of the 2026-08-31 execution program, wrapper project
+  `wave-1-execution`, merged as PR #262) resolves
+  `oat docs generate-index` from `documentation.root` (app root canonical,
+  `<root>/docs` precedence as compatibility behavior), defaults output to the
+  app-root manifest, never writes the scaffold's authored `docs/index.md` or
+  `mkdocs.yml`, refuses unsafe outputs before writing (exit 1; unusable
+  configuration exits 2), updates `documentation.index` only for the Fumadocs
+  bootstrap transition, and prunes generation through the new
+  `documentation.excludes` / `--exclude` root-anchored glob grammar backed by a
+  ReDoS-safe matcher. `validateAssetsBundle` fails closed on a partial or
+  malformed bundle (seven required directories, exit 2, first offender named,
+  errno-bearing unreadable diagnosis) and every asset remedy is source-aware
+  (`OAT_ASSETS_DIR` failures never advise a rebuild or reinstall). Closed
+  `BL-260718-fix-oat-docs-generate-index`, `BL-260827-fail-closed-on-partial-or`,
+  `BL-260827-override-aware-remedy-text`, and
+  `BL-260902-add-an-exclusion-mechanism`; filed three `BL-260906-*` follow-ups.
+- CLI `0.2.51` (retire-archived-synced-project, implementation complete;
+  pending PR/release) retires a successfully archived synced project from its
+  active JSON-record and discovery-ref namespaces only after local and every
+  configured remote durability target succeed. `refs/oat/completed/<slug>`
+  preserves terminal identity and source-commit reachability; a same-SHA active
+  ref may remain as an inert alias, while differing SHAs and remote lookup
+  failures remain precise fail-closed diagnoses. List, dashboard, pull, open,
+  links, prune, archive recovery, and the completion skill now share this
+  recordless terminal contract. Uncached CLI 4721/4721 and control-plane 78/78
+  tests and the full repository/release/docs gate sequence passed. Follow-up
+  task p04-t06 also made recordless archive resume accept explicit `null` as a
+  no-recap receipt without weakening validation of present recap evidence. The
+  authenticated Claude Fable gate run
+  `2e607741-ddac-4b6e-bc38-0d65d66c93aa` reviewed head
+  `5a05907aee3f2a5bcff776baf9e9b870b3cc1b87` and passed the configured
+  Important threshold; its Medium and Minor findings are dispositioned.
+- CLI `0.2.54` (`recon-skill`, implementation complete and user-approved; PR
+  #248 open) adds the provider-neutral `recon` skill and
+  `recon-worker` to the research pack. Approved homogeneous worker waves now
+  gather, verify, challenge, cover, and reconcile bounded evidence into one
+  validated packet directory whose manifest, synthesis, canonical claim ledger,
+  gaps, and review artifacts are the normal consumer surface; raw dossiers stay
+  outside default consumer context. The research pack acquires its reusable
+  dispatch dependencies from the utility pack through same-scope durable leases
+  and materializes the worker at user scope only when installed inventory is
+  current and matches the bundled definition. All 36 implementation and
+  revision tasks across revisions p-rev1 through p-rev9, independent reviews,
+  and the configured cross-family exit gate passed. First-class
+  discovery/quick-start integration and broader analysis and research
+  integration remain separately tracked in `BL-260830-integrate-recon-with-oat`
+  and `BL-260830-integrate-recon-across`.
+- CLI `0.2.55` (recon receipt-chain removal, 2026-09-04) removes the
+  prepared/approved/accepted/completed dispatch receipts, catalog recheck, and
+  typed stage topology from the recon packet contract and reverts the
+  `prepare`/`execute` operations from `oat-dispatch-subagents`, because no
+  live launcher produced those records and every real run failed publication.
+  The manifest now carries a compact fingerprint-bound execution envelope; the
+  achieved profile derives from complete typed artifacts written by approved
+  lanes; claim evidence links are closed objects validated before brief
+  creation; the skill adds a launch-capability preflight, deadline semantics
+  that forbid manual interruption of accepted lanes, and worker vs
+  provider/dispatch vs contract vs source failure categories. See
+  `DR-260904-remove-dispatch-receipt-chain`.
 - CLI `0.2.50` (scope-adoption diagnostics, implementation complete) makes PJM
   migration eligibility depend on recognized legacy evidence rather than pack
   intent or adoption labels alone. User-agent reachability now follows

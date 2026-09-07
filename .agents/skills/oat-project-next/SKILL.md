@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.12
+version: 1.0.14
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -111,7 +111,8 @@ projects, and synced records whose detached checkout is absent.
 
 - **The `projects` array is non-empty but the active pointer is missing or
   invalid:** Show the available project names with their `scope` and `checkout`
-  state, then invoke `oat-project-open` so the user selects an existing
+  state, then invoke `oat-project-open` by loading the current
+  `oat-project-open/SKILL.md` and following it, so the user selects an existing
   project. An absent-checkout synced record and a local-only project both take
   this selection route; never suggest creating a replacement project. **STOP**
   this router after the selection workflow returns so the next invocation can
@@ -301,7 +302,8 @@ unresolved or stale — resume with `oat-project-implement` before
 post-implementation routing."
 
 Only an `allowed` and fresh exit-gate disposition falls through to the normal
-post-implementation checks.
+post-implementation checks. Every other combination keeps its current
+fail-closed routing.
 
 Validate freshness from the complete persisted transition, not from `status`
 alone:
@@ -315,6 +317,32 @@ alone:
   `implementation_fingerprint`, configured gate-run provenance, and any eligible
   receive durably completed. Qualified state also requires the complete rolling
   freshness fields.
+- `allowed/configured` with `disposition: project_disabled` is the third valid
+  combination. Null gate-run and artifact provenance is required here, not
+  merely tolerated: nothing launched, so any non-null launch provenance is
+  contradictory and fails closed. It additionally requires a matching
+  `config_fingerprint`, `reviewed_head`, and `implementation_fingerprint`, a
+  `project_override` sub-record recording the disabled value and its
+  `state.md:oat_skill_gate_overrides` source, and the same rolling-freshness
+  rules as every other allowed result. The complete accepted shape is
+  `resolved_command` set to the configured command, `launch_state:
+not_started`, null `launch_attempt_id`, `launch_started_at`,
+  `launch_result_receipt`, `gate_run_marker`, `gate_run_id`, `envelope_status`,
+  `artifact`, and `handoff`, plus `receive_state: not_started`,
+  `receive_correlation`, `receive_source_artifact`,
+  `receive_archived_artifact`, `receive_event_identity`, `receive_pre_head`,
+  and `receive_commit` all null, `receive_eligible: false`,
+  `receive_completed: false`, `attempts_completed: 0`, and `failure: null`.
+  Any populated launch, receive, attempt, or failure field contradicts a gate
+  that never ran and fails closed.
+- Because the override lives in the state carrier the implementation
+  fingerprint excludes, a persisted `project_disabled` result is never accepted
+  on its stored value alone. Re-resolve the gate with project context and
+  require that the current resolution is still `configured_disabled_by_project`
+  and that `config_fingerprint` recomputed from that current resolution equals
+  the persisted one. A re-enabled gate changes the resolution and the
+  fingerprint, so an override-era transition routes as stale and a fresh
+  configured run is required.
 - `pending`, `blocked`, malformed, contradictory, or legacy-absent state never
   falls through. Pending and blocked generations resume their persisted
   configuration; configuration-fingerprint mismatch fails closed.
@@ -328,8 +356,9 @@ alone:
   a valid `freshness_fingerprint`. Exactly one merge base and 64-character
   lowercase hexadecimal implementation/freshness digests are mandatory.
   Missing or malformed inputs route as stale. When HEAD differs from
-  `freshness_head`, use the full raw Git byte algorithm from
-  `oat-project-implement` with only its literal state-carrier exclusion. Verify
+  `freshness_head`, use the full raw Git byte algorithm read from the current
+  `oat-project-implement/SKILL.md`, with only its literal state-carrier
+  exclusion, rather than a remembered version of that algorithm. Verify
   and ignore state-only checkpoint commits before classification. An unchanged
   qualified fingerprint preserves freshness across a merge, rebase, or base
   update but routes to `oat-project-implement` to persist the advanced rolling
@@ -438,7 +467,7 @@ Reason: {one-line explanation}
 
 The router still dispatches (blockers are informational, not gates).
 
-**Invoke the target skill** using the Skill tool. The agent will load the skill content and follow it directly.
+**Invoke the target skill** using the Skill tool. Invoking the target means loading the target skill's current `SKILL.md` and following it directly, or dispatching a child that carries it; a remembered outcome or ambient discovery is not compliant. This step, not the Step 5 routing decisions, is this router's execution boundary.
 
 ## Success Criteria
 

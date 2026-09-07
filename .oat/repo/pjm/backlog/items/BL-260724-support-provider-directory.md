@@ -27,6 +27,46 @@ removal, or provider-disable operations to mutate canonical content through the
 directory alias. When the provider collection has unmanaged divergence or the
 alias cannot be proven safe, retain or fall back to ordinary per-entry sync.
 
+## Status Note (2026-09-03)
+
+Left **open** by operator decision after the tool-pack-scope-provider-truthfulness
+project. Part of this item shipped; its headline criterion did not.
+
+**What shipped.** Adoption and detachment of an exact collection alias, with
+manifest tracking for inherited entries, reconciliation on add/remove, detach
+without deletion, fail-closed handling of unsafe links, and documentation. Unlink
+is structurally impossible: `fs/io.ts` returns `false` rather than removing.
+
+**What did not.** Criterion 1 — `auto` preferring a collection symlink when the
+provider collection is absent — is not in the shipped product. An absent
+destination always falls back to per-entry sync. `collectionAliasCreationAvailable`
+defaults to `false` and no production caller sets it, and the creation primitive
+throws `E_COLLECTION_LINK_UNSAFE` unconditionally, because the Node runtime
+exposes no securely guarded parent-relative symlink primitive. Switching an
+adopted alias to an explicit `symlink` or `copy` strategy is also inert. Net
+behavior is adopt-only and detach-only: never create, never unlink, never
+transition.
+
+**Coverage is narrower than the criteria imply.** Collection aliases are gated to
+`contentType === 'skill'`, and `getSyncMappings` drops `nativeRead` mappings, so
+in practice this applies to Claude skills only.
+
+**A caution for whoever picks this up.** The happy-path tests pass only because
+the test wrapper forces `collectionAliasCreationAvailable` to `true` and
+substitutes an unguarded test-local creation function. The one end-to-end test
+that exercises the real `oat sync` command is named "falls Claude skills back
+per-entry" and asserts no collection is created. Do not read the green suite as
+evidence the capability exists.
+
+**What would close it.** An identity-bound parent-relative creation primitive
+(`symlinkat`-class), wiring the availability flag to a production caller, a
+lifecycle test starting from adoption rather than injected creation, and a guard
+test asserting no production caller enables the flag until that primitive exists.
+This is the same missing `openat`/`renameat`/`linkat` class of primitive that
+constrains the `AGENTS.md` work in `BL-260903-close-manual-only-agents-md`.
+
+The reduction was documented, not silent: see `design.md:504-517` in that project.
+
 ## Acceptance Criteria
 
 - `auto` prefers a collection directory symlink for supported provider/content

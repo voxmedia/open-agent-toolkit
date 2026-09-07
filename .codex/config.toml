@@ -123,3 +123,7 @@ config_file = "agents/oat-reviewer-gpt-5-6-terra-low.toml"
 [agents.oat-reviewer-gpt-5-6-terra-medium]
 description = "Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode."
 config_file = "agents/oat-reviewer-gpt-5-6-terra-medium.toml"
+
+[agents.recon-worker]
+description = "Executes one bounded recon packet assignment as a non-interactive leaf worker and writes exactly one declared artifact."
+config_file = "agents/recon-worker.toml"

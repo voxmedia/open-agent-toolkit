@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -11,7 +11,7 @@ import {
   loadSyncConfig as defaultLoadSyncConfig,
   saveSyncConfig as defaultSaveSyncConfig,
 } from '@config/index';
-import type { ProviderAdapter } from '@providers/shared';
+import type { ProviderAdapter, ProviderScopeContext } from '@providers/shared';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -23,6 +23,7 @@ interface HarnessOptions {
   cwd?: string;
   home?: string;
   adapters?: ProviderAdapter[];
+  providerContext?: ProviderScopeContext;
 }
 
 interface RunArgs {
@@ -69,6 +70,13 @@ function createHarness(options: HarnessOptions = {}): {
       ],
     loadSyncConfig: defaultLoadSyncConfig,
     saveSyncConfig: defaultSaveSyncConfig,
+    ...(options.providerContext
+      ? {
+          resolveProviderScopeContext: vi.fn(
+            async () => options.providerContext!,
+          ),
+        }
+      : {}),
   });
 
   return {
@@ -120,6 +128,41 @@ describe('oat providers set', () => {
       }),
     );
     tempDirs.length = 0;
+  });
+
+  it('documents project default and project or user sync config scopes', () => {
+    const help = createProvidersSetCommand().helpInformation();
+    const normalizedHelp = help.replace(/\s+/g, ' ');
+
+    expect(normalizedHelp).toContain(
+      "Enable or disable providers in the selected scope's sync config",
+    );
+    expect(normalizedHelp).toContain('(project by default)');
+    expect(normalizedHelp).toContain('--scope <scope>');
+    expect(normalizedHelp).toContain('Sync config scope: project or user');
+    expect(normalizedHelp).toContain('default: "project"');
+  });
+
+  it('rejects an invalid JSON scope before resolving roots or writing config', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
+    tempDirs.push(root);
+
+    const { command, capture, resolveScopeRoot } = createHarness({ cwd: root });
+    command.exitOverride();
+
+    await expect(
+      runCommand(command, {
+        globalArgs: ['--json'],
+        commandArgs: ['--scope', 'nonsense', '--enabled', 'claude'],
+      }),
+    ).rejects.toMatchObject({ code: 'commander.invalidArgument' });
+
+    expect(resolveScopeRoot).not.toHaveBeenCalled();
+    await expect(
+      readFile(join(root, '.oat', 'sync', 'config.json'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(capture.jsonPayloads).toEqual([]);
+    expect(process.exitCode).not.toBe(0);
   });
 
   it('succeeds without --scope (defaults to project scope)', async () => {
@@ -183,6 +226,35 @@ describe('oat providers set', () => {
     expect(capture.error[0]).toContain('Unknown providers');
   });
 
+  it('accepts a provider registered only through the scope context', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
+    tempDirs.push(root);
+    const adapter = createAdapter('registry-only');
+    const { command } = createHarness({
+      cwd: root,
+      adapters: [],
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: [],
+        detectedProviders: [],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [{ adapter, extensions: [], capabilities: [] }],
+      },
+    });
+
+    await runCommand(command, {
+      commandArgs: ['--scope', 'project', '--enabled', 'registry-only'],
+    });
+
+    const config = JSON.parse(
+      await readFile(join(root, '.oat', 'sync', 'config.json'), 'utf8'),
+    );
+    expect(config.providers['registry-only'].enabled).toBe(true);
+    expect(process.exitCode).toBe(0);
+  });
+
   it('rejects providers present in both enabled and disabled lists', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
     tempDirs.push(root);
@@ -218,32 +290,79 @@ describe('oat providers set', () => {
     expect(capture.error[0]).toContain('No provider updates requested');
   });
 
-  it('rejects non-project scope', async () => {
+  it('rejects aggregate scope', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
     tempDirs.push(root);
 
-    const { command, capture } = createHarness({ cwd: root });
+    const { command, capture, resolveScopeRoot } = createHarness({ cwd: root });
+    command.exitOverride();
 
-    await runCommand(command, {
-      commandArgs: ['--scope', 'all', '--enabled', 'claude'],
-    });
+    await expect(
+      runCommand(command, {
+        commandArgs: ['--scope', 'all', '--enabled', 'claude'],
+      }),
+    ).rejects.toMatchObject({ code: 'commander.invalidArgument' });
 
-    expect(process.exitCode).toBe(1);
-    expect(capture.error[0]).toContain('only supports project scope');
+    expect(resolveScopeRoot).not.toHaveBeenCalled();
+    expect(capture.error).toEqual([]);
   });
 
-  it('rejects user scope', async () => {
+  it('writes provider enablement at user scope', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
     tempDirs.push(root);
 
-    const { command, capture } = createHarness({ cwd: root });
+    const { command, resolveScopeRoot } = createHarness({ cwd: root });
 
     await runCommand(command, {
       commandArgs: ['--scope', 'user', '--enabled', 'claude'],
     });
 
-    expect(process.exitCode).toBe(1);
-    expect(capture.error[0]).toContain('only supports project scope');
+    expect(process.exitCode).toBe(0);
+    expect(resolveScopeRoot).toHaveBeenCalledWith(
+      'user',
+      expect.objectContaining({ scope: 'user' }),
+    );
+    const config = await defaultLoadSyncConfig(
+      join(root, '.oat', 'sync', 'config.json'),
+    );
+    expect(config.providers.claude?.enabled).toBe(true);
+  });
+
+  it('uses the canonical user config schema and preserves legacy siblings', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-providers-set-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.oat'), { recursive: true });
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        tools: { workflows: true },
+        futureField: { preserved: true },
+        knownStrays: ['.cursor/skills/user-only'],
+      }),
+      'utf8',
+    );
+
+    const { command } = createHarness({ cwd: root });
+    await runCommand(command, {
+      commandArgs: ['--scope', 'user', '--enabled', 'claude'],
+    });
+
+    expect(
+      JSON.parse(
+        await readFile(join(root, '.oat', 'sync', 'config.json'), 'utf8'),
+      ),
+    ).toMatchObject({
+      providers: { claude: { enabled: true } },
+      knownStrays: ['.cursor/skills/user-only'],
+    });
+    expect(
+      JSON.parse(await readFile(join(root, '.oat', 'config.json'), 'utf8')),
+    ).toEqual({
+      version: 1,
+      tools: { workflows: true },
+      futureField: { preserved: true },
+    });
   });
 
   it('preserves existing provider strategy when updating enabled', async () => {

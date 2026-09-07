@@ -68,6 +68,83 @@ in skill frontmatter with `oat_gateable: true`, and
 `oat internal validate-oat-skills` warns when config targets a missing or
 non-gateable skill.
 
+### Per-project gate overrides
+
+Gate configuration is shared, but one project can opt out of a configured
+lifecycle gate without changing any config layer. The override lives only in
+that project's `state.md`:
+
+```yaml
+oat_skill_gate_overrides:
+  oat-project-implement: disabled
+```
+
+The map is strict. Keys are gate-aware skill names and the only permitted value
+is the literal `disabled`. Arrays, booleans, `enabled`, unknown values,
+duplicate keys, and malformed maps are rejected with the offending project state
+path. An absent map means follow configuration; keeping every gate leaves the
+map absent.
+
+Override keys are accepted only for skills that declare `oat_gateable: true`.
+A configured gate may still be resolved and executed for a lifecycle skill that
+is not gate-aware — `oat-project-discover` and `oat-project-design` are the
+current examples — but because no override key for such a skill is accepted,
+their configured gates apply to every project and cannot be disabled per
+project.
+
+Precedence is layered, not merged: config layers decide whether a gate exists
+at all, and the project override then decides whether an existing gate runs for
+that project. An override never creates configuration, so a project may record
+an override for a skill that has no configured gate; the gate stays absent.
+Overrides never mutate shared, local, or user config, and config changes never
+rewrite a project's override.
+
+Interactive project setup offers a keep-or-disable choice per configured gate,
+one skill at a time; there is no single switch that disables every gate.
+Non-interactive runs never prompt and never write a new map, and an explicit
+existing map is preserved unchanged on resume and import.
+
+Resolution is opt-in. Without `--project`, `oat gate resolve` keeps returning
+the raw `GateConfig | null` that existing consumers parse:
+
+```bash
+oat gate resolve oat-project-implement --json
+```
+
+With project context it returns a discriminated envelope instead:
+
+```bash
+oat gate resolve oat-project-implement --project "$PROJECT_PATH" --json
+```
+
+The envelope's `resolution` is one of three values:
+
+| `resolution`                     | Meaning                                   | `configuredGate` | `effectiveGate` |
+| -------------------------------- | ----------------------------------------- | ---------------- | --------------- |
+| `configured`                     | A configured gate runs for this project.  | the gate         | the gate        |
+| `configured_disabled_by_project` | Configured, but this project disabled it. | the gate         | `null`          |
+| `not_configured`                 | No gate is configured for this skill.     | `null`           | `null`          |
+
+`configured_disabled_by_project` retains `configuredGate` so evidence of a
+deliberate opt-out can never be mistaken for absent configuration. It also
+carries `configSource` and a `projectOverride` record naming the
+`state.md:oat_skill_gate_overrides` source.
+
+`configSource` reports the layer that owned the decision. For
+`not_configured` it is the layer that explicitly declared the skill `null`, and
+`null` only when no layer mentions the skill at all, so a deliberate
+layer-level disable stays distinguishable from an absent declaration.
+`configuredGate` is `null` in both cases, so neither reads as configured.
+
+Disabled is a posture, not an outcome. A project-disabled gate launches no
+process and never enters the passed, missing, or failed branches. Project
+progress reports every active override by skill key so the deliberate posture
+stays visible to reviewers.
+
+This mechanism covers configured lifecycle skill gates only. It does not affect
+the optional `oat_phase_review_gate`, HiLL policy, or autonomous design-gate
+behavior, and it cannot disable every gate with one project-wide boolean.
+
 ### Implementation exit-gate closeout
 
 For `oat-project-implement`, the configured skill gate is a final, resumable
@@ -82,14 +159,22 @@ configured command. The state records:
 
 - `pending`, `allowed`, `blocked`, or `stale` status;
 - a `configured` or `no_gate` resolution;
-- `passed`, `warned`, `prompt_approved`, or `no_gate` allowed dispositions;
+- `passed`, `warned`, `prompt_approved`, `project_disabled`, or `no_gate`
+  allowed dispositions;
 - the resolved configuration fingerprint, reviewed HEAD, implementation
   fingerprint, gate run, envelope, and receive provenance; and
 - launch and receive reconciliation data needed to resume without duplicating
   an accepted run or completed receive.
 
-A `null` resolution is explicit success for that closeout generation:
-`allowed/no_gate` with `disposition: no_gate`. Configured success becomes
+Only a `not_configured` resolution is explicit success for that closeout
+generation: `allowed/no_gate` with `disposition: no_gate`. A null, missing,
+malformed, or unrecognized resolver result fails closed as unresolved and is
+never treated as no gate. A gate this project disabled
+persists `allowed/configured` with `disposition: project_disabled`, the
+configured command retained as never-executed evidence, null launch and receive
+provenance, and a `project_override` record. `config_fingerprint` covers the
+resolved override state, so re-enabling the gate changes the fingerprint and a
+stored `project_disabled` result is routed as stale instead of reused. Configured success becomes
 `allowed/passed`; `warn` and an explicit `prompt` continuation persist their
 own allowed dispositions only for a validated, receive-eligible `blocked`
 envelope after eligible receive completes durably. Unresolved, malformed,

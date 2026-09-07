@@ -8,8 +8,10 @@ scope_estimate: L
 labels: [reviews, orchestration, gates, efficiency]
 assignee: null
 created: '2026-07-11T15:29:00Z'
-updated: '2026-08-29T00:04:21Z'
-associated_issues: []
+updated: 2026-09-02T23:49:54Z
+associated_issues:
+  - type: github
+    ref: https://github.com/voxmedia/open-agent-toolkit/issues/233
 ---
 
 ## Description

@@ -1,11 +1,17 @@
 import type { CommandContext } from '@app/command-context';
+import type { SyncOperationResult } from '@engine/engine.types';
 
 import type {
   ScopeSyncPlan,
   SyncCommandDependencies,
   SyncSummary,
 } from './sync.types';
-import { countPlannedOperations } from './sync.utils';
+import {
+  buildCollectionLifecycle,
+  countPlannedOperations,
+  formatCollectionLifecycle,
+  toSyncOutputPlan,
+} from './sync.utils';
 
 function summarize(scopePlans: ScopeSyncPlan[]): SyncSummary {
   return {
@@ -25,10 +31,30 @@ function summarize(scopePlans: ScopeSyncPlan[]): SyncSummary {
         total +
         scopePlan.plan.entries.filter((entry) => entry.operation === 'skip')
           .length +
+        (scopePlan.plan.collections ?? []).filter(
+          ({ action }) => action === 'fallback-per-entry',
+        ).length +
         extensionSkipped
       );
     }, 0),
   };
+}
+
+function buildOperationResults(
+  scopePlans: readonly ScopeSyncPlan[],
+): SyncOperationResult[] {
+  return scopePlans.flatMap((scopePlan) =>
+    [...scopePlan.plan.entries, ...scopePlan.plan.removals].map(
+      (operation) => ({
+        scope: scopePlan.scope,
+        provider: operation.provider,
+        contentKind: operation.canonical.type,
+        asset: operation.canonical.name,
+        action: operation.operation,
+        status: operation.operation === 'skip' ? 'current' : 'planned',
+      }),
+    ),
+  );
 }
 
 function formatMaterializationExtensions(scopePlan: ScopeSyncPlan): string {
@@ -60,11 +86,23 @@ function formatDryRunOutput(
 
   return scopePlans
     .map((scopePlan) => {
-      const syncOutput = dependencies.formatSyncPlan(scopePlan.plan, false);
+      const collectionOutput = formatCollectionLifecycle(
+        buildCollectionLifecycle(scopePlan),
+      );
+      const syncOutput =
+        collectionOutput &&
+        scopePlan.plan.entries.length === 0 &&
+        scopePlan.plan.removals.length === 0
+          ? 'Per-entry sync plan\nNo per-entry operations.'
+          : dependencies.formatSyncPlan(scopePlan.plan, false);
       const extensionOutput = formatMaterializationExtensions(scopePlan);
-      return extensionOutput
-        ? `Scope: ${scopePlan.scope}\n${syncOutput}\n\n${extensionOutput}`
-        : `Scope: ${scopePlan.scope}\n${syncOutput}`;
+      return [
+        `Scope: ${scopePlan.scope}\n${syncOutput}`,
+        collectionOutput,
+        extensionOutput,
+      ]
+        .filter(Boolean)
+        .join('\n\n');
     })
     .join('\n\n');
 }
@@ -84,6 +122,10 @@ export function runSyncDryRun(
   const materializationExtensions = scopePlans.flatMap(
     (scopePlan) => scopePlan.materializationExtensions,
   );
+  const operationResults = buildOperationResults(scopePlans);
+  const collectionOperations = scopePlans.flatMap((scopePlan) =>
+    buildCollectionLifecycle(scopePlan),
+  );
   const codexExtensions = materializationExtensions
     .filter((extension) => extension.provider === 'codex')
     .map((extension) => ({
@@ -102,11 +144,13 @@ export function runSyncDryRun(
     context.logger.json({
       scope: context.scope,
       dryRun: true,
-      plans: scopePlans.map((scopePlan) => scopePlan.plan),
+      plans: scopePlans.map(toSyncOutputPlan),
+      collectionOperations,
       summary,
       providerMismatches,
       versionSkew,
       materializationExtensions,
+      operationResults,
       codexExtensions,
     });
   } else {

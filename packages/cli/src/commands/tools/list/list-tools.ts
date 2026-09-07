@@ -1,6 +1,13 @@
 import type { CommandContext } from '@app/command-context';
 import { resolveConcreteScopes } from '@commands/shared/shared.utils';
-import { formatPackInventoryDetails } from '@commands/tools/shared/format-pack-inventory';
+import {
+  formatPackEvidenceDetails,
+  formatPackInventoryDetails,
+  packEvidenceBlock,
+  projectRenderablePackEvidence,
+  unavailablePackEvidence,
+  type PackEvidenceBlockV1,
+} from '@commands/tools/shared/format-pack-inventory';
 import {
   inventoryPack,
   type InventoryPackInput,
@@ -24,6 +31,7 @@ export interface ListToolsDependencies {
 export interface ListToolsResult {
   tools: ToolInfo[];
   packs: PackInventory[];
+  packEvidence: PackEvidenceBlockV1;
 }
 
 export async function runListTools(
@@ -50,21 +58,45 @@ export async function runListTools(
     allTools.push(...tools);
     roots[scope] = scopeRoot;
   }
+  const packRoots = {
+    projectRoot: roots.project,
+    userRoot: roots.user,
+  };
   const inspectPack = dependencies.inventoryPack ?? inventoryPack;
-  const packs = await Promise.all(
+  const inspected = await Promise.all(
     PACK_MANIFEST.map(({ name }) =>
       inspectPack({
         pack: name,
         assetsRoot,
         projectRoot: roots.project,
         userRoot: roots.user,
-      }),
+      }).then(
+        (canonical) => ({
+          canonical,
+          evidence: projectRenderablePackEvidence(canonical, packRoots),
+        }),
+        (error: unknown) => ({
+          canonical: null,
+          evidence: unavailablePackEvidence({
+            pack: name,
+            scopes,
+            reason: error instanceof Error ? error.message : String(error),
+            roots: packRoots,
+          }),
+        }),
+      ),
     ),
+  );
+  const packs = inspected
+    .map(({ canonical }) => canonical)
+    .filter((pack): pack is PackInventory => pack !== null);
+  const packEvidence = packEvidenceBlock(
+    inspected.map(({ evidence }) => evidence),
   );
 
   if (context.json) {
-    logger.json({ tools: allTools, packs });
-    return { tools: allTools, packs };
+    logger.json({ tools: allTools, packs, packEvidence });
+    return { tools: allTools, packs, packEvidence };
   }
 
   if (allTools.length === 0) {
@@ -74,7 +106,10 @@ export async function runListTools(
       logger.info(`${pack.pack}: ${pack.placement}`);
       for (const line of formatPackInventoryDetails(pack)) logger.info(line);
     }
-    return { tools: allTools, packs };
+    for (const evidence of packEvidence.items) {
+      for (const line of formatPackEvidenceDetails(evidence)) logger.info(line);
+    }
+    return { tools: allTools, packs, packEvidence };
   }
 
   logger.info('Installed tools:\n');
@@ -125,7 +160,13 @@ export async function runListTools(
     for (const line of formatPackInventoryDetails(pack)) logger.info(line);
   }
 
-  return { tools: allTools, packs };
+  logger.info('\nNormalized pack evidence:');
+  for (const evidence of packEvidence.items) {
+    logger.info(`${evidence.pack}: ${evidence.realizedPlacement}`);
+    for (const line of formatPackEvidenceDetails(evidence)) logger.info(line);
+  }
+
+  return { tools: allTools, packs, packEvidence };
 }
 
 function formatRow(

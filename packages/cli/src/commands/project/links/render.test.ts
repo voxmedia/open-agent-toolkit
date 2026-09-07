@@ -72,6 +72,16 @@ describe('renderLinksBlock', () => {
     expect(block).toContain('refs/oat/projects/demo` @ `a1b2c3d`');
     expect(block).not.toContain('https://');
   });
+
+  it('renders completed-ref labels while keeping URLs pinned to the full SHA', () => {
+    const completed = renderLinksBlock({
+      ...input,
+      ref: 'refs/oat/completed/demo',
+    });
+    expect(completed).toContain('refs/oat/completed/demo');
+    expect(completed).toContain(`/blob/${input.sha}/discovery.md`);
+    expect(completed).not.toContain('/blob/refs/oat/completed/demo/');
+  });
 });
 
 describe('replaceLinksBlock', () => {

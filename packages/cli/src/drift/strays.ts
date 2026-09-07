@@ -209,6 +209,16 @@ export async function detectStrays(
   const scopeRoot = inferScopeRoot(providerDir);
   const reports: DriftReport[] = [];
   const resolvedProviderDir = resolve(providerDir);
+  const providerDirRelative = toScopeRelative(resolvedProviderDir, scopeRoot);
+  if (
+    manifest.collections.some(
+      (collection) =>
+        collection.provider === provider &&
+        collection.providerDir === providerDirRelative,
+    )
+  ) {
+    return reports;
+  }
   const entries = await readProviderEntries(resolvedProviderDir);
 
   for (const entry of entries) {

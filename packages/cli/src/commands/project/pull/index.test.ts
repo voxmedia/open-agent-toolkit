@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { readFile, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
@@ -17,10 +17,24 @@ import { createSyncedFixture } from '@test-support/synced-fixture';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createProjectPullCommand } from './index';
+import { createProjectPullCommand, guardSyncedTerminalTarget } from './index';
 
 function git(cwd: string, args: string[]): string {
   return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
+}
+
+function terminalGitRunner(rows: string[]): GitRunner {
+  return {
+    run: vi.fn(async (args: string[]) => {
+      const requestedRefs = args.filter((arg) => arg.startsWith('refs/oat/'));
+      const selected = rows.filter((row) =>
+        requestedRefs.some((ref) => row.endsWith(`\t${ref}`)),
+      );
+      return selected.length > 0
+        ? { code: 0, stdout: selected.join('\n'), stderr: '' }
+        : { code: 2, stdout: '', stderr: '' };
+    }),
+  };
 }
 
 function harness(
@@ -37,6 +51,7 @@ function harness(
   const abortSynced = vi.fn(async () => undefined);
   const pullChildren = vi.fn(async () => []);
   const commitRecordChange = vi.fn(async () => null);
+  const guardTerminal = vi.fn(async () => undefined);
   const resolveTarget = vi.fn(async () => ({
     repoRoot: '/repo',
     sharedRoot: '/repo/.oat/projects/shared',
@@ -60,6 +75,8 @@ function harness(
       logger: capture.logger,
     }),
     resolveProjectRoot: async () => '/repo',
+    resolveProjectsRoot: async () => '.oat/projects/shared',
+    guardSyncedTerminalTarget: guardTerminal,
     resolveSyncedTarget: resolveTarget,
     pullSynced,
     continueSynced,
@@ -78,6 +95,7 @@ function harness(
     abortSynced,
     pullChildren,
     commitRecordChange,
+    guardTerminal,
   };
 }
 
@@ -106,7 +124,8 @@ describe('createProjectPullCommand', () => {
   });
 
   it('resolves absent checkouts from records and pulls them', async () => {
-    const { command, resolveTarget, pullSynced } = harness('created');
+    const { command, resolveTarget, pullSynced, guardTerminal } =
+      harness('created');
     await run(command, ['demo']);
     expect(resolveTarget).toHaveBeenCalledWith(
       { repoRoot: '/repo', env: {} },
@@ -115,7 +134,105 @@ describe('createProjectPullCommand', () => {
       { allowMissingCheckout: true },
     );
     expect(pullSynced).toHaveBeenCalledOnce();
+    expect(guardTerminal).toHaveBeenCalledWith(
+      '/repo',
+      '.oat/projects/shared',
+      'demo',
+      'pull',
+      expect.anything(),
+    );
     expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    ['demo', 'matching active ref is only a stale terminal alias'],
+    [
+      '.oat/projects/synced/demo',
+      'matching active ref is only a stale terminal alias',
+    ],
+  ])(
+    'blocks terminal matching aliases before pull for %s',
+    async (input, message) => {
+      const sha = 'a'.repeat(40);
+      const gitRunner = terminalGitRunner([
+        `${sha}\trefs/oat/projects/demo`,
+        `${sha}\trefs/oat/completed/demo`,
+      ]);
+
+      await expect(
+        guardSyncedTerminalTarget(
+          '/repo',
+          '.oat/projects/shared',
+          input,
+          'pull',
+          gitRunner,
+        ),
+      ).rejects.toThrow(message);
+    },
+  );
+
+  it('blocks completed-only terminal identity and reports ref mismatch precisely', async () => {
+    const completedSha = 'a'.repeat(40);
+    await expect(
+      guardSyncedTerminalTarget(
+        '/repo',
+        '.oat/projects/shared',
+        'completed-only',
+        'pull',
+        terminalGitRunner([
+          `${completedSha}\trefs/oat/completed/completed-only`,
+        ]),
+      ),
+    ).rejects.toThrow(/already archived.*cannot be pulled/i);
+
+    await expect(
+      guardSyncedTerminalTarget(
+        '/repo',
+        '.oat/projects/shared',
+        'mismatch',
+        'pull',
+        terminalGitRunner([
+          `${'b'.repeat(40)}\trefs/oat/projects/mismatch`,
+          `${completedSha}\trefs/oat/completed/mismatch`,
+        ]),
+      ),
+    ).rejects.toThrow(/invalid terminal refs.*repair the ref mismatch/i);
+  });
+
+  it('blocks a legacy complete record before any ref adoption', async () => {
+    const fixture = await createSyncedFixture();
+    try {
+      const syncedRoot = join(fixture.cloneA, '.oat/projects/synced');
+      await mkdir(syncedRoot, { recursive: true });
+      await writeFile(
+        join(syncedRoot, 'legacy.json'),
+        `${JSON.stringify({
+          schemaVersion: 1,
+          slug: 'legacy',
+          scope: 'synced',
+          ref: 'refs/oat/projects/legacy',
+          remote: 'origin',
+          status: 'complete',
+          createdAt: '2026-08-30T00:00:00.000Z',
+          completedAt: '2026-08-31T00:00:00.000Z',
+          archiveSnapshot: 'legacy',
+          archiveSourceRefSha: 'a'.repeat(40),
+        })}\n`,
+        'utf8',
+      );
+
+      await expect(
+        guardSyncedTerminalTarget(
+          fixture.cloneA,
+          '.oat/projects/shared',
+          'legacy',
+          'pull',
+          defaultGitRunner,
+        ),
+      ).rejects.toThrow(/legacy complete record.*retry oat-project-complete/i);
+    } finally {
+      await fixture.cleanup();
+    }
   });
 
   it('pulls and records the parent while --no-children skips child pulls', async () => {

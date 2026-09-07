@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { expectDispatchStampFieldContract } from '@test-support/skills/dispatch-stamp-contract';
 import { describe, expect, it } from 'vitest';
 
 function repoFilePath(relativePath: string): string {
@@ -471,6 +472,23 @@ printf 'artifact-read\\n'`,
     }
   });
 
+  it('requires local and remote review rails to persist native dispatch lineage', () => {
+    for (const skill of [
+      'oat-project-review-provide',
+      'oat-project-review-provide-remote',
+    ]) {
+      const content = readRepoFile(`.agents/skills/${skill}/SKILL.md`);
+      expect(content, skill).toContain('native dispatch lineage');
+      expect(content, skill).toContain('oat project dispatch record');
+      expect(content, skill).toMatch(
+        /immediately[^]{0,180}accepted[^]{0,160}blocked-before-start/i,
+      );
+      expect(content, skill).toMatch(
+        /timeout[^]{0,160}`BLOCKED`[^]{0,180}(?:never|not)[^]{0,100}(?:fallback|replacement)/i,
+      );
+    }
+  });
+
   it('materializes synced projects before implementation and review validation', () => {
     const implement = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
@@ -593,7 +611,7 @@ printf 'artifact-read\\n'`,
       /If this is the final implementation phase checkpoint, run\s+`oat-project-review-provide code final`/,
     );
     expect(content).toMatch(
-      /do not run a duplicate final\s+phase-only lifecycle review/,
+      /do not run a duplicate final\s+phase-only lifecycle\s+review/,
     );
   });
 
@@ -657,6 +675,7 @@ printf 'artifact-read\\n'`,
       expect(content, `${path} stamp adapter`).toContain(
         'toDispatchStampRecord(dispatchReport)',
       );
+      expectDispatchStampFieldContract(content, path);
       expect(content, `${path} exact provider payload`).toContain(
         'providers.<provider>.dispatchArgs',
       );
@@ -945,6 +964,35 @@ printf 'artifact-read\\n'`,
     expect(inheritedMaterializedCodexExamples).toEqual([]);
   });
 
+  it('accepts a project-disabled exit gate only with null launch provenance', () => {
+    const next = readRepoFile('.agents/skills/oat-project-next/SKILL.md');
+    const flat = next.replace(/\s+/g, ' ');
+
+    // The router must recognize the disposition the closeout can now persist,
+    // or a deliberate project override loops the operator back to implement.
+    expect(flat).toContain(
+      '`allowed/configured` with `disposition: project_disabled` is the third valid combination.',
+    );
+    expect(flat).toContain(
+      'Null gate-run and artifact provenance is required here, not merely tolerated',
+    );
+    expect(flat).toContain(
+      '`project_override` sub-record recording the disabled value and its `state.md:oat_skill_gate_overrides` source',
+    );
+    expect(flat).toContain(
+      'an override-era transition routes as stale and a fresh configured run is required',
+    );
+
+    // The closeout side must persist exactly what the router requires.
+    const closeout = readRepoFile(
+      '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+    ).replace(/\s+/g, ' ');
+    expect(closeout).toContain(
+      'A `configured_disabled_by_project` resolution persists `allowed/configured` with `disposition: project_disabled`.',
+    );
+    expect(closeout).toContain('keeps `launch_state: not_started`');
+  });
+
   it('routes phase-range review fixes into the last phase in the range', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-review-receive/SKILL.md',
@@ -974,56 +1022,34 @@ printf 'artifact-read\\n'`,
     );
   });
 
-  it('pulls synced completion projects before artifact reads and fails closed', () => {
+  it('routes synced completion through the terminal-aware entry before artifact reads', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const executor = readRepoFile(
+      '.agents/skills/oat-project-complete/scripts/execute-synced-archive-entry.mjs',
     );
     const scopeIndex = content.indexOf(
       'PROJECT_SCOPE=$(oat project scope "$PROJECT_PATH" --format value)',
     );
-    const pullIndex = content.indexOf(
-      'oat project pull "$PROJECT_PATH" || { echo "oat: project pull failed for $PROJECT_PATH; resolve the reported state before continuing" >&2; exit 1; }',
+    const entryIndex = content.indexOf(
+      'SYNCED_ARCHIVE_ENTRY=$(node "$SYNCED_ARCHIVE_EXECUTE_SCRIPT"',
     );
     const stateReadIndex = content.indexOf(
       'Before asking the batched questions, read `oat_pr_status`',
     );
 
     expect(scopeIndex).toBeGreaterThanOrEqual(0);
-    expect(pullIndex).toBeGreaterThan(scopeIndex);
-    expect(stateReadIndex).toBeGreaterThan(pullIndex);
-
-    const arrivalBlock = content.slice(
-      scopeIndex,
-      content.indexOf('PROJECT_RETAINED_REF=""', scopeIndex),
+    expect(entryIndex).toBeGreaterThan(scopeIndex);
+    expect(stateReadIndex).toBeGreaterThan(entryIndex);
+    expect(executor).toContain("if (entry.route === 'pull')");
+    expect(executor).toContain('await pullProject(projectPath);');
+    expect(executor).toContain(
+      "await runOat(['project', 'pull', projectPath], options.repoRoot);",
     );
-    const runArrival = (pullStatus: string) =>
-      execFileSync(
-        '/bin/bash',
-        [
-          '-c',
-          `oat() {
-  if [[ "$1 $2" == "project scope" ]]; then
-    printf synced
-  elif [[ "$1 $2" == "project pull" ]]; then
-    [[ "$pullStatus" == "success" ]]
-  fi
-}
-${arrivalBlock}
-printf 'artifact-read\\n'`,
-          'completion-arrival',
-        ],
-        {
-          encoding: 'utf8',
-          env: {
-            ...process.env,
-            PROJECT_PATH: '/tmp/synced-project',
-            pullStatus,
-          },
-        },
-      );
-
-    expect(runArrival('success')).toContain('artifact-read');
-    expect(() => runArrival('conflict')).toThrow();
+    expect(executor).toContain(
+      "throw executionError(`oat ${args.join(' ')} failed: ${error.message}`);",
+    );
   });
 
   it('integrates interactive completion recap and retro policy before lifecycle mutation', () => {
@@ -1032,7 +1058,7 @@ printf 'artifact-read\\n'`,
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.5');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.7');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );
@@ -1062,7 +1088,7 @@ printf 'artifact-read\\n'`,
     );
     expect(content).toContain('When `SHOULD_GENERATE_RETRO="true"`, dispatch');
     expect(normalizedContent).toContain(
-      'dispatch `oat-project-retro` in generate mode before any lifecycle mutation.',
+      'dispatch `oat-project-retro` in generate mode before any lifecycle mutation: load the current `oat-project-retro/SKILL.md` and follow it, or dispatch a child that carries it.',
     );
     expect(content).toMatch(
       /construct exactly one brief-aware, provider-neutral\s+author seam/,
@@ -1216,7 +1242,10 @@ printf 'artifact-read\\n'`,
       '**Skip if `SHOULD_ARCHIVE` is false or `IS_DURABLE_PROJECT` is false.**',
     );
     expect(content).toContain(
-      'Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).',
+      'Archive happens after PR description generation. For a synced project, the',
+    );
+    expect(content).toContain(
+      'archive command owns the exact lifecycle commit that deletes the discovery',
     );
     expect(content).toContain(
       'The archive-side effects in this step are CLI-owned. Do not reimplement local archive movement, summary export, S3 sync, AWS credential handling, or worktree durability checks in the skill.',
@@ -1393,7 +1422,7 @@ printf 'artifact-read\\n'`,
       'test "$RECOVERED_PUSH_SHA" = "$EVIDENCE_COMMIT" || exit 1',
     );
     expect(normalizedContent).toContain(
-      'When Step 7.5 restored `EVIDENCE_COMMIT`, do not stage or commit recap records again.',
+      'When Step 7.5 restored `EVIDENCE_COMMIT` for a non-archive completion, do not stage or commit recap records again.',
     );
     expect(content).toContain(
       'git commit --only -m "chore(oat): attest final project recap" --',
@@ -1550,7 +1579,7 @@ printf 'artifact-read\\n'`,
       'If `summary.md` is missing or stale, refresh it automatically before proceeding.',
     );
     expect(prFinalContent).toContain(
-      'Prefer running the `oat-project-summary` skill when skill-to-skill invocation is available in the current host/runtime.',
+      'When skill-to-skill invocation is available in the current host/runtime, load the current `oat-project-summary/SKILL.md` and follow it;',
     );
     expect(prFinalContent).toContain(
       'Do not assume `oat-project-summary` is a shell command on `PATH`.',
@@ -1559,7 +1588,7 @@ printf 'artifact-read\\n'`,
       'Do not ask whether to generate or refresh `summary.md` during pr-final.',
     );
     expect(completeContent).toContain(
-      'Also preflight summary status using the same freshness rules as `oat-project-summary`:',
+      'Also preflight summary status using the same freshness rules as `oat-project-summary`, read from the current `oat-project-summary/SKILL.md` rather than a remembered version of that step:',
     );
     expect(completeContent).toContain(
       'Would you like me to generate it now as part of completion?',
@@ -1631,7 +1660,13 @@ printf 'artifact-read\\n'`,
     );
     expect(content).toContain('gh pr edit "$PR_REF" --body-file "$TMP_BODY"');
     expect(content).toContain(
-      'If `gh pr edit` fails (e.g. PR was merged between Step 2 and now',
+      'If `gh` is missing or `gh pr edit` fails, always print the manual-update path.',
+    );
+    expect(content).toContain(
+      'For a synced archive completion this tracked-PR update is required: stop',
+    );
+    expect(content).toContain(
+      'before Step 12, retain the active pointer, and let the next invocation resume',
     );
   });
 

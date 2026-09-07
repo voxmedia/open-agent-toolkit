@@ -1,6 +1,6 @@
 ---
 name: oat-project-progress
-version: 1.3.0
+version: 1.3.1
 description: Use when the user explicitly asks to check OAT project progress — e.g. "check progress", "what's next", "where are we", or confirms a previously offered progress check. Do NOT auto-invoke just because a workflow step completed. Reads project status and offers the next route.
 disable-model-invocation: false
 user-invocable: true
@@ -175,6 +175,8 @@ Read `{project}/state.md` frontmatter:
 - `oat_blockers` - Any blockers
 - `oat_hill_checkpoints` - Configured gates (e.g., `["discovery", "spec", "design"]`)
 - `oat_hill_completed` - Completed HiLL checkpoints
+- `oat_skill_gate_overrides` - Configured lifecycle gates this project
+  deliberately disabled, keyed by gate-aware skill name
 
 **Display format:**
 
@@ -186,9 +188,18 @@ Read `{project}/state.md` frontmatter:
    HiLL Gates: {oat_hill_checkpoints}
    Completed: {oat_hill_completed as checkmarks}
    HiLL Pending: {yes/no for current phase}
+   Gate Overrides: {gate-aware skill keys from oat_skill_gate_overrides, or "None"}
    Blockers: {oat_blockers or "None"}
    Next: {recommended_skill}
 ```
+
+Report every active override by its gate-aware skill key, so a deliberately
+disabled lifecycle gate is visible to reviewers rather than silently absent.
+An override is project posture recorded in `state.md`; it never changes shared,
+local, or user configuration, and it is not a gate outcome. Show an override
+even when no gate is currently configured for that skill, and never infer a
+configured gate from an override alone. This is read-only reporting: never add,
+remove, or repair the map here.
 
 ### Step 5: Determine Next Skill
 

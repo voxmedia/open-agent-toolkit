@@ -8,6 +8,7 @@ import {
   hasScopedPackOwnershipEvidence,
   readScopedPackIntent,
   writeScopedPackIntent,
+  writeScopedPackLease,
 } from './scoped-pack-intent';
 
 const tempDirs: string[] = [];
@@ -89,6 +90,102 @@ describe('scoped pack intent', () => {
     expect(JSON.parse(await readFile(configPath, 'utf8'))).toMatchObject({
       tools: { docs: true },
       futureField: { retained: true },
+    });
+  });
+
+  it('keeps direct intent separate from sorted dependency leases', async () => {
+    const scopeRoot = await makeScopeRoot();
+    const configPath = join(scopeRoot, '.oat', 'config.json');
+
+    await writeScopedPackLease({
+      pack: 'utility',
+      scope: 'user',
+      scopeRoot,
+      requiredBy: 'research',
+      enabled: true,
+    });
+    await writeScopedPackLease({
+      pack: 'utility',
+      scope: 'user',
+      scopeRoot,
+      requiredBy: 'brainstorm',
+      enabled: true,
+    });
+    await writeScopedPackLease({
+      pack: 'utility',
+      scope: 'user',
+      scopeRoot,
+      requiredBy: 'research',
+      enabled: true,
+    });
+
+    await expect(
+      readScopedPackIntent({ pack: 'utility', scope: 'user', scopeRoot }),
+    ).resolves.toMatchObject({
+      enabled: true,
+      direct: false,
+      requiredBy: ['brainstorm', 'research'],
+      state: 'transitive',
+      source: 'declared',
+    });
+    expect(JSON.parse(await readFile(configPath, 'utf8'))).toEqual({
+      version: 1,
+      tools: {
+        requiredBy: { utility: ['brainstorm', 'research'] },
+      },
+    });
+
+    await writeScopedPackIntent({
+      pack: 'utility',
+      scope: 'user',
+      scopeRoot,
+      enabled: true,
+    });
+    await writeScopedPackLease({
+      pack: 'utility',
+      scope: 'user',
+      scopeRoot,
+      requiredBy: 'research',
+      enabled: false,
+    });
+    await expect(
+      readScopedPackIntent({ pack: 'utility', scope: 'user', scopeRoot }),
+    ).resolves.toMatchObject({
+      enabled: true,
+      direct: true,
+      requiredBy: ['brainstorm'],
+      state: 'direct',
+    });
+  });
+
+  it('does not infer a dependency-sized partial footprint as direct legacy intent', async () => {
+    const scopeRoot = await makeScopeRoot();
+    await writeFile(
+      join(scopeRoot, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        tools: { requiredBy: { utility: ['research'] } },
+      }),
+    );
+    await mkdir(
+      join(scopeRoot, '.agents', 'skills', 'oat-dispatch-subagents'),
+      { recursive: true },
+    );
+    await mkdir(
+      join(scopeRoot, '.agents', 'skills', 'subagent-orchestration'),
+      {
+        recursive: true,
+      },
+    );
+
+    await expect(
+      readScopedPackIntent({ pack: 'utility', scope: 'user', scopeRoot }),
+    ).resolves.toMatchObject({
+      enabled: true,
+      direct: false,
+      requiredBy: ['research'],
+      state: 'transitive',
+      source: 'declared',
     });
   });
 

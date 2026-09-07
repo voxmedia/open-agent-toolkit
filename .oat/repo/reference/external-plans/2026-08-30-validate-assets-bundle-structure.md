@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260827-fail-closed-on-partial-or.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260827-fail-closed-on-partial-or
@@ -41,7 +41,7 @@ contract and remains intentionally cheaper than a file inventory or checksum.
 - Source backlog item:
   [BL-260827-fail-closed-on-partial-or — Fail closed on partial or metadata-only OAT_ASSETS_DIR bundles](../../pjm/backlog/items/BL-260827-fail-closed-on-partial-or.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - `packages/cli/src/fs/assets.ts:28-67` validates only metadata shape and
     `oatVersion`; it never checks bundle content.
@@ -62,12 +62,20 @@ contract and remains intentionally cheaper than a file inventory or checksum.
 
 ## Dependencies
 
-| Type         | Dependency                                                                                                                                                             | Required state                                                                             | Current state                                         |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
-| Soft history | [2026-08-19 assets-root plan](./2026-08-19-hermetic-cli-assets-root.md)                                                                                                | Preserve its explicit-override and fail-closed metadata behavior.                          | Implemented on current main.                          |
-| Downstream   | [BL-260827-override-aware-remedy-text — Override-aware remedy text in assets-root fail-closed errors](../../pjm/backlog/items/BL-260827-override-aware-remedy-text.md) | Structural validation must land first or execute earlier in one explicitly ordered series. | Open; separately planned and blocked on this outcome. |
+| Type          | Dependency                                                                                                                                                             | Required state                                                                                                        | Current state                                         |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Soft history  | [2026-08-19 assets-root plan](./2026-08-19-hermetic-cli-assets-root.md)                                                                                                | Preserve its explicit-override and fail-closed metadata behavior.                                                     | Implemented on current main.                          |
+| Downstream    | [BL-260827-override-aware-remedy-text — Override-aware remedy text in assets-root fail-closed errors](../../pjm/backlog/items/BL-260827-override-aware-remedy-text.md) | Structural validation must land first or execute earlier in one explicitly ordered series.                            | Open; separately planned and blocked on this outcome. |
+| Soft ordering | W1 group 2 plan [Make asset-bundle errors aware of explicit overrides](./2026-08-30-make-assets-errors-override-aware.md)                                              | Runs after this plan; both edit `packages/cli/src/fs/assets.ts` and `assets.test.ts`, so never in one parallel group. | Pending.                                              |
 
 There are no unsatisfied hard dependencies for this plan itself.
+
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                         | Required update                                                        |
+| ------------------------------------------------------------------------------------ | ---------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections. | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted. |
+| `review-plan-workflow` (draft PR #190) merges                                        | No               | None.                                                   | None.                                                                  |
 
 ## Drift check
 
@@ -75,7 +83,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- packages/cli/src/fs/assets.ts packages/cli/src/fs/assets.test.ts packages/cli/scripts/bundle-assets.sh packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- packages/cli/src/fs/assets.ts packages/cli/src/fs/assets.test.ts packages/cli/scripts/bundle-assets.sh packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
 ```
 
 Stop if the producer's directory set, asset validation boundary, or an existing
@@ -92,8 +100,9 @@ inventory/checksum contract changed materially.
 - Lint/format check: `pnpm check` → repository checks pass.
 - Implementation pattern: use `CliError` exit code 2 and fail explicit
   overrides without fallback to packaged assets.
-- Git/PR convention: shipped CLI behavior requires one lockstep bump of all
-  five public packages; do not push or open a PR unless instructed.
+- Git/PR convention: shipped CLI behavior is release-shaped; the lockstep bump
+  is owned by the wave fan-in in lane mode (see Scope); do not push or open a
+  PR unless instructed.
 
 ## Scope
 
@@ -103,12 +112,13 @@ inventory/checksum contract changed materially.
   deterministic structural validation after metadata/version validation.
 - `packages/cli/src/fs/assets.test.ts` — complete fixture construction plus
   metadata-only, missing-directory, and non-directory cases.
-- `packages/cli/scripts/bundle-assets.sh` — verification source only; change it
-  only if live producer output contradicts the declared invariant.
-- Five public package manifests and `pnpm-lock.yaml`.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
+- `packages/cli/scripts/bundle-assets.sh` — evidence only; if its output no
+  longer creates the seven named directories, that is the STOP condition below,
+  not a repair target.
 - Per-file manifests, hashes, checksums, or exhaustive asset enumeration.
 - Validating every bundled skill/template document.
 - Changing `OAT_ASSETS_DIR` precedence or fallback behavior.
@@ -173,26 +183,18 @@ that the downstream remedy plan intentionally changes.
 
 **Verify:** focused assets tests pass with all table rows executed.
 
-### 4. Apply release bookkeeping and full gates
+### 4. Run the mode's gates
 
-Bump the five public package versions together and update `pnpm-lock.yaml` via
-pnpm. Fetch `origin/main` immediately before version validation.
+**Lane mode (default under the execution program):** run the focused tests
+above, then `pnpm check`, `pnpm type-check`, and `pnpm run check:skill-bumps`
+with captured exit codes. Do not edit lockstep release files or run
+`pnpm release:check-versions` / `pnpm release:validate`; the wave fan-in owns
+the lockstep bump and the full definition-of-done sequence. **Standalone mode
+only:** bump the five public packages above freshly fetched `origin/main` and
+run the eight AGENTS.md gates in order.
 
-**Verify:**
-
-```bash
-pnpm check
-pnpm type-check
-pnpm test
-pnpm build
-pnpm run check:skill-bumps
-git fetch origin main
-pnpm release:check-versions
-pnpm release:validate
-pnpm build:docs
-```
-
-Every command exits zero; verify the focused assets suite actually executed.
+**Verify:** every named command exits zero; verify the focused assets suite
+actually executed (no `cache hit, replaying logs`).
 
 ## Test plan
 
@@ -210,8 +212,9 @@ Every command exits zero; verify the focused assets suite actually executed.
 - [ ] Complete packaged and explicit bundles still resolve.
 - [ ] Metadata/schema/version error precedence remains stable.
 - [ ] No checksum or exhaustive inventory scope was introduced.
-- [ ] All five public packages have one lockstep version bump.
-- [ ] Focused and full gates exit zero.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions
@@ -232,7 +235,7 @@ history, producer script, validator, tests, and downstream plan when:
 
 - a dependency landed after this plan was written;
 - substantial time elapsed or main advanced materially from
-  `845462e78468265c7e2e2b2f6c64731472731ecb`;
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9`;
 - a cited asset, test, producer, or release contract changed;
 - linked backlog/project/decision intent changed;
 - another PR implemented part of the outcome; or

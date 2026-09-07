@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   getUserSyncConfigPath,
   resolveUserSyncConfig,
+  updateUserSyncConfig,
 } from './user-sync-config';
 
 describe('resolveUserSyncConfig', () => {
@@ -169,5 +170,31 @@ describe('resolveUserSyncConfig', () => {
     await expect(
       readFile(getUserSyncConfigPath(userConfigDir), 'utf8'),
     ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('updates canonical user config after resolving legacy migration', async () => {
+    const userConfigDir = await createUserConfigDir();
+    await writeFile(
+      join(userConfigDir, 'config.json'),
+      JSON.stringify({
+        version: 1,
+        knownStrays: ['.cursor/skills/legacy-only'],
+        futureField: true,
+      }),
+      'utf8',
+    );
+
+    const updated = await updateUserSyncConfig(userConfigDir, (current) => ({
+      ...current,
+      providers: { ...current.providers, claude: { enabled: true } },
+    }));
+
+    expect(updated).toMatchObject({
+      knownStrays: ['.cursor/skills/legacy-only'],
+      providers: { claude: { enabled: true } },
+    });
+    expect(
+      JSON.parse(await readFile(join(userConfigDir, 'config.json'), 'utf8')),
+    ).toEqual({ version: 1, futureField: true });
   });
 });

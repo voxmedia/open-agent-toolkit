@@ -5,6 +5,8 @@ import {
 } from '@app/command-context';
 import {
   type UpsertSectionResult,
+  formatAgentsMdGuidanceResult,
+  formatAgentsMdMutationFailure,
   upsertAgentsMdSection,
 } from '@commands/shared/agents-md';
 import {
@@ -52,6 +54,12 @@ interface DocsInitCommandOptions {
   yes?: boolean;
 }
 
+interface DocsInitExecutionResult {
+  createdFiles: string[];
+  appRoot: string;
+  rootPackagePatch: RootPackagePatchResult;
+}
+
 interface DocsInitDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveAssetsRoot: () => Promise<string>;
@@ -70,7 +78,7 @@ interface DocsInitDependencies {
     context: CommandContext,
     options: DocsInitResolvedOptions,
     assetsRoot: string,
-  ) => Promise<void>;
+  ) => Promise<DocsInitExecutionResult | void>;
   upsertAgentsMdSection: (
     repoRoot: string,
     key: string,
@@ -154,24 +162,20 @@ const DEFAULT_DEPENDENCIES: DocsInitDependencies = {
     };
     await writeOatConfig(context.cwd, config);
 
-    if (context.json) {
-      context.logger.json({
-        status: 'ok',
-        ...options,
-        createdFiles: result.createdFiles,
-        appRoot: result.appRoot,
-        rootPackagePatch,
-      });
-      return;
+    if (!context.json) {
+      context.logger.info(`Scaffolded docs app at ${options.targetDir}`);
+      context.logger.info(`  Framework: ${options.framework}`);
+      context.logger.info(`  Repo shape: ${options.repoShape}`);
+      context.logger.info(`  App name: ${options.appName}`);
+      context.logger.info(`  Lint: ${options.lint}`);
+      context.logger.info(`  Format: ${options.format}`);
+      logRootPackagePatch(context, rootPackagePatch);
     }
-
-    context.logger.info(`Scaffolded docs app at ${options.targetDir}`);
-    context.logger.info(`  Framework: ${options.framework}`);
-    context.logger.info(`  Repo shape: ${options.repoShape}`);
-    context.logger.info(`  App name: ${options.appName}`);
-    context.logger.info(`  Lint: ${options.lint}`);
-    context.logger.info(`  Format: ${options.format}`);
-    logRootPackagePatch(context, rootPackagePatch);
+    return {
+      createdFiles: result.createdFiles,
+      appRoot: result.appRoot,
+      rootPackagePatch,
+    };
   },
   upsertAgentsMdSection,
   readOatConfig,
@@ -263,15 +267,56 @@ async function runDocsInitCommand(
     }
 
     const assetsRoot = await dependencies.resolveAssetsRoot();
-    await dependencies.runDocsInit(context, resolved, assetsRoot);
+    const scaffold = await dependencies.runDocsInit(
+      context,
+      resolved,
+      assetsRoot,
+    );
 
     const sectionBody = buildDocsSectionBody(resolved);
-    const sectionResult = await dependencies.upsertAgentsMdSection(
-      context.cwd,
-      'docs',
-      sectionBody,
-    );
-    if (!context.json && sectionResult.action !== 'no-change') {
+    let sectionResult: UpsertSectionResult;
+    try {
+      sectionResult = await dependencies.upsertAgentsMdSection(
+        context.cwd,
+        'docs',
+        sectionBody,
+      );
+    } catch (error) {
+      throw new Error(formatAgentsMdMutationFailure(error), { cause: error });
+    }
+    if (
+      sectionResult.action === 'manual-required' ||
+      sectionResult.action === 'blocked'
+    ) {
+      if (context.json) {
+        context.logger.json({
+          status: 'partial',
+          scaffold: {
+            status: 'complete',
+            targetDir: resolved.targetDir,
+            framework: resolved.framework,
+          },
+          guidance: sectionResult,
+        });
+      } else {
+        context.logger.warn(
+          `Docs scaffold completed; AGENTS.md guidance is ${sectionResult.action}.`,
+        );
+        for (const line of formatAgentsMdGuidanceResult(sectionResult)) {
+          context.logger.info(line);
+        }
+      }
+      process.exitCode = 1;
+      return;
+    }
+    if (context.json) {
+      context.logger.json({
+        status: 'ok',
+        ...resolved,
+        ...scaffold,
+        guidance: sectionResult,
+      });
+    } else if (sectionResult.action !== 'no-change') {
       context.logger.info(`AGENTS.md docs section ${sectionResult.action}.`);
     }
 

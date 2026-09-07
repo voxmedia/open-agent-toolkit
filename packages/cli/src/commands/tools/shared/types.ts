@@ -35,6 +35,13 @@ export interface PackAssetDefinition {
   ownership: Partial<Record<ConcreteScope, PackAssetOwnership>>;
   executable?: boolean;
   sharedOwner?: string;
+  userMaterializable?: boolean;
+}
+
+export interface PackDependencyDefinition {
+  pack: PackName;
+  scope: 'same';
+  assets: readonly string[];
 }
 
 export interface PackDefinition {
@@ -42,6 +49,7 @@ export interface PackDefinition {
   allowedScopes: readonly ConcreteScope[];
   defaultScope: ConcreteScope;
   assets: readonly PackAssetDefinition[];
+  dependencies?: readonly PackDependencyDefinition[];
 }
 
 export type PackAssetStatus =

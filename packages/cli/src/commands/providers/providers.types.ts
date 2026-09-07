@@ -5,7 +5,14 @@ import type { CopyTransform, DriftReport } from '@drift/index';
 import type { Manifest } from '@manifest/index';
 import type { CodexRoleExport } from '@providers/codex/codec/export-to-codex';
 import type { CodexMaterializeRoleOptions } from '@providers/codex/codec/materialize';
-import type { PathMapping, ProviderAdapter } from '@providers/shared';
+import type {
+  ManagedContentKind,
+  PathMapping,
+  ProviderActivationSource,
+  ProviderAdapter,
+  ProviderCapabilitySupport,
+  ProviderProjectionMode,
+} from '@providers/shared';
 import type {
   ConcreteScope,
   ContentType,
@@ -27,6 +34,34 @@ export interface ProviderListItem {
   defaultStrategy: SyncStrategy;
   contentTypes: ContentType[];
   summary: ProviderListSummary;
+  scopes: ProviderScopeInspection[];
+}
+
+export type ProviderInspectionMaterialization =
+  | 'not-required'
+  | 'current'
+  | 'missing'
+  | 'failed'
+  | 'unsupported'
+  | 'unknown';
+
+export interface ProviderContentInspection {
+  contentKind: ManagedContentKind;
+  capability: ProviderCapabilitySupport;
+  projectionModes: readonly ProviderProjectionMode[];
+  nativeRead: boolean;
+  materialization: ProviderInspectionMaterialization;
+  visibility: 'not-reported' | 'unsupported' | 'unknown';
+}
+
+export interface ProviderScopeInspection {
+  scope: ConcreteScope;
+  activation: {
+    state: 'active' | 'inactive' | 'unknown';
+    source: ProviderActivationSource | 'detection-fallback' | 'not-resolved';
+    reason: string;
+  };
+  content: ProviderContentInspection[];
 }
 
 export interface ProvidersListDependencies {
@@ -53,6 +88,10 @@ export interface ProviderInspectMappingState {
   inSync: number;
   drifted: number;
   missing: number;
+  nativeRead: boolean;
+  projectionModes: readonly ProviderProjectionMode[];
+  materialization: ProviderInspectionMaterialization;
+  visibility: 'not-reported' | 'unsupported' | 'unknown';
 }
 
 export interface ProviderInspectResult {
@@ -64,6 +103,7 @@ export interface ProviderInspectResult {
   userMappings: PathMapping[];
   version: string | null;
   mappings: ProviderInspectMappingState[];
+  scopes: ProviderScopeInspection[];
 }
 
 export interface ProvidersInspectDependencies {

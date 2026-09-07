@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildPackInstallStateMap,
+  buildPackInstallStateMapFromEvidence,
   buildPackInstallStateMapFromInventory,
   resolvePackInstallLocation,
 } from './install-state';
@@ -106,6 +107,48 @@ describe('buildPackInstallStateMapFromInventory', () => {
       ],
     );
     expect(result.docs.location).toBe('not-installed');
+  });
+});
+
+describe('buildPackInstallStateMapFromEvidence', () => {
+  it('does not turn declared-only intent into installed state', () => {
+    const result = buildPackInstallStateMapFromEvidence(
+      ['project-management'],
+      [
+        {
+          schemaVersion: 1,
+          pack: 'project-management',
+          canonical: null,
+          scopes: [],
+          knownRealizedScopes: [],
+          unknownScopes: [],
+          realizedPlacement: 'none',
+          providers: [],
+          diagnostics: [],
+        },
+      ],
+    );
+    expect(result['project-management'].location).toBe('not-installed');
+  });
+
+  it('projects only verified realized scopes', () => {
+    const result = buildPackInstallStateMapFromEvidence(
+      ['ideas'],
+      [
+        {
+          schemaVersion: 1,
+          pack: 'ideas',
+          canonical: null,
+          scopes: [],
+          knownRealizedScopes: ['user'],
+          unknownScopes: ['project'],
+          realizedPlacement: 'unknown',
+          providers: [],
+          diagnostics: [],
+        },
+      ],
+    );
+    expect(result.ideas.location).toBe('user');
   });
 });
 

@@ -39,12 +39,23 @@ export interface OatDocumentationConfig {
   config?: string;
   index?: string;
   requireForProjectCompletion?: boolean;
+  /**
+   * Globs, relative to the docs directory `oat docs generate-index` indexes,
+   * whose matches are left out of the generated index. Trimmed, de-duplicated,
+   * and order-preserving.
+   */
+  excludes?: string[];
 }
 
 export interface OatGitConfig {
   defaultBranch?: string;
 }
 
+/**
+ * Known project config keys. Unknown siblings written by a newer OAT are not
+ * described here, but they are preserved verbatim across read-mutate-write:
+ * see the FR10 merge in `normalizeOatConfig`.
+ */
 export interface OatProjectsConfig {
   root?: string;
   defaultScope?: 'shared' | 'local' | 'synced';
@@ -885,19 +896,23 @@ function normalizeWorkflowConfig(
   return Object.keys(next).length > 0 ? next : undefined;
 }
 
-export type OatToolsConfig = Partial<
-  Record<
-    | 'core'
-    | 'ideas'
-    | 'docs'
-    | 'workflows'
-    | 'utility'
-    | 'project-management'
-    | 'research'
-    | 'brainstorm',
-    boolean
-  >
+export type OatToolPackName =
+  | 'core'
+  | 'ideas'
+  | 'docs'
+  | 'workflows'
+  | 'utility'
+  | 'project-management'
+  | 'research'
+  | 'brainstorm';
+
+export type OatToolsRequiredByConfig = Partial<
+  Record<OatToolPackName, OatToolPackName[]>
 >;
+
+export type OatToolsConfig = Partial<Record<OatToolPackName, boolean>> & {
+  requiredBy?: OatToolsRequiredByConfig;
+};
 
 export type OatPjmRemoteProvider = 'github' | 'linear' | 'jira';
 export type OatPjmRemoteDescriptionMode =
@@ -944,7 +959,6 @@ export interface OatPjmRemoteSharedConfig {
     >;
   };
 }
-
 export interface OatPjmConfig {
   initialized?: boolean;
   schemaVersion?: number;
@@ -983,7 +997,7 @@ const VALID_TOOL_PACKS = [
   'project-management',
   'research',
   'brainstorm',
-] as const satisfies readonly (keyof OatToolsConfig)[];
+] as const satisfies readonly OatToolPackName[];
 
 function normalizeToolsConfig(value: unknown): OatToolsConfig | undefined {
   if (!isRecord(value)) {
@@ -994,6 +1008,29 @@ function normalizeToolsConfig(value: unknown): OatToolsConfig | undefined {
   for (const pack of VALID_TOOL_PACKS) {
     if (typeof value[pack] === 'boolean') {
       tools[pack] = value[pack];
+    }
+  }
+  if (isRecord(value.requiredBy)) {
+    const requiredBy: OatToolsRequiredByConfig = {};
+    for (const pack of VALID_TOOL_PACKS) {
+      const leases = value.requiredBy[pack];
+      if (!Array.isArray(leases)) continue;
+      const normalized = [
+        ...new Set(
+          leases.filter(
+            (lease): lease is OatToolPackName =>
+              typeof lease === 'string' &&
+              lease !== pack &&
+              (VALID_TOOL_PACKS as readonly string[]).includes(lease),
+          ),
+        ),
+      ].sort();
+      if (normalized.length > 0) {
+        requiredBy[pack] = normalized;
+      }
+    }
+    if (Object.keys(requiredBy).length > 0) {
+      tools.requiredBy = requiredBy;
     }
   }
   return Object.keys(tools).length > 0 ? tools : undefined;
@@ -1426,6 +1463,49 @@ async function normalizeReadableProjectPath(
   }
 }
 
+/**
+ * Parse `documentation.excludes` into a trimmed, de-duplicated,
+ * order-preserving list.
+ *
+ * Unlike its scalar `documentation.*` siblings, a malformed value is rejected
+ * rather than silently dropped: a typo in an exclusion list would otherwise
+ * publish pages the operator believed were excluded, with no signal anywhere.
+ * An absent key and an empty array are both "no exclusions".
+ */
+function normalizeDocumentationExcludes(
+  value: unknown,
+  configPath: string,
+): string[] {
+  if (value === undefined) {
+    return [];
+  }
+
+  const invalid = (): never => {
+    throw new CliError(
+      `Invalid documentation.excludes in ${configPath}: expected an array of non-empty strings. ` +
+        'Repair it with oat config set documentation.excludes "<glob>,<glob>" (an empty value clears it).',
+      2,
+    );
+  };
+
+  if (!Array.isArray(value)) {
+    invalid();
+  }
+
+  const normalized: string[] = [];
+  for (const entry of value as unknown[]) {
+    if (typeof entry !== 'string' || !entry.trim()) {
+      invalid();
+    }
+    const trimmedEntry = (entry as string).trim();
+    if (!normalized.includes(trimmedEntry)) {
+      normalized.push(trimmedEntry);
+    }
+  }
+
+  return normalized;
+}
+
 function normalizeOatConfig(
   parsed: unknown,
   configPath = '.oat/config.json',
@@ -1461,11 +1541,27 @@ function normalizeOatConfig(
         2,
       );
     }
-    if (root || defaultScope) {
-      next.projects = {
-        ...(root ? { root } : {}),
-        ...(defaultScope ? { defaultScope } : {}),
-      };
+    // FR10: retain unknown siblings. Normalization previously rebuilt this
+    // subtree from the two known keys, so any field a newer OAT wrote was
+    // destroyed by the next read-mutate-write cycle — which every project-scope
+    // pack install performs. The values come from JSON.parse, so they are
+    // JSON-safe by construction; known keys are normalized and overwrite the
+    // raw ones, and everything else is carried through untouched.
+    // Built with `Object.fromEntries` rather than assignment: `preserved[key]`
+    // invokes the legacy prototype setter for a key named `__proto__`, so a
+    // valid JSON sibling with that name would silently vanish.
+    const preserved = Object.fromEntries(
+      Object.entries(parsed.projects).filter(
+        ([key]) => key !== 'root' && key !== 'defaultScope',
+      ),
+    );
+    const normalized: Record<string, unknown> = {
+      ...preserved,
+      ...(root ? { root } : {}),
+      ...(defaultScope ? { defaultScope } : {}),
+    };
+    if (Object.keys(normalized).length > 0) {
+      next.projects = normalized as OatProjectsConfig;
     }
   }
 
@@ -1566,6 +1662,13 @@ function normalizeOatConfig(
     if (typeof parsed.documentation.requireForProjectCompletion === 'boolean') {
       doc.requireForProjectCompletion =
         parsed.documentation.requireForProjectCompletion;
+    }
+    const excludes = normalizeDocumentationExcludes(
+      parsed.documentation.excludes,
+      configPath,
+    );
+    if (excludes.length > 0) {
+      doc.excludes = excludes;
     }
     if (Object.keys(doc).length > 0) {
       next.documentation = doc;
@@ -1671,6 +1774,36 @@ export async function readOatConfigForDefaultScopeRepair(
       const { defaultScope: _invalidDefaultScope, ...projects } =
         parsed.projects;
       return normalizeOatConfig({ ...parsed, projects }, configPath);
+    }
+    return normalizeOatConfig(parsed, configPath);
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return { ...DEFAULT_OAT_CONFIG };
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Read shared config with an unusable `documentation.excludes` dropped, so
+ * `oat config set documentation.excludes ...` can perform the repair its own
+ * validation error prescribes. Mirrors the `projects.defaultScope` precedent
+ * above: without it, the only key-specific repair command the error names is
+ * itself blocked by the invalid value.
+ */
+export async function readOatConfigForDocumentationExcludesRepair(
+  repoRoot: string,
+): Promise<OatConfig> {
+  const configPath = getConfigPath(repoRoot);
+
+  try {
+    const raw = await readFile(configPath, 'utf8');
+    const parsed = parseJsonConfig(raw, configPath);
+    if (isRecord(parsed) && isRecord(parsed.documentation)) {
+      const { excludes: _invalidExcludes, ...documentation } =
+        parsed.documentation;
+      return normalizeOatConfig({ ...parsed, documentation }, configPath);
     }
     return normalizeOatConfig(parsed, configPath);
   } catch (error) {

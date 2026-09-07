@@ -25,6 +25,8 @@ interface HarnessOptions {
     skippedScripts: string[];
     projectsRootInitialized: boolean;
   };
+  guidanceWriteActions?: Array<'created' | 'updated' | 'no-change'>;
+  guidanceError?: Error;
 }
 
 function createHarness(options: HarnessOptions = {}) {
@@ -34,7 +36,11 @@ function createHarness(options: HarnessOptions = {}) {
   const resolveProjectRoot = vi.fn(async () => '/tmp/workspace');
   const resolveScopeRoot = vi.fn(() => '/tmp/home');
   const resolveAssetsRoot = vi.fn(async () => '/tmp/assets');
+  const installedWorkflowScopes = new Set<Scope>();
   const installWorkflows = vi.fn(async () => {
+    installedWorkflowScopes.add(
+      installWorkflows.mock.calls.at(-1)?.[0].scope ?? 'user',
+    );
     return (
       options.result ?? {
         copiedSkills: ['oat-project-new'],
@@ -59,7 +65,56 @@ function createHarness(options: HarnessOptions = {}) {
       }
     );
   });
-  const confirmAction = vi.fn(async () => confirmResponses.shift() ?? true);
+  const confirmAction = vi.fn(async () => confirmResponses.shift() ?? false);
+  const scanTools = vi.fn(async ({ scope }: { scope: 'project' | 'user' }) => [
+    ...(scope === 'project'
+      ? [
+          {
+            name: 'oat-docs',
+            type: 'skill' as const,
+            scope,
+            version: '1.0.0',
+            bundledVersion: '1.0.0',
+            pack: 'docs' as const,
+            status: 'current' as const,
+          },
+        ]
+      : [
+          {
+            name: 'oat-doctor',
+            type: 'skill' as const,
+            scope,
+            version: '1.0.0',
+            bundledVersion: '1.0.0',
+            pack: 'core' as const,
+            status: 'current' as const,
+          },
+        ]),
+    ...(installedWorkflowScopes.has(scope)
+      ? [
+          {
+            name: 'oat-project-new',
+            type: 'skill' as const,
+            scope,
+            version: '1.0.0',
+            bundledVersion: '1.0.0',
+            pack: 'workflows' as const,
+            status: 'current' as const,
+          },
+        ]
+      : []),
+  ]);
+  const guidanceWriteActions = [
+    ...(options.guidanceWriteActions ?? ['created']),
+  ];
+  const upsertAgentsMdSection = vi.fn(async () => {
+    if (options.guidanceError) throw options.guidanceError;
+    return {
+      action: guidanceWriteActions.shift() ?? 'no-change',
+      path: '/tmp/workspace/AGENTS.md',
+    };
+  });
+  const removeAgentsMdSection = vi.fn(async () => false);
 
   const command = createInitToolsWorkflowsCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -77,6 +132,9 @@ function createHarness(options: HarnessOptions = {}) {
     resolveAssetsRoot,
     installWorkflows,
     confirmAction,
+    scanTools,
+    upsertAgentsMdSection,
+    removeAgentsMdSection,
   });
 
   return {
@@ -87,6 +145,9 @@ function createHarness(options: HarnessOptions = {}) {
     resolveAssetsRoot,
     installWorkflows,
     confirmAction,
+    scanTools,
+    upsertAgentsMdSection,
+    removeAgentsMdSection,
   };
 }
 
@@ -211,6 +272,123 @@ describe('createInitToolsWorkflowsCommand', () => {
       status: 'ok',
       scope: 'user',
       targetRoot: '/tmp/home',
+      projectGuidance: {
+        action: 'not-requested',
+      },
     });
+  });
+
+  it.each(['project', 'user'] as const)(
+    'applies accepted project guidance without changing %s capability placement',
+    async (scope) => {
+      const {
+        command,
+        capture,
+        installWorkflows,
+        upsertAgentsMdSection,
+        removeAgentsMdSection,
+      } = createHarness();
+
+      await runCommand(command, ['--project-guidance'], ['--scope', scope]);
+
+      expect(installWorkflows).toHaveBeenCalledWith(
+        expect.objectContaining({ scope }),
+      );
+      expect(upsertAgentsMdSection).toHaveBeenCalledWith(
+        '/tmp/workspace',
+        'tools',
+        expect.stringMatching(
+          /\*\*core\*\*[\s\S]*\*\*docs\*\*[\s\S]*\*\*workflows\*\*/,
+        ),
+        { removeSectionKeys: ['workflows'] },
+      );
+      expect(removeAgentsMdSection).not.toHaveBeenCalled();
+      expect(capture.info.join('\n')).toContain('Project guidance: create');
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('keeps explicit decline and non-interactive default write-free', async () => {
+    const declined = createHarness({ interactive: true });
+    await runCommand(
+      declined.command,
+      ['--no-project-guidance'],
+      ['--scope', 'project'],
+    );
+    expect(declined.upsertAgentsMdSection).not.toHaveBeenCalled();
+    expect(declined.removeAgentsMdSection).not.toHaveBeenCalled();
+    expect(declined.capture.info.join('\n')).toContain(
+      'Project guidance: declined',
+    );
+
+    const nonInteractive = createHarness({ interactive: false });
+    await runCommand(nonInteractive.command, [], ['--scope', 'project']);
+    expect(nonInteractive.upsertAgentsMdSection).not.toHaveBeenCalled();
+    expect(nonInteractive.removeAgentsMdSection).not.toHaveBeenCalled();
+    expect(nonInteractive.capture.info.join('\n')).toContain(
+      'Re-run with --project-guidance',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('prompts once for guidance and reports repeated accepted updates', async () => {
+    const harness = createHarness({
+      interactive: true,
+      confirmResponses: [true, true],
+      guidanceWriteActions: ['created', 'no-change'],
+    });
+
+    await runCommand(harness.command, [], ['--scope', 'project']);
+    await runCommand(harness.command, [], ['--scope', 'project']);
+
+    expect(harness.confirmAction).toHaveBeenCalledTimes(2);
+    expect(harness.upsertAgentsMdSection).toHaveBeenCalledTimes(2);
+    expect(harness.capture.info.join('\n')).toContain(
+      'Project guidance: create',
+    );
+    expect(harness.capture.info.join('\n')).toContain(
+      'Project guidance: no-change',
+    );
+  });
+
+  it('rejects conflicting project guidance flags before writing', async () => {
+    const { command, installWorkflows, upsertAgentsMdSection } =
+      createHarness();
+
+    await expect(
+      runCommand(
+        command,
+        ['--project-guidance', '--no-project-guidance'],
+        ['--scope', 'project'],
+      ),
+    ).rejects.toThrow(
+      '--project-guidance and --no-project-guidance cannot be used together.',
+    );
+
+    expect(installWorkflows).not.toHaveBeenCalled();
+    expect(upsertAgentsMdSection).not.toHaveBeenCalled();
+  });
+
+  it('reports blocked guidance without coupling it to capability installation', async () => {
+    const { command, capture, installWorkflows } = createHarness({
+      guidanceError: new Error('unsafe AGENTS.md target'),
+    });
+
+    await runCommand(
+      command,
+      ['--project-guidance'],
+      ['--scope', 'project', '--json'],
+    );
+
+    expect(installWorkflows).toHaveBeenCalledTimes(1);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'partial',
+      scope: 'project',
+      projectGuidance: {
+        action: 'blocked',
+        reason: expect.stringContaining('planned safely'),
+      },
+    });
+    expect(process.exitCode).toBe(1);
   });
 });

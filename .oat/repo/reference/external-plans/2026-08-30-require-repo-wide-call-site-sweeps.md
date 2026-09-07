@@ -6,8 +6,8 @@ oat_external_plan_sources:
   - .oat/repo/pjm/backlog/reviews/backlog-and-roadmap-review.md
   - .oat/repo/pjm/backlog/reviews/priority-alignment.md
   - .oat/repo/pjm/backlog/items/BL-260818-require-repo-wide-call-site.md
-oat_external_plan_commit: 845462e78468265c7e2e2b2f6c64731472731ecb
-oat_external_plan_date: '2026-08-30'
+oat_external_plan_commit: 49aeb5075971180b48c131bbd2b21b82d455bfc9
+oat_external_plan_date: '2026-09-02'
 oat_execution_status: READY
 oat_backlog_items:
   - BL-260818-require-repo-wide-call-site
@@ -44,7 +44,7 @@ review scope, not a correctness boundary.
 - Source backlog item:
   [BL-260818-require-repo-wide-call-site — Require repo-wide call-site sweeps](../../pjm/backlog/items/BL-260818-require-repo-wide-call-site.md)
 - Planned at: `origin/main` commit
-  `845462e78468265c7e2e2b2f6c64731472731ecb` on `2026-08-30`.
+  `49aeb5075971180b48c131bbd2b21b82d455bfc9` on `2026-09-02`.
 - Verified evidence:
   - [explainer-improvements-v2 summary](../project-summaries/20260818-explainer-improvements-v2.md)
     at lines 75-81 and 111-114 records that `publicAccess` was threaded only
@@ -67,11 +67,20 @@ review scope, not a correctness boundary.
 
 ## Dependencies
 
-| Type              | Dependency                                                                                            | Required state                                                                                          | Current state            |
-| ----------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------ |
-| Soft coordination | [BL-260706-front-load-recurring-gate](../../pjm/backlog/items/BL-260706-front-load-recurring-gate.md) | Avoid duplicating any future generic brief guidance; this plan owns only the phase-time call-site rule. | Open, broader mechanism. |
+| Type              | Dependency                                                                                                                                                       | Required state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Current state                                                                  |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Soft coordination | [BL-260706-front-load-recurring-gate](../../pjm/backlog/items/BL-260706-front-load-recurring-gate.md)                                                            | Avoid duplicating any future generic brief guidance; this plan owns only the phase-time call-site rule.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Open, broader mechanism.                                                       |
+| Soft ordering     | W2 group 3 plan [Document patch-and-restore recovery for lost child handles with staged work](./2026-09-02-document-patch-and-restore-for-lost-child-handles.md) | Runs before this plan; both edit `.agents/agents/oat-phase-implementer.md`, so never in one parallel group.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Pending.                                                                       |
+| Soft ordering     | Shared write: `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts` (2026-09-05 Bugbot finding on PR #260)                     | Never in one parallel group with any other plan that writes this file; wave order lands them in sequence (W2 group 2, W3 group 1, W4 group 1, W5 group 4). The other writers are: W2 group 2 [Require lifecycle orchestrators to load every named execution skill](./2026-08-30-require-named-lifecycle-skills-to-be-loaded.md); W4 group 1 [Let one project disable configured lifecycle gates explicitly](./2026-08-30-disable-configured-gates-per-project.md); W5 group 4 [Make terminal project status agree with completed revision plans](./2026-09-04-make-terminal-project-status-agree-with-revision-plans.md). | Pending; the execution program keeps each of these lanes in a different group. |
 
 There are no unsatisfied hard dependencies.
+
+## Landing-event impact
+
+| Event                                                                                | Affected         | Files in common                                                                                                                                                                                                            | Required update                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------ | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tool-pack-scope-provider-truthfulness` **landed** (PR #255 `a06e9713a`, 2026-09-03) | See dependencies | Recorded in the Dependencies and Revalidation sections.                                                                                                                                                                    | Drift re-run 2026-09-03 and 2026-09-04; anchors refreshed where noted.                                                                                                             |
+| `review-plan-workflow` (draft PR #190) merges                                        | Minor            | `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts` (this plan adds cases; #190 head `63161897dd4` rewrites it). `.agents/agents/oat-phase-implementer.md` is not in the #190 surface. | If #190 merges first: re-read the merged test file, re-anchor the `:850-865` sequencing block, and add the new cases beside the merged content; if this lands first, #190 rebases. |
 
 ## Drift check
 
@@ -79,7 +88,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat 845462e78468265c7e2e2b2f6c64731472731ecb..origin/main -- .agents/agents/oat-phase-implementer.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references/phase-execution.md packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git diff --stat 49aeb5075971180b48c131bbd2b21b82d455bfc9..origin/main -- .agents/agents/oat-phase-implementer.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references/phase-execution.md packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
 ```
 
 If another change already defines cross-cutting option handling, reconcile to a
@@ -93,9 +102,12 @@ single owner and refresh this plan rather than adding parallel wording.
   cannot be reached through the existing dispatch contract. If it is edited,
   bump that skill version exactly once.
 - Run `pnpm lint && pnpm format` for `.agents` changes.
-- Bump all five public package versions together and update `pnpm-lock.yaml`.
+- Release bookkeeping is mode-dependent: under the execution program the
+  wave fan-in owns the lockstep five-package bump; only a standalone execution
+  bumps the five public packages and `pnpm-lock.yaml` itself.
 - Use semantic anchors in tests; never encode physical prose line numbers.
-- Run the focused contract test independently, then the full Definition of Done.
+- Run the focused contract test independently, then the mode-appropriate gates
+  in step 5.
 - Do not push or open a PR unless instructed.
 
 ## Scope
@@ -106,7 +118,8 @@ single owner and refresh this plan rather than adding parallel wording.
   repo-wide sweep, and mechanically-widen-or-stop rule.
 - `post-implement-sequence-contracts.test.ts` — stable contract assertions and
   a negative mutation/probe.
-- Managed provider views, five public package versions, and `pnpm-lock.yaml`.
+- Managed provider views.
+- Lockstep release files (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never edited by this plan when it runs as a wave lane; the wave fan-in step makes exactly one lockstep bump for the integrated wave and regenerates the version asset through the build. Only a standalone execution bumps them itself, above fresh `origin/main`.
 
 ### Out of scope
 
@@ -171,24 +184,35 @@ removes either repository-wide scope or the stop boundary; it must fail.
 
 **Verify:** focused test red/green proof passes after restoration.
 
-### 4. Refresh shipped views and release bookkeeping
+### 4. Refresh shipped views and skill bookkeeping
 
-Run `oat sync --scope all`, inspect generated agent views, bump all five public
-packages together, and update `pnpm-lock.yaml`. Bump
-`oat-project-implement` only if its canonical `SKILL.md` was actually changed.
+Run `oat sync --scope all` and inspect generated agent views. Bump
+`oat-project-implement` only if its canonical `SKILL.md` was actually changed,
+and update its pin in `packages/cli/src/validation/skills.test.ts` when you do.
 
-### 5. Run complete gates
+### 5. Run the mode-appropriate gates
 
-Run the repository Definition of Done in order, with the focused contract test
-executed independently and `origin/main` fetched immediately before version
-validation.
+**Lane mode (default under the execution program):** bump changed skill
+`version:` fields and update their pins in
+`packages/cli/src/validation/skills.test.ts` where a pin exists; run the
+focused tests above, then `pnpm check`, `pnpm type-check`, and
+`pnpm run check:skill-bumps` with captured exit codes, plus `pnpm lint` and `pnpm format`
+because this plan changes `.agents/agents`. Do not edit
+lockstep release files or run `pnpm release:check-versions` /
+`pnpm release:validate`; the wave fan-in owns the lockstep bump and the full
+definition-of-done sequence. **Standalone mode only:** bump the five public
+packages above freshly fetched `origin/main` and run the eight AGENTS.md gates
+in order.
+Run the focused contract test independently so Turbo cache replay is not the
+only evidence.
 
 ## Test plan
 
 - Stable semantic assertions over the phase task-execution section.
 - Negative probe for a local-only sweep and for silent boundary expansion.
 - Existing phase sequencing tests remain green.
-- Managed-view, lint/format, package-version, release, and full repository gates.
+- Managed-view and lint/format gates, then the lane-mode or standalone gate
+  set from step 5.
 
 ## Done criteria
 
@@ -199,7 +223,10 @@ validation.
 - [ ] Ambiguous or ownership-changing expansion stops with exact evidence.
 - [ ] `plan.md`, lifecycle ordering, and review gates are not silently changed.
 - [ ] A non-vacuous contract test guards all required properties.
-- [ ] Managed views, package versions, and all gates pass.
+- [ ] Managed views pass.
+- [ ] Lane mode: focused tests, `pnpm check`, `pnpm type-check`, and
+      `pnpm run check:skill-bumps` pass and no lockstep release file is edited.
+      Standalone mode: one lockstep bump and all eight gates pass.
 - [ ] `git status --short` contains no unexplained file.
 
 ## STOP conditions
@@ -213,12 +240,16 @@ Stop and report instead of improvising when:
 - the negative probe does not fail when a required property is removed; or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-06, wave 3)
+
+Executed as wave-3 p01 (PR wave-3-execution, CLI 0.2.58): `oat-phase-implementer.md` 1.1.2 → 1.1.3 with its three `skills.test.ts` pins (this file belongs in the In-scope list: steps 4–5 move the pins); contract assertions plus six negative probes in `post-implement-sequence-contracts.test.ts`; `oat-project-implement` not bumped because the agent-level rule is reachable through the existing dispatch contract. Reported owner decision, not applied by the lane: `oat-project-implement/references/phase-execution.md:608` still says a task commit "changes only declared files" while `:493` and `:652` already say "declared or mechanically derived"; aligning `:608` costs an `oat-project-implement` bump plus seven pins and belongs to that skill's owner (recorded for a later lane). Docs mirror `apps/oat-docs/docs/workflows/projects/implementation-execution.md:91` updated at the wave's document step. Sync convention (program rule from wave 3): where this plan says `oat sync --scope all`, lanes run `pnpm run cli -- sync --scope project`; `--scope all` also rewrites the operator's user-scope provider views and manifest and is operator-only.
+
 ## Revalidation Before Execution
 
 Revalidate against current `origin/main`, the source backlog item, both cited
 historical commits, the explainer summary, phase implementer, implement skill,
 and focused test when main advances materially from
-`845462e78468265c7e2e2b2f6c64731472731ecb`, phase ownership or wording changes,
+`49aeb5075971180b48c131bbd2b21b82d455bfc9`, phase ownership or wording changes,
 the broader recurring-gate item lands, or the cited gap cannot be reproduced.
 Refresh or supersede stale scope before execution.
 

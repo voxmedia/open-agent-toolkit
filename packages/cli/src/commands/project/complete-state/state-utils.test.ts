@@ -132,4 +132,43 @@ describe('renderCompletedProjectState', () => {
       '## Current Phase\n\nLifecycle complete; archived locally\n',
     );
   });
+
+  it('preserves a nested gate-override map and unrelated keys verbatim', () => {
+    // Executable preserve-on-write proof for `oat_skill_gate_overrides`.
+    // The project-state allowlist is declarative and has no production call
+    // site, so a real writer is driven here instead: dropping or reflowing the
+    // nested map would silently re-enable a gate the operator disabled.
+    const input = buildStateInput({
+      frontmatter: [
+        'oat_current_task: p01-t01',
+        'oat_phase: implement',
+        'oat_phase_status: in_progress',
+        'oat_skill_gate_overrides:',
+        '  oat-project-implement: disabled',
+        '  oat-project-plan: disabled',
+        'some_unrelated_custom_key: keep-me',
+        'oat_project_completed: null',
+        'oat_project_state_updated: "2026-04-13T18:17:21.000Z"',
+        'oat_generated: false',
+      ],
+    });
+
+    const output = renderCompletedProjectState(input, {
+      archived: false,
+      nowUtc: '2026-04-13T21:55:00Z',
+      today: '2026-04-13',
+    });
+
+    expect(output).toContain(
+      [
+        'oat_skill_gate_overrides:',
+        '  oat-project-implement: disabled',
+        '  oat-project-plan: disabled',
+      ].join('\n'),
+    );
+    expect(output).toContain('some_unrelated_custom_key: keep-me');
+    // The writer still did its own job on the same block.
+    expect(output).toContain('oat_lifecycle: complete');
+    expect(output).toContain('oat_project_completed: "2026-04-13T21:55:00Z"');
+  });
 });

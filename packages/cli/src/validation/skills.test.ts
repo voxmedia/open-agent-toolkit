@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import {
   mkdir,
   mkdtemp,
@@ -11,6 +12,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
+import { GATE_AWARE_SKILLS } from '@commands/shared/frontmatter';
+import {
+  getPackMemberNames,
+  PACK_MANIFEST,
+} from '@commands/tools/shared/pack-manifest';
+import { expectDispatchStampFieldContract } from '@test-support/skills/dispatch-stamp-contract';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { validateChangedSkillVersionBumps, validateOatSkills } from './skills';
@@ -179,6 +186,49 @@ function extractArtifactHygieneContract(content: string): string {
     .slice(start, end === -1 ? undefined : end)
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/**
+ * Fenced code blocks, in order. Contract snippets are executed one block at a
+ * time, so a safety preamble only protects the block it appears in.
+ */
+function fencedBlocks(markdown: string): string[] {
+  const blocks: string[] = [];
+  let current: string[] | null = null;
+  let fenceChar = '';
+  let fenceLength = 0;
+
+  for (const line of markdown.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    const marker = /^(`{3,}|~{3,})(.*)$/.exec(trimmed);
+    if (current === null) {
+      if (marker) {
+        fenceChar = marker[1]![0]!;
+        fenceLength = marker[1]!.length;
+        current = [];
+      }
+      continue;
+    }
+    // CommonMark: a closer is a line of only fence characters, of the same kind
+    // and at least as long as the opener. Requiring an exact length would let a
+    // longer closer merge a guarded block into an unguarded one.
+    const closes =
+      marker !== null &&
+      marker[1]![0] === fenceChar &&
+      marker[1]!.length >= fenceLength &&
+      marker[2]!.trim() === '';
+    if (closes) {
+      blocks.push(current.join('\n'));
+      current = null;
+      continue;
+    }
+    current.push(line);
+  }
+
+  // An unterminated block still carries instructions a runtime would execute.
+  if (current !== null) blocks.push(current.join('\n'));
+
+  return blocks;
 }
 
 describe('validateOatSkills', () => {
@@ -1780,7 +1830,7 @@ describe('validateOatSkills', () => {
     } of [
       {
         skillName: 'oat-project-discover',
-        version: '2.2.2',
+        version: '2.2.4',
         finalizedHeading:
           '### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)',
         gateHeading: '### Step 12: Gate Execution',
@@ -1789,7 +1839,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-design',
-        version: '2.3.2',
+        version: '2.3.4',
         finalizedHeading:
           '### Step 6: User-Review Gate (commit-first ordering)',
         gateHeading: '### Step 7: Gate Execution',
@@ -1799,7 +1849,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.6',
+        version: '1.4.8',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -1807,7 +1857,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.7',
+        version: '2.3.9',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -1816,7 +1866,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.3.1',
+        version: '2.3.4',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -2208,7 +2258,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
   });
 
   it('requires classified resolver calls and effective terminal reviewer notices before launch', async () => {
@@ -2514,7 +2564,7 @@ describe('validateOatSkills', () => {
     );
     const combined = `${content}\n${dispatchReference}`;
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
     expect(dispatchReference).toContain(
       '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
     );
@@ -2549,12 +2599,46 @@ describe('validateOatSkills', () => {
     expect(combined).toMatch(/launcher-selected\/config-declared/i);
   });
 
+  it('records native dispatch lineage around the host-owned launch boundary', async () => {
+    const paths = [
+      '.agents/skills/oat-dispatch-subagents/SKILL.md',
+      '.agents/skills/oat-project-dispatch-subagents/SKILL.md',
+      '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    ];
+    const contracts = await Promise.all(paths.map(readRepoFile));
+    const central = `${contracts[0]}\n${contracts[1]}`;
+
+    expect(central).toContain('oat project dispatch record');
+    expect(central).toContain('--event-file -');
+    expect(central).toMatch(
+      /construct[^]{0,180}redact[^]{0,220}before[^]{0,100}native (?:host )?(?:call|launch)/i,
+    );
+    expect(central).toMatch(
+      /immediately after[^]{0,180}(?:accepted|blocked-before-start)[^]{0,220}generic dispatch record/i,
+    );
+    expect(central).toMatch(
+      /exact target[^]{0,160}model[^]{0,120}effort[^]{0,120}route[^]{0,140}authority/i,
+    );
+    expect(central).toMatch(
+      /one[^]{0,100}fallback[^]{0,240}provesNoChildStarted: *true/i,
+    );
+    expect(central).toMatch(
+      /timeout[^]{0,100}`BLOCKED`[^]{0,100}refusal[^]{0,120}runtime mismatch[^]{0,160}(?:never|do not)[^]{0,100}(?:fallback|replacement)/i,
+    );
+    for (const [index, contract] of contracts.entries()) {
+      expect(contract, paths[index]).toMatch(/native dispatch lineage/i);
+    }
+  });
+
   it('forbids replacement launches after reviewer acceptance', async () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -2573,7 +2657,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.2');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.4');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -2660,7 +2744,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.20');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.22');
     expect(shared).toContain(
       '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
     );
@@ -2705,7 +2789,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.20');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.22');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -2733,14 +2817,14 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.1'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.3'],
       ['.agents/agents/oat-reviewer.md', '1.2.1'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.2'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.1'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.4'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.1'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.1'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.0'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.7'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.1'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.9'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -2849,7 +2933,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.20');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.22');
   });
 
   it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
@@ -3043,12 +3127,12 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.1');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.3');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.1');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -3354,6 +3438,300 @@ describe('validateOatSkills', () => {
       );
       expect(contract, `${name} contradictory conjunction`).not.toMatch(
         /accepted implementation handle and exact (?:launcher-owned dispatch )?target[\s\S]{0,80}remain (?:available|intact)/i,
+      );
+    }
+  });
+
+  it('prescribes verified capture-and-restore before a fresh child continues on a dirty tree', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+
+    expect(phase).toMatch(
+      /a\s+fresh\s+child\s+never\s+starts\s+on\s+a\s+dirty\s+tree/i,
+    );
+    expect(phase).toMatch(
+      /dirty worktree[\s\S]{0,120}blocks continuation[\s\S]{0,240}`recovered_patch`[\s\S]{0,240}unverified[\s\S]{0,160}still blocks/i,
+    );
+
+    let cursor = -1;
+    for (const step of [
+      'capture-dirty-tree.mjs',
+      'capture-script-unavailable',
+      'cannot still be writing',
+      'node "$CAPTURE_SCRIPT"',
+      '--bounded-file',
+      '`round-trip-failed`',
+      'restore --staged',
+      '`recovered_patch`',
+      '--verify',
+      '--expected-head',
+      'git apply --index',
+      'it as its first action',
+      'continuation event',
+    ]) {
+      const next = phase.indexOf(step, cursor + 1);
+      expect(next, `ordered capture chain step ${step}`).toBeGreaterThan(
+        cursor,
+      );
+      cursor = next;
+    }
+
+    const contracts = [
+      ['phase root', phase],
+      ['phase agent', agent],
+    ] as const;
+
+    for (const [name, contract] of contracts) {
+      // Resolved through installed scope, never a repository-relative literal:
+      // a user-scope install has no `.agents/skills/...` under the process cwd,
+      // and a MODULE_NOT_FOUND there is not one of the named stop reasons the
+      // same prose requires the operator to report verbatim.
+      expect(contract, `${name} capture script`).toContain(
+        'scripts/capture-dirty-tree.mjs',
+      );
+      expect(contract, `${name} capture script resolution roots`).toMatch(
+        /(?:\$\{SKILL_DIR:-\}|\$\{HOME:-\}\/\.agents\/skills)[\s\S]{0,400}scripts\/capture-dirty-tree\.mjs/,
+      );
+      // Per invoking block, not per file. `node ""` reads its program from
+      // stdin and exits zero at EOF, so a block that runs the script without
+      // resolving and guarding it in the same block reports an unverified
+      // artifact as verified — shell variables do not survive across separate
+      // tool invocations, and a guard in some other block does not protect it.
+      const invokingBlocks = fencedBlocks(contract).filter((block) =>
+        block.includes('node "$CAPTURE_SCRIPT"'),
+      );
+      expect(
+        invokingBlocks.length,
+        `${name} blocks invoking the capture script`,
+      ).toBeGreaterThan(0);
+      for (const [index, block] of invokingBlocks.entries()) {
+        const label = `${name} capture invocation block ${index + 1}`;
+        // Before the invocation, not merely somewhere in the block.
+        expect(block, `${label} runs under set -eu`).toMatch(/^\s*set -eu$/m);
+        expect(
+          block.search(/^\s*set -eu$/m),
+          `${label} sets -eu before it runs`,
+        ).toBeLessThan(block.indexOf('node "$CAPTURE_SCRIPT"'));
+        expect(block, `${label} binds the probed root`).toContain(
+          'CAPTURE_SCRIPT="$CAPTURE_ROOT/scripts/capture-dirty-tree.mjs"',
+        );
+        expect(block, `${label} terminates on a miss`).toMatch(
+          /\[ -n "\$CAPTURE_SCRIPT" \] \|\| \{[\s\S]{0,160}capture-script-unavailable[\s\S]{0,80}exit 1/,
+        );
+        expect(
+          block.indexOf('capture-script-unavailable'),
+          `${label} guards before it runs`,
+        ).toBeLessThan(block.indexOf('node "$CAPTURE_SCRIPT"'));
+        // A bare `<placeholder>` after a flag is shell input redirection, not a
+        // placeholder, so a block carrying one is not runnable verbatim.
+        expect(block, `${label} has no unquoted placeholder`).not.toMatch(
+          /--[a-z-]+ <[a-z_]+>/,
+        );
+      }
+      // The verifier runs only for a briefed artifact. Unconditional again, the
+      // artifact variables sit in an artifact-free retry's path, where `set -u`
+      // exits before the ledger reconciliation that retry has to reach.
+      const verifyingBlocks = invokingBlocks.filter((block) =>
+        block.includes('--verify'),
+      );
+      expect(
+        verifyingBlocks.length,
+        `${name} blocks verifying an artifact`,
+      ).toBeGreaterThan(0);
+      for (const [index, block] of verifyingBlocks.entries()) {
+        const label = `${name} verify block ${index + 1}`;
+        // All three fields together, so a partial brief is a named stop rather
+        // than an unbound-variable death under `set -u`.
+        const guardAt = block.indexOf(
+          'if [ -z "${ARTIFACT_DIR:-}${MANIFEST_DIGEST:-}${ARTIFACT_SIZE:-}" ]; then',
+        );
+        expect(
+          guardAt,
+          `${label} is conditional on a complete briefed artifact`,
+        ).toBeGreaterThan(-1);
+        expect(block, `${label} names the partial-brief stop`).toMatch(
+          /artifact-verification-failed: a partial recovered_patch is unusable/,
+        );
+        // Bounded by this branch's own closer — the FIRST `fi` at the guard's
+        // indentation — not by the last `fi` in the block. Taking the last one
+        // would let a `fi` moved above the verifier pass unnoticed.
+        const lineStart = block.lastIndexOf('\n', guardAt) + 1;
+        const indent = block.slice(lineStart, guardAt);
+        const closeMatch = new RegExp(`^${indent}fi$`, 'm').exec(
+          block.slice(guardAt),
+        );
+        const closeAt = closeMatch ? guardAt + closeMatch.index : -1;
+        expect(closeAt, `${label} closes its branch`).toBeGreaterThan(guardAt);
+        for (const token of [
+          '--verify',
+          '"$ARTIFACT_DIR"',
+          '"$MANIFEST_DIGEST"',
+          '"$ARTIFACT_SIZE"',
+        ]) {
+          expect(
+            block.indexOf(token),
+            `${label} opens ${token} inside the branch`,
+          ).toBeGreaterThan(guardAt);
+          expect(
+            block.lastIndexOf(token),
+            `${label} closes ${token} inside the branch`,
+          ).toBeLessThan(closeAt);
+        }
+      }
+      expect(
+        contract,
+        `${name} no repo-relative capture invocation`,
+      ).not.toMatch(
+        /node\s+"?\.agents\/skills\/oat-project-implement\/scripts\/capture-dirty-tree\.mjs/,
+      );
+      for (const reason of [
+        'active-writer',
+        'unsupported-dirt',
+        'round-trip-failed',
+        'artifact-verification-failed',
+      ]) {
+        // Presence is not enough: each reason has to sit inside a clause that
+        // still calls it a stop, so a prose rewrite cannot quietly turn one
+        // into a best-effort path.
+        expect(contract, `${name} ${reason} stop clause`).toMatch(
+          new RegExp(`${reason}[\\s\\S]{0,320}\\bstop`, 'i'),
+        );
+      }
+      expect(contract, `${name} recovered_patch brief field`).toMatch(
+        /recovered_patch:\s*\{\s*artifact,\s*manifest_digest,\s*size,\s*stat,\s*components\s*\}/,
+      );
+      expect(contract, `${name} artifact lives outside the worktree`).toMatch(
+        /`artifact`\s+is\s+a\s+readable\s+path\s+outside\s+the\s+worktree,\s+never\s+a\s+mutable\s+worktree\s+path/i,
+      );
+      expect(contract, `${name} verifies before applying`).toMatch(
+        /--verify[\s\S]{0,300}--manifest-digest[\s\S]{0,120}--size[\s\S]{0,160}--expected-head[\s\S]{0,2400}git apply --index/i,
+      );
+      expect(contract, `${name} reconciles the artifact base`).toMatch(
+        /integrity is not base agreement/i,
+      );
+      expect(contract, `${name} refuses a best-effort restore`).toMatch(
+        /(?:never|no)[\s\S]{0,120}best-effort restore/i,
+      );
+    }
+  });
+
+  it('reconciles the pending attempt before the recovered patch is applied and committed', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+
+    // Applying and committing the artifact before the ledger reconciliation
+    // put a new commit on the phase branch whenever the reconcile blocked.
+    // The retry then failed the exact-HEAD check against `recovery_base_head`
+    // and the phase parked with no contract path to continue, so the
+    // reconciliation — and every other precondition that can park the phase —
+    // has to finish while the branch is still exactly at its briefed base.
+    // Bounded to the sequence under test. `indexOf('## Mode: Recover')` would
+    // land on the inline cross-reference inside Mode: Implement, dragging that
+    // mode's own apply-and-commit sentence into the comparison.
+    const recoverStart = agent.indexOf('\n## Mode: Recover\n');
+    expect(recoverStart, 'phase agent recover heading').toBeGreaterThan(-1);
+    const recoverEnd = agent.indexOf('\n## ', recoverStart + 1);
+    const recover = agent.slice(
+      recoverStart,
+      recoverEnd > -1 ? recoverEnd : undefined,
+    );
+    const sequenceStart = phase.indexOf(
+      "**Recovering a lost child's uncommitted work.**",
+    );
+    expect(sequenceStart, 'phase root capture sequence').toBeGreaterThan(-1);
+    const sequence = phase.slice(
+      sequenceStart,
+      phase.indexOf('Attempt accounting uses exactly one', sequenceStart),
+    );
+
+    const surfaces = [
+      [
+        'phase agent',
+        recover,
+        /Reconcile the authoritative\s+`pending_attempt`/,
+        /Only now apply the verified\s+`recovered_patch`/,
+      ],
+      [
+        'phase root',
+        sequence,
+        /pending-attempt\s+reconciliation/,
+        /before it applies or commits anything/,
+      ],
+    ] as const;
+
+    for (const [name, contract, reconcile, ordering] of surfaces) {
+      // Searched, not indexed: the contracts wrap, so a literal phrase can
+      // straddle a newline.
+      const reconcileAt = contract.search(reconcile);
+      const applyAt = contract.search(/git apply --index/);
+      const commitAt = contract.search(
+        /commit\s+it as (?:your|its) first action/,
+      );
+
+      // Position alone would survive a rewrite that keeps the words and
+      // reverses the meaning, so pin the clause that states the ordering and
+      // reject its negation.
+      expect(contract, `${name} states the ordering`).toMatch(ordering);
+      expect(contract, `${name} does not invert the ordering`).not.toMatch(
+        /(?:after|once) it (?:applies|has applied|commits|has committed)[\s\S]{0,120}reconcil/i,
+      );
+      expect(
+        contract,
+        `${name} does not negate the first-action commit`,
+      ).not.toMatch(
+        /(?:do not|never|must not)\s+commit\s+it as (?:your|its) first action/i,
+      );
+
+      expect(reconcileAt, `${name} states the reconciliation`).toBeGreaterThan(
+        -1,
+      );
+      expect(applyAt, `${name} states the apply`).toBeGreaterThan(-1);
+      expect(
+        commitAt,
+        `${name} states the first-action commit`,
+      ).toBeGreaterThan(-1);
+      expect(reconcileAt, `${name} reconciles before applying`).toBeLessThan(
+        applyAt,
+      );
+      expect(reconcileAt, `${name} reconciles before committing`).toBeLessThan(
+        commitAt,
+      );
+      expect(
+        contract,
+        `${name} a precondition stop leaves the briefed base intact`,
+      ).toMatch(/leaves the branch exactly at\s+`recovery_base_head`/);
+      // And the other direction: once the recovery commit exists it is the
+      // base a retry is measured against, so a legitimate retry can proceed.
+      expect(contract, `${name} retry base after a recovery commit`).toMatch(
+        /`recovery_base_head`[\s\S]{0,80}(?:is|set to)[\s\S]{0,120}that recovery commit/,
+      );
+      expect(
+        contract,
+        `${name} the retry brief drops the committed artifact`,
+      ).toMatch(/(?:without|omits) the already-committed artifact/);
+      // And that artifact-free brief must still reach the reconciliation
+      // rather than parking on an unset artifact variable.
+      const skipAt = contract.search(
+        /skips verification and continues to the ledger\s+reconciliation/,
+      );
+      expect(
+        skipAt,
+        `${name} an artifact-free brief skips verification`,
+      ).toBeGreaterThan(-1);
+      expect(
+        skipAt,
+        `${name} skips verification before the reconciliation`,
+      ).toBeLessThan(reconcileAt);
+      expect(contract, `${name} the artifact-free apply is a no-op`).toMatch(
+        /(?:step 4|apply step) is a no-op/,
       );
     }
   });
@@ -3958,15 +4336,15 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.20'],
-      ['oat-project-review-provide', '1.5.2'],
-      ['oat-project-review-receive', '1.6.1'],
+      ['oat-project-plan-writing', '1.2.22'],
+      ['oat-project-review-provide', '1.5.4'],
+      ['oat-project-review-receive', '1.6.2'],
       ['oat-project-review-receive-remote', '1.5.1'],
-      ['oat-project-implement', '2.3.1'],
-      ['oat-project-pr-final', '1.6.0'],
+      ['oat-project-implement', '2.3.4'],
+      ['oat-project-pr-final', '1.6.1'],
       ['oat-project-pr-progress', '1.3.0'],
-      ['oat-project-complete', '1.7.5'],
-      ['oat-project-next', '1.0.12'],
+      ['oat-project-complete', '1.7.7'],
+      ['oat-project-next', '1.0.14'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -4043,7 +4421,7 @@ describe('validateOatSkills', () => {
       receive.indexOf('### Step 2: Parse Findings into Buckets'),
     );
 
-    expect(receive.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.1');
+    expect(receive.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.2');
     expect(resolver).toContain(
       'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
     );
@@ -4854,14 +5232,14 @@ describe('validateOatSkills', () => {
     expect(planTier3Row(quickTable)).toContain('`oat-project-quick-start`');
     expect(planTier3Row(specTable)).toContain('`oat-project-plan`');
     expect(planTier3Row(importTable)).toContain('`oat-project-import-plan`');
-    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.12');
+    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.14');
   });
 
   it('supports project completion before or after PR merge in every mode', async () => {
     const progress = await readRepoFile(
       '.agents/skills/oat-project-progress/SKILL.md',
     );
-    expect(progress.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.0');
+    expect(progress.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.1');
 
     const modeSections = [
       [
@@ -5030,13 +5408,41 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('pins the gate-aware skill set against live oat_gateable declarations', async () => {
+    // The override parser rejects keys outside GATE_AWARE_SKILLS. If a skill
+    // gains or loses `oat_gateable: true` without updating that constant, a
+    // legitimate override would be rejected or an inert one accepted.
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillsRoot = join(repoRoot, '.agents', 'skills');
+    const entries = await readdir(skillsRoot, { withFileTypes: true });
+    const declared: string[] = [];
+
+    for (const entry of entries.filter((candidate) =>
+      candidate.isDirectory(),
+    )) {
+      let content: string;
+      try {
+        content = await readRawRepoFile(
+          `.agents/skills/${entry.name}/SKILL.md`,
+        );
+      } catch {
+        continue;
+      }
+      if (/^oat_gateable:\s*true\s*$/m.test(content)) {
+        declared.push(entry.name);
+      }
+    }
+
+    expect(declared.sort()).toEqual([...GATE_AWARE_SKILLS].sort());
+  });
+
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.20'],
-      ['oat-project-plan', '1.4.6'],
-      ['oat-project-quick-start', '2.3.7'],
-      ['oat-project-import-plan', '1.4.11'],
-      ['oat-project-review-provide', '1.5.2'],
+      ['oat-project-plan-writing', '1.2.22'],
+      ['oat-project-plan', '1.4.8'],
+      ['oat-project-quick-start', '2.3.9'],
+      ['oat-project-import-plan', '1.4.13'],
+      ['oat-project-review-provide', '1.5.4'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -5051,9 +5457,9 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.3.1'],
-      ['oat-project-review-provide', '1.5.2'],
-      ['oat-project-review-provide-remote', '1.1.1'],
+      ['oat-project-implement', '2.3.4'],
+      ['oat-project-review-provide', '1.5.4'],
+      ['oat-project-review-provide-remote', '1.1.3'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -5093,6 +5499,7 @@ describe('validateOatSkills', () => {
       expect(content, `${skillName} report-derived stamp`).toContain(
         'formatDispatchStamp(dispatchReport)',
       );
+      expectDispatchStampFieldContract(content, skillName);
       expect(content, `${skillName} target retention`).toMatch(
         /providers\.<provider>\.dispatchArgs[\s\S]{0,220}providers\.<provider>\.selection\.target/,
       );
@@ -5129,10 +5536,10 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(engine).toMatch(/^version:\s*1\.2\.3$/m);
+    expect(engine).toMatch(/^version:\s*1\.2\.6$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
-    expect(adapter).toMatch(/^version:\s*1\.1\.3$/m);
+    expect(adapter).toMatch(/^version:\s*1\.1\.4$/m);
     expect(adapter).toContain('oat-dispatch-subagents');
     expect(engine).toMatch(/resolved dispatch policy or named ceiling/i);
     expect(engine).toMatch(
@@ -5199,7 +5606,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.1'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.3'],
       ['.agents/agents/oat-reviewer.md', '1.2.1'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.1'],
     ] as const;
@@ -5252,7 +5659,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable research-pack callers to installed-root schema reads', async () => {
     const callers = [
-      ['.agents/skills/analyze/SKILL.md', '0.1.1'],
+      ['.agents/skills/analyze/SKILL.md', '0.2.0'],
       ['.agents/skills/compare/SKILL.md', '0.1.1'],
     ] as const;
 
@@ -5292,7 +5699,7 @@ describe('validateOatSkills', () => {
 
   it('pins portable utility-pack callers to installed-root sibling reads', async () => {
     const callers = [
-      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.3'],
+      ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.6'],
       ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.2'],
       ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.1'],
     ] as const;
@@ -6036,7 +6443,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.7');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.9');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -6089,7 +6496,7 @@ describe('validateOatSkills', () => {
     expect(
       skillContent,
       'oat-project-design selective-mode contract version must stay explicit',
-    ).toMatch(/^version:\s*2\.3\.2$/m);
+    ).toMatch(/^version:\s*2\.3\.4$/m);
     expect(
       skillContent,
       'Step 4a heading must remain present for selective review-pass flow',
@@ -6600,5 +7007,798 @@ describe('validateOatSkills', () => {
     expect(content).not.toContain('oat backlog generate-id');
     expect(content).not.toContain('oat backlog regenerate-index');
     expect(content).not.toContain('ITEM_PATH=');
+  });
+});
+
+describe('recon canonical contracts', () => {
+  it('keeps the recon skill and worker provider-neutral and versioned', async () => {
+    const [skill, worker] = await Promise.all([
+      readRepoFile('.agents/skills/recon/SKILL.md'),
+      readRepoFile('.agents/agents/recon-worker.md'),
+    ]);
+
+    expect(skill).toMatch(/^name:\s*recon$/m);
+    expect(skill).toMatch(/^version:\s*1\.1\.0$/m);
+    expect(skill).toMatch(/provider-neutral/i);
+    expect(skill).toMatch(/exact (?:provider, )?model and effort/i);
+    expect(skill).toMatch(/before\s+(?:any\s+)?(?:worker\s+)?launch/i);
+    expect(skill).toMatch(/same\s+approved model and effort/i);
+    expect(skill).toMatch(/packet directory/i);
+    expect(worker).toMatch(/never interact with the user/i);
+    expect(worker).toMatch(/never dispatch/i);
+  });
+});
+
+describe('bundled skill contract truthfulness — doctor inventory', () => {
+  it("keeps doctor's declared bundled inventory identical to the pack manifest", async () => {
+    const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
+
+    const sectionStart = doctor.indexOf(
+      '**Bundled skill manifest (source of truth):**',
+    );
+    const sectionEnd = doctor.indexOf('For each pack, determine:');
+    expect(sectionStart, 'inventory section start').toBeGreaterThan(-1);
+    expect(sectionEnd, 'inventory section end').toBeGreaterThan(sectionStart);
+
+    const section = doctor.slice(sectionStart, sectionEnd);
+    const declared = new Map<string, string[]>();
+    let currentPack: string | undefined;
+    for (const line of section.split('\n')) {
+      const heading = line.match(/^`([a-z-]+)` pack skills:$/);
+      if (heading?.[1]) {
+        currentPack = heading[1];
+        // A repeated heading would let a later block silently discard the
+        // names declared under the earlier one.
+        expect(
+          declared.has(currentPack),
+          `duplicate ${currentPack} heading`,
+        ).toBe(false);
+        declared.set(currentPack, []);
+        continue;
+      }
+      const bullet = line.match(/^-\s+(.+)$/);
+      if (bullet?.[1] && currentPack) {
+        declared.get(currentPack)?.push(
+          ...bullet[1]
+            .split(',')
+            .map((name) => name.trim())
+            .filter((name) => name.length > 0),
+        );
+      }
+    }
+
+    const expected = new Map(
+      PACK_MANIFEST.map((pack) => [
+        pack.name,
+        [...getPackMemberNames(pack.name, 'skill')].sort(),
+      ]),
+    );
+
+    expect([...declared.keys()].sort(), 'declared pack headings').toEqual(
+      [...expected.keys()].sort(),
+    );
+    for (const [pack, expectedSkills] of expected) {
+      expect([...(declared.get(pack) ?? [])].sort(), `${pack} pack`).toEqual(
+        expectedSkills,
+      );
+    }
+  });
+
+  it("derives doctor's summary example counts from the pack manifest", async () => {
+    const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
+    const packSkills = new Map(
+      PACK_MANIFEST.map((pack) => [
+        pack.name,
+        [...getPackMemberNames(pack.name, 'skill')].sort(),
+      ]),
+    );
+
+    const installedTable = doctor.slice(
+      doctor.indexOf('## Installed Packs'),
+      doctor.indexOf('## Outdated Skills'),
+    );
+    const installedRows = [
+      ...installedTable.matchAll(
+        /^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/gm,
+      ),
+    ];
+    expect(installedRows.length, 'installed pack example rows').toBeGreaterThan(
+      0,
+    );
+    for (const [, pack, total] of installedRows) {
+      // Membership is asserted, never filtered: a row naming a pack that does
+      // not exist is itself the drift this case exists to catch.
+      expect(packSkills.has(pack ?? ''), `${pack} is a manifest pack`).toBe(
+        true,
+      );
+      expect(Number(total), `${pack} example denominator`).toBe(
+        packSkills.get(pack ?? '')?.length,
+      );
+    }
+
+    const availableSection = doctor.slice(
+      doctor.indexOf('## Available But Not Installed'),
+      doctor.indexOf('## Configuration'),
+    );
+    const availableRows = [
+      ...availableSection.matchAll(
+        /^- \*\*([a-z-]+)\*\* pack: (.+?) \((\d+) skills available\)$/gm,
+      ),
+    ];
+    expect(availableRows.length, 'available pack example rows').toBeGreaterThan(
+      0,
+    );
+    for (const [, pack, names, count] of availableRows) {
+      const listed = (names ?? '')
+        .split(',')
+        .map((name) => name.trim())
+        .sort();
+      expect(listed, `${pack} example skill list`).toEqual(
+        packSkills.get(pack ?? ''),
+      );
+      expect(Number(count), `${pack} example count`).toBe(listed.length);
+    }
+  });
+});
+
+describe('bundled skill contract truthfulness — brainstorm diagnostics', () => {
+  it('keeps the brainstorm node-missing note free of a later-doctor promise', async () => {
+    const brainstorm = await readRepoFile(
+      '.agents/skills/oat-brainstorm/SKILL.md',
+    );
+    const nodeMissing = brainstorm
+      .split('\n')
+      .find((line) => line.startsWith('- If `node` is **missing**:'));
+
+    expect(nodeMissing, 'node-missing branch').toBeDefined();
+
+    // The invariant is bounded, not keyword-blocked: exactly one sentence in
+    // this branch may refer to a later diagnostic reader, and it must be the
+    // sentence that denies the note survives at all. Any *additional*
+    // sentence promising a later run observes it therefore fails, even when
+    // the truthful wording is still present alongside it.
+    const readerSentences = (branch: string): string[] =>
+      branch
+        .split(/(?<=\.)\s+/)
+        .filter((sentence) =>
+          /\b(?:oat-)?doctor\b|\bdiagnostics?\b|\b(?:later|subsequent|future|another)\b[^.]*\brun\b/i.test(
+            sentence,
+          ),
+        );
+    const permitted = [
+      'Nothing persists that note, so no later diagnostic run can report it.',
+    ];
+
+    expect(readerSentences(nodeMissing ?? '')).toEqual(permitted);
+
+    // Permanent negative controls: the guard must reject a reinstated promise
+    // appended beside the truthful clause, and the original pre-fix phrasing.
+    expect(
+      readerSentences(
+        `${nodeMissing ?? ''} A subsequent \`oat-doctor\` run surfaces it under Configuration.`,
+      ),
+      'paraphrased promise appended beside the truthful clause',
+    ).not.toEqual(permitted);
+    expect(
+      readerSentences(
+        '- If `node` is **missing**: skip the offer entirely. Do not print the offer message. Log a one-line note in the conversation that the visual companion is unavailable in this environment (a state `oat-doctor` can pick up later: "visual companion suppressed — node not on PATH"). Proceed with `VISUAL_COMPANION = "unavailable"`.',
+      ),
+      'original pre-fix phrasing',
+    ).not.toEqual(permitted);
+
+    expect(nodeMissing).toMatch(/for this session only|conversation-only/i);
+    expect(nodeMissing).toMatch(/nothing persists/i);
+    // The immediate, supported behaviour stays intact.
+    expect(nodeMissing).toContain(
+      'visual companion suppressed — node not on PATH',
+    );
+    expect(nodeMissing).toContain('VISUAL_COMPANION = "unavailable"');
+    expect(nodeMissing).toContain('skip the offer entirely');
+  });
+});
+
+describe('bundled skill contract truthfulness — idea-summarize tools', () => {
+  it('declares Bash and Glob alongside its prior tools', async () => {
+    const skill = await readRepoFile(
+      '.agents/skills/oat-idea-summarize/SKILL.md',
+    );
+
+    const frontmatter = skill.match(/^---\n([\s\S]*?)\n---\n/)?.[1];
+    expect(frontmatter, 'idea-summarize frontmatter').toBeDefined();
+    const declaredTools = (
+      frontmatter?.match(/^allowed-tools:\s*(.+)$/m)?.[1] ?? ''
+    )
+      .split(',')
+      .map((tool) => tool.trim())
+      .filter((tool) => tool.length > 0);
+
+    // Declaration and usage are asserted together: the steps below invoke
+    // shell commands (Bash) and the Glob tool, so both must be declared, and
+    // the previously declared tools must survive.
+    expect(declaredTools).toEqual(
+      expect.arrayContaining([
+        'Read',
+        'Write',
+        'Bash',
+        'Glob',
+        'Grep',
+        'AskUserQuestion',
+      ]),
+    );
+
+    const resolveStep = skill.match(
+      /### Step 1: Resolve Active Idea[\s\S]*?(?=### Step 2:)/,
+    )?.[0];
+    expect(resolveStep, 'resolve-active-idea step').toBeDefined();
+    // Normal path: a shell command reads the pointer.
+    expect(resolveStep).toContain('oat config get activeIdea');
+    // Missing-active-idea fallback: Glob tool plus a shell write-back.
+    const fallback = resolveStep?.slice(
+      resolveStep.indexOf('**If missing or invalid:**'),
+    );
+    expect(fallback, 'missing-active-idea fallback').toBeDefined();
+    expect(fallback).toContain('Use the Glob tool');
+    expect(fallback).toContain('oat config set activeIdea');
+  });
+});
+
+describe('bundled skill contract truthfulness — analyze progress model', () => {
+  it('keeps analyze on a single ten-step progress model', async () => {
+    const analyze = await readRepoFile('.agents/skills/analyze/SKILL.md');
+
+    // No stale nine-step denominator survives anywhere in the skill.
+    expect(analyze).not.toMatch(/\[\d+\/9\]/);
+
+    const advertised = analyze.slice(
+      analyze.indexOf('## Progress Indicators (User-Facing)'),
+      analyze.indexOf('## Workflow'),
+    );
+    const advertisedSteps = [
+      ...advertised.matchAll(/^- `\[(\d+)\/(\d+)\] ([^`]+)`/gm),
+    ];
+
+    expect(advertisedSteps.map(([, index]) => index)).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+    ]);
+    expect([...new Set(advertisedSteps.map(([, , total]) => total))]).toEqual([
+      '10',
+    ]);
+    expect(
+      new Set(advertisedSteps.map(([, , , label]) => label)).size,
+      'distinct advertised step labels',
+    ).toBe(10);
+
+    // The workflow body emits the same ten-step model it advertises: same
+    // indices, same denominators, same labels, one heading each.
+    // Bounded at the next top-level heading so Examples, Troubleshooting, and
+    // Success Criteria may legitimately quote a progress marker.
+    const workflowStart = analyze.indexOf('## Workflow');
+    const headingOffset = analyze.slice(workflowStart + 1).search(/^## /m);
+    expect(headingOffset, 'heading after the workflow section').toBeGreaterThan(
+      -1,
+    );
+    const workflow = analyze.slice(
+      workflowStart,
+      workflowStart + 1 + headingOffset,
+    );
+    const emitted = [...workflow.matchAll(/\[(\d+)\/(\d+)\] ([^`\n]+)/g)];
+    expect(emitted.map(([, index]) => index)).toEqual(
+      advertisedSteps.map(([, index]) => index),
+    );
+    expect(emitted.map(([, , total]) => total)).toEqual(
+      advertisedSteps.map(([, , total]) => total),
+    );
+    expect(emitted.map(([, , , label]) => label.trim())).toEqual(
+      advertisedSteps.map(([, , , label]) => label.trim()),
+    );
+    expect(
+      [...workflow.matchAll(/^### Step (\d+):/gm)].map(([, index]) => index),
+    ).toEqual(advertisedSteps.map(([, index]) => index));
+  });
+});
+
+/**
+ * Executable backstops for standing contract claims.
+ *
+ * Maintenance rule (the guidance guarded here demands one beside the claim):
+ * every assertion below is keyed to a stable semantic anchor — a bolded
+ * requirement-block label, a markdown heading, or a list ordinal — and, where
+ * prose is guarded, a semantic phrase inside the extracted slice, never to a
+ * physical line number.
+ * Rewording a clause means updating its `requires` pattern in the same PR;
+ * deliberately dropping a clause means deleting its row here and saying why.
+ */
+interface BackstopClause {
+  id: string;
+  requires: RegExp;
+}
+
+/**
+ * Markdown a reader actually receives as guidance. HTML comments render to
+ * nothing, and fenced or indented code blocks are literal samples rather than
+ * directives, so counting any of them would let a requirement be disabled
+ * while its words still match.
+ */
+function liveMarkdown(content: string): string {
+  const kept: string[] = [];
+  let fence: string | null = null;
+  let indented = false;
+
+  for (const line of content.replace(/<!--[\s\S]*?-->/g, '').split(/\r?\n/)) {
+    const trimmed = line.trim();
+    const marker = /^(`{3,}|~{3,})/.exec(trimmed);
+
+    if (fence !== null) {
+      // CommonMark: a closer is the same fence character, at least as long.
+      if (
+        marker !== null &&
+        marker[1]![0] === fence[0] &&
+        marker[1]!.length >= fence.length
+      )
+        fence = null;
+      continue;
+    }
+
+    if (indented) {
+      // An indented block runs until a non-blank line indented under four
+      // spaces; blank lines inside it belong to the block.
+      if (trimmed === '' || /^ {4,}/.test(line)) continue;
+      indented = false;
+    }
+
+    if (marker !== null) {
+      fence = marker[1]!;
+      continue;
+    }
+
+    // CommonMark indented code: four spaces after a blank line. Continuation
+    // lines of a list item are indented too, but they follow a non-blank line,
+    // so they stay live.
+    const previous = kept.at(-1);
+    if (
+      /^ {4,}\S/.test(line) &&
+      (previous === undefined || previous.trim() === '')
+    ) {
+      indented = true;
+      continue;
+    }
+
+    kept.push(line);
+  }
+
+  return kept.join('\n');
+}
+
+/** Repository-relative paths the guarded prose cites as live code. */
+function citedRepoPaths(text: string): string[] {
+  return [...text.matchAll(/`(packages\/[^`\s]+)`/g)].map(([, path]) => path!);
+}
+
+function unresolvedRepoPaths(paths: string[]): string[] {
+  const repoRoot = join(process.cwd(), '..', '..');
+  return paths.filter((path) => !existsSync(join(repoRoot, path)));
+}
+
+/**
+ * Additive weakening is invisible to presence-only clause matching, so the
+ * guarded block carries an explicit deny list. Neither intentional carve-out
+ * (a point-in-time observation needing no permanent backstop, and unguarded
+ * non-normative prose) is worded with any of these terms; introducing one
+ * deliberately means updating this list in the same PR.
+ */
+/** Top-level and nested bullet counts, so an added clause is visible. */
+function bulletShape(block: string): [number, number] {
+  const lines = block.split('\n');
+  return [
+    lines.filter((line) => /^- /.test(line)).length,
+    lines.filter((line) => /^ {2}- /.test(line)).length,
+  ];
+}
+
+function weakeningTerms(text: string): string[] {
+  return [
+    ...text.matchAll(
+      /\b(?:exempt(?:s|ed|ion|ions)?|waive[ds]?|waivers?|opt(?:ed)?[ -]?out|grandfathered|optional|discretion)\b/gi,
+    ),
+  ].map(([term]) => term.toLowerCase());
+}
+
+/**
+ * Bounded extraction of one bolded requirement block. The block runs from its
+ * `**Label ...:**` opener to the next bolded opener of any case or the next
+ * markdown heading, so edits above or below it neither widen nor truncate the
+ * guard.
+ */
+function extractBoldedRequirementBlock(content: string, label: string): string {
+  const live = liveMarkdown(content);
+  const start = live.indexOf(`**${label}`);
+  if (start === -1) return '';
+  const rest = live.slice(start);
+  const end = rest.slice(1).search(/\n(?:\*\*\S|#{1,6} )/);
+  return (end === -1 ? rest : rest.slice(0, end + 1)).trim();
+}
+
+function normalizeProse(block: string): string {
+  return block.replace(/\s+/g, ' ').trim();
+}
+
+function missingClauses(text: string, clauses: BackstopClause[]): string[] {
+  return clauses
+    .filter(({ requires }) => !requires.test(text))
+    .map(({ id }) => id);
+}
+
+/**
+ * Stable identity is two-sided. Requiring the prohibition alone would still
+ * pass if an author *added* line-number keying beside it, so every sentence
+ * that mentions line numbers must also deny them.
+ */
+function lineIdentityViolations(text: string): string[] {
+  const violations: string[] = [];
+  const mentions = text
+    .split(/(?<=[.;])\s+/)
+    .filter((sentence) => /line numbers?/i.test(sentence));
+  if (mentions.length === 0) violations.push('line-identity-unmentioned');
+  if (mentions.some((sentence) => !/\bnever\b|\bnot\b/i.test(sentence)))
+    violations.push('line-identity-not-prohibited');
+  return violations;
+}
+
+const authoringBackstopClauses: BackstopClause[] = [
+  { id: 'point-in-time-class', requires: /\*\*point-in-time observation\*\*/i },
+  {
+    id: 'repository-static-class',
+    requires: /\*\*repository-static standing invariant\*\*/i,
+  },
+  {
+    id: 'runtime-class',
+    requires: /\*\*runtime\/lifecycle standing invariant\*\*/i,
+  },
+  {
+    id: 'point-in-time-needs-no-backstop',
+    requires:
+      /revalidation trigger[^.]{0,80}no permanent\s+backstop is required/i,
+  },
+  {
+    id: 'static-owner-is-a-contract-test',
+    requires:
+      /decidable from tracked files[^.]{0,160}\. Back it with a contract test\./i,
+  },
+  {
+    id: 'runtime-owner-is-the-owning-code',
+    requires:
+      /Enforce it in the CLI or runtime code that owns the operation, and expose a structured result/i,
+  },
+  {
+    id: 'stable-identity',
+    requires: /Never key a guard to a physical line number/i,
+  },
+  {
+    id: 'prose-is-not-runtime-enforcement',
+    requires:
+      /A prose assertion is not enforcement for a runtime claim: keep the enforcement in the owning code/i,
+  },
+  {
+    id: 'prose-pins-stay-legitimate',
+    requires:
+      /Pinning the prose that documents the claim is still useful and is not a substitute/i,
+  },
+  {
+    id: 'no-cli-when-a-test-suffices',
+    requires:
+      /not add a CLI command when a repository-static contract test already decides the claim/i,
+  },
+  {
+    id: 'same-pr-timing',
+    requires: /Ship the claim and its backstop in the same PR/i,
+  },
+  {
+    id: 'no-deferred-backstop',
+    requires:
+      /(?:Splitting them|deferring the backstop to follow-up work)[^.]{0,120}is not allowed/i,
+  },
+  {
+    id: 'maintenance-rule-in-artifact',
+    requires: /maintenance rule inside the guarded artifact/i,
+  },
+  {
+    id: 'names-its-own-guard',
+    requires:
+      /packages\/cli\/src\/validation\/skills\.test\.ts`[^.]*in the same\s+PR/i,
+  },
+  {
+    id: 'non-normative-prose-exempt',
+    requires:
+      /rationale, examples, troubleshooting notes, and deliberately non-normative guidance unguarded/i,
+  },
+  {
+    id: 'names-the-static-inventory-precedent',
+    requires: /validation\/autonomy-gate-inventory\.test\.ts/,
+  },
+  {
+    id: 'names-the-shipped-copy-precedent',
+    requires: /skills-bundled-docs-contract\.test\.ts/,
+  },
+  {
+    id: 'names-the-runtime-precedent',
+    requires: /commands\/project\/log\/rollup\.ts/,
+  },
+];
+
+const designEchoClauses: BackstopClause[] = [
+  { id: 'names-standing-invariants', requires: /standing invariant/i },
+  { id: 'executable-owner', requires: /name its\s+executable owner/i },
+  {
+    id: 'verification-method',
+    requires: /verification method in the same design/i,
+  },
+  {
+    id: 'static-routing',
+    requires: /decidable from tracked files to a contract test/i,
+  },
+  {
+    id: 'runtime-routing',
+    requires: /owns the operation and\s+emits a structured result/i,
+  },
+  {
+    id: 'point-in-time-exempt',
+    requires: /point-in-time observation[^.]{0,120}citation, not an owner/i,
+  },
+  {
+    id: 'delegates-the-full-rule',
+    requires:
+      /taxonomy, stable-identity, and same-PR rules live in the `create-oat-skill` skill/i,
+  },
+  {
+    id: 'names-its-own-guard',
+    requires:
+      /packages\/cli\/src\/validation\/skills\.test\.ts` in the same PR/i,
+  },
+];
+
+describe('authoring contract — executable backstops for standing claims', () => {
+  it('requires a same-PR executable backstop with a stable identity', async () => {
+    const skill = await readRepoFile(
+      '.agents/skills/create-oat-skill/SKILL.md',
+    );
+    const rule = extractBoldedRequirementBlock(
+      skill,
+      'Executable backstops for contract claims',
+    );
+
+    expect(rule, 'executable-backstops requirement block').not.toBe('');
+
+    // The rule lives with the other OAT authoring conventions, beside the
+    // autonomy inventory guidance it generalizes.
+    const conventions = skill.slice(
+      skill.indexOf('### Step 3: Apply OAT Conventions'),
+      skill.indexOf('### Step 4: Create Files'),
+    );
+    expect(conventions, 'rule placement inside Step 3').toContain(rule);
+    expect(
+      skill.indexOf('**Autonomy gate inventory'),
+      'rule follows the autonomy inventory guidance it generalizes',
+    ).toBeLessThan(skill.indexOf('**Executable backstops'));
+
+    const text = normalizeProse(rule);
+    expect(missingClauses(text, authoringBackstopClauses)).toEqual([]);
+    expect(lineIdentityViolations(text)).toEqual([]);
+
+    // "Every cited mechanism exists" is repository-static by the rule's own
+    // taxonomy, so it is keyed to the files rather than to the strings. A
+    // rename would otherwise leave the guidance pointing at a dead precedent
+    // with a green suite — the drift the plan's STOP condition is written
+    // against.
+    const cited = citedRepoPaths(text);
+    expect(cited.length, 'repository paths cited by the rule').toBe(4);
+    expect(unresolvedRepoPaths(cited), 'every cited path resolves').toEqual([]);
+    expect(
+      unresolvedRepoPaths([
+        ...cited,
+        'packages/cli/src/validation/renamed-away.test.ts',
+      ]),
+      'a renamed-away precedent is detected',
+    ).toEqual(['packages/cli/src/validation/renamed-away.test.ts']);
+
+    // Presence-only clause matching cannot see an obligation that is
+    // neutralized by addition rather than deletion, so the block also carries
+    // a weakening deny list and a bullet-structure check.
+    expect(weakeningTerms(text), 'weakening vocabulary in the rule').toEqual(
+      [],
+    );
+    expect(bulletShape(rule), 'rule bullet structure').toEqual([7, 3]);
+
+    // Negative control: a blanket exemption appended to the block leaves every
+    // required clause matched, and both additive signals still catch it.
+    const exemptionAppended = `${rule}\n- Skills under active development are exempt from every requirement in this block until they stabilize.`;
+    expect(
+      missingClauses(
+        normalizeProse(exemptionAppended),
+        authoringBackstopClauses,
+      ),
+      'presence-only matching is blind to the appended exemption',
+    ).toEqual([]);
+    expect(
+      weakeningTerms(normalizeProse(exemptionAppended)),
+      'the deny list catches the appended exemption',
+    ).toEqual(['exempt']);
+    expect(
+      bulletShape(exemptionAppended),
+      'the bullet structure catches the appended exemption',
+    ).toEqual([8, 3]);
+
+    // Red/green mutation 1: the same-PR obligation is removed. A guard that
+    // only checked for the words "backstop" or "contract test" would still
+    // pass here, so this proves the timing clause is really enforced.
+    const withoutSamePr = text.replace(
+      /- Ship the claim and its backstop in the same PR\..*?point-in-time observation\. /,
+      '',
+    );
+    expect(withoutSamePr, 'same-PR mutation applied').not.toBe(text);
+    expect(missingClauses(withoutSamePr, authoringBackstopClauses)).toEqual([
+      'same-pr-timing',
+      'no-deferred-backstop',
+    ]);
+
+    // Red/green mutation 2: stable identity is rewritten to key guards to
+    // physical line numbers. Both the prohibition and the two-sided sentence
+    // check must fail.
+    const keyedByLineNumber = text.replace(
+      /Never key a guard to a physical line number;/i,
+      'Key each guard to a physical line number;',
+    );
+    expect(keyedByLineNumber, 'line-number mutation applied').not.toBe(text);
+    expect(missingClauses(keyedByLineNumber, authoringBackstopClauses)).toEqual(
+      ['stable-identity'],
+    );
+    expect(lineIdentityViolations(keyedByLineNumber)).toEqual([
+      'line-identity-not-prohibited',
+    ]);
+
+    // Red/green mutation 3: the prohibition is deleted outright rather than
+    // inverted, so no line-number sentence survives at all.
+    const withoutIdentityRule = text
+      .split(/(?<=[.;])\s+/)
+      .filter((sentence) => !/line numbers?/i.test(sentence))
+      .join(' ');
+    expect(withoutIdentityRule, 'identity-deletion mutation applied').not.toBe(
+      text,
+    );
+    expect(lineIdentityViolations(withoutIdentityRule)).toEqual([
+      'line-identity-unmentioned',
+    ]);
+
+    // Extraction control 1: a bolded sibling still bounds the block when its
+    // label is lowercase, so requirements that move below it are not silently
+    // absorbed into this rule and counted as satisfying it.
+    const lowercaseSibling = skill.replace(
+      '**Subagent/worker availability',
+      '**subagent/worker availability',
+    );
+    expect(lowercaseSibling, 'lowercase-sibling control applied').not.toBe(
+      skill,
+    );
+    expect(
+      extractBoldedRequirementBlock(
+        lowercaseSibling,
+        'Executable backstops for contract claims',
+      ),
+      'a lowercase bolded sibling still bounds the block',
+    ).toBe(rule);
+
+    // Extraction control 2: commented-out prose renders to nothing, so the
+    // guard must read the rule as absent rather than as live guidance.
+    const commentedOut = skill.replace(rule, `<!--\n${rule}\n-->`);
+    expect(commentedOut, 'comment-out control applied').not.toBe(skill);
+    expect(
+      extractBoldedRequirementBlock(
+        commentedOut,
+        'Executable backstops for contract claims',
+      ),
+      'commented-out guidance is not live',
+    ).toBe('');
+
+    // Extraction control 3: fenced prose is a literal sample. Demoting the
+    // rule into a code block must read as absent, not as live guidance.
+    const fencedOut = skill.replace(
+      rule,
+      ['```markdown', rule, '```'].join('\n'),
+    );
+    expect(fencedOut, 'fenced-out control applied').not.toBe(skill);
+    expect(
+      extractBoldedRequirementBlock(
+        fencedOut,
+        'Executable backstops for contract claims',
+      ),
+      'fenced guidance is a sample, not live',
+    ).toBe('');
+
+    // Extraction control 4: demoting the rule into a four-space indented block
+    // after a blank line is an indented code sample, so it must read as absent
+    // rather than as live guidance.
+    const indentedOut = skill.replace(
+      rule,
+      rule
+        .split('\n')
+        .map((line) => `    ${line}`)
+        .join('\n'),
+    );
+    expect(indentedOut, 'indented-demotion control applied').not.toBe(skill);
+    expect(
+      extractBoldedRequirementBlock(
+        indentedOut,
+        'Executable backstops for contract claims',
+      ),
+      'indented guidance is a sample, not live',
+    ).toBe('');
+  });
+
+  it('echoes the obligation in design without duplicating the taxonomy', async () => {
+    const design = await readRepoFile(
+      '.agents/skills/oat-project-design/SKILL.md',
+    );
+    const echo = extractBoldedRequirementBlock(design, 'Standing invariants');
+
+    expect(echo, 'design standing-invariant echo').not.toBe('');
+
+    const text = normalizeProse(echo);
+    expect(missingClauses(text, designEchoClauses)).toEqual([]);
+
+    // The echo points at the authoring rule instead of restating its classes;
+    // a copied taxonomy would drift out of step with create-oat-skill.
+    expect(text, 'design echo must not restate the claim taxonomy').not.toMatch(
+      /\*\*(?:repository-static|runtime\/lifecycle) standing invariant\*\*/i,
+    );
+
+    // Red/green mutation: dropping the executable-owner obligation leaves
+    // prose that still mentions standing invariants but demands nothing.
+    const withoutOwner = text.replace(
+      'name its executable owner and its verification method in the same design: ',
+      '',
+    );
+    expect(withoutOwner, 'executable-owner mutation applied').not.toBe(text);
+    expect(missingClauses(withoutOwner, designEchoClauses)).toEqual([
+      'executable-owner',
+      'verification-method',
+    ]);
+
+    // Red/green mutation: dropping the deferral pointer would strand the
+    // design echo with no owner for the taxonomy, stable-identity, and same-PR
+    // rules it deliberately does not restate.
+    const withoutPointer = text.replace(
+      /The full taxonomy, stable-identity, and same-PR rules live in the `create-oat-skill` skill;[^.]*\./i,
+      '',
+    );
+    expect(withoutPointer, 'delegation mutation applied').not.toBe(text);
+    expect(missingClauses(withoutPointer, designEchoClauses)).toEqual([
+      'delegates-the-full-rule',
+    ]);
+
+    // The echo is additive: the shared section list and the
+    // requirement-to-test mapping keep their order and content.
+    const iterator = design.slice(
+      design.indexOf('### Step 4: Section Iterator'),
+      design.indexOf('### Step 4a: Selective Review Pass'),
+    );
+    const sections = [...iterator.matchAll(/^(\d+)\. \*\*([^*]+)\*\*/gm)];
+    expect(sections.map(([, index]) => Number(index))).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+    ]);
+    expect(sections.at(6)?.[2]).toBe('Error Handling');
+    expect(sections.at(7)?.[2]).toBe(
+      'Testing Strategy (with Requirement-to-Test Mapping)',
+    );
+    expect(iterator).toContain('**Step a (Requirement-to-Test Mapping):**');
+    expect(iterator).toContain('**Step b (Test Levels):**');
+    expect(iterator).toContain('`ID | Verification | Key Scenarios`');
   });
 });

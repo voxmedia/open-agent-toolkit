@@ -74,7 +74,11 @@ import {
   classifyModelFamily,
   type ModelFamily,
 } from '@providers/identity/family';
-import type { DispatchAction, DispatchRole } from '@providers/identity/stamp';
+import {
+  formatDispatchStamp,
+  type DispatchAction,
+  type DispatchRole,
+} from '@providers/identity/stamp';
 import { Command, Option } from 'commander';
 import YAML from 'yaml';
 
@@ -2891,8 +2895,16 @@ async function runDispatchCeilingResolve(
     const dispatchReport = buildResolutionReport(resolution, options);
 
     if (context.json) {
+      // The stamp is emitted exactly when report context produced a report, and
+      // always through the canonical formatter: never hand-assembled here.
       context.logger.json(
-        dispatchReport ? { ...resolution, dispatchReport } : resolution,
+        dispatchReport
+          ? {
+              ...resolution,
+              dispatchReport,
+              dispatchStamp: formatDispatchStamp(dispatchReport),
+            }
+          : resolution,
       );
     } else {
       writeHumanResolution(context, resolution);

@@ -1,7 +1,8 @@
 import type { PackName } from '@commands/tools/shared/types';
 import type { Command } from 'commander';
 
-import { getCanonicalProviderPaths } from './pack-manifest';
+import { getPackDefinition } from './pack-manifest';
+import type { PackDefinition } from './types';
 
 const INSTALL_SYNC_CANONICAL_PATHS = Symbol('oat.installSyncCanonicalPaths');
 
@@ -21,8 +22,25 @@ export function canonicalAgentPaths(agentNames: readonly string[]): string[] {
   );
 }
 
-export function canonicalPathsForPack(pack: PackName): string[] {
-  return getCanonicalProviderPaths(pack);
+export function canonicalPathsForPack(
+  pack: PackName,
+  resolveDefinition: (pack: PackName) => PackDefinition = getPackDefinition,
+): string[] {
+  const definition = resolveDefinition(pack);
+  const direct = definition.assets
+    .filter(({ kind }) => kind === 'skill' || kind === 'agent')
+    .map(({ destination }) => destination);
+  const dependencies = (definition.dependencies ?? []).flatMap((dependency) => {
+    const owner = resolveDefinition(dependency.pack);
+    const selected = new Set(dependency.assets);
+    return owner.assets
+      .filter(
+        ({ id, kind }) =>
+          selected.has(id) && (kind === 'skill' || kind === 'agent'),
+      )
+      .map(({ destination }) => destination);
+  });
+  return uniqueCanonicalPaths([...direct, ...dependencies]);
 }
 
 export function canonicalPathsForPacks(packs: readonly PackName[]): string[] {

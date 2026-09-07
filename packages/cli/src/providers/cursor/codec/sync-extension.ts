@@ -19,7 +19,10 @@ import {
 } from '@config/dispatch-matrix';
 import { normalizeProjectPath, resolveActiveProject } from '@config/oat-config';
 import { resolveEffectiveConfig } from '@config/resolve';
-import type { CanonicalEntry } from '@engine/index';
+import {
+  materializationCanonicalPathAllowed,
+  type CanonicalEntry,
+} from '@engine/index';
 import { CliError } from '@errors/index';
 import { ensureDir, fileExists } from '@fs/io';
 import { validateRealPathWithinScope } from '@fs/paths';
@@ -34,6 +37,7 @@ import {
   type MaterializationPlan,
   type MaterializationWriteOperation,
 } from '@providers/shared';
+import type { MaterializationOperationResult } from '@providers/shared/materialization-extension';
 import YAML from 'yaml';
 
 import {
@@ -353,11 +357,10 @@ function canonicalPathAllowed(
   canonicalEntry: CanonicalEntry,
   allowedCanonicalPaths?: string[],
 ): boolean {
-  if (!allowedCanonicalPaths?.length) {
-    return true;
-  }
-  return new Set(allowedCanonicalPaths).has(
-    toRelativePath(scopeRoot, canonicalEntry.canonicalPath),
+  return materializationCanonicalPathAllowed(
+    scopeRoot,
+    canonicalEntry,
+    allowedCanonicalPaths,
   );
 }
 
@@ -366,6 +369,7 @@ async function desiredRolesFromCanonical(
   targets: CursorMaterializationTarget[],
 ): Promise<CursorMaterializedAgent[]> {
   const desired: CursorMaterializedAgent[] = [];
+  const sourceByRoleName = new Map<string, string>();
   for (const entry of canonicalEntries) {
     if (
       entry.type !== 'agent' ||
@@ -383,25 +387,22 @@ async function desiredRolesFromCanonical(
       continue;
     }
     for (const target of targets) {
-      desired.push(
-        materializeCursorAgent({
-          agent,
-          mapping: target.mapping,
-          owner: target.owner,
-        }),
-      );
+      const role = materializeCursorAgent({
+        agent,
+        mapping: target.mapping,
+        owner: target.owner,
+      });
+      const existingSource = sourceByRoleName.get(role.roleName);
+      if (existingSource) {
+        throw new CliError(
+          `Duplicate Cursor role name ${role.roleName} from ${existingSource} and ${entry.canonicalPath}. Refusing ambiguous role writes.`,
+        );
+      }
+      sourceByRoleName.set(role.roleName, entry.canonicalPath);
+      desired.push(role);
     }
   }
 
-  const names = new Set<string>();
-  for (const role of desired) {
-    if (names.has(role.roleName)) {
-      throw new CliError(
-        `Distinct Cursor targets produced the same Cursor role name ${role.roleName}. Refusing ambiguous role writes.`,
-      );
-    }
-    names.add(role.roleName);
-  }
   return desired.sort((left, right) =>
     left.roleName.localeCompare(right.roleName),
   );
@@ -639,14 +640,17 @@ export async function applyCursorProjectExtensionPlan(
   scopeRoot: string,
   plan: CursorExtensionPlan,
 ): Promise<CursorExtensionApplyResult> {
-  const result: CursorExtensionApplyResult = {
-    applied: 0,
-    failed: 0,
-    skipped: 0,
-  };
+  const operationResults: MaterializationOperationResult[] = [];
   for (const operation of plan.operations) {
     if (operation.action === 'skip') {
-      result.skipped += 1;
+      operationResults.push({
+        provider: operation.provider,
+        target: operation.target,
+        path: operation.path,
+        entryName: operation.entryName,
+        action: operation.action,
+        status: 'current',
+      });
       continue;
     }
     const absolutePath = resolve(scopeRoot, operation.path);
@@ -658,12 +662,43 @@ export async function applyCursorProjectExtensionPlan(
         await ensureDir(dirname(absolutePath));
         await writeFile(absolutePath, operation.content ?? '', 'utf8');
       }
-      result.applied += 1;
-    } catch {
-      result.failed += 1;
+      operationResults.push({
+        provider: operation.provider,
+        target: operation.target,
+        path: operation.path,
+        entryName: operation.entryName,
+        action: operation.action,
+        status: 'changed',
+      });
+    } catch (error) {
+      const missing =
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        error.code === 'ENOENT';
+      operationResults.push({
+        provider: operation.provider,
+        target: operation.target,
+        path: operation.path,
+        entryName: operation.entryName,
+        action: operation.action,
+        status: missing ? 'missing' : 'failed',
+        failure: missing
+          ? 'Materialization input was missing; restore it and retry sync.'
+          : 'Materialization failed; inspect local verbose diagnostics and retry sync.',
+      });
     }
   }
-  return result;
+  return {
+    applied: operationResults.filter(({ status }) => status === 'changed')
+      .length,
+    failed: operationResults.filter(
+      ({ status }) => status === 'failed' || status === 'missing',
+    ).length,
+    skipped: operationResults.filter(({ status }) => status === 'current')
+      .length,
+    operations: operationResults,
+  };
 }
 
 export function hasCursorExtensionChanges(plan: CursorExtensionPlan): boolean {

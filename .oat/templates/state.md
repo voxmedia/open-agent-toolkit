@@ -36,13 +36,16 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: { OAT_WORKFLOW_MODE } # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
+# oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
+#   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
-#   disposition: null # null | passed | warned | prompt_approved | no_gate
+#   disposition: null # null | passed | warned | prompt_approved | project_disabled | no_gate
 #   config_fingerprint: '<stable hash of resolved gate declaration>'
 #   resolved_command: null
 #   resolved_description: null
+#   project_override: null # null or {value: disabled, source: state.md:oat_skill_gate_overrides}
 #   on_failure: block # block | prompt | warn | null
 #   max_attempts: 2
 #   attempts_completed: 0

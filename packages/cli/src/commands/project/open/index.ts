@@ -5,6 +5,7 @@ import {
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
+import { guardSyncedTerminalTarget } from '@commands/project/pull';
 import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { readSyncedRecord } from '@commands/project/sync/record';
 import {
@@ -67,6 +68,7 @@ interface ProjectOpenDependencies {
     repoRoot: string,
     env: NodeJS.ProcessEnv,
   ) => Promise<string>;
+  guardSyncedTerminalTarget: typeof guardSyncedTerminalTarget;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
   writeOatLocalConfig: (
     repoRoot: string,
@@ -106,6 +108,7 @@ const DEFAULT_DEPENDENCIES: ProjectOpenDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   resolveProjectsRoot,
+  guardSyncedTerminalTarget,
   readOatLocalConfig,
   writeOatLocalConfig,
   setActiveProject,
@@ -197,11 +200,35 @@ async function resolveProject(
     const projectName = basename(fullProjectPath);
     let syncTarget: ResolvedSyncTarget | undefined;
     if (scope === 'synced') {
-      syncTarget = await dependencies.resolveSyncedTarget(
-        { repoRoot, env: dependencies.processEnv },
-        fullProjectPath,
-        {},
-        { allowMissingCheckout: true },
+      try {
+        syncTarget = await dependencies.resolveSyncedTarget(
+          { repoRoot, env: dependencies.processEnv },
+          fullProjectPath,
+          {},
+          { allowMissingCheckout: true },
+        );
+      } catch (error) {
+        if (
+          error instanceof CliError &&
+          error.exitCode === 1 &&
+          error.message.startsWith('No synced project named ')
+        ) {
+          await dependencies.guardSyncedTerminalTarget(
+            repoRoot,
+            projectsRoot,
+            input,
+            'open',
+            dependencies.gitRunner,
+          );
+        }
+        throw error;
+      }
+      await dependencies.guardSyncedTerminalTarget(
+        repoRoot,
+        projectsRoot,
+        input,
+        'open',
+        dependencies.gitRunner,
       );
       if (
         !(await dependencies.dirExists(fullProjectPath)) ||
@@ -266,12 +293,26 @@ async function resolveProject(
       };
     } catch (error) {
       if (error instanceof CliError && error.exitCode === 1) {
+        await dependencies.guardSyncedTerminalTarget(
+          repoRoot,
+          projectsRoot,
+          input,
+          'open',
+          dependencies.gitRunner,
+        );
         throw new CliError(`Project not found: ${input}`, 1);
       }
       throw error;
     }
   }
   if (candidate.scope === 'synced') {
+    await dependencies.guardSyncedTerminalTarget(
+      repoRoot,
+      projectsRoot,
+      input,
+      'open',
+      dependencies.gitRunner,
+    );
     syncTarget ??= await dependencies.resolveSyncedTarget(
       { repoRoot, env: dependencies.processEnv },
       candidate.fullProjectPath,

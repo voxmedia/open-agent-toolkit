@@ -126,6 +126,9 @@ describe('createInitToolsResearchCommand', () => {
     expect(choices.find((choice) => choice.value === 'analyze')?.checked).toBe(
       true,
     );
+    expect(choices.find((choice) => choice.value === 'recon')?.checked).toBe(
+      true,
+    );
   });
 
   it('non-interactive installs all research skills', async () => {

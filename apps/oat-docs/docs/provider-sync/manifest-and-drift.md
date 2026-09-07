@@ -32,6 +32,38 @@ Autonomous worktree bootstrap also treats sync output as setup state. `oat-workt
 
 For transformed mappings such as project-scoped rules, the manifest stores hashes for the rendered provider output that was actually written, not the canonical source markdown. This keeps drift detection aligned with the on-disk managed file.
 
+### Collection alias ownership
+
+Manifest version 2 can record an exact collection-directory alias plus the
+canonical entries inherited through it. Collection records distinguish links
+created by OAT (`oat-created`) from exact links OAT adopted without rewriting
+(`adopted-exact`). Inherited entries use the `collection` strategy and refer to
+their owning collection record; OAT does not mutate provider child paths under
+that alias.
+
+The current runtime adopts an existing alias only when it exactly resolves to
+the canonical collection and has the same entry set. When the destination is
+absent, `auto` falls back to ordinary per-entry sync: Node does not expose the
+identity-bound parent-relative primitive OAT requires to create a collection
+alias safely. OAT does not use copy fallback for collection aliases.
+
+OAT also does not automatically unlink a collection alias in the current
+runtime because a separate identity check followed by path-based removal has a
+final replacement race. Disabling a provider detaches ownership while
+preserving the alias. Configuring an explicit per-entry strategy does not
+release an owned collection. Deferred collection-directory copies and symlinks
+fail closed because the current runtime cannot publish through replaceable
+ancestors without following them.
+To leave the provider directory externally owned, run
+`oat providers set --scope <scope> --disabled <provider>` and then
+`oat sync --scope <scope>` to detach OAT ownership. Then verify and remove the
+preserved alias before managing the directory manually. Automatic transition
+requires an identity-bound, non-following publication primitive.
+Deferred file operations and ordinary non-transition per-entry symlinks retain
+their existing behavior. Real directories, destination races, broken links,
+foreign targets, and unverifiable identities are preserved and fail closed.
+Canonical targets are never removed.
+
 ## Drift states
 
 - `in_sync`
@@ -46,6 +78,11 @@ For transformed mappings such as project-scoped rules, the manifest stores hashe
 - `replaced`
 
 Rendered rule files participate in the same drift states as other managed copies. If a provider rule file is edited directly, drift is computed against the expected rendered output for that provider.
+
+Collection-backed entries are checked through the owning collection identity.
+An exact alias is `in_sync`; an absent alias is `missing`; and a broken,
+replaced, foreign, or otherwise unverifiable alias is `drifted`. Provider list
+and inspect output summarize collection ownership separately from copy mode.
 
 ## Stray adoption
 

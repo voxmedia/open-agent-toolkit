@@ -540,10 +540,13 @@ describe('scaffoldDocsApp', () => {
     expect(tsconfig.compilerOptions?.baseUrl).toBe('.');
     expect(tsconfig.compilerOptions?.paths?.['@/*']).toEqual(['./*']);
 
+    // The Fumadocs seed names the generated app-root manifest that
+    // `oat docs generate-index` writes, not the authored source page under
+    // `docs/`, so a fresh scaffold is correct before the first build.
     expect(result.documentationConfig).toEqual({
       root: 'apps/my-docs',
       tooling: 'fumadocs',
-      index: join('apps/my-docs', 'docs', 'index.md'),
+      index: join('apps/my-docs', 'index.md'),
     });
   });
 

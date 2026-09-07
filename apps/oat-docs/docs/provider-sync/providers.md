@@ -13,6 +13,7 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - User: `~/.agents/skills` -> `~/.claude/skills`, `~/.agents/agents` -> `~/.claude/agents`
     - Rule files stay `.md` and are rendered with Claude-compatible frontmatter when needed
     - Managed phase implementers and optional nested workers use the exact configured candidate returned as `providers.claude.dispatchArgs.model`; OAT passes that value as the actual Agent `model`
+    - Claude's official subagent contract says existing agent directories are watched and changes load within seconds. It describes a conditional restart for the first agent added to a directory that was absent when the session started, for agents added through `--add-dir`, and when Claude starts with `--disable-slash-commands`. OAT cannot observe those session-start and launch-mode facts. After a successful provider-visible file change, the generic OAT repository policy therefore conservatively advises starting a new provider session; it does not claim that Claude hot-reloaded the file or that the application process must restart. The provider semantics were verified against [Claude Code subagent documentation](https://code.claude.com/docs/en/sub-agents) on 2026-08-31.
 
 === "Cursor"
 
@@ -62,7 +63,7 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
     - All project-generated Codex variants and config registrations are repository-owned, version-controlled output and are never auto-ignored by OAT. User-config output remains under `~/.codex`.
     - A single role can be materialized directly with `oat providers codex materialize <agent-name> --model <model-id> --effort <reasoning-effort>`; `--agent-path` selects a specific canonical markdown agent, `--role-name` overrides the generated role name, and `--scope user` writes a user-config-owned role.
     - Aggregate Codex config drift metadata (`aggregateConfigHash`) is emitted in sync/status codex extension output and intentionally not stored as a separate manifest row
-    - Sync-time materialization is best effort; managed workflow correctness uses exact registered roles or a fresh child pinned to the resolved model plus reasoning effort with canonical role instructions, and does not require provider restart/hot reload
+    - Sync-time materialization is best effort; managed workflow correctness uses exact registered roles or a fresh child pinned to the resolved model plus reasoning effort with canonical role instructions. After a successful provider-visible file change, OAT conservatively advises starting a new Codex session so it has an opportunity to load the role. This repository policy is not a Codex hot-reload contract, an application-process restart requirement, or proof that the new session exposed the role.
     - Codex `max` is a first-class dispatch effort. It is present only for the Sol family in the committed supported catalogue, for both implementer and reviewer roles.
     - Codex multi-agent dispatch uses config-defined roles (`[agents.<name>]`) and `agent_type`
     - Codex subagent workflows require `[features] multi_agent = true` in active Codex config layers
@@ -103,10 +104,76 @@ Claude binds the exact model argument described above. Cursor launches the
 exact native variant. A missing or unselectable managed target blocks rather
 than falling back to the root target or a base role.
 
+### Post-launch runtime observation
+
+Runtime observation is a separate, optional layer from the configured
+invocation above. It never changes launch, fallback, policy, ceiling, role,
+authority, or any selector: it only records what a provider said about its own
+child, so a configured selection and an observed identity stay independently
+readable.
+
+Codex reports child lineage, role, model, and effort through its session and
+turn metadata. It reports no service tier: the parser accepts one for forward
+compatibility, but no captured rollout carries the field. Claude reports role, model, effort, and service tier
+from its on-disk transcript metadata, and lineage only as root-or-child: it
+emits no depth field, so a subagent turn is recorded as `depth-unknown` rather
+than given an invented depth. Claude's role comes from the same class of
+bounded role identifier Codex records, and is reported only on the subagent
+turns that carry one. Cursor exposes no metadata channel and stays explicitly
+`not-reported`.
+
+`not-exposed` is reserved for an axis a provider genuinely does not have. It is
+not a stand-in for an axis that simply went unreported on a given run, and it is
+never written in place of a value the provider did report.
+
+Observation is metadata-only. Parsers select entries by type and never read
+conversation content, and raw provider output is projected through the owning
+parser's allowlist before validation, so instruction text, conversation bodies,
+and working directories are dropped rather than merely ignored. A missing,
+unparseable, or uncorrelated
+observation is `not-reported`, never a copy of the requested arguments or the
+materialized pin. An observed mismatch is evidence for a human to read; it is
+not a fallback trigger and cannot authorize replacement or retry.
+
+## Materialization, refresh, and visibility
+
+OAT reports three separate facts rather than collapsing them into “available”:
+
+1. **Materialization** says whether the canonical asset's provider output was
+   changed, current, missing, failed, unsupported, or unknown.
+2. **Catalog refresh policy** is provider- and content-specific. A policy is
+   `live`, `manual-refresh`, `restart-required`, or `unknown`, with its source
+   and verification date.
+3. **Runtime visibility** says whether the active provider catalog was actually
+   observed. `oat sync`, `oat status`, `oat doctor`, and install-triggered sync
+   do not query a running provider session, so they report visibility as
+   `not-reported` or `unknown`, never `visible`.
+
+After a successful provider-visible file change, `oat sync` conservatively
+advises starting a new provider session so the provider has an opportunity to
+load the changed asset. This repository decision was approved on 2026-08-31 and
+is recorded in the active project's implementation record. It is safety
+guidance, not a provider hot-reload guarantee, an instruction to restart the
+application process, or proof that the new session loaded or exposed the asset.
+The compatibility schema reports this session boundary as `restart-required`;
+with `repository-decision` provenance, that state means “start a new provider
+session,” not “restart the application.”
+No advice is emitted for current/no-op, planned-only, failed, missing, inactive,
+or unsupported materialization.
+
+A truthful provider/content-specific policy takes precedence over this generic
+repository decision. Claude's documented behavior remains conditional on
+session-start and launch-mode facts that OAT cannot observe, so OAT does not
+claim those conditions were met; the conservative new-session advice still
+applies after a successful file change. Unsupported capabilities retain an
+`unknown` policy rather than inheriting advice. A current file with no
+current-session catalog probe is still not proof of provider visibility.
+
 ## Scope rules
 
 - Project scope: skills + agents + rules
-- User scope: skills, plus the two bundled managed Codex and Cursor role definitions used only for user-owned target expansion (provider mappings vary by adapter)
+- User scope: skills plus capability-supported ordinary agents (provider mappings vary by adapter)
+- The two bundled managed roles separately participate in Codex and Cursor extension expansion for user-owned targets
 - Rules are project-scoped only in this release
 - Codex user-scope sync materializes user-config custom roles under `~/.codex`; project-config and supported-catalogue output remains project-scoped and version controlled
 - Cursor user-scope sync materializes user-config variants under `~/.cursor/agents`; project-config and supported-catalogue output remains project-scoped and version controlled

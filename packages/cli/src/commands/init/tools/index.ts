@@ -10,12 +10,15 @@ import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
 import { applyGitignore } from '@commands/local/apply';
 import { addLocalPaths } from '@commands/local/manage';
 import {
+  type AgentsMdMutationOptions,
   type UpsertSectionResult,
-  removeAgentsMdSection,
+  formatAgentsMdGuidanceResult,
+  formatAgentsMdMutationFailure,
   upsertAgentsMdSection,
 } from '@commands/shared/agents-md';
 import { withScopeOption } from '@commands/shared/scope-option';
 import {
+  confirmAction,
   type MultiSelectChoice,
   type PromptContext,
   type SelectChoice,
@@ -23,11 +26,17 @@ import {
   selectWithAbort,
 } from '@commands/shared/shared.prompts';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import type { AutoSyncResult } from '@commands/tools/shared/auto-sync';
 import {
   canonicalPathsForPacks,
   getInstalledCanonicalPaths,
   setInstalledCanonicalPaths,
 } from '@commands/tools/shared/install-sync-context';
+import {
+  packScopeFactsFromInventory,
+  projectPackEvidence,
+  type ToolPackEvidence,
+} from '@commands/tools/shared/pack-evidence';
 import {
   inventoryPack,
   type InventoryPackInput,
@@ -38,6 +47,11 @@ import {
   type PackLifecycleRequest,
   type PackLifecycleResult,
 } from '@commands/tools/shared/pack-lifecycle';
+import {
+  evaluatePackLifecycleOutcome,
+  resolveAdditivePackScopeSelection,
+  type PackLifecycleOutcome,
+} from '@commands/tools/shared/pack-lifecycle-outcome';
 import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
 import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
@@ -51,6 +65,10 @@ import {
 } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import {
+  adviseProviderRefresh,
+  type ProviderVisibilityEvidence,
+} from '@providers/shared/restart-adviser';
 import type { ConcreteScope } from '@shared/types';
 import { Command } from 'commander';
 
@@ -80,9 +98,18 @@ import {
 } from './ideas/install-ideas';
 import {
   buildPackInstallStateMap,
-  buildPackInstallStateMapFromInventory,
+  buildPackInstallStateMapFromEvidence,
   type PackInstallState,
 } from './install-state';
+import {
+  type AgentsGuidancePlan,
+  commandProjectGuidanceChoice,
+  type PlanProjectGuidanceInput,
+  planProjectGuidance,
+  type ProjectGuidancePack,
+  reportableProjectGuidance,
+  withProjectGuidanceOptions,
+} from './project-guidance';
 import { createInitToolsProjectManagementCommand } from './project-management';
 import {
   installProjectManagement as defaultInstallProjectManagement,
@@ -142,6 +169,8 @@ export interface InitToolsDependencies {
     choices: SelectChoice<T>[],
     ctx: PromptContext,
   ) => Promise<T | null>;
+  confirmAction: PlanProjectGuidanceInput['confirmAction'];
+  planProjectGuidance: typeof planProjectGuidance;
   installCore: (options: InstallCoreOptions) => Promise<InstallCoreResult>;
   installDocs: (options: InstallDocsOptions) => Promise<InstallDocsResult>;
   installIdeas: (options: InstallIdeasOptions) => Promise<InstallIdeasResult>;
@@ -184,13 +213,18 @@ export interface InitToolsDependencies {
     repoRoot: string,
     key: string,
     body: string,
+    options?: AgentsMdMutationOptions,
   ) => Promise<UpsertSectionResult>;
-  removeAgentsMdSection: (repoRoot: string, key: string) => Promise<boolean>;
   reconcilePacks?: (
     requests: readonly PackLifecycleRequest[],
     options?: { dryRun?: boolean },
   ) => Promise<PackLifecycleResult[]>;
   inventoryPack?: (input: InventoryPackInput) => Promise<PackInventory>;
+  syncAfterInstall?: (
+    scopes: ConcreteScope[],
+    context: CommandContext,
+    installedCanonicalPaths: string[],
+  ) => Promise<AutoSyncResult>;
 }
 
 interface OutdatedSkillRecord {
@@ -205,6 +239,7 @@ interface InitToolsRunMetadata {
   affectedScopes: ConcreteScope[];
   appliedScopes: ConcreteScope[];
   adoptedPacks: ToolPack[];
+  syncHandled: boolean;
 }
 
 function formatVersionForDisplay(version: string | null): string {
@@ -226,6 +261,7 @@ type UserEligiblePack = Exclude<ToolPack, 'core'>;
 
 let lastRunInitToolsMetadata: InitToolsRunMetadata | null = null;
 const appliedScopesByCommand = new WeakMap<Command, ConcreteScope[]>();
+const syncHandledByCommand = new WeakSet<Command>();
 
 const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   buildCommandContext,
@@ -235,6 +271,8 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   scanTools,
   selectManyWithAbort,
   selectWithAbort,
+  confirmAction,
+  planProjectGuidance,
   installCore: defaultInstallCore,
   installDocs: defaultInstallDocs,
   installIdeas: defaultInstallIdeas,
@@ -250,7 +288,6 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
   writeOatConfig,
   resolveLocalPaths,
   upsertAgentsMdSection,
-  removeAgentsMdSection,
   reconcilePacks: reconcilePackLifecycles,
   inventoryPack,
 };
@@ -274,6 +311,39 @@ interface ScopeReconcileResult {
 
 function isUserEligiblePack(pack: ToolPack): pack is UserEligiblePack {
   return USER_ELIGIBLE_PACKS.has(pack);
+}
+
+async function loadPackEvidence(
+  pack: ToolPack,
+  projectRoot: string | null,
+  userRoot: string,
+  assetsRoot: string,
+  inventory: NonNullable<InitToolsDependencies['inventoryPack']>,
+): Promise<ToolPackEvidence> {
+  const canonical = await inventory({
+    pack,
+    assetsRoot,
+    ...(projectRoot ? { projectRoot } : {}),
+    userRoot,
+  });
+  return projectPackEvidence({
+    canonical,
+    scopes: canonical.scopes.map(packScopeFactsFromInventory),
+  });
+}
+
+function assertVerifiedPackScopes(
+  evidence: ToolPackEvidence,
+  expected: readonly ConcreteScope[],
+): void {
+  if (
+    evidence.unknownScopes.length > 0 ||
+    expected.some((scope) => !evidence.knownRealizedScopes.includes(scope))
+  ) {
+    throw new Error(
+      `Pack ${evidence.pack} placement verification failed for ${expected.join(', ')} scope`,
+    );
+  }
 }
 
 /**
@@ -384,7 +454,15 @@ async function loadInstalledPackStates(
         }),
       ),
     );
-    return buildPackInstallStateMapFromInventory(ALL_TOOL_PACKS, inventories);
+    return buildPackInstallStateMapFromEvidence(
+      ALL_TOOL_PACKS,
+      inventories.map((canonical) =>
+        projectPackEvidence({
+          canonical,
+          scopes: canonical.scopes.map(packScopeFactsFromInventory),
+        }),
+      ),
+    );
   }
   const [projectTools, userTools] = await Promise.all([
     projectRoot
@@ -473,6 +551,10 @@ export function consumeInitToolsRunMetadata(): InitToolsRunMetadata | null {
   const metadata = lastRunInitToolsMetadata;
   lastRunInitToolsMetadata = null;
   return metadata;
+}
+
+export function wasInstallSyncHandled(command: Command): boolean {
+  return syncHandledByCommand.has(command);
 }
 
 /**
@@ -670,12 +752,18 @@ function buildPackEndStateChoices(
     {
       label: `Project scope (${pack})`,
       value: 'project',
-      description: 'Install at project scope only',
+      description:
+        currentLocation === 'user' || currentLocation === 'both'
+          ? 'Add or refresh project scope; keep user scope'
+          : 'Install at project scope',
     },
     {
       label: `User scope (${pack})`,
       value: 'user',
-      description: 'Install at user scope only',
+      description:
+        currentLocation === 'project' || currentLocation === 'both'
+          ? 'Add or refresh user scope; keep project scope'
+          : 'Install at user scope',
     },
     {
       label: `Project + user (${pack})`,
@@ -703,13 +791,35 @@ function reportSuccess(
   packs: PackScopeInfo[],
   syncScopes: ConcreteScope[],
   adoptedPacks: ToolPack[],
+  lifecycle: readonly PackLifecycleOutcome[],
+  projectGuidance: AgentsGuidancePlan,
 ): void {
+  const providerVisibility = initProviderVisibility(syncScopes);
   if (context.json) {
+    if (
+      projectGuidance.action === 'blocked' ||
+      projectGuidance.action === 'manual-required'
+    ) {
+      context.logger.json({
+        status: 'partial',
+        installedPacks: packs,
+        syncScopes,
+        lifecycle: lifecycle.map(({ selection, status }) => ({
+          pack: selection.pack,
+          status,
+        })),
+        projectGuidance: reportableProjectGuidance(projectGuidance),
+      });
+      return;
+    }
     context.logger.json({
       status: 'ok',
       installedPacks: packs,
       syncScopes,
       ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
+      lifecycle,
+      projectGuidance: reportableProjectGuidance(projectGuidance),
+      ...(providerVisibility ? { providerVisibility } : {}),
     });
     return;
   }
@@ -728,7 +838,152 @@ function reportSuccess(
   });
   if (syncScopes.length === 0) {
     context.logger.info('No sync needed.');
+  } else if (providerVisibility) {
+    context.logger.info(
+      `Provider catalog visibility: ${providerVisibility.state} — ${providerVisibility.reason}`,
+    );
   }
+  for (const outcome of lifecycle) {
+    context.logger.info(
+      `Lifecycle ${outcome.selection.pack}: ${outcome.status} (${outcome.canonical.status})`,
+    );
+  }
+  const guidanceMessage = `Project guidance: ${projectGuidance.action} — ${projectGuidance.reason}`;
+  if (
+    projectGuidance.action === 'blocked' ||
+    projectGuidance.action === 'manual-required'
+  ) {
+    context.logger.warn(guidanceMessage);
+    if (projectGuidance.manualPatch) {
+      for (const line of formatAgentsMdGuidanceResult({
+        action: 'manual-required',
+        manualPatch: projectGuidance.manualPatch,
+      })) {
+        context.logger.info(line);
+      }
+    }
+  } else {
+    context.logger.info(guidanceMessage);
+  }
+}
+
+async function applyProjectGuidance(
+  plan: AgentsGuidancePlan,
+  dependencies: InitToolsDependencies,
+): Promise<AgentsGuidancePlan> {
+  if (plan.action !== 'create' || !plan.repoRoot) return plan;
+
+  try {
+    const sectionResult = await dependencies.upsertAgentsMdSection(
+      plan.repoRoot,
+      plan.sectionKey,
+      plan.body,
+      plan.legacySectionAction === 'remove'
+        ? { removeSectionKeys: ['workflows'] }
+        : undefined,
+    );
+    if (sectionResult.action === 'manual-required') {
+      return {
+        ...plan,
+        action: 'manual-required',
+        reason:
+          'Accepted project guidance requires the reported manual AGENTS.md patch. Capability placement and PJM adoption were unchanged.',
+        manualPatch: sectionResult.manualPatch,
+      };
+    }
+    if (sectionResult.action === 'blocked') {
+      return {
+        ...plan,
+        action: 'blocked',
+        reason:
+          `Accepted project guidance was blocked: ${sectionResult.blocked?.reason ?? 'AGENTS.md could not be planned safely.'} ${sectionResult.blocked?.action ?? ''}`.trim(),
+      };
+    }
+    return {
+      ...plan,
+      action: sectionResult.action === 'created' ? 'create' : 'no-change',
+      reason: `Accepted project guidance ${sectionResult.action}. Capability placement and PJM adoption were unchanged.`,
+    };
+  } catch (error) {
+    return {
+      ...plan,
+      action: 'blocked',
+      reason: `Accepted project guidance was blocked: ${formatAgentsMdMutationFailure(error)}`,
+    };
+  }
+}
+
+async function planAndApplyProjectGuidanceAfterInstall(
+  context: CommandContext,
+  assetsRoot: string,
+  installedProjectRoot: string | null,
+  explicitChoice: boolean | undefined,
+  dependencies: InitToolsDependencies,
+): Promise<AgentsGuidancePlan> {
+  const initialPlan = await dependencies.planProjectGuidance({
+    repoRoot: installedProjectRoot,
+    packs: [],
+    explicitChoice,
+    interactive: context.interactive,
+    confirmAction: dependencies.confirmAction,
+  });
+  if (initialPlan.choice.choice !== 'accepted') return initialPlan;
+
+  try {
+    const repoRoot =
+      installedProjectRoot ??
+      (await dependencies.resolveProjectRoot(context.cwd));
+    const userRoot = dependencies.resolveScopeRoot(
+      'user',
+      context.cwd,
+      context.home,
+    );
+    const finalPackStates = await loadInstalledPackStates(
+      repoRoot,
+      userRoot,
+      assetsRoot,
+      dependencies,
+    );
+    const realizedPacks = ALL_TOOL_PACKS.flatMap((pack) => {
+      const scope = finalPackStates[pack].location;
+      return scope === 'not-installed'
+        ? []
+        : [{ pack, scope } satisfies ProjectGuidancePack];
+    });
+    const completePlan = await dependencies.planProjectGuidance({
+      repoRoot,
+      packs: realizedPacks,
+      explicitChoice: true,
+      interactive: false,
+      confirmAction: dependencies.confirmAction,
+    });
+    return applyProjectGuidance(completePlan, dependencies);
+  } catch (error) {
+    return {
+      ...initialPlan,
+      action: 'blocked',
+      reason: `Accepted project guidance was blocked: ${formatAgentsMdMutationFailure(error)}`,
+    };
+  }
+}
+
+function initProviderVisibility(
+  syncScopes: readonly ConcreteScope[],
+): ProviderVisibilityEvidence | null {
+  if (syncScopes.length === 0) return null;
+  return adviseProviderRefresh({
+    policy: {
+      state: 'unknown',
+      reason:
+        'Init does not select one provider/content refresh contract for the aggregate sync',
+    },
+    materialization: 'unknown',
+    observation: {
+      state: 'not-reported',
+      reference:
+        'oat init records provider sync completion but does not query any active provider catalog',
+    },
+  });
 }
 
 function reportOutdatedSkills(
@@ -764,78 +1019,22 @@ async function updateOutdatedSkills(
   return updatedNames;
 }
 
-const PACK_DESCRIPTIONS: Record<ToolPack, string> = {
-  core: 'Diagnostics and documentation (oat-doctor, oat-docs)',
-  docs: 'Documentation and instruction governance workflows',
-  workflows:
-    'Project lifecycle (create, discover, plan, implement, review, complete)',
-  ideas: 'Idea capture and refinement',
-  'project-management':
-    'Local backlog, roadmap, and reference doc management (oat-pjm-* skills)',
-  utility:
-    'Standalone utilities (skill authoring, maintainability review, code reviews)',
-  research: 'Research, analysis, verification, and synthesis',
-  brainstorm: 'Always-on brainstorming entry point with visual companion',
-};
-
 interface PackScopeInfo {
   pack: ToolPack;
   scope: PackInstallTarget;
 }
 
-export function buildToolPacksSectionBody(packs: PackScopeInfo[]): string {
-  const userPacks = packs.filter(
-    (p) => p.scope === 'user' || p.scope === 'both',
-  );
-  const hasWorkflows = packs.some((p) => p.pack === 'workflows');
-
-  const lines = [
-    '## Tool Packs',
-    '',
-    '- **Skills directory:** `.agents/skills/`',
-    '- **Discover available skills:** scan `.agents/skills/*/SKILL.md`',
-    '- **Refresh provider views:** `oat sync --scope all`',
-    '- **Update skills to latest versions:** `oat tools update`',
-  ];
-
-  if (userPacks.length > 0) {
-    const userPackNames = userPacks.map((p) => p.pack).join(', ');
-    lines.push(
-      `- **User-scoped skills:** \`~/.agents/skills/\` (${userPackNames} packs installed at user scope)`,
-    );
-  }
-
-  lines.push('', '### Installed Packs', '');
-
-  for (const { pack, scope } of packs) {
-    const suffix =
-      scope === 'user'
-        ? ' _(user scope)_'
-        : scope === 'both'
-          ? ' _(project + user scope)_'
-          : '';
-    lines.push(`- **${pack}** — ${PACK_DESCRIPTIONS[pack]}${suffix}`);
-  }
-
-  if (hasWorkflows) {
-    lines.push(
-      '',
-      '### Workflow Execution Continuation',
-      '',
-      '- This guidance applies only to OAT project lifecycle execution, such as `oat-project-implement`, and OAT project review/receive flows. It does not apply to non-OAT tasks or ad-hoc work outside the OAT project workflow.',
-      '- When executing an OAT project implementation or OAT project review workflow, do not stop at task boundaries, phase boundaries, or other clean checkpoints unless the configured HiLL checkpoint has been reached, a real blocker exists, or explicit user input is required.',
-      '- Status summaries, completed bookkeeping, and "clean boundary" pauses are not valid stop reasons. After updating tracking artifacts, continue execution until an allowed stop condition applies.',
-    );
-  }
-
-  return lines.join('\n');
-}
+export { buildToolPacksSectionBody } from './project-guidance';
 
 export async function runInitTools(
   context: CommandContext,
   dependencies: InitToolsDependencies,
+  explicitProjectGuidance?: boolean,
 ): Promise<ToolPack[]> {
   lastRunInitToolsMetadata = null;
+  let attemptedPacks: ToolPack[] = [];
+  let attemptedSelections: PackLifecycleOutcome['selection'][] = [];
+  let lifecycleOutcomes: PackLifecycleOutcome[] = [];
 
   try {
     const userRoot = dependencies.resolveScopeRoot(
@@ -875,11 +1074,13 @@ export async function runInitTools(
     if (!context.interactive) {
       selectedPacks.push('project-management');
     }
+    attemptedPacks = selectedPacks;
     if (selectedPacks.length === 0) {
       lastRunInitToolsMetadata = {
         affectedScopes: [],
         appliedScopes: [],
         adoptedPacks: [],
+        syncHandled: dependencies.syncAfterInstall !== undefined,
       };
       if (!context.json) {
         context.logger.info('No tool packs selected.');
@@ -893,6 +1094,16 @@ export async function runInitTools(
       selectedPacks,
       initialPackStates,
       dependencies,
+    );
+    attemptedSelections = selectedPacks.map((pack) =>
+      resolveAdditivePackScopeSelection({
+        pack,
+        requested: pack === 'core' ? 'user' : packScopes[pack],
+        knownRealizedScopes: scopesForLocation(
+          initialPackStates[pack].location,
+        ),
+        unknownScopes: [],
+      }),
     );
 
     function scopeRoot(scope: ConcreteScope): string {
@@ -929,6 +1140,40 @@ export async function runInitTools(
       const lifecycle = await dependencies.reconcilePacks(requests);
       for (const { plan } of lifecycle) {
         if (plan.operations.length > 0) affectedScopes.add(plan.scope);
+      }
+      if (dependencies.inventoryPack) {
+        const finalEvidence = await Promise.all(
+          selectedPacks.map((pack) =>
+            loadPackEvidence(
+              pack,
+              projectRoot,
+              userRoot,
+              assetsRoot,
+              dependencies.inventoryPack!,
+            ),
+          ),
+        );
+        lifecycleOutcomes = finalEvidence.map((evidence) => {
+          const packResults = lifecycle.filter(
+            ({ request }) => request.pack === evidence.pack,
+          );
+          const selection = attemptedSelections.find(
+            ({ pack }) => pack === evidence.pack,
+          )!;
+          return evaluatePackLifecycleOutcome({
+            selection,
+            lifecycle: packResults,
+            sync: { scopes: [], status: 'not-run', providers: [] },
+            finalEvidence: evidence,
+          });
+        });
+        for (const evidence of finalEvidence) {
+          const target =
+            evidence.pack === 'core'
+              ? (['user'] as const)
+              : scopesForEndState(packScopes[evidence.pack]);
+          assertVerifiedPackScopes(evidence, target);
+        }
       }
       if (
         requests.some(
@@ -1274,31 +1519,6 @@ export async function runInitTools(
       pack,
       scope: packScopes[pack],
     }));
-    const adoptsProject = packScopeInfo.some(({ scope }) => scope !== 'user');
-    const sectionBody = buildToolPacksSectionBody(packScopeInfo);
-    const sectionResult = adoptsProject
-      ? await dependencies.upsertAgentsMdSection(
-          scopeRoot('project'),
-          'tools',
-          sectionBody,
-        )
-      : { action: 'no-change' as const };
-    // Pack placement never writes the project-management or decisions AGENTS
-    // sections. Those belong to explicit repository adoption (`oat pjm init`,
-    // via `initializeRepoReference`), which owns the `pjm.initialized` marker.
-    if (adoptsProject) {
-      await dependencies.removeAgentsMdSection(
-        scopeRoot('project'),
-        'workflows',
-      );
-    }
-
-    if (!context.json && sectionResult.action !== 'no-change') {
-      context.logger.info(
-        `AGENTS.md tool packs section ${sectionResult.action}.`,
-      );
-    }
-
     const affectedScopesList = [...affectedScopes];
     const appliedScopes = [
       ...new Set(
@@ -1318,19 +1538,112 @@ export async function runInitTools(
             )
           ).adoptedPacks
         : [];
+    const finalPackStates = await loadInstalledPackStates(
+      projectRoot,
+      userRoot,
+      assetsRoot,
+      dependencies,
+    );
+    const realizedPacks = ALL_TOOL_PACKS.flatMap((pack) => {
+      const scope = finalPackStates[pack].location;
+      return scope === 'not-installed'
+        ? []
+        : [{ pack, scope } satisfies ProjectGuidancePack];
+    });
+    const plannedGuidance = await dependencies.planProjectGuidance({
+      repoRoot: projectRoot,
+      packs: realizedPacks,
+      explicitChoice: explicitProjectGuidance,
+      interactive: context.interactive,
+      confirmAction: dependencies.confirmAction,
+    });
+    const guidancePlan = await applyProjectGuidance(
+      plannedGuidance,
+      dependencies,
+    );
+    if (dependencies.syncAfterInstall) {
+      const sync = await dependencies.syncAfterInstall(
+        affectedScopesList,
+        context,
+        canonicalPathsForPacks(selectedPacks),
+      );
+      lifecycleOutcomes = lifecycleOutcomes.map((outcome) =>
+        evaluatePackLifecycleOutcome({
+          selection: outcome.selection,
+          lifecycle: outcome.canonical.results,
+          sync: {
+            scopes: sync.scopes.filter((scope) =>
+              outcome.selection.targetScopes.includes(scope),
+            ),
+            status:
+              sync.scopes.length === 0
+                ? 'not-run'
+                : sync.synced
+                  ? 'complete'
+                  : 'failed',
+            providers: [],
+            ...(sync.error ? { error: sync.error } : {}),
+          },
+          finalEvidence: outcome.finalEvidence,
+        }),
+      );
+    }
     lastRunInitToolsMetadata = {
       affectedScopes: affectedScopesList,
       appliedScopes,
       adoptedPacks,
+      syncHandled: dependencies.syncAfterInstall !== undefined,
     };
-    reportSuccess(context, packScopeInfo, affectedScopesList, adoptedPacks);
-    process.exitCode = 0;
+    reportSuccess(
+      context,
+      packScopeInfo,
+      affectedScopesList,
+      adoptedPacks,
+      lifecycleOutcomes,
+      guidancePlan,
+    );
+    process.exitCode =
+      lifecycleOutcomes.some(({ status }) => status !== 'complete') ||
+      guidancePlan.action === 'blocked' ||
+      guidancePlan.action === 'manual-required'
+        ? 1
+        : 0;
     return selectedPacks;
   } catch (error) {
     lastRunInitToolsMetadata = null;
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
-      context.logger.json({ status: 'error', message });
+      context.logger.json({
+        status: 'error',
+        message,
+        ...(attemptedPacks.length > 0
+          ? {
+              lifecycle:
+                lifecycleOutcomes.length > 0
+                  ? lifecycleOutcomes
+                  : attemptedPacks.map((pack) => ({
+                      schemaVersion: 1,
+                      selection: attemptedSelections.find(
+                        (selection) => selection.pack === pack,
+                      ) ?? {
+                        pack,
+                        requested: 'user' as const,
+                        retainedRealizedScopes: [],
+                        targetScopes: [],
+                      },
+                      canonical: { status: 'failed' as const, results: [] },
+                      sync: {
+                        scopes: [],
+                        status: 'not-run' as const,
+                        providers: [],
+                      },
+                      finalEvidence: null,
+                      status: 'failed' as const,
+                      recovery: [{ code: 'canonical-apply-failed', message }],
+                    })),
+            }
+          : {}),
+      });
     } else {
       context.logger.error(message);
     }
@@ -1341,8 +1654,13 @@ export async function runInitTools(
 
 export async function runInitToolsWithDefaults(
   context: CommandContext,
+  explicitProjectGuidance?: boolean,
 ): Promise<ToolPack[]> {
-  return runInitTools(context, { ...DEFAULT_DEPENDENCIES });
+  return runInitTools(
+    context,
+    { ...DEFAULT_DEPENDENCIES },
+    explicitProjectGuidance,
+  );
 }
 
 /**
@@ -1355,43 +1673,63 @@ export async function runInitToolsWithDefaults(
  * `defaultScope`. Falls back to the configured default only when placement
  * cannot be observed (no inventory dependency, or an inventory failure).
  */
-async function resolvePackCommandScopes(
+async function resolvePackCommandSelection(
   pack: ToolPack,
   context: CommandContext,
   assetsRoot: string,
   dependencies: InitToolsDependencies,
-): Promise<ConcreteScope[]> {
+  requested?: ConcreteScope | 'both',
+): Promise<PackLifecycleOutcome['selection']> {
   const definition = getPackDefinition(pack);
   const inventory = dependencies.inventoryPack;
-  if (!inventory) return [definition.defaultScope];
-
-  try {
-    const userRoot = dependencies.resolveScopeRoot(
-      'user',
-      context.cwd,
-      context.home,
-    );
-    const projectRoot = definition.allowedScopes.includes('project')
-      ? await dependencies
-          .resolveProjectRoot(context.cwd)
-          .catch(() => undefined)
-      : undefined;
-    const packInventory = await inventory({
+  if (!inventory) {
+    const fallback = requested ?? definition.defaultScope;
+    const fallbackScopes: ConcreteScope[] =
+      fallback === 'both' ? ['project', 'user'] : [fallback];
+    return {
       pack,
-      assetsRoot,
-      ...(projectRoot ? { projectRoot } : {}),
-      userRoot,
-    });
-    const states = buildPackInstallStateMapFromInventory(
-      [pack],
-      [packInventory],
-    );
-    return scopesForEndState(
-      resolvePackDefaultEndState(pack, states[pack].location),
-    ).filter((scope) => definition.allowedScopes.includes(scope));
-  } catch {
-    return [definition.defaultScope];
+      requested: fallback,
+      retainedRealizedScopes: [],
+      targetScopes: fallbackScopes.filter((scope) =>
+        definition.allowedScopes.includes(scope),
+      ),
+    };
   }
+
+  const userRoot = dependencies.resolveScopeRoot(
+    'user',
+    context.cwd,
+    context.home,
+  );
+  const projectRoot = definition.allowedScopes.includes('project')
+    ? await dependencies.resolveProjectRoot(context.cwd).catch(() => undefined)
+    : undefined;
+  const canonical = await inventory({
+    pack,
+    assetsRoot,
+    ...(projectRoot ? { projectRoot } : {}),
+    userRoot,
+  });
+  const evidence = projectPackEvidence({
+    canonical,
+    scopes: canonical.scopes.map(packScopeFactsFromInventory),
+  });
+  const defaultRequest =
+    evidence.knownRealizedScopes.length === 2
+      ? 'both'
+      : (evidence.knownRealizedScopes[0] ?? definition.defaultScope);
+  const selection = resolveAdditivePackScopeSelection({
+    pack,
+    requested: requested ?? defaultRequest,
+    knownRealizedScopes: evidence.knownRealizedScopes,
+    unknownScopes: evidence.unknownScopes,
+  });
+  return {
+    ...selection,
+    targetScopes: selection.targetScopes.filter((scope) =>
+      definition.allowedScopes.includes(scope),
+    ),
+  };
 }
 
 function createReconciledPackCommand(
@@ -1411,14 +1749,24 @@ function createReconciledPackCommand(
       'Install OAT brainstorm skill (always-on entry point with visual companion)',
   };
   const base = new Command(pack).description(descriptions[pack]);
-  const packCommand = pack === 'core' ? base : withScopeOption(base);
+  const scopedCommand = pack === 'core' ? base : withScopeOption(base);
+  const packCommand =
+    pack === 'workflows'
+      ? withProjectGuidanceOptions(scopedCommand)
+      : scopedCommand;
   return packCommand
     .allowUnknownOption(false)
     .action(async (_options: unknown, command: Command) => {
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
+      let lifecycleOutcome: PackLifecycleOutcome | null = null;
+      let selection: PackLifecycleOutcome['selection'] | null = null;
       try {
+        const explicitProjectGuidance =
+          pack === 'workflows'
+            ? commandProjectGuidanceChoice(command)
+            : undefined;
         const assetsRoot = await dependencies.resolveAssetsRoot();
         const explicitScope =
           command.getOptionValueSourceWithGlobals('scope') === 'cli';
@@ -1426,17 +1774,18 @@ function createReconciledPackCommand(
           context.scope === 'project' || context.scope === 'user'
             ? context.scope
             : null;
-        const scopes: ConcreteScope[] =
+        selection = await resolvePackCommandSelection(
+          pack,
+          context,
+          assetsRoot,
+          dependencies,
           explicitScope && context.scope === 'all'
-            ? [...definition.allowedScopes]
-            : requestedScope
-              ? [requestedScope]
-              : await resolvePackCommandScopes(
-                  pack,
-                  context,
-                  assetsRoot,
-                  dependencies,
-                );
+            ? 'both'
+            : explicitScope && requestedScope
+              ? requestedScope
+              : undefined,
+        );
+        const scopes = [...selection.targetScopes];
         for (const scope of scopes) {
           if (!definition.allowedScopes.includes(scope)) {
             throw new Error(`Pack ${pack} does not allow ${scope} scope`);
@@ -1461,11 +1810,59 @@ function createReconciledPackCommand(
           ),
         );
         const results = await dependencies.reconcilePacks!(requests);
+        let finalEvidence: ToolPackEvidence | null = null;
+        if (dependencies.inventoryPack) {
+          finalEvidence = await loadPackEvidence(
+            pack,
+            requests.some(({ scope }) => scope === 'project')
+              ? await dependencies.resolveProjectRoot(context.cwd)
+              : null,
+            dependencies.resolveScopeRoot('user', context.cwd, context.home),
+            assetsRoot,
+            dependencies.inventoryPack,
+          );
+        }
+        lifecycleOutcome = evaluatePackLifecycleOutcome({
+          selection,
+          lifecycle: results,
+          sync: { scopes: [], status: 'not-run', providers: [] },
+          finalEvidence,
+        });
+        if (finalEvidence) assertVerifiedPackScopes(finalEvidence, scopes);
         appliedScopesByCommand.set(
           command,
-          results.map(({ request }) => request.scope),
+          results
+            .filter(({ plan }) => plan.operations.length > 0)
+            .map(({ request }) => request.scope),
         );
         setInstalledCanonicalPaths(command, canonicalPathsForPacks([pack]));
+        if (dependencies.syncAfterInstall) {
+          syncHandledByCommand.add(command);
+          const changedScopes = results
+            .filter(({ plan }) => plan.operations.length > 0)
+            .map(({ request }) => request.scope);
+          const sync = await dependencies.syncAfterInstall(
+            changedScopes,
+            context,
+            canonicalPathsForPacks([pack]),
+          );
+          lifecycleOutcome = evaluatePackLifecycleOutcome({
+            selection,
+            lifecycle: results,
+            sync: {
+              scopes: sync.scopes,
+              status:
+                sync.scopes.length === 0
+                  ? 'not-run'
+                  : sync.synced
+                    ? 'complete'
+                    : 'failed',
+              providers: [],
+              ...(sync.error ? { error: sync.error } : {}),
+            },
+            finalEvidence,
+          });
+        }
 
         // Project-scope placement installs capability only. The
         // project-management and decisions AGENTS sections are written by the
@@ -1484,12 +1881,38 @@ function createReconciledPackCommand(
             ).adoptedPacks
           : [];
 
+        const providerVisibility = initProviderVisibility(
+          results
+            .filter(({ plan }) => plan.operations.length > 0)
+            .map(({ request }) => request.scope),
+        );
+        const projectGuidance =
+          pack === 'workflows'
+            ? await planAndApplyProjectGuidanceAfterInstall(
+                context,
+                assetsRoot,
+                requests.find(({ scope }) => scope === 'project')?.scopeRoot ??
+                  null,
+                explicitProjectGuidance,
+                dependencies,
+              )
+            : null;
         if (context.json) {
+          const guidanceIncomplete =
+            projectGuidance?.action === 'blocked' ||
+            projectGuidance?.action === 'manual-required';
           context.logger.json({
-            status: 'ok',
+            status: guidanceIncomplete ? 'partial' : 'ok',
             pack,
             scopes,
             results,
+            lifecycle: lifecycleOutcome,
+            ...(projectGuidance
+              ? {
+                  projectGuidance: reportableProjectGuidance(projectGuidance),
+                }
+              : {}),
+            ...(providerVisibility ? { providerVisibility } : {}),
             ...(adoptedPacks.length > 0 ? { adoptedPacks } : {}),
           });
         } else {
@@ -1497,6 +1920,33 @@ function createReconciledPackCommand(
             context.logger.info(`Adopted project tool pack: ${adoptedPack}`);
           }
           context.logger.info(`Installed ${pack} tool pack.`);
+          context.logger.info(
+            `Lifecycle: ${lifecycleOutcome.status} (${lifecycleOutcome.canonical.status})`,
+          );
+          if (providerVisibility) {
+            context.logger.info(
+              `Provider catalog visibility: ${providerVisibility.state} — ${providerVisibility.reason}`,
+            );
+          }
+          if (projectGuidance) {
+            const guidanceMessage = `Project guidance: ${projectGuidance.action} — ${projectGuidance.reason}`;
+            if (
+              projectGuidance.action === 'blocked' ||
+              projectGuidance.action === 'manual-required'
+            ) {
+              context.logger.warn(guidanceMessage);
+              if (projectGuidance.manualPatch) {
+                for (const line of formatAgentsMdGuidanceResult({
+                  action: 'manual-required',
+                  manualPatch: projectGuidance.manualPatch,
+                })) {
+                  context.logger.info(line);
+                }
+              }
+            } else {
+              context.logger.info(guidanceMessage);
+            }
+          }
           for (const result of results) {
             context.logger.info(`Scope: ${result.request.scope}`);
             context.logger.info(`Target root: ${result.request.scopeRoot}`);
@@ -1508,10 +1958,34 @@ function createReconciledPackCommand(
             );
           }
         }
-        process.exitCode = 0;
+        process.exitCode =
+          lifecycleOutcome.status === 'complete' &&
+          projectGuidance?.action !== 'blocked' &&
+          projectGuidance?.action !== 'manual-required'
+            ? 0
+            : 1;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        if (context.json) context.logger.json({ status: 'error', message });
+        lifecycleOutcome ??= {
+          schemaVersion: 1,
+          selection: selection ?? {
+            pack,
+            requested: 'user',
+            retainedRealizedScopes: [],
+            targetScopes: [],
+          },
+          canonical: { status: 'failed', results: [] },
+          sync: { scopes: [], status: 'not-run', providers: [] },
+          finalEvidence: null,
+          status: 'failed',
+          recovery: [{ code: 'canonical-apply-failed', message }],
+        };
+        if (context.json)
+          context.logger.json({
+            status: 'error',
+            message,
+            lifecycle: lifecycleOutcome,
+          });
         else context.logger.error(message);
         process.exitCode = 1;
       }
@@ -1610,8 +2084,10 @@ export function createInitToolsCommand(
     }
   }
 
-  const command = new Command('tools').description(
-    'Install OAT tool packs (core, ideas, docs, workflows, utility, project-management, research, brainstorm)',
+  const command = withProjectGuidanceOptions(
+    new Command('tools').description(
+      'Install OAT tool packs (core, ideas, docs, workflows, utility, project-management, research, brainstorm)',
+    ),
   );
   for (const packCommand of packCommands) {
     command.addCommand(packCommand);
@@ -1620,7 +2096,11 @@ export function createInitToolsCommand(
     const context = dependencies.buildCommandContext(
       readGlobalOptions(actionCommand),
     );
-    const selectedPacks = await runInitTools(context, dependencies);
+    const selectedPacks = await runInitTools(
+      context,
+      dependencies,
+      commandProjectGuidanceChoice(actionCommand),
+    );
     appliedScopesByCommand.set(
       actionCommand,
       lastRunInitToolsMetadata?.appliedScopes ?? [],

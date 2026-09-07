@@ -1,6 +1,13 @@
 import type { CommandContext } from '@app/command-context';
 import { resolveConcreteScopes } from '@commands/shared/shared.utils';
-import { formatPackInventoryDetails } from '@commands/tools/shared/format-pack-inventory';
+import {
+  formatPackEvidenceDetails,
+  formatPackInventoryDetails,
+  packEvidenceBlock,
+  projectRenderablePackEvidence,
+  unavailablePackEvidence,
+  type PackEvidenceBlockV1,
+} from '@commands/tools/shared/format-pack-inventory';
 import {
   inventoryPack,
   type InventoryPackInput,
@@ -36,6 +43,7 @@ export interface InfoToolResult {
   found: boolean;
   tool: ToolDetail | null;
   pack: PackInventory | null;
+  packEvidence?: PackEvidenceBlockV1;
 }
 
 export async function runInfoTool(
@@ -54,23 +62,43 @@ export async function runInfoTool(
       context.home,
     );
   }
+  const packRoots = {
+    projectRoot: roots.project,
+    userRoot: roots.user,
+  };
   const packName = PACK_MANIFEST.find(
     ({ name: candidate }) => candidate === name,
   )?.name;
   if (packName) {
-    const pack = await (dependencies.inventoryPack ?? inventoryPack)({
-      pack: packName,
-      assetsRoot,
-      projectRoot: roots.project,
-      userRoot: roots.user,
-    });
-    if (context.json) logger.json({ tool: null, pack });
-    else {
-      logger.info(`${pack.pack}`);
-      logger.info(`  Placement:   ${pack.placement}`);
-      for (const line of formatPackInventoryDetails(pack)) logger.info(line);
+    let pack: PackInventory | null = null;
+    let evidence;
+    try {
+      pack = await (dependencies.inventoryPack ?? inventoryPack)({
+        pack: packName,
+        assetsRoot,
+        projectRoot: roots.project,
+        userRoot: roots.user,
+      });
+      evidence = projectRenderablePackEvidence(pack, packRoots);
+    } catch (error) {
+      evidence = unavailablePackEvidence({
+        pack: packName,
+        scopes,
+        reason: error instanceof Error ? error.message : String(error),
+        roots: packRoots,
+      });
     }
-    return { found: true, tool: null, pack };
+    const packEvidence = packEvidenceBlock([evidence]);
+    if (context.json) logger.json({ tool: null, pack, packEvidence });
+    else {
+      logger.info(packName);
+      if (pack) {
+        logger.info(`  Placement:   ${pack.placement}`);
+        for (const line of formatPackInventoryDetails(pack)) logger.info(line);
+      }
+      for (const line of formatPackEvidenceDetails(evidence)) logger.info(line);
+    }
+    return { found: true, tool: null, pack, packEvidence };
   }
 
   for (const scope of scopes) {

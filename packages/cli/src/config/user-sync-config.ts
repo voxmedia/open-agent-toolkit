@@ -67,6 +67,22 @@ export async function resolveUserSyncConfig(
   return migratedSyncConfig;
 }
 
+export async function updateUserSyncConfig(
+  userConfigDir: string,
+  update: (current: SyncConfig) => SyncConfig,
+  overrides: Partial<UserSyncConfigDependencies> = {},
+): Promise<SyncConfig> {
+  const dependencies: UserSyncConfigDependencies = {
+    ...DEFAULT_DEPENDENCIES,
+    ...overrides,
+  };
+  const current = await resolveUserSyncConfig(userConfigDir, dependencies);
+  return dependencies.saveSyncConfig(
+    getUserSyncConfigPath(userConfigDir),
+    update(current),
+  );
+}
+
 async function readLegacyConfig(
   configPath: string,
   read: UserSyncConfigDependencies['readFile'],

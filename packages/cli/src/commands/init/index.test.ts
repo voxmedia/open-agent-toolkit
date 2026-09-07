@@ -27,7 +27,8 @@ import { CliError } from '@errors/index';
 import { createEmptyManifest, type Manifest } from '@manifest/index';
 import { codexAdapter } from '@providers/codex';
 import { cursorAdapter } from '@providers/cursor';
-import type { ProviderAdapter } from '@providers/shared';
+import type { ProviderAdapter, ProviderScopeContext } from '@providers/shared';
+import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -36,6 +37,7 @@ import { createInitCommand, type InitStrayCandidate } from './index';
 
 interface HarnessOptions {
   interactive?: boolean;
+  loadedManifests?: Manifest[];
   home?: string;
   scopeRootByScope?: Partial<Record<'project' | 'user', string>>;
   strays?: InitStrayCandidate[];
@@ -48,6 +50,8 @@ interface HarnessOptions {
   useDefaultCollectStrays?: boolean;
   useDefaultEnsureCanonicalDirs?: boolean;
   adapters?: ProviderAdapter[];
+  providerContext?: ProviderScopeContext;
+  providerContextResolver?: () => Promise<ProviderScopeContext>;
   configAwareActiveAdapterNames?: string[];
   loadedSyncConfig?: SyncConfig;
   userKnownStrays?: string[];
@@ -66,6 +70,17 @@ interface HarnessOptions {
 interface RunInitArgs {
   globalArgs?: string[];
   commandArgs?: string[];
+}
+
+function createProviderAdapter(name: string): ProviderAdapter {
+  return {
+    name,
+    displayName: name,
+    defaultStrategy: 'symlink',
+    projectMappings: [],
+    userMappings: [],
+    detect: async () => true,
+  };
 }
 
 const ADOPT_REMEDIATION =
@@ -151,6 +166,7 @@ function createHarness(options: HarnessOptions = {}): {
   resolveScopeRoot: ReturnType<typeof vi.fn>;
   ensureCanonicalDirs: ReturnType<typeof vi.fn>;
   saveManifest: ReturnType<typeof vi.fn>;
+  loadManifest: ReturnType<typeof vi.fn>;
   collectStrays: ReturnType<typeof vi.fn>;
   confirmAction: ReturnType<typeof vi.fn>;
   selectManyWithAbort: ReturnType<typeof vi.fn>;
@@ -195,14 +211,18 @@ function createHarness(options: HarnessOptions = {}): {
   const selectWithAbort = vi.fn(async () =>
     singleSelectResponses.length > 0 ? singleSelectResponses.shift()! : 'no',
   );
-  const selectProvidersWithAbort = vi.fn(
-    async () => providerSelectResponses.shift() ?? [],
+  const selectProvidersWithAbort = vi.fn(async () =>
+    providerSelectResponses.length > 0 ? providerSelectResponses.shift()! : [],
   );
   const resolveScopeRoot = vi.fn(
     async (scope: 'project' | 'user') => scopeRoots[scope],
   );
   const ensureCanonicalDirs = vi.fn(async () => undefined);
   const saveManifest = vi.fn(async () => undefined);
+  const queuedManifests = [...(options.loadedManifests ?? [])];
+  const loadManifest = vi.fn(
+    async () => queuedManifests.shift() ?? createEmptyManifest(),
+  );
   const collectStrays = vi.fn(async () => options.strays ?? []);
   const adoptStray = vi.fn(
     async (_scopeRoot: string, _stray, manifest: Manifest) => {
@@ -298,7 +318,7 @@ function createHarness(options: HarnessOptions = {}): {
       logger: capture.logger,
     }),
     resolveScopeRoot,
-    loadManifest: vi.fn(async () => createEmptyManifest()),
+    loadManifest,
     saveManifest,
     scanCanonical: vi.fn(async () => createCanonicalEntries()),
     confirmAction,
@@ -319,6 +339,15 @@ function createHarness(options: HarnessOptions = {}): {
       detectedUnset: options.configAwareActiveAdapterNames ?? ['claude'],
       detectedDisabled: [],
     })),
+    ...(options.providerContextResolver
+      ? { resolveProviderScopeContext: options.providerContextResolver }
+      : options.providerContext
+        ? {
+            resolveProviderScopeContext: vi.fn(
+              async () => options.providerContext!,
+            ),
+          }
+        : {}),
     isHookInstalled: vi.fn(async () => options.hookInstalled ?? true),
     getHookInstallInfo,
     configureLocalHooksPath,
@@ -371,6 +400,7 @@ function createHarness(options: HarnessOptions = {}): {
     resolveScopeRoot,
     ensureCanonicalDirs,
     saveManifest,
+    loadManifest,
     collectStrays,
     confirmAction,
     selectManyWithAbort,
@@ -427,6 +457,145 @@ describe('createInitCommand', () => {
       }),
     );
     tempDirs.length = 0;
+  });
+
+  describe('manifest version restamp advisory', () => {
+    const staleManifest = (oatVersion: string): Manifest => ({
+      ...createEmptyManifest(),
+      oatVersion,
+    });
+    const restampWarning = (scope: string, producingVersion: string): string =>
+      `Manifest version restamp [init ${scope}]: manifest produced by oat "${producingVersion}" will be restamped to oat "${OAT_VERSION}".`;
+
+    it('warns before the save that destroys the producing version', async () => {
+      const { capture, command, saveManifest } = createHarness({
+        interactive: false,
+        loadedManifests: [staleManifest('0.0.1')],
+      });
+
+      // The save is what replaces `oatVersion`, so "warned by the end of the
+      // run" is not the contract: capture the warnings visible at the exact
+      // moment the save is dispatched.
+      let warningsWhenSaved: string[] = [];
+      saveManifest.mockImplementationOnce(async () => {
+        warningsWhenSaved = [...capture.warn];
+      });
+
+      await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+      const expected = restampWarning('project', '0.0.1');
+      expect(warningsWhenSaved).toContain(expected);
+      expect(
+        capture.warn.filter((message) => message === expected),
+      ).toHaveLength(1);
+      expect(saveManifest).toHaveBeenCalledTimes(1);
+    });
+
+    it('stays quiet when the manifest was produced by the invoking version', async () => {
+      const { capture, command, saveManifest } = createHarness({
+        interactive: false,
+        loadedManifests: [staleManifest(OAT_VERSION)],
+      });
+
+      await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+      expect(
+        capture.warn.filter((message) =>
+          message.startsWith('Manifest version restamp'),
+        ),
+      ).toEqual([]);
+      expect(saveManifest).toHaveBeenCalledTimes(1);
+    });
+
+    it('reads the producing version before the empty-entries fallback', async () => {
+      // `createEmptyManifest()` is already stamped with the invoking version,
+      // so deriving the diagnostic after that replacement would silently
+      // discard the producer. The real loader rejects a manifest without
+      // `entries`, which makes this branch reachable only through an injected
+      // loader -- and therefore ordering that must hold by construction, not by
+      // the schema's current strictness.
+      const withoutEntries = {
+        ...staleManifest('0.0.1'),
+        entries: undefined,
+      } as unknown as Manifest;
+      const { capture, command } = createHarness({
+        interactive: false,
+        loadedManifests: [withoutEntries],
+      });
+
+      await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+      expect(capture.warn).toContain(restampWarning('project', '0.0.1'));
+    });
+
+    it('emits structured JSON evidence and no warning text in JSON mode', async () => {
+      const { capture, command } = createHarness({
+        interactive: false,
+        loadedManifests: [staleManifest('0.0.1')],
+      });
+
+      await runInitCommand(command, {
+        globalArgs: ['--json', '--scope', 'project'],
+      });
+
+      const payload = capture.jsonPayloads[0] as {
+        manifestVersionRestamps: unknown[];
+      };
+      expect(payload.manifestVersionRestamps).toEqual([
+        {
+          scope: 'project',
+          producingVersion: '0.0.1',
+          invokingVersion: OAT_VERSION,
+        },
+      ]);
+      expect(
+        [...capture.warn, ...capture.info, ...capture.success].filter(
+          (message) => message.includes('Manifest version restamp'),
+        ),
+      ).toEqual([]);
+    });
+
+    it('reports one diagnostic per affected scope and omits unaffected scopes', async () => {
+      const { capture, command } = createHarness({
+        interactive: false,
+        loadedManifests: [staleManifest('0.0.1'), staleManifest(OAT_VERSION)],
+      });
+
+      await runInitCommand(command, { globalArgs: ['--scope', 'all'] });
+
+      expect(
+        capture.warn.filter((message) =>
+          message.startsWith('Manifest version restamp'),
+        ),
+      ).toEqual([restampWarning('project', '0.0.1')]);
+    });
+
+    it('reports one diagnostic per scope when every scope is stale', async () => {
+      const { capture, command } = createHarness({
+        interactive: false,
+        loadedManifests: [staleManifest('0.0.1'), staleManifest('0.0.2')],
+      });
+
+      await runInitCommand(command, {
+        globalArgs: ['--json', '--scope', 'all'],
+      });
+
+      const payload = capture.jsonPayloads[0] as {
+        manifestVersionRestamps: Array<{ scope: string }>;
+      };
+      expect(payload.manifestVersionRestamps).toEqual([
+        {
+          scope: 'project',
+          producingVersion: '0.0.1',
+          invokingVersion: OAT_VERSION,
+        },
+        {
+          scope: 'user',
+          producingVersion: '0.0.2',
+          invokingVersion: OAT_VERSION,
+        },
+      ]);
+    });
   });
 
   it('creates canonical directories and manifest', async () => {
@@ -532,6 +701,50 @@ describe('createInitCommand', () => {
     );
   });
 
+  for (const [path, response] of [
+    ['cancel', null],
+    ['save', ['registry-only']],
+  ] as const) {
+    it(`detects each provider once during interactive init ${path}`, async () => {
+      const adapter = createProviderAdapter('registry-only');
+      const detect = vi.spyOn(adapter, 'detect').mockResolvedValue(true);
+      const providerContextResolver = vi.fn(async () => {
+        await adapter.detect('/tmp/workspace');
+        return {
+          scope: 'project' as const,
+          configSource: '<project>/.oat/sync/config.json',
+          activeProviders: ['registry-only'],
+          detectedProviders: ['registry-only'],
+          mismatches: {
+            detectedUnset: ['registry-only'],
+            detectedDisabled: [],
+          },
+          activation: [
+            {
+              provider: 'registry-only',
+              state: 'active' as const,
+              source: 'detected-unset' as const,
+              reason: 'detected without explicit configuration',
+            },
+          ],
+          registrations: [{ adapter, extensions: [], capabilities: [] }],
+        };
+      });
+      const { command } = createHarness({
+        interactive: true,
+        hookInstalled: true,
+        adapters: [adapter],
+        providerContextResolver,
+        providerSelectResponses: [response],
+      });
+
+      await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+      expect(providerContextResolver).toHaveBeenCalledTimes(1);
+      expect(detect).toHaveBeenCalledTimes(1);
+    });
+  }
+
   it('non-interactive mode does not mutate provider config and shows guidance', async () => {
     const { command, capture, selectProvidersWithAbort, saveSyncConfig } =
       createHarness({
@@ -602,6 +815,36 @@ describe('createInitCommand', () => {
     const activeAdapters = collectStrays.mock
       .calls[0]?.[4] as ProviderAdapter[];
     expect(activeAdapters.map((adapter) => adapter.name)).toEqual(['claude']);
+  });
+
+  it('uses a registry-only provider context for project stray scanning', async () => {
+    const adapter: ProviderAdapter = {
+      name: 'registry-only',
+      displayName: 'Registry Only',
+      defaultStrategy: 'symlink',
+      projectMappings: [],
+      userMappings: [],
+      detect: async () => true,
+    };
+    const { command, collectStrays } = createHarness({
+      interactive: false,
+      hookInstalled: true,
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [{ adapter, extensions: [], capabilities: [] }],
+      },
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    const activeAdapters = collectStrays.mock
+      .calls[0]?.[4] as ProviderAdapter[];
+    expect(activeAdapters.map(({ name }) => name)).toEqual(['registry-only']);
   });
 
   it('detects strays and prompts for adoption in interactive mode', async () => {
@@ -1906,6 +2149,40 @@ config_file = "agents/reviewer.toml"
       });
 
       expect(runToolPacks).toHaveBeenCalledTimes(1);
+    });
+
+    it('propagates explicit project guidance into guided tool setup', async () => {
+      const { command, runToolPacks } = createHarness({
+        interactive: false,
+        hookInstalled: true,
+        oatDirExists: true,
+        useDefaultGuidedSetup: true,
+      });
+
+      await runInitCommand(command, {
+        globalArgs: ['--scope', 'project'],
+        commandArgs: ['--setup', '--project-guidance'],
+      });
+
+      expect(runToolPacks).toHaveBeenCalledWith(
+        expect.objectContaining({ scopeSelection: 'defaults' }),
+        true,
+      );
+    });
+
+    it('rejects conflicting project guidance flags', async () => {
+      const { command } = createHarness({ interactive: false });
+
+      await expect(
+        runInitCommand(command, {
+          globalArgs: ['--scope', 'project'],
+          commandArgs: [
+            '--setup',
+            '--project-guidance',
+            '--no-project-guidance',
+          ],
+        }),
+      ).rejects.toThrow('cannot be used together');
     });
 
     it('guided setup defers the per-pack scope gate to the tools flow without prompting upfront', async () => {

@@ -14,8 +14,10 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:30:47.499Z
-updated: 2026-08-30T22:30:47.499Z
-associated_issues: []
+updated: 2026-09-02T23:49:54Z
+associated_issues:
+  - type: github
+    ref: https://github.com/voxmedia/open-agent-toolkit/issues/205
 external_plans: []
 ---
 

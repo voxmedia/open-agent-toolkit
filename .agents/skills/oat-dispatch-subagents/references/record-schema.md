@@ -191,7 +191,9 @@ current nested dispatcher. It does not imply a stable enum or authorize
 reconstruction of a materialized lifecycle variant.
 
 `role_selector` is the exact provider or harness agent-type selector, when that
-surface exists. Preserve opaque selectors byte-for-byte.
+surface exists. Preserve opaque selectors byte-for-byte, within the
+256-character identifier bound described under
+[Size and Content Bounds](#size-and-content-bounds).
 
 Use the stable selection reasons `native-catalog`,
 `native-catalog-unsatisfying`, `pre-start-rejection`, `inherit`, and
@@ -257,3 +259,77 @@ the interpreted service tier when known.
 A service tier never changes `model_class_floor` or `floor_satisfaction`.
 Unknown tier semantics must be recorded as a diagnostic and may block a
 consequential route.
+
+## Size and Content Bounds
+
+A dispatch record is evidence, not a document. Validation enforces these bounds
+and fails closed; know them before authoring a record rather than discovering
+them at a durable write.
+
+Caller-authored text, by kind:
+
+- 256 characters — identifiers, names, selectors, routes, and statuses.
+- 512 characters — a single explanatory field such as `classification_reason`
+  or one `escalate_when` entry.
+- 1024 characters — the longest free-form fields: `objective`,
+  `expected_output`, and `verification_evidence`.
+
+Six container fields carry short references and identifiers, never narrative
+text: `payload`, `candidates_considered`, `configured_invocation_evidence`,
+`continuation_events`, `diagnostics`, and `escalate_when`. Each is validated as
+a closed JSON projection bounded on four independent axes, so no one axis can
+be traded against another:
+
+- nesting depth at most 4 levels;
+- each string at most 512 characters;
+- at most 512 values per field, which closes chunking one body into many short
+  strings; and
+- at most 16 KiB serialized per field.
+
+The whole record is additionally capped at 64 KiB, measured as the **published**
+bytes — the pretty-printed JSON plus trailing newline that is actually written
+to the journal, not compact `JSON.stringify` output. The two differ by roughly a
+tenth on a nested record, so size against the published form. Per-field
+projection limits above remain compact measurements, because they bound the
+shape of a field rather than the size of a file. A realistically rich record
+measures a few kilobytes, so these limits bind prompt bodies, transcripts, and
+chunked logs rather than legitimate evidence.
+
+Keys are classified against credential, token, prompt/message, transcript, and
+role-content families after Unicode folding, and a spelling the normalizer
+cannot fully account for is treated as sensitive rather than classified on a
+partial token. Store references, identifiers, and digests; never role content, message bodies,
+or credentials.
+
+Absolute filesystem paths are handled by field class, because the journal is
+committed and a home path in it is permanent:
+
+- **Identity and control fields reject them.** `caller`, `scope`, every
+  selector, `selected_route`, the `guidance_*` fields, `authority`,
+  `authorization_scope`, `catalog_snapshot`, `candidates_considered` and
+  `fallback` refuse a record containing an absolute path, including
+  colon-prefixed forms such as `cwd:/Users/alice`. A path is never a legitimate
+  identifier there, so ambiguity resolves to rejection. Pass a repository-relative
+  path or a redacted form like `<user>/agents/<role>.md`.
+- **Prose and nested evidence redact them best-effort.** `objective`,
+  `expected_output`, `verification_evidence`, `classification_reason`,
+  `escalate_when`, and the bounded container fields replace a detected path with
+  `<redacted-path>`. This is deliberately conservative rather than complete: it
+  skips candidates inside an `http`/`https` URL and candidates ending in `/`, so
+  a URL route (`?next=/dashboard`) and a regex literal (`/foo/bar/`) survive
+  intact. Colon-prefixed forms also survive. Corrupting a legitimate value is
+  worse than leaving a path in prose, so do not rely on this to sanitize
+  caller-authored text — redact before submitting.
+
+Optional runtime observation is metadata-only and subject to the same
+identifier bound, which admits letters, digits, `.`, `_`, and `-` only, so no
+observation value can carry a path or a URL. Its `match` and `comparedAxes` are
+always derived from the record's configured invocation rather than supplied by
+the caller, and `matching` covers only the axes listed in `comparedAxes`.
+It records what a provider reported about its own child and never restates the
+request. An axis the provider did not report is simply absent from the
+observation; an absent or unparseable observation is `not-reported` as a whole;
+and `not-exposed` is reserved vocabulary for an axis a provider genuinely has
+no selectable control for, with no producer today. None of the three is ever
+filled in from `model_selector`, `effort_selector`, `service_tier_selector`, or
+`role_selector`.

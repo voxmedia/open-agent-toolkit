@@ -12,6 +12,10 @@ tools/smoke/recovery/
 .DS_Store
 *.pem
 
+# OAT project dispatch writer lock. Held only while a dispatch record is being
+# published; a crashed writer leaves it behind until it is reclaimed.
+.dispatch-lock/
+
 # tsc
 *.tsbuildinfo
 

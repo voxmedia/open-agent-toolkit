@@ -5,6 +5,7 @@ import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   assertValidProjectSlug,
+  completedSyncedRefName,
   resolveProjectScope,
   resolveScopeRoot,
   syncedRecordPath,
@@ -43,6 +44,120 @@ export interface ResolveSyncedTargetDependencies {
 export interface ResolvedSyncTarget extends SyncTarget {
   adopt: boolean;
   adoptionRecord: AdoptionRecordState;
+}
+
+export type SyncedTerminalRefState =
+  | 'absent'
+  | 'active-only'
+  | 'completed-only'
+  | 'both'
+  | 'wrong-sha';
+
+export interface SyncedTerminalRefProbe {
+  state: SyncedTerminalRefState;
+  activeRef: string;
+  completedRef: string;
+  expectedSha: string;
+  activeSha: string | null;
+  completedSha: string | null;
+}
+
+async function remoteTerminalRefShas(
+  target: SyncTarget,
+  activeRef: string,
+  completedRef: string,
+  git: GitRunner,
+): Promise<{ activeSha: string | null; completedSha: string | null }> {
+  const result = await git.run(
+    ['ls-remote', '--exit-code', target.remote, activeRef, completedRef],
+    { cwd: target.repoRoot, allowFailure: true },
+  );
+  if (
+    classifyRemoteRefLookup(
+      result,
+      target.remote,
+      `${activeRef} and ${completedRef}`,
+    ) === 'absent'
+  ) {
+    return { activeSha: null, completedSha: null };
+  }
+
+  const requestedRefs = new Set([activeRef, completedRef]);
+  const advertised = new Map<string, string>();
+  const rows = result.stdout.split('\n').filter((row) => row.length > 0);
+  if (rows.length === 0) {
+    throw new CliError(
+      `Unable to verify terminal refs for ${target.slug}: git ls-remote returned a malformed empty advertisement.`,
+      2,
+    );
+  }
+  for (const row of rows) {
+    const fields = row.trim().split(/\s+/);
+    if (
+      fields.length !== 2 ||
+      !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i.test(fields[0] ?? '')
+    ) {
+      throw new CliError(
+        `Unable to verify terminal refs for ${target.slug}: git ls-remote returned a malformed row.`,
+        2,
+      );
+    }
+    const [sha, ref] = fields as [string, string];
+    if (!requestedRefs.has(ref)) {
+      throw new CliError(
+        `Unable to verify terminal refs for ${target.slug}: git ls-remote returned unexpected ref ${ref}.`,
+        2,
+      );
+    }
+    if (advertised.has(ref)) {
+      throw new CliError(
+        `Unable to verify terminal refs for ${target.slug}: git ls-remote returned duplicate rows for ${ref}.`,
+        2,
+      );
+    }
+    advertised.set(ref, sha);
+  }
+  return {
+    activeSha: advertised.get(activeRef) ?? null,
+    completedSha: advertised.get(completedRef) ?? null,
+  };
+}
+
+export async function probeSyncedTerminalRefs(
+  target: SyncTarget,
+  expectedSha: string,
+  git: GitRunner,
+): Promise<SyncedTerminalRefProbe> {
+  const activeRef = target.ref;
+  const completedRef = completedSyncedRefName(target.slug);
+  const { activeSha, completedSha } = await remoteTerminalRefShas(
+    target,
+    activeRef,
+    completedRef,
+    git,
+  );
+
+  const wrongSha =
+    (activeSha !== null && activeSha !== expectedSha) ||
+    (completedSha !== null && completedSha !== expectedSha);
+  const state: SyncedTerminalRefState = wrongSha
+    ? 'wrong-sha'
+    : activeSha !== null && completedSha !== null
+      ? 'both'
+      : activeSha !== null
+        ? 'active-only'
+        : completedSha !== null
+          ? 'completed-only'
+          : 'absent';
+
+  return {
+    state,
+    activeRef,
+    completedRef,
+    expectedSha,
+    activeSha,
+    completedSha,
+  };
 }
 
 async function pathExists(path: string): Promise<boolean> {

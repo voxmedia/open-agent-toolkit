@@ -1,9 +1,18 @@
 import { execSync } from 'node:child_process';
 import { readdir, writeFile } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 
+import {
+  classifyLegacySyncedRecord,
+  probeAuthoritativeCompletedRef,
+} from '@commands/project/list';
+import { defaultGitRunner, type GitRunner } from '@commands/project/sync/git';
+import { listSyncedRecords } from '@commands/project/sync/record';
+import { buildSyncTarget } from '@commands/project/sync/ref-sync';
+import { probeSyncedTerminalRefs } from '@commands/project/sync/resolve-target';
 import { parseFrontmatterField } from '@commands/shared/frontmatter';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import { resolveScopeRoot } from '@commands/shared/project-scope';
 import { readOatLocalConfig } from '@config/oat-config';
 import { ensureDir, fileExists } from '@fs/io';
 
@@ -17,6 +26,7 @@ export interface GenerateStateOptions {
   env?: NodeJS.ProcessEnv;
   today?: string;
   git?: GitOperations;
+  gitRunner?: GitRunner;
 }
 
 export interface GenerateStateResult {
@@ -450,24 +460,48 @@ function isTerminalCoordinationProject(
 async function listAvailableProjects(
   repoRoot: string,
   projectsRoot: string,
+  gitRunner: GitRunner,
 ): Promise<ProjectListSections> {
-  const fullRoot = join(repoRoot, projectsRoot);
-  try {
-    const entries = await readdir(fullRoot, { withFileTypes: true });
-    const dirs = entries.filter((e) => e.isDirectory());
-
-    if (dirs.length === 0) {
-      return {
-        active: '*(No projects found)*',
-        decompositions: '*(No decompositions found)*',
-      };
+  const lines: string[] = [];
+  const decompositions: string[] = [];
+  const materializedSynced = new Set<string>();
+  for (const scope of ['shared', 'synced', 'local'] as const) {
+    const scopeRoot = resolveScopeRoot(repoRoot, projectsRoot, scope);
+    let entries;
+    try {
+      entries = await readdir(scopeRoot, { withFileTypes: true });
+    } catch {
+      continue;
     }
-
-    const lines: string[] = [];
-    const decompositions: string[] = [];
-    for (const dir of dirs) {
-      const stateFile = join(fullRoot, dir.name, 'state.md');
+    for (const dir of entries.filter((entry) => entry.isDirectory())) {
+      const stateFile = join(scopeRoot, dir.name, 'state.md');
       if (await fileExists(stateFile)) {
+        if (scope === 'synced') {
+          materializedSynced.add(dir.name);
+          const target = buildSyncTarget(repoRoot, projectsRoot, dir.name);
+          const terminal = await probeAuthoritativeCompletedRef(
+            target,
+            gitRunner,
+          );
+          if (terminal) {
+            const row = classifyLegacySyncedRecord(
+              {
+                schemaVersion: 1,
+                slug: dir.name,
+                scope: 'synced',
+                ref: target.ref,
+                remote: 'origin',
+                status: 'active',
+                createdAt: new Date(0).toISOString(),
+                completedAt: null,
+              },
+              target.projectPath,
+              terminal,
+            );
+            lines.push(`- **${dir.name}** - ${row.recommendation.reason}`);
+            continue;
+          }
+        }
         const phase =
           (await parseFrontmatterField(stateFile, 'oat_phase')) || 'unknown';
         const phaseStatus =
@@ -484,20 +518,41 @@ async function listAvailableProjects(
         }
       }
     }
-
-    return {
-      active: lines.length > 0 ? lines.join('\n') : '*(No projects found)*',
-      decompositions:
-        decompositions.length > 0
-          ? decompositions.join('\n')
-          : '*(No decompositions found)*',
-    };
-  } catch {
-    return {
-      active: '*(No projects directory found)*',
-      decompositions: '*(No decompositions found)*',
-    };
   }
+
+  const syncedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'synced');
+  const records = await listSyncedRecords(syncedRoot);
+  for (const record of records) {
+    if (materializedSynced.has(record.slug)) continue;
+    const target = buildSyncTarget(repoRoot, projectsRoot, record.slug);
+    const authoritative = await probeAuthoritativeCompletedRef(
+      target,
+      gitRunner,
+    );
+    const probe =
+      authoritative ??
+      (record.archiveSourceRefSha
+        ? await probeSyncedTerminalRefs(
+            target,
+            record.archiveSourceRefSha,
+            gitRunner,
+          )
+        : undefined);
+    const row = classifyLegacySyncedRecord(record, target.projectPath, probe);
+    lines.push(
+      row.kind === 'recorded-absent'
+        ? `- **${record.slug}** - checkout absent; oat project pull ${record.slug}`
+        : `- **${record.slug}** - ${row.recommendation.reason}`,
+    );
+  }
+
+  return {
+    active: lines.length > 0 ? lines.join('\n') : '*(No projects found)*',
+    decompositions:
+      decompositions.length > 0
+        ? decompositions.join('\n')
+        : '*(No decompositions found)*',
+  };
 }
 
 function buildDashboardMarkdown(
@@ -621,12 +676,46 @@ export async function generateStateDashboard(
   const env = options.env ?? process.env;
   const today = options.today ?? new Date().toISOString().slice(0, 10);
   const git = options.git ?? defaultGit;
+  const gitRunner = options.gitRunner ?? defaultGitRunner;
 
   const dashboardPath = join(repoRoot, '.oat', 'state.md');
   const projectsRoot = await resolveProjectsRoot(repoRoot, env);
   const hasProjects = await hasAnyProjects(join(repoRoot, projectsRoot));
 
   const project = await readActiveProject(repoRoot);
+  let terminalNextStep: { step: string; reason: string } | null = null;
+  if (project.status === 'active' && project.path) {
+    const activePath = resolve(repoRoot, project.path);
+    const syncedRoot = resolveScopeRoot(repoRoot, projectsRoot, 'synced');
+    if (dirname(activePath) === syncedRoot) {
+      const target = buildSyncTarget(repoRoot, projectsRoot, project.name);
+      const terminal = await probeAuthoritativeCompletedRef(target, gitRunner);
+      if (terminal) {
+        const row = classifyLegacySyncedRecord(
+          {
+            schemaVersion: 1,
+            slug: project.name,
+            scope: 'synced',
+            ref: target.ref,
+            remote: 'origin',
+            status: 'active',
+            createdAt: new Date(0).toISOString(),
+            completedAt: null,
+          },
+          activePath,
+          terminal,
+        );
+        project.status =
+          row.kind === 'terminal-invalid'
+            ? 'terminal ref mismatch'
+            : 'terminal cleanup pending';
+        terminalNextStep = {
+          step: 'oat-project-complete',
+          reason: row.recommendation.reason,
+        };
+      }
+    }
+  }
 
   let state: ProjectState | null = null;
   if (project.status === 'active') {
@@ -635,9 +724,14 @@ export async function generateStateDashboard(
 
   const knowledge = await readKnowledgeStatus(repoRoot);
   const staleness = calculateStaleness(knowledge, git, repoRoot, today);
-  const nextStep = computeNextStep(project, hasProjects, state);
+  const nextStep =
+    terminalNextStep ?? computeNextStep(project, hasProjects, state);
 
-  const projectsList = await listAvailableProjects(repoRoot, projectsRoot);
+  const projectsList = await listAvailableProjects(
+    repoRoot,
+    projectsRoot,
+    gitRunner,
+  );
   const markdown = buildDashboardMarkdown(
     project,
     state,

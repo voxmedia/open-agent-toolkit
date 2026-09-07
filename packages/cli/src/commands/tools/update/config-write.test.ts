@@ -253,7 +253,7 @@ describe('createToolsUpdateCommand config writes', () => {
     expect(process.exitCode).toBeUndefined();
   });
 
-  it('repairs managed Git files for a current project workflows reconcile plan with no content operations', async () => {
+  it('does not repair managed Git files for declared-only workflows intent', async () => {
     const applyOatCoreGitignore = vi.fn(async () => ({
       action: 'updated' as const,
       entries: ['.oat/projects/synced/*/'],
@@ -270,6 +270,9 @@ describe('createToolsUpdateCommand config writes', () => {
         pack: 'workflows' as const,
         scope: 'project' as const,
         enabled: true,
+        direct: true,
+        requiredBy: [],
+        state: 'direct' as const,
         source: 'declared' as const,
         configPath: '/tmp/workspace/.oat/config.json',
         diagnostics: [],
@@ -319,9 +322,10 @@ describe('createToolsUpdateCommand config writes', () => {
       ['--scope', 'project', '--cwd', '/tmp/workspace'],
     );
 
-    expect(applyOatCoreGitignore).toHaveBeenCalledWith('/tmp/workspace');
-    expect(applyOatCoreGitattributes).toHaveBeenCalledWith('/tmp/workspace');
-    expect(process.exitCode).toBeUndefined();
+    expect(dependencies.reconcilePacks).not.toHaveBeenCalled();
+    expect(applyOatCoreGitignore).not.toHaveBeenCalled();
+    expect(applyOatCoreGitattributes).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
   });
 
   it('still checks tracking when the OAT core section is already current', async () => {

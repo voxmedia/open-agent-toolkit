@@ -1,6 +1,6 @@
 ---
 name: oat-brainstorm
-version: 1.3.4
+version: 1.3.5
 description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
@@ -191,7 +191,7 @@ Classify the opening brainstorm topic before running the Node preflight or print
 command -v node >/dev/null 2>&1 && echo "available" || echo "missing"
 ```
 
-- If `node` is **missing**: skip the offer entirely. Do not print the offer message. Log a one-line note in the conversation that the visual companion is unavailable in this environment (a state `oat-doctor` can pick up later: "visual companion suppressed — node not on PATH"). Proceed with `VISUAL_COMPANION = "unavailable"`.
+- If `node` is **missing**: skip the offer entirely. Do not print the offer message. Log a one-line note in the conversation for this session only: "visual companion suppressed — node not on PATH". Nothing persists that note, so no later diagnostic run can report it. Proceed with `VISUAL_COMPANION = "unavailable"`.
 - If `node` is **available**: print the offer as its own message. Suggested wording (adapt freely; the constraint is "own message, no other content"):
 
   > "Some of what we're working on might be easier to explain if I can show it in a local web browser — mockups, diagrams, side-by-side comparisons. The visual companion is bundled with this skill (a small Node-based local server). Want me to start it? (Requires opening a `localhost` URL.)"

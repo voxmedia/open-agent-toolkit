@@ -1,8 +1,9 @@
 import { lstat, readFile, readlink, stat } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
+import { proveCollectionIdentity } from '@engine/collection-sync';
 import { computeContentHash, computeStringHash } from '@manifest/hash';
-import type { ManifestEntry } from '@manifest/manifest.types';
+import type { ManifestEntryV2 } from '@manifest/manifest.types';
 
 import type { DriftReport } from './drift.types';
 
@@ -11,7 +12,7 @@ export interface CopyTransform {
 }
 
 function createReport(
-  entry: ManifestEntry,
+  entry: ManifestEntryV2,
   state: DriftReport['state'],
 ): DriftReport {
   return {
@@ -23,12 +24,30 @@ function createReport(
 }
 
 export async function detectDrift(
-  entry: ManifestEntry,
+  entry: ManifestEntryV2,
   scopeRoot: string,
   copyTransform?: CopyTransform,
 ): Promise<DriftReport> {
   const providerPath = resolve(scopeRoot, entry.providerPath);
   const canonicalPath = resolve(scopeRoot, entry.canonicalPath);
+
+  if (entry.strategy === 'collection') {
+    const proof = await proveCollectionIdentity({
+      root: scopeRoot,
+      canonicalDir: dirname(canonicalPath),
+      providerDir: dirname(providerPath),
+    });
+    if (proof.status === 'exact-link') {
+      return createReport(entry, { status: 'in_sync' });
+    }
+    if (proof.status === 'absent') {
+      return createReport(entry, { status: 'missing' });
+    }
+    return createReport(entry, {
+      status: 'drifted',
+      reason: proof.reason === 'broken-link' ? 'broken' : 'replaced',
+    });
+  }
 
   // Missing check must run first, before strategy-specific branches.
   let providerStat: Awaited<ReturnType<typeof lstat>>;

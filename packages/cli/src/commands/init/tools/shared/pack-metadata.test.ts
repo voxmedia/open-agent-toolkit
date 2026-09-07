@@ -48,5 +48,6 @@ describe('legacy manifest compatibility views', () => {
           .map(({ source }) => source!.replace('skills/', '')),
       );
     }
+    expect(RESEARCH_SKILLS).toContain('recon');
   });
 });

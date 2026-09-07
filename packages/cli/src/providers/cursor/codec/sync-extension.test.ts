@@ -424,14 +424,51 @@ describe('cursor sync extension', () => {
     await mkdir(join(root, '.cursor'), { recursive: true });
     await symlink(external, join(root, '.cursor', 'agents'), 'dir');
 
-    await expect(applyCursorProjectExtensionPlan(root, plan)).resolves.toEqual({
+    await expect(
+      applyCursorProjectExtensionPlan(root, plan),
+    ).resolves.toMatchObject({
       applied: 0,
       failed: 1,
       skipped: 0,
+      operations: [
+        expect.objectContaining({
+          provider: 'cursor',
+          target: 'role',
+          status: 'failed',
+          failure:
+            'Materialization failed; inspect local verbose diagnostics and retry sync.',
+        }),
+      ],
     });
     await expect(
       readFile(join(external, 'oat-reviewer-gpt-5-6-sol-high.md'), 'utf8'),
     ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('names both canonical paths when two agents produce the same Cursor role', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'oat-cursor-dup-home-'));
+    const bundle = await mkdtemp(join(tmpdir(), 'oat-cursor-dup-bundle-'));
+    tempDirs.push(home, bundle);
+    const userEntries = await createCanonicalEntries(home);
+    const bundledEntries = await createCanonicalEntries(bundle, [
+      'oat-reviewer',
+    ]);
+    await mkdir(join(home, '.oat'), { recursive: true });
+    await writeFile(
+      join(home, '.oat', 'config.json'),
+      configWithCursorCandidates(['claude-fable-5-xhigh']),
+    );
+
+    await expect(
+      computeCursorProjectExtensionPlan(
+        home,
+        [...userEntries, ...bundledEntries],
+        undefined,
+        { userConfigDir: join(home, '.oat') },
+      ),
+    ).rejects.toThrow(
+      `Duplicate Cursor role name oat-reviewer-claude-fable-5-xhigh from ${join(home, '.agents', 'agents', 'oat-reviewer.md')} and ${join(bundle, '.agents', 'agents', 'oat-reviewer.md')}. Refusing ambiguous role writes.`,
+    );
   });
 
   it('materializes user-scope canonical agents under the user provider root only', async () => {

@@ -16,7 +16,7 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { computeLinksInput } from './compute';
-import { createProjectLinksCommand } from './index';
+import { createProjectLinksCommand, resolveLinksTarget } from './index';
 
 const target: SyncTarget = {
   repoRoot: '/repo',
@@ -106,11 +106,50 @@ describe('computeLinksInput', () => {
       await fixture.cleanup();
     }
   });
+
+  it('reads an explicit completed ref while retaining full-SHA pinning', async () => {
+    const completedRef = 'refs/oat/completed/demo';
+    const gitRun = vi.fn(async (args: string[]) => {
+      if (args[0] === 'rev-parse') {
+        return { code: 0, stdout: 'c'.repeat(40), stderr: '' };
+      }
+      if (args[0] === 'ls-tree') {
+        return { code: 0, stdout: 'summary.md', stderr: '' };
+      }
+      if (args[0] === 'remote') {
+        return { code: 0, stdout: 'git@github.com:o/r.git', stderr: '' };
+      }
+      return { code: 0, stdout: '', stderr: '' };
+    });
+
+    const input = await computeLinksInput(
+      target,
+      { run: gitRun } as GitRunner,
+      {
+        now: new Date('2026-08-31T00:00:00Z'),
+        ref: completedRef,
+      },
+    );
+
+    expect(input).toMatchObject({
+      ref: completedRef,
+      sha: 'c'.repeat(40),
+      present: ['summary.md'],
+    });
+    expect(gitRun).toHaveBeenCalledWith(
+      ['fetch', 'origin', `+${completedRef}:${completedRef}`],
+      { cwd: '/repo' },
+    );
+  });
 });
 
 function harness() {
   const capture = createLoggerCapture();
   const resolveSyncedTarget = vi.fn(async () => ({ ...target, adopt: false }));
+  const resolveTerminalLinksTarget = vi.fn(async () => ({
+    target,
+    ref: target.ref,
+  }));
   const compute = vi.fn(async () => ({
     slug: 'demo',
     sha: 'a'.repeat(40),
@@ -135,7 +174,9 @@ function harness() {
         logger: capture.logger,
       }),
       resolveProjectRoot: async () => '/repo',
+      resolveProjectsRoot: async () => '.oat/projects/shared',
       resolveSyncedTarget,
+      resolveLinksTarget: resolveTerminalLinksTarget,
       computeLinksInput: compute,
       gitRunner: { run: vi.fn() },
       processEnv: {},
@@ -224,4 +265,55 @@ describe('createProjectLinksCommand', () => {
       markdown: expect.stringContaining('<!-- oat:project-links:start -->'),
     });
   });
+
+  it('resolves matching terminal aliases through the completed ref', async () => {
+    const sha = 'a'.repeat(40);
+    const completedRef = 'refs/oat/completed/demo';
+    const resolved = await resolveLinksTarget(
+      '/repo',
+      '.oat/projects/shared',
+      'demo',
+      {},
+      terminalGitRunner([
+        `${sha}\trefs/oat/projects/demo`,
+        `${sha}\t${completedRef}`,
+      ]),
+      async () => ({ ...target, adopt: false, adoptionRecord: 'durable' }),
+    );
+
+    expect(resolved).toEqual({
+      target: expect.objectContaining({ slug: 'demo' }),
+      ref: completedRef,
+    });
+  });
+
+  it('rejects mismatched terminal refs during explicit link refresh', async () => {
+    await expect(
+      resolveLinksTarget(
+        '/repo',
+        '.oat/projects/shared',
+        'demo',
+        {},
+        terminalGitRunner([
+          `${'a'.repeat(40)}\trefs/oat/projects/demo`,
+          `${'b'.repeat(40)}\trefs/oat/completed/demo`,
+        ]),
+        async () => ({ ...target, adopt: false, adoptionRecord: 'durable' }),
+      ),
+    ).rejects.toThrow(/repair the terminal ref mismatch/i);
+  });
 });
+
+function terminalGitRunner(rows: string[]): GitRunner {
+  return {
+    run: vi.fn(async (args: string[]) => {
+      const requestedRefs = args.filter((arg) => arg.startsWith('refs/oat/'));
+      const selected = rows.filter((row) =>
+        requestedRefs.some((ref) => row.endsWith(`\t${ref}`)),
+      );
+      return selected.length
+        ? { code: 0, stdout: selected.join('\n'), stderr: '' }
+        : { code: 2, stdout: '', stderr: '' };
+    }),
+  };
+}

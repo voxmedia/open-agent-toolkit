@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.5.2
+version: 1.5.4
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -654,11 +654,18 @@ oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role review
 ```
 
 Require `dispatchReport.schemaVersion: 1`. Render/consume the resolver's
-versioned report using `formatDispatchReport(dispatchReport)` semantics, and
-derive the formal compatibility line only with
-`formatDispatchStamp(dispatchReport)` / `toDispatchStampRecord(dispatchReport)`.
-Include that derived line in the review dispatch audit metadata; do not
-hand-assemble `Dispatch:` fields from a role name or model string.
+versioned report using `formatDispatchReport(dispatchReport)` semantics. Take
+the formal compatibility line directly from the same response's additive
+`dispatchStamp` field: it must be a non-empty string beginning with the
+canonical `Dispatch:` prefix. Copy that returned value byte-for-byte into the
+review dispatch audit metadata. Reformatting the report through
+`formatDispatchStamp(dispatchReport)` / `toDispatchStampRecord(dispatchReport)`
+is an optional corroboration where that library is already loaded; it is never
+the normal path and never a substitute for the returned field, and no
+out-of-tree shim is required. Do not hand-assemble `Dispatch:` fields from a
+role name or model string. If `dispatchStamp` is absent or lacks the canonical
+prefix on a report-bearing response, stop and report instead of reconstructing
+it.
 
 The exact managed provider target still comes from
 `providers.<provider>.dispatchArgs` plus
@@ -723,6 +730,17 @@ After constructing the complete provider payload, record the launcher-owned
 `launcher-selected/config-declared` provenance. These fields are immutable:
 missing telemetry, missing reviewer self-report, or contradictory self-report
 must not populate, replace, or overwrite them and must not trigger fallback.
+
+Persist native dispatch lineage around the host-owned review launch. Construct
+and redact the complete generic record plus OAT role event before the native
+call. Immediately after the call returns `accepted` or
+`blocked-before-start`, run `oat project dispatch record --project
+"$PROJECT_PATH" --event-file - --json`. The rejected form must attest
+`provesNoChildStarted: true`; only it permits one exact-target approximation
+with a fresh request ID. Preserve the exact model, effort, route, authority,
+and provider controls. Timeout, `BLOCKED`, refusal after acceptance, runtime
+mismatch, missing telemetry, interruption, and malformed output never
+authorize fallback or replacement.
 
 Once the native host accepts a reviewer, every terminal result is an
 authoritative review outcome. An accepted reviewer returning `BLOCKED` is a

@@ -1,18 +1,47 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  chmod,
+  lstat,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  readlink,
+  realpath,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { removeAgentsMdSection, upsertAgentsMdSection } from './agents-md';
+import {
+  type AgentsMdFileSystem,
+  removeAgentsMdSection,
+  upsertAgentsMdSection,
+  upsertAgentsMdSections,
+} from './agents-md';
 
-describe('upsertAgentsMdSection', () => {
-  let root: string;
+const realFileSystem: AgentsMdFileSystem = {
+  lstat,
+  readFile,
+  readlink,
+  realpath,
+  writeFile,
+};
+
+function withFileSystem(
+  overrides: Partial<AgentsMdFileSystem>,
+): AgentsMdFileSystem {
+  return { ...realFileSystem, ...overrides };
+}
+
+describe('manual-only AGENTS.md guidance', () => {
+  let root = '';
 
   afterEach(async () => {
-    if (root) {
-      await rm(root, { recursive: true, force: true });
-    }
+    if (root) await rm(root, { recursive: true, force: true });
   });
 
   async function setup(existingContent?: string): Promise<string> {
@@ -27,148 +56,352 @@ describe('upsertAgentsMdSection', () => {
     return readFile(join(root, 'AGENTS.md'), 'utf8');
   }
 
-  it('creates AGENTS.md with the section when file does not exist', async () => {
+  async function expectNoPrivateArtifacts(): Promise<void> {
+    expect(await readdir(root)).not.toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/\.(?:tmp|recovery)|oat-recovery/i),
+      ]),
+    );
+  }
+
+  it('creates a missing root file once with one exclusive write', async () => {
     await setup();
+    const write = vi.fn(realFileSystem.writeFile);
 
-    const result = await upsertAgentsMdSection(
+    const first = await upsertAgentsMdSection(
       root,
-      'docs',
-      '## Docs\nPath: docs/',
+      'tools',
+      '## Tool Packs\n- workflows',
+      { fileSystem: withFileSystem({ writeFile: write }) },
     );
-
-    expect(result.action).toBe('created');
-    const content = await readAgentsMd();
-    expect(content).toBe(
-      '<!-- OAT docs -->\n## Docs\nPath: docs/\n<!-- END OAT docs -->\n',
-    );
-  });
-
-  it('appends section to existing AGENTS.md without markers', async () => {
-    await setup('# My Project\n\nSome content.\n');
-
-    const result = await upsertAgentsMdSection(
+    const repeated = await upsertAgentsMdSection(
       root,
-      'docs',
-      '## Docs\nPath: docs/',
+      'tools',
+      '## Tool Packs\n- workflows',
     );
 
-    expect(result.action).toBe('updated');
-    const content = await readAgentsMd();
-    expect(content).toBe(
-      '# My Project\n\nSome content.\n\n<!-- OAT docs -->\n## Docs\nPath: docs/\n<!-- END OAT docs -->\n',
+    expect(first).toEqual({ action: 'created' });
+    expect(repeated).toEqual({ action: 'no-change' });
+    expect(write).toHaveBeenCalledTimes(1);
+    expect(write.mock.calls[0]?.[2]).toMatchObject({ flag: 'wx' });
+    await expect(readAgentsMd()).resolves.toBe(
+      '<!-- OAT tools -->\n## Tool Packs\n- workflows\n<!-- END OAT tools -->\n',
     );
+    await expectNoPrivateArtifacts();
   });
 
-  it('replaces existing section content when markers are present', async () => {
-    await setup(
-      '# Header\n\n<!-- OAT docs -->\nold content\n<!-- END OAT docs -->\n\n# Footer\n',
-    );
-
-    const result = await upsertAgentsMdSection(root, 'docs', 'new content');
-
-    expect(result.action).toBe('updated');
-    const content = await readAgentsMd();
-    expect(content).toBe(
-      '# Header\n\n<!-- OAT docs -->\nnew content\n<!-- END OAT docs -->\n\n# Footer\n',
-    );
+  it('applies the process umask to a safely created file', async () => {
+    await setup();
+    const previousUmask = process.umask(0o077);
+    try {
+      await upsertAgentsMdSection(root, 'tools', 'Tool guidance');
+    } finally {
+      process.umask(previousUmask);
+    }
+    expect((await lstat(join(root, 'AGENTS.md'))).mode & 0o777).toBe(0o600);
   });
 
-  it('returns no-change when content is identical', async () => {
-    await setup(
-      '# Header\n\n<!-- OAT docs -->\nsame content\n<!-- END OAT docs -->\n',
-    );
+  it('preserves a target that appears before exclusive create and replans manually', async () => {
+    await setup();
+    const agentsPath = join(root, 'AGENTS.md');
+    let injected = false;
+    const fileSystem = withFileSystem({
+      writeFile: vi.fn(async (...args) => {
+        if (!injected) {
+          injected = true;
+          await writeFile(agentsPath, '# Late user file\n', 'utf8');
+        }
+        return writeFile(...args);
+      }) as AgentsMdFileSystem['writeFile'],
+    });
 
-    const result = await upsertAgentsMdSection(root, 'docs', 'same content');
+    const result = await upsertAgentsMdSection(root, 'tools', 'Tool guidance', {
+      fileSystem,
+    });
 
-    expect(result.action).toBe('no-change');
+    expect(result).toMatchObject({ action: 'manual-required' });
+    await expect(readAgentsMd()).resolves.toBe('# Late user file\n');
+    await expectNoPrivateArtifacts();
   });
 
-  it('handles different section keys independently', async () => {
-    await setup('<!-- OAT docs -->\ndocs section\n<!-- END OAT docs -->\n');
+  it.each(['direct', 'symlink'] as const)(
+    'returns the same redacted zero-write patch for an existing %s target',
+    async (kind) => {
+      await setup();
+      const agentsPath = join(root, 'AGENTS.md');
+      const targetPath =
+        kind === 'direct' ? agentsPath : join(root, 'guidance.md');
+      const original = '# Private user instructions\nDo not echo this text.\n';
+      await writeFile(targetPath, original, { mode: 0o640 });
+      await chmod(targetPath, 0o640);
+      if (kind === 'symlink') await symlink('guidance.md', agentsPath);
+      const before = await lstat(targetPath);
 
-    const result = await upsertAgentsMdSection(
-      root,
-      'workflows',
-      'workflows section',
-    );
+      const first = await upsertAgentsMdSection(
+        root,
+        'tools',
+        '## Tool Packs\n- workflows',
+        { removeSectionKeys: ['workflows'] },
+      );
+      const repeated = await upsertAgentsMdSection(
+        root,
+        'tools',
+        '## Tool Packs\n- workflows',
+        { removeSectionKeys: ['workflows'] },
+      );
 
-    expect(result.action).toBe('updated');
-    const content = await readAgentsMd();
-    expect(content).toContain('<!-- OAT docs -->');
-    expect(content).toContain('<!-- OAT workflows -->');
-    expect(content).toContain('docs section');
-    expect(content).toContain('workflows section');
+      expect(first).toEqual(repeated);
+      expect(first).toMatchObject({
+        action: 'manual-required',
+        manualPatch: {
+          target: kind === 'direct' ? 'AGENTS.md' : 'guidance.md',
+          managedBlock:
+            '<!-- OAT tools -->\n## Tool Packs\n- workflows\n<!-- END OAT tools -->',
+          legacyBlockAction: 'preserve',
+          instructions: expect.any(Array),
+        },
+      });
+      expect(JSON.stringify(first)).not.toContain('Private user instructions');
+      expect(JSON.stringify(first)).not.toContain(root);
+      await expect(readFile(targetPath, 'utf8')).resolves.toBe(original);
+      const after = await lstat(targetPath);
+      expect(after.ino).toBe(before.ino);
+      expect(after.mode).toBe(before.mode);
+      await expectNoPrivateArtifacts();
+    },
+  );
+
+  it('redacts an absolute contained symlink target as repository-relative', async () => {
+    await setup();
+    const target = join(root, 'nested', 'guidance.md');
+    await mkdir(join(root, 'nested'));
+    await writeFile(target, '# Existing\n', 'utf8');
+    await symlink(target, join(root, 'AGENTS.md'));
+
+    const result = await upsertAgentsMdSection(root, 'tools', 'Tool guidance');
+
+    expect(result.manualPatch?.target).toBe('nested/guidance.md');
+    expect(JSON.stringify(result)).not.toContain(root);
+    await expect(readFile(target, 'utf8')).resolves.toBe('# Existing\n');
   });
 
-  it('appends with double newline when file does not end with newline', async () => {
-    await setup('# Header');
+  it.each(['direct', 'symlink'] as const)(
+    'returns no-change for exact existing managed content through a %s target',
+    async (kind) => {
+      await setup();
+      const content =
+        '<!-- OAT tools -->\nTool guidance\n<!-- END OAT tools -->\n';
+      const target =
+        kind === 'direct' ? join(root, 'AGENTS.md') : join(root, 'shared.md');
+      await writeFile(target, content, 'utf8');
+      if (kind === 'symlink')
+        await symlink('shared.md', join(root, 'AGENTS.md'));
 
-    const result = await upsertAgentsMdSection(root, 'docs', 'content');
+      await expect(
+        upsertAgentsMdSection(root, 'tools', 'Tool guidance', {
+          removeSectionKeys: ['workflows'],
+        }),
+      ).resolves.toEqual({ action: 'no-change' });
+      await expect(readFile(target, 'utf8')).resolves.toBe(content);
+    },
+  );
 
-    expect(result.action).toBe('updated');
-    const content = await readAgentsMd();
-    expect(content).toBe(
-      '# Header\n\n<!-- OAT docs -->\ncontent\n<!-- END OAT docs -->\n',
-    );
+  it.each(['direct', 'symlink'] as const)(
+    'proposes legacy removal without changing a %s target',
+    async (kind) => {
+      await setup();
+      const original = [
+        '# Prefix',
+        '<!-- OAT workflows -->',
+        'legacy',
+        '<!-- END OAT workflows -->',
+        '# Suffix',
+        '',
+      ].join('\n');
+      const target =
+        kind === 'direct' ? join(root, 'AGENTS.md') : join(root, 'shared.md');
+      await writeFile(target, original, 'utf8');
+      if (kind === 'symlink')
+        await symlink('shared.md', join(root, 'AGENTS.md'));
+
+      const result = await upsertAgentsMdSection(
+        root,
+        'tools',
+        'Tool guidance',
+        {
+          removeSectionKeys: ['workflows'],
+        },
+      );
+
+      expect(result).toMatchObject({
+        action: 'manual-required',
+        manualPatch: { legacyBlockAction: 'remove-manually' },
+      });
+      expect(result.manualPatch?.instructions.join('\n')).toMatch(
+        /remove the legacy OAT workflows/i,
+      );
+      await expect(readFile(target, 'utf8')).resolves.toBe(original);
+    },
+  );
+
+  it.each([
+    '<!-- OAT tools -->\nunterminated\n',
+    '<!-- END OAT tools -->\n',
+    '<!-- END OAT tools -->\n<!-- OAT tools -->\n',
+    '<!-- OAT tools -->\none\n<!-- OAT tools -->\ntwo\n<!-- END OAT tools -->\n',
+    '<!-- OAT tools -->\none\n<!-- END OAT tools -->\n<!-- END OAT tools -->\n',
+    '<!-- OAT workflows -->\nunterminated legacy\n',
+  ])('returns blocked for malformed or duplicate markers', async (content) => {
+    await setup(content);
+
+    const result = await upsertAgentsMdSection(root, 'tools', 'replacement', {
+      removeSectionKeys: ['workflows'],
+    });
+
+    expect(result).toMatchObject({
+      action: 'blocked',
+      blocked: {
+        code: 'blocked',
+        target: 'AGENTS.md',
+        reason: expect.stringMatching(/marker pair/),
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain(root);
+    await expect(readAgentsMd()).resolves.toBe(content);
   });
-});
 
-describe('removeAgentsMdSection', () => {
-  let root: string;
+  it.each([
+    [
+      'nested',
+      '<!-- OAT tools -->\n<!-- OAT workflows -->\nlegacy\n<!-- END OAT workflows -->\n<!-- END OAT tools -->\n',
+    ],
+    [
+      'reverse nested',
+      '<!-- OAT workflows -->\n<!-- OAT tools -->\nold\n<!-- END OAT tools -->\n<!-- END OAT workflows -->\n',
+    ],
+    [
+      'crossed',
+      '<!-- OAT tools -->\n<!-- OAT workflows -->\n<!-- END OAT tools -->\n<!-- END OAT workflows -->\n',
+    ],
+  ])('returns blocked for %s managed ranges', async (_case, content) => {
+    await setup(content);
 
-  afterEach(async () => {
-    if (root) {
-      await rm(root, { recursive: true, force: true });
+    const result = await upsertAgentsMdSection(root, 'tools', 'replacement', {
+      removeSectionKeys: ['workflows'],
+    });
+
+    expect(result).toMatchObject({ action: 'blocked' });
+    await expect(readAgentsMd()).resolves.toBe(content);
+  });
+
+  it.each([
+    ['external', async (path: string) => symlink('../outside.md', path)],
+    ['broken', async (path: string) => symlink('missing.md', path)],
+    ['cyclic', async (path: string) => symlink('AGENTS.md', path)],
+    [
+      'directory',
+      async (path: string) => {
+        await mkdir(join(root, 'guidance'));
+        await symlink('guidance', path);
+      },
+    ],
+  ])('returns blocked for an unsafe %s target', async (_case, seed) => {
+    await setup();
+    const outside = join(root, '..', 'outside.md');
+    await writeFile(outside, '# Outside\n', 'utf8');
+    try {
+      await seed(join(root, 'AGENTS.md'));
+      const result = await upsertAgentsMdSection(root, 'tools', 'replacement');
+      expect(result).toMatchObject({ action: 'blocked' });
+      expect(JSON.stringify(result)).not.toContain(root);
+      await expect(readFile(outside, 'utf8')).resolves.toBe('# Outside\n');
+    } finally {
+      await rm(outside, { force: true });
     }
   });
 
-  async function setup(existingContent?: string): Promise<string> {
-    root = await mkdtemp(join(tmpdir(), 'agents-md-rm-test-'));
-    if (existingContent !== undefined) {
-      await writeFile(join(root, 'AGENTS.md'), existingContent, 'utf8');
-    }
-    return root;
-  }
+  it.each(['direct', 'symlink'] as const)(
+    'blocks a late in-place edit while preserving its bytes for a %s target',
+    async (kind) => {
+      await setup();
+      const target =
+        kind === 'direct' ? join(root, 'AGENTS.md') : join(root, 'shared.md');
+      await writeFile(target, '# Original\n', 'utf8');
+      if (kind === 'symlink')
+        await symlink('shared.md', join(root, 'AGENTS.md'));
+      let reads = 0;
+      const fileSystem = withFileSystem({
+        readFile: vi.fn(async (...args) => {
+          const value = await readFile(...args);
+          reads += 1;
+          if (reads === 1)
+            await writeFile(target, '# Late user edit\n', 'utf8');
+          return value;
+        }) as AgentsMdFileSystem['readFile'],
+      });
 
-  async function readAgentsMd(): Promise<string> {
-    return readFile(join(root, 'AGENTS.md'), 'utf8');
-  }
+      const result = await upsertAgentsMdSection(root, 'tools', 'replacement', {
+        fileSystem,
+      });
 
-  it('returns false when file does not exist', async () => {
+      expect(result).toMatchObject({ action: 'blocked' });
+      await expect(readFile(target, 'utf8')).resolves.toBe(
+        '# Late user edit\n',
+      );
+      await expectNoPrivateArtifacts();
+    },
+  );
+
+  it('creates all requested sections together for a missing target', async () => {
     await setup();
-    expect(await removeAgentsMdSection(root, 'workflows')).toBe(false);
-  });
+    const result = await upsertAgentsMdSections(root, [
+      { key: 'project-management', body: 'PJM guidance' },
+      { key: 'decisions', body: 'Decision guidance' },
+    ]);
 
-  it('returns false when section markers are not present', async () => {
-    await setup('# Header\n\nSome content.\n');
-    expect(await removeAgentsMdSection(root, 'workflows')).toBe(false);
-  });
-
-  it('removes section and collapses extra blank lines', async () => {
-    await setup(
-      '# Header\n\n<!-- OAT workflows -->\nold content\n<!-- END OAT workflows -->\n\n# Footer\n',
+    expect(result).toEqual({
+      'project-management': { action: 'created' },
+      decisions: { action: 'created' },
+    });
+    await expect(readAgentsMd()).resolves.toBe(
+      '<!-- OAT project-management -->\nPJM guidance\n<!-- END OAT project-management -->\n\n<!-- OAT decisions -->\nDecision guidance\n<!-- END OAT decisions -->\n',
     );
-
-    const removed = await removeAgentsMdSection(root, 'workflows');
-
-    expect(removed).toBe(true);
-    const content = await readAgentsMd();
-    expect(content).not.toContain('OAT workflows');
-    expect(content).not.toContain('old content');
-    expect(content).toContain('# Header');
-    expect(content).toContain('# Footer');
   });
 
-  it('preserves other sections when removing one', async () => {
-    await setup(
-      '<!-- OAT tools -->\nnew content\n<!-- END OAT tools -->\n\n<!-- OAT workflows -->\nlegacy\n<!-- END OAT workflows -->\n',
+  it('returns one user-content-free manual patch for requested existing sections', async () => {
+    const original = '# Secret prefix\nSecret suffix\n';
+    await setup(original);
+    const result = await upsertAgentsMdSections(root, [
+      { key: 'project-management', body: 'PJM guidance' },
+      { key: 'decisions', body: 'Decision guidance' },
+    ]);
+
+    expect(result['project-management']).toEqual(result.decisions);
+    expect(result['project-management']).toMatchObject({
+      action: 'manual-required',
+      manualPatch: {
+        managedBlock: expect.stringContaining('<!-- OAT decisions -->'),
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain('Secret');
+    await expect(readAgentsMd()).resolves.toBe(original);
+  });
+
+  it('never removes an existing managed section automatically', async () => {
+    const original =
+      '# Header\n<!-- OAT workflows -->\nlegacy\n<!-- END OAT workflows -->\n';
+    await setup(original);
+
+    await expect(removeAgentsMdSection(root, 'workflows')).resolves.toBe(
+      'manual-required',
     );
+    await expect(readAgentsMd()).resolves.toBe(original);
+  });
 
-    await removeAgentsMdSection(root, 'workflows');
-
-    const content = await readAgentsMd();
-    expect(content).toContain('<!-- OAT tools -->');
-    expect(content).toContain('new content');
-    expect(content).not.toContain('<!-- OAT workflows -->');
+  it('returns false when a removed section or file is absent', async () => {
+    await setup();
+    await expect(removeAgentsMdSection(root, 'workflows')).resolves.toBe(false);
+    await writeFile(join(root, 'AGENTS.md'), '# Header\n', 'utf8');
+    await expect(removeAgentsMdSection(root, 'workflows')).resolves.toBe(false);
   });
 });

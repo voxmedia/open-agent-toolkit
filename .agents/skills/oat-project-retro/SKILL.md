@@ -1,6 +1,6 @@
 ---
 name: oat-project-retro
-version: 1.0.3
+version: 1.0.4
 description: Use when the user requests or confirms a project retrospective — e.g. "run the project retro", "write project-retro.md", "retrospective this project", or confirms a previously offered retro. Do NOT auto-invoke merely because implementation or summary completed. Produces references/project-retro.md from project logs, execution learnings, and session/transcript evidence, with repo improvements and OAT upstream feedback.
 disable-model-invocation: false
 user-invocable: true
@@ -178,7 +178,9 @@ Read effective `workflow.retro.apply` and `workflow.retro.filing` configuration.
 - Apply only when `workflow.retro.apply` is `auto`.
 - `ask` or absent means propose-only.
 - Chain to `oat-project-retro-file` only when at least one
-  `workflow.retro.filing` destination is explicitly configured.
+  `workflow.retro.filing` destination is explicitly configured; chaining means
+  loading the current `oat-project-retro-file/SKILL.md` and following it, or
+  dispatching a child that carries it.
 - Without filing config, file nothing and report that proposals remain.
 
 All applications follow the apply procedure. Filing remains owned by

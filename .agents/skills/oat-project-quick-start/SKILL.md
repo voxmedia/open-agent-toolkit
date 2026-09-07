@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.3.7
+version: 2.3.9
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -542,7 +542,7 @@ skill pauses, is interrupted, or cannot resolve dispatch before Step 3.7,
 persist and commit this state. `oat-project-next` must route it back to the
 current planning workflow and cannot advance it to implementation.
 
-Plan requirements — apply `oat-project-plan-writing` canonical format invariants:
+Plan requirements — apply `oat-project-plan-writing` canonical format invariants, loading the current `oat-project-plan-writing/SKILL.md` and following them as written:
 
 - Stable task IDs (`pNN-tNN`)
 - Verification step per task
@@ -566,7 +566,9 @@ Before moving the quick project to ready-for-implementation, resolve the
 complete dispatch ladder and the project named ceiling.
 
 Invoke the `Complete Dispatch Ladder Adoption Contract` from
-`oat-project-plan-writing`. If the effective ladder is missing or incomplete,
+`oat-project-plan-writing`: load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written. If the
+effective ladder is missing or incomplete,
 show the full bundled recommendation and ask the user to select its owning
 scope before running exactly one command:
 
@@ -630,7 +632,8 @@ non-interactive unresolved state are not implementation-ready.
 
 After the generated quick plan has stable phase IDs and before Step 3.6 starts
 the plan artifact review, invoke the `Shared Phase Gate Review Setup Contract` from
-`oat-project-plan-writing`.
+`oat-project-plan-writing`: load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written.
 
 When that contract offers a choice, render its required question verbatim:
 "Should an additional cross-runtime phase gate review run after implementation
@@ -648,10 +651,31 @@ This Phase gate review setup is independent from HiLL checkpoints. Do not read o
 change HiLL fields here, and do not add a provider/model `--target` to any
 lifecycle command.
 
+### Step 3.57: Configure Lifecycle Gate Posture
+
+After the generated quick plan has stable phase IDs and before Step 3.6
+starts the plan artifact review, invoke the `Shared Lifecycle Gate Posture Setup Contract` from
+`oat-project-plan-writing`: load the current
+`oat-project-plan-writing/SKILL.md` and follow that contract as written. This
+runs adjacent to, but independently from, the phase gate review setup above.
+
+If `"$PROJECT_PATH/state.md"` already contains an explicit
+`oat_skill_gate_overrides` map, preserve it through the shared contract without
+probing, prompting, or mutation. Otherwise let the contract probe the configured
+gate-aware skills and offer a keep-or-disable choice for each configured gate
+independently.
+
+Persist only disabled choices, and only in `"$PROJECT_PATH/state.md"`. Keeping
+every gate leaves the map absent. Never modify the shared, local, or user
+configuration layers, and never prompt or write a new map in non-interactive
+mode.
+
 ### Step 3.6: Run Plan Artifact Review Loop
 
 Before dispatching the artifact reviewer, invoke the `Managed Dispatch
-Readiness and Review Contract` from `oat-project-plan-writing`:
+Readiness and Review Contract` from `oat-project-plan-writing` — load the
+current `oat-project-plan-writing/SKILL.md` and follow that contract as
+written:
 
 ```bash
 oat project dispatch-ceiling resolve --provider "$ACTIVE_PROVIDER" --role reviewer --preflight --json
@@ -662,7 +686,7 @@ If managed resolution or the complete ladder is unresolved, return to Step
 resolver. Do not hand the quick plan to implementation while either contract is
 unresolved.
 
-Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before syncing project state or handing off to implementation.
+Invoke the shared `Auto Artifact-Review Loop` from `oat-project-plan-writing` with target `plan` before syncing project state or handing off to implementation. Load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written.
 
 Required payload:
 
@@ -721,13 +745,19 @@ artifact above that exists.
 After artifact finalization and plan artifact review, run the configured gate
 as the last check before plan and project completion:
 
-1. Resolve the gate for this skill:
+1. Resolve the gate for this skill with project context:
 
    ```bash
-   oat gate resolve <this-skill> --json
+   oat gate resolve <this-skill> --project "$PROJECT_PATH" --json
    ```
 
-   If the command returns JSON `null`, no gate is configured; proceed directly to the completion steps in Step 3.7 below.
+   Handle all three `resolution` values explicitly:
+   - `not_configured`: no gate is configured; proceed directly to the completion steps in Step 3.7 below.
+   - `configured_disabled_by_project`: the operator disabled this configured gate for this project. Do not launch any process. Emit `configured but disabled by project override`, including the project path and the `projectOverride` source from the envelope, then proceed directly to the completion steps in Step 3.7 below. A project-disabled gate never enters the passed, missing, or failed branches, and its `configuredGate` is evidence only, never executed.
+   - `configured`: continue with the steps below, executing `effectiveGate` exactly as configured.
+
+   A null, missing, malformed, or unrecognized result is an operational failure
+   that fails closed as unresolved. Never treat it as "no gate configured."
 
 2. Export the resolved project path into the command shell:
 

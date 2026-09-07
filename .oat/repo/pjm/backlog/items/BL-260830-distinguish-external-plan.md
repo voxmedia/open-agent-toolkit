@@ -13,9 +13,10 @@ labels:
   - workflow
 assignee: null
 created: 2026-08-30T23:01:52.697Z
-updated: 2026-08-30T23:01:52.697Z
+updated: 2026-09-03T00:08:42Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-02-enforce-external-plan-readiness-contract.md
 ---
 
 ## Description

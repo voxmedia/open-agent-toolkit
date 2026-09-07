@@ -36,9 +36,11 @@ import {
 import type {
   ConfigAwareAdaptersResult,
   ProviderAdapter,
+  ProviderScopeContext,
 } from '@providers/shared';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { ConcreteScope, Scope } from '@shared/types';
+import { formatSyncPlan as formatSyncPlanForReal } from '@ui/output';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -47,6 +49,8 @@ import type { SyncMaterializationExtension } from './sync.types';
 
 interface HarnessOptions {
   adapters?: ProviderAdapter[];
+  providerContext?: ProviderScopeContext;
+  providerContextResolver?: () => Promise<ProviderScopeContext>;
   plans?: SyncPlan[];
   executeResults?: SyncResult[];
   codexExtensionPlans?: CodexExtensionPlan[];
@@ -54,6 +58,12 @@ interface HarnessOptions {
   interactive?: boolean;
   loadedSyncConfig?: SyncConfig;
   loadedManifests?: Manifest[];
+  /**
+   * Use the production plan formatter instead of the compact fake. Required by
+   * any assertion about the composed human body, because the fake never emits
+   * the formatter's own "No changes required." sentence.
+   */
+  useRealSyncPlanFormatter?: boolean;
   loadManifestError?: Error;
   configAwareResults?: ConfigAwareAdaptersResult[];
   providerSelectResponses?: Array<string[] | null>;
@@ -64,6 +74,8 @@ interface HarnessOptions {
   useDiskCodexExtension?: boolean;
   useDiskScanner?: boolean;
   useDiskBundledCodexAgents?: boolean;
+  bundledManagedAgents?: CanonicalEntry[];
+  bundledManagedAgentsError?: Error;
   extraMaterializationExtensions?: SyncMaterializationExtension[];
 }
 
@@ -222,6 +234,59 @@ function createEmptyPlan(scope: SyncPlan['scope'] = 'project'): SyncPlan {
   };
 }
 
+function createCollectionPlan(
+  action:
+    | 'create-collection-link'
+    | 'fallback-per-entry'
+    | 'reject-collection' = 'create-collection-link',
+): SyncPlan {
+  return {
+    scope: 'project',
+    entries: [],
+    removals: [],
+    collections: [
+      {
+        provider: 'claude',
+        scope: 'project',
+        contentType: 'skill',
+        canonicalDir: '/tmp/workspace/.agents/skills',
+        providerDir: '/tmp/workspace/.claude/skills',
+        action,
+        ownership: action === 'create-collection-link' ? 'oat-created' : 'none',
+        configuredStrategy: 'auto',
+        proof:
+          action !== 'create-collection-link'
+            ? {
+                status: 'ineligible',
+                reason: 'real-directory',
+                checkedAt: '2026-02-14T00:00:00.000Z',
+              }
+            : {
+                status: 'absent',
+                canonicalDirectory: {
+                  device: 'secret-device',
+                  inode: 'secret-inode',
+                  type: 'directory',
+                  modifiedAtNanoseconds: '1',
+                },
+                providerParent: {
+                  device: 'secret-parent-device',
+                  inode: 'secret-parent-inode',
+                  type: 'directory',
+                  modifiedAtNanoseconds: '1',
+                },
+                checkedAt: '2026-02-14T00:00:00.000Z',
+              },
+        inheritedEntries: ['.agents/skills/skill-one'],
+        reason:
+          action === 'fallback-per-entry'
+            ? 'provider collection is a real directory; use per-entry sync'
+            : 'provider collection is absent',
+      },
+    ],
+  };
+}
+
 function createRulePlan(
   operation: SyncPlan['entries'][number]['operation'] = 'create_copy',
   scope: SyncPlan['scope'] = 'project',
@@ -250,6 +315,7 @@ function createHarness(options: HarnessOptions = {}): {
   adapters: ProviderAdapter[];
   computeSyncPlan: ReturnType<typeof vi.fn>;
   executeSyncPlan: ReturnType<typeof vi.fn>;
+  scanCanonical: ReturnType<typeof vi.fn>;
   computeCodexProjectExtensionPlan: ReturnType<typeof vi.fn>;
   applyCodexProjectExtensionPlan: ReturnType<typeof vi.fn>;
   saveSyncConfig: ReturnType<typeof vi.fn>;
@@ -321,8 +387,8 @@ function createHarness(options: HarnessOptions = {}): {
       });
 
   const providerSelectResponses = [...(options.providerSelectResponses ?? [])];
-  const selectProvidersWithAbort = vi.fn(
-    async () => providerSelectResponses.shift() ?? [],
+  const selectProvidersWithAbort = vi.fn(async () =>
+    providerSelectResponses.length > 0 ? providerSelectResponses.shift()! : [],
   );
 
   const saveSyncConfig = vi.fn(
@@ -331,7 +397,23 @@ function createHarness(options: HarnessOptions = {}): {
     },
   );
   const manifestQueue = [...(options.loadedManifests ?? [])];
+  const scanBundledManagedAgents = options.useDiskBundledCodexAgents
+    ? vi.fn(scanBundledManagedAgentsFromDisk)
+    : vi.fn(async () => {
+        if (options.bundledManagedAgentsError) {
+          throw options.bundledManagedAgentsError;
+        }
+        return options.bundledManagedAgents ?? [];
+      });
 
+  const scanCanonical = options.useDiskScanner
+    ? vi.fn(scanCanonicalFromDisk)
+    : vi.fn(async (_scopeRoot: string, scope: 'project' | 'user') => {
+        return (
+          options.canonicalEntriesByScope?.[scope] ??
+          options.canonicalEntries ?? [createCanonicalEntry()]
+        );
+      });
   const command = createSyncCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       scope: (globalOptions.scope ?? 'project') as Scope,
@@ -359,19 +441,19 @@ function createHarness(options: HarnessOptions = {}): {
         options.loadedSyncConfig ?? (DEFAULT_SYNC_CONFIG as SyncConfig),
     ),
     saveSyncConfig,
-    scanCanonical: options.useDiskScanner
-      ? vi.fn(scanCanonicalFromDisk)
-      : vi.fn(async (_scopeRoot: string, scope: 'project' | 'user') => {
-          return (
-            options.canonicalEntriesByScope?.[scope] ??
-            options.canonicalEntries ?? [createCanonicalEntry()]
-          );
-        }),
-    scanBundledManagedAgents: options.useDiskBundledCodexAgents
-      ? vi.fn(scanBundledManagedAgentsFromDisk)
-      : vi.fn(async () => []),
+    scanCanonical,
+    scanBundledManagedAgents,
     getAdapters: () => adapters,
     getConfigAwareAdapters,
+    ...(options.providerContextResolver
+      ? { resolveProviderScopeContext: options.providerContextResolver }
+      : options.providerContext
+        ? {
+            resolveProviderScopeContext: vi.fn(
+              async () => options.providerContext!,
+            ),
+          }
+        : {}),
     selectProvidersWithAbort,
     computeSyncPlan,
     executeSyncPlan,
@@ -407,9 +489,11 @@ function createHarness(options: HarnessOptions = {}): {
     ],
     applyMaterializationExtensionPlan: (extension, scopeRoot, plan) =>
       extension.applyPlan(scopeRoot, plan),
-    formatSyncPlan: vi.fn((plan: SyncPlan, applied: boolean) => {
-      return `sync-${applied ? 'applied' : 'dry'}-${plan.scope}-${plan.entries.length + plan.removals.length}`;
-    }),
+    formatSyncPlan: options.useRealSyncPlanFormatter
+      ? vi.fn(formatSyncPlanForReal)
+      : vi.fn((plan: SyncPlan, applied: boolean) => {
+          return `sync-${applied ? 'applied' : 'dry'}-${plan.scope}-${plan.entries.length + plan.removals.length}`;
+        }),
   });
 
   return {
@@ -418,9 +502,11 @@ function createHarness(options: HarnessOptions = {}): {
     adapters,
     computeSyncPlan,
     executeSyncPlan,
+    scanCanonical,
     computeCodexProjectExtensionPlan,
     applyCodexProjectExtensionPlan,
     saveSyncConfig,
+    scanBundledManagedAgents,
     selectProvidersWithAbort,
   };
 }
@@ -472,6 +558,64 @@ describe('createSyncCommand', () => {
     expect(capture.info).toContain('Run without --dry-run to apply changes.');
   });
 
+  it('routes a registry-only provider context into sync planning', async () => {
+    const adapter = createAdapter('registry-only');
+    const { command, computeSyncPlan } = createHarness({
+      adapters: [],
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [{ adapter, extensions: [], capabilities: [] }],
+      },
+    });
+
+    await runSyncCommand(command, ['--dry-run']);
+
+    expect(computeSyncPlan.mock.calls[0]?.[0].adapters).toEqual([adapter]);
+  });
+
+  it('threads unsupported registry collection capability into per-entry planning', async () => {
+    const adapter = createAdapter('registry-only');
+    const { command, computeSyncPlan } = createHarness({
+      adapters: [],
+      providerContext: {
+        scope: 'project',
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders: ['registry-only'],
+        detectedProviders: ['registry-only'],
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: [],
+        registrations: [
+          {
+            adapter,
+            extensions: [],
+            capabilities: [
+              {
+                scope: 'project',
+                contentKind: 'skill',
+                support: 'supported',
+                projectionModes: ['entry-sync'],
+                nativeRoleSurface: false,
+                collectionAlias: 'unsupported',
+                catalogRefresh: { state: 'unknown', reason: 'test fixture' },
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    await runSyncCommand(command, ['--dry-run']);
+
+    expect(
+      computeSyncPlan.mock.calls[0]?.[0].collectionAliasEligibleMappings,
+    ).toEqual([]);
+  });
+
   it('dry-run no-op: shows no changes to apply guidance', async () => {
     const { capture, command, executeSyncPlan } = createHarness({
       plans: [createEmptyPlan('project')],
@@ -489,6 +633,142 @@ describe('createSyncCommand', () => {
     expect(capture.info).toContain('No changes to apply.');
   });
 
+  it('renders redacted collection plans with structured fallback evidence in dry-run JSON and human output', async () => {
+    const plan = createCollectionPlan('fallback-per-entry');
+    const jsonHarness = createHarness({ plans: [plan] });
+    await runSyncCommand(jsonHarness.command, {
+      globalArgs: ['--scope', 'project', '--json'],
+      commandArgs: ['--dry-run'],
+    });
+
+    expect(jsonHarness.capture.jsonPayloads[0]).toMatchObject({
+      collectionOperations: [
+        {
+          scope: 'project',
+          provider: 'claude',
+          contentType: 'skill',
+          action: 'fallback-per-entry',
+          ownership: 'none',
+          canonicalDir: '.agents/skills',
+          providerDir: '.claude/skills',
+          reason: 'provider collection is a real directory; use per-entry sync',
+          result: {
+            status: 'planned',
+            reason:
+              'provider collection is a real directory; use per-entry sync',
+          },
+        },
+      ],
+      plans: [
+        {
+          collections: [
+            {
+              proof: { status: 'ineligible', reason: 'real-directory' },
+            },
+          ],
+        },
+      ],
+    });
+    expect(JSON.stringify(jsonHarness.capture.jsonPayloads[0])).not.toContain(
+      '/tmp/workspace',
+    );
+
+    const humanHarness = createHarness({ plans: [plan] });
+    await runSyncCommand(humanHarness.command, {
+      globalArgs: ['--scope', 'project'],
+      commandArgs: ['--dry-run'],
+    });
+    expect(humanHarness.capture.info[0]).toContain(
+      'fallback-per-entry ownership=none .agents/skills -> .claude/skills',
+    );
+    expect(humanHarness.capture.info[0]).toContain(
+      'result: planned — provider collection is a real directory; use per-entry sync',
+    );
+    expect(humanHarness.capture.info[0]).not.toContain('/tmp/workspace');
+  });
+
+  it('renders applied collection results with dry-run-parity fields', async () => {
+    const plan = createCollectionPlan();
+    const { capture, command, executeSyncPlan } = createHarness({
+      plans: [plan],
+      executeResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          collectionResults: [
+            {
+              provider: 'claude',
+              contentType: 'skill',
+              action: 'create-collection-link',
+              ownership: 'oat-created',
+              status: 'changed',
+              reason: 'provider collection is absent',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    expect(executeSyncPlan).toHaveBeenCalledTimes(1);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      collectionOperations: [
+        {
+          scope: 'project',
+          provider: 'claude',
+          contentType: 'skill',
+          action: 'create-collection-link',
+          ownership: 'oat-created',
+          canonicalDir: '.agents/skills',
+          providerDir: '.claude/skills',
+          reason: 'provider collection is absent',
+          result: {
+            status: 'changed',
+            reason: 'provider collection is absent',
+          },
+        },
+      ],
+    });
+    expect(JSON.stringify(capture.jsonPayloads[0])).not.toContain(
+      'secret-device',
+    );
+
+    const humanHarness = createHarness({
+      plans: [plan],
+      executeResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          collectionResults: [
+            {
+              provider: 'claude',
+              contentType: 'skill',
+              action: 'create-collection-link',
+              ownership: 'oat-created',
+              status: 'changed',
+              reason: 'provider collection is absent',
+            },
+          ],
+        },
+      ],
+    });
+    await runSyncCommand(humanHarness.command, {
+      globalArgs: ['--scope', 'project'],
+    });
+    expect(humanHarness.capture.info[0]).toContain(
+      'create-collection-link ownership=oat-created .agents/skills -> .claude/skills',
+    );
+    expect(humanHarness.capture.info[0]).toContain(
+      'result: changed — provider collection is absent',
+    );
+    expect(humanHarness.capture.info[0]).not.toContain('/tmp/workspace');
+  });
+
   it('apply (default): executes sync plan', async () => {
     const { capture, command, executeSyncPlan } = createHarness({
       plans: [createPlan('create_symlink')],
@@ -503,6 +783,490 @@ describe('createSyncCommand', () => {
     expect(capture.success).toContain('\nSync applied successfully.');
   });
 
+  it('reports sourced provider refresh advice only after a successful relevant change', async () => {
+    const canonical = createAgentCanonicalEntry('reviewer.md');
+    const adapter = createScopedAdapter('claude');
+    const { capture, command } = createHarness({
+      adapters: [adapter],
+      canonicalEntries: [canonical],
+      plans: [
+        {
+          scope: 'user',
+          entries: [
+            {
+              canonical,
+              provider: 'claude',
+              providerPath: '/tmp/home/.claude/agents/reviewer.md',
+              operation: 'create_copy',
+              strategy: 'copy',
+              reason: 'missing',
+            },
+          ],
+          removals: [],
+        },
+      ],
+      executeResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          operations: [
+            {
+              scope: 'user',
+              provider: 'claude',
+              contentKind: 'agent',
+              asset: 'reviewer.md',
+              action: 'create_copy',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'user', '--json'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      providerRefreshAdvice: [
+        {
+          scope: 'user',
+          provider: 'claude',
+          contentKind: 'agent',
+          materialization: 'changed',
+          visibility: {
+            state: 'restart-required',
+            source: 'provider-refresh-policy',
+            policy: {
+              state: 'restart-required',
+              provenance: {
+                kind: 'repository-decision',
+                reference:
+                  '.oat/projects/shared/tool-pack-scope-provider-truthfulness/implementation.md#hill-decision-conservative-new-session-advice',
+                verifiedAt: '2026-08-31',
+              },
+            },
+            recovery: [
+              {
+                code: 'start-new-provider-session',
+                message:
+                  'Start a new provider session so it has an opportunity to load the changed asset, then inspect its catalog.',
+              },
+            ],
+          },
+        },
+      ],
+    });
+  });
+
+  it('renders conservative new-session advice after a successful relevant change', async () => {
+    const canonical = createAgentCanonicalEntry('reviewer.md');
+    const { capture, command } = createHarness({
+      adapters: [createScopedAdapter('claude')],
+      canonicalEntries: [canonical],
+      plans: [
+        {
+          scope: 'user',
+          entries: [
+            {
+              canonical,
+              provider: 'claude',
+              providerPath: '/tmp/home/.claude/agents/reviewer.md',
+              operation: 'create_copy',
+              strategy: 'copy',
+              reason: 'missing',
+            },
+          ],
+          removals: [],
+        },
+      ],
+      executeResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          operations: [
+            {
+              scope: 'user',
+              provider: 'claude',
+              contentKind: 'agent',
+              asset: 'reviewer.md',
+              action: 'create_copy',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'user'],
+    });
+
+    const output = capture.info.join('\n');
+    expect(output).toContain(
+      'Start a new provider session so it has an opportunity to load the changed asset',
+    );
+    expect(output).not.toMatch(
+      /restart (?:the )?(?:provider|application|process)/i,
+    );
+  });
+
+  it('reports exact config-only extension changes as JSON new-session advice', async () => {
+    const adapter = createCodexAdapter();
+    const { capture, command } = createHarness({
+      adapters: [adapter],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [adapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          operations: [
+            {
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              reason: 'managed config differs',
+              content: '[features]\nmulti_agent = true\n',
+            },
+          ],
+          managedRoles: [],
+          aggregateConfigHash: 'hash-config-only',
+        },
+      ],
+      codexExtensionApplyResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          operations: [
+            {
+              provider: 'codex',
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    const payload = capture.jsonPayloads[0] as {
+      providerRefreshAdvice: Array<Record<string, unknown>>;
+    };
+    expect(payload.providerRefreshAdvice).toHaveLength(1);
+    expect(payload.providerRefreshAdvice[0]).toMatchObject({
+      scope: 'project',
+      provider: 'codex',
+      contentKind: 'agent',
+      materialization: 'changed',
+      visibility: {
+        state: 'restart-required',
+        recovery: [{ code: 'start-new-provider-session' }],
+      },
+    });
+    expect(payload.providerRefreshAdvice[0]).not.toHaveProperty('asset');
+    expect(payload.providerRefreshAdvice[0]).not.toHaveProperty('path');
+    expect(payload.providerRefreshAdvice[0]).not.toHaveProperty('entryName');
+  });
+
+  it('renders exact config-only extension changes as human new-session advice', async () => {
+    const adapter = createCodexAdapter();
+    const { capture, command } = createHarness({
+      adapters: [adapter],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [adapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          operations: [
+            {
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              reason: 'managed config differs',
+              content: '[features]\nmulti_agent = true\n',
+            },
+          ],
+          managedRoles: [],
+          aggregateConfigHash: 'hash-config-only',
+        },
+      ],
+      codexExtensionApplyResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          operations: [
+            {
+              provider: 'codex',
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    expect(capture.info.join('\n')).toContain(
+      'Provider visibility [project] codex/agent: restart-required — Start a new provider session so it has an opportunity to load the changed asset',
+    );
+  });
+
+  it('deduplicates exact changed role and config results for one capability', async () => {
+    const adapter = createCodexAdapter();
+    const { capture, command } = createHarness({
+      adapters: [adapter],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [adapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          operations: [
+            {
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/reviewer.toml',
+              reason: 'managed role missing',
+              roleName: 'reviewer',
+              content: 'developer_instructions = "review"\n',
+            },
+            {
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              reason: 'managed config differs',
+              content: '[features]\nmulti_agent = true\n',
+            },
+          ],
+          managedRoles: ['reviewer'],
+          aggregateConfigHash: 'hash-role-config',
+        },
+      ],
+      codexExtensionApplyResults: [
+        {
+          applied: 2,
+          failed: 0,
+          skipped: 0,
+          operations: [
+            {
+              provider: 'codex',
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/reviewer.toml',
+              entryName: 'reviewer',
+              status: 'changed',
+            },
+            {
+              provider: 'codex',
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    expect(
+      (capture.jsonPayloads[0] as { providerRefreshAdvice: unknown[] })
+        .providerRefreshAdvice,
+    ).toHaveLength(1);
+  });
+
+  it('keeps aggregate-only mixed counts unattributed to named assets', async () => {
+    const first = createAgentCanonicalEntry('first.md');
+    const second = createAgentCanonicalEntry('second.md');
+    const { capture, command } = createHarness({
+      adapters: [createScopedAdapter('claude')],
+      canonicalEntries: [first, second],
+      plans: [
+        {
+          scope: 'user',
+          entries: [first, second].map((canonical) => ({
+            canonical,
+            provider: 'claude',
+            providerPath: `/tmp/home/.claude/agents/${canonical.name}`,
+            operation: 'create_copy' as const,
+            strategy: 'copy' as const,
+            reason: 'missing',
+          })),
+          removals: [],
+        },
+      ],
+      executeResults: [{ applied: 1, failed: 1, skipped: 0 }],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'user', '--json'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      summary: { applied: 1, failed: 1 },
+      operationResults: [
+        { asset: 'first.md', status: 'unknown' },
+        { asset: 'second.md', status: 'unknown' },
+      ],
+      providerRefreshAdvice: [],
+    });
+  });
+
+  it('renders aggregate-only core evidence as unknown without attributing counts', async () => {
+    const first = createAgentCanonicalEntry('first.md');
+    const second = createAgentCanonicalEntry('second.md');
+    const { capture, command } = createHarness({
+      adapters: [createScopedAdapter('claude')],
+      canonicalEntries: [first, second],
+      plans: [
+        {
+          scope: 'user',
+          entries: [
+            {
+              canonical: first,
+              provider: 'claude',
+              providerPath: '/tmp/home/.claude/agents/first.md',
+              operation: 'create_copy' as const,
+              strategy: 'copy' as const,
+              reason: 'first agent missing',
+            },
+            {
+              canonical: second,
+              provider: 'claude',
+              providerPath: '/tmp/home/.claude/agents/second.md',
+              operation: 'create_copy' as const,
+              strategy: 'copy' as const,
+              reason: 'second agent missing',
+            },
+          ],
+          removals: [],
+        },
+      ],
+      executeResults: [{ applied: 1, failed: 1, skipped: 0 }],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'user'],
+    });
+
+    expect(capture.info[0]).toContain(
+      'Core aggregate result: applied 1, failed 1, skipped 0; non-skip named outcomes remain unknown.',
+    );
+    expect(capture.info[0]).toContain(
+      '- user:claude:agent:create_copy first.md\n  reason: first agent missing\n  result: unknown',
+    );
+    expect(capture.info[0]).toContain(
+      '- user:claude:agent:create_copy second.md\n  reason: second agent missing\n  result: unknown',
+    );
+    expect(capture.info[0]).not.toContain('first.md\n  result: changed');
+    expect(capture.info[0]).not.toContain('second.md\n  result: failed');
+    expect(capture.info[0]).not.toContain('Sync plan (applied)');
+  });
+
+  it('joins exact mixed core results to plan reasons by stable identity', async () => {
+    const first = createAgentCanonicalEntry('first.md');
+    const second = createAgentCanonicalEntry('second.md');
+    const { capture, command } = createHarness({
+      adapters: [createScopedAdapter('claude')],
+      canonicalEntries: [first, second],
+      plans: [
+        {
+          scope: 'user',
+          entries: [
+            {
+              canonical: first,
+              provider: 'claude',
+              providerPath: '/tmp/home/.claude/agents/first.md',
+              operation: 'create_copy' as const,
+              strategy: 'copy' as const,
+              reason: 'first agent missing',
+            },
+            {
+              canonical: second,
+              provider: 'claude',
+              providerPath: '/tmp/home/.claude/agents/second.md',
+              operation: 'create_copy' as const,
+              strategy: 'copy' as const,
+              reason: 'second agent stale',
+            },
+          ],
+          removals: [],
+        },
+      ],
+      executeResults: [
+        {
+          applied: 1,
+          failed: 1,
+          skipped: 0,
+          operations: [
+            {
+              scope: 'user',
+              provider: 'claude',
+              contentKind: 'agent',
+              asset: 'second.md',
+              action: 'create_copy',
+              status: 'failed',
+              failure:
+                'Materialization failed; inspect local verbose diagnostics and retry sync.',
+            },
+            {
+              scope: 'user',
+              provider: 'claude',
+              contentKind: 'agent',
+              asset: 'first.md',
+              action: 'create_copy',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'user'],
+    });
+
+    expect(capture.info[0]).toContain(
+      '- user:claude:agent:create_copy first.md\n  reason: first agent missing\n  result: changed',
+    );
+    expect(capture.info[0]).toContain(
+      '- user:claude:agent:create_copy second.md\n  reason: second agent stale\n  result: failed — Materialization failed; inspect local verbose diagnostics and retry sync.',
+    );
+    expect(capture.info[0]).not.toContain('Sync plan (applied)');
+    expect(capture.warn).toContain('\nSync completed with partial failures.');
+  });
+
   it('apply (default): executes skip-only plans to reconcile manifest state', async () => {
     const { capture, command, executeSyncPlan } = createHarness({
       plans: [createPlan('skip')],
@@ -515,6 +1279,9 @@ describe('createSyncCommand', () => {
 
     expect(executeSyncPlan).toHaveBeenCalledTimes(1);
     expect(capture.info).toContain('\nNo changes required.');
+    expect(capture.info).not.toContain(
+      '\nManifest version refreshed; no content changes required.',
+    );
   });
 
   it('apply (default): executes transformed rule copy plans', async () => {
@@ -565,6 +1332,9 @@ describe('createSyncCommand', () => {
 
     expect(executeSyncPlan).toHaveBeenCalledTimes(1);
     expect(capture.info).toContain('\nNo changes required.');
+    expect(capture.info).not.toContain(
+      '\nManifest version refreshed; no content changes required.',
+    );
   });
 
   it('apply no-op: refreshes stale manifest oatVersion even when no files changed', async () => {
@@ -573,6 +1343,9 @@ describe('createSyncCommand', () => {
       loadedManifests: [staleManifest],
       plans: [createEmptyPlan()],
       executeResults: [{ applied: 0, failed: 0, skipped: 0 }],
+      // Production formatter: the empty-plan sentence lives inside the plan
+      // body it composes, and the compact fake would hide it.
+      useRealSyncPlanFormatter: true,
     });
 
     // The restamp is the *only* mutation on this path, so it is the exact case
@@ -598,7 +1371,57 @@ describe('createSyncCommand', () => {
       staleManifest,
       '/tmp/workspace/.oat/sync/manifest.json',
     );
-    expect(capture.info).toContain('\nNo changes required.');
+    // The restamp *is* a mutation, so the run must not report that nothing was
+    // required. Exit code and the restamp itself are unchanged by the wording.
+    expect(capture.info).toContain(
+      '\nManifest version refreshed; no content changes required.',
+    );
+    // Joined rather than element-wise: the plan body logs a single multi-line
+    // string, so array membership is blind to a sentence embedded inside it.
+    // The heading survives; only the contradicting sentence is dropped.
+    expect(capture.info.join('\n')).toContain('Sync plan (applied)');
+    expect(capture.info.join('\n')).not.toContain('No changes required.');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('apply: never calls a failed run restamp-only, even with zero planned operations', async () => {
+    // A rejected collection counts as a failure but is not a planned operation
+    // (`countPlannedOperations` admits only the mutating collection actions),
+    // so `plannedOperations === 0 && failed > 0` is reachable. Such a run is
+    // not restamp-only and must not be described as needing no content changes.
+    const { capture, command } = createHarness({
+      loadedManifests: [createManifest({ oatVersion: '0.0.1' })],
+      plans: [createCollectionPlan('reject-collection')],
+      executeResults: [{ applied: 0, failed: 1, skipped: 0 }],
+      useRealSyncPlanFormatter: true,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    const output = capture.info.join('\n');
+    expect(output).not.toContain('Manifest version refreshed');
+    expect(capture.warn).toContain(versionSkewWarning('0.0.1'));
+  });
+
+  it('apply true no-op: keeps the plan body sentence when nothing was restamped', async () => {
+    const { capture, command } = createHarness({
+      loadedManifests: [createManifest({ oatVersion: OAT_VERSION })],
+      plans: [createEmptyPlan()],
+      executeResults: [{ applied: 0, failed: 0, skipped: 0 }],
+      useRealSyncPlanFormatter: true,
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    // The other side of the restamp-only contract: with no skew, the shared
+    // formatter's own sentence must still reach the operator.
+    const output = capture.info.join('\n');
+    expect(output).toContain('Sync plan (applied)\nNo changes required.');
+    expect(output).not.toContain('Manifest version refreshed');
   });
 
   it('apply: warns once about version skew before the sync plan executes', async () => {
@@ -1031,6 +1854,49 @@ describe('createSyncCommand', () => {
     expect(computeSyncPlan.mock.calls[0]?.[0].adapters).toEqual([]);
   });
 
+  for (const [path, response] of [
+    ['cancel', null],
+    ['save', ['registry-only']],
+  ] as const) {
+    it(`detects each provider once during interactive sync ${path}`, async () => {
+      const adapter = createAdapter('registry-only');
+      const detect = vi.spyOn(adapter, 'detect').mockResolvedValue(true);
+      const providerContextResolver = vi.fn(async () => {
+        await adapter.detect('/tmp/workspace');
+        return {
+          scope: 'project' as const,
+          configSource: '<project>/.oat/sync/config.json',
+          activeProviders: ['registry-only'],
+          detectedProviders: ['registry-only'],
+          mismatches: {
+            detectedUnset: ['registry-only'],
+            detectedDisabled: [],
+          },
+          activation: [
+            {
+              provider: 'registry-only',
+              state: 'active' as const,
+              source: 'detected-unset' as const,
+              reason: 'detected without explicit configuration',
+            },
+          ],
+          registrations: [{ adapter, extensions: [], capabilities: [] }],
+        };
+      });
+      const { command } = createHarness({
+        interactive: true,
+        adapters: [adapter],
+        providerContextResolver,
+        providerSelectResponses: [response],
+      });
+
+      await runSyncCommand(command, { globalArgs: ['--scope', 'project'] });
+
+      expect(providerContextResolver).toHaveBeenCalledTimes(1);
+      expect(detect).toHaveBeenCalledTimes(1);
+    });
+  }
+
   it('warns in non-interactive mode and does not mutate config on mismatches', async () => {
     const { command, saveSyncConfig, capture, selectProvidersWithAbort } =
       createHarness({
@@ -1296,6 +2162,16 @@ describe('createSyncCommand', () => {
       applied: 1,
       failed: 0,
       skipped: 0,
+      operations: [
+        {
+          provider: 'cursor',
+          action: 'create' as const,
+          target: 'role',
+          path: '.cursor/agents/oat-reviewer-gpt.md',
+          entryName: 'oat-reviewer-gpt',
+          status: 'changed' as const,
+        },
+      ],
     }));
     const cursorExtension: SyncMaterializationExtension = {
       provider: 'cursor',
@@ -1347,7 +2223,23 @@ describe('createSyncCommand', () => {
           aggregateConfigHash: 'codex-hash',
         },
       ],
-      codexExtensionApplyResults: [{ applied: 1, failed: 0, skipped: 0 }],
+      codexExtensionApplyResults: [
+        {
+          applied: 1,
+          failed: 0,
+          skipped: 0,
+          operations: [
+            {
+              provider: 'codex',
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/oat-reviewer.toml',
+              entryName: 'oat-reviewer',
+              status: 'changed',
+            },
+          ],
+        },
+      ],
       extraMaterializationExtensions: [cursorExtension],
     });
 
@@ -1382,11 +2274,106 @@ describe('createSyncCommand', () => {
         skipped: 0,
       },
       materializationExtensions: [
-        { provider: 'codex', applied: 1, failed: 0 },
-        { provider: 'cursor', applied: 1, failed: 0 },
+        {
+          provider: 'codex',
+          applied: 1,
+          failed: 0,
+          operations: [{ reason: 'managed Codex role file missing' }],
+          operationResults: [{ status: 'changed' }],
+        },
+        {
+          provider: 'cursor',
+          applied: 1,
+          failed: 0,
+          operations: [{ reason: 'managed Cursor role file missing' }],
+          operationResults: [{ status: 'changed' }],
+        },
+      ],
+      codexExtensions: [
+        {
+          operations: [{ reason: 'managed Codex role file missing' }],
+        },
       ],
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('renders exact mixed extension results separately from plan reasons', async () => {
+    const adapter = createCodexAdapter();
+    const { capture, command } = createHarness({
+      adapters: [adapter],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [adapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          operations: [
+            {
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/reviewer.toml',
+              reason: 'managed role file missing',
+              roleName: 'reviewer',
+              content: 'developer_instructions = "review"',
+            },
+            {
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              reason: 'managed config differs',
+              content: '[features]\nmulti_agent = true\n',
+            },
+          ],
+          managedRoles: ['reviewer'],
+          aggregateConfigHash: 'hash-reviewer',
+        },
+      ],
+      codexExtensionApplyResults: [
+        {
+          applied: 1,
+          failed: 1,
+          skipped: 0,
+          operations: [
+            {
+              provider: 'codex',
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/reviewer.toml',
+              entryName: 'reviewer',
+              status: 'changed',
+            },
+            {
+              provider: 'codex',
+              action: 'update',
+              target: 'config',
+              path: '.codex/config.toml',
+              status: 'failed',
+              failure:
+                'Materialization failed; inspect local verbose diagnostics and retry sync.',
+            },
+          ],
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    expect(capture.info[0]).toContain('codex extension results');
+    expect(capture.info[0]).toContain(
+      '- codex:role:create .codex/agents/reviewer.toml (reviewer)\n  reason: managed role file missing\n  result: changed',
+    );
+    expect(capture.info[0]).toContain(
+      '- codex:config:update .codex/config.toml\n  reason: managed config differs\n  result: failed — Materialization failed; inspect local verbose diagnostics and retry sync.',
+    );
+    expect(capture.info[0]).not.toContain('extension (applied)');
+    expect(capture.warn).toContain('\nSync completed with partial failures.');
   });
 
   it('reports combined user extension partial failure in JSON and exits nonzero', async () => {
@@ -1821,6 +2808,7 @@ describe('createSyncCommand', () => {
     expect(executeSyncPlan).not.toHaveBeenCalled();
     expect(applyCodexProjectExtensionPlan).toHaveBeenCalledTimes(1);
     expect(capture.success).toContain('\nSync applied successfully.');
+    expect(capture.info.join('\n')).not.toContain('Provider visibility');
   });
 
   it('materializes user-owned Codex roles through the real user scanner and preserves every owner idempotently', async () => {
@@ -1933,9 +2921,7 @@ describe('createSyncCommand', () => {
       );
       expect(first.computeSyncPlan).toHaveBeenCalledWith(
         expect.objectContaining({
-          canonical: expect.not.arrayContaining([
-            expect.objectContaining({ type: 'agent' }),
-          ]),
+          canonical: [],
         }),
       );
 
@@ -2227,6 +3213,99 @@ describe('createSyncCommand', () => {
   });
 
   describe('scoped provider materialization', () => {
+    it('scans user canonical content from active provider declarations', async () => {
+      const adapter = createScopedAdapter();
+      const { command, scanCanonical } = createHarness({ adapters: [adapter] });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'user'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(scanCanonical).toHaveBeenCalledWith('/tmp/home', 'user', [
+        { contentType: 'skill', canonicalDir: '.agents/skills' },
+        { contentType: 'agent', canonicalDir: '.agents/agents' },
+      ]);
+    });
+
+    it('feeds in-scope pack agents to ordinary and extension planning while excluding bundle roles from ordinary planning', async () => {
+      const claude = createScopedAdapter();
+      const codex = createCodexAdapter();
+      const packAgent = createAgentCanonicalEntry(
+        'eligible-pack-agent.md',
+        '/tmp/home',
+      );
+      const bundledRole = createAgentCanonicalEntry(
+        'oat-phase-implementer.md',
+        '/bundle',
+      );
+      const { command, computeSyncPlan, computeCodexProjectExtensionPlan } =
+        createHarness({
+          adapters: [claude, codex],
+          configAwareResults: [
+            {
+              activeAdapters: [claude, codex],
+              detectedUnset: [],
+              detectedDisabled: [],
+            },
+            {
+              activeAdapters: [claude, codex],
+              detectedUnset: [],
+              detectedDisabled: [],
+            },
+          ],
+          canonicalEntriesByScope: { user: [] },
+          bundledManagedAgents: [packAgent, bundledRole],
+        });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'user'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(computeSyncPlan).toHaveBeenCalledWith(
+        expect.objectContaining({
+          scope: 'user',
+          canonical: [packAgent],
+        }),
+      );
+      expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+        '/tmp/home',
+        [packAgent, bundledRole],
+        undefined,
+        { userConfigDir: '/tmp/home/.oat' },
+      );
+    });
+
+    it.each(['outdated', 'newer'])(
+      'fails closed before native role planning when a materializable agent is %s',
+      async (status) => {
+        const codex = createCodexAdapter();
+        const error = new CliError(
+          `User-materializable agent agent:eligible-pack-agent.md is ${status}, not current. Run oat tools update --pack research --scope user before running user sync.`,
+        );
+        const { command, computeCodexProjectExtensionPlan } = createHarness({
+          adapters: [codex],
+          configAwareResults: [
+            {
+              activeAdapters: [codex],
+              detectedUnset: [],
+              detectedDisabled: [],
+            },
+          ],
+          bundledManagedAgentsError: error,
+        });
+
+        await expect(
+          runSyncCommand(command, {
+            globalArgs: ['--scope', 'user'],
+            commandArgs: ['--dry-run'],
+          }),
+        ).rejects.toBe(error);
+        expect(computeCodexProjectExtensionPlan).not.toHaveBeenCalled();
+      },
+    );
+
     it('plans project and user scopes independently for --scope all', async () => {
       const adapter = createScopedAdapter();
       const { command, computeSyncPlan } = createHarness({
@@ -2429,9 +3508,55 @@ describe('createSyncCommand', () => {
       expect(computeSyncPlan).not.toHaveBeenCalled();
     });
 
+    it('prefers bundled managed agents over user copies for user-scope extensions', async () => {
+      const adapter = createCodexAdapter();
+      const bundledReviewer: CanonicalEntry = {
+        name: 'oat-reviewer.md',
+        type: 'agent',
+        canonicalPath: '/bundle/agents/oat-reviewer.md',
+        isFile: true,
+      };
+      const { command, computeCodexProjectExtensionPlan } = createHarness({
+        adapters: [adapter],
+        configAwareResults: [
+          {
+            activeAdapters: [adapter],
+            detectedUnset: [],
+            detectedDisabled: [],
+          },
+        ],
+        canonicalEntriesByScope: {
+          user: [
+            createAgentCanonicalEntry('oat-reviewer.md', '/tmp/home'),
+            createAgentCanonicalEntry('oat-codebase-mapper.md', '/tmp/home'),
+          ],
+        },
+        bundledManagedAgents: [bundledReviewer],
+      });
+
+      await runSyncCommand(command, {
+        globalArgs: ['--scope', 'user'],
+        commandArgs: ['--dry-run'],
+      });
+
+      expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+        '/tmp/home',
+        [
+          bundledReviewer,
+          createAgentCanonicalEntry('oat-codebase-mapper.md', '/tmp/home'),
+        ],
+        undefined,
+        expect.objectContaining({ userConfigDir: '/tmp/home/.oat' }),
+      );
+    });
+
     it('forwards the exact filter into user-scope materialization extension planning', async () => {
       const adapter = createCodexAdapter();
-      const { command, computeCodexProjectExtensionPlan } = createHarness({
+      const {
+        command,
+        computeCodexProjectExtensionPlan,
+        scanBundledManagedAgents,
+      } = createHarness({
         adapters: [adapter],
         configAwareResults: [
           {
@@ -2462,6 +3587,9 @@ describe('createSyncCommand', () => {
         ['.agents/agents/oat-reviewer.md'],
         expect.objectContaining({ userConfigDir: '/tmp/home/.oat' }),
       );
+      expect(scanBundledManagedAgents).toHaveBeenCalledWith({
+        scopeRoot: '/tmp/home',
+      });
     });
   });
 });

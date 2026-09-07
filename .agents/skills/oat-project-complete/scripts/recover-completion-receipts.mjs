@@ -91,6 +91,23 @@ async function changedPaths(projectPath, commit) {
   return output === '' ? [] : output.split('\n').sort();
 }
 
+async function isAncestor(projectPath, ancestor, descendant) {
+  try {
+    await execFileAsync(
+      'git',
+      ['merge-base', '--is-ancestor', ancestor, descendant],
+      { cwd: projectPath, encoding: 'utf8' },
+    );
+    return true;
+  } catch (error) {
+    if (error?.code === 1) return false;
+    const detail = error?.stderr?.trim() || error?.message || String(error);
+    throw completionReceiptError(
+      `git merge-base failed while recovering completion receipts: ${detail}`,
+    );
+  }
+}
+
 async function committedFile(projectPath, commit, path, label) {
   const content = await git(projectPath, ['show', `${commit}:${path}`], {
     allowFailure: true,
@@ -695,6 +712,99 @@ export async function recoverCompletionReceipts({
     projectRefCommit: finalArtifactCommit,
     evidenceCommit,
     evidencePushRequired,
+  };
+}
+
+export async function recoverArchivedRecapEvidenceReceipt({
+  repoRoot,
+  lifecycleCommit,
+  evidencePaths,
+}) {
+  if (typeof repoRoot !== 'string' || repoRoot.length === 0) {
+    throw completionReceiptError(
+      'Archived recap evidence recovery requires the repository root.',
+    );
+  }
+  if (!FULL_SHA.test(lifecycleCommit ?? '')) {
+    throw completionReceiptError(
+      'Archived recap evidence recovery requires a full lifecycle commit SHA.',
+    );
+  }
+  if (!Array.isArray(evidencePaths) || evidencePaths.length !== 2) {
+    throw completionReceiptError(
+      'Archived recap evidence recovery requires exactly two evidence paths.',
+    );
+  }
+  const exactEvidencePaths = evidencePaths.map((path, index) =>
+    requireRelativeGitPath(path, `Archived evidence path ${index + 1}`),
+  );
+  if (new Set(exactEvidencePaths).size !== exactEvidencePaths.length) {
+    throw completionReceiptError('Archived evidence paths must be unique.');
+  }
+
+  const resolvedLifecycle = await git(repoRoot, [
+    'rev-parse',
+    '--verify',
+    `${lifecycleCommit}^{commit}`,
+  ]);
+  if (resolvedLifecycle !== lifecycleCommit) {
+    throw completionReceiptError(
+      'Archived recap lifecycle receipt does not resolve to the exact commit.',
+    );
+  }
+  const head = await git(repoRoot, ['rev-parse', 'HEAD']);
+  if (head === lifecycleCommit) {
+    return {
+      status: 'none',
+      evidenceCommit: null,
+      evidencePushRequired: false,
+      evidencePaths: exactEvidencePaths,
+    };
+  }
+  if ((await commitSubject(repoRoot, head)) !== EVIDENCE_MESSAGE) {
+    throw completionReceiptError(
+      'Archived recap retry HEAD is neither the lifecycle commit nor the exact evidence commit.',
+    );
+  }
+  if (
+    (await singleParent(repoRoot, head, 'Archived recap evidence commit')) !==
+    lifecycleCommit
+  ) {
+    throw completionReceiptError(
+      'Archived recap evidence commit must be the immediate child of the lifecycle commit.',
+    );
+  }
+  requireExactPaths(
+    await changedPaths(repoRoot, head),
+    exactEvidencePaths,
+    'Archived recap evidence commit',
+  );
+
+  const upstream = await git(
+    repoRoot,
+    ['rev-parse', '--verify', '@{u}^{commit}'],
+    { allowFailure: true },
+  );
+  let evidencePushRequired;
+  if (upstream === head) {
+    evidencePushRequired = false;
+  } else if (
+    upstream === null ||
+    (FULL_SHA.test(upstream) &&
+      (await isAncestor(repoRoot, upstream, lifecycleCommit)))
+  ) {
+    evidencePushRequired = true;
+  } else {
+    throw completionReceiptError(
+      'Archived recap evidence retry requires upstream to equal the evidence commit or remain an ancestor of its lifecycle parent.',
+    );
+  }
+
+  return {
+    status: 'recovered',
+    evidenceCommit: head,
+    evidencePushRequired,
+    evidencePaths: exactEvidencePaths,
   };
 }
 

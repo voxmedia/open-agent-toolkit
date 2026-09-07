@@ -12,7 +12,10 @@ import {
   buildProjectManagementAgentsSectionBody,
   PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
 } from '@commands/init/tools/project-management/agents-guidance';
-import { upsertAgentsMdSection } from '@commands/shared/agents-md';
+import {
+  type UpsertSectionResult,
+  upsertAgentsMdSections,
+} from '@commands/shared/agents-md';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 
@@ -30,6 +33,10 @@ export interface RepoReferenceInitResult {
   repoRoot: string;
   created: string[];
   skipped: string[];
+  guidance: {
+    projectManagement: UpsertSectionResult;
+    decisions: UpsertSectionResult;
+  };
 }
 
 interface TemplateTarget {
@@ -202,20 +209,28 @@ export async function initializeRepoReference(
   // it is written here — after scaffold verification and alongside the
   // `pjm.initialized` marker — so installing the capability at any scope never
   // implies that this repository adopted PJM.
-  await upsertAgentsMdSection(
-    projectRoot,
-    PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
-    buildProjectManagementAgentsSectionBody(),
-  );
-  await upsertAgentsMdSection(
-    projectRoot,
-    DECISION_AGENTS_SECTION_KEY,
-    buildDecisionAgentsSectionBody(),
-  );
+  const guidance = await upsertAgentsMdSections(projectRoot, [
+    {
+      key: PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+      body: buildProjectManagementAgentsSectionBody(),
+    },
+    {
+      key: DECISION_AGENTS_SECTION_KEY,
+      body: buildDecisionAgentsSectionBody(),
+    },
+  ]);
 
   return {
     repoRoot: options.repoRoot,
     created,
     skipped,
+    guidance: {
+      projectManagement: guidance[PROJECT_MANAGEMENT_AGENTS_SECTION_KEY] ?? {
+        action: 'no-change',
+      },
+      decisions: guidance[DECISION_AGENTS_SECTION_KEY] ?? {
+        action: 'no-change',
+      },
+    },
   };
 }
