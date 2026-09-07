@@ -2444,7 +2444,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
 /**
  * Floors, not exact counts: the corpus grows, but a glob or path regression that
  * shrinks it must fail loudly rather than quietly widening every exemption.
- * Recorded at 41 bounded files / 158 candidate sentences, so losing a single
+ * Recorded at 42 bounded files / 179 candidate sentences, so losing a single
  * scanned file or one reference file's worth of candidates breaches the floor.
  * The negative control below reads these values rather than restating them, so
  * lowering them cannot silently disarm the guard.

@@ -96,6 +96,89 @@ function makeRevisionProgress({
   };
 }
 
+/**
+ * Snapshot fixture — provenance.
+ *
+ * Captured on 2026-09-07 by running the committed `parseTaskProgress` over the
+ * read-only archive `.oat/projects/archived/workflow-friction/` (`plan.md` +
+ * `implementation.md`) at commit 9d004921263a639888192c8ab005733fcb762903, and
+ * cross-checked against a raw `grep` of that plan's headings. Phase names are
+ * copied verbatim from `plan.md:88,431,629,700,838,910,1172`.
+ *
+ * Measured result: 15/25 completed. The five ordinary phases parse normally
+ * because that project writes `### Task pNN-tNN:` + `**Status:** completed` for
+ * them (`p05` reads 1/2 because its `p05-t01` body still says `pending`). Its
+ * two revision phases read 0/8 and 0/1 because `implementation.md` has no
+ * `## Revision Phase …` section for them at all: their completion is recorded
+ * only in the Progress Overview table (`implementation.md:35-36`,
+ * `| Revision Phase p-rev1: … | complete | 8 | 8/8 |`) and their task ids only
+ * as review-log bullets (`implementation.md:660-667`). That table asserts
+ * 25/25. This is precisely the shape the external plan's "Out of scope" names:
+ * completion marked "on the heading line or only in the Progress Overview
+ * table".
+ *
+ * This is a snapshot, not a reader: the archive is evidence and is never read
+ * or mutated by this test.
+ */
+function makeWorkflowFrictionProgress(): ProjectState['progress'] {
+  return {
+    total: 25,
+    completed: 15,
+    currentTaskId: null,
+    phases: [
+      {
+        phaseId: 'p01',
+        name: 'Config System Extension',
+        total: 4,
+        completed: 4,
+        isRevision: false,
+      },
+      {
+        phaseId: 'p02',
+        name: 'Skill Integration — oat-project-implement',
+        total: 5,
+        completed: 5,
+        isRevision: false,
+      },
+      {
+        phaseId: 'p03',
+        name: 'Skill Integration — oat-project-complete and oat-project-pr-final',
+        total: 2,
+        completed: 2,
+        isRevision: false,
+      },
+      {
+        phaseId: 'p04',
+        name: 'Skill Integration — Review Skills',
+        total: 3,
+        completed: 3,
+        isRevision: false,
+      },
+      {
+        phaseId: 'p05',
+        name: 'Documentation and Bundled Docs Update',
+        total: 2,
+        completed: 1,
+        isRevision: false,
+      },
+      {
+        phaseId: 'p-rev1',
+        name: 'Final Review Fixes',
+        total: 8,
+        completed: 0,
+        isRevision: true,
+      },
+      {
+        phaseId: 'p-rev2',
+        name: 'Re-Review Polish',
+        total: 1,
+        completed: 0,
+        isRevision: true,
+      },
+    ],
+  };
+}
+
 function makeArtifacts(
   currentArtifact?: Partial<ArtifactStatus> & { type: ArtifactStatus['type'] },
 ): ArtifactStatus[] {
@@ -440,6 +523,54 @@ describe('recommendSkill', () => {
 
     expect(recommendSkill(state).skill).not.toBe('oat-project-implement');
     expect(recommendSkill(state).skill).toBe('oat-project-review-provide');
+  });
+
+  // Documents — does not endorse — the interaction between this phase's heading
+  // widening and the completion-format class the external plan puts out of
+  // scope. Widening made `## Revision Phase p-revN:` plan headings parse for the
+  // first time, so their tasks now surface in `progress.phases`. When a project
+  // records those tasks' completion somewhere other than `### Task <id>:` +
+  // `**Status:** completed` in `implementation.md` — for the captured archive,
+  // only in the Progress Overview table and in review-log bullets — no
+  // task-level record exists to read, so the phase counts 0/N however finished
+  // it actually is.
+  //
+  // For a `complete` lifecycle the terminal guard absorbs this, which is why
+  // the real archive is unaffected. For an `active` or `paused` lifecycle the
+  // project routes back to `oat-project-implement` even though its own record
+  // says the revision work is done. Recognizing phase-level completion records
+  // is deliberately NOT done here — it is the out-of-scope completion-format
+  // class, tracked as `BL-260907-recognize-phase-level`. This test pins today's
+  // behavior so that follow-up changes it deliberately rather than by accident.
+  it('routes an active-lifecycle project to implement when its revision phases are recorded only at phase level (documented BL-260907-recognize-phase-level interaction)', () => {
+    const progress = makeWorkflowFrictionProgress();
+
+    // Counterfactual lifecycle: the captured project is `complete`; this is the
+    // active-lifecycle case the widening newly reaches.
+    const active = makeState({
+      phase: 'implement',
+      phaseStatus: 'pr_open',
+      workflowMode: 'quick',
+      lifecycle: 'active',
+      progress,
+    });
+
+    expect(recommendSkill(active)).toMatchObject({
+      skill: 'oat-project-implement',
+      reason: 'Revision work remains incomplete',
+    });
+
+    // The captured project's real lifecycle. The terminal guard absorbs the
+    // same progress snapshot, so the archive itself never regressed.
+    const complete = makeState({
+      phase: 'implement',
+      phaseStatus: 'pr_open',
+      workflowMode: 'quick',
+      lifecycle: 'complete',
+      progress,
+    });
+
+    expect(recommendSkill(complete).skill).not.toBe('oat-project-implement');
   });
 
   it('routes active top-level review artifacts to review-receive', () => {

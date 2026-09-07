@@ -23,6 +23,13 @@ import type { TaskProgress } from '../types';
  *
  * Ordinary and revision ids can never collide: ordinary ids are `p<digits>`
  * and revision ids are `p-rev<digits>`.
+ *
+ * One consequence of normalizing spellings: a plan that declares the same
+ * phase twice under two spellings (`## Phase 1:` and `## Phase p01:` as
+ * separate headings) now yields two phase records sharing one `phaseId`. No
+ * task is misattributed — each task still lands in its own enclosing phase —
+ * but a consumer keying `progress.phases` by `phaseId` would see a duplicate.
+ * Rejecting that authoring shape belongs to plan validation, not here.
  */
 const ORDINARY_PHASE_HEADING_PATTERN = /^## Phase p?(\d+): (.+)$/;
 const CANONICAL_REVISION_PHASE_HEADING_PATTERN = /^## Phase p-rev(\d+): (.+)$/;
