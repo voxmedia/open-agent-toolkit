@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -91,6 +98,82 @@ function expectValidReportContext(command: string): void {
   if (/--role\s+implementer/.test(command)) {
     expect(command).toMatch(/--report-action\s+(?:implementation|fix)(?:\s|$)/);
   }
+}
+
+const QUICK_SCAFFOLD_ANCHOR =
+  '- Create project via the same scaffolding path used by `oat-project-new`';
+
+/**
+ * The scaffold branch is prose plus one executable block, so the consolidation
+ * control below runs the block the skill actually ships against a real
+ * `oat project new` instead of asserting that the prose exists.
+ */
+function extractQuickScaffoldBlock(content: string): string {
+  const start = content.indexOf(QUICK_SCAFFOLD_ANCHOR);
+  const end = content.indexOf('### Step 1: Set Quick Workflow Metadata', start);
+  if (start < 0 || end <= start) {
+    throw new Error('Missing quick-start scaffold branch.');
+  }
+  const block = content.slice(start, end).match(/```bash\n([\s\S]*?)\n```/);
+  if (!block?.[1]?.includes('oat project new')) {
+    throw new Error('Missing `oat project new` block in quick-start.');
+  }
+  return block[1];
+}
+
+function builtCliEntry(): string {
+  const entry = repoFilePath('packages/cli/dist/index.js');
+  if (!existsSync(entry)) {
+    throw new Error(
+      `Missing built CLI at ${entry}. This control runs the real scaffolder; ` +
+        'run `pnpm --filter @open-agent-toolkit/cli build` first (turbo already ' +
+        'orders build before test).',
+    );
+  }
+  return entry;
+}
+
+interface ScaffoldWorkspace {
+  readonly workspace: string;
+  readonly repository: string;
+  readonly env: NodeJS.ProcessEnv;
+}
+
+/**
+ * A scratch repository with `oat` on PATH and an isolated HOME, so the skill
+ * block runs verbatim and nothing resolves against the maintainer's
+ * `~/.oat/templates`.
+ */
+function createScaffoldWorkspace(cliEntry: string): ScaffoldWorkspace {
+  const workspace = mkdtempSync(join(tmpdir(), 'quick-start-scaffold-'));
+  const binDirectory = join(workspace, 'bin');
+  const home = join(workspace, 'home');
+  const repository = join(workspace, 'repo');
+  for (const directory of [binDirectory, home, repository]) {
+    mkdirSync(directory, { recursive: true });
+  }
+  const shellQuote = (value: string): string =>
+    `'${value.replaceAll("'", `'\\''`)}'`;
+  writeFileSync(
+    join(binDirectory, 'oat'),
+    `#!/bin/sh\nexec ${shellQuote(process.execPath)} ${shellQuote(cliEntry)} "$@"\n`,
+    { mode: 0o755 },
+  );
+  // Inherited `OAT_*` settings (notably `OAT_PROJECTS_ROOT`) outrank the
+  // scratch repository's own config and can place the scaffolded projects
+  // outside `workspace`, where the cleanup below never reaches them.
+  const inherited = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => !key.startsWith('OAT_')),
+  );
+  return {
+    workspace,
+    repository,
+    env: {
+      ...inherited,
+      HOME: home,
+      PATH: `${binDirectory}:${process.env.PATH ?? ''}`,
+    },
+  };
 }
 
 const QUICK_PLAN_READINESS_HEADING =
@@ -3042,6 +3125,195 @@ printf '%s\\n' "$EVENTS"`;
         }),
       ),
     ).toBe('not-ready');
+  });
+
+  it('re-resolves PROJECT_PATH after scaffolding so the absorbed consolidation fields land in the created project', () => {
+    const quickStart = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const scaffoldBlock = extractQuickScaffoldBlock(quickStart).replace(
+      '{project-name}',
+      'absorbing-project',
+    );
+    const { workspace, repository, env } =
+      createScaffoldWorkspace(builtCliEntry());
+
+    try {
+      // The skill's own block, run verbatim between a real Step 0.5 resolve and
+      // a real Step 1 + consolidation frontmatter write. `retired-scaffold` is
+      // the active project when quick-start starts, which is exactly the
+      // consolidation case: this run absorbs it rather than continuing it.
+      const driver = [
+        'set -eu',
+        'git init -q .',
+        'git config user.email quick-start@example.invalid',
+        'git config user.name "Quick Start Control"',
+        "printf '# scratch\\n' > README.md",
+        'git add -A',
+        'git commit -q -m init',
+        'oat config set projects.defaultScope shared --shared > /dev/null',
+        'oat project new "retired-scaffold" --mode quick --json > /dev/null',
+        'PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)',
+        `printf 'step0.5:%s\\n' "$PROJECT_PATH"`,
+        scaffoldBlock,
+        // Step 1 and the consolidation fields, written through PROJECT_PATH
+        // exactly as the skill directs. Nothing here names the project
+        // directory, so the resolved variable alone decides where they land.
+        `awk 'NR == 1 && /^---$/ { print; print "absorbed_projects: [retired-scaffold]"; print "absorbed_backlog_ids: [BL-260907-example]"; next } { print }' "$PROJECT_PATH/state.md" > "$PROJECT_PATH/state.md.tmp"`,
+        'mv "$PROJECT_PATH/state.md.tmp" "$PROJECT_PATH/state.md"',
+        `printf 'resolved:%s\\n' "$PROJECT_PATH"`,
+      ].join('\n');
+
+      const stdout = execFileSync('/bin/bash', ['-c', driver], {
+        cwd: repository,
+        encoding: 'utf8',
+        env,
+      });
+      const reported = (prefix: string): string | undefined =>
+        stdout
+          .split('\n')
+          .filter((line) => line.startsWith(prefix))
+          .map((line) => line.slice(prefix.length))
+          .at(-1);
+      const stale = reported('step0.5:');
+      const resolved = reported('resolved:');
+
+      // Scaffolding repoints `activeProject`, so the Step 0.5 value is stale
+      // from the moment `oat project new` returns.
+      expect(stale).toBe('.oat/projects/shared/retired-scaffold');
+      expect(resolved).toBe('.oat/projects/shared/absorbing-project');
+
+      const created = readFileSync(
+        join(repository, '.oat/projects/shared/absorbing-project/state.md'),
+        'utf8',
+      );
+      const retired = readFileSync(
+        join(repository, '.oat/projects/shared/retired-scaffold/state.md'),
+        'utf8',
+      );
+
+      // Read the fields back out of the project the scaffolder actually
+      // created. Completion's absorbed-project sweep reads these two fields
+      // there and nowhere else.
+      expect(created).toContain('absorbed_projects: [retired-scaffold]');
+      expect(created).toContain('absorbed_backlog_ids: [BL-260907-example]');
+      // Without the re-resolve they landed in the scaffold being retired.
+      expect(retired).not.toContain('absorbed_projects:');
+      expect(retired).not.toContain('absorbed_backlog_ids:');
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it('stops the quick-start scaffold branch when the real scaffolder fails and leaves a valid stale PROJECT_PATH', () => {
+    const quickStart = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    // A real `oat project new` failure: the CLI rejects the name, reports
+    // `status: error` with no `projectPath`, and leaves `activeProject`
+    // pointing at the project that is being retired -- whose `state.md` is
+    // perfectly valid, so an existence check alone would wave it through.
+    const scaffoldBlock = extractQuickScaffoldBlock(quickStart).replace(
+      '{project-name}',
+      'bad name!',
+    );
+    const { workspace, repository, env } =
+      createScaffoldWorkspace(builtCliEntry());
+
+    try {
+      const setup = [
+        'set -eu',
+        'git init -q .',
+        'git config user.email quick-start@example.invalid',
+        'git config user.name "Quick Start Control"',
+        "printf '# scratch\\n' > README.md",
+        'git add -A',
+        'git commit -q -m init',
+        'oat config set projects.defaultScope shared --shared > /dev/null',
+        'oat project new "retired-scaffold" --mode quick --json > /dev/null',
+      ].join('\n');
+      execFileSync('/bin/bash', ['-c', setup], {
+        cwd: repository,
+        encoding: 'utf8',
+        env,
+      });
+
+      const retiredState = join(
+        repository,
+        '.oat/projects/shared/retired-scaffold/state.md',
+      );
+      const before = readFileSync(retiredState, 'utf8');
+
+      let exitCode = 0;
+      try {
+        execFileSync('/bin/bash', ['-c', scaffoldBlock], {
+          cwd: repository,
+          encoding: 'utf8',
+          env,
+          stdio: 'pipe',
+        });
+      } catch (error) {
+        exitCode = (error as { status?: number }).status ?? -1;
+      }
+
+      // Falling back to `activeProject` unconditionally would resolve back to
+      // the retired scaffold and let Step 1 write into it.
+      expect(exitCode).toBe(1);
+      expect(readFileSync(retiredState, 'utf8')).toBe(before);
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it('stops the quick-start scaffold branch when the reported PROJECT_PATH has no state.md', () => {
+    const quickStart = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+    const scaffoldBlock = extractQuickScaffoldBlock(quickStart).replace(
+      '{project-name}',
+      'absorbing-project',
+    );
+    const workspace = mkdtempSync(join(tmpdir(), 'quick-start-validate-'));
+
+    try {
+      const binDirectory = join(workspace, 'bin');
+      mkdirSync(binDirectory, { recursive: true });
+      // A scaffolder that reports a path it did not create. The block must
+      // stop here rather than let Step 1 and the consolidation write pick
+      // some other target.
+      writeFileSync(
+        join(binDirectory, 'oat'),
+        [
+          '#!/bin/sh',
+          'if [ "$1" = "project" ]; then',
+          '  printf \'{\\n  "status": "ok",\\n  "projectPath": ".oat/projects/shared/never-created"\\n}\\n\'',
+          '  exit 0',
+          'fi',
+          'exit 0',
+        ].join('\n'),
+        { mode: 0o755 },
+      );
+
+      let exitCode = 0;
+      try {
+        execFileSync('/bin/bash', ['-c', scaffoldBlock], {
+          cwd: workspace,
+          encoding: 'utf8',
+          env: {
+            ...process.env,
+            HOME: workspace,
+            PATH: `${binDirectory}:${process.env.PATH ?? ''}`,
+          },
+          stdio: 'pipe',
+        });
+      } catch (error) {
+        exitCode = (error as { status?: number }).status ?? -1;
+      }
+
+      expect(exitCode).toBe(1);
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
   });
 
   it('explains why spec-driven planning stops and names a recoverable continuation', () => {
