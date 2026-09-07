@@ -189,7 +189,10 @@ Lifecycle complete
 - ✓ Exit gate attempt 3 allowed/passed (run `905419ec`, 0C/0I/2M/1m; both Mediums deferred to `BL-260907-harden-the-external-plan` class follow-up, Minor fixed)
 - ✓ Post-implement sequence: summary (`394159d3b`, with the promoted decision), document (`394159d3b`), pr (PR #275)
 - ✓ PR created
-- ✓ Project lifecycle complete
+- ✓ Project lifecycle complete (completion tail deferred to program close)
+- ✗ CI on PR #275 failed one Linux-only test; fixed as `7aed651ce` (fix(p02): content-root probe through the injected stat); gates green; pushed
+- ⚠ Exit gate basis stale (product change after the reviewed head); operator decision on a re-run pending
+- ⧗ Awaiting CI re-run and human review
 
 ## Blockers
 
