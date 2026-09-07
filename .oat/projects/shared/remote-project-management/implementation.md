@@ -3055,6 +3055,281 @@ Track test execution during implementation.
   reachable; both remote PJM and the independently delivered lite workflow are
   retained in the synchronized provider views.
 
+## Machine-Readable Completion Ledger
+
+These canonical task receipts mirror the earlier chronological phase records so
+`oat project status` can reconstruct every completed task.
+
+### Task p04-t01: Normalize GitHub identity and snapshots
+
+**Status:** completed
+**Commit:** 656a513be002b0aca1b15cddfea2ee1341e4cfd0
+
+### Task p04-t02: Validate GitHub host context and capabilities
+
+**Status:** completed
+**Commit:** 30f78ae8b7d45d8c61893a320a90cf841f85c9a6
+
+### Task p04-t03: Read and refresh GitHub issues
+
+**Status:** completed
+**Commit:** b1c9e5482c0373fd61df7c9dfb4578f3bfab0dc9
+
+### Task p04-t04: Plan GitHub create and field updates
+
+**Status:** completed
+**Commit:** aaa4a6fd82bf5462f7df33909c76a885040b45a1
+
+### Task p04-t05: Accept and verify GitHub mutation observations
+
+**Status:** completed
+**Commit:** dd49a1c41c9a630bb8bb3b570811d613f152cabc
+
+### Task p04-t06: Run GitHub adapter conformance
+
+**Status:** completed
+**Commit:** 5d7fcccbb657415ffca50cf3b69e4772a61f6a1f
+
+### Task p04-t07: Add GitHub lifecycle integration
+
+**Status:** completed
+**Commit:** 2b40105a3de12764d6bb7e09c0f6e70585fe9deb
+
+### Task p04-t08: Gate publication to public GitHub issues
+
+**Status:** completed
+**Commit:** 724baf850854830839ce5896a622abc9454acaae
+
+### Task p04-t09: Plan GitHub duplicate searches
+
+**Status:** completed
+**Commit:** 7668e3baeaa175b3e023c57e5d8cae192054bd7e
+
+### Task p04-t10: Validate GitHub duplicate-search observations
+
+**Status:** completed
+**Commit:** a49465e1c99fe75128b741d701c3b8d3f28f13ce
+
+### Task p04-t11: Read bounded GitHub discussion evidence
+
+**Status:** completed
+**Commit:** 680424fe8f173fcbea7028f7bef63619574207c8
+
+### Task p05-t01: Normalize Linear identity and snapshots
+
+**Status:** completed
+**Commit:** 2ae26d36c64e54ce577c7bc5c3cd3aead419bbea
+
+### Task p05-t02: Plan Linear semantic read intents
+
+**Status:** completed
+**Commit:** b1c97664b8b9c5088c61cb31b565231b19e16073
+
+### Task p05-t03: Plan Linear semantic mutation intents
+
+**Status:** completed
+**Commit:** 8efb8d1c777a3a8f1b3ff33c15ef0196c9c2cbc5
+
+### Task p05-t04: Validate Linear read observations
+
+**Status:** completed
+**Commit:** 8875b621e1d94d096ceb5094957c00151ca54f68
+
+### Task p05-t05: Validate Linear mutation observations
+
+**Status:** completed
+**Commit:** 7611654d245f4df37f74e802a13b19903b93f643
+
+### Task p05-t06: Run Linear adapter conformance
+
+**Status:** completed
+**Commit:** 7d17ca8caf1685681f8107a659f904d3df29a658
+
+### Task p05-t07: Add Linear lifecycle integration
+
+**Status:** completed
+**Commit:** a183bd88c874c3a129b79a93ede75b2cf20c7ffc
+
+### Task p05-t08: Plan Linear duplicate-search intents
+
+**Status:** completed
+**Commit:** b597073c59915974f8357597331efb2afced5402
+
+### Task p05-t09: Validate Linear duplicate-search observations
+
+**Status:** completed
+**Commit:** ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
+
+### Task p06-t01: Normalize Jira Cloud identity and snapshots
+
+**Status:** completed
+**Commit:** 4e234aafe80f75cc5cd14685ecf6403f08cb4eaa
+
+### Task p06-t02: Preserve Jira ADF managed content
+
+**Status:** completed
+**Commit:** 436b5a8b6cdd1d5857bbef9f9e2535b84f2238ae
+
+### Task p06-t03: Plan Jira semantic read and metadata intents
+
+**Status:** completed
+**Commit:** 5adb5018527deacfceab6196fd4e2bc935da6750
+
+### Task p06-t04: Plan Jira semantic mutation intents
+
+**Status:** completed
+**Commit:** 9017c2fc8e650639b1412c20c10f4eb4e63d2a88
+
+### Task p06-t05: Validate Jira read and metadata observations
+
+**Status:** completed
+**Commit:** 3c4213406cd5d715cbe2a448f210537b398d1e25
+
+### Task p06-t06: Validate Jira mutation observations
+
+**Status:** completed
+**Commit:** d7c345de48f89a90d17dfeef4105263d68ab01c8
+
+### Task p06-t07: Run Jira adapter conformance
+
+**Status:** completed
+**Commit:** f554cd33b95c7e8664ddd28b1ba575f308db7591
+
+### Task p06-t08: Add Jira lifecycle integration
+
+**Status:** completed
+**Commit:** a1658baff70bc176770c7880a4ce94916c95af72
+
+### Task p06-t09: Plan Jira duplicate-search intents
+
+**Status:** completed
+**Commit:** d8f14bd2e1ff9267214e2d90809cd59906514d6e
+
+### Task p06-t10: Validate Jira duplicate-search observations
+
+**Status:** completed
+**Commit:** b16811bc5d2105b0055a576144831488a1382c6d
+
+### Task p07-t01: Persist immutable reviewed batches
+
+**Status:** completed
+**Commit:** 777b69d362a12f69ca39a66c1afe278014993ef9
+
+### Task p07-t02: Implement composite closeout
+
+**Status:** completed
+**Commit:** 7827d51d07af344517620f8646216cfdc0fdf253
+
+### Task p07-t03: Recover interrupted closeout substeps
+
+**Status:** completed
+**Commit:** e2ebb6fa0b22aea261a9f48808c53e97cd28901e
+
+### Task p07-t04: Add bounded discussion evidence reads
+
+**Status:** completed
+**Commit:** fc3188bd7fd6f27f2e90cf864f43ff135ae7262e
+
+### Task p07-t05: Resolve remote anomalies by relink or detach
+
+**Status:** completed
+**Commit:** 18ba5f44e544fee6a55d3f4d6dc2c4ccaf666236
+
+### Task p07-t06: Resolve uncertain creates and recreate safely
+
+**Status:** completed
+**Commit:** 2149457a8423007c1adf0e25276987a3ca583e5a
+
+### Task p07-t07: Complete remote doctor and local migration
+
+**Status:** completed
+**Commit:** 6705410c1d8fcf2390c42703f6f8ad78a03f5a2e
+
+### Task p07-t08: Cover representative cross-provider workflows
+
+**Status:** completed
+**Commit:** 2829f8dcfa797d533f155ee61112d3925ba09a14
+
+### Task p07-t09: Cover offline, security, and recovery guarantees
+
+**Status:** completed
+**Commit:** b292ecb38d275f3730405d62d77730cd1200496d
+
+### Task p07-t10: Add end-to-end command workflows
+
+**Status:** completed
+**Commit:** 390f21157181e2b5cfd5d83ad582ed0aa00bba60
+
+### Task prev3-t01: (review) Restore recreate from non-active anomalies
+
+**Status:** completed
+**Commit:** a59be4171bec65a071d57a7b4a73d0dc8e0e1d31
+
+### Task prev3-t02: (review) Expose exact lifecycle approval previews
+
+**Status:** completed
+**Commit:** a9c86aab6ee0d21f923f9e602a8f3e5ed55215ab
+
+### Task p08-t01: Document remote PJM configuration and safety
+
+**Status:** completed
+**Commit:** d78efc897b4bdcb2ccdd25fe3fb686686298aa3b
+
+### Task p08-t02: Update CLI and file-location references
+
+**Status:** completed
+**Commit:** 2f4f53dc2ec777360c220df2130b34a3b0eebce7
+
+### Task p08-t03: Document and validate the host skill
+
+**Status:** completed
+**Commit:** 9f4c1c09ef5d30ace684979b5e1163bd653516fb
+
+### Task p08-t04: Run evidence-grade focused and full verification
+
+**Status:** completed
+**Commit:** 7c32ddbde145b28b331cfd0db1ed674bdafad7ed
+
+### Task p08-t05: Apply the lockstep public-package version bump
+
+**Status:** completed
+**Commit:** e4eec29842775abcd5d32684ed65a3b5785e5be3
+
+### Task p08-t06: Run the complete CI-equivalent release gate
+
+**Status:** completed
+**Commit:** 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae
+
+### Task p09-t01: (review) Record P0 guard-neutralization proof
+
+**Status:** completed
+**Commit:** 818647f11d2c08986741aae4bf5df4a1f5b0bea5
+
+### Task p09-t02: (review) Reconcile durable closeout state
+
+**Status:** completed
+**Commit:** dda462ea6cd35e8cb03e8f7aeebaf7c00658cb7c
+
+### Task p09-t03: (review) Correct ineffective negative-control probes
+
+**Status:** completed
+**Commit:** 681e69905b2f6d63d1e62f164f06c6c8aa19971b
+
+### Task p09-t04: (review) Align the current Phase 9 status
+
+**Status:** completed
+**Commit:** f2489c00c5719d309e45eb4cfa41c437be9d6d73
+
+### Task prev2-t01: (review) Make the mutation-to-verification handoff restart-safe
+
+**Status:** completed
+**Commit:** 4a02c866e64ac72ba22bdf44ad14c132a377ea2b
+
+### Task prev2-t02: (review) Fail closed on incomplete project-create provenance
+
+**Status:** completed
+**Commit:** 1af99a23b5cb67142cd06f37c3b3b0bc648e941e
+
 ## References
 
 - Plan: `plan.md`
@@ -3079,3 +3354,24 @@ Track test execution during implementation.
   artifact contains one Medium lifecycle-bookkeeping finding that must be
   dispositioned by `oat-project-review-receive` before the gate can become
   allowed.
+
+### Review Received: final (configured exit gate)
+
+**Artifact:** `reviews/archived/final-review-2026-09-07T053105Z.md`
+**Gate run:** `bee16cdf-2649-4445-baaf-fe7827c841c2`
+**Findings:** 0 Critical, 0 Important, 1 Medium, 0 Minor
+
+- `M1` — addressed now. Added canonical completion receipts for the 54 tasks
+  whose chronological phase records previously used compact commit lists.
+  This changes only the lifecycle artifact; the earlier task histories and
+  commits remain authoritative and unchanged.
+- Public verification now reports 90/90 completed tasks, with every phase and
+  corrective revision at its exact completed total.
+
+#### Deferred Findings (Medium)
+
+None.
+
+#### Deferred Findings (Minor)
+
+None.

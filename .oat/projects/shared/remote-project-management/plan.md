@@ -1650,7 +1650,7 @@ restore each exact production guard before continuing or committing.
 | plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | revision-1-review-3 | codex:sol-high           |
 | plan   | artifact | passed          | 2026-09-01 | -                                                                     | -                                        | revision-2-review-2 | codex:sol-high           |
 | plan   | artifact | passed          | 2026-09-07 | -                                                                     | 0b899c6ff28e2f279c6290166a9b2a4ad3fe2801 | revision-3-review-1 | codex:sol-high           |
-| final  | code     | received        | 2026-09-07 | reviews/final-review-2026-09-07T053105Z.md                            | 6946819c31fd63db54af6f67397d3f511f9651b9 | gate                | cursor-fable-5-1-high    |
+| final  | code     | passed          | 2026-09-07 | reviews/archived/final-review-2026-09-07T053105Z.md                   | 6946819c31fd63db54af6f67397d3f511f9651b9 | gate                | cursor-fable-5-1-high    |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
