@@ -1079,10 +1079,17 @@ describe('pjm remote end-to-end command workflows', () => {
         lifecycle: 'blocked',
         publicationProjection: {
           ...anomalyMetadata.publicationProjection,
-          priority:
-            lifecycleCondition === 'missing-or-invisible'
-              ? 'none'
-              : 'frontmatter',
+          priority: 'frontmatter',
+        },
+        providerMappingEvidence: {
+          priority: {
+            status:
+              lifecycleCondition === 'missing-or-invisible'
+                ? 'unavailable'
+                : 'safe',
+            evidenceDigest: `sha256:e2e-priority-mapping-${lifecycleCondition}`,
+            observedAt: '2026-09-05T12:00:00.000Z',
+          },
         },
       });
       const anomalyState =

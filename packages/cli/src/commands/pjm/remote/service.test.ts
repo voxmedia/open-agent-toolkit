@@ -68,6 +68,13 @@ function binding(
       description: 'description-section',
       priority: 'frontmatter',
     },
+    providerMappingEvidence: {
+      priority: {
+        status: 'unavailable',
+        evidenceDigest: 'sha256:no-safe-priority-mapping',
+        observedAt: timestamp,
+      },
+    },
     provenanceToken: 'oat-binding:bnd_service_001',
     lifecycle: 'active',
     createdAt: timestamp,
@@ -952,10 +959,17 @@ describe('production lifecycle composition', () => {
         lifecycle: 'blocked',
         publicationProjection: {
           ...anomalyMetadata.publicationProjection,
-          priority:
-            lifecycleCondition === 'missing-or-invisible'
-              ? 'none'
-              : 'frontmatter',
+          priority: 'frontmatter',
+        },
+        providerMappingEvidence: {
+          priority: {
+            status:
+              lifecycleCondition === 'missing-or-invisible'
+                ? 'unavailable'
+                : 'safe',
+            evidenceDigest: `sha256:priority-mapping-${lifecycleCondition}`,
+            observedAt: timestamp,
+          },
         },
       });
       const anomalyState = (await store.readBindingState(
@@ -1146,9 +1160,12 @@ describe('production lifecycle composition', () => {
     ))!;
     await store.updateBindingMetadata({
       ...beforePriorityPolicyDrift,
-      publicationProjection: {
-        ...beforePriorityPolicyDrift.publicationProjection,
-        priority: 'frontmatter',
+      providerMappingEvidence: {
+        priority: {
+          status: 'safe',
+          evidenceDigest: 'sha256:changed-safe-priority-mapping',
+          observedAt: timestamp,
+        },
       },
     });
     await expect(

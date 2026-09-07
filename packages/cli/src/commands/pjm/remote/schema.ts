@@ -156,6 +156,18 @@ export const PublicationProjectionSchema = z
   })
   .strict();
 
+export const ProviderMappingEvidenceSchema = z
+  .object({
+    priority: z
+      .object({
+        status: z.enum(['safe', 'unavailable']),
+        evidenceDigest: z.string().min(1).max(512),
+        observedAt: TimestampSchema,
+      })
+      .strict(),
+  })
+  .strict();
+
 const LocalIssueProjectionSchema = z
   .object({
     title: z.string().max(8_192),
@@ -229,6 +241,7 @@ export const RemoteBindingMetadataSchema = z
       }),
     policyRestrictions: BindingPolicyRestrictionSchema,
     publicationProjection: PublicationProjectionSchema,
+    providerMappingEvidence: ProviderMappingEvidenceSchema.optional(),
     provenanceToken: z.string().min(1).max(512),
     lifecycle: z.enum(['active', 'blocked', 'tombstoned']),
     createdAt: TimestampSchema,

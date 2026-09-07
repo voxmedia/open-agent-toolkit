@@ -125,6 +125,13 @@ describe('remote record schemas', () => {
         authority: { default: 'user-approved' },
       },
       publicationProjection,
+      providerMappingEvidence: {
+        priority: {
+          status: 'safe',
+          evidenceDigest: 'sha256:safe-priority-mapping',
+          observedAt: timestamp,
+        },
+      },
       provenanceToken: 'oat-binding:bnd_binding_123',
       lifecycle: 'active',
       createdAt: '2026-08-31T00:00:00.000Z',
@@ -132,6 +139,18 @@ describe('remote record schemas', () => {
     });
 
     expect(parsed.bindingId).toBe('bnd_binding_123');
+    expect(parsed.providerMappingEvidence?.priority.status).toBe('safe');
+    expect(() =>
+      RemoteBindingMetadataSchema.parse({
+        ...parsed,
+        providerMappingEvidence: {
+          priority: {
+            status: 'safe',
+            evidenceDigest: 'sha256:missing-observation-time',
+          },
+        },
+      }),
+    ).toThrow();
     expect(() =>
       RemoteBindingMetadataSchema.parse({ ...parsed, description: 'secret' }),
     ).toThrow();

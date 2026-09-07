@@ -937,7 +937,7 @@ async function applyResolutionPreview(
       metadata,
       state,
       descriptionMode: effective.description,
-      priorityMapping: resolveSafePriorityMapping(metadata),
+      priorityMapping: resolveRecreatePriorityPolicy(metadata).enabled,
     });
     const assessedAt = operation.approvalPreview?.createdAt;
     if (!assessedAt) {
@@ -1771,8 +1771,22 @@ async function resolveCurrentResolutionAction(
   };
 }
 
-function resolveSafePriorityMapping(metadata: RemoteBindingMetadata): boolean {
-  return metadata.publicationProjection.priority !== 'none';
+function resolveRecreatePriorityPolicy(metadata: RemoteBindingMetadata) {
+  const evidence = metadata.providerMappingEvidence?.priority;
+  const mappingAvailable = evidence?.status === 'safe';
+  const localSource = metadata.publicationProjection.priority;
+  return {
+    enabled: mappingAvailable && localSource !== 'none',
+    mappingAvailable,
+    localSource,
+    evidence:
+      evidence ??
+      ({
+        status: 'unavailable',
+        evidenceDigest: null,
+        observedAt: null,
+      } as const),
+  };
 }
 
 function resolutionPolicyEvidence(
@@ -1780,14 +1794,17 @@ function resolutionPolicyEvidence(
   metadata: RemoteBindingMetadata,
   operation: 'relink' | 'detach' | 'recreate',
 ) {
+  const priorityPolicy = resolveRecreatePriorityPolicy(metadata);
   return {
     effective,
     ...(operation === 'recreate'
       ? {
           priorityMapping: {
-            enabled: resolveSafePriorityMapping(metadata),
-            source: 'binding-publication-projection' as const,
-            projection: metadata.publicationProjection.priority,
+            enabled: priorityPolicy.enabled,
+            mappingAvailable: priorityPolicy.mappingAvailable,
+            localSource: priorityPolicy.localSource,
+            source: 'provider-binding-evidence' as const,
+            evidence: priorityPolicy.evidence,
           },
         }
       : {}),
@@ -4368,7 +4385,7 @@ async function continueResolutionOperation(
         metadata,
         state,
         descriptionMode: effective.description,
-        priorityMapping: resolveSafePriorityMapping(metadata),
+        priorityMapping: resolveRecreatePriorityPolicy(metadata).enabled,
       });
       const safety = assessOutboundProjectionSafety(projection, {
         assessedAt: dependencies.now(),
