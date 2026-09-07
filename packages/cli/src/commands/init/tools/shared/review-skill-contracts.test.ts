@@ -2122,9 +2122,12 @@ printf '%s\\n' "$EVENTS"`;
       .split('\n')
       .filter((line) => line.startsWith('| plan '));
     expect(nextQuick).toContain('| Quick Plan Readiness |');
-    // The exact tuple set, not aggregate counts: every plan-phase/tier
-    // combination the classifier can produce has exactly one route, and a
-    // duplicated row cannot stand in for a missing one.
+    // The exact tuple set, not aggregate counts: every plan-phase boundary
+    // classification Step 2 can produce — tier 3, tier 2, tier 1, and tier 1b —
+    // has exactly one route, and a duplicated row cannot stand in for a missing
+    // one. Tier 1b is `oat_status: complete` with a null `oat_ready_for`, which
+    // readiness condition 2 can never satisfy, so it carries a single
+    // always-not-ready row rather than a pair.
     expect(
       quickPlanRows.map((row) =>
         row
@@ -2157,7 +2160,21 @@ printf '%s\\n' "$EVENTS"`;
       ['plan', 'in_progress', 'tier 1', 'ready', '`oat-project-implement` \\*'],
       ['plan', 'complete', 'tier 1', 'not ready', '`oat-project-quick-start`'],
       ['plan', 'complete', 'tier 1', 'ready', '`oat-project-implement` \\*'],
+      [
+        'plan',
+        'any',
+        'tier 1b',
+        'not ready (always)',
+        '`oat-project-quick-start`',
+      ],
     ]);
+    // Tier 1b must not keep Step 2's own "advance to the next phase" arrow.
+    expect(normalizeProse(next)).toContain(
+      'Exception: in quick mode at the `plan` phase, a tier-1b artifact is evaluated against **quick plan readiness**',
+    );
+    expect(normalizeProse(next)).toContain(
+      'readiness always fails, so it returns to the quick workflow instead of advancing to the next phase',
+    );
     // The generic tier-1 rule must not silently outrank the readiness column.
     expect(normalizeProse(next)).toContain(
       "Exception: in quick mode at the `plan` phase, the Quick Mode table's `Quick Plan Readiness` column decides the target.",
@@ -2472,6 +2489,177 @@ printf '%s\\n' "$EVENTS"`;
       ),
     ).toBe('not-ready');
 
+    // A backtick fence nested inside a tilde fence stays fenced: an example
+    // `passed` row after the real pending row must not dispose of it.
+    const nestedFenceExample = [
+      '~~~text',
+      'Example of a dispositioned review section:',
+      '',
+      '```',
+      '| plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+      '```',
+      '~~~',
+    ];
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [...PENDING_PLAN_ROW, '', ...nestedFenceExample],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+    // Order-independence, proved without leaning on `tail -1`: the fenced
+    // `passed` row is the ONLY plan row in the document, so a parser that leaks
+    // it returns ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [...nestedFenceExample, '', ...REVIEW_TABLE_HEADER],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // CommonMark nesting: an example that nests correctly (outer marker run
+    // longer than the inner one) stays fenced through the inner closer.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '~~~~text',
+            '~~~yaml',
+            'nested: true',
+            '~~~',
+            '',
+            '| plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+            '~~~~',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // A four-space-indented example row is indented code, not the record.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '    | plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // An indented (non-fenced) code block is still an example, not the record.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '    Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // `oat_template` follows the repository's absent-or-false convention, so a
+    // plan that predates the field is still ready.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER.filter(
+            (line) => !line.startsWith('oat_template:'),
+          ),
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
+    // An unpaired quote is a different scalar to YAML, and fails closed here.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER.map((line) =>
+            line.startsWith('oat_status:') ? "oat_status: complete'" : line,
+          ),
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // An explicit null `oat_template` is "not a template", like an absent key.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER.map((line) =>
+            line.startsWith('oat_template:') ? 'oat_template:' : line,
+          ),
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
+    // Alternate key spellings must not smuggle a real template past the check.
+    for (const templateLine of [
+      'oat_template : true',
+      '"oat_template": true',
+      'oat_template: maybe',
+    ]) {
+      expect(
+        classifyQuickPlan(
+          guard,
+          quickPlanFixture({
+            frontmatter: REVIEWED_FRONTMATTER.map((line) =>
+              line.startsWith('oat_template:') ? templateLine : line,
+            ),
+            reviews: PASSED_PLAN_ROW,
+            tasks: SUBSTANTIVE_TASKS,
+          }),
+        ),
+        templateLine,
+      ).toBe('not-ready');
+    }
+
+    // Quoted YAML scalars are the same values.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: [
+            "oat_status: 'complete'",
+            "oat_ready_for: 'oat-project-implement'",
+            'oat_plan_source: quick',
+            'oat_template: "false"',
+          ],
+          reviews: PASSED_PLAN_ROW,
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('ready');
+
     // A task heading that only appears inside a fenced example is not a task.
     expect(
       classifyQuickPlan(
@@ -2555,6 +2743,24 @@ printf '%s\\n' "$EVENTS"`;
 
     expect(quickStart).toContain(
       '- ✅ An existing incomplete quick project resumed in place against **quick plan readiness** instead of being re-scaffolded.',
+    );
+
+    // The in-place constraint must live in Step 3 itself, not only remotely in
+    // Step 0.5: Step 3 is where the template would otherwise be read.
+    const stepThree = quickStart.slice(
+      quickStart.indexOf('### Step 3: Generate Plan Directly'),
+      quickStart.indexOf(
+        '### Step 3.5: Resolve Dispatch Policy Before Implementation Readiness',
+      ),
+    );
+    expect(normalizeProse(stepThree)).toContain(
+      '`.oat/templates/plan.md` is read only when `"$PROJECT_PATH/plan.md"` is missing.',
+    );
+    expect(normalizeProse(stepThree)).toContain(
+      'never replaces phases, tasks, or `## Reviews` rows an earlier run already wrote',
+    );
+    expect(normalizeProse(stepThree)).toContain(
+      'does not license a template rewrite of existing content',
     );
   });
 });

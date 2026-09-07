@@ -2005,6 +2005,15 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
   },
   {
     file: '.agents/skills/oat-project-quick-start/SKILL.md',
+    anchor: 'Quick Plan Readiness (Named Predicate)',
+    match: 'the same absent-or-false convention',
+    classification: 'non-executing',
+    skills: ['oat-project-next'],
+    reason:
+      'Cites the boundary-tier convention that router documents for the same field; nothing is executed here.',
+  },
+  {
+    file: '.agents/skills/oat-project-quick-start/SKILL.md',
     anchor: 'Step 0.5: Resolve Active Project',
     match: 'Ready → there is nothing left to author here',
     classification: 'load-required',

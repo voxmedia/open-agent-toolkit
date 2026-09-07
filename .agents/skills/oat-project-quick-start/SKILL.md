@@ -877,14 +877,22 @@ not restate its conditions.
 
 A quick `plan.md` is implementation-ready only when all of the following hold:
 
-1. Frontmatter `oat_status: complete`.
-2. Frontmatter `oat_ready_for: oat-project-implement`.
-3. Frontmatter `oat_template: false`.
+1. Frontmatter `oat_status: complete`, quoted or bare.
+2. Frontmatter `oat_ready_for: oat-project-implement`, quoted or bare.
+3. Frontmatter `oat_template` is not `true`: `oat_template: false`, an explicit
+   null, or an absent key, which is the same absent-or-false convention
+   `oat-project-next` applies when it classifies boundary tiers. A duplicated
+   `oat_template` key is contradictory, and an unrecognized value is not read as
+   ready.
 4. The `## Reviews` section records the Step 3.7 disposition: a `plan` artifact
    row whose Status is something other than `pending` or `-`, or the explicit
    `Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)`
-   recorded on a line of its own — never quoted inside other prose, and never
-   inside a fenced example.
+   recorded on a line of its own, starting at column 0 — never quoted inside
+   other prose, never indented into a code block, and never inside a fenced
+   example. Fences are read as CommonMark reads them — a fence closes only on a
+   bare run of its own marker, at least as long as the one that opened it — so an
+   example nested inside another fence stays an example, and any line indented
+   four spaces or more is example code rather than the record.
 5. At least one phase carries a substantive task — a `### Task pNN-tNN:`
    heading under a `## Phase` heading, outside any fenced example, whose title
    still reads as text once every `{placeholder}` is removed.
@@ -914,26 +922,58 @@ quick_plan_ready() {
 
   # Each field is declared exactly once, with exactly the required value, so a
   # duplicated or contradictory key cannot be read as ready.
+  # Quotes must pair: `'complete` and `complete"` are different scalars to YAML
+  # and are not the required value here either.
+  quick_plan_key() { printf '[\"'\'']?%s[\"'\'']?[[:space:]]*:' "$1"; }
   quick_plan_field() {
-    [ "$(printf '%s\n' "$FRONTMATTER" | grep -cE "^$1:[[:space:]]")" = "1" ] || return 1
-    printf '%s\n' "$FRONTMATTER" | grep -qE "^$1:[[:space:]]+$2[[:space:]]*(#.*)?$"
+    [ "$(printf '%s\n' "$FRONTMATTER" | grep -cE "^$(quick_plan_key "$1")")" = "1" ] || return 1
+    printf '%s\n' "$FRONTMATTER" |
+      grep -qE "^$(quick_plan_key "$1")[[:space:]]+($2|'$2'|\"$2\")[[:space:]]*(#.*)?$"
   }
   quick_plan_field oat_status complete || return 1
   quick_plan_field oat_ready_for oat-project-implement || return 1
-  quick_plan_field oat_template false || return 1
+
+  # `oat_template` follows the absent-or-false convention `oat-project-next`
+  # documents: only an explicit `true` disqualifies a plan. Absent, null, and
+  # false all mean "not a template"; a duplicated key is contradictory, and an
+  # unrecognized scalar is not read as ready.
+  TEMPLATE_KEY=$(quick_plan_key oat_template)
+  TEMPLATE_COUNT=$(printf '%s\n' "$FRONTMATTER" | grep -cE "^$TEMPLATE_KEY")
+  [ "$TEMPLATE_COUNT" -le 1 ] || return 1
+  if [ "$TEMPLATE_COUNT" = "1" ]; then
+    printf '%s\n' "$FRONTMATTER" |
+      grep -qE "^$TEMPLATE_KEY[[:space:]]*(false|'false'|\"false\"|null|~)?[[:space:]]*(#.*)?$" || return 1
+  fi
 
   # Fenced examples are not the record: a sample review section inside a code
   # block must not dispose of a real pending row.
   REVIEWS=$(awk '
-    /^[[:space:]]*([`][`][`]|~~~)/ { fence = 1 - fence; next }
+    # CommonMark fences: a fence closes only on its own marker character, at
+    # least as long as the one that opened it, and a closing fence carries no
+    # info string. A marker indented four or more spaces is indented code.
+    /^[[:space:]]*([`][`][`]|~~~)/ {
+      line = $0
+      indent = match(line, /[^[:space:]]/) - 1
+      if (indent < 4) {
+        sub(/^[[:space:]]*/, "", line)
+        marker = substr(line, 1, 1)
+        len = 0
+        while (substr(line, len + 1, 1) == marker) len++
+        rest = substr(line, len + 1)
+        if (!fence) { fence = 1; fmark = marker; flen = len }
+        else if (marker == fmark && len >= flen && rest ~ /^[[:space:]]*$/) fence = 0
+      }
+      next
+    }
     fence { next }
+    /^    / { next }
     /^## Reviews[[:space:]]*$/ { inside = 1; next }
     inside && /^##[[:space:]]/ { exit }
     inside { print }
   ' "$PLAN_FILE")
   # The skip disposition counts only as its own recorded line, never as a
   # substring of prose that merely quotes it.
-  if ! printf '%s\n' "$REVIEWS" | grep -qE '^[[:space:]]*(- )?Plan artifact review: skipped \(workflow\.autoArtifactReview\.plan=false\)[[:space:]]*$'; then
+  if ! printf '%s\n' "$REVIEWS" | grep -qE '^(- )?Plan artifact review: skipped \(workflow\.autoArtifactReview\.plan=false\)[[:space:]]*$'; then
     PLAN_STATUS=$(printf '%s\n' "$REVIEWS" |
       grep -E '^\|[[:space:]]*plan[[:space:]]*\|[[:space:]]*artifact[[:space:]]*\|' |
       tail -1 |
@@ -946,8 +986,25 @@ quick_plan_ready() {
   # At least one real task heading, inside a phase and outside fenced examples,
   # whose title still reads as text once every {placeholder} is removed.
   awk '
-    /^[[:space:]]*([`][`][`]|~~~)/ { fence = 1 - fence; next }
+    # CommonMark fences: a fence closes only on its own marker character, at
+    # least as long as the one that opened it, and a closing fence carries no
+    # info string. A marker indented four or more spaces is indented code.
+    /^[[:space:]]*([`][`][`]|~~~)/ {
+      line = $0
+      indent = match(line, /[^[:space:]]/) - 1
+      if (indent < 4) {
+        sub(/^[[:space:]]*/, "", line)
+        marker = substr(line, 1, 1)
+        len = 0
+        while (substr(line, len + 1, 1) == marker) len++
+        rest = substr(line, len + 1)
+        if (!fence) { fence = 1; fmark = marker; flen = len }
+        else if (marker == fmark && len >= flen && rest ~ /^[[:space:]]*$/) fence = 0
+      }
+      next
+    }
     fence { next }
+    /^    / { next }
     /^##[[:space:]]/ { inphase = ($0 ~ /^##[[:space:]]+Phase/); next }
     inphase && /^### Task p[0-9]+-t[0-9]+:[[:space:]]/ {
       sub(/^### Task p[0-9]+-t[0-9]+:[[:space:]]*/, "")
