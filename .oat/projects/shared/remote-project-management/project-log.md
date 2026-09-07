@@ -184,6 +184,10 @@ Phase p09 completed two bounded final-review fixes in 818647f11 and dda462ea6; f
 
 p09 review fix 1 corrected three ineffective test selectors in 681e69905; each restored probe selected and passed 2/2, the five-file union passed 82/82, and temporary guard mutations were restored byte-for-byte.
 
+### 2026-09-07 · structural · oat-project-review-receive · p09
+
+p09 review round 2 passed at d2193de6077237abe3fcc823e7d4672fcb0ae345 with 0 critical, 0 important, 0 medium, and 0 minor findings; corrected probes selected 2/2 each and restored union passed 82/82.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

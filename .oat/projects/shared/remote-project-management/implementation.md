@@ -2807,6 +2807,22 @@ and retain the 82/82 restored union.
 
 **Next:** Run a fresh p09 code re-review at the corrected proof head.
 
+### Review Received: p09 (round 2)
+
+**Date:** 2026-09-07
+**Review artifact:** reviews/archived/p09-review-2026-09-07T050520Z.md
+**Status:** passed
+
+**Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+The independent narrowed re-review ran all three corrected commands verbatim;
+each selected and passed 2/2 restored tests. The five-file union passed 82/82,
+the reviewed range contained no production mutation, and the prior Important
+finding is closed.
+
+**Next:** Run the fresh final lifecycle code re-review at the current exact
+head.
+
 <!-- orchestration-runs-end -->
 
 ---
