@@ -272,10 +272,15 @@ Read the JSON envelope before retrying:
 oat pjm remote doctor --json
 ```
 
+Before the first provider-contacting command, discover a matching live
+connector. If no capable connector exists, inspect an already configured
+provider CLI's live help. Construct only bounded provider-neutral capability
+evidence and supply it through `--capability-evidence-stdin`.
+
 - `pending` with `externalAction` means OAT durably prepared one exact semantic
-  host action. Discover a matching live connector, or inspect an already
-  configured provider CLI's help only when no capable connector exists, then
-  return one bounded observation with `oat pjm remote operation continue`.
+  host action. Confirm the previously selected capability remains granted,
+  execute that exact action at most once, then submit one bounded observation
+  through `oat pjm remote operation continue`.
 - `uncertain` means an effect may have occurred. Follow the envelope's recovery
   instructions; never repeat a create or update blindly.
 - `needs-review` requires an explicit reconciliation choice.
