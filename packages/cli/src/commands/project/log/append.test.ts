@@ -1,8 +1,8 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { hostname, tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
@@ -13,8 +13,11 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  appendProjectLog,
   commitProjectLog,
   PROJECT_LOG_COMMIT_ATTEMPTS,
+  projectLogLockPath,
+  type AppendProjectLogDependencies,
   type GateProjectLogReceipt,
 } from './append';
 import { createProjectLogCommand } from './index';
@@ -968,7 +971,10 @@ describe('oat project log append', () => {
         { sleep },
       );
 
-      expect(result).toMatchObject({ outcome: 'failed', attempts: 0 });
+      expect(result).toMatchObject({
+        outcome: 'entry-missing-after-commit',
+        attempts: 0,
+      });
       expect(result.error).toContain(identity);
       expect(git(['rev-parse', 'HEAD'])).toBe(baseline);
     });
@@ -993,7 +999,10 @@ describe('oat project log append', () => {
         { sleep },
       );
 
-      expect(result).toMatchObject({ outcome: 'failed', attempts: 0 });
+      expect(result).toMatchObject({
+        outcome: 'entry-missing-after-commit',
+        attempts: 0,
+      });
       expect(git(['status', '--porcelain', '--', logPath])).toBe('');
     });
 
@@ -1172,6 +1181,333 @@ describe('oat project log append', () => {
       });
       expect(result.error).toBeUndefined();
       expect(git(['rev-parse', 'HEAD'])).not.toBe(baseline);
+    });
+  });
+
+  describe('overlapping writers', () => {
+    const keyA = 'aaaaaaaa-7777-4000-8000-aaaaaaaaaaaa';
+    const keyB = 'bbbbbbbb-7777-4000-8000-bbbbbbbbbbbb';
+
+    function entry(key: string): {
+      repoRoot: string;
+      project: string;
+      structural: boolean;
+      producer: string;
+      ref: string;
+      body: string;
+      idempotencyKey: string;
+    } {
+      return {
+        repoRoot: '',
+        project: '',
+        structural: true,
+        producer: 'oat gate review',
+        ref: 'p02',
+        body: `status=ok run=${key}`,
+        idempotencyKey: key,
+      };
+    }
+
+    it('serializes two overlapping finalizations so both run ids survive', async () => {
+      const { root, projectPath, logPath } = await createRepo();
+      const projectRelativePath = join('.oat', 'projects', 'shared', 'demo');
+      // A log that already carries an end-of-run synthesis section: entries are
+      // spliced in ahead of it, which is the read/modify/write window two
+      // writers can overlap inside.
+      await writeFile(
+        logPath,
+        '# Project Log: demo\n\n## Entries\n\n## End-of-run synthesis\n\nprior synthesis\n',
+        'utf8',
+      );
+      const git = initGitRepo(root);
+
+      // Deterministic interleave, no sleep race. Writer A is held inside its
+      // window until writer B has demonstrably reached the same window --
+      // either by entering it (no serialization) or by contending for the lock
+      // (serialization working). Both signals resolve the same gate, so the
+      // control fails fast when the lock is removed instead of hanging.
+      let openWindow: () => void = () => {};
+      const windowShared = new Promise<void>((settle) => {
+        openWindow = settle;
+      });
+      const lockSleep = vi.fn(async (ms: number): Promise<void> => {
+        openWindow();
+        await new Promise((settle) => setTimeout(settle, ms));
+      });
+
+      const base: Partial<AppendProjectLogDependencies> = {
+        resolveActiveProject: async () => ({
+          status: 'active',
+          path: projectRelativePath,
+        }),
+        resolveAssetsRoot: async () => CANONICAL_ASSETS_ROOT,
+        now: () => new Date('2026-07-17T12:00:00.000Z'),
+      };
+
+      const writerA = appendProjectLog(
+        { ...entry(keyA), repoRoot: root, project: projectRelativePath },
+        {
+          ...base,
+          writeLog: async (path: string, content: string): Promise<void> => {
+            await windowShared;
+            await writeFile(path, content, 'utf8');
+          },
+          lock: { pollMs: 1, sleep: lockSleep },
+        },
+      );
+      const writerB = appendProjectLog(
+        { ...entry(keyB), repoRoot: root, project: projectRelativePath },
+        {
+          ...base,
+          readLog: async (path: string): Promise<string> => {
+            openWindow();
+            return readFile(path, 'utf8');
+          },
+          lock: { pollMs: 1, sleep: lockSleep },
+        },
+      );
+      const [resultA, resultB] = await Promise.all([writerA, writerB]);
+
+      expect(resultA.status).toBe('appended');
+      expect(resultB.status).toBe('appended');
+      const content = await readFile(logPath, 'utf8');
+      // Neither writer's entry was clobbered by the other's stale rewrite.
+      expect(countHeadings(content, keyA)).toBe(1);
+      expect(countHeadings(content, keyB)).toBe(1);
+      // The windows really did overlap: B found the lock held rather than
+      // sailing through an uncontended acquire.
+      expect(lockSleep).toHaveBeenCalled();
+      // Both entries are still spliced ahead of the synthesis section.
+      expect(content.indexOf(`run=${keyA}`)).toBeLessThan(
+        content.indexOf('## End-of-run synthesis'),
+      );
+      expect(content.indexOf(`run=${keyB}`)).toBeLessThan(
+        content.indexOf('## End-of-run synthesis'),
+      );
+
+      // A same-id replay stays singular.
+      const replay = await appendProjectLog(
+        { ...entry(keyA), repoRoot: root, project: projectRelativePath },
+        base,
+      );
+      expect(replay.status).toBe('already-appended');
+      const afterReplay = await readFile(logPath, 'utf8');
+      expect(countHeadings(afterReplay, keyA)).toBe(1);
+      expect(countHeadings(afterReplay, keyB)).toBe(1);
+
+      // Both finalizations settle, and each one's identity is in HEAD.
+      for (const key of [keyA, keyB]) {
+        const commit = await commitProjectLog({
+          repoRoot: root,
+          logPath,
+          message: 'chore(oat): overlapping writers',
+          identity: { key, body: `status=ok run=${key}` },
+        });
+        expect(['committed', 'nothing-to-commit']).toContain(commit.outcome);
+      }
+      const head = git([
+        'show',
+        `HEAD:${join(projectRelativePath, 'project-log.md')}`,
+      ]);
+      expect(countHeadings(head, keyA)).toBe(1);
+      expect(countHeadings(head, keyB)).toBe(1);
+      expect(git(['status', '--porcelain', '--', logPath])).toBe('');
+      expect(projectPath).toBe(join(root, projectRelativePath));
+    });
+
+    it('refuses to rewrite the log when the advisory lock is unavailable', async () => {
+      const { root, logPath } = await createRepo();
+      const projectRelativePath = join('.oat', 'projects', 'shared', 'demo');
+      await writeFile(
+        logPath,
+        '# Project Log: demo\n\n## Entries\n\n## End-of-run synthesis\n\nprior synthesis\n',
+        'utf8',
+      );
+
+      let signalHolderInWindow: () => void = () => {};
+      const holderInWindow = new Promise<void>((settle) => {
+        signalHolderInWindow = settle;
+      });
+      let releaseHolder: () => void = () => {};
+      const holderReleased = new Promise<void>((settle) => {
+        releaseHolder = settle;
+      });
+
+      const base: Partial<AppendProjectLogDependencies> = {
+        resolveActiveProject: async () => ({
+          status: 'active',
+          path: projectRelativePath,
+        }),
+        resolveAssetsRoot: async () => CANONICAL_ASSETS_ROOT,
+        now: () => new Date('2026-07-17T12:00:00.000Z'),
+      };
+
+      const holder = appendProjectLog(
+        { ...entry(keyA), repoRoot: root, project: projectRelativePath },
+        {
+          ...base,
+          readLog: async (path: string): Promise<string> => {
+            signalHolderInWindow();
+            return readFile(path, 'utf8');
+          },
+          writeLog: async (path: string, content: string): Promise<void> => {
+            await holderReleased;
+            await writeFile(path, content, 'utf8');
+          },
+        },
+      );
+
+      // The holder is demonstrably inside its read/modify/write window, so the
+      // second writer's bounded wait really does expire against a held lock.
+      await holderInWindow;
+      await expect(
+        appendProjectLog(
+          { ...entry(keyB), repoRoot: root, project: projectRelativePath },
+          { ...base, lock: { waitMs: 0 } },
+        ),
+      ).rejects.toThrow(/Timed out waiting for the project log lock/);
+
+      releaseHolder();
+      await expect(holder).resolves.toMatchObject({ status: 'appended' });
+
+      // The refusal wrote nothing: the holder's entry is intact and the
+      // refused writer left no partial rewrite behind.
+      const content = await readFile(logPath, 'utf8');
+      expect(countHeadings(content, keyA)).toBe(1);
+      expect(countHeadings(content, keyB)).toBe(0);
+      expect(content).toContain('prior synthesis');
+    });
+
+    it('reclaims a lock abandoned by a crashed writer instead of wedging', async () => {
+      const { root, logPath } = await createRepo();
+      const projectRelativePath = join('.oat', 'projects', 'shared', 'demo');
+      await writeFile(
+        logPath,
+        '# Project Log: demo\n\n## Entries\n\n## End-of-run synthesis\n\nprior synthesis\n',
+        'utf8',
+      );
+
+      // A real pid that has already exited: the lock a killed gate leaves
+      // behind. Nothing may wait for it, because it will never be released.
+      const crashed = spawnSync(process.execPath, ['-e', '']).pid;
+      expect(crashed).toBeGreaterThan(0);
+      const lockPath = projectLogLockPath(logPath);
+      await mkdir(dirname(lockPath), { recursive: true });
+      await writeFile(
+        lockPath,
+        `${JSON.stringify({
+          token: 'crashed-writer',
+          pid: crashed,
+          host: hostname(),
+          acquiredAt: new Date().toISOString(),
+        })}\n`,
+        'utf8',
+      );
+
+      const result = await appendProjectLog(
+        { ...entry(keyA), repoRoot: root, project: projectRelativePath },
+        {
+          resolveActiveProject: async () => ({
+            status: 'active',
+            path: projectRelativePath,
+          }),
+          resolveAssetsRoot: async () => CANONICAL_ASSETS_ROOT,
+          now: () => new Date('2026-07-17T12:00:00.000Z'),
+          // No waiting is permitted: the abandoned lock has to be reclaimed on
+          // the spot, not outlived.
+          lock: { waitMs: 0 },
+        },
+      );
+
+      expect(result.status).toBe('appended');
+      expect(countHeadings(await readFile(logPath, 'utf8'), keyA)).toBe(1);
+      // The reclaimed lock is released again, and the reclamation slot is not
+      // left behind to block the next writer.
+      await expect(readFile(lockPath, 'utf8')).rejects.toThrow();
+      await expect(readFile(`${lockPath}.reclaim`, 'utf8')).rejects.toThrow();
+    });
+
+    it('refuses to settle a commit it cannot read back from HEAD', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      const git = initGitRepo(root);
+      const baseline = git(['rev-parse', 'HEAD']);
+      await writeFile(
+        logPath,
+        `# Project Log: demo\n\n## Entries\n\n### 2026-07-17 · structural · oat gate review · p02\n\nstatus=ok run=${keyA}\n`,
+        'utf8',
+      );
+
+      const commit = await commitProjectLog(
+        {
+          repoRoot: root,
+          logPath,
+          message: 'chore(oat): unreadable verification',
+          identity: { key: keyA, body: `status=ok run=${keyA}` },
+        },
+        {
+          // The commit itself works; only the read back of the committed log
+          // is unavailable, which is the state a buffer limit or a transient
+          // git read error produces.
+          runGit: (repoRoot: string, args: string[]): string => {
+            if (args[0] === 'show') {
+              throw new Error('fatal: unable to read object');
+            }
+            return execFileSync('git', args, {
+              cwd: repoRoot,
+              encoding: 'utf8',
+              stdio: ['ignore', 'pipe', 'pipe'],
+            }).trim();
+          },
+        },
+      );
+
+      // The commit landed, but unread evidence is not proof, so it does not
+      // settle: the receipt and its idempotent recovery finish the job.
+      expect(git(['rev-parse', 'HEAD'])).not.toBe(baseline);
+      expect(commit).toMatchObject({
+        outcome: 'commit-unverified',
+        committed: false,
+      });
+      expect(commit.error).toContain(keyA);
+    });
+
+    it('refuses to settle a commit whose entry the committed log does not carry', async () => {
+      const { root, logPath } = await createRepo();
+      const projectRelativePath = join('.oat', 'projects', 'shared', 'demo');
+      await seedLog(logPath);
+      const git = initGitRepo(root);
+
+      // The exact post-race state: our append is gone from the file, a
+      // competing writer's entry is there instead, and the log is dirty, so the
+      // commit below really does stage and commit -- successfully.
+      await writeFile(
+        logPath,
+        `# Project Log: demo\n\n## Entries\n\n### 2026-07-17 · structural · oat gate review · p02\n\nstatus=ok run=${keyB}\n`,
+        'utf8',
+      );
+
+      const commit = await commitProjectLog({
+        repoRoot: root,
+        logPath,
+        message: 'chore(oat): identity verification',
+        identity: { key: keyA, body: `status=ok run=${keyA}` },
+      });
+
+      // The commit itself succeeded -- HEAD moved and the tree is clean -- but
+      // it did not carry the caller's run, so it is not settled work.
+      expect(commit).toMatchObject({
+        outcome: 'entry-missing-after-commit',
+        committed: false,
+      });
+      expect(commit.error).toContain(keyA);
+      expect(git(['status', '--porcelain', '--', logPath])).toBe('');
+      const head = git([
+        'show',
+        `HEAD:${join(projectRelativePath, 'project-log.md')}`,
+      ]);
+      expect(countHeadings(head, keyB)).toBe(1);
+      expect(countHeadings(head, keyA)).toBe(0);
     });
   });
 

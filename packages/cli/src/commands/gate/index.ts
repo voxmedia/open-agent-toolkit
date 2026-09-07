@@ -3171,7 +3171,11 @@ async function emitGateProjectLogPartialFinalization(options: {
   }
   context.logger.warn(
     `Warning: the oat gate review project log entry is appended but not committed (${
-      receipt.lockClass ?? 'unknown'
+      receipt.commitStatus === 'entry-missing-after-commit'
+        ? 'the committed log does not carry this run'
+        : receipt.commitStatus === 'commit-unverified'
+          ? 'the committed log could not be read back'
+          : (receipt.lockClass ?? 'unknown')
     } after ${receipt.attempts} attempts). Receipt: ${receiptPath}. Complete it with: ${command}`,
   );
 }
@@ -3248,7 +3252,16 @@ async function finalizeReviewGateProjectLog(
     if (commit.error != null) {
       report('gate-project-log-commit-failed', commit.error, result.logPath);
     }
-    if (commit.outcome === 'blocked-by-index-lock') {
+    // Both dispositions leave the run's entry uncommitted, and both are
+    // finished by the same idempotent recovery command: the lock case never
+    // reached a commit, and the missing-entry case reached one that did not
+    // carry this run. Either way the durable receipt is what carries the work
+    // into the later process that completes it.
+    if (
+      commit.outcome === 'blocked-by-index-lock' ||
+      commit.outcome === 'entry-missing-after-commit' ||
+      commit.outcome === 'commit-unverified'
+    ) {
       await emitGateProjectLogPartialFinalization({
         context,
         dependencies,
