@@ -250,34 +250,44 @@
 | BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap                      | open   | medium   | task       | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                                      | open   | medium   | feature    | M        |
 | BL-260817-drop-explainer-kit-publish     | Drop explainer-kit publish-request/v1 in a future minor                                                         | open   | medium   | task       | S        |
+| BL-260907-fail-closed-on-unparsable      | Fail closed on unparsable program dates in the readiness contract                                               | open   | medium   | task       | XS       |
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                                      | open   | medium   | feature    | M        |
 | BL-260906-fix-sync-apply-branch          | Fix sync apply branch precedence when a rejected collection leaves zero planned operations                      | open   | medium   | task       | S        |
+| BL-260907-fold-oat-config-adopt-onto     | Fold oat config adopt onto the shared surface-flag resolver                                                     | open   | medium   | task       | XS       |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                               | open   | medium   | feature    | L        |
 | BL-260906-guard-packed-asset-directories | Guard packed asset directories and document the OAT_ASSETS_DIR contract                                         | open   | medium   | task       | S        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                                    | open   | medium   | feature    | M        |
 | BL-260904-honor-metadata-version         | Honor metadata.version as the canonical skill version                                                           | open   | medium   | feature    | M        |
+| BL-260907-ignore-backslash-escaped       | Ignore backslash-escaped emphasis in skill-script reference extraction                                          | open   | medium   | task       | XS       |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                          | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                              | open   | medium   | feature    | M        |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                                    | open   | medium   | task       | M        |
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                                   | open   | medium   | feature    | M        |
 | BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                               | open   | medium   | feature    | L        |
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions            | open   | medium   | task       | S        |
+| BL-260907-name-the-resolved-target       | Name the resolved target in the symlink inert-exclusion warning                                                 | open   | medium   | task       | XS       |
 | BL-260830-persist-instruction-sync       | Persist instruction sync strategy in config and init                                                            | open   | medium   | feature    | M        |
 | BL-260906-persist-status-native-skill    | Persist status native-skill adoption by setting manifestChanged                                                 | open   | medium   | task       | S        |
 | BL-260903-populate-provider-reachability | Populate provider reachability evidence across pack and lifecycle surfaces                                      | open   | medium   | feature    | M        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                          | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                               | open   | medium   | feature    | L        |
+| BL-260907-re-resolve-project-path-after  | Re-resolve PROJECT_PATH after quick-start scaffolds a fresh project                                             | open   | medium   | task       | XS       |
 | BL-260907-recognize-phase-level          | Recognize phase-level completion records so bullet-list revision phases do not read as incomplete               | open   | medium   | task       | S        |
+| BL-260907-record-absorbed-projects       | Record absorbed projects and backlog items for Lite consolidations                                              | open   | medium   | task       | S        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags           | open   | medium   | task       | S        |
 | BL-260906-repair-the-stray-fence-in-oat  | Repair the stray fence in oat-project-review-provide and tighten the fence rule repo-wide                       | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                                   | open   | medium   | feature    | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                                      | open   | medium   | feature    | S        |
+| BL-260907-route-quick-mode-discovery     | Route quick-mode discovery rows in oat-project-next straight to quick-start                                     | open   | medium   | task       | XS       |
 | BL-260817-run-the-rc-explainer-end       | Run the RC explainer end-to-end test in CI with a provisioned browser                                           | open   | medium   | task       | M        |
+| BL-260907-settle-the-oat-wave-program    | Settle the oat-wave-program ledger status vocabulary                                                            | open   | medium   | task       | XS       |
 | BL-260827-span-based-prose-guards        | Span-based prose guards, anchored probe records, and a shared probe runner for skill contract tests             | open   | medium   | task       | S        |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                                   | open   | medium   | task       |          |
+| BL-260907-type-check-cli-test-files      | Type-check CLI test files with a test-scoped tsconfig gate                                                      | open   | medium   | task       | M        |
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                                   | open   | medium   | task       | S        |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                                      | open   | medium   | task       | S        |
 | BL-260817-verify-protected-mode-public   | Verify protected-mode public URLs with an authenticated end-to-end GET                                          | open   | medium   | task       | M        |
+| BL-260907-warn-when-documentation-root   | Warn when documentation.root has the wrong type instead of dropping it                                          | open   | medium   | task       | S        |
 | BL-260830-wire-bounded-durable-reference | Wire bounded durable-reference reads into lifecycle skills                                                      | open   | medium   | feature    | M        |
 | BL-260830-wire-provide-remote-skills     | Wire provide-remote skills to the review-remote helper CLI                                                      | open   | medium   | feature    | L        |
 | BL-260903-pr-final-archives-reviews      | pr-final archives reviews before a late final review exists                                                     | open   | medium   | task       | S        |
