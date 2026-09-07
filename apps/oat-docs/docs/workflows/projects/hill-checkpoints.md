@@ -45,7 +45,7 @@ Lite projects have no HiLL checkpoints. `oat-project-implement` resolves
 when the mode is `lite` it resolves checkpoint state as `none` without reading
 or interpreting `oat_plan_hill_phases`. An empty list cannot represent lite's
 policy, because for every other mode an empty list means "checkpoint after every
-phase". Lite planning writes:
+phase". `oat-project-implement`'s Lite checkpoint bypass writes:
 
 ```yaml
 oat_auto_review_at_hill_checkpoints: false # lite: no checkpoints
