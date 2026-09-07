@@ -75,9 +75,9 @@ inconclusive.
 
 ## Current State
 
-- **Promotions:** `partial` — RP-01 is applied; RP-02 and RP-03 remain.
+- **Promotions:** `partial` — RP-01 and RP-02 are applied; RP-03 remains.
 - **Filing:** `complete` — RP-04 and UP-01/UP-02 are already filed and tracked.
-- **Unsettled items:** RP-02 and RP-03 remain proposed under the current apply
+- **Unsettled items:** RP-03 remains proposed under the current apply
   authorization. No filing item is unsettled.
 
 ## What Went Well
@@ -253,9 +253,9 @@ generic repository gates do not front-load this inventory.
 
 - **Type:** docs
 - **Disposition:** apply
-- **Status:** proposed
+- **Status:** applied
 - **Target:** `.oat/repo/pjm/backlog/items/BL-260903-pr-final-archives-reviews.md`
-- **Applied-ref:** —
+- **Applied-ref:** `.oat/repo/pjm/backlog/items/BL-260903-pr-final-archives-reviews.md`
 - **Disposition-note:** —
 
 Replace its placeholder acceptance criteria with controls that resolve every
