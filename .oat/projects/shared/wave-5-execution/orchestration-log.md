@@ -66,3 +66,23 @@ writing and must never be followed by an automatic gate re-run in the same
 command.
 
 ---
+
+### 2026-09-07 · structural · oat gate review · plan (attempts 3–5)
+
+Attempt 3 (`80c5b964`) blocked: the addenda claimed equal authority while the
+Architecture still said "entire and only". Attempt 4 (`e8b7c6c5`) blocked: the
+governing `oat-wave-execute` brief rule says the external plan is the entire
+contract, so a plan-plus-addendum model cannot be briefed without changing the
+skill. Resolution: apply the refreshes to the eight source plans themselves as
+dated `Refresh applied 2026-09-07 (wave-5 boundary)` entries in their
+`## Revalidation Before Execution` sections — the program's own pre-dispatch
+mechanism (used 2026-09-03 and 2026-09-04) — and return the wrapper to the
+single-contract model. Attempt 5 (`3c8b9eb2`) passed with zero findings.
+**Skill signal (contradicts):** the W3/W4 convention "plans are immutable
+inputs; corrections at wave close" is wrong for refreshes that change a task's
+contract; the wave skill should say: apply pre-dispatch refreshes to the plan
+files as dated Revalidation entries, and reserve wave-close corrections for
+execution records. Five plan-gate runs is at the program's diminishing-returns
+cap; the last two findings were about the mechanism, not the wave's scope.
+
+---

@@ -22,8 +22,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-the-loop lifecycle approval (workflow.hillCheckpointDefault=final)
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 10
 oat_dispatch_policy: # managed/high per operator routing preference
@@ -93,19 +93,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T04:55:57.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-5-execution
 
-**Status:** Plan complete — awaiting plan gate
+**Status:** Implementation in progress
 **Started:** 2026-09-07
 **Last Updated:** 2026-09-07
 
 ## Current Phase
 
-Plan — wrapper artifacts authored and validated; the configured plan gate runs next, then `oat-project-implement` (group 1: p01 + p02 + p03).
+Implementation — group 1 (p01 + p02 + p03) dispatched in parallel worktrees at the wave base.
 
 ## Artifacts
 
@@ -120,7 +120,7 @@ Plan — wrapper artifacts authored and validated; the configured plan gate runs
 - ✓ Preflight: `wave-5-execution` created from `origin/main` `0f47bf7004166d420758d1bcd77d253007174332` (post PR #264); install, build, type-check green
 - ✓ Wave-boundary drift refresh (recon, non-authoritative) recorded in `plan.md`
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
-- ⧗ Plan gate
+- ✓ Plan gate passed on attempt 5 (0 findings) after the wave-boundary refreshes moved into eight source plans
 - ⧗ Group 1 (p01 + p02 + p03), fan-in, group 2, fan-in, p07 → p08, p09 → p10, p11, closeout
 
 ## Blockers
@@ -129,4 +129,4 @@ None
 
 ## Next Milestone
 
-Plan gate passes; dispatch group 1 (p01 + p02 + p03) in parallel worktrees at the wave base.
+Group 1 lanes reviewed and fanned in with the lockstep bump 0.2.62 → 0.2.63; then group 2.
