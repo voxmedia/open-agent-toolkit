@@ -1232,6 +1232,15 @@ Receive correlation `fbe945ef-837c-4b08-89c3-3351a5b06110` binds source
 `eacf235758c54fc9971a68bdfea32b2700294074`. The review event identity is
 `final:code:gate:b69da3fc6ea945a43f90ba08643610ae25a70c65:fbe945ef-837c-4b08-89c3-3351a5b06110`.
 
+#### Configured implementation exit gate review 5 received — passed
+
+The gate review found 0 Critical, 0 Important, 0 Medium, and one Minor design
+wording drift. The shipped behavior, regression coverage, and release gates
+all passed. The design refusal clause now states that unresolved scaffold
+content is rejected in every present core or adaptive section. Under the
+user's standing wording-only direction, the event is `passed` without a
+redundant lifecycle review. No code or test change was required.
+
 #### Phase 9 implementation complete
 
 `p09-t01` committed as `2fc015fc9186ab8f585f67a4a845f0d9e4c98fea`.

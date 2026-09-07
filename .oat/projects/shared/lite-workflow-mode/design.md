@@ -299,9 +299,10 @@ oat project promote <project-path> --to quick [--json]
 
 - Only `lite` to `quick` is accepted in this project. Other pairs error with
   a pointer to the spec-driven promotion skill.
-- Refuses if `references/lite-plan.md` already exists, the mode is not
-  lite, or any core contract section is missing or still holds a scaffold
-  placeholder. Promotion carries Product Behavior into discovery success
+- Refuses if `references/lite-plan.md` already exists, the mode is not lite,
+  any core contract section is missing, or any present section (core or
+  adaptive) still holds a scaffold placeholder or the shipped instructional
+  comment. Promotion carries Product Behavior into discovery success
   criteria and Technical Design into clearly labeled carried-forward context,
   and archives the original Lite plan byte-for-byte. The `oat_template` flag is ignored: lite keeps it
   set until completion so routing stays with the entry skill. Runs
