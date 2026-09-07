@@ -650,6 +650,96 @@ Route on the structured result:
   it; only when skill loading is unavailable in the current host/runtime, author
   a complete summary inline before continuing.
 
+**Absorbed-project retirement sweep.** Run this sweep here — after the status
+probe above and before the roll-up below — so that every finding it produces is dispositioned in the project log while
+appends are still allowed. Retiring an absorbed scaffold is a semantic claim
+about the active planning surfaces, not the physical removal of a directory, so
+this sweep checks the claim. It is advisory: a raw match is never a hard block
+on closeout.
+
+```bash
+PJM_DOCTOR=$(oat pjm doctor --json 2>/dev/null || true)
+```
+
+Skip the sweep, record the single note
+`Retirement sweep skipped: no PJM adoption.`, and continue when `PJM_DOCTOR` is
+empty, is not parseable JSON, or reports an `adoption.state` other than
+`declared` or `inferred-legacy`. This skill ships to repositories that never
+adopted PJM and to repositories where the planning surfaces do not exist; a
+missing surface degrades this sweep and never fails closeout.
+
+Otherwise read `absorbed_projects` and `absorbed_backlog_ids` from
+`"$PROJECT_PATH/state.md"` frontmatter. These two fields are the only inputs the
+sweep takes. When both are absent or empty, nothing was consolidated: record
+`Retirement sweep: no absorbed projects recorded.` and continue.
+
+For each absorbed slug and each absorbed backlog ID, search the active planning
+surfaces:
+
+- `.oat/repo/pjm/roadmap.md` — the Now/Next/Later lanes and the sequencing map
+- `.oat/repo/pjm/current-state.md`
+- `.oat/repo/pjm/backlog/index.md` — the Curated Overview
+- the `state.md` of projects that are still active. Project states are
+  scope-nested as `<projects-root-parent>/<scope>/<project>/state.md`, so
+  resolve the configured root first — `oat config get projects.root`, default
+  `.oat/projects/shared` — and scan its sibling scope directories, which are
+  `shared`, `local`, and `synced` under the default layout
+  (`.oat/projects/*/*/state.md`). Skip the sibling `archived` tree, which holds
+  durable evidence rather than an active claim, and skip any project whose own
+  `state.md` already records a terminal `oat_lifecycle: complete` — a completed
+  project left in an active scope directory is not a live ownership claim
+  either
+
+Match a slug or backlog ID only where it carries future-oriented ownership
+language — an active surface that still claims the absorbed work as planned,
+owned, scheduled, or in flight. A bare mention that makes no such claim is not a
+finding. The completing project's own `absorbed_projects` and
+`absorbed_backlog_ids` fields are the sweep's input, never a finding. Prose that
+clearly describes past state is exempt: a dated history entry, a retro, a decision record, a changelog line,
+or any sentence whose tense reports what already happened is evidence, not a
+stale claim.
+
+Each remaining hit becomes a named finding carrying a recorded disposition,
+either fixed now — edit the stale surface in this run — or accepted as
+historical with the reason it is exempt. An autonomous run records the third
+disposition, `deferred advisory`, described below. Append the dispositions to the project
+log before the roll-up runs, so the roll-up summarizes them and the seal remains
+the final entry:
+
+```bash
+oat project log append \
+  --project "$PROJECT_PATH" \
+  --structural \
+  --producer oat-project-complete \
+  --ref retirement-sweep \
+  --body "Retirement sweep: <surface>:<finding> — <fixed|accepted as historical>; <reason>."
+```
+
+If a disposition edits inputs that `summary.md` reflects, regenerate the summary
+before the roll-up, exactly as this step already requires for a log with
+entries.
+
+Three bounded variations change where the dispositions land, never whether the
+sweep runs:
+
+- **Autonomous completion.** No new interactive gate may be opened here, so
+  record every finding as an advisory warning entry with the disposition
+  `deferred advisory` and continue, mirroring the warn-and-continue precedent
+  for non-blocking completion warnings in
+  `oat-project-implement/references/completion-and-closeout.md`.
+- **No project log** (`status: "absent"` from the probe above). Record the
+  findings and their dispositions in the Step 12 completion summary
+  instead, and never create a project log for them.
+- **Resumed completion whose log already carries a seal.** The status probe
+  above reports no seal state, so detect the seal directly before appending
+  anything: read `logPath` from `PROJECT_LOG_CHECK` and treat the log as sealed
+  when it already contains a structural seal heading of the form
+  `### <date> · structural · oat-project-complete · seal`. On a sealed log the
+  sweep runs in report-only mode: surface the findings and dispositions in the
+  Step 12 completion summary, append nothing to the sealed log, and never
+  re-enter the roll-up or the seal. No project-log append may follow the seal,
+  on a resume as much as on a first run.
+
 For a log with entries, reuse the summary flow's structured roll-up result only
 when this completion run has that exact result in memory and it reports
 `status: "ok"`. Otherwise run the idempotent enforcement surface:
@@ -1541,6 +1631,10 @@ Show user:
 - Report the final recap outcome and tracked reference root. A failed
   attestation is a warning with `built-not-durable`, not a project-completion
   failure.
+- Report every absorbed-project retirement finding from the Step 3.7 sweep with
+  its disposition. This is the required destination whenever the sweep could not
+  append them to the project log — an absent log, or a resume whose log is
+  already sealed — and it stays a report, never a completion failure.
 - If PR was opened: include the PR URL.
 - If `oat_pr_url` is present, show it in the completion summary even when PR creation was skipped because the project already tracked an open PR.
 - If Step 11.5 ran, report whether the PR description was synced (e.g. `PR description synced: <PR URL>`) or warn that the sync failed and surface the artifact path so the user can update it manually.
