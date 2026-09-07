@@ -200,6 +200,10 @@ Final review round 3/3 passed at 527ce8bc0b5eb7a420cc62a740dbf3d4f8ff893c with z
 
 Resolved the implementation exit gate as configured and persisted its immutable configuration plus final-review effective-delta basis before launch.
 
+### 2026-09-07 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:1,minor:0 exit=0 status=ok artifact=.oat/projects/shared/remote-project-management/reviews/final-review-2026-09-07T053105Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
