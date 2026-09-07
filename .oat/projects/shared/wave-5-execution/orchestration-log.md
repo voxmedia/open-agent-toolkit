@@ -120,8 +120,7 @@ reached a root reviewer; the in-lane Codex rounds caught two real defects
 before commit (p04's over-broad index-lock detector; p08's `resolveLifecycleCritic`
 model) and the root reviewers' live probes caught a red root `pnpm test`
 (p08's smoke-tier pin) and a vacuous project glob (p11). Ten backlog items
-archived; twelve follow-ups filed across the wave (two at the p09 park, one at
-the p10 fix round, nine at closeout). **Skill signals for `oat-wave-execute`:**
+archived; thirteen follow-ups filed across the wave (two at the p09 park, one at the p10 fix round, ten at closeout). **Skill signals for `oat-wave-execute`:**
 (1) pre-dispatch refreshes belong in the source plans as dated Revalidation
 entries (the gate rejected wrapper-side addenda three times); (2) a lane that
 bumps a skill must sweep old version literals repo-wide in plain and

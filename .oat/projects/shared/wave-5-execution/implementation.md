@@ -373,6 +373,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-07
 
+- Final review round 1 (`w5-final-review-001`, head `5aa2f5ab4`): PASS with record corrections (0C/1I/3M/3m), all applied in `9386be825`; round 2 (`w5-final-review-002`) verified the dispositions — see Review Received: final.
 - p11-t01 `0bd2a2815`→`e73c5ee0f`, sweep `a61e42b52`→`b90f1d8c9`; merge `b59bbe804`; lockstep retained 0.2.63. All merges complete (10 of 11; p09 parked).
 - p10-t01 `9d0049212`→`6654df618`, pin `aaf4c8677`→`392eb88f0`; merge `098efc30b`; lockstep retained 0.2.63.
 - p08-t01 `049783897`→`b4c4d879b`, fix `d7f8a6ff8`→`6f670166a`; merge `28d99dbaf`; lockstep retained 0.2.63.
@@ -411,6 +412,29 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p09   | validator suite 13/13 (uncommitted)           | -      | -      | parked   |
 | p10   | 6008 (forced CLI suite) + control-plane 102   | all    | 0      | -        |
 | p11   | 6011 (forced CLI suite) + test:smoke 160      | all    | 0      | -        |
+
+## Review Received: final
+
+**Date:** 2026-09-07
+**Review artifact (round 1):** reviews/archived/final-review-2026-09-07T142545Z.md (reviewed head `5aa2f5ab4813fcf76bb877258fda9929a3a0bb7e`, invocation manual, dispatch `w5-final-review-001`, reconnaissance attempted)
+
+**Findings (round 1):** Critical 0 · Important 1 · Medium 3 · Minor 3 — PASS with record corrections; no code defect. Verified by the reviewer: all twelve gates green with cache bypass (`Cached: 0` on forced check/type-check/test, CLI 6011; root `pnpm test`; build; check:skill-bumps 10; release:check-versions; release:validate; test:skills 857; test:smoke 160; forced build:docs); 21/21 patch-id mappings identical and 21↔21 ledger/artifact correspondence; one commit touches release files (0.2.62 → 0.2.63) and no lane commit touches a release file, `.oat/projects/`, or the external plans (`576fc11d8` touches only Revalidation sections); all eight weaker-anywhere surfaces probed, several live (a real gate under a held `.git/index.lock` returned the true disposition with an idempotent fresh-process recovery; `unset` refused all five `set` refusal classes byte-unchanged; the readiness guard returned not-ready on a fresh quick scaffold; ten script-reference shapes extracted; six forged seam probes rejected). Residual coverage recorded honestly: p01's recovery branch could not be forced live (every reachable post-selection step is defensively contained) and rests on the focused suites plus the lane review.
+
+**Dispositions (all record corrections, `9386be825`):**
+
+- I1 — `state.md` not advanced at the p11 fan-in (still named p11 as in flight): **fixed** — Current Phase, Progress (p11 merge, archive, follow-ups, closeout records, round-1 result), the Implementation artifact line, and Next Milestone advanced to the closeout head; `oat_blockers` and the p09 row unchanged.
+- M1 — the Phase 11 Outcome and Final Summary claimed the sweep "requires each child to prove a terminal state": **fixed** — reworded to the advisory ownership-language sweep that shipped (never a hard block); the same overstatement and an inverted seal ordering in `completed.md`'s p11 entry corrected too.
+- M2 — `oat_current_task_id` pointed at the completed `p11-t01`: **fixed** (`null`).
+- M3 — `BL-260907-route-quick-mode-discovery` scoped to `oat-project-next` only while `oat-project-progress` carries the same stale row: **fixed** — item title, description, and criteria widened; the Deferred Findings entry names the second skill; index regenerated.
+- m1 (receipt path `<project>/gate-receipts/`), m2 (group-1 refresh note qualified to p01 and p03), m3 (archival checkbox lists ten slugs with the p09 parenthetical): **fixed**.
+
+**Verification record:** what — the record-correction commit above; how — round 2 below verified each disposition on `9386be825` and confirmed `git diff --stat 5aa2f5ab4..9386be825` touches only wrapper and backlog files; where — this section and the archived artifacts.
+
+**Review artifact (round 2):** reviews/archived/final-review-2026-09-07T143255Z.md (reviewed head `9386be8253f7b88abc65e04106a724c14ac55a2f`, invocation manual, dispatch `w5-final-review-002`)
+
+**Findings (round 2):** Critical 0 · Important 0 · Medium 0 · Minor 1 — PASS. All seven dispositions verified fixed at source; `git diff --stat 5aa2f5ab4..9386be825` is seven wrapper/backlog files and the product trees (`packages`, `apps`, `tools`, `.agents`, lockfile, `.gitignore`, `turbo.json`) are tree-hash identical to the head where round 1 ran the twelve gates; forced `check` (`Cached: 0`), `check:skill-bumps`, `release:check-versions`, `pjm doctor` (declared, 0 warnings), and `validate-plan` re-run green. New m1: the orchestration-log synthesis counted twelve follow-ups (nine at closeout) where git shows thirteen (two at the p09 park, one at the p10 fix round, ten at closeout) — fixed in the receive commit.
+
+**Review row `final` → `passed`.** The configured exit gate runs next on the closeout head.
 
 ## Deferred Findings
 
