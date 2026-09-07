@@ -938,6 +938,7 @@ git commit -m "fix(p12-t07): backstop the external-plan source backlink in the r
 | final  | code     | passed      | 2026-09-07 | reviews/archived/final-review-2026-09-07T143255Z.md         | 9386be8253f7b88abc65e04106a724c14ac55a2f | manual     | -                   |
 | final  | code     | fixes_added | 2026-09-07 | reviews/archived/final-review-2026-09-07T144442Z.md         | c9ad23b69d13eb47da7340a6f26c48271af04a98 | gate       | codex-5-6-sol-xhigh |
 | p12    | code     | passed      | 2026-09-07 | reviews/archived/p12-review-2026-09-07T163054Z.md           | 368d8b8d0ff8d695677a506ee8867d1e04f01798 | manual     | -                   |
+| final  | code     | received    | 2026-09-07 | reviews/final-review-2026-09-07T165019Z.md                  | ebf7cbf2749f4d3c08c6377211ff712b5baa25dc | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
