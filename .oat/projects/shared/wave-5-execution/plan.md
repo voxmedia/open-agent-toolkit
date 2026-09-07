@@ -904,6 +904,32 @@ Expected: the new control is red before the fix and green after; all gates green
 git commit -m "fix(p12-t07): backstop the external-plan source backlink in the readiness contract"
 ```
 
+### Task p12-t08: (review) Relate the source backlink to its declared source and refresh the parser comment
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`, `packages/control-plane/src/state/quick-plan-readiness.ts` (comment only)
+
+**Step 1: Understand the issue**
+
+Review finding: superseded exit-gate launch M1 — `evaluateExternalPlan` treats a source declaration as linked when any Markdown link appears in it, so `- Source backlog item: BL-123 — see [unrelated](https://example.com)` passes; the bidirectional relationship is not proven. m1 — the `quick-plan-readiness.ts` comment claims a tab-handling divergence from the shell guard that p12-t05 removed.
+Location: `reviews/archived/final-review-2026-09-07T165019Z.md`
+
+**Step 2: Implement fix**
+
+Parse the named source from each declaration (backlog ID, issue ref, artifact path, or scope) and require a link whose label or destination identifies that source; keep `none` as a whole value; add a mutation control (declared ID + unrelated link → missing-backlink violation) beside the accepted direct-link control; keep the 44-plan corpus sweep green. Rewrite the parser comment to describe the shared column-based indentation (retain only the Unicode-title divergence if it still exists).
+
+**Step 3: Verify**
+
+Run: `pnpm exec vitest run src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts` (from `packages/cli`) and `pnpm --filter @open-agent-toolkit/control-plane exec vitest run`, then the lane-mode gates.
+Expected: the new control is red before the fix and green after; all gates green.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p12-t08): relate the source backlink to its declared source"
+```
+
 ---
 
 ## Reviews
@@ -938,7 +964,7 @@ git commit -m "fix(p12-t07): backstop the external-plan source backlink in the r
 | final  | code     | passed      | 2026-09-07 | reviews/archived/final-review-2026-09-07T143255Z.md         | 9386be8253f7b88abc65e04106a724c14ac55a2f | manual     | -                   |
 | final  | code     | fixes_added | 2026-09-07 | reviews/archived/final-review-2026-09-07T144442Z.md         | c9ad23b69d13eb47da7340a6f26c48271af04a98 | gate       | codex-5-6-sol-xhigh |
 | p12    | code     | passed      | 2026-09-07 | reviews/archived/p12-review-2026-09-07T163054Z.md           | 368d8b8d0ff8d695677a506ee8867d1e04f01798 | manual     | -                   |
-| final  | code     | received    | 2026-09-07 | reviews/final-review-2026-09-07T165019Z.md                  | ebf7cbf2749f4d3c08c6377211ff712b5baa25dc | gate       | codex-5-6-sol-xhigh |
+| final  | code     | superseded  | 2026-09-07 | reviews/archived/final-review-2026-09-07T165019Z.md         | ebf7cbf2749f4d3c08c6377211ff712b5baa25dc | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: null
+oat_current_task_id: p12-t08
 oat_generated: false
 ---
 
@@ -216,6 +216,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** `0a6ae1118`→`97fc307ee`
+
+### Task p12-t08: (review) Relate the source backlink to its declared source and refresh the parser comment
+
+**Status:** pending
+**Commit:** -
 
 ## Autonomy Gate Provenance
 
@@ -516,6 +521,14 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - The gate's Deferred Findings Disposition table accepts all five deferred Mediums as filed.
 
 **Gate row `final` (attempt 1) → `fixes_added`** (gate-written row moved forward in place with the archived path); `oat_implement_exit_gate` → `blocked`, `attempts_completed: 1`, receive completed in the following state checkpoint. Attempt 2 runs after Phase 12 lands.
+
+## Review Received: final (configured exit gate, attempt 2 launch `w5-exit-gate-20260907T163516Z` — superseded)
+
+**Date:** 2026-09-07
+**Gate:** run `c21ea64d-8f58-4673-adbc-6f1f6821fee4`, target `codex-5-6-sol-xhigh`; the reviewer completed and the gate committed its artifact (`63214a61c`, ledger row written), but the harness killed the gate process for low system memory before the receipt was written (`w5-exit-gate-20260907T163516Z.receipt.json` empty; last events `gate-liveness`). No envelope, so the launch does not count as a completed attempt (W3 precedent): row recorded `superseded`, artifact archived, and the gate re-runs for the receipt.
+**Review artifact:** reviews/archived/final-review-2026-09-07T165019Z.md (reviewed head `ebf7cbf2749f4d3c08c6377211ff712b5baa25dc`, invocation gate)
+
+**Findings (informational, from the superseded artifact):** Critical 0 · Important 0 · Medium 1 · Minor 1 — "no blocking findings remain at the gate's Important threshold"; all seven attempt-1 findings recorded implemented. M1: the backlink rule accepts any link inside a source declaration without relating it to the declared source (`BL-123 — see [unrelated](…)` accepted) — fixed before the re-run as `p12-t08`. m1: the `quick-plan-readiness.ts` comment still describes the tab divergence p12-t05 removed — fixed before the re-run as `p12-t08`.
 
 ## Deferred Findings
 
