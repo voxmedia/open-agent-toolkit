@@ -231,6 +231,7 @@
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                                                    | open   | high     | task       | M        |
 | BL-260907-make-the-completion-seal       | Make the completion seal append idempotent so pre-archive interruptions can resume                              | open   | high     | task       | M        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                                        | open   | high     | task       | M        |
+| BL-260907-replace-the-default-project    | Replace the default project recap with a direct agent-authored visual flow                                      | open   | high     | feature    | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                                     | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                                   | open   | high     | feature    | L        |
 | BL-260907-finalize-synced-archive-mjs    | finalize-synced-archive.mjs reads stdin with fs/promises readFile(0), so the synced deferred clear always fails | open   | high     | task       | XS       |
