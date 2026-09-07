@@ -184,6 +184,10 @@ target=claude-fable-skip-permissions threshold=important findings=critical:0,imp
 
 verdict=implementation-complete; tasks=2/2; recovery_attempts=0; final_task=620656d8f32c3c7752b0b9fa01303ec9bda644c6; verification=pass; next=p09-review
 
+### 2026-09-07 · structural · oat-project-review-receive · p09
+
+verdict=fixes-added; review=reviews/archived/p09-review-2026-09-07T031008Z.md; reviewed_head=620656d8f32c3c7752b0b9fa01303ec9bda644c6; findings=critical:0,important:0,medium:1,minor:0; task=p09-t03
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

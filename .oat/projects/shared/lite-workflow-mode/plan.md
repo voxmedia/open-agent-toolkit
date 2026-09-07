@@ -1412,7 +1412,7 @@ git commit -m "docs(p06-t11): align brainstorming guidance with lite"
 | p08           | code     | passed          | 2026-09-07 | reviews/archived/p08-review-2026-09-07T023910Z.md                               | 609d6b5297c474a9f62b6546f028999fb6416e68 | auto       | -                             |
 | final         | code     | passed          | 2026-09-07 | reviews/archived/final-review-2026-09-07T024344Z.md                             | ff2bf38e008317f34636a2ad588ebac8e030f631 | auto       | -                             |
 | final         | code     | fixes_added     | 2026-09-07 | reviews/archived/final-review-2026-09-07T030022Z.md                             | c479493d521c9c3036c5f165af5ebe7277cd8d31 | gate       | claude-fable-skip-permissions |
-| p09           | code     | received        | 2026-09-07 | reviews/p09-review-2026-09-07T031008Z.md                                        | 620656d8f32c3c7752b0b9fa01303ec9bda644c6 | auto       | -                             |
+| p09           | code     | fixes_added     | 2026-09-07 | reviews/archived/p09-review-2026-09-07T031008Z.md                               | 620656d8f32c3c7752b0b9fa01303ec9bda644c6 | auto       | -                             |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -2314,6 +2314,43 @@ git commit -m "docs(p09-t02): align lite promotion references"
 
 ---
 
+### Task p09-t03: (review) Reject comment-only adaptive scaffold markers
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/promote/promote.ts`
+- Modify: `packages/cli/src/commands/project/promote/promote.test.ts`
+
+**Step 1: Reproduce the residual marker path**
+
+Author all bracketed fields in both adaptive sections of the shipped Lite
+scaffold while retaining only each section's instructional HTML comment.
+Confirm the parser currently accepts both comments and promotion can carry
+them forward.
+
+**Step 2: Extend marker detection precisely**
+
+Include the shipped instructional HTML comments in template-marker detection.
+Do not reject unrelated authored comments or broadly strip user content.
+
+**Step 3: Add fail-capable regression coverage**
+
+Add Product Behavior and Technical Design cases that retain only the matching
+shipped instructional comment. Require `invalid-lite-plan` and zero writes.
+Neutralize the comment-specific guard, require both cases to fail, restore it,
+and require the full focused promotion suite to pass.
+
+**Step 4: Verify and commit**
+
+Run the focused promotion suite plus CLI check and type-check. Commit with:
+
+```bash
+git add packages/cli/src/commands/project/promote/promote.ts packages/cli/src/commands/project/promote/promote.test.ts
+git commit -m "fix(p09-t03): reject lite scaffold comments"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -2328,9 +2365,9 @@ git commit -m "docs(p09-t02): align lite promotion references"
 - Phase p-rev2: 5 tasks - Lite lifecycle-gate posture composition, Wave 4 closeout alignment, terminal CI evidence, and two current closeout wording corrections
 - Phase 7: 4 tasks - remote review ledger, proof-strategy scope, executable proof boundaries, and Lite self-review source
 - Phase 8: 2 tasks - project sync producer stamp and Phase 7 closeout artifact refresh
-- Phase 9: 2 tasks - promotion placeholder rejection and reference wording alignment
+- Phase 9: 3 tasks - promotion placeholder/comment rejection and reference wording alignment
 
-**Total:** 47 tasks across 11 phases
+**Total:** 48 tasks across 11 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

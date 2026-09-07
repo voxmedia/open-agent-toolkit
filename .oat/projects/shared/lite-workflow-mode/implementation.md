@@ -1201,6 +1201,15 @@ Root independently inspected the two-commit diff, confirmed the worktree is
 clean and version parity holds, and reran the focused promotion suite (30/30).
 Fresh Phase 9 review remains required.
 
+#### Phase 9 review received — fix loop 1
+
+The independent Phase 9 review found 0 Critical, 0 Important, 1 Medium, and 0
+Minor findings. The shipped-template regression rejects bracket placeholders,
+but comment-only instructional markers can still pass after every bracketed
+field is authored. The finding maps to `p09-t03` (`code_fix_required`). It
+requires precise shipped-comment detection and a comment-specific negative
+control; no finding is deferred.
+
 #### Configured implementation exit gate generation 4 created
 
 The configured declaration resolved with canonical configuration fingerprint
