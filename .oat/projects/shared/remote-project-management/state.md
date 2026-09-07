@@ -2,7 +2,9 @@
 oat_current_task: null
 oat_last_commit: 9d42e2741499046b14f01f5f734fd9921aac28aa
 oat_blockers:
-  ['Revision 3 fix loop 2/3 is complete; final normal review 3/3 is pending']
+  [
+    'Revision 3 passed; latest origin/main must be merged and revalidated before Phase 8',
+  ]
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -53,7 +55,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T03:04:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T03:09:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -88,7 +90,7 @@ structured plan artifact review passed and implementation starts at
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 3 artifact review passed)
-- **Implementation:** implementation.md (in progress; p-rev3 review pending)
+- **Implementation:** implementation.md (in progress; latest-main transition pending)
 
 ## Progress
 
@@ -254,17 +256,17 @@ structured plan artifact review passed and implementation starts at
 - ⚠ Root-owned Revision 3 review 2/3 blocked with 1 Important finding
 - ✓ Bounded Revision 3 fix loop 2/3 committed as `9d42e2741`; root verified
   120/120
-- ⧗ Final normal Revision 3 review 3/3 pending
-- ⧗ After p-rev3 code review passes, merge latest `origin/main` and re-establish
-  the verification baseline before Phase 8
+- ✓ Final normal Revision 3 review 3/3 passed with zero findings
+- ⧗ Merge latest `origin/main` and re-establish the verification baseline
+  before Phase 8
 
 ## Blockers
 
-Revision 3 fix loop 2/3 is complete and final normal review 3/3 is required.
-The branch-level lockstep version gate remains preserved for planned
-`p08-t05` release work after mainline reconciliation.
+Revision 3 passed. The separately authorized latest-main transition gate must
+now merge and revalidate `origin/main` before Phase 8. The branch-level
+lockstep version gate remains preserved for planned `p08-t05` release work.
 
 ## Next Milestone
 
-Run final normal Revision 3 review 3/3. After p-rev3 passes, merge latest
-`origin/main` before Phase 8.
+Merge latest `origin/main` using the wave-program handoff, then re-establish
+the verification baseline before Phase 8.

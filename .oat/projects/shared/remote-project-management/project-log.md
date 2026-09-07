@@ -160,6 +160,10 @@ Recovery attempt 1/10 passed at 2ed83eb26862a4d5ebbd1b012d77edcfbfdbb720; produc
 
 Phase 7 operator extension exhausted at 4/4 reviews and 3/3 fixes with 1 Critical and 1 Important finding; see reviews/p07-review-2026-09-07T015809Z.md.
 
+### 2026-09-07 · structural · oat-project-implement · p-rev3
+
+Revision 3 passed root-owned review 3/3 with zero Critical or Important findings after 2/3 bounded fix loops; see reviews/p-rev3-review-2026-09-07T030518Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
