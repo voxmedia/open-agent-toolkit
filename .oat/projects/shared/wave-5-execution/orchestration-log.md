@@ -92,3 +92,44 @@ cap; the last two findings were about the mechanism, not the wave's scope.
 p09 parked with no commit: the plan's resume premise (the status probe sees the seal and skips the append) is false against the real CLI — reproduced, not inferred (two seals appended on replay). Wrapper rule 4 applied; p10 and p11 proceed on the current tip. **Skill signal (strengthens):** the STOP→park rule worked as designed — the lane stopped before widening a guard that would have created a real regression, preserved its work as a patch, and filed the refresh item. **Skill signal (gap):** the plan-readiness contract (p07) checks dependency tables, not load-bearing behavioral premises; a "premise probe" step at wave-boundary recon (execute the plan's stated current-state claims against the built CLI) would have caught this before dispatch.
 
 ---
+
+### 2026-09-07 · process · oat-wave-execute · p11 review brief inverted the seal ordering
+
+The orchestrator's p11 review brief (ruling 2) said the retirement sweep runs
+"after the roll-up/seal and before the Step 8 archive block"; the plan requires
+the inverse (inside Step 3.7, before the roll-up and seal — the post-seal
+placement is the defect being fixed). The implementation followed the plan; the
+reviewer flagged the brief, ran the inverted placement as a red proof (it fails
+the shipped ordering test), and no code changed. **Skill signal (gap):** a
+review brief's phase-specific rulings must be derived from the plan's own step
+text, not summarized from memory of the wrapper; when a ruling states an
+ordering, quote the plan sentence it comes from so a reviewer can check the
+brief against the contract.
+
+---
+
+### 2026-09-07 · synthesis · oat-wave-execute · end of run (wave 5)
+
+Eleven lanes in five groups; ten merged, one parked (p09, STOP on a reproduced
+false premise). One lockstep bump (0.2.62 → 0.2.63) with the manifest restamp
+in the same commit; six fan-ins, each with the eight-gate sequence and
+uncached test runs (6011 CLI tests at the tip). Review economics: six lanes
+needed one fix round with a round-2 verification (p02, p03, p06, p07, p08,
+p10); four passed with an address-now sweep (p01, p04, p05, p11); no Critical
+reached a root reviewer; the in-lane Codex rounds caught two real defects
+before commit (p04's over-broad index-lock detector; p08's `resolveLifecycleCritic`
+model) and the root reviewers' live probes caught a red root `pnpm test`
+(p08's smoke-tier pin) and a vacuous project glob (p11). Ten backlog items
+archived; twelve follow-ups filed across the wave (two at the p09 park, one at
+the p10 fix round, nine at closeout). **Skill signals for `oat-wave-execute`:**
+(1) pre-dispatch refreshes belong in the source plans as dated Revalidation
+entries (the gate rejected wrapper-side addenda three times); (2) a lane that
+bumps a skill must sweep old version literals repo-wide in plain and
+regex-escaped forms and run `pnpm test:smoke`; (3) gates run sequentially in
+one worktree; (4) SHAs in reports are pasted from `git rev-parse`; (5) a
+reviewer's "do not weaken — file and pin" ruling governs the fix round; (6) a
+wave-boundary "premise probe" (execute each plan's current-state claims against
+the built CLI) would have parked p09 before dispatch; (7) review-brief rulings
+quote the plan sentence they derive from.
+
+---

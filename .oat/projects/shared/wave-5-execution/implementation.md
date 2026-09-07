@@ -383,9 +383,18 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact                  | Planned / Documented                                                         | Actual / Accepted                                                                   | Reason                                                                                   | Source of Truth                     | Follow-up                            |
+| ------------- | -------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------ |
+| p01 review    | source plan Test plan            | `recovers from the selected snapshot` expects the original verdict           | fail-closed: replacement bytes never recover (Done criterion 6)                     | `assertArtifactContentCurrent` in `review-verdict.ts` is out of the plan's scope         | reviewer ruling, plan Done criteria | wave-close plan correction           |
+| p01 review    | source plan Done criteria        | every `review_failed` envelope names `postSelection`                         | only `unexpected_post_selection_failure` envelopes do                               | `review_did_not_complete` is out of plan scope                                           | plan In-scope                       | wave-close plan correction           |
+| p03 review    | source plan readiness definition | `oat_template: false`                                                        | absent-or-false                                                                     | repository convention; 12/76 live quick plans flip not-ready → ready, none the other way | `oat-project-next` convention       | wave-close plan correction           |
+| p04           | source plan step 3               | retry helper inside `commitReviewGateProjectLog` AND exported for `--commit` | retry, classification, dedupe live in `project/log/append.ts`; gate wrapper is thin | literal reading creates an import cycle; DR-260718                                       | DR-260718                           | none                                 |
+| p07           | source plan In-scope             | readiness rules as a shipped module                                          | local test helpers in the contract test                                             | the plan names only the test file; consumers deferred                                    | plan In-scope                       | none                                 |
+| p08           | source plan seam list            | fact critic required in both modes                                           | probe requires it; `run.mjs` returns null without one                               | the plan's rule is stricter than the runtime; pinned as a judgment call                  | plan step 2                         | none                                 |
+| p09           | source plan resume design        | status probe sees the seal and skips the append                              | seal append not idempotent; probe cannot see a seal                                 | reproduced on the CLI (two seals on replay)                                              | STOP condition                      | `BL-260907-make-the-completion-seal` |
+| p10           | source plan Step 2 Verify        | the `:94-127` negatives still hold                                           | same-phase cross-spelling negatives flipped; cross-phase negatives survive          | Step 2's body requires collapsing heading dialects                                       | reviewer ruling                     | wave-close plan correction           |
+| p11           | source plan step 3               | `.oat/projects/*/state.md` glob                                              | configured `projects.root`, scope-nested, terminal projects excluded                | literal glob matched zero files on this layout                                           | reviewer probe (93 vs 0)            | none                                 |
+| p11 review    | source plan Outcome              | consolidations record `absorbed_*` (quick-start only)                        | Lite consolidations record nothing; sweep degrades to a note                        | plan scoped to quick-start; refresh did not extend it                                    | plan Outcome                        | `BL-260907-record-absorbed-projects` |
 
 ## Test Results
 
@@ -403,27 +412,65 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p10   | 6008 (forced CLI suite) + control-plane 102   | all    | 0      | -        |
 | p11   | 6011 (forced CLI suite) + test:smoke 160      | all    | 0      | -        |
 
+## Deferred Findings
+
+### Deferred Findings (Medium)
+
+- p02 review round 2 M2 — a wrong-TYPED `documentation.root` is silently dropped in both modes with zero warnings (pre-existing door the inert-exclusion warnings do not cover) → `BL-260907-warn-when-documentation-root`.
+- p10 review round 1 I1 (converted to a pinned interaction per the reviewer's "do not weaken — file and pin" ruling) — bullet-list / table-only completion records now surface as incomplete revision phases → `BL-260907-recognize-phase-level`.
+- p11 review M1 — a Lite consolidation records no `absorbed_*` fields, so the retirement sweep degrades to its recorded note (plan-scope gap; interim quick-mode-only qualifier in `lifecycle.md`) → `BL-260907-record-absorbed-projects`.
+- p09 park — the completion seal append is not idempotent and `oat project log check` cannot see a seal → `BL-260907-make-the-completion-seal`; the synced deferred clear from PR #254 always fails on a numeric-fd `readFile` → `BL-260907-finalize-synced-archive-mjs`.
+
+### Deferred Findings (Minor)
+
+- p06 review — `packages/cli` test files are excluded from tsc and type-aware oxlint → `BL-260907-type-check-cli-test-files`.
+- p05 review — `oat config adopt` keeps an inline copy of the surface-flag block → `BL-260907-fold-oat-config-adopt-onto`.
+- p03 review (deferred) — quick-mode `discovery` rows in `oat-project-next` still route through `oat-project-plan` (two-hop) → `BL-260907-route-quick-mode-discovery`.
+- p02 review round 2 — the inert-exclusion warning's case-sensitivity hint is wrong when a symlink resolved the target elsewhere → `BL-260907-name-the-resolved-target`.
+- p06 review round 2 m1 — an escaped-underscore reference yields a trailing backslash and a false positive (zero live instances) → `BL-260907-ignore-backslash-escaped`.
+- p07 fix round (Codex) — `oat-wave-program` contradicts itself on the ledger's terminal vocabulary (`merged` vs `done`) → `BL-260907-settle-the-oat-wave-program`.
+- p07 review round 2 m1 — the program-document date fallback fails open → `BL-260907-fail-closed-on-unparsable`.
+- p11 review m3 / Codex — quick-start resolves `PROJECT_PATH` before `oat project new` and writes through the stale value (pre-existing) → `BL-260907-re-resolve-project-path-after`.
+- p11 review m2 — the plan's `-t 'absorbed'` verify filter runs two of the three new tests → wave-close plan correction.
+- p11 review m3 (process) — the orchestrator's review brief stated the sweep/seal ordering backwards; the implementation and plan agree (sweep before roll-up and seal); recorded in `orchestration-log.md`, no code change.
+- p07 review — the stray four-backtick fence in the repo-improve plan template is pre-existing → `BL-260906-repair-the-stray-fence-in-oat` (already open).
+- p01 review — three plan-internal inconsistencies (Done checkbox scope, the snapshot bullet, the `verdict-parse` bullet) → wave-close plan corrections.
+
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- (filled at closeout)
+- Gate resilience: a committed review artifact that survives a post-selection failure is re-validated through the normal path's own eligibility function and returned with its real disposition (no reviewer re-dispatch; replacement bytes never recover; envelopes name `postSelection.step` / `code`); gate project-log finalization retries transient index locks on git's own contention evidence, settles only on proven identity, and leaves a durable, idempotent recovery receipt (`DR-260907-gate-log-receipts-live-under`).
+- Configuration: `documentation.instructionPointerExcludes` keeps instruction-sync pointer files out of docs content trees (fail-closed on malformed values; issue #238 reproduced and closed on this repository); `oat config unset <key>` with `set`-parity refusals, aggregate-key rejection, and empty-parent pruning.
+- Lifecycle routing and closeout: one quick-plan readiness predicate shared by plan 1.4.10 / progress 1.4.1 / next 1.1.1 / quick-start 2.3.10, with incomplete quick projects resuming in quick-start rather than dead-ending; the recommender treats a project as terminal only when `oat_lifecycle` is complete AND no revision phase is incomplete, on a task parser that normalizes heading dialects; the autonomous recap is capability-aware and non-blocking (explainer-kit 1.0.7 seam probe; complete 1.7.8, implement 2.3.6, summary 1.5.3, autonomous 1.0.13); consolidated-project retirement is semantic (each absorbed child must prove a terminal state; the sweep runs before the roll-up and seal; quick-start records `absorbed_*`).
+- Contracts: every `.oat/scripts` reference in shipped skill Markdown is validated against pack manifests; the repo-improve plan template (2.1.3) carries the external-plan readiness contract and the contract test sweeps all 44 dated plans.
 
 **Behavioral changes (user-facing):**
 
-- (filled at closeout)
+- Lockstep public packages 0.2.62 → 0.2.63; `.oat/sync/manifest.json` restamped in the same commit.
+- A gate whose post-selection step throws after a committed artifact exists no longer fails as `review_failed`; an index-lock collision during log finalization no longer loses the gate's log entry; a recovery command is printed and idempotent.
+- Malformed `instructionPointerExcludes` stops sync/validate with a repair message; `oat config unset` exists.
+- Incomplete quick projects route to quick-start; a project with incomplete revision phases is not reported terminal; autonomous completion skips the recap (recorded) when a required seam is missing instead of failing; consolidated projects are retired only when their children are proven terminal.
+- Skills with dangling script references and external plans whose status contradicts their dependency table fail the contract test.
 
 **Key files / modules:**
 
-- (filled at closeout)
+- `packages/cli/src/commands/gate/index.ts`, `project/log/append.ts`, `.oat/gate-runs/` receipts — recovery and retry.
+- `packages/cli/src/config/oat-config.ts`, `commands/instructions/*`, `commands/config/index.ts` — exclusions and `unset`.
+- `.agents/skills/oat-project-{plan,progress,next,quick-start,complete,implement,summary,autonomous}`, `oat-explainer-kit/scripts/probe-recap-seams.mjs`, `oat-repo-improve/references/plan-template.md` — routing, recap, retirement, readiness.
+- `packages/control-plane/src/state/tasks.ts`, `recommender/router.ts` — terminal status.
+- `packages/cli/src/commands/init/tools/shared/skill-script-references.ts`, `skills-bundled-docs-contract.test.ts` — script-reference and readiness contracts.
 
 **Verification performed:**
 
-- (filled at closeout)
+- Per lane: plan-focused suites, forced-turbo check/type-check/test (`Cached: 0`), lint, format, validate-skills, check:skill-bumps, `test:smoke` where a skill was bumped, one or two read-only Codex rounds, and a root-owned adversarial review with live CLI probes (p02, p03, p06, p07, p08, p10 with a fix round and a round-2 verification; p01, p04, p05, p11 with an address-now sweep).
+- Six fan-ins with the eight-gate definition-of-done sequence and uncached test runs (6011 CLI tests at the tip); final review and the configured exit gate recorded below.
 
 **Design deltas (if any):**
 
-- (filled at closeout)
+- p09 parked on its plan's STOP (false resume premise, reproduced); ten of eleven lanes merged.
+- Pre-dispatch refreshes were applied to eight source plans as dated Revalidation entries after the plan gate rejected wrapper-side addenda three times.
+- See the Deviations table for the per-lane deltas (retry placement, readiness helpers, critic seam, flipped negatives, configured-root glob, Lite recording gap).
 
 ## References
 
