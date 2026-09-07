@@ -1,6 +1,6 @@
 ---
 name: oat-project-summary
-version: 1.5.2
+version: 1.5.3
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
@@ -239,37 +239,47 @@ spec, or design artifacts.
 
 **Non-lite section sources:**
 
-| Section                        | Primary Sources                                                        |
-| ------------------------------ | ---------------------------------------------------------------------- |
-| Overview                       | discovery.md initial request, spec.md problem statement                |
-| What Was Implemented           | implementation.md task outcomes, plan.md phase structure               |
-| Key Decisions                  | design.md decisions, implementation.md notes/decisions                 |
-| Design Deltas                  | implementation.md deviations table; review-received design drift notes |
-| Notable Challenges             | implementation.md issues/blockers in task notes                        |
-| Tradeoffs Made                 | implementation.md decisions, design.md tradeoff sections               |
-| Integration Notes              | implementation.md notes about cross-cutting concerns                   |
-| Revision History               | plan.md p-revN phases, implementation.md revision notes                |
-| Follow-up Items                | implementation.md deferred findings, plan.md deferred items            |
-| Associated Issues              | state.md `associated_issues` field                                     |
-| Workflow Observations          | project-log.md via `oat project log rollup` only                       |
-| Autonomous Execution Learnings | oat-execution-learnings.md dated entries                               |
-| Explainer Outcome              | project-recap `manifest.json` and `build-record.json`                  |
+| Section                        | Primary Sources                                                                   |
+| ------------------------------ | --------------------------------------------------------------------------------- |
+| Overview                       | discovery.md initial request, spec.md problem statement                           |
+| What Was Implemented           | implementation.md task outcomes, plan.md phase structure                          |
+| Key Decisions                  | design.md decisions, implementation.md notes/decisions                            |
+| Design Deltas                  | implementation.md deviations table; review-received design drift notes            |
+| Notable Challenges             | implementation.md issues/blockers in task notes                                   |
+| Tradeoffs Made                 | implementation.md decisions, design.md tradeoff sections                          |
+| Integration Notes              | implementation.md notes about cross-cutting concerns                              |
+| Revision History               | plan.md p-revN phases, implementation.md revision notes                           |
+| Follow-up Items                | implementation.md deferred findings, plan.md deferred items                       |
+| Associated Issues              | state.md `associated_issues` field                                                |
+| Workflow Observations          | project-log.md via `oat project log rollup` only                                  |
+| Autonomous Execution Learnings | oat-execution-learnings.md dated entries                                          |
+| Explainer Outcome              | project-recap `manifest.json` and `build-record.json`, or the recorded recap skip |
 
 **Explainer Outcome (conditional):**
 
-When a project-recap attempt exists, render this section:
+When a project-recap attempt or a recorded recap skip exists, render this
+section with exactly one item. A run that happened uses the first form:
 
 ```markdown
 ## Explainer Outcome
 
-- **project-recap:** {outcome} — `{run path}`{optional warning or recovery note}
+- **project-recap:** {generated | degraded} {outcome} — `{run path}`{optional warning or recovery note}
 ```
 
-When a project-recap attempt exists, include exactly one concise outcome item with its recipe, outcome (`built-durable`, `built-not-durable`, or `failed`), run path, and warning or recovery note when applicable.
+A recap that never ran because a required seam was unavailable uses the second
+form, which has a reason and no run path:
 
-Use `manifest.json` and `build-record.json` as the source of truth; refresh the existing item instead of appending a duplicate.
+```markdown
+## Explainer Outcome
 
-Omit `Explainer Outcome` when no project-recap attempt exists. A failed or non-durable recap remains visible as its product outcome; do not reinterpret it as project implementation failure.
+- **project-recap:** skipped — {skip reason}
+```
+
+Include exactly one concise item with its recipe, state (`generated`, `degraded`, or `skipped`), and either its outcome (`built-durable`, `built-not-durable`, `built-needs-review`, or `failed`) with run path, or its skip reason. Add a warning or recovery note when applicable. Use `generated` for `built-durable`, `degraded` for any other terminal outcome, and `skipped` only for a recap whose intent resolved to skip.
+
+Use `manifest.json` and `build-record.json` as the source of truth for a run, and the recorded recap intent for a skip; refresh the existing item instead of appending a duplicate.
+
+Omit `Explainer Outcome` only when no project-recap attempt and no recorded recap skip exist. A degraded or skipped recap remains visible as its own product outcome; do not reinterpret either as project implementation failure. A `capability_probe` skip means the host had no provider configured for a required seam, not that the recap failed.
 
 **Autonomous Execution Learnings (conditional):**
 
@@ -619,5 +629,6 @@ Summary tracks: last task {task_id}, {N} revision phases
   ledger graduation
 - When the PJM tool pack is available, each Key Decision is promoted to a canonical `reference/decisions/DR-YYMMDD-slug` record via `oat decision new` (status `accepted`), deduped on the date-independent slug so re-runs never create duplicate records
 - When the PJM tool pack is unavailable, decision promotion is skipped silently with no prompt
-- A project-recap attempt appears once in a concise Explainer Outcome section
-  sourced from its manifest and build record
+- A project-recap attempt or recorded capability skip appears once in a concise
+  Explainer Outcome section sourced from its manifest and build record, or from
+  the recorded recap intent

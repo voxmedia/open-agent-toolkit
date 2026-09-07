@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 import { createBrowserProbeSession } from '../../explainer-kit/scripts/lib/browser-runtime.mjs';
+import { checkTerminalOutcome } from '../scripts/check-terminal-outcome.mjs';
 import { runOatExplainer } from '../scripts/run.mjs';
 
 const execFile = promisify(execFileCallback);
@@ -170,6 +171,133 @@ test('both lifecycle recap callers require author, critic, and unattended mode',
       text,
       /`mode: unattended`/,
       `${name} must declare unattended lifecycle mode`,
+    );
+  }
+});
+
+test('both lifecycle recap callers probe seams before attempting a recap', () => {
+  const callers = [
+    {
+      name: 'project completion',
+      invocation: 'invoke `scripts/run.mjs#runOatExplainer`',
+      text: sectionBetween(
+        completionSkill,
+        '### Step 3.6: Select Final Project Recap',
+        '### Step 3.7: Project Log Completion Gate',
+      ),
+    },
+    {
+      name: 'implementation tail',
+      invocation: 'Invoke the `oat-explainer-kit` adapter first',
+      text: sectionBetween(
+        closeoutReference,
+        '**Implementation-Tail Project Recap (non-lite only):**',
+        '**Autonomous final HiLL approval:**',
+      ),
+    },
+  ];
+
+  for (const { name, invocation, text } of callers) {
+    assert.match(
+      text,
+      /probe-recap-seams\.mjs#probeRecapSeams/,
+      `${name} must probe seam availability`,
+    );
+    assert.match(
+      text,
+      /pass the\s+result to autonomous intent resolution as\s+`seamProbe`/i,
+      `${name} must hand the probe result to the resolver as seamProbe`,
+    );
+    assert.match(
+      text,
+      /accepts a\s+`seamProbe` only for autonomous\s+`projectRecap`/,
+      `${name} must scope the probe handoff to autonomous resolution`,
+    );
+    assert.match(
+      text,
+      /all five required seams — author, fact critic, browser session,\s+visual critic, and set planner/,
+      `${name} must probe all five unattended seams`,
+    );
+    assert.match(
+      text,
+      /E_SET_PLANNER_REQUIRED/,
+      `${name} must detect a missing set planner pre-flight`,
+    );
+    assert.match(
+      text,
+      /Autonomous resolution then returns a recordable\s+`skip` with source `capability_probe`/,
+      `${name} must record a probe-driven skip in autonomy`,
+    );
+    assert.match(
+      text,
+      /is unchanged: (?:a\s+recorded interactive `generate`|the decision recorded at the batched prompt governs)/,
+      `${name} must leave interactive resolution unchanged`,
+    );
+    assert.match(
+      text,
+      /Never convert a\s+?configured-but-invalid seam, or a run that failed after a\s+?passing probe, into a\s+?skip; that run stays `failed`\./,
+      `${name} must keep invalid seams and failed runs out of the skip path`,
+    );
+    assert.match(
+      text,
+      /pass its recorded source as\s+`--skip-reason`/,
+      `${name} must carry the skip reason into the guard`,
+    );
+
+    // The probe decides the skip pre-flight, so no caller may reach it from a
+    // failed adapter invocation. The invocation anchor must exist, otherwise
+    // this ordering assertion would pass vacuously.
+    const probeIndex = text.indexOf('probeRecapSeams');
+    const invokeIndex = text.indexOf(invocation);
+    assert.ok(probeIndex >= 0, `${name} must name the probe (anchor missing)`);
+    assert.ok(
+      invokeIndex >= 0,
+      `${name} must name its adapter invocation (anchor "${invocation}" missing)`,
+    );
+    assert.ok(
+      probeIndex < invokeIndex,
+      `${name} must probe before invoking the adapter`,
+    );
+  }
+});
+
+test('the lite carve-out keeps the whole recap subsection out of lite closeout', () => {
+  assert.match(
+    closeoutReference,
+    /This entire project-recap subsection applies only to non-lite workflows\. For\s+lite, do not resolve recap intent, inspect recap runs, invoke\s+`oat-explainer-kit`, run the terminal-outcome guard, or let recap block\s+closeout\. The lite contract sets `PROJECT_RECAP_REACHABLE=false` and proceeds\s+from the required reviews through its stored optional steps to `pr` and\s+sequence completion\./,
+  );
+  assert.match(
+    closeoutReference,
+    /\*\*Implementation-Tail Project Recap \(non-lite only\):\*\*/,
+  );
+});
+
+test('the terminal-outcome guard accepts a probe-driven skip with its reason', () => {
+  assert.deepEqual(
+    checkTerminalOutcome({ intent: 'skip', reason: 'capability_probe' }),
+    { ok: true, intent: 'skip', outcome: null, reason: 'capability_probe' },
+  );
+  assert.deepEqual(checkTerminalOutcome({ intent: 'skip' }), {
+    ok: true,
+    intent: 'skip',
+    outcome: null,
+    reason: null,
+  });
+
+  // A generated recap still needs a terminal outcome, so a reason cannot be
+  // used to talk the guard out of missing evidence.
+  for (const invalid of [
+    { intent: 'generate', reason: 'capability_probe' },
+    {
+      intent: 'generate',
+      outcome: 'built-durable',
+      reason: 'capability_probe',
+    },
+    { intent: 'skip', reason: 'seams-unavailable' },
+  ]) {
+    assert.throws(
+      () => checkTerminalOutcome(invalid),
+      (error) => error?.code === 'E_RECAP_OUTCOME',
     );
   }
 });

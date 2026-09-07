@@ -1,6 +1,6 @@
 ---
 name: oat-project-autonomous
-version: 1.0.12
+version: 1.0.13
 description: Use when a user explicitly asks to run an OAT project autonomously end-to-end. Activates session-only autonomy, resumes the correct lifecycle phase, and drives the existing OAT skills through final PR or a reported boundary.
 argument-hint: '<goal | project-slug | ticket-ref>'
 disable-model-invocation: true
@@ -266,6 +266,15 @@ Resolve and persist `projectRecap` as `generate` with source `autonomous_policy`
 Reassert this forced recap intent on resume; a stale lower-precedence skip is overridden, warned, and recorded.
 The autonomous mode policy has precedence over project state and workflow
 preference, so `never` does not suppress the recap.
+
+Kickoff persists the forced `generate` intent without probing seams, because the
+host that runs the recap is the one that matters and closeout is where it runs.
+The closeout recap gate probes seam availability and may resolve a recordable
+`skip` with source `capability_probe` on a host where a required seam is
+unavailable. That later capability skip is the only thing that overrides this
+forced intent, it is decided before any run rather than from a failed one, and
+it never blocks unattended completion. Do not reassert `generate` over a
+recorded `capability_probe` skip within the same closeout.
 
 Resolve and persist `projectExplainer` as `generate` with source `kickoff_prompt` only when the kickoff request explicitly asks for a project explainer.
 A general autonomous goal, project creation, or normal planning does not count as an explainer request.

@@ -326,6 +326,18 @@ describe('review skill contracts', () => {
     expect(content).toContain(
       'Reassert this forced recap intent on resume; a stale lower-precedence skip is overridden, warned, and recorded.',
     );
+    expect(content).toMatch(
+      /Kickoff persists the forced `generate` intent without probing seams/,
+    );
+    expect(content).toMatch(
+      /may resolve a recordable\s+`skip` with source `capability_probe`/,
+    );
+    expect(content).toMatch(
+      /it is decided before any run rather than from a failed one, and\s+it never blocks unattended completion/,
+    );
+    expect(content).toMatch(
+      /Do not reassert `generate` over a\s+recorded `capability_probe` skip within the same closeout\./,
+    );
     expect(content).toContain(
       'Resolve and persist `projectExplainer` as `generate` with source `kickoff_prompt` only when the kickoff request explicitly asks for a project explainer.',
     );
@@ -394,7 +406,7 @@ printf 'artifact-read\\n'`,
       'A fresh `project-recap` manifest for the current completed implementation deduplicates the lifecycle-tail run: reuse it and do not invoke the adapter again.',
     );
     expect(content).toContain(
-      'When `OAT_AUTONOMOUS=1` and no fresh recap exists, attempt `project-recap` exactly once; missing or stale persisted intent cannot suppress this autonomous attempt.',
+      'When `OAT_AUTONOMOUS=1` and no fresh recap exists, run this recap gate exactly once; missing or stale persisted intent cannot suppress this autonomous gate. In autonomy, attempt the adapter run exactly once and only when the seam probe resolves every required seam and intent resolves to `generate`; an interactive `generate` still attempts the run regardless of the probe result, and a seam-less interactive attempt is still the `failed` outcome it is today.',
     );
     expect(content).toContain(
       'Invoke the `oat-explainer-kit` adapter first, then run its shared tracked-run finalizer in `dedicated` mode for a successful build.',
@@ -417,6 +429,42 @@ printf 'artifact-read\\n'`,
     expect(content).toMatch(
       /always invoke this implementation-tail recap with\s+`mode: unattended`\./,
     );
+    expect(content).toMatch(
+      /Probe seam availability before resolving intent\. Call\s+`oat-explainer-kit\/scripts\/probe-recap-seams\.mjs#probeRecapSeams` in\s+`mode: unattended`/,
+    );
+    expect(content).toMatch(
+      /covers all five required seams — author, fact critic, browser session,\s+visual critic, and set planner/,
+    );
+    expect(content).toMatch(
+      /a host missing only the set planner is\s+detected here instead of at the adapter's `E_SET_PLANNER_REQUIRED`/,
+    );
+    expect(content).toMatch(
+      /In autonomy, a probe result of `seams-unavailable` means no provider is\s+configured for a required seam\. Autonomous resolution then returns a recordable\s+`skip` with source `capability_probe`: record it with the warning, do not invoke\s+the adapter, and continue closeout\./,
+    );
+    expect(content).toMatch(
+      /Interactive closeout is unchanged: a\s+recorded interactive `generate` still attempts the recap and a run that fails\s+for a missing seam is still the `failed` outcome it is today\./,
+    );
+    expect(content).toMatch(
+      /never blocks final HiLL approval on a missing recap, and this skip is\s+resolved before any run, never from a failed one/,
+    );
+    expect(content).toMatch(
+      /Never convert a configured-but-invalid seam, or a run that failed after a\s+passing probe, into a skip; that run stays `failed`\./,
+    );
+    expect(content).toMatch(
+      /A `skip` intent requires no manifest; pass its recorded source as\s+`--skip-reason` so the receipt states why no recap exists\./,
+    );
+    expect(content).toContain(
+      'The autonomy gate and the interactive rule are two separate rules and are never read as one.',
+    );
+    expect(content).toMatch(
+      /an interactive `generate` still attempts the run regardless of the probe result, and a seam-less interactive attempt is still the `failed` outcome it is today/,
+    );
+    expect(content).toMatch(
+      /That probe-driven skip record supersedes the\s+intent resolved and persisted earlier in this run for the remainder of the run/,
+    );
+    expect(content).toMatch(
+      /pass the skip — not the earlier `generate` — to\s+the terminal-outcome guard as `--intent skip --skip-reason capability_probe`/,
+    );
 
     const normalizedContent = content.replace(/\s+/g, ' ');
     const finalReviewIndex = normalizedContent.indexOf(
@@ -437,14 +485,21 @@ printf 'artifact-read\\n'`,
 
     expect(content).toContain('## Explainer Outcome');
     expect(content).toContain(
-      'When a project-recap attempt exists, include exactly one concise outcome item with its recipe, outcome (`built-durable`, `built-not-durable`, or `failed`), run path, and warning or recovery note when applicable.',
+      'Include exactly one concise item with its recipe, state (`generated`, `degraded`, or `skipped`), and either its outcome (`built-durable`, `built-not-durable`, `built-needs-review`, or `failed`) with run path, or its skip reason.',
     );
     expect(content).toContain(
-      'Use `manifest.json` and `build-record.json` as the source of truth; refresh the existing item instead of appending a duplicate.',
+      'Use `generated` for `built-durable`, `degraded` for any other terminal outcome, and `skipped` only for a recap whose intent resolved to skip.',
     );
     expect(content).toContain(
-      'Omit `Explainer Outcome` when no project-recap attempt exists.',
+      'Use `manifest.json` and `build-record.json` as the source of truth for a run, and the recorded recap intent for a skip; refresh the existing item instead of appending a duplicate.',
     );
+    expect(content).toContain(
+      'Omit `Explainer Outcome` only when no project-recap attempt and no recorded recap skip exist.',
+    );
+    expect(content).toContain(
+      'A `capability_probe` skip means the host had no provider configured for a required seam, not that the recap failed.',
+    );
+    expect(content).toContain('- **project-recap:** skipped — {skip reason}');
   });
 
   it('allows quick/import design artifact reviews without spec.md', () => {
@@ -1208,7 +1263,7 @@ printf 'artifact-read\\n'`,
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.7');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.8');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );
@@ -1250,6 +1305,39 @@ printf 'artifact-read\\n'`,
       /Supply it\s+alongside the existing `critic` callback \(or validated\s+`criticModulePath`\)/,
     );
     expect(content).toMatch(/invoke the recap with `mode: unattended`\./);
+    expect(content).toMatch(
+      /If no fresh recap exists, probe seam availability before invoking the adapter\.\s+Call `oat-explainer-kit\/scripts\/probe-recap-seams\.mjs#probeRecapSeams` in\s+`mode: unattended`/,
+    );
+    expect(content).toMatch(
+      /covers all five required seams — author, fact critic, browser session,\s+visual critic, and set planner/,
+    );
+    expect(content).toMatch(
+      /In autonomy, a probe result of `seams-unavailable` means no provider is\s+configured for a required seam\. Autonomous resolution then returns a recordable\s+`skip` with source `capability_probe`: record it with the warning, leave\s+`SELECTED_PROJECT_RECAP_RUN` empty, and complete without a recap\./,
+    );
+    expect(content).toMatch(
+      /An interactive\s+completion is unchanged: the decision recorded at the batched prompt governs, a\s+recorded `generate` still attempts the recap, and a run that fails for a missing\s+seam is still the `failed` outcome it is today\./,
+    );
+    expect(content).toMatch(
+      /Never convert a\s+configured-but-invalid seam, or a run that failed after a passing probe, into a\s+skip; that run stays `failed`\./,
+    );
+    expect(content).toMatch(
+      /This covers both an interactive skip and a\s+probe-driven `capability_probe` skip; neither prompts, and neither blocks\s+completion\./,
+    );
+    expect(content).toContain(
+      'The autonomy gate and the interactive rule are two separate rules and are never read as one.',
+    );
+    expect(content).toMatch(
+      /In autonomy, attempt the adapter run exactly once and only when the probe resolves every seam; an interactive `generate` still attempts the run regardless of the probe result/,
+    );
+    expect(content).toMatch(
+      /When the gate above allows the attempt, invoke `scripts\/run\.mjs#runOatExplainer` exactly once with recipe `project-recap`/,
+    );
+    expect(content).toMatch(
+      /That\s+probe-driven skip record supersedes the intent resolved and persisted earlier in\s+this run for the remainder of the run/,
+    );
+    expect(content).toMatch(
+      /treat any `SHOULD_GENERATE_RECAP="true"` set from the earlier resolution as\s+stale, and pass the skip — not the earlier `generate` — to the terminal-outcome\s+guard as `--intent skip --skip-reason capability_probe`/,
+    );
 
     const resolveIndex = normalizedContent.indexOf(
       'Resolve `projectRecap` intent before presenting the batched completion prompt.',
