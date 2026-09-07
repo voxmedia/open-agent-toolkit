@@ -8,6 +8,7 @@
   - [Config and Local State](cli-utilities/config-and-local-state.md) — Utility command groups for config discovery, backlog helpers, local paths, instruction integrity, and diagnostics.
   - [Configuration](cli-utilities/configuration.md) — How OAT configuration is split across shared repo, repo-local, user, and provider-sync surfaces.
   - [Project Log](cli-utilities/project-log.md) — Capture append-only project observations and roll them into durable summary and ledger surfaces.
+  - [Remote Project Management](cli-utilities/remote-project-management.md) — Safely bind OAT planning records to GitHub, Linear, or Jira through provider-neutral host capabilities.
   - [Tool Packs and Installed Assets](cli-utilities/tool-packs.md) — Tool-pack lifecycle commands (oat tools) for installing, updating, and removing skills.
   - [Workflow Gates](cli-utilities/workflow-gates.md) — Configure per-skill final commands and family-aware review dispatch with oat gate.
 - Contributing

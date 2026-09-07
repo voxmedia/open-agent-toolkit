@@ -15,6 +15,7 @@ For the deep file-by-file reference, see:
 - [File Locations](../reference/file-locations.md)
 - [`.oat` Directory Structure](../reference/oat-directory-structure.md)
 - [Sync Config (`.oat/sync/config.json`)](../provider-sync/config.md)
+- [Remote Project Management](remote-project-management.md)
 
 ## The five config surfaces
 
@@ -99,6 +100,15 @@ Common keys in `.oat/config.json`:
 - `archive.awsProfile` — optional AWS named profile forwarded as `AWS_PROFILE` to every `aws` invocation in archive flows
 - `archive.awsRegion` — optional AWS region forwarded as `AWS_REGION` to every `aws` invocation in archive flows
 - `tools.<pack>` — project-scope intent for a bundled tool pack (`true` or absent)
+- `pjm.remote.storage.state` — `local` by default; `shared` requires an
+  explicit preview and fresh approval and is unavailable to local projects
+- `pjm.remote.policy.description` — `none`, `managed-section`, or `replace`;
+  the default is `none`
+- `pjm.remote.policy.authority.*` — repository defaults and operation-specific
+  authority for remote creates, field updates, transitions, annotations,
+  deletion, relink, detach, and recreate; the default is `read-only`
+- `pjm.remote.policy.providers.<provider>.*` — optional GitHub, Linear, or Jira
+  tightening that cannot broaden repository policy
 - `pjm.initialized` / `pjm.schemaVersion` — explicit repository PJM adoption written by `oat pjm init`
 - `workflow.gates.skills` / `workflow.gates.execTargets` — per-skill gates and cross-runtime exec targets; manage with `oat gate`
 - `workflow.gateTimeouts.code` / `workflow.gateTimeouts.artifact` — default review budgets in milliseconds
