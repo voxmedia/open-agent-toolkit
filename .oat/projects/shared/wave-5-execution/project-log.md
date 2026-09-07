@@ -64,6 +64,10 @@ target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,m
 
 review=final status=fixes_added artifact=reviews/final-review-2026-09-07T144442Z.md findings=0C/3I/4M/0m run=33895672-bac5-4cb4-9a9e-474e440a9bc5
 
+### 2026-09-07 · structural · oat gate review · final
+
+target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:2,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/wave-5-execution/reviews/final-review-2026-09-07T174812Z.md run=a720129c-9808-4d43-8ae6-4b8de92e8fdb
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
