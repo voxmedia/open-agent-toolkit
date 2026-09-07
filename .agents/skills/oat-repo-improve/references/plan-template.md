@@ -247,6 +247,20 @@ Do not use a repository-wide `README.md` as the index. Do not ask executors to m
 
 An index records the same provenance as a plan, but it carries no `oat_execution_status` and none of the dependency, landing-event, or revalidation sections: it is not executable, so it has no execution readiness of its own. Each indexed plan carries its own status.
 
+## Execution Programs
+
+A third document kind can appear in `external-plans/`: an execution program, marked `oat_execution_program: true`. Programs are written by `oat-wave-program`, not by this skill, and this contract only says how to read one.
+
+A program maps a corpus of plans into waves. It inspects no tree, so it carries no `oat_external_plan_commit`, no `oat_external_plan_main_commit`, and no `oat_execution_status` — asking a map for provenance or execution readiness is a category error, and each plan it lists answers those questions for itself. What a program must carry instead is its ledger:
+
+- `oat_program_indexes` listing at least one plan index path;
+- a `## Status Ledger` section with a `Wave | Theme | Lanes | Status | Record` table recording at least one wave, where every Status cell is `composed`, `in-progress`, `merged`, or `done` — the vocabulary `oat-wave-program` itself uses;
+- a `## Wave Table` section recording at least one plan; its heading may carry a coverage suffix, as in `## Wave Table (coverage: 31 plans = 31 index rows)`.
+
+A program's mode is selected by `oat_external_plan_date` when it has one and by the date part of `created` otherwise, because the producing template emits `created` and no plan date. Without that fallback every generated program would sort into legacy mode permanently and never be checked at all.
+
+A program dated on or after the contract's landing date is held to exactly the rules above; an earlier one is read in legacy mode like any other artifact. The exemption is deliberate and bounded: a program is not exempt from the contract, it is held to the part of it that applies to a map.
+
 ## Quality Gate
 
 Before finishing each plan, confirm:

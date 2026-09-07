@@ -68,6 +68,30 @@ const EXTERNAL_PLANS_DIR = join(
   'reference',
   'external-plans',
 );
+const SNAPSHOT_FIXTURES_DIR = join(import.meta.dirname, '__fixtures__');
+
+/**
+ * Read a captured fixture, dropping the leading provenance comment so the
+ * bytes below it are exactly what was captured from the source artifact.
+ */
+function readSnapshotFixture(name: string): string {
+  const text = readFileSync(join(SNAPSHOT_FIXTURES_DIR, name), 'utf8');
+  const header = /^<!--[\s\S]*?-->\n+/.exec(text);
+
+  expect(
+    header,
+    `${name} must record its provenance in a header comment`,
+  ).not.toBeNull();
+  expect(header?.[0], `${name} header must name its source`).toContain(
+    'Source:',
+  );
+  expect(header?.[0], `${name} header must name its captured commit`).toMatch(
+    /Captured: +[0-9a-f]{40}/,
+  );
+
+  return text.slice(header?.[0].length ?? 0);
+}
+
 const REPO_IMPROVE_SKILL = join(SKILLS_DIR, 'oat-repo-improve', 'SKILL.md');
 const PLAN_TEMPLATE = join(
   SKILLS_DIR,
@@ -126,6 +150,22 @@ const EMPTY_REVALIDATION_VIOLATION =
   '## Revalidation Before Execution must name at least one revalidation trigger';
 const MALFORMED_DATE_VIOLATION =
   'oat_external_plan_date must be an ISO YYYY-MM-DD date';
+const MISSING_PROGRAM_INDEXES_VIOLATION =
+  'oat_program_indexes must list at least one plan index';
+const MISSING_STATUS_LEDGER_TABLE_VIOLATION =
+  '## Status Ledger must declare a Wave / Theme / Lanes / Status / Record table';
+const EMPTY_STATUS_LEDGER_VIOLATION =
+  '## Status Ledger must record at least one wave';
+const EMPTY_WAVE_TABLE_VIOLATION =
+  '## Wave Table must record at least one plan';
+
+// `oat-wave-program` documents `composed → in-progress → merged` for a wave's
+// ledger row (SKILL.md:66) and also instructs the final row to flip to `done`
+// at program close (SKILL.md:116). Both spellings come from the producer, so
+// both are accepted here; this contract reads programs, it does not redefine
+// that skill's vocabulary.
+const WAVE_STATUSES = ['composed', 'in-progress', 'merged', 'done'];
+const STATUS_LEDGER_COLUMNS = ['wave', 'theme', 'lanes', 'status', 'record'];
 
 type PlanReadinessMode = 'legacy' | 'prospective';
 type PlanDocumentKind = 'plan' | 'index' | 'program';
@@ -152,7 +192,10 @@ function parsePlanFrontmatter(text: string): Record<string, unknown> {
  * a code fence as the real section, and a multiline `$` in a regex would match
  * at every line end and truncate the body to its first line.
  */
-function planSection(text: string, heading: string): string | undefined {
+function findSection(
+  text: string,
+  matches: (heading: string) => boolean,
+): string | undefined {
   const lines = text.split('\n');
   let fence: string | undefined;
   let start = -1;
@@ -179,17 +222,91 @@ function planSection(text: string, heading: string): string | undefined {
       continue;
     }
 
+    const heading = line.startsWith('## ')
+      ? line.slice(3).trimEnd()
+      : undefined;
     if (start === -1) {
-      if (line.trimEnd() === `## ${heading}`) start = index + 1;
+      if (heading !== undefined && matches(heading)) start = index + 1;
       continue;
     }
-    if (line.startsWith('## ')) {
+    if (heading !== undefined) {
       end = index;
       break;
     }
   }
 
   return start === -1 ? undefined : lines.slice(start, end).join('\n');
+}
+
+function planSection(text: string, heading: string): string | undefined {
+  return findSection(text, (candidate) => candidate === heading);
+}
+
+/**
+ * A program's wave-table heading carries a coverage suffix, as in
+ * `## Wave Table (coverage: 31 plans = 31 index rows; verified 2026-09-04)`.
+ */
+function planSectionStartingWith(
+  text: string,
+  prefix: string,
+): string | undefined {
+  // Exact heading, or the heading followed by its parenthesised suffix. A
+  // bare `startsWith` would also match `## Wave Tables`.
+  return findSection(
+    text,
+    (candidate) => candidate === prefix || candidate.startsWith(`${prefix} (`),
+  );
+}
+
+/** Leading `YYYY-MM-DD` of a date or ISO timestamp value, when it has one. */
+function isoDatePart(value: unknown): string | undefined {
+  const text =
+    typeof value === 'string'
+      ? value
+      : value instanceof Date
+        ? value.toISOString()
+        : undefined;
+  const candidate = text?.slice(0, 10);
+
+  return candidate !== undefined && ISO_DATE.test(candidate)
+    ? candidate
+    : undefined;
+}
+
+/**
+ * Table rows that are neither delimiter rows nor blank. A well-formed table
+ * has at least two: its header and one row of content.
+ */
+function contentTableRows(section: string): number {
+  let rows = 0;
+
+  for (const line of section.split('\n')) {
+    if (!isTableRow(line)) continue;
+    const first = tableCells(line)[0];
+    if (first === undefined) continue;
+    if (/^:?-+:?$/.test(first)) continue;
+    rows += 1;
+  }
+
+  return rows;
+}
+
+/** Status cell of each real row in a program's Status Ledger table. */
+function waveStatuses(ledger: string): string[] {
+  const statuses: string[] = [];
+
+  for (const line of ledger.split('\n')) {
+    if (!isTableRow(line)) continue;
+    const cells = tableCells(line);
+    if (cells.length < STATUS_LEDGER_COLUMNS.length) continue;
+    const status = cells[3];
+    if (status === undefined) continue;
+    if (status.toLowerCase() === 'status') continue;
+    if (/^:?-+:?$/.test(status)) continue;
+    statuses.push(status);
+  }
+
+  return statuses;
 }
 
 /**
@@ -343,6 +460,62 @@ function buildProspectivePlan(
   return ['---', ...frontmatter, '---', '', ...body].join('\n');
 }
 
+const DEFAULT_STATUS_LEDGER = [
+  '| Wave | Theme | Lanes | Status | Record |',
+  '| ---- | ----- | ----- | ------ | ------ |',
+  '| W1 | Theme | 4 | merged | PR #262. |',
+  '| W2 | Theme | 5 | composed | Awaiting approval. |',
+].join('\n');
+
+const DEFAULT_WAVE_TABLE = [
+  '| Plan | Index | Wave | Ordering notes | Status |',
+  '| ---- | ----- | ---- | -------------- | ------ |',
+  '| [Plan](./x.md) | [Index](./i.md) | W1 | None. | merged |',
+].join('\n');
+
+interface ProgramDocumentOverrides {
+  date?: string | null;
+  programIndexes?: string[] | null;
+  statusLedger?: string | null;
+  waveTable?: string | null;
+  waveTableHeading?: string;
+}
+
+/**
+ * A minimal execution-program document that satisfies every prospective
+ * program rule unless overridden. Shaped after the real
+ * `2026-08-31-execution-program.md` and `oat-wave-program`'s own
+ * `execution-program-template.md`.
+ */
+function buildProgramDocument(
+  overrides: ProgramDocumentOverrides = {},
+): string {
+  const {
+    date = PROSPECTIVE_DATE,
+    programIndexes = ['.oat/repo/reference/external-plans/i.md'],
+    statusLedger = DEFAULT_STATUS_LEDGER,
+    waveTable = DEFAULT_WAVE_TABLE,
+    waveTableHeading = '## Wave Table (coverage: 1 plan = 1 index row)',
+  } = overrides;
+
+  const frontmatter = [
+    'oat_generated: true',
+    'oat_external_plan_index: false',
+    'oat_execution_program: true',
+    ...(programIndexes === null
+      ? []
+      : ['oat_program_indexes:', ...programIndexes.map((p) => `  - ${p}`)]),
+    ...(date === null ? [] : [`oat_external_plan_date: '${date}'`]),
+  ];
+
+  const body = ['# Execution Program', ''];
+  if (statusLedger !== null)
+    body.push('## Status Ledger', '', statusLedger, '');
+  if (waveTable !== null) body.push(waveTableHeading, '', waveTable, '');
+
+  return ['---', ...frontmatter, '---', '', ...body].join('\n');
+}
+
 /**
  * Read one external plan under the mode its date selects. Legacy plans are
  * accepted exactly as written; prospective plans must carry full provenance,
@@ -364,12 +537,19 @@ function evaluateExternalPlan(text: string): PlanReadiness {
     typeof frontmatter.oat_external_plan_date === 'string'
       ? frontmatter.oat_external_plan_date
       : undefined;
+  // A program has no `oat_external_plan_date`: its producing template
+  // (`oat-wave-program/assets/execution-program-template.md`) carries only
+  // `created`. Without this fallback every generated program would sort into
+  // legacy mode forever and never be checked at all.
+  const effectiveDate =
+    kind === 'program' ? (date ?? isoDatePart(frontmatter.created)) : date;
   // Dates are compared lexically, which is only sound for ISO dates. A present
   // but malformed date fails closed into prospective mode rather than sorting
   // its way into the permissive branch.
   const malformedDate = date !== undefined && !ISO_DATE.test(date);
   const mode: PlanReadinessMode =
-    !malformedDate && (date === undefined || date < CONTRACT_LANDING_DATE)
+    !malformedDate &&
+    (effectiveDate === undefined || effectiveDate < CONTRACT_LANDING_DATE)
       ? 'legacy'
       : 'prospective';
 
@@ -385,10 +565,50 @@ function evaluateExternalPlan(text: string): PlanReadiness {
   // unimportable, so legacy plans return accepted before any further rule.
   if (mode === 'legacy') return { mode, kind, status, violations };
 
-  // A program document sequences other plans and has no execution readiness.
-  if (kind === 'program') return { mode, kind, status, violations };
-
   if (malformedDate) violations.push(MALFORMED_DATE_VIOLATION);
+
+  // An execution program maps other plans rather than being one. It inspects
+  // no tree, so it carries no provenance SHAs and no `oat_execution_status` of
+  // its own; requiring those would reject every document `oat-wave-program`'s
+  // template produces. What it must carry is its ledger, so that is enforced.
+  if (kind === 'program') {
+    const indexes = frontmatter.oat_program_indexes;
+    if (
+      !Array.isArray(indexes) ||
+      indexes.length === 0 ||
+      !indexes.every(
+        (entry) => typeof entry === 'string' && entry.trim() !== '',
+      )
+    ) {
+      violations.push(MISSING_PROGRAM_INDEXES_VIOLATION);
+    }
+
+    const ledger = planSection(text, 'Status Ledger');
+    if (ledger === undefined) {
+      violations.push('missing ## Status Ledger');
+    } else if (!hasTableHeader(ledger, STATUS_LEDGER_COLUMNS)) {
+      violations.push(MISSING_STATUS_LEDGER_TABLE_VIOLATION);
+    } else {
+      const statuses = waveStatuses(ledger);
+      if (statuses.length === 0) violations.push(EMPTY_STATUS_LEDGER_VIOLATION);
+      for (const waveStatus of statuses) {
+        if (!WAVE_STATUSES.includes(waveStatus.toLowerCase())) {
+          violations.push(
+            `wave status "${waveStatus}" is not ${WAVE_STATUSES.join(', ')}`,
+          );
+        }
+      }
+    }
+
+    const waveTable = planSectionStartingWith(text, 'Wave Table');
+    if (waveTable === undefined) {
+      violations.push('missing ## Wave Table');
+    } else if (contentTableRows(waveTable) < 2) {
+      violations.push(EMPTY_WAVE_TABLE_VIOLATION);
+    }
+
+    return { mode, kind, status, violations };
+  }
 
   const commit = frontmatter.oat_external_plan_commit;
   if (typeof commit !== 'string' || !FULL_SHA.test(commit)) {
@@ -2361,6 +2581,34 @@ describe('skills bundled docs contract', () => {
       expect(readiness.violations, name).toContain(expected);
     }
 
+    // An index carries provenance but no execution readiness of its own, so
+    // the exemption must be exactly that: no status, no sections, but both
+    // SHAs still enforced.
+    const index = evaluateExternalPlan(
+      buildProspectivePlan({
+        status: null,
+        dependencies: null,
+        landingEvents: null,
+        revalidation: null,
+      }).replace('oat_external_plan: true', 'oat_external_plan_index: true'),
+    );
+
+    expect(index.kind).toBe('index');
+    expect(index.violations).toEqual([]);
+
+    const indexWithShortSha = evaluateExternalPlan(
+      buildProspectivePlan({
+        commit: '6f443c08',
+        status: null,
+        dependencies: null,
+        landingEvents: null,
+        revalidation: null,
+      }).replace('oat_external_plan: true', 'oat_external_plan_index: true'),
+    );
+
+    expect(indexWithShortSha.kind).toBe('index');
+    expect(indexWithShortSha.violations).toEqual([SHORT_SHA_VIOLATION]);
+
     // Outer pipes are optional in Markdown; a table written without them must
     // still be read rather than silently contributing no rows.
     const withoutOuterPipes = evaluateExternalPlan(
@@ -2377,22 +2625,164 @@ describe('skills bundled docs contract', () => {
     expect(withoutOuterPipes.violations).toEqual([]);
   });
 
-  it('rejects a post-contract plan whose unsatisfied hard dependency claims READY', () => {
-    // Negative control derived from a real artifact, not an invented one.
-    // This plan carries `oat_execution_status: READY` while its `Hard
-    // ordering` row still reads "Pending in W1; this plan is BLOCKED until
-    // then." It is accepted today only because its date selects legacy mode.
-    // Re-dating that exact content is the reproduction: the same bytes that
-    // legacy mode accepts are rejected once the contract applies.
-    const fixture = join(
-      EXTERNAL_PLANS_DIR,
-      '2026-09-02-add-exclusions-to-docs-index-generation.md',
+  it('holds an execution program to its own contract instead of exempting it', () => {
+    // `oat_execution_program` is vocabulary owned by `oat-wave-program`, whose
+    // documents are maps rather than plans: they inspect no tree, so they
+    // carry no provenance SHAs and no `oat_execution_status`. Requiring those
+    // would reject every document that skill's own template produces. What a
+    // program must carry is its ledger, and that is what is enforced here.
+    const accepted = evaluateExternalPlan(buildProgramDocument());
+
+    expect(accepted.kind).toBe('program');
+    expect(accepted.mode).toBe('prospective');
+    expect(accepted.violations).toEqual([]);
+
+    const cases: [string, ProgramDocumentOverrides, string][] = [
+      [
+        'no program indexes',
+        { programIndexes: null },
+        MISSING_PROGRAM_INDEXES_VIOLATION,
+      ],
+      [
+        'empty program indexes',
+        { programIndexes: [] },
+        MISSING_PROGRAM_INDEXES_VIOLATION,
+      ],
+      ['no status ledger', { statusLedger: null }, 'missing ## Status Ledger'],
+      ['no wave table', { waveTable: null }, 'missing ## Wave Table'],
+      [
+        'status ledger without its columns',
+        { statusLedger: 'Everything is fine.' },
+        MISSING_STATUS_LEDGER_TABLE_VIOLATION,
+      ],
+      [
+        'wave status outside the vocabulary',
+        {
+          statusLedger: [
+            '| Wave | Theme | Lanes | Status | Record |',
+            '| ---- | ----- | ----- | ------ | ------ |',
+            '| W1 | Theme | 4 | shipped | PR #262. |',
+          ].join('\n'),
+        },
+        `wave status "shipped" is not ${WAVE_STATUSES.join(', ')}`,
+      ],
+      [
+        'status ledger with a header but no waves',
+        {
+          statusLedger: [
+            '| Wave | Theme | Lanes | Status | Record |',
+            '| ---- | ----- | ----- | ------ | ------ |',
+          ].join('\n'),
+        },
+        EMPTY_STATUS_LEDGER_VIOLATION,
+      ],
+      [
+        'wave table with a header but no plans',
+        {
+          waveTable: [
+            '| Plan | Index | Wave | Ordering notes | Status |',
+            '| ---- | ----- | ---- | -------------- | ------ |',
+          ].join('\n'),
+        },
+        EMPTY_WAVE_TABLE_VIOLATION,
+      ],
+      [
+        'program indexes that are not paths',
+        { programIndexes: ['   '] },
+        MISSING_PROGRAM_INDEXES_VIOLATION,
+      ],
+    ];
+
+    for (const [name, overrides, expected] of cases) {
+      const readiness = evaluateExternalPlan(buildProgramDocument(overrides));
+      expect(readiness.kind, name).toBe('program');
+      expect(readiness.mode, name).toBe('prospective');
+      expect(readiness.violations, name).toContain(expected);
+    }
+
+    // Producer-shaped: `oat-wave-program`'s template emits `created` and no
+    // `oat_external_plan_date` at all. Without the created-date fallback every
+    // generated program would sort into legacy mode forever, and the rules
+    // above would never run on real output.
+    const producerShaped = buildProgramDocument({ date: null }).replace(
+      '---\n\n# Execution Program',
+      "created: '2026-09-20T05:24:43Z'\n---\n\n# Execution Program",
     );
-    const real = readFileSync(fixture, 'utf8');
+
+    expect(producerShaped).not.toContain('oat_external_plan_date');
+    expect(evaluateExternalPlan(producerShaped).mode).toBe('prospective');
+    expect(evaluateExternalPlan(producerShaped).violations).toEqual([]);
+
+    const producerShapedMissingLedger = evaluateExternalPlan(
+      buildProgramDocument({ date: null, statusLedger: null }).replace(
+        '---\n\n# Execution Program',
+        "created: '2026-09-20T05:24:43Z'\n---\n\n# Execution Program",
+      ),
+    );
+
+    expect(producerShapedMissingLedger.mode).toBe('prospective');
+    expect(producerShapedMissingLedger.violations).toContain(
+      'missing ## Status Ledger',
+    );
+
+    // A heading that merely starts with the same words is not the section.
+    expect(
+      evaluateExternalPlan(
+        buildProgramDocument({ waveTableHeading: '## Wave Tables' }),
+      ).violations,
+    ).toContain('missing ## Wave Table');
+
+    // Both real program documents predate the contract and carry no date, so
+    // legacy mode must keep tolerating a program with none of the above.
+    const legacyProgram = evaluateExternalPlan(
+      buildProgramDocument({
+        date: null,
+        programIndexes: null,
+        statusLedger: null,
+        waveTable: null,
+      }),
+    );
+
+    expect(legacyProgram.mode).toBe('legacy');
+    expect(legacyProgram.violations).toEqual([]);
+
+    // The real corpus shape: the wave-table heading carries a coverage suffix.
+    for (const name of [
+      '2026-08-31-execution-program.md',
+      '2026-08-19-execution-program.md',
+    ]) {
+      const text = readFileSync(join(EXTERNAL_PLANS_DIR, name), 'utf8');
+      const readiness = evaluateExternalPlan(text);
+      expect(readiness.kind, name).toBe('program');
+      expect(readiness.mode, name).toBe('legacy');
+      expect(readiness.violations, name).toEqual([]);
+      // Re-dated past the contract, the real documents satisfy the program
+      // rules on their own shape rather than needing a retrofit.
+      const redated = text.replace(
+        /^---\n/,
+        `---\noat_external_plan_date: '${PROSPECTIVE_DATE}'\n`,
+      );
+      const prospective = evaluateExternalPlan(redated);
+      expect(prospective.mode, name).toBe('prospective');
+      expect(prospective.violations, name).toEqual([]);
+    }
+  });
+
+  it('rejects a post-contract plan whose unsatisfied hard dependency claims READY', () => {
+    // Negative control captured from a real artifact, not an invented one.
+    // The snapshot holds the source's frontmatter and `## Dependencies`
+    // verbatim: `oat_execution_status: READY` alongside a `Hard ordering` row
+    // reading "Pending in W1; this plan is BLOCKED until then." Legacy mode
+    // accepts those bytes; re-dated past the contract they are rejected.
+    //
+    // Snapshotted rather than read live so that repairing the real plan --
+    // the correct maintenance action, deliberately out of scope here -- does
+    // not break this test. Provenance is in the fixture's own header.
+    const real = readSnapshotFixture('blocked-plan-claiming-ready.md');
 
     expect(
       real,
-      `${fixture} is the recorded negative control: it must keep an unsatisfied hard dependency alongside a READY status`,
+      'the recorded negative control must keep an unsatisfied hard dependency alongside a READY status',
     ).toContain('| Hard ordering ');
     expect(real).toContain('oat_execution_status: READY');
 

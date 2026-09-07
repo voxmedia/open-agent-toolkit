@@ -225,6 +225,8 @@ Each plan must:
 - preserve source intent without copying unverified claims;
 - never contain secret values.
 
+Three document kinds live under `external-plans/`, and the readiness rules differ by kind. A plan carries the full contract. An index (`oat_external_plan_index: true`) carries provenance but no status or dependency/landing/revalidation sections. An execution program (`oat_execution_program: true`, written by `oat-wave-program`) maps plans into waves: it inspects no tree, so it carries no provenance SHAs and no status, and must instead carry `oat_program_indexes`, a `## Status Ledger` whose wave statuses are `composed`, `in-progress`, `merged`, or `done`, and a `## Wave Table`. A program has no plan date, so its mode is selected from `created`. See the "Execution Programs" section of `references/plan-template.md`.
+
 Plans written before this contract landed on 2026-09-07 are read in legacy mode and are never retrofitted. The 31 plans in the 2026-08-31 execution program stamped `oat_external_plan_commit` with the `origin/main` SHA whose content they inspected from a planning branch; legacy mode accepts that provenance as-is. Apply the full provenance rule only to plans written from now on.
 
 A plan executed inside a wave refreshes its drift check against the exact execution `HEAD` after predecessor lanes integrate, not only from the authored SHA to `origin/main`. Record that refreshed comparison rather than re-stamping the authored provenance.

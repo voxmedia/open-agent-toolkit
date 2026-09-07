@@ -37,6 +37,13 @@ These are findings exclusions, not absolute read prohibitions. Improve may read 
 
 External plans are not canonical OAT project `plan.md` files. They contain self-contained context, scope, steps, verification, done criteria, and STOP conditions, but no canonical OAT phase/task IDs or lifecycle bookkeeping. External execution-readiness metadata is a separate thing and is carried deliberately: it describes whether the plan's own prerequisites have merged, not how an OAT project is moving through phases.
 
+After generation, choose either execution path:
+
+- Execute a plan directly as a standalone handoff.
+- Run `oat-project-import-plan <external-plan-path>` to preserve and normalize one plan for tracked OAT execution.
+
+Project-sized candidates are split when possible. If inseparable work needs multiple design decisions or lacks one coherent verification boundary, improve recommends an OAT project workflow instead of emitting a mega-plan.
+
 ## Plan readiness and execution readiness
 
 Improve scores candidates on two independent axes. A candidate is plan-ready when it is understood well enough to write a self-contained executable plan, and execution-ready when every hard dependency it names has already merged.
@@ -50,13 +57,6 @@ A blocked candidate is still planned. Rather than dropping work whose prerequisi
 Plan provenance is recorded as two separate SHAs: `oat_external_plan_commit` is the full SHA of the `HEAD` whose content was actually inspected, and `oat_external_plan_main_commit` is the fetched `origin/main` or merge-base used only for comparison. They may differ, and normally do when planning happens on a branch.
 
 Plans written before this contract landed are read in legacy mode: a short SHA, a missing comparison SHA, missing sections, and a missing status (read as `READY`) are all accepted, and those plans are never rewritten.
-
-After generation, choose either execution path:
-
-- Execute a plan directly as a standalone handoff.
-- Run `oat-project-import-plan <external-plan-path>` to preserve and normalize one plan for tracked OAT execution.
-
-Project-sized candidates are split when possible. If inseparable work needs multiple design decisions or lacks one coherent verification boundary, improve recommends an OAT project workflow instead of emitting a mega-plan.
 
 ## Optional tracking
 
