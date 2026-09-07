@@ -180,18 +180,40 @@ changing the accepted dispatch target or widening the bounded file scope.
   user-replacement identity is deterministic without changing production
   behavior or weakening the expected status.
 
-**Recovery volume:** p-rev2 has four governed recovery events. The exact target
-and original history remain unchanged; required CI must rerun against the next
-pushed head before stability is claimed.
+### Recovery Event p-rev2-recovery-5-sigterm-listener-race
+
+- Phase/task: p-rev2 / prev2-t03
+- Original request: 348bd412-b8a9-40e9-8d98-6aab9099cbeb
+- Original commit: 6db21410ff85bdc01632154784c9f4baa815ddaa
+- Defect class: test
+- Discovered by: `pnpm test:smoke`, `/tmp/oat-lite-smoke.log` subtest 88
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 5/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
+- Recovery commit: 692f3d1e493e4b2b638eb01c357778c186fde6ed
+- Verification: the focused provision/drive SIGTERM subtests passed 10 of 10
+  iterations before and after commit; `pnpm test:smoke` passed 160 of 160 and
+  `pnpm test` passed before and after the committed correction.
+- Reason: the readiness sentinel could be observed before the test-local
+  SIGTERM listener was armed. Both generated wrapper branches now create the
+  termination promise before writing the sentinel and then await that promise.
+  Production cleanup behavior and deadlines are unchanged.
+
+**Recovery volume:** p-rev2 has five governed recovery events. The exact target
+and original history remain unchanged; focused review and required CI must pass
+against the stabilized range before stability is claimed.
 
 ### Task prev2-t03: Re-establish terminal verification and CI
 
 **Status:** complete
 
-The exact SIGTERM cleanup subtest passed 10 consecutive local runs before any
-cleanup-code change. The original CI timeout mechanism is therefore
-inconclusive, not classified as flaky. No change to
-`tools/smoke/runner/cleanup.test.mjs` was justified or made.
+The exact SIGTERM cleanup subtest initially passed 10 consecutive isolated
+runs, so the original CI timeout mechanism remained inconclusive. A later full
+smoke run reproduced the failure and established a negative control: the
+generated test wrapper published its readiness sentinel before installing its
+test-local SIGTERM listener. Recovery attempt 5 corrected that readiness race
+in `tools/smoke/runner/cleanup.test.mjs` without changing production behavior.
 
 Exact reproduction command:
 
@@ -2183,7 +2205,7 @@ Track test execution during implementation.
 | 5      | Mode-aware skill contracts, closeout integration, full phase gates                                                                   | Yes after two review-fix loops              | 0 final | Review, import, progress, recap bypass, PR flow               |
 | 6      | Ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, docs, release validation, manual workflow | Yes; p06-t10 and p06-t11 used no retries    | 0 final | Docs, provider sync, real promotion routing, release `0.2.60` |
 | p-rev1 | Focused revision suites, promotion negative controls, full repository gates, post-fix contract tests, project sync dry-run           | Yes after recovery and two review fix loops | 0 final | Adaptive Lite depth, proportionate proof, executor boundary   |
-| p-rev2 | SIGTERM reproduction, ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, release validation  | Yes after three recovery events             | 0 final | Wave 4 composition, closeout alignment, local terminal proof  |
+| p-rev2 | SIGTERM reproduction, ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, release validation  | Yes after five recovery events              | 0 final | Wave 4 composition, closeout alignment, local terminal proof  |
 
 ## Final Summary (for PR/docs)
 

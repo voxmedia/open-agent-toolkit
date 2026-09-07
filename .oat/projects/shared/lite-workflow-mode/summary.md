@@ -133,9 +133,11 @@ heavy for this class of work while retaining OAT's safety and handoff value.
 - **p-rev2 — Wave 4 integration and closeout.** Composed native Lite planning
   with the complete shared lifecycle-gate posture contract, registered
   `LITE-10`, and aligned local closeout and PR artifacts to Wave 4 and `0.2.60`.
-  All four p-rev2 tasks and local terminal verification are complete, including
-  the wording-only alignment from the final re-review. Publication, push, and
-  required CI for the exact remote head remain closeout boundaries.
+  All four p-rev2 tasks and five bounded recovery events are complete. The two
+  final test-only recoveries made the symlink replacement control portable and
+  removed a reproduced SIGTERM readiness race without changing production
+  behavior. Focused review, publication, and required CI for the exact remote
+  head remain closeout boundaries.
 
 ## Follow-up Items
 
@@ -143,8 +145,9 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   projection ownership or header contracts change.
 - Re-evaluate universal plan-template proof and testing guidance under
   `BL-260906-re-evaluate-universal-plan`.
-- Publish the refreshed local PR body, push the stabilized range, and obtain
-  required CI for the exact remote head before merge.
+- Complete focused review, publish the refreshed local PR body, push the
+  stabilized range, and obtain required CI for the exact remote head before
+  merge.
 
 ## Workflow Observations
 

@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 5465524e53c33bd870cb89e3b8ce30f0d5a4a49d
+oat_last_commit: 692f3d1e493e4b2b638eb01c357778c186fde6ed
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -32,16 +32,7 @@ oat_phase_recovery_policy:
       pending_attempt: null
     p-rev2:
       used_attempts: 5
-      pending_attempt:
-        attempt: 5
-        event_id: p-rev2-recovery-5-sigterm-listener-race
-        original_request_id: 348bd412-b8a9-40e9-8d98-6aab9099cbeb
-        original_task_id: prev2-t03
-        original_commit: 6db21410ff85bdc01632154784c9f4baa815ddaa
-        discovered_by: pnpm test:smoke, /tmp/oat-lite-smoke.log subtest 88
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
-        reservation_head: 0884bcccf90bb4455970364ac81eb10767b17f8b
-        status: completed
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -130,9 +121,9 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all four p-rev2 tasks and local terminal verification are
-complete; PR #264 remains open pending publication of the stabilized local body
-and required CI for the exact remote head.
+Implementation — all four p-rev2 tasks and five bounded recovery events are
+complete. The latest test-only stabilization remains pending focused review,
+publication, and required CI for its exact remote head.
 
 ## Artifacts
 
@@ -208,15 +199,20 @@ and required CI for the exact remote head.
   one wording-only Medium alignment finding
 - ✓ `prev2-t04` aligned current closeout wording; all four p-rev2 tasks are
   complete
+- ✓ p-rev2 recovery attempt 4 made the same-target symlink replacement
+  negative control deterministic across macOS and Ubuntu
+- ✓ p-rev2 recovery attempt 5 armed the test-local SIGTERM listener before
+  publishing readiness; focused stress, smoke, and workspace tests passed
 
 ## Blockers
 
-None. Local implementation and terminal verification are complete. Publication,
-push, and exact-remote-head CI remain root-owned external boundaries.
+None. The bounded corrections and local recovery verification are complete.
+Focused independent review, publication, and exact-remote-head CI remain
+root-owned closeout work.
 
 ## Next Milestone
 
-Publish the refreshed local PR description, push the stabilized range, and
-obtain a fresh green required CI run for that exact remote head. This local PR
-body has not yet been published. PR merge and release remain separate
-authorization boundaries.
+Complete a focused independent review of the two test-only stabilization
+commits. Then publish the refreshed local PR description, push the stabilized
+range, and obtain a fresh green required CI run for that exact remote head. PR
+merge and release remain separate authorization boundaries.
