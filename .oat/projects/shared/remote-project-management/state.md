@@ -1,15 +1,15 @@
 ---
 oat_current_task: null
-oat_last_commit: 898405c88e11881e44566449c8af43c8e833bc83
+oat_last_commit: d71f35c9759bbbbc2fa6cf148309a3c7c0d49e92
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_orchestration_retry_limit: 3
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: in_progress # Status: in_progress | complete
-oat_pr_status: ready
-oat_pr_url: null
+oat_phase_status: pr_open # Status: in_progress | complete
+oat_pr_status: open
+oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/273
 oat_execution_mode: single-thread # single-thread | subagent-driven
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -107,26 +107,19 @@ oat_post_implement_sequence:
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T05:44:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T05:45:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: remote-project-management
 
-**Status:** Final PR artifact ready; publication pending
+**Status:** PR open; final HiLL closeout approval pending
 **Started:** 2026-03-15
 **Last Updated:** 2026-09-07
 
 ## Current Phase
 
-Implementation — All 90/90 planned tasks are complete. p09-t04 closed final
-review round 2's sole Medium current-status contradiction. Final lifecycle
-review round 3 passed with zero findings and empty deferred ledgers. The
-configured implementation exit gate also passed after its sole Medium
-lifecycle-artifact finding was addressed and verified at 90/90. The configured
-post-implementation sequence is the next milestone. Current main
-`0f47bf7004166d420758d1bcd77d253007174332` remains merged through
-`6c73da33cf64fa2221def42a0b2fc6f7960ced73`.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -134,7 +127,7 @@ post-implementation sequence is the next milestone. Current main
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 3 artifact review passed)
-- **Implementation:** implementation.md (90/90 tasks complete; final review passed; exit gate pending)
+- **Implementation:** implementation.md (90/90 tasks complete; final review and exit gate passed)
 
 ## Progress
 
@@ -325,6 +318,8 @@ post-implementation sequence is the next milestone. Current main
 - ✓ Phase 9 completed 4/4 tasks; all 90/90 implementation tasks are complete
 - ✓ Final lifecycle review round 3/3 passed with zero findings and empty
   deferred Medium/Minor ledgers
+- ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/273
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -333,4 +328,8 @@ fresh.
 
 ## Next Milestone
 
-Create and execute the immutable post-implementation sequence snapshot.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
