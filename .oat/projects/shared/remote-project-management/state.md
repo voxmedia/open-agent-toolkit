@@ -109,6 +109,10 @@ oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-09-07T05:45:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_project_recap:
+  decision: generate
+  source: interactive
+  decided_at: '2026-09-07T12:10:22.987Z'
 ---
 
 # Project State: remote-project-management
