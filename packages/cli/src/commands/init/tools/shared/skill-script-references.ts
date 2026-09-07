@@ -17,6 +17,14 @@
  * also holds repository-local authoring and utility skills no pack ships. Those
  * directories are classified and reported, never resolved to a pack and never a
  * failure by themselves.
+ *
+ * Scan boundary: `extractScriptReferences` takes any text, but the shipping
+ * caller feeds it authored Markdown only — every `**\/*.md` under a skill
+ * directory except the vendored `references/docs/` copies. That covers every
+ * reference in the tree today, since each of the six skill files naming
+ * `.oat/scripts` is a `SKILL.md`. A skill that ships a non-Markdown asset
+ * carrying a script reference would fall outside this scan, so widen the caller
+ * deliberately rather than assuming this module already sees it.
  */
 
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
@@ -38,7 +46,18 @@ export const SCRIPT_DESTINATION_PREFIX = '.oat/scripts/';
 // `~/.oat/scripts/…`, and the plain relative form. The trailing slash is
 // required, so a mention of the directory itself — `${HOME}/.oat/scripts` — is
 // not a reference start at all.
-const SCRIPT_REFERENCE_START = /(?<![A-Za-z0-9_.-])\.oat\/scripts\//g;
+//
+// `_` is absent from the lookbehind on purpose, so an italic `_.oat/scripts/…_`
+// still starts a match. The glued-identifier case it used to cover —
+// `myrepo_.oat/scripts/…` — is rejected instead by `readOpeningEmphasis`, which
+// can tell an emphasis delimiter at a word boundary from an underscore inside a
+// name. A lookbehind cannot make that distinction, and a wrongly rejected start
+// is a silent miss.
+const SCRIPT_REFERENCE_START = /(?<![A-Za-z0-9.-])\.oat\/scripts\//g;
+
+// Characters that may not sit next to an emphasis delimiter for it to read as
+// emphasis rather than as part of an identifier.
+const IDENTIFIER_CHARACTER = /[\p{L}\p{N}._-]/u;
 
 // Stage two reads the name that follows, losslessly, up to the first character
 // that closes the surrounding Markdown construct: whitespace, the backtick or
@@ -75,9 +94,16 @@ const TRAILING_PROSE_MARK = /[.:!?]$/;
 // load-bearing as the matches, since a false positive here blocks CI on
 // documentation that is entirely correct.
 //
-// This test runs after the prose mark is dropped, so a `?` that merely ended a
-// question is gone before it can be mistaken for a glob.
+// This test runs after every trailing decoration is dropped, so a `?` that
+// merely ended a question, or a `*` that merely closed an emphasis span, is
+// gone before it can be mistaken for a glob.
 const PLACEHOLDER_SYNTAX = /[<{}$*?]/;
+
+/** The `*` and `_` emphasis run opening a reference. */
+interface OpeningEmphasis {
+  asterisks: number;
+  underscores: number;
+}
 
 function readReferenceToken(line: string, from: number): string {
   let end = from;
@@ -85,6 +111,89 @@ function readReferenceToken(line: string, from: number): string {
     end += 1;
   }
   return line.slice(from, end);
+}
+
+/**
+ * The emphasis run opening this reference, or `null` when the run is glued to a
+ * name and therefore opened nothing.
+ *
+ * The opening run is the only reliable evidence that a trailing delimiter is
+ * emphasis rather than content, and both delimiters need that evidence:
+ *
+ * - `_` is a legal filename character, so `.oat/scripts/x.sh_` with no opening
+ *   run keeps its underscore. That is what makes a typo such as
+ *   `resolve-tracking.sh_` still fail instead of being normalized into the
+ *   shipped name.
+ * - `*` is not a legal filename character, but it *is* glob syntax, which this
+ *   module treats as prose about the directory. An unpaired
+ *   `.oat/scripts/resolve-tracking.sh*` is a glob, and stripping its star would
+ *   normalize it into a shipped name — the exact fail-open this design exists to
+ *   prevent. Leaving it attached keeps it a glob, which is skipped.
+ *
+ * `null` rejects the match outright for `myrepo_.oat/scripts/x.sh`, where the
+ * underscore is glued to an identifier. The identifier test is Unicode-aware so
+ * `café_.oat/scripts/x.sh` is rejected too.
+ */
+function readOpeningEmphasis(line: string, at: number): OpeningEmphasis | null {
+  let start = at;
+  while (start > 0 && (line[start - 1] === '_' || line[start - 1] === '*')) {
+    start -= 1;
+  }
+
+  const run = line.slice(start, at);
+  if (run.length === 0) return { asterisks: 0, underscores: 0 };
+
+  const preceding = start > 0 ? line[start - 1]! : '';
+  if (IDENTIFIER_CHARACTER.test(preceding)) return null;
+
+  return {
+    asterisks: run.split('').filter((char) => char === '*').length,
+    underscores: run.split('').filter((char) => char === '_').length,
+  };
+}
+
+/**
+ * Drop the decoration Markdown and prose leave on the end of a reference.
+ *
+ * Each delimiter comes off only up to the length of its opening run, so an
+ * unpaired trailing `*` or `_` survives as part of the name and is judged on its
+ * merits downstream. At most one prose mark is dropped in total, so a doubled
+ * `x.sh..` keeps a period and still fails the manifest comparison.
+ *
+ * A single ordered pass is not enough, because the layers interleave:
+ * `**x.sh**.` closes its emphasis outside the sentence period, and `_*x.sh*_`
+ * nests two delimiters. The loop peels whichever layer is currently outermost
+ * until no budget is left.
+ */
+function stripTrailingDecoration(
+  token: string,
+  opening: OpeningEmphasis,
+): string {
+  let name = token;
+  let asterisks = opening.asterisks;
+  let underscores = opening.underscores;
+  let proseMarkDropped = false;
+
+  for (;;) {
+    if (asterisks > 0 && name.endsWith('*')) {
+      name = name.slice(0, -1);
+      asterisks -= 1;
+      continue;
+    }
+    if (underscores > 0 && name.endsWith('_')) {
+      name = name.slice(0, -1);
+      underscores -= 1;
+      continue;
+    }
+    if (!proseMarkDropped && TRAILING_PROSE_MARK.test(name)) {
+      name = name.replace(TRAILING_PROSE_MARK, '');
+      proseMarkDropped = true;
+      continue;
+    }
+    break;
+  }
+
+  return name;
 }
 
 /** One extracted reference, kept line-addressed so failures cite a location. */
@@ -137,19 +246,24 @@ function skillNameOf(asset: PackAssetDefinition): string {
  * so a reference can never be assembled across a line break.
  *
  * A reference is returned essentially as authored. Nothing is truncated to a
- * shipped-looking prefix, and the only edit is dropping a single trailing prose
- * mark, so a malformed name reaches the manifest comparison intact and fails
- * there rather than being normalized into a name that happens to exist.
+ * shipped-looking prefix, and the only edits are dropping the Markdown
+ * decoration around it — a closing emphasis run and at most one prose mark — so
+ * a malformed name reaches the manifest comparison intact and fails there
+ * rather than being normalized into a name that happens to exist.
  */
 export function extractScriptReferences(text: string): ScriptReference[] {
   const references: ScriptReference[] = [];
 
   for (const [index, line] of text.split(/\r?\n/).entries()) {
     for (const match of line.matchAll(SCRIPT_REFERENCE_START)) {
-      const name = readReferenceToken(
-        line,
-        match.index + match[0].length,
-      ).replace(TRAILING_PROSE_MARK, '');
+      const opening = readOpeningEmphasis(line, match.index);
+      // A delimiter glued to a name, so it never opened emphasis.
+      if (opening === null) continue;
+
+      const name = stripTrailingDecoration(
+        readReferenceToken(line, match.index + match[0].length),
+        opening,
+      );
 
       // Prose about the directory, not a reference into it.
       if (PLACEHOLDER_SYNTAX.test(name)) continue;

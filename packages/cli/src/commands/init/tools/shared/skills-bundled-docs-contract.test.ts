@@ -540,7 +540,16 @@ const PINNED_HISTORICAL_CROSS_SKILL_READS: readonly CrossSkillReference[] = [
 const CANONICAL_UNSHIPPED_SKILL_DIRS =
   classifyCanonicalSkillDirs(listSkillDirs()).canonicalUnshipped;
 
-/** Authored Markdown of one shipped skill, shaped for the script-reference check. */
+/**
+ * Authored Markdown of one shipped skill, shaped for the script-reference check.
+ *
+ * This is the scan boundary: `listAuthoredMarkdown` takes `**\/*.md` under the
+ * skill directory and skips the vendored `references/docs/` copies, so a script
+ * reference authored in a non-Markdown skill asset is outside the check. That
+ * costs nothing today — every skill file naming `.oat/scripts` is a `SKILL.md` —
+ * but widening it is a deliberate change here, not an assumption the extractor
+ * makes.
+ */
 function collectSkillScriptSources(skill: string) {
   const skillDir = join(SKILLS_DIR, skill);
   if (!existsSync(skillDir)) return [];

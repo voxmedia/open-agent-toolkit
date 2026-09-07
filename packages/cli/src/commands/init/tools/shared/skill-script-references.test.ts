@@ -160,6 +160,78 @@ describe('extractScriptReferences', () => {
       'Run .oat/scripts/resolve-tracking.sh..',
       ['.oat/scripts/resolve-tracking.sh.'],
     ],
+    // Emphasis adjoining a reference used to discard it entirely: the closing
+    // `**` survived in the token and tripped the glob test, and an opening `_`
+    // stopped the start pattern from matching at all. Both were fail-open on a
+    // spelling this repository uses for other paths.
+    [
+      'a bold-wrapped reference',
+      'Run **.oat/scripts/bold-missing.sh** now.',
+      ['.oat/scripts/bold-missing.sh'],
+    ],
+    [
+      'an italic-wrapped reference using asterisks',
+      'Run *.oat/scripts/italic-missing.sh* now.',
+      ['.oat/scripts/italic-missing.sh'],
+    ],
+    [
+      'an italic-wrapped reference using underscores',
+      'Run _.oat/scripts/underscore-missing.sh_ now.',
+      ['.oat/scripts/underscore-missing.sh'],
+    ],
+    [
+      'a nested emphasis pair',
+      'Run _**.oat/scripts/nested-missing.sh**_ now.',
+      ['.oat/scripts/nested-missing.sh'],
+    ],
+    // Unpaired delimiters are content, not decoration. Dropping one would
+    // normalize a glob or a typo into whatever shipped name it happens to
+    // prefix, which is the fail-open this module exists to prevent.
+    [
+      'does not strip an unpaired trailing asterisk into a shipped name',
+      'Run .oat/scripts/resolve-tracking.sh* now.',
+      [],
+    ],
+    [
+      'does not strip an unpaired trailing emphasis run',
+      'Run .oat/scripts/trailing-missing.sh** now.',
+      [],
+    ],
+    [
+      'ignores a suffix glob rather than truncating it',
+      'The `.oat/scripts/generate-*` helpers install executable.',
+      [],
+    ],
+    [
+      'emphasis closing outside a sentence period',
+      'Run **.oat/scripts/bold-missing.sh**.',
+      ['.oat/scripts/bold-missing.sh'],
+    ],
+    [
+      'a backticked bold reference',
+      'Run `**.oat/scripts/bold-missing.sh**` now.',
+      ['.oat/scripts/bold-missing.sh'],
+    ],
+    [
+      'a bold-wrapped reference to a shipped script',
+      'Run **.oat/scripts/resolve-tracking.sh** now.',
+      ['.oat/scripts/resolve-tracking.sh'],
+    ],
+    [
+      'an underscore-italic reference to a shipped script',
+      'Run _.oat/scripts/resolve-tracking.sh_ now.',
+      ['.oat/scripts/resolve-tracking.sh'],
+    ],
+    [
+      'an underscore glued to an identifier, which never opened emphasis',
+      'The fork at myrepo_.oat/scripts/thing.sh is unrelated.',
+      [],
+    ],
+    [
+      'an underscore glued to a non-ASCII identifier',
+      'The fork at café_.oat/scripts/thing.sh is unrelated.',
+      [],
+    ],
     [
       'does not truncate a shipped prefix followed by another segment',
       'Run `.oat/scripts/resolve-tracking.sh/extra.sh`',
