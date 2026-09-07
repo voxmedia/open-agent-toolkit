@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p07-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,19 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status      | Tasks | Completed |
-| ------------ | ----------- | ----- | --------- |
-| Phase 1      | complete    | 4     | 4/4       |
-| Phase 2      | complete    | 3     | 3/3       |
-| Phase 3      | complete    | 3     | 3/3       |
-| Phase 4      | complete    | 2     | 2/2       |
-| Phase 5      | complete    | 4     | 4/4       |
-| Phase 6      | complete    | 11    | 11/11     |
-| Phase p-rev1 | complete    | 7     | 7/7       |
-| Phase p-rev2 | complete    | 5     | 5/5       |
-| Phase 7      | in_progress | 4     | 0/4       |
+| Phase        | Status   | Tasks | Completed |
+| ------------ | -------- | ----- | --------- |
+| Phase 1      | complete | 4     | 4/4       |
+| Phase 2      | complete | 3     | 3/3       |
+| Phase 3      | complete | 3     | 3/3       |
+| Phase 4      | complete | 2     | 2/2       |
+| Phase 5      | complete | 4     | 4/4       |
+| Phase 6      | complete | 11    | 11/11     |
+| Phase p-rev1 | complete | 7     | 7/7       |
+| Phase p-rev2 | complete | 5     | 5/5       |
+| Phase 7      | complete | 4     | 4/4       |
 
-**Total:** 39/43 tasks completed
+**Total:** 43/43 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -44,8 +44,9 @@ Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are seque
 
 ## Phase 7: Remote Review Fixes
 
-**Status:** in progress
+**Status:** complete
 **Started:** 2026-09-07
+**Completed:** 2026-09-07
 
 ### Remote Review Received: PR #264
 
@@ -60,6 +61,52 @@ The source comments span three reviewed commits, so the receive event records
 reviewed-head and invocation lineage as unknown instead of substituting the
 current PR head. No finding was deferred or dismissed. No GitHub reply was
 posted.
+
+### Task p07-t01: Restore the missing stabilization review event
+
+**Status:** completed
+**Commit:** `e85796c4a337962a4d841aad29ad0dcce21e236f`
+
+Restored the distinct stabilization review event with its actual reviewed head
+and kept the later remote-review receive event last.
+
+### Task p07-t02: Scope proof-strategy requirements by workflow contract
+
+**Status:** completed
+**Commit:** `974623dabd3e680196e5010f9ff1f0b6ece58f30`
+
+Scoped the declared proof-strategy requirement to workflows that define it.
+Other workflows continue to be reviewed against their declared verification
+intent. Focused and full skill-contract suites passed.
+
+### Task p07-t03: Block every unexecutable proof boundary
+
+**Status:** completed
+**Commit:** `a01f11d20c07c9773ac52d3c59e23c6431d24ef8`
+
+Aligned interactive and autonomous execution so required proof without an
+executor stops before commit or completion. Contract controls cover both paths.
+
+### Task p07-t04: Route Lite self-review to the plan contract
+
+**Status:** completed
+**Commit:** `c362ffc5cb8d90e582dc47ffb7b301e2318311a2`
+
+Routed Lite phase self-review to its complete plan contract, refreshed all
+provider projections, advanced public packages to `0.2.61`, and completed the
+full Definition of Done. The mechanically derived reviewer pin in
+`review-skill-contracts.test.ts` was included before commit.
+
+### Phase Review
+
+**Status:** passed
+**Artifact:** `reviews/archived/p07-review-2026-09-07T020835Z.md`
+**Reviewed head:** `c362ffc5cb8d90e582dc47ffb7b301e2318311a2`
+**Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+The independent reviewer verified the exact four-commit range, fail-capable
+contract checks, generated projection parity, lockstep versions, and all
+required gates. Reconnaissance was not attempted and no fix loop was needed.
 
 ---
 
@@ -976,6 +1023,53 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Push the completed revision commits and refresh PR #264 after explicit
   authorization.
+
+### Run 3 — 2026-09-07
+
+**Branch:** `simple-project`
+**Tier:** Tier 1 — subagents
+**Dispatch policy:** managed `high` (Codex)
+**Schedule:** `p07`
+
+#### Dispatch Records
+
+- **p07 implementation:** accepted request
+  `lite-p07-3be3351e-c8eb-45f3-87cc-48d9c60d6bd8`; durable record
+  `dispatch/lite-p07-3be3351e-c8eb-45f3-87cc-48d9c60d6bd8.json`; target
+  `oat-phase-implementer-gpt-5-6-sol-medium`; completed all four tasks from
+  base `8e00bcdd3fdc6af9d8135a2eff3b548f7e110338` through
+  `c362ffc5cb8d90e582dc47ffb7b301e2318311a2` with no recovery or nested
+  dispatch.
+- Dispatch policy: high; selected=medium; cap=high (codex, enforced — variant
+  `oat-phase-implementer-gpt-5-6-sol-medium`).
+- Dispatch: scope=p07 action=implementation role=implementer producer=unknown
+  provenance=unknown model_axis=selected:gpt-5.6-sol
+  effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high
+  target=oat-phase-implementer-gpt-5-6-sol-medium
+- **p07 review:** accepted request
+  `lite-p07-review-2572fcd4-1ae7-4f48-bb2c-ab434c414d2a`; durable record
+  `dispatch/lite-p07-review-2572fcd4-1ae7-4f48-bb2c-ab434c414d2a.json`;
+  target `oat-reviewer-gpt-5-6-sol-high`; artifact
+  `reviews/archived/p07-review-2026-09-07T020835Z.md`; passed with no findings.
+  Reconnaissance was not attempted.
+- Dispatch policy: high; selected=high; cap=high (codex, enforced — variant
+  `oat-reviewer-gpt-5-6-sol-high`).
+- Dispatch: scope=p07 action=review role=reviewer producer=unknown
+  provenance=unknown model_axis=selected:gpt-5.6-sol
+  effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high
+  target=oat-reviewer-gpt-5-6-sol-high
+
+#### Phase Outcomes
+
+| Phase | Implementation | Review | Fix Loops | Outcome |
+| ----- | -------------- | ------ | --------- | ------- |
+| p07   | DONE (4/4)     | passed | 0         | pass    |
+
+#### Outstanding Items
+
+- Run the final lifecycle review and refresh closeout artifacts for Phase 7.
+- Establish exact remote CI after an authorized push. Push and merge remain
+  separate authorization boundaries.
 
 ---
 

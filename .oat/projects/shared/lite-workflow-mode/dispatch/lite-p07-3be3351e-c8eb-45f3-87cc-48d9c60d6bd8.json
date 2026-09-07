@@ -44,7 +44,7 @@
     "dispatch_stamp": "Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium"
   },
   "launch_status": "accepted",
-  "child_outcome": "in-progress",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "dispatch-report-v1:p07",
     "native-spawn-accepted",
@@ -52,7 +52,9 @@
     "same-handle-post-journal-scope"
   ],
   "runtime_confirmation": "not-reported",
-  "diagnostics": [],
+  "diagnostics": [
+    "Completed four ordered task commits from e85796c4 through c362ffc5 with no recovery attempts or nested dispatch."
+  ],
   "continuation_events": [],
   "fallback": {
     "mode": "block",
