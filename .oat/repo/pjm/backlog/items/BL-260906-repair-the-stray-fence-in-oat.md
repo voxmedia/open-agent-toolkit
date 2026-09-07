@@ -27,3 +27,7 @@ p04 review findings (wave 2). oat-project-review-provide/SKILL.md:1057 opens a b
 - [ ] The coupled matrix row (anchor `Recommended Next Step`) is deleted in the same commit and the contract suite passes
 - [ ] `oat-project-review-provide` version bumped once with its `skills.test.ts` pin updated
 - [ ] The fence rule (or a repo-wide balance check) runs over all of `.agents/skills/**` and the three out-of-surface instances are repaired
+
+## Scope note (2026-09-07, wave 5 p07)
+
+Wave 5 p07 (`2026-09-02-enforce-external-plan-readiness-contract.md`) added `## Revalidation Before Execution` and a new STOP clause to `.agents/skills/oat-repo-improve/references/plan-template.md`; they join the region already outside the stray fence (with `## STOP conditions`, `## Repository conventions`, `## Review focus`), so the repair must re-fence that whole trailing region, not only the sections present when this item was filed.
