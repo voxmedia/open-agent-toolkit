@@ -1,6 +1,6 @@
 ---
 oat_generated: true
-oat_generated_at: 2026-09-06
+oat_generated_at: 2026-09-07
 oat_pr_type: project
 oat_pr_scope: final
 oat_project: .oat/projects/shared/lite-workflow-mode
@@ -69,12 +69,17 @@ contract.
   contract, including per-gate Keep or Disable choices, non-interactive
   preservation, and `LITE-10` autonomy coverage.
 - Integrate Wave 4's delivered-project follow-ups and closeout contracts while
-  preserving the five lockstep public packages and bundled release metadata at
-  `0.2.61`.
+  preserving the five lockstep public packages and bundled release metadata.
 - Close the four actionable PR #264 review findings by restoring review-event
   lineage, scoping proof-strategy requirements by workflow, blocking required
   proof when no executor is available, and making Lite self-review use the
   complete `plan.md` requirements contract.
+- Harden promotion against adaptive scaffold leakage. Product Behavior and
+  Technical Design now reject unchanged placeholders and their exact shipped
+  instructional comments while preserving unrelated authored comments. The
+  successful CLI integration path authors and verifies both adaptive payloads.
+- Regenerate the project sync manifest from the source CLI, refresh closeout
+  artifacts, and advance all public release surfaces to `0.2.62`.
 
 ## Verification
 
@@ -97,6 +102,11 @@ contract.
   and an independent exact-range review with no findings
 - Phase 8 source-CLI project sync dry-run with zero pending operations and no
   producer-version skew, plus skill-bump and release-version gates
+- Phase 9 shipped-scaffold controls, comment-specific fail-capability probes,
+  successful end-to-end adaptive promotion, and two zero-finding re-reviews
+- Final local gate ledger: check, type-check, test, build, skill-bump gate,
+  release-version gate, release validation, docs build, lint, and format all
+  exit 0; the CLI test task executed 330 files and 5,804 tests
 - Disposable manual Lite project covering interview, approval, implementation,
   phase/final reviews, exit gate, and PR-description generation
 
@@ -129,20 +139,25 @@ contract.
 - Phase 7 completed four ordered review-fix commits and passed independent
   review with no findings. The following final lifecycle review found one
   Important generated-manifest issue and one Medium closeout-artifact issue;
-  both Phase 8 corrections are now local and require fresh final review and the
-  configured exit gate before closeout.
+  both Phase 8 corrections passed independent review.
+- The regenerated cross-family exit gate then found one Medium promotion defect
+  and two Minor docs drifts. Phase 9 closed all three. Its first review exposed
+  a comment-only marker residue; the fix and the later one-file integration
+  recovery each passed fresh independent review with no findings. Fresh final
+  review and the regenerated exit gate remain before closeout.
 
 ## Local / Remote Head Status
 
-- Local source baseline used for this artifact refresh:
-  `59fd7f31f29e5f6db2f3b44778d7d38ba7efdd47` (Phase 7 plus the p08-t01
-  source-derived manifest correction). This artifact-only task advances local
-  HEAD when committed.
+- Local implementation baseline used for this artifact refresh:
+  `18767ee4eb3b9e2cfae23cda75cba2cf04e60baf` (Phase 9 plus its bounded
+  integration-fixture recovery). Summary refresh head before this artifact is
+  `8d365186a`.
 - Live PR #264 remains at
   `df9f720edd85b99b9dc691b123b98a6bbbefcb7e`. CI and Release Dry Run are green
   for that exact remote head only; they do not cover the local Phase 7/8 source.
-- The required push is authorized but remains root-owned. Fresh exact-head CI,
-  Release Dry Run, and Bugbot results are pending until that push occurs.
+- Push and merge are authorized but remain root-owned. Fresh exact-head CI,
+  Release Dry Run, and Bugbot results are pending until the final reviewed head
+  is pushed.
 
 ## References
 
