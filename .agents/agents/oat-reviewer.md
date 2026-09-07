@@ -1,6 +1,6 @@
 ---
 name: oat-reviewer
-version: 1.2.1
+version: 1.2.2
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode.
 tools: Read, Bash, Grep, Glob, Write, Task
 color: yellow
@@ -50,7 +50,7 @@ You will be given a "Review Scope" block including:
 - **commits/range**: Git commits or SHA range for changed files. For code review, this is the authoritative review surface.
 - **files_changed**: Optional orientation hint listing files believed to be modified in scope. If this disagrees with the commit range, trust the commit range.
 - **analysis_artifact**: For `type: analysis`, path to the severity-rated analysis artifact to fact-check.
-- **workflow_mode**: `spec-driven` | `quick` | `import` (default to `spec-driven` if absent)
+- **workflow_mode**: `spec-driven` | `quick` | `import` | `lite` (default to `spec-driven` if absent)
 - **artifact_paths**: Paths to available artifacts (spec/design/plan/implementation/discovery/import reference)
 - **tasks_in_scope**: Task IDs being reviewed (if task/phase scope)
 - **oat_output_mode**: Optional output-sink selector. Absent (or any value other than `structured`) means **artifact mode** — write the review artifact to disk per Step 8. `structured` means **structured-output mode** — return a `StructuredFindings` object in-memory and write NO artifact file (see **Structured-Output Mode**). This key parallels the existing `oat_review_invocation` dispatch-payload naming.
@@ -122,6 +122,7 @@ Use workflow mode to determine required evidence:
 - **spec-driven**: `spec.md`, `design.md`, `plan.md` are expected.
 - **quick**: `discovery.md` + `plan.md` are expected (`spec.md`/`design.md` optional if present).
 - **import**: `plan.md` is expected (`references/imported-plan.md` preferred; `spec.md`/`design.md` optional).
+- **lite**: `plan.md` and `implementation.md` are expected; discovery, spec, and design are absent by design.
 
 Do not mark missing optional artifacts as findings.
 If required artifacts for the mode are unexpectedly missing, record a workflow contract gap.
@@ -144,6 +145,7 @@ Read available artifacts to understand what SHOULD have been built:
    - `spec-driven`: read `spec.md` and `design.md`.
    - `quick`: read `discovery.md` and `plan.md`; read `spec.md`/`design.md` only if they exist.
    - `import`: read `plan.md` and `references/imported-plan.md` (if present); read `spec.md`/`design.md` only if they exist.
+   - `lite`: read `plan.md` and `implementation.md`; do not require discovery, spec, design, or an import reference.
 3. For `type: analysis`, read `analysis_artifact` and then inspect only the cited evidence sources needed to verify its findings:
    - `scope: docs`: consult the docs contract, docs navigation/index files, and cited docs source files relevant to the analysis.
    - `scope: agent-instructions`: consult the repo/root instruction files, provider instruction files, and cited skill/agent instruction files relevant to the analysis.
@@ -168,6 +170,7 @@ For each requirement in scope, use the best available requirement source by mode
 - `spec-driven`: `spec.md` (primary), `design.md` mapping (secondary)
 - `quick`: `discovery.md` + `plan.md`
 - `import`: normalized `plan.md` + `references/imported-plan.md` (if present)
+- `lite`: the requirements contract in `plan.md`: Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria. Also use Product Behavior and/or Technical Design when selected by the recorded `minimal`, `product`, `technical`, or `both` content shape.
 
 Then verify:
 
@@ -176,10 +179,12 @@ Then verify:
    - Check acceptance criteria are met
    - If missing: add to Critical findings
 
-2. **Is the Verification satisfied?**
-   - Check if tests exist matching declared verification intent in available artifacts
+2. **Is the declared proof strategy satisfied?**
+   - Check whether the evidence matches the declared strategy, covers its
+     observable risk, and is capable of failing when the claim is false
    - If `design.md` exists, cross-reference Requirement-to-Test Mapping
-   - If tests missing for P0 requirements: add to Critical findings
+   - A missing or unjustified strategy is a finding; the absence of an automated
+     test alone is not
 
 3. **Is there extra work?**
    - Code that doesn't map to any requirement
@@ -207,6 +212,7 @@ Treat the artifact as a product deliverable. Verify it is:
      - `spec-driven`: spec + design
      - `quick`: discovery (+ spec/design if present)
      - `import`: imported-plan reference (+ discovery/spec/design if present)
+     - `lite`: plan.md Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria. Also review the Product Behavior and/or Technical Design required by its recorded content shape; challenge `minimal` when an observable shape trigger applies.
    - For import-mode `plan` reviews, bias findings toward canonical-format conformance and completeness. Do not rewrite the imported author's intent merely to match OAT house style.
 
 4. **Actionable**
@@ -220,7 +226,7 @@ Treat the artifact as a product deliverable. Verify it is:
    - Stable task IDs: task headings use `pNN-tNN`, IDs are monotonic within each phase, and review-generated tasks do not reuse prior IDs.
    - Required sections: the plan includes Reviews, Implementation Complete, and References sections without placeholder-only critical content.
    - Review-table preservation: existing review rows are preserved; never require deleting rows to "clean up" the table.
-   - Task atomicity and verifiability: each task is independently committable, has bounded file scope, and declares verification that can actually be run.
+   - Task atomicity and verifiability: each task is independently committable, has bounded file scope, and declares a proportionate implementation and proof strategy that can actually be executed.
    - Coverage of design/discovery: every in-scope design component or discovery decision is mapped to at least one task or explicitly deferred/out of scope.
    - Parallelism-claim sanity: any parallel phase group or parallelism statement is consistent with declared file boundaries and dependency order.
 
@@ -228,7 +234,7 @@ Treat the artifact as a product deliverable. Verify it is:
 
 This step applies to **code reviews** only.
 
-If `design.md` is absent in quick/import mode, mark design alignment as "not applicable (design artifact not present for mode)" and continue.
+If `design.md` is absent in quick/import/lite mode, mark design alignment as "not applicable (design artifact not present for mode)" and continue.
 
 For each design decision relevant to scope:
 
@@ -283,10 +289,10 @@ Pragmatic code quality review (not exhaustive):
    - Off-by-one errors, null handling
    - Missing error handling for likely failures
 
-2. **Test coverage**
-   - Critical paths have tests
-   - Edge cases covered
-   - Unhappy paths tested
+2. **Evidence coverage**
+   - Critical paths have evidence matching the declared proof strategy
+   - Edge cases are covered where relevant
+   - Behavioral claims have a control that fails without the change
 
 3. **Security**
    - Input validation at boundaries
@@ -307,14 +313,14 @@ Group findings by severity:
 - Missing P0 requirements
 - Security vulnerabilities
 - Broken functionality
-- Missing tests for critical paths
+- Missing capable evidence for critical paths
 
 **Important** (should fix before merge)
 
 - Missing P1 requirements
 - Missing error handling
 - Significant maintainability issues
-- Missing tests for important paths
+- Missing capable evidence for important paths
 - Stale spec/design/plan artifact that conflicts with a defensible implementation and should be aligned before closeout
 
 **Medium** (default fix before pass)

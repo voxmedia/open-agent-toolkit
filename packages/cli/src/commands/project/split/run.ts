@@ -111,8 +111,8 @@ async function existingProjectSlugs(
 async function recordDetectedRecommendation(
   repoRoot: string,
   document: SplitPlanDocument,
-  dependencies: Pick<RunSplitDependencies, 'appendFile'>,
-): Promise<void> {
+  dependencies: Pick<RunSplitDependencies, 'appendFile' | 'stat'>,
+): Promise<boolean> {
   const localConfig = await readOatLocalConfig(repoRoot);
   if (!localConfig.activeProject) {
     throw new Error(
@@ -124,6 +124,9 @@ async function recordDetectedRecommendation(
     localConfig.activeProject,
     'discovery.md',
   );
+  if (!(await exists(discoveryPath, dependencies))) {
+    return false;
+  }
   await dependencies.appendFile(
     discoveryPath,
     [
@@ -139,6 +142,7 @@ async function recordDetectedRecommendation(
     ].join('\n'),
     'utf8',
   );
+  return true;
 }
 
 function isEffectivelyNonInteractive(
@@ -315,7 +319,16 @@ export function createProjectSplitRunCommand(
           (document.origin === 'detected-mid-stream' ||
             document.origin === 'detected-convergence')
         ) {
-          await recordDetectedRecommendation(repoRoot, document, dependencies);
+          const recorded = await recordDetectedRecommendation(
+            repoRoot,
+            document,
+            dependencies,
+          );
+          if (!recorded) {
+            context.logger.info(
+              'skipped split recommendation: no discovery.md for this project',
+            );
+          }
           context.logger.error(
             'Detected split requires interactive confirmation; recommendation recorded.',
           );

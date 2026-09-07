@@ -426,6 +426,11 @@ For a plan-declared parallel group, the root:
 Containment, ownership, base, or fixture-readiness failure in smoke mode aborts
 the run. It never authorizes replacement or sequential degradation.
 
+Lite plans never take this path. A lite `plan.md` must contain exactly one phase
+and declare no parallel groups, so lite implementation is always sequential;
+`oat project validate-plan` enforces both rules. Work that needs more than one
+phase should promote to quick rather than declare a parallel group.
+
 ## Synced projects in worktrees
 
 A tracked `.oat/projects/synced/<project>.json` record lets every repository

@@ -1,0 +1,99 @@
+{
+  "request_id": "lite-p06-49152831-dceb-492d-8f66-a0e03c5d683a",
+  "caller": "oat-project-implement",
+  "scope": "p06",
+  "objective": "Implement Phase 6 documentation, provider sync, manual lite verification, lockstep versions, and terminal release gates",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-native-implementation-20260905T231727Z",
+    "source": "tool-schema",
+    "observed_at": "2026-09-05T23:17:27.000Z"
+  },
+  "authority": "phase-implementation",
+  "role_selector": "oat-phase-implementer-gpt-5-6-sol-high",
+  "model_selector": "gpt-5.6-sol",
+  "model_selector_granularity": "materialized-role",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-07-25",
+  "guidance_verified_at": "2026-07-25",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["oat-phase-implementer-gpt-5-6-sol-high"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 7200,
+  "retry_limit": 0,
+  "payload": {
+    "mode": "implementation",
+    "agent_type": "oat-phase-implementer-gpt-5-6-sol-high",
+    "fork_turns": "none",
+    "phase": "p06",
+    "phase_base_head": "7e636cf25663b50ba70a5c64524362d15774dee0",
+    "tasks": ["p06-t01", "p06-t02", "p06-t03"],
+    "plan": ".oat/projects/shared/lite-workflow-mode/plan.md",
+    "worktree": "root"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "INVALID_RUN_ABORT",
+  "configured_invocation_evidence": [
+    "dispatch-report-v1:p06",
+    "native-spawn-accepted",
+    "canonical-role:project"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [
+    "Pre-edit base validation failed: payload.phase_base_head was 7e636cf25663b50ba70a5c64524362d15774dee0 while accepted-run HEAD was 8b985078e36a76de1788daf3ce1b7cefe8b1abba after the launch journal commit. The worktree was clean, the only intervening path was this dispatch record, and no p06 task executed."
+  ],
+  "continuation_events": [],
+  "fallback": {
+    "mode": "block",
+    "allow_below_task_class_floor": false
+  },
+  "task_class": "hard-reasoning",
+  "model_class_floor": "hard-reasoning",
+  "classification_source": "caller",
+  "classification_reason": "Phase 6 combines cross-surface documentation, generated provider views, an end-to-end workflow probe, lockstep release state, and evidence-grade terminal gates.",
+  "floor_satisfaction": "satisfied",
+  "authorization_scope": "lite-workflow-mode-p06",
+  "expected_output": "Three task commits with complete manual-run evidence, synchronized provider views, lockstep versions, and all terminal gates passing",
+  "verification_evidence": "Per-task checks, recorded manual lite route and pauses, provider-view ownership and lite coverage, RED/GREEN release version gate, uncached tests, full AGENTS definition-of-done sequence, lint, format, and clean worktree",
+  "escalate_when": [
+    "the manual lite run requires an unavailable interactive capability or external PR creation",
+    "origin/main cannot be fetched or release versions cannot be established",
+    "a terminal gate remains failing after bounded diagnosis",
+    "implementation requires scope outside the three p06 tasks"
+  ],
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<project>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.1",
+      "contentDigest": "sha256:9f2fd68d9ef0381bf30db95164150eda6aac885f8ffa716917d6a3d471142513",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}

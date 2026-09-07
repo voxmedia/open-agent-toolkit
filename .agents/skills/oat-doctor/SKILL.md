@@ -1,6 +1,6 @@
 ---
 name: oat-doctor
-version: 1.2.0
+version: 1.2.1
 description: Use when you need to diagnose your OAT setup, check for outdated skills, identify misconfigurations, or get a summary of installed tools and config. Runs health checks and recommends corrective actions.
 argument-hint: '[--summary]'
 disable-model-invocation: true
@@ -174,7 +174,7 @@ it, and lists every skill that pack ships.
 - oat-project-capture, oat-project-clear-active, oat-project-complete
 - oat-project-design, oat-project-dispatch-subagents, oat-project-discover
 - oat-project-document, oat-project-implement, oat-project-import-plan
-- oat-project-new, oat-project-next, oat-project-open
+- oat-project-lite, oat-project-new, oat-project-next, oat-project-open
 - oat-project-plan, oat-project-plan-writing, oat-project-pr-final
 - oat-project-pr-progress, oat-project-progress, oat-project-promote-spec-driven
 - oat-project-quick-start, oat-project-reconcile, oat-project-retro
@@ -238,7 +238,7 @@ OAT ▸ DOCTOR SUMMARY
 | --------- | ------- | ------ | -------- |
 | core      | user    | 2/2    | current  |
 | docs      | project | 7/7    | current  |
-| workflows | project | 39/39  | current  |
+| workflows | project | 40/40  | current  |
 | ideas     | user    | 4/4    | current  |
 | project-management | project | 4/4 | current |
 | research  | project | 6/6    | current  |

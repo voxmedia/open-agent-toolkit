@@ -25,7 +25,7 @@ The root supplies:
 - `mode`: `implement`, `fix`, or `recover`;
 - `artifact_paths`: available plan, design, spec, discovery, implementation,
   and imported-plan paths;
-- `workflow_mode`: `spec-driven`, `quick`, or `import`;
+- `workflow_mode`: `spec-driven`, `quick`, `import`, or `lite`;
 - `commit_convention`: exact task/fix commit convention;
 - `phase_base_head`: root-recorded HEAD before phase dispatch;
 - `worktree`: assigned phase worktree or orchestration checkout;
@@ -116,6 +116,11 @@ Read each required artifact once at phase start:
 - `quick`: phase section from plan and discovery; design/spec when present;
 - `import`: phase section from plan and imported plan; design/spec when
   present.
+- `lite`: read the whole plan.md requirements contract: the assigned phase
+  section plus Summary, Decisions, Assumptions, Out of Scope, and Validation
+  Criteria, and the Product Behavior and/or Technical Design selected by its
+  recorded `minimal`, `product`, `technical`, or `both` content shape.
+  Discovery, spec, and design are absent by design.
 
 Extract all phase tasks, dependency order, file boundaries, verification
 commands, commit messages, and phase-wide verification before editing.
@@ -398,7 +403,17 @@ For every task:
 
 1. Record `PRE_TASK_HEAD`.
 2. Read the task steps and declared file boundary.
-3. Follow RED/GREEN/refactor ordering when specified.
+3. Execute the task's declared implementation and proof strategy without
+   silently substituting TDD. Follow RED/GREEN/refactor ordering only when the
+   selected strategy specifies it.
+   For required manual or visual proof, inspect the effective runtime tool
+   catalog for an available computer-use capability; never infer availability
+   from planning prose, configuration, or another agent's tools. Use available
+   computer-use for required visual proof. When `OAT_AUTONOMOUS=1` and no
+   autonomous executor can perform the criterion, return `BLOCKED` with an
+   explicit `IMPLEMENT-20 unverified proof boundary`, name the criterion and
+   missing capability, and stop before committing the task or marking the task
+   or phase complete. Never mark unavailable proof deferred-but-verified.
 4. Implement only that task. Optional nested help does not transfer task
    ownership or commit authority.
 5. Apply the Prevention and Post-Commit Recovery ordering: format, run every

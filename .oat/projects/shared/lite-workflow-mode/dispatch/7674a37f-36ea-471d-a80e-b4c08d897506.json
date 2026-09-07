@@ -1,0 +1,103 @@
+{
+  "request_id": "7674a37f-36ea-471d-a80e-b4c08d897506",
+  "caller": "oat-project-implement",
+  "scope": "p-rev1",
+  "objective": "Independently review the completed p-rev1 implementation and bounded recovery against the approved revision plan",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-native-review-20260906T165618Z",
+    "source": "tool-schema",
+    "observed_at": "2026-09-06T16:56:18Z"
+  },
+  "authority": "review-artifact-only",
+  "role_selector": "oat-reviewer-gpt-5-6-sol-high",
+  "model_selector": "gpt-5.6-sol",
+  "model_selector_granularity": "materialized-role",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-07-25",
+  "guidance_verified_at": "2026-07-25",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["oat-reviewer-gpt-5-6-sol-high"],
+  "selection_reason": "gate-target",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-5-6-sol-high",
+    "fork_turns": "none",
+    "scope": "p-rev1",
+    "range_base": "f1b478c59",
+    "range_head": "5e9e23fc90bf20da5735e8fd7b97bbbfe04fa0fa",
+    "task_commits": [
+      "77710ca35524af03b3b257872813e2ce5f846d87",
+      "c2c27b647697499cdffb3a64141b10af095b9ef5",
+      "d57119df38dbcf812340bb6a11b504863e354144"
+    ],
+    "output_mode": "artifact",
+    "worktree": "root",
+    "review_invocation": "auto",
+    "expected_artifact": "reviews/p-rev1-review-2026-09-06T165618Z.md"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "blocked",
+  "configured_invocation_evidence": [
+    "dispatch-report-v1:p-rev1-review",
+    "native-spawn-accepted",
+    "canonical-role:project",
+    "project-policy:managed-high"
+  ],
+  "runtime_confirmation": "configured-invocation-only",
+  "diagnostics": [],
+  "continuation_events": [],
+  "fallback": {
+    "mode": "block",
+    "allow_below_task_class_floor": false
+  },
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "This is the independent load-bearing phase review after a failed and then successful composition recovery; a subtle miss could incorrectly mark the revision complete.",
+  "floor_satisfaction": "satisfied",
+  "authorization_scope": "lite-workflow-mode-p-rev1-review",
+  "expected_output": "One timestamped p-rev1 code review artifact with a valid reconnaissance signal, evidence-backed findings, and an explicit pass or blocking verdict.",
+  "verification_evidence": "Approved p-rev1 plan tasks, implementation and recovery commits, root phase verification, generated-view sync state, and the complete committed review range.",
+  "escalate_when": [
+    "The authoritative range is invalid or cannot be reviewed independently.",
+    "The review artifact contract cannot be satisfied.",
+    "Unexpected code mutation or out-of-scope concurrent change is observed."
+  ],
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<project>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.2",
+      "contentDigest": "sha256:222cdef9222d11153d228891876db2085f65f0168306247b423956eabfb3ff25",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}

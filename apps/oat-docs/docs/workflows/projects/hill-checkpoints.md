@@ -38,6 +38,27 @@ Semantics:
 - Empty list: checkpoint after every phase boundary, but only after implementation has confirmed the choice and written `oat_plan_hill_phases: []` into `plan.md`.
 - Explicit list: checkpoint only after completing the named phases (`p01`, `p04`, etc).
 
+### Lite checkpoint bypass
+
+Lite projects have no HiLL checkpoints. `oat-project-implement` resolves
+`oat_workflow_mode` from project state before any checkpoint field read, and
+when the mode is `lite` it resolves checkpoint state as `none` without reading
+or interpreting `oat_plan_hill_phases`. An empty list cannot represent lite's
+policy, because for every other mode an empty list means "checkpoint after every
+phase". Lite planning writes:
+
+```yaml
+oat_auto_review_at_hill_checkpoints: false # lite: no checkpoints
+```
+
+The workflow preference prompt, the standard checkpoint prompt, and the
+auto-review preference prompt are all skipped in both interactive and autonomous
+runs. Only HiLL approval pauses are absent — the root-owned per-phase review and
+the final review remain required.
+
+The rest of this section applies to `spec-driven`, `quick`, and `import`
+projects.
+
 On the first implementation run, `oat-project-implement` must summarize every plan phase, state the total phase count and final phase ID, and then ask an explicit three-option checkpoint question:
 
 - Stop after each phase

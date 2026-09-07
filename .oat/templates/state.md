@@ -34,7 +34,7 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #         - { harness: cursor, model: gpt-5.5-xhigh }
 #   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
-oat_workflow_mode: { OAT_WORKFLOW_MODE } # spec-driven | quick | import
+oat_workflow_mode: { OAT_WORKFLOW_MODE } # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration

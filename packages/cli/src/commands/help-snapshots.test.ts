@@ -1094,6 +1094,7 @@ describe('help output snapshots', () => {
         new [options] <name>                         Create or update an OAT project scaffold
         open [options] <name>                        Open or switch to an OAT project
         pause [options] [name]                       Pause an OAT project
+        promote [options] <project-path>             Promote an authored lite project to the quick workflow
         prune [options] [project-path|slug]          Permanently remove a synced project and its ref
         push [options] [project-path|slug]           Commit and publish a synced OAT project
         pull [options] [project-path|slug]           Materialize or update a synced OAT project
@@ -1225,7 +1226,7 @@ describe('help output snapshots', () => {
 
       Options:
         --mode <mode>       Scaffold mode (choices: "spec-driven", "quick", "import",
-                            default: "spec-driven")
+                            "lite", default: "spec-driven")
         --scope <scope>     Project scope (choices: "shared", "local", "synced")
         --force             Allow a duplicate slug in another scope; scaffold remains
                             non-destructive

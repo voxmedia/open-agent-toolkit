@@ -1,7 +1,7 @@
 ---
 name: oat-project-discover
-version: 2.2.4
-description: Use when the user explicitly asks to continue discovery for an active spec-driven OAT project — e.g. "continue discovery", "run discovery", or confirms a previously offered discovery step. Do NOT auto-invoke for new ideas or quick-mode projects. Gathers requirements and context before spec/design.
+version: 2.2.5
+description: Use when the user explicitly asks to continue discovery for an active spec-driven OAT project — e.g. "continue discovery", "run discovery", or confirms a previously offered discovery step. Do NOT auto-invoke for new ideas or quick/lite-mode projects. Gathers requirements and context before spec/design.
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Glob, Grep, AskUserQuestion
@@ -15,11 +15,11 @@ Gather requirements and understand the problem space through natural collaborati
 
 **Required:** Knowledge base must exist. If missing, run the `oat-repo-knowledge-index` skill first.
 
-**Required for model invocation:** An active spec-driven OAT project must already exist. If no active project exists, route to `oat-project-new` for spec-driven setup or `oat-project-quick-start` for quick workflow. If the active project is quick or import mode, decline this skill and route to the current mode's next step instead.
+**Required for model invocation:** An active spec-driven OAT project must already exist. If no active project exists, route to `oat-project-new` for spec-driven setup, `oat-project-quick-start` for quick workflow, or `oat-project-lite` for single-sitting lite work. If the active project is quick, import, or lite mode, decline this skill and route to the current mode's next step instead.
 
 ## Model Invocation Gate
 
-This skill is model-invokable only for explicit discovery-continuation asks on an active spec-driven project. Do NOT auto-invoke when the user mentions a new idea, asks for a quick workflow, or has an active quick/import project.
+This skill is model-invokable only for explicit discovery-continuation asks on an active spec-driven project. Do NOT auto-invoke when the user mentions a new idea, asks for a quick or lite workflow, or has an active quick/import/lite project.
 
 Before acting:
 
@@ -27,7 +27,7 @@ Before acting:
 2. Confirm `{PROJECT_PATH}/state.md` exists.
 3. Confirm `oat_workflow_mode` is `spec-driven` or absent only in a legacy spec-driven project.
 
-If any check fails, decline this skill. Offer `oat-project-new` for a new spec-driven project, `oat-project-quick-start` for a quick project, or `oat-project-open` for switching to an existing project. When the gate passes, summarize the active project and ask before continuing discovery.
+If any check fails, decline this skill. Offer `oat-project-new` for a new spec-driven project, `oat-project-quick-start` for a quick project, `oat-project-lite` for single-sitting work, or `oat-project-open` for switching to an existing project. When the gate passes, summarize the active project and ask before continuing discovery.
 
 ## Mode Assertion
 
@@ -101,6 +101,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 - Read `oat_workflow_mode` from `{PROJECT_PATH}/state.md`
 - If `oat_workflow_mode` is present and not `spec-driven`, stop and route:
   - quick project: continue with `oat-project-quick-start` / `oat-project-progress`
+  - lite project: continue with `oat-project-lite` / `oat-project-progress`
   - import project: continue with `oat-project-import-plan` / `oat-project-progress`
 - Ask user:
   - **Continue** with active project, or

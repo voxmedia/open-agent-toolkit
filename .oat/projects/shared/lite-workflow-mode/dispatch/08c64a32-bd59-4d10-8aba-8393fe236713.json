@@ -1,0 +1,108 @@
+{
+  "request_id": "08c64a32-bd59-4d10-8aba-8393fe236713",
+  "caller": "oat-project-implement",
+  "scope": "p-rev1-rereview1",
+  "objective": "Freshly re-review the four fixes for the first blocking p-rev1 review",
+  "action": "review",
+  "role_name": "oat-reviewer",
+  "role_class": "reviewer",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-native-review-20260906T172704Z",
+    "source": "tool-schema",
+    "observed_at": "2026-09-06T17:27:04Z"
+  },
+  "authority": "review-artifact-only",
+  "role_selector": "oat-reviewer-gpt-5-6-sol-high",
+  "model_selector": "gpt-5.6-sol",
+  "model_selector_granularity": "materialized-role",
+  "effort_selector": "high",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-07-25",
+  "guidance_verified_at": "2026-07-25",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["oat-reviewer-gpt-5-6-sol-high"],
+  "selection_reason": "gate-target",
+  "selected_route": "native",
+  "deadline_seconds": 3600,
+  "retry_limit": 0,
+  "payload": {
+    "agent_type": "oat-reviewer-gpt-5-6-sol-high",
+    "fork_turns": "none",
+    "scope": "p-rev1",
+    "range_base": "0b149d6d8f21206a495cdb4e43a4ffb1d9d6a94c",
+    "range_head": "bec28560621bd30126ecbd3d80fbb48181f12ed8",
+    "task_commits": ["dab9d9e39", "84470bf09", "90c74a7e1", "a0d92b138"],
+    "prior_artifact": "reviews/archived/p-rev1-review-2026-09-06T165618Z.md",
+    "output_mode": "artifact",
+    "worktree": "root",
+    "review_invocation": "auto",
+    "expected_artifact": "reviews/p-rev1-review-2026-09-06T172704Z.md"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "blocked",
+  "configured_invocation_evidence": [
+    "dispatch-report-v1:p-rev1-review",
+    "native-spawn-accepted",
+    "canonical-role:project",
+    "project-policy:managed-high",
+    "fresh-reviewer-fix-only-range"
+  ],
+  "runtime_confirmation": "configured-invocation-only",
+  "diagnostics": [],
+  "continuation_events": [
+    {
+      "event_id": "p-rev1-rereview1",
+      "prior_review_request_id": "7674a37f-36ea-471d-a80e-b4c08d897506",
+      "fix_request_id": "75571899-f333-414a-acc5-a0cc0753754e",
+      "mode": "review"
+    }
+  ],
+  "fallback": {
+    "mode": "block",
+    "allow_below_task_class_floor": false
+  },
+  "task_class": "consequential",
+  "model_class_floor": "consequential",
+  "classification_source": "caller",
+  "classification_reason": "This fresh independent re-review decides whether four fixes fully close the blocking p-rev1 contract and evidence gaps.",
+  "floor_satisfaction": "satisfied",
+  "authorization_scope": "lite-workflow-mode-p-rev1-rereview1",
+  "expected_output": "One timestamped p-rev1 re-review artifact with a valid reconnaissance signal, per-finding closure evidence, and an explicit pass or blocking verdict.",
+  "verification_evidence": "Prior blocking artifact, four ordered fix commits, promotion negative controls, executor-boundary contract tests, design alignment, root focused suite, and project-sync convergence.",
+  "escalate_when": [
+    "The bounded fix range or prior review artifact cannot be validated.",
+    "The review artifact contract cannot be satisfied.",
+    "Unexpected code mutation or out-of-scope concurrent change is observed."
+  ],
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-reviewer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-reviewer.md",
+      "selectedPath": "<project>/agents/oat-reviewer.md",
+      "roleVersion": "1.2.2",
+      "contentDigest": "sha256:222cdef9222d11153d228891876db2085f65f0168306247b423956eabfb3ff25",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}

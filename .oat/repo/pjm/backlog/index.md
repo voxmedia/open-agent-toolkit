@@ -4,6 +4,10 @@
 
 ## Curated Overview
 
+- 2026-09-06: `BL-260906-re-evaluate-universal-plan` reopens the default-policy
+  question in `DR-260714-flexible-plan-task-bodies`: objective,
+  risk-proportionate proof should prevent both proof-free plans and low-value
+  test theater across every workflow mode.
 - 2026-09-06: wave 1 of the execution program closed `BL-260718-fix-oat-docs-generate-index`,
   `BL-260827-fail-closed-on-partial-or`, `BL-260827-override-aware-remedy-text`, and
   `BL-260902-add-an-exclusion-mechanism` (CLI 0.2.56) and filed three `BL-260906-*`
@@ -256,6 +260,7 @@
 | BL-260906-fix-sync-apply-branch          | Fix sync apply branch precedence when a rejected collection leaves zero planned operations            | open   | medium   | task       | S        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                     | open   | medium   | feature    | L        |
 | BL-260906-guard-packed-asset-directories | Guard packed asset directories and document the OAT_ASSETS_DIR contract                               | open   | medium   | task       | S        |
+| BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                          | open   | medium   | feature    | M        |
 | BL-260904-honor-metadata-version         | Honor metadata.version as the canonical skill version                                                 | open   | medium   | feature    | M        |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                    | open   | medium   | feature    | M        |
@@ -263,11 +268,13 @@
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                          | open   | medium   | task       | M        |
 | BL-260902-make-consolidated-project      | Make consolidated-project retirement checks semantic                                                  | open   | medium   | task       | M        |
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                         | open   | medium   | feature    | M        |
+| BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                     | open   | medium   | feature    | L        |
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions  | open   | medium   | task       | S        |
 | BL-260830-persist-instruction-sync       | Persist instruction sync strategy in config and init                                                  | open   | medium   | feature    | M        |
 | BL-260906-persist-status-native-skill    | Persist status native-skill adoption by setting manifestChanged                                       | open   | medium   | task       | S        |
 | BL-260903-populate-provider-reachability | Populate provider reachability evidence across pack and lifecycle surfaces                            | open   | medium   | feature    | M        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                | open   | medium   | idea       | L        |
+| BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                     | open   | medium   | feature    | L        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags | open   | medium   | task       | S        |
 | BL-260906-repair-the-stray-fence-in-oat  | Repair the stray fence in oat-project-review-provide and tighten the fence rule repo-wide             | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                         | open   | medium   | feature    | M        |

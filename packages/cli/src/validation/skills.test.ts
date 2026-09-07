@@ -1362,7 +1362,7 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.2');
     expect(tools).toContain('Task');
     for (const broadReview of [
       'final code reviews',
@@ -1787,9 +1787,10 @@ describe('validateOatSkills', () => {
     }
   });
 
-  it('marks quick-start and import-plan as gateable lifecycle skills', async () => {
+  it('marks lite, quick-start, and import-plan as gateable lifecycle skills', async () => {
     for (const skillName of [
       'oat-project-quick-start',
+      'oat-project-lite',
       'oat-project-import-plan',
     ]) {
       const content = await readRepoFile(
@@ -1803,9 +1804,10 @@ describe('validateOatSkills', () => {
     }
   });
 
-  it('adds Gate Execution steps to quick-start and import-plan', async () => {
+  it('adds Gate Execution steps to lite, quick-start, and import-plan', async () => {
     for (const skillName of [
       'oat-project-quick-start',
+      'oat-project-lite',
       'oat-project-import-plan',
     ]) {
       const content = await readRepoFile(
@@ -1830,7 +1832,7 @@ describe('validateOatSkills', () => {
     } of [
       {
         skillName: 'oat-project-discover',
-        version: '2.2.4',
+        version: '2.2.5',
         finalizedHeading:
           '### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)',
         gateHeading: '### Step 12: Gate Execution',
@@ -1849,7 +1851,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.8',
+        version: '1.4.9',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -1865,8 +1867,16 @@ describe('validateOatSkills', () => {
         noGateNextStep: 'Step 3.7',
       },
       {
+        skillName: 'oat-project-lite',
+        version: '1.1.1',
+        finalizedHeading: '### Step 6: Run Plan Artifact Review Loop',
+        gateHeading: '### Gate Execution',
+        completionHeading: '### Step 7: Mark Plan Complete and Hand Off',
+        noGateNextStep: 'Step 7',
+      },
+      {
         skillName: 'oat-project-implement',
-        version: '2.3.4',
+        version: '2.3.5',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -1939,6 +1949,97 @@ describe('validateOatSkills', () => {
       'plan artifact review precedes exit gate',
     ).toBeLessThan(gateIndex);
     expect(plan).not.toContain('### Step 14.5: Propose Parallel Groups');
+  });
+
+  it('oat-project-lite enforces the single-pause interaction contract', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-lite/SKILL.md',
+    );
+    const artifacts = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/artifacts.md',
+    );
+    const liteArtifactRow = artifacts
+      .split('\n')
+      .find((line) => line.startsWith('| `lite`'));
+    const interviewStart = content.indexOf(
+      '### Step 2: Batched Critical Interview',
+    );
+    const authoringStart = content.indexOf(
+      '### Step 3: Author the Single-Phase Plan',
+    );
+    const interview = content.slice(interviewStart, authoringStart);
+    const approvalStart = content.indexOf('### Step 4: Single Approval Gate');
+    const dispatchStart = content.indexOf(
+      '### Step 5: Resolve Dispatch Ceiling',
+    );
+    const approval = content.slice(approvalStart, dispatchStart);
+    const persistence = content.slice(
+      content.indexOf('## Artifact Persistence (Required)'),
+      content.indexOf('### Step 0 (Preflight): Inherited Git State'),
+    );
+
+    expect(interviewStart).toBeGreaterThanOrEqual(0);
+    expect(authoringStart).toBeGreaterThan(interviewStart);
+    expect(interview).toMatch(/one batched round/i);
+    expect(interview).toMatch(
+      /second round only for questions (?:that|which) the first round(?:'s answers)? created/i,
+    );
+    expect(interview).toMatch(/just proceed[\s\S]*careful assumptions/i);
+    expect(content).toContain(
+      'oat project promote "$PROJECT_PATH" --to quick --json',
+    );
+    expect(approval.match(/AskUserQuestion/g)).toHaveLength(1);
+    expect(content.match(/AskUserQuestion/g)).toHaveLength(2);
+    expect(content).not.toMatch(/^### .*HiLL/m);
+    expect(content).not.toMatch(/^### .*Phase Gate/m);
+    expect(content).not.toContain('oat_hill_checkpoints');
+    expect(interview).toMatch(
+      /select exactly one plan content shape: `minimal`,\s*`product`,\s*`technical`, or `both`/i,
+    );
+    expect(content).toMatch(
+      /Product Behavior is a numbered list of testable outcomes/i,
+    );
+    expect(content).toMatch(
+      /Technical Design describes current operation and the\s+proposed changes/i,
+    );
+    expect(content).toMatch(
+      /configuration edit that changes\s+runtime behavior is not minimal/i,
+    );
+    expect(content).toContain(
+      'oat project validate-plan --project-path "$PROJECT_PATH"',
+    );
+    expect(content).not.toContain('oat project validate-plan "$PROJECT_PATH"');
+    expect(content).toMatch(
+      /a backticked\s+command or test name, or a `manual:` visual-proof instruction/,
+    );
+    expect(content).not.toMatch(
+      /a backticked\s+command, a test name, or a `manual:` visual-proof instruction/,
+    );
+    expect(liteArtifactRow).toMatch(
+      /Summary.*Decisions.*Assumptions.*Out of Scope.*Validation Criteria/,
+    );
+    expect(persistence).toMatch(
+      /after Step 3[\s\S]*before the Step 4 approval gate/i,
+    );
+    expect(persistence).toMatch(/after Step 6[\s\S]*before Gate Execution/i);
+  });
+
+  it('oat-project-lite registers every interactive gate in the autonomy inventory', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-lite/SKILL.md',
+    );
+    const contract = await readRepoFile('.agents/docs/autonomy-contract.md');
+
+    expect(content).toMatch(
+      /OAT_AUTONOMOUS=1[\s\S]*references\/docs\/autonomy-contract\.md/,
+    );
+    for (let gate = 1; gate <= 10; gate += 1) {
+      const gateId = `LITE-${String(gate).padStart(2, '0')}`;
+      expect(content, `${gateId} cited by skill`).toContain(gateId);
+      expect(contract, `${gateId} registered`).toMatch(
+        new RegExp(`^\\| ${gateId}\\s+\\|`, 'm'),
+      );
+    }
   });
 
   it('declares the implementation exit gate as a required top-level closeout capability', async () => {
@@ -2258,7 +2359,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
   });
 
   it('requires classified resolver calls and effective terminal reviewer notices before launch', async () => {
@@ -2564,7 +2665,7 @@ describe('validateOatSkills', () => {
     );
     const combined = `${content}\n${dispatchReference}`;
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
     expect(dispatchReference).toContain(
       '${IMPLEMENTER_AGENT_PROVIDER_ROOT}/agents/oat-phase-implementer.md',
     );
@@ -2638,7 +2739,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -2657,7 +2758,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.5');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -2744,7 +2845,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.22');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.23');
     expect(shared).toContain(
       '${WORKFLOWS_AGENT_PROVIDER_ROOT}/agents/oat-reviewer.md',
     );
@@ -2789,7 +2890,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.22');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.23');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -2817,13 +2918,13 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.3'],
-      ['.agents/agents/oat-reviewer.md', '1.2.1'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.4'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.4'],
+      ['.agents/agents/oat-reviewer.md', '1.2.2'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.5'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.1'],
-      ['.agents/skills/oat-project-document/SKILL.md', '1.8.1'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.1'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.2'],
+      ['.agents/skills/oat-project-document/SKILL.md', '1.8.2'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.9'],
     ] as const;
 
@@ -2933,7 +3034,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.22');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.23');
   });
 
   it('auto-selects an existing dispatch-ladder scope only under explicit autonomy', async () => {
@@ -3127,12 +3228,12 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.3');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.4');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.5');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -4336,15 +4437,15 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.22'],
-      ['oat-project-review-provide', '1.5.4'],
+      ['oat-project-plan-writing', '1.2.23'],
+      ['oat-project-review-provide', '1.5.5'],
       ['oat-project-review-receive', '1.6.2'],
       ['oat-project-review-receive-remote', '1.5.1'],
-      ['oat-project-implement', '2.3.4'],
-      ['oat-project-pr-final', '1.6.1'],
-      ['oat-project-pr-progress', '1.3.0'],
+      ['oat-project-implement', '2.3.5'],
+      ['oat-project-pr-final', '1.6.2'],
+      ['oat-project-pr-progress', '1.3.1'],
       ['oat-project-complete', '1.7.7'],
-      ['oat-project-next', '1.0.14'],
+      ['oat-project-next', '1.1.0'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -5214,6 +5315,10 @@ describe('validateOatSkills', () => {
     );
     const importTable = next.slice(
       next.indexOf('**Import Mode:**'),
+      next.indexOf('**Lite Mode:**'),
+    );
+    const liteTable = next.slice(
+      next.indexOf('**Lite Mode:**'),
       next.indexOf('### Step 4:'),
     );
     const planTier3Row = (table: string): string | undefined =>
@@ -5232,14 +5337,15 @@ describe('validateOatSkills', () => {
     expect(planTier3Row(quickTable)).toContain('`oat-project-quick-start`');
     expect(planTier3Row(specTable)).toContain('`oat-project-plan`');
     expect(planTier3Row(importTable)).toContain('`oat-project-import-plan`');
-    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.14');
+    expect(planTier3Row(liteTable)).toContain('`oat-project-lite`');
+    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.0');
   });
 
   it('supports project completion before or after PR merge in every mode', async () => {
     const progress = await readRepoFile(
       '.agents/skills/oat-project-progress/SKILL.md',
     );
-    expect(progress.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.1');
+    expect(progress.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.0');
 
     const modeSections = [
       [
@@ -5256,7 +5362,14 @@ describe('validateOatSkills', () => {
           progress.indexOf('**Import mode'),
         ),
       ],
-      ['import', progress.slice(progress.indexOf('**Import mode'))],
+      [
+        'import',
+        progress.slice(
+          progress.indexOf('**Import mode'),
+          progress.indexOf('**Lite mode'),
+        ),
+      ],
+      ['lite', progress.slice(progress.indexOf('**Lite mode'))],
     ] as const;
 
     for (const [mode, section] of modeSections) {
@@ -5438,11 +5551,11 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.22'],
-      ['oat-project-plan', '1.4.8'],
+      ['oat-project-plan-writing', '1.2.23'],
+      ['oat-project-plan', '1.4.9'],
       ['oat-project-quick-start', '2.3.9'],
-      ['oat-project-import-plan', '1.4.13'],
-      ['oat-project-review-provide', '1.5.4'],
+      ['oat-project-import-plan', '1.4.14'],
+      ['oat-project-review-provide', '1.5.5'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -5457,8 +5570,8 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.3.4'],
-      ['oat-project-review-provide', '1.5.4'],
+      ['oat-project-implement', '2.3.5'],
+      ['oat-project-review-provide', '1.5.5'],
       ['oat-project-review-provide-remote', '1.1.3'],
     ] as const;
 
@@ -5606,8 +5719,8 @@ describe('validateOatSkills', () => {
 
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
-      ['.agents/agents/oat-phase-implementer.md', '1.1.3'],
-      ['.agents/agents/oat-reviewer.md', '1.2.1'],
+      ['.agents/agents/oat-phase-implementer.md', '1.1.4'],
+      ['.agents/agents/oat-reviewer.md', '1.2.2'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.1'],
     ] as const;
 
@@ -7007,6 +7120,719 @@ describe('validateOatSkills', () => {
     expect(content).not.toContain('oat backlog generate-id');
     expect(content).not.toContain('oat backlog regenerate-index');
     expect(content).not.toContain('ITEM_PATH=');
+  });
+});
+
+describe('lite mode skill contracts', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  it('import-plan offers lite for single-phase plans and preserves import provenance', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-import-plan/SKILL.md',
+    );
+    const normalization = content.indexOf(
+      '### Step 3: Normalize Into Canonical OAT plan.md',
+    );
+    const offer = content.indexOf('### Step 3.5: Lite Offer');
+    const metadata = content.indexOf('### Step 4: Update Plan Metadata');
+    const offerSection = content.slice(offer, metadata);
+    const phaseGate = content.slice(
+      content.indexOf('### Step 4.25: Configure Optional Phase Gate Review'),
+      content.indexOf('### Step 4.5:'),
+    );
+    const stateWrite = content.slice(
+      content.indexOf('### Step 5: Update Project State'),
+      content.indexOf('### Step 5.5:'),
+    );
+
+    expect(normalization).toBeGreaterThanOrEqual(0);
+    expect(offer).toBeGreaterThan(normalization);
+    expect(metadata).toBeGreaterThan(offer);
+    expect(offerSection).toMatch(/exactly one `## Phase` heading/i);
+    expect(offerSection).toMatch(
+      /`oat_plan_parallel_groups`[\s\S]{0,100}empty/i,
+    );
+    expect(offerSection).toMatch(
+      /AskUserQuestion[\s\S]{0,180}lite[\s\S]{0,120}Recommended/i,
+    );
+    expect(offerSection).toMatch(
+      /single-phase plans can still be multi-session\s+work/i,
+    );
+    expect(offerSection).toMatch(
+      /Summary[\s\S]{0,220}Decisions[\s\S]{0,220}Assumptions[\s\S]{0,220}Out of Scope[\s\S]{0,220}Validation Criteria/i,
+    );
+    expect(phaseGate).toMatch(/lite offer was accepted[\s\S]{0,120}skip/i);
+    expect(stateWrite).toContain('oat_workflow_mode: lite');
+    expect(stateWrite).toContain('oat_workflow_origin: imported');
+    expect(stateWrite).toMatch(/oat_import_reference|oat_import_\*/);
+    expect(stateWrite).toContain('oat_plan_source: imported');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.14');
+  });
+
+  it('lite bypasses implementation checkpoints', async () => {
+    const [planResume, closeout, phaseExecution] = await Promise.all([
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/plan-and-resume.md',
+      ),
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+      ),
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/phase-execution.md',
+      ),
+    ]);
+    const checkpointStep = planResume.slice(
+      planResume.indexOf('### Step 2.5: Confirm Plan HiLL Checkpoints'),
+      planResume.indexOf('### Step 2.6:'),
+    );
+    const finalHill = closeout.slice(
+      closeout.indexOf('### Step 15: Final HiLL Closeout Sequence'),
+      closeout.indexOf('### Step 16:'),
+    );
+
+    expect(checkpointStep).toMatch(
+      /oat_workflow_mode[\s\S]{0,120}lite[\s\S]{0,220}checkpoint state[\s\S]{0,120}none/i,
+    );
+    expect(checkpointStep).toMatch(
+      /without reading[\s\S]{0,120}oat_plan_hill_phases/i,
+    );
+    expect(checkpointStep).toMatch(
+      /skip[\s\S]{0,160}workflow preference[\s\S]{0,160}standard checkpoint prompt[\s\S]{0,160}auto-review preference prompt/i,
+    );
+    expect(checkpointStep).toContain(
+      'oat_auto_review_at_hill_checkpoints: false # lite: no checkpoints',
+    );
+    expect(finalHill).toMatch(/lite[\s\S]{0,100}no final HiLL approval step/i);
+    expect(finalHill).toMatch(/passed\s+final review[\s\S]{0,180}closeout/i);
+    const resolutionContract = finalHill.match(
+      /# BEGIN LITE CLOSEOUT RESOLUTION CONTRACT\n([\s\S]*?)# END LITE CLOSEOUT RESOLUTION CONTRACT/,
+    )?.[1];
+    expect(resolutionContract).toBeDefined();
+
+    const { stdout } = await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${resolutionContract}\nprintf 'checkpoint=%s\\napproval=%s\\nawaiting=%s\\nautonomous=%s\\n' "$FINAL_CHECKPOINT_EXISTS" "$APPROVAL" "$AWAITING_APPROVAL_REACHABLE" "$AUTONOMOUS_APPROVAL_REACHABLE"`,
+      ],
+      {
+        env: {
+          ...process.env,
+          WORKFLOW_MODE: 'lite',
+          OAT_PLAN_HILL_PHASES: '[]',
+          OAT_AUTONOMOUS: '1',
+          GENERIC_PRE_APPROVAL: 'summary document pr',
+          PHASE_REVIEW_STATUS: 'passed',
+          FINAL_REVIEW_STATUS: 'passed',
+        },
+      },
+    );
+    expect(stdout).toContain('checkpoint=false');
+    expect(stdout).toContain('approval=not_required');
+    expect(stdout).toContain('awaiting=false');
+    expect(stdout).toContain('autonomous=false');
+    expect(phaseExecution).toContain('lite is always a single phase');
+  });
+
+  it('lite collapses closeout', async () => {
+    const [closeout, next, prFinal, summary, document] = await Promise.all([
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+      ),
+      readRepoFile('.agents/skills/oat-project-next/SKILL.md'),
+      readRepoFile('.agents/skills/oat-project-pr-final/SKILL.md'),
+      readRepoFile('.agents/skills/oat-project-summary/SKILL.md'),
+      readRepoFile('.agents/skills/oat-project-document/SKILL.md'),
+    ]);
+    const closeoutStep = closeout.slice(
+      closeout.indexOf('### Step 15: Final HiLL Closeout Sequence'),
+      closeout.indexOf('### Step 16:'),
+    );
+    const nextFinalRoutes = next.slice(
+      next.indexOf('**5.4: Final code review not passed**'),
+      next.indexOf('### Step 6:'),
+    );
+    const prSummary = prFinal.slice(
+      prFinal.indexOf('**Step 3.0: Check for summary.md**'),
+      prFinal.indexOf('**Step 3.1:'),
+    );
+    const closeoutContract = closeoutStep.match(
+      /# BEGIN LITE CLOSEOUT RESOLUTION CONTRACT\n([\s\S]*?)# END LITE CLOSEOUT RESOLUTION CONTRACT/,
+    )?.[1];
+    const prContract = prSummary.match(
+      /# BEGIN LITE PR SUMMARY ROUTE CONTRACT\n([\s\S]*?)# END LITE PR SUMMARY ROUTE CONTRACT/,
+    )?.[1];
+
+    expect(closeoutStep).toMatch(
+      /lite[\s\S]{0,500}workflow\.postImplementSequence\.lite\.preApproval/i,
+    );
+    expect(closeoutStep).toMatch(
+      /generic[\s\S]{0,160}workflow\.postImplementSequence[\s\S]{0,220}not[\s\S]{0,120}opt-in/i,
+    );
+    expect(closeoutStep).toMatch(
+      /default[\s\S]{0,120}`\[pr\]`[\s\S]{0,300}`\[summary, pr\]`[\s\S]{0,120}unchanged/i,
+    );
+    expect(closeoutStep).toMatch(/lite[\s\S]{0,500}never[\s\S]{0,80}`retro`/i);
+    expect(nextFinalRoutes).toMatch(
+      /oat_workflow_mode[\s\S]{0,120}lite[\s\S]{0,220}oat-project-pr-final/i,
+    );
+    expect(nextFinalRoutes.indexOf('oat_workflow_mode: lite')).toBeLessThan(
+      nextFinalRoutes.indexOf('**5.5: Summary not done**'),
+    );
+    expect(prSummary).toMatch(
+      /lite[\s\S]{0,120}do not[\s\S]{0,120}summary\.md/i,
+    );
+    expect(prSummary).toMatch(
+      /plan\.md[\s\S]{0,240}Summary[\s\S]{0,160}Decisions[\s\S]{0,160}Validation Criteria/i,
+    );
+    expect(prSummary).toMatch(
+      /implementation\.md[\s\S]{0,180}Final Summary[\s\S]{0,180}reduced assurance/i,
+    );
+    expect(closeoutContract).toBeDefined();
+    expect(prContract).toBeDefined();
+
+    const config = JSON.parse(await readRepoFile('.oat/config.json')) as {
+      workflow: {
+        postImplementSequence: {
+          preApproval: string[];
+          postApproval: string[];
+        };
+      };
+    };
+    expect(config.workflow.postImplementSequence.preApproval).toEqual([
+      'summary',
+      'document',
+      'pr',
+    ]);
+
+    const runCloseout = async (litePreApproval = '') => {
+      const { stdout } = await execFileAsync(
+        '/bin/bash',
+        [
+          '-c',
+          `${closeoutContract}\nprintf 'pre=%s\\npost=%s\\napproval=%s\\nrecap=%s\\norder=%s\\n' "${'${PRE_APPROVAL[*]}'}" "${'${POST_APPROVAL[*]}'}" "$APPROVAL" "$PROJECT_RECAP_REACHABLE" "${'${ORDERED_CLOSEOUT[*]}'}"`,
+        ],
+        {
+          env: {
+            ...process.env,
+            WORKFLOW_MODE: 'lite',
+            GENERIC_PRE_APPROVAL:
+              config.workflow.postImplementSequence.preApproval.join(' '),
+            GENERIC_POST_APPROVAL: 'retro',
+            LITE_PRE_APPROVAL: litePreApproval,
+            OAT_PLAN_HILL_PHASES: '[]',
+            OAT_AUTONOMOUS: '1',
+            PHASE_REVIEW_STATUS: 'passed',
+            FINAL_REVIEW_STATUS: 'passed',
+          },
+        },
+      );
+      return stdout;
+    };
+
+    expect(await runCloseout()).toContain(
+      'pre=pr\npost=\napproval=not_required',
+    );
+    expect(await runCloseout()).toContain(
+      'recap=false\norder=phase-review final-review pr complete',
+    );
+    expect(await runCloseout('summary pr')).toContain(
+      'pre=summary pr\npost=\napproval=not_required',
+    );
+    expect(await runCloseout('summary pr')).toContain(
+      'recap=false\norder=phase-review final-review summary pr complete',
+    );
+    expect(await runCloseout('summary retro pr')).not.toContain('retro');
+    await expect(
+      execFileAsync('/bin/bash', ['-c', closeoutContract ?? 'exit 1'], {
+        env: {
+          ...process.env,
+          WORKFLOW_MODE: 'lite',
+          PHASE_REVIEW_STATUS: 'passed',
+          FINAL_REVIEW_STATUS: 'pending',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 65 });
+
+    const { stdout: prRoute } = await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${prContract}\nprintf 'strategy=%s\\ngeneric=%s\\n' "$PR_SUMMARY_STRATEGY" "$GENERIC_SUMMARY_REACHABLE"`,
+      ],
+      { env: { ...process.env, WORKFLOW_MODE: 'lite' } },
+    );
+    expect(prRoute).toContain('strategy=lite-artifacts');
+    expect(prRoute).toContain('generic=false');
+
+    const neutralizedCloseout = closeoutContract?.replace(
+      '[ "$WORKFLOW_MODE" = "lite" ]',
+      '[ "$WORKFLOW_MODE" = "__neutralized__" ]',
+    );
+    const { stdout: rejectedCloseout } = await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${neutralizedCloseout}\nprintf 'pre=%s|approval=%s' "${'${PRE_APPROVAL[*]}'}" "$APPROVAL"`,
+      ],
+      { env: { ...process.env, WORKFLOW_MODE: 'lite' } },
+    );
+    expect(rejectedCloseout).not.toBe('pre=pr|approval=not_required');
+
+    const neutralizedPr = prContract?.replace(
+      '[ "$WORKFLOW_MODE" = "lite" ]',
+      '[ "$WORKFLOW_MODE" = "__neutralized__" ]',
+    );
+    const { stdout: rejectedPr } = await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${neutralizedPr}\nprintf 'strategy=%s|generic=%s' "$PR_SUMMARY_STRATEGY" "$GENERIC_SUMMARY_REACHABLE"`,
+      ],
+      { env: { ...process.env, WORKFLOW_MODE: 'lite' } },
+    );
+    expect(rejectedPr).toBe('strategy=summary-md|generic=true');
+
+    for (const [name, content] of [
+      ['summary', summary],
+      ['document', document],
+    ] as const) {
+      expect(content, name).toMatch(
+        /lite[\s\S]{0,500}Summary[\s\S]{0,180}Decisions[\s\S]{0,180}Assumptions[\s\S]{0,180}Out of Scope[\s\S]{0,180}Validation Criteria/i,
+      );
+      expect(content, name).toMatch(
+        /implementation\.md[\s\S]{0,220}(?:shipped results|what actually shipped)/i,
+      );
+      expect(content, name).toMatch(
+        /discovery\.md[\s\S]{0,120}spec\.md[\s\S]{0,120}design\.md[\s\S]{0,160}absent/i,
+      );
+    }
+    const liteSummarySources = summary.slice(
+      summary.indexOf('**Lite section sources:**'),
+      summary.indexOf('**Non-lite section sources:**'),
+    );
+    for (const source of [
+      'Summary',
+      'Decisions',
+      'Assumptions',
+      'Out of Scope',
+      'Validation Criteria',
+      'implementation.md',
+    ]) {
+      expect(liteSummarySources).toContain(source);
+    }
+    expect(liteSummarySources).not.toMatch(/discovery\.md|spec\.md|design\.md/);
+    expect(liteSummarySources.replace('`Assumptions`', '')).not.toContain(
+      '`Assumptions`',
+    );
+    expect(summary.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.2');
+    expect(document.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.8.2');
+  });
+
+  it('routes lite projects through progress and next', async () => {
+    const [progress, next, planWriting] = await Promise.all([
+      readRepoFile('.agents/skills/oat-project-progress/SKILL.md'),
+      readRepoFile('.agents/skills/oat-project-next/SKILL.md'),
+      readRepoFile('.agents/skills/oat-project-plan-writing/SKILL.md'),
+    ]);
+
+    const progressLite = progress.slice(
+      progress.indexOf('**Lite mode (`oat_workflow_mode: lite`):**'),
+    );
+    const nextLite = next.slice(
+      next.indexOf('**Lite Mode:**'),
+      next.indexOf('### Step 4:'),
+    );
+
+    expect(progressLite).toContain('`oat-project-lite`');
+    expect(nextLite).toContain('`oat-project-lite`');
+    expect(progress).toMatch(
+      /Start a new project[\s\S]{0,500}oat-project-lite/,
+    );
+    expect(progress).toMatch(/Workflow:[\s\S]{0,500}oat-project-lite/);
+    expect(next).toMatch(
+      /projects` array is empty[\s\S]{0,500}oat-project-lite/,
+    );
+    expect(planWriting).toMatch(
+      /plan-producing workflows[\s\S]{0,240}lite planning/i,
+    );
+    expect(planWriting).toContain(
+      'oat_plan_source: spec-driven | quick | imported | lite',
+    );
+  });
+
+  it('makes reviewer and implementer contracts mode-aware for lite', async () => {
+    const [reviewer, implementer, phaseExecution] = await Promise.all([
+      readRepoFile('.agents/agents/oat-reviewer.md'),
+      readRepoFile('.agents/agents/oat-phase-implementer.md'),
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/phase-execution.md',
+      ),
+    ]);
+
+    expect(reviewer).toContain('`spec-driven` | `quick` | `import` | `lite`');
+    expect(reviewer).toMatch(
+      /\*\*lite\*\*:[\s\S]{0,260}`plan\.md`[\s\S]{0,260}absent by design/i,
+    );
+    for (const section of [
+      'Summary',
+      'Decisions',
+      'Assumptions',
+      'Out of Scope',
+      'Validation Criteria',
+    ]) {
+      expect(reviewer).toMatch(
+        new RegExp(`lite[^\\n]*${section}|${section}[^\\n]*lite`, 'i'),
+      );
+    }
+    expect(reviewer).toMatch(
+      /Product Behavior and\/or\s+Technical Design[\s\S]{0,180}minimal[\s\S]{0,120}product[\s\S]{0,120}technical[\s\S]{0,120}both/i,
+    );
+    expect(implementer).toMatch(
+      /`lite`: read the whole plan\.md requirements contract:[\s\S]{0,200}Summary, Decisions, Assumptions, Out of Scope, and Validation[\s\S]{0,40}Criteria/i,
+    );
+    expect(implementer).toContain(
+      '`spec-driven`, `quick`, `import`, or `lite`',
+    );
+    expect(implementer).toMatch(
+      /`lite`: read the whole plan\.md requirements contract: the assigned phase/i,
+    );
+    expect(implementer).toMatch(
+      /Product Behavior and\/or Technical Design selected by its[\s\S]{0,120}`minimal`, `product`, `technical`, or `both`/i,
+    );
+    expect(phaseExecution).toContain(
+      'workflow_mode: {spec-driven|quick|import|lite}',
+    );
+  });
+
+  it('makes Lite proof strategy proportionate to observable risk', async () => {
+    const [
+      lite,
+      reviewer,
+      implementer,
+      implementWorkflow,
+      phaseExecution,
+      autonomy,
+      template,
+    ] = await Promise.all([
+      readRepoFile('.agents/skills/oat-project-lite/SKILL.md'),
+      readRepoFile('.agents/agents/oat-reviewer.md'),
+      readRepoFile('.agents/agents/oat-phase-implementer.md'),
+      readRepoFile('.agents/skills/oat-project-implement/SKILL.md'),
+      readRepoFile(
+        '.agents/skills/oat-project-implement/references/phase-execution.md',
+      ),
+      readRepoFile('.agents/docs/autonomy-contract.md'),
+      readRepoFile('.oat/templates/plan-lite.md'),
+    ]);
+
+    expect(template).toContain('**Implementation and Proof Strategy:**');
+    expect(template).toMatch(
+      /Strategy:[\s\S]{0,180}Observable risk:[\s\S]{0,180}Why proportionate:/i,
+    );
+    expect(template).not.toMatch(/Write test \(RED\)|Implement \(GREEN\)/i);
+    expect(lite).toMatch(
+      /Every behavioral change has at least one proof that fails without the change/i,
+    );
+    expect(lite).toMatch(
+      /Static or build checks alone are sufficient only when the change cannot alter\s+runtime behavior/i,
+    );
+    expect(lite).toMatch(/bug fix preserves a pre-fix reproduction/i);
+    expect(lite).toMatch(/user-interface change requires visual proof/i);
+    expect(lite).toMatch(/Deletions require a negative search/i);
+    expect(reviewer).toMatch(
+      /evidence matches the declared strategy[\s\S]{0,160}capable of failing when the claim is false/i,
+    );
+    expect(reviewer).toMatch(/absence of an automated\s+test alone is not/i);
+    expect(implementer).toMatch(
+      /declared implementation and proof strategy without[\s\S]{0,80}silently substituting TDD/i,
+    );
+    expect(autonomy).toMatch(
+      /^\| IMPLEMENT-20\s+\|\s+`oat-project-implement`[\s\S]*computer-use capability[\s\S]*explicit proof boundary[\s\S]*deferred-but-verified/m,
+    );
+    expect(implementWorkflow).toMatch(
+      /manual\/visual proof[\s\S]{0,80}`IMPLEMENT-20`[\s\S]{0,80}phase-execution\.md/i,
+    );
+    for (const executor of [phaseExecution, implementer]) {
+      expect(executor).toMatch(/effective runtime tool\s+catalog/i);
+      expect(executor).toMatch(/computer-use capability/i);
+      expect(executor).toContain('`IMPLEMENT-20 unverified proof boundary`');
+      expect(executor).toMatch(
+        /before\s+committing\s+the\s+task\s+or\s+marking\s+the\s+task\s+or\s+phase\s+complete/i,
+      );
+      expect(executor).toMatch(/deferred-but-verified/i);
+    }
+    expect(implementWorkflow.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe(
+      '2.3.5',
+    );
+    expect(implementer.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.4');
+  });
+
+  it('keeps lite review and PR prerequisites reduced but explicit', async () => {
+    const [review, prFinal, prProgress] = await Promise.all([
+      readRepoFile('.agents/skills/oat-project-review-provide/SKILL.md'),
+      readRepoFile('.agents/skills/oat-project-pr-final/SKILL.md'),
+      readRepoFile('.agents/skills/oat-project-pr-progress/SKILL.md'),
+    ]);
+
+    expect(review).toMatch(
+      /Required for code review[\s\S]{0,800}`lite`:[^\n]*`plan\.md`[^\n]*`implementation\.md`/i,
+    );
+    expect(review).toMatch(
+      /reviewing `plan` in `lite` mode requires only `plan\.md`/i,
+    );
+    expect(review).toContain('- Workflow mode: {WORKFLOW_MODE}');
+    expect(review).toMatch(
+      /lite[\s\S]{0,500}Summary[\s\S]{0,300}Decisions[\s\S]{0,300}Assumptions[\s\S]{0,300}Out of Scope[\s\S]{0,300}Validation Criteria/i,
+    );
+    expect(prFinal).toMatch(/lite[\s\S]{0,260}reduced assurance/i);
+    expect(prProgress).toContain(
+      'Summary, Decisions, Assumptions, Out of Scope, and Validation Criteria in plan.md for lite',
+    );
+  });
+
+  it('folds lite brainstorm updates into plan.md only', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-brainstorm/SKILL.md',
+    );
+    const contract = content.match(
+      /# BEGIN LITE FOLD-BACK CONTRACT\n([\s\S]*?)# END LITE FOLD-BACK CONTRACT/,
+    )?.[1];
+    const promotionContract = content.match(
+      /# BEGIN LITE PROJECT PROMOTION CONTRACT\n([\s\S]*?)# END LITE PROJECT PROMOTION CONTRACT/,
+    )?.[1];
+    expect(contract).toBeDefined();
+    expect(promotionContract).toBeDefined();
+    expect(content).toMatch(
+      /\| lite\s+\| none \/ closed\s+\| `oat-project-lite`/,
+    );
+    expect(contract).toContain('ARTIFACT_PATH="$ACTIVE_PROJECT/plan.md"');
+    expect(content).toContain('## Brainstorming Update');
+
+    const root = await mkdtemp(join(tmpdir(), 'oat-lite-fold-back-'));
+    tempDirs.push(root);
+    await writeFile(join(root, 'plan.md'), '# Plan\n\n## Phase 1\n', 'utf8');
+    await writeFile(
+      join(root, 'state.md'),
+      'oat_workflow_mode: lite\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, 'implementation.md'),
+      '# Implementation\n',
+      'utf8',
+    );
+    await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${contract}\nprintf '\\n## Brainstorming Update\\n\\nA bounded update.\\n' >> "$ARTIFACT_PATH"`,
+      ],
+      {
+        env: {
+          ...process.env,
+          ACTIVE_PROJECT: root,
+          ACTIVE_PROJECT_MODE: 'lite',
+        },
+      },
+    );
+
+    expect(await readFile(join(root, 'plan.md'), 'utf8')).toContain(
+      '## Brainstorming Update',
+    );
+    await expect(
+      readFile(join(root, 'discovery.md'), 'utf8'),
+    ).rejects.toThrow();
+
+    const promotedRoot = await mkdtemp(join(tmpdir(), 'oat-lite-promotion-'));
+    tempDirs.push(promotedRoot);
+    const { stdout: promotion } = await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${promotionContract}\nprintf 'next=%s\\nplan=%s\\n' "$NEXT_SKILL" "$LITE_PLAN_PATH"`,
+      ],
+      {
+        env: {
+          ...process.env,
+          PROMOTION_MODE: 'lite',
+          PROMOTED_PROJECT: promotedRoot,
+        },
+      },
+    );
+    expect(promotion).toContain('next=oat-project-lite');
+    expect(promotion).toContain(`plan=${join(promotedRoot, 'plan.md')}`);
+    expect(await readFile(join(promotedRoot, 'plan.md'), 'utf8')).toContain(
+      '## Validation Criteria',
+    );
+    await expect(
+      readFile(join(promotedRoot, 'discovery.md'), 'utf8'),
+    ).rejects.toThrow();
+
+    await writeFile(join(promotedRoot, 'plan.md'), 'preserved plan\n', 'utf8');
+    await execFileAsync('/bin/bash', ['-c', promotionContract ?? 'exit 1'], {
+      env: {
+        ...process.env,
+        PROMOTION_MODE: 'lite',
+        PROMOTED_PROJECT: promotedRoot,
+      },
+    });
+    expect(await readFile(join(promotedRoot, 'plan.md'), 'utf8')).toBe(
+      'preserved plan\n',
+    );
+
+    const neutralizedPromotion = promotionContract?.replace(
+      '[ "$PROMOTION_MODE" = "lite" ]',
+      '[ "$PROMOTION_MODE" = "__neutralized__" ]',
+    );
+    const rejectedRoot = await mkdtemp(join(tmpdir(), 'oat-lite-rejected-'));
+    tempDirs.push(rejectedRoot);
+    const { stdout: rejectedPromotion } = await execFileAsync(
+      '/bin/bash',
+      ['-c', `${neutralizedPromotion}\nprintf 'next=%s' "$NEXT_SKILL"`],
+      {
+        env: {
+          ...process.env,
+          PROMOTION_MODE: 'lite',
+          PROMOTED_PROJECT: rejectedRoot,
+        },
+      },
+    );
+    expect(rejectedPromotion).not.toBe('next=oat-project-lite');
+    await expect(
+      readFile(join(rejectedRoot, 'plan.md'), 'utf8'),
+    ).rejects.toThrow();
+  });
+
+  it('exposes lite from every declared project-entry surface', async () => {
+    const checks = [
+      [
+        '.agents/skills/oat-docs/SKILL.md',
+        /three main approaches[\s\S]{0,800}lite/i,
+      ],
+      [
+        '.agents/skills/oat-project-capture/SKILL.md',
+        /started any work[\s\S]{0,180}oat-project-lite/i,
+      ],
+      [
+        '.agents/skills/oat-pjm-review-backlog/SKILL.md',
+        /recommended project mode[^\n]*oat-project-lite/i,
+      ],
+      [
+        '.agents/skills/oat-project-discover/SKILL.md',
+        /no active project[^\n]*oat-project-lite/i,
+      ],
+    ] as const;
+
+    for (const [path, pattern] of checks) {
+      expect(await readRepoFile(path), path).toMatch(pattern);
+    }
+
+    const autonomous = await readRepoFile(
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+    );
+    const persistedLiteResumeFixture = [
+      'oat_workflow_mode: lite',
+      'oat_phase: plan',
+      'oat_phase_status: in_progress',
+      'oat_ready_for: null',
+    ].join('\n');
+    const persistedState = Object.fromEntries(
+      persistedLiteResumeFixture
+        .split('\n')
+        .map((line) => line.split(/:\s*/, 2)),
+    );
+    const routeTable = autonomous.slice(
+      autonomous.indexOf('| Persisted state'),
+      autonomous.indexOf('### Step 2:'),
+    );
+    const liteResumeRoute = routeTable.match(
+      /\| Lite plan incomplete\s+\| `([^`]+)`/,
+    )?.[1];
+    const resolvedResumeRoute =
+      persistedState.oat_workflow_mode === 'lite' &&
+      persistedState.oat_phase === 'plan' &&
+      persistedState.oat_phase_status === 'in_progress'
+        ? liteResumeRoute
+        : undefined;
+    expect(resolvedResumeRoute).toBe('oat-project-lite');
+    const neutralizedState = {
+      ...persistedState,
+      oat_workflow_mode: 'quick',
+    };
+    expect(
+      neutralizedState.oat_workflow_mode === 'lite' &&
+        neutralizedState.oat_phase === 'plan' &&
+        neutralizedState.oat_phase_status === 'in_progress'
+        ? liteResumeRoute
+        : undefined,
+    ).toBeUndefined();
+    expect(autonomous).toMatch(/Lite:[\s\S]{0,220}single-sitting/i);
+    expect(autonomous).toMatch(/Lite plan incomplete[^\n]*`oat-project-lite`/);
+    expect(autonomous).toContain('Workflow mode: {lite | quick | spec-driven}');
+    expect(autonomous).not.toMatch(
+      /ALLOWED Activities[\s\S]*Selecting quick or spec-driven/,
+    );
+    expect(autonomous).not.toMatch(
+      /Success Criteria[\s\S]*Quick\/spec-driven selection/,
+    );
+  });
+
+  it('guards workflow-mode inventories against omitting lite', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillRoot = join(repoRoot, '.agents', 'skills');
+    const agentRoot = join(repoRoot, '.agents', 'agents');
+    const files = [
+      ...(await readdir(skillRoot, { withFileTypes: true }))
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => join(skillRoot, entry.name, 'SKILL.md')),
+      ...(await readdir(agentRoot, { withFileTypes: true }))
+        .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+        .map((entry) => join(agentRoot, entry.name)),
+    ];
+    const inventoryPatterns = [
+      /quick\s+(?:or|vs\.?|versus|compared (?:with|to))\s+spec-driven/i,
+      /spec-driven\s+(?:or|vs\.?|versus|compared (?:with|to))\s+quick/i,
+      /quick\/import/i,
+      /oat-project-quick-start.*oat-project-new|oat-project-new.*oat-project-quick-start/i,
+    ];
+    for (const survivor of [
+      'quick vs spec-driven',
+      'spec-driven versus quick',
+      'quick compared with spec-driven',
+    ]) {
+      expect(inventoryPatterns.some((pattern) => pattern.test(survivor))).toBe(
+        true,
+      );
+    }
+    const allowlist = [
+      'reviewing `design` in `quick/import` mode requires only `discovery.md`',
+      'oat_workflow_mode: quick` or `oat_workflow_mode: import',
+      'Convert a quick/import workflow project into a Spec-Driven OAT lifecycle project',
+    ];
+    const violations: string[] = [];
+
+    for (const file of files) {
+      const content = await readFile(file, 'utf8');
+      for (const [index, line] of content.split('\n').entries()) {
+        if (
+          inventoryPatterns.some((pattern) => pattern.test(line)) &&
+          !/lite|oat-project-lite/i.test(line) &&
+          !allowlist.some((allowed) => line.includes(allowed))
+        ) {
+          violations.push(`${file}:${index + 1}:${line}`);
+        }
+      }
+    }
+
+    expect(violations).toEqual([]);
   });
 });
 

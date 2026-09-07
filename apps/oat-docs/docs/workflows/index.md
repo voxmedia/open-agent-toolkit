@@ -44,6 +44,7 @@ Stay with direct CLI usage when:
 ## Workflow Modes In Practice
 
 - CLI only: direct commands, no tracked project artifacts
+- Lite mode: a batched interview and one approval produce a single-phase `plan.md` for a single-sitting change
 - Quick mode: tracked work with a lighter upfront planning path
 - Spec-driven mode: explicit discovery, requirements, design, and plan artifacts
 - Import mode: an externally-authored plan imported into OAT for tracked execution

@@ -15,6 +15,21 @@ optional bounded child for beneficial recon, isolated fanout, or specialist
 work under the shared dispatch contract. The phase implementer remains
 responsible for file boundaries, verification, and task commits.
 
+#### Required Manual or Visual Proof Boundary
+
+Before committing a task that declares required manual or visual proof, the
+active phase executor must inspect its effective runtime tool catalog for an
+available computer-use capability. Do not infer availability from planning
+prose, configuration, or another agent's tools. Use available computer-use for
+required visual proof and record the observed result.
+
+When `OAT_AUTONOMOUS=1` and no autonomous executor can perform the required
+manual or visual criterion, return `BLOCKED` with an explicit
+`IMPLEMENT-20 unverified proof boundary`. Name the criterion and missing
+capability, and stop before committing the task or marking the task or phase
+complete. Never mark unavailable proof deferred-but-verified. Outside autonomy,
+stop at the same proof boundary for operator execution.
+
 #### Resolve and Dispatch the Phase Implementer
 
 Before each phase:
@@ -54,7 +69,7 @@ Before each phase:
      spec: {PROJECT_PATH}/spec.md
      implementation: {PROJECT_PATH}/implementation.md
      discovery: {PROJECT_PATH}/discovery.md
-   workflow_mode: {spec-driven|quick|import}
+   workflow_mode: {spec-driven|quick|import|lite} # lite is always a single phase
    active_provider: {codex|claude|cursor|other}
    phase_base_head: {PHASE_BASE_HEAD}
    worktree: {assigned checkout}

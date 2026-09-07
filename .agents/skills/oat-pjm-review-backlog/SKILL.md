@@ -1,6 +1,6 @@
 ---
 name: oat-pjm-review-backlog
-version: 1.6.0
+version: 1.6.1
 description: Use when prioritizing the file-backed repo backlog or evaluating roadmap alignment. Produces value-effort ratings, dependency mapping, execution recommendations, and an optional external-plan handoff.
 argument-hint: '[backlog-root] [--roadmap=<path>] [--output=<path>]'
 disable-model-invocation: true
@@ -255,7 +255,7 @@ This step mirrors the **Project Kickoff Handoffs** section of the pjm instructio
 **For each item in the agreed kickoff stack**, write or refresh `.oat/repo/pjm/handoffs/<BL-id>.md` with:
 
 - the backlog item reference — its ID **and** human-readable title **and** path (never a bare ID);
-- the recommended project mode (`oat-project-quick-start` vs `oat-project-new`), including which artifacts (spec/design/plan) to pre-populate from existing research when it exists;
+- the recommended project mode (`oat-project-lite` for single-sitting work, `oat-project-quick-start` for quick work, or `oat-project-new` for spec-driven work), including which artifacts (spec/design/plan) to pre-populate from existing research when it exists;
 - authoritative input pointers (research directories, decision records, code paths);
 - repo conventions and verification gates the item file does not restate;
 - a close-out section requiring (a) the **Backlog Lifecycle** — `oat backlog archive <id>` — executed in the same PR that ships the item, and (b) deletion of the handoff file (`git rm`) in that same PR.

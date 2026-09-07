@@ -62,8 +62,8 @@ A valid command is stored byte-for-byte. `oat gate resolve` returns that exact
 string, and the lifecycle executes it unchanged; OAT does not inject, reorder,
 or rewrite its shell arguments.
 
-`oat-project-plan`, `oat-project-implement`, `oat-project-quick-start`, and
-`oat-project-import-plan` are currently gate-aware. Gate awareness is declared
+`oat-project-plan`, `oat-project-implement`, `oat-project-quick-start`,
+`oat-project-lite`, and `oat-project-import-plan` are currently gate-aware. Gate awareness is declared
 in skill frontmatter with `oat_gateable: true`, and
 `oat internal validate-oat-skills` warns when config targets a missing or
 non-gateable skill.
@@ -610,7 +610,7 @@ oat gate set oat-project-implement \
 ```
 
 Apply the same command shape to `oat-project-plan`,
-`oat-project-quick-start`, and `oat-project-import-plan` when those lifecycle
+`oat-project-quick-start`, `oat-project-lite`, and `oat-project-import-plan` when those lifecycle
 skills have configured review gates. Do not add `--target`; explicit targets
 remain manual/debug or deliberate local/user-specific overrides.
 

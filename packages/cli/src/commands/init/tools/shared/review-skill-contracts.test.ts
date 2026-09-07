@@ -99,7 +99,7 @@ describe('review skill contracts', () => {
     const templateEnd = content.indexOf('````', templateStart + 4);
     const nextStep = content.indexOf('## Recommended Next Step');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.2');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );
@@ -343,6 +343,34 @@ printf 'artifact-read\\n'`,
     );
     expect(content).toContain(
       'For contiguous phase-range scopes (`pNN-pMM`), aggregate commit matches for each phase in the inclusive range',
+    );
+  });
+
+  it('passes explicit lite review scope for artifact-plan and code-final reviews', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const validation = content.slice(
+      content.indexOf('### Step 2: Validate Artifacts Exist (Mode-Aware)'),
+      content.indexOf('### Step 3: Determine Scope and Commits'),
+    );
+    const scope = content.slice(
+      content.indexOf('Build the "Review Scope" metadata for the reviewer:'),
+      content.indexOf('### Step 6:'),
+    );
+
+    expect(content).toContain(
+      'reviewing `design` in `quick/import` mode requires only `discovery.md`',
+    );
+    expect(validation).toMatch(
+      /`lite`:[^\n]*`plan\.md`[^\n]*`implementation\.md`/,
+    );
+    expect(validation).toMatch(
+      /reviewing `plan` in `lite` mode requires only `plan\.md`/,
+    );
+    expect(scope).toContain('- Workflow mode: {WORKFLOW_MODE}');
+    expect(scope).toMatch(
+      /lite[\s\S]{0,500}Discovery: not required[\s\S]{0,300}Spec: not required[\s\S]{0,300}Design: not required[\s\S]{0,300}Import reference: not required/i,
     );
   });
 

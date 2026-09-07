@@ -1,0 +1,96 @@
+{
+  "request_id": "db708ad8-cd34-4116-a84e-fa24e5d77846",
+  "caller": "oat-project-implement",
+  "scope": "p-rev1",
+  "objective": "Implement the approved Lite plan revision for adaptive specification depth and risk-proportionate proof",
+  "action": "implementation",
+  "role_name": "oat-phase-implementer",
+  "role_class": "worker",
+  "provider": "codex",
+  "dispatch_context": "root-native",
+  "dispatch_policy": "high",
+  "dispatch_ceiling": "high",
+  "catalog_snapshot": {
+    "id": "codex-native-implementation-20260906T155329Z",
+    "source": "tool-schema",
+    "observed_at": "2026-09-06T15:53:29Z"
+  },
+  "authority": "phase-implementation",
+  "role_selector": "oat-phase-implementer-gpt-5-6-sol-medium",
+  "model_selector": "gpt-5.6-sol",
+  "model_selector_granularity": "materialized-role",
+  "effort_selector": "medium",
+  "reasoning_mode_selector": null,
+  "service_tier_selector": null,
+  "guidance_reference": "subagent-orchestration/references/provider-codex.md",
+  "guidance_version": "2026-07-25",
+  "guidance_verified_at": "2026-07-25",
+  "guidance_status": "fresh",
+  "selection_source": "native-default",
+  "candidates_considered": ["oat-phase-implementer-gpt-5-6-sol-medium"],
+  "selection_reason": "native-catalog",
+  "selected_route": "native",
+  "deadline_seconds": 7200,
+  "retry_limit": 0,
+  "payload": {
+    "mode": "implementation",
+    "phase": "p-rev1",
+    "phase_base_head": "f1b478c59d66addbd983009082301b5982e48674",
+    "expected_base_sha": "f1b478c59d66addbd983009082301b5982e48674",
+    "tasks": ["prev1-t01", "prev1-t02"],
+    "worktree": "root",
+    "fork_turns": "none"
+  },
+  "launch_status": "accepted",
+  "child_outcome": "pending",
+  "configured_invocation_evidence": [
+    "dispatch-report-v1:p-rev1",
+    "native-spawn-accepted",
+    "canonical-role:project",
+    "project-policy:managed-high"
+  ],
+  "runtime_confirmation": "not-reported",
+  "diagnostics": [],
+  "continuation_events": [],
+  "fallback": {
+    "mode": "block",
+    "allow_below_task_class_floor": false
+  },
+  "task_class": "default-implementation",
+  "model_class_floor": "default-implementation",
+  "classification_source": "caller",
+  "classification_reason": "Two bounded multi-surface contract changes require coherent edits across templates, agents, promotion behavior, docs, and existing tests; requirements and mappings are explicit.",
+  "floor_satisfaction": "satisfied",
+  "authorization_scope": "lite-workflow-mode-p-rev1",
+  "expected_output": "Two verified task commits implementing adaptive Lite specification shapes and proportionate proof guidance, plus a clean phase report.",
+  "verification_evidence": "Declared focused Vitest suites, skill validation, lint, format, check, skill-bump gate, exact task commit boundaries, and clean worktree.",
+  "escalate_when": [
+    "Implementation requires scope outside the two approved revision tasks.",
+    "The shared worktree changes unexpectedly or is not based on the recorded SHA.",
+    "Declared verification cannot establish correctness."
+  ],
+  "oat": {
+    "schemaVersion": 1,
+    "canonicalRole": {
+      "status": "resolved",
+      "dependency": "workflows",
+      "canonicalRole": "oat-phase-implementer",
+      "tier": "project",
+      "validation": "direct-canonical",
+      "canonicalPath": "<project>/agents/oat-phase-implementer.md",
+      "selectedPath": "<project>/agents/oat-phase-implementer.md",
+      "roleVersion": "1.1.2",
+      "contentDigest": "sha256:b433b34602d8b3f619626486edf8c986d114bf20b393e1bc41fbad0e6ff5d62c",
+      "candidateMisses": []
+    },
+    "preStartRejection": null,
+    "fallbackClaim": null,
+    "fallback": {
+      "status": "not-applicable",
+      "reason": "No fallback recorded."
+    },
+    "runtimeObservation": {
+      "status": "not-reported"
+    }
+  }
+}

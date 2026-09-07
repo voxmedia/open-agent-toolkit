@@ -1,6 +1,6 @@
 ---
 title: Lifecycle
-description: 'End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.'
+description: 'End-to-end phase flow from discovery through completion: spec-driven, quick, lite, and import paths.'
 ---
 
 # Lifecycle
@@ -27,9 +27,9 @@ Full spec-driven design supports three interaction modes: collaborative, selecti
 
 ## Quick Look
 
-- What it does: explains the end-to-end lifecycle for tracked OAT projects, including alternate quick and import lanes.
+- What it does: explains the end-to-end lifecycle for tracked OAT projects, including alternate quick, lite, and import lanes.
 - When to use it: when you need the actual project execution model, not just a high-level overview of workflow mode.
-- Primary entry points: `oat-project-new`, `oat-project-quick-start`, `oat-project-import-plan`, `oat-project-implement`
+- Primary entry points: `oat-project-new`, `oat-project-quick-start`, `oat-project-lite`, `oat-project-import-plan`, `oat-project-implement`
 
 ## Lifecycle Map
 
@@ -41,6 +41,10 @@ flowchart LR
   PR --> DOC["Docs sync (optional)"]
   DOC --> C["Complete"]
 ```
+
+This map shows the spec-driven default. The quick, lite, import, and capture
+lanes each skip part of it — see [Lane diagrams](#lane-diagrams) below. Lite in
+particular has no discovery, spec, or design step at all.
 
 ## Post-implementation flow
 
@@ -72,6 +76,37 @@ After implementation closeout finishes:
    - Review artifacts delegate to `oat-project-review-receive`
    - After revision tasks complete, state returns to `pr_open`
 5. **Complete** (`oat-project-complete`) — accepts any phase status (`pr_open`, `complete`, `in_progress`), auto-refreshes `summary.md` before closeout when needed, and archives when selected by the workflow preference or completion prompt
+
+### Project-recap gate (non-lite)
+
+The final-closeout orchestrator owns one project-recap gate. It runs after the
+final code review has passed and after any configured pre-approval summary and
+documentation steps, but before final HiLL approval. It neither replaces nor
+repeats the final review, and the stored order of the other pre-approval steps
+is preserved.
+
+Recap intent resolves through `oat-explainer-kit`. A fresh `project-recap`
+manifest for the current completed implementation is reused rather than
+regenerated — fresh means it names recipe `project-recap`, belongs to this
+project, has a terminal outcome, and its recorded source hashes match the
+current approved inputs. A present-but-incomplete, wrong-recipe, or stale
+manifest does not qualify.
+
+Recap outcomes are reported, not blocking: `failed` and `built-not-durable` are
+recorded as warnings and never block final approval, completion reporting, or
+later PR steps. The selected or attempted outcome and run path are included in
+the implementation completion report, and `summary.md` carries a single
+`Explainer Outcome` section when it exists.
+
+**Lite skips this gate entirely.** Lite sets `PROJECT_RECAP_REACHABLE=false` and
+does not resolve recap intent, inspect recap runs, invoke `oat-explainer-kit`,
+or run the terminal-outcome guard. It proceeds from the required reviews through
+its stored optional steps to `pr` and sequence completion.
+
+Lite mode collapses the default pre-approval sequence to PR creation only.
+`oat-project-pr-final` builds the body directly from the lite plan and
+`implementation.md`; summary and documentation remain explicit lite opt-ins,
+and retro is not added to the lite closeout sequence.
 
 ### Completion archive behavior
 
@@ -167,7 +202,9 @@ When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter 
 ### Phase-review setup during planning
 
 Spec-driven, quick, and import planning run one shared setup after stable phase
-IDs exist and before the plan artifact review. The target probe qualifies only
+IDs exist and before the plan artifact review. Lite omits this planning-time
+setup and prompt, while its built-in implementation phase and final reviews
+remain required. The target probe qualifies only
 an explicitly configured, enabled, and available review target, then offers all
 phases, selected phases, or disabled. Existing explicit
 `oat_phase_review_gate` values are preserved unchanged without re-prompting.
@@ -213,6 +250,13 @@ See [Implementation Execution](implementation-execution.md) for the full executi
 3. Implement: `oat-project-implement` (sequential by default; parallel when `oat_plan_parallel_groups` is declared)
 4. `oat-project-review-provide` / `oat-project-pr-final`
 5. Optional `oat-project-promote-spec-driven` to backfill spec-driven lifecycle artifacts in-place
+
+### Lite lane diagram
+
+1. `oat-project-lite` runs one batched interview, authors a single-phase `plan.md` with validation criteria, and pauses once for approval
+2. Implement: `oat-project-implement` runs the single phase without HiLL checkpoint prompts
+3. Pass the mandatory final review, then route directly to `oat-project-pr-final`
+4. Optional `oat project promote <project-path> --to quick` when the work no longer fits one sitting
 
 ### Import lane diagram
 
@@ -269,6 +313,75 @@ still read as compatibility capped-policy input, but new quick-start selections
 should use the dispatch-policy names, including explicit `Uncapped` and
 `Inherit Host Defaults`.
 
+### Lite lane
+
+```mermaid
+flowchart LR
+  L["Lite interview\n(one batched round)"] --> P["Single-phase plan\n(one approval)"]
+  P --> I["Implement (oat-project-implement)"]
+  I --> R["Final review"] --> PR["PR (default closeout)"]
+  P -->|Scope grows| Q["Promote to Quick"]
+```
+
+Lite keeps planning and validation in `plan.md`. The interview selects a
+`minimal`, `product`, `technical`, or `both` content shape and records the
+rationale. Product Behavior is required for user-visible changes; Technical
+Design is required for cross-module, data/state-format, or consumed-contract
+changes. It has no separate discovery, spec, or design artifact, skips
+implementation HiLL prompts, and routes a passed final review directly to PR
+creation. Summary and documentation run only when enabled through the
+lite-specific post-implementation sequence.
+
+Each task chooses evidence proportionate to its risk instead of requiring one
+test-first recipe. Behavioral changes need a proof that fails without the
+change; refactors default to characterization-first when existing coverage is
+insufficient; documentation-only work may use formatting, link, spelling, or
+build checks. UI changes require visual proof. In autonomous runs, available
+computer-use capability performs that proof; otherwise execution stops at an
+explicit proof boundary.
+
+### Promoting a lite project to quick
+
+When lite work outgrows one sitting, `oat project promote <project-path> --to quick`
+converts it in place. Each artifact has a different fate: the authored lite plan
+is **moved** to `references/lite-plan.md`, a new `discovery.md` is **derived**
+from its five core sections plus any adaptive Product Behavior and Technical
+Design, a **fresh** quick template takes over the `plan.md` path, and `state.md`
+is **rewritten** to quick mode.
+
+```mermaid
+flowchart LR
+  subgraph Before
+    LPLAN["plan.md\nfive core sections plus adaptive\nProduct Behavior / Technical Design"]
+    LSTATE["state.md\noat_workflow_mode: lite"]
+  end
+
+  CMD["oat project promote\n--to quick"]
+
+  subgraph After
+    DISC["discovery.md\nderived from the lite plan\noat_ready_for: oat-project-quick-start"]
+    REF["references/lite-plan.md\noriginal lite plan, preserved"]
+    QPLAN["plan.md\nfresh quick-start template"]
+    QSTATE["state.md\noat_workflow_mode: quick\noat_phase: discovery (complete)\noat_ready_for: oat-project-quick-start"]
+  end
+
+  LPLAN --> CMD
+  LSTATE --> CMD
+  CMD -->|derive| DISC
+  CMD -->|move| REF
+  CMD -->|scaffold| QPLAN
+  CMD -->|rewrite| QSTATE
+```
+
+The project slug, directory, and branch are untouched, so history and any open
+work continue uninterrupted. `oat_ready_for` is stamped on **both** `discovery.md`
+and `state.md`; the quick-start recommender reads artifact readiness, so
+consumers must preserve both. Promotion refuses rather than half-applying: a
+non-lite project, an existing `references/lite-plan.md`, invalid authored
+sections, an unresolved scope, or an unreadable template each return a stable
+categorical `reason` and exit non-zero. See
+[CLI Reference](../../reference/cli-reference.md) for the full refusal contract.
+
 ### Import lane
 
 ```mermaid
@@ -303,6 +416,10 @@ Key differences from other lanes:
 Quick lane progression:
 
 `discovery.md` -> [`design.md` (optional lightweight)] -> `plan.md` -> `implementation.md`
+
+Lite lane progression:
+
+`plan.md` -> `implementation.md` -> `pr/*.md` (`summary.md` and documentation are opt-in)
 
 Import lane progression:
 
@@ -360,15 +477,15 @@ actionable `oat pjm init` stop instead of scaffolding implicitly. See
 
 ### Seeding a new project from a brainstorm
 
-When the brainstorming destination is "promote to a new OAT project", the dispatcher confirms a project slug and a mode (`quick` vs `spec-driven`) with the user, runs `oat project new <slug> --mode <mode>` to scaffold the project, and writes the new project's `discovery.md` directly from the brainstorming payload — Initial Request, Solution Space with approaches considered, Chosen Direction, Key Decisions, Open Questions. It writes `discovery.md` only (never a partial `design.md`), so the design phase keeps its full collaborative cadence and consumes the brainstorm's architectural intent from discovery's Solution Space and Chosen Direction sections during approach reaffirmation. The dispatcher stops with a pointer to `oat-project-quick-start` or `oat-project-design` — it deliberately does not auto-chain into the next phase, so the user makes that transition consciously.
+When the brainstorming destination is "promote to a new OAT project", the dispatcher confirms a project slug and one of three modes: `lite`, `quick`, or `spec-driven`. For Quick and Spec-Driven projects, it runs `oat project new <slug> --mode <mode>` and writes `discovery.md` directly from the brainstorming payload — Initial Request, Solution Space with approaches considered, Chosen Direction, Key Decisions, and Open Questions. It writes only `discovery.md` (never a partial `design.md`), then points to `oat-project-quick-start` or `oat-project-design` without auto-chaining. For Lite projects, it instead seeds the five sections in `plan.md`, leaves `discovery.md` and `design.md` absent, and points to `oat-project-lite`.
 
-This is a parallel entry path into the Spec-Driven and Quick lanes, not a new lane: the resulting project follows the normal lane it was scaffolded into. The brainstorm-as-seed step is what changes — the user arrives at `oat-project-quick-start` (or `oat-project-design`) with discovery already populated rather than starting from a blank discovery template.
+This is a parallel entry path into all three lanes, not a new lane. Quick and Spec-Driven users arrive at `oat-project-quick-start` or `oat-project-design` with discovery already populated; Lite users arrive at `oat-project-lite` with the single-phase plan already seeded.
 
 ### Folding back into an active project
 
 When `oat-brainstorm` fires while a project is active, it offers a 3-way picker before any pack-filtered destination shows up:
 
-- **Related to the project** → fold the synthesized brainstorming content back into the most-specific upstream artifact (`design.md` if it exists, otherwise `discovery.md`), commit immediately, and print a handoff prompt for the right plan-authoring skill (`oat-project-plan` for spec-driven, `oat-project-quick-start` for quick, `oat-project-revise` when an open PR exists). The fold-back commit is safety-gated: a preflight `git status --porcelain -- "$ARTIFACT_PATH"` checks for dirty state, staging is exactly `git add -- "$ARTIFACT_PATH"` (never `-A`, never globs), and the handoff prompt only prints after the scoped commit succeeds.
+- **Related to the project** → for Lite, fold the synthesis into `plan.md` immediately above `## Phase 1` and hand off to `oat-project-lite`; for Quick and Spec-Driven, use the most-specific upstream artifact (`design.md` if it exists, otherwise `discovery.md`) and hand off to `oat-project-quick-start` or `oat-project-plan`. Any mode with an open PR hands off to `oat-project-revise`. The fold-back commit is safety-gated: a preflight `git status --porcelain -- "$ARTIFACT_PATH"` checks for dirty state, staging is exactly `git add -- "$ARTIFACT_PATH"` (never `-A`, never globs), and the handoff prompt only prints after the scoped commit succeeds.
 - **Independent of the project** → the active project is acknowledged but doesn't constrain the picker; brainstorm routes through its standard pack-filtered terminal-state options (new project, backlog item, idea, doc-to-path, inline).
 - **Related but supplementary** → write a brainstorming reference file at `.oat/projects/<scope>/<project>/brainstorming/YYYY-MM-DD-<topic>.md`, alongside `pr/` and `reviews/`. No lifecycle artifact is touched.
 

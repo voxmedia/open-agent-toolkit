@@ -169,14 +169,18 @@ Present these options to the user, with a recommendation based on the assessment
    _Lightweight design keeps the smaller collaborative/draft choice; it does not offer selective collaborative mode._
    → Use `oat-project-quick-start`
 
-3. **Import external plan** — Normalize an existing plan into OAT format → Implement
+3. **Lite workflow** — Batched interview → single plan.md with validation criteria → one approval → implement
+   _Best for: single-sitting changes such as one component, one bug fix, or one small refactor._
+   → Use `oat-project-lite`
+
+4. **Import external plan** — Normalize an existing plan into OAT format → Implement
    _Best for: plans already drafted in another tool, session, or document._
    → Use `oat-project-import-plan`
 
-4. **Provider plan mode → import** — Use provider's native plan mode, then import the result into an OAT project for tracked implementation.
+5. **Provider plan mode → import** — Use provider's native plan mode, then import the result into an OAT project for tracked implementation.
    _Best for: users who prefer provider planning UX but want OAT tracking._
 
-5. **No project workflow** — Proceed without OAT project tracking.
+6. **No project workflow** — Proceed without OAT project tracking.
    _Best for: small fixes, straightforward changes, or explicit user preference._
 
 ### Recommendation Heuristic
@@ -185,9 +189,10 @@ Before presenting options, assess the request and lead with a recommendation:
 
 - **Multiple components/APIs/data models, unclear boundaries, or cross-cutting concerns** → Recommend spec-driven (#1)
 - **Bounded feature of any size, some design questions but clear requirements** → Recommend quick (#2)
-- **User references an existing plan or external artifact** → Recommend import (#3)
-- **User is already in plan mode or prefers that UX** → Recommend provider plan mode → import (#4)
-- **Simple, well-understood change or user says "just do it"** → Recommend no workflow (#5)
+- **Single-sitting change with a clear outcome** → Recommend lite (#3)
+- **User references an existing plan or external artifact** → Recommend import (#4)
+- **User is already in plan mode or prefers that UX** → Recommend provider plan mode → import (#5)
+- **User explicitly says "just do it" or declines tracking** → Recommend no workflow (#6)
 
 The distinguishing factor is **requirements clarity and design risk**, not task count. A large but well-understood migration is fine for quick mode. A small but architecturally unclear feature might need spec-driven.
 

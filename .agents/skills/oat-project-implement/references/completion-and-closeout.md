@@ -709,10 +709,65 @@ require `oat_implement_exit_gate` to remain allowed and fresh. If it becomes
 stale, malformed, pending, or blocked, persist/retain that state, stop the
 sequence, and resume through `oat-project-implement`.
 
-Identify the final implementation phase from the plan. A final HiLL checkpoint
-exists when `oat_plan_hill_phases` is `[]` (every phase) or when it explicitly
-contains that final phase ID. Defer only a checkpoint on the final implementation
-phase; non-final checkpoint behavior remains unchanged.
+For `oat_workflow_mode: lite`, there is no final HiLL approval step. A passed
+final review and allowed implementation exit gate proceed directly to closeout
+with `approval: not_required`; do not read
+`oat_plan_hill_phases`, ask for approval, or invoke the autonomous approval
+branch. Set `final_checkpoint_exists = false`,
+`awaiting_approval_reachable = false`, and
+`autonomous_approval_reachable = false`. Per-phase review and final review
+remain unchanged.
+
+Use this executable contract before any generic checkpoint or preference
+resolution:
+
+```bash
+# BEGIN LITE CLOSEOUT RESOLUTION CONTRACT
+if [ "$WORKFLOW_MODE" = "lite" ]; then
+  if [ "${PHASE_REVIEW_STATUS:-}" != "passed" ] || [ "${FINAL_REVIEW_STATUS:-}" != "passed" ]; then
+    echo "oat: lite closeout requires passed phase and final reviews" >&2
+    exit 65
+  fi
+  FINAL_CHECKPOINT_EXISTS="false"
+  APPROVAL="not_required"
+  AWAITING_APPROVAL_REACHABLE="false"
+  AUTONOMOUS_APPROVAL_REACHABLE="false"
+  PROJECT_RECAP_REACHABLE="false"
+  ORDERED_CLOSEOUT=("phase-review" "final-review")
+  PRE_APPROVAL=()
+  for STEP in ${LITE_PRE_APPROVAL:-}; do
+    case "$STEP" in
+      summary|document|pr)
+        ALREADY_PRESENT="false"
+        for PRESENT in "${PRE_APPROVAL[@]}"; do
+          [ "$PRESENT" = "$STEP" ] && ALREADY_PRESENT="true"
+        done
+        [ "$ALREADY_PRESENT" = "true" ] || PRE_APPROVAL+=("$STEP")
+        ;;
+    esac
+  done
+  PR_PRESENT="false"
+  for PRESENT in "${PRE_APPROVAL[@]}"; do
+    [ "$PRESENT" = "pr" ] && PR_PRESENT="true"
+  done
+  [ "$PR_PRESENT" = "true" ] || PRE_APPROVAL+=("pr")
+  POST_APPROVAL=()
+  ORDERED_CLOSEOUT+=("${PRE_APPROVAL[@]}" "complete")
+fi
+# END LITE CLOSEOUT RESOLUTION CONTRACT
+```
+
+The contract intentionally does not read `OAT_PLAN_HILL_PHASES`,
+`GENERIC_PRE_APPROVAL`, `GENERIC_POST_APPROVAL`, or `OAT_AUTONOMOUS` in its
+lite branch. After it resolves lite, skip every generic checkpoint,
+preference-resolution, awaiting-approval, and autonomous-approval algorithm
+below.
+
+For non-lite workflows only, identify the final implementation phase from the
+plan. A final HiLL checkpoint exists when `oat_plan_hill_phases` is `[]` (every
+phase) or when it explicitly contains that final phase ID. Defer only a
+checkpoint on the final implementation phase; non-final checkpoint behavior
+remains unchanged.
 
 Run final verification (Step 12). Final review must be `passed` and the
 configured implementation exit gate in Step 14 must be allowed before any
@@ -720,8 +775,9 @@ pre-approval dispatch. If final checkpoint auto-review is enabled, Step 8 has
 already run `oat-project-review-provide code final`; do not run a duplicate
 final review here.
 
-Read the effective `workflow.postImplementSequence` once. For a configured
-legacy or structured preference, normalize legacy values before snapshotting:
+For non-lite workflows, read the effective `workflow.postImplementSequence`
+once. For a configured legacy or structured preference, normalize legacy
+values before snapshotting:
 `wait` → `{ preApproval: [], postApproval: [] }`, `summary` →
 `{ preApproval: ["summary"], postApproval: [] }`, `pr` → `{ preApproval:
 ["summary", "pr"], postApproval: [] }`, and `docs-pr` → `{ preApproval:
@@ -729,8 +785,28 @@ legacy or structured preference, normalize legacy values before snapshotting:
 These legacy mappings remain unchanged. Structured preferences additionally
 accept `retro` in `postApproval`; `retro` is invalid in `preApproval`.
 
-If `OAT_AUTONOMOUS=1` and the preference is unset, use the inventory's
-autonomous lifecycle-tail default:
+For `oat_workflow_mode: lite`, the earlier resolution contract preempts that
+normalization. The generic `workflow.postImplementSequence` value is not a lite
+opt-in to summary or documentation. Supply only the explicit
+`workflow.postImplementSequence.lite.preApproval` override as
+`LITE_PRE_APPROVAL` for those opt-ins:
+
+- The default with no lite-specific override is `[pr]`.
+- Filter a lite-specific override to `summary`, `document`, and `pr`, remove
+  duplicates while retaining its order, and append `pr` when it is absent. For
+  example, `[summary, pr]` remains unchanged.
+- Resolve `postApproval` to `[]`. A lite closeout never includes `retro`, even
+  when the generic preference or autonomous default includes it.
+
+This transformation applies in interactive and autonomous execution alike.
+Persist the resulting arrays as the immutable sequence snapshot and set
+`approval: not_required`; the lite-specific override changes optional work,
+not the absence of a HiLL approval checkpoint. The generic configured and
+autonomous-default preference resolution immediately below applies only to
+non-lite workflows; it must not overwrite the lite transformation.
+
+For non-lite workflows, if `OAT_AUTONOMOUS=1` and the preference is unset, use
+the inventory's autonomous lifecycle-tail default:
 
 ```yaml
 preApproval: [summary, document, pr]
@@ -803,9 +879,16 @@ checkpoint protocol to gate bookkeeping, final HiLL bookkeeping, and completion
 bookkeeping. A mixed commit, missing child transition, or non-state path in the
 checkpoint-persistence commit fails closed as stale.
 
-**Implementation-Tail Project Recap:**
+**Implementation-Tail Project Recap (non-lite only):**
 
 The final-closeout orchestrator owns one project-recap gate. Run this recap gate after the final code review has passed and configured pre-approval summary/document steps have completed, but before final HiLL approval. Preserve the stored order of all other pre-approval steps and the existing final review sequence; the recap gate does not replace or repeat either.
+
+This entire project-recap subsection applies only to non-lite workflows. For
+lite, do not resolve recap intent, inspect recap runs, invoke
+`oat-explainer-kit`, run the terminal-outcome guard, or let recap block
+closeout. The lite contract sets `PROJECT_RECAP_REACHABLE=false` and proceeds
+from the required reviews through its stored optional steps to `pr` and
+sequence completion.
 
 Before generating, inspect the active project's explainer runs. A fresh `project-recap` manifest for the current completed implementation deduplicates the lifecycle-tail run: reuse it and do not invoke the adapter again. Fresh means the manifest identifies recipe `project-recap`, belongs to this project, has a terminal outcome, and its recorded source hashes match the current approved implementation inputs. A merely present, incomplete, wrong-recipe, or stale manifest does not satisfy this check.
 
@@ -834,6 +917,13 @@ terminal generated outcomes are `built-durable`, `built-not-durable`,
 approval; do not substitute a warning or infer an outcome from filesystem
 presence. A `skip` intent requires no manifest.
 
+**Lite completion algorithm:** Dispatch incomplete `pre_approval` steps in
+stored order, retain `approval: not_required`, keep both approval reachability
+flags false, and commit `status: complete` when they finish. Do not enter the
+generic checkpoint or autonomous algorithms below.
+
+**Non-lite approval algorithm:**
+
 1. Dispatch incomplete `pre_approval` steps in stored order.
 2. When they succeed and a final checkpoint exists, commit `status:
 awaiting_approval` with `approval: pending` before asking for final HiLL
@@ -853,8 +943,8 @@ awaiting_approval` with `approval: pending` before asking for final HiLL
 
 **Autonomous final HiLL approval:**
 
-When `OAT_AUTONOMOUS=1`, gate `IMPLEMENT-16` replaces only the approval question
-in steps 2-4:
+For non-lite workflows only, when `OAT_AUTONOMOUS=1`, gate `IMPLEMENT-16`
+replaces only the approval question in steps 2-4:
 
 1. Require the final review row to be `passed` and verify its review artifact
    and dispatch record. A failed blocking review or unresolved Critical finding
@@ -873,10 +963,11 @@ approval, destructive-change risk, or missing-credential boundary. When
 autonomy is inactive, the explicit user approval/decline/defer behavior above
 is unchanged.
 
-If the preference is unset and autonomy is inactive, do not create a sequence
-snapshot. Retain the existing next-step prompt only after final approval when a
-final checkpoint is configured. Under autonomy, the default snapshot above
-always resolves the unset case.
+For non-lite workflows, if the preference is unset and autonomy is inactive,
+do not create a sequence snapshot. Retain the existing next-step prompt only
+after final approval when a final checkpoint is configured. Under autonomy,
+the default snapshot above always resolves the unset case. The lite branch
+always snapshots its deterministic `[pr]` default.
 
 ### Step 16: Mark Implementation Complete
 

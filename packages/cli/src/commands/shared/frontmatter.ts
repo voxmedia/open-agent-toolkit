@@ -89,6 +89,7 @@ export const SKILL_GATE_OVERRIDE_SOURCE = `state.md:${SKILL_GATE_OVERRIDE_FIELD}
 export const GATE_AWARE_SKILLS = [
   'oat-project-implement',
   'oat-project-import-plan',
+  'oat-project-lite',
   'oat-project-plan',
   'oat-project-quick-start',
 ] as const;

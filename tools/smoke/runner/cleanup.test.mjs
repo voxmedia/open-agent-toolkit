@@ -902,8 +902,9 @@ try {
       handlers: {
         async drive(options, context) {
           if (pauseStage === 'drive') {
+            const termination = pauseForTermination();
             await writeFile(sentinel, JSON.stringify(context.manifest));
-            await pauseForTermination();
+            await termination;
           }
           return { action: 'none', status: 'dry-run-stub' };
         },
@@ -918,8 +919,9 @@ try {
         });
         context.manifest = manifest;
         if (pauseStage === 'provision') {
+          const termination = pauseForTermination();
           await writeFile(sentinel, JSON.stringify(manifest));
-          await pauseForTermination();
+          await termination;
         }
         return manifest;
       },

@@ -50,9 +50,30 @@ archive metadata own terminal reachability and retry identity.
 
 Mode-sensitive notes:
 
-- `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`) for routing.
-- `spec.md` and `design.md` are required in spec-driven mode, optional in quick/import mode. Quick mode offers a lightweight `design.md` (architecture, components, testing strategy) at a post-discovery decision point.
-- `plan.md` remains canonical execution artifact across all modes.
+- `state.md` includes workflow mode metadata (`spec-driven`, `quick`, `import`, `lite`) for routing.
+- `plan.md` remains the canonical execution artifact across all modes.
+
+| Mode          | Core authored artifacts                                                                                                                | Optional artifacts                         |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `spec-driven` | `discovery.md`, `spec.md`, `design.md`, `plan.md`                                                                                      | -                                          |
+| `quick`       | `discovery.md`, `plan.md`                                                                                                              | Lightweight `design.md`, `spec.md`         |
+| `import`      | `references/imported-plan.md`, `plan.md`                                                                                               | `spec.md`, `design.md`                     |
+| `lite`        | Single-phase `plan.md` with Summary, Decisions, Assumptions, Out of Scope, Validation Criteria, and an explicit adaptive content shape | `summary.md` and documentation at closeout |
+
+Every Lite plan keeps Summary, Decisions, Assumptions, Out of Scope, and
+Validation Criteria. User-visible changes add numbered, testable Product
+Behavior. Changes that cross module boundaries, alter data or state formats,
+or change a contract consumed by another surface add Technical Design. That
+section covers current operation, proposed changes, and data flow when data or
+state crosses a boundary. The Decisions section records the selected shape and
+why it fits.
+
+Each Lite task also records an implementation and proof strategy: the risk it
+covers, why the evidence is proportionate, and the exact command or manual
+proof. Strategies may be test-first, characterization-first,
+implementation-then-regression, static/build, or manual/visual. Static or build
+checks alone fit only changes that cannot affect runtime behavior; every
+behavioral change needs evidence that fails without the change.
 
 ## Supporting artifacts
 
