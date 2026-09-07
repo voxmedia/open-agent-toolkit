@@ -70,7 +70,11 @@ contract.
   preservation, and `LITE-10` autonomy coverage.
 - Integrate Wave 4's delivered-project follow-ups and closeout contracts while
   preserving the five lockstep public packages and bundled release metadata at
-  `0.2.60`.
+  `0.2.61`.
+- Close the four actionable PR #264 review findings by restoring review-event
+  lineage, scoping proof-strategy requirements by workflow, blocking required
+  proof when no executor is available, and making Lite self-review use the
+  complete `plan.md` requirements contract.
 
 ## Verification
 
@@ -88,6 +92,11 @@ contract.
 - Post-Wave-4 focused shared-posture checks: 232/232 contract tests, autonomy
   inventory validation, a no-op project sync dry-run, skill-bump validation,
   lint, and format
+- Phase 7 focused contract suites, fail-capability mutations, the complete
+  ordered Definition of Done, skill tests, lint, format, release validation,
+  and an independent exact-range review with no findings
+- Phase 8 source-CLI project sync dry-run with zero pending operations and no
+  producer-version skew, plus skill-bump and release-version gates
 - Disposable manual Lite project covering interview, approval, implementation,
   phase/final reviews, exit gate, and PR-description generation
 
@@ -104,19 +113,36 @@ contract.
   0 Important, 0 Medium, and 0 Minor findings.
 - Wave 4 integrated from current `main`; its additive execution contracts
   compose with the revised Lite proof strategy, and public release surfaces are
-  authoritative at `0.2.60`.
+  authoritative at `0.2.61`.
 - The post-Wave-4 final review's three Important findings are closed. The
   stabilized p-rev2 re-review found one wording-only Medium alignment issue,
-  resolved in `prev2-t04` under the user's no-re-review waiver. A focused review
-  then accepted both test-only stabilizations and found one stale SIGTERM
-  disposition, corrected in `prev2-t05` under the same wording-only direction.
+  resolved in the fourth p-rev2 task under the user's no-re-review waiver. A
+  focused review then accepted both test-only stabilizations and found one stale
+  SIGTERM disposition, corrected in the fifth task under the same wording-only
+  direction.
   All five p-rev2 tasks and five governed recovery events are complete. The two
-  final test-only recoveries made the symlink replacement control deterministic across hosts
-  and removed a reproduced SIGTERM readiness race without changing production
-  behavior. Focused review accepted both corrections. The stabilized source
-  head `15ad3374c` passed CI and Release Dry Run, and the refreshed retrospective
-  is complete in propose-only mode. Live PR checks govern the final
-  bookkeeping-only head.
+  final test-only recoveries made the symlink replacement control deterministic
+  across hosts and removed a reproduced SIGTERM readiness race without changing
+  production behavior. Focused review accepted both corrections. The stabilized
+  source head `15ad3374c` passed CI and Release Dry Run, and the refreshed
+  retrospective is complete in propose-only mode.
+- Phase 7 completed four ordered review-fix commits and passed independent
+  review with no findings. The following final lifecycle review found one
+  Important generated-manifest issue and one Medium closeout-artifact issue;
+  both Phase 8 corrections are now local and require fresh final review and the
+  configured exit gate before closeout.
+
+## Local / Remote Head Status
+
+- Local source baseline used for this artifact refresh:
+  `59fd7f31f29e5f6db2f3b44778d7d38ba7efdd47` (Phase 7 plus the p08-t01
+  source-derived manifest correction). This artifact-only task advances local
+  HEAD when committed.
+- Live PR #264 remains at
+  `df9f720edd85b99b9dc691b123b98a6bbbefcb7e`. CI and Release Dry Run are green
+  for that exact remote head only; they do not cover the local Phase 7/8 source.
+- The required push is authorized but remains root-owned. Fresh exact-head CI,
+  Release Dry Run, and Bugbot results are pending until that push occurs.
 
 ## References
 

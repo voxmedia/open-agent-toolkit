@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-06
 oat_generated: true
-oat_summary_last_task: prev2-t04
+oat_summary_last_task: p07-t04
 oat_summary_revision_count: 2
 oat_summary_includes_revisions: [p-rev1, p-rev2]
 ---
@@ -38,11 +38,16 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   now carry artifact-level quick-start readiness.
 - Added validation, fail-capable integration coverage, provider projections,
   lifecycle documentation, a disposable end-to-end Lite run, and synchronized
-  public release surfaces at `0.2.60` after integrating Wave 4.
+  public release surfaces at `0.2.61` after integrating Wave 4 and the Phase 7
+  remote-review fixes.
 - Replaced mandatory test-first task wording with a declared, risk-proportionate
   proof strategy. Behavioral changes retain fail-capable evidence, while prose
   and mechanical changes can use focused static or composition checks instead
   of new fixtures or harnesses.
+- Closed the four actionable PR #264 review findings by restoring missing review
+  lineage, scoping proof-strategy requirements to workflows that declare them,
+  blocking unexecutable proof boundaries, and routing Lite self-review to the
+  complete `plan.md` requirements contract.
 
 ## Key Decisions
 
@@ -96,6 +101,10 @@ heavy for this class of work while retaining OAT's safety and handoff value.
 - Revision 1 needed one bounded recovery and two review-fix loops. The final
   reviewer reproduced the tail-only Technical Design omission control and passed
   the phase with no findings.
+- Phase 7 passed its exact-range independent review, but the subsequent final
+  lifecycle review found a generated manifest producer stamp and stale closeout
+  prose. Phase 8 regenerated the manifest through the source CLI and refreshed
+  these artifacts; a fresh final review still governs closeout.
 
 ## Tradeoffs Made
 
@@ -132,12 +141,19 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   defect and two review-fix loops; the final independent review had no findings.
 - **p-rev2 — Wave 4 integration and closeout.** Composed native Lite planning
   with the complete shared lifecycle-gate posture contract, registered
-  `LITE-10`, and aligned local closeout and PR artifacts to Wave 4 and `0.2.60`.
+  `LITE-10`, and aligned local closeout and PR artifacts to Wave 4's then-current
+  release surfaces.
   All five p-rev2 tasks and five bounded recovery events are complete. The two
   final test-only recoveries made the symlink replacement control portable and
   removed a reproduced SIGTERM readiness race without changing production
   behavior. The focused review accepted both corrections, and exact-head CI
   plus Release Dry Run passed at `15ad3374c` after publication.
+- **Phase 7 — Remote review fixes.** Restored the missing stabilization review
+  event, made proof-strategy checks workflow-aware, enforced executable proof
+  boundaries in interactive and autonomous runs, and routed Lite self-review
+  to its complete plan contract. Four ordered task commits passed the full
+  Definition of Done and an independent review with no findings; public package
+  and bundled release surfaces advanced to `0.2.61`.
 
 ## Follow-up Items
 
@@ -145,9 +161,22 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   projection ownership or header contracts change.
 - Re-evaluate universal plan-template proof and testing guidance under
   `BL-260906-re-evaluate-universal-plan`.
-- The refreshed project retrospective is complete in propose-only mode. Resolve
-  lifecycle approval next. PR merge and release remain separate authorization
-  boundaries.
+- The refreshed project retrospective is complete in propose-only mode. Phase 8
+  fixes are local, but final re-review, the configured exit gate, and exact-head
+  remote checks remain required. PR merge and release remain separate
+  authorization boundaries.
+
+## Closeout Status
+
+- The local source baseline for this refresh is
+  `59fd7f31f29e5f6db2f3b44778d7d38ba7efdd47`, which includes Phase 7 and the
+  p08-t01 source-derived manifest correction. This artifact-only task advances
+  local HEAD when committed.
+- Live PR #264 remains at
+  `df9f720edd85b99b9dc691b123b98a6bbbefcb7e`. Its green CI and Release Dry Run
+  results cover only that exact remote head, not the local Phase 7/8 source.
+- Push is authorized but remains root-owned. Fresh exact-head CI, Release Dry
+  Run, and Bugbot results remain pending until the local branch is pushed.
 
 ## Workflow Observations
 
