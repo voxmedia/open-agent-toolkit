@@ -614,6 +614,12 @@ describe('production lifecycle composition', () => {
     expect(resolutionOperation!.approvalPreview?.digest).toBe(
       resolution.approvalPreview!.digest,
     );
+    expect(resolutionOperation).toMatchObject({
+      preview: {
+        capabilityEvidenceDigest: expect.not.stringContaining('unprobed'),
+      },
+      selectedExecution: null,
+    });
     await writeFile(
       authorityPath,
       JSON.stringify({
@@ -658,12 +664,31 @@ describe('production lifecycle composition', () => {
       await store.readBindingMetadata(migrationBinding.bindingId),
     ).toMatchObject({ lifecycle: 'tombstoned' });
 
+    await expect(
+      runner({
+        operation: 'resolve',
+        projectRoot: repository,
+        bindingId: migrationBinding.bindingId,
+        resolutionKind: 'relink',
+        providerRef: 'linear:issue-relocated',
+      }),
+    ).rejects.toThrow(/preview requires current.*capability/i);
+    runnerInput = {
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['read'],
+      evidenceDigest: 'sha256:resolution-capability',
+      observedAt: timestamp,
+    };
     const relinkPreview = await runner({
       operation: 'resolve',
       projectRoot: repository,
       bindingId: migrationBinding.bindingId,
       resolutionKind: 'relink',
       providerRef: 'linear:issue-relocated',
+      capabilityEvidenceStdin: true,
     });
     expect(relinkPreview).toMatchObject({
       approvalPreview: {
@@ -676,6 +701,10 @@ describe('production lifecycle composition', () => {
       /preview (op_[A-Za-z0-9_-]+)/,
     )?.[1];
     const relinkOperation = await store.readOperation(relinkOperationId!);
+    expect(relinkOperation).toMatchObject({
+      preview: { capabilityEvidenceDigest: 'sha256:resolution-capability' },
+      selectedExecution: { evidenceDigest: 'sha256:resolution-capability' },
+    });
     await writeFile(
       authorityPath,
       JSON.stringify({
@@ -700,13 +729,47 @@ describe('production lifecycle composition', () => {
       }),
     );
     runnerInput = {
-      provider: 'linear',
-      context: { workspaceId: 'workspace-1' },
-      surfaceKind: 'connector',
-      availability: 'available',
-      semanticCapabilities: ['read'],
-      evidenceDigest: 'sha256:resolution-capability',
+      ...(runnerInput as Record<string, unknown>),
+      observedAt: '2026-08-31T11:54:59.000Z',
+    };
+    await expect(
+      runner({
+        operation: 'resolve',
+        projectRoot: repository,
+        bindingId: migrationBinding.bindingId,
+        resolutionKind: 'relink',
+        providerRef: 'linear:issue-relocated',
+        previewOperationId: relinkOperationId,
+        capabilityEvidenceStdin: true,
+        authorityEvidenceFile: authorityPath,
+      }),
+    ).rejects.toThrow(/capability evidence is stale/i);
+    await expect(
+      store.readCurrentAction(relinkOperationId!),
+    ).resolves.toBeNull();
+    runnerInput = {
+      ...(runnerInput as Record<string, unknown>),
+      evidenceDigest: 'sha256:changed-resolution-capability',
       observedAt: timestamp,
+    };
+    await expect(
+      runner({
+        operation: 'resolve',
+        projectRoot: repository,
+        bindingId: migrationBinding.bindingId,
+        resolutionKind: 'relink',
+        providerRef: 'linear:issue-relocated',
+        previewOperationId: relinkOperationId,
+        capabilityEvidenceStdin: true,
+        authorityEvidenceFile: authorityPath,
+      }),
+    ).rejects.toThrow(/capability.*(changed|drift|match)/i);
+    await expect(
+      store.readCurrentAction(relinkOperationId!),
+    ).resolves.toBeNull();
+    runnerInput = {
+      ...(runnerInput as Record<string, unknown>),
+      evidenceDigest: 'sha256:resolution-capability',
     };
     const relinkHandoff = await runner({
       operation: 'resolve',
@@ -772,11 +835,21 @@ describe('production lifecycle composition', () => {
       ...planningMetadata,
       purposes: ['source'],
     });
+    runnerInput = {
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['search-duplicates', 'create', 'read'],
+      evidenceDigest: 'sha256:recreate-capability',
+      observedAt: timestamp,
+    };
     const sourceRecreatePreview = await runner({
       operation: 'resolve',
       projectRoot: repository,
       bindingId: migrationBinding.bindingId,
       resolutionKind: 'recreate',
+      capabilityEvidenceStdin: true,
     });
     const sourceRecreateOperationId =
       sourceRecreatePreview.recovery[0]?.instruction.match(
@@ -856,13 +929,20 @@ describe('production lifecycle composition', () => {
     ).rejects.toThrow(/permit no outbound fields/i);
     await store.updateBindingMetadata(planningMetadata);
 
+    const configPath = join(repository, '.oat', 'config.json');
+    const managedConfig = JSON.parse(await readFile(configPath, 'utf8')) as {
+      pjm: { remote: { policy: Record<string, unknown> } };
+    };
+    managedConfig.pjm.remote.policy.description = 'managed-section';
+    await writeFile(configPath, `${JSON.stringify(managedConfig)}\n`);
+
     let recreateOperationId: string | undefined;
     for (const lifecycleCondition of [
       'archived',
       'moved',
-      'missing-or-invisible',
       'deleted-confirmed',
       'temporarily-unavailable',
+      'missing-or-invisible',
     ] as const) {
       const anomalyMetadata = (await store.readBindingMetadata(
         migrationBinding.bindingId,
@@ -870,6 +950,13 @@ describe('production lifecycle composition', () => {
       await store.updateBindingMetadata({
         ...anomalyMetadata,
         lifecycle: 'blocked',
+        publicationProjection: {
+          ...anomalyMetadata.publicationProjection,
+          priority:
+            lifecycleCondition === 'missing-or-invisible'
+              ? 'none'
+              : 'frontmatter',
+        },
       });
       const anomalyState = (await store.readBindingState(
         migrationBinding.bindingId,
@@ -883,11 +970,21 @@ describe('production lifecycle composition', () => {
           lifecycle: lifecycleCondition,
         },
       });
+      runnerInput = {
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        surfaceKind: 'connector',
+        availability: 'available',
+        semanticCapabilities: ['search-duplicates', 'create', 'read'],
+        evidenceDigest: 'sha256:recreate-capability',
+        observedAt: timestamp,
+      };
       const recreatePreview = await runner({
         operation: 'resolve',
         projectRoot: repository,
         bindingId: migrationBinding.bindingId,
         resolutionKind: 'recreate',
+        capabilityEvidenceStdin: true,
       });
       expect(recreatePreview).toMatchObject({
         approvalPreview: {
@@ -923,6 +1020,35 @@ describe('production lifecycle composition', () => {
           },
         }),
       );
+      if (lifecycleCondition === 'archived') {
+        const beforeQueryDrift = (await store.readBindingState(
+          migrationBinding.bindingId,
+        ))!;
+        await store.writeBindingState({
+          ...beforeQueryDrift,
+          localProjection: {
+            ...beforeQueryDrift.localProjection,
+            title: 'Changed duplicate-search query',
+          },
+        });
+        await expect(
+          runner({
+            operation: 'resolve',
+            projectRoot: repository,
+            bindingId: migrationBinding.bindingId,
+            resolutionKind: 'recreate',
+            previewOperationId: recreateOperationId,
+            capabilityEvidenceStdin: true,
+            authorityEvidenceFile: authorityPath,
+          }),
+        ).rejects.toThrow(
+          /(action|projection|preview).*(changed|drift|match)/i,
+        );
+        await expect(
+          store.readCurrentAction(recreateOperationId!),
+        ).resolves.toBeNull();
+        await store.writeBindingState(beforeQueryDrift);
+      }
       runnerInput = {
         provider: 'linear',
         context: { workspaceId: 'workspace-1' },
@@ -972,10 +1098,18 @@ describe('production lifecycle composition', () => {
         externalAction: null,
         approvalPreview: {
           operationClass: 'recreate',
-          fieldMask: expect.arrayContaining(['title', 'priority']),
+          fieldMask:
+            lifecycleCondition === 'missing-or-invisible'
+              ? expect.arrayContaining(['title', 'description'])
+              : expect.arrayContaining(['title', 'description', 'priority']),
           authority: 'user-approved',
         },
       });
+      if (lifecycleCondition === 'missing-or-invisible') {
+        expect(createPreview.approvalPreview!.fieldMask).not.toContain(
+          'priority',
+        );
+      }
     }
     const createOperation = await store.readOperation(recreateOperationId!);
     expect(createOperation!.approvalPreview).toEqual(
@@ -1007,7 +1141,27 @@ describe('production lifecycle composition', () => {
         },
       }),
     );
-    const configPath = join(repository, '.oat', 'config.json');
+    const beforePriorityPolicyDrift = (await store.readBindingMetadata(
+      migrationBinding.bindingId,
+    ))!;
+    await store.updateBindingMetadata({
+      ...beforePriorityPolicyDrift,
+      publicationProjection: {
+        ...beforePriorityPolicyDrift.publicationProjection,
+        priority: 'frontmatter',
+      },
+    });
+    await expect(
+      runner({
+        operation: 'resolve',
+        projectRoot: repository,
+        bindingId: migrationBinding.bindingId,
+        resolutionKind: 'recreate',
+        previewOperationId: recreateOperationId,
+        authorityEvidenceFile: authorityPath,
+      }),
+    ).rejects.toThrow(/policy.*drifted|projection.*drifted/i);
+    await store.updateBindingMetadata(beforePriorityPolicyDrift);
     const originalConfig = await readFile(configPath, 'utf8');
     const tightenedConfig = JSON.parse(originalConfig) as {
       pjm: { remote: { policy: Record<string, unknown> } };
@@ -1063,6 +1217,10 @@ describe('production lifecycle composition', () => {
       },
     });
     const createAction = createHandoff.externalAction!;
+    const recreateCreateFields = createAction.intent.fields as Record<
+      string,
+      unknown
+    >;
     runnerInput = {
       schemaVersion: 1,
       operationId: createAction.operationId,
@@ -1076,10 +1234,7 @@ describe('production lifecycle composition', () => {
       outcome: {
         classification: 'observed',
         identity: { stableId: 'issue-recreated', aliases: ['RECREATED-1'] },
-        fields: {
-          title: 'Local title',
-          priority: 'high',
-        },
+        fields: recreateCreateFields,
         revisionDigest: 'sha256:recreate-create',
         diagnosticCode: null,
       },
@@ -1107,12 +1262,7 @@ describe('production lifecycle composition', () => {
       outcome: {
         classification: 'observed',
         identity: { stableId: 'issue-recreated', aliases: ['RECREATED-1'] },
-        fields: {
-          title: 'Local title',
-          description: 'Local managed description',
-          priority: 'high',
-          status: 'open',
-        },
+        fields: { ...recreateCreateFields, priority: null, status: 'open' },
         revisionDigest: 'sha256:recreate-readback',
         diagnosticCode: null,
       },

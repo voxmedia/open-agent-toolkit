@@ -830,6 +830,12 @@ async function prepareResolution(
     binding: metadata.policyRestrictions,
   });
   const now = dependencies.now();
+  const resolutionAction = await resolveCurrentResolutionAction(
+    request,
+    metadata,
+    state,
+    dependencies,
+  );
   const operationId = durableId('op', dependencies.randomId());
   const operationWithoutApproval: RemoteOperationRecord = {
     recordType: 'operation',
@@ -853,10 +859,12 @@ async function prepareResolution(
       bindingId: metadata.bindingId,
       provider: metadata.provider,
       providerContext: metadata.remoteIdentity.context,
-      capabilityEvidenceDigest: 'unprobed',
+      capabilityEvidenceDigest: resolutionAction.capabilityEvidenceDigest,
       revisionDigest: state.snapshot?.revision.contentHash ?? 'unobserved',
       revisionEvidence: revisionEvidenceFromState(state),
-      policyDigest: semanticDigest(effective),
+      policyDigest: semanticDigest(
+        resolutionPolicyEvidence(effective, metadata, request.resolutionKind),
+      ),
     },
     authority: {
       effective: effective.authority[request.resolutionKind],
@@ -865,7 +873,7 @@ async function prepareResolution(
     approval: null,
     createdAt: now,
     updatedAt: now,
-    selectedExecution: null,
+    selectedExecution: resolutionAction.selectedExecution,
     attempts: [],
     observations: [],
     verification: [],
@@ -920,11 +928,16 @@ async function applyResolutionPreview(
       request.projectRoot,
       metadata,
     );
+    const policyEvidence = resolutionPolicyEvidence(
+      effective,
+      metadata,
+      'recreate',
+    );
     const projection = planRecreateNewRecordProjection({
       metadata,
       state,
       descriptionMode: effective.description,
-      priorityMapping: true,
+      priorityMapping: resolveSafePriorityMapping(metadata),
     });
     const assessedAt = operation.approvalPreview?.createdAt;
     if (!assessedAt) {
@@ -935,7 +948,7 @@ async function applyResolutionPreview(
     const expectedPreviewDigest = semanticDigest({
       bindingId: metadata.bindingId,
       target: metadata.target,
-      policyDigest: semanticDigest(effective),
+      policyDigest: semanticDigest(policyEvidence),
       projectionDigest: safety.projectionDigest,
       safetyResultDigest: safety.resultDigest,
       capabilityEvidenceDigest: operation.selectedExecution!.evidenceDigest,
@@ -947,7 +960,7 @@ async function applyResolutionPreview(
       digest: expectedPreviewDigest,
       revisionDigest: state.snapshot?.revision.contentHash ?? 'unobserved',
       revisionEvidence: revisionEvidenceFromState(state),
-      policyDigest: semanticDigest(effective),
+      policyDigest: semanticDigest(policyEvidence),
       projectionDigest: safety.projectionDigest,
       safetyResultDigest: safety.resultDigest,
     };
@@ -1017,28 +1030,38 @@ async function applyResolutionPreview(
     (entry) =>
       entry.field === 'binding-transition' && entry.status === 'verified',
   );
-  const invocation = await readCurrentMutationInvocation(request);
   const effective = await effectivePolicyForBinding(
     request.projectRoot,
     metadata,
   );
+  const lifecycleOperation = operation.lifecycleOperation as
+    | 'relink'
+    | 'detach'
+    | 'recreate';
+  const currentResolutionAction = await resolveCurrentResolutionAction(
+    request,
+    metadata,
+    state,
+    dependencies,
+  );
   const expectedAuthority: NonNullable<RemoteOperationRecord['authority']> = {
-    effective:
-      effective.authority[
-        operation.lifecycleOperation as 'relink' | 'detach' | 'recreate'
-      ],
+    effective: effective.authority[lifecycleOperation],
     sourceDigest: semanticDigest(effective.authorityTrace),
   };
   const expectedPreviewInputs: RemoteOperationRecord['preview'] = {
     ...operation.preview,
+    capabilityEvidenceDigest: currentResolutionAction.capabilityEvidenceDigest,
     revisionDigest: state.snapshot?.revision.contentHash ?? 'unobserved',
     revisionEvidence: revisionEvidenceFromState(state),
-    policyDigest: semanticDigest(effective),
+    policyDigest: semanticDigest(
+      resolutionPolicyEvidence(effective, metadata, lifecycleOperation),
+    ),
   };
   const expectedOperationInputs: RemoteOperationRecord = {
     ...operation,
     preview: expectedPreviewInputs,
     authority: expectedAuthority,
+    selectedExecution: currentResolutionAction.selectedExecution,
   };
   const expectedApprovalPreview = resolutionApprovalPreview(
     expectedOperationInputs,
@@ -1054,17 +1077,19 @@ async function applyResolutionPreview(
     !persistedBindingTransition &&
     (!isDeepStrictEqual(operation.preview, expectedPreview) ||
       !isDeepStrictEqual(operation.authority, expectedAuthority) ||
+      !isDeepStrictEqual(
+        operation.selectedExecution,
+        currentResolutionAction.selectedExecution,
+      ) ||
       !isDeepStrictEqual(operation.approvalPreview, expectedApprovalPreview))
   ) {
     throw new Error(
-      'Resolution policy, authority, revision, or public approval preview drifted.',
+      'Resolution capability, semantic action, policy, authority, revision, or public approval preview drifted.',
     );
   }
+  const invocation = await readCurrentMutationInvocation(request);
   const authority = validateProductionMutationAuthority({
-    effective:
-      effective.authority[
-        operation.lifecycleOperation as 'relink' | 'detach' | 'recreate'
-      ],
+    effective: effective.authority[lifecycleOperation],
     invocation,
     preview: persistedBindingPreview(operation.approvalPreview!),
     expected: {
@@ -1140,29 +1165,13 @@ async function applyResolutionPreview(
       },
     });
   }
-  if (!request.capabilityEvidenceStdin) {
-    throw new Error(
-      'Relink and recreate require current live host capability evidence.',
-    );
+  if (!currentResolutionAction.semanticOperation) {
+    throw new Error('Resolution host action evidence is missing.');
   }
-  const capability = parseHostCapabilityEvidence(
-    await dependencies.readObservationStdin(),
-  );
-  const semanticOperation =
-    operation.lifecycleOperation === 'relink' ? 'read' : 'search-duplicates';
-  const selection = selectHostExecution({
-    provider: metadata.provider,
-    context: metadata.remoteIdentity.context,
-    operation: semanticOperation,
-    candidates: [capability],
-    attemptStarted: false,
-  });
-  if (!selection.selected) {
-    throw new Error(`No current host capability: ${selection.reason}.`);
-  }
+  const semanticOperation = currentResolutionAction.semanticOperation;
   const stableId =
-    operation.lifecycleOperation === 'relink'
-      ? parseProviderReference(request.providerRef, metadata.provider)
+    semanticOperation === 'read'
+      ? currentResolutionAction.intent.stableId
       : null;
   const action = buildExternalAction({
     operationId: operation.operationId,
@@ -1170,10 +1179,7 @@ async function applyResolutionPreview(
     provider: metadata.provider,
     semanticOperation,
     context: metadata.remoteIdentity.context,
-    intent:
-      semanticOperation === 'read'
-        ? { stableId: stableId! }
-        : { query: state.localProjection.title },
+    intent: currentResolutionAction.intent,
     expectedObservation: {
       fields:
         semanticOperation === 'read'
@@ -1186,7 +1192,8 @@ async function applyResolutionPreview(
         : {}),
       requireIdentity: semanticOperation === 'read',
       stableId,
-      capabilityEvidenceDigest: capability.evidenceDigest,
+      capabilityEvidenceDigest:
+        currentResolutionAction.capabilityEvidenceDigest,
     },
     persistedPreview: {},
   });
@@ -1195,7 +1202,7 @@ async function applyResolutionPreview(
     state: 'pending',
     authority: authority.authority,
     approval: authority.approval,
-    selectedExecution: capabilityReference(capability),
+    selectedExecution: currentResolutionAction.selectedExecution,
     reason: {
       code: `resolution-${operation.lifecycleOperation}-observation-required`,
       message: 'Provider-neutral resolution evidence is required.',
@@ -1664,6 +1671,129 @@ async function effectivePolicyForBinding(
   });
 }
 
+type ResolutionActionEvidence =
+  | {
+      semanticOperation: null;
+      intent: null;
+      capabilityEvidenceDigest: string;
+      selectedExecution: null;
+    }
+  | {
+      semanticOperation: 'read';
+      intent: { stableId: string };
+      capabilityEvidenceDigest: string;
+      selectedExecution: NonNullable<
+        RemoteOperationRecord['selectedExecution']
+      >;
+    }
+  | {
+      semanticOperation: 'search-duplicates';
+      intent: { query: string };
+      capabilityEvidenceDigest: string;
+      selectedExecution: NonNullable<
+        RemoteOperationRecord['selectedExecution']
+      >;
+    };
+
+async function resolveCurrentResolutionAction(
+  request: RemoteCommandRequest,
+  metadata: RemoteBindingMetadata,
+  state: RemoteBindingState,
+  dependencies: ProductionRemoteRunnerDependencies,
+): Promise<ResolutionActionEvidence> {
+  if (request.resolutionKind === 'detach') {
+    return {
+      semanticOperation: null,
+      intent: null,
+      capabilityEvidenceDigest: semanticDigest({
+        mode: 'no-host-action',
+        lifecycleOperation: 'detach',
+      }),
+      selectedExecution: null,
+    };
+  }
+  if (
+    request.resolutionKind !== 'relink' &&
+    request.resolutionKind !== 'recreate'
+  ) {
+    throw new Error('Resolution requires an explicit supported kind.');
+  }
+  if (!request.capabilityEvidenceStdin) {
+    throw new Error(
+      'Relink and recreate preview requires current live host capability evidence.',
+    );
+  }
+  const capability = parseHostCapabilityEvidence(
+    await dependencies.readObservationStdin(),
+  );
+  const now = Date.parse(dependencies.now());
+  const observedAt = Date.parse(capability.observedAt);
+  if (
+    !Number.isFinite(now) ||
+    !Number.isFinite(observedAt) ||
+    observedAt > now ||
+    now - observedAt > 300_000
+  ) {
+    throw new Error('Resolution capability evidence is stale or future-dated.');
+  }
+  const semanticOperation =
+    request.resolutionKind === 'relink' ? 'read' : 'search-duplicates';
+  const selection = selectHostExecution({
+    provider: metadata.provider,
+    context: metadata.remoteIdentity.context,
+    operation: semanticOperation,
+    candidates: [capability],
+    attemptStarted: false,
+  });
+  if (!selection.selected) {
+    throw new Error(`No current host capability: ${selection.reason}.`);
+  }
+  const selectedEvidence = {
+    capabilityEvidenceDigest: selection.evidence.evidenceDigest,
+    selectedExecution: capabilityReference(selection.evidence),
+  };
+  if (semanticOperation === 'read') {
+    return {
+      semanticOperation,
+      intent: {
+        stableId: parseProviderReference(
+          request.providerRef,
+          metadata.provider,
+        ),
+      },
+      ...selectedEvidence,
+    };
+  }
+  return {
+    semanticOperation,
+    intent: { query: state.localProjection.title },
+    ...selectedEvidence,
+  };
+}
+
+function resolveSafePriorityMapping(metadata: RemoteBindingMetadata): boolean {
+  return metadata.publicationProjection.priority !== 'none';
+}
+
+function resolutionPolicyEvidence(
+  effective: Awaited<ReturnType<typeof effectivePolicyForBinding>>,
+  metadata: RemoteBindingMetadata,
+  operation: 'relink' | 'detach' | 'recreate',
+) {
+  return {
+    effective,
+    ...(operation === 'recreate'
+      ? {
+          priorityMapping: {
+            enabled: resolveSafePriorityMapping(metadata),
+            source: 'binding-publication-projection' as const,
+            projection: metadata.publicationProjection.priority,
+          },
+        }
+      : {}),
+  };
+}
+
 function resolutionApprovalPreview(
   operation: RemoteOperationRecord,
   metadata: RemoteBindingMetadata,
@@ -1696,15 +1826,30 @@ function resolutionApprovalPreview(
       digest: operation.preview.revisionDigest,
       revisionEvidence,
     }),
-    capability: digest(
-      'capability',
-      operation.preview.capabilityEvidenceDigest,
-    ),
+    capability: digest('capability', {
+      mode: operation.selectedExecution ? 'selected' : 'no-host-action',
+      selectedExecution: operation.selectedExecution,
+      evidenceDigest: operation.preview.capabilityEvidenceDigest,
+    }),
     policy: operation.preview.policyDigest,
     projection: digest('projection', {
-      lifecycleOperation: operation.lifecycleOperation,
-      localTarget: metadata.target,
-      providerRef: providerRef ?? null,
+      semanticAction:
+        operation.lifecycleOperation === 'detach'
+          ? null
+          : operation.lifecycleOperation === 'relink'
+            ? {
+                operation: 'read',
+                intent: {
+                  stableId: parseProviderReference(
+                    providerRef,
+                    metadata.provider,
+                  ),
+                },
+              }
+            : {
+                operation: 'search-duplicates',
+                intent: { query: state.localProjection.title },
+              },
     }),
     outboundSafety: digest('outbound-safety', {
       operation: operation.lifecycleOperation,
@@ -4214,11 +4359,16 @@ async function continueResolutionOperation(
         request.projectRoot,
         metadata,
       );
+      const policyEvidence = resolutionPolicyEvidence(
+        effective,
+        metadata,
+        'recreate',
+      );
       const projection = planRecreateNewRecordProjection({
         metadata,
         state,
         descriptionMode: effective.description,
-        priorityMapping: true,
+        priorityMapping: resolveSafePriorityMapping(metadata),
       });
       const safety = assessOutboundProjectionSafety(projection, {
         assessedAt: dependencies.now(),
@@ -4233,7 +4383,7 @@ async function continueResolutionOperation(
       const previewDigest = semanticDigest({
         bindingId: metadata.bindingId,
         target: metadata.target,
-        policyDigest: semanticDigest(effective),
+        policyDigest: semanticDigest(policyEvidence),
         projectionDigest: safety.projectionDigest,
         safetyResultDigest: safety.resultDigest,
         capabilityEvidenceDigest: operation.selectedExecution.evidenceDigest,
@@ -4278,7 +4428,7 @@ async function continueResolutionOperation(
           digest: previewDigest,
           revisionDigest: state.snapshot?.revision.contentHash ?? 'unobserved',
           revisionEvidence: revisionEvidenceFromState(state),
-          policyDigest: semanticDigest(effective),
+          policyDigest: semanticDigest(policyEvidence),
           projectionDigest: safety.projectionDigest,
           safetyResultDigest: safety.resultDigest,
         },

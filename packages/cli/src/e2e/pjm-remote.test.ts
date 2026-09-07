@@ -438,7 +438,7 @@ describe('pjm remote end-to-end command workflows', () => {
           remote: {
             schemaVersion: 1,
             policy: {
-              description: 'none',
+              description: 'managed-section',
               authority: { default: 'user-approved' },
             },
             storage: { state: 'local' },
@@ -963,6 +963,9 @@ describe('pjm remote end-to-end command workflows', () => {
       );
     };
 
+    runnerInput = capabilities.find(
+      (capability) => capability.provider === 'linear',
+    )!;
     const relinkPreview = await runRemoteCommand(
       [
         'resolve',
@@ -970,6 +973,7 @@ describe('pjm remote end-to-end command workflows', () => {
         'linear:linear-relinked',
         '--binding',
         'bnd_linear_e2e_001',
+        '--capability-evidence-stdin',
       ],
       'needs-review',
       false,
@@ -1064,15 +1068,22 @@ describe('pjm remote end-to-end command workflows', () => {
     for (const lifecycleCondition of [
       'archived',
       'moved',
-      'missing-or-invisible',
       'deleted-confirmed',
       'temporarily-unavailable',
+      'missing-or-invisible',
     ] as const) {
       const anomalyMetadata =
         (await store.readBindingMetadata('bnd_linear_e2e_001'))!;
       await store.updateBindingMetadata({
         ...anomalyMetadata,
         lifecycle: 'blocked',
+        publicationProjection: {
+          ...anomalyMetadata.publicationProjection,
+          priority:
+            lifecycleCondition === 'missing-or-invisible'
+              ? 'none'
+              : 'frontmatter',
+        },
       });
       const anomalyState =
         (await store.readBindingState('bnd_linear_e2e_001'))!;
@@ -1085,8 +1096,17 @@ describe('pjm remote end-to-end command workflows', () => {
           lifecycle: lifecycleCondition,
         },
       });
+      runnerInput = capabilities.find(
+        (capability) => capability.provider === 'linear',
+      )!;
       const recreatePreview = await runRemoteCommand(
-        ['resolve', 'recreate', '--binding', 'bnd_linear_e2e_001'],
+        [
+          'resolve',
+          'recreate',
+          '--binding',
+          'bnd_linear_e2e_001',
+          '--capability-evidence-stdin',
+        ],
         'needs-review',
         true,
         { projectRoot: repository, run: runner },
@@ -1162,8 +1182,19 @@ describe('pjm remote end-to-end command workflows', () => {
       ) as RemoteCommandEnvelope;
       expect(createPreviewEnvelope).toMatchObject({
         status: 'needs-review',
-        approvalPreview: { operationClass: 'recreate' },
+        approvalPreview: {
+          operationClass: 'recreate',
+          fieldMask:
+            lifecycleCondition === 'missing-or-invisible'
+              ? expect.arrayContaining(['title', 'description'])
+              : expect.arrayContaining(['title', 'description', 'priority']),
+        },
       });
+      if (lifecycleCondition === 'missing-or-invisible') {
+        expect(createPreviewEnvelope.approvalPreview!.fieldMask).not.toContain(
+          'priority',
+        );
+      }
       recreateCreateApprovalPreview = createPreviewEnvelope.approvalPreview!;
     }
     await approveResolution(
@@ -1241,7 +1272,7 @@ describe('pjm remote end-to-end command workflows', () => {
         identity: { stableId: 'linear-recreated', aliases: ['REC-1'] },
         fields: {
           ...createFields,
-          description: 'Recreated description',
+          priority: null,
           status: 'open',
         },
         revisionDigest: 'sha256:e2e-recreate-readback',
