@@ -190,6 +190,18 @@ oat_generated: false
 
 **Plan rows: attempt 1 → `fixes_added`, attempt 2 → `superseded`** (gate-written rows moved forward in place with the archived paths); the gate re-runs on the repaired wrapper.
 
+### Review Received: plan (attempt 3)
+
+**Date:** 2026-09-07
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-07T044034Z.md (gate-invoked, run `80c5b964-3260-491f-8925-933ad39ed8d5`, blocked)
+**Findings:** Critical 0 · Important 1 · Medium 0 · Minor 0 — resolved in-artifact:
+
+- I1 — contract precedence was contradictory: Architecture said the external plan is the "entire and only" contract while the addenda claimed equal authority: **fixed** — Architecture now defines the complete task contract as exactly two documents (the immutable plan plus its named, non-narrowing addendum), states precedence (addendum governs current-state facts; the plan governs every requirement and the addendum may only add), and declares the Parallelism observations and Drift Refresh Record evidence-only; wrapper rules 1–2 and the addenda intro align; instruction-like sentences in the drift record became pointers to the addenda; the lane-brief contract sentence is updated to the same model.
+
+**Verification record:** what — the wording repair; how — `oat project validate-plan` exit 0; grep shows no remaining "entire and only" phrase; where — this section and the commit that carries it.
+
+**Plan row (attempt 3) → `fixes_added`**; the gate re-runs (attempt 4).
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
