@@ -12,6 +12,7 @@ import { createProjectMigrateCommand } from './migrate';
 import { createProjectNewCommand } from './new';
 import { createProjectOpenCommand } from './open';
 import { createProjectPauseCommand } from './pause';
+import { createProjectPromoteCommand } from './promote';
 import { createProjectPruneCommand } from './prune';
 import { createProjectPullCommand } from './pull';
 import { createProjectPushCommand } from './push';
@@ -36,6 +37,7 @@ export function createProjectCommand(): Command {
     .addCommand(createProjectNewCommand())
     .addCommand(createProjectOpenCommand())
     .addCommand(createProjectPauseCommand())
+    .addCommand(createProjectPromoteCommand())
     .addCommand(createProjectPruneCommand())
     .addCommand(createProjectPushCommand())
     .addCommand(createProjectPullCommand())

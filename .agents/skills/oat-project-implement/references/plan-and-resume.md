@@ -110,7 +110,25 @@ Example:
 
 ### Step 2.5: Confirm Plan HiLL Checkpoints
 
-Read `oat_plan_hill_phases` from `"$PROJECT_PATH/plan.md"` frontmatter when present and validate it.
+#### Lite checkpoint bypass
+
+Resolve `oat_workflow_mode` from project state before any generic checkpoint
+field read. When `oat_workflow_mode` is `lite`, resolve checkpoint state as
+`none` without reading or interpreting `oat_plan_hill_phases`; for other modes,
+an empty list means every phase and therefore cannot represent lite's policy.
+Write this plan frontmatter value:
+
+```yaml
+oat_auto_review_at_hill_checkpoints: false # lite: no checkpoints
+```
+
+Skip the workflow preference prompt, standard checkpoint prompt, and
+auto-review preference prompt in both interactive and autonomous runs. Continue
+directly to Step 2.6. The standard root-owned per-phase review and final review
+remain required; only HiLL approval pauses are absent.
+
+For every other workflow mode, read `oat_plan_hill_phases` from
+`"$PROJECT_PATH/plan.md"` frontmatter when present and validate it.
 
 - **Valid format:** JSON-like array of phase IDs (e.g., `["p01","p03"]`)
 - **Allowed pre-confirmation state:** field missing entirely on the first implementation run

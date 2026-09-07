@@ -8,12 +8,14 @@ import { describe, expect, it } from 'vitest';
 const PROJECT_START_SKILLS = [
   'oat-project-new',
   'oat-project-quick-start',
+  'oat-project-lite',
   'oat-project-import-plan',
 ] as const;
 
 /** Plan-producing workflows that must run the shared gate-posture setup. */
 const GATE_POSTURE_CALLER_SKILLS = [
   'oat-project-quick-start',
+  'oat-project-lite',
   'oat-project-plan',
   'oat-project-import-plan',
 ] as const;
@@ -349,19 +351,26 @@ describe('project-start preflight contracts', () => {
     });
 
     it.each(GATE_POSTURE_CALLER_SKILLS)(
-      '%s runs gate-posture setup between phase-gate setup and artifact review',
+      '%s runs gate-posture setup after stable plan structure and before artifact review',
       (name) => {
         const content = readSkill(name);
-        const phaseGate = content.indexOf(
-          ': Configure Optional Phase Gate Review',
+        const stablePlanStructure = content.indexOf(
+          name === 'oat-project-lite'
+            ? '### Step 5: Resolve Dispatch Ceiling'
+            : ': Configure Optional Phase Gate Review',
         );
         const posture = content.indexOf(': Configure Lifecycle Gate Posture');
         const artifactReview = content.indexOf('Plan Artifact Review Loop');
 
         // Ordering, not mere presence: the posture choice must be persisted
         // after the plan has stable phase IDs and before artifact review.
-        expect(phaseGate, `${name} has phase-gate setup`).toBeGreaterThan(0);
-        expect(posture, `${name} has posture setup`).toBeGreaterThan(phaseGate);
+        expect(
+          stablePlanStructure,
+          `${name} has stable plan structure`,
+        ).toBeGreaterThan(0);
+        expect(posture, `${name} has posture setup`).toBeGreaterThan(
+          stablePlanStructure,
+        );
         expect(artifactReview, `${name} has artifact review`).toBeGreaterThan(
           posture,
         );

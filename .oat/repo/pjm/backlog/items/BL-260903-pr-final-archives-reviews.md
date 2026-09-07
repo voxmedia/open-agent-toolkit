@@ -12,7 +12,7 @@ labels:
   - retro
 assignee: null
 created: 2026-09-03T17:54:40.503Z
-updated: 2026-09-04T03:55:32Z
+updated: 2026-09-07T01:12:43Z
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-03-validate-review-ledger-paths-before-final-pr.md
@@ -30,5 +30,12 @@ Suggested directions, either of which would close it: re-run the archive step af
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- Before `gh pr create`, PR-final validates that every path referenced by the
+  plan Reviews ledger resolves to an existing active or archived review
+  artifact. It blocks with the missing path when validation fails.
+- A test covers a final review created after the initial archive pass. PR-final
+  archives or otherwise reconciles that artifact and leaves the ledger path
+  resolvable before PR creation.
+- A test moves a tracked review into the ignored `reviews/archived/` directory,
+  runs the repository formatter and staging hooks, and proves the committed
+  destination remains present without reporting a false archival failure.

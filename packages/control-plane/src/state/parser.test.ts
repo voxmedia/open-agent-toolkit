@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { WORKFLOW_MODES } from '../index';
 import { parseStateFrontmatter } from './parser';
 
 describe('parseStateFrontmatter', () => {
@@ -135,6 +136,25 @@ oat_workflow_mode: import
       executionMode: 'single-thread',
       workflowMode: 'import',
     });
+  });
+
+  it('parses lite workflow mode and rejects unknown workflow modes', () => {
+    expect(
+      parseStateFrontmatter(`---
+oat_workflow_mode: lite
+---
+`),
+    ).toMatchObject({ workflowMode: 'lite' });
+    expect(
+      parseStateFrontmatter(`---
+oat_workflow_mode: bogus
+---
+`),
+    ).toMatchObject({ workflowMode: null });
+  });
+
+  it('exports the complete ordered workflow mode list', () => {
+    expect(WORKFLOW_MODES).toEqual(['spec-driven', 'quick', 'import', 'lite']);
   });
 
   it('parses complete lifecycle values when present', () => {

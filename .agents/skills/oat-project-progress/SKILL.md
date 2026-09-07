@@ -1,6 +1,6 @@
 ---
 name: oat-project-progress
-version: 1.3.1
+version: 1.4.0
 description: Use when the user explicitly asks to check OAT project progress — e.g. "check progress", "what's next", "where are we", or confirms a previously offered progress check. Do NOT auto-invoke just because a workflow step completed. Reads project status and offers the next route.
 disable-model-invocation: false
 user-invocable: true
@@ -160,6 +160,7 @@ No active projects.
 Start a new project:
   oat-project-new - Create a spec-driven project scaffold
   oat-project-quick-start - Start a quick workflow project
+  oat-project-lite - Start a lite workflow (interview -> plan -> implement)
   oat-project-import-plan - Import an external markdown plan into OAT
 ```
 
@@ -171,7 +172,7 @@ Read `{project}/state.md` frontmatter:
 
 - `oat_phase` - Current phase
 - `oat_phase_status` - in_progress or complete
-- `oat_workflow_mode` - spec-driven | quick | import
+- `oat_workflow_mode` - spec-driven | quick | import | lite
 - `oat_blockers` - Any blockers
 - `oat_hill_checkpoints` - Configured gates (e.g., `["discovery", "spec", "design"]`)
 - `oat_hill_completed` - Completed HiLL checkpoints
@@ -210,6 +211,7 @@ Read `oat_workflow_mode` from `state.md` frontmatter:
 - `spec-driven` (default if missing)
 - `quick`
 - `import`
+- `lite`
 
 **HiLL override (apply before phase routing):**
 
@@ -290,6 +292,16 @@ Routing matrix by mode:
 | implement | complete         | Ready for final review / PR                                                                                                         |
 | implement | pr_open          | `oat-project-complete`                                                                                                              |
 
+**Lite mode (`oat_workflow_mode: lite`):**
+
+| oat_phase | oat_phase_status | Next Skill                                                                                                                          |
+| --------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| plan      | in_progress      | Continue `oat-project-lite` when the plan is still tier 3; otherwise `oat-project-implement`                                        |
+| plan      | complete         | `oat-project-implement`                                                                                                             |
+| implement | in_progress      | Continue `oat-project-implement`. If drift detected (see drift detection above), also mention `oat-project-reconcile` as an option. |
+| implement | complete         | Ready for final review / PR                                                                                                         |
+| implement | pr_open          | `oat-project-complete`                                                                                                              |
+
 **If blockers exist:**
 
 ```
@@ -312,9 +324,10 @@ Knowledge:
   oat-repo-knowledge-index             - Generate/refresh codebase knowledge base
 
 Workflow:
+  oat-project-lite              - Start a lite workflow (interview -> plan -> implement)
   oat-project-quick-start       - Start a quick workflow (discover -> plan -> implement)
   oat-project-import-plan       - Import an external markdown plan and normalize plan.md
-  oat-project-promote-spec-driven - Promote quick/import project to spec-driven lifecycle
+  oat-project-promote-spec-driven - Promote quick/import/lite project to spec-driven lifecycle (lite promotes via quick)
   oat-project-discover          - Start discovery phase (requirements gathering)
   oat-project-design            - Confirm requirements + create technical design (folds spec authoring inline)
   oat-project-spec              - Optional standalone specification (most projects skip this — design handles it)

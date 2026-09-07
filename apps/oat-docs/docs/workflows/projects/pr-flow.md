@@ -17,10 +17,12 @@ Expected artifacts:
 - Required (all modes): `plan.md`
 - Required (spec-driven mode): `spec.md`, `design.md`
 - Optional (quick/import): `spec.md`, `design.md`
+- Not expected (lite): `discovery.md`, `spec.md`, or `design.md`
 - Recommended (quick mode): `discovery.md`
 - Recommended (import mode): `references/imported-plan.md`
 - Recommended: `implementation.md` final summary
 - Recommended: `summary.md` — pr-final treats it as the primary source for the PR Summary section and automatically refreshes it first when missing or stale
+- Lite source row: `oat-project-pr-final` uses the plan's Summary, Decisions, and Validation Criteria plus the `implementation.md` Final Summary; it does not create `summary.md` unless lite closeout explicitly opts in
 - Required gate for final PR: review table final row should be `passed`
 
 ## Output

@@ -12,6 +12,7 @@ import { Command } from 'commander';
 import {
   extractPhaseIdsFromPlan,
   parseFrontmatterFromContent,
+  validateLitePlan,
   validateParallelGroups,
 } from './validate-plan';
 
@@ -77,6 +78,34 @@ export function createProjectValidatePlanCommand(
 
       const groups = frontmatterResult.data['oat_plan_parallel_groups'];
       const phaseIds = extractPhaseIdsFromPlan(content);
+      let workflowMode: string | null = null;
+      try {
+        const stateContent = readFileSync(
+          join(options.projectPath, 'state.md'),
+          'utf-8',
+        );
+        const stateFrontmatter = parseFrontmatterFromContent(stateContent);
+        const mode =
+          stateFrontmatter.kind === 'invalid'
+            ? null
+            : stateFrontmatter.data['oat_workflow_mode'];
+        workflowMode = typeof mode === 'string' ? mode : null;
+      } catch {
+        workflowMode = null;
+      }
+
+      const liteResult = validateLitePlan(content, workflowMode);
+      if (!liteResult.ok) {
+        if (context.json) {
+          context.logger.json({ valid: false, errors: [liteResult.message] });
+        } else {
+          context.logger.error('Plan validation failed:');
+          context.logger.error(`  - ${liteResult.message}`);
+        }
+        process.exitCode = 1;
+        return;
+      }
+
       const result = validateParallelGroups(groups, phaseIds);
 
       if (result.valid) {

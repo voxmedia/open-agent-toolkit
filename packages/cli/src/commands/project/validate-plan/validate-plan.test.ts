@@ -4,8 +4,83 @@ import { createProjectValidatePlanCommand } from './index';
 import {
   extractPhaseIdsFromPlan,
   parseFrontmatterFromContent,
+  validateLitePlan,
   validateParallelGroups,
 } from './validate-plan';
+
+function litePlan(
+  options: {
+    phases?: number;
+    groups?: string;
+    criteria?: string[];
+  } = {},
+): string {
+  const phases = options.phases ?? 1;
+  const groups = options.groups ?? '[]';
+  const criteria = options.criteria ?? [
+    '- [ ] Focused behavior passes — Check: `pnpm test`',
+    '- manual: inspect the generated project state',
+  ];
+  return [
+    '---',
+    `oat_plan_parallel_groups: ${groups}`,
+    '---',
+    '',
+    '# Lite Plan',
+    '',
+    '## Validation Criteria',
+    '',
+    ...criteria,
+    '',
+    ...Array.from({ length: phases }, (_, index) => [
+      `## Phase ${index + 1}: Phase ${index + 1}`,
+      '',
+      `### Task p${String(index + 1).padStart(2, '0')}-t01: Task`,
+      '',
+    ]).flat(),
+  ].join('\n');
+}
+
+describe('validateLitePlan', () => {
+  it('returns lite-multi-phase when a lite plan has two phase headings', () => {
+    expect(validateLitePlan(litePlan({ phases: 2 }), 'lite')).toEqual({
+      ok: false,
+      code: 'lite-multi-phase',
+      message: expect.stringContaining('exactly one phase'),
+    });
+  });
+
+  it('returns lite-parallel-groups for non-empty lite parallel groups', () => {
+    expect(validateLitePlan(litePlan({ groups: '[[p01]]' }), 'lite')).toEqual({
+      ok: false,
+      code: 'lite-parallel-groups',
+      message: expect.stringContaining('no parallel groups'),
+    });
+  });
+
+  it('returns lite-criterion-without-command for a commandless criterion', () => {
+    expect(
+      validateLitePlan(
+        litePlan({ criteria: ['- [ ] The feature works correctly'] }),
+        'lite',
+      ),
+    ).toEqual({
+      ok: false,
+      code: 'lite-criterion-without-command',
+      message: expect.stringContaining('command'),
+    });
+  });
+
+  it('accepts a single-phase lite plan when every criterion names a command or manual check', () => {
+    expect(validateLitePlan(litePlan(), 'lite')).toEqual({ ok: true });
+  });
+
+  it('does not apply lite invariants to quick plans', () => {
+    expect(validateLitePlan(litePlan({ phases: 2 }), 'quick')).toEqual({
+      ok: true,
+    });
+  });
+});
 
 describe('validateParallelGroups', () => {
   const phaseIds = ['p01', 'p02', 'p03', 'p04', 'p05'] as const;

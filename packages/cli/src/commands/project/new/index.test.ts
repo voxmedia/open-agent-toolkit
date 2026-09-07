@@ -4,6 +4,7 @@ import {
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
 import { CliError } from '@errors/cli-error';
+import { WORKFLOW_MODES } from '@open-agent-toolkit/control-plane';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -18,7 +19,7 @@ type CommitScaffoldStatus =
 
 interface HarnessOptions {
   result?: {
-    mode: 'spec-driven' | 'quick' | 'import';
+    mode: 'spec-driven' | 'quick' | 'import' | 'lite';
     scope?: 'shared' | 'local' | 'synced';
     ref?: string;
     sha?: string;
@@ -141,6 +142,19 @@ describe('createProjectNewCommand', () => {
         scope: 'local',
       }),
     );
+  });
+
+  it('forwards lite mode and derives choices from WORKFLOW_MODES', async () => {
+    const { command, scaffoldProject } = createHarness();
+
+    await runCommand(command, ['demo', '--mode', 'lite']);
+
+    expect(scaffoldProject).toHaveBeenCalledWith(
+      expect.objectContaining({ mode: 'lite' }),
+    );
+    expect(
+      command.options.find((option) => option.long === '--mode')?.argChoices,
+    ).toEqual(WORKFLOW_MODES);
   });
 
   it('forwards an omitted scope as undefined for scaffold defaulting', async () => {

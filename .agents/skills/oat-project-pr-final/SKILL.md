@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-final
-version: 1.6.1
+version: 1.6.2
 description: Use when the user requests or confirms opening the final PR for an active OAT project — e.g. "open the final PR", "ship it", "run oat-project-pr-final", or confirms a previously offered final-PR step. Do NOT auto-invoke when phases are marked complete. Generates the final lifecycle PR description from artifacts and creates the PR.
 disable-model-invocation: false
 user-invocable: true
@@ -26,7 +26,8 @@ Generate a PR-ready summary grounded in canonical OAT artifacts, including:
 - `activeProject` in `.oat/config.local.json` points at an active project directory (or you can provide project name when prompted)
 - `{PROJECT_PATH}/plan.md` exists
 - In `spec-driven` mode: `{PROJECT_PATH}/spec.md` and `{PROJECT_PATH}/design.md` are required
-- In `quick`/`import` mode: `spec.md`/`design.md` are optional
+- In `quick`/`import`/`lite` mode: `spec.md`/`design.md` are optional; lite
+  proceeds with a reduced assurance note because plan.md is its full contract
 
 **Required (recommended to proceed):**
 
@@ -162,7 +163,7 @@ If `WORKFLOW_MODE=spec-driven`, also require:
 ls "$PROJECT_PATH/spec.md" "$PROJECT_PATH/design.md" 2>/dev/null
 ```
 
-If `WORKFLOW_MODE` is `quick` or `import`, proceed without spec/design and include a reduced-assurance note in the PR body.
+If `WORKFLOW_MODE` is `quick`, `import`, or `lite`, proceed without spec/design and include a reduced assurance note in the PR body. For lite, explicitly note that plan.md is the reduced artifact contract and the absence of discovery/spec/design is intentional.
 
 ### Step 2: Check Final Review Status
 
@@ -214,7 +215,32 @@ sequence step.
 
 **Step 3.0: Check for summary.md**
 
-Check if `{PROJECT_PATH}/summary.md` exists:
+Resolve the structurally exclusive route first:
+
+```bash
+# BEGIN LITE PR SUMMARY ROUTE CONTRACT
+if [ "$WORKFLOW_MODE" = "lite" ]; then
+  PR_SUMMARY_STRATEGY="lite-artifacts"
+  GENERIC_SUMMARY_REACHABLE="false"
+else
+  PR_SUMMARY_STRATEGY="summary-md"
+  GENERIC_SUMMARY_REACHABLE="true"
+fi
+# END LITE PR SUMMARY ROUTE CONTRACT
+```
+
+For `oat_workflow_mode: lite`, do not generate, refresh, or require
+`summary.md`. Synthesize the PR summary directly from the `plan.md` `Summary`,
+`Decisions`, and `Validation Criteria` sections plus the
+`implementation.md` `Final Summary (for PR/docs)` shipped results. This is the
+explicit reduced assurance path: absent `discovery.md`, `spec.md`, and
+`design.md` are valid and must not block PR creation. Then continue to Step 3.1
+only for the remaining available artifacts; do not invoke
+`oat-project-summary` for lite. This branch ends Step 3.0 and jumps directly to
+Step 3.1.
+
+**Non-lite branch only:** If the route contract sets
+`GENERIC_SUMMARY_REACHABLE=true`, check if `{PROJECT_PATH}/summary.md` exists:
 
 - If `summary.md` is missing or stale, refresh it automatically before proceeding.
 - When skill-to-skill invocation is available in the current host/runtime, load the current `oat-project-summary/SKILL.md` and follow it; never synthesize the summary from a remembered version of that skill.
@@ -229,8 +255,8 @@ Check if `{PROJECT_PATH}/summary.md` exists:
 
 Read:
 
-- `{PROJECT_PATH}/spec.md` (goals, priorities, verification; optional in quick/import)
-- `{PROJECT_PATH}/design.md` (architecture + testing strategy; optional in quick/import)
+- `{PROJECT_PATH}/spec.md` (goals, priorities, verification; optional in quick/import/lite)
+- `{PROJECT_PATH}/design.md` (architecture + testing strategy; optional in quick/import/lite)
 - `{PROJECT_PATH}/plan.md` (phases/tasks + reviews table)
 - `{PROJECT_PATH}/implementation.md` (if exists; preferred for “what actually happened”)
 - `{PROJECT_PATH}/discovery.md` (recommended for quick mode)
@@ -339,7 +365,7 @@ oat_project: { PROJECT_PATH }
 
 ## Goals / Non-Goals
 
-{brief bullets from available requirement artifacts: spec in spec-driven mode; discovery/import source in quick/import}
+{brief bullets from available requirement artifacts: spec in spec-driven mode; discovery/import source in quick/import; plan contract in lite}
 
 ## Changes
 

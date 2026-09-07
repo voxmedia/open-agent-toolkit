@@ -639,6 +639,89 @@ const PLAN_WRITING_CONTRACT_CLAUSE =
   'load the current `oat-project-plan-writing/SKILL.md` and follow that contract as written';
 
 const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
+  // ---------------------------------------------------------------------- lite
+  {
+    file: '.agents/skills/oat-project-lite/SKILL.md',
+    anchor: 'Step 5: Resolve Dispatch Ceiling',
+    match: 'Managed Dispatch Readiness and Review Contract',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [PLAN_WRITING_CONTRACT_CLAUSE],
+  },
+  {
+    file: '.agents/skills/oat-project-lite/SKILL.md',
+    anchor: 'Step 5: Resolve Dispatch Ceiling',
+    match: 'follow that contract as written',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [
+      'Invoke the complete **Managed Dispatch Readiness and Review Contract** from `oat-project-plan-writing`',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-lite/SKILL.md',
+    anchor: 'Step 5.5: Configure Lifecycle Gate Posture',
+    match: 'At this boundary, load the current',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [PLAN_WRITING_CONTRACT_CLAUSE],
+  },
+  {
+    file: '.agents/skills/oat-project-lite/SKILL.md',
+    anchor: 'Step 6: Run Plan Artifact Review Loop',
+    match:
+      'Invoke the `Auto Artifact-Review Loop` from `oat-project-plan-writing`',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [
+      'load the current `oat-project-plan-writing/SKILL.md` and follow that loop as written',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-lite/SKILL.md',
+    anchor: 'Step 6: Run Plan Artifact Review Loop',
+    match: 'follow that loop as written',
+    classification: 'load-required',
+    skills: ['oat-project-plan-writing'],
+    requires: [
+      'Invoke the `Auto Artifact-Review Loop` from `oat-project-plan-writing`',
+    ],
+  },
+  {
+    file: '.agents/skills/oat-project-lite/SKILL.md',
+    anchor: 'Success Criteria',
+    match: 'Completion state was committed separately and routes to',
+    classification: 'non-executing',
+    skills: ['oat-project-implement'],
+    reason:
+      'Success-criteria checklist describing the terminal handoff; Step 8 owns the execution boundary.',
+  },
+  {
+    file: '.agents/skills/oat-project-next/SKILL.md',
+    anchor: 'Step 5: Post-Implementation Router',
+    match: 'a passed final review routes directly to `oat-project-pr-final`',
+    classification: 'non-executing',
+    skills: ['oat-project-pr-final'],
+    reason:
+      'Lite routing rule inside the router table; Step 6 owns the invocation boundary.',
+  },
+  {
+    file: '.agents/skills/oat-project-plan/SKILL.md',
+    anchor: 'Prerequisites',
+    match: 'Lite planning is owned by `oat-project-lite`',
+    classification: 'non-executing',
+    skills: ['oat-project-lite'],
+    reason:
+      'Terminal handoff: this skill stops and tells the user which entry point owns lite planning.',
+  },
+  {
+    file: '.agents/skills/oat-project-pr-final/SKILL.md',
+    anchor: 'Step 3: Collect Project Summary',
+    match: 'do not invoke `oat-project-summary` for lite',
+    classification: 'non-executing',
+    skills: ['oat-project-summary'],
+    reason: 'Negative directive: lite explicitly does not run the named skill.',
+  },
   // ---------------------------------------------------------------- autonomous
   {
     file: '.agents/skills/oat-project-autonomous/SKILL.md',
@@ -661,6 +744,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
       'oat-project-discover',
       'oat-project-implement',
       'oat-project-import-plan',
+      'oat-project-lite',
       'oat-project-plan',
       'oat-project-quick-start',
     ],
@@ -672,7 +756,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     anchor: 'Step 2: Select Workflow Mode by Review Density',
     match: 'Invoke `oat-project-new` for spec-driven mode',
     classification: 'load-required',
-    skills: ['oat-project-new', 'oat-project-quick-start'],
+    skills: ['oat-project-lite', 'oat-project-new', 'oat-project-quick-start'],
     requires: [
       "load the selected creation skill's current `SKILL.md` and follow it",
     ],
@@ -717,6 +801,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
       'oat-project-discover',
       'oat-project-implement',
       'oat-project-import-plan',
+      'oat-project-lite',
       'oat-project-new',
       'oat-project-plan',
       'oat-project-quick-start',
@@ -733,6 +818,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
       'oat-project-dispatch-subagents',
       'oat-project-document',
       'oat-project-implement',
+      'oat-project-lite',
       'oat-project-pr-final',
       'oat-project-review-provide',
       'oat-project-review-receive',
@@ -753,6 +839,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
       'oat-project-document',
       'oat-project-implement',
       'oat-project-import-plan',
+      'oat-project-lite',
       'oat-project-new',
       'oat-project-plan',
       'oat-project-pr-final',
@@ -776,6 +863,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
       'oat-project-document',
       'oat-project-implement',
       'oat-project-import-plan',
+      'oat-project-lite',
       'oat-project-new',
       'oat-project-plan',
       'oat-project-pr-final',
@@ -794,6 +882,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     match: 'use `oat-project-reconcile` instead',
     classification: 'non-executing',
     skills: [
+      'oat-project-lite',
       'oat-project-new',
       'oat-project-quick-start',
       'oat-project-reconcile',
@@ -1010,7 +1099,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     anchor: 'Prerequisites',
     match: 'route to `oat-project-new` for spec-driven setup',
     classification: 'non-executing',
-    skills: ['oat-project-new', 'oat-project-quick-start'],
+    skills: ['oat-project-lite', 'oat-project-new', 'oat-project-quick-start'],
     reason:
       'Terminal handoff: this skill declines and stops; the named skill is the next entry point.',
   },
@@ -1021,6 +1110,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-import-plan',
+      'oat-project-lite',
       'oat-project-progress',
       'oat-project-quick-start',
     ],
@@ -1396,6 +1486,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     classification: 'non-executing',
     skills: [
       'oat-project-import-plan',
+      'oat-project-lite',
       'oat-project-new',
       'oat-project-quick-start',
     ],

@@ -8,7 +8,13 @@ export type Phase =
 
 export type PhaseStatus = 'in_progress' | 'complete' | 'pr_open';
 
-export type WorkflowMode = 'spec-driven' | 'quick' | 'import';
+export const WORKFLOW_MODES = [
+  'spec-driven',
+  'quick',
+  'import',
+  'lite',
+] as const;
+export type WorkflowMode = (typeof WORKFLOW_MODES)[number];
 
 export type ExecutionMode = 'single-thread' | 'subagent-driven';
 
