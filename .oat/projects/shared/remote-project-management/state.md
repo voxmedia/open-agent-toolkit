@@ -94,7 +94,7 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-09-07T05:43:41Z'
 oat_post_implement_sequence:
-  status: post_approval
+  status: complete
   source: configured
   final_phase: p09
   pre_approval: [summary, document, pr]
@@ -107,7 +107,7 @@ oat_post_implement_sequence:
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T12:18:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T12:19:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -117,7 +117,7 @@ oat_project_recap:
 
 # Project State: remote-project-management
 
-**Status:** PR open; post-approval closeout in progress
+**Status:** PR open; post-implementation sequence complete
 **Started:** 2026-03-15
 **Last Updated:** 2026-09-07
 
@@ -327,7 +327,7 @@ Implementation — PR open; no final HiLL checkpoint is configured for p09.
   as a non-blocking closeout warning
 - ✓ No final HiLL approval is required because the final phase p09 is not a
   configured implementation checkpoint
-- ⧗ Completing post-approval bookkeeping
+- ✓ Stored post-implementation sequence complete
 
 ## Blockers
 
@@ -336,7 +336,7 @@ fresh.
 
 ## Next Milestone
 
-Complete the stored post-implementation sequence and implementation bookkeeping.
+Mark implementation complete, preserving the open PR handoff.
 
 - Resume command: `oat-project-implement`
 - Merge before completion: merge the PR, then run `oat-project-complete`.
