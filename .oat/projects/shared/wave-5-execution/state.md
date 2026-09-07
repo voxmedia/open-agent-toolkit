@@ -191,8 +191,8 @@ Lifecycle complete
 - ✓ PR created
 - ✓ Project lifecycle complete (completion tail deferred to program close)
 - ✗ CI on PR #275 failed one Linux-only test; fixed as `7aed651ce` (fix(p02): content-root probe through the injected stat); gates green; pushed
-- ⚠ Exit gate basis stale (product change after the reviewed head); operator decision on a re-run pending
-- ⧗ Awaiting CI re-run and human review
+- ✓ Operator accepted the post-gate CI fix without a gate re-run (2026-09-07, "2"); CI re-run green, Bugbot clean
+- ⧗ Merge
 
 ## Blockers
 
