@@ -2877,6 +2877,75 @@ printf '%s\\n' "$EVENTS"`;
       ),
     ).toBe('not-ready');
 
+    // CommonMark measures indentation in columns, so one leading tab is
+    // already a four-column code indentation. A tab-indented apparent CLOSER
+    // never ends the example: the `passed` row below stays fenced, and the
+    // real pending row remains the only disposition. Counting the tab as a
+    // single character closed the fence and published the example row.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '```text',
+            'Example of a dispositioned review section:',
+            '\t```',
+            '| plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+            '```',
+            '```',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // The same column rule applies to an OPENER. A tab-indented marker is
+    // indented code, not a fence, so the bare marker after it opens the
+    // example that hides the `passed` row. Reading the tab as one column
+    // instead desynchronized the scan: it opened on the tab and closed on the
+    // bare marker, leaving the example row exposed as the record.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: [
+            ...PENDING_PLAN_ROW,
+            '',
+            '\t```',
+            '```',
+            '| plan  | artifact | passed  | 2026-09-07 | reviews/example.md |',
+            '```',
+          ],
+          tasks: SUBSTANTIVE_TASKS,
+        }),
+      ),
+    ).toBe('not-ready');
+
+    // Task extraction carries the identical fence logic, so it gets the
+    // identical control: a tab-indented apparent closer must not promote an
+    // example task heading into the substantive-task condition.
+    expect(
+      classifyQuickPlan(
+        guard,
+        quickPlanFixture({
+          frontmatter: REVIEWED_FRONTMATTER,
+          reviews: PASSED_PLAN_ROW,
+          tasks: [
+            '```markdown',
+            'Example task shape:',
+            '\t```',
+            '### Task p01-t01: Example task heading in a fenced sample',
+            '```',
+            '```',
+          ],
+        }),
+      ),
+    ).toBe('not-ready');
+
     // `oat_template` follows the repository's absent-or-false convention, so a
     // plan that predates the field is still ready.
     expect(
