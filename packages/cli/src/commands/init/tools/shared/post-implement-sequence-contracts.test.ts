@@ -428,6 +428,7 @@ describe('post-implementation sequence contracts', () => {
       'oat-project-design',
       'oat-project-plan',
       'oat-project-quick-start',
+      'oat-project-lite',
       'oat-project-import-plan',
     ]) {
       const skill = readLifecycleGateSkill(skillName);
@@ -960,7 +961,7 @@ describe('post-implementation sequence contracts', () => {
     const normalized = normalizeWhitespace(skill);
 
     expect(normalized).toContain(
-      'If the preference is unset and autonomy is inactive, do not create a sequence snapshot. Retain the existing next-step prompt only after final approval when a final checkpoint is configured.',
+      'For non-lite workflows, if the preference is unset and autonomy is inactive, do not create a sequence snapshot. Retain the existing next-step prompt only after final approval when a final checkpoint is configured.',
     );
   });
 

@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.14
+version: 1.1.0
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -106,6 +106,7 @@ projects, and synced records whose detached checkout is absent.
 - **The `projects` array is empty:** Report error and suggest:
   - `oat-project-new` — Create a spec-driven project
   - `oat-project-quick-start` — Start a quick workflow project
+  - `oat-project-lite` — Start a lite workflow project
   - `oat-project-import-plan` — Import an external plan
   - **STOP.** Do not attempt routing.
 
@@ -124,15 +125,15 @@ projects, and synced records whose detached checkout is absent.
 
 Read `"$PROJECT_PATH/state.md"` frontmatter and extract:
 
-| Field                     | Used For                                                                     |
-| ------------------------- | ---------------------------------------------------------------------------- |
-| `oat_phase`               | Current lifecycle position (discovery, spec, design, plan, implement)        |
-| `oat_phase_status`        | Phase completion state (in_progress, complete, pr_open)                      |
-| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import). Default: `spec-driven` |
-| `oat_hill_checkpoints`    | Which phases require HiLL approval                                           |
-| `oat_hill_completed`      | Which HiLL gates have been passed                                            |
-| `oat_blockers`            | Informational warnings (not routing gates)                                   |
-| `oat_implement_exit_gate` | Whether the implementation exit gate is allowed and fresh                    |
+| Field                     | Used For                                                                           |
+| ------------------------- | ---------------------------------------------------------------------------------- |
+| `oat_phase`               | Current lifecycle position (discovery, spec, design, plan, implement)              |
+| `oat_phase_status`        | Phase completion state (in_progress, complete, pr_open)                            |
+| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import, lite). Default: `spec-driven` |
+| `oat_hill_checkpoints`    | Which phases require HiLL approval                                                 |
+| `oat_hill_completed`      | Which HiLL gates have been passed                                                  |
+| `oat_blockers`            | Informational warnings (not routing gates)                                         |
+| `oat_implement_exit_gate` | Whether the implementation exit gate is allowed and fresh                          |
 
 **If state.md is missing or unreadable:** Report error and suggest running the relevant phase skill directly. STOP.
 
@@ -252,6 +253,15 @@ Otherwise, look up the target skill from the routing table for the current `oat_
 | Current Phase | Phase Status | Boundary Tier | Target Skill               |
 | ------------- | ------------ | ------------- | -------------------------- |
 | plan          | in_progress  | tier 3        | `oat-project-import-plan`  |
+| plan          | in_progress  | tier 2        | `oat-project-implement` \* |
+| plan          | complete     | tier 1        | `oat-project-implement` \* |
+| implement     | in_progress  | —             | `oat-project-implement` \* |
+
+**Lite Mode:**
+
+| Current Phase | Phase Status | Boundary Tier | Target Skill               |
+| ------------- | ------------ | ------------- | -------------------------- |
+| plan          | in_progress  | tier 3        | `oat-project-lite`         |
 | plan          | in_progress  | tier 2        | `oat-project-implement` \* |
 | plan          | complete     | tier 1        | `oat-project-implement` \* |
 | implement     | in_progress  | —             | `oat-project-implement` \* |
@@ -423,6 +433,12 @@ Ignore matching rows outside `REVIEWS_SECTION`; they are not review events.
 
 - If `FINAL_ROW` has `Status="passed"`:
   → Continue to 5.5
+
+**Lite closeout route:** If `oat_workflow_mode: lite`, a passed final review
+routes directly to `oat-project-pr-final` before the summary check below.
+Announce: "Final review passed — creating final PR". Optional lite summary or
+documentation work is owned by the immutable implementation closeout snapshot,
+not this fallback router.
 
 **5.5: Summary not done**
 

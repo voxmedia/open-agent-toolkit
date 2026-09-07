@@ -37,6 +37,19 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.60` (`lite-workflow-mode`, implementation complete; pending
+  PR/release) adds Lite as a first-class workflow mode for single-sitting
+  changes that still need an approved plan, atomic task commits, managed
+  dispatch, and independent review. Lite uses a three-artifact project shape
+  (`plan.md`, `state.md`, and `implementation.md`), one sequential phase, and
+  one pre-implementation approval; it omits discovery, spec, design, recap,
+  and default documentation closeout. `oat project promote <path> --to quick`
+  preserves the Lite plan and project identity while scaffolding Quick
+  discovery and plan artifacts when scope grows. Provider projections,
+  lifecycle docs, promotion paths, a disposable end-to-end run, and the full
+  repository/release/docs gate sequence passed. The configured cross-family
+  exit gate passed after the final design wording was aligned with the shipped
+  artifact-level readiness behavior.
 - CLI `0.2.59` (wave 4 of the 2026-08-31 execution program, wrapper project
   `wave-4-execution`, "delivered-project follow-ups", merged as PR #271) lets one project disable a
   configured lifecycle gate through a strict `oat_skill_gate_overrides` map in

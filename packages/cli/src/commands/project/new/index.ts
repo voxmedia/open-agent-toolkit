@@ -9,11 +9,14 @@ import {
 } from '@commands/shared/project-scope';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { CliError } from '@errors/cli-error';
+import {
+  WORKFLOW_MODES,
+  type WorkflowMode,
+} from '@open-agent-toolkit/control-plane';
 import { Command, Option } from 'commander';
 
 import {
   scaffoldProject as defaultScaffoldProject,
-  type ProjectScaffoldMode,
   type ScaffoldProjectResult,
 } from './scaffold';
 
@@ -24,7 +27,7 @@ const COMMIT_STATUS_MESSAGES = {
 } as const;
 
 interface ProjectNewCommandOptions {
-  mode: ProjectScaffoldMode;
+  mode: WorkflowMode;
   force: boolean;
   setActive: boolean;
   dashboard: boolean;
@@ -39,7 +42,7 @@ interface ProjectNewDependencies {
   scaffoldProject: (options: {
     repoRoot: string;
     projectName: string;
-    mode: ProjectScaffoldMode;
+    mode: WorkflowMode;
     force: boolean;
     setActive: boolean;
     refreshDashboard: boolean;
@@ -159,7 +162,7 @@ export function createProjectNewCommand(
     .argument('<name>', 'Project name (letters, numbers, dash, underscore)')
     .addOption(
       new Option('--mode <mode>', 'Scaffold mode')
-        .choices(['spec-driven', 'quick', 'import'])
+        .choices([...WORKFLOW_MODES])
         .default('spec-driven'),
     )
     .addOption(

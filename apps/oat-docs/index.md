@@ -60,7 +60,7 @@
     - [Evidence Layers](workflows/projects/evidence-layers.md) — The three-layer dispatch evidence model — policy resolution, launcher-owned configured invocation, and optional runtime-observed identity — used across dispatch records and smoke verification.
     - [Human-in-the-Loop Lifecycle (HiLL) Checkpoints](workflows/projects/hill-checkpoints.md) — Checkpoint configuration and behavior for pauseable, human-in-the-loop lifecycle execution.
     - [Implementation Execution](workflows/projects/implementation-execution.md) — How OAT executes plans with root-owned phase agents, independent phase review, bounded fixes, and worktree fan-out.
-    - [Lifecycle](workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, and import paths.
+    - [Lifecycle](workflows/projects/lifecycle.md) — End-to-end phase flow from discovery through completion: spec-driven, quick, lite, and import paths.
     - [Orchestration Model](workflows/projects/orchestration-model.md) — Root-owned phase execution, optional nested work, independent reviews, and provider-neutral dispatch in OAT projects.
     - [Picking Up Projects](workflows/projects/picking-up-projects.md) — Continue a synced OAT project on another machine or from another user through its dedicated Git ref.
     - [PR Flow](workflows/projects/pr-flow.md) — PR generation inputs, outputs, artifact expectations, and frontmatter handling.

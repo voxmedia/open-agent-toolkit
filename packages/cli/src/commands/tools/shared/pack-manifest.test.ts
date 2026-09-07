@@ -38,6 +38,20 @@ function fixture(overrides: Partial<PackDefinition> = {}): PackDefinition {
 }
 
 describe('PACK_MANIFEST', () => {
+  it('registers oat-project-lite in the workflows pack', () => {
+    const workflows = PACK_MANIFEST.find(({ name }) => name === 'workflows');
+
+    expect(workflows?.assets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'skill:oat-project-lite',
+          source: 'skills/oat-project-lite',
+          destination: '.agents/skills/oat-project-lite',
+        }),
+      ]),
+    );
+  });
+
   it('covers every PackName exactly once', () => {
     expect(PACK_MANIFEST.map(({ name }) => name).sort()).toEqual(
       [...ALL_PACKS].sort(),

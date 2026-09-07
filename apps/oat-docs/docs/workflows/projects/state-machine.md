@@ -32,7 +32,13 @@ flowchart TD
   FA --> FC["Fixes completed"]
   FC --> PASSED["Review passed"]
   PASSED --> I
+
+  LITE["Lite: batched interview\n(no discovery/spec/design)"] -. entry point .-> P
 ```
+
+The solid chain is the spec-driven progression. Lite enters at **Plan in
+progress** and never sets `oat_phase` to `discovery`, `spec`, or `design`;
+quick and import projects also skip part of the leading chain.
 
 ## Phase status values
 
@@ -64,6 +70,20 @@ Typical progression:
 11. PR open (`pr_open`) — post-PR review posture; actual PR existence is tracked via `oat_pr_status` / `oat_pr_url`
 12. Revision loop (optional): `pr_open` → revise → `in_progress` → implement → `pr_open`
 13. Complete
+
+Lite progression:
+
+1. Plan in progress (`oat_workflow_mode: lite`, `oat_phase: plan`)
+2. Ready for implement (one approval; no discovery, spec, or design states)
+3. Implement in progress (single phase, no HiLL checkpoint pauses)
+4. Implement complete (final review passed)
+5. PR open (`pr_open`) — lite closeout routes straight to `oat-project-pr-final`
+6. Complete
+
+A lite project that outgrows one sitting can move to the quick chain with `oat
+project promote <project-path> --to quick`, which flips `oat_workflow_mode` to
+`quick` and sets `oat_phase: discovery` with `oat_phase_status: complete`. See
+[Lifecycle](lifecycle.md#promoting-a-lite-project-to-quick).
 
 ## Review progression
 

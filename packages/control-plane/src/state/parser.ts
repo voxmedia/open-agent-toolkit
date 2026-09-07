@@ -3,13 +3,14 @@ import {
   normalizeNullableString,
   parseBoolean,
 } from '../shared/utils/normalize';
-import type {
-  ExecutionMode,
-  ExplainerDecisionV1,
-  Lifecycle,
-  Phase,
-  PhaseStatus,
-  WorkflowMode,
+import {
+  WORKFLOW_MODES,
+  type ExecutionMode,
+  type ExplainerDecisionV1,
+  type Lifecycle,
+  type Phase,
+  type PhaseStatus,
+  type WorkflowMode,
 } from '../types';
 
 const PHASES = [
@@ -22,7 +23,6 @@ const PHASES = [
 ] as const;
 const PHASE_STATUSES = ['in_progress', 'complete', 'pr_open'] as const;
 const EXECUTION_MODES = ['single-thread', 'subagent-driven'] as const;
-const WORKFLOW_MODES = ['spec-driven', 'quick', 'import'] as const;
 const LIFECYCLE_VALUES = ['active', 'paused', 'complete'] as const;
 const EXPLAINER_DECISIONS = ['generate', 'skip'] as const;
 const EXPLAINER_SOURCES = [

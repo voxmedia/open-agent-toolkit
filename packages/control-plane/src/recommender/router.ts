@@ -76,6 +76,13 @@ const IMPORT_ROUTES: Partial<Record<EarlyPhaseKey, string>> = {
   'implement:in_progress:any': 'oat-project-implement',
 };
 
+const LITE_ROUTES: Partial<Record<EarlyPhaseKey, string>> = {
+  'plan:in_progress:3': 'oat-project-lite',
+  'plan:in_progress:2': 'oat-project-implement',
+  'plan:complete:1': 'oat-project-implement',
+  'implement:in_progress:any': 'oat-project-implement',
+};
+
 export function recommendSkill(
   state: Omit<ProjectState, 'recommendation'>,
 ): SkillRecommendation {
@@ -96,6 +103,15 @@ export function recommendSkill(
   }
 
   const currentArtifact = getCurrentArtifact(state);
+  if (
+    state.workflowMode === 'quick' &&
+    currentArtifact?.readyFor === 'oat-project-quick-start'
+  ) {
+    return {
+      skill: 'oat-project-quick-start',
+      reason: 'Promoted quick project is explicitly ready for quick-start',
+    };
+  }
   if (currentArtifact?.readyFor && currentArtifact.status === 'complete') {
     return {
       skill: normalizeImplementationSkill(currentArtifact.readyFor, state),
@@ -199,7 +215,10 @@ function getPostImplementationRecommendation(
   const summaryArtifact = state.artifacts.find(
     (artifact) => artifact.type === 'summary',
   );
-  if (!summaryArtifact || summaryArtifact.status !== 'complete') {
+  if (
+    state.workflowMode !== 'lite' &&
+    (!summaryArtifact || summaryArtifact.status !== 'complete')
+  ) {
     return {
       skill: 'oat-project-summary',
       reason: 'Final review passed but summary is not complete',
@@ -209,7 +228,10 @@ function getPostImplementationRecommendation(
   if (state.phaseStatus !== 'pr_open') {
     return {
       skill: 'oat-project-pr-final',
-      reason: 'Summary is complete and the final PR has not been opened',
+      reason:
+        state.workflowMode === 'lite'
+          ? 'Final review passed; lite mode synthesizes the PR from plan and implementation'
+          : 'Summary is complete and the final PR has not been opened',
     };
   }
 
@@ -290,6 +312,8 @@ function getWorkflowRoutes(
       return QUICK_ROUTES;
     case 'import':
       return IMPORT_ROUTES;
+    case 'lite':
+      return LITE_ROUTES;
     case 'spec-driven':
     default:
       return SPEC_DRIVEN_ROUTES;

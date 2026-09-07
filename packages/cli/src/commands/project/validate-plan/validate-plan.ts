@@ -40,6 +40,81 @@ export type ValidationResult =
   | { valid: true }
   | { valid: false; errors: string[] };
 
+export type LitePlanValidationResult =
+  | { ok: true }
+  | {
+      ok: false;
+      code:
+        | 'lite-multi-phase'
+        | 'lite-parallel-groups'
+        | 'lite-criterion-without-command';
+      message: string;
+    };
+
+function validationCriteria(planContent: string): string[] | null {
+  const heading = /^## Validation Criteria[ \t]*$/m.exec(planContent);
+  if (!heading) return null;
+  const bodyStart = heading.index + heading[0].length;
+  const remaining = planContent.slice(bodyStart);
+  const nextHeading = /^##\s+/m.exec(remaining);
+  const body = remaining.slice(0, nextHeading?.index ?? remaining.length);
+  return body
+    .split('\n')
+    .filter((line) => /^\s*-\s+/.test(line))
+    .map((line) => line.replace(/^\s*-\s+(?:\[[ xX]\]\s*)?/, '').trim());
+}
+
+export function validateLitePlan(
+  planContent: string,
+  workflowMode: string | null | undefined,
+): LitePlanValidationResult {
+  if (workflowMode !== 'lite') {
+    return { ok: true };
+  }
+
+  const phaseCount = planContent.match(/^## Phase\b.*$/gm)?.length ?? 0;
+  if (phaseCount !== 1) {
+    return {
+      ok: false,
+      code: 'lite-multi-phase',
+      message: `Lite plans must contain exactly one phase; found ${phaseCount}.`,
+    };
+  }
+
+  const frontmatter = parseFrontmatterFromContent(planContent);
+  const groups =
+    frontmatter.kind === 'invalid'
+      ? undefined
+      : frontmatter.data['oat_plan_parallel_groups'];
+  if (
+    groups !== undefined &&
+    groups !== null &&
+    !(Array.isArray(groups) && groups.length === 0)
+  ) {
+    return {
+      ok: false,
+      code: 'lite-parallel-groups',
+      message: 'Lite plans must declare no parallel groups.',
+    };
+  }
+
+  const criteria = validationCriteria(planContent);
+  const invalidCriterion = criteria?.find(
+    (criterion) =>
+      !criterion.startsWith('manual:') && !/`[^`\n]+`/.test(criterion),
+  );
+  if (!criteria || criteria.length === 0 || invalidCriterion !== undefined) {
+    return {
+      ok: false,
+      code: 'lite-criterion-without-command',
+      message:
+        'Every lite Validation Criteria bullet must name a command in backticks or start with manual: after the bullet marker.',
+    };
+  }
+
+  return { ok: true };
+}
+
 export function validateParallelGroups(
   groups: unknown,
   phaseIds: readonly string[],
