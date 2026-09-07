@@ -216,6 +216,6 @@ verdict=pass; gates=10/10; cli_tests=5804/5804; release=0.2.62; summary=current;
 
 target=claude-fable-skip-permissions threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-07T034726Z.md
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+The project recorded 44 structural review and gate events and no separate judgment observations. The durable retrospective already captures the workflow lessons, including dispatch-baseline hardening and universal plan-proof guidance, with accepted follow-up backlog items. No additional unsynthesized project or general feedback remains.
