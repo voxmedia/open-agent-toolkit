@@ -168,6 +168,10 @@ Revision 3 passed root-owned review 3/3 with zero Critical or Important findings
 
 Merged origin/main f83463e64 without rebasing reviewed history in c20df4331; collision 477/477, remote/E2E/help 768/768, smoke 161/161, uncached build 5/5, and project-scope sync passed before Phase 8.
 
+### 2026-09-07 · structural · oat-project-implement · p08
+
+verdict=passed; review_rounds=3/3; fix_loops=2/3; artifact=reviews/p08-review-2026-09-07T042019Z.md; reviewed_head=a9004ccfd3b62157a72088ba92e26f5194a6aad2
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
