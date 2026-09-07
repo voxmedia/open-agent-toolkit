@@ -7601,6 +7601,33 @@ describe('lite mode skill contracts', () => {
       );
       expect(executor).toMatch(/deferred-but-verified/i);
     }
+    const implementerProofBoundary = implementer.slice(
+      implementer.indexOf('For required manual or visual proof'),
+      implementer.indexOf('4. Implement only that task.'),
+    );
+    expect(implementerProofBoundary).toMatch(
+      /available\s+computer-use[\s\S]{0,100}record the performed proof/i,
+    );
+    expect(implementerProofBoundary).toMatch(
+      /no available executor[\s\S]{0,180}before\s+committing\s+the\s+task[\s\S]{0,120}phase complete/i,
+    );
+    expect(implementerProofBoundary).toMatch(
+      /OAT_AUTONOMOUS=1[\s\S]{0,100}return\s+`BLOCKED`[\s\S]{0,140}IMPLEMENT-20 unverified proof boundary/i,
+    );
+    expect(implementerProofBoundary).toMatch(
+      /interactive run[\s\S]{0,80}return\s+`NEEDS_CONTEXT`[\s\S]{0,140}operator\s+to\s+execute\s+the\s+criterion\s+or\s+direct/i,
+    );
+
+    const proofDisposition = (
+      autonomous: boolean,
+      executorAvailable: boolean,
+    ): 'performed' | 'BLOCKED' | 'NEEDS_CONTEXT' => {
+      if (executorAvailable) return 'performed';
+      return autonomous ? 'BLOCKED' : 'NEEDS_CONTEXT';
+    };
+    expect(proofDisposition(true, false)).toBe('BLOCKED');
+    expect(proofDisposition(false, false)).toBe('NEEDS_CONTEXT');
+    expect(proofDisposition(true, true)).toBe('performed');
     expect(implementWorkflow.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe(
       '2.3.5',
     );
