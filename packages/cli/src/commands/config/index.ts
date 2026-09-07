@@ -26,6 +26,7 @@ import {
   dispatchPolicyPolicyDescription,
   managedDispatchPolicyValueList,
 } from '@config/dispatch-policy-options';
+import { parseJsonConfig } from '@config/json';
 import {
   VALID_DISPATCH_POLICY_MODES,
   VALID_MANAGED_DISPATCH_POLICIES,
@@ -1479,6 +1480,34 @@ function defaultSurfaceForKey(key: ConfigKey): ConfigSurface {
   return 'shared';
 }
 
+interface SurfaceFlagOptions {
+  shared?: boolean;
+  local?: boolean;
+  user?: boolean;
+}
+
+/**
+ * Resolve the `--shared` / `--local` / `--user` trio to a single surface.
+ *
+ * Lifted verbatim out of the `set` action so `unset` enforces the same
+ * mutual-exclusion rule through the same code path. The thrown message is
+ * byte-identical to the one `set` raised inline, because tests pin it.
+ */
+function resolveSurfaceFlags(options: SurfaceFlagOptions): ConfigSurface {
+  const flagsPresent = [options.shared, options.local, options.user].filter(
+    Boolean,
+  ).length;
+  if (flagsPresent > 1) {
+    throw new Error(
+      '--shared, --local, and --user flags are mutually exclusive; pass at most one.',
+    );
+  }
+  if (options.shared) return 'shared';
+  if (options.local) return 'local';
+  if (options.user) return 'user';
+  return 'auto';
+}
+
 function parseBooleanValue(key: ConfigKey, rawValue: string): boolean {
   const normalized = rawValue.trim().toLowerCase();
   if (normalized !== 'true' && normalized !== 'false') {
@@ -2387,6 +2416,370 @@ async function setConfigValue(
   };
 }
 
+/**
+ * Marker for a `KEY_ORDER` family that reached `unsetConfigValue` without an
+ * owning branch. `index.test.ts` enumerates the live catalog and asserts no key
+ * produces this message, so adding a key family without an unset path fails a
+ * test rather than shipping a silent no-op.
+ */
+const UNSET_UNHANDLED_FAMILY_PREFIX = 'No unset handler for config key: ';
+
+interface ConfigUnsetResult {
+  key: ConfigKey;
+  removed: boolean;
+  source: Exclude<ConfigSurface, 'auto'>;
+}
+
+/**
+ * Copy `record` without one own key.
+ *
+ * Built with `Object.fromEntries` rather than `delete`, for the same reason
+ * `normalizeOatConfig` does: a key named `__proto__` reaches the legacy
+ * prototype setter through assignment, and provider names in
+ * `workflow.dispatchCeiling.providers.<name>` come from user input. This makes
+ * the copy taken here safe; it does not claim end-to-end `__proto__` safety for
+ * the surrounding read/normalize/write path, which this plan does not touch.
+ */
+function withoutOwnKey(
+  record: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(record).filter(([entryKey]) => entryKey !== key),
+  );
+}
+
+/**
+ * Remove one dotted path from a config object, pruning every parent the removal
+ * empties.
+ *
+ * Pruning is strictly "the object has no remaining own keys". That is what
+ * keeps a prune from destroying a sibling the `oat config` catalog does not
+ * expose — `documentation.index` and `documentation.instructionPointerExcludes`
+ * are parsed by `config/oat-config.ts` but are not `ConfigKey`s, so an unset of
+ * the last catalogued `documentation.*` key leaves the parent in place while
+ * either one is still present.
+ *
+ * A missing path, a `null`/`undefined` leaf, or a non-object in the middle of
+ * the path all report `removed: false`, which the caller surfaces as the
+ * already-unset outcome rather than an error.
+ */
+function removeConfigPath(
+  config: Record<string, unknown>,
+  path: string[],
+): { next: Record<string, unknown>; removed: boolean } {
+  const [head, ...rest] = path;
+  if (head === undefined) {
+    return { next: config, removed: false };
+  }
+  if (!Object.prototype.hasOwnProperty.call(config, head)) {
+    return { next: config, removed: false };
+  }
+
+  if (rest.length === 0) {
+    const current = config[head];
+    // `null` is how a normalized surface spells "not set here" (see
+    // `isResolvedValue` in config/resolve.ts), so it is already unset.
+    if (current === undefined || current === null) {
+      return { next: config, removed: false };
+    }
+    return { next: withoutOwnKey(config, head), removed: true };
+  }
+
+  const child = config[head];
+  if (!isRecord(child)) {
+    return { next: config, removed: false };
+  }
+
+  const result = removeConfigPath(child, rest);
+  if (!result.removed) {
+    return { next: config, removed: false };
+  }
+
+  if (Object.keys(result.next).length === 0) {
+    return { next: withoutOwnKey(config, head), removed: true };
+  }
+  return { next: { ...config, [head]: result.next }, removed: true };
+}
+
+/**
+ * Map a config key to its path inside the owning config file.
+ *
+ * One branch per `setConfigValue` family, so a new family that lands without an
+ * unset path falls through to `UNSET_UNHANDLED_FAMILY_PREFIX` instead of being
+ * silently mis-split. The dynamic dispatch-ceiling keys must not be split on
+ * `.` blindly: a provider name may itself contain dots, which is why they are
+ * parsed with the same helper `set` uses.
+ */
+function configPathForKey(key: ConfigKey): string[] {
+  if (isDispatchCeilingProviderKey(key)) {
+    const { provider, tier } = parseDispatchCeilingProviderConfigKey(key);
+    const base = ['workflow', 'dispatchCeiling', 'providers', provider];
+    return tier ? [...base, tier] : base;
+  }
+
+  if (isWorkflowKey(key)) {
+    return key.split('.');
+  }
+
+  if (key === 'activeIdea') {
+    return ['activeIdea'];
+  }
+
+  if (key === 'updateNotifications') {
+    return ['updateNotifications'];
+  }
+
+  if (key === 'autoReviewAtCheckpoints') {
+    return ['autoReviewAtCheckpoints'];
+  }
+
+  if (
+    key.startsWith('explainers.') ||
+    key.startsWith('documentation.') ||
+    key.startsWith('archive.')
+  ) {
+    return key.split('.');
+  }
+
+  if (
+    key === 'git.defaultBranch' ||
+    key === 'projects.root' ||
+    key === 'projects.defaultScope' ||
+    key === 'worktrees.root'
+  ) {
+    return key.split('.');
+  }
+
+  throw new Error(`${UNSET_UNHANDLED_FAMILY_PREFIX}${key}`);
+}
+
+/**
+ * Remove a supported key from one config surface.
+ *
+ * Mirrors `setConfigValue`: the same `validateSurfaceForKey` restrictions, the
+ * same `defaultSurfaceForKey` fallback for `auto`, and the same lenient readers
+ * for the two keys whose own validation errors name `oat config` as the repair
+ * path (otherwise a strict read would reject the very value being removed).
+ *
+ * Two families are deliberately refused rather than removed, which keeps
+ * `unset` at parity with `set` instead of inventing a second removal path:
+ *
+ * - `activeProject` / `lastPausedProject` — DR-260222 keeps lifecycle state on
+ *   `oat config set <key> ''`.
+ * - `tools.*` — the only mutable `KEY_ORDER` family whose `CONFIG_CATALOG`
+ *   `owningCommand` is not an `oat config set` invocation (it names
+ *   `oat tools install / oat tools update`), and `setConfigValue` already
+ *   refuses anything but `true` while pointing at `oat tools remove`, which
+ *   also removes the installed pack files. Letting `unset` clear the intent
+ *   alone would leave exactly the drift that message exists to prevent, so
+ *   there is no `set` removal behavior here for `unset` to be at parity with.
+ */
+async function unsetConfigValue(
+  repoRoot: string,
+  userConfigDir: string,
+  key: ConfigKey,
+  surface: ConfigSurface,
+  dependencies: ConfigCommandDependencies,
+  warn: (message: string) => void,
+): Promise<ConfigUnsetResult> {
+  validateSurfaceForKey(key, surface);
+
+  const resolved = await dependencies.resolveEffectiveConfig(
+    repoRoot,
+    userConfigDir,
+    dependencies.processEnv,
+  );
+  const envShadowed = resolved.resolved[key]?.source === 'env';
+
+  if (key === 'activeProject' || key === 'lastPausedProject') {
+    throw new Error(
+      `Cannot unset state key '${key}'. Lifecycle state is cleared with: oat config set ${key} ''`,
+    );
+  }
+
+  if (key.startsWith('tools.')) {
+    const packName = key.slice('tools.'.length);
+    throw new Error(
+      `Pack intent '${key}' cannot be unset. To remove the pack and clear its intent, run: oat tools remove --pack ${packName} --scope project`,
+    );
+  }
+
+  // `workflow.dispatchCeiling` and `workflow.dispatchCeiling.providers` are
+  // accepted by `isConfigKey` so `get` can return the aggregate view that
+  // `buildResolvedConfigAggregate` assembles from the leaf keys. They are not
+  // leaves and are not in `KEY_ORDER`; removing one would silently delete the
+  // whole ceiling or the whole provider matrix, which no plan step asks for.
+  if (
+    key === 'workflow.dispatchCeiling' ||
+    key === 'workflow.dispatchCeiling.providers'
+  ) {
+    throw new Error(
+      `Cannot unset '${key}': it is an aggregate read view, not a stored key. Unset the individual workflow.dispatchCeiling.preset or workflow.dispatchCeiling.providers.<provider> keys instead.`,
+    );
+  }
+
+  const effectiveSurface: Exclude<ConfigSurface, 'auto'> =
+    surface === 'auto'
+      ? (defaultSurfaceForKey(key) as Exclude<ConfigSurface, 'auto'>)
+      : surface;
+  const path = configPathForKey(key);
+
+  const removed = await removeFromSurface(
+    repoRoot,
+    userConfigDir,
+    key,
+    effectiveSurface,
+    path,
+    dependencies,
+  );
+
+  // The env guard is scoped to the targeted surface, not to the effective
+  // value, so that `unset` mirrors `set`: `set` happily rewrites a stored value
+  // an env var currently shadows, so `unset` must be able to remove that same
+  // stored value. It only refuses when the surface holds nothing to remove and
+  // the env override is what the caller is actually seeing -- reporting
+  // "already unset" there would imply the effective value is gone when it is
+  // not. When a stored value was removed while an override is active, the
+  // removal is reported and the still-live override is warned about, so an
+  // env-sourced value is never reported as unset.
+  if (envShadowed) {
+    if (!removed) {
+      throw new Error(
+        `Cannot unset '${key}' at '${effectiveSurface}' scope: nothing is stored there, and its effective value comes from an environment variable override (source: env). Clear the environment variable in your shell to stop overriding it.`,
+      );
+    }
+    warn(
+      `${key} was removed from ${effectiveSurface} config, but an environment variable override still supplies its effective value.`,
+    );
+  }
+
+  return { key, removed, source: effectiveSurface };
+}
+
+/**
+ * Remove `path` from one surface, falling back to the file on disk.
+ *
+ * The normalizing readers silently drop a stored value that fails validation
+ * instead of throwing, so such a key is invisible to `removeConfigPath` and
+ * would be reported as already-unset while still physically present in the
+ * file. `set` repairs the same file by rewriting it, so `unset` must be able to
+ * clean it too. The normalized read stays the primary path -- it preserves the
+ * lenient readers for the two keys whose strict read throws -- and the raw read
+ * runs only when the normalized pass found nothing to remove.
+ */
+async function removeFromSurface(
+  repoRoot: string,
+  userConfigDir: string,
+  key: ConfigKey,
+  effectiveSurface: Exclude<ConfigSurface, 'auto'>,
+  path: string[],
+  dependencies: ConfigCommandDependencies,
+): Promise<boolean> {
+  if (effectiveSurface === 'user') {
+    const configPath = join(userConfigDir, 'config.json');
+    const userConfig = await dependencies.readUserConfig(userConfigDir);
+    const { next, removed } = removeConfigPath(
+      userConfig as unknown as Record<string, unknown>,
+      path,
+    );
+    if (removed) {
+      await dependencies.writeUserConfig(
+        userConfigDir,
+        next as unknown as UserConfig,
+      );
+      return true;
+    }
+    const repaired = await removeConfigPathOnDisk(configPath, path);
+    if (repaired) {
+      await dependencies.writeUserConfig(
+        userConfigDir,
+        repaired as unknown as UserConfig,
+      );
+      return true;
+    }
+    return false;
+  }
+
+  if (effectiveSurface === 'local') {
+    const configPath = join(repoRoot, '.oat', 'config.local.json');
+    const localConfig = await dependencies.readOatLocalConfig(repoRoot);
+    const { next, removed } = removeConfigPath(
+      localConfig as unknown as Record<string, unknown>,
+      path,
+    );
+    if (removed) {
+      await dependencies.writeOatLocalConfig(
+        repoRoot,
+        next as unknown as OatLocalConfig,
+      );
+      return true;
+    }
+    const repaired = await removeConfigPathOnDisk(configPath, path);
+    if (repaired) {
+      await dependencies.writeOatLocalConfig(
+        repoRoot,
+        repaired as unknown as OatLocalConfig,
+      );
+      return true;
+    }
+    return false;
+  }
+
+  const configPath = join(repoRoot, '.oat', 'config.json');
+  const sharedConfig =
+    key === 'documentation.excludes'
+      ? await dependencies.readOatConfigForDocumentationExcludesRepair(repoRoot)
+      : key === 'projects.defaultScope'
+        ? await dependencies.readOatConfigForDefaultScopeRepair(repoRoot)
+        : await dependencies.readOatConfig(repoRoot);
+  const { next, removed } = removeConfigPath(
+    sharedConfig as unknown as Record<string, unknown>,
+    path,
+  );
+  if (removed) {
+    await dependencies.writeOatConfig(repoRoot, next as unknown as OatConfig);
+    return true;
+  }
+  const repaired = await removeConfigPathOnDisk(configPath, path);
+  if (repaired) {
+    await dependencies.writeOatConfig(
+      repoRoot,
+      repaired as unknown as OatConfig,
+    );
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Remove `path` from the raw JSON on disk, ignoring normalization.
+ *
+ * Returns the rewritten object when the path was physically present, or `null`
+ * when the file is missing, unreadable as an object, or simply does not hold
+ * the path. A `null` stored value counts as absent, matching `isResolvedValue`
+ * in `config/resolve.ts` and the leaf rule in `removeConfigPath`.
+ */
+async function removeConfigPathOnDisk(
+  configPath: string,
+  path: string[],
+): Promise<Record<string, unknown> | null> {
+  let raw: string;
+  try {
+    raw = await readFileDefault(configPath, 'utf8');
+  } catch {
+    return null;
+  }
+
+  const parsed = parseJsonConfig(raw, configPath);
+  if (!isRecord(parsed)) {
+    return null;
+  }
+
+  const { next, removed } = removeConfigPath(parsed, path);
+  return removed ? next : null;
+}
+
 interface AdoptDispatchMatrixOptions {
   surface: ConfigSurface;
 }
@@ -2775,6 +3168,54 @@ async function runSet(
   }
 }
 
+async function runUnset(
+  keyArg: string,
+  surface: ConfigSurface,
+  context: CommandContext,
+  dependencies: ConfigCommandDependencies,
+): Promise<void> {
+  try {
+    if (!isConfigKey(keyArg)) {
+      throw new Error(`Unknown config key: ${keyArg}`);
+    }
+
+    const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+    const userConfigDir = join(context.home, '.oat');
+    const result = await unsetConfigValue(
+      repoRoot,
+      userConfigDir,
+      keyArg,
+      surface,
+      dependencies,
+      context.logger.warn,
+    );
+    if (context.json) {
+      context.logger.json({
+        status: 'ok',
+        key: result.key,
+        value: null,
+        source: result.source,
+        removed: result.removed,
+      });
+    } else {
+      context.logger.info(
+        result.removed
+          ? `${result.key} unset from ${result.source} config`
+          : `${result.key} is already unset in ${result.source} config`,
+      );
+    }
+    process.exitCode = 0;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (context.json) {
+      context.logger.json({ status: 'error', message });
+    } else {
+      context.logger.error(message);
+    }
+    process.exitCode = 1;
+  }
+}
+
 async function runAdopt(
   templateArg: string,
   options: AdoptDispatchMatrixOptions,
@@ -2942,21 +3383,49 @@ export function createConfigCommand(
               readGlobalOptions(command),
             );
             try {
-              const flagsPresent = [
-                options.shared,
-                options.local,
-                options.user,
-              ].filter(Boolean).length;
-              if (flagsPresent > 1) {
-                throw new Error(
-                  '--shared, --local, and --user flags are mutually exclusive; pass at most one.',
-                );
-              }
-              let surface: ConfigSurface = 'auto';
-              if (options.shared) surface = 'shared';
-              else if (options.local) surface = 'local';
-              else if (options.user) surface = 'user';
+              const surface = resolveSurfaceFlags(options);
               await runSet(key, value, surface, context, dependencies);
+            } catch (error) {
+              const message =
+                error instanceof Error ? error.message : String(error);
+              if (context.json) {
+                context.logger.json({ status: 'error', message });
+              } else {
+                context.logger.error(message);
+              }
+              process.exitCode = 1;
+            }
+          },
+        ),
+    )
+    .addCommand(
+      new Command('unset')
+        .description('Remove an OAT config value from one surface')
+        .argument('<key>', 'Config key')
+        .option(
+          '--shared',
+          'Remove from the shared repo config (.oat/config.json)',
+        )
+        .option(
+          '--local',
+          'Remove from the repo-local config (.oat/config.local.json)',
+        )
+        .option(
+          '--user',
+          'Remove from the user-level config (~/.oat/config.json)',
+        )
+        .action(
+          async (
+            key: string,
+            options: { shared?: boolean; local?: boolean; user?: boolean },
+            command: Command,
+          ) => {
+            const context = dependencies.buildCommandContext(
+              readGlobalOptions(command),
+            );
+            try {
+              const surface = resolveSurfaceFlags(options);
+              await runUnset(key, surface, context, dependencies);
             } catch (error) {
               const message =
                 error instanceof Error ? error.message : String(error);

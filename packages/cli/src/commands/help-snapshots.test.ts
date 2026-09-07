@@ -440,6 +440,7 @@ describe('help output snapshots', () => {
       Commands:
         get <key>                    Get a resolved OAT config value
         set [options] <key> <value>  Set an OAT config value
+        unset [options] <key>        Remove an OAT config value from one surface
         adopt [options] <template>   Adopt a bundled OAT config recommendation
         list                         List resolved OAT config values with sources
         dump                         Dump merged OAT config with source attribution
