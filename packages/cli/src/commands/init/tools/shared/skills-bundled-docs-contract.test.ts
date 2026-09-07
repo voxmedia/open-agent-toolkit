@@ -264,7 +264,28 @@ const LINK_DEFINITION = /^[ \t]{0,3}\[([^\]]+)\]:[ \t]*(\S+)/gm;
 // What a declaration can name in its own words. A backticked value counts as a
 // path only when it looks like one; otherwise the declaration may still name a
 // scope in prose, and its longer words are what a link has to pick up.
-const BACKLOG_ID = /\bBL-[A-Za-z0-9][A-Za-z0-9-]*/g;
+// A backlog ID is `BL` followed by one or more hyphen-delimited alphanumeric
+// segments. The extractor and the matcher below are built from this one
+// grammar so they cannot drift: an ID may only be extended by a new
+// `-segment`, never by a bare alphabetic, digit, or underscore suffix. So
+// `BL-260902` names `BL-260902-add-...`, while `BL-123foo`, `BL-123_x`, and
+// `BL-1234` are all different identifiers.
+const BACKLOG_ID_SOURCE = 'BL(?:-[A-Za-z0-9]+)+';
+// The boundaries are Unicode-aware so that no letter or number of any script
+// can sit against an ID and still read as that ID: `BL-123` is not `BL-123foo`
+// and not `BL-123\u00e9` either.
+const BACKLOG_ID_START = '(?<![\\p{L}\\p{N}_-])';
+// Extraction wants a complete token, so not even a hyphen may follow:
+// `BL-123--evil` is a malformed identifier, not the ID `BL-123`, and reading
+// it as `BL-123` would let a link to `BL-123-other` satisfy it.
+const BACKLOG_ID_TOKEN_END = '(?![\\p{L}\\p{N}_-])';
+// Matching lets a link name the ID exactly or extend it by one further
+// complete `-segment`, and by nothing else.
+const BACKLOG_ID_MATCH_END = '(?:(?=-[A-Za-z0-9])|(?![\\p{L}\\p{N}_-]))';
+const BACKLOG_ID = new RegExp(
+  `${BACKLOG_ID_START}${BACKLOG_ID_SOURCE}${BACKLOG_ID_TOKEN_END}`,
+  'gu',
+);
 const ISSUE_REFERENCE = /#\d+(?!\d)/g;
 const BACKTICKED_VALUE = /`([^`]+)`/g;
 const SCOPE_WORD = /[\p{L}\p{N}][\p{L}\p{N}._/-]{3,}/gu;
@@ -290,16 +311,37 @@ function normalizeReferenceLabel(label: string): string {
   return label.trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
-/** Inline code spans and HTML comments render no navigable link. */
+// An HTML comment hides everything to its terminator, or to end of input when
+// it is never closed. A code span closes only on a backtick run of exactly its
+// own length, so a stray single backtick cannot pair with one half of a later
+// double run and erase a real link definition between them.
+const HTML_COMMENT = /<!--[\s\S]*?(?:-->|$)/g;
+const CODE_SPAN = /(?<!`)(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)/g;
+
+/** An HTML comment renders nothing at all, so nothing inside one counts. */
+function withoutHtmlComments(text: string): string {
+  return text.replace(HTML_COMMENT, ' ');
+}
+
+/**
+ * Inline code spans and HTML comments render no navigable link. Only link and
+ * definition scanning uses this: a declaration keeps its code spans, because a
+ * backticked path or a backticked `none` is the declared value itself.
+ */
 function withoutInlineCode(text: string): string {
-  return text.replace(/<!--[\s\S]*?-->/g, ' ').replace(/(`+)[\s\S]*?\1/g, ' ');
+  return withoutHtmlComments(text).replace(CODE_SPAN, ' ');
 }
 
 function linkDefinitions(section: string): Map<string, string> {
   const definitions = new Map<string, string>();
-  // A definition inside a fence is an example, and the first definition is the
-  // one Markdown resolves against.
-  for (const match of withoutFences(section).matchAll(LINK_DEFINITION)) {
+  // A definition only counts where Markdown would read one: not inside a
+  // fence, and not inside an HTML comment or code span either. Definitions go
+  // through the same helper the declaration scan uses, so a reference cannot
+  // resolve through text that renders nothing. The first definition is the one
+  // Markdown resolves against.
+  for (const match of withoutInlineCode(withoutFences(section)).matchAll(
+    LINK_DEFINITION,
+  )) {
     const name = normalizeReferenceLabel(match[1] as string);
     if (!definitions.has(name)) definitions.set(name, match[2] as string);
   }
@@ -384,11 +426,12 @@ function identifiesSource(link: DeclarationLink, named: NamedSource): boolean {
 
   switch (named.kind) {
     case 'backlog':
-      // `BL-260902` may name `BL-260902-add-...`: an ID extends by a new
-      // segment, never by more digits.
-      return new RegExp(`(?<![a-z0-9-])${escapeRegExp(value)}(?![0-9])`).test(
-        haystack,
-      );
+      // The same segment boundaries the grammar above defines, so a link to a
+      // neighbouring ID never satisfies this one.
+      return new RegExp(
+        `${BACKLOG_ID_START}${escapeRegExp(value)}${BACKLOG_ID_MATCH_END}`,
+        'u',
+      ).test(haystack);
     case 'issue':
       return (
         new RegExp(`#${value}(?![0-9])`).test(haystack) ||
@@ -456,7 +499,10 @@ function withoutFences(section: string): string {
  * reading only the first match would reject the template's own shape.
  */
 function sourceDeclarations(section: string): string[] {
-  const lines = withoutFences(section).split('\n');
+  // A bullet inside a fence or an HTML comment renders nothing, so it declares
+  // nothing either. Code spans stay: a backticked value is the declaration's
+  // own content, not a link.
+  const lines = withoutHtmlComments(withoutFences(section)).split('\n');
   const declarations: string[] = [];
 
   for (const [index, line] of lines.entries()) {
@@ -2828,10 +2874,92 @@ describe('skills bundled docs contract', () => {
       '- Source issue: #239 — [239 reasons](https://example.com/z)',
       'a link whose label merely contains the declared issue number',
     );
+    // An ID extends only by a new hyphen-delimited segment. A bare suffix
+    // makes a different identifier, whichever character starts it.
+    rejected(
+      '- Source backlog item: BL-123 — [x](../../pjm/backlog/items/BL-123foo.md)',
+      'a link to a backlog ID extended by a bare alphabetic suffix',
+    );
+    rejected(
+      '- Source backlog item: BL-123 — [x](../../pjm/backlog/items/BL-123_x.md)',
+      'a link to a backlog ID extended by an underscore suffix',
+    );
+    rejected(
+      '- Source backlog item: BL-123 — [x](../../pjm/backlog/items/BL-123\u00e9.md)',
+      'a link to a backlog ID extended by a non-ASCII letter',
+    );
     // The extending-segment case is the one that must keep working.
     accepted(
       '- Source backlog item: BL-260902 — [the item](../../pjm/backlog/items/BL-260902-add-an-exclusion-mechanism.md)',
       'a link to the full ID the declaration abbreviates',
+    );
+
+    // An HTML comment renders nothing at all, so a definition parked inside
+    // one resolves no reference and leaves the declaration unlinked.
+    rejected(
+      [
+        '- Source backlog item: BL-260907-example — [the item][item]',
+        '',
+        '<!--',
+        '[item]: ../../pjm/backlog/items/BL-260907-example.md',
+        '-->',
+      ].join('\n'),
+      'a reference definition that only exists inside an HTML comment',
+    );
+    // An unterminated comment hides everything after it just as well.
+    rejected(
+      [
+        '- Source backlog item: BL-260907-example — [the item][item]',
+        '',
+        '<!--',
+        '[item]: ../../pjm/backlog/items/BL-260907-example.md',
+      ].join('\n'),
+      'a reference definition inside a comment that is never closed',
+    );
+    // A whole declaration inside a comment declares nothing, so the section
+    // has no source declaration at all.
+    rejected(
+      [
+        '<!--',
+        '- Source backlog item: BL-260907-example — [the item](../../pjm/backlog/items/BL-260907-example.md)',
+        '-->',
+      ].join('\n'),
+      'a source declaration commented out entirely',
+    );
+    // A stray backtick must not pair with half of a later run and erase a real
+    // definition between them; Markdown leaves both runs unmatched.
+    accepted(
+      [
+        '- Source backlog item: BL-260907-example — [the item][item]',
+        '- Verified evidence: a lone ` backtick',
+        '',
+        '[item]: ../../pjm/backlog/items/BL-260907-example.md',
+        '',
+        '- Verified evidence: a ``double`` run',
+      ].join('\n'),
+      'a definition between two unmatched backtick runs',
+    );
+
+    // An ID extends by one complete segment and nothing else, so a malformed
+    // neighbour is a different identifier rather than an extension.
+    rejected(
+      '- Source backlog item: BL-123 — [x](../../pjm/backlog/items/BL-123--other.md)',
+      'a link to an ID separated by a doubled hyphen',
+    );
+    rejected(
+      '- Source backlog item: BL-123 — [x](../../pjm/backlog/items/BL-123-_other.md)',
+      'a link whose extra segment does not start alphanumerically',
+    );
+    accepted(
+      '- Source backlog item: BL-123 — [x](../../pjm/backlog/items/BL-123-other.md)',
+      'a link to the ID extended by one complete segment',
+    );
+    // A malformed token is not the ID it starts with. Read as `BL-123` it
+    // would accept a link to `BL-123-other`; read whole, it is a scope the
+    // link has to name.
+    rejected(
+      '- Source backlog item: BL-123--evil — [x](../../pjm/backlog/items/BL-123-other.md)',
+      'a malformed backlog token truncated to a shorter valid ID',
     );
 
     // Markdown that renders no navigable link cannot be the backlink.
