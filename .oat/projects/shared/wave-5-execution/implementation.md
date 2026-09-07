@@ -36,9 +36,9 @@ oat_generated: false
 | Phase 08 (make-autonomous-project-recap-capability-aware)                   | complete | 1     | 1/1       |
 | Phase 09 (defer-activeproject-clearing-on-archive-completions)              | blocked  | 1     | 0/1       |
 | Phase 10 (make-terminal-project-status-agree-with-revision-plans)           | complete | 1     | 1/1       |
-| Phase 11 (make-consolidated-project-retirement-semantic)                    | pending  | 1     | 0/1       |
+| Phase 11 (make-consolidated-project-retirement-semantic)                    | complete | 1     | 1/1       |
 
-**Total:** 9/11 planned tasks completed; 1 parked (p09)
+**Total:** 10/11 planned tasks completed; 1 parked (p09)
 
 ---
 
@@ -164,15 +164,15 @@ oat_generated: false
 
 ## Phase 11: make consolidated project retirement semantic (p11)
 
-**Status:** pending · **Group:** group 5 · **Tasks:** p11-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 5 (HiLL lane; ran last on the tip after p10) · **Tasks:** p11-t01 (+ one address-now sweep commit)
+**Outcome:** consolidated-project retirement is semantic: `oat-project-complete` sweeps the `absorbed_projects` / `absorbed_backlog_ids` a quick-start consolidation recorded, requires each child to prove a terminal state before retirement, records unproven children (and the `deferred advisory` disposition) in the project log INSIDE Step 3.7 — before the roll-up and seal, never after — detects an already-sealed log on a resumed completion by reading the log at `logPath`, resolves the configured `projects.root` for the still-active-project glob (93 matches here where the plan's literal glob matched zero) and excludes terminal `oat_lifecycle: complete` projects; `oat-project-quick-start` records the two fields; `lifecycle.md` documents the sweep; strictly append-only (353 added, 0 deleted).
+**Verification:** forced check/type-check/test `Cached: 0` (CLI 6011), check:skill-bumps, lint, format, validate-skills, test:smoke 160; five red proofs re-run by the reviewer (all non-vacuous) plus two reviewer probes (terminal-complete exclusion vs a live claim; ordering anchors unique); review 0C/0I/1M/3m PASS; address-now sweep `w5-p11-sweep-001` (self-exemption clause, ownership-language match sentence, quick-mode-only qualifier in the docs).
+**Deviations:** no re-bumps (complete 1.7.8 from p08, quick-start 2.3.10 from p03); a Lite consolidation records no `absorbed_*` fields (PR #264 in the base; plan scoped to quick-start) → follow-up filed at closeout; quick-start's pre-existing stale `PROJECT_PATH` after `oat project new` → follow-up filed; the plan's `-t 'absorbed'` verify filter skips the resume test → wave-close correction.
 
 ### Task p11-t01: Execute external plan — Make consolidated-project retirement checks semantic
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `0bd2a2815`; sweep `a61e42b52`
 
 ## Autonomy Gate Provenance
 
@@ -289,6 +289,11 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - `w5-p10-fix-001` outcome: one documentation-and-test commit `aaf4c8677ff7889c6a1e49eb95fcfeea899d56df` (three files; `router.ts` byte-identical, `tasks.ts` comment-only): the interaction pinned in `router.test.ts` with a provenance-headed snapshot of the parser's output over the `workflow-friction` archive (no archive I/O), red-then-green in both directions (simulating the follow-up landing fails exactly the new case; removing the lifecycle guard fails it plus the two terminal cases); `BL-260907-recognize-phase-level` filed and referenced; the corpus provenance comment corrected to 42/179 (floors unchanged); a note on duplicate normalized phase ids. Report correction: `subagent-implement-refactor` 9/36/0 completed, `workflow-friction` 7/25/15 completed (p05 1/2 — its table says 2/2 while the task body reads pending), `retire-archived-synced-project` 15/15; that archive has no `## Revision Phase` section — completion lives only in the Progress Overview table and review-log bullets (the plan's out-of-scope wording verbatim). STOP clause not triggered (criterion 1 is heading-dialect normalization, fully met; completion counting is separate). One Codex round (0C/0I/0M/1m fixed). Record `dispatch/w5-p10-fix-001.json`.
 - `w5-p10-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w5-p10-review-002.json`.
 - `w5-p10-review-002` outcome: PASS (fan-in may proceed), 0C/0I/0M/2m. `router.ts` byte-identical by blob hash; `tasks.ts` comment-only proven mechanically; the new case and both mutations re-run (1/33 and 4/40 failed, as designed); the fixture matches a fresh read-only parse field-for-field and every provenance claim verified at its cited line; STOP not triggered; weaker-anywhere unchanged (17/17 parser, 43/43 router, three archived parses byte-identical to round 1); I1 and M1 fully dispositioned; corpus measured at 179 candidates. Minors: scaffold acceptance criteria on the new backlog item (filled by the orchestrator before the fan-in); the plan's Step 2 Verify sentence (wave-close correction).
+- `w5-p11-impl-001` — p11 dispatched alone at `2d39833e547db72692af50ca00c0311dd4b67492` (the tip after p10; the base carries p03's quick-start 2.3.10 and p08's complete 1.7.8, nothing from the parked p09); target opus, task_class hard-reasoning. Record `dispatch/w5-p11-impl-001.json`.
+- `w5-p11-impl-001` outcome: DONE, one commit `0bd2a2815334fece741a4f8297dee3d63feb693b` (four files, +353/−0; prose only in two already-bumped skills). Two Codex rounds (R1 3I/3M: the plan's `.oat/projects/*/state.md` glob matched nothing on this scope-nested layout — fixed; a sealed resume was undetectable because `ProjectLogCheckResult` has no seal field — now reads the log at `logPath`; stale `PROJECT_PATH` after `oat project new` — rejected as pre-existing; R2 2I/3M: the glob now resolves the configured `projects.root`; terminal `oat_lifecycle: complete` projects excluded; `deferred advisory` documented). Five red proofs; a `####` subheading that re-keyed the seal line in the autonomy inventory was replaced by a bold lead-in (cause fixed, no contract remap); the sweep raises no user prompt (plan STOP). Reported: the Lite-mode recording gap.
+- `w5-p11-review-001` — reviewer, target opus, nine rulings (fail-closed retirement probes, ordering vs the seal, the configured-root glob, no re-bumps, load-contract + autonomy inventory, red proofs, docs, weaker-anywhere, the rejected Codex item). Record `dispatch/w5-p11-review-001.json`.
+- `w5-p11-review-001` outcome: PASS, 0C/0I/1M/3m, reconnaissance not-attempted. Strictly append-only diff settles weaker-anywhere structurally; all five red proofs re-run non-vacuous; gates forced `Cached: 0`; glob 93 matches vs 0 for the plan's literal; versions and pins untouched; docs carry `deferred advisory` and presume nothing from p09; the stale-`PROJECT_PATH` rejection confirmed pre-existing at base. Medium: a Lite consolidation escapes the sweep (ruled a plan-scope gap — the plan's Outcome is quick-start-only and fail-closed would violate its STOP; follow-up + interim docs qualifier). Minors: the completing project's own `absorbed_*` fields self-match by construction (advisory noise); the plan's `-t 'absorbed'` filter runs 2 of 3 new tests; the orchestrator's brief ruling 2 stated the sweep/seal ordering backwards (a brief defect — the implementation and the plan agree: sweep BEFORE roll-up and seal; recorded in the orchestration log). Address-now sweep `w5-p11-sweep-001`.
+- `w5-p11-sweep-001` outcome (address-now sweep, no re-review): one commit `a61e42b520512fc59b437e3980d3ac442c76d8b9` (three files, +20/−5): the match sentence disambiguated to the ownership-language reading with a bare-mention clause and the self-exemption clause (the completing project's own `absorbed_*` fields are input, never a finding), three assertions added to the existing whitespace-normalized region (red proof: deleting the exemption sentence fails exactly that assertion; restored byte-exact), and `lifecycle.md` states the recording step is quick-mode only today. No bumps, no pins, `sync --scope project` no-op; changed file 67, focused 94, forced check `Cached: 0`, check:skill-bumps, lint, format, validate-skills all 0. Record `dispatch/w5-p11-sweep-001.json`.
 
 #### Phase Outcomes
 
@@ -336,13 +341,15 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - `wave-5/p10` rebased onto the integration tip and merged with `git merge --no-ff` as `098efc30b`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `9d0049212`→`6654df618`, `aaf4c8677`→`392eb88f0`. p09 (group 4, first) is parked with no commits, so group 4's fan-in is p10 alone.
 - Lockstep retained at 0.2.63; integration gates (sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - p11 readiness on the merged tip: its plan is READY; the base carries p03's `oat-project-quick-start` (2.3.10) and p08's `oat-project-complete` (1.7.8) — p11 edits both without re-bumping; none of p09's edits are present. p10's worktree and branch removed; p09's parked worktree stays until wave close.
+  | p11 | `.worktrees/wave-5/p11` | DONE (`0bd2a2815` + sweep `a61e42b52`; forced CLI suite 6011, test:smoke 160) | passed (0C/0I/1M/3m; address-now sweep) | 0 |
 
 #### Parallel Groups
 
-- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08 (merged); p09 (PARKED); p10 (merged); p11 (next).
+- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08 (merged); p09 (PARKED); p10 (merged); p11 (review passed; fan-in next).
 
 #### Outstanding Items
 
+- closeout: backlog archive (ten items), follow-ups, Deferred Findings, Final Summary, final review, exit gate, PR.
 - p11 (group 5); then closeout with p09 recorded parked.
 - p10 (group 4, second; runs on the current tip because p09 parked with no commits), p11 (group 5); then closeout. p09 needs a plan refresh (`BL-260907-make-the-completion-seal`) before it can run in a later wave.
 - p09 → p10 (group 4), p11 (group 5); then closeout.
@@ -386,7 +393,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p08   | 6007 (forced CLI suite) + test:skills 856     | all    | 0      | -        |
 | p09   | validator suite 13/13 (uncommitted)           | -      | -      | parked   |
 | p10   | 6008 (forced CLI suite) + control-plane 102   | all    | 0      | -        |
-| p11   | -                                             | -      | -      | -        |
+| p11   | 6011 (forced CLI suite) + test:smoke 160      | all    | 0      | -        |
 
 ## Final Summary (for PR/docs)
 
