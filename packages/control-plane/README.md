@@ -71,9 +71,24 @@ discriminated union:
   They carry the conflicting refs and SHAs, use `checkout: 'invalid'`, and
   return a repair diagnosis rather than workflow guidance.
 
+`ArtifactStatus` for the `plan` artifact also carries `quickPlanReadiness`, the
+executable equivalent of the named **quick plan readiness** predicate that
+`oat-project-quick-start` defines and that `oat-project-plan`,
+`oat-project-progress`, and `oat-project-next` route by: ready frontmatter
+(`oat_status: complete`, `oat_ready_for: oat-project-implement`, `oat_template`
+absent or false), a durable `## Reviews` disposition read fence-aware, and a
+substantive `### Task pNN-tNN:` under a `## Phase` heading. The field reports
+`ready` plus the first unmet clause in `failure`, and is omitted on every other
+artifact type.
+
 ### `recommendSkill(projectState)`
 
 Pure function that maps parsed project state to the next recommended OAT workflow skill.
+
+In quick mode at the `plan` phase, the route is decided by `quickPlanReadiness`:
+a ready plan keeps its ordinary route to `oat-project-implement`, and a plan
+that is not ready routes to `oat-project-quick-start` to be finished in place.
+Every other workflow mode and phase is unaffected by the predicate.
 
 ## Current Consumers
 

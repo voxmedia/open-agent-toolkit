@@ -2,7 +2,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { scanArtifacts } from '../state/artifacts';
 import type { ArtifactStatus, ProjectState, ReviewStatus } from '../types';
@@ -837,5 +837,224 @@ describe('recommendSkill', () => {
     });
 
     expect(recommendSkill(state).skill).toBe('oat-project-complete');
+  });
+});
+
+// The public recommender must agree with the four lifecycle skills about the
+// same `plan.md`. These cases run the real artifact reader over real files so
+// the predicate, the boundary tier, and the route are exercised together.
+describe('recommendSkill quick plan readiness gate', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map(async (dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  const READY_FRONTMATTER = `---
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_phase_status: complete
+oat_template: false
+---
+`;
+
+  const PRE_REVIEW_FRONTMATTER = `---
+oat_status: in_progress
+oat_ready_for: null
+oat_phase_status: in_progress
+oat_template: false
+---
+`;
+
+  const SUBSTANTIVE_PHASE = `
+## Phase 1: Foundation
+
+### Task p01-t01: Add the readiness predicate
+
+**Status:** pending
+`;
+
+  const PLACEHOLDER_PHASE = `
+## Phase 1: Foundation
+
+### Task p01-t01: {Task title}
+`;
+
+  const RECORDED_DISPOSITION = `
+## Reviews
+
+| Scope | Type     | Status | Date       | Artifact |
+| ----- | -------- | ------ | ---------- | -------- |
+| plan  | artifact | passed | 2026-09-07 | -        |
+`;
+
+  const PENDING_DISPOSITION = `
+## Reviews
+
+| Scope | Type     | Status  | Date | Artifact |
+| ----- | -------- | ------- | ---- | -------- |
+| plan  | artifact | pending | -    | -        |
+`;
+
+  async function planState(
+    plan: string | null,
+    overrides: Partial<Omit<ProjectState, 'recommendation'>> = {},
+  ): Promise<Omit<ProjectState, 'recommendation'>> {
+    const projectRoot = await mkdtemp(join(tmpdir(), 'oat-router-quick-plan-'));
+    tempDirs.push(projectRoot);
+    if (plan != null) {
+      await writeFile(join(projectRoot, 'plan.md'), plan, 'utf8');
+    }
+
+    return makeState({
+      phase: 'plan',
+      phaseStatus: 'complete',
+      workflowMode: 'quick',
+      artifacts: await scanArtifacts(projectRoot),
+      ...overrides,
+    });
+  }
+
+  it('routes a substantive but pre-review quick plan to quick-start instead of implement', async () => {
+    const state = await planState(
+      `${PRE_REVIEW_FRONTMATTER}\n# Plan: demo\n${SUBSTANTIVE_PHASE}${PENDING_DISPOSITION}`,
+      { phaseStatus: 'in_progress' },
+    );
+
+    // Boundary tier 2 is what previously mapped straight to implementation.
+    expect(
+      state.artifacts.find((artifact) => artifact.type === 'plan'),
+    ).toMatchObject({ boundaryTier: 2 });
+    expect(recommendSkill(state)).toEqual({
+      skill: 'oat-project-quick-start',
+      reason:
+        'Quick plan is not implementation-ready (frontmatter is not the recorded plan-complete state); resume the quick workflow in place',
+    });
+  });
+
+  it('routes a ready-looking quick plan with no review disposition to quick-start', async () => {
+    const state = await planState(
+      `${READY_FRONTMATTER}\n# Plan: demo\n${SUBSTANTIVE_PHASE}${PENDING_DISPOSITION}`,
+    );
+
+    expect(recommendSkill(state)).toEqual({
+      skill: 'oat-project-quick-start',
+      reason:
+        'Quick plan is not implementation-ready (the Reviews section records no plan review disposition); resume the quick workflow in place',
+    });
+  });
+
+  it('routes a ready-looking quick plan with no substantive task to quick-start', async () => {
+    const state = await planState(
+      `${READY_FRONTMATTER}\n# Plan: demo\n${PLACEHOLDER_PHASE}${RECORDED_DISPOSITION}`,
+    );
+
+    expect(recommendSkill(state)).toEqual({
+      skill: 'oat-project-quick-start',
+      reason:
+        'Quick plan is not implementation-ready (no phase carries a substantive task); resume the quick workflow in place',
+    });
+  });
+
+  it('routes a tier-1b quick plan with no oat_ready_for to quick-start', async () => {
+    const state = await planState(
+      `---
+oat_status: complete
+oat_template: false
+---
+\n# Plan: demo\n${SUBSTANTIVE_PHASE}${RECORDED_DISPOSITION}`,
+    );
+
+    expect(recommendSkill(state).skill).toBe('oat-project-quick-start');
+  });
+
+  it('routes a quick project whose plan.md is missing to quick-start', async () => {
+    const state = await planState(null);
+
+    expect(recommendSkill(state)).toEqual({
+      skill: 'oat-project-quick-start',
+      reason:
+        'Quick plan is not implementation-ready (plan.md is missing); resume the quick workflow in place',
+    });
+  });
+
+  it('keeps the implement route for a quick plan that satisfies every clause', async () => {
+    const ready = `${READY_FRONTMATTER}\n# Plan: demo\n${SUBSTANTIVE_PHASE}${RECORDED_DISPOSITION}`;
+
+    const complete = await planState(ready);
+    const inProgress = await planState(ready, { phaseStatus: 'in_progress' });
+
+    expect(recommendSkill(complete)).toEqual({
+      skill: 'oat-project-implement',
+      reason:
+        'Current artifact is complete and explicitly points to the next skill',
+    });
+    expect(recommendSkill(inProgress).skill).toBe('oat-project-implement');
+  });
+
+  it('accepts the explicit skip disposition as the recorded outcome', async () => {
+    const state = await planState(
+      `${READY_FRONTMATTER}\n# Plan: demo\n${SUBSTANTIVE_PHASE}
+## Reviews
+
+Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)
+`,
+    );
+
+    expect(recommendSkill(state).skill).toBe('oat-project-implement');
+  });
+
+  it('leaves lite and spec-driven plan routes untouched by the quick predicate', async () => {
+    const notReady = `${PRE_REVIEW_FRONTMATTER}\n# Plan: demo\n${SUBSTANTIVE_PHASE}${PENDING_DISPOSITION}`;
+
+    const lite = await planState(notReady, {
+      workflowMode: 'lite',
+      phaseStatus: 'in_progress',
+    });
+    const specDriven = await planState(notReady, {
+      workflowMode: 'spec-driven',
+      phaseStatus: 'in_progress',
+    });
+    const importMode = await planState(notReady, {
+      workflowMode: 'import',
+      phaseStatus: 'in_progress',
+    });
+
+    expect(recommendSkill(lite)).toEqual({
+      skill: 'oat-project-implement',
+      reason: 'Route lite plan work based on boundary tier',
+    });
+    expect(recommendSkill(specDriven)).toEqual({
+      skill: 'oat-project-implement',
+      reason: 'Route spec-driven plan work based on boundary tier',
+    });
+    expect(recommendSkill(importMode)).toEqual({
+      skill: 'oat-project-implement',
+      reason: 'Route import plan work based on boundary tier',
+    });
+  });
+
+  it('leaves quick implementation and discovery routes untouched', async () => {
+    const notReady = `${PRE_REVIEW_FRONTMATTER}\n# Plan: demo\n${SUBSTANTIVE_PHASE}${PENDING_DISPOSITION}`;
+
+    const implementing = await planState(notReady, {
+      phase: 'implement',
+      phaseStatus: 'in_progress',
+    });
+    const discovering = await planState(notReady, {
+      phase: 'discovery',
+      phaseStatus: 'complete',
+      artifacts: makeArtifacts({
+        type: 'discovery',
+        boundaryTier: 1,
+        status: 'complete',
+      }),
+    });
+
+    expect(recommendSkill(implementing).skill).toBe('oat-project-implement');
+    expect(recommendSkill(discovering).skill).toBe('oat-project-plan');
   });
 });

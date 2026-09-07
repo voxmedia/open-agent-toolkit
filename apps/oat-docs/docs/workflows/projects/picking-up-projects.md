@@ -43,6 +43,13 @@ re-scaffolding, rather than through `oat-project-implement`. `oat-project-plan`,
 plan readiness** predicate that `oat-project-quick-start` defines; readiness is
 never inferred from the presence of tasks alone.
 
+`oat project status` and `oat project list` apply the same predicate. For a
+quick project at the `plan` phase they recommend `oat-project-quick-start`, with
+the unmet clause in the reason, until the plan carries ready frontmatter, a
+durable `## Reviews` disposition, and a substantive task; only then do they
+recommend `oat-project-implement`. Recommendations for lite, spec-driven, and
+import projects are unchanged, because the predicate is quick-workflow policy.
+
 ## What travels
 
 - The project ref carries the complete active artifact tree and its history.
