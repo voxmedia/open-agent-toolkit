@@ -62,9 +62,7 @@ governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
    codes. Lanes never edit the lockstep release files (five public package
    manifests, `packages/cli/assets/public-package-versions.json`,
    `pnpm-lock.yaml`) and never run `pnpm release:check-versions` or
-   `pnpm release:validate`; the wave fan-in owns the single lockstep bump
-   (≥ 0.2.63, above freshly fetched `origin/main`) and the full eight-gate
-   sequence after every merge.
+   `pnpm release:validate`; the wave fan-in owns the single lockstep bump (≥ 0.2.63, above freshly fetched `origin/main`) and runs the full eight-gate sequence at every fan-in boundary — after the group-1 merges, after the group-2 merges, and after each later single-lane merge (p07, p08, p09, p10, p11) — always before that fan-in's bookkeeping edit.
 4. **STOP → BLOCKED at phase level (bundle exception).** A source-plan STOP parks
    the phase (record in `state.md` `oat_blockers` + `implementation.md`); sibling
    phases continue. **Bundle phases:** a STOP parks only the stopped task; the
@@ -208,10 +206,85 @@ documentation config seam and the config catalog; p06 and p07 add validators
 change lifecycle-skill prose and the completion/next routers, reviewed with
 verbatim snippet execution and live CLI probes._
 
+## Wave-Boundary Refresh Addenda (authoritative)
+
+The program's Wave 5 cross-wave prerequisite instructs the wrapper, before
+dispatch, to "re-read every W5 plan's `## Landing-event impact` table against
+the then-current state … and apply the listed refreshes", and each source
+plan's `## Revalidation Before Execution` section requires a refresh when main
+advances materially or another PR implements part of the surface. The
+external-plan files are immutable inputs during the wave (corrections land at
+the wave-close refresh), so the refreshes are applied here as task addenda.
+Each addendum below is part of the named task's contract, carries the same
+authority as the source plan's own steps, and is reproduced verbatim in the
+lane brief. Addenda never remove or weaken a source-plan requirement; they add
+current-state requirements the plan's authored commit could not see.
+
+- **All skill-editing lanes (p03, p08, p09, p10, p11):**
+  `packages/cli/src/validation/named-skill-load-contract.test.ts` is a write
+  surface and a verification gate: any new sentence pairing an execution verb
+  with a named `oat-project-*` skill carries a load clause and a matrix row;
+  no anchored heading is reworded without moving its rows; the corpus floor is
+  not lowered. Add the file to the in-worktree drift check.
+- **Shared-skill bump rule (wrapper-owned, PR-scoped):** the first lane in
+  plan order that edits a skill bumps it once; later lanes (`oat-project-next`:
+  p03 then p10; `oat-project-quick-start`: p03 then p11;
+  `oat-project-complete`: p08 then p09 then p11) edit prose only and leave the
+  pins at the earlier lane's value. Editing
+  `oat-project-implement/references/completion-and-closeout.md` (p08) is one
+  `oat-project-implement` bump (2.3.5 → 2.3.6) with its eight pins.
+- **p03 addendum — pin set:** the source plan's "`oat-project-progress` has no
+  pin" and "three pins" statements are superseded: four bumps (plan 1.4.9,
+  progress 1.4.0, next 1.1.0, quick-start 2.3.9 → next patch each) with eight
+  pins located by version literal — plan `skills.test.ts:1854`, `:5555`;
+  progress `:5348`; next `:4448`, `:5341`; quick-start `:1862`, `:2928`,
+  `:5556`, `:6559`. `skills.test.ts` and `named-skill-load-contract.test.ts`
+  join the drift command. The base has four workflow modes: the readiness
+  definition and routing rows are written for quick mode as the plan says, and
+  the existing Lite tables in `oat-project-progress:295+` and
+  `oat-project-next:260` are left intact unless the plan's own sweep rule
+  requires a mechanical widening, which is then reported.
+- **p08 addendum — Lite recap carve-out:** the Lite PR inserted a non-lite
+  recap carve-out at `completion-and-closeout.md:886-889` ("this entire
+  project-recap subsection applies only to non-lite workflows"). The
+  capability-aware recap (skip reasons, non-blocking probe) is implemented for
+  non-lite workflows inside that carve-out; the lite carve-out is preserved
+  verbatim and its contract test (if any) stays green. Pins: `skills.test.ts:1247`
+  (explainer-kit), `:4447` (complete), `:2925`/`:7435` (summary), the eight
+  `oat-project-implement` pins, and `review-skill-contracts.test.ts:1089`.
+- **p09 / p11 addendum — pins:** `oat-project-complete` is pinned at
+  `skills.test.ts:4447` and `review-skill-contracts.test.ts:1089` (not `:4002`);
+  p08 owns the wave's `oat-project-complete` bump; p09 and p11 do not re-bump.
+  p11's `oat-project-quick-start` pins are `:1862`, `:2928`, `:5556`, `:6559`
+  at p03's value.
+- **p10 addendum — Lite mode and the current router:** the terminal-status
+  guard is written against the current recommender ladder
+  (`packages/control-plane/src/recommender/router.ts`: `LITE_ROUTES` `:79-85`,
+  the early quick return `:106-115`, `getPostImplementationRecommendation`
+  `:170` with `hasIncompleteRevisionPhase` `:173-178`, the
+  `workflowMode !== 'lite'` branch `:218-224`) and `WORKFLOW_MODES` in
+  `types.ts:11-17` (four members). The guard applies uniformly to every
+  workflow mode including `lite`: a project whose plan still carries an
+  incomplete revision phase is not terminal in any mode. The behavior/test
+  matrix gains a positive and a negative control for `workflowMode: 'lite'`
+  (an incomplete `p-revN` in a lite plan → not terminal / routed to the
+  revision; all revision phases complete → terminal). `oat-project-next`
+  Step 1's field table (`:124-140`) gains the `oat_lifecycle` row the
+  discriminator reads, and Step 5.2 is at `:393-398`. Pins `skills.test.ts:4448`
+  and `:5341` stay at p03's value (no re-bump).
+- **p05 addendum — scope:** `packages/cli/src/commands/help-snapshots.test.ts`
+  (the literal `oat config --help` snapshot) and
+  `apps/oat-docs/docs/cli-utilities/configuration.md` are write surfaces and
+  join the drift command; the `documentation.excludes` dependency row is
+  satisfied (W1, PR #262), so the family-coverage test includes it and any key
+  p02 adds.
+- **p01 / p04 addendum — decision records:** both lanes create a decision
+  record with `pnpm run cli -- decision new` and regenerate the index; the
+  fan-in preserves both index rows.
+
 ## Drift Refresh Record (2026-09-07, vs `0f47bf7004166d420758d1bcd77d253007174332`)
 
-**2 PASS / 9 MINOR-DRIFT / 0 STOP.** This record is non-authoritative recon
-evidence (one bounded read-only recon agent, Opus, native dispatch, run against
+**2 PASS / 9 MINOR-DRIFT / 0 STOP** (two current-contract refreshes carried as authoritative addenda in the next section). This record is non-authoritative recon evidence (one bounded read-only recon agent, Opus, native dispatch, run against
 the wave base, the Lite PR #264 merge commit; 349 commits and the W1–W4,
 #255, and #264 merges sit between the plans' authored commit `49aeb5075`
 (`6b9a15841` for p10) and the base). Draft PR #190 is still open at
@@ -318,6 +391,8 @@ commit.
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-recover-committed-review-artifacts-after-post-selection-failures.md`
 
+**Refresh addendum (part of this task's contract):** the `p01` items under `## Wave-Boundary Refresh Addenda`.
+
 **Ordering:** group 1; runs at the wave base in parallel with p02 and p03 and merges first within the group. Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p01-t01` prefix.
 
@@ -388,6 +463,8 @@ git commit -m "fix(p02-t01): keep instruction-sync pointer files out of document
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-route-incomplete-quick-projects-to-quick-start.md`
 
+**Refresh addendum (part of this task's contract):** the `p03` items under `## Wave-Boundary Refresh Addenda`.
+
 **Ordering:** group 1; runs at the wave base in parallel with p01 and p02 and merges third within the group. Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p03-t01` prefix.
 
@@ -423,6 +500,8 @@ git commit -m "fix(p03-t01): route incomplete quick projects to quick-start from
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-retry-gate-project-log-finalization-across-index-locks.md`
 
+**Refresh addendum (part of this task's contract):** the `p04` items under `## Wave-Boundary Refresh Addenda`.
+
 **Ordering:** group 2; runs after the group-1 fan-in in parallel with p05 and p06 (after group 1's gate plan p01) and merges first within the group. Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p04-t01` prefix.
 
@@ -457,6 +536,8 @@ git commit -m "fix(p04-t01): retry gate project-log finalization across transien
 
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-add-oat-config-unset-command.md`
+
+**Refresh addendum (part of this task's contract):** the `p05` items under `## Wave-Boundary Refresh Addenda`.
 
 **Ordering:** group 2; runs after the group-1 fan-in in parallel with p04 and p06 (after the instruction-sync plan p02 so its family-coverage test includes the new documentation key) and merges second within the group. Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p05-t01` prefix.
@@ -563,6 +644,8 @@ git commit -m "feat(p07-t01): enforce plan-readiness versus execution-readiness 
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-make-autonomous-project-recap-capability-aware.md`
 
+**Refresh addendum (part of this task's contract):** the `p08` items under `## Wave-Boundary Refresh Addenda`.
+
 **Ordering:** group 3 (sequential pair, second); runs alone after p07 merges (both write `validation/skills.test.ts`). Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p08-t01` prefix.
 
@@ -597,6 +680,8 @@ git commit -m "feat(p08-t01): make the autonomous project recap capability-aware
 
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-defer-activeproject-clearing-on-archive-completions.md`
+
+**Refresh addendum (part of this task's contract):** the `p09` items under `## Wave-Boundary Refresh Addenda`.
 
 **Ordering:** group 4 (sequential pair, first); runs alone after p08 merges (p08 releases `oat-project-complete/SKILL.md`). Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p09-t01` prefix.
@@ -633,6 +718,8 @@ git commit -m "fix(p09-t01): defer activeProject clearing on shared archive comp
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-04-make-terminal-project-status-agree-with-revision-plans.md`
 
+**Refresh addendum (part of this task's contract):** the `p10` items under `## Wave-Boundary Refresh Addenda`.
+
 **Ordering:** group 4 (sequential pair, second); runs alone after p09 merges (shares `validation/skills.test.ts` with p09 and `oat-project-next/SKILL.md` with p03). Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p10-t01` prefix.
 
@@ -668,6 +755,8 @@ git commit -m "fix(p10-t01): make terminal project status agree with completed r
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-02-make-consolidated-project-retirement-semantic.md`
 
+**Refresh addendum (part of this task's contract):** the `p11` items under `## Wave-Boundary Refresh Addenda`.
+
 **Ordering:** group 5; runs alone after p10 merges (after the active-pointer and quick-resume lanes; its sweep runs before the project-log seal). Execution, commit, and review boundaries are the source
 plan's own; the wrapper adds only the `p11-t01` prefix.
 
@@ -696,24 +785,24 @@ git commit -m "fix(p11-t01): make consolidated-project retirement checks semanti
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p05    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p06    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p07    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p08    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p09    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p10    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p11    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-09-07 | reviews/artifact-plan-review-2026-09-07T042724Z.md | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-09-07 | reviews/artifact-plan-review-2026-09-07T043343Z.md | -             | -          | -           |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target         |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------- |
+| p01    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p02    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p03    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p04    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p05    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p06    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p07    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p08    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p09    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p10    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p11    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| final  | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T042724Z.md | -             | gate       | codex-5-6-sol-xhigh |
+| spec   | artifact | pending     | -          | -                                                           | -             | -          | -                   |
+| design | artifact | pending     | -          | -                                                           | -             | -          | -                   |
+| plan   | artifact | superseded  | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T043343Z.md | -             | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
@@ -733,6 +822,6 @@ git commit -m "fix(p11-t01): make consolidated-project retirement checks semanti
 
 - Source plans: the 11 `.oat/repo/reference/external-plans/*.md` files named above
 - Program: `.oat/repo/reference/external-plans/2026-08-31-execution-program.md`
-- Program indexes: `.oat/repo/reference/external-plans/2026-09-03-backlog-review-wave-5-plan-index.md`
-- Pattern: `DR-260713-wave-project-wrapper-over`; prior wave summaries in
+- Program indexes: `.oat/repo/reference/external-plans/2026-09-02-backlog-review-wave-4-plan-index.md` (ten of the eleven lanes) and `.oat/repo/reference/external-plans/2026-09-03-backlog-review-wave-5-plan-index.md`
+- Pattern: `DR-260713-wave-project-wrapper-over`, `DR-260713-bundle-stop-semantics-park`, `DR-260713-shared-tracked-surfaces` — program-level decision slugs from the 2026-08 wave program carried by `oat-wave-execute`, not records in this repository's decision index; prior wave summaries in
   `.oat/projects/shared/wave-{1,2,3,4}-execution/summary.md`

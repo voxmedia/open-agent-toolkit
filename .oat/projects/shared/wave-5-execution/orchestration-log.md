@@ -48,3 +48,21 @@ Draft PR #190 still open at `63161897d`. Remote name will be
 `origin/wave-5-execution-2026-09`.
 
 ---
+
+### 2026-09-07 · structural · oat gate review · plan
+
+Plan gate attempt 1 (run `b26aff5c`) blocked 0C/1I/1M/1m: the wrapper's
+recon-found current-contract changes (p03 pin set, p10 Lite mode) were labelled
+non-authoritative while the immutable source plans lack them. Attempt 2 (run
+`e4f1049a`) repeated the findings because the orchestrator's repair script
+aborted on an anchor that oxfmt had re-wrapped before writing anything —
+recorded as `superseded`. Repair: a `## Wave-Boundary Refresh Addenda
+(authoritative)` section under the program's pre-dispatch refresh clause.
+**Skill signal (gap):** the wave skill needs an explicit mechanism for applying
+pre-dispatch refreshes to immutable plans; the W3/W4 "descriptive observation"
+framing is rejected by the gate once a refresh changes a task's contract.
+**Skill signal (strengthens):** repair scripts must assert every anchor before
+writing and must never be followed by an automatic gate re-run in the same
+command.
+
+---

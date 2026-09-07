@@ -176,7 +176,19 @@ oat_generated: false
 
 ## Autonomy Gate Provenance
 
-_Gate-invoked review events (plan gate, configured exit gate) are recorded here as `### Review Received: <scope>` sections when they occur._
+### Review Received: plan (attempts 1 and 2)
+
+**Date:** 2026-09-07
+**Review artifacts:** reviews/archived/artifact-plan-review-2026-09-07T042724Z.md (attempt 1, run `b26aff5c-be34-4ac1-be16-86211c5b4d48`, blocked) and reviews/archived/artifact-plan-review-2026-09-07T043343Z.md (attempt 2, run `e4f1049a-ff67-4dd7-bf0b-7226abb7f69a`, blocked with the identical findings — the orchestrator's repair script aborted before writing and the gate re-ran on the unrepaired wrapper; recorded as `superseded`). Both gate-invoked, target `codex-5-6-sol-xhigh`.
+**Findings:** Critical 0 · Important 1 · Medium 1 · Minor 1 — all resolved in-artifact (gate mode, auto-disposition):
+
+- I1 — the drift refresh found current-contract changes for p03 (progress pin, eight pins) and p10 (Lite mode in the router) that the source plans do not carry while the wrapper called its observations non-authoritative: **fixed** — a `## Wave-Boundary Refresh Addenda (authoritative)` section now applies the refreshes the program's pre-dispatch clause and each plan's Revalidation section require, as task addenda with source-plan authority (p03 pin set; p10 Lite positive/negative controls, current router anchors, `oat_lifecycle` field row; p08 Lite recap carve-out; p09/p11 pins and no-re-bump; p05 scope; p01/p04 decision index; `named-skill-load-contract.test.ts` for every skill-editing lane); each affected task points at its addendum; the record reads "0 STOP (two current-contract refreshes carried as authoritative addenda)".
+- M1 — "after every merge" gate cadence: **fixed** — the contract names the fan-in boundaries (group 1, group 2, each later single-lane merge) and "before that fan-in's bookkeeping edit".
+- m1 — References: **fixed** — the Wave 4 index added; the `DR-260713-*` slugs labelled as program-level provenance.
+
+**Verification record:** what — the three in-artifact repairs; how — `oat project validate-plan` exit 0; eight tasks carry the addendum pointer; where — this section and the commit that carries it.
+
+**Plan rows: attempt 1 → `fixes_added`, attempt 2 → `superseded`** (gate-written rows moved forward in place with the archived paths); the gate re-runs on the repaired wrapper.
 
 ## Orchestration Runs
 
