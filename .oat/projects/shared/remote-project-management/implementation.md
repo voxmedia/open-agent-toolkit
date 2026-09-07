@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Revision 3 passed; latest origin/main must be merged and revalidated before Phase 8.
+oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: null
+oat_current_task_id: p08-t01
 oat_generated: false
 ---
 
@@ -2178,6 +2177,9 @@ review_3_head: cfccc8a3ad837350be33fb03faeb451463bd61ed
 review_3_findings: 0 critical, 0 important, 0 medium, 0 minor
 review_3_reconnaissance: not-attempted
 phase_outcome: passed
+mainline_source_head: f83463e64353f7ca04b4abcecbeb7e59c2135ba3
+mainline_merge_commit: c20df4331299beeabcb8f4998c9e9788a369ec78
+mainline_verification: collision 477/477; remote/E2E/help 768/768; smoke 161/161; uncached build 5/5; project sync current
 ```
 
 **Implementation dispatch:** Dispatch: scope=p06 action=implementation
@@ -2412,8 +2414,12 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   declared schema/service/E2E boundary. Root independently reproduced the
   120/120 phase suite. Final normal Revision 3 review 3/3 passed with zero
   findings at `9d42e2741`; reconnaissance was not attempted. Revision 3 is
-  complete after 3/3 reviews and 2/3 fix loops. The latest-main transition gate
-  is next, before Phase 8.
+  complete after 3/3 reviews and 2/3 fix loops. Latest `origin/main` at
+  `f83463e64` was merged without rebasing reviewed history in `c20df4331`.
+  Main's V2 sync manifest was retained and project-scope sync regenerated the
+  `oat-pjm-remote` entry. Root passed the 477/477 collision suites, 768/768
+  remote/E2E/help suite, 161/161 smoke suite, and uncached five-package build.
+  Phase 8 begins at `p08-t01`.
 
 <!-- orchestration-runs-end -->
 
@@ -2518,6 +2524,7 @@ Track test execution during implementation.
 | 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 93/93; remote 544/544; checks passed   | 0      | operator review passed     |
 | 6     | Jira adapter, ADF, conformance, integration, and duplicate-search suite              | 42/42; remote 586/586; checks passed   | 0      | review round 1 pending     |
 | rev3  | Recreate anomaly and public lifecycle approval evidence union                        | 120/120; boundary and diff passed      | 0      | review passed              |
+| main  | Mainline collision, remote/E2E/help, smoke, build, and project sync transition       | 477/477; 768/768; 161/161; build 5/5   | 0      | transition passed          |
 
 ## Final Summary (for PR/docs)
 

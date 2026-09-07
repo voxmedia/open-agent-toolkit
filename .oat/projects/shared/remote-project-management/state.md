@@ -1,10 +1,7 @@
 ---
-oat_current_task: null
-oat_last_commit: 9d42e2741499046b14f01f5f734fd9921aac28aa
-oat_blockers:
-  [
-    'Revision 3 passed; latest origin/main must be merged and revalidated before Phase 8',
-  ]
+oat_current_task: p08-t01
+oat_last_commit: c20df4331299beeabcb8f4998c9e9788a369ec78
+oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -55,7 +52,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T03:09:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T03:12:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -257,16 +254,16 @@ structured plan artifact review passed and implementation starts at
 - ✓ Bounded Revision 3 fix loop 2/3 committed as `9d42e2741`; root verified
   120/120
 - ✓ Final normal Revision 3 review 3/3 passed with zero findings
-- ⧗ Merge latest `origin/main` and re-establish the verification baseline
-  before Phase 8
+- ✓ Merged `origin/main` at `f83463e64` through merge commit `c20df4331`
+- ✓ Re-established collision 477/477, remote/E2E/help 768/768, smoke
+  161/161, and uncached build baselines
+- ⧗ Phase 8 begins at `p08-t01`
 
 ## Blockers
 
-Revision 3 passed. The separately authorized latest-main transition gate must
-now merge and revalidate `origin/main` before Phase 8. The branch-level
-lockstep version gate remains preserved for planned `p08-t05` release work.
+No active implementation blocker. The branch-level lockstep version gate
+remains preserved for planned `p08-t05` release work against the merged main.
 
 ## Next Milestone
 
-Merge latest `origin/main` using the wave-program handoff, then re-establish
-the verification baseline before Phase 8.
+Begin Phase 8 at `p08-t01` under the merged workflow contract.

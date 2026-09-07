@@ -164,6 +164,10 @@ Phase 7 operator extension exhausted at 4/4 reviews and 3/3 fixes with 1 Critica
 
 Revision 3 passed root-owned review 3/3 with zero Critical or Important findings after 2/3 bounded fix loops; see reviews/p-rev3-review-2026-09-07T030518Z.md.
 
+### 2026-09-07 · structural · oat-project-implement · latest-main-transition
+
+Merged origin/main f83463e64 without rebasing reviewed history in c20df4331; collision 477/477, remote/E2E/help 768/768, smoke 161/161, uncached build 5/5, and project-scope sync passed before Phase 8.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

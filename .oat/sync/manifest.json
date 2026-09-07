@@ -911,8 +911,18 @@
       "isFile": true,
       "lastSynced": "2026-08-31T18:05:27.318Z",
       "strategy": "symlink"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-pjm-remote",
+      "providerPath": ".claude/skills/oat-pjm-remote",
+      "provider": "claude",
+      "contentType": "skill",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-09-07T03:11:15.651Z",
+      "strategy": "symlink"
     }
   ],
   "collections": [],
-  "lastUpdated": "2026-08-31T18:05:27.318Z"
+  "lastUpdated": "2026-09-07T03:11:15.651Z"
 }
