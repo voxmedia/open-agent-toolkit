@@ -343,12 +343,19 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - p11 readiness on the merged tip: its plan is READY; the base carries p03's `oat-project-quick-start` (2.3.10) and p08's `oat-project-complete` (1.7.8) — p11 edits both without re-bumping; none of p09's edits are present. p10's worktree and branch removed; p09's parked worktree stays until wave close.
   | p11 | `.worktrees/wave-5/p11` | DONE (`0bd2a2815` + sweep `a61e42b52`; forced CLI suite 6011, test:smoke 160) | passed (0C/0I/1M/3m; address-now sweep) | 0 |
 
+#### p11 fan-in — group 5 (2026-09-07)
+
+- `wave-5/p11` rebased onto the integration tip and merged with `git merge --no-ff` as `b59bbe804`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `0bd2a2815`→`e73c5ee0f`, `a61e42b52`→`b90f1d8c9`.
+- Lockstep retained at 0.2.63; integration gates (sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke` 0 and `pnpm test:skills` 0 run separately. Config-integrity check: all tracked `.oat/config.json` keys present.
+- All eleven lanes dispositioned: ten merged, p09 parked. p11's worktree and branch removed; p09's parked worktree is removed at wave close (patch preserved in the orchestrator scratchpad).
+
 #### Parallel Groups
 
-- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08 (merged); p09 (PARKED); p10 (merged); p11 (review passed; fan-in next).
+- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08 (merged); p09 (PARKED); p10 (merged); p11 (merged).
 
 #### Outstanding Items
 
+- Closeout: archive ten backlog items, file follow-ups, Deferred Findings, Final Summary, orchestration-log synthesis, final review, exit gate, post-implement sequence, PR; p09 stays parked (`BL-260907-make-the-completion-seal`).
 - closeout: backlog archive (ten items), follow-ups, Deferred Findings, Final Summary, final review, exit gate, PR.
 - p11 (group 5); then closeout with p09 recorded parked.
 - p10 (group 4, second; runs on the current tip because p09 parked with no commits), p11 (group 5); then closeout. p09 needs a plan refresh (`BL-260907-make-the-completion-seal`) before it can run in a later wave.
@@ -366,6 +373,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-07
 
+- p11-t01 `0bd2a2815`→`e73c5ee0f`, sweep `a61e42b52`→`b90f1d8c9`; merge `b59bbe804`; lockstep retained 0.2.63. All merges complete (10 of 11; p09 parked).
 - p10-t01 `9d0049212`→`6654df618`, pin `aaf4c8677`→`392eb88f0`; merge `098efc30b`; lockstep retained 0.2.63.
 - p08-t01 `049783897`→`b4c4d879b`, fix `d7f8a6ff8`→`6f670166a`; merge `28d99dbaf`; lockstep retained 0.2.63.
 - p07-t01 `e4dfa0e27`→`b09dbd49c`, fix `9c2f96ca5`→`1f097db93`; merge `a59e0d24f`; lockstep retained 0.2.63.
