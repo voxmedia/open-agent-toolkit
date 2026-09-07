@@ -1576,7 +1576,16 @@ printf 'artifact-read\\n'`,
       'For each absorbed slug and each absorbed backlog ID',
     );
     expect(sweep, 'matches future-oriented ownership language').toContain(
-      'future-oriented ownership language tied to either',
+      'Match a slug or backlog ID only where it carries future-oriented ownership language',
+    );
+    expect(sweep, 'a bare mention is not a finding').toContain(
+      'A bare mention that makes no such claim is not a finding',
+    );
+    expect(
+      sweep,
+      "the completing project's own recorded fields are input, never a finding",
+    ).toContain(
+      "The completing project's own `absorbed_projects` and `absorbed_backlog_ids` fields are the sweep's input, never a finding",
     );
     expect(sweep, 'names what a stale ownership claim looks like').toContain(
       'still claims the absorbed work as planned, owned, scheduled, or in flight',

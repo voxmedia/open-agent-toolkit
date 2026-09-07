@@ -152,6 +152,10 @@ When a quick project consolidates earlier scaffolds, quick-start records
 `absorbed_projects` and `absorbed_backlog_ids` in that project's `state.md`
 frontmatter. Those two fields are the only inputs the sweep takes.
 
+Recording them is a quick-mode step today. A lite project that consolidates
+earlier scaffolds records nothing, so the sweep finds no inputs and degrades to
+its recorded note rather than checking that project's surfaces.
+
 Inside the project-log completion gate — after the log status probe and before
 the roll-up and seal — completion searches the active planning surfaces for each
 absorbed slug and backlog ID, and for future-oriented ownership language tied to

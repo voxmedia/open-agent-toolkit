@@ -690,10 +690,12 @@ surfaces:
   project left in an active scope directory is not a live ownership claim
   either
 
-Match on the slug, on the backlog ID, and on future-oriented ownership language
-tied to either — an active surface that still claims the absorbed work as
-planned, owned, scheduled, or in flight. Prose that clearly describes past state
-is exempt: a dated history entry, a retro, a decision record, a changelog line,
+Match a slug or backlog ID only where it carries future-oriented ownership
+language — an active surface that still claims the absorbed work as planned,
+owned, scheduled, or in flight. A bare mention that makes no such claim is not a
+finding. The completing project's own `absorbed_projects` and
+`absorbed_backlog_ids` fields are the sweep's input, never a finding. Prose that
+clearly describes past state is exempt: a dated history entry, a retro, a decision record, a changelog line,
 or any sentence whose tense reports what already happened is evidence, not a
 stale claim.
 
