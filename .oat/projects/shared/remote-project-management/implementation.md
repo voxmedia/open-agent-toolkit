@@ -2544,7 +2544,7 @@ candidates_considered:
   - gpt-5.6-sol/high
 selected_route: native
 phase_base_head: 283bc57694b0e9f4d9504ae036ff028624b5eaef
-phase_head: 6c73da33cf64fa2221def42a0b2fc6f7960ced73
+phase_head: c6a11db8d53514da37a7c5a6553b3d0dd2ec177f
 task_commits:
   - d78efc897b4bdcb2ccdd25fe3fb686686298aa3b
   - 2f4f53dc2ec777360c220df2130b34a3b0eebce7
@@ -2556,12 +2556,14 @@ launch_status: accepted
 child_outcome: done
 continuation_events:
   - p08-review-fix-1-20260907-7cc214e03
+  - p08-review-fix-2-20260907-96096ade1
 recovery_usage: 0/10
 pending_attempt: null
 review_rounds: 2/3
-fix_loops: 1/3
+fix_loops: 2/3
 review_fix_commits:
   - 19356eaf9fbb57f0116075f05edf4e093b2cb558
+  - c6a11db8d53514da37a7c5a6553b3d0dd2ec177f
 main_reconciliation_commit: 6c73da33cf64fa2221def42a0b2fc6f7960ced73
 main_reconciliation_head: 0f47bf7004166d420758d1bcd77d253007174332
 phase_verification: focused 708/708; forced workspace 6470/6470 with 0 cached; fix contract 4/4; skill suite 837/837; focused remote/E2E 51/51; current-main version gate passed at 0.2.63
@@ -2573,7 +2575,7 @@ review_2_artifact: reviews/p08-review-2026-09-07T041040Z.md
 review_2_head: 96096ade106ac2278ee7aba174ad88933036d9c8
 review_2_findings: 0 critical, 1 important, 0 medium, 0 minor
 review_2_reconnaissance: not-attempted
-phase_outcome: fixes-required
+phase_outcome: awaiting-review-3
 ```
 
 **Implementation dispatch:** Dispatch: scope=p08 action=implementation
@@ -2611,7 +2613,12 @@ target=oat-reviewer-gpt-5-6-sol-high
   Independent review round 2 found the original two findings resolved and all
   integration/release checks passing, but blocked on one Important stale
   capability-discovery sequence in the independently linked troubleshooting
-  page. Reconnaissance was not attempted. Bounded fix loop 2/3 is next.
+  page. Reconnaissance was not attempted. Bounded fix loop 2/3 continued
+  through the original accepted implementer and corrected only
+  `apps/oat-docs/docs/reference/troubleshooting.md` in `c6a11db8d`. Root
+  reproduced the 4/4 skill contract, file-scoped docs format/lint, current-main
+  version gate, exact parent/file boundary, diff integrity, and clean worktree.
+  Independent review round 3/3 is next.
 
 <!-- orchestration-runs-end -->
 
