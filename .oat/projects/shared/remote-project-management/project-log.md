@@ -216,6 +216,10 @@ Project recap intent generate was attempted exactly once at explainers/remote-pr
 
 Implementation completed at 90/90 tasks after passing final review and the configured exit gate; summary, documentation, PR, recap terminal outcome, and approval-aware closeout sequence are complete.
 
+### 2026-09-07 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/remote-project-management/references/project-retro.md evidence_used=current-session,issue-backlog-history,lifecycle-artifacts,project-log,recap-run-evidence evidence_unavailable=historical-session-transcript,oat-execution-learnings promotions=1 upstream=1 apply=skipped filing=performed
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
