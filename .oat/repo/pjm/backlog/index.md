@@ -246,6 +246,7 @@
 | BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path                      | open   | medium   | task       | S        |
 | BL-260830-decide-generic-oat-ownership   | Decide generic OAT ownership of Jira backlog refinement                                                         | open   | medium   | idea       | L        |
 | BL-260902-decide-test-only-freshness     | Decide test-only freshness exception for the implement exit gate                                                | open   | medium   | idea       | S        |
+| BL-260907-decode-entity-and-percent      | Decode entity and percent escapes before matching external-plan backlinks                                       | open   | medium   | task       | XS       |
 | BL-260902-defer-activeproject-clearing   | Defer activeProject clearing on shared and local archive completions                                            | open   | medium   | task       | S        |
 | BL-260818-distinguish-operator-directed  | Distinguish operator-directed review rounds from failed fix cycles in the review-cycle cap                      | open   | medium   | task       | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                                                      | open   | medium   | feature    | M        |
@@ -261,6 +262,7 @@
 | BL-260907-ignore-backslash-escaped       | Ignore backslash-escaped emphasis in skill-script reference extraction                                          | open   | medium   | task       | XS       |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                          | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                              | open   | medium   | feature    | M        |
+| BL-260907-let-oat-config-unset-remove    | Let oat config unset remove a malformed stored value                                                            | open   | medium   | task       | XS       |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                                    | open   | medium   | task       | M        |
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                                   | open   | medium   | feature    | M        |
 | BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                               | open   | medium   | feature    | L        |
