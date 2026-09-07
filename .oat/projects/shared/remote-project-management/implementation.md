@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: null
+oat_current_task_id: p09-t01
 oat_generated: false
 ---
 
@@ -24,21 +24,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | completed | 10    | 10/10     |
-| Phase 2    | completed | 10    | 10/10     |
-| Phase 3    | completed | 12    | 12/12     |
-| Phase 4    | completed | 11    | 11/11     |
-| Phase 5    | completed | 9     | 9/9       |
-| Phase 6    | completed | 10    | 10/10     |
-| Phase 7    | completed | 10    | 10/10     |
-| Phase 8    | completed | 6     | 6/6       |
-| Revision 1 | completed | 4     | 4/4       |
-| Revision 2 | completed | 2     | 2/2       |
-| Revision 3 | completed | 2     | 2/2       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | completed   | 10    | 10/10     |
+| Phase 2    | completed   | 10    | 10/10     |
+| Phase 3    | completed   | 12    | 12/12     |
+| Phase 4    | completed   | 11    | 11/11     |
+| Phase 5    | completed   | 9     | 9/9       |
+| Phase 6    | completed   | 10    | 10/10     |
+| Phase 7    | completed   | 10    | 10/10     |
+| Phase 8    | completed   | 6     | 6/6       |
+| Phase 9    | in_progress | 2     | 0/2       |
+| Revision 1 | completed   | 4     | 4/4       |
+| Revision 2 | completed   | 2     | 2/2       |
+| Revision 3 | completed   | 2     | 2/2       |
 
-**Total:** 86/86 tasks completed
+**Total:** 86/88 tasks completed
 
 ---
 
@@ -2633,6 +2634,37 @@ target=oat-reviewer-gpt-5-6-sol-high
   Lint and format passed. The separate forced workspace run passed 375 files
   and 6,545 tests with 0/10 cached tasks; smoke passed 161/161, skills 837/837,
   release tests 39/39, and canonical skill validation passed for 65 skills.
+
+### Review Received: final
+
+**Date:** 2026-09-07
+**Review artifact:** reviews/archived/final-review-2026-09-07T043133Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** p09-t01, p09-t02
+
+**Finding dispositions:**
+
+- I1 -> p09-t01: record current reproduction-grade negative controls for the
+  NFR1-NFR3 release-assurance clauses, including guard neutralization,
+  restoration, bad-state rejection, and valid accepted controls.
+- M1 -> p09-t02 (`artifact_alignment_required`): the shipped implementation is
+  accepted because the reviewed code and exact-head verification passed; the
+  current code/review chain is authoritative. Reconcile stale state and test
+  rollups without deleting their detailed historical failure evidence.
+
+**Deferred Findings (Medium):** none. The supplied final-review ledger contained
+no prior deferred Medium findings, and M1 is converted to p09-t02.
+
+**Next:** Execute p09-t01 and p09-t02 via `oat-project-implement`, update this
+artifact-identified review event to `fixes_completed`, and run a fresh final
+code re-review.
 
 <!-- orchestration-runs-end -->
 

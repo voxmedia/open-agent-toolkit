@@ -67,6 +67,8 @@ canonical OAT Markdown skills, and injected process/filesystem/tool seams.
    the exhausted Phase 7 operator extension.
 5. p08 Documentation and release validation depends on a passing p-rev3 review
    and the latest-main transition gate.
+6. p09 Final review fixes depend on the received final review and close its
+   release-assurance evidence and durable-state findings before re-review.
 
 - **Hard dependencies:** p02 depends on p01; p03 depends on p01-p02; p-rev1
   depends on p03; p-rev2 depends on the completed p-rev1 implementation and
@@ -74,6 +76,10 @@ canonical OAT Markdown skills, and injected process/filesystem/tool seams.
   p07 depends on p04-p06; p-rev3 depends on the completed p07 implementation
   and its received operator-extension review; p08 depends on a passing p-rev3
   code review and the latest-main transition gate.
+- **Final review fixes:** p09 depends on the received final review at
+  `e9b1d0f2d12f4a24acb261972a85409b4cef1521`; p09-t01 and p09-t02 execute
+  sequentially so the proof record is complete before the durable closeout
+  summaries are reconciled.
 - **Revision sequencing:** prev1-t01 through prev1-t04 and then prev2-t01
   through prev2-t02 execute sequentially because they share operation,
   service, schema, action, persistence, and command surfaces. After p07,
@@ -1503,6 +1509,52 @@ in-scope implementation files when a gate exposes a project defect.
    needed; otherwise use fix(p08-t06): resolve release gate defects. Both
    branches include the formatted implementation evidence.
 
+## Phase 9: Final Review Fixes
+
+### Task p09-t01: (review) Record P0 guard-neutralization proof
+
+**Files:** Modify
+.oat/projects/shared/remote-project-management/implementation.md. Temporarily
+modify only the exact production guards exercised by the selected synthetic
+tests; restore every temporary mutation before committing.
+
+1. Enumerate the release-assurance clauses from NFR1, NFR2, and NFR3 that rely
+   on tests: whole-field inbound suppression, the universal outbound
+   projection gate, preview/approval binding, fail-closed mutation after
+   uncertainty, and restart-safe durable recovery.
+2. For each clause, select one existing synthetic, bounded test whose
+   acceptance and rejection controls exercise the current production path.
+   Record the exact test and categorical valid/bad-state outcomes without
+   scanning the repository, worktree, Git history, or arbitrary files for
+   sensitive values.
+3. Neutralize the exact load-bearing production guard for one clause at a time,
+   run its selected test, and record the expected failure. Restore the guard
+   immediately, rerun the same test, and record the passing rejection plus
+   valid accepted control. Finish with a clean diff outside implementation.md.
+4. Run the affected focused union, `git diff --check`, and a bounded status/diff
+   check proving no temporary production mutation remains.
+5. Format: pnpm format:fix
+6. Commit: docs(p09-t01): record P0 negative-control evidence
+
+### Task p09-t02: (review) Reconcile durable closeout state
+
+**Files:** Modify .oat/projects/shared/remote-project-management/state.md and
+.oat/projects/shared/remote-project-management/implementation.md.
+
+1. Remove superseded resume directions while preserving historical failures
+   and review evidence. Record current main `0f47bf7004166d420758d1bcd77d253007174332`,
+   merge `6c73da33cf64fa2221def42a0b2fc6f7960ced73`, completed Phase 8 and p09 proof
+   work, and the final re-review as the next lifecycle milestone.
+2. Reconcile the implementation Test Results terminal dispositions for Phase 3,
+   Revision 1, Revision 2, and Phase 6 with their later passing review history;
+   retain the detailed chronological record of every earlier block.
+3. Update implementation/state progress and resume metadata to show p09
+   complete and no next implementation task, with final re-review still
+   pending.
+4. Format: pnpm format:fix
+5. Run: `git diff --check` and `oat project validate-plan --project-path .oat/projects/shared/remote-project-management --json`
+6. Commit: docs(p09-t02): reconcile final review state
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                              | Reviewed Head                            | Invocation          | Gate Target              |
@@ -1538,11 +1590,12 @@ in-scope implementation files when a gate exposes a project defect.
 | p08    | code     | fixes_completed | 2026-09-07 | reviews/p08-review-2026-09-07T035129Z.md                              | 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae | review-1            | codex:sol-high           |
 | p08    | code     | fixes_completed | 2026-09-07 | reviews/p08-review-2026-09-07T041040Z.md                              | 96096ade106ac2278ee7aba174ad88933036d9c8 | review-2            | codex:sol-high           |
 | p08    | code     | passed          | 2026-09-07 | reviews/p08-review-2026-09-07T042019Z.md                              | a9004ccfd3b62157a72088ba92e26f5194a6aad2 | review-3            | codex:sol-high           |
+| p09    | code     | pending         | -          | -                                                                     | -                                        | -                   | -                        |
 | p-rev1 | code     | fixes_added     | 2026-09-01 | reviews/archived/p-rev1-round-4-operator-review-2026-09-01T180520Z.md | 83ae7a9c160afdf4e6e4d08ff26268469403df0a | operator-extension  | -                        |
 | p-rev2 | code     | fixes_completed | 2026-09-01 | reviews/p-rev2-review-2026-09-01T202947Z.md                           | 1af99a23b5cb67142cd06f37c3b3b0bc648e941e | review-1            | codex:sol-high           |
 | p-rev2 | code     | fixes_completed | 2026-09-01 | reviews/p-rev2-rereview-2026-09-01T210901Z.md                         | e79732b6cef1b996a54334e308860a121cdd989d | review-2            | codex:sol-high           |
 | p-rev2 | code     | passed          | 2026-09-01 | reviews/p-rev2-final-rereview-2026-09-01T213136Z.md                   | 5a15f738df8e7d5ab467b94a1e28a77ca5df420c | review-3            | codex:sol-high           |
-| final  | code     | received        | 2026-09-07 | reviews/final-review-2026-09-07T043133Z.md                            | e9b1d0f2d12f4a24acb261972a85409b4cef1521 | auto                | -                        |
+| final  | code     | fixes_added     | 2026-09-07 | reviews/archived/final-review-2026-09-07T043133Z.md                   | e9b1d0f2d12f4a24acb261972a85409b4cef1521 | auto                | -                        |
 | spec   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | boundary-revision-3 | codex:sol-high           |
 | design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md                  | -                                        | manual-1            | cursor                   |
 | design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md                  | -                                        | manual-2            | cursor                   |
@@ -1776,11 +1829,12 @@ authoritative in `implementation.md`.
 - Phase 6: 10 tasks - Jira semantic intents, observations, ADF, and duplicate search
 - Phase 7: 10 tasks - batches, closeout, recovery, doctor, E2E, security
 - Phase 8: 6 tasks - docs, skill references, versions, CI/release gates
+- Phase 9: 2 tasks - P0 negative controls and durable closeout reconciliation
 - Revision 1: 4 tasks - caller authority, action safety, production lifecycle, resumable materialization
 - Revision 2: 2 tasks - verification-handoff restart safety and incomplete-intent provenance
 - Revision 3: 2 tasks - recreate anomaly resolution and public lifecycle approval evidence
 
-**Total: 86 tasks**
+**Total: 88 tasks**
 
 ## References
 
