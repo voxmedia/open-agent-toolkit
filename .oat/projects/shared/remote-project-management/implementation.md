@@ -1232,6 +1232,37 @@ validation:
 Both ordered release-gate passes completed without a repair, recovery attempt,
 or additional scope expansion.
 
+---
+
+## Phase 9: Final Review Fixes
+
+**Status:** in_progress — p09-t01 proof complete; p09-t02 durable-state
+reconciliation pending
+**Started:** 2026-09-07
+
+### Task p09-t01: P0 guard-neutralization proof
+
+The following reproduction-grade negative controls use only existing bounded,
+synthetic fixtures. Each production guard was neutralized independently, its
+bound test was required to fail, and the guard was restored immediately before
+the same test was required to pass. No repository, worktree, Git-history, or
+arbitrary-file content scan was performed.
+
+| Clause                                      | Exact production guard                                                                                                                           | Exact test/probe                                                                                                                                                                                                                              | Neutralized categorical outcome                                                                                                                               | Restored bad-state rejection                                                                          | Valid accepted control                                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| NFR1 whole-field inbound suppression        | `snapshot.ts` `sanitizeCoreField`: sensitive-content signal must produce the whole-field marker and redaction evidence                           | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/snapshot.test.ts -t 'retains only core fields\|suppresses a signaled field'`                                                                                   | exit 1; the neutralized sanitizer retained the signaled field, so the bounded snapshot schema rejected the unsuppressed value and the suppression test failed | exit 0; the signaled description became only the suppression marker with one field-specific redaction | the ordinary allowlisted snapshot remained accepted unchanged; 2/2 selected tests passed                           |
+| NFR1 universal outbound projection gate     | `external-action.ts` `buildExternalAction`: every mutation calls `requireCurrentOutboundSafety` before an action digest is emitted               | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/external-action.test.ts -t 'builds a provider-neutral digest-bound mutation action\|rejects missing, blocked, stale, and mismatched mutation safety evidence'` | exit 1; blocked safety evidence was accepted and the expected `blocks` rejection did not occur                                                                | exit 0; missing, blocked, stale, and preview-mismatched safety evidence was rejected                  | a matching safe projection produced the provider-neutral digest-bound mutation action; 2/2 selected tests passed   |
+| NFR2 preview/approval binding               | `preview.ts` `validatePreviewApproval`: approval `previewDigest` must equal the current preview digest                                           | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/preview.test.ts -t 'binds approval digests to a specific generated preview instance\|accepts only fresh, matching, non-secret approval evidence'`              | exit 1; approval for the older preview was returned as `{ valid: true, reason: null }`                                                                        | exit 0; the older approval was rejected as `digest-mismatch`                                          | fresh matching non-sensitive approval evidence remained valid; 2/2 selected tests passed                           |
+| NFR2 fail-closed mutation after uncertainty | `resolution.ts` `recreateBinding`: a journal with `createAttempted` and no completed binding transition returns uncertain without another create | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/resolution.test.ts -t 'freezes an uncertain create and never blindly retries after restart'`                                                                   | exit 1; restart invoked create twice instead of once                                                                                                          | exit 0; restart preserved uncertain/blocked state and create count remained one                       | the initial approved create attempt executed once and its uncertain outcome was retained; 1/1 selected test passed |
+| NFR3 restart-safe durable recovery          | `closeout.ts` `resumeCloseoutOperation`: verified persisted substeps are skipped during resume                                                   | `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote/closeout.test.ts -t 'recovers a crash after verified'`                                                                                                         | exit 1; resume repeated both already verified annotation and transition substeps                                                                              | exit 0; each crash variant resumed without repeating the verified substep                             | the unfinished safe substep completed after restart and both operations ended verified; 2/2 selected tests passed  |
+
+Before and after the five probes, the exact production files had identical
+SHA-256 values: `snapshot.ts` `d74e4007...a73`, `external-action.ts`
+`d47f0df4...c27`, `preview.ts` `7f4f1111...dcc4`, `resolution.ts`
+`d4085faf...e3f`, and `closeout.ts` `419413b9...2bb`. The focused union,
+formatting, diff validation, and bounded status proof are recorded with the
+task commit; only this implementation artifact remains in the task diff.
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
