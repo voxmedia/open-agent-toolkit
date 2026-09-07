@@ -129,7 +129,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T17:55:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T18:29:53.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -141,7 +141,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all lanes dispositioned (10 merged, p09 parked); root final review passed; the configured exit gate blocked on attempt 1 (three Important, four Medium) and its findings were fixed as Phase 12, merged, gated, and root-reviewed (passed); attempt 2 blocked on a stale record sentence plus two backlink-rule Mediums; attempts are exhausted, so the gate is `blocked` pending an operator decision while p12-t09 lands.
+Implementation — all lanes dispositioned (10 merged, p09 parked); root final review passed; the configured exit gate blocked on attempt 1 (three Important, four Medium) and its findings were fixed as Phase 12, merged, gated, and root-reviewed (passed); attempt 2 blocked on a stale record sentence plus two backlink-rule Mediums; attempts are exhausted, so the gate is `blocked` pending an operator decision; p12-t09 has landed and every finding is fixed on the tip.
 
 ## Artifacts
 
@@ -149,7 +149,7 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete; eleven pointer-only tasks, groups [p01, p02, p03], [p04, p05, p06], then p07 → p08, p09 → p10, p11)
-- **Implementation:** `implementation.md` (18/19 tasks complete; p09 parked)
+- **Implementation:** `implementation.md` (19/20 tasks complete; p09 parked)
 
 ## Progress
 
@@ -172,7 +172,8 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 - ✓ Fix-round root review passed (0C/0I/2M/6m; record fixes applied)
 - ✗ Exit gate attempt-2 launch `w5-exit-gate-20260907T163516Z` killed by the harness (low memory) after the reviewer passed (0C/0I/1M/1m) — superseded, no receipt; its findings fixed as p12-t08 (`c66a2fdc5`)
 - ✗ Exit gate attempt 2 (run `a720129c`) blocked: 0C/1I/2M/1m — the Important is a stale user-facing summary sentence (record), the Mediums tighten the p12-t08 backlink rule (p12-t09); attempts exhausted (2/2) → gate `blocked`, escalated to the operator
-- ⧗ p12-t09, then an operator decision on a further gate attempt; post-implement sequence and PR after that
+- ✓ p12-t09 merged (`0811e7bb6`); eight gates + smoke + skills + root test green — every exit-gate finding is now fixed on the tip
+- ⧗ Operator decision on the exhausted exit gate; post-implement sequence and PR after that
 
 ## Blockers
 

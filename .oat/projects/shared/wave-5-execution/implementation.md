@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p12-t09
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,22 +24,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                                                       | Status      | Tasks | Completed |
-| --------------------------------------------------------------------------- | ----------- | ----- | --------- |
-| Phase 01 (recover-committed-review-artifacts-after-post-selection-failures) | complete    | 1     | 1/1       |
-| Phase 02 (keep-instruction-sync-pointers-out-of-docs-trees)                 | complete    | 1     | 1/1       |
-| Phase 03 (route-incomplete-quick-projects-to-quick-start)                   | complete    | 1     | 1/1       |
-| Phase 04 (retry-gate-project-log-finalization-across-index-locks)           | complete    | 1     | 1/1       |
-| Phase 05 (add-oat-config-unset-command)                                     | complete    | 1     | 1/1       |
-| Phase 06 (validate-skill-script-references-against-pack-manifests)          | complete    | 1     | 1/1       |
-| Phase 07 (enforce-external-plan-readiness-contract)                         | complete    | 1     | 1/1       |
-| Phase 08 (make-autonomous-project-recap-capability-aware)                   | complete    | 1     | 1/1       |
-| Phase 09 (defer-activeproject-clearing-on-archive-completions)              | blocked     | 1     | 0/1       |
-| Phase 10 (make-terminal-project-status-agree-with-revision-plans)           | complete    | 1     | 1/1       |
-| Phase 11 (make-consolidated-project-retirement-semantic)                    | complete    | 1     | 1/1       |
-| Phase 12 (exit-gate fixes)                                                  | in_progress | 9     | 8/9       |
+| Phase                                                                       | Status   | Tasks | Completed |
+| --------------------------------------------------------------------------- | -------- | ----- | --------- |
+| Phase 01 (recover-committed-review-artifacts-after-post-selection-failures) | complete | 1     | 1/1       |
+| Phase 02 (keep-instruction-sync-pointers-out-of-docs-trees)                 | complete | 1     | 1/1       |
+| Phase 03 (route-incomplete-quick-projects-to-quick-start)                   | complete | 1     | 1/1       |
+| Phase 04 (retry-gate-project-log-finalization-across-index-locks)           | complete | 1     | 1/1       |
+| Phase 05 (add-oat-config-unset-command)                                     | complete | 1     | 1/1       |
+| Phase 06 (validate-skill-script-references-against-pack-manifests)          | complete | 1     | 1/1       |
+| Phase 07 (enforce-external-plan-readiness-contract)                         | complete | 1     | 1/1       |
+| Phase 08 (make-autonomous-project-recap-capability-aware)                   | complete | 1     | 1/1       |
+| Phase 09 (defer-activeproject-clearing-on-archive-completions)              | blocked  | 1     | 0/1       |
+| Phase 10 (make-terminal-project-status-agree-with-revision-plans)           | complete | 1     | 1/1       |
+| Phase 11 (make-consolidated-project-retirement-semantic)                    | complete | 1     | 1/1       |
+| Phase 12 (exit-gate fixes)                                                  | complete | 9     | 9/9       |
 
-**Total:** 18/20 planned tasks completed; 1 parked (p09)
+**Total:** 19/20 planned tasks completed; 1 parked (p09)
 
 ---
 
@@ -177,7 +177,7 @@ oat_generated: false
 
 ## Phase 12: exit-gate fixes (p12)
 
-**Status:** in*progress (p12-t09 from exit gate attempt 2) · **Group:** exit-gate fix round (worktrees A = p12-t01/t02/t03, B = p12-t05/t06/t07, C = p12-t04, D = p12-t08, E = p12-t09) · **Tasks:** p12-t01 … p12-t09
+**Status:** complete (every exit-gate finding from attempts 1 and 2 and the superseded launch is fixed; the gate itself is exhausted and blocked pending an operator decision) · **Group:** exit-gate fix round (worktrees A = p12-t01/t02/t03, B = p12-t05/t06/t07, C = p12-t04, D = p12-t08, E = p12-t09) · **Tasks:** p12-t01 … p12-t09
 **Outcome:** all seven attempt-1 findings resolved with red-then-green controls: the gate-log append window is one critical section under a project-local advisory lock in the log module (never a Git lock; a rewrite that cannot take the lock refuses) and a commit settles only when `HEAD:project-log.md` positively carries the caller's entry (`entry-missing-after-commit` / `commit-unverified` route to the receipt); receipt staleness is decided against `HEAD:project-log.md` with exact identity; `documentation.instructionPointerExcludes` is catalogued (`string[]` through `normalizeExcludedPaths`, absolute / `..` / drive-letter entries refused, family coverage + `KEY_ORDER` removal control, five docs pages); the control-plane reader carries an executable Quick Plan Readiness predicate (34/34 verdict parity with the skill's awk guard; 51 non-quick fixtures byte-identical; `oat project status` public controls); the awk guard measures indentation in columns (tab → next multiple of four) in both copies; quick-start re-resolves `PROJECT_PATH` from `oat project new --json` (status-gated fallback) before Step 1 with a real-CLI create-path control reading `absorbed*_`back; the readiness contract backstops the plan↔source backlink in both directions (fence-aware, all link forms,`none`as a whole value).
 **Verification:** per lane: focused suites, forced check/type-check/test`Cached: 0`, check:skill-bumps, lint, format, validate-skills, test:smoke (B), one or two Codex rounds (A: 2 + 1 + 1; B: 1 per task; C: 1, zero findings); fan-in on the tip: eight gates green (CLI 6036, control-plane 141), `pnpm test:smoke`, `pnpm test:skills`, root `pnpm test`all 0.
 **Deviations:** t02 also changed`apps/oat-docs/docs/cli-utilities/workflow-gates.md`and removed the dead working-tree reader`projectLogContainsIdempotencyKey`from`append.ts`(its only consumer was the replaced line); t03 also changed`oat-config.ts`and`oat-config.test.ts`(the repair message and a lenient reader so`set`can repair a malformed value) and three more docs pages that claimed the key had no`oat config`entry; t04 decides every quick`plan`-phase tier by readiness (tier 3 and 1b too, matching the `oat-project-next`table) and adds an additive`quickPlanReadiness`field to`oat project status --json`; t07 also guards the item→plan half. Deferred: `unset`on a malformed stored value exits 1 (identical pre-existing behavior for`documentation.excludes`) → follow-up at closeout; five legacy `2026-08-19-_` plans carry no source backlink (exempt by legacy mode).
@@ -224,8 +224,8 @@ oat_generated: false
 
 ### Task p12-t09: (review) Tighten backlog-ID matching and ignore reference definitions inside HTML comments
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `3a1df2d16`→`80b36ae05`
 
 ## Autonomy Gate Provenance
 
@@ -356,23 +356,25 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - `w5-p12-review-001` outcome: PASS, 0C/0I/2M/6m. All seven attempt-1 findings resolved as the gate reviewer worded them: t01 proven with 20 iterations of two concurrent OS processes on a log carrying a synthesis section (both run IDs survive in HEAD every time; replay singular) and a `pre-commit` hook stripping the run id (`entry-missing-after-commit`, exit 1, never `committed`); every `unlinkSync` touches only the module's own advisory lock; the shipped `quick_plan_ready()` shell guard and the compiled `evaluateQuickPlanReadiness` agree on 22 edge fixtures (zero disagreements); `oat project status` on nine scratch projects routes the three not-ready quick cases to quick-start naming the unmet clause, lite/spec-driven/import unchanged; 13 sequential cache-bypassed gates green. Mediums (records): the Progress Overview omitted Phase 12 (10/11 → 17/18) and `state.md` still called the fix round in flight — **fixed** here. Minors: three factual slips in the Phase 12 Deviations line (exit code 1 not 2; three more docs pages; `workflow-gates.md` and `oat-config.test.ts` undisclosed) — **fixed**; dispatch records' placeholder worktree/task class — **reconciled** in the note above; a stale comment in `config/index.ts` — **fixed** (carried in the receive commit `d3f098549` after commitlint rejected the standalone commit's body); the plan's t04 verify command can pass vacuously against a stale control-plane `dist` — **fixed** (build prefix added to the task); `plan.md` completion checklist counts — **fixed** (12/12 phases, 18/18 tasks); `state.md` gate block `artifact` / `reviewed_head` — **fixed** (archived path; the head the artifact declares). The reviewer's own first t04 control appeared to pass against a stale `dist` — the same mechanism as the minor.
 - `w5-p12d-impl-001` — lane D (the lane-B implementer handle) in `.worktrees/wave-5/p12d` at `a5aa7d2d991fcc6f13ca065912879f7f2505da90`: p12-t08 from the superseded attempt-2 launch's Medium and Minor. Record `dispatch/w5-p12d-impl-001.json`.
 - `w5-p12d-impl-001` outcome: DONE, one commit `18de7b1f170f77d317bbf183f7b35df4aef76f7c` (`skills-bundled-docs-contract.test.ts`; a comment in `quick-plan-readiness.ts`). M1 reproduced (three unrelated-link declarations accepted); the rule now extracts the declared sources (backlog IDs, `#NNN` issue refs, backticked paths, prose-scope words) and requires a link whose label or destination identifies one (type-aware bounded matching; images, inline code, and HTML comments excluded; reference links resolved through fence-aware first-wins definitions with CommonMark label normalisation; non-backtracking link regex). Eleven guards each neutralised separately with its own failing control; corpus sweep byte-identical (31 pass / 13 fail, all exempt by kind or legacy mode). Codex one round (`codex exec -s read-only`; 4I/1M/2m, all accepted and fixed: prose-scope permissiveness, substring/numeric collisions, manufactured reference links, images/inline-code links, balanced parens + label normalisation, quadratic regex, the locale sentence). Residuals recorded, not changed: label-OR-destination stays per the brief (`[BL-123](https://example.com)` accepted); prose-scope matching is heuristic; balanced parentheses one level deep. Fan-in: `wave-5/p12d` → `c66a2fdc5` (lane commit re-hashed `18de7b1f1`→`dc890c0bc`, patch-id identical); eight gates + smoke + skills + root test green (CLI 6036); worktree removed.
+- `w5-p12e-impl-001` — lane E (the lane-B implementer handle) in `.worktrees/wave-5/p12e` at `f5c955732c01d282e52916dce1d7a88e459ec9f5`: p12-t09 from exit gate attempt 2's two Mediums. Record `dispatch/w5-p12e-impl-001.json`.
+- `w5-p12e-impl-001` outcome: DONE, one commit `3a1df2d166db5745fc203906d65c2784ced1f0ed` (`skills-bundled-docs-contract.test.ts` only). Both classes reproduced (`BL-123foo` and `BL-123_x` accepted; a commented definition resolved); one bounded grammar (`BL` + hyphen-delimited alphanumeric segments) now drives extraction and matching (exact or one further complete `-segment`); HTML comments (terminated or to EOF) stripped before definitions and declarations, exact-length code spans stripped before links/definitions. Five guards each neutralised separately with its own failing control (two of the lane's own first controls were non-discriminating and were replaced — caught by the neutralisation sweep, not the green suite); corpus sweep byte-identical (31/13). Codex one round (0C/3I/2M/1m): commented-out declarations, unterminated comments, the extractor/matcher boundary split, a false rejection the lane's own first stripper introduced, and a duplicated control — all fixed; DECLINED and filed: entity/percent-encoded neighbouring IDs and raw HTML blocks other than comments (`BL-260907-decode-entity-and-percent`). Fan-in: `wave-5/p12e` → `0811e7bb6` (`3a1df2d16`→`80b36ae05`, patch-id identical); eight gates + smoke + skills + root test green (CLI 6036); worktree removed.
 
 #### Phase Outcomes
 
-| Phase | Worktree                         | Implementer outcome                                                                                | Review outcome                                                   | Fix rounds |
-| ----- | -------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---------- |
-| p01   | `.worktrees/wave-5/p01`          | DONE_WITH_CONCERNS (`7c1988b63` + sweep `06de22c7d`; forced CLI suite 5815)                        | passed (0C/1I/1M/4m — I1/M1 plan corrections; address-now sweep) | 0          |
-| p02   | `.worktrees/wave-5/p02`          | DONE (`78f1279df` + fix `f1790effd` + sweep `96a5d9480`; forced CLI suite 5848)                    | passed (round 1 0C/2I/2M/5m → round 2 0C/0I/3M/4m)               | 1          |
-| p03   | `.worktrees/wave-5/p03`          | DONE (`36a56cb64` + fix `fcc6c0f26`; forced CLI suite 5808, check:skill-bumps 4)                   | passed (round 1 0C/1I/3M/4m → round 2 0C/0I/0M/1m)               | 1          |
-| p04   | `.worktrees/wave-5/p04`          | DONE (`48837edf0` + sweep `09de4c92f`; forced CLI suite 5898)                                      | passed (0C/0I/1M/5m; address-now sweep)                          | 0          |
-| p05   | `.worktrees/wave-5/p05`          | DONE (`3fd3aaa62` + sweep `d779ea634`; forced CLI suite, focused 202)                              | passed (0C/0I/3M/5m; address-now sweep)                          | 0          |
-| p06   | `.worktrees/wave-5/p06`          | DONE (`8432f1d4d` + fix `970aedccc`; forced CLI suite 5924)                                        | passed (round 1 0C/1I/0M/2m → round 2 0C/0I/0M/2m)               | 1          |
-| p07   | `.worktrees/wave-5/p07`          | DONE (`e4dfa0e27` + fix `9c2f96ca5`; forced CLI suite 6006, check:skill-bumps 1)                   | passed (round 1 0C/1I/2M/5m → round 2 0C/0I/0M/2m)               | 1          |
-| p08   | `.worktrees/wave-5/p08`          | DONE (`049783897` + fix `d7f8a6ff8`; forced CLI suite 6007, test:skills 856, check:skill-bumps 10) | passed (round 1 1C/2I/1M/3m → round 2 0C/0I/0M/0m)               | 1          |
-| p09   | `.worktrees/wave-5/p09`          | BLOCKED — plan STOP (seal append not idempotent; resume premise false); parked patch preserved     | not reviewed (parked)                                            | 0          |
-| p10   | `.worktrees/wave-5/p10`          | DONE (`9d0049212` + pin `aaf4c8677`; forced CLI suite 6008, control-plane 102, test:smoke 0)       | passed (round 1 0C/1I/1M/4m → round 2 0C/0I/0M/2m)               | 1          |
-| p11   | `.worktrees/wave-5/p11`          | DONE (`0bd2a2815` + sweep `a61e42b52`; forced CLI suite 6011, test:smoke 160)                      | passed (0C/0I/1M/3m; address-now sweep)                          | 0          |
-| p12   | `.worktrees/wave-5/p12{a,b,c,d}` | DONE (eight fix commits; forced CLI suite 6036, control-plane 141, smoke, skills, root test)       | fix-round root review pending; exit gate attempt 2 pending       | 0          |
+| Phase | Worktree                           | Implementer outcome                                                                                | Review outcome                                                                                                              | Fix rounds |
+| ----- | ---------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| p01   | `.worktrees/wave-5/p01`            | DONE_WITH_CONCERNS (`7c1988b63` + sweep `06de22c7d`; forced CLI suite 5815)                        | passed (0C/1I/1M/4m — I1/M1 plan corrections; address-now sweep)                                                            | 0          |
+| p02   | `.worktrees/wave-5/p02`            | DONE (`78f1279df` + fix `f1790effd` + sweep `96a5d9480`; forced CLI suite 5848)                    | passed (round 1 0C/2I/2M/5m → round 2 0C/0I/3M/4m)                                                                          | 1          |
+| p03   | `.worktrees/wave-5/p03`            | DONE (`36a56cb64` + fix `fcc6c0f26`; forced CLI suite 5808, check:skill-bumps 4)                   | passed (round 1 0C/1I/3M/4m → round 2 0C/0I/0M/1m)                                                                          | 1          |
+| p04   | `.worktrees/wave-5/p04`            | DONE (`48837edf0` + sweep `09de4c92f`; forced CLI suite 5898)                                      | passed (0C/0I/1M/5m; address-now sweep)                                                                                     | 0          |
+| p05   | `.worktrees/wave-5/p05`            | DONE (`3fd3aaa62` + sweep `d779ea634`; forced CLI suite, focused 202)                              | passed (0C/0I/3M/5m; address-now sweep)                                                                                     | 0          |
+| p06   | `.worktrees/wave-5/p06`            | DONE (`8432f1d4d` + fix `970aedccc`; forced CLI suite 5924)                                        | passed (round 1 0C/1I/0M/2m → round 2 0C/0I/0M/2m)                                                                          | 1          |
+| p07   | `.worktrees/wave-5/p07`            | DONE (`e4dfa0e27` + fix `9c2f96ca5`; forced CLI suite 6006, check:skill-bumps 1)                   | passed (round 1 0C/1I/2M/5m → round 2 0C/0I/0M/2m)                                                                          | 1          |
+| p08   | `.worktrees/wave-5/p08`            | DONE (`049783897` + fix `d7f8a6ff8`; forced CLI suite 6007, test:skills 856, check:skill-bumps 10) | passed (round 1 1C/2I/1M/3m → round 2 0C/0I/0M/0m)                                                                          | 1          |
+| p09   | `.worktrees/wave-5/p09`            | BLOCKED — plan STOP (seal append not idempotent; resume premise false); parked patch preserved     | not reviewed (parked)                                                                                                       | 0          |
+| p10   | `.worktrees/wave-5/p10`            | DONE (`9d0049212` + pin `aaf4c8677`; forced CLI suite 6008, control-plane 102, test:smoke 0)       | passed (round 1 0C/1I/1M/4m → round 2 0C/0I/0M/2m)                                                                          | 1          |
+| p11   | `.worktrees/wave-5/p11`            | DONE (`0bd2a2815` + sweep `a61e42b52`; forced CLI suite 6011, test:smoke 160)                      | passed (0C/0I/1M/3m; address-now sweep)                                                                                     | 0          |
+| p12   | `.worktrees/wave-5/p12{a,b,c,d,e}` | DONE (nine fix commits; forced CLI suite 6036, control-plane 141, smoke, skills, root test)        | passed (fix-round root review 0C/0I/2M/6m); exit gate attempt 2 blocked on records + two Mediums, all fixed; gate exhausted | 0          |
 
 #### Group 1 fan-in — p01, p02, p03 (2026-09-07)
 
@@ -444,6 +446,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 ### 2026-09-07
 
 - Final review round 1 (`w5-final-review-001`, head `5aa2f5ab4`): PASS with record corrections (0C/1I/3M/3m), all applied in `9386be825`; round 2 (`w5-final-review-002`) verified the dispositions — see Review Received: final.
+- Exit gate attempt 2 blocked (0C/1I/2M/1m; attempts exhausted) → p12-t09 `3a1df2d16`→`80b36ae05`, merge `0811e7bb6`; gates green; lockstep retained 0.2.63; the gate stays `blocked` pending an operator decision.
 - Exit gate attempt-2 launch killed after a passing review (superseded) → p12-t08 `18de7b1f1`→`dc890c0bc`, merge `c66a2fdc5`; gates green; lockstep retained 0.2.63.
 - Exit gate attempt 1 blocked (0C/3I/4M) → Phase 12: p12a `ddeabab1e`, p12b `bcf907526`, p12c `368d8b8d0` (seven fix commits, patch-ids verified); gates green on `368d8b8d0`; lockstep retained 0.2.63.
 - p11-t01 `0bd2a2815`→`e73c5ee0f`, sweep `a61e42b52`→`b90f1d8c9`; merge `b59bbe804`; lockstep retained 0.2.63. All merges complete (10 of 11; p09 parked).
@@ -566,6 +569,8 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### Deferred Findings (Minor)
 
+- p12-t03 Codex — `oat config unset` on a malformed stored value exits 1 (identical pre-existing behavior for `documentation.excludes`) → `BL-260907-let-oat-config-unset-remove`.
+- p12-t09 Codex (declined in the wave) — entity/percent-encoded neighbouring backlog IDs and definitions inside raw HTML blocks still satisfy the backlink rule → `BL-260907-decode-entity-and-percent`.
 - p06 review — `packages/cli` test files are excluded from tsc and type-aware oxlint → `BL-260907-type-check-cli-test-files`.
 - p05 review — `oat config adopt` keeps an inline copy of the surface-flag block → `BL-260907-fold-oat-config-adopt-onto`.
 - p03 review (deferred) — quick-mode `discovery` rows in `oat-project-next` (and the matching row in `oat-project-progress`'s routing table) still route through `oat-project-plan` (two-hop) → `BL-260907-route-quick-mode-discovery`.
