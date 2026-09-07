@@ -375,14 +375,14 @@ once an artifact exists, its `generatedAt` (the artifact's seconds-precision
 `oat_generated_at`), so a caller can correlate the result to the exact artifact
 and disambiguate re-gate rounds:
 
-| `status`                       | Exit | Meaning                                                      |
-| ------------------------------ | ---- | ------------------------------------------------------------ |
-| `ok`                           | 0    | Review completed; gate passed at the threshold.              |
-| `blocked`                      | 1    | Review completed; findings at/above the threshold.           |
-| `review_failed`                | ≠0   | The provider target exited non-zero; no verdict.             |
-| `artifact_missing`             | 1    | The child exited cleanly without producing an artifact.      |
-| `artifact_validation_failed`   | 1    | Artifact format or configured invocation fields are invalid. |
-| `targeting_correlation_failed` | 1    | Identity did not correlate; do not run review-receive.       |
+| `status`                       | Exit | Meaning                                                         |
+| ------------------------------ | ---- | --------------------------------------------------------------- |
+| `ok`                           | 0    | Review completed; gate passed at the threshold.                 |
+| `blocked`                      | 1    | Review completed; findings at/above the threshold.              |
+| `review_failed`                | ≠0   | No validated verdict: the target or post-selection work failed. |
+| `artifact_missing`             | 1    | The child exited cleanly without producing an artifact.         |
+| `artifact_validation_failed`   | 1    | Artifact format or configured invocation fields are invalid.    |
+| `targeting_correlation_failed` | 1    | Identity did not correlate; do not run review-receive.          |
 
 Only `ok` and `blocked` are positive, receive-eligible review outcomes: both
 follow successful identity corroboration and carry a non-null `handoff`.
@@ -399,6 +399,37 @@ review artifact. It sets `receiveEligible: false`, `remediable: false`, and
 bookkeeping finish inline or through a synchronously awaited child, then start
 a new gate run. Do not use review-fix retries or review-receive for the failed
 run.
+
+Post-selection recovery covers work that fails _after_ the reviewer already
+committed a run-correlated artifact: corroboration, the threshold, handoff
+construction, or result writing. Recovery means re-validation, never re-review.
+The gate re-runs the same eligibility pipeline the normal path uses (project
+containment, `oat_generated_at` validity, verdict parsing, gate-invocation
+corroboration, the `oat_review_invocation: gate` marker, and the threshold)
+against the immutable content/signature snapshot selected at correlation time.
+It re-validates that snapshot rather than re-parsing whatever the path now
+holds, and it never dispatches a second reviewer. The artifact must still be
+present and unchanged for re-validation to succeed: a deleted or rewritten
+artifact fails re-validation and the run stays failed.
+When that re-validation succeeds the gate returns the ordinary `ok` or
+`blocked` envelope with an additive `postSelectionRecovery: true`. Like
+`lateCompletion`, that is recovery telemetry rather than a new status: route
+review-receive from `status`, `receiveEligible`, and `handoff` as usual.
+
+When no artifact was selected, or the selected snapshot does not re-validate,
+the run stays `review_failed` with `outcome:
+unexpected_post_selection_failure`. That envelope names the failing sub-step in
+`postSelection.step` (`target-dispatch`, `artifact-scan`,
+`artifact-correlation`, `artifact-validation`, `verdict-parse`,
+`invocation-corroboration`, or `verdict-disposition`) and a routable
+`postSelection.code`: the thrown error's own `code` or constructor name, the
+eligibility cause when a committed artifact failed re-validation, or
+`recovery_revalidation_failed` when the re-validation attempt itself threw. That
+last case also emits a `gate-recovery-failed` diagnostic, so a persistent
+non-recovery stays distinguishable from the transient failure that triggered it.
+Replacement bytes at the artifact path, a missing artifact, a non-gate
+invocation marker, and an artifact targeting another project never recover. Route deterministically on those
+fields instead of re-dispatching the reviewer.
 
 `ok` and `blocked` also include `receiveEligible: true`, `outcome`,
 `artifactPath`, `counts`, `scope`, `handoff`, `gateInvocation`, and
@@ -884,14 +915,15 @@ those artifacts; correct the project/run correlation and start a new gate run.
 
 ### Incident-to-regression mapping
 
-| Observed failure                                         | Regression coverage                                                                                                    |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Headless reviewer could not complete an async delegation | route unit matrix plus canonical checkout-local command, strict receipt, headless inline, and structured-refusal cases |
-| Large final review exceeded the old 15-minute budget     | scope-aware resolver tests plus scaled final-scope fake-runtime case                                                   |
-| Silent child looked idle while transcripts grew          | metadata-probe tests plus timeout-with-advancing-transcript fixture                                                    |
-| Timeout or child failure produced no artifact            | fail-closed `noOutputProduced` fixture                                                                                 |
-| Artifact carried the wrong gate run ID                   | provenance-mismatch fixture                                                                                            |
-| Passing artifact lost receive routing                    | handoff and `receiveEligible` fixture                                                                                  |
+| Observed failure                                                      | Regression coverage                                                                                                    |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Headless reviewer could not complete an async delegation              | route unit matrix plus canonical checkout-local command, strict receipt, headless inline, and structured-refusal cases |
+| Large final review exceeded the old 15-minute budget                  | scope-aware resolver tests plus scaled final-scope fake-runtime case                                                   |
+| Silent child looked idle while transcripts grew                       | metadata-probe tests plus timeout-with-advancing-transcript fixture                                                    |
+| Timeout or child failure produced no artifact                         | fail-closed `noOutputProduced` fixture                                                                                 |
+| Artifact carried the wrong gate run ID                                | provenance-mismatch fixture                                                                                            |
+| Passing artifact lost receive routing                                 | handoff and `receiveEligible` fixture                                                                                  |
+| Passing review reported as a failed gate after a post-selection error | post-selection recovery cases plus snapshot-replacement, non-gate-marker, and foreign-target controls                  |
 
 ## Current limits
 
