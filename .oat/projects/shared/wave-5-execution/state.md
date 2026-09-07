@@ -55,7 +55,7 @@ oat_dispatch_policy: # managed/high per operator routing preference
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: stale
+  status: allowed
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
@@ -77,7 +77,7 @@ oat_implement_exit_gate:
   gate_run_id: '905419ec-75d0-4ea0-9881-5425c6c54e9d'
   envelope_status: ok
   artifact: '.oat/projects/shared/wave-5-execution/reviews/archived/final-review-2026-09-07T214334Z.md'
-  handoff: 'Gate attempt 3 passed (run 905419ec) and was received; CI on PR #275 then failed one Linux-only test (case-sensitive content-root probe) and the fix 7aed651ce changed product code after the reviewed head 34e89bbc9, so the passed basis is stale; a re-run needs operator authorization (attempts 3/3 consumed)'
+  handoff: 'Gate attempt 3 passed (run 905419ec) and was received; the post-gate CI fix 7aed651ce (Linux case-sensitivity probe, 17 lines) staled the basis; on 2026-09-07 the operator chose to accept the fix without a re-run (option 2) and merge on green CI - recorded as an operator acceptance of a stale gate basis; freshness fields point at the fix'
   receive_state: completed
   receive_correlation: 'run=905419ec-75d0-4ea0-9881-5425c6c54e9d; handoff=receive; source=reviews/final-review-2026-09-07T214334Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/wave-5-execution/reviews/final-review-2026-09-07T214334Z.md'
@@ -88,7 +88,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-07T22:09:56Z'
+  updated_at: '2026-09-07T23:10:21Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -144,7 +144,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/275' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-09-07T21:51:41.457Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T22:09:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T23:10:21.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_lifecycle: complete
 ---
