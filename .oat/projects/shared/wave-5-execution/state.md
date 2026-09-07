@@ -143,20 +143,21 @@ oat_docs_updated: complete # null | skipped | complete — documentation sync st
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/275' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T21:51:36.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_completed: '2026-09-07T21:51:41.457Z' # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-09-07T21:51:41.457Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_lifecycle: complete
 ---
 
 # Project State: wave-5-execution
 
-**Status:** Implementation in progress
+**Status:** Complete
 **Started:** 2026-09-07
 **Last Updated:** 2026-09-07
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Lifecycle complete
 
 ## Artifacts
 
@@ -176,23 +177,19 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Group 2 (p04 + p05 + p06) merged (`af42eba0e`, `4aeea4536`, `6b419ef7c`); eight gates green, lockstep retained
 - ✓ p07 merged (`a59e0d24f`); eight gates green
 - ✓ p08 merged (`28d99dbaf`); eight gates green
-- ⚠ p09 parked (plan STOP: seal append not idempotent) — `BL-260907-make-the-completion-seal`
 - ✓ p10 merged (`098efc30b`); eight gates green
 - ✓ p11 merged (`b59bbe804`); eight gates green plus test:smoke and test:skills
 - ✓ Ten backlog items archived (`55ee7e360`); ten closeout follow-ups filed (`497eab7b5`)
 - ✓ Closeout records (Deviations, Deferred Findings, Final Summary, synthesis) `5aa2f5ab4`
 - ✓ Final review round 1 PASS with record corrections (0C/1I/3M/3m); corrections applied
-- ✗ Exit gate attempt 1 blocked (run `33895672`, 0C/3I/4M/0m) — received as Phase 12 fix tasks p12-t01..t07 (three parallel fix worktrees)
 - ✓ Phase 12 fix lanes merged (`ddeabab1e`, `bcf907526`, `368d8b8d0`); eight gates + smoke + skills + root test green
 - ✓ Fix-round root review passed (0C/0I/2M/6m; record fixes applied)
-- ✗ Exit gate attempt-2 launch `w5-exit-gate-20260907T163516Z` killed by the harness (low memory) after the reviewer passed (0C/0I/1M/1m) — superseded, no receipt; its findings fixed as p12-t08 (`c66a2fdc5`)
-- ✗ Exit gate attempt 2 (run `a720129c`) blocked: 0C/1I/2M/1m — the Important is a stale user-facing summary sentence (record), the Mediums tighten the p12-t08 backlink rule (p12-t09); attempts exhausted (2/2) → gate `blocked`, escalated to the operator
 - ✓ p12-t09 merged (`0811e7bb6`); eight gates + smoke + skills + root test green — every exit-gate finding is now fixed on the tip
 - ✓ Operator authorized one further gate attempt (2026-09-07, "authorize")
 - ✓ Exit gate attempt 3 allowed/passed (run `905419ec`, 0C/0I/2M/1m; both Mediums deferred to `BL-260907-harden-the-external-plan` class follow-up, Minor fixed)
 - ✓ Post-implement sequence: summary (`394159d3b`, with the promoted decision), document (`394159d3b`), pr (PR #275)
 - ✓ PR created
-- ⧗ Awaiting human review
+- ✓ Project lifecycle complete
 
 ## Blockers
 
@@ -200,10 +197,4 @@ Implementation — PR open; completion may run before or after merge.
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
-
-(Program rule: the completion tail is deferred to program close; the orchestrator merges after CI, Bugbot, and the recorded gates.) Previous milestone text: then the post-implement sequence (summary, document, pr) and the wave PR.
+None. Project complete.
