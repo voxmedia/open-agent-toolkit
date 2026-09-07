@@ -1220,6 +1220,16 @@ the comment guard failed both new comment-only cases; restoration passed the
 inspected the exact diff and reran the focused suite (33/33). The prior review
 event is `fixes_completed` pending fresh re-review.
 
+#### Phase 9 re-review passed
+
+The fresh independent re-review at
+`reviews/archived/p09-review-2026-09-07T031728Z.md` inspected the exact
+`p09-t03` fix range and found 0 Critical, 0 Important, 0 Medium, and 0 Minor
+findings. Independent probes confirmed both shipped comments reject while an
+unrelated authored comment remains accepted and preserved. Phase 9 is complete
+after one fix loop; the originating gate event is `fixes_completed` pending a
+fresh final lifecycle review and regenerated exit-gate generation.
+
 #### Configured implementation exit gate generation 4 created
 
 The configured declaration resolved with canonical configuration fingerprint
