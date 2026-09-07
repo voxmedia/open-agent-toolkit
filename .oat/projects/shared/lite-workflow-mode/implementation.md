@@ -1203,6 +1203,15 @@ Attempt `8b629a4b-c821-4abd-b439-037c6ee13ed5` is reserved at
 `reviews/gate-receipts/implement-exit-8b629a4b-c821-4abd-b439-037c6ee13ed5.json`.
 The exact configured command remains unexecuted at this checkpoint.
 
+#### Configured implementation exit gate launch 4 accepted
+
+Run marker
+`/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/93818858-2e0d-4a1f-a8e7-d8536ca4b6c2.json`
+binds run `93818858-2e0d-4a1f-a8e7-d8536ca4b6c2` to the normalized project,
+final code-review scope, and start time `2026-09-07T02:50:17.894Z`. Launch
+attempt `8b629a4b-c821-4abd-b439-037c6ee13ed5` is accepted and running; no
+terminal envelope has been consumed.
+
 ### 2026-09-06
 
 #### Configured implementation exit gate generation 3 created
