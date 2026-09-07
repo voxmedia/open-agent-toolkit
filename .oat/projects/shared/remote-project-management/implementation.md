@@ -24,19 +24,19 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 10    | 10/10     |
-| Phase 2    | completed   | 10    | 10/10     |
-| Phase 3    | blocked     | 12    | 12/12     |
-| Phase 4    | completed   | 11    | 11/11     |
-| Phase 5    | completed   | 9     | 9/9       |
-| Phase 6    | completed   | 10    | 10/10     |
-| Phase 7    | in_progress | 10    | 10/10     |
-| Phase 8    | in_progress | 6     | 6/6       |
-| Revision 1 | blocked     | 4     | 4/4       |
-| Revision 2 | completed   | 2     | 2/2       |
-| Revision 3 | completed   | 2     | 2/2       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 10    | 10/10     |
+| Phase 2    | completed | 10    | 10/10     |
+| Phase 3    | completed | 12    | 12/12     |
+| Phase 4    | completed | 11    | 11/11     |
+| Phase 5    | completed | 9     | 9/9       |
+| Phase 6    | completed | 10    | 10/10     |
+| Phase 7    | completed | 10    | 10/10     |
+| Phase 8    | completed | 6     | 6/6       |
+| Revision 1 | completed | 4     | 4/4       |
+| Revision 2 | completed | 2     | 2/2       |
+| Revision 3 | completed | 2     | 2/2       |
 
 **Total:** 86/86 tasks completed
 
@@ -2737,24 +2737,68 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- A local-first remote project-management control plane for GitHub, Linear,
+  and Jira, with durable operation journals, provider-neutral semantic actions,
+  reconciliation, closeout, recovery, verification, and doctor diagnostics.
+- A live host-execution contract that discovers currently available connectors
+  or configured CLI help at runtime while keeping provider tool names, native
+  schemas, captured catalogs, and CLI dialects out of OAT core and skills.
+- End-to-end privacy and approval controls: bounded inbound allowlists with
+  whole-field suppression, explicit normalized outbound projections, one
+  universal pre-write gate, approval-bound previews/actions, and authoritative
+  read-back verification.
+- User-facing CLI reference, configuration, troubleshooting, workflow, and
+  host-skill documentation, plus the versioned `oat-pjm-remote` canonical skill.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Remote work remains useful offline without claiming remote freshness or
+  success; provider contact proceeds only through an explicit durable handoff.
+- Hosts discover and attest bounded capability evidence before the first
+  provider-contacting command, execute each emitted action at most once, and
+  continue with one bounded observation.
+- Policy resolution may apply a broader provider replacement before binding
+  restrictions and purpose grants tighten authority; hard approval floors and
+  current caller evidence remain mandatory.
+- Remote content that triggers a conservative sensitive-content signal is
+  suppressed as a whole field and marked incomplete rather than parsed for
+  credential values.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/pjm/remote/` - remote schemas, policy, privacy,
+  lifecycle, provider-neutral execution, persistence, and verification.
+- `packages/cli/src/commands/pjm/` - public commands and production composition.
+- `.agents/skills/oat-pjm-remote/` - runtime-discovered host execution workflow
+  and its provider-neutral contract tests.
+- `apps/oat-docs/docs/cli-utilities/` and `apps/oat-docs/docs/reference/` - user
+  configuration, command, storage, recovery, and troubleshooting guidance.
+- `packages/*/package.json` and `packages/cli/assets/public-package-versions.json`
+  - lockstep `0.2.63` public release boundary above current main `0.2.62`.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Focused remote/E2E verification passed 708/708 tests; the evidence-grade
+  forced workspace run passed 6,470/6,470 tests with zero cached tasks.
+- Phase and review-fix contracts, skill validation/version gates, smoke and
+  release suites, docs lint/format, plan validation, type checking, and package
+  builds passed.
+- The complete CI-equivalent release sequence passed twice before the final
+  review; independent Phase 8 review reproduced the focused, release, version,
+  skill, merge, and forced zero-cache docs checks with zero findings.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- The early credential-value parser design was replaced by bounded whole-field
+  suppression with explicit incompleteness evidence, avoiding any general-DLP
+  claim or repository-wide secret scan.
+- Static provider transport machinery and captured catalogs were replaced by
+  live host discovery and bounded provider-neutral capability evidence.
+- Three corrective revisions preserved exhausted review history while closing
+  production approval, restart-safety, anomaly, and lifecycle-evidence gaps.
+- Latest main was merged rather than rebased so reviewed history remains
+  reachable; both remote PJM and the independently delivered lite workflow are
+  retained in the synchronized provider views.
 
 ## References
 
