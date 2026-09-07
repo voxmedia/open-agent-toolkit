@@ -60,6 +60,10 @@ target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,m
 
 target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-5-execution/reviews/artifact-plan-review-2026-09-07T045405Z.md
 
+### 2026-09-07 · structural · oat-project-review-provide · final
+
+review=final status=fixes_added artifact=reviews/final-review-2026-09-07T144442Z.md findings=0C/3I/4M/0m run=33895672-bac5-4cb4-9a9e-474e440a9bc5
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
