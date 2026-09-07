@@ -720,27 +720,29 @@ git commit -m "fix(p11-t01): make consolidated-project retirement checks semanti
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target         |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------- |
-| p01    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p02    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p03    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p04    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p05    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p06    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p07    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p08    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p09    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p10    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p11    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| final  | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T042724Z.md | -             | gate       | codex-5-6-sol-xhigh |
-| spec   | artifact | pending     | -          | -                                                           | -             | -          | -                   |
-| design | artifact | pending     | -          | -                                                           | -             | -          | -                   |
-| plan   | artifact | superseded  | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T043343Z.md | -             | gate       | codex-5-6-sol-xhigh |
-| plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T044034Z.md | -             | gate       | codex-5-6-sol-xhigh |
-| plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T044657Z.md | -             | gate       | codex-5-6-sol-xhigh |
-| plan   | artifact | passed      | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T045405Z.md | -             | gate       | codex-5-6-sol-xhigh |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
+| p04    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p05    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p06    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p07    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p08    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p09    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p10    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p11    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| final  | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T042724Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
+| plan   | artifact | superseded  | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T043343Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
+| plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T044034Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
+| plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T044657Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
+| plan   | artifact | passed      | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T045405Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
+| p01    | code     | passed      | 2026-09-07 | reviews/archived/p01-review-2026-09-07T054826Z.md           | 7c1988b6380d3893b6c74e1f545e1580b4032566 | manual     | -                   |
+| p02    | code     | fixes_added | 2026-09-07 | reviews/archived/p02-review-2026-09-07T055258Z.md           | 78f1279dfb47c33f568a405ce9d28331d7048d4f | manual     | -                   |
+| p02    | code     | passed      | 2026-09-07 | reviews/archived/p02-review-2026-09-07T063650Z.md           | f1790effdd5962414a4e0232ed6a9f919d46b6e5 | manual     | -                   |
+| p03    | code     | fixes_added | 2026-09-07 | reviews/archived/p03-review-2026-09-07T054810Z.md           | 36a56cb6409afd7831f705539796238732a53823 | manual     | -                   |
+| p03    | code     | passed      | 2026-09-07 | reviews/archived/p03-review-2026-09-07T061709Z.md           | fcc6c0f2695a46642566d7205d80a300c99d66b5 | manual     | -                   |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
