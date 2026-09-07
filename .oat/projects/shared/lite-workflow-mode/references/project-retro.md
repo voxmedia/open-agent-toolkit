@@ -1,6 +1,6 @@
 ---
 oat_retro_project: lite-workflow-mode
-oat_retro_generated: '2026-09-06T05:17:39Z'
+oat_retro_generated: '2026-09-07T00:38:07Z'
 oat_retro_evidence_sources:
   - source: project-log
     status: used
@@ -20,6 +20,8 @@ oat_retro_evidence_sources:
     status: used
   - source: github-pr-state
     status: used
+  - source: github-actions
+    status: used
   - source: spec
     status: unavailable
 oat_retro_promotions: proposed
@@ -32,201 +34,202 @@ oat_template: false
 
 ## Executive Summary
 
-The project delivered Lite as a first-class OAT workflow and proved its core
-contracts through 27 implementation tasks, independent phase reviews,
-production-derived promotion controls, and a configured exit gate. The result
-is credible because several initially green or apparently complete paths failed
-under real artifacts, full-surface tests, or independent review and were then
-reproduced before correction. The largest opportunity is not more Lite code;
-it is reducing workflow friction around cross-cutting mode inventories,
-prelaunch provenance, dispatch terminalization, and review-artifact closeout.
+The project delivered Lite as a first-class OAT workflow, then materially
+improved it through a user-directed revision that restored adaptive product and
+technical specification depth and replaced mandatory test-first ceremony with
+risk-proportionate proof. The final result spans 39 tasks across eight phases,
+including Wave 4 integration, five governed p-rev2 recoveries, independent
+review, and exact-head CI and release validation. The strongest lesson is that
+workflow changes must be verified at composition boundaries and on the same
+platform classes that consume their evidence.
 
 ## Evidence and Review Method
 
-The synthesis read the append-only `project-log.md` first, then the lifecycle
-artifacts, 29 archived review documents, three exit-gate receipts, 33 dispatch
-records, relevant Git history, and the current session transcript
-`01a073de-998c-7541-97c9-379dade1c17e`. Live GitHub state for PR #264 was used
-only for the generation-time boundary snapshot. Three bounded read-only lanes
-separately examined durable outcomes, failure taxonomy, and feedback
-deduplication; root synthesis reopened the cited sources before retaining their
-claims.
+The synthesis read the append-only `project-log.md` first, then the current
+plan, state, implementation, discovery, design, summary, decision records,
+archived reviews, gate receipts, dispatch records, Git history, and session
+transcript `01a073de-998c-7541-97c9-379dade1c17e`. Live GitHub evidence was
+limited to PR #264 and exact-head Actions runs `34070017663` and `34070017665`.
+Two bounded read-only lanes checked the post-retro execution chronology and
+deduplicated feedback against existing backlog and GitHub issues; root reopened
+the cited durable sources before retaining their conclusions.
 
 No project-local `oat-execution-learnings.md` or formal `spec.md` exists. That
-absence is expected for the Quick workflow used to build Lite, but both sources
-are recorded as unavailable rather than inferred. Committed artifacts outrank
-session recollection. Causes below are labeled confirmed only when a receipt,
-review, reproduction, or durable ledger supports them; otherwise the text says
-hypothesis or inconclusive.
+is expected for this Quick-origin project and is recorded as unavailable.
+Committed evidence and exact run receipts outrank recollection. The two final
+test mechanisms are confirmed by preserved negative controls and focused
+review; the cause of older unreconciled dispatch terminal state remains
+inconclusive.
 
 ## Outcome Snapshot
 
-| Area              | Generation-time outcome                                                                                    | Evidence anchor                            |
-| ----------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| Product           | Fourth workflow mode with a three-artifact Lite scaffold and dedicated planning skill                      | `summary.md` → What Was Implemented        |
-| Promotion         | In-place Lite-to-Quick promotion preserves identity and captured context                                   | `DR-260906-promote-oversized-lite-work`    |
-| Execution         | 27/27 tasks across six phases                                                                              | `implementation.md` → Progress Overview    |
-| Review            | Every phase passed; exit gate run `0da02d5a-4d15-4c3c-97bf-94cf246ac945` passed the Important threshold    | `plan.md` → Reviews; matching gate receipt |
-| Verification      | Full repository/release/docs gates plus uncached, smoke, skill, lint, format, and negative controls passed | `implementation.md` → Final Summary        |
-| Delivery boundary | PR #264 was open at `975a5169c`; GitHub reported merge conflicts and Cursor Bugbot had passed              | live GitHub PR state at generation         |
+| Area              | Generation-time outcome                                                                                              | Evidence anchor                                       |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Product           | Lite is a first-class, three-artifact, single-phase workflow with safe in-place promotion                            | `summary.md` → What Was Implemented                   |
+| Specification     | Lite plans adaptively include Product Behavior and Technical Design and preserve them during promotion               | `plan.md` → Phase p-rev1                              |
+| Proof             | Plans select proportionate, fail-capable evidence instead of requiring test-first work for every change              | `design.md` → Revision 1                              |
+| Execution         | 39/39 tasks across eight phases, including five governed p-rev2 recoveries                                           | `implementation.md` → Progress Overview               |
+| Review            | Final stabilization review accepted both substantive test fixes; its wording-only Medium was resolved in `prev2-t05` | `reviews/archived/final-review-2026-09-07T002708Z.md` |
+| Verification      | Local required and supplemental gates passed; exact-head CI and Release Dry Run passed                               | Actions runs `34070017663`, `34070017665`             |
+| Delivery boundary | PR #264 is open and mergeable at `15ad3374c`; merge, release, and lifecycle approval are not implied                 | live GitHub and `state.md`                            |
 
 ## Current State
 
-- **Promotions:** `proposed` — RP-01 and RP-02 await an apply decision.
-- **Filing:** `complete` — UP-01 was filed as GitHub issue #265 and UP-02 as
-  GitHub issue #266; both are tracked by `BL-260906-harden-dispatch-launch`.
-- **Unsettled items:** RP-01 and RP-02 remain proposed for application.
+- **Promotions:** `proposed` — RP-01 through RP-03 await an apply decision.
+- **Filing:** `complete` — RP-04 and UP-01/UP-02 are already filed and tracked.
+- **Unsettled items:** RP-01, RP-02, and RP-03 require an explicit apply
+  decision. No filing item is unsettled.
 
 ## What Went Well
 
-- The reduced workflow did not reduce assurance. `DR-260906-retain-managed-implementation`
-  preserved managed ceilings, per-phase review, final review, and the exit gate.
-- Pre-edit SHA validation prevented a stale p06 launch from changing code. The
-  `INVALID_RUN_ABORT` record shows 0/3 tasks executed before explicit relaunch
-  authorization.
-- Production-derived controls materially improved confidence. Gate run
-  `e1faf839-7cd8-4635-8d73-2196ade93c55` disproved a hand-built routing fixture;
-  p06-t10 then proved shared and local promotion through real artifacts and a
-  neutralized-guard failure.
-- Failure bookkeeping generally failed closed. The first p04 recovery was
-  settled as failed, the attempted correction was restored, and the second
-  authorized recovery produced commit `479d2f1a1c0ebbe3e64445d3af14d5bcde3e18b1`.
-- The final gate receipts consistently preserved configured-target provenance,
-  run correlation, and receive eligibility without claiming unreported runtime
-  identity.
+- Lite retained managed implementation, phase review, final review, and the
+  configured exit gate even while reducing planning ceremony.
+- The user feedback loop improved the product rather than merely polishing
+  wording. Revision p-rev1 restored conditional specification sections and
+  made proof strategy proportional to runtime risk.
+- Append-only recovery preserved original task commits and exact dispatch
+  provenance. Each p-rev2 attempt was reserved, bounded, verified, and settled
+  without rewriting history.
+- Real negative controls changed the result. Ubuntu exposed a symlink identity
+  fixture that macOS did not, and full-suite load exposed a SIGTERM readiness
+  race that isolated repetitions initially missed.
+- Exact-head GitHub evidence closed the loop. CI `34070017663` and Release Dry
+  Run `34070017665` passed on the published SHA `15ad3374c`.
 
 ## Challenges and Struggles
 
-### Plan review did not converge within its normal budget
+### Planning review exceeded its useful convergence window
 
-Eleven plan-gate rounds found additional mode-aware surfaces, with Important
-counts oscillating instead of trending to zero. This delayed implementation and
-made another automated round a poor proxy for completion. The user first
-authorized bounded continuation, then stopped the loop after round eleven and
-accepted the explicit residual-risk handoff to phase and final reviews. Those
-later reviews found real omissions, validating the risk disclosure without
-showing that an unbounded planning loop would have been efficient. Evidence:
-`plan.md` → Plan artifact review disposition.
+Eleven early plan-gate rounds found additional mode-aware surfaces, but the
+finding count did not converge monotonically. The user stopped the unbounded
+loop and accepted an explicit handoff to phase and final reviews. Those later
+reviews found real omissions, so the risk disclosure was warranted, but more
+planning rounds would not necessarily have found them more efficiently.
+Evidence: `plan.md` → Plan artifact review disposition.
 
-### Prelaunch bookkeeping invalidated its own execution baseline
+### The first Lite plan shape was too compressed
 
-The first p06 launch recorded its journal commit after the payload's expected
-base had been captured. The accepted-run HEAD therefore differed from
-`expected_base_sha`; the implementer rejected the run before edits, leaving all
-three tasks untouched. The response was an explicit user-authorized relaunch
-whose base matched the post-journal HEAD. Safety worked, but the producer and
-consumer disagreed about which required bookkeeping belonged to the launch
-baseline. Evidence: `implementation.md` → p06 invalid-run abort before
-implementation; dispatch record `lite-p06-49152831-dceb-492d-8f66-a0e03c5d683a`.
+The collapsed plan originally omitted explicit Product Behavior and Technical
+Design sections and prescribed RED/GREEN language broadly enough to encourage
+test theater. The user supplied the Warp reference again and challenged both
+choices. Revision p-rev1 added observable triggers for adaptive section depth,
+promotion preservation, and risk-proportionate proof. Evidence: `plan.md` →
+Phase p-rev1 and `reviews/archived/p-rev1-review-2026-09-06T173547Z.md`.
 
-### Fixture fidelity produced false confidence twice
+### Wave 4 integration exposed a composition gap
 
-The p03 promotion tests did not initially model the untouched canonical Lite
-template, and a later recommender test hand-built a readiness state no
-production path emitted. Both suites could pass while real artifacts failed.
-The response was to derive unresolved markers from the resolved template and
-to test promote-then-recommend through real shared/local projects. The final
-controls also neutralized the guard to prove the requirement test could fail.
-Evidence: archived `code-p03-review-2026-09-05T210319Z.md`; gate run
-`e1faf839-7cd8-4635-8d73-2196ade93c55`; commit
-`f3abb7688f005353ebee472c3d4df36e3c99cd0c`.
+The merge preserved both sides mechanically, but Lite did not invoke Wave 4's
+new shared lifecycle-gate posture setup. The post-merge review found this as an
+Important issue. `prev2-t01` composed the contracts and added `LITE-10` plus
+caller-inventory coverage. Evidence:
+`reviews/archived/final-review-2026-09-06T225347Z.md` and
+`implementation.md` → Task prev2-t01.
 
-### Review closeout crossed a tracked-to-ignored boundary awkwardly
+### Cross-platform negative controls were initially unstable
 
-During final PR preparation, eleven tracked top-level review files had to move
-into the repository's gitignored `reviews/archived/` surface. The scoped rename
-commit succeeded, but the lint-staged hook attempted to re-add ignored
-destinations and emitted an error while applying its formatting results. This
-did not lose data, yet it made a successful closeout look partially failed and
-exposed missing acceptance criteria in the existing archival backlog record.
-Evidence: session transcript `01a073de-998c-7541-97c9-379dade1c17e`; commit
-`6e31c6f579e438afacd6399de285d188fc7ffcd5`;
-`BL-260903-pr-final-archives-reviews`.
+Required CI run `34067919653` failed because Ubuntu reused a deleted symlink
+inode while the fixture recreated the same raw link text. The production guard
+correctly returned `partial`; recovery 4 changed only the fixture to use a
+distinct raw spelling that resolves to the same canonical target, preserving
+the strong `changed` expectation. A later full smoke run then reproduced a
+60-second SIGTERM timeout: the generated wrapper wrote its readiness sentinel
+before installing its test-local listener. Recovery 5 armed the listener first
+in both branches. Focused stress, the 160-test smoke suite, independent review,
+and exact-head CI all passed afterward. Evidence: recovery events 4–5 in
+`implementation.md` and
+`reviews/archived/final-review-2026-09-07T002708Z.md`.
+
+### Durable bookkeeping repeatedly crossed awkward boundaries
+
+Mandatory launch journaling once invalidated its own expected base SHA, and
+ignored PR/review destinations required force-staging after lint-staged tried
+to re-add them generically. These failures did not corrupt source, but they
+made valid work look incomplete and consumed recovery attention. GitHub issues
+#265/#266 and the existing PR-final archival backlog item retain the follow-up.
 
 ## Decision Register
 
-| Decision                  | Why it mattered                                                     | Durable record                             |
-| ------------------------- | ------------------------------------------------------------------- | ------------------------------------------ |
-| Make Lite first-class     | Reuses project identity, routing, resume, and review infrastructure | `DR-260906-lite-is-a-first-class-workflow` |
-| Use three artifacts       | Separates approved intent from machine-mutated execution state      | `DR-260906-use-a-three-artifact-lite`      |
-| Keep one sequential phase | Makes scope growth an explicit promotion signal                     | `DR-260906-keep-lite-single-phase`         |
-| Promote in place          | Preserves interview context and project identity                    | `DR-260906-promote-oversized-lite-work`    |
-| Retain managed review     | Planning reduction does not waive execution assurance               | `DR-260906-retain-managed-implementation`  |
+| Decision                  | Rationale                                                          | Durable record                             |
+| ------------------------- | ------------------------------------------------------------------ | ------------------------------------------ |
+| Make Lite first-class     | Reuse project identity, routing, resume, and review infrastructure | `DR-260906-lite-is-a-first-class-workflow` |
+| Use three artifacts       | Separate approved intent from machine-mutated execution state      | `DR-260906-use-a-three-artifact-lite`      |
+| Keep one sequential phase | Make scope growth an explicit promotion signal                     | `DR-260906-keep-lite-single-phase`         |
+| Promote in place          | Preserve interview context and project identity                    | `DR-260906-promote-oversized-lite-work`    |
+| Retain managed review     | Planning reduction does not waive execution assurance              | `DR-260906-retain-managed-implementation`  |
+| Use adaptive plan depth   | Require product/technical sections from observable change triggers | p-rev1 design revision                     |
+| Use proportionate proof   | Prefer the cheapest evidence that can fail for the relevant risk   | p-rev1 design revision                     |
 
 ## Rejected or Superseded Alternatives
 
 - A conversation-only micro mode was rejected because it lacked durable resume
   and handoff state.
 - A minimal-profile flag inside Quick was rejected because it would compound
-  Quick's existing branching complexity.
-- Branch-only draft-PR specs were rejected because they bypassed project
-  registration and structured progress.
-- Making Quick the default was deliberately deferred to
-  `BL-260904-make-quick-the-default-oat` so the Lite project did not absorb a
-  repo-wide rename and migration.
-
-Evidence: `discovery.md` → Solution Space and Deferred Ideas.
+  Quick's branching complexity.
+- A fixed five-section Lite plan was superseded because it could hide
+  user-visible behavior and cross-module design decisions.
+- Mandatory test-first wording was superseded because docs, skills, config, and
+  mechanical changes can gain no confidence from bespoke fixtures or harnesses.
+- Increasing smoke deadlines was rejected because it would mask the readiness
+  race rather than fix the test contract.
 
 ## Where We Changed Course
 
-- Repeated plan-gate findings triggered a user-directed stop and a move from
-  planning convergence to implementation-time phase/final review coverage.
-- The p06 terminal test failure triggered an authorized plan revision rather
-  than an out-of-scope repair hidden inside a release task.
-- A supposedly complete router fix was replaced after a real promoted project
-  proved the fixture impossible; the new direction used producer-generated
-  artifacts end to end.
-- The final Minor finding was resolved as artifact wording under the user's
-  explicit no-re-review direction, avoiding a redundant code-review cycle.
+- Non-converging plan review triggered a bounded handoff to implementation-time
+  review, preserving explicit residual risk.
+- The user's Warp refresher triggered a formal revision phase rather than a
+  template-only patch; the result changed plan, promotion, reviewer,
+  implementer, validator, and documentation contracts together.
+- Wave 4 review triggered composition with the shared lifecycle-gate posture
+  instead of treating a conflict-free merge as semantic compatibility.
+- An isolated SIGTERM pass was superseded when the full smoke suite produced a
+  negative control; the project moved from inconclusive mechanism to confirmed
+  test-harness race.
 
 ## New Architecture Patterns and Approaches
 
-- **Three-artifact Lite contract:** `plan.md` holds approved intent while
-  `state.md` and `implementation.md` remain machine-owned.
-- **In-place workflow promotion:** a project changes mode without losing slug,
-  branch, interview context, or historical Lite plan.
-- **Artifact-level readiness:** promoted discovery remains `in_progress` while
-  carrying `oat_ready_for: oat-project-quick-start`, matching project state for
-  consumers that route from artifacts.
-- **Mode-specific closeout resolution:** Lite defaults to PR-only closeout while
-  allowing explicitly configured summary/document steps and excluding recap.
+- **Adaptive Lite plan shape:** observable behavior and implementation triggers
+  determine whether product or technical sections are required.
+- **Proof-strategy declaration:** each plan chooses evidence based on risk and
+  executor capability; runtime behavior still requires a check that can fail.
+- **Lossless in-place promotion:** authored product and technical payloads move
+  into Quick discovery instead of disappearing during escalation.
+- **Governed append-only recovery:** reservation, exact target, candidate
+  commit, verification, and settlement preserve task history and provenance.
 
 ## Domain Learnings
 
-- A workflow-mode addition is a compatibility change across declarations,
-  routers, templates, lifecycle prose, provider projections, and release
-  assets—not a local enum edit.
-- Tests of parsers and routers must consume artifacts produced by the real
-  writer. A syntactically valid fixture can encode the same false model as the
-  code under test.
-- Bundled skills, docs, templates, and provider views are shipped CLI behavior;
-  they require lockstep package versions and sync verification.
-- A configured cross-family target proves configured invocation diversity, not
-  actual runtime model identity when telemetry reports `not-reported`.
+- Workflow modes are composition contracts across schemas, routers, templates,
+  skills, agents, docs, bundled assets, and provider projections.
+- A green fixture is weak evidence when the platform can vary filesystem
+  identity or scheduling. State the invariant directly in test data.
+- Readiness sentinels must mean the consumer is actually ready, not that an
+  earlier asynchronous step completed.
+- Test proportionality is not reduced rigor. It moves rigor to the failure mode
+  that matters and avoids fixtures that only rehearse implementation details.
+- A later successful isolated run cannot classify an earlier failure. Preserve
+  the failure and keep the mechanism inconclusive until a matching negative
+  control exists.
 
 ## Gotchas for Humans
 
-- In zsh evidence wrappers, use `rc` rather than the reserved `status` variable;
-  the p06-t11 wrapper failed before its assertion for this reason.
-- Treat review-cycle caps as authorization boundaries. A new finding after the
-  cap does not authorize another automated review.
-- Before merge, reconcile PR #264 with current `main`; at generation time GitHub
-  reported conflicts in generated reference, sync, and lockstep-version files.
-- Do not interpret a clean configured-target receipt as runtime-model
-  attestation when runtime identity is explicitly unreported.
+- Review a merge for semantic composition even when Git reports no conflict.
+- Do not call a branch stable until required CI and release validation pass on
+  the exact published SHA.
+- In zsh evidence wrappers, avoid the reserved `status` variable; use `rc`.
+- Treat review-cycle caps and merge/release steps as authorization boundaries.
+- When moving tracked files into ignored OAT archive directories, expect to
+  force-stage the exact paths and verify the commit contents.
 
 ## Gotchas for Autonomous Agents
 
-- Resolve the exact accepted HEAD only after every required launch-journal
-  commit; otherwise pre-edit provenance correctly aborts the run.
-- Before consuming a review attempt, verify the target artifact changed. One
-  plan review repeated an unchanged target after an edit script aborted.
-- Use production-emitted artifacts for routing and scaffold controls, and prove
-  high-value guards can fail by neutralizing them once.
-- When archiving tracked reviews into an ignored directory, verify both the
-  index rename and hook behavior; a generic restage may reject the destination.
-- Treat accepted dispatch records as launch provenance until a linked terminal
-  outcome is durably reconciled.
+- Resolve the accepted execution baseline after every mandatory journal commit.
+- Use production-emitted artifacts for router and promotion controls.
+- For cross-platform symlink tests, do not rely on inode churn to prove user
+  replacement; make identity differ explicitly while preserving the target.
+- Arm signal handlers before publishing readiness to a controlling process.
+- A wording-only waiver does not cover substantive test changes. Re-review
+  evidence semantics after changing a negative control.
+- Reconcile accepted dispatch records to terminal outcomes before closeout.
 
 ## Repo Improvements (Promotion Register)
 
@@ -240,12 +243,11 @@ Evidence: `discovery.md` → Solution Space and Deferred Ideas.
 - **Disposition-note:** —
 
 Add a compact checklist requiring workflow-mode changes to enumerate and test
-the canonical declaration, recommender/router consumers, scaffold/templates,
-lifecycle-skill contracts, documentation, bundled release assets, and provider
-projections. Preserve the intentionally separate route tables unless a change
-explicitly owns their consolidation. Eleven plan reviews and later production
-controls showed that generic repository gates did not front-load this
-cross-surface inventory.
+the canonical declaration, recommender/router consumers, templates, lifecycle
+skills, agent contracts, documentation, bundled assets, and provider
+projections. Include semantic composition with newly shared contracts. The
+early review volume and Wave 4's missed gate-posture composition show that
+generic repository gates do not front-load this inventory.
 
 ### RP-02: Make the existing PR-final archival backlog item testable
 
@@ -256,11 +258,40 @@ cross-surface inventory.
 - **Applied-ref:** —
 - **Disposition-note:** —
 
-Replace the placeholder acceptance criteria with explicit controls: validate
-that every Reviews-ledger path resolves before `gh pr create`; cover late final
-reviews; and prove that tracked-to-ignored archive moves survive formatting and
-staging hooks without losing the destination or presenting a false failure.
-This extends the existing item rather than creating a duplicate.
+Replace its placeholder acceptance criteria with controls that resolve every
+review-ledger path before PR creation, cover late final reviews, and prove that
+tracked-to-ignored archive moves survive formatting and staging hooks without
+losing the destination or presenting a false failure.
+
+### RP-03: Add the Linux symlink mechanism to the collection-stability backlog
+
+- **Type:** docs
+- **Disposition:** apply
+- **Status:** proposed
+- **Target:** `.oat/repo/pjm/backlog/items/BL-260904-stabilize-the-collection.md`
+- **Applied-ref:** —
+- **Disposition-note:** —
+
+Record required CI run `34067919653` and recovery commit `ddddba079` as evidence
+that Linux can reuse a deleted symlink inode. State that same-target replacement
+tests need distinct raw link text, not presumed inode churn. Do not close the
+item unless its separate ten-consecutive-uncached-run criterion is satisfied.
+
+### RP-04: Re-evaluate proof guidance across every plan workflow
+
+- **Type:** code-follow-up
+- **Disposition:** file
+- **Status:** filed
+- **Destination:** `.oat/repo/pjm/backlog/items/BL-260906-re-evaluate-universal-plan.md`
+- **Destination-receipt:** 25ec799cc61be6d538d716c3e3f6028e775117a9
+- **Remote-visibility:** pushed
+- **Sanitized:** no
+- **Disposition-note:** —
+
+The Lite revision established a proportionate proof strategy, but the same
+policy should be reconciled across all plan templates, planning skills,
+implementer/reviewer contracts, docs, and workflow modes. The existing backlog
+item already owns this work; no duplicate was created.
 
 ## OAT Upstream Feedback (Upstream Register)
 
@@ -271,16 +302,11 @@ This extends the existing item rather than creating a duplicate.
 - **Destination-receipt:** —
 - **Remote-visibility:** —
 - **Sanitized:** yes
-- **Disposition-note:** Filed as GitHub issue #265 and linked from
-  `BL-260906-harden-dispatch-launch`.
+- **Disposition-note:** Tracked by `BL-260906-harden-dispatch-launch`.
 
-Phase dispatch should not invalidate its own `expected_base_sha`. Persist all
+Phase dispatch must not invalidate its own `expected_base_sha`. Persist all
 mandatory prelaunch journal commits before resolving the accepted base, or
-encode an explicit semantic-head rule that both launcher and implementer
-validate. Add a control in which launch journaling advances Git HEAD and prove
-the first authorized dispatch remains valid without weakening pre-edit aborts.
-The p06 abort demonstrates the defect and the corrected relaunch demonstrates
-the intended invariant.
+define one semantic-head rule that launcher and implementer both validate.
 
 ### UP-02: Reconcile every accepted dispatch to a terminal outcome
 
@@ -289,33 +315,29 @@ the intended invariant.
 - **Destination-receipt:** —
 - **Remote-visibility:** —
 - **Sanitized:** yes
-- **Disposition-note:** Filed as GitHub issue #266 and linked from
-  `BL-260906-harden-dispatch-launch`.
+- **Disposition-note:** Tracked by `BL-260906-harden-dispatch-launch`.
 
-Several accepted p01-p03 implementation and review records still report
-`child_outcome: in-progress` even though committed implementation and review
-artifacts record completion or pass. Require a linked terminal envelope or an
-append-only reconciliation event for every accepted dispatch, preserve both
-launch and terminal provenance, and add a closeout check that detects accepted
-records lacking terminal truth. The mechanism that left these records stale is
-inconclusive; the durable inconsistency is confirmed.
+Require a linked terminal envelope or append-only reconciliation event for
+every accepted dispatch. Preserve launch provenance, terminal provenance, and
+a closeout check for accepted records that still report in-progress state.
+
+No new upstream feedback was identified from Wave 4 or recoveries 4–5. Their
+actionable follow-up is covered by RP-01, RP-03, and existing backlog items.
 
 ## Remaining Boundaries and Follow-Ups
 
-At generation time, PR #264 was open but conflicting with `main`; merge and
-release were not authorized. The configured closeout sequence had completed
-summary, documentation, and PR creation and was awaiting final HiLL approval.
-The separately owned Quick-default rename remained tracked in
-`BL-260904-make-quick-the-default-oat`. RP-01/RP-02 require an apply decision;
-UP-01/UP-02 require a filing decision and destination.
+At generation time, PR #264 is open and mergeable at `15ad3374c`; exact-head CI
+and Release Dry Run are green. Lifecycle approval is still pending, and merge
+and release remain separate authorization boundaries. RP-01 through RP-03 await
+an apply decision. The universal proof-guidance backlog item and GitHub issues
+#265/#266 are already filed and must not be duplicated.
 
 ## Reflections
 
-Lite succeeded because its smaller artifact contract was paired with strong
-execution evidence, not because the project was intrinsically simple. The run
-also showed a recurring systems lesson: cross-cutting workflow changes fail at
-the seams between producers and consumers—template versus validator, state
-versus discovery artifact, configured target versus runtime identity, launch
-journal versus accepted SHA. Future work should inventory those seams before
-review, test them with producer-generated artifacts, and retain exact failure
-receipts when an independent gate disproves a green fixture.
+Lite succeeded because reduced ceremony was paired with durable intent,
+proportionate evidence, and independent review. The project also showed why
+“small workflow” cannot mean “small systems surface”: the hardest defects sat
+between artifacts, shared contracts, operating systems, and asynchronous test
+control. Future work should inventory those seams before implementation, use
+real producer outputs, and preserve exact negative controls long enough to
+classify failures honestly.

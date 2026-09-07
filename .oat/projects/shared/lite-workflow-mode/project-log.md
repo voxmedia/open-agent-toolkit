@@ -160,6 +160,10 @@ Final re-review used one mechanical reconnaissance wave plus primary inline sema
 
 Closed the review's wording-only Medium in prev2-t04 at 5465524e53c33bd870cb89e3b8ce30f0d5a4a49d; the review already met the Critical/Important threshold, and the user waived redundant re-review for this alignment class.
 
+### 2026-09-07 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/lite-workflow-mode/references/project-retro.md evidence_used=archived-review-markdown,dispatch-records,gate-receipts,git-history,github-actions,github-pr-state,lifecycle-artifacts,project-log,session-transcript evidence_unavailable=oat-execution-learnings,spec promotions=4 upstream=2 apply=deferred filing=skipped
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
