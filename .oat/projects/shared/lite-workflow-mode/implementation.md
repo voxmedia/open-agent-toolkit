@@ -1181,6 +1181,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
+### 2026-09-07
+
+#### Configured implementation exit gate generation 4 created
+
+The configured declaration resolved with canonical configuration fingerprint
+`sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324`.
+Generation 4 binds the passing final lifecycle review head
+`ff2bf38e008317f34636a2ad588ebac8e030f631` to the unique `origin/main` merge
+base `f83463e64353f7ca04b4abcecbeb7e59c2135ba3`. The state-carrier-excluded
+effective delta is
+`sha256:effective-delta-v1:6a4af529a3bbf87ca8548b2cfdaac50232beab41184f07d01443b65f79b4f553`.
+This is a new generation after substantive Phase 7 and Phase 8 changes; prior
+gate attempts and their operator extension remain historical and are not
+carried into the new two-attempt budget.
+
 ### 2026-09-06
 
 #### Configured implementation exit gate generation 3 created
