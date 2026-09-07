@@ -164,6 +164,25 @@ This guarantees:
 - `activeProject` update in `.oat/config.local.json`
 - repo dashboard refresh (`.oat/state.md`) via existing scaffolder behavior
 
+**Consolidating earlier scaffolds.** When this project absorbs work that earlier
+project scaffolds already started — those directories are being retired into
+this one rather than continued — record what was absorbed in
+`"$PROJECT_PATH/state.md"` frontmatter as part of the same Step 1 frontmatter
+write, so this branch adds fields to that single write rather than performing
+its own:
+
+- `absorbed_projects: [<slug>]` — the project slug of every retired scaffold,
+  which also names the scaffold directory under the projects root that this
+  project supersedes.
+- `absorbed_backlog_ids: [<BL-id>]` — every backlog ID those scaffolds carried
+  into this project.
+
+Record both fields only when a consolidation actually happened; an absent field
+and an empty list are equivalent. These two fields are the only inputs the
+absorbed-project retirement sweep reads at completion, where retiring a scaffold
+is treated as a semantic claim about the planning surfaces rather than the
+physical removal of a directory.
+
 ### Step 1: Set Quick Workflow Metadata
 
 Update `"$PROJECT_PATH/state.md"` frontmatter:

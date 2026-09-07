@@ -1458,6 +1458,207 @@ printf 'artifact-read\\n'`,
     expect(content).toContain('No project-log append may follow the seal');
   });
 
+  it('records absorbed project slugs and backlog IDs at quick-start consolidation', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-quick-start/SKILL.md',
+    );
+
+    const consolidationIndex = content.indexOf(
+      '**Consolidating earlier scaffolds.**',
+    );
+    const stepOneIndex = content.indexOf(
+      '### Step 1: Set Quick Workflow Metadata',
+    );
+
+    expect(consolidationIndex).toBeGreaterThanOrEqual(0);
+    expect(stepOneIndex).toBeGreaterThan(consolidationIndex);
+
+    const branch = content
+      .slice(consolidationIndex, stepOneIndex)
+      .replace(/\s+/g, ' ');
+
+    expect(branch).toContain('absorbed_projects: [<slug>]');
+    expect(branch).toContain('absorbed_backlog_ids: [<BL-id>]');
+    expect(branch).toContain('"$PROJECT_PATH/state.md"` frontmatter');
+    expect(branch, 'names the retired scaffold directories').toMatch(
+      /names the scaffold directory[\s\S]{0,120}supersedes/i,
+    );
+    expect(branch, 'consolidation is conditional, not unconditional').toContain(
+      'only when a consolidation actually happened',
+    );
+    expect(branch, 'the two fields are the sweep inputs').toContain(
+      'only inputs the absorbed-project retirement sweep reads at completion',
+    );
+    expect(branch, 'retirement is semantic, not physical').toContain(
+      'semantic claim about the planning surfaces rather than the physical removal of a directory',
+    );
+  });
+
+  it('sweeps and dispositions absorbed ownership before the project-log roll-up and seal', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+
+    const checkIndex = content.indexOf(
+      'oat project log check --project "$PROJECT_PATH" --json',
+    );
+    const sweepIndex = content.indexOf(
+      '**Absorbed-project retirement sweep.**',
+    );
+    const rollupIndex = content.indexOf(
+      'oat project log rollup --project "$PROJECT_PATH" --json',
+    );
+    const sealIndex = content.indexOf(
+      '--producer oat-project-complete \\\n  --ref seal',
+    );
+    const completeStateIndex = content.indexOf(
+      'oat project complete-state "${COMPLETE_STATE_ARGS[@]}"',
+    );
+    const archiveIndex = content.indexOf(
+      'ARCHIVE_OUTPUT=$(oat project archive "${ARCHIVE_ARGS[@]}" --json 2>&1)',
+    );
+
+    expect(checkIndex).toBeGreaterThanOrEqual(0);
+    expect(
+      sweepIndex,
+      'the sweep runs after the status probe it depends on',
+    ).toBeGreaterThan(checkIndex);
+    expect(rollupIndex).toBeGreaterThan(sweepIndex);
+    expect(sealIndex).toBeGreaterThan(rollupIndex);
+    expect(completeStateIndex).toBeGreaterThan(sealIndex);
+    expect(archiveIndex).toBeGreaterThan(completeStateIndex);
+
+    const sweep = content.slice(sweepIndex, rollupIndex).replace(/\s+/g, ' ');
+
+    expect(sweep, 'reads both recorded inputs').toContain(
+      'read `absorbed_projects` and `absorbed_backlog_ids` from',
+    );
+    expect(sweep, 'those two fields are the only inputs').toContain(
+      'These two fields are the only inputs the sweep takes',
+    );
+    expect(sweep, 'degrades without PJM adoption').toContain(
+      'adoption.state` other than `declared` or `inferred-legacy`',
+    );
+    expect(sweep, 'a missing surface never fails closeout').toContain(
+      'degrades this sweep and never fails closeout',
+    );
+    expect(sweep, 'advisory, not a mechanical block').toContain(
+      'advisory: a raw match is never a hard block on closeout',
+    );
+
+    for (const surface of [
+      '.oat/repo/pjm/roadmap.md',
+      '.oat/repo/pjm/current-state.md',
+      '.oat/repo/pjm/backlog/index.md',
+      '.oat/projects/*/*/state.md',
+    ]) {
+      expect(sweep, `sweeps ${surface}`).toContain(surface);
+    }
+
+    expect(
+      sweep,
+      'the project glob matches the real scope-nested layout',
+    ).toContain(
+      'scope-nested as `<projects-root-parent>/<scope>/<project>/state.md`',
+    );
+    expect(
+      sweep,
+      'the configured projects root is resolved, not hardcoded',
+    ).toContain('oat config get projects.root');
+    expect(sweep, 'the archive tree is excluded').toContain(
+      'Skip the sibling `archived` tree',
+    );
+    expect(
+      sweep,
+      'terminal projects in an active scope are not live claims',
+    ).toContain('already records a terminal `oat_lifecycle: complete`');
+    expect(sweep, 'searches per slug and per backlog ID').toContain(
+      'For each absorbed slug and each absorbed backlog ID',
+    );
+    expect(sweep, 'matches future-oriented ownership language').toContain(
+      'future-oriented ownership language tied to either',
+    );
+    expect(sweep, 'names what a stale ownership claim looks like').toContain(
+      'still claims the absorbed work as planned, owned, scheduled, or in flight',
+    );
+    expect(sweep, 'historical prose is exempt').toContain(
+      'clearly describes past state is exempt',
+    );
+    expect(sweep, 'each finding carries a disposition').toContain(
+      'named finding carrying a recorded disposition',
+    );
+    expect(sweep, 'both in-run dispositions are named').toMatch(
+      /either fixed now[\s\S]{0,140}accepted as historical/i,
+    );
+    expect(sweep, 'dispositions are appended before the roll-up').toContain(
+      'Append the dispositions to the project log before the roll-up runs',
+    );
+    expect(sweep, 'sweep appends are structural log entries').toContain(
+      '--producer oat-project-complete \\ --ref retirement-sweep',
+    );
+    expect(sweep, 'summary regenerates before the roll-up').toContain(
+      'regenerate the summary before the roll-up',
+    );
+    expect(sweep, 'autonomous completion warns and continues').toContain(
+      'advisory warning entry with the disposition `deferred advisory` and continue',
+    );
+    expect(sweep, 'an absent log is reported, never created').toContain(
+      'never create a project log for them',
+    );
+  });
+
+  it('never appends retirement findings after an existing seal on resume', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+
+    const sweepIndex = content.indexOf(
+      '**Absorbed-project retirement sweep.**',
+    );
+    const rollupIndex = content.indexOf(
+      'oat project log rollup --project "$PROJECT_PATH" --json',
+    );
+    const resumeIndex = content.indexOf(
+      '**Resumed completion whose log already carries a seal.**',
+    );
+
+    expect(sweepIndex).toBeGreaterThanOrEqual(0);
+    expect(
+      resumeIndex,
+      'the resume clause sits inside the sweep, before the roll-up',
+    ).toBeGreaterThan(sweepIndex);
+    expect(resumeIndex).toBeLessThan(rollupIndex);
+
+    const resumeClause = content
+      .slice(resumeIndex, rollupIndex)
+      .replace(/\s+/g, ' ');
+
+    expect(
+      resumeClause,
+      'the seal is detected directly, since the probe reports no seal state',
+    ).toContain('The status probe above reports no seal state');
+    expect(
+      resumeClause,
+      'detection reads a real field of the probe result',
+    ).toContain('read `logPath` from `PROJECT_LOG_CHECK`');
+    expect(resumeClause, 'names the detectable seal heading').toContain(
+      '### <date> · structural · oat-project-complete · seal',
+    );
+    expect(resumeClause, 'report-only on a sealed log').toContain(
+      'runs in report-only mode',
+    );
+    expect(resumeClause, 'appends nothing to a sealed log').toContain(
+      'append nothing to the sealed log',
+    );
+    expect(resumeClause, 'never re-enters the roll-up or seal').toContain(
+      'never re-enter the roll-up or the seal',
+    );
+    expect(
+      resumeClause,
+      'the resume clause itself restates the no-post-seal invariant',
+    ).toContain('No project-log append may follow the seal');
+  });
+
   it('delegates project completion archive side effects to the CLI command', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-complete/SKILL.md',

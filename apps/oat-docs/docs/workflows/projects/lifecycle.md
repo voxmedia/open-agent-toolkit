@@ -141,6 +141,47 @@ On completion, OAT treats archive handling as an explicit closeout choice:
   ref. `oat project prune` is a separate destructive choice that removes
   terminal ref reachability but preserves local and S3 archive snapshots.
 
+### Absorbed-project retirement sweep
+
+Retiring a project that a later project absorbed is a semantic claim, not a
+filesystem operation. Deleting or archiving the old scaffold does not make the
+roadmap stop promising its work, so completion checks the claim against the
+prose that still makes it.
+
+When a quick project consolidates earlier scaffolds, quick-start records
+`absorbed_projects` and `absorbed_backlog_ids` in that project's `state.md`
+frontmatter. Those two fields are the only inputs the sweep takes.
+
+Inside the project-log completion gate — after the log status probe and before
+the roll-up and seal — completion searches the active planning surfaces for each
+absorbed slug and backlog ID, and for future-oriented ownership language tied to
+them:
+
+- `.oat/repo/pjm/roadmap.md` (the Now/Next/Later lanes and the sequencing map)
+- `.oat/repo/pjm/current-state.md`
+- the Curated Overview in `.oat/repo/pjm/backlog/index.md`
+- the scope-nested `state.md` of projects that are still active, under the
+  configured projects root, skipping the `archived` tree and any project already
+  recorded as complete
+
+The sweep is advisory. A raw match is never a hard block on closeout: each hit
+becomes a named finding carrying a recorded disposition: fixed in the same run,
+accepted as historical with a reason, or — in an autonomous run — recorded as
+`deferred advisory`. Prose that clearly describes
+past state is exempt, so a dated history entry, a retro, a decision record, or a
+changelog line reads as evidence rather than a stale claim.
+
+Placement is the point. Dispositions are appended to the project log before the
+roll-up, so the roll-up summarizes them and the completion seal remains the
+final entry — no project-log append ever follows the seal. Three variations
+change where and how the dispositions are recorded: an autonomous run records
+each finding as a `deferred advisory` warning and continues, a project with no log reports them in the
+final completion summary, and a resumed completion whose log already
+carries a seal runs report-only and appends nothing.
+
+Repositories that never adopted PJM skip the sweep with a one-line note. A
+missing planning surface degrades the sweep, never the closeout.
+
 ### Phase status: `pr_open`
 
 After `oat-project-pr-final` runs, `state.md` shows `oat_phase_status: pr_open`. This signals:
