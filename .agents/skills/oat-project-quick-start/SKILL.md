@@ -152,10 +152,41 @@ If no valid active project exists:
   - If `$ARGUMENTS` contains only a bare `{project-name}` (for example a slug or short title) without a substantive description, ask the user for a short project description before scanning the repo or drafting discovery.
   - Do not infer requirements from the project name alone or go exploring the codebase to guess what the project means.
   - If neither field is available, ask for both the project name and a short project description. One or two sentences is enough for the description.
-- Create project via the same scaffolding path used by `oat-project-new`:
+- Create project via the same scaffolding path used by `oat-project-new`, then
+  re-resolve `PROJECT_PATH` from the path the scaffold reports:
 
 ```bash
-oat project new "{project-name}" --mode quick
+SCAFFOLD=$(oat project new "{project-name}" --mode quick --json) || SCAFFOLD=''
+# Report what the scaffolder said, so a `commitStatus` of anything but
+# `committed`, and its `commitError`, stay as visible as they were before this
+# branch started capturing the output.
+printf '%s\n' "$SCAFFOLD"
+# Scaffolding creates the project directory and repoints `activeProject`, so
+# the Step 0.5 value of PROJECT_PATH is stale from here on. Left unresolved it
+# still names whatever project was active before this run -- sending the Step 1
+# and consolidation writes into a project this run is retiring -- or is empty,
+# which makes "$PROJECT_PATH/state.md" the absolute path /state.md. Re-resolve
+# from the report the scaffolder just made.
+SCAFFOLD_STATUS=$(printf '%s\n' "$SCAFFOLD" |
+  sed -n 's/.*"status"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' |
+  head -1)
+PROJECT_PATH=$(printf '%s\n' "$SCAFFOLD" |
+  sed -n 's/.*"projectPath"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' |
+  head -1)
+# Only a reported success may fall back to the pointer the scaffolder set. A
+# failed scaffold reports no path and leaves the old pointer untouched, so an
+# unconditional fallback would resolve straight back to the stale project and
+# pass the check below on that project state.md.
+if [ "$SCAFFOLD_STATUS" = "ok" ] && [ -z "$PROJECT_PATH" ]; then
+  PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
+fi
+# Validate before anything writes. A failed scaffold, an unresolved path, or a
+# path with no state.md stops the run; it never silently writes somewhere else.
+if [ "$SCAFFOLD_STATUS" != "ok" ] || [ -z "$PROJECT_PATH" ] ||
+  [ ! -f "$PROJECT_PATH/state.md" ]; then
+  printf 'quick-start: scaffolding did not yield a project path with state.md\n' >&2
+  exit 1
+fi
 ```
 
 This guarantees:
@@ -163,13 +194,16 @@ This guarantees:
 - standard artifact scaffolding from `.oat/templates/`
 - `activeProject` update in `.oat/config.local.json`
 - repo dashboard refresh (`.oat/state.md`) via existing scaffolder behavior
+- a `PROJECT_PATH` that names the project this run just created, validated
+  before Step 1 and before the consolidation write below
 
 **Consolidating earlier scaffolds.** When this project absorbs work that earlier
 project scaffolds already started — those directories are being retired into
 this one rather than continued — record what was absorbed in
 `"$PROJECT_PATH/state.md"` frontmatter as part of the same Step 1 frontmatter
 write, so this branch adds fields to that single write rather than performing
-its own:
+its own. `PROJECT_PATH` here is the re-resolved, validated path above, never the
+pre-scaffold value:
 
 - `absorbed_projects: [<slug>]` — the project slug of every retired scaffold,
   which also names the scaffold directory under the projects root that this
@@ -185,7 +219,9 @@ physical removal of a directory.
 
 ### Step 1: Set Quick Workflow Metadata
 
-Update `"$PROJECT_PATH/state.md"` frontmatter:
+Update `"$PROJECT_PATH/state.md"` frontmatter, using the `PROJECT_PATH` that
+Step 0.5 resolved for a resumed project or that scaffolding re-resolved and
+validated for a new one:
 
 - `oat_workflow_mode: quick`
 - `oat_workflow_origin: native`
@@ -910,8 +946,10 @@ A quick `plan.md` is implementation-ready only when all of the following hold:
    other prose, never indented into a code block, and never inside a fenced
    example. Fences are read as CommonMark reads them — a fence closes only on a
    bare run of its own marker, at least as long as the one that opened it — so an
-   example nested inside another fence stays an example, and any line indented
-   four spaces or more is example code rather than the record.
+   example nested inside another fence stays an example. Indentation is measured
+   in columns, with a tab advancing to the next multiple of four, so any line
+   indented four or more columns — including a single tab-indented apparent fence
+   marker — is example code rather than the record.
 5. At least one phase carries a substantive task — a `### Task pNN-tNN:`
    heading under a `## Phase` heading, outside any fenced example, whose title
    still reads as text once every `{placeholder}` is removed.
@@ -967,13 +1005,27 @@ quick_plan_ready() {
   # Fenced examples are not the record: a sample review section inside a code
   # block must not dispose of a real pending row.
   REVIEWS=$(awk '
+    # CommonMark measures indentation in columns, not characters: a tab
+    # advances to the next multiple of four, so a single leading tab is
+    # already a four-column code indentation. Counting raw characters would
+    # let a tab-indented apparent closer end the fence used here while the
+    # document still reads it as example content.
+    function indent_columns(text,   i, column, character) {
+      column = 0
+      for (i = 1; i <= length(text); i++) {
+        character = substr(text, i, 1)
+        if (character == " ") column++
+        else if (character == "\t") column += 4 - (column % 4)
+        else break
+      }
+      return column
+    }
     # CommonMark fences: a fence closes only on its own marker character, at
     # least as long as the one that opened it, and a closing fence carries no
-    # info string. A marker indented four or more spaces is indented code.
+    # info string. A marker indented four or more columns is indented code.
     /^[[:space:]]*([`][`][`]|~~~)/ {
       line = $0
-      indent = match(line, /[^[:space:]]/) - 1
-      if (indent < 4) {
+      if (indent_columns(line) < 4) {
         sub(/^[[:space:]]*/, "", line)
         marker = substr(line, 1, 1)
         len = 0
@@ -985,7 +1037,7 @@ quick_plan_ready() {
       next
     }
     fence { next }
-    /^    / { next }
+    indent_columns($0) >= 4 { next }
     /^## Reviews[[:space:]]*$/ { inside = 1; next }
     inside && /^##[[:space:]]/ { exit }
     inside { print }
@@ -1005,13 +1057,27 @@ quick_plan_ready() {
   # At least one real task heading, inside a phase and outside fenced examples,
   # whose title still reads as text once every {placeholder} is removed.
   awk '
+    # CommonMark measures indentation in columns, not characters: a tab
+    # advances to the next multiple of four, so a single leading tab is
+    # already a four-column code indentation. Counting raw characters would
+    # let a tab-indented apparent closer end the fence used here while the
+    # document still reads it as example content.
+    function indent_columns(text,   i, column, character) {
+      column = 0
+      for (i = 1; i <= length(text); i++) {
+        character = substr(text, i, 1)
+        if (character == " ") column++
+        else if (character == "\t") column += 4 - (column % 4)
+        else break
+      }
+      return column
+    }
     # CommonMark fences: a fence closes only on its own marker character, at
     # least as long as the one that opened it, and a closing fence carries no
-    # info string. A marker indented four or more spaces is indented code.
+    # info string. A marker indented four or more columns is indented code.
     /^[[:space:]]*([`][`][`]|~~~)/ {
       line = $0
-      indent = match(line, /[^[:space:]]/) - 1
-      if (indent < 4) {
+      if (indent_columns(line) < 4) {
         sub(/^[[:space:]]*/, "", line)
         marker = substr(line, 1, 1)
         len = 0
@@ -1023,7 +1089,7 @@ quick_plan_ready() {
       next
     }
     fence { next }
-    /^    / { next }
+    indent_columns($0) >= 4 { next }
     /^##[[:space:]]/ { inphase = ($0 ~ /^##[[:space:]]+Phase/); next }
     inphase && /^### Task p[0-9]+-t[0-9]+:[[:space:]]/ {
       sub(/^### Task p[0-9]+-t[0-9]+:[[:space:]]*/, "")
