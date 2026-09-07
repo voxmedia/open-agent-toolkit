@@ -33,7 +33,7 @@ oat_generated: false
 | Phase 5      | complete | 4     | 4/4       |
 | Phase 6      | complete | 11    | 11/11     |
 | Phase p-rev1 | complete | 7     | 7/7       |
-| Phase p-rev2 | complete | 4     | 4/4       |
+| Phase p-rev2 | complete | 5     | 5/5       |
 
 **Total:** 39/39 tasks completed
 

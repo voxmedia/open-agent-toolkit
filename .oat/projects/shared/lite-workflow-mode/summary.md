@@ -136,8 +136,8 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   All five p-rev2 tasks and five bounded recovery events are complete. The two
   final test-only recoveries made the symlink replacement control portable and
   removed a reproduced SIGTERM readiness race without changing production
-  behavior. Focused review, publication, and required CI for the exact remote
-  head remain closeout boundaries.
+  behavior. The focused review accepted both corrections, and exact-head CI
+  plus Release Dry Run passed at `15ad3374c` after publication.
 
 ## Follow-up Items
 
@@ -145,9 +145,8 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   projection ownership or header contracts change.
 - Re-evaluate universal plan-template proof and testing guidance under
   `BL-260906-re-evaluate-universal-plan`.
-- Complete focused review, publish the refreshed local PR body, push the
-  stabilized range, and obtain required CI for the exact remote head before
-  merge.
+- Generate the refreshed project retrospective and resolve lifecycle approval.
+  PR merge and release remain separate authorization boundaries.
 
 ## Workflow Observations
 
