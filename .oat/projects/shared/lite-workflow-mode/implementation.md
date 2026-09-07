@@ -44,6 +44,38 @@ Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are seque
 
 ---
 
+## Phase 9: Exit-Gate Review Fixes
+
+**Status:** complete
+**Started:** 2026-09-07
+**Completed:** 2026-09-07
+
+### Task p09-t01: Reject unresolved adaptive-section placeholders during promotion
+
+**Status:** completed
+**Commit:** `2fc015fc9186ab8f585f67a4a845f0d9e4c98fea`
+
+### Task p09-t02: Align promote and HiLL reference wording
+
+**Status:** completed
+**Commit:** `620656d8f32c3c7752b0b9fa01303ec9bda644c6`
+
+### Task p09-t03: Reject comment-only adaptive scaffold markers
+
+**Status:** completed
+**Commit:** `9448bfb1ae97b3843316b875ffdd178e2aefad8f`
+
+### Task p09-t04: Author adaptive sections in the CLI promotion integration fixture
+
+**Status:** completed
+**Commit:** `18767ee4eb3b9e2cfae23cda75cba2cf04e60baf`
+
+The phase closed the final exit-gate findings, passed two independent
+zero-finding re-reviews, and completed the current-head Definition of Done at
+release `0.2.62`.
+
+---
+
 ## Phase 8: Final Closeout Review Fixes
 
 **Status:** complete
@@ -214,7 +246,7 @@ publish the stabilized branch and require fresh CI for that exact remote head.
 
 ### Task prev2-t01: Compose Lite with lifecycle-gate posture setup
 
-**Status:** complete
+**Status:** completed
 **Commit:** `59d4254a59c8658ced67911e71bfffbf666a059f`
 
 Lite now invokes the complete shared lifecycle-gate posture setup after stable
@@ -228,7 +260,7 @@ package versions remain `0.2.60`.
 
 ### Task prev2-t02: Align Wave 4 closeout artifacts
 
-**Status:** complete
+**Status:** completed
 
 The active state, summary, implementation closeout, and local final PR artifact
 now name the reviewed Wave 4 merge and public lockstep `0.2.60` as authoritative.
@@ -340,7 +372,7 @@ against the stabilized range before stability is claimed.
 
 ### Task prev2-t03: Re-establish terminal verification and CI
 
-**Status:** complete
+**Status:** completed
 
 The exact SIGTERM cleanup subtest initially passed 10 consecutive isolated
 runs, so the original CI timeout mechanism remained inconclusive. A later full
@@ -398,7 +430,7 @@ finding.
 
 ### Task prev2-t04: Align current closeout wording
 
-**Status:** complete
+**Status:** completed
 **Commit:** `5465524e53c33bd870cb89e3b8ce30f0d5a4a49d`
 
 Active closeout prose in state, summary, implementation, and the local PR body
@@ -425,7 +457,7 @@ without another review under the user's standing direction for this class.
 
 ### Task prev2-t05: Align the active SIGTERM disposition
 
-**Status:** complete
+**Status:** completed
 
 The initial isolated attempt remains recorded as inconclusive. The active
 closeout now also records the later full-smoke negative control, which
