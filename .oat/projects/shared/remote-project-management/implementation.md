@@ -1133,6 +1133,46 @@ findings; bounded fix loop 1/3 is pending.
 
 ---
 
+## Phase 8: Documentation, Packaging, and Release Validation
+
+### Task p08-t04: Evidence-grade focused and full verification
+
+The pre-format verification run completed with no implementation repair and no
+scope expansion. Each command ran separately and recorded its own exit:
+
+| Command                                                                                                    | Exit | Evidence                                                                           |
+| ---------------------------------------------------------------------------------------------------------- | ---: | ---------------------------------------------------------------------------------- |
+| `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote src/e2e/pjm-remote.test.ts` |    0 | Live focused run: 45 files, 708/708 tests passed                                   |
+| `pnpm test:smoke`                                                                                          |    0 | Live Node test run: 161/161 passed                                                 |
+| `pnpm test:skills`                                                                                         |    0 | Live Node test run: 836/836 passed                                                 |
+| `pnpm test:release`                                                                                        |    0 | Live Node test run: 39 passed, 1 skipped, 0 failed                                 |
+| `pnpm oat:validate-skills`                                                                                 |    0 | Live validation: 64 canonical `oat-*` skills passed                                |
+| `env HOME=<isolated-temp-home> pnpm exec turbo run test --force`                                           |    0 | Evidence-grade forced run: 10/10 tasks, 0 cached; CLI 6,470/6,470 tests passed     |
+| `pnpm check`                                                                                               |    0 | Turbo 10/10 tasks, 9 cached; markdownlint live over 71 docs; skill validation live |
+| `pnpm type-check`                                                                                          |    0 | Turbo 10/10 tasks, 5 cached                                                        |
+| `pnpm build`                                                                                               |    0 | Turbo 5/5 tasks, 5 cached (`FULL TURBO` replay)                                    |
+
+No cached broad-gate result is treated as the live package-test proof; the
+isolated-home forced Turbo run above is the evidence-grade full test result.
+
+After `pnpm format:fix` exited 0, the complete sequence was rerun:
+
+| Command                                                                                                    | Exit | Evidence after formatting                                                      |
+| ---------------------------------------------------------------------------------------------------------- | ---: | ------------------------------------------------------------------------------ |
+| `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/pjm/remote src/e2e/pjm-remote.test.ts` |    0 | Live focused run: 45 files, 708/708 tests passed                               |
+| `pnpm test:smoke`                                                                                          |    0 | Live Node test run: 161/161 passed                                             |
+| `pnpm test:skills`                                                                                         |    0 | Live Node test run: 836/836 passed                                             |
+| `pnpm test:release`                                                                                        |    0 | Live Node test run: 39 passed, 1 skipped, 0 failed                             |
+| `pnpm oat:validate-skills`                                                                                 |    0 | Live validation: 64 canonical `oat-*` skills passed                            |
+| `env HOME=<fresh-isolated-temp-home> pnpm exec turbo run test --force`                                     |    0 | Evidence-grade forced run: 10/10 tasks, 0 cached; CLI 6,470/6,470 tests passed |
+| `pnpm check`                                                                                               |    0 | Turbo 10/10 tasks, 10 cached (`FULL TURBO`); skill validation still ran live   |
+| `pnpm type-check`                                                                                          |    0 | Turbo 10/10 tasks, 10 cached (`FULL TURBO`)                                    |
+| `pnpm build`                                                                                               |    0 | Turbo 5/5 tasks, 5 cached (`FULL TURBO`)                                       |
+
+The repeated focused, smoke, skills, release, skill-validation, and forced
+workspace test commands are live evidence. Cache replay in `check`,
+`type-check`, and `build` is recorded rather than represented as fresh work.
+
 ## Orchestration Runs
 
 > This section is used by `oat-project-subagent-implement` to log parallel execution runs.
