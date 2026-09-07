@@ -1339,7 +1339,7 @@ implementer target and one independent review 4/4; it does not authorize
 additional fixes, reviews, scope expansion, or Phase 8 work.
 
 1. Fix only the four Critical and one Important findings in
-   `reviews/p07-review-2026-09-06T213110Z.md`: recreate purpose/policy/preimage
+   `reviews/archived/p07-review-2026-09-06T213110Z.md`: recreate purpose/policy/preimage
    drift, restart-safe resolution observation/materialization, former snapshot
    retention, production lifecycle/cross-provider E2E proof, and inspectable
    lifecycle approval previews.
@@ -1595,62 +1595,62 @@ restore each exact production guard before continuing or committing.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                              | Reviewed Head                            | Invocation          | Gate Target              |
-| ------ | -------- | --------------- | ---------- | --------------------------------------------------------------------- | ---------------------------------------- | ------------------- | ------------------------ |
-| p01    | code     | passed          | 2026-08-31 | reviews/artifact-p01-code-operator-review-2026-08-31T122741Z.md       | c8ef3d593db10283623ac96e08f9bbdd687bc888 | operator-extension  | codex:sol-high           |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-review-2026-08-31T135618Z.md                | ea0a596eef46b02fc8c5c024ff619ee6f1a237e6 | review-1            | codex:sol-high           |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-rereview-2026-08-31T145000Z.md              | 2be3bd5121038e6ef9f1e7a04b06808c17bfd352 | review-2            | codex:sol-high           |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md          | 734a15f492e1f3e7cb5340245382da3c0633d47e | review-3            | codex:sol-high           |
-| p02    | code     | received        | 2026-08-31 | reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md       | 4daa8013a328da23f357161869fa6234b2ce1bcc | operator-extension  | codex:sol-high           |
-| p02    | code     | fixes_completed | 2026-08-31 | reviews/p02-review-2026-08-31T183652Z.md                              | 8fa237bdbd44bde0e533662e55718a5688b85847 | manual              | codex:sol-high           |
-| p02    | code     | passed          | 2026-08-31 | reviews/p02-review-2026-08-31T190519Z.md                              | ed0fe77585c6688726ba9ca316eed09e73bf56cc | manual              | codex:sol-high           |
-| p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T202119Z.md                              | 5e6915158f969acacca9f0ef3171340995258fe2 | manual              | -                        |
-| p03    | code     | fixes_completed | 2026-08-31 | reviews/p03-review-2026-08-31T213820Z.md                              | b8b7892d05d4cabdc179adbeff768078eecf0a15 | manual              | -                        |
-| p03    | code     | received        | 2026-08-31 | reviews/p03-review-2026-08-31T232956Z.md                              | 9872f13ddd2940b338ababfea297434dad6a4ae5 | manual              | -                        |
-| p04    | code     | fixes_completed | 2026-09-02 | reviews/p04-review-2026-09-02T123746Z.md                              | 680424fe8f173fcbea7028f7bef63619574207c8 | review-1            | codex:sol-high           |
-| p04    | code     | fixes_completed | 2026-09-02 | reviews/p04-rereview-2026-09-02T132440Z.md                            | 407d82524dabe5590306f40286375c00ab38b9c3 | review-2            | codex:sol-high           |
-| p04    | code     | fixes_completed | 2026-09-02 | reviews/p04-final-review-2026-09-02T140132Z.md                        | 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67 | review-3            | codex:sol-high           |
-| p04    | code     | passed          | 2026-09-02 | reviews/p04-operator-review-2026-09-02T144931Z.md                     | 97ca0ed13b0fc76689989e4a49f3e638a9701915 | operator-extension  | codex:sol-high           |
-| p05    | code     | fixes_completed | 2026-09-02 | reviews/p05-review-2026-09-02T210533Z.md                              | ab94b6080a37b2b1bcdd80a51c93b5507c746fdd | review-1            | codex:sol-high           |
-| p05    | code     | fixes_completed | 2026-09-02 | reviews/p05-review-2026-09-02T214026Z.md                              | ef806735359899afd7b720055a776045ec93dca7 | review-2            | codex:sol-high           |
-| p05    | code     | fixes_completed | 2026-09-02 | reviews/p05-review-2026-09-02T215328Z.md                              | e75f1d8e99edad72aa52442e31be9eec6116ae28 | review-3            | codex:sol-high           |
-| p05    | code     | passed          | 2026-09-05 | reviews/p05-operator-review-2026-09-05T223153Z.md                     | a0a5eca48b40b1a75c6761c9c79406f290f82543 | operator-extension  | codex:sol-high           |
-| p06    | code     | fixes_completed | 2026-09-05 | reviews/p06-review-2026-09-05T225221Z.md                              | 1903de1bc6295aa91454d6ca5080b59d1cdc4db9 | review-1            | codex:sol-high           |
-| p06    | code     | fixes_completed | 2026-09-05 | reviews/p06-review-2026-09-05T230856Z.md                              | 937cb9efe610bc019d6a48200fc27e4a3d9e3bae | review-2            | codex:sol-high           |
-| p06    | code     | passed          | 2026-09-05 | reviews/p06-review-2026-09-05T231752Z.md                              | cfccc8a3ad837350be33fb03faeb451463bd61ed | review-3            | codex:sol-high           |
-| p07    | code     | fixes_completed | 2026-09-06 | reviews/p07-review-2026-09-06T203750Z.md                              | 2ed83eb26862a4d5ebbd1b012d77edcfbfdbb720 | review-1            | codex:sol-high           |
-| p07    | code     | fixes_completed | 2026-09-06 | reviews/p07-review-2026-09-06T211250Z.md                              | 56ee775cb4418c2b2bf2fbd29a9de1d820da2829 | review-2            | codex:sol-high           |
-| p07    | code     | fixes_completed | 2026-09-06 | reviews/p07-review-2026-09-06T213110Z.md                              | a0adeeeec8f2869a9d718ea21580f7b37e49c0d1 | review-3            | codex:sol-high           |
-| p07    | code     | received        | 2026-09-07 | reviews/p07-review-2026-09-07T015809Z.md                              | af095f3c0c338b7d571a86a4b70f498b758537ee | operator-extension  | codex:sol-high           |
-| p-rev3 | code     | fixes_completed | 2026-09-07 | reviews/p-rev3-review-2026-09-07T023906Z.md                           | a9c86aab6ee0d21f923f9e602a8f3e5ed55215ab | review-1            | codex:sol-high           |
-| p-rev3 | code     | fixes_completed | 2026-09-07 | reviews/p-rev3-review-2026-09-07T025531Z.md                           | 2c101ce59258f42c1a95ae9c949609408d571f49 | review-2            | codex:sol-high           |
-| p-rev3 | code     | passed          | 2026-09-07 | reviews/p-rev3-review-2026-09-07T030518Z.md                           | 9d42e2741499046b14f01f5f734fd9921aac28aa | review-3            | codex:sol-high           |
-| p08    | code     | fixes_completed | 2026-09-07 | reviews/p08-review-2026-09-07T035129Z.md                              | 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae | review-1            | codex:sol-high           |
-| p08    | code     | fixes_completed | 2026-09-07 | reviews/p08-review-2026-09-07T041040Z.md                              | 96096ade106ac2278ee7aba174ad88933036d9c8 | review-2            | codex:sol-high           |
-| p08    | code     | passed          | 2026-09-07 | reviews/p08-review-2026-09-07T042019Z.md                              | a9004ccfd3b62157a72088ba92e26f5194a6aad2 | review-3            | codex:sol-high           |
-| p09    | code     | fixes_completed | 2026-09-07 | reviews/archived/p09-review-2026-09-07T045515Z.md                     | a26c54b4d818c6474321c0c4b8bf45f2ba7b1294 | auto                | -                        |
-| p09    | code     | passed          | 2026-09-07 | reviews/archived/p09-review-2026-09-07T050520Z.md                     | d2193de6077237abe3fcc823e7d4672fcb0ae345 | auto                | -                        |
-| p-rev1 | code     | fixes_added     | 2026-09-01 | reviews/archived/p-rev1-round-4-operator-review-2026-09-01T180520Z.md | 83ae7a9c160afdf4e6e4d08ff26268469403df0a | operator-extension  | -                        |
-| p-rev2 | code     | fixes_completed | 2026-09-01 | reviews/p-rev2-review-2026-09-01T202947Z.md                           | 1af99a23b5cb67142cd06f37c3b3b0bc648e941e | review-1            | codex:sol-high           |
-| p-rev2 | code     | fixes_completed | 2026-09-01 | reviews/p-rev2-rereview-2026-09-01T210901Z.md                         | e79732b6cef1b996a54334e308860a121cdd989d | review-2            | codex:sol-high           |
-| p-rev2 | code     | passed          | 2026-09-01 | reviews/p-rev2-final-rereview-2026-09-01T213136Z.md                   | 5a15f738df8e7d5ab467b94a1e28a77ca5df420c | review-3            | codex:sol-high           |
-| final  | code     | fixes_completed | 2026-09-07 | reviews/archived/final-review-2026-09-07T043133Z.md                   | e9b1d0f2d12f4a24acb261972a85409b4cef1521 | auto                | -                        |
-| final  | code     | fixes_completed | 2026-09-07 | reviews/archived/final-review-2026-09-07T050851Z.md                   | 3c407b85cc00d3502649497560b6e9692300d2af | auto                | -                        |
-| final  | code     | passed          | 2026-09-07 | reviews/archived/final-review-2026-09-07T051409Z.md                   | 527ce8bc0b5eb7a420cc62a740dbf3d4f8ff893c | auto                | -                        |
-| spec   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | boundary-revision-3 | codex:sol-high           |
-| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T010815Z.md                  | -                                        | manual-1            | cursor                   |
-| design | artifact | fixes_completed | 2026-08-31 | reviews/artifact-design-review-2026-08-31T012755Z.md                  | -                                        | manual-2            | cursor                   |
-| plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | structured-auto-3   | codex:sol-high           |
-| plan   | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T021338Z.md           | -                                        | gate                | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T022727Z.md           | -                                        | gate                | cursor-gpt-5-6-sol-xhigh |
-| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T025155Z.md           | -                                        | -                   | -                        |
-| design | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | boundary-revision-3 | codex:sol-high           |
-| plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | boundary-revision-3 | codex:sol-high           |
-| plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | revision-1-review-2 | codex:sol-high           |
-| plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | revision-1-review-3 | codex:sol-high           |
-| plan   | artifact | passed          | 2026-09-01 | -                                                                     | -                                        | revision-2-review-2 | codex:sol-high           |
-| plan   | artifact | passed          | 2026-09-07 | -                                                                     | 0b899c6ff28e2f279c6290166a9b2a4ad3fe2801 | revision-3-review-1 | codex:sol-high           |
-| final  | code     | passed          | 2026-09-07 | reviews/archived/final-review-2026-09-07T053105Z.md                   | 6946819c31fd63db54af6f67397d3f511f9651b9 | gate                | cursor-fable-5-1-high    |
+| Scope  | Type     | Status          | Date       | Artifact                                                                 | Reviewed Head                            | Invocation          | Gate Target              |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------------------ | ---------------------------------------- | ------------------- | ------------------------ |
+| p01    | code     | passed          | 2026-08-31 | reviews/archived/artifact-p01-code-operator-review-2026-08-31T122741Z.md | c8ef3d593db10283623ac96e08f9bbdd687bc888 | operator-extension  | codex:sol-high           |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/archived/artifact-p02-code-review-2026-08-31T135618Z.md          | ea0a596eef46b02fc8c5c024ff619ee6f1a237e6 | review-1            | codex:sol-high           |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/archived/artifact-p02-code-rereview-2026-08-31T145000Z.md        | 2be3bd5121038e6ef9f1e7a04b06808c17bfd352 | review-2            | codex:sol-high           |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/archived/artifact-p02-code-final-review-2026-08-31T150500Z.md    | 734a15f492e1f3e7cb5340245382da3c0633d47e | review-3            | codex:sol-high           |
+| p02    | code     | received        | 2026-08-31 | reviews/archived/artifact-p02-code-operator-review-2026-08-31T154000Z.md | 4daa8013a328da23f357161869fa6234b2ce1bcc | operator-extension  | codex:sol-high           |
+| p02    | code     | fixes_completed | 2026-08-31 | reviews/archived/p02-review-2026-08-31T183652Z.md                        | 8fa237bdbd44bde0e533662e55718a5688b85847 | manual              | codex:sol-high           |
+| p02    | code     | passed          | 2026-08-31 | reviews/archived/p02-review-2026-08-31T190519Z.md                        | ed0fe77585c6688726ba9ca316eed09e73bf56cc | manual              | codex:sol-high           |
+| p03    | code     | fixes_completed | 2026-08-31 | reviews/archived/p03-review-2026-08-31T202119Z.md                        | 5e6915158f969acacca9f0ef3171340995258fe2 | manual              | -                        |
+| p03    | code     | fixes_completed | 2026-08-31 | reviews/archived/p03-review-2026-08-31T213820Z.md                        | b8b7892d05d4cabdc179adbeff768078eecf0a15 | manual              | -                        |
+| p03    | code     | received        | 2026-08-31 | reviews/archived/p03-review-2026-08-31T232956Z.md                        | 9872f13ddd2940b338ababfea297434dad6a4ae5 | manual              | -                        |
+| p04    | code     | fixes_completed | 2026-09-02 | reviews/archived/p04-review-2026-09-02T123746Z.md                        | 680424fe8f173fcbea7028f7bef63619574207c8 | review-1            | codex:sol-high           |
+| p04    | code     | fixes_completed | 2026-09-02 | reviews/archived/p04-rereview-2026-09-02T132440Z.md                      | 407d82524dabe5590306f40286375c00ab38b9c3 | review-2            | codex:sol-high           |
+| p04    | code     | fixes_completed | 2026-09-02 | reviews/archived/p04-final-review-2026-09-02T140132Z.md                  | 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67 | review-3            | codex:sol-high           |
+| p04    | code     | passed          | 2026-09-02 | reviews/archived/p04-operator-review-2026-09-02T144931Z.md               | 97ca0ed13b0fc76689989e4a49f3e638a9701915 | operator-extension  | codex:sol-high           |
+| p05    | code     | fixes_completed | 2026-09-02 | reviews/archived/p05-review-2026-09-02T210533Z.md                        | ab94b6080a37b2b1bcdd80a51c93b5507c746fdd | review-1            | codex:sol-high           |
+| p05    | code     | fixes_completed | 2026-09-02 | reviews/archived/p05-review-2026-09-02T214026Z.md                        | ef806735359899afd7b720055a776045ec93dca7 | review-2            | codex:sol-high           |
+| p05    | code     | fixes_completed | 2026-09-02 | reviews/archived/p05-review-2026-09-02T215328Z.md                        | e75f1d8e99edad72aa52442e31be9eec6116ae28 | review-3            | codex:sol-high           |
+| p05    | code     | passed          | 2026-09-05 | reviews/archived/p05-operator-review-2026-09-05T223153Z.md               | a0a5eca48b40b1a75c6761c9c79406f290f82543 | operator-extension  | codex:sol-high           |
+| p06    | code     | fixes_completed | 2026-09-05 | reviews/archived/p06-review-2026-09-05T225221Z.md                        | 1903de1bc6295aa91454d6ca5080b59d1cdc4db9 | review-1            | codex:sol-high           |
+| p06    | code     | fixes_completed | 2026-09-05 | reviews/archived/p06-review-2026-09-05T230856Z.md                        | 937cb9efe610bc019d6a48200fc27e4a3d9e3bae | review-2            | codex:sol-high           |
+| p06    | code     | passed          | 2026-09-05 | reviews/archived/p06-review-2026-09-05T231752Z.md                        | cfccc8a3ad837350be33fb03faeb451463bd61ed | review-3            | codex:sol-high           |
+| p07    | code     | fixes_completed | 2026-09-06 | reviews/archived/p07-review-2026-09-06T203750Z.md                        | 2ed83eb26862a4d5ebbd1b012d77edcfbfdbb720 | review-1            | codex:sol-high           |
+| p07    | code     | fixes_completed | 2026-09-06 | reviews/archived/p07-review-2026-09-06T211250Z.md                        | 56ee775cb4418c2b2bf2fbd29a9de1d820da2829 | review-2            | codex:sol-high           |
+| p07    | code     | fixes_completed | 2026-09-06 | reviews/archived/p07-review-2026-09-06T213110Z.md                        | a0adeeeec8f2869a9d718ea21580f7b37e49c0d1 | review-3            | codex:sol-high           |
+| p07    | code     | received        | 2026-09-07 | reviews/archived/p07-review-2026-09-07T015809Z.md                        | af095f3c0c338b7d571a86a4b70f498b758537ee | operator-extension  | codex:sol-high           |
+| p-rev3 | code     | fixes_completed | 2026-09-07 | reviews/archived/p-rev3-review-2026-09-07T023906Z.md                     | a9c86aab6ee0d21f923f9e602a8f3e5ed55215ab | review-1            | codex:sol-high           |
+| p-rev3 | code     | fixes_completed | 2026-09-07 | reviews/archived/p-rev3-review-2026-09-07T025531Z.md                     | 2c101ce59258f42c1a95ae9c949609408d571f49 | review-2            | codex:sol-high           |
+| p-rev3 | code     | passed          | 2026-09-07 | reviews/archived/p-rev3-review-2026-09-07T030518Z.md                     | 9d42e2741499046b14f01f5f734fd9921aac28aa | review-3            | codex:sol-high           |
+| p08    | code     | fixes_completed | 2026-09-07 | reviews/archived/p08-review-2026-09-07T035129Z.md                        | 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae | review-1            | codex:sol-high           |
+| p08    | code     | fixes_completed | 2026-09-07 | reviews/archived/p08-review-2026-09-07T041040Z.md                        | 96096ade106ac2278ee7aba174ad88933036d9c8 | review-2            | codex:sol-high           |
+| p08    | code     | passed          | 2026-09-07 | reviews/archived/p08-review-2026-09-07T042019Z.md                        | a9004ccfd3b62157a72088ba92e26f5194a6aad2 | review-3            | codex:sol-high           |
+| p09    | code     | fixes_completed | 2026-09-07 | reviews/archived/p09-review-2026-09-07T045515Z.md                        | a26c54b4d818c6474321c0c4b8bf45f2ba7b1294 | auto                | -                        |
+| p09    | code     | passed          | 2026-09-07 | reviews/archived/p09-review-2026-09-07T050520Z.md                        | d2193de6077237abe3fcc823e7d4672fcb0ae345 | auto                | -                        |
+| p-rev1 | code     | fixes_added     | 2026-09-01 | reviews/archived/p-rev1-round-4-operator-review-2026-09-01T180520Z.md    | 83ae7a9c160afdf4e6e4d08ff26268469403df0a | operator-extension  | -                        |
+| p-rev2 | code     | fixes_completed | 2026-09-01 | reviews/archived/p-rev2-review-2026-09-01T202947Z.md                     | 1af99a23b5cb67142cd06f37c3b3b0bc648e941e | review-1            | codex:sol-high           |
+| p-rev2 | code     | fixes_completed | 2026-09-01 | reviews/archived/p-rev2-rereview-2026-09-01T210901Z.md                   | e79732b6cef1b996a54334e308860a121cdd989d | review-2            | codex:sol-high           |
+| p-rev2 | code     | passed          | 2026-09-01 | reviews/archived/p-rev2-final-rereview-2026-09-01T213136Z.md             | 5a15f738df8e7d5ab467b94a1e28a77ca5df420c | review-3            | codex:sol-high           |
+| final  | code     | fixes_completed | 2026-09-07 | reviews/archived/final-review-2026-09-07T043133Z.md                      | e9b1d0f2d12f4a24acb261972a85409b4cef1521 | auto                | -                        |
+| final  | code     | fixes_completed | 2026-09-07 | reviews/archived/final-review-2026-09-07T050851Z.md                      | 3c407b85cc00d3502649497560b6e9692300d2af | auto                | -                        |
+| final  | code     | passed          | 2026-09-07 | reviews/archived/final-review-2026-09-07T051409Z.md                      | 527ce8bc0b5eb7a420cc62a740dbf3d4f8ff893c | auto                | -                        |
+| spec   | artifact | passed          | 2026-08-31 | -                                                                        | -                                        | boundary-revision-3 | codex:sol-high           |
+| design | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-design-review-2026-08-31T010815Z.md            | -                                        | manual-1            | cursor                   |
+| design | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-design-review-2026-08-31T012755Z.md            | -                                        | manual-2            | cursor                   |
+| plan   | artifact | passed          | 2026-08-31 | -                                                                        | -                                        | structured-auto-3   | codex:sol-high           |
+| plan   | artifact | fixes_completed | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T021338Z.md              | -                                        | gate                | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T022727Z.md              | -                                        | gate                | cursor-gpt-5-6-sol-xhigh |
+| plan   | artifact | passed          | 2026-08-31 | reviews/archived/artifact-plan-review-2026-08-31T025155Z.md              | -                                        | -                   | -                        |
+| design | artifact | passed          | 2026-08-31 | -                                                                        | -                                        | boundary-revision-3 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-08-31 | -                                                                        | -                                        | boundary-revision-3 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-08-31 | -                                                                        | -                                        | revision-1-review-2 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-08-31 | -                                                                        | -                                        | revision-1-review-3 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-09-01 | -                                                                        | -                                        | revision-2-review-2 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-09-07 | -                                                                        | 0b899c6ff28e2f279c6290166a9b2a4ad3fe2801 | revision-3-review-1 | codex:sol-high           |
+| final  | code     | passed          | 2026-09-07 | reviews/archived/final-review-2026-09-07T053105Z.md                      | 6946819c31fd63db54af6f67397d3f511f9651b9 | gate                | cursor-fable-5-1-high    |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
@@ -1658,7 +1658,7 @@ passed.
 ## Phase p-rev1: Revision 1 — Phase 3 Production Contract Closure
 
 Source: operator-approved corrective revision from
-`reviews/p03-review-2026-08-31T232956Z.md` (2026-08-31)
+`reviews/archived/p03-review-2026-08-31T232956Z.md` (2026-08-31)
 
 This is a pre-Phase-4 corrective revision. Phase 4 remains blocked until all
 four revision tasks complete and a fresh root-owned `p-rev1` code review

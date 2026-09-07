@@ -460,12 +460,12 @@ lint, build, and diff checks passed.
 
 ### p02-t10 Review Fix Round 1
 
-- Review artifact: `reviews/p02-review-2026-08-31T183652Z.md`
+- Review artifact: `reviews/archived/p02-review-2026-08-31T183652Z.md`
 - Findings addressed: 1 Critical and 2 Important.
 - Fix commit: `ed0fe77585c6688726ba9ca316eed09e73bf56cc`
 - Boundary: persistence-schema suppression enforcement, conservative legacy-v1
   compatibility, and shared allowlist/evidence capacity.
-- Passing re-review: `reviews/p02-review-2026-08-31T190519Z.md` at `ed0fe7758`
+- Passing re-review: `reviews/archived/p02-review-2026-08-31T190519Z.md` at `ed0fe7758`
   with 0 Critical, Important, Medium, or Minor findings.
 
 ---
@@ -494,7 +494,7 @@ lint, build, and diff checks passed.
 ### Review Fix Round 1
 
 - Review artifact:
-  `reviews/artifact-p02-code-review-2026-08-31T135618Z.md`
+  `reviews/archived/artifact-p02-code-review-2026-08-31T135618Z.md`
 - Findings addressed: 1 Critical and 2 Important.
 - Fix commit: `bbbb3857cc793eb9a6def31e75cf6af65cccfa9f`
 - Boundary: snapshot redaction, preview approval binding, and postcondition
@@ -512,7 +512,7 @@ lint, build, and diff checks passed.
 ### Review Fix Round 2
 
 - Review artifact:
-  `reviews/artifact-p02-code-rereview-2026-08-31T145000Z.md`
+  `reviews/archived/artifact-p02-code-rereview-2026-08-31T145000Z.md`
 - Findings addressed: 2 Critical and 0 Important.
 - Fix commit: `eed80d5ab6b297d19da4569ca9963e25fd53b57d`
 - Boundary: snapshot and preview credential detection only; the two
@@ -530,7 +530,7 @@ lint, build, and diff checks passed.
 ### Review Fix Round 3 — Operator Extension
 
 - Review artifact:
-  `reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md`
+  `reviews/archived/artifact-p02-code-final-review-2026-08-31T150500Z.md`
 - Finding addressed: 1 Critical and 0 Important.
 - Fix commit: `831e110beff1aa8065926409f4819fec834cfc3c`
 - Boundary: one shared credential-assignment scanner and its snapshot/preview
@@ -638,11 +638,11 @@ final normal code review found 6 Critical and 1 Important issue.
 
 ### Phase 3 terminal review disposition
 
-- Review 1: `reviews/p03-review-2026-08-31T202119Z.md` — 5 Critical,
+- Review 1: `reviews/archived/p03-review-2026-08-31T202119Z.md` — 5 Critical,
   2 Important; fixed by `b8b7892d0`.
-- Review 2: `reviews/p03-review-2026-08-31T213820Z.md` — 5 Critical,
+- Review 2: `reviews/archived/p03-review-2026-08-31T213820Z.md` — 5 Critical,
   1 Important; fixed by `9872f13dd`.
-- Review 3: `reviews/p03-review-2026-08-31T232956Z.md` — 6 Critical,
+- Review 3: `reviews/archived/p03-review-2026-08-31T232956Z.md` — 6 Critical,
   1 Important; terminal normal-governance block.
 - Every reviewer reported `**Reconnaissance:** not-attempted`; none of the
   three artifacts contains a `## Review Orchestration` section.
@@ -653,7 +653,7 @@ final normal code review found 6 Critical and 1 Important issue.
 
 **Date:** 2026-08-31
 **Source:** inline operator agreement informed by
-`reviews/p03-review-2026-08-31T232956Z.md`
+`reviews/archived/p03-review-2026-08-31T232956Z.md`
 
 **Changes requested:**
 
@@ -728,11 +728,11 @@ and final normal code review found one Critical and one Important issue.
 
 ### Revision 1 terminal review disposition
 
-- Review 1: `reviews/p-rev1-review-2026-09-01T020434Z.md` — 4 Critical;
+- Review 1: `reviews/archived/p-rev1-review-2026-09-01T020434Z.md` — 4 Critical;
   fixed by `1a11231c8`.
-- Review 2: `reviews/p-rev1-round-2-re-review-2026-09-01T031049Z.md` —
+- Review 2: `reviews/archived/p-rev1-round-2-re-review-2026-09-01T031049Z.md` —
   2 Critical and 1 Important; fixed by `15332edbf`.
-- Review 3: `reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md` —
+- Review 3: `reviews/archived/p-rev1-round-3-re-review-2026-09-01T161854Z.md` —
   1 Critical and 1 Important; terminal normal-governance block.
 - Phase 4 is not authorized while this blocker remains. Any additional
   Revision 1 repair/review cycle requires explicit operator authorization.
@@ -790,7 +790,7 @@ findings after operator-extension fix loop 3/3.
   provider-capacity interruptions resumed through the original accepted
   handle at the exact same Sol/high target and request ID.
 - Review round 1 at
-  `reviews/p04-review-2026-09-02T123746Z.md` blocked with five Critical and one
+  `reviews/archived/p04-review-2026-09-02T123746Z.md` blocked with five Critical and one
   Important finding. The review covered the exact implementation range through
   `680424fe8`, reported `Reconnaissance: not-attempted`, and independently
   reran the focused suite at 53/53.
@@ -801,7 +801,7 @@ findings after operator-extension fix loop 3/3.
   focused suite at 76/76. The implementer also passed CLI lint, type-check,
   format, and build. The broader CLI suite passed 5,090/5,091; the only failure
   was a repeated out-of-scope doctor/defaultScope timeout.
-- Review round 2 at `reviews/p04-rereview-2026-09-02T132440Z.md` blocked with
+- Review round 2 at `reviews/archived/p04-rereview-2026-09-02T132440Z.md` blocked with
   three Critical and one Important finding. It reported
   `Reconnaissance: not-attempted`, independently passed the focused suite at
   76/76, and reproduced wrong-issue public verification, forged/unbounded
@@ -813,7 +813,7 @@ findings after operator-extension fix loop 3/3.
   live focused suite at 92/92. The implementer also passed the broader remote
   suite at 427/427 plus CLI lint, type-check, format, diff, and build.
 - Final normal review round 3 at
-  `reviews/p04-final-review-2026-09-02T140132Z.md` blocked with one Critical,
+  `reviews/archived/p04-final-review-2026-09-02T140132Z.md` blocked with one Critical,
   one Important, and one Medium finding. It reported
   `Reconnaissance: not-attempted`, independently passed the focused suite at
   92/92 and the remote suite at 427/427, and reproduced wrong-context duplicate
@@ -829,7 +829,7 @@ findings after operator-extension fix loop 3/3.
   live focused suite at 116/116. The implementer also passed the full remote
   suite at 451/451 plus CLI lint, type-check, format, diff, and build.
 - Independent operator-extension review 4/4 at
-  `reviews/p04-operator-review-2026-09-02T144931Z.md` passed with zero Critical,
+  `reviews/archived/p04-operator-review-2026-09-02T144931Z.md` passed with zero Critical,
   Important, Medium, or Minor findings. It reported
   `Reconnaissance: not-attempted`, independently passed the focused suite at
   116/116 and the remote suite at 451/451, and none of the prior bypasses
@@ -885,7 +885,7 @@ zero findings after fix loop 3/3.
   nested dispatch occurred.
 - The planned lockstep version bump remains deferred to `p08-t05`; Phase 5 does
   not claim the release gates pass at version `0.2.50`.
-- Review round 1 at `reviews/p05-review-2026-09-02T210533Z.md` blocked with
+- Review round 1 at `reviews/archived/p05-review-2026-09-02T210533Z.md` blocked with
   three Critical and three Important findings. It reported
   `Reconnaissance: not-attempted`, independently passed the focused suite at
   38/38 and the remote suite at 489/489, and reproduced altered mutation/read
@@ -898,7 +898,7 @@ zero findings after fix loop 3/3.
   focused suite at 81/81. The implementer also passed the full remote suite at
   532/532 plus CLI lint, type-check, format, diff, build, and provider-neutrality
   checks.
-- Review round 2 at `reviews/p05-review-2026-09-02T214026Z.md` blocked with one
+- Review round 2 at `reviews/archived/p05-review-2026-09-02T214026Z.md` blocked with one
   Critical and two Important findings. It reported
   `Reconnaissance: not-attempted`, passed the focused suite at 81/81 and remote
   suite at 532/532, and reproduced a wrong-UUID public read, a selector/input
@@ -911,7 +911,7 @@ zero findings after fix loop 3/3.
   at 87/87. The implementer also passed the full remote suite at 538/538 plus
   CLI lint, type-check, build, formatting, diff, and provider-neutrality checks.
 - Final normal review round 3 at
-  `reviews/p05-review-2026-09-02T215328Z.md` blocked with zero Critical and one
+  `reviews/archived/p05-review-2026-09-02T215328Z.md` blocked with zero Critical and one
   Important finding. It reported `Reconnaissance: not-attempted`, passed the
   focused suite at 87/87 and remote suite at 538/538, confirmed all nine prior
   findings resolved, and reproduced stale capability evidence reported as
@@ -929,7 +929,7 @@ zero findings after fix loop 3/3.
   lint, type-check, build, formatting, diff, and provider-neutrality checks.
   Independent operator-extension review 4/4 passed with zero Critical,
   Important, Medium, or Minor findings at
-  `reviews/p05-operator-review-2026-09-05T223153Z.md`. Reconnaissance was not
+  `reviews/archived/p05-operator-review-2026-09-05T223153Z.md`. Reconnaissance was not
   attempted. Phase 5 is complete and `p06-t01` is next.
 
 ---
@@ -999,7 +999,7 @@ zero findings after fix loop 3/3.
   not claim release gates pass at version `0.2.50`.
 - Independent review round 1 blocked with three Critical and three Important
   findings at exact reviewed head `1903de1bc6295aa91454d6ca5080b59d1cdc4db9`.
-  The artifact is `reviews/p06-review-2026-09-05T225221Z.md` and records
+  The artifact is `reviews/archived/p06-review-2026-09-05T225221Z.md` and records
   `Reconnaissance: not-attempted`.
 - Bounded review-fix loop 1/3 completed through the accepted Phase 6
   implementer as `937cb9efe610bc019d6a48200fc27e4a3d9e3bae` within the exact
@@ -1008,7 +1008,7 @@ zero findings after fix loop 3/3.
   build, format, diff integrity, and provider-neutrality passing.
 - Independent review round 2 blocked with two Critical and one Important
   finding at exact reviewed head `937cb9efe610bc019d6a48200fc27e4a3d9e3bae`.
-  The artifact is `reviews/p06-review-2026-09-05T230856Z.md` and records
+  The artifact is `reviews/archived/p06-review-2026-09-05T230856Z.md` and records
   `Reconnaissance: not-attempted`.
 - Bounded review-fix loop 2/3 completed through the accepted Phase 6
   implementer as `cfccc8a3ad837350be33fb03faeb451463bd61ed` within four of the
@@ -1017,7 +1017,7 @@ zero findings after fix loop 3/3.
   provider-neutrality passing.
 - Final normal review round 3 passed with zero Critical, Important, Medium, or
   Minor findings at `cfccc8a3ad837350be33fb03faeb451463bd61ed`. The artifact
-  is `reviews/p06-review-2026-09-05T231752Z.md` and records
+  is `reviews/archived/p06-review-2026-09-05T231752Z.md` and records
   `Reconnaissance: not-attempted`.
 - Phase 6 is complete after 3/3 reviews and 2/3 fix loops. Phase 7 starts at
   `p07-t01`.
@@ -1122,7 +1122,7 @@ findings; bounded fix loop 1/3 is pending.
 - Independent review blocked at exact product head
   `2ed83eb26862a4d5ebbd1b012d77edcfbfdbb720` with five Critical, three
   Important, one Medium, and zero Minor findings.
-- Artifact: `reviews/p07-review-2026-09-06T203750Z.md`.
+- Artifact: `reviews/archived/p07-review-2026-09-06T203750Z.md`.
 - Reconnaissance: not-attempted.
 - The focused Phase 7 union passed 218/218. Full smoke passed 140/141 because a
   pre-existing malformed linked-worktree metadata entry prevented one
@@ -1430,12 +1430,12 @@ continuation_events:
 
 #### Independent review and bounded fixes
 
-| Round | Request                                   | Target                                                | Artifact                                                          | Findings                          | Outcome                                  |
-| ----- | ----------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------- | ---------------------------------------- |
-| 1     | `review-p01-20260831T052706Z`             | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-review-2026-08-31T052706Z.md`          | 2 Critical, 2 Important, 3 Medium | blocked; same-handle fix `7b927ed8a`     |
-| 2     | `review-p01-r2-20260831T060131Z`          | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-rereview-2026-08-31T060131Z.md`        | 2 Critical, 1 Important, 3 Medium | blocked; same-handle fix `306bdd9dc`     |
-| 3     | `review-p01-r3-20260831T063219Z`          | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-final-review-2026-08-31T063219Z.md`    | 2 Critical, 0 Important, 3 Medium | terminal blocked; governance cap reached |
-| 4     | `review-p01-r4-operator-20260831T122741Z` | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/artifact-p01-code-operator-review-2026-08-31T122741Z.md` | 0 Critical, 0 Important, 4 Medium | passed under operator extension          |
+| Round | Request                                   | Target                                                | Artifact                                                                   | Findings                          | Outcome                                  |
+| ----- | ----------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------- | ---------------------------------------- |
+| 1     | `review-p01-20260831T052706Z`             | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/archived/artifact-p01-code-review-2026-08-31T052706Z.md`          | 2 Critical, 2 Important, 3 Medium | blocked; same-handle fix `7b927ed8a`     |
+| 2     | `review-p01-r2-20260831T060131Z`          | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/archived/artifact-p01-code-rereview-2026-08-31T060131Z.md`        | 2 Critical, 1 Important, 3 Medium | blocked; same-handle fix `306bdd9dc`     |
+| 3     | `review-p01-r3-20260831T063219Z`          | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/archived/artifact-p01-code-final-review-2026-08-31T063219Z.md`    | 2 Critical, 0 Important, 3 Medium | terminal blocked; governance cap reached |
+| 4     | `review-p01-r4-operator-20260831T122741Z` | `oat-reviewer-gpt-5-6-sol-high` (`gpt-5.6-sol`, high) | `reviews/archived/artifact-p01-code-operator-review-2026-08-31T122741Z.md` | 0 Critical, 0 Important, 4 Medium | passed under operator extension          |
 
 - Every reviewer reported `**Reconnaissance:** not-attempted`; no review
   artifact contains a `## Review Orchestration` section.
@@ -1456,7 +1456,7 @@ continuation_events:
   three-cycle terminal stop.
 - Scope: exactly one additional bounded fix/review cycle for the two Critical
   findings in
-  `reviews/artifact-p01-code-final-review-2026-08-31T063219Z.md`.
+  `reviews/archived/artifact-p01-code-final-review-2026-08-31T063219Z.md`.
 - Retry accounting: `oat_orchestration_retry_limit` increased from 2 to 3;
   prior usage remains 2 and is not reset.
 - Governance exception: one fourth independent review is authorized for this
@@ -1473,7 +1473,7 @@ continuation_events:
   independently reran the combined 444-test suite and checked the exact diff.
 - Review-fix retry usage: 3/3; prior usage was preserved.
 - Review artifact:
-  `reviews/artifact-p01-code-operator-review-2026-08-31T122741Z.md`.
+  `reviews/archived/artifact-p01-code-operator-review-2026-08-31T122741Z.md`.
 - Review result: PASS with 0 Critical, 0 Important, 4 Medium, and 0 Minor.
 - All prior blocking findings remain resolved. The retained nonblocking Mediums
   cover duplicate-identity provider context, pre-rename temporary cleanup,
@@ -1515,7 +1515,7 @@ pending_attempt: null
 review_cycles: 4/4
 review_fix_loops: 3/3
 phase_outcome: blocked
-terminal_review_artifact: reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md
+terminal_review_artifact: reviews/archived/artifact-p02-code-operator-review-2026-08-31T154000Z.md
 continuation_events:
   - id: review-fix-p02-r1-20260831T1425Z
     reason: bounded fixes for Phase 2 round-1 Critical and Important review findings
@@ -1538,12 +1538,12 @@ continuation_events:
 
 #### Independent review and bounded fixes
 
-| Round | Request                                 | Artifact                                                          | Findings                          | Outcome                        |
-| ----- | --------------------------------------- | ----------------------------------------------------------------- | --------------------------------- | ------------------------------ |
-| 1     | `review-p02-20260831T135618Z`           | `reviews/artifact-p02-code-review-2026-08-31T135618Z.md`          | 1 Critical, 2 Important, 2 Medium | blocked; fix `bbbb3857c`       |
-| 2     | `review-p02-r2-20260831T1450Z`          | `reviews/artifact-p02-code-rereview-2026-08-31T145000Z.md`        | 2 Critical, 0 Important, 2 Medium | blocked; fix `eed80d5ab`       |
-| 3     | `review-p02-r3-20260831T1505Z`          | `reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md`    | 1 Critical, 0 Important, 2 Medium | terminal normal-review BLOCK   |
-| 4     | `review-p02-r4-operator-20260831T1540Z` | `reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md` | 2 Critical, 0 Important, 2 Medium | terminal operator-review BLOCK |
+| Round | Request                                 | Artifact                                                                   | Findings                          | Outcome                        |
+| ----- | --------------------------------------- | -------------------------------------------------------------------------- | --------------------------------- | ------------------------------ |
+| 1     | `review-p02-20260831T135618Z`           | `reviews/archived/artifact-p02-code-review-2026-08-31T135618Z.md`          | 1 Critical, 2 Important, 2 Medium | blocked; fix `bbbb3857c`       |
+| 2     | `review-p02-r2-20260831T1450Z`          | `reviews/archived/artifact-p02-code-rereview-2026-08-31T145000Z.md`        | 2 Critical, 0 Important, 2 Medium | blocked; fix `eed80d5ab`       |
+| 3     | `review-p02-r3-20260831T1505Z`          | `reviews/archived/artifact-p02-code-final-review-2026-08-31T150500Z.md`    | 1 Critical, 0 Important, 2 Medium | terminal normal-review BLOCK   |
+| 4     | `review-p02-r4-operator-20260831T1540Z` | `reviews/archived/artifact-p02-code-operator-review-2026-08-31T154000Z.md` | 2 Critical, 0 Important, 2 Medium | terminal operator-review BLOCK |
 
 - All five blockers from rounds 1 and 2 are resolved. The remaining Critical
   finding is a punctuation-delimited credential-assignment bypass shared by
@@ -1559,7 +1559,7 @@ continuation_events:
   three-review Phase 2 governance stop.
 - Scope: exactly one additional bounded fix/review cycle for the single
   Critical finding in
-  `reviews/artifact-p02-code-final-review-2026-08-31T150500Z.md`.
+  `reviews/archived/artifact-p02-code-final-review-2026-08-31T150500Z.md`.
 - Repair boundary: one shared credential-assignment scanner plus snapshot and
   preview consumers/regressions. The two Medium findings remain out of scope.
 - Governance exception: review-fix capacity is extended from 2 to 3 and review
@@ -1576,7 +1576,7 @@ continuation_events:
   type-check, lint, check, and build passed; uncached CLI 4,838/4,838 with 0
   cached tasks.
 - Review artifact:
-  `reviews/artifact-p02-code-operator-review-2026-08-31T154000Z.md`.
+  `reviews/archived/artifact-p02-code-operator-review-2026-08-31T154000Z.md`.
 - Review result: BLOCK with 2 Critical, 0 Important, 2 Medium, and 0 Minor.
 - Remaining Critical findings: multi-segment/escaped values can retain a secret
   suffix after partial redaction, and bracket-notation assignments bypass all
@@ -1654,10 +1654,10 @@ target=oat-phase-implementer-gpt-5-6-sol-high
 
 **Review outcomes:**
 
-| Round | Request                                       | Artifact                                   | Findings                             | Outcome                  |
-| ----- | --------------------------------------------- | ------------------------------------------ | ------------------------------------ | ------------------------ |
-| 1     | `review-p02-boundary-revision-20260831T1830Z` | `reviews/p02-review-2026-08-31T183652Z.md` | 1 Critical, 2 Important              | blocked; fix `ed0fe7758` |
-| 2     | `review-p02-boundary-r2-20260831T1900Z`       | `reviews/p02-review-2026-08-31T190519Z.md` | 0 Critical, Important, Medium, Minor | passed                   |
+| Round | Request                                       | Artifact                                            | Findings                             | Outcome                  |
+| ----- | --------------------------------------------- | --------------------------------------------------- | ------------------------------------ | ------------------------ |
+| 1     | `review-p02-boundary-revision-20260831T1830Z` | `reviews/archived/p02-review-2026-08-31T183652Z.md` | 1 Critical, 2 Important              | blocked; fix `ed0fe7758` |
+| 2     | `review-p02-boundary-r2-20260831T1900Z`       | `reviews/archived/p02-review-2026-08-31T190519Z.md` | 0 Critical, Important, Medium, Minor | passed                   |
 
 - Both reviewers reported `**Reconnaissance:** not-attempted`; neither review
   artifact contains a `## Review Orchestration` section.
@@ -1708,11 +1708,11 @@ target=oat-reviewer-gpt-5-6-sol-high
 
 **Review outcomes:**
 
-| Round | Artifact                                   | Findings                | Outcome         |
-| ----- | ------------------------------------------ | ----------------------- | --------------- |
-| 1     | `reviews/p03-review-2026-08-31T202119Z.md` | 5 Critical, 2 Important | fix `b8b7892d0` |
-| 2     | `reviews/p03-review-2026-08-31T213820Z.md` | 5 Critical, 1 Important | fix `9872f13dd` |
-| 3     | `reviews/p03-review-2026-08-31T232956Z.md` | 6 Critical, 1 Important | terminal block  |
+| Round | Artifact                                            | Findings                | Outcome         |
+| ----- | --------------------------------------------------- | ----------------------- | --------------- |
+| 1     | `reviews/archived/p03-review-2026-08-31T202119Z.md` | 5 Critical, 2 Important | fix `b8b7892d0` |
+| 2     | `reviews/archived/p03-review-2026-08-31T213820Z.md` | 5 Critical, 1 Important | fix `9872f13dd` |
+| 3     | `reviews/archived/p03-review-2026-08-31T232956Z.md` | 6 Critical, 1 Important | terminal block  |
 
 - Review governance is exhausted at 3/3. No Phase 4 dispatch occurred.
 - The final artifact's focused verification passed, but direct reproductions
@@ -1787,9 +1787,9 @@ target=oat-reviewer-gpt-5-6-sol-high
 
 | Round | Artifact                                                                | Findings                | Outcome                  |
 | ----- | ----------------------------------------------------------------------- | ----------------------- | ------------------------ |
-| 1     | `reviews/p-rev1-review-2026-09-01T020434Z.md`                           | 4 Critical              | fix `1a11231c8`          |
-| 2     | `reviews/p-rev1-round-2-re-review-2026-09-01T031049Z.md`                | 2 Critical, 1 Important | fix `15332edbf`          |
-| 3     | `reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md`                | 1 Critical, 1 Important | terminal normal block    |
+| 1     | `reviews/archived/p-rev1-review-2026-09-01T020434Z.md`                  | 4 Critical              | fix `1a11231c8`          |
+| 2     | `reviews/archived/p-rev1-round-2-re-review-2026-09-01T031049Z.md`       | 2 Critical, 1 Important | fix `15332edbf`          |
+| 3     | `reviews/archived/p-rev1-round-3-re-review-2026-09-01T161854Z.md`       | 1 Critical, 1 Important | terminal normal block    |
 | 4     | `reviews/archived/p-rev1-round-4-operator-review-2026-09-01T180520Z.md` | 1 Critical, 1 Medium    | terminal extension block |
 
 - All four revision tasks completed. Root independently verified the final
@@ -1814,7 +1814,7 @@ target=oat-reviewer-gpt-5-6-sol-high
   three-review Revision 1 governance stop on 2026-09-01.
 - Scope: exactly one additional bounded fix/review cycle for the one Critical
   and one Important finding in
-  `reviews/p-rev1-round-3-re-review-2026-09-01T161854Z.md`.
+  `reviews/archived/p-rev1-round-3-re-review-2026-09-01T161854Z.md`.
 - Repair boundary: public create-handoff restart recovery and deterministic
   active-intent handling, plus truthful digest-bound revision freshness in the
   structured approval preview and their mechanically required regressions.
@@ -1946,7 +1946,7 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   full release gate is not described as passing.
 - Worktree was clean. Recovery remained 0/10 with no pending attempt or event.
 - Fresh root-owned review 1 is recorded at
-  `reviews/p-rev2-review-2026-09-01T202947Z.md` against exact code head
+  `reviews/archived/p-rev2-review-2026-09-01T202947Z.md` against exact code head
   `1af99a23b5cb67142cd06f37c3b3b0bc648e941e`. It reported
   `**Reconnaissance:** not-attempted` and blocked with 1 Critical, 0 Important,
   0 Medium, and 0 Minor.
@@ -1971,7 +1971,7 @@ target=oat-phase-implementer-gpt-5-6-sol-high
 - Review-fix loop 1/3 is complete. Fresh root-owned re-review is pending; Phase
   4 did not start.
 - Fresh root-owned review 2 is recorded at
-  `reviews/p-rev2-rereview-2026-09-01T210901Z.md` against exact code head
+  `reviews/archived/p-rev2-rereview-2026-09-01T210901Z.md` against exact code head
   `e79732b6cef1b996a54334e308860a121cdd989d`. It reported
   `**Reconnaissance:** not-attempted` and blocked with 0 Critical, 1 Important,
   0 Medium, and 0 Minor.
@@ -1993,7 +1993,7 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   integrity. The worktree was clean. Recovery remained 0/10 with no pending
   attempt because this was a review-fix loop.
 - Fresh root-owned review 3 is recorded at
-  `reviews/p-rev2-final-rereview-2026-09-01T213136Z.md` against exact code head
+  `reviews/archived/p-rev2-final-rereview-2026-09-01T213136Z.md` against exact code head
   `5a15f738df8e7d5ab467b94a1e28a77ca5df420c`. It reported
   `**Reconnaissance:** not-attempted` and passed with zero findings at every
   severity.
@@ -2055,19 +2055,19 @@ recovery_usage: 0/10
 pending_attempt: null
 review_rounds: 4/4
 fix_loops: 3/3
-review_1_artifact: reviews/p04-review-2026-09-02T123746Z.md
+review_1_artifact: reviews/archived/p04-review-2026-09-02T123746Z.md
 review_1_head: 680424fe8f173fcbea7028f7bef63619574207c8
 review_1_findings: 5 critical, 1 important, 0 medium, 0 minor
 review_1_reconnaissance: not-attempted
 fix_1_commit: 407d82524dabe5590306f40286375c00ab38b9c3
 fix_1_outcome: done_with_concerns
-review_2_artifact: reviews/p04-rereview-2026-09-02T132440Z.md
+review_2_artifact: reviews/archived/p04-rereview-2026-09-02T132440Z.md
 review_2_head: 407d82524dabe5590306f40286375c00ab38b9c3
 review_2_findings: 3 critical, 1 important, 0 medium, 0 minor
 review_2_reconnaissance: not-attempted
 fix_2_commit: 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67
 fix_2_outcome: done
-review_3_artifact: reviews/p04-final-review-2026-09-02T140132Z.md
+review_3_artifact: reviews/archived/p04-final-review-2026-09-02T140132Z.md
 review_3_head: 77dd7afb444f1f5ef93397dacfbfc1eb96a50f67
 review_3_findings: 1 critical, 1 important, 1 medium, 0 minor
 review_3_reconnaissance: not-attempted
@@ -2076,7 +2076,7 @@ operator_extension_fix_limit: 1
 operator_extension_review_limit: 1
 fix_3_commit: 97ca0ed13b0fc76689989e4a49f3e638a9701915
 fix_3_outcome: done
-review_4_artifact: reviews/p04-operator-review-2026-09-02T144931Z.md
+review_4_artifact: reviews/archived/p04-operator-review-2026-09-02T144931Z.md
 review_4_head: 97ca0ed13b0fc76689989e4a49f3e638a9701915
 review_4_findings: 0 critical, 0 important, 0 medium, 0 minor
 review_4_reconnaissance: not-attempted
@@ -2188,19 +2188,19 @@ recovery_usage: 0/10
 pending_attempt: null
 review_rounds: 4/4
 fix_loops: 3/3
-review_1_artifact: reviews/p05-review-2026-09-02T210533Z.md
+review_1_artifact: reviews/archived/p05-review-2026-09-02T210533Z.md
 review_1_head: ab94b6080a37b2b1bcdd80a51c93b5507c746fdd
 review_1_findings: 3 critical, 3 important, 0 medium, 0 minor
 review_1_reconnaissance: not-attempted
 fix_1_commit: ef806735359899afd7b720055a776045ec93dca7
 fix_1_outcome: done
-review_2_artifact: reviews/p05-review-2026-09-02T214026Z.md
+review_2_artifact: reviews/archived/p05-review-2026-09-02T214026Z.md
 review_2_head: ef806735359899afd7b720055a776045ec93dca7
 review_2_findings: 1 critical, 2 important, 0 medium, 0 minor
 review_2_reconnaissance: not-attempted
 fix_2_commit: e75f1d8e99edad72aa52442e31be9eec6116ae28
 fix_2_outcome: done
-review_3_artifact: reviews/p05-review-2026-09-02T215328Z.md
+review_3_artifact: reviews/archived/p05-review-2026-09-02T215328Z.md
 review_3_head: e75f1d8e99edad72aa52442e31be9eec6116ae28
 review_3_findings: 0 critical, 1 important, 0 medium, 0 minor
 review_3_reconnaissance: not-attempted
@@ -2209,7 +2209,7 @@ operator_extension_fix_limit: 1
 operator_extension_review_limit: 1
 fix_3_commit: a0a5eca48b40b1a75c6761c9c79406f290f82543
 fix_3_outcome: done
-review_4_artifact: reviews/p05-operator-review-2026-09-05T223153Z.md
+review_4_artifact: reviews/archived/p05-operator-review-2026-09-05T223153Z.md
 review_4_head: a0a5eca48b40b1a75c6761c9c79406f290f82543
 review_4_findings: 0 critical, 0 important, 0 medium, 0 minor
 review_4_reconnaissance: not-attempted
@@ -2320,19 +2320,19 @@ review_rounds: 4/4
 fix_loops: 3/3
 recovery_reservation_commit: 961fedfbcd1fca6ed0c646179f1c98b8e616c361
 recovery_commit: 1903de1bc6295aa91454d6ca5080b59d1cdc4db9
-review_1_artifact: reviews/p06-review-2026-09-05T225221Z.md
+review_1_artifact: reviews/archived/p06-review-2026-09-05T225221Z.md
 review_1_head: 1903de1bc6295aa91454d6ca5080b59d1cdc4db9
 review_1_findings: 3 critical, 3 important, 0 medium, 0 minor
 review_1_reconnaissance: not-attempted
 review_fix_1_commit: 937cb9efe610bc019d6a48200fc27e4a3d9e3bae
 review_fix_1_verification: jira 57/57; remote 601/601; lint, types, build, format, diff, provider-neutrality passed
-review_2_artifact: reviews/p06-review-2026-09-05T230856Z.md
+review_2_artifact: reviews/archived/p06-review-2026-09-05T230856Z.md
 review_2_head: 937cb9efe610bc019d6a48200fc27e4a3d9e3bae
 review_2_findings: 2 critical, 1 important, 0 medium, 0 minor
 review_2_reconnaissance: not-attempted
 review_fix_2_commit: cfccc8a3ad837350be33fb03faeb451463bd61ed
 review_fix_2_verification: jira 59/59; remote 603/603; lint, types, build, format, diff, provider-neutrality passed
-review_3_artifact: reviews/p06-review-2026-09-05T231752Z.md
+review_3_artifact: reviews/archived/p06-review-2026-09-05T231752Z.md
 review_3_head: cfccc8a3ad837350be33fb03faeb451463bd61ed
 review_3_findings: 0 critical, 0 important, 0 medium, 0 minor
 review_3_reconnaissance: not-attempted
@@ -2405,19 +2405,19 @@ recovery_02_reservation_commit: c1d755645dd172968d300c4fef0af6865b21c683
 recovery_02_activation_commit: 7712ddd1b876e9d905dad9ee88f0eac6745f3090
 recovery_02_commit: 2ed83eb26862a4d5ebbd1b012d77edcfbfdbb720
 recovery_outcome: recovered
-review_1_artifact: reviews/p07-review-2026-09-06T203750Z.md
+review_1_artifact: reviews/archived/p07-review-2026-09-06T203750Z.md
 review_1_head: 2ed83eb26862a4d5ebbd1b012d77edcfbfdbb720
 review_1_findings: 5 critical, 3 important, 1 medium, 0 minor
 review_1_reconnaissance: not-attempted
 review_fix_1_commit: 56ee775cb4418c2b2bf2fbd29a9de1d820da2829
 review_fix_1_verification: remote/E2E/help 759/759; smoke 141/141; scoped smoke 1/1; CLI lint, types, build, root format, diff, boundary, and provider-neutrality passed
-review_2_artifact: reviews/p07-review-2026-09-06T211250Z.md
+review_2_artifact: reviews/archived/p07-review-2026-09-06T211250Z.md
 review_2_head: 56ee775cb4418c2b2bf2fbd29a9de1d820da2829
 review_2_findings: 5 critical, 2 important, 0 medium, 0 minor
 review_2_reconnaissance: not-attempted
 review_fix_2_commit: a0adeeeec8f2869a9d718ea21580f7b37e49c0d1
 review_fix_2_verification: focused 217/217; remote/E2E/help 761/761; smoke 141/141; scoped smoke 1/1; CLI lint, types, build, root format, diff, boundary, and provider-neutrality passed
-review_3_artifact: reviews/p07-review-2026-09-06T213110Z.md
+review_3_artifact: reviews/archived/p07-review-2026-09-06T213110Z.md
 review_3_head: a0adeeeec8f2869a9d718ea21580f7b37e49c0d1
 review_3_findings: 4 critical, 1 important, 0 medium, 0 minor
 review_3_reconnaissance: not-attempted
@@ -2427,7 +2427,7 @@ operator_extension_review_limit: 1
 fix_3_commit: af095f3c0c338b7d571a86a4b70f498b758537ee
 fix_3_outcome: done
 fix_3_verification: focused 250/250; remote/E2E/help 762/762; smoke 141/141; scoped smoke 1/1; CLI lint, types, build, root format, diff, boundary, and provider-neutrality passed
-review_4_artifact: reviews/p07-review-2026-09-07T015809Z.md
+review_4_artifact: reviews/archived/p07-review-2026-09-07T015809Z.md
 review_4_head: af095f3c0c338b7d571a86a4b70f498b758537ee
 review_4_findings: 1 critical, 1 important, 0 medium, 0 minor
 review_4_reconnaissance: not-attempted
@@ -2519,19 +2519,19 @@ pending_attempt: null
 review_rounds: 3/3
 fix_loops: 2/3
 phase_verification: remote approval/anomaly union 120/120 passed at committed HEAD
-review_1_artifact: reviews/p-rev3-review-2026-09-07T023906Z.md
+review_1_artifact: reviews/archived/p-rev3-review-2026-09-07T023906Z.md
 review_1_head: a9c86aab6ee0d21f923f9e602a8f3e5ed55215ab
 review_1_findings: 0 critical, 2 important, 0 medium, 0 minor
 review_1_reconnaissance: not-attempted
 review_fix_1_commit: 2c101ce59258f42c1a95ae9c949609408d571f49
 review_fix_1_verification: remote approval/anomaly union 120/120; CLI types, lint, build, format, diff, and no-secret-output smoke passed
-review_2_artifact: reviews/p-rev3-review-2026-09-07T025531Z.md
+review_2_artifact: reviews/archived/p-rev3-review-2026-09-07T025531Z.md
 review_2_head: 2c101ce59258f42c1a95ae9c949609408d571f49
 review_2_findings: 0 critical, 1 important, 0 medium, 0 minor
 review_2_reconnaissance: not-attempted
 review_fix_2_commit: 9d42e2741499046b14f01f5f734fd9921aac28aa
 review_fix_2_verification: remote approval/anomaly union 120/120; CLI types, lint, build, format, diff, and no-secret-output smoke passed
-review_3_artifact: reviews/p-rev3-review-2026-09-07T030518Z.md
+review_3_artifact: reviews/archived/p-rev3-review-2026-09-07T030518Z.md
 review_3_head: 9d42e2741499046b14f01f5f734fd9921aac28aa
 review_3_findings: 0 critical, 0 important, 0 medium, 0 minor
 review_3_reconnaissance: not-attempted
@@ -2629,15 +2629,15 @@ review_fix_commits:
 main_reconciliation_commit: 6c73da33cf64fa2221def42a0b2fc6f7960ced73
 main_reconciliation_head: 0f47bf7004166d420758d1bcd77d253007174332
 phase_verification: focused 708/708; forced workspace 6470/6470 with 0 cached; fix contract 4/4; skill suite 837/837; focused remote/E2E 51/51; current-main version gate passed at 0.2.63
-review_1_artifact: reviews/p08-review-2026-09-07T035129Z.md
+review_1_artifact: reviews/archived/p08-review-2026-09-07T035129Z.md
 review_1_head: 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae
 review_1_findings: 0 critical, 2 important, 0 medium, 0 minor
 review_1_reconnaissance: not-attempted
-review_2_artifact: reviews/p08-review-2026-09-07T041040Z.md
+review_2_artifact: reviews/archived/p08-review-2026-09-07T041040Z.md
 review_2_head: 96096ade106ac2278ee7aba174ad88933036d9c8
 review_2_findings: 0 critical, 1 important, 0 medium, 0 minor
 review_2_reconnaissance: not-attempted
-review_3_artifact: reviews/p08-review-2026-09-07T042019Z.md
+review_3_artifact: reviews/archived/p08-review-2026-09-07T042019Z.md
 review_3_head: a9004ccfd3b62157a72088ba92e26f5194a6aad2
 review_3_findings: 0 critical, 0 important, 0 medium, 0 minor
 review_3_reconnaissance: not-attempted
