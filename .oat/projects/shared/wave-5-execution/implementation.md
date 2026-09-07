@@ -286,6 +286,12 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
   | p05 | `.worktrees/wave-5/p05` | DONE (`3fd3aaa62` + sweep `d779ea634`; forced CLI suite, focused 202) | passed (0C/0I/3M/5m; address-now sweep) | 0 |
   | p06 | `.worktrees/wave-5/p06` | DONE (`8432f1d4d` + fix `970aedccc`; forced CLI suite 5924) | passed (round 1 0C/1I/0M/2m → round 2 0C/0I/0M/2m) | 1 |
 
+#### Group 2 fan-in — p04, p05, p06 (2026-09-07)
+
+- Merge order p04 → p05 → p06 with `git merge --no-ff` after rebasing each lane on the integration tip (no worktree-init sync commits this time; the manifest was already 0.2.63). Merge commits `af42eba0e` (p04), `4aeea4536` (p05), `6b419ef7c` (p06). Lane commits re-hashed by the rebase (identical `git patch-id --stable` pairs; the Reviews table keeps the pre-rebase heads): 09de4c92f→7792f7583; 48837edf0→c055d5acf; d779ea634→3631ba9aa; 3fd3aaa62→98fac8ccf; 970aedccc→1eaa49997; 8432f1d4d→6db97567b.
+- Lockstep retained at 0.2.63 (`origin/main` still 0.2.62); integration gates (group fan-in mode, sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
+- Group-3 readiness on the merged tip: p07's plan is READY and its seams (`skills-bundled-docs-contract.test.ts`, `pack-manifest.ts`) carry p06's additions (`pack-manifest.ts` byte-identical to base; the contract test gained a contiguous block); p07 owns the `oat-repo-improve` bump; p08 follows with the `oat-project-complete` bump. Group-2 worktrees and branches removed after the merge.
+
 #### Parallel Groups
 
 - group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged, fan-in complete); p07 → p08, p09 → p10, p11 (sequential, next).
@@ -304,6 +310,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-07
 
+- p04-t01 `48837edf0`→`c055d5acf`, sweep `09de4c92f`→`7792f7583`; p05-t01 `3fd3aaa62`→`98fac8ccf`, sweep `d779ea634`→`3631ba9aa`; p06-t01 `8432f1d4d`→`6db97567b`, fix `970aedccc`→`1eaa49997`; merges `af42eba0e`, `4aeea4536`, `6b419ef7c`; lockstep retained 0.2.63.
 - p01-t01 `7c1988b63`→`1f6b1c9fe`, sweep `06de22c7d`→`d862ecb47`; p02-t01 `78f1279df`→`82898f9dc`, fix `f1790effd`→`6ed220954`, docs sweep `96a5d9480`→`3ff67384d`; p03-t01 `36a56cb64`→`8f4be3270`, fix `fcc6c0f26`→`ea25e45e7`; merges `9c932c262`, `ef4fc6b69`, `d77063b96`; hygiene `74e37e6e2`; lockstep bump `fdcb6c3ed`.
 - Wrapper authored from the program's Wave 5 section and the wave-boundary drift refresh (`f4b7c0c4f`); plan gate blocked three times on the refresh-carrying mechanism (attempts 1, 3, 4; attempt 2 superseded) and passed on attempt 5 (0 findings) after the refreshes were applied to eight source plans (`576fc11d8`).
 

@@ -93,7 +93,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T06:45:41.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T08:09:50.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -105,7 +105,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — group 1 merged (lockstep 0.2.63); group 2 (p04 + p05 + p06) dispatched at the integration tip.
+Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 (plan-readiness contract) dispatched alone at the integration tip.
 
 ## Artifacts
 
@@ -122,7 +122,8 @@ Implementation — group 1 merged (lockstep 0.2.63); group 2 (p04 + p05 + p06) d
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
 - ✓ Plan gate passed on attempt 5 (0 findings) after the wave-boundary refreshes moved into eight source plans
 - ✓ Group 1 (p01 + p02 + p03) merged (`9c932c262`, `ef4fc6b69`, `d77063b96`); lockstep 0.2.63 + manifest restamp; eight gates green
-- ⧗ Group 2 (p04 + p05 + p06), fan-in, p07 → p08, p09 → p10, p11, closeout
+- ✓ Group 2 (p04 + p05 + p06) merged (`af42eba0e`, `4aeea4536`, `6b419ef7c`); eight gates green, lockstep retained
+- ⧗ p07 → p08, p09 → p10, p11, closeout
 
 ## Blockers
 
@@ -130,4 +131,4 @@ None
 
 ## Next Milestone
 
-Group 2 lanes reviewed and fanned in (lockstep retained); then p07 → p08.
+p07 reviewed and merged; then p08, p09 → p10, p11.
