@@ -1214,6 +1214,16 @@ final code-review scope, and start time `2026-09-07T03:42:55.592Z`. Launch
 attempt `55eb0496-fd9f-40e9-8682-c2a626484f1e` is accepted and running; no
 terminal envelope has been consumed.
 
+#### Configured implementation exit gate result 5 persisted
+
+Run `fbe945ef-837c-4b08-89c3-3351a5b06110` returned a valid `status: ok`
+envelope for the declared project and gate invocation. The gate passed its
+Important threshold with 0 Critical, 0 Important, 0 Medium, and 1 Minor
+finding. The receipt is receive eligible and hands off
+`reviews/final-review-2026-09-07T034726Z.md` to
+`oat-project-review-receive`; no terminal allowance is recorded before that
+receive completes.
+
 #### Phase 9 implementation complete
 
 `p09-t01` committed as `2fc015fc9186ab8f585f67a4a845f0d9e4c98fea`.
