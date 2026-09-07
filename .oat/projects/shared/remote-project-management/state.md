@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 1128360a2a6d753ae10cf639fc2162044b47ab8a
+oat_last_commit: c2576d86b9815f2da649a08ead574c54a27261e1
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -80,21 +80,21 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/remote-project-management/reviews/final-review-2026-09-07T053105Z.md
   handoff: Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=1). Run oat-project-review-receive for .oat/projects/shared/remote-project-management/reviews/final-review-2026-09-07T053105Z.md to disposition them before marking the final review row passed.
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: gate-run=bee16cdf-2649-4445-baaf-fe7827c841c2;scope=final;type=code;source=final-review-2026-09-07T053105Z.md
+  receive_source_artifact: .oat/projects/shared/remote-project-management/reviews/final-review-2026-09-07T053105Z.md
+  receive_archived_artifact: .oat/projects/shared/remote-project-management/reviews/archived/final-review-2026-09-07T053105Z.md
+  receive_event_identity: final|code|final-review-2026-09-07T053105Z.md
+  receive_pre_head: c2576d86b9815f2da649a08ead574c54a27261e1
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-07T05:34:44Z'
+  updated_at: '2026-09-07T05:35:30Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T05:34:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T05:35:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
