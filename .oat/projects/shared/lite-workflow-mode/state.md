@@ -41,7 +41,7 @@ oat_phase_recovery_policy:
         discovered_by: pnpm test:smoke, /tmp/oat-lite-smoke.log subtest 88
         dispatch_target: oat-phase-implementer-gpt-5-6-sol-medium
         reservation_head: 0884bcccf90bb4455970364ac81eb10767b17f8b
-        status: pending
+        status: completed
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
