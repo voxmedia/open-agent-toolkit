@@ -306,16 +306,16 @@ git commit -m "fix(p05-t01): diagnose canonical skills missing from a provider v
 
 ## Reviews
 
-| Scope | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ----- | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| plan  | artifact | pending | -    | -        | -             | -          | -           |
-| p01   | code     | pending | -    | -        | -             | -          | -           |
-| p02   | code     | pending | -    | -        | -             | -          | -           |
-| p03   | code     | pending | -    | -        | -             | -          | -           |
-| p04   | code     | pending | -    | -        | -             | -          | -           |
-| p05   | code     | pending | -    | -        | -             | -          | -           |
-| final | code     | pending | -    | -        | -             | -          | -           |
-| spec  | artifact | pending | -    | -        | -             | -          | -           |
+| Scope | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
+| ----- | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
+| plan  | artifact | received | 2026-09-07 | reviews/artifact-plan-review-2026-09-07T235418Z.md | -             | -          | -           |
+| p01   | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p02   | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p03   | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p04   | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p05   | code     | pending  | -          | -                                                  | -             | -          | -           |
+| final | code     | pending  | -          | -                                                  | -             | -          | -           |
+| spec  | artifact | pending  | -          | -                                                  | -             | -          | -           |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
