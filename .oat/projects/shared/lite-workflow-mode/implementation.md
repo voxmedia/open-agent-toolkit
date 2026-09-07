@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p08-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -35,9 +35,9 @@ oat_generated: false
 | Phase p-rev1 | complete | 7     | 7/7       |
 | Phase p-rev2 | complete | 5     | 5/5       |
 | Phase 7      | complete | 4     | 4/4       |
-| Phase 8      | pending  | 2     | 0/2       |
+| Phase 8      | complete | 2     | 2/2       |
 
-**Total:** 43/45 tasks completed
+**Total:** 45/45 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
 
@@ -45,8 +45,9 @@ Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are seque
 
 ## Phase 8: Final Closeout Review Fixes
 
-**Status:** pending
+**Status:** complete
 **Started:** 2026-09-07
+**Completed:** 2026-09-07
 
 ### Final Review Received
 
@@ -62,6 +63,34 @@ artifacts through Phase 7 and release `0.2.61`. The historical p06-t02 Medium
 deferral was resurfaced; the reviewer confirmed that the user's prior explicit
 defer remains acceptable because the base/variant ownership contract did not
 change.
+
+### Task p08-t01: Regenerate the project sync manifest with the source CLI
+
+**Status:** completed
+**Commit:** `59fd7f31f29e5f6db2f3b44778d7d38ba7efdd47`
+
+Regenerated the project manifest through the repository source CLI. Its
+producer stamp is now `0.2.61`, and project sync reports no skew or drift.
+
+### Task p08-t02: Refresh closeout artifacts through Phase 7
+
+**Status:** completed
+**Commit:** `609d6b5297c474a9f62b6546f028999fb6416e68`
+
+Refreshed the summary and PR artifact through Phase 7 and release `0.2.61`.
+Both preserve the distinction between local verification and the last pushed,
+green remote head.
+
+### Phase Review
+
+**Status:** passed
+**Artifact:** `reviews/archived/p08-review-2026-09-07T023910Z.md`
+**Reviewed head:** `609d6b5297c474a9f62b6546f028999fb6416e68`
+**Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+The independent reviewer verified the exact two-commit range, source-derived
+manifest stamp, zero sync skew or drift, and current closeout artifacts. No fix
+loop was needed.
 
 ---
 
@@ -1093,6 +1122,48 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Run the final lifecycle review and refresh closeout artifacts for Phase 7.
 - Establish exact remote CI after an authorized push. Push and merge remain
   separate authorization boundaries.
+
+### Run 4 — 2026-09-07
+
+**Branch:** `simple-project`
+**Tier:** Tier 1 — subagents
+**Dispatch policy:** managed `high` (Codex)
+**Schedule:** `p08`
+
+#### Dispatch Records
+
+- **p08 implementation:** accepted request
+  `lite-p08-985e7f91-7213-479b-8708-db4f1aabcc66`; durable record
+  `dispatch/lite-p08-985e7f91-7213-479b-8708-db4f1aabcc66.json`; target
+  `oat-phase-implementer-gpt-5-6-sol-medium`; completed both tasks from base
+  `334eb0d996e48aba9df32ae763f49e5eae758368` through
+  `609d6b5297c474a9f62b6546f028999fb6416e68` with no recovery or nested
+  dispatch.
+- **p08 review:** accepted request
+  `lite-p08-review-6005beb2-b8b0-4c31-b63e-9a2993cbf30d`; durable record
+  `dispatch/lite-p08-review-6005beb2-b8b0-4c31-b63e-9a2993cbf30d.json`;
+  target `oat-reviewer-gpt-5-6-sol-high`; artifact
+  `reviews/archived/p08-review-2026-09-07T023910Z.md`; passed with no findings.
+  Reconnaissance was not attempted.
+- Dispatch: scope=p08 action=implementation role=implementer producer=unknown
+  provenance=unknown model_axis=selected:gpt-5.6-sol
+  effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high
+  target=oat-phase-implementer-gpt-5-6-sol-medium
+- Dispatch: scope=p08 action=review role=reviewer producer=unknown
+  provenance=unknown model_axis=selected:gpt-5.6-sol
+  effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high
+  target=oat-reviewer-gpt-5-6-sol-high
+
+#### Phase Outcomes
+
+| Phase | Implementation | Review | Fix Loops | Outcome |
+| ----- | -------------- | ------ | --------- | ------- |
+| p08   | DONE (2/2)     | passed | 0         | pass    |
+
+#### Outstanding Items
+
+- Run the fresh final lifecycle re-review and configured implementation exit
+  gate, then push and establish exact-head remote checks.
 
 ---
 

@@ -1408,7 +1408,8 @@ git commit -m "docs(p06-t11): align brainstorming guidance with lite"
 | final         | code     | passed          | 2026-09-07 | reviews/archived/final-review-2026-09-07T002708Z.md                             | de3a673edf5bbfb3c234a761c7eba9c695b82539 | auto       | -                             |
 | remote-pr-264 | code     | fixes_completed | 2026-09-07 | reviews/archived/remote-pr-264-review-2026-09-07T012843Z.md                     | -                                        | -          | -                             |
 | p07           | code     | passed          | 2026-09-07 | reviews/archived/p07-review-2026-09-07T020835Z.md                               | c362ffc5cb8d90e582dc47ffb7b301e2318311a2 | auto       | -                             |
-| final         | code     | fixes_added     | 2026-09-07 | reviews/archived/final-review-2026-09-07T022638Z.md                             | 5503200465229688ed45b352856d2714821eaeb6 | auto       | -                             |
+| final         | code     | fixes_completed | 2026-09-07 | reviews/archived/final-review-2026-09-07T022638Z.md                             | 5503200465229688ed45b352856d2714821eaeb6 | auto       | -                             |
+| p08           | code     | passed          | 2026-09-07 | reviews/archived/p08-review-2026-09-07T023910Z.md                               | 609d6b5297c474a9f62b6546f028999fb6416e68 | auto       | -                             |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

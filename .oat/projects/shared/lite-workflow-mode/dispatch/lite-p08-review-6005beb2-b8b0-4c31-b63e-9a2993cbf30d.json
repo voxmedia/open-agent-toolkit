@@ -46,7 +46,7 @@
     "dispatch_stamp": "Dispatch: scope=p08 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high"
   },
   "launch_status": "accepted",
-  "child_outcome": "in-progress",
+  "child_outcome": "completed",
   "configured_invocation_evidence": [
     "dispatch-report-v1:p08-review",
     "native-spawn-accepted",
@@ -54,7 +54,9 @@
     "same-handle-post-journal-scope"
   ],
   "runtime_confirmation": "not-reported",
-  "diagnostics": [],
+  "diagnostics": [
+    "PASS with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings; reconnaissance not attempted."
+  ],
   "continuation_events": [],
   "oat": {
     "schemaVersion": 1,
