@@ -172,6 +172,10 @@ Merged origin/main f83463e64 without rebasing reviewed history in c20df4331; col
 
 verdict=passed; review_rounds=3/3; fix_loops=2/3; artifact=reviews/p08-review-2026-09-07T042019Z.md; reviewed_head=a9004ccfd3b62157a72088ba92e26f5194a6aad2
 
+### 2026-09-07 · structural · oat-project-review-provide · reviews/final-review-2026-09-07T043133Z.md
+
+Final code review used attempted reconnaissance; complete orchestration evidence and primary reconciliation are recorded in reviews/final-review-2026-09-07T043133Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
