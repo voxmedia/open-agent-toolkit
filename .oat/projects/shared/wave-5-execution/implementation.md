@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p10-t01
+oat_current_task_id: p11-t01
 oat_generated: false
 ---
 
@@ -35,10 +35,10 @@ oat_generated: false
 | Phase 07 (enforce-external-plan-readiness-contract)                         | complete | 1     | 1/1       |
 | Phase 08 (make-autonomous-project-recap-capability-aware)                   | complete | 1     | 1/1       |
 | Phase 09 (defer-activeproject-clearing-on-archive-completions)              | blocked  | 1     | 0/1       |
-| Phase 10 (make-terminal-project-status-agree-with-revision-plans)           | pending  | 1     | 0/1       |
+| Phase 10 (make-terminal-project-status-agree-with-revision-plans)           | complete | 1     | 1/1       |
 | Phase 11 (make-consolidated-project-retirement-semantic)                    | pending  | 1     | 0/1       |
 
-**Total:** 8/11 planned tasks completed; 1 parked (p09)
+**Total:** 9/11 planned tasks completed; 1 parked (p09)
 
 ---
 
@@ -152,15 +152,15 @@ oat_generated: false
 
 ## Phase 10: make terminal project status agree with revision plans (p10)
 
-**Status:** pending · **Group:** group 4 (sequential pair, second) · **Tasks:** p10-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 4 (sequential pair, second; ran on the tip after p08 because p09 parked) · **Tasks:** p10-t01 (+ one pin commit)
+**Outcome:** terminal project status agrees with completed revision plans: the control-plane task parser normalizes heading dialects (`## Revision Phase p-rev1:` pairs with `prev1-t01`; ordinals compared as zero-padded strings so adjacent large ordinals stay distinct; wrong-phase and kind-mismatched task ids rejected), the recommender's post-implementation guard treats a project as terminal only when `oat_lifecycle` is `complete` AND no revision phase is incomplete, keyed on lifecycle alone with no workflow-mode branch (spec-driven, quick, and lite behave identically; `paused`/`active` still resume), and `oat-project-next` Step 1 reads `oat_lifecycle` with the Step 5.2 discriminator pinned; `HeadingDialect` deleted.
+**Verification:** forced check/type-check/test `Cached: 0` (control-plane 102, cli 6008), lint, format, validate-skills, test:smoke; real archived projects re-parsed read-only (9/36 and both revision phases discovered where the old parser dropped them); review round 1 (0C/1I/1M/4m) plus round 2 (0C/0I/0M/2m).
+**Deviations:** two pre-existing negative expectations in `tasks.test.ts` flipped to positives per the plan's Step 2 (cross-spelling same-phase pairing must count; the cross-phase negatives survive in a dedicated case) — ruled by the reviewer; archived projects with `**Status:** complete` and no `### Task` headings still report 0 completed (completion-format class the plan declares out of scope → follow-up).
 
 ### Task p10-t01: Execute external plan — Make terminal project status agree with completed revision plans
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `9d0049212`; pin `aaf4c8677`
 
 ## Phase 11: make consolidated project retirement semantic (p11)
 
@@ -282,6 +282,13 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - `w5-p08-review-002` outcome: PASS (fan-in may proceed), 0C/0I/0M/0m. `pnpm test:smoke` 160/160 and root `pnpm test` exit 0 re-run by the reviewer (both had been red); escaped-form sweep over 2,317 tracked files clean on every code/test/skill/asset surface; interactive seam-less end state executed (guard accepts `generate` + `failed`, never `E_RECAP_OUTCOME`); all 19 forged shapes rejected; an exhaustive 3^5 = 243 real-producer host-combination probe (skip 31 / generate 1 / fail-closed 211 / spurious 0) with zero legitimate probes rejected; the two new `NG` inventory mappings ruled correct (exact table delta computed); the narrowed critic comment accurate; two neutralizations red; Lite carve-out and `PROJECT_RECAP_REACHABLE` byte-identical to base; `check:skill-bumps` 10; gates forced `Cached: 0`.
 - `w5-p09-impl-001` — p09 dispatched alone at the group-4 base `956773dc6832dea1a765bfa61716e824166878fc`; target opus, task_class default-implementation. Record `dispatch/w5-p09-impl-001.json`.
 - `w5-p09-impl-001` outcome: BLOCKED (parked, no commit). The plan's own STOP condition fired — "the resume design would require a second `oat project archive` invocation, a project-log append after the seal, or skipping the Step 7 artifact" — because the plan's step-3 premise ("Step 3.7's status probe sees the existing seal and skips the append") is false against the real CLI: `oat project log check` has no seal awareness (`check.ts:35`), the seal append passes no idempotency key and embeds a fresh timestamp (`SKILL.md:680`), replaying the skill's seal invocation appended a second seal both times, and the Step 3.65 router that could skip `project-log` is gated to synced non-archive completions. Widening the Step 6 guard as the plan requires would keep the pointer alive through the network-bearing closeout and make every interruption append a second seal, breaking the skill's pinned "No project-log append may follow the seal" contract and two of the plan's own acceptance items. Parked work (steps 1, 2, 3, 5: guard widening, a separate durable validator with directory + receipt modes, the shared resume branch, both docs pages; 531 insertions; no bump) preserved as a patch in the orchestrator's scratchpad; the worktree left dirty at the base; `oat-project-complete` untouched at 1.7.8. Filed: `BL-260907-make-the-completion-seal` (plan refresh/supersession: seal idempotence CLI-side or router extension) and `BL-260907-finalize-synced-archive-mjs` (incidental, higher-severity pre-existing bug: `finalize-synced-archive.mjs:94` reads stdin with `fs/promises` `readFile(0)`, so the synced deferred clear from PR #254 always fails). Per wrapper rule 4/5 the park does not block group 4's second lane or group 5: p10 and p11 run on the current tip.
+- `w5-p10-impl-001` — p10 dispatched alone at `fa5caf514cbd4cfad086234fe6c03cae4cfb30ef` (the tip after p08 plus the p09 park bookkeeping; p09 contributed no commits); target opus, task_class hard-reasoning. Record `dispatch/w5-p10-impl-001.json`.
+- `w5-p10-impl-001` outcome: DONE, one commit `9d004921263a639888192c8ab005733fcb762903` (eight files, +701/−38; no bump — `oat-project-next` stays at p03's 1.1.1). Two Codex rounds (R1 Important: `normalizeOrdinal` used `Number.parseInt`, collapsing huge ordinals onto one phase id — a STOP invariant — fixed with string-only normalization; Medium: nothing locked exactly `lifecycle === 'complete'` — a paused-project case added; a Minor about gate logs rejected; R2 all none). Four neutralization controls each caught by exactly one test; three archived projects re-parsed read-only. Two pre-existing negatives flipped per the plan's Step 2 (flagged for the reviewer). `test:smoke` run (0).
+- `w5-p10-review-001` — reviewer, target opus, eight rulings (the flipped negatives, per-mode terminal guard incl. lite, ordinal normalization edge cases, the `oat_lifecycle` row and Step 5.2 pin, the real-artifact residue, Lite routes unchanged, weaker-anywhere, the unchanged scope files). Record `dispatch/w5-p10-review-001.json`.
+- `w5-p10-review-001` outcome: PASS with follow-ups, 0C/1I/1M/4m, reconnaissance attempted. Rulings: the flipped negative is correct (Step 2's body requires collapsing the dialect distinction; its Verify sentence contradicts its own body → plan correction; only ONE expectation flipped, both surviving negatives hold); the terminal guard sits before any workflow-mode branching (43-probe sweep across spec-driven/quick/import/lite × complete/pr_open × active/paused/complete, 43/43); ordinal normalization 17/17 on the reviewer's own edge cases; skill contracts sound (1.1.1, pins untouched); Lite routes byte-identical; `validate-plan.ts`/`types.ts` unchanged as the plan requires. Real-artifact check: `workflow-friction` reports 15/25, not 0 (the report's claim was false → M1 record correction). I1 (weaker-anywhere): the widening makes bullet-list/table-only revision phases visible, so a `workflow-friction`-shaped project at `lifecycle: active` now routes to implement where it previously routed to complete — the reviewer's Fix: do NOT weaken the widening; file the completion-format follow-up the plan anticipates and pin the interaction. Three of four neutralizations re-run red. Fix round `w5-p10-fix-001` (the orchestrator first mis-scoped it toward implementing phase-level completion, then corrected to the reviewer's ruling before any edit was made).
+- `w5-p10-fix-001` outcome: one documentation-and-test commit `aaf4c8677ff7889c6a1e49eb95fcfeea899d56df` (three files; `router.ts` byte-identical, `tasks.ts` comment-only): the interaction pinned in `router.test.ts` with a provenance-headed snapshot of the parser's output over the `workflow-friction` archive (no archive I/O), red-then-green in both directions (simulating the follow-up landing fails exactly the new case; removing the lifecycle guard fails it plus the two terminal cases); `BL-260907-recognize-phase-level` filed and referenced; the corpus provenance comment corrected to 42/179 (floors unchanged); a note on duplicate normalized phase ids. Report correction: `subagent-implement-refactor` 9/36/0 completed, `workflow-friction` 7/25/15 completed (p05 1/2 — its table says 2/2 while the task body reads pending), `retire-archived-synced-project` 15/15; that archive has no `## Revision Phase` section — completion lives only in the Progress Overview table and review-log bullets (the plan's out-of-scope wording verbatim). STOP clause not triggered (criterion 1 is heading-dialect normalization, fully met; completion counting is separate). One Codex round (0C/0I/0M/1m fixed). Record `dispatch/w5-p10-fix-001.json`.
+- `w5-p10-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w5-p10-review-002.json`.
+- `w5-p10-review-002` outcome: PASS (fan-in may proceed), 0C/0I/0M/2m. `router.ts` byte-identical by blob hash; `tasks.ts` comment-only proven mechanically; the new case and both mutations re-run (1/33 and 4/40 failed, as designed); the fixture matches a fresh read-only parse field-for-field and every provenance claim verified at its cited line; STOP not triggered; weaker-anywhere unchanged (17/17 parser, 43/43 router, three archived parses byte-identical to round 1); I1 and M1 fully dispositioned; corpus measured at 179 candidates. Minors: scaffold acceptance criteria on the new backlog item (filled by the orchestrator before the fan-in); the plan's Step 2 Verify sentence (wave-close correction).
 
 #### Phase Outcomes
 
@@ -322,13 +329,15 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - Lockstep retained at 0.2.63; integration gates (sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - p09 readiness on the merged tip: its plan is READY; the base carries p08's `oat-project-complete` bump (1.7.8, pins at `skills.test.ts` and `review-skill-contracts.test.ts`) — p09 edits that skill's prose without re-bumping; p08's worktree and branch removed.
   | p09 | `.worktrees/wave-5/p09` | BLOCKED — plan STOP (seal append not idempotent; resume premise false); parked patch preserved | not reviewed (parked) | 0 |
+  | p10 | `.worktrees/wave-5/p10` | DONE (`9d0049212` + pin `aaf4c8677`; forced CLI suite 6008, control-plane 102, test:smoke 0) | passed (round 1 0C/1I/1M/4m → round 2 0C/0I/0M/2m) | 1 |
 
 #### Parallel Groups
 
-- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08 (merged); p09 (PARKED on a plan STOP); p10, p11 (sequential, next).
+- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08 (merged); p09 (PARKED); p10 (merged); p11 (next).
 
 #### Outstanding Items
 
+- p11 (group 5); then closeout with p09 recorded parked.
 - p10 (group 4, second; runs on the current tip because p09 parked with no commits), p11 (group 5); then closeout. p09 needs a plan refresh (`BL-260907-make-the-completion-seal`) before it can run in a later wave.
 - p09 → p10 (group 4), p11 (group 5); then closeout.
 - p08 (group 3, second), then p09 → p10 (group 4), p11 (group 5); then closeout.
@@ -369,7 +378,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p07   | 6006 (forced CLI suite) + 286 focused         | all    | 0      | -        |
 | p08   | 6007 (forced CLI suite) + test:skills 856     | all    | 0      | -        |
 | p09   | validator suite 13/13 (uncommitted)           | -      | -      | parked   |
-| p10   | -                                             | -      | -      | -        |
+| p10   | 6008 (forced CLI suite) + control-plane 102   | all    | 0      | -        |
 | p11   | -                                             | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
