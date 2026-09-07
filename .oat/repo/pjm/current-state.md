@@ -37,6 +37,18 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.63` (`remote-project-management`, implementation and independent
+  closeout reviews complete; pending PR/release) adds local-first remote PJM
+  bindings for GitHub Issues, Linear, and Jira Cloud. `oat pjm remote` now
+  supports explicit intake, publish, refresh, reconcile, discussion, closeout,
+  relink, detach, recreate, and restart-safe operation continuation through a
+  provider-neutral host-execution boundary. Every outbound create/update uses
+  an explicit normalized projection and universal digest-bound safety gate;
+  inbound ticket fields use bounded allowlists and whole-field suppression;
+  durable journals plus authoritative read-back prevent blind retry after
+  uncertain effects. OAT core, skills, and tests retain no provider MCP names,
+  native schemas, captured catalogs, or CLI dialects.
+
 - CLI `0.2.60` (`lite-workflow-mode`, implementation complete; pending
   PR/release) adds Lite as a first-class workflow mode for single-sitting
   changes that still need an approved plan, atomic task commits, managed
