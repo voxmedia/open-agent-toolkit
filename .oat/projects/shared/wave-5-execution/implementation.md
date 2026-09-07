@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p08-t01
+oat_current_task_id: p09-t01
 oat_generated: false
 ---
 
@@ -33,12 +33,12 @@ oat_generated: false
 | Phase 05 (add-oat-config-unset-command)                                     | complete | 1     | 1/1       |
 | Phase 06 (validate-skill-script-references-against-pack-manifests)          | complete | 1     | 1/1       |
 | Phase 07 (enforce-external-plan-readiness-contract)                         | complete | 1     | 1/1       |
-| Phase 08 (make-autonomous-project-recap-capability-aware)                   | pending  | 1     | 0/1       |
+| Phase 08 (make-autonomous-project-recap-capability-aware)                   | complete | 1     | 1/1       |
 | Phase 09 (defer-activeproject-clearing-on-archive-completions)              | pending  | 1     | 0/1       |
 | Phase 10 (make-terminal-project-status-agree-with-revision-plans)           | pending  | 1     | 0/1       |
 | Phase 11 (make-consolidated-project-retirement-semantic)                    | pending  | 1     | 0/1       |
 
-**Total:** 7/11 planned tasks completed
+**Total:** 8/11 planned tasks completed
 
 ---
 
@@ -128,15 +128,15 @@ oat_generated: false
 
 ## Phase 08: make autonomous project recap capability aware (p08)
 
-**Status:** pending · **Group:** group 3 (sequential pair, second) · **Tasks:** p08-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 3 (sequential pair, second) · **Tasks:** p08-t01 (+ one review-fix commit)
+**Outcome:** the autonomous project recap is capability-aware and non-blocking: a new `probe-recap-seams.mjs` in `oat-explainer-kit` classifies the five adapter seams (author, critic, browser, visual, planner) check by check against `run.mjs`'s resolvers; in autonomy the closeout runs the recap gate exactly once and attempts generation only when intent resolves to `generate` and every required seam resolves, otherwise records a capability `skip` naming the seam (an `invalid` seam stays a failure; a forged or wrong-mode probe can never produce a skip); interactive behavior unchanged; the Lite non-lite recap carve-out preserved verbatim and pinned; five skills bumped (complete 1.7.8, implement 2.3.6, summary 1.5.3, autonomous 1.0.13, explainer-kit 1.0.7) with their pins; docs and the autonomy inventory updated.
+**Verification:** test:skills 856, forced check/type-check/test `Cached: 0` (6007), check:skill-bumps 10 branch-wide; review round 1 (1C/2I/1M/3m) plus round 2 (0C/0I/0M/0m).
+**Deviations:** the probe treats the fact critic as a required seam per the plan although `run.mjs#resolveLifecycleCritic` returns null when it is absent (the one place the probe is stricter than the adapter — ruled by the reviewer); the pre-commit hook re-padded `.agents/docs/autonomy-contract.md` tables (semantic delta: three changes); the `oat-project-complete` bare pin is at `review-skill-contracts.test.ts:1211`, not the refresh entry's `:1089`.
 
 ### Task p08-t01: Execute external plan — Make the autonomous project recap capability-aware and non-blocking
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `049783897`; review fix `d7f8a6ff8`
 
 ## Phase 09: defer activeproject clearing on archive completions (p09)
 
@@ -273,6 +273,13 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - `w5-p07-fix-001` outcome: one commit `9c2f96ca5c7acaf387961b98b386f143590f0cee` (seven files incl. a new provenance-headed fixture and an `.oxfmtrc.jsonc` ignore for `__fixtures__/**`): execution programs are held to their own ledger contract (indexes, five-column status ledger with producer vocabulary tolerating `merged`/`done`, wave table), mode selected from `created` for programs since the producer template emits no plan date (Codex catch: the rules were otherwise unreachable), both real programs pass as legacy and when re-dated; the live-file control replaced by the snapshot fixture (proven by simulating the wave-close repair: old test exit 1, new test exit 0); index branch tested; docs mirror and the stray-fence scope note. One Codex round (1I/2M fixed; the `oat-wave-program` `merged` vs `done` self-contradiction tolerated and logged as a follow-up). Focused 287, CLI 6007. Record `dispatch/w5-p07-fix-001.json`.
 - `w5-p07-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w5-p07-review-002.json`.
 - `w5-p07-review-002` outcome: PASS (fan-in may proceed), 0C/0I/0M/2m. The round-1 P1 bypass probe now rejected on all three ledger rules; both real programs pass as written and re-dated; the fixture byte-compared against `git show 6db0457c0:<source>` (identical; the only surviving live-plan reference is the fixture's `Source:` header); index branch covered; rulings: ledger contract instead of SHA rules is the correct reading (the producer template emits none of the SHA fields), the `created` fallback is necessary and gated on programs, the `merged`/`done` tolerance correct; nine adversarial program probes and four neutralizations (incl. stripping the fixture's provenance header); corpus sweep 44 dated / 0 rejected; `oat-repo-improve` 2.1.3, no pin moved; gates forced `Cached: 0` (287 / 6007). Minors: the program `created` fallback fails OPEN for an unparseable or missing date (follow-up); the `oat-wave-program` vocabulary contradiction had no tracked item (both now in the wave's follow-up list).
+- `w5-p08-impl-001` — p08 dispatched alone at the group-3 second base `8b2784643fcf56e75ae09926281e312b668867ed` (no sync commit needed); target opus, task_class hard-reasoning. Record `dispatch/w5-p08-impl-001.json`.
+- `w5-p08-impl-001` outcome: DONE, one commit `049783897a03bfed27a798dfa39478b821f24f0a` (20 files, +1587/−194; five bumps by version literal). Two Codex rounds (R1 0C/3I/3M: `seamProbe` scoped to autonomous resolution, the unconditional recap attempt removed, the handoff pinned, parity with `run.mjs`, discriminated-union probe validation, explicit invocation anchors; R2 0C/2I/2M: forgery resistance (wrong-mode/unknown IDs/inconsistent partitions), interactive branch made explicit, a REAL parity bug — `resolveLifecycleCritic` raises a type error not a conflict for `{critic, criticModulePath}` — fixed by five per-resolver classifiers, docs and the `IMPLEMENT-19` gate row corrected). Four neutralization groups red (10/11/1/1). Judgment call flagged: the critic is required per the plan although the adapter returns null without one. Autonomy inventory remapped three times; the vendored `autonomy-contract.md` copies are symlinks.
+- `w5-p08-review-001` — reviewer, target opus, eight rulings incl. the critic-seam judgment, verbatim snippet execution, parity probes, forgery probes. Record `dispatch/w5-p08-review-001.json`.
+- `w5-p08-review-001` outcome: CHANGES REQUESTED, 1C/2I/1M/3m. C1: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs:435` still pinned `oat-explainer-kit` at `1\.0\.6` (regex-escaped), so `pnpm test:smoke` and root `pnpm test` were red — the lane's forced `turbo run test` never reaches the smoke tier and its literal sweep covered only the two named test files. I1: the invocation gate was mode-unqualified (interactive seam-less completion would regress from `failed` to blocked by `E_RECAP_OUTCOME`; the ambiguous literal pinned). I2: `assertSeamProbe` never enforced the partition its message promised (2 of 19 forged shapes survived). Rulings: the critic seam is NOT a divergence (`bind-project-sources.mjs:71` binds lifecycle recaps federated; `fact-base.mjs:27-31` throws without a critic) — probe correct as shipped; parity 29/29 with `run.mjs`'s resolvers (probed by exporting them into a mktemp copy); forgery 17/19 rejected, no shape converts an invalid seam into a skip; the five `NG` inventory mappings genuine; the 242-line reformat reduces to the three intended hunks; the Lite carve-out byte-identical and pinned; four neutralization groups red. Fix round `w5-p08-fix-001`.
+- `w5-p08-fix-001` outcome: one commit `d7f8a6ff8f1d66d6dbc8fadf429179f16546647e` (10 files): the smoke pin moved to `1\.0\.7` (`test:smoke` 160/160, root `pnpm test` exit 0 — both had been red); a repo-wide fixed-string sweep of all five old versions in plain and escaped forms (the escaped regex was the only hit); both invocation gates qualified "In autonomy" with the interactive rule stated separately and a never-read-as-one clause (red-then-green on the pinned literal; the pre-existing `runOatExplainer exactly once` literal kept contiguous); `assertSeamProbe` enforces a disjoint, duplicate-free, complete five-seam partition (the review's shapes 12 and 14 now rejected); Step 3.6 states the probe-driven skip supersedes the resolved intent; the critic-seam framing recorded as a durable code comment; interactive guidance no longer offers `capability_probe`. One Codex round (0C/0I/0M/2m fixed). Record `dispatch/w5-p08-fix-001.json`. Wave rule adopted: sweep old version literals repo-wide in plain and escaped forms and run `pnpm test:smoke` whenever a skill is bumped.
+- `w5-p08-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w5-p08-review-002.json`.
+- `w5-p08-review-002` outcome: PASS (fan-in may proceed), 0C/0I/0M/0m. `pnpm test:smoke` 160/160 and root `pnpm test` exit 0 re-run by the reviewer (both had been red); escaped-form sweep over 2,317 tracked files clean on every code/test/skill/asset surface; interactive seam-less end state executed (guard accepts `generate` + `failed`, never `E_RECAP_OUTCOME`); all 19 forged shapes rejected; an exhaustive 3^5 = 243 real-producer host-combination probe (skip 31 / generate 1 / fail-closed 211 / spurious 0) with zero legitimate probes rejected; the two new `NG` inventory mappings ruled correct (exact table delta computed); the narrowed critic comment accurate; two neutralizations red; Lite carve-out and `PROJECT_RECAP_REACHABLE` byte-identical to base; `check:skill-bumps` 10; gates forced `Cached: 0`.
 
 #### Phase Outcomes
 
@@ -305,13 +312,15 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - `wave-5/p07` rebased onto the integration tip and merged with `git merge --no-ff` as `a59e0d24f`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `e4dfa0e27`→`b09dbd49c`, `9c2f96ca5`→`1f097db93`. The lane's and the orchestrator's scope notes on `BL-260906-repair-the-stray-fence-in-oat` merged into one.
 - Lockstep retained at 0.2.63; integration gates (sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - p08 readiness on the merged tip: its plan is READY; the base carries p07's `oat-repo-improve` bump and no change to the five skills p08 bumps; p07's worktree and branch removed.
+  | p08 | `.worktrees/wave-5/p08` | DONE (`049783897` + fix `d7f8a6ff8`; forced CLI suite 6007, test:skills 856, check:skill-bumps 10) | passed (round 1 1C/2I/1M/3m → round 2 0C/0I/0M/0m) | 1 |
 
 #### Parallel Groups
 
-- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08, p09 → p10, p11 (sequential, next).
+- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08 (merged); p09 → p10, p11 (sequential, next).
 
 #### Outstanding Items
 
+- p09 → p10 (group 4), p11 (group 5); then closeout.
 - p08 (group 3, second), then p09 → p10 (group 4), p11 (group 5); then closeout.
 - p07 → p08 (group 3), p09 → p10 (group 4), p11 (group 5), each alone after the previous merge; then closeout.
 - Group 2 (p04 + p05 + p06) after the group-1 fan-in; then p07 → p08, p09 → p10, p11; closeout.
@@ -347,7 +356,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p05   | forced CLI suite + 202 focused + 59 snapshots | all    | 0      | -        |
 | p06   | 5924 (forced CLI suite) + 139 focused         | all    | 0      | -        |
 | p07   | 6006 (forced CLI suite) + 286 focused         | all    | 0      | -        |
-| p08   | -                                             | -      | -      | -        |
+| p08   | 6007 (forced CLI suite) + test:skills 856     | all    | 0      | -        |
 | p09   | -                                             | -      | -      | -        |
 | p10   | -                                             | -      | -      | -        |
 | p11   | -                                             | -      | -      | -        |
