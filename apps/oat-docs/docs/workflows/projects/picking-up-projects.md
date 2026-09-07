@@ -36,6 +36,13 @@ its parent is reported and skipped rather than adopted.
 After adoption, set or open the project through the normal lifecycle command
 you are using. Arrival-aware project skills pull before reading its artifacts.
 
+An adopted quick-workflow project whose `plan.md` is not implementation-ready
+resumes through `oat-project-quick-start`, which continues it in place without
+re-scaffolding, rather than through `oat-project-implement`. `oat-project-plan`,
+`oat-project-progress`, and `oat-project-next` all route by the single **quick
+plan readiness** predicate that `oat-project-quick-start` defines; readiness is
+never inferred from the presence of tasks alone.
+
 ## What travels
 
 - The project ref carries the complete active artifact tree and its history.

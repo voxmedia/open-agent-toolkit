@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.1.0
+version: 1.1.1
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -165,6 +165,10 @@ Apply the following tiers in order:
 
 - `oat_status == "complete"` AND `oat_ready_for` is not null
 - → Use `oat_ready_for` as the target skill
+- Exception: in quick mode at the `plan` phase, the Quick Mode table's
+  `Quick Plan Readiness` column decides the target. A tier-1 quick plan that
+  fails readiness returns to the quick workflow, and `oat_ready_for` is not
+  followed on its own.
 
 **Tier 1b (Complete without target):**
 
@@ -238,15 +242,33 @@ Otherwise, look up the target skill from the routing table for the current `oat_
 
 **Quick Mode:**
 
-| Current Phase | Phase Status | Boundary Tier | Target Skill               |
-| ------------- | ------------ | ------------- | -------------------------- |
-| discovery     | in_progress  | tier 3        | `oat-project-discover`     |
-| discovery     | in_progress  | tier 2        | `oat-project-plan`         |
-| discovery     | complete     | tier 1        | `oat-project-plan`         |
-| plan          | in_progress  | tier 3        | `oat-project-quick-start`  |
-| plan          | in_progress  | tier 2        | `oat-project-implement` \* |
-| plan          | complete     | tier 1        | `oat-project-implement` \* |
-| implement     | in_progress  | —             | `oat-project-implement` \* |
+| Current Phase | Phase Status | Boundary Tier | Quick Plan Readiness | Target Skill               |
+| ------------- | ------------ | ------------- | -------------------- | -------------------------- |
+| discovery     | in_progress  | tier 3        | —                    | `oat-project-discover`     |
+| discovery     | in_progress  | tier 2        | —                    | `oat-project-plan`         |
+| discovery     | complete     | tier 1        | —                    | `oat-project-plan`         |
+| plan          | in_progress  | tier 3        | not ready            | `oat-project-quick-start`  |
+| plan          | in_progress  | tier 2        | not ready            | `oat-project-quick-start`  |
+| plan          | in_progress  | tier 1        | not ready            | `oat-project-quick-start`  |
+| plan          | in_progress  | tier 1        | ready                | `oat-project-implement` \* |
+| plan          | complete     | tier 1        | not ready            | `oat-project-quick-start`  |
+| plan          | complete     | tier 1        | ready                | `oat-project-implement` \* |
+| implement     | in_progress  | —             | —                    | `oat-project-implement` \* |
+
+The `Quick Plan Readiness` column applies to the `plan` phase only, and only
+after the boundary tier has already been classified by Step 2, so tier semantics
+are unchanged: it discriminates the two `plan` outcomes that would otherwise
+share one tier. A tier-2 or tier-1 quick plan is no longer assumed ready, and a
+tier-1 plan whose readiness fails is returned to the quick workflow rather than
+advanced. Both recorded phase statuses carry a tier-1 pair of rows, so a plan
+artifact that has already advanced past the `state.md` phase status still
+matches a route instead of falling through the table. Readiness is the named **quick plan readiness** predicate: load
+`oat-project-quick-start/SKILL.md` and apply it as written to
+`{PROJECT_PATH}/plan.md` instead of restating its conditions here, and never
+infer readiness from the presence of substantive tasks. A `not ready` result
+resumes the quick workflow in place: load `oat-project-quick-start/SKILL.md` and
+follow its Step 0.5 resume branch. Spec-driven planning is not the recovery path
+for a quick project.
 
 **Import Mode:**
 
