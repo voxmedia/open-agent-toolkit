@@ -1,0 +1,335 @@
+---
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_blockers: []
+oat_last_updated: 2026-09-07
+oat_phase: plan
+oat_phase_status: complete
+oat_plan_hill_phases: ['p05']
+oat_auto_review_at_hill_checkpoints: true
+oat_plan_parallel_groups: [['p01', 'p02', 'p03'], ['p04', 'p05']]
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
+oat_generated: false
+oat_template: false
+---
+
+# Implementation Plan: wave-6-execution (Wave 6 external-plan wrapper)
+
+> Execute this plan using `oat-project-implement` — groups per
+> `oat_plan_parallel_groups`. Concurrency ceiling: 3 worktrees (operator
+> decision); group 1 is p01 + p02 + p03, group 2 is p04 + p05 after the group-1
+> fan-in (p04 after p02 releases `validation/skills.test.ts`; p05 after p01
+> releases `info-tool.ts`).
+
+**Goal:** Execute the 5 Wave 6 external plans ("truthfulness residue": populate
+provider reachability evidence across pack and lifecycle surfaces; validate
+review-ledger paths and archive only terminal reviews before the final PR;
+preserve `__proto__`-named config keys through JSON parsing; honor
+`metadata.version` as the canonical skill version; diagnose canonical skills
+missing from a provider view at resolution time) through the wave→project
+wrapper pattern (DR-260713-wave-project-wrapper-over), per the 2026-08-31
+execution program
+(`.oat/repo/reference/external-plans/2026-08-31-execution-program.md`, Wave 6).
+
+**Architecture:** Thin wrapper. Each task's **entire and only implementation contract** is its external plan under `.oat/repo/reference/external-plans/`, including the dated **Refresh applied 2026-09-07 (wave-6 boundary)** entry that the program's pre-dispatch refresh clause placed in all five plans' `## Revalidation Before Execution` sections before dispatch (commit `ceeac1149`). Tasks below carry wrapper-owned metadata exclusively: the source-plan path, ordering/dependencies, wrapper-level verification gates, the commit convention, and review mapping. Nothing in this file restates, narrows, or overrides a source plan; the Parallelism observations and the Drift Refresh Record are evidence, not contract text.
+
+**Commit Convention:** `{type}(p{NN}-t{NN}): {description}` — the external plan
+governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
+
+**Wrapper execution contract (applies to every task):**
+
+1. **Drift check first.** Run the source plan's `## Drift check` (including any files its 2026-09-07 refresh entry adds) against current HEAD. A material mismatch (per that plan's own definition) is a STOP. The wave-boundary drift refresh (see record below) does not replace the in-worktree re-check — the integration tip advances as groups merge.
+2. **Execute the source plan's `## Implementation steps`** in order with each step's embedded Verify gate; honor its `## STOP conditions` verbatim. A load-bearing current-state claim the lane cannot reproduce on the built CLI is a STOP candidate: reproduce first, report, never improvise (the wave-5 p09 rule).
+3. **Confirm the source plan's `## Done criteria`**, then run the lane-mode DoD gates: the plan's focused tests, then `pnpm check`, `pnpm type-check`, `pnpm run check:skill-bumps`, `pnpm lint`, `pnpm format`, and `pnpm oat:validate-skills` (uniform across lanes), each with captured exit codes; a lane that bumps a skill also sweeps the old version literal repo-wide (plain and regex-escaped forms, `packages/cli/src` and `tools/smoke`) and runs `pnpm test:smoke`. Lanes never edit the lockstep release files (five public package manifests, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`) and never run `pnpm release:check-versions` or `pnpm release:validate`; the wave fan-in owns the single lockstep bump (≥ 0.2.64, above freshly fetched `origin/main`) and runs the full eight-gate sequence at every fan-in boundary — after the group-1 merges and after the group-2 merges — always before that fan-in's bookkeeping edit.
+4. **STOP → BLOCKED at phase level (bundle exception).** A source-plan STOP parks the phase (record in `state.md` `oat_blockers` + `implementation.md`); sibling phases continue. **Bundle phases:** a STOP parks only the stopped task; the implementer records the blocker and continues remaining independent tasks; the phase is terminal when every task is completed or parked (DR-260713-bundle-stop-semantics-park).
+5. **Group-dependency rule:** a group starts when every phase of the previous group is terminal — merged, or parked with completed commits merged. A park never blocks the next group.
+6. **Merge serialization:** within a group, merge phase branches one at a time in plan order, rebasing each on the updated tip first. Deliberately sequenced shared files (recorded from the drift refresh; the program's two-group composition exists so each seam is touched by at most one lane at a time): `packages/cli/src/validation/skills.test.ts` (p02 inserts and re-pins inside the `:4438` case; p04 inserts its own cases after p02 lands — both re-anchor on the merged tip); `packages/cli/src/commands/tools/info/info-tool.ts`, `tools/info/index.ts`, and `apps/oat-docs/docs/tool-packs.md` (p01 `:76`/`:82`/`:282-308` then p05's provider-view block and `:505`); `config/json.ts` (p03) feeds every `commands/tools` suite p01 runs — the group-1 fan-in re-runs those suites on the integrated tree; `getSkillVersion` (p04) is consumed by p05's canonical-vs-view comparison — the group-2 fan-in re-runs the integrated `scan-tools` / `info-tool` / `doctor` suites. One `version:` bump per skill per PR (no two W6 lanes bump the same skill: p02 bumps `oat-project-pr-final`, p04 bumps `create-agnostic-skill` and `create-oat-skill`). Each lane that edits a canonical skill runs `pnpm run cli -- sync --scope project` after its edits and commits any manifest restamp; `--scope all` is operator-only. The fan-in bump commit also runs the project-scope sync so `.oat/sync/manifest.json` restamps with the lockstep.
+7. **Backlog archival is NOT part of any task** — once, serialized on the integration branch after all merges (DR-260713-shared-tracked-surfaces).
+8. **Phase review checklist = the source plan's `## Review focus`.**
+9. **Artifact hygiene:** every agent runs `pnpm exec oxfmt <file>` (or `pnpm format:fix`) on markdown it writes and reports observations for `orchestration-log.md` (workers report; the root appends). Never format `state.md`.
+10. **Commit verification after ambiguous results:** inspect `git log`/HEAD before retrying; record SHAs pasted from `git rev-parse` in `implementation.md`.
+11. **Repo-local CLI:** the global `oat` trails the branch; every `oat` invocation that reads or writes repository state (`sync`, `docs generate-index`, validators, `tools info`) uses `pnpm run cli -- <command>` or `node packages/cli/dist/index.js` after `pnpm build`.
+12. **Verification evidence:** `pnpm check` and `pnpm type-check` replay Turbo caches; evidence runs use `HOME=$(mktemp -d) pnpm exec turbo run <gate> --force` (`Cached: 0`). Disposition-verification rounds execute prose shell snippets verbatim in a fresh shell and walk every failure sequence of a contract; reviewers of command-surface lanes probe the built CLI in a scratch project; `oat gate review` writes its own Reviews row, which the receive step moves forward in place. Probe edits are restored from a `mktemp -d` backup copy, never with `git checkout --` on uncommitted work. Pins are located by grepping the version literal, never the skill name. A test that simulates filesystem case-insensitivity runs under a mocked directory probe (or a case-sensitive image), never only on APFS.
+13. **Root final-review brief:** enumerates every sibling-plan dependency row (p02→p04, p01→p05) and every plan premise about another package, and probes each; the configured exit gate then runs in the foreground with no other agents active (two wave-5 launches were killed for memory).
+
+## Parallelism
+
+Group 1 (p01 reachability evidence, p02 review-ledger paths, p03 `__proto__`
+config keys) runs three write-disjoint lanes in separate worktrees; group 2
+(p04 `metadata.version`, p05 provider-view diagnostics) runs two write-disjoint
+lanes after the group-1 fan-in, because p04 inserts into
+`validation/skills.test.ts` after p02's inserts and p05 extends `info-tool.ts`
+after p01's edits. The program's composition is confirmed by the recon (every
+pairwise write intersection inside a group is empty).
+
+> The recon observations below are **non-authoritative grouping evidence only** —
+> they justify group composition but never constrain a source plan: each source
+> plan's own live location/condition checks govern at execution time.
+
+- Group 1 write surfaces (file-level disjoint, all three pairs empty): p01 —
+  `packages/cli/src/commands/tools/**` (`pack-evidence.ts`, `auto-sync.ts`,
+  `pack-lifecycle-outcome.ts`, `install/`, `list/`, `info/`, `format-pack-inventory.ts`,
+  `update-tools.ts`, `remove-tools.ts`), `status/index.ts`, `doctor/index.ts`,
+  `sync/apply.ts`, `apps/oat-docs/docs/tool-packs.md:282-308`, plus tests the
+  drift command omits (`status/index.test.ts`, `doctor/index.test.ts`,
+  `commands/init/tools/**` tests); p02 — `.agents/skills/oat-project-pr-final/SKILL.md`
+  (1.6.2 → 1.6.3), `packages/cli/src/validation/skills.test.ts` (`:2927`, `:4445`,
+  the Step-2 block `:4556-4590`), `review-skill-contracts.test.ts` (`:1486`,
+  `:2098`), `post-implement-sequence-contracts.test.ts` (`:970-982`),
+  `named-skill-load-contract.test.ts` (9 `file:` rows + 10 `skills:` rows for
+  pr-final; the plan's drift command omits it); p03 — `packages/cli/src/config/json.ts`,
+  new `json.test.ts`, the Step-4 consumer sweep including the W5-added
+  `commands/config/index.ts` consumer (refresh amendment), one decision record
+  (+ `decisions/index.md`).
+- Group 2 write surfaces (the pair is empty): p04 — `packages/cli/src/commands/shared/frontmatter.ts`
+  (+ test), `validation/skills.ts`, `validation/skills.test.ts` (new cases;
+  no template-skill pins exist), `config/resolve.ts`, `copy-helpers.ts`,
+  `scan-tools.ts`, `doctor/index.ts`, `validate-skill-version-bumps.ts`,
+  `validate-oat-skills.ts`, `.agents/skills/create-{agnostic,oat}-skill/SKILL.md`
+  (1.4.1 → 1.4.2, 1.5.1 → 1.5.2), `apps/oat-docs/docs/contributing/skills.md`
+  (sole W6 owner); p05 — `packages/cli/src/drift/**`, `commands/tools/info/**`
+  (after p01), `list-tools.ts`, `tools/shared/types.ts`, `scan-tools.ts` (read;
+  p04 rewrites `getSkillVersion` in the same group — line-disjoint),
+  `manifest.types.ts`, `scope-option.ts`, `status/index.ts` (after p01),
+  `apps/oat-docs/docs/{tool-packs.md:505,manifest-and-drift.md}`, tests the drift
+  command omits (`status/index.test.ts`, `tool-pack-lifecycle.integration.test.ts`).
+- **Observation (descriptive):** `scan-tools.ts` is written by p04 (version read
+  `:115-118`) and read by p05 in the same group — line-disjoint, but the fan-in
+  re-runs the integrated suites before the bookkeeping edit.
+- **Smoke tier:** no `tools/smoke` pin names a skill any W6 lane bumps
+  (`wrapper-compatibility.test.mjs` pins explainer-kit only).
+
+## Dispatch Profile
+
+_No per-phase overrides. Runtime selection applies, capped by the project's named
+dispatch policy in `state.md` (managed / `high`); provider-specific model/effort
+selection is owned by runtime resolution, not this plan. Cross-model review
+requirements are embedded in every lane: p01 and p05 change `oat tools` output
+surfaces (reviewed with live CLI probes); p02 changes a lifecycle skill's
+pre-PR guard (verbatim snippet execution; weaker-anywhere on the archive
+step); p03 changes the config parse chokepoint (every consumer suite plus a
+`__proto__` scratch config through the real commands); p04 changes skill
+version resolution and the bump gate (weaker-anywhere on the validators)._
+
+## Refreshes Applied to the Source Plans (2026-09-07)
+
+The program's Wave 6 cross-wave prerequisite instructs the wrapper, before
+dispatch, to re-read every W6 plan's landing-event table against the
+then-current state and apply the listed refreshes, and each plan's
+`## Revalidation Before Execution` section requires a refresh when main
+advances materially. Those refreshes were applied to the plan files themselves
+(`DR-260907-pre-dispatch-refreshes-live`), as a dated
+**Refresh applied 2026-09-07 (wave-6 boundary)** entry at the top of each
+plan's Revalidation section (commit `ceeac1149`): p01 (anchors; live premises
+reproduced; seam ownership with p05), p02 (pr-final is 1.6.2; relocated and
+revalued pins; the `named-skill-load-contract.test.ts` rows; an idempotency
+case for the timestamp-suffix rule), p03 (the caller inventory is ten, not
+eight — the W5 `oat config unset` consumer joins the drift check, the sweep,
+and In-scope; a zod null-prototype case), p04 (no template-skill pins exist;
+two constraining decisions from 2026-09-06; the `oat-*` filter in the structural
+validator means the alias-only warning must also come from the changed-skill
+bump validator; 82 skills), p05 (anchors; live `oat tools info` shape; seam
+ownership after p01 and beside p04).
+
+## Drift Refresh Record (2026-09-07, vs `1bef28fa1fb95e1473872ff9a511a6b42fa37889`)
+
+**1 PASS / 4 MINOR-DRIFT / 0 STOP** (three false premises corrected in the plans' own refresh entries: p03's caller count, p04's non-existent pins and "no constraining decisions"; p02's version premise re-pinned). This record is non-authoritative recon evidence; the wave base is `origin/main` after the wave-5 close PR #276; PR #190 is still an open draft at `63161897d`, so every "#190 merged first" row is un-triggered. The lockstep on the base is 0.2.63 and `.oat/sync/manifest.json` is at 0.2.63 (`sync --scope project --dry-run` clean), so the group-1 fan-in bump is 0.2.63 → 0.2.64 with the manifest restamped in the same commit.
+
+- **p01 — provider reachability evidence:** MINOR-DRIFT. 37 files changed nearby (PR #248, W4, W5) but every seam file is byte-unchanged; shifted anchors listed in the refresh entry; premises reproduced live (`packEvidence.items[0].providers === []`; list/info omit `userManagedRoleMaterialization` while status/doctor pass it; the other six diagnostic codes have zero emitters).
+- **p02 — review-ledger paths before the final PR:** MINOR-DRIFT. `skills.test.ts` +2178 and `review-skill-contracts.test.ts` +1598 since authoring; pr-final is 1.6.2; all pins relocated (refresh entry); every W2/W3/W5 dependency row is satisfied.
+- **p03 — `__proto__` config keys:** MINOR-DRIFT with a corrected premise. Mechanism reproduced live on `jsonc-parser` 3.2.1; ten production callers (the plan said eight), including the W5 `commands/config/index.ts:2856` consumer that already carries a `__proto__` disclaimer — added to the contract by the refresh; the gate module (`gate/index.ts:980`) was rewritten by W5.
+- **p04 — `metadata.version`:** MINOR-DRIFT with two corrected premises. `frontmatter.ts` +144 (W4); no version pins exist for the two template skills; `DR-260906-standing-claims-in-skills-name` and `DR-260906-one-version-bump-per-changed` constrain the work; `validateOatSkills` covers 64 `oat-*` of 82 skills, so the alias warning must also be emitted by the changed-skill bump validator.
+- **p05 — provider-view diagnostics:** PASS. Eight files changed, none of its seams; `DriftReport` and the manifest entry schema unchanged; `oat tools info` has no provider or drift section today.
+
+## Phase 01: populate-provider-reachability-evidence (group 1)
+
+**Milestone:** the source plan's `## Done criteria` fully satisfied.
+
+### Task p01-t01: Execute external plan — Populate provider reachability evidence across pack and lifecycle surfaces
+
+**Source plan (the contract):**
+`.oat/repo/reference/external-plans/2026-09-03-populate-provider-reachability-evidence.md`
+
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p01`).
+
+**Ordering:** group 1; runs at the wave base in parallel with p02 and p03 and merges first within the group. Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p01-t01` prefix.
+
+**Step 1: Drift check** — per the source plan's `## Drift check`.
+
+**Step 2: Execute** the source plan in full.
+
+**Step 3: Verify (wrapper gate)**
+
+Run: the source plan's `## Done criteria` checks, then the lane-mode DoD gates from the wrapper execution contract
+Expected: all green.
+
+**Step 4: Cross-model review** — before committing, obtain an independent cross-model review of the uncommitted diff via the runtime-configured reviewer (at most two rounds; format before dispatching); disposition every finding in the phase report.
+
+**Step 5: Commit**
+
+```bash
+git commit -m "fix(p01-t01): populate provider reachability evidence across pack and lifecycle surfaces"
+```
+
+---
+
+## Phase 02: validate-review-ledger-paths-before-final-pr (group 1)
+
+**Milestone:** the source plan's `## Done criteria` fully satisfied.
+
+### Task p02-t01: Execute external plan — Validate review-ledger paths and archive only terminal reviews before the final PR
+
+**Source plan (the contract):**
+`.oat/repo/reference/external-plans/2026-09-03-validate-review-ledger-paths-before-final-pr.md`
+
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p02`).
+
+**Ordering:** group 1; runs at the wave base in parallel with p01 and p03 and merges second within the group; p04 (group 2) inserts into `validation/skills.test.ts` after this lane lands. Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p02-t01` prefix.
+
+**Step 1: Drift check** — per the source plan's `## Drift check`.
+
+**Step 2: Execute** the source plan in full.
+
+**Step 3: Verify (wrapper gate)**
+
+Run: the source plan's `## Done criteria` checks, then the lane-mode DoD gates from the wrapper execution contract
+Expected: all green.
+
+**Step 4: Cross-model review** — before committing, obtain an independent cross-model review of the uncommitted diff via the runtime-configured reviewer (at most two rounds; format before dispatching); disposition every finding in the phase report.
+
+**Step 5: Commit**
+
+```bash
+git commit -m "fix(p02-t01): validate review-ledger paths and archive only terminal reviews before the final PR"
+```
+
+---
+
+## Phase 03: preserve-proto-named-config-keys (group 1)
+
+**Milestone:** the source plan's `## Done criteria` fully satisfied.
+
+### Task p03-t01: Execute external plan — Preserve `__proto__`-named config keys through JSON parsing
+
+**Source plan (the contract):**
+`.oat/repo/reference/external-plans/2026-09-03-preserve-proto-named-config-keys.md`
+
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p03`; it amends the drift check, the consumer sweep, and In-scope with the W5 `commands/config/index.ts` consumer).
+
+**Ordering:** group 1; runs at the wave base in parallel with p01 and p02 and merges third within the group (its `config/json.ts` rewrite feeds the `commands/tools` suites p01 runs, so the fan-in re-runs them on the integrated tree). Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p03-t01` prefix.
+
+**Step 1: Drift check** — per the source plan's `## Drift check`.
+
+**Step 2: Execute** the source plan in full.
+
+**Step 3: Verify (wrapper gate)**
+
+Run: the source plan's `## Done criteria` checks, then the lane-mode DoD gates from the wrapper execution contract
+Expected: all green.
+
+**Step 4: Cross-model review** — before committing, obtain an independent cross-model review of the uncommitted diff via the runtime-configured reviewer (at most two rounds; format before dispatching); disposition every finding in the phase report.
+
+**Step 5: Commit**
+
+```bash
+git commit -m "fix(p03-t01): preserve __proto__-named config keys through JSON parsing"
+```
+
+---
+
+## Phase 04: honor-metadata-version-for-skills (group 2)
+
+**Milestone:** the source plan's `## Done criteria` fully satisfied.
+
+### Task p04-t01: Execute external plan — Honor metadata.version as the canonical skill version
+
+**Source plan (the contract):**
+`.oat/repo/reference/external-plans/2026-09-04-honor-metadata-version-for-skills.md`
+
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p04`; it corrects the pin premise, names the two constraining decisions, and amends the alias-warning contract for non-`oat-*` skills).
+
+**Ordering:** group 2; starts after the group-1 fan-in (p02 has released `validation/skills.test.ts`) in parallel with p05 and merges first within the group. Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p04-t01` prefix.
+
+**Step 1: Drift check** — per the source plan's `## Drift check`.
+
+**Step 2: Execute** the source plan in full.
+
+**Step 3: Verify (wrapper gate)**
+
+Run: the source plan's `## Done criteria` checks, then the lane-mode DoD gates from the wrapper execution contract
+Expected: all green.
+
+**Step 4: Cross-model review** — before committing, obtain an independent cross-model review of the uncommitted diff via the runtime-configured reviewer (at most two rounds; format before dispatching); disposition every finding in the phase report.
+
+**Step 5: Commit**
+
+```bash
+git commit -m "fix(p04-t01): honor metadata.version as the canonical skill version"
+```
+
+---
+
+## Phase 05: diagnose-canonical-skills-missing-from-provider-views (group 2)
+
+**Milestone:** the source plan's `## Done criteria` fully satisfied.
+
+### Task p05-t01: Execute external plan — Diagnose canonical skills missing from a provider view at resolution time
+
+**Source plan (the contract):**
+`.oat/repo/reference/external-plans/2026-09-04-diagnose-canonical-skills-missing-from-provider-views.md`
+
+**Refresh applied 2026-09-07:** see the source plan's `## Revalidation Before Execution` entry (`p05`).
+
+**Ordering:** group 2; starts after the group-1 fan-in (p01 has released `info-tool.ts`) in parallel with p04 and merges second within the group (re-anchor on the merged tip; p04's `getSkillVersion` rewrite is consumed through `scan-tools.ts`). Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p05-t01` prefix.
+
+**Step 1: Drift check** — per the source plan's `## Drift check`.
+
+**Step 2: Execute** the source plan in full.
+
+**Step 3: Verify (wrapper gate)**
+
+Run: the source plan's `## Done criteria` checks, then the lane-mode DoD gates from the wrapper execution contract
+Expected: all green.
+
+**Step 4: Cross-model review** — before committing, obtain an independent cross-model review of the uncommitted diff via the runtime-configured reviewer (at most two rounds; format before dispatching); disposition every finding in the phase report.
+
+**Step 5: Commit**
+
+```bash
+git commit -m "fix(p05-t01): diagnose canonical skills missing from a provider view at resolution time"
+```
+
+---
+
+## Reviews
+
+| Scope | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
+| ----- | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
+| plan  | artifact | pending | -    | -        | -             | -          | -           |
+| p01   | code     | pending | -    | -        | -             | -          | -           |
+| p02   | code     | pending | -    | -        | -             | -          | -           |
+| p03   | code     | pending | -    | -        | -             | -          | -           |
+| p04   | code     | pending | -    | -        | -             | -          | -           |
+| p05   | code     | pending | -    | -        | -             | -          | -           |
+| final | code     | pending | -    | -        | -             | -          | -           |
+| spec  | artifact | pending | -    | -        | -             | -          | -           |
+
+> Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
+
+## Implementation Complete
+
+- [ ] 5/5 phases, 5/5 tasks complete
+- [ ] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
+- [ ] **Serialized backlog bookkeeping** (integration branch, after all merges): `oat backlog archive` with real outcome summaries for `BL-260903-populate-provider-reachability`, `BL-260903-pr-final-archives-reviews`, `BL-260903-preserve-proto-named-config`, `BL-260904-honor-metadata-version`, `BL-260904-diagnose-canonical-skills`, one commit
+- [ ] Orchestration-log end-of-run synthesis written; roll-up into `summary.md` before any archive step — `summary.md` is produced by the post-implement sequence after the exit gate (archive tail deferred to program close)
+- [ ] Full DoD gates green on the integration branch (fan-in lockstep bump above freshly fetched `origin/main`)
+
+## References
+
+- Source plans: the 5 `.oat/repo/reference/external-plans/*.md` files named above
+- Program: `.oat/repo/reference/external-plans/2026-08-31-execution-program.md`
+- Program index: `.oat/repo/reference/external-plans/2026-09-03-backlog-review-wave-5-plan-index.md`
+- Pattern: `DR-260713-wave-project-wrapper-over`, `DR-260713-bundle-stop-semantics-park`, `DR-260713-shared-tracked-surfaces` — program-level decision slugs from the 2026-08 wave program carried by `oat-wave-execute`, not records in this repository's decision index; `DR-260907-pre-dispatch-refreshes-live` (this repository); prior wave summaries in `.oat/projects/shared/wave-{1,2,3,4,5}-execution/summary.md`
