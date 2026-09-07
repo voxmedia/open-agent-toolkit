@@ -68,16 +68,18 @@ Each entry excludes that directory and everything beneath it, matching the
 directory path exactly rather than by prefix — excluding `apps/docs` leaves a
 sibling `apps/docs-legacy` scanned. Entries are repository-relative and
 normalized, so `apps/./docs`, `apps//docs`, and `apps/docs/` all name the same
-tree; absolute paths and paths escaping the repository are ignored, and the
-repository root itself cannot be excluded. A structurally malformed value
+tree; absolute paths and paths escaping the repository are dropped with a
+warning, and the repository root itself cannot be excluded. A structurally malformed value
 (anything other than an array of non-empty strings) is rejected with exit code
 `2` rather than silently ignored.
 
 The list is additive to the derived content root, and it is applied after the
-`.oat/repo` carve-in, so excluding a tree can never leave `.oat/repo/**`
-unscanned. `.oat/repo` is consequently the one path an explicit opt-out cannot
-exclude: listing it is reported as having no effect rather than silently
-honoured.
+`.oat/repo` carve-in, so excluding _another_ tree can never collaterally leave
+`.oat/repo/**` unscanned. `.oat/repo` itself is never excludable — listing it
+is reported as having no effect rather than silently honoured, and its
+`AGENTS.md` keeps its pointer. A deliberate opt-out naming a path _beneath_
+it, such as `.oat/repo/pjm`, is honoured: descendants are reached by ordinary
+traversal, so only the carve-in root is protected from exclusion.
 
 ### When an exclusion does nothing
 
@@ -85,14 +87,18 @@ An entry that is well formed but cannot protect anything — it names a
 directory that does not exist, differs in case from the real path on a
 case-insensitive filesystem such as APFS, is absolute, escapes the repository,
 or is the unexcludable `.oat/repo` — does not fail the command. It is reported
-as a warning on stderr naming the entry, and it is omitted from
-`effectiveExcludedPaths`.
+as a warning naming the entry, and it is never counted as protection.
+
+The warning channel depends on the mode: in human mode warnings are written to
+stderr, and under `--json` they are carried in the `exclusionWarnings` payload
+field instead, because `--json` suppresses stderr warnings entirely.
 
 That distinction matters most on a case-insensitive filesystem: a
 `documentation.root` of `Apps/Docsapp` resolves happily while the scan compares
 the real `apps/docsapp`, so the tree would be scanned after all. Trust
 `effectiveExcludedPaths`, not `excludedPaths`, when deciding whether a tree is
-protected.
+protected — and read `exclusionWarnings` for the reason, since the stderr
+warnings are silent under `--json`.
 
 Because both commands read `.oat/config.json` to resolve exclusions, they
 inherit its validation. Any value that fails a _fail-closed_ field check —
@@ -105,13 +111,22 @@ leaves the content root underived, and no default exclusion applies).
 
 Exclusion only stops a directory from being scanned. Nothing is deleted: a
 `CLAUDE.md` that already exists inside an excluded tree is left exactly as it
-is. When any exclusion is configured, `--json` output carries two additional
-fields. `excludedPaths` lists the configured exclusions — a statement of
-intent, not a per-directory skip log, so `.oat` appearing there does not
-contradict `.oat/repo` still being scanned. `effectiveExcludedPaths` lists the
-subset that names a real, case-exact directory the scan actually pruned; it is
-present whenever `excludedPaths` is, including as an empty array when every
-configured entry turned out to be inert.
+is. When any exclusion is configured, `--json` output carries three additional
+fields.
+
+- `excludedPaths` lists the configured exclusions — a statement of intent, not
+  a per-directory skip log, so `.oat` appearing there does not contradict
+  `.oat/repo` still being scanned.
+- `effectiveExcludedPaths` lists the subset that names a real, case-exact
+  directory the scan actually pruned. It is present whenever `excludedPaths`
+  is, including as an empty array when every configured entry turned out to be
+  inert.
+- `exclusionWarnings` lists one message per configured exclusion that will not
+  protect anything — the `--json` counterpart of the stderr warnings above.
+
+Each field is omitted when it would be empty. `exclusionWarnings` is
+independent of the other two: an absolute or repository-escaping entry is
+dropped before `excludedPaths` is built, so it appears only here.
 
 ## Canonical Model
 
