@@ -1183,6 +1183,24 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ### 2026-09-07
 
+#### Phase 9 implementation complete
+
+`p09-t01` committed as `2fc015fc9186ab8f585f67a4a845f0d9e4c98fea`.
+Promotion now applies the existing unresolved-template guard to Product
+Behavior and Technical Design when present. The regression uses the shipped
+Lite scaffold. Neutralizing the new guard made both cases fail; restoration
+passed the 30-test promotion suite.
+
+`p09-t02` committed as `620656d8f32c3c7752b0b9fa01303ec9bda644c6`.
+The CLI reference now documents adaptive-section carry-forward and the HiLL
+guide attributes the Lite bypass write to `oat-project-implement`. Public
+packages advanced in lockstep to `0.2.62`, strictly above fetched
+`origin/main` at `0.2.59`; docs, release, and version gates passed.
+
+Root independently inspected the two-commit diff, confirmed the worktree is
+clean and version parity holds, and reran the focused promotion suite (30/30).
+Fresh Phase 9 review remains required.
+
 #### Configured implementation exit gate generation 4 created
 
 The configured declaration resolved with canonical configuration fingerprint
@@ -2513,6 +2531,8 @@ Track test execution during implementation.
 | p-rev1 | Focused revision suites, promotion negative controls, full repository gates, post-fix contract tests, project sync dry-run           | Yes after recovery and two review fix loops     | 0 final | Adaptive Lite depth, proportionate proof, executor boundary   |
 | p-rev2 | SIGTERM reproduction, ordered definition-of-done gates, isolated-HOME forced tests, smoke, skills, lint, format, release validation  | Yes after five recovery events                  | 0 final | Wave 4 composition, closeout alignment, local terminal proof  |
 | 7      | Focused contract suites, fail-capability mutations, ordered definition-of-done gates, skills, lint, format, project sync dry-run     | Yes; independent review passed with no findings | 0       | Remote-review fixes and release `0.2.61`                      |
+| 8      | Source-derived project sync, closeout artifact assertions, skill/version gates                                                       | Yes; independent review passed with no findings | 0       | Manifest provenance and refreshed closeout artifacts          |
+| 9      | Shipped-scaffold promotion suite, docs checks/build, release validation, version gates                                               | Yes                                             | 0       | Exit-gate fixes and release `0.2.62`                          |
 
 ## Final Summary (for PR/docs)
 
