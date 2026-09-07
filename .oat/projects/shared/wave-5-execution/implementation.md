@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p12-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -176,45 +176,45 @@ oat_generated: false
 
 ## Phase 12: exit-gate fixes (p12)
 
-**Status:** in_progress · **Group:** exit-gate fix round (three parallel worktrees: A = p12-t01/t02/t03, B = p12-t05/t06/t07, C = p12-t04) · **Tasks:** p12-t01 … p12-t07
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete (pending the fix-round root review and exit gate attempt 2) · **Group:** exit-gate fix round (three parallel worktrees: A = p12-t01/t02/t03, B = p12-t05/t06/t07, C = p12-t04) · **Tasks:** p12-t01 … p12-t07
+**Outcome:** all seven attempt-1 findings resolved with red-then-green controls: the gate-log append window is one critical section under a project-local advisory lock in the log module (never a Git lock; a rewrite that cannot take the lock refuses) and a commit settles only when `HEAD:project-log.md` positively carries the caller's entry (`entry-missing-after-commit` / `commit-unverified` route to the receipt); receipt staleness is decided against `HEAD:project-log.md` with exact identity; `documentation.instructionPointerExcludes` is catalogued (`string[]` through `normalizeExcludedPaths`, absolute / `..` / drive-letter entries refused, family coverage + `KEY_ORDER` removal control, five docs pages); the control-plane reader carries an executable Quick Plan Readiness predicate (34/34 verdict parity with the skill's awk guard; 51 non-quick fixtures byte-identical; `oat project status` public controls); the awk guard measures indentation in columns (tab → next multiple of four) in both copies; quick-start re-resolves `PROJECT_PATH` from `oat project new --json` (status-gated fallback) before Step 1 with a real-CLI create-path control reading `absorbed_*` back; the readiness contract backstops the plan↔source backlink in both directions (fence-aware, all link forms, `none` as a whole value).
+**Verification:** per lane: focused suites, forced check/type-check/test `Cached: 0`, check:skill-bumps, lint, format, validate-skills, test:smoke (B), one or two Codex rounds (A: 2 + 1 + 1; B: 1 per task; C: 1, zero findings); fan-in on the tip: eight gates green (CLI 6036, control-plane 141), `pnpm test:smoke`, `pnpm test:skills`, root `pnpm test` all 0.
+**Deviations:** t02 removed the dead working-tree reader `projectLogContainsIdempotencyKey` from `append.ts` (its only consumer was the replaced line); t03 also changed `oat-config.ts` (the repair message and a lenient reader so `set` can repair a malformed value) and two more docs pages that claimed the key had no `oat config` entry; t04 decides every quick `plan`-phase tier by readiness (tier 3 and 1b too, matching the `oat-project-next` table) and adds an additive `quickPlanReadiness` field to `oat project status --json`; t07 also guards the item→plan half. Deferred: `unset` on a malformed stored value exits 2 (identical pre-existing behavior for `documentation.excludes`) → follow-up at closeout; five legacy `2026-08-19-*` plans carry no source backlink (exempt by legacy mode).
 
 ### Task p12-t01: (review) Make gate project-log finalization concurrency-safe and identity-verified
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `4c7186666`→`d804cd3ff`
 
 ### Task p12-t02: (review) Classify a gate receipt as stale only against the committed log
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `ab17b7322`→`ff4cb2a06`
 
 ### Task p12-t03: (review) Catalog documentation.instructionPointerExcludes for oat config set/unset
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `2753eef49`→`e768163d5`
 
 ### Task p12-t04: (review) Give the control-plane recommender the quick-plan readiness predicate
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `cd3107e38`→`f205f0478`
 
 ### Task p12-t05: (review) Measure fence indentation in columns in the quick-start readiness guard
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `ef0f0b72f`→`60a00dde3`
 
 ### Task p12-t06: (review) Re-resolve PROJECT_PATH after quick-start scaffolds and prove the absorbed fields land
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `d1f7a6baf`→`2bf2ae0b0`
 
 ### Task p12-t07: (review) Backstop the external-plan source backlink in the readiness contract
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `0a6ae1118`→`97fc307ee`
 
 ## Autonomy Gate Provenance
 
@@ -336,14 +336,28 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - `w5-p11-review-001` — reviewer, target opus, nine rulings (fail-closed retirement probes, ordering vs the seal, the configured-root glob, no re-bumps, load-contract + autonomy inventory, red proofs, docs, weaker-anywhere, the rejected Codex item). Record `dispatch/w5-p11-review-001.json`.
 - `w5-p11-review-001` outcome: PASS, 0C/0I/1M/3m, reconnaissance not-attempted. Strictly append-only diff settles weaker-anywhere structurally; all five red proofs re-run non-vacuous; gates forced `Cached: 0`; glob 93 matches vs 0 for the plan's literal; versions and pins untouched; docs carry `deferred advisory` and presume nothing from p09; the stale-`PROJECT_PATH` rejection confirmed pre-existing at base. Medium: a Lite consolidation escapes the sweep (ruled a plan-scope gap — the plan's Outcome is quick-start-only and fail-closed would violate its STOP; follow-up + interim docs qualifier). Minors: the completing project's own `absorbed_*` fields self-match by construction (advisory noise); the plan's `-t 'absorbed'` filter runs 2 of 3 new tests; the orchestrator's brief ruling 2 stated the sweep/seal ordering backwards (a brief defect — the implementation and the plan agree: sweep BEFORE roll-up and seal; recorded in the orchestration log). Address-now sweep `w5-p11-sweep-001`.
 - `w5-p11-sweep-001` outcome (address-now sweep, no re-review): one commit `a61e42b520512fc59b437e3980d3ac442c76d8b9` (three files, +20/−5): the match sentence disambiguated to the ownership-language reading with a bare-mention clause and the self-exemption clause (the completing project's own `absorbed_*` fields are input, never a finding), three assertions added to the existing whitespace-normalized region (red proof: deleting the exemption sentence fails exactly that assertion; restored byte-exact), and `lifecycle.md` states the recording step is quick-mode only today. No bumps, no pins, `sync --scope project` no-op; changed file 67, focused 94, forced check `Cached: 0`, check:skill-bumps, lint, format, validate-skills all 0. Record `dispatch/w5-p11-sweep-001.json`.
+- `w5-p12a-impl-001` / `w5-p12b-impl-001` / `w5-p12c-impl-001` — exit-gate fix lanes dispatched in parallel at `90744c43f1f6501d80fd59307740a3af826a77a2` (A: p12-t01..t03 CLI; B: p12-t05..t07 skill prose + contract tests; C: p12-t04 control-plane); target opus, task_class hard-reasoning; briefs carry the gate artifact's findings, the seam rulings, and the no-re-bump rule. Records `dispatch/w5-p12{a,b,c}-impl-001.json`.
+- `w5-p12a-impl-001` outcome: DONE, three commits `4c7186666d47f0d3cb52077a571e35097a60883d`, `ab17b732260cb5cdb026efde53d2359b3678612e`, `2753eef492abe70eec0cb98d8225daf888edb364`. I1 reproduced with a deterministic interleaving probe (writer B's entry clobbered; B's commit returned `committed` with B absent from HEAD); fix = advisory lock under the OS temp root + HEAD read-back; four red-then-green controls; the overlapping-writer control caught the lane's own `/private/var` vs `/var` path defect. Codex R1/R2 (stale-takeover ownership, settle-on-unknown) accepted and fixed. M1 reproduced (`headCarriesEntry=false … reportedState=stale`); the pre-existing stale test seeded an uncommitted entry and was corrected. I3 reproduced (`Unknown config key` on set/unset/list); Windows drive-letter bypass (Codex P2) fixed; `unset` on a malformed stored value deferred (sibling parity).
+- `w5-p12b-impl-001` outcome: DONE, three commits `ef0f0b72f4d259ad4bad83f0e8518fd1a9e5e64c`, `d1f7a6baf8cc7aab40e91dc10ab18a93af96dce9`, `0a6ae111801c6f3cefb5169319628bf8390f2713`. M2 reproduced against markdown-it 14.1.0 (a tab-indented closer is fence content); `indent_columns()` in both awk copies; three fixtures. M4 reproduced live (no active project → `/state.md`; stale active project → fields land in the retired scaffold); status-gated re-resolve; three real-CLI controls (Codex Important: a failed scaffold must not fall back to the stale path — fixed). M3 reproduced (both template halves deletable with 100/100 green); backlink assertions both directions + prospective rule + mutation controls; Codex R1 (first-match parsing, whole-value `none`, fence-awareness, link forms, index-exemption controls) all fixed. `codex review` returned 401 after the first task (review endpoint auth); `codex exec -s read-only` used instead. The lane pre-trusted its worktree in `~/.codex/config.toml`.
+- `w5-p12c-impl-001` outcome: DONE, one commit `cd3107e3896a6299a9558352c8eb7b7986af4f43`. I2 reproduced through `oat project status` on four scratch quick projects (a/b/c → implement); new `packages/control-plane/src/state/quick-plan-readiness.ts` attached to the `plan` artifact; router gates quick `plan`-phase routes on readiness before the `oat_ready_for` branch; 26 predicate tests, 9 router controls, 3 reader controls, 5 public `status` controls; 34/34 differential parity with the skill's shell guard; 68-fixture before/after matrix with all 51 non-quick recommendations byte-identical; Codex zero findings.
+- Fan-in: `wave-5/p12a` → `ddeabab1e`, `wave-5/p12b` → `bcf907526`, `wave-5/p12c` → `368d8b8d0` (`--no-ff`, rebased in that order onto the dispatch commit; patch-ids identical for all seven lane commits); lockstep retained 0.2.63; eight gates + smoke + skills + root test green on `368d8b8d0`. Root review `w5-p12-review-001` next, then exit gate attempt 2.
 
 #### Phase Outcomes
 
-| Phase | Worktree                | Implementer outcome                                                              | Review outcome                                                   | Fix rounds |
-| ----- | ----------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---------- |
-| p01   | `.worktrees/wave-5/p01` | DONE_WITH_CONCERNS (`7c1988b63` + sweep `06de22c7d`; forced CLI suite 5815)      | passed (0C/1I/1M/4m — I1/M1 plan corrections; address-now sweep) | 0          |
-| p02   | `.worktrees/wave-5/p02` | DONE (`78f1279df` + fix `f1790effd` + sweep `96a5d9480`; forced CLI suite 5848)  | passed (round 1 0C/2I/2M/5m → round 2 0C/0I/3M/4m)               | 1          |
-| p03   | `.worktrees/wave-5/p03` | DONE (`36a56cb64` + fix `fcc6c0f26`; forced CLI suite 5808, check:skill-bumps 4) | passed (round 1 0C/1I/3M/4m → round 2 0C/0I/0M/1m)               | 1          |
+| Phase | Worktree                       | Implementer outcome                                                                                | Review outcome                                                   | Fix rounds |
+| ----- | ------------------------------ | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---------- |
+| p01   | `.worktrees/wave-5/p01`        | DONE_WITH_CONCERNS (`7c1988b63` + sweep `06de22c7d`; forced CLI suite 5815)                        | passed (0C/1I/1M/4m — I1/M1 plan corrections; address-now sweep) | 0          |
+| p02   | `.worktrees/wave-5/p02`        | DONE (`78f1279df` + fix `f1790effd` + sweep `96a5d9480`; forced CLI suite 5848)                    | passed (round 1 0C/2I/2M/5m → round 2 0C/0I/3M/4m)               | 1          |
+| p03   | `.worktrees/wave-5/p03`        | DONE (`36a56cb64` + fix `fcc6c0f26`; forced CLI suite 5808, check:skill-bumps 4)                   | passed (round 1 0C/1I/3M/4m → round 2 0C/0I/0M/1m)               | 1          |
+| p04   | `.worktrees/wave-5/p04`        | DONE (`48837edf0` + sweep `09de4c92f`; forced CLI suite 5898)                                      | passed (0C/0I/1M/5m; address-now sweep)                          | 0          |
+| p05   | `.worktrees/wave-5/p05`        | DONE (`3fd3aaa62` + sweep `d779ea634`; forced CLI suite, focused 202)                              | passed (0C/0I/3M/5m; address-now sweep)                          | 0          |
+| p06   | `.worktrees/wave-5/p06`        | DONE (`8432f1d4d` + fix `970aedccc`; forced CLI suite 5924)                                        | passed (round 1 0C/1I/0M/2m → round 2 0C/0I/0M/2m)               | 1          |
+| p07   | `.worktrees/wave-5/p07`        | DONE (`e4dfa0e27` + fix `9c2f96ca5`; forced CLI suite 6006, check:skill-bumps 1)                   | passed (round 1 0C/1I/2M/5m → round 2 0C/0I/0M/2m)               | 1          |
+| p08   | `.worktrees/wave-5/p08`        | DONE (`049783897` + fix `d7f8a6ff8`; forced CLI suite 6007, test:skills 856, check:skill-bumps 10) | passed (round 1 1C/2I/1M/3m → round 2 0C/0I/0M/0m)               | 1          |
+| p09   | `.worktrees/wave-5/p09`        | BLOCKED — plan STOP (seal append not idempotent; resume premise false); parked patch preserved     | not reviewed (parked)                                            | 0          |
+| p10   | `.worktrees/wave-5/p10`        | DONE (`9d0049212` + pin `aaf4c8677`; forced CLI suite 6008, control-plane 102, test:smoke 0)       | passed (round 1 0C/1I/1M/4m → round 2 0C/0I/0M/2m)               | 1          |
+| p11   | `.worktrees/wave-5/p11`        | DONE (`0bd2a2815` + sweep `a61e42b52`; forced CLI suite 6011, test:smoke 160)                      | passed (0C/0I/1M/3m; address-now sweep)                          | 0          |
+| p12   | `.worktrees/wave-5/p12{a,b,c}` | DONE (seven fix commits; forced CLI suite 6036, control-plane 141, smoke, skills, root test)       | fix-round root review pending; exit gate attempt 2 pending       | 0          |
 
 #### Group 1 fan-in — p01, p02, p03 (2026-09-07)
 
@@ -352,44 +366,43 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - Fan-in-owned lockstep bump 0.2.62 → 0.2.63 above freshly fetched `origin/main` (`0f47bf700`), commit `fdcb6c3ed`; `public-package-versions.json` regenerated by the build; `.oat/sync/manifest.json` restamped in the same commit (`pnpm run cli -- sync --scope project` printed the wave-4 advisory: manifest produced by 0.2.62, invoked by 0.2.63; `Manifest version refreshed; no content changes required.`).
 - Integration gates (group fan-in mode), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present. Gates run sequentially (the p02 lane showed that concurrent asset-mutating gates in one tree produce spurious failures).
 - Group-2 readiness on the merged tip: p04, p05, p06 plans are READY; p04 re-anchors on p01's gate-module changes and appends to the same docs tables (merge p01 first was honoured; p04 rebases its docs hunk), p05's family-coverage test must include p02's `documentation.instructionPointerExcludes` (parsed only in `oat-config.ts`, absent from the catalog) — its plan's refresh entry covers this. Group-1 worktrees and branches removed after the merge.
-  | p04 | `.worktrees/wave-5/p04` | DONE (`48837edf0` + sweep `09de4c92f`; forced CLI suite 5898) | passed (0C/0I/1M/5m; address-now sweep) | 0 |
-  | p05 | `.worktrees/wave-5/p05` | DONE (`3fd3aaa62` + sweep `d779ea634`; forced CLI suite, focused 202) | passed (0C/0I/3M/5m; address-now sweep) | 0 |
-  | p06 | `.worktrees/wave-5/p06` | DONE (`8432f1d4d` + fix `970aedccc`; forced CLI suite 5924) | passed (round 1 0C/1I/0M/2m → round 2 0C/0I/0M/2m) | 1 |
 
 #### Group 2 fan-in — p04, p05, p06 (2026-09-07)
 
 - Merge order p04 → p05 → p06 with `git merge --no-ff` after rebasing each lane on the integration tip (no worktree-init sync commits this time; the manifest was already 0.2.63). Merge commits `af42eba0e` (p04), `4aeea4536` (p05), `6b419ef7c` (p06). Lane commits re-hashed by the rebase (identical `git patch-id --stable` pairs; the Reviews table keeps the pre-rebase heads): 09de4c92f→7792f7583; 48837edf0→c055d5acf; d779ea634→3631ba9aa; 3fd3aaa62→98fac8ccf; 970aedccc→1eaa49997; 8432f1d4d→6db97567b.
 - Lockstep retained at 0.2.63 (`origin/main` still 0.2.62); integration gates (group fan-in mode, sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - Group-3 readiness on the merged tip: p07's plan is READY and its seams (`skills-bundled-docs-contract.test.ts`, `pack-manifest.ts`) carry p06's additions (`pack-manifest.ts` byte-identical to base; the contract test gained a contiguous block); p07 owns the `oat-repo-improve` bump; p08 follows with the `oat-project-complete` bump. Group-2 worktrees and branches removed after the merge.
-  | p07 | `.worktrees/wave-5/p07` | DONE (`e4dfa0e27` + fix `9c2f96ca5`; forced CLI suite 6006, check:skill-bumps 1) | passed (round 1 0C/1I/2M/5m → round 2 0C/0I/0M/2m) | 1 |
 
 #### p07 fan-in — group 3, first (2026-09-07)
 
 - `wave-5/p07` rebased onto the integration tip and merged with `git merge --no-ff` as `a59e0d24f`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `e4dfa0e27`→`b09dbd49c`, `9c2f96ca5`→`1f097db93`. The lane's and the orchestrator's scope notes on `BL-260906-repair-the-stray-fence-in-oat` merged into one.
 - Lockstep retained at 0.2.63; integration gates (sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - p08 readiness on the merged tip: its plan is READY; the base carries p07's `oat-repo-improve` bump and no change to the five skills p08 bumps; p07's worktree and branch removed.
-  | p08 | `.worktrees/wave-5/p08` | DONE (`049783897` + fix `d7f8a6ff8`; forced CLI suite 6007, test:skills 856, check:skill-bumps 10) | passed (round 1 1C/2I/1M/3m → round 2 0C/0I/0M/0m) | 1 |
 
 #### p08 fan-in — group 3, second (2026-09-07)
 
 - `wave-5/p08` rebased onto the integration tip and merged with `git merge --no-ff` as `28d99dbaf`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `049783897`→`b4c4d879b`, `d7f8a6ff8`→`6f670166a`.
 - Lockstep retained at 0.2.63; integration gates (sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - p09 readiness on the merged tip: its plan is READY; the base carries p08's `oat-project-complete` bump (1.7.8, pins at `skills.test.ts` and `review-skill-contracts.test.ts`) — p09 edits that skill's prose without re-bumping; p08's worktree and branch removed.
-  | p09 | `.worktrees/wave-5/p09` | BLOCKED — plan STOP (seal append not idempotent; resume premise false); parked patch preserved | not reviewed (parked) | 0 |
-  | p10 | `.worktrees/wave-5/p10` | DONE (`9d0049212` + pin `aaf4c8677`; forced CLI suite 6008, control-plane 102, test:smoke 0) | passed (round 1 0C/1I/1M/4m → round 2 0C/0I/0M/2m) | 1 |
 
 #### p10 fan-in — group 4, second (2026-09-07)
 
 - `wave-5/p10` rebased onto the integration tip and merged with `git merge --no-ff` as `098efc30b`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `9d0049212`→`6654df618`, `aaf4c8677`→`392eb88f0`. p09 (group 4, first) is parked with no commits, so group 4's fan-in is p10 alone.
 - Lockstep retained at 0.2.63; integration gates (sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - p11 readiness on the merged tip: its plan is READY; the base carries p03's `oat-project-quick-start` (2.3.10) and p08's `oat-project-complete` (1.7.8) — p11 edits both without re-bumping; none of p09's edits are present. p10's worktree and branch removed; p09's parked worktree stays until wave close.
-  | p11 | `.worktrees/wave-5/p11` | DONE (`0bd2a2815` + sweep `a61e42b52`; forced CLI suite 6011, test:smoke 160) | passed (0C/0I/1M/3m; address-now sweep) | 0 |
 
 #### p11 fan-in — group 5 (2026-09-07)
 
 - `wave-5/p11` rebased onto the integration tip and merged with `git merge --no-ff` as `b59bbe804`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `0bd2a2815`→`e73c5ee0f`, `a61e42b52`→`b90f1d8c9`.
 - Lockstep retained at 0.2.63; integration gates (sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke` 0 and `pnpm test:skills` 0 run separately. Config-integrity check: all tracked `.oat/config.json` keys present.
 - All eleven lanes dispositioned: ten merged, p09 parked. p11's worktree and branch removed; p09's parked worktree is removed at wave close (patch preserved in the orchestrator scratchpad).
+
+#### p12 fan-in — exit-gate fix round (2026-09-07)
+
+- `wave-5/p12a`, `wave-5/p12b`, `wave-5/p12c` rebased onto the integration tip (the dispatch commit `de492c60c`) and merged with `git merge --no-ff` as `ddeabab1e`, `bcf907526`, `368d8b8d0`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `4c7186666`→`d804cd3ff`, `ab17b7322`→`ff4cb2a06`, `2753eef49`→`e768163d5`, `ef0f0b72f`→`60a00dde3`, `d1f7a6baf`→`2bf2ae0b0`, `0a6ae1118`→`97fc307ee`, `cd3107e38`→`f205f0478`.
+- Lockstep retained at 0.2.63; integration gates (sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total; CLI 6036), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke`, `pnpm test:skills`, root `pnpm test` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
+- Record repair in this entry: the Phase Outcomes rows for p04–p11 had been appended inside the fan-in bullet lists by the bookkeeping script instead of the table; moved into the table (content unchanged).
+- Fix worktrees retained until the fix-round root review passes; then removed.
 
 #### Parallel Groups
 
@@ -416,6 +429,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 ### 2026-09-07
 
 - Final review round 1 (`w5-final-review-001`, head `5aa2f5ab4`): PASS with record corrections (0C/1I/3M/3m), all applied in `9386be825`; round 2 (`w5-final-review-002`) verified the dispositions — see Review Received: final.
+- Exit gate attempt 1 blocked (0C/3I/4M) → Phase 12: p12a `ddeabab1e`, p12b `bcf907526`, p12c `368d8b8d0` (seven fix commits, patch-ids verified); gates green on `368d8b8d0`; lockstep retained 0.2.63.
 - p11-t01 `0bd2a2815`→`e73c5ee0f`, sweep `a61e42b52`→`b90f1d8c9`; merge `b59bbe804`; lockstep retained 0.2.63. All merges complete (10 of 11; p09 parked).
 - p10-t01 `9d0049212`→`6654df618`, pin `aaf4c8677`→`392eb88f0`; merge `098efc30b`; lockstep retained 0.2.63.
 - p08-t01 `049783897`→`b4c4d879b`, fix `d7f8a6ff8`→`6f670166a`; merge `28d99dbaf`; lockstep retained 0.2.63.
@@ -441,19 +455,20 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Test Results
 
-| Phase | Tests Run                                     | Passed | Failed | Coverage |
-| ----- | --------------------------------------------- | ------ | ------ | -------- |
-| p01   | 5815 (forced CLI suite) + 361 gate            | all    | 0      | -        |
-| p02   | 5848 (forced CLI suite) + 231 focused         | all    | 0      | -        |
-| p03   | 5808 (forced CLI suite) + 322 focused         | all    | 0      | -        |
-| p04   | 5898 (forced CLI suite) + 330 focused         | all    | 0      | -        |
-| p05   | forced CLI suite + 202 focused + 59 snapshots | all    | 0      | -        |
-| p06   | 5924 (forced CLI suite) + 139 focused         | all    | 0      | -        |
-| p07   | 6006 (forced CLI suite) + 286 focused         | all    | 0      | -        |
-| p08   | 6007 (forced CLI suite) + test:skills 856     | all    | 0      | -        |
-| p09   | validator suite 13/13 (uncommitted)           | -      | -      | parked   |
-| p10   | 6008 (forced CLI suite) + control-plane 102   | all    | 0      | -        |
-| p11   | 6011 (forced CLI suite) + test:smoke 160      | all    | 0      | -        |
+| Phase | Tests Run                                                    | Passed | Failed | Coverage |
+| ----- | ------------------------------------------------------------ | ------ | ------ | -------- |
+| p01   | 5815 (forced CLI suite) + 361 gate                           | all    | 0      | -        |
+| p02   | 5848 (forced CLI suite) + 231 focused                        | all    | 0      | -        |
+| p03   | 5808 (forced CLI suite) + 322 focused                        | all    | 0      | -        |
+| p04   | 5898 (forced CLI suite) + 330 focused                        | all    | 0      | -        |
+| p05   | forced CLI suite + 202 focused + 59 snapshots                | all    | 0      | -        |
+| p06   | 5924 (forced CLI suite) + 139 focused                        | all    | 0      | -        |
+| p07   | 6006 (forced CLI suite) + 286 focused                        | all    | 0      | -        |
+| p08   | 6007 (forced CLI suite) + test:skills 856                    | all    | 0      | -        |
+| p09   | validator suite 13/13 (uncommitted)                          | -      | -      | parked   |
+| p10   | 6008 (forced CLI suite) + control-plane 102                  | all    | 0      | -        |
+| p11   | 6011 (forced CLI suite) + test:smoke 160                     | all    | 0      | -        |
+| p12   | 6036 (forced CLI suite) + control-plane 141 + smoke + skills | all    | 0      | -        |
 
 ## Review Received: final
 

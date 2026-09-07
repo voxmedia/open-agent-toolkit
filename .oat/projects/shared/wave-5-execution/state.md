@@ -168,7 +168,8 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 - ✓ Closeout records (Deviations, Deferred Findings, Final Summary, synthesis) `5aa2f5ab4`
 - ✓ Final review round 1 PASS with record corrections (0C/1I/3M/3m); corrections applied
 - ✗ Exit gate attempt 1 blocked (run `33895672`, 0C/3I/4M/0m) — received as Phase 12 fix tasks p12-t01..t07 (three parallel fix worktrees)
-- ⧗ Phase 12 fixes, exit gate attempt 2, post-implement sequence, PR
+- ✓ Phase 12 fix lanes merged (`ddeabab1e`, `bcf907526`, `368d8b8d0`); eight gates + smoke + skills + root test green
+- ⧗ Fix-round root review, exit gate attempt 2, post-implement sequence, PR
 
 ## Blockers
 
