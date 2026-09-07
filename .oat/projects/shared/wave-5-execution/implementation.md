@@ -556,6 +556,8 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - M2 — reference definitions inside HTML comments are collected, so a commented definition manufactures a backlink: **convert → `p12-t09`**.
 - m1 — stale counts (`plan.md` checklist → 20/20 with p12-t09; the Phase 12 status line's task range; the deferred-Minor ledger still listing the `PROJECT_PATH` item p12-t06 resolved): **fixed in this receive commit**.
 
+**Operator decision (2026-09-07):** Thomas authorized one further gate attempt on the current tip ("authorize"), after the escalation below was presented with the accumulated feedback; the authorization is recorded in `state.md` (`oat_implement_exit_gate.handoff`) and the attempt runs as attempt 3 with `max_attempts` raised to 3 for this project by that decision.
+
 **Attempt accounting (completion-and-closeout.md, Step 14):** attempt 1 blocked and was received (Phase 12); this attempt 2 blocked and is received here; `attempts_completed` → 2 = `max_attempts`, `on_failure: block` → the gate persists `blocked` and no further gate launch is made autonomously. Per the contract the completion steps do not run; the project stays `in_progress`, and the accumulated feedback is escalated to the operator with the fixes for every finding already applied (records here; code as p12-t09) so that an operator-authorized re-run has nothing outstanding.
 
 ## Deferred Findings

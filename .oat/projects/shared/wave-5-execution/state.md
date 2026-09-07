@@ -55,40 +55,40 @@ oat_dispatch_policy: # managed/high per operator routing preference
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: blocked
+  status: pending
   resolution: configured
-  disposition: blocked
+  disposition: null
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
-  max_attempts: 2
+  max_attempts: 3
   attempts_completed: 2
-  reviewed_head: da9639f9439cb04238322ad23ce51a511428337f
+  reviewed_head: 53ad90980e9c8d2247f3ae11ce0d68c5aa312f9d
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v1:7217bd80340eb8c34ea02c3dc44e1927e58797fce67219c2020f95360ac09511'
+  implementation_fingerprint: 'sha256:effective-delta-v1:52709415176ecf51731c57a73663ff034ecccc8f504566d622c3407c7802baf7'
   freshness_head: null
   freshness_fingerprint: null
-  launch_state: result_persisted
-  launch_attempt_id: 'w5-exit-gate-20260907T173426Z'
-  launch_started_at: '2026-09-07T17:34:26Z'
-  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w5/w5-exit-gate-20260907T173426Z.receipt.json'
-  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/a720129c-9808-4d43-8ae6-4b8de92e8fdb.json'
-  gate_run_id: 'a720129c-9808-4d43-8ae6-4b8de92e8fdb'
-  envelope_status: ok
-  artifact: '.oat/projects/shared/wave-5-execution/reviews/archived/final-review-2026-09-07T174812Z.md'
-  handoff: 'Gate attempt 2 blocked at the important threshold (0C/1I/2M/1m, run a720129c); received (I1/m1 record fixes in the receive commit, M1/M2 → p12-t09); attempts exhausted (2/2) — blocked pending an operator decision'
-  receive_state: completed
-  receive_correlation: 'run=a720129c-9808-4d43-8ae6-4b8de92e8fdb; handoff=receive; source=reviews/final-review-2026-09-07T174812Z.md; scope=final; type=code'
-  receive_source_artifact: '.oat/projects/shared/wave-5-execution/reviews/final-review-2026-09-07T174812Z.md'
-  receive_archived_artifact: '.oat/projects/shared/wave-5-execution/reviews/archived/final-review-2026-09-07T174812Z.md'
-  receive_event_identity: 'final | code | final-review-2026-09-07T174812Z.md'
-  receive_pre_head: c7489aecb
+  launch_state: intent_persisted
+  launch_attempt_id: 'w5-exit-gate-20260907T213219Z'
+  launch_started_at: '2026-09-07T21:32:19Z'
+  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/605305a6-995c-45ad-b818-a5532d6dc5ec/scratchpad/w5/w5-exit-gate-20260907T213219Z.receipt.json'
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: 'Attempts 1 and 2 blocked and received (Phase 12 p12-t01..t09 fixed every finding); operator authorized one further attempt on 2026-09-07 (max_attempts raised 2 → 3 by that decision); attempt 3 launches on the p12-t09 tip'
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
   receive_commit: null
-  receive_eligible: true
-  receive_completed: true
-  failure: 'attempts exhausted (max_attempts 2) with on_failure block; no further autonomous gate launch'
-  updated_at: '2026-09-07T17:55:12Z'
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-09-07T21:32:19Z'
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -129,7 +129,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T18:29:53.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T21:32:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -141,7 +141,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all lanes dispositioned (10 merged, p09 parked); root final review passed; the configured exit gate blocked on attempt 1 (three Important, four Medium) and its findings were fixed as Phase 12, merged, gated, and root-reviewed (passed); attempt 2 blocked on a stale record sentence plus two backlink-rule Mediums; attempts are exhausted, so the gate is `blocked` pending an operator decision; p12-t09 has landed and every finding is fixed on the tip.
+Implementation — all lanes dispositioned (10 merged, p09 parked); root final review passed; the configured exit gate blocked on attempt 1 (three Important, four Medium) and its findings were fixed as Phase 12, merged, gated, and root-reviewed (passed); attempt 2 blocked on a stale record sentence plus two backlink-rule Mediums; attempts are exhausted, so p12-t09 landed with every finding fixed on the tip; the operator authorized attempt 3.
 
 ## Artifacts
 
@@ -173,7 +173,8 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 - ✗ Exit gate attempt-2 launch `w5-exit-gate-20260907T163516Z` killed by the harness (low memory) after the reviewer passed (0C/0I/1M/1m) — superseded, no receipt; its findings fixed as p12-t08 (`c66a2fdc5`)
 - ✗ Exit gate attempt 2 (run `a720129c`) blocked: 0C/1I/2M/1m — the Important is a stale user-facing summary sentence (record), the Mediums tighten the p12-t08 backlink rule (p12-t09); attempts exhausted (2/2) → gate `blocked`, escalated to the operator
 - ✓ p12-t09 merged (`0811e7bb6`); eight gates + smoke + skills + root test green — every exit-gate finding is now fixed on the tip
-- ⧗ Operator decision on the exhausted exit gate; post-implement sequence and PR after that
+- ✓ Operator authorized one further gate attempt (2026-09-07, "authorize")
+- ⧗ Exit gate attempt 3 (operator-authorized), post-implement sequence, PR
 
 ## Blockers
 
@@ -181,4 +182,4 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 
 ## Next Milestone
 
-Operator decision on the exhausted exit gate (the findings are fixed: records here, code as p12-t09); if a further attempt is authorized it runs on the p12-t09 tip, then the post-implement sequence (summary, document, pr) and the wave PR.
+Exit gate attempt 3 (operator-authorized 2026-09-07) on the p12-t09 tip, then the post-implement sequence (summary, document, pr) and the wave PR.
