@@ -94,12 +94,12 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-09-07T05:43:41Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: post_approval
   source: configured
   final_phase: p09
   pre_approval: [summary, document, pr]
   pre_approval_completed: [summary, document, pr]
-  approval: pending
+  approval: not_required
   approval_source: null
   post_approval: []
   post_approval_completed: []
@@ -107,7 +107,7 @@ oat_post_implement_sequence:
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T12:17:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T12:18:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -117,13 +117,13 @@ oat_project_recap:
 
 # Project State: remote-project-management
 
-**Status:** PR open; final HiLL closeout approval pending
+**Status:** PR open; post-approval closeout in progress
 **Started:** 2026-03-15
 **Last Updated:** 2026-09-07
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — PR open; no final HiLL checkpoint is configured for p09.
 
 ## Artifacts
 
@@ -323,7 +323,11 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Final lifecycle review round 3/3 passed with zero findings and empty
   deferred Medium/Minor ledgers
 - ✓ PR created: https://github.com/voxmedia/open-agent-toolkit/pull/273
-- ⧗ Awaiting human review
+- ⚠ Project recap attempt reached terminal `failed` during authoring; retained
+  as a non-blocking closeout warning
+- ✓ No final HiLL approval is required because the final phase p09 is not a
+  configured implementation checkpoint
+- ⧗ Completing post-approval bookkeeping
 
 ## Blockers
 
@@ -332,8 +336,7 @@ fresh.
 
 ## Next Milestone
 
-PR is open for review.
+Complete the stored post-implementation sequence and implementation bookkeeping.
 
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Resume command: `oat-project-implement`
 - Merge before completion: merge the PR, then run `oat-project-complete`.
