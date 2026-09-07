@@ -212,7 +212,9 @@ the raw heading spelling; otherwise `workflow-friction`'s
 drops every task. Keep a negative case proving a task whose id belongs to
 another phase is still rejected.
 
-**Verify:** same command → the `:94-127` negative expectations still hold;
+**Verify:** same command → the cross-phase negative expectations from
+`:94-127` still hold (the same-phase cross-spelling negatives necessarily
+flip to positives once heading dialects collapse — corrected at wave-5 close);
 `## Phase p01:` + `p01-t01`, `## Phase 1:` + `p1-t01`, and
 `## Revision Phase p-rev1:` + `prev1-t01` cases pass.
 
@@ -324,6 +326,10 @@ Stop and report instead of improvising when:
   routing step, or the quick-route plan's Step 5.2 changes have not landed
   and the same lines are being edited concurrently; or
 - a named verification gate fails twice after one bounded correction.
+
+## Execution record (2026-09-07, wave 5)
+
+Executed as wave-5 p10 (PR #275 `wave-5-execution`, CLI 0.2.63): heading-dialect normalization in `packages/control-plane/src/state/tasks.ts` (`## Phase p01:`/`## Phase 1:`/`## Revision Phase p-rev1:` with `p01-t01`/`p1-t01`/`prev1-t01`; string-only ordinal normalization so ordinals past `MAX_SAFE_INTEGER` stay distinct; `HeadingDialect` deleted); the router's terminal-status guard keys on `oat_lifecycle === 'complete'` alone (a `paused` project with incomplete revision work still resumes implement; no workflow-mode branch — three Lite router controls pin it); `oat-project-next` prose (no bump; stays at p03's 1.1.1). Two pre-existing same-phase cross-spelling negatives in `tasks.test.ts` necessarily flipped to positives (a dedicated wrong-phase / kind-mismatch case keeps the cross-phase negatives) — the Step 2 Verify sentence is corrected below. Real-artifact reproduction: `subagent-implement-refactor` now parses 9 phases / 36 tasks (was 2/6) and `workflow-friction` discovers both revision phases, yet both still report 0 completed because their implementation.md uses `**Status:** complete` without `### Task` headings — the completion-format class the plan declares out of scope; the review ruled "do not weaken — file and pin", so the case is pinned and `BL-260907` follow-up filed at wave close.
 
 ## Revalidation Before Execution
 

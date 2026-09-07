@@ -41,7 +41,8 @@ existing incomplete quick project in place without re-scaffolding. One
 plan-readiness predicate is defined once and referenced everywhere: a quick
 plan is implementation-ready only when its frontmatter says so
 (`oat_status: complete`, `oat_ready_for: oat-project-implement`,
-`oat_template: false`), its `## Reviews` section carries the Step 3.7
+`oat_template` absent or `false` — corrected at wave-5 close to the
+repository convention), its `## Reviews` section carries the Step 3.7
 disposition (a review row or the explicit policy skip), and it has at least
 one phase with substantive tasks. Substantive tasks alone never make a plan
 ready.
@@ -167,7 +168,7 @@ Only `oat-project-next` tier 3 routes correctly. Nothing defines what
 In `oat-project-quick-start/SKILL.md` add one named predicate ("quick plan
 readiness") beside Step 3.7: a quick `plan.md` is implementation-ready only
 when all of the following hold — `oat_status: complete`,
-`oat_ready_for: oat-project-implement`, `oat_template: false`, the
+`oat_ready_for: oat-project-implement`, `oat_template` absent or `false`, the
 `## Reviews` section records the Step 3.7 disposition (a `plan` review row or
 the explicit `Plan artifact review: skipped (...)` line), and at least one
 phase has substantive tasks. A plan with substantive tasks but Step 3
@@ -257,6 +258,10 @@ Stop and report instead of improvising when:
   `oat-project-next` table (add a readiness column instead);
 - any of the four skill bumps is missing at `check:skill-bumps`; or
 - a named verification gate fails twice after one bounded correction.
+
+## Execution record (2026-09-07, wave 5)
+
+Executed as wave-5 p03 (PR #275 `wave-5-execution`, CLI 0.2.63): one plan-readiness predicate (quick-start Step 3.7 sibling) referenced by plan 1.4.10, progress 1.4.1, next 1.1.1, quick-start 2.3.10; the readiness guard requires closed once-only frontmatter, a fence-aware `## Reviews` disposition (review row or line-anchored policy skip), and a substantive `### Task pNN-tNN:` under a `## Phase` heading; six quick `plan` rows in `oat-project-next` (incl. tier 1 and the readiness-column precedence exception over the generic tier-1 rule); quick-start resumes an incomplete quick project in place (Step 0.5/Step 3 never re-scaffold); nine version pins located by literal. Correction applied at wave close: the predicate treats `oat_template` ABSENT as false (the repository convention; 12 of 76 live quick plans flip not-ready → ready, none the other way) — the plan's `oat_template: false` wording is reworded below. Deferred: the quick-mode `discovery` rows in `oat-project-next` still route to `oat-project-plan` (a two-hop route, no longer a dead end) — follow-up filed at wave close. Exit gate (attempt 1) found that the plan's out-of-scope note "no routing code exists" was false for `packages/control-plane`: `oat project status` routed every quick plan at boundary tier 2 to implement; fixed in the wave as p12-t04 (an executable Quick Plan Readiness predicate in the control-plane reader, 34/34 parity with the skill guard) and p12-t05 (tab-aware fence indentation in the awk guard).
 
 ## Revalidation Before Execution
 

@@ -38,7 +38,7 @@ copying their content here. -->
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
 - CLI `0.2.63` (wave 5 of the 2026-08-31 execution program, wrapper project
-  `wave-5-execution`, "program-intake follow-ups", PR `wave-5-execution-2026-09`; ten of
+  `wave-5-execution`, "program-intake follow-ups", merged as PR #275; ten of
   eleven lanes) makes gates recover a committed review artifact after a
   post-selection failure and survive index-lock collisions with an idempotent
   receipt-backed recovery command (`DR-260907-additive-post-selection`,

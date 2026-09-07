@@ -1,7 +1,7 @@
 ---
 id: BL-260907-re-resolve-project-path-after
 title: Re-resolve PROJECT_PATH after quick-start scaffolds a fresh project
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T14:05:46.524Z
-updated: 2026-09-07T14:05:46.524Z
+updated: '2026-09-07T23:19:36Z'
 associated_issues: []
 external_plans: []
 ---

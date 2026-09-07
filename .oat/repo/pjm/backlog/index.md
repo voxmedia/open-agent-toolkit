@@ -274,7 +274,6 @@
 | BL-260903-populate-provider-reachability | Populate provider reachability evidence across pack and lifecycle surfaces                                      | open   | medium   | feature    | M        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                          | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                               | open   | medium   | feature    | L        |
-| BL-260907-re-resolve-project-path-after  | Re-resolve PROJECT_PATH after quick-start scaffolds a fresh project                                             | open   | medium   | task       | XS       |
 | BL-260907-recognize-phase-level          | Recognize phase-level completion records so bullet-list revision phases do not read as incomplete               | open   | medium   | task       | S        |
 | BL-260907-record-absorbed-projects       | Record absorbed projects and backlog items for Lite consolidations                                              | open   | medium   | task       | S        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags           | open   | medium   | task       | S        |
