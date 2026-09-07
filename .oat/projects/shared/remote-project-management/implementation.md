@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: null
+oat_current_task_id: p09-t03
 oat_generated: false
 ---
 
@@ -24,22 +24,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | completed | 10    | 10/10     |
-| Phase 2    | completed | 10    | 10/10     |
-| Phase 3    | completed | 12    | 12/12     |
-| Phase 4    | completed | 11    | 11/11     |
-| Phase 5    | completed | 9     | 9/9       |
-| Phase 6    | completed | 10    | 10/10     |
-| Phase 7    | completed | 10    | 10/10     |
-| Phase 8    | completed | 6     | 6/6       |
-| Phase 9    | completed | 2     | 2/2       |
-| Revision 1 | completed | 4     | 4/4       |
-| Revision 2 | completed | 2     | 2/2       |
-| Revision 3 | completed | 2     | 2/2       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | completed   | 10    | 10/10     |
+| Phase 2    | completed   | 10    | 10/10     |
+| Phase 3    | completed   | 12    | 12/12     |
+| Phase 4    | completed   | 11    | 11/11     |
+| Phase 5    | completed   | 9     | 9/9       |
+| Phase 6    | completed   | 10    | 10/10     |
+| Phase 7    | completed   | 10    | 10/10     |
+| Phase 8    | completed   | 6     | 6/6       |
+| Phase 9    | in_progress | 3     | 2/3       |
+| Revision 1 | completed   | 4     | 4/4       |
+| Revision 2 | completed   | 2     | 2/2       |
+| Revision 3 | completed   | 2     | 2/2       |
 
-**Total:** 88/88 tasks completed
+**Total:** 88/89 tasks completed
 
 ---
 
@@ -1234,8 +1234,8 @@ or additional scope expansion.
 
 ## Phase 9: Final Review Fixes
 
-**Status:** completed — 2/2 final-review fixes complete; fresh final re-review
-pending
+**Status:** in progress — 2/3 final-review fixes complete; p09-t03 corrects
+three ineffective negative-control probes
 **Started:** 2026-09-07
 
 ### Task p09-t01: P0 guard-neutralization proof
@@ -2756,6 +2756,29 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   additionally reported every CI-order gate passing.
 - No recovery attempt, optional nested dispatch, deviation, or implementation
   concern was reported.
+
+### Review Received: p09
+
+**Date:** 2026-09-07
+**Review artifact:** reviews/archived/p09-review-2026-09-07T045515Z.md
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**New task added:** p09-t03
+
+**Finding disposition:** I1 -> p09-t03. Three recorded probes escaped regex
+alternation and selected zero tests, so their claimed neutralized failures were
+not reproducible from the artifact. Repeat those three guard-neutralization
+controls with commands that select exactly 2 tests each, restore the guards,
+and retain the 82/82 restored union.
+
+**Next:** Resume the original p09 implementer for p09-t03, update this event to
+`fixes_completed`, and run a fresh p09 re-review.
 
 <!-- orchestration-runs-end -->
 

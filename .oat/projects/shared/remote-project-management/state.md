@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: dda462ea6cd35e8cb03e8f7aeebaf7c00658cb7c
+oat_current_task: p09-t03
+oat_last_commit: 65bea7f5561b10b99422da88a5b1be59cb3fa25a
 oat_blockers: []
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -58,24 +58,23 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T04:54:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T04:59:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: remote-project-management
 
-**Status:** Implementation tasks complete; final re-review pending
+**Status:** Phase 9 review fix in progress
 **Started:** 2026-03-15
 **Last Updated:** 2026-09-07
 
 ## Current Phase
 
-Implementation — All 88 planned tasks are complete, including both Phase 9
-final-review fixes. The next lifecycle milestone is a fresh final code
-re-review. Current main `0f47bf7004166d420758d1bcd77d253007174332` is merged
-without rebasing reviewed history through
-`6c73da33cf64fa2221def42a0b2fc6f7960ced73`; the public release boundary
-remains `0.2.63` above main's `0.2.62`.
+Implementation — 88/89 planned tasks are complete. The first p09 review found
+that three recorded negative-control commands selected zero tests; p09-t03 is
+the bounded executable-proof correction. Current main
+`0f47bf7004166d420758d1bcd77d253007174332` remains merged without rebasing
+reviewed history through `6c73da33cf64fa2221def42a0b2fc6f7960ced73`.
 
 ## Artifacts
 
@@ -83,7 +82,7 @@ remains `0.2.63` above main's `0.2.62`.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 3 artifact review passed)
-- **Implementation:** implementation.md (88/88 tasks complete; fresh final re-review pending)
+- **Implementation:** implementation.md (88/89 tasks complete; p09-t03 pending)
 
 ## Progress
 

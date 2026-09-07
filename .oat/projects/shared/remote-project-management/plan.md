@@ -1555,6 +1555,28 @@ tests; restore every temporary mutation before committing.
 5. Run: `git diff --check` and `oat project validate-plan --project-path .oat/projects/shared/remote-project-management --json`
 6. Commit: docs(p09-t02): reconcile final review state
 
+### Task p09-t03: (review) Correct ineffective negative-control probes
+
+**Files:** Modify
+.oat/projects/shared/remote-project-management/implementation.md. Temporarily
+modify only `snapshot.ts`, `external-action.ts`, and `preview.ts` one at a time;
+restore each exact production guard before continuing or committing.
+
+1. Replace the three recorded `vitest -t` patterns whose escaped `\|` selects
+   zero tests with exact executable probes using unescaped regex alternation or
+   one command per named test.
+2. Repeat the bounded neutralize/run/restore/run procedure for NFR1 whole-field
+   suppression, NFR1 universal outbound gating, and NFR2 preview/approval
+   binding. Require each corrected probe to select exactly 2 tests, fail while
+   its guard is neutralized, then pass after restoration with both bad-state
+   rejection and the valid accepted control represented.
+3. Rerun the complete restored five-file focused union and require 82/82. Prove
+   the three temporarily modified production files are byte-identical to their
+   pre-probe state and that no production diff remains.
+4. Format: pnpm format:fix
+5. Run: `git diff --check` plus bounded status and task-file boundary checks.
+6. Commit: docs(p09-t03): correct negative-control probes
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                              | Reviewed Head                            | Invocation          | Gate Target              |
@@ -1590,7 +1612,7 @@ tests; restore every temporary mutation before committing.
 | p08    | code     | fixes_completed | 2026-09-07 | reviews/p08-review-2026-09-07T035129Z.md                              | 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae | review-1            | codex:sol-high           |
 | p08    | code     | fixes_completed | 2026-09-07 | reviews/p08-review-2026-09-07T041040Z.md                              | 96096ade106ac2278ee7aba174ad88933036d9c8 | review-2            | codex:sol-high           |
 | p08    | code     | passed          | 2026-09-07 | reviews/p08-review-2026-09-07T042019Z.md                              | a9004ccfd3b62157a72088ba92e26f5194a6aad2 | review-3            | codex:sol-high           |
-| p09    | code     | received        | 2026-09-07 | reviews/p09-review-2026-09-07T045515Z.md                              | a26c54b4d818c6474321c0c4b8bf45f2ba7b1294 | auto                | -                        |
+| p09    | code     | fixes_added     | 2026-09-07 | reviews/archived/p09-review-2026-09-07T045515Z.md                     | a26c54b4d818c6474321c0c4b8bf45f2ba7b1294 | auto                | -                        |
 | p-rev1 | code     | fixes_added     | 2026-09-01 | reviews/archived/p-rev1-round-4-operator-review-2026-09-01T180520Z.md | 83ae7a9c160afdf4e6e4d08ff26268469403df0a | operator-extension  | -                        |
 | p-rev2 | code     | fixes_completed | 2026-09-01 | reviews/p-rev2-review-2026-09-01T202947Z.md                           | 1af99a23b5cb67142cd06f37c3b3b0bc648e941e | review-1            | codex:sol-high           |
 | p-rev2 | code     | fixes_completed | 2026-09-01 | reviews/p-rev2-rereview-2026-09-01T210901Z.md                         | e79732b6cef1b996a54334e308860a121cdd989d | review-2            | codex:sol-high           |
@@ -1829,12 +1851,12 @@ authoritative in `implementation.md`.
 - Phase 6: 10 tasks - Jira semantic intents, observations, ADF, and duplicate search
 - Phase 7: 10 tasks - batches, closeout, recovery, doctor, E2E, security
 - Phase 8: 6 tasks - docs, skill references, versions, CI/release gates
-- Phase 9: 2 tasks - P0 negative controls and durable closeout reconciliation
+- Phase 9: 3 tasks - P0 negative controls, durable state, and executable proof repair
 - Revision 1: 4 tasks - caller authority, action safety, production lifecycle, resumable materialization
 - Revision 2: 2 tasks - verification-handoff restart safety and incomplete-intent provenance
 - Revision 3: 2 tasks - recreate anomaly resolution and public lifecycle approval evidence
 
-**Total: 88 tasks**
+**Total: 89 tasks**
 
 ## References
 
