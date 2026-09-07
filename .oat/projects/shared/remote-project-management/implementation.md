@@ -3055,6 +3055,16 @@ Track test execution during implementation.
   reachable; both remote PJM and the independently delivered lite workflow are
   retained in the synchronized provider views.
 
+**Implementation-tail explainer:**
+
+- The operator selected `generate`; the adapter made exactly one unattended
+  `project-recap` attempt at
+  `explainers/remote-project-management-recap`.
+- The attempt reached the terminal `failed` outcome in the authoring stage and
+  retained a build record plus terminal evidence. No durability or publication
+  step ran. The shared terminal-outcome guard accepted `failed` as a terminal,
+  non-blocking closeout warning.
+
 ## Machine-Readable Completion Ledger
 
 These canonical task receipts mirror the earlier chronological phase records so

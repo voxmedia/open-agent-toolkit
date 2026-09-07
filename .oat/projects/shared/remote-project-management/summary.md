@@ -128,6 +128,14 @@ previewable, verifiable, and restart-safe.
   approval previews. The revision passed its independent review before Phase 8
   release work resumed.
 
+## Explainer Outcome
+
+The requested implementation-tail project recap was attempted once at
+`explainers/remote-project-management-recap` and reached the terminal `failed`
+outcome during authoring. The retained build record and terminal evidence name
+an authoring pipeline failure; no durable or published recap was produced. This
+is a non-blocking closeout warning under the configured lifecycle contract.
+
 ## Workflow Observations
 
 ### 2026-08-31 · structural · oat gate review · design

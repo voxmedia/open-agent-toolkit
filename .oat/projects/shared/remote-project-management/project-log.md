@@ -208,6 +208,10 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0
 
 Received gate run bee16cdf-2649-4445-baaf-fe7827c841c2; addressed its sole Medium lifecycle-artifact finding with canonical receipts for 54 existing task commits, and verified the public project status at 90/90 with every phase complete.
 
+### 2026-09-07 · structural · oat-project-implement · implementation-tail-recap
+
+Project recap intent generate was attempted exactly once at explainers/remote-project-management-recap and reached terminal failed during authoring; no durability or publication step ran.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
