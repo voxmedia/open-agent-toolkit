@@ -220,27 +220,19 @@
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------ | -------- | ---------- | -------- |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                                                             | open   | urgent   | feature    | L        |
 | BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                                                                | open   | high     | feature    | M        |
-| BL-260830-add-oat-config-unset-command   | Add oat config unset command                                                                                    | open   | high     | feature    | S        |
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                                                                       | open   | high     | feature    | L        |
 | BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts                                          | open   | high     | task       | M        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches                                                  | open   | high     | feature    | M        |
 | BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                                            | open   | high     | task       | M        |
-| BL-260830-clarify-quick-mode-resume      | Clarify quick-mode resume routing from oat-project-plan                                                         | open   | high     | feature    | S        |
-| BL-260830-distinguish-external-plan      | Distinguish external-plan readiness from execution readiness                                                    | open   | high     | task       | M        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                                         | open   | high     | feature    | M        |
 | BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                                                         | open   | high     | task       | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                                          | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                                    | open   | high     | feature    | L        |
-| BL-260902-make-autonomous-project-recap  | Make autonomous project recap capability-aware and non-blocking                                                 | open   | high     | task       | M        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                                                    | open   | high     | task       | M        |
-| BL-260901-make-terminal-project-status   | Make terminal project status agree with completed revision plans                                                | open   | high     | task       | S        |
 | BL-260907-make-the-completion-seal       | Make the completion seal append idempotent so pre-archive interruptions can resume                              | open   | high     | task       | M        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                                        | open   | high     | task       | M        |
-| BL-260902-recover-committed-review       | Recover committed review artifacts from post-selection gate failures                                            | open   | high     | task       | M        |
-| BL-260902-retry-gate-project-log         | Retry gate project-log finalization across transient Git index locks                                            | open   | high     | task       | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                                     | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                                   | open   | high     | feature    | L        |
-| BL-260902-validate-every-shipped-skill   | Validate every shipped skill-to-script reference against its pack manifest                                      | open   | high     | task       | M        |
 | BL-260907-finalize-synced-archive-mjs    | finalize-synced-archive.mjs reads stdin with fs/promises readFile(0), so the synced deferred clear always fails | open   | high     | task       | XS       |
 | BL-260901-add-corrective-revision        | Add corrective-revision transition after review exhaustion                                                      | open   | medium   | feature    | M        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                                                                 | open   | medium   | feature    | M        |
@@ -266,9 +258,7 @@
 | BL-260904-honor-metadata-version         | Honor metadata.version as the canonical skill version                                                           | open   | medium   | feature    | M        |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                          | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                              | open   | medium   | feature    | M        |
-| BL-260902-keep-pjm-init-provider         | Keep instruction-sync pointer files out of documentation content trees                                          | open   | medium   | task       | M        |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                                    | open   | medium   | task       | M        |
-| BL-260902-make-consolidated-project      | Make consolidated-project retirement checks semantic                                                            | open   | medium   | task       | M        |
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                                   | open   | medium   | feature    | M        |
 | BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                               | open   | medium   | feature    | L        |
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions            | open   | medium   | task       | S        |

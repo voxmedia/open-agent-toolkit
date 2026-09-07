@@ -1,7 +1,7 @@
 ---
 id: BL-260902-make-autonomous-project-recap
 title: Make autonomous project recap capability-aware and non-blocking
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - autonomy
 assignee: null
 created: 2026-09-02T23:48:48.908Z
-updated: 2026-09-03T00:08:42Z
+updated: '2026-09-07T14:04:45Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/230

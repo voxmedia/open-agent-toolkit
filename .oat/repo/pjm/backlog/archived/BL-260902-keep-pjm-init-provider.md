@@ -1,7 +1,7 @@
 ---
 id: BL-260902-keep-pjm-init-provider
 title: Keep instruction-sync pointer files out of documentation content trees
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - instruction-sync
 assignee: null
 created: 2026-09-02T23:48:35.398Z
-updated: 2026-09-03T00:08:42Z
+updated: '2026-09-07T14:04:35Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/238

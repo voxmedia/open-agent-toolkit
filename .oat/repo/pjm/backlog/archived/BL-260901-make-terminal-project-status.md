@@ -1,7 +1,7 @@
 ---
 id: BL-260901-make-terminal-project-status
 title: Make terminal project status agree with completed revision plans
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - cli
 assignee: null
 created: 2026-09-01T20:03:37.272Z
-updated: 2026-09-04T22:34:57Z
+updated: '2026-09-07T14:04:47Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-04-make-terminal-project-status-agree-with-revision-plans.md

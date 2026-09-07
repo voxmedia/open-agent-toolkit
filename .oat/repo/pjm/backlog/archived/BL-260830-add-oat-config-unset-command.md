@@ -1,7 +1,7 @@
 ---
 id: BL-260830-add-oat-config-unset-command
 title: Add oat config unset command
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: S
@@ -13,7 +13,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:30:45.656Z
-updated: 2026-09-03T00:08:42Z
+updated: '2026-09-07T14:04:40Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-02-add-oat-config-unset-command.md

@@ -1,7 +1,7 @@
 ---
 id: BL-260902-retry-gate-project-log
 title: Retry gate project-log finalization across transient Git index locks
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - review-gate-integrity
 assignee: null
 created: 2026-09-02T23:48:45.450Z
-updated: 2026-09-03T00:08:42Z
+updated: '2026-09-07T14:04:39Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/213

@@ -1,7 +1,7 @@
 ---
 id: BL-260902-validate-every-shipped-skill
 title: Validate every shipped skill-to-script reference against its pack manifest
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - tests
 assignee: null
 created: 2026-09-02T23:48:42.130Z
-updated: 2026-09-03T00:08:42Z
+updated: '2026-09-07T14:04:42Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/199

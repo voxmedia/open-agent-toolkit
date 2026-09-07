@@ -1,7 +1,7 @@
 ---
 id: BL-260902-make-consolidated-project
 title: Make consolidated-project retirement checks semantic
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - quick-start
 assignee: null
 created: 2026-09-02T23:48:38.755Z
-updated: 2026-09-03T00:08:42Z
+updated: '2026-09-07T14:04:49Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/250

@@ -1,7 +1,7 @@
 ---
 id: BL-260830-clarify-quick-mode-resume
 title: Clarify quick-mode resume routing from oat-project-plan
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - legacy-promoted
 assignee: null
 created: 2026-08-30T22:30:42.099Z
-updated: 2026-09-03T00:08:42Z
+updated: '2026-09-07T14:04:37Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-02-route-incomplete-quick-projects-to-quick-start.md

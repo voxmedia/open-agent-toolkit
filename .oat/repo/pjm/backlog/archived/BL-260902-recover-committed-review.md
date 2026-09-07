@@ -1,7 +1,7 @@
 ---
 id: BL-260902-recover-committed-review
 title: Recover committed review artifacts from post-selection gate failures
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - reliability
 assignee: null
 created: 2026-09-02T23:48:30.479Z
-updated: 2026-09-03T00:08:42Z
+updated: '2026-09-07T14:04:33Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/232

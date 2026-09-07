@@ -1,7 +1,7 @@
 ---
 id: BL-260830-distinguish-external-plan
 title: Distinguish external-plan readiness from execution readiness
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: M
@@ -13,7 +13,7 @@ labels:
   - workflow
 assignee: null
 created: 2026-08-30T23:01:52.697Z
-updated: 2026-09-03T00:08:42Z
+updated: '2026-09-07T14:04:44Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-02-enforce-external-plan-readiness-contract.md
