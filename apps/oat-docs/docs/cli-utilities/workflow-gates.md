@@ -476,6 +476,66 @@ oat --json gate review \
 Read the resulting envelope and exit code; that is the whole completion
 contract.
 
+### Project log finalization
+
+After the envelope is written, the gate appends one structural entry to the
+project's `project-log.md` and commits it, so the run does not leave a dirty
+worktree for whatever executes next. The entry body ends with
+`run=<runId>` — the same run id the envelope carries. That token is the entry's
+stable identity: a retry or a later recovery recognizes the entry it already
+wrote instead of appending a second one.
+
+Staging and committing the log retries **three attempts** separated by two
+waits (250 ms, then 500 ms) when, and only when, git itself reports index-lock
+contention: `Unable to create '…/index.lock': File exists`, or git's `Another
+git process seems to be running in this repository` advice in output that also
+names an index lock. Every other failure — a hook,
+signing, identity, or pathspec error — is reported immediately rather than
+retried, including one whose output merely mentions `index.lock`. The gate never
+deletes, moves, or forces a lock it did not take. A lock whose mtime is
+unchanged across the whole retry window is reported as `persistent-index-lock`;
+one that moves is `transient-index-lock`. If a competing writer commits the same
+entry while the gate retries, the gate reports the work as already committed
+instead of a failure — but only when the committed log still carries this run's
+entry.
+
+When the retries are exhausted the append has landed but the commit has not, so
+the gate writes a durable receipt to
+`<project>/gate-receipts/<runId>.json` and emits a
+`gate-project-log-partial-finalization` diagnostic naming the receipt and
+printing its recovery command verbatim. The receipt directory is gitignored, so
+a receipt never dirties the worktree. The gate result is unchanged: a passing
+review still exits `ok`.
+
+The receipt completes the finalization from a later process, with no reviewer
+and no second gate run:
+
+```bash
+oat project log append --project <projectPath> --structural \
+  --producer 'oat gate review' --ref <ref> --body <body> \
+  --idempotency-key <runId> --commit
+```
+
+Before appending anything, that command validates the receipt against the live
+tree: the project path must resolve to the same project, `worktreeRoot` must
+match `git rev-parse --show-toplevel`, and the review artifact must still exist
+with its recorded sha256 signature. The replayed entry must also be the entry
+the receipt describes — `--producer`, `--ref`, and `--body` are compared against
+the receipt, and the receipt's own run id must be the `--idempotency-key` that
+names its file — so a receipt can never be consumed while some other entry is
+written. Any mismatch exits non-zero with a
+`gate-project-log-receipt-mismatch` diagnostic and touches nothing. On a match
+it appends (or reports `already-appended` when the entry is already there),
+commits with the same bounded retry, and deletes the receipt. Running it twice
+is safe: the second run appends nothing and creates no commit.
+
+At the start of a run, a receipt still sitting under the project produces a
+`gate-project-log-receipt-pending` diagnostic naming the receipt and its
+recovery command. Its `state` is `stale` when the log already carries that run
+id — the append landed, so recovery will observe `already-appended` and clear
+the receipt — and `pending` otherwise. The warning is discovery only; the gate
+still runs.
+
 ## Exec targets
 
 `oat gate cross-provider-exec` chooses from `workflow.gates.execTargets`.
@@ -924,6 +984,7 @@ those artifacts; correct the project/run correlation and start a new gate run.
 | Artifact carried the wrong gate run ID                                | provenance-mismatch fixture                                                                                            |
 | Passing artifact lost receive routing                                 | handoff and `receiveEligible` fixture                                                                                  |
 | Passing review reported as a failed gate after a post-selection error | post-selection recovery cases plus snapshot-replacement, non-gate-marker, and foreign-target controls                  |
+| Transient index lock turned a completed review into a failed gate     | index-lock retry cases plus persistent/transient classification, receipt fixture, and fresh-process recovery control   |
 
 ## Current limits
 

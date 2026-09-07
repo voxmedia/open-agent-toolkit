@@ -20,6 +20,7 @@ import {
   appendProjectLog as appendProjectLogFromDisk,
   instantiateProjectLogTemplate,
   type AppendProjectLogInput,
+  type GateProjectLogReceipt,
   type ProjectLogAppendResult,
 } from '@commands/project/log/append';
 import { BUILTIN_EXEC_TARGETS, type ExecTarget } from '@config/oat-config';
@@ -63,6 +64,12 @@ interface HarnessOptions {
   appendProjectLog?: (
     input: AppendProjectLogInput,
   ) => Promise<ProjectLogAppendResult>;
+  writeGateProjectLogReceipt?: (
+    path: string,
+    receipt: GateProjectLogReceipt,
+    warn: (message: string) => void,
+  ) => Promise<boolean>;
+  sleep?: (ms: number) => Promise<void>;
 }
 
 interface ProcessCall {
@@ -166,6 +173,10 @@ function createHarness(options: HarnessOptions): {
     appendProjectLog:
       options.appendProjectLog ??
       (async () => ({ status: 'skipped', reason: 'projectLog=false' })),
+    ...(options.writeGateProjectLogReceipt
+      ? { writeGateProjectLogReceipt: options.writeGateProjectLogReceipt }
+      : {}),
+    ...(options.sleep ? { sleep: options.sleep } : {}),
   } as Parameters<typeof createGateCommand>[0];
 
   const command = createGateCommand(overrides);
@@ -387,6 +398,8 @@ async function runReviewGate(options: {
   readGateRouteReceipt?: HarnessOptions['readGateRouteReceipt'];
   createGateActivityProbe?: HarnessOptions['createGateActivityProbe'];
   appendProjectLog?: HarnessOptions['appendProjectLog'];
+  writeGateProjectLogReceipt?: HarnessOptions['writeGateProjectLogReceipt'];
+  sleep?: HarnessOptions['sleep'];
   args?: string[];
   globalArgs?: string[];
 }): Promise<LoggerCapture> {
@@ -403,6 +416,8 @@ async function runReviewGate(options: {
     readGateRouteReceipt: options.readGateRouteReceipt,
     createGateActivityProbe: options.createGateActivityProbe,
     appendProjectLog: options.appendProjectLog,
+    writeGateProjectLogReceipt: options.writeGateProjectLogReceipt,
+    sleep: options.sleep,
   });
   await runCommand(
     command,
@@ -5668,6 +5683,445 @@ describe('oat gate', () => {
     expect(
       git(['status', '--porcelain', '--', `${projectPath}/project-log.md`]),
     ).not.toBe('');
+  });
+
+  interface GateProjectLogRun {
+    capture: LoggerCapture;
+    diagnostics: Record<string, unknown>[];
+    git: (args: string[]) => string;
+    home: string;
+    projectPath: string;
+    root: string;
+    runId: string;
+    sleep: ReturnType<typeof vi.fn>;
+  }
+
+  /**
+   * Runs one review gate against a real git repo, optionally under a held
+   * `.git/index.lock`, with the retry sleeps injected so the bound is
+   * observable and the test does not wait on wall-clock delays.
+   */
+  async function runGateWithProjectLog(
+    options: {
+      holdIndexLock?: boolean;
+      onSleep?: (input: {
+        call: number;
+        root: string;
+        projectPath: string;
+      }) => Promise<void>;
+      seedReceipt?: (input: {
+        root: string;
+        projectPath: string;
+      }) => Promise<void>;
+    } = {},
+  ): Promise<GateProjectLogRun> {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const git = initGitRepo(root);
+    await options.seedReceipt?.({ root, projectPath });
+    if (options.holdIndexLock) {
+      await writeFile(join(root, '.git', 'index.lock'), '', 'utf8');
+    }
+    let sleepCalls = 0;
+    const sleep = vi.fn(async () => {
+      sleepCalls += 1;
+      await options.onSleep?.({ call: sleepCalls, root, projectPath });
+    });
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+    const diagnosticLines: string[] = [];
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeDiagnostic: (message) => diagnosticLines.push(message),
+      appendProjectLog: appendProjectLogFromDisk,
+      sleep,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    return {
+      capture,
+      diagnostics: diagnosticLines.map(
+        (line) => JSON.parse(line) as Record<string, unknown>,
+      ),
+      git,
+      home,
+      projectPath,
+      root,
+      runId: String(capture.jsonPayloads[0]?.runId),
+      sleep,
+    };
+  }
+
+  async function readGateReceipt(
+    run: GateProjectLogRun,
+  ): Promise<GateProjectLogReceipt> {
+    return JSON.parse(
+      await readFile(
+        join(run.root, run.projectPath, 'gate-receipts', `${run.runId}.json`),
+        'utf8',
+      ),
+    ) as GateProjectLogReceipt;
+  }
+
+  function countRunHeadings(content: string, runId: string): number {
+    return content.split('\n').filter((line) => line.includes(`run=${runId}`))
+      .length;
+  }
+
+  it('carries the gate run id into the structural project log body', async () => {
+    const run = await runGateWithProjectLog();
+
+    const content = await readFile(
+      join(run.root, run.projectPath, 'project-log.md'),
+      'utf8',
+    );
+    expect(run.runId).toMatch(/[0-9a-f-]{8,}/i);
+    expect(content).toContain(`run=${run.runId}`);
+    expect(countRunHeadings(content, run.runId)).toBe(1);
+    expect(run.sleep).not.toHaveBeenCalled();
+  });
+
+  it('retries and commits after a transient index lock clears', async () => {
+    const run = await runGateWithProjectLog({
+      holdIndexLock: true,
+      onSleep: async ({ root }) => {
+        await rm(join(root, '.git', 'index.lock'), { force: true });
+      },
+    });
+
+    expect(run.sleep).toHaveBeenCalledTimes(1);
+    expect(run.diagnostics).not.toContainEqual(
+      expect.objectContaining({ type: 'gate-project-log-commit-failed' }),
+    );
+    expect(run.diagnostics).not.toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-partial-finalization',
+      }),
+    );
+    expect(run.git(['show', '--name-only', '--format=', 'HEAD'])).toBe(
+      `${run.projectPath}/project-log.md`,
+    );
+    const content = await readFile(
+      join(run.root, run.projectPath, 'project-log.md'),
+      'utf8',
+    );
+    expect(countRunHeadings(content, run.runId)).toBe(1);
+    expect(
+      run.git([
+        'status',
+        '--porcelain',
+        '--',
+        `${run.projectPath}/project-log.md`,
+      ]),
+    ).toBe('');
+  });
+
+  it('classifies a held index lock as persistent after exhausting retries and never deletes it', async () => {
+    const run = await runGateWithProjectLog({ holdIndexLock: true });
+
+    // Three attempts means exactly two waits.
+    expect(run.sleep).toHaveBeenCalledTimes(2);
+    expect(run.sleep.mock.calls.map(([ms]) => ms)).toEqual([250, 500]);
+    const receipt = await readGateReceipt(run);
+    expect(receipt).toMatchObject({
+      lockClass: 'persistent-index-lock',
+      attempts: 3,
+      commitStatus: 'blocked-by-index-lock',
+    });
+    // The gate never removes a lock it did not take.
+    await expect(
+      readFile(join(run.root, '.git', 'index.lock'), 'utf8'),
+    ).resolves.toBe('');
+    expect(run.capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('emits a partial-finalization receipt when retries are exhausted', async () => {
+    const run = await runGateWithProjectLog({ holdIndexLock: true });
+    const receiptPath = join(
+      run.root,
+      run.projectPath,
+      'gate-receipts',
+      `${run.runId}.json`,
+    );
+    const receipt = await readGateReceipt(run);
+    const artifactPath = String(run.capture.jsonPayloads[0]?.artifactPath);
+
+    expect(receipt).toMatchObject({
+      runId: run.runId,
+      project: run.projectPath,
+      projectPath: join(run.root, run.projectPath),
+      logPath: join(run.root, run.projectPath, 'project-log.md'),
+      artifactPath,
+      appendStatus: 'appended',
+      commitStatus: 'blocked-by-index-lock',
+      lockClass: 'persistent-index-lock',
+      attempts: 3,
+      producer: 'oat gate review',
+      ref: 'p02',
+    });
+    expect(receipt.worktreeRoot).toBe(
+      run.git(['rev-parse', '--show-toplevel']),
+    );
+    expect(receipt.artifactSignature).toMatch(/^[0-9a-f]{64}$/);
+    expect(receipt.body).toContain(`run=${run.runId}`);
+    expect(receipt.recovery.command).toBe(
+      [
+        'oat project log append',
+        `--project ${join(run.root, run.projectPath)}`,
+        '--structural',
+        "--producer 'oat gate review'",
+        '--ref p02',
+        `--body '${receipt.body}'`,
+        `--idempotency-key ${run.runId}`,
+        '--commit',
+      ].join(' '),
+    );
+    expect(run.diagnostics).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-partial-finalization',
+        receiptPath,
+        lockClass: 'persistent-index-lock',
+        attempts: 3,
+        recovery: receipt.recovery.command,
+      }),
+    );
+  });
+
+  it('warns at gate start when a receipt is pending for the project', async () => {
+    let pendingReceiptPath = '';
+    const run = await runGateWithProjectLog({
+      seedReceipt: async ({ root, projectPath }) => {
+        pendingReceiptPath = join(
+          root,
+          projectPath,
+          'gate-receipts',
+          'earlier-run.json',
+        );
+        await mkdir(join(root, projectPath, 'gate-receipts'), {
+          recursive: true,
+        });
+        await writeFile(
+          pendingReceiptPath,
+          `${JSON.stringify({
+            runId: 'earlier-run',
+            logPath: join(root, projectPath, 'project-log.md'),
+            recovery: { command: 'oat project log append --commit' },
+          })}\n`,
+          'utf8',
+        );
+      },
+    });
+
+    expect(run.diagnostics).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-receipt-pending',
+        state: 'pending',
+        receiptPath: pendingReceiptPath,
+        runId: 'earlier-run',
+      }),
+    );
+    // The warning is discovery, not a gate failure.
+    expect(run.capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+  });
+
+  /**
+   * Installs an `oat` shim on PATH so a receipt's `recovery.command` can be run
+   * verbatim, in a genuinely separate process, through the real CLI entry
+   * point. Running the string itself (rather than a hand-rebuilt argv) is what
+   * proves the receipt's quoting and flags are actually replayable.
+   */
+  async function installOatShim(root: string): Promise<string> {
+    const cliRoot = join(process.cwd(), '..', '..');
+    const binDir = join(root, 'recovery-bin');
+    await mkdir(binDir, { recursive: true });
+    await writeFile(
+      join(binDir, 'oat'),
+      [
+        '#!/bin/sh',
+        `exec ${JSON.stringify(join(cliRoot, 'node_modules', '.bin', 'tsx'))} \\`,
+        `  --tsconfig ${JSON.stringify(join(cliRoot, 'packages', 'cli', 'tsconfig.json'))} \\`,
+        `  ${JSON.stringify(join(cliRoot, 'packages', 'cli', 'src', 'index.ts'))} "$@"`,
+        '',
+      ].join('\n'),
+      { encoding: 'utf8', mode: 0o755 },
+    );
+    return binDir;
+  }
+
+  function runRecoveryCommand(options: {
+    binDir: string;
+    command: string;
+    home: string;
+    root: string;
+    tmpDir: string;
+  }): { status: number; output: string } {
+    try {
+      const output = execFileSync('sh', ['-c', options.command], {
+        cwd: options.root,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          HOME: options.home,
+          // A private TMPDIR makes any gate run in this child observable: every
+          // review gate writes `<tmp>/oat-gate-runs/<runId>.json` before it
+          // dispatches a reviewer.
+          TMPDIR: options.tmpDir,
+          PATH: `${options.binDir}:${process.env.PATH ?? ''}`,
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      return { status: 0, output };
+    } catch (error) {
+      const failure = error as {
+        status?: number;
+        stdout?: string;
+        stderr?: string;
+      };
+      return {
+        status: failure.status ?? 1,
+        output: `${failure.stdout ?? ''}${failure.stderr ?? ''}`,
+      };
+    }
+  }
+
+  async function snapshotReviews(
+    root: string,
+    projectPath: string,
+  ): Promise<string> {
+    const dir = join(root, projectPath, 'reviews');
+    const names = (await readdir(dir)).sort();
+    const contents = await Promise.all(
+      names.map(
+        async (name) => `${name}:${await readFile(join(dir, name), 'utf8')}`,
+      ),
+    );
+    return contents.join('\n');
+  }
+
+  it('recovers finalization from the receipt in a fresh process without re-running the review', async () => {
+    const run = await runGateWithProjectLog({ holdIndexLock: true });
+    const receipt = await readGateReceipt(run);
+    const receiptPath = join(
+      run.root,
+      run.projectPath,
+      'gate-receipts',
+      `${run.runId}.json`,
+    );
+    const logPath = join(run.root, run.projectPath, 'project-log.md');
+    expect(
+      run.git([
+        'status',
+        '--porcelain',
+        '--',
+        `${run.projectPath}/project-log.md`,
+      ]),
+    ).not.toBe('');
+
+    // The other process finished with the index; nothing deleted the lock on
+    // its behalf.
+    await rm(join(run.root, '.git', 'index.lock'));
+    const headBefore = run.git(['rev-parse', 'HEAD']);
+    const reviewsBefore = await snapshotReviews(run.root, run.projectPath);
+    const binDir = await installOatShim(run.root);
+    const tmpDir = join(run.root, 'recovery-tmp');
+    await mkdir(tmpDir, { recursive: true });
+
+    const recovery = runRecoveryCommand({
+      binDir,
+      command: receipt.recovery.command,
+      home: run.home,
+      root: run.root,
+      tmpDir,
+    });
+
+    expect(recovery.status, recovery.output).toBe(0);
+    expect(run.git(['rev-list', '--count', `${headBefore}..HEAD`])).toBe('1');
+    expect(run.git(['show', '--name-only', '--format=', 'HEAD'])).toBe(
+      `${run.projectPath}/project-log.md`,
+    );
+    expect(
+      run.git([
+        'status',
+        '--porcelain',
+        '--',
+        `${run.projectPath}/project-log.md`,
+      ]),
+    ).toBe('');
+    const content = await readFile(logPath, 'utf8');
+    expect(countRunHeadings(content, run.runId)).toBe(1);
+    await expect(readFile(receiptPath, 'utf8')).rejects.toThrow();
+    // No reviewer ran: the review artifacts are byte-identical and the
+    // recovery process emitted no gate envelope.
+    await expect(snapshotReviews(run.root, run.projectPath)).resolves.toBe(
+      reviewsBefore,
+    );
+    expect(recovery.output).not.toContain('"runId"');
+    expect(recovery.output).not.toContain('receiveEligible');
+    // No gate ran in the child: a review gate always creates its run-marker
+    // directory under TMPDIR before it dispatches anything.
+    await expect(readdir(tmpDir)).resolves.not.toContain('oat-gate-runs');
+
+    const replay = runRecoveryCommand({
+      binDir,
+      command: receipt.recovery.command,
+      home: run.home,
+      root: run.root,
+      tmpDir,
+    });
+
+    expect(replay.status, replay.output).toBe(0);
+    expect(replay.output).toContain('already present');
+    await expect(readdir(tmpDir)).resolves.not.toContain('oat-gate-runs');
+    expect(run.git(['rev-list', '--count', `${headBefore}..HEAD`])).toBe('1');
+    await expect(readFile(logPath, 'utf8')).resolves.toBe(content);
+    expect(countRunHeadings(content, run.runId)).toBe(1);
+  }, 120_000);
+
+  it('reports a receipt as stale once its run id is already in the log', async () => {
+    let pendingReceiptPath = '';
+    const run = await runGateWithProjectLog({
+      seedReceipt: async ({ root, projectPath }) => {
+        const logPath = await writeExistingProjectLog(root, projectPath);
+        await writeFile(
+          logPath,
+          `${await readFile(logPath, 'utf8')}\n### 2026-07-17 · structural · oat gate review · p01\n\nstatus=ok run=earlier-run\n`,
+          'utf8',
+        );
+        pendingReceiptPath = join(
+          root,
+          projectPath,
+          'gate-receipts',
+          'earlier-run.json',
+        );
+        await mkdir(join(root, projectPath, 'gate-receipts'), {
+          recursive: true,
+        });
+        await writeFile(
+          pendingReceiptPath,
+          `${JSON.stringify({
+            runId: 'earlier-run',
+            logPath,
+            recovery: { command: 'oat project log append --commit' },
+          })}\n`,
+          'utf8',
+        );
+      },
+    });
+
+    expect(run.diagnostics).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-receipt-pending',
+        state: 'stale',
+        receiptPath: pendingReceiptPath,
+      }),
+    );
   });
 
   it('injects headless context and keeps JSON stdout envelope-only', async () => {

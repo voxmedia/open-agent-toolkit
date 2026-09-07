@@ -2,14 +2,21 @@ import { execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, isAbsolute, join, relative } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
-import { appendProjectLog } from '@commands/project/log/append';
+import {
+  appendProjectLog,
+  commitProjectLog,
+  GATE_RECEIPTS_DIRNAME,
+  projectLogContainsIdempotencyKey,
+  type GateProjectLogReceipt,
+  type ProjectLogCommitResult,
+} from '@commands/project/log/append';
 import type { LatestReview } from '@commands/review/latest';
 import {
   getFrontmatterBlock,
@@ -138,6 +145,12 @@ interface GateCommandDependencies {
     path: string,
     warn: (message: string) => void,
   ) => Promise<void>;
+  writeGateProjectLogReceipt: (
+    path: string,
+    receipt: GateProjectLogReceipt,
+    warn: (message: string) => void,
+  ) => Promise<boolean>;
+  sleep: (ms: number) => Promise<void>;
   writeDiagnostic: (message: string) => void;
 }
 
@@ -270,6 +283,8 @@ interface ReviewGateProjectLogFinalization {
   exitCode: number;
   counts?: ReviewGateVerdict['counts'];
   artifactPath?: string;
+  artifactSignature?: string;
+  runId: string;
 }
 type ReviewProjectResolutionSource =
   | 'declared'
@@ -402,6 +417,10 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   processEnv: process.env,
   writeGateRunMarker,
   removeGateRunMarker,
+  writeGateProjectLogReceipt,
+  sleep: async (ms) => {
+    await new Promise((settle) => setTimeout(settle, ms));
+  },
   writeDiagnostic: (message) => process.stderr.write(message),
 };
 
@@ -450,6 +469,30 @@ async function writeGateRunMarker(
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     warn(`Unable to write gate run marker ${path}: ${detail}`);
+    return false;
+  }
+}
+
+/**
+ * Writes a gate partial-finalization receipt.
+ *
+ * Injected like `writeGateRunMarker`, but deliberately not stored beside it:
+ * the run marker lives in `tmpdir()` because it dies with the run, while a
+ * receipt has to survive into the later process that finishes the
+ * finalization, so it lives under the project it belongs to.
+ */
+async function writeGateProjectLogReceipt(
+  path: string,
+  receipt: GateProjectLogReceipt,
+  warn: (message: string) => void,
+): Promise<boolean> {
+  try {
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, `${JSON.stringify(receipt, null, 2)}\n`, 'utf8');
+    return true;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    warn(`Unable to write gate project log receipt ${path}: ${detail}`);
     return false;
   }
 }
@@ -2825,79 +2868,230 @@ function writeReviewGateTargetingFailure(
   );
 }
 
+const GATE_PROJECT_LOG_PRODUCER = 'oat gate review';
+const GATE_PROJECT_LOG_COMMIT_MESSAGE =
+  'chore(oat): record gate review in project log';
+
 /**
  * Commits `project-log.md` after this gate run appends to it.
  *
- * The log is tracked, so an uncommitted append leaves the worktree dirty for
- * whatever runs next — including a dispatched subagent whose preflight requires
- * a clean tree. The commit is pathspec-scoped to the log alone so unrelated
- * working-tree changes are never swept in.
+ * The retry, the index-lock classification, and the log mutation itself belong
+ * to the `oat project log` module (DR-260718), so this is a thin gate-side
+ * wrapper that supplies the gate's commit message and its injected sleep. The
+ * recovery entry point calls the same implementation, so a finalization
+ * completed later is the finalization the gate would have made.
  *
- * Scope note: this commits the whole log file, so a log that was already dirty
- * before the gate ran is committed along with this run's entry. That is
- * deliberate — leaving the earlier append uncommitted would reproduce the dirty
- * tree this exists to prevent — but it does mean the commit is not always
- * exactly one entry.
- *
- * Never throws: git failures are reported to the caller, which degrades to a
- * diagnostic rather than altering the gate's exit status. On failure the index
- * is restored so a partially staged log is not left behind.
+ * Never throws and never removes an index lock: git failures are reported to
+ * the caller, which degrades to a diagnostic rather than altering the gate's
+ * exit status.
  */
-function commitReviewGateProjectLog(
+async function commitReviewGateProjectLog(
   repoRoot: string,
   logPath: string,
-): { committed: boolean; error?: string } {
-  const run = (args: string[]): string =>
-    execFileSync('git', args, {
+  identity: { key: string; body: string },
+  sleep: (ms: number) => Promise<void>,
+): Promise<ProjectLogCommitResult> {
+  return commitProjectLog(
+    {
+      repoRoot,
+      logPath,
+      message: GATE_PROJECT_LOG_COMMIT_MESSAGE,
+      identity,
+    },
+    { sleep },
+  );
+}
+
+function resolveGateProjectPath(repoRoot: string, project: string): string {
+  return isAbsolute(project) ? project : join(repoRoot, project);
+}
+
+function resolveWorktreeRoot(repoRoot: string): string {
+  try {
+    return execFileSync('git', ['rev-parse', '--show-toplevel'], {
       cwd: repoRoot,
       encoding: 'utf8',
-      // Capture stderr rather than inheriting it so skip/failure probes do not
-      // leak raw `git fatal:` lines into gate output.
       stdio: ['ignore', 'pipe', 'pipe'],
     }).trim();
-
-  try {
-    run(['rev-parse', '--is-inside-work-tree']);
   } catch {
-    return { committed: false };
+    return repoRoot;
   }
+}
 
-  let staged = false;
+/**
+ * Quotes a value for the copy-pasteable recovery command. Anything outside the
+ * safe set is single-quoted so a body full of spaces and `=` tokens survives a
+ * shell round trip verbatim.
+ */
+function shellQuote(value: string): string {
+  return /^[\w@%+=:,./-]+$/.test(value)
+    ? value
+    : `'${value.replaceAll("'", `'\\''`)}'`;
+}
+
+function composeGateProjectLogRecoveryCommand(input: {
+  projectPath: string;
+  producer: string;
+  ref: string;
+  body: string;
+  runId: string;
+}): string {
+  return [
+    'oat project log append',
+    `--project ${shellQuote(input.projectPath)}`,
+    '--structural',
+    `--producer ${shellQuote(input.producer)}`,
+    `--ref ${shellQuote(input.ref)}`,
+    `--body ${shellQuote(input.body)}`,
+    `--idempotency-key ${shellQuote(input.runId)}`,
+    '--commit',
+  ].join(' ');
+}
+
+/**
+ * Warns once per pending gate project-log receipt at the start of a run.
+ *
+ * A receipt whose run id the log already carries is reported as `stale`: the
+ * append landed, so the recovery command will observe `already-appended` and
+ * clear the receipt. Anything else is `pending` finalization work. The
+ * staleness question is answered by the log module, so the gate never reads
+ * `project-log.md` itself.
+ */
+async function warnPendingGateProjectLogReceipts(options: {
+  context: CommandContext;
+  dependencies: GateCommandDependencies;
+  repoRoot: string;
+  project: string;
+}): Promise<void> {
+  const receiptsDir = join(
+    resolveGateProjectPath(options.repoRoot, options.project),
+    GATE_RECEIPTS_DIRNAME,
+  );
+  let entries: string[];
   try {
-    if (run(['status', '--porcelain', '--', logPath]).length === 0) {
-      return { committed: false };
-    }
-
-    run(['add', '--', logPath]);
-    staged = true;
-    run([
-      'commit',
-      '-m',
-      'chore(oat): record gate review in project log',
-      '--',
-      logPath,
-    ]);
-    return { committed: true };
-  } catch (error) {
-    if (staged) {
-      try {
-        // A failed commit (hook, signing, identity) would otherwise leave the
-        // log staged, which is a worse state than the dirty tree we started in.
-        run(['reset', '--quiet', '--', logPath]);
-      } catch {
-        // Best effort: the reported commit failure already tells the caller the
-        // log needs attention.
-      }
-    }
-    const stderr =
-      error && typeof error === 'object' && 'stderr' in error
-        ? (error as { stderr?: Buffer | string }).stderr
-        : undefined;
-    const message =
-      (stderr != null ? stderr.toString().trim() : '') ||
-      (error instanceof Error ? error.message : String(error));
-    return { committed: false, error: message };
+    entries = await readdir(receiptsDir);
+  } catch {
+    return;
   }
+
+  for (const name of entries
+    .filter((entry) => entry.endsWith('.json'))
+    .sort()) {
+    const receiptPath = join(receiptsDir, name);
+    let receipt: GateProjectLogReceipt;
+    try {
+      receipt = JSON.parse(
+        await readFile(receiptPath, 'utf8'),
+      ) as GateProjectLogReceipt;
+    } catch {
+      continue;
+    }
+    const stale = await projectLogContainsIdempotencyKey(
+      receipt.logPath,
+      receipt.runId,
+      receipt.body,
+    );
+    const state = stale ? 'stale' : 'pending';
+    if (options.context.json) {
+      options.dependencies.writeDiagnostic(
+        `${JSON.stringify({
+          type: 'gate-project-log-receipt-pending',
+          state,
+          project: options.project,
+          receiptPath,
+          runId: receipt.runId,
+          recovery: receipt.recovery?.command,
+        })}\n`,
+      );
+      continue;
+    }
+    options.context.logger.warn(
+      `Warning: a ${state} gate project log receipt exists at ${receiptPath}. Complete it with: ${receipt.recovery?.command ?? 'oat project log append --commit'}`,
+    );
+  }
+}
+
+/**
+ * Emits the durable partial-finalization receipt and its diagnostic.
+ *
+ * Reached only when the retry budget is exhausted against an index lock: the
+ * entry is in the log but not in a commit, so a later process must finish the
+ * job. The receipt carries the exact recovery command, and the diagnostic
+ * prints it verbatim so an operator or orchestrator can run it without
+ * reconstructing any of the gate's state.
+ */
+async function emitGateProjectLogPartialFinalization(options: {
+  context: CommandContext;
+  dependencies: GateCommandDependencies;
+  finalization: ReviewGateProjectLogFinalization;
+  appendStatus: 'appended' | 'already-appended';
+  logPath: string;
+  body: string;
+  commit: ProjectLogCommitResult;
+}): Promise<void> {
+  const { commit, context, dependencies, finalization } = options;
+  const projectPath = resolveGateProjectPath(
+    finalization.repoRoot,
+    finalization.project,
+  );
+  const receiptPath = join(
+    projectPath,
+    GATE_RECEIPTS_DIRNAME,
+    `${finalization.runId}.json`,
+  );
+  const command = composeGateProjectLogRecoveryCommand({
+    projectPath,
+    producer: GATE_PROJECT_LOG_PRODUCER,
+    ref: finalization.ref,
+    body: options.body,
+    runId: finalization.runId,
+  });
+  const receipt: GateProjectLogReceipt = {
+    runId: finalization.runId,
+    project: finalization.project,
+    projectPath,
+    worktreeRoot: resolveWorktreeRoot(finalization.repoRoot),
+    logPath: options.logPath,
+    artifactPath: finalization.artifactPath ?? null,
+    artifactSignature: finalization.artifactSignature ?? null,
+    appendStatus: options.appendStatus,
+    commitStatus: commit.outcome,
+    lockClass: commit.lockClass ?? null,
+    attempts: commit.attempts,
+    producer: GATE_PROJECT_LOG_PRODUCER,
+    ref: finalization.ref,
+    body: options.body,
+    recovery: { command },
+  };
+
+  const written = await dependencies.writeGateProjectLogReceipt(
+    receiptPath,
+    receipt,
+    (message) => context.logger.warn(message),
+  );
+  if (!written) {
+    return;
+  }
+
+  if (context.json) {
+    dependencies.writeDiagnostic(
+      `${JSON.stringify({
+        type: 'gate-project-log-partial-finalization',
+        project: finalization.project,
+        receiptPath,
+        logPath: options.logPath,
+        lockClass: receipt.lockClass,
+        attempts: receipt.attempts,
+        recovery: command,
+      })}\n`,
+    );
+    return;
+  }
+  context.logger.warn(
+    `Warning: the oat gate review project log entry is appended but not committed (${
+      receipt.lockClass ?? 'unknown'
+    } after ${receipt.attempts} attempts). Receipt: ${receiptPath}. Complete it with: ${command}`,
+  );
 }
 
 async function finalizeReviewGateProjectLog(
@@ -2911,7 +3105,11 @@ async function finalizeReviewGateProjectLog(
   const artifact = finalization.artifactPath
     ? ` artifact=${finalization.artifactPath}`
     : '';
-  const body = `target=${finalization.target} threshold=${finalization.threshold}${findings} exit=${finalization.exitCode} status=${finalization.status}${artifact}`;
+  // The run id is the finalization's stable event identity: it makes the entry
+  // recognizable to a retry or to a later recovery, so neither ever appends a
+  // second entry for the same run. It is an additive token on the one-line
+  // structural body, which no consumer parses.
+  const body = `target=${finalization.target} threshold=${finalization.threshold}${findings} exit=${finalization.exitCode} status=${finalization.status}${artifact} run=${finalization.runId}`;
 
   // Finalization runs after the JSON envelope is emitted, and `logger.warn` is
   // suppressed in JSON mode. Automation would otherwise get no signal that the
@@ -2947,19 +3145,37 @@ async function finalizeReviewGateProjectLog(
       home: finalization.home,
       project: finalization.project,
       structural: true,
-      producer: 'oat gate review',
+      producer: GATE_PROJECT_LOG_PRODUCER,
       ref: finalization.ref,
       body,
+      idempotencyKey: finalization.runId,
     });
 
-    if (result.status === 'appended') {
-      const commit = commitReviewGateProjectLog(
-        finalization.repoRoot,
-        result.logPath,
-      );
-      if (commit.error != null) {
-        report('gate-project-log-commit-failed', commit.error, result.logPath);
-      }
+    if (result.status === 'skipped') {
+      return;
+    }
+
+    // `already-appended` is success: this run's entry is in the log, so the
+    // only work left is the commit.
+    const commit = await commitReviewGateProjectLog(
+      finalization.repoRoot,
+      result.logPath,
+      { key: finalization.runId, body },
+      dependencies.sleep,
+    );
+    if (commit.error != null) {
+      report('gate-project-log-commit-failed', commit.error, result.logPath);
+    }
+    if (commit.outcome === 'blocked-by-index-lock') {
+      await emitGateProjectLogPartialFinalization({
+        context,
+        dependencies,
+        finalization,
+        appendStatus: result.status,
+        logPath: result.logPath,
+        body,
+        commit,
+      });
     }
   } catch (error) {
     report(
@@ -3758,7 +3974,14 @@ async function runReviewGate(
       threshold,
       status: 'review_failed',
       exitCode: 1,
+      runId,
     };
+    await warnPendingGateProjectLogReceipts({
+      context,
+      dependencies,
+      repoRoot,
+      project: projectPath,
+    });
     markPostSelectionStep('artifact-scan');
     const before = await listReviewGateArtifactCandidates({
       repoRoot,
@@ -3886,9 +4109,10 @@ async function runReviewGate(
       after,
     });
     if (projectLogFinalization) {
-      projectLogFinalization.artifactPath =
-        artifactResolution.artifact?.path ??
-        artifactResolution.diagnosticArtifact?.path;
+      const correlated =
+        artifactResolution.artifact ?? artifactResolution.diagnosticArtifact;
+      projectLogFinalization.artifactPath = correlated?.path;
+      projectLogFinalization.artifactSignature = correlated?.signature;
     }
     if (!artifactResolution.artifact && writeRefusalFailure()) {
       return;
@@ -4094,6 +4318,7 @@ async function runReviewGate(
       projectLogFinalization.exitCode = blocking ? 1 : 0;
       projectLogFinalization.counts = verdict.counts;
       projectLogFinalization.artifactPath = producedArtifact.path;
+      projectLogFinalization.artifactSignature = producedArtifact.signature;
     }
     process.exitCode = blocking ? 1 : 0;
   } catch (error) {
@@ -4192,6 +4417,7 @@ async function runReviewGate(
               projectLogFinalization.exitCode = disposition.blocking ? 1 : 0;
               projectLogFinalization.counts = disposition.verdict.counts;
               projectLogFinalization.artifactPath = snapshot.path;
+              projectLogFinalization.artifactSignature = snapshot.signature;
             }
             process.exitCode = disposition.blocking ? 1 : 0;
             return;
