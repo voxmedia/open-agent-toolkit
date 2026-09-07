@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: p09-t01
+oat_current_task_id: p10-t01
 oat_generated: false
 ---
 
@@ -34,11 +34,11 @@ oat_generated: false
 | Phase 06 (validate-skill-script-references-against-pack-manifests)          | complete | 1     | 1/1       |
 | Phase 07 (enforce-external-plan-readiness-contract)                         | complete | 1     | 1/1       |
 | Phase 08 (make-autonomous-project-recap-capability-aware)                   | complete | 1     | 1/1       |
-| Phase 09 (defer-activeproject-clearing-on-archive-completions)              | pending  | 1     | 0/1       |
+| Phase 09 (defer-activeproject-clearing-on-archive-completions)              | blocked  | 1     | 0/1       |
 | Phase 10 (make-terminal-project-status-agree-with-revision-plans)           | pending  | 1     | 0/1       |
 | Phase 11 (make-consolidated-project-retirement-semantic)                    | pending  | 1     | 0/1       |
 
-**Total:** 8/11 planned tasks completed
+**Total:** 8/11 planned tasks completed; 1 parked (p09)
 
 ---
 
@@ -140,15 +140,15 @@ oat_generated: false
 
 ## Phase 09: defer activeproject clearing on archive completions (p09)
 
-**Status:** pending · **Group:** group 4 (sequential pair, first) · **Tasks:** p09-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** blocked (parked on the plan's own STOP condition) · **Group:** 4 (sequential pair, first) · **Tasks:** p09-t01
+**Outcome:** none merged. The plan's resume design rests on a false premise (the completion seal append is not idempotent and the status probe cannot see a seal), reproduced against the real CLI; executing it would widen the active-pointer window across the whole closeout and append duplicate seals. Parked work (steps 1, 2, 3, 5) preserved as a patch; two backlog items filed.
+**Verification:** the new validator suite 13/13 in the worktree (uncommitted); no lane gates run (no commit).
+**Deviations:** STOP → BLOCKED per wrapper rule 4; the plan requires a refresh or supersession (`BL-260907-make-the-completion-seal`); the incidental `finalize-synced-archive.mjs` stdin bug filed as `BL-260907-finalize-synced-archive-mjs`.
 
 ### Task p09-t01: Execute external plan — Defer activeProject clearing on shared archive completions
 
-**Status:** pending
-**Commit:** -
+**Status:** blocked
+**Commit:** - (parked; patch `w5/p09-parked-work.patch` in the orchestrator scratchpad)
 
 ## Phase 10: make terminal project status agree with revision plans (p10)
 
@@ -280,6 +280,8 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - `w5-p08-fix-001` outcome: one commit `d7f8a6ff8f1d66d6dbc8fadf429179f16546647e` (10 files): the smoke pin moved to `1\.0\.7` (`test:smoke` 160/160, root `pnpm test` exit 0 — both had been red); a repo-wide fixed-string sweep of all five old versions in plain and escaped forms (the escaped regex was the only hit); both invocation gates qualified "In autonomy" with the interactive rule stated separately and a never-read-as-one clause (red-then-green on the pinned literal; the pre-existing `runOatExplainer exactly once` literal kept contiguous); `assertSeamProbe` enforces a disjoint, duplicate-free, complete five-seam partition (the review's shapes 12 and 14 now rejected); Step 3.6 states the probe-driven skip supersedes the resolved intent; the critic-seam framing recorded as a durable code comment; interactive guidance no longer offers `capability_probe`. One Codex round (0C/0I/0M/2m fixed). Record `dispatch/w5-p08-fix-001.json`. Wave rule adopted: sweep old version literals repo-wide in plain and escaped forms and run `pnpm test:smoke` whenever a skill is bumped.
 - `w5-p08-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w5-p08-review-002.json`.
 - `w5-p08-review-002` outcome: PASS (fan-in may proceed), 0C/0I/0M/0m. `pnpm test:smoke` 160/160 and root `pnpm test` exit 0 re-run by the reviewer (both had been red); escaped-form sweep over 2,317 tracked files clean on every code/test/skill/asset surface; interactive seam-less end state executed (guard accepts `generate` + `failed`, never `E_RECAP_OUTCOME`); all 19 forged shapes rejected; an exhaustive 3^5 = 243 real-producer host-combination probe (skip 31 / generate 1 / fail-closed 211 / spurious 0) with zero legitimate probes rejected; the two new `NG` inventory mappings ruled correct (exact table delta computed); the narrowed critic comment accurate; two neutralizations red; Lite carve-out and `PROJECT_RECAP_REACHABLE` byte-identical to base; `check:skill-bumps` 10; gates forced `Cached: 0`.
+- `w5-p09-impl-001` — p09 dispatched alone at the group-4 base `956773dc6832dea1a765bfa61716e824166878fc`; target opus, task_class default-implementation. Record `dispatch/w5-p09-impl-001.json`.
+- `w5-p09-impl-001` outcome: BLOCKED (parked, no commit). The plan's own STOP condition fired — "the resume design would require a second `oat project archive` invocation, a project-log append after the seal, or skipping the Step 7 artifact" — because the plan's step-3 premise ("Step 3.7's status probe sees the existing seal and skips the append") is false against the real CLI: `oat project log check` has no seal awareness (`check.ts:35`), the seal append passes no idempotency key and embeds a fresh timestamp (`SKILL.md:680`), replaying the skill's seal invocation appended a second seal both times, and the Step 3.65 router that could skip `project-log` is gated to synced non-archive completions. Widening the Step 6 guard as the plan requires would keep the pointer alive through the network-bearing closeout and make every interruption append a second seal, breaking the skill's pinned "No project-log append may follow the seal" contract and two of the plan's own acceptance items. Parked work (steps 1, 2, 3, 5: guard widening, a separate durable validator with directory + receipt modes, the shared resume branch, both docs pages; 531 insertions; no bump) preserved as a patch in the orchestrator's scratchpad; the worktree left dirty at the base; `oat-project-complete` untouched at 1.7.8. Filed: `BL-260907-make-the-completion-seal` (plan refresh/supersession: seal idempotence CLI-side or router extension) and `BL-260907-finalize-synced-archive-mjs` (incidental, higher-severity pre-existing bug: `finalize-synced-archive.mjs:94` reads stdin with `fs/promises` `readFile(0)`, so the synced deferred clear from PR #254 always fails). Per wrapper rule 4/5 the park does not block group 4's second lane or group 5: p10 and p11 run on the current tip.
 
 #### Phase Outcomes
 
@@ -319,13 +321,15 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
 - `wave-5/p08` rebased onto the integration tip and merged with `git merge --no-ff` as `28d99dbaf`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `049783897`→`b4c4d879b`, `d7f8a6ff8`→`6f670166a`.
 - Lockstep retained at 0.2.63; integration gates (sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
 - p09 readiness on the merged tip: its plan is READY; the base carries p08's `oat-project-complete` bump (1.7.8, pins at `skills.test.ts` and `review-skill-contracts.test.ts`) — p09 edits that skill's prose without re-bumping; p08's worktree and branch removed.
+  | p09 | `.worktrees/wave-5/p09` | BLOCKED — plan STOP (seal append not idempotent; resume premise false); parked patch preserved | not reviewed (parked) | 0 |
 
 #### Parallel Groups
 
-- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08 (merged); p09 → p10, p11 (sequential, next).
+- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08 (merged); p09 (PARKED on a plan STOP); p10, p11 (sequential, next).
 
 #### Outstanding Items
 
+- p10 (group 4, second; runs on the current tip because p09 parked with no commits), p11 (group 5); then closeout. p09 needs a plan refresh (`BL-260907-make-the-completion-seal`) before it can run in a later wave.
 - p09 → p10 (group 4), p11 (group 5); then closeout.
 - p08 (group 3, second), then p09 → p10 (group 4), p11 (group 5); then closeout.
 - p07 → p08 (group 3), p09 → p10 (group 4), p11 (group 5), each alone after the previous merge; then closeout.
@@ -364,7 +368,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p06   | 5924 (forced CLI suite) + 139 focused         | all    | 0      | -        |
 | p07   | 6006 (forced CLI suite) + 286 focused         | all    | 0      | -        |
 | p08   | 6007 (forced CLI suite) + test:skills 856     | all    | 0      | -        |
-| p09   | -                                             | -      | -      | -        |
+| p09   | validator suite 13/13 (uncommitted)           | -      | -      | parked   |
 | p10   | -                                             | -      | -      | -        |
 | p11   | -                                             | -      | -      | -        |
 

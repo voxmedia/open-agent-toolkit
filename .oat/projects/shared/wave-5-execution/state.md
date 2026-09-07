@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: null
-oat_blockers: []
+oat_blockers:
+  - 'p09 parked on its plan STOP: the completion seal append is not idempotent and the status probe cannot see a seal, so the plan\'s pre-archive resume design cannot be implemented without a CLI change (BL-260907-make-the-completion-seal)'
 associated_issues:
   - { type: backlog, ref: 'BL-260902-recover-committed-review' }
   - { type: backlog, ref: 'BL-260902-keep-pjm-init-provider' }
@@ -93,7 +94,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T11:39:47.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: "2026-09-07T11:54:55.000Z" # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -105,7 +106,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 and p08 merged; p09 (defer activeProject clearing) dispatched alone at the integration tip.
+Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 and p08 merged; p09 parked on a plan STOP (no commits); p10 (terminal status vs revision plans) dispatched alone at the integration tip.
 
 ## Artifacts
 
@@ -125,12 +126,13 @@ Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 and p08 merged; 
 - ✓ Group 2 (p04 + p05 + p06) merged (`af42eba0e`, `4aeea4536`, `6b419ef7c`); eight gates green, lockstep retained
 - ✓ p07 merged (`a59e0d24f`); eight gates green
 - ✓ p08 merged (`28d99dbaf`); eight gates green
-- ⧗ p09 → p10, p11, closeout
+- ⚠ p09 parked (plan STOP: seal append not idempotent) — `BL-260907-make-the-completion-seal`
+- ⧗ p10, p11, closeout
 
 ## Blockers
 
-None
+- p09 (`2026-09-02-defer-activeproject-clearing-on-archive-completions.md`) parked on its own STOP condition; needs a plan refresh or supersession (`BL-260907-make-the-completion-seal`) before a later wave runs it. Siblings continue per wrapper rules 4–5.
 
 ## Next Milestone
 
-p09 reviewed and merged; then p10, p11.
+p10 reviewed and merged; then p11.

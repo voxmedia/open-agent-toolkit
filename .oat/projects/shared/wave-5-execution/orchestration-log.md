@@ -86,3 +86,9 @@ execution records. Five plan-gate runs is at the program's diminishing-returns
 cap; the last two findings were about the mechanism, not the wave's scope.
 
 ---
+
+### 2026-09-07 · structural · oat-wave-execute · p09 STOP → park
+
+p09 parked with no commit: the plan's resume premise (the status probe sees the seal and skips the append) is false against the real CLI — reproduced, not inferred (two seals appended on replay). Wrapper rule 4 applied; p10 and p11 proceed on the current tip. **Skill signal (strengthens):** the STOP→park rule worked as designed — the lane stopped before widening a guard that would have created a real regression, preserved its work as a patch, and filed the refresh item. **Skill signal (gap):** the plan-readiness contract (p07) checks dependency tables, not load-bearing behavioral premises; a "premise probe" step at wave-boundary recon (execute the plan's stated current-state claims against the built CLI) would have caught this before dispatch.
+
+---
