@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-09-07
 oat_phase: plan
@@ -1551,7 +1551,7 @@ in-scope implementation files when a gate exposes a project defect.
 | plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | revision-1-review-2 | codex:sol-high           |
 | plan   | artifact | passed          | 2026-08-31 | -                                                                     | -                                        | revision-1-review-3 | codex:sol-high           |
 | plan   | artifact | passed          | 2026-09-01 | -                                                                     | -                                        | revision-2-review-2 | codex:sol-high           |
-| plan   | artifact | pending         | 2026-09-07 | -                                                                     | -                                        | revision-3-review-1 | codex:sol-high           |
+| plan   | artifact | passed          | 2026-09-07 | -                                                                     | 0b899c6ff28e2f279c6290166a9b2a4ad3fe2801 | revision-3-review-1 | codex:sol-high           |
 
 **Status values:** pending -> received -> fixes_added -> fixes_completed ->
 passed.
