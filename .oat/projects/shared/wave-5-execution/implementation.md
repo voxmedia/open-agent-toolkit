@@ -331,6 +331,12 @@ Wave base `0f47bf7004166d420758d1bcd77d253007174332` (the Lite PR #264 merge); p
   | p09 | `.worktrees/wave-5/p09` | BLOCKED — plan STOP (seal append not idempotent; resume premise false); parked patch preserved | not reviewed (parked) | 0 |
   | p10 | `.worktrees/wave-5/p10` | DONE (`9d0049212` + pin `aaf4c8677`; forced CLI suite 6008, control-plane 102, test:smoke 0) | passed (round 1 0C/1I/1M/4m → round 2 0C/0I/0M/2m) | 1 |
 
+#### p10 fan-in — group 4, second (2026-09-07)
+
+- `wave-5/p10` rebased onto the integration tip and merged with `git merge --no-ff` as `098efc30b`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `9d0049212`→`6654df618`, `aaf4c8677`→`392eb88f0`. p09 (group 4, first) is parked with no commits, so group 4's fan-in is p10 alone.
+- Lockstep retained at 0.2.63; integration gates (sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
+- p11 readiness on the merged tip: its plan is READY; the base carries p03's `oat-project-quick-start` (2.3.10) and p08's `oat-project-complete` (1.7.8) — p11 edits both without re-bumping; none of p09's edits are present. p10's worktree and branch removed; p09's parked worktree stays until wave close.
+
 #### Parallel Groups
 
 - group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 + p06 (merged); p07 (merged); p08 (merged); p09 (PARKED); p10 (merged); p11 (next).
@@ -353,6 +359,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-07
 
+- p10-t01 `9d0049212`→`6654df618`, pin `aaf4c8677`→`392eb88f0`; merge `098efc30b`; lockstep retained 0.2.63.
 - p08-t01 `049783897`→`b4c4d879b`, fix `d7f8a6ff8`→`6f670166a`; merge `28d99dbaf`; lockstep retained 0.2.63.
 - p07-t01 `e4dfa0e27`→`b09dbd49c`, fix `9c2f96ca5`→`1f097db93`; merge `a59e0d24f`; lockstep retained 0.2.63.
 - p04-t01 `48837edf0`→`c055d5acf`, sweep `09de4c92f`→`7792f7583`; p05-t01 `3fd3aaa62`→`98fac8ccf`, sweep `d779ea634`→`3631ba9aa`; p06-t01 `8432f1d4d`→`6db97567b`, fix `970aedccc`→`1eaa49997`; merges `af42eba0e`, `4aeea4536`, `6b419ef7c`; lockstep retained 0.2.63.

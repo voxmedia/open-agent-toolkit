@@ -94,7 +94,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T04:13:42.471Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T11:54:55.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T13:10:52.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -106,7 +106,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 and p08 merged; p09 parked on a plan STOP (no commits); p10 (terminal status vs revision plans) dispatched alone at the integration tip.
+Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 and p08 merged; p10 merged; p11 (semantic consolidated-project retirement) dispatched alone at the integration tip — the last lane.
 
 ## Artifacts
 
@@ -127,7 +127,8 @@ Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 and p08 merged; 
 - ✓ p07 merged (`a59e0d24f`); eight gates green
 - ✓ p08 merged (`28d99dbaf`); eight gates green
 - ⚠ p09 parked (plan STOP: seal append not idempotent) — `BL-260907-make-the-completion-seal`
-- ⧗ p10, p11, closeout
+- ✓ p10 merged (`098efc30b`); eight gates green
+- ⧗ p11, closeout
 
 ## Blockers
 
@@ -135,4 +136,4 @@ Implementation — groups 1 and 2 merged (lockstep 0.2.63); p07 and p08 merged; 
 
 ## Next Milestone
 
-p10 reviewed and merged; then p11.
+p11 reviewed and merged; then closeout (final review, exit gate, post-implement sequence, PR).
