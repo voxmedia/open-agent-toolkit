@@ -2702,6 +2702,61 @@ no prior deferred Medium findings, and M1 is converted to p09-t02.
 
 **Next:** Run a fresh final code re-review at the Phase 9 completion head.
 
+### Run 13 — Phase p09
+
+```yaml
+request_id: remote-project-management-p09-implementation-1
+caller: oat-project-implement
+scope: p09
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+model_axis: selected:gpt-5.6-sol
+effort_axis: selected:high
+task_class: consequential
+model_class_floor: consequential
+floor_satisfaction: satisfied
+selection_source: policy-resolved
+selection_reason: native-catalog
+selected_route: native
+phase_base_head: 604fa3f3c3ff4b29478975ed393776dcdb9c85be
+phase_head: dda462ea6cd35e8cb03e8f7aeebaf7c00658cb7c
+task_commits:
+  - 818647f11d2c08986741aae4bf5df4a1f5b0bea5
+  - dda462ea6cd35e8cb03e8f7aeebaf7c00658cb7c
+launch_status: accepted
+child_outcome: done
+continuation_events: []
+recovery_usage: 0/10
+pending_attempt: null
+phase_verification: five expected guard-neutralization failures; restored focused union 82/82; CI-order gates passed
+phase_outcome: implementation-complete; fresh root-owned review pending
+```
+
+**Implementation dispatch:** Dispatch: scope=p09 action=implementation
+role=implementer producer=unknown provenance=unknown
+model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+dispatch_policy=high dispatch_ceiling=high
+target=oat-phase-implementer-gpt-5-6-sol-high
+
+- `p09-t01` independently neutralized five exact production guards using only
+  bounded synthetic fixtures. Every selected test failed under neutralization,
+  each guard was restored byte-for-byte immediately, and the restored five-file
+  focused union passed 82/82 with no production diff.
+- `p09-t02` reconciled durable resume state and terminal review rollups while
+  preserving chronological failure evidence. All 88 tasks are complete and the
+  next lifecycle action is a fresh final code re-review.
+- Root verified the exact two-commit append-only range, declared file
+  boundaries, clean worktree, diff integrity, unchanged `origin/main`, the
+  82/82 restored focused union, and valid plan metadata. The phase implementer
+  additionally reported every CI-order gate passing.
+- No recovery attempt, optional nested dispatch, deviation, or implementation
+  concern was reported.
+
 <!-- orchestration-runs-end -->
 
 ---

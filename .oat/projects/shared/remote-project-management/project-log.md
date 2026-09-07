@@ -176,6 +176,10 @@ verdict=passed; review_rounds=3/3; fix_loops=2/3; artifact=reviews/p08-review-20
 
 Final code review used attempted reconnaissance; complete orchestration evidence and primary reconciliation are recorded in reviews/final-review-2026-09-07T043133Z.md.
 
+### 2026-09-07 · structural · oat-project-implement · p09
+
+Phase p09 completed two bounded final-review fixes in 818647f11 and dda462ea6; five guard neutralizations failed as expected, restored focused union passed 82/82, all CI-order gates passed, and no optional nested dispatch occurred.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
