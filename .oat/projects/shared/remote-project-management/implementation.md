@@ -2544,7 +2544,7 @@ candidates_considered:
   - gpt-5.6-sol/high
 selected_route: native
 phase_base_head: 283bc57694b0e9f4d9504ae036ff028624b5eaef
-phase_head: 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae
+phase_head: 6c73da33cf64fa2221def42a0b2fc6f7960ced73
 task_commits:
   - d78efc897b4bdcb2ccdd25fe3fb686686298aa3b
   - 2f4f53dc2ec777360c220df2130b34a3b0eebce7
@@ -2554,17 +2554,22 @@ task_commits:
   - 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae
 launch_status: accepted
 child_outcome: done
-continuation_events: []
+continuation_events:
+  - p08-review-fix-1-20260907-7cc214e03
 recovery_usage: 0/10
 pending_attempt: null
 review_rounds: 1/3
-fix_loops: 0/3
-phase_verification: focused 708/708; forced workspace 6470/6470 with 0 cached; CI-equivalent gates passed twice
+fix_loops: 1/3
+review_fix_commits:
+  - 19356eaf9fbb57f0116075f05edf4e093b2cb558
+main_reconciliation_commit: 6c73da33cf64fa2221def42a0b2fc6f7960ced73
+main_reconciliation_head: 0f47bf7004166d420758d1bcd77d253007174332
+phase_verification: focused 708/708; forced workspace 6470/6470 with 0 cached; fix contract 4/4; skill suite 837/837; focused remote/E2E 51/51; current-main version gate passed at 0.2.63
 review_1_artifact: reviews/p08-review-2026-09-07T035129Z.md
 review_1_head: 3a083ed922ebda6fd79797f6f3fdaa68fbecf6ae
 review_1_findings: 0 critical, 2 important, 0 medium, 0 minor
 review_1_reconnaissance: not-attempted
-phase_outcome: fixes-required
+phase_outcome: awaiting-review-2
 ```
 
 **Implementation dispatch:** Dispatch: scope=p08 action=implementation
@@ -2586,6 +2591,20 @@ target=oat-reviewer-gpt-5-6-sol-high
   corroboration; the forced Phase 8 suite is the live package-test evidence.
 - Review round 1 blocked with two Important findings. Reconnaissance was not
   attempted, and no review orchestration log entry is required.
+- Bounded fix loop 1/3 resumed the original accepted implementer through
+  `p08-review-fix-1-20260907-7cc214e03`. Commit `19356eaf9` corrected the
+  provider-policy hierarchy and moved live capability discovery before the
+  first remote command. The fix changed only its six declared files, bumped
+  `oat-pjm-remote` from 1.0.0 to 1.0.1, and passed the 4/4 contract, 837/837
+  skill, 51/51 focused remote/E2E, docs, lint, format, skill-bump, release
+  validation, and docs-build checks.
+- The implementer's fresh version gate found that `origin/main` had advanced
+  from the previously reconciled 0.2.59 baseline to 0.2.62. Root preserved the
+  reviewed branch history, merged current main `0f47bf700` in `6c73da33c`,
+  retained both `oat-pjm-remote` and `oat-project-lite` sync entries, and
+  resolved all five public packages plus the bundled version asset to 0.2.63.
+  The current-main version gate and focused `oat-pjm-remote` contract pass.
+  Independent review round 2 is next.
 
 <!-- orchestration-runs-end -->
 
