@@ -15,6 +15,8 @@ interface HarnessOptions {
   json?: boolean;
   scanError?: Error;
   excludedPaths?: string[];
+  effectiveExcludedPaths?: string[];
+  exclusionWarnings?: string[];
 }
 
 function createHarness(options: HarnessOptions = {}): {
@@ -29,7 +31,11 @@ function createHarness(options: HarnessOptions = {}): {
 
   // Injected for the same reason as the sync harness: the harness cwd is a fake
   // path, so the production resolver must not read the developer's filesystem.
-  const resolveInstructionPointerExcludes = vi.fn(async () => excludedPaths);
+  const resolveInstructionPointerExcludes = vi.fn(async () => ({
+    configured: excludedPaths,
+    effective: options.effectiveExcludedPaths ?? excludedPaths,
+    warnings: options.exclusionWarnings ?? [],
+  }));
 
   const scanInstructionFiles = vi.fn(
     async (_repoRoot: string, scanOptions?: { excludedPaths?: string[] }) => {
@@ -106,7 +112,10 @@ describe('createInstructionsValidateCommand', () => {
     process.exitCode = originalExitCode;
   });
 
-  it('reports no drift for an excluded docs directory and matches what sync would skip', async () => {
+  // Wiring only, for the same reason as the sync harness: this proves validate
+  // resolves and forwards the same exclusions sync does, not that the scanner
+  // honours them.
+  it('forwards the same resolved exclusions sync does, reporting no drift for an excluded directory', async () => {
     const {
       command,
       capture,

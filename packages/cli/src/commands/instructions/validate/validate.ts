@@ -52,17 +52,24 @@ export function createInstructionsValidateCommand(
 
         try {
           const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
-          const excludedPaths =
+          const exclusions =
             await dependencies.resolveInstructionPointerExcludes(repoRoot);
+          // Warned before any work: an operator whose opt-out silently matches
+          // nothing must hear about it even when validate then reports `ok`.
+          for (const warning of exclusions.warnings) {
+            context.logger.warn(warning);
+          }
           const entries = await dependencies.scanInstructionFiles(repoRoot, {
-            excludedPaths,
+            excludedPaths: exclusions.configured,
             strategy,
           });
           const payload = buildInstructionsPayload({
             mode: 'validate',
             entries,
             actions: [],
-            excludedPaths,
+            excludedPaths: exclusions.configured,
+            effectiveExcludedPaths: exclusions.effective,
+            exclusionWarnings: exclusions.warnings,
           });
 
           if (context.json) {

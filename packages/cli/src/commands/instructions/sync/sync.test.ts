@@ -19,6 +19,8 @@ interface HarnessOptions {
   json?: boolean;
   commandError?: Error;
   excludedPaths?: string[];
+  effectiveExcludedPaths?: string[];
+  exclusionWarnings?: string[];
 }
 
 function createHarness(options: HarnessOptions = {}): {
@@ -39,7 +41,11 @@ function createHarness(options: HarnessOptions = {}): {
   // Injected rather than left to the real implementation: the harness cwd is a
   // fake path, and letting the production resolver read `/tmp/workspace` would
   // make the wiring assertions depend on the developer's filesystem.
-  const resolveInstructionPointerExcludes = vi.fn(async () => excludedPaths);
+  const resolveInstructionPointerExcludes = vi.fn(async () => ({
+    configured: excludedPaths,
+    effective: options.effectiveExcludedPaths ?? excludedPaths,
+    warnings: options.exclusionWarnings ?? [],
+  }));
 
   // Applies the exclusions the command hands it, so a test that asserts "no
   // create for an excluded directory" is exercising the real pass-through
@@ -147,7 +153,10 @@ describe('createInstructionsSyncCommand', () => {
     });
   });
 
-  it('plans no create for an excluded docs directory but still plans one for a non-excluded sibling', async () => {
+  // Wiring only: this harness's scanner mock applies the exclusion itself, so
+  // deleting the production predicate leaves this test green. The behavioral
+  // proof is in instructions.integration.test.ts against the real scanner.
+  it('forwards resolved exclusions to the scanner, planning no create for an excluded directory', async () => {
     const {
       command,
       capture,

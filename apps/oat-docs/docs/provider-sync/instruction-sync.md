@@ -64,23 +64,54 @@ repository-relative directories:
 }
 ```
 
-Each entry excludes that directory and everything beneath it. Entries are
-repository-relative and normalized, so `apps/./docs`, `apps//docs`, and
-`apps/docs/` all name the same tree; absolute paths and paths escaping the
-repository are ignored, and the repository root itself cannot be excluded. A
-malformed value (anything other than an array of non-empty strings) is
-rejected with an error rather than silently ignored.
+Each entry excludes that directory and everything beneath it, matching the
+directory path exactly rather than by prefix — excluding `apps/docs` leaves a
+sibling `apps/docs-legacy` scanned. Entries are repository-relative and
+normalized, so `apps/./docs`, `apps//docs`, and `apps/docs/` all name the same
+tree; absolute paths and paths escaping the repository are ignored, and the
+repository root itself cannot be excluded. A structurally malformed value
+(anything other than an array of non-empty strings) is rejected with exit code
+`2` rather than silently ignored.
 
 The list is additive to the derived content root, and it is applied after the
 `.oat/repo` carve-in, so excluding a tree can never leave `.oat/repo/**`
-unscanned.
+unscanned. `.oat/repo` is consequently the one path an explicit opt-out cannot
+exclude: listing it is reported as having no effect rather than silently
+honoured.
+
+### When an exclusion does nothing
+
+An entry that is well formed but cannot protect anything — it names a
+directory that does not exist, differs in case from the real path on a
+case-insensitive filesystem such as APFS, is absolute, escapes the repository,
+or is the unexcludable `.oat/repo` — does not fail the command. It is reported
+as a warning on stderr naming the entry, and it is omitted from
+`effectiveExcludedPaths`.
+
+That distinction matters most on a case-insensitive filesystem: a
+`documentation.root` of `Apps/Docsapp` resolves happily while the scan compares
+the real `apps/docsapp`, so the tree would be scanned after all. Trust
+`effectiveExcludedPaths`, not `excludedPaths`, when deciding whether a tree is
+protected.
+
+Because both commands read `.oat/config.json` to resolve exclusions, they
+inherit its validation. Any value that fails a _fail-closed_ field check —
+including keys these commands do not otherwise use, such as
+`documentation.excludes` — makes `oat instructions sync` and
+`oat instructions validate` exit `2` until it is repaired. Not every key is
+fail-closed: a wrong-typed scalar such as `documentation.root` is dropped
+rather than rejected, so it never aborts the command (a dropped `root` simply
+leaves the content root underived, and no default exclusion applies).
 
 Exclusion only stops a directory from being scanned. Nothing is deleted: a
 `CLAUDE.md` that already exists inside an excluded tree is left exactly as it
-is. When any exclusion is active, `--json` output carries an additional
-`excludedPaths` field listing the exclusions that were applied. It reports the
-configured exclusions rather than a per-directory skip log, so `.oat` appearing
-there does not contradict `.oat/repo` still being scanned.
+is. When any exclusion is configured, `--json` output carries two additional
+fields. `excludedPaths` lists the configured exclusions — a statement of
+intent, not a per-directory skip log, so `.oat` appearing there does not
+contradict `.oat/repo` still being scanned. `effectiveExcludedPaths` lists the
+subset that names a real, case-exact directory the scan actually pruned; it is
+present whenever `excludedPaths` is, including as an empty array when every
+configured entry turned out to be inert.
 
 ## Canonical Model
 

@@ -373,10 +373,15 @@ export function createInstructionsSyncCommand(
         try {
           const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
           const strategy = resolveInstructionSyncStrategy(options.strategy);
-          const excludedPaths =
+          const exclusions =
             await dependencies.resolveInstructionPointerExcludes(repoRoot);
+          // Warned before any work: an operator whose opt-out silently matches
+          // nothing must hear about it even when the sync then succeeds.
+          for (const warning of exclusions.warnings) {
+            context.logger.warn(warning);
+          }
           const entries = await dependencies.scanInstructionFiles(repoRoot, {
-            excludedPaths,
+            excludedPaths: exclusions.configured,
             strategy,
           });
           const plannedActions = planSyncActions({
@@ -401,7 +406,9 @@ export function createInstructionsSyncCommand(
               ? entries
               : getPostSyncEntries(entries, actions, strategy),
             actions,
-            excludedPaths,
+            excludedPaths: exclusions.configured,
+            effectiveExcludedPaths: exclusions.effective,
+            exclusionWarnings: exclusions.warnings,
           });
 
           if (context.json) {

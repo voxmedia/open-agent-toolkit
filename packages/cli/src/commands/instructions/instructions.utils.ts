@@ -19,6 +19,7 @@ import type {
   InstructionEntry,
   InstructionsJsonPayload,
   InstructionsMode,
+  InstructionPointerExclusions,
   InstructionsScanOptions,
   InstructionsScanDependencies,
   InstructionsStatus,
@@ -46,6 +47,8 @@ interface BuildInstructionsPayloadArgs {
   entries: InstructionEntry[];
   actions: InstructionActionRecord[];
   excludedPaths?: string[];
+  effectiveExcludedPaths?: string[];
+  exclusionWarnings?: string[];
 }
 
 interface InstructionDirectoryEntry {
@@ -207,6 +210,58 @@ export function normalizeExcludedPaths(
 }
 
 /**
+ * Paths the carve-in queues directly, which therefore never reach the exclusion
+ * predicate and can never be excluded however the config asks. An opt-out
+ * naming one of these is inert and must be reported as such rather than
+ * silently listed as protection.
+ *
+ * Matched exactly, never by prefix: only the carve-in root itself bypasses the
+ * predicate. Its *descendants* are reached by ordinary traversal out of the
+ * queued directory, so `.oat/repo/pjm` is excludable even though `.oat/repo`
+ * is not, and treating it as inert would be a false warning about an exclusion
+ * that really does protect its tree.
+ */
+const UNEXCLUDABLE_PATHS = new Set(
+  [...ROOT_EXCLUDED_DIRECTORY_CARVE_INS].map(
+    ([directory, carveIn]) => `${directory}/${carveIn}`,
+  ),
+);
+
+/**
+ * Whether `relativePath` names a real directory whose on-disk spelling matches
+ * exactly.
+ *
+ * The case check is the point. On a case-insensitive filesystem (APFS, NTFS) a
+ * plain existence test accepts `Apps/Docsapp/docs` for a directory really named
+ * `apps/docsapp/docs`, but the scan compares against `relative(repoRoot, ...)`,
+ * which always yields the true on-disk case. The exclusion would then be
+ * reported as applied while matching nothing — issue #238 recurring silently on
+ * the default developer platform. Resolving through `realpath` and comparing
+ * the result to the requested spelling catches that, and returns false for a
+ * path that does not exist at all.
+ *
+ * `repoRoot` is realpath'd too, so a symlinked checkout (`/tmp` on macOS) does
+ * not make every entry look like a mismatch.
+ */
+async function isCaseExactDirectory(
+  dependencies: InstructionsScanDependencies,
+  repoRoot: string,
+  relativePath: string,
+): Promise<boolean> {
+  try {
+    const realRoot = await dependencies.realpath(repoRoot);
+    const candidate = join(realRoot, relativePath);
+    if (!(await directoryExists(dependencies, candidate))) {
+      return false;
+    }
+    const realCandidate = await dependencies.realpath(candidate);
+    return toPosixPath(relative(realRoot, realCandidate)) === relativePath;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * The directories `oat instructions sync` and `oat instructions validate` skip:
  * the derived documentation content root first, then the explicit
  * `documentation.instructionPointerExcludes` opt-outs.
@@ -216,20 +271,85 @@ export function normalizeExcludedPaths(
  * could report drift in a directory sync refuses to touch, and the repository
  * would have no clean state to reach.
  *
+ * Every configured entry is classified rather than trusted. An entry that is
+ * dropped during normalization, names an unexcludable carve-in root, or does
+ * not resolve to a real case-exact directory is reported as a warning and kept
+ * out of `effective`, so no caller can mistake a typo for protection.
+ *
+ * `effective` answers "is this tree protected from pointer writes?", not "did
+ * the exclusion predicate fire for it". An entry that names an already-skipped
+ * built-in root (`.git`, `node_modules`) or sits beneath another exclusion is
+ * still effective, because the operator's intent holds; warning about those
+ * would be a false alarm about exclusions that do work.
+ *
  * Nothing here deletes or rewrites an existing pointer. Excluding a directory
  * only stops it being reported and written; a `CLAUDE.md` already inside an
  * excluded tree is left exactly as it is.
  */
 export async function resolveInstructionPointerExcludes(
   repoRoot: string,
-): Promise<string[]> {
+  overrides: Partial<InstructionsScanDependencies> = {},
+): Promise<InstructionPointerExclusions> {
+  const dependencies: InstructionsScanDependencies = {
+    lstat,
+    realpath,
+    readdir,
+    readFile,
+    readlink,
+    stat,
+    ...overrides,
+  };
+
   const config = await readOatConfig(repoRoot);
   const contentRoot = await resolveDocumentationContentRoot(repoRoot, config);
 
-  return normalizeExcludedPaths([
-    ...(contentRoot ? [contentRoot] : []),
-    ...(config.documentation?.instructionPointerExcludes ?? []),
-  ]);
+  const requested: Array<{ raw: string; source: string }> = [
+    ...(contentRoot === null
+      ? []
+      : [{ raw: contentRoot, source: 'documentation.root' }]),
+    ...(config.documentation?.instructionPointerExcludes ?? []).map((raw) => ({
+      raw,
+      source: 'documentation.instructionPointerExcludes',
+    })),
+  ];
+
+  const configured: string[] = [];
+  const effective: string[] = [];
+  const warnings: string[] = [];
+
+  for (const { raw, source } of requested) {
+    const [normalizedPath] = normalizeExcludedPaths([raw]);
+
+    if (!normalizedPath) {
+      warnings.push(
+        `Ignoring ${source} entry ${JSON.stringify(raw)}: exclusions must be repository-relative paths inside the repository.`,
+      );
+      continue;
+    }
+
+    if (configured.includes(normalizedPath)) {
+      continue;
+    }
+    configured.push(normalizedPath);
+
+    if (UNEXCLUDABLE_PATHS.has(normalizedPath)) {
+      warnings.push(
+        `${source} entry ${JSON.stringify(normalizedPath)} has no effect: ${normalizedPath} is always scanned.`,
+      );
+      continue;
+    }
+
+    if (!(await isCaseExactDirectory(dependencies, repoRoot, normalizedPath))) {
+      warnings.push(
+        `${source} entry ${JSON.stringify(normalizedPath)} matches no directory in this repository (matching is case-sensitive), so it excludes nothing.`,
+      );
+      continue;
+    }
+
+    effective.push(normalizedPath);
+  }
+
+  return { configured, effective, warnings };
 }
 
 async function scanInstructionDirectories(
@@ -634,10 +754,15 @@ export function buildInstructionsPayload({
   entries,
   actions,
   excludedPaths,
+  effectiveExcludedPaths,
+  exclusionWarnings,
 }: BuildInstructionsPayloadArgs): InstructionsJsonPayload {
   const normalizedEntries = normalizeEntries(entries);
   const normalizedActions = normalizeActions(actions);
   const normalizedExcludedPaths = normalizeExcludedPaths(excludedPaths);
+  const normalizedEffectivePaths = normalizeExcludedPaths(
+    effectiveExcludedPaths,
+  );
 
   return {
     mode,
@@ -645,10 +770,22 @@ export function buildInstructionsPayload({
     summary: buildInstructionsSummary(normalizedEntries, normalizedActions),
     entries: normalizedEntries,
     actions: normalizedActions,
-    // Omitted rather than emitted empty, so a repository with no documentation
-    // root keeps its existing payload shape exactly.
+    // Both omitted when nothing is configured, so a repository with no
+    // documentation root keeps its existing payload shape exactly. Once
+    // `excludedPaths` is present its effective counterpart always is too, even
+    // when empty: "configured three, protected none" is precisely the state a
+    // consumer must be able to see, and omitting the field would hide it.
     ...(normalizedExcludedPaths.length > 0
-      ? { excludedPaths: normalizedExcludedPaths }
+      ? {
+          excludedPaths: normalizedExcludedPaths,
+          effectiveExcludedPaths: normalizedEffectivePaths,
+        }
+      : {}),
+    // Independent of the two fields above: an entry rejected during
+    // normalization produces a warning but no configured path, and that is
+    // exactly the case a JSON consumer must still be able to see.
+    ...(exclusionWarnings !== undefined && exclusionWarnings.length > 0
+      ? { exclusionWarnings }
       : {}),
   };
 }

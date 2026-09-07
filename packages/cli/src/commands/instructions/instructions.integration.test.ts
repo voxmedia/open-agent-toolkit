@@ -786,6 +786,122 @@ describe('instructions command integration', () => {
       ]);
     });
 
+    it('does not report an inert exclusion as protection', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+
+      await mkdir(join(root, 'apps', 'docsapp', 'docs', 'guide'), {
+        recursive: true,
+      });
+      await seedRepoCarveIn(root);
+      // `Apps/Docsapp` resolves on a case-insensitive filesystem but the scan
+      // compares the real on-disk case, so this exclusion protects nothing.
+      // The pre-fix payload claimed it was applied while the page below
+      // reverted to `missing` -- issue #238 recurring behind a false report.
+      await writeDocumentationConfig(root, {
+        root: 'Apps/Docsapp',
+        instructionPointerExcludes: ['nonexistent-dir', '/etc'],
+      });
+
+      await writeFile(
+        join(root, 'apps', 'docsapp', 'docs', 'guide', 'AGENTS.md'),
+        '# docs page\n',
+        'utf8',
+      );
+
+      const result = await runCli(
+        root,
+        ['instructions', 'validate', '--json'],
+        ['--json'],
+      );
+
+      const payload = JSON.parse(result.stdout);
+      // Whatever the configured list says, nothing is claimed as effective.
+      expect(payload.effectiveExcludedPaths).toEqual([]);
+      const guide = payload.entries.find((entry: { agentsPath: string }) =>
+        entry.agentsPath?.includes('docs/guide'),
+      );
+      // The page really is still scanned; the payload no longer contradicts it.
+      expect(guide).toBeDefined();
+    });
+
+    it('reports effective exclusions when the configuration is correct', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+
+      await mkdir(join(root, 'apps', 'docsapp', 'docs'), { recursive: true });
+      await mkdir(join(root, 'vendor'), { recursive: true });
+      await seedRepoCarveIn(root);
+      await writeDocumentationConfig(root, {
+        root: 'apps/docsapp',
+        instructionPointerExcludes: ['vendor'],
+      });
+
+      await writeFile(
+        join(root, 'apps', 'docsapp', 'docs', 'AGENTS.md'),
+        '# docs page\n',
+        'utf8',
+      );
+      await writeFile(
+        join(root, 'vendor', 'AGENTS.md'),
+        '# vendored\n',
+        'utf8',
+      );
+
+      const result = await runCli(
+        root,
+        ['instructions', 'validate', '--json'],
+        ['--json'],
+      );
+
+      const payload = JSON.parse(result.stdout);
+      expect(payload.excludedPaths).toEqual(['apps/docsapp/docs', 'vendor']);
+      expect(payload.effectiveExcludedPaths).toEqual([
+        'apps/docsapp/docs',
+        'vendor',
+      ]);
+      expect(payload).not.toHaveProperty('exclusionWarnings');
+
+      // The report is only worth anything if the trees really were pruned.
+      const scanned = payload.entries.map(
+        (entry: { agentsPath: string }) => entry.agentsPath,
+      );
+      expect(
+        scanned.some((path: string) => path.includes('docsapp/docs')),
+      ).toBe(false);
+      expect(scanned.some((path: string) => path.includes('vendor'))).toBe(
+        false,
+      );
+      // ...and that the carve-in still is not.
+      expect(scanned.some((path: string) => path.includes('.oat/repo'))).toBe(
+        true,
+      );
+    });
+
+    it('surfaces inert exclusions to --json consumers, where warnings are suppressed', async () => {
+      const root = await createWorkspace();
+      tempDirs.push(root);
+
+      await seedRepoCarveIn(root);
+      // Absolute entries are rejected during normalization, so they reach
+      // neither excludedPaths nor effectiveExcludedPaths. Without
+      // exclusionWarnings a --json consumer would see no trace of them at all.
+      await writeDocumentationConfig(root, {
+        instructionPointerExcludes: ['/etc'],
+      });
+
+      const result = await runCli(
+        root,
+        ['instructions', 'validate', '--json'],
+        ['--json'],
+      );
+
+      const payload = JSON.parse(result.stdout);
+      expect(payload).not.toHaveProperty('excludedPaths');
+      expect(payload.exclusionWarnings).toHaveLength(1);
+      expect(payload.exclusionWarnings[0]).toContain('/etc');
+    });
+
     it('fails closed on a malformed opt-out list instead of syncing anyway', async () => {
       const root = await createWorkspace();
       tempDirs.push(root);

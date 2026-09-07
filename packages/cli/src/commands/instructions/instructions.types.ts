@@ -53,17 +53,57 @@ export interface InstructionsJsonPayload {
   entries: InstructionEntry[];
   actions: InstructionActionRecord[];
   /**
-   * The normalized repo-relative exclusions applied to this scan, in the order
-   * they were resolved. These are the configured exclusions, not a record of
-   * directories actually skipped: the `.oat/repo` carve-in is queued before the
-   * exclusion predicate runs, so listing `.oat` here still leaves `.oat/repo`
-   * scanned.
+   * The normalized repo-relative exclusions this scan was *configured* with, in
+   * resolution order. An entry here is a statement of intent, not a guarantee:
+   * it may name a directory that does not exist, differ in case from the real
+   * path on a case-insensitive filesystem, or be shadowed by the `.oat/repo`
+   * carve-in.
    *
-   * Additive and omitted entirely when nothing was excluded, so payloads from
+   * Read `effectiveExcludedPaths` to learn what was actually protected.
+   *
+   * Additive and omitted entirely when nothing was configured, so payloads from
    * repositories without a documentation root are byte-identical to the
    * pre-exclusion shape.
    */
   excludedPaths?: string[];
+  /**
+   * The subset of `excludedPaths` that names a real, case-exact directory the
+   * scan can actually prune. This is the field a consumer should trust when
+   * deciding whether a tree is protected; every configured entry missing from
+   * it was also reported as a warning on stderr.
+   *
+   * Present whenever `excludedPaths` is, including as an empty array when every
+   * configured entry turned out to be inert; omitted only when nothing was
+   * configured at all.
+   */
+  effectiveExcludedPaths?: string[];
+  /**
+   * One message per configured exclusion that will not protect anything, the
+   * same text written to stderr in human mode.
+   *
+   * This field is why the JSON surface is complete. `logger.warn` is suppressed
+   * under `--json`, and an entry rejected during normalization (an absolute
+   * path, or one escaping the repository) never reaches `excludedPaths` either
+   * — so without this a `--json` consumer would see no trace at all of an
+   * exclusion that silently does nothing. Omitted when empty.
+   */
+  exclusionWarnings?: string[];
+}
+
+/**
+ * The resolved exclusion set, split so that intent and effect cannot be
+ * confused. A configured entry that protects nothing is the failure mode this
+ * split exists to surface: silently reporting it as applied would let an
+ * operator believe a documentation tree is safe while pointers are written
+ * into it.
+ */
+export interface InstructionPointerExclusions {
+  /** Normalized entries exactly as configured, in resolution order. */
+  configured: string[];
+  /** The subset that names a real, case-exact, prunable directory. */
+  effective: string[];
+  /** One human-readable warning per configured entry that will do nothing. */
+  warnings: string[];
 }
 
 export interface InstructionsScanOptions {
@@ -97,7 +137,9 @@ export interface InstructionsValidateCommandDependencies {
    * from this interface rather than resolving its own, so validate can never
    * report drift that sync would refuse to fix.
    */
-  resolveInstructionPointerExcludes: (repoRoot: string) => Promise<string[]>;
+  resolveInstructionPointerExcludes: (
+    repoRoot: string,
+  ) => Promise<InstructionPointerExclusions>;
   scanInstructionFiles: (
     repoRoot: string,
     options?: InstructionsScanOptions,
