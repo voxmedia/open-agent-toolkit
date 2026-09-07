@@ -1234,8 +1234,8 @@ or additional scope expansion.
 
 ## Phase 9: Final Review Fixes
 
-**Status:** completed — 3/3 final-review fixes complete; fresh p09 re-review
-pending
+**Status:** in progress — prior tasks p09-t01 through p09-t03 complete; p09
+independent review round 2 passed; final lifecycle review round 3 pending
 **Started:** 2026-09-07
 
 ### Task p09-t01: P0 guard-neutralization proof
