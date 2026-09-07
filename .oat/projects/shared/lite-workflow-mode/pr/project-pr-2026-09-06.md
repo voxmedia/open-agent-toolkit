@@ -113,9 +113,10 @@ contract.
   All five p-rev2 tasks and five governed recovery events are complete. The two
   final test-only recoveries made the symlink replacement control deterministic across hosts
   and removed a reproduced SIGTERM readiness race without changing production
-  behavior. Focused review, publication, push, and required CI for the exact
-  remote head remain pending. This refreshed local body has not been published
-  to GitHub.
+  behavior. Focused review accepted both corrections. The stabilized source
+  head `15ad3374c` passed CI and Release Dry Run, and the refreshed retrospective
+  is complete in propose-only mode. Live PR checks govern the final
+  bookkeeping-only head.
 
 ## References
 

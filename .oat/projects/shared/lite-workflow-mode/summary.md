@@ -145,8 +145,9 @@ heavy for this class of work while retaining OAT's safety and handoff value.
   projection ownership or header contracts change.
 - Re-evaluate universal plan-template proof and testing guidance under
   `BL-260906-re-evaluate-universal-plan`.
-- Generate the refreshed project retrospective and resolve lifecycle approval.
-  PR merge and release remain separate authorization boundaries.
+- The refreshed project retrospective is complete in propose-only mode. Resolve
+  lifecycle approval next. PR merge and release remain separate authorization
+  boundaries.
 
 ## Workflow Observations
 

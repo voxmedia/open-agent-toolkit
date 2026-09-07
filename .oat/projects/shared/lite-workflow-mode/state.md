@@ -121,9 +121,10 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all five p-rev2 tasks and five bounded recovery events are
-complete. The focused stabilization review accepted both test-only fixes, PR
-#264 is current at `15ad3374c`, and exact-head CI plus Release Dry Run passed.
+Implementation and retrospective are complete. The focused stabilization
+review accepted both test-only fixes. The stabilized source head `15ad3374c`
+passed exact-head CI and Release Dry Run before the final project-bookkeeping
+commits.
 
 ## Artifacts
 
@@ -132,6 +133,7 @@ complete. The focused stabilization review accepted both test-only fixes, PR
 - **Design:** `design.md` (complete lightweight design)
 - **Plan:** `plan.md` (complete, including revision 1)
 - **Implementation:** `implementation.md` (complete)
+- **Retrospective:** `references/project-retro.md` (complete, propose-only)
 
 ## Progress
 
@@ -207,11 +209,11 @@ complete. The focused stabilization review accepted both test-only fixes, PR
 
 ## Blockers
 
-None. The bounded corrections and local recovery verification are complete.
-Focused independent review, publication, and exact-remote-head CI are complete.
-Retrospective generation and lifecycle approval remain closeout work.
+None. The bounded corrections, independent review, publication, source-head
+verification, and retrospective are complete. Lifecycle approval remains
+closeout work; live PR checks govern subsequent bookkeeping commits.
 
 ## Next Milestone
 
-Generate the project retrospective, then resolve the configured lifecycle
-approval. PR merge and release remain separate authorization boundaries.
+Resolve the configured lifecycle approval. PR merge and release remain
+separate authorization boundaries.
