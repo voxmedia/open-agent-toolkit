@@ -108,10 +108,18 @@ Common keys in `.oat/config.json`:
   authority for remote creates, field updates, transitions, annotations,
   deletion, relink, detach, and recreate; the default is `read-only`
 - `pjm.remote.policy.providers.<provider>.*` — optional GitHub, Linear, or Jira
-  tightening that cannot broaden repository policy
+  replacement policy; its operation override or default may broaden the
+  repository result before later restrictions apply
 - `pjm.initialized` / `pjm.schemaVersion` — explicit repository PJM adoption written by `oat pjm init`
 - `workflow.gates.skills` / `workflow.gates.execTargets` — per-skill gates and cross-runtime exec targets; manage with `oat gate`
 - `workflow.gateTimeouts.code` / `workflow.gateTimeouts.artifact` — default review budgets in milliseconds
+
+Remote authority resolves the repository operation override, repository
+default, or built-in read-only fallback first. Matching provider policy replaces
+that result. Binding defaults and operation restrictions then clamp authority,
+and purpose field grants intersect to narrow outbound fields. No configured
+layer bypasses hard approval floors or current caller-owned authority evidence;
+missing, stale, or mismatched evidence fails closed.
 
 Tool-pack intent example:
 

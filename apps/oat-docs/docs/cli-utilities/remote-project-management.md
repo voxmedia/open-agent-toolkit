@@ -31,18 +31,23 @@ Continue only when `adoption.state` is `declared` or `inferred-legacy`. Run
 The command family is `oat pjm remote`:
 
 ```bash
-oat pjm remote intake github:example/repository#123 --to-backlog BL-123 --json
-oat pjm remote publish --binding rb_example --json
-oat pjm remote refresh --binding rb_example --json
-oat pjm remote reconcile --binding rb_example --json
-oat pjm remote closeout --project .oat/projects/shared/example --json
-oat pjm remote discussion --binding rb_example --limit 20 --json
-oat pjm remote resolve relink --binding rb_example github:example/repository#456 --json
+oat pjm remote intake github:example/repository#123 --to-backlog BL-123 --capability-evidence-stdin --json
+oat pjm remote publish --binding rb_example --capability-evidence-stdin --json
+oat pjm remote refresh --binding rb_example --capability-evidence-stdin --json
+oat pjm remote reconcile --binding rb_example --capability-evidence-stdin --json
+oat pjm remote closeout --project .oat/projects/shared/example --capability-evidence-stdin --json
+oat pjm remote discussion --binding rb_example --limit 20 --capability-evidence-stdin --json
+oat pjm remote resolve relink --binding rb_example github:example/repository#456 --capability-evidence-stdin --json
 oat pjm remote resolve detach --binding rb_example --json
-oat pjm remote resolve recreate --binding rb_example --json
+oat pjm remote resolve recreate --binding rb_example --capability-evidence-stdin --json
 oat pjm remote doctor --json
 oat pjm remote migrate --check --json
 ```
+
+Before each provider-contacting example, the host discovers live capability and
+supplies only its bounded provider-neutral evidence on standard input. Mutation
+commands also require the current caller-owned authority evidence requested by
+their live help.
 
 - `intake` reads one remote record into a selected local backlog target and
   creates the binding.
@@ -93,10 +98,14 @@ oat config set pjm.remote.policy.providers.github.authority.operations.create us
 
 Description modes are `none`, `managed-section`, and `replace`. Authority modes
 are `read-only`, `user-approved`, `user-authorized`, and `autonomous`.
-Repository, provider, purpose, and operation policy combine by intersection, so
-a narrower layer can tighten authority or fields but cannot broaden them.
-Autonomous configuration is not a background grant: the caller must also
-provide evidence of an active, otherwise authorized OAT workflow.
+For each operation, OAT resolves the repository operation override, then its
+repository default, then the built-in read-only fallback. A matching provider
+operation override or provider default replaces that repository result and may
+broaden it. Binding defaults and operation restrictions then clamp authority,
+while purpose field grants intersect to narrow the outbound fields. Provider
+configuration never bypasses hard approval floors or the requirement for
+current caller-owned authority evidence; missing, stale, or mismatched evidence
+fails closed. Autonomous configuration is not a background grant.
 
 ## Live host capability boundary
 
@@ -104,12 +113,15 @@ At operation time, the host agent inspects currently granted MCP or connector
 descriptions for the requested semantic operation and exact account, workspace,
 site, or repository context. If no capable connector is available, it may
 inspect the live help of an already configured provider CLI before the first
-attempt.
+provider-contacting command.
 
 OAT does not store provider tool names, native schemas, captured catalogs,
 executable names, flags, or CLI dialects. The host returns only bounded,
-sanitized capability evidence. It must not install tools, request credential
-values, or switch execution surfaces after an attempt begins.
+sanitized capability evidence through `--capability-evidence-stdin`. It must not
+install tools, request credential values, or switch execution surfaces after an
+attempt begins. The CLI may then emit one provider-neutral `externalAction`.
+The host executes that exact action at most once and returns one bounded
+observation with `oat pjm remote operation continue`.
 
 ## Content and outbound safety
 

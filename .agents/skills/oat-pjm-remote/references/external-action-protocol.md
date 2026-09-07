@@ -5,10 +5,16 @@ operation ID, step ID, action digest, provider context, semantic intent,
 expected observation contract, and (for mutation) the exact outbound
 projection and safety-result digests.
 
+Initial live connector discovery (or configured-CLI-help fallback) and bounded
+provider-neutral capability evidence construction happen before the first
+provider-contacting remote command. The evidence is passed through
+`--capability-evidence-stdin`; native tool names, schemas, catalogs,
+descriptions, help text, requests, and responses are excluded.
+
 Before execution:
 
 1. Confirm the action belongs to the current durable operation and step.
-2. Discover a currently granted capability from its live description.
+2. Confirm the previously selected capability remains currently granted.
 3. Confirm semantic operation and exact provider context.
 4. For a mutation, confirm the projection and safety digests are present. Do
    not reconstruct, enrich, or reinterpret the projection.

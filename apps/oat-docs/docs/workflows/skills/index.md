@@ -55,23 +55,26 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 Use `oat-pjm-remote` only for an explicit remote lifecycle request. Its loop is
 deliberately narrow:
 
-1. Run the requested `oat pjm remote ... --json` command and treat the CLI's
-   policy, preview, approval, safety, and durable state as authoritative.
-2. When the CLI returns `pending` with `externalAction`, inspect currently
-   granted MCP or connector descriptions for a semantic and exact-context
-   match.
-3. If no capable connector is available, inspect an already configured
+1. Before the first provider-contacting command, inspect currently granted MCP
+   or connector descriptions for a semantic and exact-context match.
+2. If no capable connector is available, inspect an already configured
    provider CLI's live help before the first attempt. Do not install a tool,
    retain its dialect, or switch execution surfaces mid-attempt.
-4. Execute the emitted semantic action at most once and submit one bounded,
+3. Construct only bounded provider-neutral capability evidence and pass it to
+   the requested command with `--capability-evidence-stdin`. Treat the CLI's
+   policy, preview, approval, safety, and durable state as authoritative.
+4. When the CLI returns `pending` with `externalAction`, execute that exact
+   semantic action at most once and submit one bounded,
    sanitized observation with `oat pjm remote operation continue`.
 5. Continue only when the CLI emits another exact action for the same durable
    operation. Stop on its terminal envelope.
 
-The skill cannot broaden the normalized projection, weaken repository policy,
-read credential values, persist native provider data, or declare remote
-success. A connector result, process exit, or visible remote change is only
-evidence. Success requires an OAT `ok` envelope after authoritative read-back.
+The skill cannot broaden the normalized projection, bypass effective policy,
+binding clamps, purpose field grants, hard approval floors, or caller-owned
+authority evidence, read credential values, persist native provider data, or
+declare remote success. A connector result, process exit, or visible remote
+change is only evidence. Success requires an OAT `ok` envelope after
+authoritative read-back.
 See [Remote Project Management](../../cli-utilities/remote-project-management.md)
 for policy, storage, approval, and recovery details.
 

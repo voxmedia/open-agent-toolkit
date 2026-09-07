@@ -26,10 +26,29 @@ test('keeps CLI policy, verdicts, adoption, and continuation authoritative', asy
 
 test('requires live discovery and bounded discussion reads', async () => {
   const skill = await readFile(skillUrl, 'utf8');
-  assert.match(skill, /currently granted MCP or connector tools/);
+  assert.match(skill, /currently granted\s+MCP or connector tools/);
   assert.match(skill, /already configured\s+provider CLI and its live help/);
   assert.match(skill, /page\/cursor and maximum\s+item limit/);
   assert.match(skill, /Never scan the repository, worktree, Git history/);
+});
+
+test('discovers capability before the first remote command and executes one action', async () => {
+  const skill = await readFile(skillUrl, 'utf8');
+  const discovery = skill.indexOf('## Live Capability Discovery');
+  const lifecycle = skill.indexOf('## Lifecycle');
+  assert.notEqual(discovery, -1);
+  assert.notEqual(lifecycle, -1);
+  assert.ok(discovery < lifecycle);
+  assert.match(skill, /before the first provider-contacting\s+remote command/i);
+  assert.match(skill, /--capability-evidence-stdin/);
+  assert.match(
+    skill,
+    /execute the\s+exact emitted semantic action at most once/,
+  );
+  assert.match(
+    skill,
+    /Submit exactly one sanitized observation through `operation continue`/,
+  );
 });
 
 test('contains no static native invocation mapping or captured catalog', async () => {
