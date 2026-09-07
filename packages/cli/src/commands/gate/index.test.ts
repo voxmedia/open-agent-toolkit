@@ -6487,6 +6487,7 @@ describe('oat gate', () => {
         source: 'exec-target-config',
       },
       message: expect.stringContaining('spawn codex ENOENT'),
+      postSelection: { step: 'target-dispatch', code: 'Error' },
     });
     expect(capture.jsonPayloads[0]?.runId).toBe(
       capture.jsonPayloads[0]?.gateInvocation.runId,
@@ -6527,6 +6528,10 @@ describe('oat gate', () => {
         source: 'exec-target-config',
       },
       message: expect.any(String),
+      postSelection: {
+        step: 'artifact-scan',
+        code: expect.stringMatching(/^\S+$/),
+      },
     });
     expect(capture.jsonPayloads[0]?.runId).toBe(
       capture.jsonPayloads[0]?.gateInvocation.runId,
@@ -6535,6 +6540,560 @@ describe('oat gate', () => {
       [],
     );
     expect(process.exitCode).toBe(1);
+  });
+
+  /**
+   * A transient post-selection failure that lands *after* the reviewer has
+   * already committed a run-correlated artifact: the first verdict evaluation
+   * throws while the gate reads the parsed invocation metadata. Later calls
+   * (the recovery re-validation) behave normally unless overridden.
+   */
+  function createTransientPostSelectionParse(options?: {
+    beforeThrow?: (absolutePath: string) => Promise<void>;
+    onRecoveryCall?: () => Promise<
+      Awaited<ReturnType<typeof parseReviewGateVerdictFromDisk>>
+    >;
+  }): {
+    parse: typeof parseReviewGateVerdictFromDisk;
+    calls: {
+      absolutePath: string;
+      snapshot: { content: string; signature: string } | undefined;
+    }[];
+  } {
+    const calls: {
+      absolutePath: string;
+      snapshot: { content: string; signature: string } | undefined;
+    }[] = [];
+    const parse: typeof parseReviewGateVerdictFromDisk = async (
+      absolutePath,
+      parseOptions,
+    ) => {
+      calls.push({
+        absolutePath,
+        snapshot: parseOptions?.artifactSnapshot
+          ? {
+              content: parseOptions.artifactSnapshot.content,
+              signature: parseOptions.artifactSnapshot.signature,
+            }
+          : undefined,
+      });
+      if (calls.length > 1) {
+        return options?.onRecoveryCall
+          ? await options.onRecoveryCall()
+          : await parseReviewGateVerdictFromDisk(absolutePath, parseOptions);
+      }
+      const verdict = await parseReviewGateVerdictFromDisk(
+        absolutePath,
+        parseOptions,
+      );
+      await options?.beforeThrow?.(absolutePath);
+      return new Proxy(verdict, {
+        get(target, property, receiver) {
+          if (property === 'gateInvocation') {
+            throw new Error('transient post-selection corroboration failure');
+          }
+          return Reflect.get(target, property, receiver);
+        },
+      });
+    };
+    return { parse, calls };
+  }
+
+  it('recovers a committed passing artifact when post-selection corroboration throws', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      outcome: 'review_completed_gate_passed',
+      artifactPath,
+      receiveEligible: true,
+      postSelectionRecovery: true,
+      handoff: expect.stringContaining('oat-project-review-receive'),
+      corroboration: { run: 'matched', invocation: 'matched' },
+    });
+    // Recovery is re-validation, never re-review: the reviewer ran once.
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('recovers a committed blocking artifact', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const appendProjectLog = vi.fn(
+      async (
+        _input: AppendProjectLogInput,
+      ): Promise<ProjectLogAppendResult> => ({
+        status: 'appended',
+        logPath: join(root, projectPath, 'project-log.md'),
+        heading: '### 2026-09-07 · structural · oat gate review · p01',
+        created: false,
+      }),
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'important',
+          counts: { critical: 0, important: 1, medium: 0, minor: 0 },
+        });
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog,
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      outcome: 'review_completed_blocking_findings',
+      receiveEligible: true,
+      postSelectionRecovery: true,
+      counts: { critical: 0, important: 1, medium: 0, minor: 0 },
+      handoff: expect.stringContaining('oat-project-review-receive'),
+    });
+    // The blocking disposition reaches the project log too, so a recovery
+    // that always logged `status=ok` would fail here.
+    expect(appendProjectLog).toHaveBeenCalledTimes(1);
+    expect(appendProjectLog.mock.calls[0]?.[0]?.body).toContain(
+      'status=blocked',
+    );
+    expect(appendProjectLog.mock.calls[0]?.[0]?.body).toContain('exit=1');
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('names the failing post-selection sub-step when no artifact exists', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        // The child leaves no artifact and poisons the reviews path, so the
+        // post-dispatch scan throws with nothing to recover.
+        await writeFile(
+          join(root, projectPath, 'reviews'),
+          'not a review directory',
+          'utf8',
+        );
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      postSelection: {
+        step: 'artifact-scan',
+        code: expect.stringMatching(/^\S+$/),
+      },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('keeps review_failed when the committed artifact does not validate', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+    const transient = createTransientPostSelectionParse({
+      onRecoveryCall: async () => {
+        throw new Error(
+          'Review artifact does not contain recognizable review findings or explicit verdict counts.',
+        );
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    // The thrown sub-step still names what failed; the eligibility cause is
+    // the routable code. The gate does not fabricate a passing verdict.
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      postSelection: {
+        step: 'invocation-corroboration',
+        code: 'artifact_verdict_unparsable',
+      },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('receiveEligible');
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('recovers from the selected snapshot, not the current path contents', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    let artifactPath = '';
+    let originalContent = '';
+    let replacementContent = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'important',
+          counts: { critical: 0, important: 1, medium: 0, minor: 0 },
+        });
+        originalContent = await readFile(join(root, artifactPath), 'utf8');
+        replacementContent = originalContent
+          .replace(
+            'oat_review_important_count: 1',
+            'oat_review_important_count: 0',
+          )
+          .replace('- Important finding that should block.', 'None.');
+      },
+    });
+    const transient = createTransientPostSelectionParse({
+      beforeThrow: async (absolutePath) => {
+        // A different, passing review body replaces the selected artifact
+        // after selection and before the post-selection failure.
+        await writeFile(absolutePath, replacementContent, 'utf8');
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    // Both the normal evaluation and the recovery re-validation were handed
+    // the selected snapshot; the replacement bytes were never parsed.
+    expect(transient.calls).toHaveLength(2);
+    for (const call of transient.calls) {
+      expect(call.snapshot?.content).toBe(originalContent);
+      expect(call.snapshot?.content).toContain(
+        '- Important finding that should block.',
+      );
+    }
+    // Replacement bytes never recover: the snapshot no longer matches the
+    // path, so the committed artifact fails re-validation and stays failed.
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      postSelection: { code: 'artifact_verdict_unparsable' },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
+    await expect(readFile(join(root, artifactPath), 'utf8')).resolves.toBe(
+      replacementContent,
+    );
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('does not recover an artifact whose invocation marker is not gate', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+          reviewInvocation: 'manual',
+        });
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      postSelection: { code: 'gate_invocation_marker_missing' },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
+    // No second dispatch: recovery never re-reviews.
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('does not recover an artifact targeting another project', async () => {
+    const { root, home } = await setup();
+    const declaredProject = await writeProject(
+      root,
+      '.oat/projects/shared/declared',
+    );
+    const siblingProject = await writeProject(
+      root,
+      '.oat/projects/shared/sibling',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath: declaredProject,
+          artifactProject: siblingProject,
+          finding: 'clean',
+        });
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+      args: [
+        '--project',
+        declaredProject,
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    // Containment is the first gate in the shared eligibility function, so a
+    // foreign-target artifact is rejected before any verdict exists — there
+    // is nothing a recovery could hand back.
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      receiveEligible: false,
+      handoff: null,
+    });
+    expect(transient.calls).toHaveLength(0);
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('normal and recovery paths share one eligibility function', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    // One pipeline, one snapshot: the recovery call receives byte-identical
+    // arguments to the normal call, so no check can be skipped on recovery.
+    expect(transient.calls).toHaveLength(2);
+    expect(transient.calls[1]).toEqual(transient.calls[0]);
+    expect(transient.calls[0]?.snapshot).toBeDefined();
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      postSelectionRecovery: true,
+    });
+  });
+
+  it('recovers the same envelope the normal path would have written', async () => {
+    const writeCleanArtifact = async (
+      root: string,
+      projectPath: string,
+    ): Promise<void> => {
+      await writeReviewArtifact({ root, projectPath, finding: 'minor' });
+    };
+    // Normalize the only run-scoped value so the two envelopes are directly
+    // comparable.
+    const normalize = (payload: unknown, runId: string): unknown =>
+      JSON.parse(
+        JSON.stringify(payload).replaceAll(runId, '<run-id>'),
+      ) as unknown;
+
+    const baseline = await setup();
+    const baselineProject = await writeProject(baseline.root);
+    await writeActiveProject(baseline.root, baselineProject);
+    const baselineRunner = createProcessRunner({
+      onExecute: async () => {
+        await writeCleanArtifact(baseline.root, baselineProject);
+      },
+    });
+    const baselineCapture = await runReviewGate({
+      root: baseline.root,
+      home: baseline.home,
+      runProcess: baselineRunner.runProcess,
+    });
+    const baselinePayload = baselineCapture.jsonPayloads[0];
+    expect(baselinePayload).toMatchObject({ status: 'ok' });
+
+    const recoveredFixture = await setup();
+    const recoveredProject = await writeProject(recoveredFixture.root);
+    await writeActiveProject(recoveredFixture.root, recoveredProject);
+    const recoveredRunner = createProcessRunner({
+      onExecute: async () => {
+        await writeCleanArtifact(recoveredFixture.root, recoveredProject);
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+    const recoveredCapture = await runReviewGate({
+      root: recoveredFixture.root,
+      home: recoveredFixture.home,
+      runProcess: recoveredRunner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+    });
+    const recoveredPayload = recoveredCapture.jsonPayloads[0];
+
+    // Recovery reuses the same run identity, threshold, corroboration,
+    // counts, handoff, and eligibility the normal path produces: the only
+    // difference is the additive marker.
+    expect(
+      normalize(recoveredPayload, String(recoveredPayload?.runId)),
+    ).toEqual({
+      ...(normalize(baselinePayload, String(baselinePayload?.runId)) as Record<
+        string,
+        unknown
+      >),
+      project: recoveredProject,
+      artifactPath: String(recoveredPayload?.artifactPath),
+      postSelectionRecovery: true,
+    });
+    expect(recoveredProject).toBe(baselineProject);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('preserves the artifact_missing envelope', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    // Byte-stable PR #246 envelope: exact key set and exact wording, so
+    // recovery can neither add a key here nor reword the guidance.
+    expect(capture.jsonPayloads[0]).toEqual({
+      status: 'artifact_missing',
+      outcome: 'review_completed_artifact_missing',
+      runId: expect.any(String),
+      target: 'codex-default',
+      project: projectPath,
+      projectResolutionSource: 'active-project',
+      artifactPath: null,
+      generatedAt: null,
+      gateInvocation: expect.objectContaining({ runId: expect.any(String) }),
+      dispatchReport: expect.anything(),
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      message:
+        'Review target codex-default completed without producing the required correlated review artifact.',
+      recovery:
+        'Fix the accepted headless target so it can write and finalize the review artifact before the process exits, then start a new gate run.',
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('records the recovered disposition in the project log', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const appendProjectLog = vi.fn(
+      async (
+        _input: AppendProjectLogInput,
+      ): Promise<ProjectLogAppendResult> => ({
+        status: 'appended',
+        logPath: join(root, projectPath, 'project-log.md'),
+        heading: '### 2026-09-07 · structural · oat gate review · p02',
+        created: false,
+      }),
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog,
+      parseReviewGateVerdict: transient.parse,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    expect(appendProjectLog).toHaveBeenCalledTimes(1);
+    const input = appendProjectLog.mock.calls[0]?.[0];
+    // The log records the recovered disposition, not the transient failure.
+    expect(input?.body).toContain('status=ok');
+    expect(input?.body).toContain('exit=0');
+    expect(input?.body).toContain('artifact=');
+    expect(input?.body).toContain('findings=critical:');
+    expect(process.exitCode).toBe(0);
   });
 
   it.each([
@@ -7152,7 +7711,11 @@ describe('oat gate', () => {
       status: 'review_failed',
       outcome: 'unexpected_post_selection_failure',
       message: 'Branch-local gate route did not return JSON.',
+      postSelection: { step: 'target-dispatch', code: 'Error' },
     });
+    // The failure precedes artifact correlation, so no snapshot was ever
+    // selected and the recovery branch must stay inert.
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
     expect(process.exitCode).toBe(1);
   });
 

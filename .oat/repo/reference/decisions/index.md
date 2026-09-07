@@ -10,6 +10,7 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-260907-additive-post-selection        | 2026-09-07 | accepted   | Additive post-selection recovery envelopes                                                             | -       |
 | DR-260906-anaphor-only-attachment        | 2026-09-06 | accepted   | Anaphor-only attachment for the codex-skill below-floor guard                                          | -       |
 | DR-260906-cross-cutting-option-changes   | 2026-09-06 | accepted   | Cross-cutting option changes sweep the repository and widen mechanically or stop                       | -       |
 | DR-260906-dirty-tree-capture-fails       | 2026-09-06 | accepted   | Dirty-tree capture fails closed on anything it cannot restore faithfully                               | -       |

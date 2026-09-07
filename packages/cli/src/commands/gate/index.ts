@@ -246,6 +246,19 @@ type ReviewGateTerminalStatus =
   | 'artifact_missing'
   | 'targeting_correlation_failed'
   | 'artifact_validation_failed';
+/**
+ * Ordered labels for the work `runReviewGate` performs after a target is
+ * selected. The label is diagnostic context for the `review_failed` envelope;
+ * it is never evidence about whether a committed artifact is receive-eligible.
+ */
+type PostSelectionStep =
+  | 'target-dispatch'
+  | 'artifact-scan'
+  | 'artifact-correlation'
+  | 'artifact-validation'
+  | 'verdict-parse'
+  | 'invocation-corroboration'
+  | 'verdict-disposition';
 interface ReviewGateProjectLogFinalization {
   repoRoot: string;
   home: string;
@@ -2474,6 +2487,7 @@ function writeReviewGateResult(
     dispatchReport: DispatchReportV1;
     corroboration: GateInvocationCorroboration;
     lateCompletion?: true;
+    postSelectionRecovery?: true;
   },
 ): void {
   const outcome = reviewGateOutcome(payload);
@@ -2607,6 +2621,24 @@ function formatGateActivityEvidenceDiagnostic(
   return `Activity evidence: ${transcriptScope} metadata ${baselineState}; observed ${observedAgoMs}ms ago; ${lastChangeTiming}.${attributionWarning}`;
 }
 
+/**
+ * A stable, routable code for the post-selection failure: the thrown error's
+ * own `code` when it has one, otherwise its constructor name.
+ */
+function postSelectionFailureCode(error: unknown): string {
+  const code = (error as { code?: unknown } | null | undefined)?.code;
+  if (typeof code === 'string' && code.trim().length > 0) {
+    return code;
+  }
+  if (typeof code === 'number') {
+    return String(code);
+  }
+  if (error instanceof Error) {
+    return error.constructor.name;
+  }
+  return 'UnknownError';
+}
+
 function writeReviewGateUnexpectedFailure(
   context: CommandContext,
   payload: {
@@ -2615,6 +2647,8 @@ function writeReviewGateUnexpectedFailure(
     target: string;
     gateInvocation: GateInvocationMetadata;
     dispatchReport: DispatchReportV1;
+    step: PostSelectionStep;
+    ineligibility?: ReviewArtifactIneligibilityCause;
     error: unknown;
   },
 ): void {
@@ -2622,6 +2656,10 @@ function writeReviewGateUnexpectedFailure(
     payload.error instanceof Error
       ? payload.error.message
       : String(payload.error);
+  // When a committed artifact was found but did not survive re-validation, the
+  // eligibility cause is the routable code; the thrown sub-step still names
+  // what failed.
+  const code = payload.ineligibility ?? postSelectionFailureCode(payload.error);
   if (context.json) {
     context.logger.json({
       status: 'review_failed',
@@ -2632,13 +2670,14 @@ function writeReviewGateUnexpectedFailure(
       projectResolutionSource: payload.projectResolutionSource,
       gateInvocation: payload.gateInvocation,
       dispatchReport: payload.dispatchReport,
+      postSelection: { step: payload.step, code },
       message,
     });
     return;
   }
 
   context.logger.error(
-    `Review failed after target selection for ${payload.target}: ${message}`,
+    `Review failed after target selection for ${payload.target}: ${message} (post-selection step: ${payload.step})`,
   );
 }
 
@@ -3307,6 +3346,265 @@ async function runCrossProviderExec(
   }
 }
 
+/**
+ * The immutable bytes and identity of the run-correlated artifact that was
+ * selected for this gate run. Recovery re-validates this snapshot, never the
+ * current contents of `path`.
+ */
+interface ReviewGateArtifactSnapshot {
+  path: string;
+  generatedAt: string | null;
+  generatedTime: number;
+  containingProject: string;
+  content: string;
+  signature: string;
+}
+
+/** Run identity the eligibility checks and their envelopes need. */
+interface ReviewArtifactDispositionIdentity {
+  runId: string;
+  repoRoot: string;
+  target: string;
+  project: string;
+  projectResolutionSource: ReviewProjectResolutionSource;
+  gateInvocation: GateInvocationMetadata;
+  dispatchReport: DispatchReportV1;
+  targetCorroboration: GateTargetCorroboration;
+  threshold: ReviewGateThreshold;
+}
+
+/** Why a selected artifact is not receive-eligible. */
+type ReviewArtifactIneligibilityCause =
+  | 'artifact_outside_review_project'
+  | 'declared_project_identity_missing'
+  | 'declared_project_identity_mismatched'
+  | 'artifact_generated_at_invalid'
+  | 'artifact_verdict_unparsable'
+  | 'gate_invocation_metadata_missing'
+  | 'gate_invocation_metadata_mismatched'
+  | 'gate_invocation_marker_missing';
+
+type ReviewArtifactDisposition =
+  | {
+      eligible: true;
+      verdict: ReviewGateVerdict;
+      blocking: boolean;
+      corroboration: GateInvocationCorroboration;
+      generatedAt: string;
+    }
+  | {
+      eligible: false;
+      cause: ReviewArtifactIneligibilityCause;
+      status: 'targeting_correlation_failed' | 'artifact_validation_failed';
+      verdict?: ReviewGateVerdict;
+      writeEnvelope: (context: CommandContext) => void;
+    };
+
+interface ReviewArtifactDispositionHooks {
+  onStep?: (step: PostSelectionStep) => void;
+  onVerdict?: (verdict: ReviewGateVerdict) => void;
+}
+
+/**
+ * The single eligibility pipeline for a selected review artifact: project
+ * containment, timestamp validity, verdict parsing from the immutable
+ * snapshot, gate-invocation corroboration, the gate invocation marker, and the
+ * blocking threshold.
+ *
+ * Both the normal path and post-selection recovery call this function so that
+ * a recovered artifact can never skip a check the normal path applies. It
+ * never re-reads `snapshot.path`, never re-dispatches a reviewer, and never
+ * writes an envelope itself: an ineligible artifact returns the exact existing
+ * failure writer for its caller to invoke.
+ */
+async function disposeValidatedReviewArtifact(
+  snapshot: ReviewGateArtifactSnapshot,
+  identity: ReviewArtifactDispositionIdentity,
+  dependencies: GateCommandDependencies,
+  hooks: ReviewArtifactDispositionHooks = {},
+): Promise<ReviewArtifactDisposition> {
+  hooks.onStep?.('artifact-validation');
+  const outsideReviewProject = snapshot.containingProject !== identity.project;
+  if (
+    outsideReviewProject ||
+    (identity.projectResolutionSource === 'declared' &&
+      identity.targetCorroboration.project !== 'matched')
+  ) {
+    const message = outsideReviewProject
+      ? 'Review artifact was written outside the resolved review project.'
+      : identity.targetCorroboration.project === 'missing'
+        ? 'Review artifact is missing oat_project for the explicitly declared project.'
+        : 'Review artifact project identity does not match the explicitly declared project.';
+    return {
+      eligible: false,
+      status: 'targeting_correlation_failed',
+      cause: outsideReviewProject
+        ? 'artifact_outside_review_project'
+        : identity.targetCorroboration.project === 'missing'
+          ? 'declared_project_identity_missing'
+          : 'declared_project_identity_mismatched',
+      writeEnvelope: (context) => {
+        writeReviewGateTargetingFailure(context, {
+          runId: identity.runId,
+          target: identity.target,
+          project: identity.project,
+          projectResolutionSource: identity.projectResolutionSource,
+          artifactPath: snapshot.path,
+          generatedAt: snapshot.generatedAt,
+          message,
+          gateInvocation: identity.gateInvocation,
+          dispatchReport: identity.dispatchReport,
+          corroboration: identity.targetCorroboration,
+        });
+      },
+    };
+  }
+
+  const generatedAt = snapshot.generatedAt;
+  if (!generatedAt || !Number.isFinite(snapshot.generatedTime)) {
+    return {
+      eligible: false,
+      status: 'artifact_validation_failed',
+      cause: 'artifact_generated_at_invalid',
+      writeEnvelope: (context) => {
+        writeReviewGateArtifactValidationFailure(context, {
+          runId: identity.runId,
+          target: identity.target,
+          project: identity.project,
+          projectResolutionSource: identity.projectResolutionSource,
+          artifactPath: snapshot.path,
+          generatedAt: snapshot.generatedAt,
+          message:
+            'Review artifact oat_generated_at is missing or is not a valid timestamp.',
+          recovery: `Set oat_generated_at to a valid timestamp in ${snapshot.path}, then rerun the gate. Invoke oat-project-review-receive only after the gate returns a receive-eligible result.`,
+          gateInvocation: identity.gateInvocation,
+          dispatchReport: identity.dispatchReport,
+          corroboration: corroborateGateInvocation(
+            identity.gateInvocation,
+            undefined,
+            identity.targetCorroboration,
+          ),
+        });
+      },
+    };
+  }
+
+  hooks.onStep?.('verdict-parse');
+  let verdict: ReviewGateVerdict;
+  try {
+    verdict = await dependencies.parseReviewGateVerdict(
+      join(identity.repoRoot, snapshot.path),
+      {
+        normalizeMissingEmptySeveritySections: true,
+        artifactSnapshot: {
+          content: snapshot.content,
+          signature: snapshot.signature,
+        },
+      },
+    );
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return {
+      eligible: false,
+      status: 'artifact_validation_failed',
+      cause: 'artifact_verdict_unparsable',
+      writeEnvelope: (context) => {
+        writeReviewGateArtifactValidationFailure(context, {
+          runId: identity.runId,
+          target: identity.target,
+          project: identity.project,
+          projectResolutionSource: identity.projectResolutionSource,
+          artifactPath: snapshot.path,
+          generatedAt: snapshot.generatedAt,
+          message: detail,
+          recovery: `The review artifact was created at ${snapshot.path} but could not be consumed. Fix the artifact format, then rerun the gate to revalidate it. Invoke oat-project-review-receive only after the gate returns a receive-eligible result; if the only issue is a missing zero-count severity heading, rerun the gate to normalize the same artifact instead of creating a new review version.`,
+          gateInvocation: identity.gateInvocation,
+          dispatchReport: identity.dispatchReport,
+          corroboration: corroborateGateInvocation(
+            identity.gateInvocation,
+            undefined,
+            identity.targetCorroboration,
+          ),
+        });
+      },
+    };
+  }
+  hooks.onVerdict?.(verdict);
+
+  hooks.onStep?.('invocation-corroboration');
+  const corroboration = corroborateGateInvocation(
+    identity.gateInvocation,
+    verdict.gateInvocation,
+    identity.targetCorroboration,
+  );
+  if (
+    corroboration.run !== 'matched' ||
+    corroboration.invocation !== 'matched'
+  ) {
+    const missing =
+      corroboration.run === 'missing' || corroboration.invocation === 'missing';
+    return {
+      eligible: false,
+      status: 'artifact_validation_failed',
+      cause: missing
+        ? 'gate_invocation_metadata_missing'
+        : 'gate_invocation_metadata_mismatched',
+      verdict,
+      writeEnvelope: (context) => {
+        writeReviewGateArtifactValidationFailure(context, {
+          runId: identity.runId,
+          target: identity.target,
+          project: identity.project,
+          projectResolutionSource: identity.projectResolutionSource,
+          artifactPath: snapshot.path,
+          generatedAt: snapshot.generatedAt,
+          message: missing
+            ? 'Review artifact invocation metadata is missing required gate-owned values.'
+            : 'Review artifact invocation metadata does not match the gate-owned configured invocation.',
+          recovery: `Copy the exact gate invocation fields from the review prompt into ${snapshot.path}, then run oat-project-review-receive only after the artifact validates.`,
+          gateInvocation: identity.gateInvocation,
+          dispatchReport: identity.dispatchReport,
+          corroboration,
+        });
+      },
+    };
+  }
+
+  if (verdict.invocation !== 'gate') {
+    return {
+      eligible: false,
+      status: 'artifact_validation_failed',
+      cause: 'gate_invocation_marker_missing',
+      verdict,
+      writeEnvelope: (context) => {
+        writeReviewGateArtifactValidationFailure(context, {
+          runId: identity.runId,
+          target: identity.target,
+          project: identity.project,
+          projectResolutionSource: identity.projectResolutionSource,
+          artifactPath: snapshot.path,
+          generatedAt: snapshot.generatedAt,
+          message:
+            'Review artifact is missing the required gate invocation marker `oat_review_invocation: gate`.',
+          recovery: `Set oat_review_invocation: gate in ${snapshot.path}, then run oat-project-review-receive only after the artifact validates.`,
+          gateInvocation: identity.gateInvocation,
+          dispatchReport: identity.dispatchReport,
+          corroboration,
+        });
+      },
+    };
+  }
+
+  hooks.onStep?.('verdict-disposition');
+  return {
+    eligible: true,
+    verdict,
+    blocking: reviewBlocksAtThreshold(verdict, identity.threshold),
+    corroboration,
+    generatedAt,
+  };
+}
+
 async function runReviewGate(
   prompt: string[],
   options: ReviewGateOptions,
@@ -3326,6 +3624,11 @@ async function runReviewGate(
         target: string;
         gateInvocation: GateInvocationMetadata;
         dispatchReport: DispatchReportV1;
+        step: PostSelectionStep;
+        artifact?: ReviewGateArtifactSnapshot;
+        dispositionIdentity?: ReviewArtifactDispositionIdentity;
+        diversity?: GateDiversityMetadata;
+        lateCompletion?: true;
       }
     | undefined;
   try {
@@ -3384,6 +3687,12 @@ async function runReviewGate(
       target: selected.id,
       gateInvocation,
       dispatchReport,
+      step: 'target-dispatch',
+    };
+    const markPostSelectionStep = (step: PostSelectionStep): void => {
+      if (postSelectionContext) {
+        postSelectionContext.step = step;
+      }
     };
     const threshold = parseReviewGateThreshold(options.exitNonzeroOn);
     projectLogFinalization = {
@@ -3396,11 +3705,13 @@ async function runReviewGate(
       status: 'review_failed',
       exitCode: 1,
     };
+    markPostSelectionStep('artifact-scan');
     const before = await listReviewGateArtifactCandidates({
       repoRoot,
       effective,
       reviewProject,
     });
+    markPostSelectionStep('target-dispatch');
     const reviewPrompt = assembleReviewGatePrompt([
       REVIEW_GATE_CONTEXT_NOTE,
       reviewGateProjectContext(reviewProject),
@@ -3508,11 +3819,13 @@ async function runReviewGate(
       return true;
     };
 
+    markPostSelectionStep('artifact-scan');
     const after = await listReviewGateArtifactCandidates({
       repoRoot,
       effective,
       reviewProject,
     });
+    markPostSelectionStep('artifact-correlation');
     const artifactResolution = resolveRunCorrelatedReviewArtifact({
       runId,
       before,
@@ -3638,193 +3951,66 @@ async function runReviewGate(
       return;
     }
 
-    if (
-      producedArtifact.containingProject !== reviewProject.path ||
-      (reviewProject.source === 'declared' &&
-        initialTargetCorroboration.project !== 'matched')
-    ) {
-      if (writeRefusalFailure()) {
-        return;
-      }
-      if (projectLogFinalization) {
-        projectLogFinalization.status = 'targeting_correlation_failed';
-        projectLogFinalization.exitCode = 1;
-      }
-      writeReviewGateTargetingFailure(context, {
-        runId,
-        target: selected.id,
-        project: projectPath,
-        projectResolutionSource: reviewProject.source,
-        artifactPath: producedArtifact.path,
-        generatedAt: producedArtifact.generatedAt,
-        message:
-          producedArtifact.containingProject !== reviewProject.path
-            ? 'Review artifact was written outside the resolved review project.'
-            : initialTargetCorroboration.project === 'missing'
-              ? 'Review artifact is missing oat_project for the explicitly declared project.'
-              : 'Review artifact project identity does not match the explicitly declared project.',
-        gateInvocation,
-        dispatchReport,
-        corroboration: initialTargetCorroboration,
-      });
-      process.exitCode = 1;
-      return;
-    }
-
-    if (
-      !producedArtifact.generatedAt ||
-      !Number.isFinite(producedArtifact.generatedTime)
-    ) {
-      if (writeRefusalFailure()) {
-        return;
-      }
-      if (projectLogFinalization) {
-        projectLogFinalization.status = 'artifact_validation_failed';
-        projectLogFinalization.exitCode = 1;
-      }
-      writeReviewGateArtifactValidationFailure(context, {
-        runId,
-        target: selected.id,
-        project: projectPath,
-        projectResolutionSource: reviewProject.source,
-        artifactPath: producedArtifact.path,
-        generatedAt: producedArtifact.generatedAt,
-        message:
-          'Review artifact oat_generated_at is missing or is not a valid timestamp.',
-        recovery: `Set oat_generated_at to a valid timestamp in ${producedArtifact.path}, then rerun the gate. Invoke oat-project-review-receive only after the gate returns a receive-eligible result.`,
-        gateInvocation,
-        dispatchReport,
-        corroboration: corroborateGateInvocation(
-          gateInvocation,
-          undefined,
-          initialTargetCorroboration,
-        ),
-      });
-      process.exitCode = 1;
-      return;
-    }
-
-    let verdict: ReviewGateVerdict;
-    try {
-      verdict = await dependencies.parseReviewGateVerdict(
-        join(repoRoot, producedArtifact.path),
-        {
-          normalizeMissingEmptySeveritySections: true,
-          artifactSnapshot: {
-            content: producedArtifact.content,
-            signature: producedArtifact.signature,
-          },
-        },
-      );
-    } catch (error) {
-      if (writeRefusalFailure()) {
-        return;
-      }
-      const detail = error instanceof Error ? error.message : String(error);
-      if (projectLogFinalization) {
-        projectLogFinalization.status = 'artifact_validation_failed';
-        projectLogFinalization.exitCode = 1;
-      }
-      writeReviewGateArtifactValidationFailure(context, {
-        runId,
-        target: selected.id,
-        project: projectPath,
-        projectResolutionSource: reviewProject.source,
-        artifactPath: producedArtifact.path,
-        generatedAt: producedArtifact.generatedAt,
-        message: detail,
-        recovery: `The review artifact was created at ${producedArtifact.path} but could not be consumed. Fix the artifact format, then rerun the gate to revalidate it. Invoke oat-project-review-receive only after the gate returns a receive-eligible result; if the only issue is a missing zero-count severity heading, rerun the gate to normalize the same artifact instead of creating a new review version.`,
-        gateInvocation,
-        dispatchReport,
-        corroboration: corroborateGateInvocation(
-          gateInvocation,
-          undefined,
-          initialTargetCorroboration,
-        ),
-      });
-      process.exitCode = 1;
-      return;
-    }
-    if (projectLogFinalization) {
-      projectLogFinalization.counts = verdict.counts;
-    }
-    const targetCorroboration = initialTargetCorroboration;
-    const corroboration = corroborateGateInvocation(
+    const artifactSnapshot: ReviewGateArtifactSnapshot = {
+      path: producedArtifact.path,
+      generatedAt: producedArtifact.generatedAt,
+      generatedTime: producedArtifact.generatedTime,
+      containingProject: producedArtifact.containingProject,
+      content: producedArtifact.content,
+      signature: producedArtifact.signature,
+    };
+    const dispositionIdentity: ReviewArtifactDispositionIdentity = {
+      runId,
+      repoRoot,
+      target: selected.id,
+      project: projectPath,
+      projectResolutionSource: reviewProject.source,
       gateInvocation,
-      verdict.gateInvocation,
-      targetCorroboration,
+      dispatchReport,
+      targetCorroboration: initialTargetCorroboration,
+      threshold,
+    };
+    if (postSelectionContext) {
+      postSelectionContext.artifact = artifactSnapshot;
+      postSelectionContext.dispositionIdentity = dispositionIdentity;
+      postSelectionContext.diversity = selected.diversity;
+      if (childResult.timedOut) {
+        postSelectionContext.lateCompletion = true;
+      }
+    }
+
+    const disposition = await disposeValidatedReviewArtifact(
+      artifactSnapshot,
+      dispositionIdentity,
+      dependencies,
+      {
+        onStep: markPostSelectionStep,
+        onVerdict: (parsed) => {
+          if (projectLogFinalization) {
+            projectLogFinalization.counts = parsed.counts;
+          }
+        },
+      },
     );
-    if (
-      corroboration.run !== 'matched' ||
-      corroboration.invocation !== 'matched'
-    ) {
-      if (writeRefusalFailure()) {
-        return;
-      }
-      const missing =
-        corroboration.run === 'missing' ||
-        corroboration.invocation === 'missing';
-      if (projectLogFinalization) {
-        projectLogFinalization.status = 'artifact_validation_failed';
-        projectLogFinalization.exitCode = 1;
-      }
-      writeReviewGateArtifactValidationFailure(context, {
-        runId,
-        target: selected.id,
-        project: projectPath,
-        projectResolutionSource: reviewProject.source,
-        artifactPath: producedArtifact.path,
-        generatedAt: producedArtifact.generatedAt,
-        message: missing
-          ? 'Review artifact invocation metadata is missing required gate-owned values.'
-          : 'Review artifact invocation metadata does not match the gate-owned configured invocation.',
-        recovery: `Copy the exact gate invocation fields from the review prompt into ${producedArtifact.path}, then run oat-project-review-receive only after the artifact validates.`,
-        gateInvocation,
-        dispatchReport,
-        corroboration,
-      });
-      process.exitCode = 1;
-      return;
-    }
-    if (verdict.invocation !== 'gate') {
+    if (!disposition.eligible) {
       if (writeRefusalFailure()) {
         return;
       }
       if (projectLogFinalization) {
-        projectLogFinalization.status = 'artifact_validation_failed';
+        projectLogFinalization.status = disposition.status;
         projectLogFinalization.exitCode = 1;
       }
-      writeReviewGateArtifactValidationFailure(context, {
-        runId,
-        target: selected.id,
-        project: projectPath,
-        projectResolutionSource: reviewProject.source,
-        artifactPath: producedArtifact.path,
-        generatedAt: producedArtifact.generatedAt,
-        message:
-          'Review artifact is missing the required gate invocation marker `oat_review_invocation: gate`.',
-        recovery: `Set oat_review_invocation: gate in ${producedArtifact.path}, then run oat-project-review-receive only after the artifact validates.`,
-        gateInvocation,
-        dispatchReport,
-        corroboration,
-      });
+      disposition.writeEnvelope(context);
       process.exitCode = 1;
       return;
     }
-    const blocking = reviewBlocksAtThreshold(verdict, threshold);
+    const { verdict, blocking, corroboration, generatedAt } = disposition;
     const handoff = buildReviewGateHandoff({
       artifactPath: producedArtifact.path,
       verdict,
       threshold,
       blocking,
     });
-    if (projectLogFinalization) {
-      projectLogFinalization.status = blocking ? 'blocked' : 'ok';
-      projectLogFinalization.exitCode = blocking ? 1 : 0;
-      projectLogFinalization.counts = verdict.counts;
-      projectLogFinalization.artifactPath = producedArtifact.path;
-    }
-
     writeReviewGateResult(context, {
       status: blocking ? 'blocked' : 'ok',
       runId,
@@ -3832,7 +4018,7 @@ async function runReviewGate(
       project: projectPath,
       projectResolutionSource: reviewProject.source,
       artifactPath: producedArtifact.path,
-      generatedAt: producedArtifact.generatedAt,
+      generatedAt,
       threshold,
       blocking,
       counts: verdict.counts,
@@ -3847,11 +4033,108 @@ async function runReviewGate(
       corroboration,
       ...(childResult.timedOut ? { lateCompletion: true } : {}),
     });
+    // Record the disposition only once the envelope is written, so a failed
+    // emission cannot leave the log claiming a result no caller received.
+    if (projectLogFinalization) {
+      projectLogFinalization.status = blocking ? 'blocked' : 'ok';
+      projectLogFinalization.exitCode = blocking ? 1 : 0;
+      projectLogFinalization.counts = verdict.counts;
+      projectLogFinalization.artifactPath = producedArtifact.path;
+    }
     process.exitCode = blocking ? 1 : 0;
   } catch (error) {
     if (postSelectionContext) {
+      const snapshot = postSelectionContext.artifact;
+      const identity = postSelectionContext.dispositionIdentity;
+      let ineligibility: ReviewArtifactIneligibilityCause | undefined;
+      if (snapshot && identity) {
+        // Recovery is re-validation of the already-committed snapshot through
+        // the same eligibility function the normal path uses. It never
+        // re-reads the artifact path and never re-dispatches the reviewer.
+        let disposition: ReviewArtifactDisposition | undefined;
+        try {
+          disposition = await disposeValidatedReviewArtifact(
+            snapshot,
+            identity,
+            dependencies,
+          );
+        } catch {
+          disposition = undefined;
+        }
+        if (disposition?.eligible) {
+          // Emission is the last thing that can fail. Keep the project-log
+          // status at its pre-recovery `review_failed` value until the
+          // envelope is actually written, and fall through to the
+          // `review_failed` envelope if it is not, so an emission failure
+          // cannot leave a recovered log entry with no recovered result.
+          let recoveryEmitted = false;
+          try {
+            const recoveredHandoff = buildReviewGateHandoff({
+              artifactPath: snapshot.path,
+              verdict: disposition.verdict,
+              threshold: identity.threshold,
+              blocking: disposition.blocking,
+            });
+            writeReviewGateResult(context, {
+              status: disposition.blocking ? 'blocked' : 'ok',
+              runId: identity.runId,
+              target: identity.target,
+              project: identity.project,
+              projectResolutionSource: identity.projectResolutionSource,
+              artifactPath: snapshot.path,
+              generatedAt: disposition.generatedAt,
+              threshold: identity.threshold,
+              blocking: disposition.blocking,
+              counts: disposition.verdict.counts,
+              reviewType: disposition.verdict.reviewType,
+              scope: disposition.verdict.scope,
+              invocation: disposition.verdict.invocation,
+              normalization: disposition.verdict.normalization,
+              handoff: recoveredHandoff,
+              diversity: postSelectionContext.diversity,
+              gateInvocation: identity.gateInvocation,
+              dispatchReport: identity.dispatchReport,
+              corroboration: disposition.corroboration,
+              ...(postSelectionContext.lateCompletion
+                ? { lateCompletion: true }
+                : {}),
+              postSelectionRecovery: true,
+            });
+            recoveryEmitted = true;
+          } catch {
+            recoveryEmitted = false;
+          }
+          if (recoveryEmitted) {
+            if (projectLogFinalization) {
+              projectLogFinalization.status = disposition.blocking
+                ? 'blocked'
+                : 'ok';
+              projectLogFinalization.exitCode = disposition.blocking ? 1 : 0;
+              projectLogFinalization.counts = disposition.verdict.counts;
+              projectLogFinalization.artifactPath = snapshot.path;
+            }
+            process.exitCode = disposition.blocking ? 1 : 0;
+            return;
+          }
+        }
+        if (disposition && !disposition.eligible) {
+          ineligibility = disposition.cause;
+        }
+      }
+      // The terminal envelope is review_failed, so the log must say so even if
+      // an earlier disposition had already been staged.
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'review_failed';
+        projectLogFinalization.exitCode = 1;
+      }
       writeReviewGateUnexpectedFailure(context, {
-        ...postSelectionContext,
+        project: postSelectionContext.project,
+        projectResolutionSource: postSelectionContext.projectResolutionSource,
+        target: postSelectionContext.target,
+        gateInvocation: postSelectionContext.gateInvocation,
+        dispatchReport: postSelectionContext.dispatchReport,
+        step: postSelectionContext.step,
+        ...(ineligibility ? { ineligibility } : {}),
         error,
       });
       process.exitCode = 1;
