@@ -472,6 +472,14 @@ describe('RemoteSyncStore', () => {
       },
     });
     await store.writeCurrentAction(action.operationId, action);
+    await store.retireCurrentActionPointerIfPresent(action.operationId, action);
+    await store.retireCurrentActionPointerIfPresent(action.operationId, action);
+    await expect(
+      store.readCurrentAction(action.operationId),
+    ).resolves.toBeNull();
+    await expect(
+      store.readAction(action.operationId, action.stepId),
+    ).resolves.toEqual(action);
     await store.transitionOperation(action.operationId, 'authorized', {
       state: 'attempt-started',
       updatedAt: '2026-08-31T00:01:00.000Z',

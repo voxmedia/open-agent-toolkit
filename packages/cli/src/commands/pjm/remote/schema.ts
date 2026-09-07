@@ -788,6 +788,7 @@ export const RemoteOperationStepSchema = z
       })
       .strict()
       .nullable(),
+    approvalPreview: z.lazy(() => ApprovalPreviewSchema).optional(),
     attempts: z.array(z.string().min(1).max(512)).max(32),
     verification: z.array(z.string().min(1).max(512)).max(64),
     retryDisposition: z.enum([
@@ -917,6 +918,7 @@ const MaterializationStepSchema = z
   .object({
     step: z.enum([
       'journal',
+      'action-pointer',
       'target',
       'metadata',
       'state',
@@ -941,9 +943,40 @@ const MaterializationPlanSchema = z
         bindingId: StableIdSchema,
         target: RemoteLocalTargetSchema,
         seedContent: z.string().max(1_048_576).nullable(),
+        resolutionBindingId: StableIdSchema.nullable().optional(),
+        resolutionReferenceRef: z
+          .string()
+          .min(1)
+          .max(2_048)
+          .nullable()
+          .optional(),
       })
       .strict()
       .nullable(),
+    resolutionEvidence: z
+      .object({
+        schemaVersion: z.literal(1),
+        formerSnapshot: RemoteSnapshotRecordSchema,
+        replacementSnapshot: RemoteSnapshotRecordSchema,
+        journalDigest: z.string().min(1).max(512),
+      })
+      .strict()
+      .optional(),
+    retireAction: z
+      .object({
+        stepId: StableIdSchema,
+        actionDigest: z.string().min(1).max(512),
+      })
+      .strict()
+      .optional(),
+    terminal: z
+      .object({
+        state: z.enum(['verified', 'uncertain', 'rejected', 'blocked']),
+        message: z.string().max(8_192).nullable(),
+        verifiedAt: TimestampSchema.nullable(),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 
@@ -1069,7 +1102,7 @@ const CurrentRemoteOperationRecordSchema = z
       'reconcile-required',
     ]),
     steps: z.array(RemoteOperationStepSchema).max(64),
-    materializationSteps: z.array(MaterializationStepSchema).max(7).optional(),
+    materializationSteps: z.array(MaterializationStepSchema).max(8).optional(),
     materializationPlan: MaterializationPlanSchema.optional(),
     currentAction: DurableVerificationReadActionSchema.optional(),
     verificationHandoff: DurableVerificationHandoffSchema.optional(),
@@ -1273,6 +1306,19 @@ const CurrentRemoteOperationRecordSchema = z
           message: 'Substep approval preview digest must match its preview.',
         });
       }
+      if (
+        step.approvalPreview &&
+        (step.approvalPreview.digest !== step.previewDigest ||
+          step.approvalPreview.bindingId !== record.bindingId ||
+          step.approvalPreview.provider !== record.provider ||
+          step.approvalPreview.operationClass !== step.semanticOperation)
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['steps', index, 'approvalPreview'],
+          message: 'Substep approval preview must match its persisted step.',
+        });
+      }
     }
     const seen = new Set<string>();
     for (const [index, step] of record.steps.entries()) {
@@ -1307,9 +1353,27 @@ const CurrentRemoteOperationRecordSchema = z
           message: 'Materialization plan binding must match its operation.',
         });
       }
+      const evidence = record.materializationPlan.resolutionEvidence;
+      if (
+        evidence &&
+        (evidence.formerSnapshot.bindingId !== record.bindingId ||
+          evidence.replacementSnapshot.bindingId !== record.bindingId ||
+          evidence.formerSnapshot.provider !== record.provider ||
+          evidence.replacementSnapshot.provider !== record.provider)
+      ) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['materializationPlan', 'resolutionEvidence'],
+          message:
+            'Resolution snapshot evidence must match its persisted operation.',
+        });
+      }
       if (record.state === 'verified') {
         const required = new Set<string>([
           'journal',
+          ...(record.materializationPlan.retireAction
+            ? ['action-pointer']
+            : []),
           ...(record.materializationPlan.association?.seedContent
             ? ['target']
             : []),

@@ -232,7 +232,7 @@ describe('production lifecycle composition', () => {
       '---\ntitle: Association-only fixture\nassociated_issues:\n  - linear:association-only\n---\n\n## Description\n\nNo binding metadata exists for this fixture.\n',
     );
     const migrationBinding: RemoteBindingMetadata = {
-      ...binding(['source']),
+      ...binding(['planning']),
       bindingId: 'bnd_migrate_001',
       target: {
         kind: 'backlog',
@@ -248,9 +248,15 @@ describe('production lifecycle composition', () => {
       provenanceToken: 'oat-binding:bnd_migrate_001',
     };
     await store.materializeIntakeBinding(migrationBinding);
+    const migrationState = state();
     await store.writeBindingState({
-      ...state({ snapshot: null }),
+      ...migrationState,
       bindingId: migrationBinding.bindingId,
+      snapshot: {
+        ...migrationState.snapshot!,
+        snapshotId: 'snap_migrate_001',
+        bindingId: migrationBinding.bindingId,
+      },
     });
     let sequence = 0;
     const capability = {
@@ -263,10 +269,17 @@ describe('production lifecycle composition', () => {
       observedAt: timestamp,
     };
     let runnerInput: unknown = capability;
+    let injectedCrash: string | null = null;
     const runner = createProductionRemoteRunner({
       now: () => timestamp,
       randomId: () => `routing_${(sequence += 1)}`,
       readObservationStdin: async () => runnerInput,
+      crash: (point) => {
+        if (point === injectedCrash) {
+          injectedCrash = null;
+          throw new Error(`crash:${point}`);
+        }
+      },
     });
 
     const closeout = await runner({
@@ -278,6 +291,12 @@ describe('production lifecycle composition', () => {
     expect(closeout).toMatchObject({
       status: 'needs-review',
       persisted: true,
+      approvalPreview: {
+        operationClass: 'annotate',
+        fieldMask: ['title'],
+        renderedFields: { title: { kind: 'hash' } },
+        authority: 'user-approved',
+      },
       results: [
         {
           bindingId: projectBinding.bindingId,
@@ -298,6 +317,13 @@ describe('production lifecycle composition', () => {
     const closeoutBatch = await store.readBatch(closeoutBatchId);
     const closeoutOperationId = closeoutBatch!.members[0]!.operationId;
     let closeoutOperation = await store.readOperation(closeoutOperationId);
+    expect(closeoutOperation!.steps[0]).toMatchObject({
+      semanticOperation: 'annotate',
+      approvalPreview: {
+        digest: closeoutOperation!.steps[0]!.previewDigest,
+        operationClass: 'annotate',
+      },
+    });
     const authorityPath = join(repository, 'resolution-authority.json');
     const writeInteractiveAuthority = async (
       operationClass: 'annotate' | 'transition',
@@ -596,13 +622,21 @@ describe('production lifecycle composition', () => {
         },
       }),
     );
+    injectedCrash = 'after-journal';
+    await expect(
+      runner({
+        operation: 'resolve',
+        projectRoot: repository,
+        bindingId: migrationBinding.bindingId,
+        resolutionKind: 'detach',
+        previewOperationId: resolutionOperationId,
+        authorityEvidenceFile: authorityPath,
+      }),
+    ).rejects.toThrow('crash:after-journal');
     const detached = await runner({
-      operation: 'resolve',
+      operation: 'operation-continue',
       projectRoot: repository,
-      bindingId: migrationBinding.bindingId,
-      resolutionKind: 'detach',
-      previewOperationId: resolutionOperationId,
-      authorityEvidenceFile: authorityPath,
+      operationId: resolutionOperationId,
     });
     expect(detached).toMatchObject({ status: 'ok', persisted: true });
     expect(
@@ -686,12 +720,20 @@ describe('production lifecycle composition', () => {
         diagnosticCode: null,
       },
     };
+    injectedCrash = 'after-resolution-action-pointer';
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: relinkOperationId,
+        observationStdin: true,
+      }),
+    ).rejects.toThrow('crash:after-resolution-action-pointer');
     expect(
       await runner({
         operation: 'operation-continue',
         projectRoot: repository,
         operationId: relinkOperationId,
-        observationStdin: true,
       }),
     ).toMatchObject({ status: 'ok' });
     expect(
@@ -700,6 +742,97 @@ describe('production lifecycle composition', () => {
       lifecycle: 'active',
       remoteIdentity: { stableId: 'issue-relocated' },
     });
+
+    const planningMetadata = (await store.readBindingMetadata(
+      migrationBinding.bindingId,
+    ))!;
+    await store.updateBindingMetadata({
+      ...planningMetadata,
+      purposes: ['source'],
+    });
+    const sourceRecreatePreview = await runner({
+      operation: 'resolve',
+      projectRoot: repository,
+      bindingId: migrationBinding.bindingId,
+      resolutionKind: 'recreate',
+    });
+    const sourceRecreateOperationId =
+      sourceRecreatePreview.recovery[0]?.instruction.match(
+        /preview (op_[A-Za-z0-9_-]+)/,
+      )?.[1];
+    const sourceRecreateOperation = await store.readOperation(
+      sourceRecreateOperationId!,
+    );
+    await writeFile(
+      authorityPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        kind: 'interactive',
+        sourceId: 'synthetic-test',
+        invocationId: 'source-recreate-invocation',
+        issuedAt: timestamp,
+        expiresAt: '2026-08-31T12:05:00.000Z',
+        instruction: {
+          operationClass: 'recreate',
+          targetId: migrationBinding.bindingId,
+          evidenceDigest: 'sha256:source-recreate-instruction',
+        },
+        approval: {
+          previewDigest: sourceRecreateOperation!.preview.digest,
+          operationClass: 'recreate',
+          approvedAt: timestamp,
+          actor: 'synthetic-reviewer',
+          source: 'synthetic-test-approval',
+        },
+      }),
+    );
+    runnerInput = {
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['search-duplicates', 'create', 'read'],
+      evidenceDigest: 'sha256:recreate-capability',
+      observedAt: timestamp,
+    };
+    const sourceSearchHandoff = await runner({
+      operation: 'resolve',
+      projectRoot: repository,
+      bindingId: migrationBinding.bindingId,
+      resolutionKind: 'recreate',
+      previewOperationId: sourceRecreateOperationId,
+      capabilityEvidenceStdin: true,
+      authorityEvidenceFile: authorityPath,
+    });
+    const sourceSearch = sourceSearchHandoff.externalAction!;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: sourceSearch.operationId,
+      stepId: sourceSearch.stepId,
+      actionDigest: sourceSearch.actionDigest,
+      observedAt: timestamp,
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest: 'sha256:recreate-capability',
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      outcome: {
+        classification: 'observed',
+        identity: null,
+        fields: {},
+        extensions: { duplicateSearchOutcome: 'no-match' },
+        revisionDigest: 'sha256:source-recreate-search',
+        diagnosticCode: null,
+      },
+    };
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: sourceRecreateOperationId,
+        observationStdin: true,
+      }),
+    ).rejects.toThrow(/permit no outbound fields/i);
+    await store.updateBindingMetadata(planningMetadata);
 
     const recreatePreview = await runner({
       operation: 'resolve',
@@ -781,8 +914,19 @@ describe('production lifecycle composition', () => {
     expect(createPreview).toMatchObject({
       status: 'needs-review',
       externalAction: null,
+      approvalPreview: {
+        operationClass: 'recreate',
+        fieldMask: expect.arrayContaining(['title', 'priority']),
+        authority: 'user-approved',
+      },
     });
     const createOperation = await store.readOperation(recreateOperationId!);
+    expect(createOperation!.approvalPreview).toEqual(
+      expect.objectContaining({
+        digest: createOperation!.preview.digest,
+        operationClass: 'recreate',
+      }),
+    );
     await writeFile(
       authorityPath,
       JSON.stringify({
@@ -806,6 +950,46 @@ describe('production lifecycle composition', () => {
         },
       }),
     );
+    const configPath = join(repository, '.oat', 'config.json');
+    const originalConfig = await readFile(configPath, 'utf8');
+    const tightenedConfig = JSON.parse(originalConfig) as {
+      pjm: { remote: { policy: Record<string, unknown> } };
+    };
+    tightenedConfig.pjm.remote.policy.description = 'replace';
+    await writeFile(configPath, `${JSON.stringify(tightenedConfig)}\n`);
+    await expect(
+      runner({
+        operation: 'resolve',
+        projectRoot: repository,
+        bindingId: migrationBinding.bindingId,
+        resolutionKind: 'recreate',
+        previewOperationId: recreateOperationId,
+        authorityEvidenceFile: authorityPath,
+      }),
+    ).rejects.toThrow(/policy.*drifted|projection.*drifted/i);
+    await writeFile(configPath, originalConfig);
+    const beforePreimageDrift = await store.readBindingState(
+      migrationBinding.bindingId,
+    );
+    await store.writeBindingState({
+      ...beforePreimageDrift!,
+      localProjection: {
+        ...beforePreimageDrift!.localProjection,
+        title: 'Drifted local title',
+        sourceRevision: 'sha256:drifted-local',
+      },
+    });
+    await expect(
+      runner({
+        operation: 'resolve',
+        projectRoot: repository,
+        bindingId: migrationBinding.bindingId,
+        resolutionKind: 'recreate',
+        previewOperationId: recreateOperationId,
+        authorityEvidenceFile: authorityPath,
+      }),
+    ).rejects.toThrow(/preimage drifted|projection.*drifted/i);
+    await store.writeBindingState(beforePreimageDrift!);
     const createHandoff = await runner({
       operation: 'resolve',
       projectRoot: repository,
@@ -876,19 +1060,57 @@ describe('production lifecycle composition', () => {
         diagnosticCode: null,
       },
     };
-    expect(
-      await runner({
+    injectedCrash = 'after-metadata';
+    await expect(
+      runner({
         operation: 'operation-continue',
         projectRoot: repository,
         operationId: recreateOperationId,
         observationStdin: true,
       }),
-    ).toMatchObject({ status: 'ok' });
+    ).rejects.toThrow('crash:after-metadata');
+    for (const crashPoint of [
+      'after-state',
+      'after-snapshot',
+      'after-baseline',
+      'after-association',
+      'after-terminal',
+    ]) {
+      injectedCrash = crashPoint;
+      await expect(
+        runner({
+          operation: 'operation-continue',
+          projectRoot: repository,
+          operationId: recreateOperationId,
+        }),
+      ).rejects.toThrow(`crash:${crashPoint}`);
+    }
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: recreateOperationId,
+      }),
+    ).rejects.toThrow(/terminal|replay/i);
     expect(
       await store.readBindingMetadata(migrationBinding.bindingId),
     ).toMatchObject({ remoteIdentity: { stableId: 'issue-recreated' } });
 
     const completedRecreate = await store.readOperation(recreateOperationId!);
+    expect(completedRecreate).toMatchObject({
+      materializationPlan: {
+        resolutionEvidence: {
+          schemaVersion: 1,
+          formerSnapshot: {
+            issue: { title: 'Relocated issue' },
+          },
+          replacementSnapshot: {
+            issue: { title: 'Local title' },
+          },
+          journalDigest: expect.stringMatching(/^sha256:/),
+        },
+      },
+    });
     for (const [duplicateOutcome, expectedStatus] of [
       ['found-existing', 'pending'],
       ['search-unavailable', 'blocked'],
@@ -957,14 +1179,33 @@ describe('production lifecycle composition', () => {
           diagnosticCode: null,
         },
       };
-      expect(
-        await runner({
+      const continueDuplicate = () =>
+        runner({
           operation: 'operation-continue',
           projectRoot: repository,
           operationId,
           observationStdin: true,
-        }),
-      ).toMatchObject({ status: expectedStatus });
+        });
+      if (duplicateOutcome === 'found-existing') {
+        injectedCrash = 'after-resolution-observation-journal';
+        await expect(continueDuplicate()).rejects.toThrow(
+          'crash:after-resolution-observation-journal',
+        );
+        expect(
+          await runner({
+            operation: 'operation-continue',
+            projectRoot: repository,
+            operationId,
+          }),
+        ).toMatchObject({
+          status: expectedStatus,
+          externalAction: { semanticOperation: 'read' },
+        });
+      } else {
+        expect(await continueDuplicate()).toMatchObject({
+          status: expectedStatus,
+        });
+      }
     }
 
     const uncertainAction = buildExternalAction({
@@ -1045,12 +1286,20 @@ describe('production lifecycle composition', () => {
         diagnosticCode: 'unknown-create-result',
       },
     };
+    injectedCrash = 'after-state';
+    await expect(
+      runner({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: uncertainAction.operationId,
+        observationStdin: true,
+      }),
+    ).rejects.toThrow('crash:after-state');
     expect(
       await runner({
         operation: 'operation-continue',
         projectRoot: repository,
         operationId: uncertainAction.operationId,
-        observationStdin: true,
       }),
     ).toMatchObject({ status: 'uncertain' });
     expect(

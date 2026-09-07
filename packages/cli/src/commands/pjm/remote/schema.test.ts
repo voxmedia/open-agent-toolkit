@@ -464,6 +464,37 @@ describe('remote record schemas', () => {
       'composite',
     );
     expect(() =>
+      RemoteOperationRecordSchema.parse({
+        ...composite,
+        steps: [
+          {
+            ...composite.steps[0],
+            approvalPreview: {
+              schemaVersion: 1,
+              digest: composite.steps[0].previewDigest,
+              bindingId: composite.bindingId,
+              provider: composite.provider,
+              operationClass: 'annotate',
+              fieldMask: ['title'],
+              createdAt: timestamp,
+              componentDigests: {
+                target: 'sha256:target',
+                baseline: 'sha256:baseline',
+                revision: 'sha256:revision',
+                capability: 'sha256:capability',
+                policy: 'sha256:policy',
+                projection: 'sha256:projection',
+                outboundSafety: 'sha256:safety',
+              },
+              renderedFields: {
+                title: { kind: 'value', value: 'Closeout' },
+              },
+            },
+          },
+        ],
+      }),
+    ).not.toThrow();
+    expect(() =>
       RemoteOperationRecordSchema.parse({ ...readOnly, authority }),
     ).toThrow(/read-only.*authority/i);
     expect(() =>

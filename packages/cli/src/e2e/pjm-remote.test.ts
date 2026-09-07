@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -14,8 +14,13 @@ import type {
   RemoteCommandEnvelope,
   RemoteCommandStatus,
 } from '../commands/pjm/remote/output';
-import type { RemoteBindingMetadata } from '../commands/pjm/remote/schema';
+import { semanticDigest } from '../commands/pjm/remote/provider';
+import type {
+  RemoteBindingMetadata,
+  RemoteBindingState,
+} from '../commands/pjm/remote/schema';
 import { createProductionRemoteRunner } from '../commands/pjm/remote/service';
+import { sanitizeRemoteSnapshot } from '../commands/pjm/remote/snapshot';
 import { resolveRemoteStorageLocations } from '../commands/pjm/remote/storage-locator';
 import { RemoteSyncStore } from '../commands/pjm/remote/store';
 
@@ -226,6 +231,200 @@ describe('pjm remote end-to-end command workflows', () => {
     });
   });
 
+  it('publishes representative targets through the real CLI runner without transitive mirroring', async () => {
+    const repository = await mkdtemp(join(tmpdir(), 'oat-p07-e2e-publish-'));
+    temporaryDirectories.push(repository);
+    execFileSync('git', ['init', '--quiet'], { cwd: repository });
+    await mkdir(join(repository, '.oat'), { recursive: true });
+    await writeFile(
+      join(repository, '.oat', 'config.json'),
+      `${JSON.stringify({
+        pjm: {
+          initialized: true,
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              description: 'managed-section',
+              authority: {
+                default: 'read-only',
+                operations: { create: 'user-authorized' },
+              },
+            },
+            storage: { state: 'local' },
+          },
+        },
+      })}\n`,
+    );
+    const publicationPath = join(repository, 'project-publication.json');
+    await writeFile(
+      publicationPath,
+      `${JSON.stringify({
+        title: 'Published project',
+        description: 'Explicit project publication',
+        priority: 'high',
+      })}\n`,
+    );
+    const providerFixtures = [
+      ['github', { repositoryId: 'repository-1' }],
+      ['linear', { workspaceId: 'workspace-1' }],
+      ['jira', { siteId: 'site-1', projectId: 'project-1' }],
+    ] as const;
+    let runnerInput: unknown;
+    let idSequence = 0;
+    const runner = createProductionRemoteRunner({
+      now: () => '2026-09-05T12:00:00.000Z',
+      randomId: () => `e2e-publish-${(idSequence += 1)}`,
+      readObservationStdin: async () => runnerInput,
+    });
+
+    for (const [provider, context] of providerFixtures) {
+      const capabilityDigest = `sha256:${provider}-publish-capability`;
+      runnerInput = {
+        provider,
+        context,
+        surfaceKind: 'connector',
+        availability: 'available',
+        semanticCapabilities: ['create', 'read'],
+        evidenceDigest: capabilityDigest,
+        observedAt: '2026-09-05T12:00:00.000Z',
+      };
+      const authorityPath = join(repository, `${provider}-authority.json`);
+      await writeFile(
+        authorityPath,
+        JSON.stringify({
+          schemaVersion: 1,
+          kind: 'interactive',
+          sourceId: 'e2e-host',
+          invocationId: `e2e-publish-${provider}`,
+          issuedAt: '2026-09-05T11:59:00.000Z',
+          expiresAt: '2026-09-05T12:05:00.000Z',
+          instruction: {
+            operationClass: 'create',
+            targetId: 'project:project-1',
+            evidenceDigest: `sha256:${provider}-publish-instruction`,
+          },
+          approval: null,
+        }),
+      );
+      const prepared = await runRemoteCommand(
+        [
+          'publish',
+          '--provider',
+          provider,
+          '--to-project',
+          'project-1',
+          '--project-publication-file',
+          publicationPath,
+          '--capability-evidence-stdin',
+          '--authority-evidence-file',
+          authorityPath,
+        ],
+        'pending',
+        true,
+        { projectRoot: repository, run: runner },
+      );
+      const preparedEnvelope = JSON.parse(
+        prepared.stdout,
+      ) as RemoteCommandEnvelope;
+      const createAction = preparedEnvelope.externalAction!;
+      expect(createAction, JSON.stringify(preparedEnvelope)).toMatchObject({
+        provider,
+        semanticOperation: 'create',
+      });
+      const fields = createAction.intent.fields as Record<string, unknown>;
+      runnerInput = {
+        schemaVersion: 1,
+        operationId: createAction.operationId,
+        stepId: createAction.stepId,
+        actionDigest: createAction.actionDigest,
+        observedAt: '2026-09-05T12:00:00.000Z',
+        surfaceKind: 'connector',
+        capabilityEvidenceDigest: capabilityDigest,
+        provider,
+        context,
+        outcome: {
+          classification: 'observed',
+          identity: {
+            stableId: `${provider}-published-1`,
+            aliases: [`${provider.toUpperCase()}-1`],
+          },
+          fields,
+          revisionDigest: `sha256:${provider}-publish-receipt`,
+          diagnosticCode: null,
+        },
+      };
+      const verification = await runRemoteCommand(
+        [
+          'operation',
+          'continue',
+          '--operation',
+          createAction.operationId,
+          '--observation-stdin',
+        ],
+        'pending',
+        true,
+        { projectRoot: repository, run: runner },
+      );
+      const readAction = (
+        JSON.parse(verification.stdout) as RemoteCommandEnvelope
+      ).externalAction!;
+      expect(readAction).toMatchObject({
+        provider,
+        semanticOperation: 'read',
+      });
+      runnerInput = {
+        schemaVersion: 1,
+        operationId: readAction.operationId,
+        stepId: readAction.stepId,
+        actionDigest: readAction.actionDigest,
+        observedAt: '2026-09-05T12:00:00.000Z',
+        surfaceKind: 'connector',
+        capabilityEvidenceDigest: capabilityDigest,
+        provider,
+        context,
+        outcome: {
+          classification: 'observed',
+          identity: {
+            stableId: `${provider}-published-1`,
+            aliases: [`${provider.toUpperCase()}-1`],
+          },
+          fields: { ...fields, status: 'open' },
+          revisionDigest: `sha256:${provider}-publish-readback`,
+          diagnosticCode: null,
+        },
+      };
+      const completed = await runRemoteCommand(
+        [
+          'operation',
+          'continue',
+          '--operation',
+          createAction.operationId,
+          '--observation-stdin',
+        ],
+        'ok',
+        true,
+        { projectRoot: repository, run: runner },
+      );
+      expect(JSON.parse(completed.stdout)).toMatchObject({ status: 'ok' });
+    }
+
+    const published = await new RemoteSyncStore(
+      resolveRemoteStorageLocations({
+        repoRoot: repository,
+        gitCommonDir: join(repository, '.git'),
+        repositoryIdentity: `local-repository:${repository}`,
+        stateStorage: 'local',
+        target: { kind: 'backlog', scope: 'shared', path: null },
+      }),
+    ).listBindingMetadata();
+    expect(published.map((binding) => binding.provider).sort()).toEqual([
+      'github',
+      'jira',
+      'linear',
+    ]);
+    expect(published).toHaveLength(3);
+  });
+
   it('drives representative provider-neutral closeout through the real CLI runner without mirroring', async () => {
     const repository = await mkdtemp(join(tmpdir(), 'oat-p07-e2e-closeout-'));
     temporaryDirectories.push(repository);
@@ -279,7 +478,7 @@ describe('pjm remote end-to-end command workflows', () => {
           aliases: [],
         },
         identityHistory: [],
-        purposes: ['source'],
+        purposes: provider === 'github' ? ['planning'] : ['source'],
         policyRestrictions: {},
         publicationProjection: {
           title: 'frontmatter',
@@ -292,23 +491,82 @@ describe('pjm remote end-to-end command workflows', () => {
         updatedAt: '2026-09-05T12:00:00.000Z',
       };
       await store.materializeIntakeBinding(metadata);
+      const state: RemoteBindingState = {
+        recordType: 'binding-state',
+        schemaVersion: 2,
+        bindingId: metadata.bindingId,
+        provider,
+        metadataUpdatedAt: metadata.updatedAt,
+        localProjection: {
+          title: `${provider} local title`,
+          description: `${provider} local description`,
+          priority: 'high',
+          source: 'explicit-project-publication',
+          sourceRevision: `sha256:${provider}-local`,
+          observedAt: metadata.updatedAt,
+        },
+        snapshot: sanitizeRemoteSnapshot({
+          snapshotId: `snap_${provider}_e2e_001`,
+          bindingId: metadata.bindingId,
+          provider,
+          observedAt: metadata.updatedAt,
+          observedBy: {
+            provider,
+            surfaceKind: 'connector',
+            context,
+            evidenceDigest: `sha256:${provider}-snapshot`,
+            semanticCapabilities: ['read'],
+          },
+          identity: metadata.remoteIdentity,
+          revision: {
+            strength: 'hash-only',
+            token: null,
+            updatedAt: metadata.updatedAt,
+            contentHash: `sha256:${provider}-remote`,
+          },
+          issue: {
+            title: `${provider} remote title`,
+            description: `${provider} remote description`,
+            priority: null,
+            status: 'open',
+          },
+          lifecycle: 'active',
+        }),
+        baseline: null,
+        capability: null,
+        contentRedacted: false,
+        lifecycle: 'active',
+        lifecycleCondition: 'active',
+        activeOperationIds: [],
+        createdAt: metadata.createdAt,
+        updatedAt: metadata.updatedAt,
+      };
+      await store.writeBindingState(state);
     }
+    const capabilities = providers.map(([provider, context]) => ({
+      provider,
+      context,
+      surfaceKind: 'connector' as const,
+      availability: 'available' as const,
+      semanticCapabilities: [
+        'annotate',
+        'transition',
+        'read',
+        'read-discussion',
+        'search-duplicates',
+        'create',
+      ],
+      evidenceDigest: `sha256:${provider}-e2e-capability`,
+      observedAt: '2026-09-05T12:00:00.000Z',
+    }));
+    let runnerInput: unknown = capabilities;
     const runner = createProductionRemoteRunner({
       now: () => '2026-09-05T12:00:00.000Z',
       randomId: (() => {
         let sequence = 0;
         return () => `e2e-closeout-${(sequence += 1)}`;
       })(),
-      readObservationStdin: async () =>
-        providers.map(([provider, context]) => ({
-          provider,
-          context,
-          surfaceKind: 'connector',
-          availability: 'available',
-          semanticCapabilities: ['annotate'],
-          evidenceDigest: `sha256:${provider}-e2e-capability`,
-          observedAt: '2026-09-05T12:00:00.000Z',
-        })),
+      readObservationStdin: async () => runnerInput,
     });
     const result = await runRemoteCommand(
       [
@@ -330,6 +588,644 @@ describe('pjm remote end-to-end command workflows', () => {
     ]);
     expect(await store.listBindingMetadata()).toHaveLength(3);
     expect(result.exitCode).toBe(1);
+
+    const batchId = (
+      await readdir(store.locations.operational.batchesDir)
+    )[0]!.replace(/\.json$/, '');
+    const firstOperation = (
+      await Promise.all(
+        (await store.readBatch(batchId))!.members.map((member) =>
+          store.readOperation(member.operationId),
+        ),
+      )
+    ).find((operation) => operation!.steps[0]?.state === 'planned')!;
+    const firstStep = firstOperation!.steps[0]!;
+    const authorityPath = join(repository, 'closeout-authority.json');
+    await writeFile(
+      authorityPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        kind: 'interactive',
+        sourceId: 'e2e-host',
+        invocationId: 'e2e-closeout-approval',
+        issuedAt: '2026-09-05T11:59:00.000Z',
+        expiresAt: '2026-09-05T12:05:00.000Z',
+        instruction: {
+          operationClass: firstStep.semanticOperation,
+          targetId: firstOperation!.bindingId,
+          evidenceDigest: 'sha256:e2e-closeout-instruction',
+        },
+        approval: {
+          previewDigest: firstStep.previewDigest,
+          operationClass: firstStep.semanticOperation,
+          approvedAt: '2026-09-05T12:00:00.000Z',
+          actor: 'e2e-operator',
+          source: 'e2e-approval',
+        },
+      }),
+    );
+    runnerInput = capabilities.find(
+      (capability) => capability.provider === firstOperation!.provider,
+    )!;
+    const applied = await runRemoteCommand(
+      [
+        'closeout',
+        '--project',
+        'shared/e2e-cross-provider',
+        '--apply-preview',
+        batchId,
+        '--capability-evidence-stdin',
+        '--authority-evidence-file',
+        authorityPath,
+      ],
+      'pending',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    const appliedEnvelope = JSON.parse(applied.stdout) as RemoteCommandEnvelope;
+    expect(appliedEnvelope.status, JSON.stringify(appliedEnvelope)).toBe(
+      'pending',
+    );
+    expect(appliedEnvelope).toMatchObject({
+      status: 'pending',
+      externalAction: { semanticOperation: 'annotate' },
+    });
+    const action = appliedEnvelope.externalAction!;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: action.operationId,
+      stepId: action.stepId,
+      actionDigest: action.actionDigest,
+      observedAt: '2026-09-05T12:00:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest:
+        action.expectedObservation.capabilityEvidenceDigest,
+      provider: action.provider,
+      context: action.context,
+      outcome: {
+        classification: 'observed',
+        identity: {
+          stableId: String(action.intent.stableId),
+          aliases: [],
+        },
+        fields: {},
+        revisionDigest: 'sha256:e2e-closeout-receipt',
+        diagnosticCode: null,
+      },
+    };
+    const verificationHandoff = await runRemoteCommand(
+      [
+        'operation',
+        'continue',
+        '--operation',
+        action.operationId,
+        '--observation-stdin',
+      ],
+      'pending',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    const readAction = (
+      JSON.parse(verificationHandoff.stdout) as RemoteCommandEnvelope
+    ).externalAction!;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: readAction.operationId,
+      stepId: readAction.stepId,
+      actionDigest: readAction.actionDigest,
+      observedAt: '2026-09-05T12:00:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest:
+        readAction.expectedObservation.capabilityEvidenceDigest,
+      provider: readAction.provider,
+      context: readAction.context,
+      outcome: {
+        classification: 'observed',
+        identity: {
+          stableId: String(readAction.intent.stableId),
+          aliases: [],
+        },
+        fields: {},
+        extensions: {
+          annotationDigest: semanticDigest(action.intent.body),
+        },
+        revisionDigest: 'sha256:e2e-closeout-readback',
+        diagnosticCode: null,
+      },
+    };
+    const partial = await runRemoteCommand(
+      [
+        'operation',
+        'continue',
+        '--operation',
+        action.operationId,
+        '--observation-stdin',
+      ],
+      'needs-review',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    expect(JSON.parse(partial.stdout)).toMatchObject({
+      status: 'needs-review',
+      persisted: true,
+      approvalPreview: { operationClass: 'transition' },
+    });
+    expect(await store.readBatch(batchId)).toMatchObject({
+      state: 'in-progress',
+    });
+
+    const transitionedOperation = await store.readOperation(action.operationId);
+    const transitionStep = transitionedOperation!.steps.find(
+      (step) => step.semanticOperation === 'transition',
+    )!;
+    await writeFile(
+      authorityPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        kind: 'interactive',
+        sourceId: 'e2e-host',
+        invocationId: 'e2e-transition-approval',
+        issuedAt: '2026-09-05T11:59:00.000Z',
+        expiresAt: '2026-09-05T12:05:00.000Z',
+        instruction: {
+          operationClass: 'transition',
+          targetId: transitionedOperation!.bindingId,
+          evidenceDigest: 'sha256:e2e-transition-instruction',
+        },
+        approval: {
+          previewDigest: transitionStep.previewDigest,
+          operationClass: 'transition',
+          approvedAt: '2026-09-05T12:00:00.000Z',
+          actor: 'e2e-operator',
+          source: 'e2e-approval',
+        },
+      }),
+    );
+    runnerInput = capabilities.find(
+      (capability) => capability.provider === transitionedOperation!.provider,
+    )!;
+    const transitionApplied = await runRemoteCommand(
+      [
+        'closeout',
+        '--project',
+        'shared/e2e-cross-provider',
+        '--apply-preview',
+        batchId,
+        '--capability-evidence-stdin',
+        '--authority-evidence-file',
+        authorityPath,
+      ],
+      'pending',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    const transitionAction = (
+      JSON.parse(transitionApplied.stdout) as RemoteCommandEnvelope
+    ).externalAction!;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: transitionAction.operationId,
+      stepId: transitionAction.stepId,
+      actionDigest: transitionAction.actionDigest,
+      observedAt: '2026-09-05T12:00:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest:
+        transitionAction.expectedObservation.capabilityEvidenceDigest,
+      provider: transitionAction.provider,
+      context: transitionAction.context,
+      outcome: {
+        classification: 'unknown',
+        identity: {
+          stableId: String(transitionAction.intent.stableId),
+          aliases: [],
+        },
+        fields: {},
+        revisionDigest: null,
+        diagnosticCode: 'synthetic-uncertain-closeout',
+      },
+    };
+    const uncertain = await runRemoteCommand(
+      [
+        'operation',
+        'continue',
+        '--operation',
+        transitionAction.operationId,
+        '--observation-stdin',
+      ],
+      'uncertain',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    expect(JSON.parse(uncertain.stdout)).toMatchObject({
+      status: 'uncertain',
+      persisted: true,
+    });
+
+    runnerInput = capabilities[0];
+    const discussion = await runRemoteCommand(
+      [
+        'discussion',
+        '--binding',
+        'bnd_github_e2e_001',
+        '--limit',
+        '2',
+        '--capability-evidence-stdin',
+      ],
+      'pending',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    const discussionAction = (
+      JSON.parse(discussion.stdout) as RemoteCommandEnvelope
+    ).externalAction!;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: discussionAction.operationId,
+      stepId: discussionAction.stepId,
+      actionDigest: discussionAction.actionDigest,
+      observedAt: '2026-09-05T12:00:00.000Z',
+      provider: discussionAction.provider,
+      context: discussionAction.context,
+      capabilityEvidenceDigest:
+        discussionAction.expectedObservation.capabilityEvidenceDigest,
+      availability: 'available',
+      items: [
+        {
+          id: 'discussion-1',
+          body: 'First bounded page',
+          createdAt: '2026-09-05T12:00:00.000Z',
+        },
+      ],
+      nextCursor: 'page-2',
+    };
+    const page = await runRemoteCommand(
+      [
+        'operation',
+        'continue',
+        '--operation',
+        discussionAction.operationId,
+        '--observation-stdin',
+      ],
+      'pending',
+      false,
+      { projectRoot: repository, run: runner },
+    );
+    expect(page.stdout).toContain('discussion evidence: available');
+    expect(page.exitCode).toBe(1);
+
+    const detachPreview = await runRemoteCommand(
+      ['resolve', 'detach', '--binding', 'bnd_linear_e2e_001'],
+      'needs-review',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    const detachEnvelope = JSON.parse(
+      detachPreview.stdout,
+    ) as RemoteCommandEnvelope;
+    const detachOperationId = detachEnvelope.recovery[0]!.instruction.match(
+      /preview (op_[A-Za-z0-9_-]+)/,
+    )![1]!;
+    const detachOperation = await store.readOperation(detachOperationId);
+    await writeFile(
+      authorityPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        kind: 'interactive',
+        sourceId: 'e2e-host',
+        invocationId: 'e2e-detach-approval',
+        issuedAt: '2026-09-05T11:59:00.000Z',
+        expiresAt: '2026-09-05T12:05:00.000Z',
+        instruction: {
+          operationClass: 'detach',
+          targetId: 'bnd_linear_e2e_001',
+          evidenceDigest: 'sha256:e2e-detach-instruction',
+        },
+        approval: {
+          previewDigest: detachOperation!.preview.digest,
+          operationClass: 'detach',
+          approvedAt: '2026-09-05T12:00:00.000Z',
+          actor: 'e2e-operator',
+          source: 'e2e-approval',
+        },
+      }),
+    );
+    const detached = await runRemoteCommand(
+      [
+        'resolve',
+        'detach',
+        '--binding',
+        'bnd_linear_e2e_001',
+        '--apply-preview',
+        detachOperationId,
+        '--authority-evidence-file',
+        authorityPath,
+      ],
+      'ok',
+      false,
+      { projectRoot: repository, run: runner },
+    );
+    expect(detached.stdout).toContain('resolve: ok');
+    const detachedMetadata =
+      await store.readBindingMetadata('bnd_linear_e2e_001');
+    const detachedState = await store.readBindingState('bnd_linear_e2e_001');
+    expect(detachedMetadata).toMatchObject({ lifecycle: 'tombstoned' });
+    expect(detachedState).toMatchObject({
+      lifecycle: 'tombstoned',
+      metadataUpdatedAt: detachedMetadata!.updatedAt,
+    });
+
+    const approveResolution = async (
+      kind: 'relink' | 'recreate',
+      bindingId: string,
+      operationId: string,
+      suffix: string,
+    ) => {
+      const operation = await store.readOperation(operationId);
+      await writeFile(
+        authorityPath,
+        JSON.stringify({
+          schemaVersion: 1,
+          kind: 'interactive',
+          sourceId: 'e2e-host',
+          invocationId: `e2e-${suffix}-approval`,
+          issuedAt: '2026-09-05T11:59:00.000Z',
+          expiresAt: '2026-09-05T12:05:00.000Z',
+          instruction: {
+            operationClass: kind,
+            targetId: bindingId,
+            evidenceDigest: `sha256:e2e-${suffix}-instruction`,
+          },
+          approval: {
+            previewDigest: operation!.preview.digest,
+            operationClass: kind,
+            approvedAt: '2026-09-05T12:00:00.000Z',
+            actor: 'e2e-operator',
+            source: 'e2e-approval',
+          },
+        }),
+      );
+      return operation!;
+    };
+
+    const relinkPreview = await runRemoteCommand(
+      [
+        'resolve',
+        'relink',
+        'linear:linear-relinked',
+        '--binding',
+        'bnd_linear_e2e_001',
+      ],
+      'needs-review',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    const relinkOperationId = (
+      JSON.parse(relinkPreview.stdout) as RemoteCommandEnvelope
+    ).recovery[0]!.instruction.match(/preview (op_[A-Za-z0-9_-]+)/)![1]!;
+    await approveResolution(
+      'relink',
+      'bnd_linear_e2e_001',
+      relinkOperationId,
+      'relink',
+    );
+    runnerInput = capabilities.find(
+      (capability) => capability.provider === 'linear',
+    )!;
+    const relinkHandoff = await runRemoteCommand(
+      [
+        'resolve',
+        'relink',
+        'linear:linear-relinked',
+        '--binding',
+        'bnd_linear_e2e_001',
+        '--apply-preview',
+        relinkOperationId,
+        '--capability-evidence-stdin',
+        '--authority-evidence-file',
+        authorityPath,
+      ],
+      'pending',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    const relinkAction = (
+      JSON.parse(relinkHandoff.stdout) as RemoteCommandEnvelope
+    ).externalAction!;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: relinkAction.operationId,
+      stepId: relinkAction.stepId,
+      actionDigest: relinkAction.actionDigest,
+      observedAt: '2026-09-05T12:00:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest:
+        relinkAction.expectedObservation.capabilityEvidenceDigest,
+      provider: relinkAction.provider,
+      context: relinkAction.context,
+      outcome: {
+        classification: 'observed',
+        identity: { stableId: 'linear-relinked', aliases: ['REL-1'] },
+        fields: {
+          title: 'Relinked title',
+          description: 'Relinked description',
+          priority: 'high',
+          status: 'open',
+        },
+        revisionDigest: 'sha256:e2e-relink-readback',
+        diagnosticCode: null,
+      },
+    };
+    const relinked = await runRemoteCommand(
+      [
+        'operation',
+        'continue',
+        '--operation',
+        relinkOperationId,
+        '--observation-stdin',
+      ],
+      'ok',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    expect(JSON.parse(relinked.stdout)).toMatchObject({ status: 'ok' });
+
+    const relinkedMetadata =
+      (await store.readBindingMetadata('bnd_linear_e2e_001'))!;
+    await store.updateBindingMetadata({
+      ...relinkedMetadata,
+      purposes: ['planning'],
+    });
+    const recreatePreview = await runRemoteCommand(
+      ['resolve', 'recreate', '--binding', 'bnd_linear_e2e_001'],
+      'needs-review',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    const recreateOperationId = (
+      JSON.parse(recreatePreview.stdout) as RemoteCommandEnvelope
+    ).recovery[0]!.instruction.match(/preview (op_[A-Za-z0-9_-]+)/)![1]!;
+    await approveResolution(
+      'recreate',
+      'bnd_linear_e2e_001',
+      recreateOperationId,
+      'recreate-search',
+    );
+    runnerInput = capabilities.find(
+      (capability) => capability.provider === 'linear',
+    )!;
+    const searchHandoff = await runRemoteCommand(
+      [
+        'resolve',
+        'recreate',
+        '--binding',
+        'bnd_linear_e2e_001',
+        '--apply-preview',
+        recreateOperationId,
+        '--capability-evidence-stdin',
+        '--authority-evidence-file',
+        authorityPath,
+      ],
+      'pending',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    const searchAction = (
+      JSON.parse(searchHandoff.stdout) as RemoteCommandEnvelope
+    ).externalAction!;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: searchAction.operationId,
+      stepId: searchAction.stepId,
+      actionDigest: searchAction.actionDigest,
+      observedAt: '2026-09-05T12:00:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest:
+        searchAction.expectedObservation.capabilityEvidenceDigest,
+      provider: searchAction.provider,
+      context: searchAction.context,
+      outcome: {
+        classification: 'observed',
+        identity: null,
+        fields: {},
+        extensions: { duplicateSearchOutcome: 'no-match' },
+        revisionDigest: 'sha256:e2e-search',
+        diagnosticCode: null,
+      },
+    };
+    const createPreview = await runRemoteCommand(
+      [
+        'operation',
+        'continue',
+        '--operation',
+        recreateOperationId,
+        '--observation-stdin',
+      ],
+      'needs-review',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    expect(JSON.parse(createPreview.stdout)).toMatchObject({
+      status: 'needs-review',
+      approvalPreview: { operationClass: 'recreate' },
+    });
+    await approveResolution(
+      'recreate',
+      'bnd_linear_e2e_001',
+      recreateOperationId,
+      'recreate-create',
+    );
+    const createHandoff = await runRemoteCommand(
+      [
+        'resolve',
+        'recreate',
+        '--binding',
+        'bnd_linear_e2e_001',
+        '--apply-preview',
+        recreateOperationId,
+        '--authority-evidence-file',
+        authorityPath,
+      ],
+      'pending',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    const createAction = (
+      JSON.parse(createHandoff.stdout) as RemoteCommandEnvelope
+    ).externalAction!;
+    const createFields = createAction.intent.fields as Record<string, unknown>;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: createAction.operationId,
+      stepId: createAction.stepId,
+      actionDigest: createAction.actionDigest,
+      observedAt: '2026-09-05T12:00:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest:
+        createAction.expectedObservation.capabilityEvidenceDigest,
+      provider: createAction.provider,
+      context: createAction.context,
+      outcome: {
+        classification: 'observed',
+        identity: { stableId: 'linear-recreated', aliases: ['REC-1'] },
+        fields: createFields,
+        revisionDigest: 'sha256:e2e-create',
+        diagnosticCode: null,
+      },
+    };
+    const readHandoff = await runRemoteCommand(
+      [
+        'operation',
+        'continue',
+        '--operation',
+        recreateOperationId,
+        '--observation-stdin',
+      ],
+      'pending',
+      true,
+      { projectRoot: repository, run: runner },
+    );
+    const recreateRead = (
+      JSON.parse(readHandoff.stdout) as RemoteCommandEnvelope
+    ).externalAction!;
+    runnerInput = {
+      schemaVersion: 1,
+      operationId: recreateRead.operationId,
+      stepId: recreateRead.stepId,
+      actionDigest: recreateRead.actionDigest,
+      observedAt: '2026-09-05T12:00:00.000Z',
+      surfaceKind: 'connector',
+      capabilityEvidenceDigest:
+        recreateRead.expectedObservation.capabilityEvidenceDigest,
+      provider: recreateRead.provider,
+      context: recreateRead.context,
+      outcome: {
+        classification: 'observed',
+        identity: { stableId: 'linear-recreated', aliases: ['REC-1'] },
+        fields: {
+          ...createFields,
+          description: 'Recreated description',
+          status: 'open',
+        },
+        revisionDigest: 'sha256:e2e-recreate-readback',
+        diagnosticCode: null,
+      },
+    };
+    const recreated = await runRemoteCommand(
+      [
+        'operation',
+        'continue',
+        '--operation',
+        recreateOperationId,
+        '--observation-stdin',
+      ],
+      'ok',
+      false,
+      { projectRoot: repository, run: runner },
+    );
+    expect(recreated.stderr || recreated.stdout).toContain(
+      'operation-continue: ok',
+    );
+    expect(await store.listBindingMetadata()).toHaveLength(3);
   });
 });
 

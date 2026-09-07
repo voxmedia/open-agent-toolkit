@@ -349,6 +349,42 @@ export class RemoteSyncStore {
     );
   }
 
+  async retireCurrentActionPointerIfPresent(
+    operationId: string,
+    expectedAction: ExternalActionEnvelope,
+  ): Promise<void> {
+    const parsed = parseExternalAction(expectedAction);
+    if (parsed.operationId !== operationId) {
+      throw new Error(
+        'External action operationId does not match its durable path.',
+      );
+    }
+    const pointerPath = join(
+      this.locations.operational.operationsDir,
+      `${operationId}.action`,
+    );
+    let current: ExternalActionEnvelope;
+    try {
+      current = parseExternalAction(
+        JSON.parse(
+          await this.#dependencies.filesystem.readFile(pointerPath, 'utf8'),
+        ),
+      );
+    } catch (error) {
+      if (isFilesystemError(error, 'ENOENT')) return;
+      throw error;
+    }
+    if (!isDeepStrictEqual(current, parsed)) {
+      throw new Error(
+        'Durable current action pointer contradicts the accepted mutation.',
+      );
+    }
+    await this.#dependencies.filesystem.unlink(pointerPath);
+    await this.#dependencies.filesystem.syncDirectory(
+      this.locations.operational.operationsDir,
+    );
+  }
+
   async readAction(
     operationId: string,
     stepId: string,
