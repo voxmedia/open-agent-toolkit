@@ -159,6 +159,31 @@ frontmatter stripping by the root session; no GitHub mutation has occurred.
 is recorded; the third event restored passing phase verification without
 changing the accepted dispatch target or widening the bounded file scope.
 
+### Recovery Event p-rev2-recovery-4-ci-integration-symlink
+
+- Phase/task: p-rev2 / prev2-t03
+- Original request: 348bd412-b8a9-40e9-8d98-6aab9099cbeb
+- Original commit: 6db21410ff85bdc01632154784c9f4baa815ddaa
+- Defect class: test
+- Discovered by: GitHub required CI run `34067919653`, job `101579854352`,
+  `pnpm test`
+- Disposition: recovered
+- Authorization: phase-standing
+- Attempt: 4/10
+- Dispatch target: oat-phase-implementer-gpt-5-6-sol-medium
+- Recovery commit: ddddba079ef92814aaeb79534ba5eab4a09efe4b
+- Verification: the focused integration suite passed 32 of 32 checks and
+  `pnpm test` passed before and after the committed correction.
+- Reason: the remote negative control expected `changed` but received `partial`
+  when Ubuntu reused the deleted symlink inode. The test now uses and asserts a
+  distinct raw link spelling that resolves to the same canonical directory, so
+  user-replacement identity is deterministic without changing production
+  behavior or weakening the expected status.
+
+**Recovery volume:** p-rev2 has four governed recovery events. The exact target
+and original history remain unchanged; required CI must rerun against the next
+pushed head before stability is claimed.
+
 ### Task prev2-t03: Re-establish terminal verification and CI
 
 **Status:** complete
