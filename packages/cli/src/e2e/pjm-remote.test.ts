@@ -1055,79 +1055,105 @@ describe('pjm remote end-to-end command workflows', () => {
       ...relinkedMetadata,
       purposes: ['planning'],
     });
-    const recreatePreview = await runRemoteCommand(
-      ['resolve', 'recreate', '--binding', 'bnd_linear_e2e_001'],
-      'needs-review',
-      true,
-      { projectRoot: repository, run: runner },
-    );
-    const recreateOperationId = (
-      JSON.parse(recreatePreview.stdout) as RemoteCommandEnvelope
-    ).recovery[0]!.instruction.match(/preview (op_[A-Za-z0-9_-]+)/)![1]!;
-    await approveResolution(
-      'recreate',
-      'bnd_linear_e2e_001',
-      recreateOperationId,
-      'recreate-search',
-    );
-    runnerInput = capabilities.find(
-      (capability) => capability.provider === 'linear',
-    )!;
-    const searchHandoff = await runRemoteCommand(
-      [
-        'resolve',
+    let recreateOperationId = '';
+    for (const lifecycleCondition of [
+      'archived',
+      'moved',
+      'missing-or-invisible',
+      'deleted-confirmed',
+      'temporarily-unavailable',
+    ] as const) {
+      const anomalyMetadata =
+        (await store.readBindingMetadata('bnd_linear_e2e_001'))!;
+      await store.updateBindingMetadata({
+        ...anomalyMetadata,
+        lifecycle: 'blocked',
+      });
+      const anomalyState =
+        (await store.readBindingState('bnd_linear_e2e_001'))!;
+      await store.writeBindingState({
+        ...anomalyState,
+        lifecycle: 'blocked',
+        lifecycleCondition,
+        snapshot: {
+          ...anomalyState.snapshot!,
+          lifecycle: lifecycleCondition,
+        },
+      });
+      const recreatePreview = await runRemoteCommand(
+        ['resolve', 'recreate', '--binding', 'bnd_linear_e2e_001'],
+        'needs-review',
+        true,
+        { projectRoot: repository, run: runner },
+      );
+      recreateOperationId = (
+        JSON.parse(recreatePreview.stdout) as RemoteCommandEnvelope
+      ).recovery[0]!.instruction.match(/preview (op_[A-Za-z0-9_-]+)/)![1]!;
+      await approveResolution(
         'recreate',
-        '--binding',
         'bnd_linear_e2e_001',
-        '--apply-preview',
         recreateOperationId,
-        '--capability-evidence-stdin',
-        '--authority-evidence-file',
-        authorityPath,
-      ],
-      'pending',
-      true,
-      { projectRoot: repository, run: runner },
-    );
-    const searchAction = (
-      JSON.parse(searchHandoff.stdout) as RemoteCommandEnvelope
-    ).externalAction!;
-    runnerInput = {
-      schemaVersion: 1,
-      operationId: searchAction.operationId,
-      stepId: searchAction.stepId,
-      actionDigest: searchAction.actionDigest,
-      observedAt: '2026-09-05T12:00:00.000Z',
-      surfaceKind: 'connector',
-      capabilityEvidenceDigest:
-        searchAction.expectedObservation.capabilityEvidenceDigest,
-      provider: searchAction.provider,
-      context: searchAction.context,
-      outcome: {
-        classification: 'observed',
-        identity: null,
-        fields: {},
-        extensions: { duplicateSearchOutcome: 'no-match' },
-        revisionDigest: 'sha256:e2e-search',
-        diagnosticCode: null,
-      },
-    };
-    const createPreview = await runRemoteCommand(
-      [
-        'operation',
-        'continue',
-        '--operation',
-        recreateOperationId,
-        '--observation-stdin',
-      ],
-      'needs-review',
-      true,
-      { projectRoot: repository, run: runner },
-    );
-    expect(JSON.parse(createPreview.stdout)).toMatchObject({
-      status: 'needs-review',
-      approvalPreview: { operationClass: 'recreate' },
-    });
+        `recreate-search-${lifecycleCondition}`,
+      );
+      runnerInput = capabilities.find(
+        (capability) => capability.provider === 'linear',
+      )!;
+      const searchHandoff = await runRemoteCommand(
+        [
+          'resolve',
+          'recreate',
+          '--binding',
+          'bnd_linear_e2e_001',
+          '--apply-preview',
+          recreateOperationId,
+          '--capability-evidence-stdin',
+          '--authority-evidence-file',
+          authorityPath,
+        ],
+        'pending',
+        true,
+        { projectRoot: repository, run: runner },
+      );
+      const searchAction = (
+        JSON.parse(searchHandoff.stdout) as RemoteCommandEnvelope
+      ).externalAction!;
+      runnerInput = {
+        schemaVersion: 1,
+        operationId: searchAction.operationId,
+        stepId: searchAction.stepId,
+        actionDigest: searchAction.actionDigest,
+        observedAt: '2026-09-05T12:00:00.000Z',
+        surfaceKind: 'connector',
+        capabilityEvidenceDigest:
+          searchAction.expectedObservation.capabilityEvidenceDigest,
+        provider: searchAction.provider,
+        context: searchAction.context,
+        outcome: {
+          classification: 'observed',
+          identity: null,
+          fields: {},
+          extensions: { duplicateSearchOutcome: 'no-match' },
+          revisionDigest: `sha256:e2e-search-${lifecycleCondition}`,
+          diagnosticCode: null,
+        },
+      };
+      const createPreview = await runRemoteCommand(
+        [
+          'operation',
+          'continue',
+          '--operation',
+          recreateOperationId,
+          '--observation-stdin',
+        ],
+        'needs-review',
+        true,
+        { projectRoot: repository, run: runner },
+      );
+      expect(JSON.parse(createPreview.stdout)).toMatchObject({
+        status: 'needs-review',
+        approvalPreview: { operationClass: 'recreate' },
+      });
+    }
     await approveResolution(
       'recreate',
       'bnd_linear_e2e_001',

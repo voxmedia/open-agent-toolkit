@@ -913,11 +913,10 @@ async function applyResolutionPreview(
       request.projectRoot,
       metadata,
     );
-    const projection = planProductionMutationProjection({
+    const projection = planRecreateNewRecordProjection({
       metadata,
       state,
       descriptionMode: effective.description,
-      operation: 'publish',
       priorityMapping: true,
     });
     const assessedAt = operation.approvalPreview?.createdAt;
@@ -4137,11 +4136,10 @@ async function continueResolutionOperation(
         request.projectRoot,
         metadata,
       );
-      const projection = planProductionMutationProjection({
+      const projection = planRecreateNewRecordProjection({
         metadata,
         state,
         descriptionMode: effective.description,
-        operation: 'publish',
         priorityMapping: true,
       });
       const safety = assessOutboundProjectionSafety(projection, {
@@ -5200,6 +5198,39 @@ export function planProductionMutationProjection(input: {
   }
   if (input.priorityMapping && shouldWrite('priority')) {
     projection.priority = local.priority;
+  }
+  if (Object.keys(projection).length === 0) {
+    throw new Error(
+      'Effective binding purpose and field policy permit no outbound fields.',
+    );
+  }
+  return projection;
+}
+
+function planRecreateNewRecordProjection(input: {
+  metadata: RemoteBindingMetadata;
+  state: RemoteBindingState;
+  descriptionMode: 'none' | 'managed-section' | 'replace';
+  priorityMapping: boolean;
+}): OutboundProjection {
+  const purpose = composePurposePolicies(input.metadata.purposes);
+  const candidate = buildCreateProjection(
+    input.state.localProjection,
+    input.descriptionMode,
+    input.metadata.bindingId,
+  );
+  const projection: OutboundProjection = {};
+  if (purpose.fields.title.includes('outbound')) {
+    projection.title = candidate.title;
+  }
+  if (
+    input.descriptionMode !== 'none' &&
+    purpose.fields.description.includes('outbound')
+  ) {
+    projection.description = candidate.description;
+  }
+  if (input.priorityMapping && purpose.fields.priority.includes('outbound')) {
+    projection.priority = candidate.priority;
   }
   if (Object.keys(projection).length === 0) {
     throw new Error(

@@ -834,92 +834,120 @@ describe('production lifecycle composition', () => {
     ).rejects.toThrow(/permit no outbound fields/i);
     await store.updateBindingMetadata(planningMetadata);
 
-    const recreatePreview = await runner({
-      operation: 'resolve',
-      projectRoot: repository,
-      bindingId: migrationBinding.bindingId,
-      resolutionKind: 'recreate',
-    });
-    const recreateOperationId = recreatePreview.recovery[0]?.instruction.match(
-      /preview (op_[A-Za-z0-9_-]+)/,
-    )?.[1];
-    const recreateOperation = await store.readOperation(recreateOperationId!);
-    await writeFile(
-      authorityPath,
-      JSON.stringify({
+    let recreateOperationId: string | undefined;
+    for (const lifecycleCondition of [
+      'archived',
+      'moved',
+      'missing-or-invisible',
+      'deleted-confirmed',
+      'temporarily-unavailable',
+    ] as const) {
+      const anomalyMetadata = (await store.readBindingMetadata(
+        migrationBinding.bindingId,
+      ))!;
+      await store.updateBindingMetadata({
+        ...anomalyMetadata,
+        lifecycle: 'blocked',
+      });
+      const anomalyState = (await store.readBindingState(
+        migrationBinding.bindingId,
+      ))!;
+      await store.writeBindingState({
+        ...anomalyState,
+        lifecycle: 'blocked',
+        lifecycleCondition,
+        snapshot: {
+          ...anomalyState.snapshot!,
+          lifecycle: lifecycleCondition,
+        },
+      });
+      const recreatePreview = await runner({
+        operation: 'resolve',
+        projectRoot: repository,
+        bindingId: migrationBinding.bindingId,
+        resolutionKind: 'recreate',
+      });
+      recreateOperationId = recreatePreview.recovery[0]?.instruction.match(
+        /preview (op_[A-Za-z0-9_-]+)/,
+      )?.[1];
+      const recreateOperation = await store.readOperation(recreateOperationId!);
+      await writeFile(
+        authorityPath,
+        JSON.stringify({
+          schemaVersion: 1,
+          kind: 'interactive',
+          sourceId: 'synthetic-test',
+          invocationId: `recreate-${lifecycleCondition}-invocation`,
+          issuedAt: timestamp,
+          expiresAt: '2026-08-31T12:05:00.000Z',
+          instruction: {
+            operationClass: 'recreate',
+            targetId: migrationBinding.bindingId,
+            evidenceDigest: `sha256:recreate-${lifecycleCondition}-instruction`,
+          },
+          approval: {
+            previewDigest: recreateOperation!.preview.digest,
+            operationClass: 'recreate',
+            approvedAt: timestamp,
+            actor: 'synthetic-reviewer',
+            source: 'synthetic-test-approval',
+          },
+        }),
+      );
+      runnerInput = {
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        surfaceKind: 'connector',
+        availability: 'available',
+        semanticCapabilities: ['search-duplicates', 'create', 'read'],
+        evidenceDigest: 'sha256:recreate-capability',
+        observedAt: timestamp,
+      };
+      const recreateHandoff = await runner({
+        operation: 'resolve',
+        projectRoot: repository,
+        bindingId: migrationBinding.bindingId,
+        resolutionKind: 'recreate',
+        previewOperationId: recreateOperationId,
+        capabilityEvidenceStdin: true,
+        authorityEvidenceFile: authorityPath,
+      });
+      const searchAction = recreateHandoff.externalAction!;
+      runnerInput = {
         schemaVersion: 1,
-        kind: 'interactive',
-        sourceId: 'synthetic-test',
-        invocationId: 'recreate-invocation',
-        issuedAt: timestamp,
-        expiresAt: '2026-08-31T12:05:00.000Z',
-        instruction: {
-          operationClass: 'recreate',
-          targetId: migrationBinding.bindingId,
-          evidenceDigest: 'sha256:recreate-instruction',
+        operationId: searchAction.operationId,
+        stepId: searchAction.stepId,
+        actionDigest: searchAction.actionDigest,
+        observedAt: timestamp,
+        surfaceKind: 'connector',
+        capabilityEvidenceDigest: 'sha256:recreate-capability',
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        outcome: {
+          classification: 'observed',
+          identity: null,
+          fields: {},
+          extensions: { duplicateSearchOutcome: 'no-match' },
+          revisionDigest: `sha256:recreate-search-${lifecycleCondition}`,
+          diagnosticCode: null,
         },
-        approval: {
-          previewDigest: recreateOperation!.preview.digest,
+      };
+      const createPreview = await runner({
+        operation: 'operation-continue',
+        projectRoot: repository,
+        operationId: recreateOperationId,
+        observationStdin: true,
+      });
+      expect(createPreview).toMatchObject({
+        status: 'needs-review',
+        externalAction: null,
+        approvalPreview: {
           operationClass: 'recreate',
-          approvedAt: timestamp,
-          actor: 'synthetic-reviewer',
-          source: 'synthetic-test-approval',
+          fieldMask: expect.arrayContaining(['title', 'priority']),
+          authority: 'user-approved',
         },
-      }),
-    );
-    runnerInput = {
-      provider: 'linear',
-      context: { workspaceId: 'workspace-1' },
-      surfaceKind: 'connector',
-      availability: 'available',
-      semanticCapabilities: ['search-duplicates', 'create', 'read'],
-      evidenceDigest: 'sha256:recreate-capability',
-      observedAt: timestamp,
-    };
-    const recreateHandoff = await runner({
-      operation: 'resolve',
-      projectRoot: repository,
-      bindingId: migrationBinding.bindingId,
-      resolutionKind: 'recreate',
-      previewOperationId: recreateOperationId,
-      capabilityEvidenceStdin: true,
-      authorityEvidenceFile: authorityPath,
-    });
-    const searchAction = recreateHandoff.externalAction!;
-    runnerInput = {
-      schemaVersion: 1,
-      operationId: searchAction.operationId,
-      stepId: searchAction.stepId,
-      actionDigest: searchAction.actionDigest,
-      observedAt: timestamp,
-      surfaceKind: 'connector',
-      capabilityEvidenceDigest: 'sha256:recreate-capability',
-      provider: 'linear',
-      context: { workspaceId: 'workspace-1' },
-      outcome: {
-        classification: 'observed',
-        identity: null,
-        fields: {},
-        extensions: { duplicateSearchOutcome: 'no-match' },
-        revisionDigest: 'sha256:recreate-search',
-        diagnosticCode: null,
-      },
-    };
-    const createPreview = await runner({
-      operation: 'operation-continue',
-      projectRoot: repository,
-      operationId: recreateOperationId,
-      observationStdin: true,
-    });
-    expect(createPreview).toMatchObject({
-      status: 'needs-review',
-      externalAction: null,
-      approvalPreview: {
-        operationClass: 'recreate',
-        fieldMask: expect.arrayContaining(['title', 'priority']),
-        authority: 'user-approved',
-      },
-    });
+      });
+    }
     const createOperation = await store.readOperation(recreateOperationId!);
     expect(createOperation!.approvalPreview).toEqual(
       expect.objectContaining({
@@ -1427,6 +1455,27 @@ describe('production lifecycle composition', () => {
     expect(managed.description).toContain('Local managed description');
     expect(managed.description).toContain('OAT-MANAGED:bnd_service_001');
   });
+
+  it.each([
+    'archived',
+    'moved',
+    'missing-or-invisible',
+    'deleted-confirmed',
+    'temporarily-unavailable',
+  ] as const)(
+    'keeps ordinary mutation blocked for the %s lifecycle anomaly',
+    (lifecycleCondition) => {
+      expect(() =>
+        planProductionMutationProjection({
+          metadata: binding(),
+          state: state({ lifecycle: 'blocked', lifecycleCondition }),
+          descriptionMode: 'replace',
+          operation: 'publish',
+          priorityMapping: true,
+        }),
+      ).toThrow(`remote-lifecycle:${lifecycleCondition}`);
+    },
+  );
 
   it.each([
     'after-journal',
