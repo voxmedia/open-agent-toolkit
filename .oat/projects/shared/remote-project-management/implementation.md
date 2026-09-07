@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Corrective Revision 3 implementation is complete; root-owned code review is pending.
 oat_last_updated: 2026-09-07
-oat_current_task_id: prev3-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -36,9 +37,9 @@ oat_generated: false
 | Phase 8    | pending     | 6     | 0/6       |
 | Revision 1 | blocked     | 4     | 4/4       |
 | Revision 2 | completed   | 2     | 2/2       |
-| Revision 3 | in_progress | 2     | 0/2       |
+| Revision 3 | in_progress | 2     | 2/2       |
 
-**Total:** 78/86 tasks completed
+**Total:** 80/86 tasks completed
 
 ---
 
@@ -2318,6 +2319,66 @@ target=oat-phase-implementer-gpt-5-6-sol-high
   reconciliation and Phase 8 remain blocked pending a passing Revision 3 code
   review.
 
+### Run 11 — Phase p-rev3
+
+```yaml
+request_id: remote-project-management-p-rev3-implementation-1
+caller: oat-project-implement
+scope: p-rev3
+action: implementation
+role_name: oat-phase-implementer-gpt-5-6-sol-high
+role_class: worker
+provider: codex
+dispatch_context: root-native
+dispatch_policy: high
+dispatch_ceiling: high
+model_axis: selected:gpt-5.6-sol
+effort_axis: selected:high
+task_class: consequential
+model_class_floor: consequential
+floor_satisfaction: satisfied
+selection_source: native-default
+selection_reason: native-catalog
+candidates_considered:
+  - gpt-5.6-sol/high
+selected_route: native
+phase_base_head: 5d9602752bc3f6914a975498b59b10457f41864d
+phase_head: a9c86aab6ee0d21f923f9e602a8f3e5ed55215ab
+task_commits:
+  - a59be4171bec65a071d57a7b4a73d0dc8e0e1d31
+  - a9c86aab6ee0d21f923f9e602a8f3e5ed55215ab
+launch_status: accepted
+child_outcome: done
+continuation_events: []
+recovery_usage: 0/10
+pending_attempt: null
+review_rounds: 0/3
+fix_loops: 0/3
+phase_verification: remote approval/anomaly union 120/120 passed at committed HEAD
+phase_outcome: implementation_passed_review_pending
+```
+
+**Implementation dispatch:** Dispatch: scope=p-rev3 action=implementation
+role=implementer producer=unknown provenance=unknown
+model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+dispatch_policy=high dispatch_ceiling=high
+target=oat-phase-implementer-gpt-5-6-sol-high
+
+- `prev3-t01` reproduced the anomaly rejection in RED tests, then restored
+  recreate resolution for all five supported non-active lifecycle anomalies
+  while keeping ordinary mutation fail-closed. Commit `a59be4171` changed only
+  its declared service and E2E files and passed 77/77 before and after commit.
+- `prev3-t02` reproduced four public approval-evidence gaps, then made initial
+  relink, detach, and recreate-search approval previews inspectable and
+  approval-validatable through public JSON and human output without private
+  store reads. Commit `a9c86aab6` changed only its seven declared files;
+  `store.ts` was not required.
+- Root independently verified the exact two-commit append-only range, declared
+  file boundaries, clean worktree, diff integrity, and the complete 120/120
+  phase suite at `a9c86aab6`.
+- No recovery attempt, optional nested dispatch, deviation, or concern was
+  reported. Fresh root-owned Revision 3 code review is next.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -2420,6 +2481,7 @@ Track test execution during implementation.
 | 4     | GitHub adapter, conformance, publication-safety, and integration suite               | 116/116; remote 451/451; checks passed | 0      | review passed              |
 | 5     | Linear adapter, conformance, integration, and duplicate-search suite                 | 93/93; remote 544/544; checks passed   | 0      | operator review passed     |
 | 6     | Jira adapter, ADF, conformance, integration, and duplicate-search suite              | 42/42; remote 586/586; checks passed   | 0      | review round 1 pending     |
+| rev3  | Recreate anomaly and public lifecycle approval evidence union                        | 120/120; boundary and diff passed      | 0      | code review pending        |
 
 ## Final Summary (for PR/docs)
 

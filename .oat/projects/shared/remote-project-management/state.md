@@ -1,7 +1,10 @@
 ---
-oat_current_task: prev3-t01
-oat_last_commit: af095f3c0c338b7d571a86a4b70f498b758537ee
-oat_blockers: []
+oat_current_task: null
+oat_last_commit: a9c86aab6ee0d21f923f9e602a8f3e5ed55215ab
+oat_blockers:
+  [
+    'Corrective Revision 3 implementation is complete; root-owned code review is pending',
+  ]
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -46,10 +49,13 @@ oat_phase_recovery_policy:
     p07:
       used_attempts: 1
       pending_attempt: null
+    p-rev3:
+      used_attempts: 0
+      pending_attempt: null
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T02:26:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T02:38:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -84,7 +90,7 @@ structured plan artifact review passed and implementation starts at
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 3 artifact review passed)
-- **Implementation:** implementation.md (in progress; next task `prev3-t01`)
+- **Implementation:** implementation.md (in progress; p-rev3 review pending)
 
 ## Progress
 
@@ -239,16 +245,22 @@ structured plan artifact review passed and implementation starts at
 - ⛔ Phase 7 operator extension is exhausted at 4/4 reviews and 3/3 fix loops
 - ✓ Operator authorized separate two-task Corrective Revision 3
 - ✓ Corrective Revision 3 plan artifact review passed with zero findings
+- ✓ prev3-t01 restored recreate across supported non-active anomalies in
+  `a59be4171`
+- ✓ prev3-t02 exposed and validated public lifecycle approval previews in
+  `a9c86aab6`
+- ✓ Revision 3 phase verification passed 120/120
+- ⧗ Root-owned Revision 3 code review pending
 - ⧗ After p-rev3 code review passes, merge latest `origin/main` and re-establish
   the verification baseline before Phase 8
 
 ## Blockers
 
-No active implementation blocker. The branch-level lockstep version gate
-remains preserved for planned `p08-t05` release work after mainline
-reconciliation.
+Revision 3 implementation is complete and blocked only on its mandatory fresh
+root-owned code review. The branch-level lockstep version gate remains
+preserved for planned `p08-t05` release work after mainline reconciliation.
 
 ## Next Milestone
 
-Implement `prev3-t01` and `prev3-t02` in order. After a passing p-rev3 code
-review, merge latest `origin/main` before Phase 8.
+Run the fresh p-rev3 code review. After it passes, merge latest `origin/main`
+before Phase 8.
