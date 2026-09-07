@@ -1362,7 +1362,7 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.2');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.3');
     expect(tools).toContain('Task');
     for (const broadReview of [
       'final code reviews',
@@ -2919,7 +2919,7 @@ describe('validateOatSkills', () => {
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.4'],
-      ['.agents/agents/oat-reviewer.md', '1.2.2'],
+      ['.agents/agents/oat-reviewer.md', '1.2.3'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.5'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.2'],
@@ -5720,7 +5720,7 @@ describe('validateOatSkills', () => {
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.4'],
-      ['.agents/agents/oat-reviewer.md', '1.2.2'],
+      ['.agents/agents/oat-reviewer.md', '1.2.3'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.1'],
     ] as const;
 
@@ -7550,7 +7550,39 @@ describe('lite mode skill contracts', () => {
     expect(reviewer).toMatch(
       /evidence matches the declared strategy[\s\S]{0,160}capable of failing when the claim is false/i,
     );
+    expect(reviewer).toMatch(
+      /missing or unjustified proof strategy[\s\S]{0,120}only when[\s\S]{0,160}workflow artifact declares that strategy/i,
+    );
+    expect(reviewer).toMatch(
+      /does not,[\s\S]{0,120}existing verification commands[\s\S]{0,100}without inventing a missing strategy field/i,
+    );
     expect(reviewer).toMatch(/absence of an automated\s+test alone is not/i);
+
+    const proofStrategyFinding = (plan: string): boolean => {
+      const declared = plan.includes('**Implementation and Proof Strategy:**');
+      if (!declared) return !/\*\*Verification:\*\*\s*\S+/.test(plan);
+
+      return ![
+        /^Strategy:[ \t]*\S+/m,
+        /^Observable risk:[ \t]*\S+/m,
+        /^Why proportionate:[ \t]*\S+/m,
+      ].every((pattern) => pattern.test(plan));
+    };
+    const liteMissingDeclaredStrategy = [
+      '# Lite Plan',
+      '**Implementation and Proof Strategy:**',
+      'Strategy:',
+      'Observable risk: stale behavior',
+      'Why proportionate: focused control',
+      '**Verification:** pnpm test',
+    ].join('\n');
+    const validQuickVerification = [
+      '# Quick Plan',
+      '**Verification:** pnpm test',
+    ].join('\n');
+
+    expect(proofStrategyFinding(liteMissingDeclaredStrategy)).toBe(true);
+    expect(proofStrategyFinding(validQuickVerification)).toBe(false);
     expect(implementer).toMatch(
       /declared implementation and proof strategy without[\s\S]{0,80}silently substituting TDD/i,
     );
