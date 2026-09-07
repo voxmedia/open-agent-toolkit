@@ -4,6 +4,10 @@
 
 ## Curated Overview
 
+- 2026-09-07: `BL-260907-replace-the-default-project` proposes a simpler,
+  direct agent-authored visual recap after another implementation-tail run produced
+  no visual artifact. It should reconcile or supersede the capability-probe and seam
+  configuration direction tracked under issue #230 before implementation.
 - 2026-09-06: `BL-260906-re-evaluate-universal-plan` reopens the default-policy
   question in `DR-260714-flexible-plan-task-bodies`: objective,
   risk-proportionate proof should prevent both proof-free plans and low-value
@@ -236,6 +240,7 @@
 | BL-260901-make-terminal-project-status   | Make terminal project status agree with completed revision plans                                      | open   | high     | task       | S        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
 | BL-260902-recover-committed-review       | Recover committed review artifacts from post-selection gate failures                                  | open   | high     | task       | M        |
+| BL-260907-replace-the-default-project    | Replace the default project recap with a direct agent-authored visual flow                            | open   | high     | feature    | M        |
 | BL-260902-retry-gate-project-log         | Retry gate project-log finalization across transient Git index locks                                  | open   | high     | task       | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                           | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                         | open   | high     | feature    | L        |
