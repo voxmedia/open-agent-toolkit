@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: null
+oat_current_task_id: p12-t09
 oat_generated: false
 ---
 
@@ -24,22 +24,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                                                       | Status   | Tasks | Completed |
-| --------------------------------------------------------------------------- | -------- | ----- | --------- |
-| Phase 01 (recover-committed-review-artifacts-after-post-selection-failures) | complete | 1     | 1/1       |
-| Phase 02 (keep-instruction-sync-pointers-out-of-docs-trees)                 | complete | 1     | 1/1       |
-| Phase 03 (route-incomplete-quick-projects-to-quick-start)                   | complete | 1     | 1/1       |
-| Phase 04 (retry-gate-project-log-finalization-across-index-locks)           | complete | 1     | 1/1       |
-| Phase 05 (add-oat-config-unset-command)                                     | complete | 1     | 1/1       |
-| Phase 06 (validate-skill-script-references-against-pack-manifests)          | complete | 1     | 1/1       |
-| Phase 07 (enforce-external-plan-readiness-contract)                         | complete | 1     | 1/1       |
-| Phase 08 (make-autonomous-project-recap-capability-aware)                   | complete | 1     | 1/1       |
-| Phase 09 (defer-activeproject-clearing-on-archive-completions)              | blocked  | 1     | 0/1       |
-| Phase 10 (make-terminal-project-status-agree-with-revision-plans)           | complete | 1     | 1/1       |
-| Phase 11 (make-consolidated-project-retirement-semantic)                    | complete | 1     | 1/1       |
-| Phase 12 (exit-gate fixes)                                                  | complete | 8     | 8/8       |
+| Phase                                                                       | Status      | Tasks | Completed |
+| --------------------------------------------------------------------------- | ----------- | ----- | --------- |
+| Phase 01 (recover-committed-review-artifacts-after-post-selection-failures) | complete    | 1     | 1/1       |
+| Phase 02 (keep-instruction-sync-pointers-out-of-docs-trees)                 | complete    | 1     | 1/1       |
+| Phase 03 (route-incomplete-quick-projects-to-quick-start)                   | complete    | 1     | 1/1       |
+| Phase 04 (retry-gate-project-log-finalization-across-index-locks)           | complete    | 1     | 1/1       |
+| Phase 05 (add-oat-config-unset-command)                                     | complete    | 1     | 1/1       |
+| Phase 06 (validate-skill-script-references-against-pack-manifests)          | complete    | 1     | 1/1       |
+| Phase 07 (enforce-external-plan-readiness-contract)                         | complete    | 1     | 1/1       |
+| Phase 08 (make-autonomous-project-recap-capability-aware)                   | complete    | 1     | 1/1       |
+| Phase 09 (defer-activeproject-clearing-on-archive-completions)              | blocked     | 1     | 0/1       |
+| Phase 10 (make-terminal-project-status-agree-with-revision-plans)           | complete    | 1     | 1/1       |
+| Phase 11 (make-consolidated-project-retirement-semantic)                    | complete    | 1     | 1/1       |
+| Phase 12 (exit-gate fixes)                                                  | in_progress | 9     | 8/9       |
 
-**Total:** 18/19 planned tasks completed; 1 parked (p09)
+**Total:** 18/20 planned tasks completed; 1 parked (p09)
 
 ---
 
@@ -177,10 +177,10 @@ oat_generated: false
 
 ## Phase 12: exit-gate fixes (p12)
 
-**Status:** complete (fix-round root review passed; p12-t08 added from the superseded gate launch; exit gate attempt 2 next) · **Group:** exit-gate fix round (three parallel worktrees: A = p12-t01/t02/t03, B = p12-t05/t06/t07, C = p12-t04) · **Tasks:** p12-t01 … p12-t07
-**Outcome:** all seven attempt-1 findings resolved with red-then-green controls: the gate-log append window is one critical section under a project-local advisory lock in the log module (never a Git lock; a rewrite that cannot take the lock refuses) and a commit settles only when `HEAD:project-log.md` positively carries the caller's entry (`entry-missing-after-commit` / `commit-unverified` route to the receipt); receipt staleness is decided against `HEAD:project-log.md` with exact identity; `documentation.instructionPointerExcludes` is catalogued (`string[]` through `normalizeExcludedPaths`, absolute / `..` / drive-letter entries refused, family coverage + `KEY_ORDER` removal control, five docs pages); the control-plane reader carries an executable Quick Plan Readiness predicate (34/34 verdict parity with the skill's awk guard; 51 non-quick fixtures byte-identical; `oat project status` public controls); the awk guard measures indentation in columns (tab → next multiple of four) in both copies; quick-start re-resolves `PROJECT_PATH` from `oat project new --json` (status-gated fallback) before Step 1 with a real-CLI create-path control reading `absorbed_*` back; the readiness contract backstops the plan↔source backlink in both directions (fence-aware, all link forms, `none` as a whole value).
-**Verification:** per lane: focused suites, forced check/type-check/test `Cached: 0`, check:skill-bumps, lint, format, validate-skills, test:smoke (B), one or two Codex rounds (A: 2 + 1 + 1; B: 1 per task; C: 1, zero findings); fan-in on the tip: eight gates green (CLI 6036, control-plane 141), `pnpm test:smoke`, `pnpm test:skills`, root `pnpm test` all 0.
-**Deviations:** t02 also changed `apps/oat-docs/docs/cli-utilities/workflow-gates.md` and removed the dead working-tree reader `projectLogContainsIdempotencyKey` from `append.ts` (its only consumer was the replaced line); t03 also changed `oat-config.ts` and `oat-config.test.ts` (the repair message and a lenient reader so `set` can repair a malformed value) and three more docs pages that claimed the key had no `oat config` entry; t04 decides every quick `plan`-phase tier by readiness (tier 3 and 1b too, matching the `oat-project-next` table) and adds an additive `quickPlanReadiness` field to `oat project status --json`; t07 also guards the item→plan half. Deferred: `unset` on a malformed stored value exits 1 (identical pre-existing behavior for `documentation.excludes`) → follow-up at closeout; five legacy `2026-08-19-*` plans carry no source backlink (exempt by legacy mode).
+**Status:** in*progress (p12-t09 from exit gate attempt 2) · **Group:** exit-gate fix round (worktrees A = p12-t01/t02/t03, B = p12-t05/t06/t07, C = p12-t04, D = p12-t08, E = p12-t09) · **Tasks:** p12-t01 … p12-t09
+**Outcome:** all seven attempt-1 findings resolved with red-then-green controls: the gate-log append window is one critical section under a project-local advisory lock in the log module (never a Git lock; a rewrite that cannot take the lock refuses) and a commit settles only when `HEAD:project-log.md` positively carries the caller's entry (`entry-missing-after-commit` / `commit-unverified` route to the receipt); receipt staleness is decided against `HEAD:project-log.md` with exact identity; `documentation.instructionPointerExcludes` is catalogued (`string[]` through `normalizeExcludedPaths`, absolute / `..` / drive-letter entries refused, family coverage + `KEY_ORDER` removal control, five docs pages); the control-plane reader carries an executable Quick Plan Readiness predicate (34/34 verdict parity with the skill's awk guard; 51 non-quick fixtures byte-identical; `oat project status` public controls); the awk guard measures indentation in columns (tab → next multiple of four) in both copies; quick-start re-resolves `PROJECT_PATH` from `oat project new --json` (status-gated fallback) before Step 1 with a real-CLI create-path control reading `absorbed*_`back; the readiness contract backstops the plan↔source backlink in both directions (fence-aware, all link forms,`none`as a whole value).
+**Verification:** per lane: focused suites, forced check/type-check/test`Cached: 0`, check:skill-bumps, lint, format, validate-skills, test:smoke (B), one or two Codex rounds (A: 2 + 1 + 1; B: 1 per task; C: 1, zero findings); fan-in on the tip: eight gates green (CLI 6036, control-plane 141), `pnpm test:smoke`, `pnpm test:skills`, root `pnpm test`all 0.
+**Deviations:** t02 also changed`apps/oat-docs/docs/cli-utilities/workflow-gates.md`and removed the dead working-tree reader`projectLogContainsIdempotencyKey`from`append.ts`(its only consumer was the replaced line); t03 also changed`oat-config.ts`and`oat-config.test.ts`(the repair message and a lenient reader so`set`can repair a malformed value) and three more docs pages that claimed the key had no`oat config`entry; t04 decides every quick`plan`-phase tier by readiness (tier 3 and 1b too, matching the `oat-project-next`table) and adds an additive`quickPlanReadiness`field to`oat project status --json`; t07 also guards the item→plan half. Deferred: `unset`on a malformed stored value exits 1 (identical pre-existing behavior for`documentation.excludes`) → follow-up at closeout; five legacy `2026-08-19-_` plans carry no source backlink (exempt by legacy mode).
 
 ### Task p12-t01: (review) Make gate project-log finalization concurrency-safe and identity-verified
 
@@ -221,6 +221,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** `18de7b1f1`→`dc890c0bc`
+
+### Task p12-t09: (review) Tighten backlog-ID matching and ignore reference definitions inside HTML comments
+
+**Status:** pending
+**Commit:** -
 
 ## Autonomy Gate Provenance
 
@@ -533,6 +538,23 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Findings (informational, from the superseded artifact):** Critical 0 · Important 0 · Medium 1 · Minor 1 — "no blocking findings remain at the gate's Important threshold"; all seven attempt-1 findings recorded implemented. M1: the backlink rule accepts any link inside a source declaration without relating it to the declared source (`BL-123 — see [unrelated](…)` accepted) — fixed before the re-run as `p12-t08`. m1: the `quick-plan-readiness.ts` comment still describes the tab divergence p12-t05 removed — fixed before the re-run as `p12-t08`.
 
+## Review Received: final (configured exit gate, attempt 2 — blocked; attempts exhausted)
+
+**Date:** 2026-09-07
+**Gate:** run `a720129c-9808-4d43-8ae6-4b8de92e8fdb`, target `codex-5-6-sol-xhigh` (diversity: unknown-producer), envelope `ok`, outcome `review_completed_blocking_findings`, `receiveEligible: true`, threshold important, blocking true, attempt `w5-exit-gate-20260907T173426Z` (launched in the foreground; the harness moved it to the background after ten minutes and it completed with a receipt).
+**Review artifact:** reviews/archived/final-review-2026-09-07T174812Z.md (reviewed head `42c799663b1ca0c2ddeed1c12c6094bd5801fb42`, invocation gate; range from the superseded launch's head `ebf7cbf27`)
+
+**Findings:** Critical 0 · Important 1 · Medium 2 · Minor 1 — blocking; auto-disposition mode. The reviewer records the p12-t08 change as rejecting the prior shapes and both focused suites green; the block rests on one record sentence.
+
+**Dispositions:**
+
+- I1 — the user-facing "Behavioral changes" bullet in `## Final Summary` still promised that consolidated projects are "retired only when their children are proven terminal" while the same artifact (and the shipped `oat-project-complete`) describe an advisory ownership-language sweep — a sentence the round-1 root-review corrections missed: **fixed in this receive commit** (record only; no product change).
+- M1 — the backlog matcher accepts `BL-123foo` for a declared `BL-123` (only a following digit is rejected): **convert → `p12-t09`**.
+- M2 — reference definitions inside HTML comments are collected, so a commented definition manufactures a backlink: **convert → `p12-t09`**.
+- m1 — stale counts (`plan.md` checklist → 20/20 with p12-t09; the Phase 12 status line's task range; the deferred-Minor ledger still listing the `PROJECT_PATH` item p12-t06 resolved): **fixed in this receive commit**.
+
+**Attempt accounting (completion-and-closeout.md, Step 14):** attempt 1 blocked and was received (Phase 12); this attempt 2 blocked and is received here; `attempts_completed` → 2 = `max_attempts`, `on_failure: block` → the gate persists `blocked` and no further gate launch is made autonomously. Per the contract the completion steps do not run; the project stays `in_progress`, and the accumulated feedback is escalated to the operator with the fixes for every finding already applied (records here; code as p12-t09) so that an operator-authorized re-run has nothing outstanding.
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)
@@ -551,7 +573,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - p06 review round 2 m1 — an escaped-underscore reference yields a trailing backslash and a false positive (zero live instances) → `BL-260907-ignore-backslash-escaped`.
 - p07 fix round (Codex) — `oat-wave-program` contradicts itself on the ledger's terminal vocabulary (`merged` vs `done`) → `BL-260907-settle-the-oat-wave-program`.
 - p07 review round 2 m1 — the program-document date fallback fails open → `BL-260907-fail-closed-on-unparsable`.
-- p11 review m3 / Codex — quick-start resolves `PROJECT_PATH` before `oat project new` and writes through the stale value (pre-existing) → `BL-260907-re-resolve-project-path-after`.
+- p11 review m3 / Codex — quick-start resolves `PROJECT_PATH` before `oat project new` and writes through the stale value (pre-existing) → filed as `BL-260907-re-resolve-project-path-after`, then elevated by exit gate attempt 1 (M4) and **fixed in this wave as p12-t06** (the item is archived at closeout).
 - p11 review m2 — the plan's `-t 'absorbed'` verify filter runs two of the three new tests → wave-close plan correction.
 - p11 review m3 (process) — the orchestrator's review brief stated the sweep/seal ordering backwards; the implementation and plan agree (sweep before roll-up and seal); recorded in `orchestration-log.md`, no code change.
 - p07 review — the stray four-backtick fence in the repo-improve plan template is pre-existing → `BL-260906-repair-the-stray-fence-in-oat` (already open).
@@ -571,7 +593,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - Lockstep public packages 0.2.62 → 0.2.63; `.oat/sync/manifest.json` restamped in the same commit.
 - A gate whose post-selection step throws after a committed artifact exists no longer fails as `review_failed`; an index-lock collision during log finalization no longer loses the gate's log entry; a recovery command is printed and idempotent.
 - Malformed `instructionPointerExcludes` stops sync/validate with a repair message; `oat config unset` exists.
-- Incomplete quick projects route to quick-start; a project with incomplete revision phases is not reported terminal; autonomous completion skips the recap (recorded) when a required seam is missing instead of failing; consolidated projects are retired only when their children are proven terminal.
+- Incomplete quick projects route to quick-start; a project with incomplete revision phases is not reported terminal; autonomous completion skips the recap (recorded) when a required seam is missing instead of failing; a consolidating project's closeout sweeps the active planning surfaces for ownership language still naming its absorbed work and dispositions each hit before the seal (advisory; never a hard block).
 - Skills with dangling script references and external plans whose status contradicts their dependency table fail the contract test.
 
 **Key files / modules:**

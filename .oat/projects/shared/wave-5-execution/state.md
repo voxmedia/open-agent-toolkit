@@ -141,7 +141,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — all lanes dispositioned (10 merged, p09 parked); root final review passed; the configured exit gate blocked on attempt 1 (three Important, four Medium) and its findings were fixed as Phase 12 in three parallel lanes, merged, gated, and root-reviewed (passed); exit gate attempt 2 runs next.
+Implementation — all lanes dispositioned (10 merged, p09 parked); root final review passed; the configured exit gate blocked on attempt 1 (three Important, four Medium) and its findings were fixed as Phase 12, merged, gated, and root-reviewed (passed); attempt 2 blocked on a stale record sentence plus two backlink-rule Mediums; attempts are exhausted, so the gate is `blocked` pending an operator decision while p12-t09 lands.
 
 ## Artifacts
 
@@ -171,7 +171,8 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 - ✓ Phase 12 fix lanes merged (`ddeabab1e`, `bcf907526`, `368d8b8d0`); eight gates + smoke + skills + root test green
 - ✓ Fix-round root review passed (0C/0I/2M/6m; record fixes applied)
 - ✗ Exit gate attempt-2 launch `w5-exit-gate-20260907T163516Z` killed by the harness (low memory) after the reviewer passed (0C/0I/1M/1m) — superseded, no receipt; its findings fixed as p12-t08 (`c66a2fdc5`)
-- ⧗ Exit gate attempt 2 (re-run), post-implement sequence, PR
+- ✗ Exit gate attempt 2 (run `a720129c`) blocked: 0C/1I/2M/1m — the Important is a stale user-facing summary sentence (record), the Mediums tighten the p12-t08 backlink rule (p12-t09); attempts exhausted (2/2) → gate `blocked`, escalated to the operator
+- ⧗ p12-t09, then an operator decision on a further gate attempt; post-implement sequence and PR after that
 
 ## Blockers
 
@@ -179,4 +180,4 @@ Implementation — all lanes dispositioned (10 merged, p09 parked); root final r
 
 ## Next Milestone
 
-Exit gate attempt 2 on the reviewed closeout head, then the post-implement sequence (summary, document, pr) and the wave PR.
+Operator decision on the exhausted exit gate (the findings are fixed: records here, code as p12-t09); if a further attempt is authorized it runs on the p12-t09 tip, then the post-implement sequence (summary, document, pr) and the wave PR.
