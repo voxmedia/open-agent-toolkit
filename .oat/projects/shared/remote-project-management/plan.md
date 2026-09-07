@@ -1317,6 +1317,30 @@ plan task, so task totals remain unchanged.
    suites, CLI lint/type-check/build/format, diff integrity, boundary, and
    provider-neutrality checks before and after the recovery commit.
 
+### Authorized Phase 7 Operator Extension
+
+The operator authorized one final bounded Phase 7 fix/review extension on
+2026-09-06 after normal review governance exhausted at 3/3 reviews and 2/3 fix
+loops. This authorizes exactly fix loop 3/3 through the original Phase 7
+implementer target and one independent review 4/4; it does not authorize
+additional fixes, reviews, scope expansion, or Phase 8 work.
+
+1. Fix only the four Critical and one Important findings in
+   `reviews/p07-review-2026-09-06T213110Z.md`: recreate purpose/policy/preimage
+   drift, restart-safe resolution observation/materialization, former snapshot
+   retention, production lifecycle/cross-provider E2E proof, and inspectable
+   lifecycle approval previews.
+2. Preserve all approved provider-neutral privacy, safety, authorization,
+   journal, and authoritative read-back contracts. Do not add provider-native
+   execution contracts or scan repository/worktree/history content for secrets.
+3. Use the original Phase 7 implementer handle and exact target. Create one
+   atomic fix commit, then run focused production, full remote/E2E/help, smoke,
+   lint, type-check, build, format, boundary, diff, and provider-neutrality
+   verification.
+4. Dispatch exactly one independent review 4/4 over the full Phase 7 range.
+   Phase 7 passes only with zero Critical and zero Important findings; otherwise
+   stop with the extension exhausted.
+
 ### Transition Gate: Reconcile Latest Main Before Phase 8
 
 After Phase 7 passes its root-owned review, fetch and merge latest

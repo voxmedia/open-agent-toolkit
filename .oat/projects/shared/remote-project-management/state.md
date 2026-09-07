@@ -3,7 +3,7 @@ oat_current_task: null
 oat_last_commit: a0adeeeec8f2869a9d718ea21580f7b37e49c0d1
 oat_blockers:
   [
-    'Phase 7 normal review governance is exhausted at 3/3 with 4 Critical and 1 Important finding; an operator extension is required',
+    'Phase 7 operator extension is authorized; bounded fix loop 3/3 is pending for 4 Critical and 1 Important finding',
   ]
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
@@ -52,7 +52,7 @@ oat_phase_recovery_policy:
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-06T21:32:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-07T01:28:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -73,8 +73,9 @@ reproduced the 759/759 remote/E2E/help suite. Independent review round 2/3 found
 five Critical and two Important findings. Bounded fix loop 2/3 completed at
 `a0adeeeec`; root independently reproduced the 761/761 remote/E2E/help suite.
 Independent review round 3/3 found four Critical and one Important finding.
-Normal review governance is exhausted; an operator extension is required, and
-Phase 7 has not passed.
+Normal review governance is exhausted. The operator authorized exactly one
+bounded extension fix loop 3/3 and one independent review 4/4; Phase 7 has not
+passed.
 
 ## Artifacts
 
@@ -82,7 +83,7 @@ Phase 7 has not passed.
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** plan.md (complete; Revision 2 structured review passed)
-- **Implementation:** implementation.md (blocked; Phase 7 operator extension required)
+- **Implementation:** implementation.md (in progress; Phase 7 extension fix pending)
 
 ## Progress
 
@@ -229,18 +230,18 @@ Phase 7 has not passed.
   finding
 - ⛔ Phase 7 normal review governance is exhausted at 3/3 reviews and 2/3 fix
   loops
+- ✓ Operator authorized bounded Phase 7 fix loop 3/3 and independent review 4/4
 - ⧗ After Phase 7 review passes, merge latest `origin/main` and re-establish
   the verification baseline before Phase 8
 
 ## Blockers
 
-Phase 7 is blocked pending explicit authorization for one bounded operator-
-extension fix loop 3/3 and independent review 4/4. The branch-level lockstep
-version gate remains preserved for planned `p08-t05` release work after
-mainline reconciliation.
+Phase 7 is blocked pending the authorized bounded operator-extension fix loop
+3/3 and independent review 4/4. The branch-level lockstep version gate remains
+preserved for planned `p08-t05` release work after mainline reconciliation.
 
 ## Next Milestone
 
-Obtain operator authorization for one bounded Phase 7 fix loop 3/3 and one
-independent review 4/4. After a Phase 7 review passes, merge latest
+Run the authorized bounded Phase 7 fix loop 3/3 through the original
+implementer, then independent review 4/4. After a passing review, merge latest
 `origin/main` before Phase 8.
