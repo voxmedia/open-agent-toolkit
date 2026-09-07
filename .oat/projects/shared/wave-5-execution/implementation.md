@@ -560,6 +560,23 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 **Attempt accounting (completion-and-closeout.md, Step 14):** attempt 1 blocked and was received (Phase 12); this attempt 2 blocked and is received here; `attempts_completed` → 2 = `max_attempts`, `on_failure: block` → the gate persists `blocked` and no further gate launch is made autonomously. Per the contract the completion steps do not run; the project stays `in_progress`, and the accumulated feedback is escalated to the operator with the fixes for every finding already applied (records here; code as p12-t09) so that an operator-authorized re-run has nothing outstanding.
 
+## Review Received: final (configured exit gate, attempt 3 (operator-authorized) — passed)
+
+**Date:** 2026-09-07
+**Gate:** run `905419ec-75d0-4ea0-9881-5425c6c54e9d`, target `codex-5-6-sol-xhigh` (diversity: unknown-producer), envelope `ok`, outcome `review_completed_gate_passed`, `receiveEligible: true`, threshold important, blocking false, attempt `w5-exit-gate-20260907T213219Z` (launched in the foreground; the harness moved it to the background after ten minutes and it completed with a receipt).
+**Review artifact:** reviews/archived/final-review-2026-09-07T214334Z.md (reviewed head `34e89bbc91657e7e195aa955b6e483b9dcb63fc0`, invocation gate)
+
+**Findings:** Critical 0 · Important 0 · Medium 2 · Minor 1 — judgment-sweep mode (passing gate).
+
+**Dispositions:**
+
+- M1 — the backlog matcher validates only the first character of an extension segment (`BL-123` accepts `BL-123-other_more`, `BL-123-otheré`, `BL-123-other--tail`): **deferred → `BL-260907-harden-the-external-plan`**. Test-rule hardening on a contract helper; the gate passed at its threshold and a product change now would stale it; the exact mutations are recorded as the item's required controls.
+- M2 — `withoutFences()` runs before HTML comments are removed in both definition and declaration extraction (a fence opener inside a comment can hide a later valid declaration): **deferred → `BL-260907-harden-the-external-plan`** (same item; same rationale).
+- m1 — `BL-260907-let-oat-config-unset-remove` said the malformed-value path exits 2; `runUnset` sets exit 1: **fixed** in this receive commit (backlog description only).
+- The gate's Requirements Coverage records p01–p08, p10, p11, and every p12 task implemented, p09 parked at its declared STOP, and all deferred Mediums accepted as filed.
+
+**Gate row `final` (attempt 3 (operator-authorized)) → `passed`** (gate-written row moved forward in place with the archived path); `oat_implement_exit_gate` → `allowed / passed` in the following state checkpoint.
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)

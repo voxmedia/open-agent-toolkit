@@ -258,6 +258,7 @@
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                               | open   | medium   | feature    | L        |
 | BL-260906-guard-packed-asset-directories | Guard packed asset directories and document the OAT_ASSETS_DIR contract                                         | open   | medium   | task       | S        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                                    | open   | medium   | feature    | M        |
+| BL-260907-harden-the-external-plan       | Harden the external-plan backlink matcher: full extension consumption and comments before fences                | open   | medium   | task       | XS       |
 | BL-260904-honor-metadata-version         | Honor metadata.version as the canonical skill version                                                           | open   | medium   | feature    | M        |
 | BL-260907-ignore-backslash-escaped       | Ignore backslash-escaped emphasis in skill-script reference extraction                                          | open   | medium   | task       | XS       |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                          | open   | medium   | feature    | L        |

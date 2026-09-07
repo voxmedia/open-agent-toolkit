@@ -18,7 +18,7 @@ external_plans: []
 
 ## Description
 
-`unsetConfigValue` reaches `resolveEffectiveConfig` (the strict reader) before its lenient branch, so `oat config unset <key>` exits 2 when the stored value is malformed; the operator must repair through `oat config set <key> ''` instead. Identical pre-existing behavior for `documentation.excludes` and, since wave-5 p12-t03, `documentation.instructionPointerExcludes` (Codex finding on the exit-gate fix round, deferred for sibling parity). Fix: read leniently for the targeted key before resolving the effective config so `unset` can remove a value the loader rejects.
+`unsetConfigValue` reaches `resolveEffectiveConfig` (the strict reader) before its lenient branch, so `oat config unset <key>` exits 1 when the stored value is malformed; the operator must repair through `oat config set <key> ''` instead. Identical pre-existing behavior for `documentation.excludes` and, since wave-5 p12-t03, `documentation.instructionPointerExcludes` (Codex finding on the exit-gate fix round, deferred for sibling parity). Fix: read leniently for the targeted key before resolving the effective config so `unset` can remove a value the loader rejects.
 
 ## Acceptance Criteria
 
