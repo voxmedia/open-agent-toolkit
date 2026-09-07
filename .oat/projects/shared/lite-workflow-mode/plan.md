@@ -1408,7 +1408,7 @@ git commit -m "docs(p06-t11): align brainstorming guidance with lite"
 | final         | code     | passed          | 2026-09-07 | reviews/archived/final-review-2026-09-07T002708Z.md                             | de3a673edf5bbfb3c234a761c7eba9c695b82539 | auto       | -                             |
 | remote-pr-264 | code     | fixes_completed | 2026-09-07 | reviews/archived/remote-pr-264-review-2026-09-07T012843Z.md                     | -                                        | -          | -                             |
 | p07           | code     | passed          | 2026-09-07 | reviews/archived/p07-review-2026-09-07T020835Z.md                               | c362ffc5cb8d90e582dc47ffb7b301e2318311a2 | auto       | -                             |
-| final         | code     | received        | 2026-09-07 | reviews/final-review-2026-09-07T022638Z.md                                      | 5503200465229688ed45b352856d2714821eaeb6 | auto       | -                             |
+| final         | code     | fixes_added     | 2026-09-07 | reviews/archived/final-review-2026-09-07T022638Z.md                             | 5503200465229688ed45b352856d2714821eaeb6 | auto       | -                             |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -2161,6 +2161,76 @@ git commit -m "fix(p07-t04): align lite self-review requirements"
 
 ---
 
+## Phase 8: Final Closeout Review Fixes
+
+### Task p08-t01: (review) Regenerate the project sync manifest with the source CLI
+
+**Files:**
+
+- Modify: `.oat/sync/manifest.json`
+
+**Step 1: Reproduce the producer-version skew**
+
+Run the project-scoped sync dry-run through the repository source CLI. Confirm
+that it reports manifest producer `0.2.55` while the invoking and public package
+version is `0.2.61`.
+
+**Step 2: Regenerate from the authoritative source CLI**
+
+Run project-scoped sync without dry-run through `pnpm run cli --`. Do not edit
+the manifest stamp by hand. Inspect the resulting diff and include only the
+source-derived project manifest or projection changes.
+
+**Step 3: Verify targeted behavior**
+
+Run the project-scoped sync dry-run again and require both zero pending
+operations and no producer-version skew. Run `pnpm run check:skill-bumps` and
+`pnpm release:check-versions`.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/sync/manifest.json
+git commit -m "fix(p08-t01): refresh project sync producer stamp"
+```
+
+---
+
+### Task p08-t02: (review) Refresh closeout artifacts through Phase 7
+
+**Files:**
+
+- Modify: `.oat/projects/shared/lite-workflow-mode/summary.md`
+- Modify: `.oat/projects/shared/lite-workflow-mode/pr/project-pr-2026-09-06.md`
+
+**Step 1: Establish current closeout facts**
+
+Read Phase 7, the final review disposition, public package version `0.2.61`,
+the current local authoritative head, and PR #264's last pushed head. Preserve
+the distinction between local verification and remote exact-head CI.
+
+**Step 2: Refresh lifecycle artifacts**
+
+Apply the current `oat-project-summary` and `oat-project-pr-final` artifact
+contracts without publishing. Include Phase 7, release `0.2.61`, the current
+review-fix state, and the fact that required remote checks remain pending until
+the authorized push.
+
+**Step 3: Verify targeted behavior**
+
+Require the summary and PR artifact to contain Phase 7 and `0.2.61`. Require
+stale claims that `prev2-t04` is the last task or that the post-`15ad3374c` head
+is bookkeeping-only to be absent. Run the repository formatter on both files.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/lite-workflow-mode/summary.md .oat/projects/shared/lite-workflow-mode/pr/project-pr-2026-09-06.md
+git commit -m "docs(p08-t02): refresh lite closeout artifacts"
+```
+
+---
+
 ## Implementation Complete
 
 **Summary:**
@@ -2174,8 +2244,9 @@ git commit -m "fix(p07-t04): align lite self-review requirements"
 - Phase p-rev1: 7 tasks - adaptive specification depth, proportionate proof, executable evidence, exact promotion preservation, autonomous proof boundaries, and design alignment
 - Phase p-rev2: 5 tasks - Lite lifecycle-gate posture composition, Wave 4 closeout alignment, terminal CI evidence, and two current closeout wording corrections
 - Phase 7: 4 tasks - remote review ledger, proof-strategy scope, executable proof boundaries, and Lite self-review source
+- Phase 8: 2 tasks - project sync producer stamp and Phase 7 closeout artifact refresh
 
-**Total:** 43 tasks across 9 phases
+**Total:** 45 tasks across 10 phases
 
 **Definition of done:** every gate in AGENTS.md exits 0 with evidence captured; the manual lite run is recorded in implementation.md.
 

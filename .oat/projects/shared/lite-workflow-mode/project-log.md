@@ -168,6 +168,10 @@ retro artifact=.oat/projects/shared/lite-workflow-mode/references/project-retro.
 
 verdict=pass; tasks=4/4; fix_loops=0; recovery_attempts=0; review=reviews/archived/p07-review-2026-09-07T020835Z.md; reviewed_head=c362ffc5cb8d90e582dc47ffb7b301e2318311a2; findings=critical:0,important:0,medium:0,minor:0; next=final-review
 
+### 2026-09-07 · structural · oat-project-review-provide · final
+
+review artifact=.oat/projects/shared/lite-workflow-mode/reviews/final-review-2026-09-07T022638Z.md range=de3a673edf5bbfb3c234a761c7eba9c695b82539..5503200465229688ed45b352856d2714821eaeb6 findings=critical:0,important:1,medium:1,minor:0 reconnaissance=attempted
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

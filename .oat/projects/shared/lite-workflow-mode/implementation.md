@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-09-07
-oat_current_task_id: null
+oat_current_task_id: p08-t01
 oat_generated: false
 ---
 
@@ -35,10 +35,33 @@ oat_generated: false
 | Phase p-rev1 | complete | 7     | 7/7       |
 | Phase p-rev2 | complete | 5     | 5/5       |
 | Phase 7      | complete | 4     | 4/4       |
+| Phase 8      | pending  | 2     | 0/2       |
 
-**Total:** 43/43 tasks completed
+**Total:** 43/45 tasks completed
 
 Parallel group declared in plan: `[['p02', 'p03']]`. Phases 1, 4, 5, 6 are sequential.
+
+---
+
+## Phase 8: Final Closeout Review Fixes
+
+**Status:** pending
+**Started:** 2026-09-07
+
+### Final Review Received
+
+**Date:** 2026-09-07
+**Artifact:** `reviews/archived/final-review-2026-09-07T022638Z.md`
+**Reviewed head:** `5503200465229688ed45b352856d2714821eaeb6`
+**Findings:** 0 Critical, 1 Important, 1 Medium, 0 Minor
+**Tasks added:** `p08-t01`, `p08-t02`
+
+The Important finding requires source-derived regeneration of the project sync
+manifest producer stamp. The Medium finding requires refreshed summary and PR
+artifacts through Phase 7 and release `0.2.61`. The historical p06-t02 Medium
+deferral was resurfaced; the reviewer confirmed that the user's prior explicit
+defer remains acceptable because the base/variant ownership contract did not
+change.
 
 ---
 
