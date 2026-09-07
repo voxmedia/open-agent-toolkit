@@ -18,6 +18,17 @@ import type { PackDefinition } from '@commands/tools/shared/pack-manifest';
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
 import { describe, expect, it } from 'vitest';
 
+import {
+  classifyCanonicalSkillDir,
+  classifyCanonicalSkillDirs,
+  extractScriptReferences,
+  findMissingShippedSkillDirs,
+  findUnshippedScriptReferences,
+  formatScriptReferenceViolation,
+  listShippedSkills,
+  resolveOwningPack,
+} from './skill-script-references';
+
 const REPO_ROOT = execFileSync('git', ['rev-parse', '--show-toplevel'], {
   cwd: import.meta.dirname,
   encoding: 'utf8',
@@ -521,6 +532,25 @@ const PINNED_HISTORICAL_CROSS_SKILL_READS: readonly CrossSkillReference[] = [
     targetPath: 'SKILL.md',
   },
 ];
+
+// Repository-local authoring and utility skills live under `.agents/skills`
+// without belonging to any pack. Naming them here at collection time makes the
+// unshipped set visible in the reporter output on a passing run, which is the
+// point of classifying them: they are reported, never failed.
+const CANONICAL_UNSHIPPED_SKILL_DIRS =
+  classifyCanonicalSkillDirs(listSkillDirs()).canonicalUnshipped;
+
+/** Authored Markdown of one shipped skill, shaped for the script-reference check. */
+function collectSkillScriptSources(skill: string) {
+  const skillDir = join(SKILLS_DIR, skill);
+  if (!existsSync(skillDir)) return [];
+
+  return listAuthoredMarkdown(skillDir).map((file) => ({
+    skill,
+    file: file.slice(REPO_ROOT.length + 1),
+    text: readFileSync(file, 'utf8'),
+  }));
+}
 
 describe('skills bundled docs contract', () => {
   it('no shipped skill references a shared .agents/docs/ doc that does not travel with it', () => {
@@ -1646,6 +1676,133 @@ describe('skills bundled docs contract', () => {
       ]),
     );
     expect(bareReferences).toEqual([]);
+  });
+
+  // ── Skill-to-script reference integrity ───────────────────────────────
+  //
+  // The case above is a shell-shape check on one known script: it proves the
+  // consumers resolve `resolve-tracking.sh` from the loaded skill's scope root
+  // rather than the process cwd, and it never consults the manifest. The cases
+  // below supply the missing half generally — every shipped skill, every script
+  // it names, checked against what its own pack actually installs — so a new
+  // skill naming a script its pack does not ship fails without anyone
+  // remembering to add a bespoke case for it.
+
+  it("every shipped skill's script references exist in its owning pack", () => {
+    // Driven by the manifest, not by `listSkillDirs()`: the canonical tree is a
+    // superset that also holds skills no pack ships, and resolving one of those
+    // to an owning pack would fail on the live tree instead of on a defect.
+    const sources = listShippedSkills().flatMap(collectSkillScriptSources);
+
+    // A file that names no script is skipped explicitly. Silence is the normal
+    // case for most shipped skills and is never an error.
+    const referencing = sources.filter(
+      ({ text }) => extractScriptReferences(text).length > 0,
+    );
+
+    expect(
+      findUnshippedScriptReferences(referencing).map(
+        formatScriptReferenceViolation,
+      ),
+      'a shipped skill names a script its own pack does not install',
+    ).toEqual([]);
+
+    // A check with nothing to check would pass forever. Pin the known live
+    // consumers so an extractor that silently stops matching is itself a
+    // failure. `arrayContaining` keeps a new, correct consumer from failing
+    // this case; the contract above still covers it.
+    expect([...new Set(referencing.map(({ skill }) => skill))].sort()).toEqual(
+      expect.arrayContaining([
+        'oat-agent-instructions-analyze',
+        'oat-agent-instructions-apply',
+        'oat-docs-analyze',
+        'oat-docs-apply',
+        'oat-repo-knowledge-index',
+      ]),
+    );
+  });
+
+  it('classifies every canonical skill directory as shipped or canonical-unshipped', () => {
+    const dirs = listSkillDirs();
+    const { shipped, canonicalUnshipped } = classifyCanonicalSkillDirs(dirs);
+
+    expect(
+      [...shipped, ...canonicalUnshipped].sort(),
+      `every canonical skill directory must classify; canonical-unshipped: ${canonicalUnshipped.join(', ') || 'none'}`,
+    ).toEqual([...dirs].sort());
+
+    // The asymmetry is deliberate. An unshipped directory is ordinary; a
+    // manifest entry with no canonical directory is a broken promise to install
+    // something that does not exist.
+    expect(
+      findMissingShippedSkillDirs(dirs),
+      'the manifest ships a skill with no canonical directory',
+    ).toEqual([]);
+  });
+
+  it.each(CANONICAL_UNSHIPPED_SKILL_DIRS)(
+    'reports canonical-unshipped skill directory %s without resolving it to a pack',
+    (name) => {
+      expect(classifyCanonicalSkillDir(name)).toBe('canonical-unshipped');
+      // Reported, never failed — even when it carries script references, which
+      // no pack manifest can adjudicate.
+      expect(() => resolveOwningPack(name)).toThrow(/shipped by no pack/);
+    },
+  );
+
+  it('reports the skill, reference, and pack when a live reference leaves its pack', () => {
+    // The mutation proof runs the live skill's own Markdown against a manifest
+    // fixture in which the referenced script has been renamed out from under
+    // it. Same content, one changed fact, so a green result on the real
+    // manifest cannot be an artifact of the extractor matching nothing.
+    const consumer = 'oat-docs-analyze';
+    const sources = collectSkillScriptSources(consumer).filter(
+      ({ text }) => extractScriptReferences(text).length > 0,
+    );
+    expect(sources.length).toBeGreaterThan(0);
+
+    const bothScopes = ['project', 'user'] as const;
+    const managed = { project: 'managed', user: 'managed' } as const;
+    const manifestFixture: readonly PackDefinition[] = [
+      {
+        name: 'docs',
+        allowedScopes: bothScopes,
+        defaultScope: 'user',
+        assets: [
+          {
+            id: `skill:${consumer}`,
+            kind: 'skill',
+            source: `skills/${consumer}`,
+            destination: `.agents/skills/${consumer}`,
+            scopes: bothScopes,
+            ownership: managed,
+          },
+          {
+            id: 'script:resolve-tracking-v2.sh',
+            kind: 'script',
+            source: 'scripts/resolve-tracking-v2.sh',
+            destination: '.oat/scripts/resolve-tracking-v2.sh',
+            scopes: bothScopes,
+            ownership: managed,
+            executable: true,
+          },
+        ],
+      },
+    ];
+
+    const violations = findUnshippedScriptReferences(sources, manifestFixture);
+
+    expect(violations.length).toBeGreaterThan(0);
+    // The line number is left unpinned so ordinary edits to the skill do not
+    // break the proof; skill, reference, and owning pack are all pinned.
+    expect(formatScriptReferenceViolation(violations[0]!)).toMatch(
+      new RegExp(
+        `^${consumer} \\(pack docs\\) references \\.oat/scripts/resolve-tracking\\.sh at \\.agents/skills/${consumer}/SKILL\\.md:\\d+, but pack docs ships \\.oat/scripts/resolve-tracking-v2\\.sh$`,
+      ),
+    );
+
+    // The same sources are clean against the real manifest.
+    expect(findUnshippedScriptReferences(sources)).toEqual([]);
   });
 
   it('resolves only exact canonical agent targets across provider layouts', () => {
