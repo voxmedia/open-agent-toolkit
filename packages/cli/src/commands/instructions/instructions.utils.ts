@@ -301,7 +301,17 @@ export async function resolveInstructionPointerExcludes(
   };
 
   const config = await readOatConfig(repoRoot);
-  const contentRoot = await resolveDocumentationContentRoot(repoRoot, config);
+  const contentRoot = await resolveDocumentationContentRoot(repoRoot, config, {
+    // Probe through the injected `stat` so a simulated filesystem (tests) and
+    // the real one agree on whether `<root>/docs` exists.
+    dirExists: async (path) => {
+      try {
+        return (await dependencies.stat(path)).isDirectory();
+      } catch {
+        return false;
+      }
+    },
+  });
 
   const requested: Array<{ raw: string; source: string }> = [
     ...(contentRoot === null

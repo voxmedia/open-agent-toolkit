@@ -1527,6 +1527,7 @@ export async function readOatConfigForDefaultScopeRepair(
 export async function resolveDocumentationContentRoot(
   repoRoot: string,
   config: OatConfig,
+  dependencies: { dirExists?: (path: string) => Promise<boolean> } = {},
 ): Promise<string | null> {
   const configuredRoot = config.documentation?.root?.trim();
   if (!configuredRoot) {
@@ -1535,7 +1536,11 @@ export async function resolveDocumentationContentRoot(
 
   const absoluteRoot = resolve(repoRoot, configuredRoot);
   const docsChild = join(absoluteRoot, 'docs');
-  const contentRoot = (await dirExists(docsChild)) ? docsChild : absoluteRoot;
+  // Callers that simulate a filesystem (the instruction-sync tests inject
+  // `stat`) pass their own directory probe so the `<root>/docs` rule sees the
+  // same filesystem the rest of the scan does; the default is the real one.
+  const probe = dependencies.dirExists ?? dirExists;
+  const contentRoot = (await probe(docsChild)) ? docsChild : absoluteRoot;
   const relativeContentRoot = normalizeToPosixPath(
     relative(repoRoot, contentRoot),
   );
