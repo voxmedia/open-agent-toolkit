@@ -1,12 +1,14 @@
 ---
 name: { skill-name }
-version: 1.0.0
-# Required: semver. Start new skills at 1.0.0; bump patch/minor/major for fixes, backward-compatible additions, and breaking changes.
 description: Use when {trigger condition}. {What this skill does for disambiguation.}
 argument-hint: '[args]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep
 user-invocable: true
+metadata:
+  version: 1.0.0
+  # Required: semver. Start new skills at 1.0.0; bump patch/minor/major for fixes, backward-compatible additions, and breaking changes.
+  # A top-level `version:` is the deprecated alias, read only when metadata.version is absent.
 ---
 
 # {Skill Title}

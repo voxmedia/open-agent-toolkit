@@ -2,6 +2,11 @@ import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 
+import {
+  resolveSkillVersion,
+  toParsedSkillFrontmatter,
+} from '@commands/shared/frontmatter';
+
 import { parseCanonicalAgentMarkdown } from './parse';
 
 export type CanonicalRoleTier = 'loaded' | 'user' | 'project';
@@ -173,14 +178,20 @@ function resolveRoleIdentity(
   try {
     const content = readFileSync(resolved.canonicalFile, 'utf8');
     const document = parseCanonicalAgentMarkdown(content, '<canonical-role>');
-    const version = document.frontmatter.version;
+    // The frontmatter is already parsed here, so hand the object to the shared
+    // resolver rather than re-parsing the block. A conflicting version is an
+    // invalid identity: the role has no single resolvable version.
+    const resolvedVersion = resolveSkillVersion(
+      toParsedSkillFrontmatter(document.frontmatter),
+    );
     if (
       document.name !== input.canonicalRole ||
-      typeof version !== 'string' ||
-      version.trim() === ''
+      resolvedVersion === null ||
+      resolvedVersion.conflict !== undefined
     ) {
       throw new Error('Canonical role identity is invalid');
     }
+    const version = resolvedVersion.version;
     const canonicalPath = redactedCandidate(
       canonicalTier(
         candidate,
@@ -197,7 +208,7 @@ function resolveRoleIdentity(
       validation: resolved.validation,
       canonicalPath,
       selectedPath: redactedCandidate(candidate.tier, input.canonicalRole),
-      roleVersion: version.trim(),
+      roleVersion: version,
       contentDigest: `sha256:${createHash('sha256').update(content).digest('hex')}`,
       candidateMisses,
     };

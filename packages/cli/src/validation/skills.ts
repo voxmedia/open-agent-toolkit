@@ -3,12 +3,18 @@ import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
-import { getFrontmatterBlock } from '@commands/shared/frontmatter';
+import {
+  getFrontmatterBlock,
+  parseSkillFrontmatter,
+  resolveSkillVersion,
+  type ResolvedSkillVersion,
+} from '@commands/shared/frontmatter';
 
 export interface ValidationFinding {
   file: string;
   message: string;
   severity?: 'error' | 'warning';
+  code?: string;
 }
 
 export interface ValidateOatSkillsResult {
@@ -686,6 +692,55 @@ function hasTrueFrontmatterValue(frontmatter: string, key: string): boolean {
   );
 }
 
+/**
+ * Resolve a skill's canonical version from a raw frontmatter block through the
+ * shared `metadata.version` → top-level `version` contract, so validation and
+ * the runtime helper can never disagree about which field wins.
+ */
+function resolveFrontmatterVersion(
+  frontmatter: string | null,
+): ResolvedSkillVersion | null {
+  if (frontmatter === null) return null;
+  return resolveSkillVersion(parseSkillFrontmatter(frontmatter));
+}
+
+function unreadableFrontmatterFinding(file: string): ValidationFinding {
+  return {
+    file,
+    code: 'skill-frontmatter-unreadable',
+    severity: 'error',
+    message:
+      'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+  };
+}
+
+function pushUniqueFinding(
+  findings: ValidationFinding[],
+  finding: ValidationFinding,
+): void {
+  const duplicate = findings.some(
+    (existing) =>
+      existing.file === finding.file &&
+      existing.code === finding.code &&
+      existing.message === finding.message,
+  );
+  if (!duplicate) {
+    findings.push(finding);
+  }
+}
+
+function versionConflictFinding(
+  file: string,
+  conflict: { metadata: string; topLevel: string },
+): ValidationFinding {
+  return {
+    file,
+    code: 'skill-version-conflict',
+    severity: 'error',
+    message: `Frontmatter metadata.version (${conflict.metadata}) and top-level version (${conflict.topLevel}) differ; a conflicting skill has no resolvable version`,
+  };
+}
+
 function isValidSemver(value: string): boolean {
   return /^\d+\.\d+\.\d+$/.test(value);
 }
@@ -916,14 +971,40 @@ async function collectChangedSkillVersionBumpFindings(
       continue;
     }
 
-    const currentFrontmatter = getFrontmatterBlock(currentContent);
-    const baseFrontmatter = getFrontmatterBlock(baseContent);
-    const currentVersion = currentFrontmatter
-      ? getFrontmatterScalar(currentFrontmatter, 'version')
-      : null;
-    const baseVersion = baseFrontmatter
-      ? getFrontmatterScalar(baseFrontmatter, 'version')
-      : null;
+    const currentBlock = getFrontmatterBlock(currentContent);
+    const parsedCurrent =
+      currentBlock === null ? null : parseSkillFrontmatter(currentBlock);
+
+    // Unreadable frontmatter would otherwise skip the bump check silently:
+    // adding a malformed `metadata:` block to a changed skill would let it keep
+    // a stale version. Report it instead of falling through to `continue`.
+    if (parsedCurrent?.malformed) {
+      // `validateOatSkills` runs the structural version-source pass before this
+      // collector, so the same file can already carry this finding.
+      pushUniqueFinding(findings, unreadableFrontmatterFinding(skillPath));
+      continue;
+    }
+
+    const resolvedCurrent =
+      parsedCurrent === null ? null : resolveSkillVersion(parsedCurrent);
+    const resolvedBase = resolveFrontmatterVersion(
+      getFrontmatterBlock(baseContent),
+    );
+
+    // A conflicting skill has no resolvable version, so it cannot be bump
+    // checked. This is the only version-source finding the bump validator
+    // emits: `validate-skill-version-bumps.ts` fails the gate on any finding
+    // regardless of severity, so the top-level alias deprecation warning stays
+    // in structural validation and never reaches this result.
+    if (resolvedCurrent?.conflict) {
+      findings.push(
+        versionConflictFinding(skillPath, resolvedCurrent.conflict),
+      );
+      continue;
+    }
+
+    const currentVersion = resolvedCurrent?.version ?? null;
+    const baseVersion = resolvedBase?.version ?? null;
 
     if (!currentVersion || !baseVersion) {
       continue;
@@ -976,6 +1057,68 @@ export async function validateChangedSkillVersionBumps(
   };
 }
 
+/**
+ * Report where each bundled skill keeps its version.
+ *
+ * This pass deliberately iterates every skill directory, not just `oat-*`:
+ * the top-level `version` alias is deprecated across the whole bundle, so a
+ * pass that inherited the `oat-*` filter used by the other structural checks
+ * could never fire for the 18 non-`oat-*` skills. `skill-version-alias` is a
+ * warning (`validate-oat-skills.ts` treats warnings as non-blocking) and
+ * `skill-version-conflict` is an error. Neither finding is produced by the
+ * bump validator, whose wrapper fails on any finding at all.
+ */
+async function collectSkillVersionSourceFindings(
+  skillsRoot: string,
+  skillDirs: readonly string[],
+  findings: ValidationFinding[],
+): Promise<void> {
+  for (const dir of skillDirs) {
+    const skillPath = join(skillsRoot, dir, 'SKILL.md');
+    let content: string;
+    try {
+      content = await readFile(skillPath, 'utf8');
+    } catch {
+      // A missing SKILL.md is reported by the structural pass for oat-*
+      // skills and is not this pass's concern.
+      continue;
+    }
+
+    const block = getFrontmatterBlock(content);
+    if (block === null) {
+      continue;
+    }
+
+    const parsed = parseSkillFrontmatter(block);
+    if (parsed.malformed) {
+      // Reported for every skill, not just `oat-*` ones: unreadable
+      // frontmatter is exactly the state that would otherwise make a version
+      // silently unreadable everywhere.
+      findings.push(unreadableFrontmatterFinding(skillPath));
+      continue;
+    }
+
+    const resolved = resolveSkillVersion(parsed);
+    if (!resolved) {
+      continue;
+    }
+
+    if (resolved.conflict) {
+      findings.push(versionConflictFinding(skillPath, resolved.conflict));
+      continue;
+    }
+
+    if (resolved.source === 'top-level') {
+      findings.push({
+        file: skillPath,
+        code: 'skill-version-alias',
+        severity: 'warning',
+        message: `Frontmatter version ${resolved.version} uses the deprecated top-level alias; move it to metadata.version (metadata.version wins when both are present)`,
+      });
+    }
+  }
+}
+
 export async function validateOatSkills(
   repoRoot: string,
   options: ValidateOatSkillsOptions = {},
@@ -989,10 +1132,11 @@ export async function validateOatSkills(
   }
 
   const entries = await readdir(skillsRoot, { withFileTypes: true });
-  const oatSkillDirs = entries
-    .filter((entry) => entry.isDirectory() && entry.name.startsWith('oat-'))
+  const allSkillDirs = entries
+    .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .sort();
+  const oatSkillDirs = allSkillDirs.filter((name) => name.startsWith('oat-'));
 
   for (const dir of oatSkillDirs) {
     const skillPath = join(skillsRoot, dir, 'SKILL.md');
@@ -1060,9 +1204,21 @@ export async function validateOatSkills(
       }
     }
 
-    if (frontmatterHasKey(fm, 'version')) {
-      const version = getFrontmatterScalar(fm, 'version') ?? '';
-      if (!isValidSemver(version)) {
+    // Malformed frontmatter is reported once, for every skill, by
+    // collectSkillVersionSourceFindings.
+    const parsedFrontmatter = parseSkillFrontmatter(fm);
+    const resolvedVersion = resolveSkillVersion(parsedFrontmatter);
+    if (!parsedFrontmatter.malformed) {
+      // A declared version that resolves to nothing (empty, or a non-string
+      // scalar such as `1.10`, which YAML reads as the number 1.1) is not a
+      // usable version, at either position.
+      // An unusable declaration is reported even when the other position still
+      // resolves: `version: 1.10` beside a valid `metadata.version` is still a
+      // version the author wrote and OAT cannot read.
+      if (
+        parsedFrontmatter.unusableVersionDeclaration ||
+        (resolvedVersion !== null && !isValidSemver(resolvedVersion.version))
+      ) {
         findings.push({
           file: skillPath,
           message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
@@ -1088,6 +1244,8 @@ export async function validateOatSkills(
       validateQuickStartSemantics(skillPath, content, findings);
     }
   }
+
+  await collectSkillVersionSourceFindings(skillsRoot, allSkillDirs, findings);
 
   await collectSyncedSafetyFindings(repoRoot, oatSkillDirs, findings);
 

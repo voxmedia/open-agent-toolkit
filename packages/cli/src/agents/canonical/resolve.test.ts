@@ -171,4 +171,90 @@ describe('resolveCanonicalRole', () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+  describe('version resolution', () => {
+    function writeRoleFrontmatter(
+      root: string,
+      role: string,
+      versionLines: readonly string[],
+    ): void {
+      const path = join(root, 'agents', `${role}.md`);
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(
+        path,
+        [
+          '---',
+          `name: ${role}`,
+          ...versionLines,
+          'description: Test role',
+          '---',
+          '',
+          `# ${role}`,
+          '',
+        ].join('\n'),
+      );
+    }
+
+    function resolveWith(versionLines: readonly string[]) {
+      const root = mkdtempSync(join(tmpdir(), 'oat-canonical-version-'));
+      try {
+        const userRoot = join(root, 'user', '.agents');
+        const projectRoot = join(root, 'project', '.agents');
+        const skillDir = join(root, 'loaded', '.agents', 'skills', 'consumer');
+        mkdirSync(skillDir, { recursive: true });
+        writeRoleFrontmatter(userRoot, 'oat-reviewer', versionLines);
+
+        return resolveCanonicalRole({
+          dependency: 'workflows',
+          canonicalRole: 'oat-reviewer',
+          skillDir,
+          userCanonicalRoot: userRoot,
+          projectCanonicalRoot: projectRoot,
+        });
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    }
+
+    it('resolves a role that carries only metadata.version', () => {
+      expect(resolveWith(['metadata:', '  version: 2.5.0'])).toMatchObject({
+        status: 'resolved',
+        roleVersion: '2.5.0',
+      });
+    });
+
+    it('prefers metadata.version over the top-level alias', () => {
+      expect(
+        resolveWith(['version: 1.2.3', 'metadata:', '  version: 1.2.3']),
+      ).toMatchObject({ status: 'resolved', roleVersion: '1.2.3' });
+    });
+
+    it('resolves a quoted nested version to the bare string', () => {
+      expect(
+        resolveWith(['metadata:', '  author: oat', '  version: "2.5.0"']),
+      ).toMatchObject({ status: 'resolved', roleVersion: '2.5.0' });
+    });
+
+    const invalidUserCandidate = {
+      status: 'missing',
+      candidateMisses: expect.arrayContaining([
+        {
+          tier: 'user',
+          candidate: '<user>/agents/oat-reviewer.md',
+          outcome: 'invalid-role',
+        },
+      ]),
+    };
+
+    it('treats a conflicting version as an invalid identity', () => {
+      expect(
+        resolveWith(['version: 1.2.3', 'metadata:', '  version: 2.0.0']),
+      ).toMatchObject(invalidUserCandidate);
+    });
+
+    it('treats a role with no resolvable version as an invalid identity', () => {
+      expect(resolveWith(['metadata:', '  author: oat'])).toMatchObject(
+        invalidUserCandidate,
+      );
+    });
+  });
 });

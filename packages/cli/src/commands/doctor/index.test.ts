@@ -1,3 +1,7 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import {
   createLoggerCapture,
@@ -42,7 +46,7 @@ import type { DoctorCheck } from '@ui/output';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createDoctorCommand } from './index';
+import { checkSkillVersionsDefault, createDoctorCommand } from './index';
 
 interface HarnessOptions {
   scope?: Scope;
@@ -2226,5 +2230,84 @@ config_file = "agents/${roleName}.toml"
 
     expect(capture.info[0]).toContain('packs:inventory');
     expect(capture.info[0]).toContain('assets unavailable');
+  });
+});
+
+describe('checkSkillVersionsDefault', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  async function writeSkill(
+    skillsRoot: string,
+    skillName: string,
+    versionLines: readonly string[],
+  ): Promise<void> {
+    const skillDir = join(skillsRoot, skillName);
+    await mkdir(skillDir, { recursive: true });
+    await writeFile(
+      join(skillDir, 'SKILL.md'),
+      [
+        '---',
+        `name: ${skillName}`,
+        ...versionLines,
+        '---',
+        '',
+        '# Demo',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+  }
+
+  it('compares installed and bundled skills across both version forms', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-doctor-versions-'));
+    tempDirs.push(root);
+    const scopeRoot = join(root, 'scope');
+    const assetsRoot = join(root, 'assets');
+    const installedRoot = join(scopeRoot, '.agents', 'skills');
+    const bundledRoot = join(assetsRoot, 'skills');
+
+    await writeSkill(installedRoot, 'oat-alias-installed', ['version: 1.1.0']);
+    await writeSkill(bundledRoot, 'oat-alias-installed', [
+      'metadata:',
+      '  version: 1.2.0',
+    ]);
+    // The alias is deliberately *below* the bundled version: resolving it
+    // instead of metadata.version would add an unexpected outdated entry.
+    await writeSkill(installedRoot, 'oat-metadata-current', [
+      'version: 1.0.0',
+      'metadata:',
+      '  version: 2.0.0',
+    ]);
+    await writeSkill(bundledRoot, 'oat-metadata-current', [
+      'metadata:',
+      '  version: 2.0.0',
+    ]);
+
+    const report = await checkSkillVersionsDefault(
+      scopeRoot,
+      assetsRoot,
+      async (path) => path.startsWith(bundledRoot),
+    );
+
+    // `oat-metadata-current` resolves to 2.0.0 on both sides; reading the
+    // stale top-level alias instead would report it as outdated.
+    expect(report).toEqual({
+      installedSkillCount: 2,
+      skippedMissingBundledCount: 0,
+      outdatedSkills: [
+        {
+          skill: 'oat-alias-installed',
+          installedVersion: '1.1.0',
+          bundledVersion: '1.2.0',
+        },
+      ],
+    });
   });
 });

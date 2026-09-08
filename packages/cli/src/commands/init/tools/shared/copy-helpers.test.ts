@@ -208,6 +208,58 @@ describe('copy-helpers', () => {
     ).resolves.toBe('mutated\n');
   });
 
+  it('copyDirWithVersionCheck compares metadata.version against a top-level alias', async () => {
+    const root = await makeTempDir();
+    const sourceDir = join(root, 'source-skill');
+    const destinationDir = join(root, 'destination-skill');
+    await mkdir(sourceDir, { recursive: true });
+    await mkdir(destinationDir, { recursive: true });
+    // A migrated bundled skill versus a still-unmigrated installed copy: the
+    // shared resolver reads both forms, so the comparison still works.
+    await writeFile(
+      join(sourceDir, 'SKILL.md'),
+      '---\nname: oat-demo\nmetadata:\n  version: 1.2.0\n---\n',
+      'utf8',
+    );
+    await writeFile(
+      join(destinationDir, 'SKILL.md'),
+      '---\nname: oat-demo\nversion: 1.1.0\n---\n',
+      'utf8',
+    );
+
+    await expect(
+      copyDirWithVersionCheck(sourceDir, destinationDir, false),
+    ).resolves.toEqual({
+      status: 'outdated',
+      installedVersion: '1.1.0',
+      bundledVersion: '1.2.0',
+    });
+  });
+
+  it('copyDirWithVersionCheck prefers metadata.version on both sides', async () => {
+    const root = await makeTempDir();
+    const sourceDir = join(root, 'source-skill');
+    const destinationDir = join(root, 'destination-skill');
+    await mkdir(sourceDir, { recursive: true });
+    await mkdir(destinationDir, { recursive: true });
+    await writeFile(
+      join(sourceDir, 'SKILL.md'),
+      '---\nname: oat-demo\nversion: 9.9.9\nmetadata:\n  version: 1.1.0\n---\n',
+      'utf8',
+    );
+    await writeFile(
+      join(destinationDir, 'SKILL.md'),
+      '---\nname: oat-demo\nmetadata:\n  version: 1.1.0\n---\n',
+      'utf8',
+    );
+
+    // Resolving the stale top-level alias instead would report the installed
+    // copy as outdated against 9.9.9.
+    await expect(
+      copyDirWithVersionCheck(sourceDir, destinationDir, false),
+    ).resolves.toEqual({ status: 'skipped' });
+  });
+
   it('copyDirWithVersionCheck returns skipped when versions are current or newer', async () => {
     const root = await makeTempDir();
     const sourceDir = join(root, 'source-skill');

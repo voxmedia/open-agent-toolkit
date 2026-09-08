@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import YAML, { isMap, isScalar } from 'yaml';
+import YAML, { isMap, isScalar, type YAMLMap } from 'yaml';
 
 export const PROJECT_STATE_KINDS = ['implementation', 'coordination'] as const;
 
@@ -287,21 +287,243 @@ export async function parseFrontmatterField(
   }
 }
 
+/**
+ * A skill or agent frontmatter block reduced to the fields that carry a
+ * version, in the one shape every version read consumes.
+ *
+ * `malformed` marks input that cannot be trusted to carry a version at all:
+ * the YAML document has errors (including duplicate keys), or `metadata` is
+ * present but is not a map. A malformed block resolves to `null` rather than
+ * to a guessed value.
+ *
+ * `unusableVersionDeclaration` records that a `version` key was present at
+ * either position but produced no usable value (empty, or a non-string scalar
+ * such as `1.10`, which YAML reads as the number 1.1). Validation needs that
+ * distinction: a skill that declares nothing is unversioned, while a skill
+ * that declares an unusable version is broken — including when the *other*
+ * position still resolves. It is carried here so no caller has to re-read the
+ * block with a regex.
+ */
+export interface ParsedSkillFrontmatter {
+  version?: string;
+  metadata?: { version?: string };
+  malformed: boolean;
+  unusableVersionDeclaration: boolean;
+}
+
+export interface SkillVersionConflict {
+  metadata: string;
+  topLevel: string;
+}
+
+export interface ResolvedSkillVersion {
+  version: string;
+  source: 'metadata' | 'top-level';
+  conflict?: SkillVersionConflict;
+}
+
+/**
+ * Read a frontmatter value that is a plain, untagged, unanchored string.
+ *
+ * Non-string scalars are deliberately rejected rather than stringified: YAML
+ * reads `version: 1.10` as the number `1.1`, so accepting numbers would report
+ * a version the author never wrote.
+ */
+function scalarStringValue(node: unknown): string | undefined {
+  if (
+    !isScalar(node) ||
+    node.anchor !== undefined ||
+    node.tag !== undefined ||
+    typeof node.value !== 'string'
+  ) {
+    return undefined;
+  }
+  const trimmed = node.value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function hasKey(map: YAMLMap, key: string): boolean {
+  return map.items.some((pair) => isScalar(pair.key) && pair.key.value === key);
+}
+
+function uniqueMapValue(map: YAMLMap, key: string): unknown {
+  const matches = map.items.filter(
+    (pair) => isScalar(pair.key) && pair.key.value === key,
+  );
+  return matches.length === 1 ? matches[0]?.value : undefined;
+}
+
+function objectStringValue(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Parse a raw frontmatter block into the shared version-carrying shape.
+ *
+ * Uses the `yaml` package already imported by this module so that
+ * `metadata.version` is read by a real YAML parser; a regex or
+ * indentation-based reader cannot tell a nested key from a top-level one.
+ */
+export function parseSkillFrontmatter(block: string): ParsedSkillFrontmatter {
+  const document = YAML.parseDocument(block, { uniqueKeys: true });
+  if (document.errors.length > 0) {
+    return { malformed: true, unusableVersionDeclaration: false };
+  }
+  if (!isMap(document.contents)) {
+    return { malformed: false, unusableVersionDeclaration: false };
+  }
+
+  const version = scalarStringValue(
+    uniqueMapValue(document.contents, 'version'),
+  );
+  const parsed: ParsedSkillFrontmatter = {
+    malformed: false,
+    unusableVersionDeclaration:
+      version === undefined && hasKey(document.contents, 'version'),
+  };
+  if (version !== undefined) {
+    parsed.version = version;
+  }
+
+  const metadata = uniqueMapValue(document.contents, 'metadata');
+  if (metadata !== undefined) {
+    if (!isMap(metadata)) {
+      return {
+        malformed: true,
+        unusableVersionDeclaration: parsed.unusableVersionDeclaration,
+      };
+    }
+    const metadataVersion = scalarStringValue(
+      uniqueMapValue(metadata, 'version'),
+    );
+    parsed.unusableVersionDeclaration =
+      parsed.unusableVersionDeclaration ||
+      (metadataVersion === undefined && hasKey(metadata, 'version'));
+    parsed.metadata =
+      metadataVersion === undefined ? {} : { version: metadataVersion };
+  }
+
+  return parsed;
+}
+
+/**
+ * Build the shared version-carrying shape from frontmatter another reader
+ * already parsed, so a caller that holds an object never re-parses text.
+ *
+ * Precedence and the null contract are identical to the block parser. One
+ * difference is inherent to the input shape and not a policy choice: a parsed
+ * object no longer carries YAML node information, so a tagged or anchored
+ * value (`!!str 1.2.3`, `&pin 1.2.3`) is indistinguishable from a plain string
+ * here, while the block parser rejects it. Callers that must reject decorated
+ * values hand over the raw block instead.
+ */
+export function toParsedSkillFrontmatter(
+  frontmatter: unknown,
+): ParsedSkillFrontmatter {
+  if (!isPlainObject(frontmatter)) {
+    return { malformed: true, unusableVersionDeclaration: false };
+  }
+
+  const version = objectStringValue(frontmatter.version);
+  const parsed: ParsedSkillFrontmatter = {
+    malformed: false,
+    unusableVersionDeclaration:
+      version === undefined && 'version' in frontmatter,
+  };
+  if (version !== undefined) {
+    parsed.version = version;
+  }
+
+  // `metadata: null` is a present-but-unusable metadata block, exactly as the
+  // block parser sees it; treating it as absent here would make the two input
+  // shapes disagree.
+  if ('metadata' in frontmatter) {
+    const metadata = frontmatter.metadata;
+    if (!isPlainObject(metadata)) {
+      return {
+        malformed: true,
+        unusableVersionDeclaration: parsed.unusableVersionDeclaration,
+      };
+    }
+    const metadataVersion = objectStringValue(metadata.version);
+    parsed.unusableVersionDeclaration =
+      parsed.unusableVersionDeclaration ||
+      (metadataVersion === undefined && 'version' in metadata);
+    parsed.metadata =
+      metadataVersion === undefined ? {} : { version: metadataVersion };
+  }
+
+  return parsed;
+}
+
+/**
+ * Resolve the canonical version with `metadata.version` taking precedence over
+ * the deprecated top-level `version` alias.
+ *
+ * When both are present and differ the resolver still reports the
+ * metadata value, but flags the conflict so callers that must not guess (the
+ * validators, canonical role identity) can reject it.
+ */
+export function resolveSkillVersion(
+  parsed: ParsedSkillFrontmatter,
+): ResolvedSkillVersion | null {
+  if (parsed.malformed) {
+    return null;
+  }
+
+  const metadataVersion = parsed.metadata?.version;
+  const topLevel = parsed.version;
+
+  if (metadataVersion !== undefined) {
+    if (topLevel !== undefined && topLevel !== metadataVersion) {
+      return {
+        version: metadataVersion,
+        source: 'metadata',
+        conflict: { metadata: metadataVersion, topLevel },
+      };
+    }
+    return { version: metadataVersion, source: 'metadata' };
+  }
+
+  if (topLevel !== undefined) {
+    return { version: topLevel, source: 'top-level' };
+  }
+
+  return null;
+}
+
+async function readResolvedVersion(
+  filePath: string,
+): Promise<ResolvedSkillVersion | null> {
+  let content: string;
+  try {
+    content = await readFile(filePath, 'utf8');
+  } catch {
+    return null;
+  }
+  const block = getFrontmatterBlock(content);
+  if (!block) return null;
+  return resolveSkillVersion(parseSkillFrontmatter(block));
+}
+
 export async function getSkillVersion(
   skillDir: string,
 ): Promise<string | null> {
-  // parseFrontmatterField() returns '' when SKILL.md is missing or unreadable,
-  // so read failures are normalized to null here.
-  const version = await parseFrontmatterField(
-    join(skillDir, 'SKILL.md'),
-    'version',
-  );
-  return version.length > 0 ? version : null;
+  // Missing, unreadable, malformed, and empty frontmatter all normalize to
+  // null here so callers keep one "no comparable version" contract.
+  const resolved = await readResolvedVersion(join(skillDir, 'SKILL.md'));
+  return resolved?.version ?? null;
 }
 
 export async function getAgentVersion(
   agentPath: string,
 ): Promise<string | null> {
-  const version = await parseFrontmatterField(agentPath, 'version');
-  return version.length > 0 ? version : null;
+  const resolved = await readResolvedVersion(agentPath);
+  return resolved?.version ?? null;
 }
