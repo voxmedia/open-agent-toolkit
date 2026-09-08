@@ -98,7 +98,19 @@ oat_generated: false
 
 ## Autonomy Gate Provenance
 
-_(plan-gate receive records are appended here)_
+### Review Received: plan (attempt 1)
+
+**Date:** 2026-09-07
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-07T235418Z.md (gate-invoked, run `e5ddc829-41d7-410f-8e6e-d1b96ea442b6`, target `codex-5-6-sol-xhigh`, blocked)
+**Findings:** Critical 0 · Important 1 · Medium 2 · Minor 0 — all resolved in-artifact (gate mode, auto-disposition):
+
+- I1 — the p04 refresh amendment routed the alias-only warning through the bump validator while the plan's Step 2, Test plan, Done criteria, STOP, and Review focus require it to stay out of the bump result (the wrapper fails on any finding): **fixed** — the refresh entry now keeps the plan's routing and instead makes the structural validator's version-alias pass iterate every bundled skill (the `oat-*` filter applies only to the other structural checks), with the Done criterion, Step 2, Test plan (a non-`oat-*` alias-only skill yields one structural warning and nothing in the bump result), and Review focus reading accordingly; the wrapper's Refreshes paragraph and drift-record bullet updated.
+- M1 — the wrapper's file inventory carried wrong paths (`apps/oat-docs/docs/tool-packs.md`, a nonexistent brace pair, p04 `config/resolve.ts` instead of `agents/canonical/resolve.ts`, p05 `status/index.ts` which its plan excludes): **fixed** — rewritten with repository-relative paths, split into writes / reads / verification per the source plans' `### In scope`, intersections recomputed (all empty), grouping retained; the merge-serialization rule's docs path corrected.
+- m/M2 — the Reviews ledger lacked the `design` placeholder row: **fixed** — added.
+
+**Verification record:** what — the three in-artifact repairs plus the p04 refresh-entry amendment; how — `oat project validate-plan` exit 0; the plan-corpus contract test green; where — this section and the commit that carries it.
+
+**Plan row (attempt 1) → `fixes_added`** (gate-written row moved forward in place with the archived path); the gate re-runs (attempt 2).
 
 ## Orchestration Runs
 

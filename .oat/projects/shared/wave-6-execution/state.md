@@ -118,7 +118,8 @@ Plan — wrapper authored from the program's Wave 6 section and the wave-boundar
 - ✓ Wave-boundary recon (Explore, opus): 1 PASS / 4 MINOR-DRIFT / 0 STOP; three false plan premises found
 - ✓ Refreshes applied to the five source plans as dated entries (`ceeac1149`)
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
-- ⧗ Plan gate
+- ✗ Plan gate attempt 1 blocked (0C/1I/2M: the p04 alias-warning contract contradiction, the file inventory, the design row) — fixed in-artifact
+- ⧗ Plan gate attempt 2
 
 ## Blockers
 

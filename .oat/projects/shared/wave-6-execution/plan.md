@@ -46,7 +46,7 @@ governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
 3. **Confirm the source plan's `## Done criteria`**, then run the lane-mode DoD gates: the plan's focused tests, then `pnpm check`, `pnpm type-check`, `pnpm run check:skill-bumps`, `pnpm lint`, `pnpm format`, and `pnpm oat:validate-skills` (uniform across lanes), each with captured exit codes; a lane that bumps a skill also sweeps the old version literal repo-wide (plain and regex-escaped forms, `packages/cli/src` and `tools/smoke`) and runs `pnpm test:smoke`. Lanes never edit the lockstep release files (five public package manifests, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`) and never run `pnpm release:check-versions` or `pnpm release:validate`; the wave fan-in owns the single lockstep bump (≥ 0.2.64, above freshly fetched `origin/main`) and runs the full eight-gate sequence at every fan-in boundary — after the group-1 merges and after the group-2 merges — always before that fan-in's bookkeeping edit.
 4. **STOP → BLOCKED at phase level (bundle exception).** A source-plan STOP parks the phase (record in `state.md` `oat_blockers` + `implementation.md`); sibling phases continue. **Bundle phases:** a STOP parks only the stopped task; the implementer records the blocker and continues remaining independent tasks; the phase is terminal when every task is completed or parked (DR-260713-bundle-stop-semantics-park).
 5. **Group-dependency rule:** a group starts when every phase of the previous group is terminal — merged, or parked with completed commits merged. A park never blocks the next group.
-6. **Merge serialization:** within a group, merge phase branches one at a time in plan order, rebasing each on the updated tip first. Deliberately sequenced shared files (recorded from the drift refresh; the program's two-group composition exists so each seam is touched by at most one lane at a time): `packages/cli/src/validation/skills.test.ts` (p02 inserts and re-pins inside the `:4438` case; p04 inserts its own cases after p02 lands — both re-anchor on the merged tip); `packages/cli/src/commands/tools/info/info-tool.ts`, `tools/info/index.ts`, and `apps/oat-docs/docs/tool-packs.md` (p01 `:76`/`:82`/`:282-308` then p05's provider-view block and `:505`); `config/json.ts` (p03) feeds every `commands/tools` suite p01 runs — the group-1 fan-in re-runs those suites on the integrated tree; `getSkillVersion` (p04) is consumed by p05's canonical-vs-view comparison — the group-2 fan-in re-runs the integrated `scan-tools` / `info-tool` / `doctor` suites. One `version:` bump per skill per PR (no two W6 lanes bump the same skill: p02 bumps `oat-project-pr-final`, p04 bumps `create-agnostic-skill` and `create-oat-skill`). Each lane that edits a canonical skill runs `pnpm run cli -- sync --scope project` after its edits and commits any manifest restamp; `--scope all` is operator-only. The fan-in bump commit also runs the project-scope sync so `.oat/sync/manifest.json` restamps with the lockstep.
+6. **Merge serialization:** within a group, merge phase branches one at a time in plan order, rebasing each on the updated tip first. Deliberately sequenced shared files (recorded from the drift refresh; the program's two-group composition exists so each seam is touched by at most one lane at a time): `packages/cli/src/validation/skills.test.ts` (p02 inserts and re-pins inside the `:4438` case; p04 inserts its own cases after p02 lands — both re-anchor on the merged tip); `packages/cli/src/commands/tools/info/info-tool.ts`, `tools/info/index.ts`, and `apps/oat-docs/docs/cli-utilities/tool-packs.md` (p01 `:76`/`:82`/`:282-308` then p05's provider-view block and `:505`); `config/json.ts` (p03) feeds every `commands/tools` suite p01 runs — the group-1 fan-in re-runs those suites on the integrated tree; `getSkillVersion` (p04) is consumed by p05's canonical-vs-view comparison — the group-2 fan-in re-runs the integrated `scan-tools` / `info-tool` / `doctor` suites. One `version:` bump per skill per PR (no two W6 lanes bump the same skill: p02 bumps `oat-project-pr-final`, p04 bumps `create-agnostic-skill` and `create-oat-skill`). Each lane that edits a canonical skill runs `pnpm run cli -- sync --scope project` after its edits and commits any manifest restamp; `--scope all` is operator-only. The fan-in bump commit also runs the project-scope sync so `.oat/sync/manifest.json` restamps with the lockstep.
 7. **Backlog archival is NOT part of any task** — once, serialized on the integration branch after all merges (DR-260713-shared-tracked-surfaces).
 8. **Phase review checklist = the source plan's `## Review focus`.**
 9. **Artifact hygiene:** every agent runs `pnpm exec oxfmt <file>` (or `pnpm format:fix`) on markdown it writes and reports observations for `orchestration-log.md` (workers report; the root appends). Never format `state.md`.
@@ -67,38 +67,74 @@ pairwise write intersection inside a group is empty).
 
 > The recon observations below are **non-authoritative grouping evidence only** —
 > they justify group composition but never constrain a source plan: each source
-> plan's own live location/condition checks govern at execution time.
+> plan's own live location/condition checks govern at execution time. Paths are
+> repository-relative; `writes` are the files a plan's `### In scope` names,
+> `reads` are inputs it consumes without editing, `verification` are test files
+> its Test plan touches that its drift command omits.
 
-- Group 1 write surfaces (file-level disjoint, all three pairs empty): p01 —
-  `packages/cli/src/commands/tools/**` (`pack-evidence.ts`, `auto-sync.ts`,
-  `pack-lifecycle-outcome.ts`, `install/`, `list/`, `info/`, `format-pack-inventory.ts`,
-  `update-tools.ts`, `remove-tools.ts`), `status/index.ts`, `doctor/index.ts`,
-  `sync/apply.ts`, `apps/oat-docs/docs/tool-packs.md:282-308`, plus tests the
-  drift command omits (`status/index.test.ts`, `doctor/index.test.ts`,
-  `commands/init/tools/**` tests); p02 — `.agents/skills/oat-project-pr-final/SKILL.md`
-  (1.6.2 → 1.6.3), `packages/cli/src/validation/skills.test.ts` (`:2927`, `:4445`,
-  the Step-2 block `:4556-4590`), `review-skill-contracts.test.ts` (`:1486`,
-  `:2098`), `post-implement-sequence-contracts.test.ts` (`:970-982`),
-  `named-skill-load-contract.test.ts` (9 `file:` rows + 10 `skills:` rows for
-  pr-final; the plan's drift command omits it); p03 — `packages/cli/src/config/json.ts`,
-  new `json.test.ts`, the Step-4 consumer sweep including the W5-added
-  `commands/config/index.ts` consumer (refresh amendment), one decision record
-  (+ `decisions/index.md`).
-- Group 2 write surfaces (the pair is empty): p04 — `packages/cli/src/commands/shared/frontmatter.ts`
-  (+ test), `validation/skills.ts`, `validation/skills.test.ts` (new cases;
-  no template-skill pins exist), `config/resolve.ts`, `copy-helpers.ts`,
-  `scan-tools.ts`, `doctor/index.ts`, `validate-skill-version-bumps.ts`,
-  `validate-oat-skills.ts`, `.agents/skills/create-{agnostic,oat}-skill/SKILL.md`
-  (1.4.1 → 1.4.2, 1.5.1 → 1.5.2), `apps/oat-docs/docs/contributing/skills.md`
-  (sole W6 owner); p05 — `packages/cli/src/drift/**`, `commands/tools/info/**`
-  (after p01), `list-tools.ts`, `tools/shared/types.ts`, `scan-tools.ts` (read;
-  p04 rewrites `getSkillVersion` in the same group — line-disjoint),
-  `manifest.types.ts`, `scope-option.ts`, `status/index.ts` (after p01),
-  `apps/oat-docs/docs/{tool-packs.md:505,manifest-and-drift.md}`, tests the drift
-  command omits (`status/index.test.ts`, `tool-pack-lifecycle.integration.test.ts`).
-- **Observation (descriptive):** `scan-tools.ts` is written by p04 (version read
-  `:115-118`) and read by p05 in the same group — line-disjoint, but the fan-in
-  re-runs the integrated suites before the bookkeeping edit.
+- p01 (group 1) — writes: `packages/cli/src/commands/tools/shared/pack-evidence.ts`,
+  new `packages/cli/src/commands/tools/shared/provider-reachability.ts` (+ test),
+  `packages/cli/src/commands/tools/shared/auto-sync.ts`,
+  `packages/cli/src/commands/tools/install/index.ts`,
+  `packages/cli/src/commands/tools/update/index.ts`, `.../update-tools.ts`,
+  `packages/cli/src/commands/tools/remove/index.ts`, `.../remove-tools.ts`,
+  `packages/cli/src/commands/init/tools/index.ts`,
+  `packages/cli/src/commands/tools/shared/format-pack-inventory.ts`,
+  `packages/cli/src/commands/tools/list/list-tools.ts`,
+  `packages/cli/src/commands/tools/info/info-tool.ts` (the
+  `userManagedRoleMaterialization` / provider-context lines around `:76`–`:82`),
+  `packages/cli/src/commands/status/index.ts`, `packages/cli/src/commands/doctor/index.ts`
+  (thread the context), `apps/oat-docs/docs/cli-utilities/tool-packs.md` (`:282-308`);
+  verification: `pack-evidence.test.ts`, `auto-sync.test.ts`,
+  `pack-lifecycle-outcome.test.ts`, `update/index.test.ts`, `status/index.test.ts`,
+  `doctor/index.test.ts`, `commands/init/tools/**` tests.
+- p02 (group 1) — writes: `.agents/skills/oat-project-pr-final/SKILL.md` (1.6.2 → 1.6.3),
+  `packages/cli/src/validation/skills.test.ts` (pins `:2927`, `:4445`; the Step-2
+  block `:4556-4590`; one new case), `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+  (`:1486`, `:2098`; one new case); verification (the plan's drift command omits
+  them): `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts`
+  (`:970-982`), `packages/cli/src/validation/named-skill-load-contract.test.ts`
+  (9 `file:` + 10 `skills:` pr-final rows), `packages/cli/src/validation/autonomy-gate-inventory.test.ts`
+  (`:360-368`); reads: `.agents/skills/oat-project-plan-writing/SKILL.md:635`,
+  `oat-project-complete/SKILL.md:355,778`, `oat-project-pr-progress/SKILL.md:108-122`, `.gitignore:85`.
+- p03 (group 1) — writes: `packages/cli/src/config/json.ts`, new
+  `packages/cli/src/config/json.test.ts`,
+  `packages/cli/src/commands/tools/shared/project-tools-config.test.ts`, one
+  decision record under `.oat/repo/reference/decisions/` (+ regenerated `index.md`);
+  reads (the Step-4 consumer sweep, ten callers per the refresh): `packages/cli/src/config/oat-config.ts`,
+  `config/sync-config.ts`, `config/user-sync-config.ts`, `commands/gate/index.ts`,
+  `commands/config/index.ts` (+ their tests as verification).
+- p04 (group 2) — writes: `packages/cli/src/commands/shared/frontmatter.ts`,
+  `packages/cli/src/validation/skills.ts`, `packages/cli/src/validation/skills.test.ts`
+  (new cases only — no template-skill pins exist), `packages/cli/src/commands/internal/validate-skill-version-bumps.test.ts`
+  (the wrapper `validate-skill-version-bumps.ts` is unchanged in behavior),
+  `packages/cli/src/agents/canonical/resolve.ts` (`:176`),
+  `.agents/skills/create-agnostic-skill/SKILL.md` (1.4.1 → 1.4.2),
+  `.agents/skills/create-oat-skill/SKILL.md` (1.5.1 → 1.5.2),
+  `apps/oat-docs/docs/contributing/skills.md` (sole W6 owner); verification:
+  `frontmatter.test.ts`, `agents/canonical/**.test.ts`, `scan-tools.test.ts`,
+  `doctor/index.test.ts`, `named-skill-load-contract.test.ts` (reads
+  `create-oat-skill` at `:376`, `:2468`, `:2591`); reads: `config/resolve.ts`,
+  `commands/init/tools/shared/copy-helpers.ts`, `scan-tools.ts`, `doctor/index.ts`
+  (version read sites the resolver serves; not edited by this plan).
+- p05 (group 2) — writes: new `packages/cli/src/drift/skill-view-diagnostic.ts`
+  (+ test), `packages/cli/src/drift/index.ts`,
+  `packages/cli/src/commands/tools/info/info-tool.ts` (a new provider-view
+  block after `:104-155`), `packages/cli/src/commands/tools/info/index.ts`,
+  `info-tool.test.ts`, one post-sync convergence integration case
+  (`tool-pack-lifecycle.integration.test.ts`),
+  `apps/oat-docs/docs/cli-utilities/tool-packs.md` (`:505`),
+  `apps/oat-docs/docs/provider-sync/manifest-and-drift.md` (`:67`); reads:
+  `drift/detector.ts`, `drift/drift.types.ts`, `manifest.types.ts`,
+  `scope-option.ts`, `scan-tools.ts:115-118` (p04 rewrites `getSkillVersion`
+  behind it), `list-tools.ts`, `tools/shared/types.ts`; explicitly OUT of scope
+  per its plan: `status/index.ts` (owned by the W4 restamp and this wave's p01).
+- Within-group write intersections recomputed from these lists: group 1
+  p01 × p02 = ∅, p01 × p03 = ∅ (p03 writes `project-tools-config.test.ts`, a
+  test p01 runs but does not edit), p02 × p03 = ∅; group 2 p04 × p05 = ∅
+  (`scan-tools.ts` is a read for both). Ordered seams: p02 → p04
+  (`validation/skills.test.ts`), p01 → p05 (`info-tool.ts`, `tool-packs.md` in
+  different sections `:282-308` vs `:505`). Grouping retained.
 - **Smoke tier:** no `tools/smoke` pin names a skill any W6 lane bumps
   (`wrapper-compatibility.test.mjs` pins explainer-kit only).
 
@@ -130,8 +166,8 @@ case for the timestamp-suffix rule), p03 (the caller inventory is ten, not
 eight — the W5 `oat config unset` consumer joins the drift check, the sweep,
 and In-scope; a zod null-prototype case), p04 (no template-skill pins exist;
 two constraining decisions from 2026-09-06; the `oat-*` filter in the structural
-validator means the alias-only warning must also come from the changed-skill
-bump validator; 82 skills), p05 (anchors; live `oat tools info` shape; seam
+validator means the version-alias pass must iterate every bundled skill while
+the alias warning stays out of the bump result; 82 skills), p05 (anchors; live `oat tools info` shape; seam
 ownership after p01 and beside p04).
 
 ## Drift Refresh Record (2026-09-07, vs `1bef28fa1fb95e1473872ff9a511a6b42fa37889`)
@@ -141,7 +177,7 @@ ownership after p01 and beside p04).
 - **p01 — provider reachability evidence:** MINOR-DRIFT. 37 files changed nearby (PR #248, W4, W5) but every seam file is byte-unchanged; shifted anchors listed in the refresh entry; premises reproduced live (`packEvidence.items[0].providers === []`; list/info omit `userManagedRoleMaterialization` while status/doctor pass it; the other six diagnostic codes have zero emitters).
 - **p02 — review-ledger paths before the final PR:** MINOR-DRIFT. `skills.test.ts` +2178 and `review-skill-contracts.test.ts` +1598 since authoring; pr-final is 1.6.2; all pins relocated (refresh entry); every W2/W3/W5 dependency row is satisfied.
 - **p03 — `__proto__` config keys:** MINOR-DRIFT with a corrected premise. Mechanism reproduced live on `jsonc-parser` 3.2.1; ten production callers (the plan said eight), including the W5 `commands/config/index.ts:2856` consumer that already carries a `__proto__` disclaimer — added to the contract by the refresh; the gate module (`gate/index.ts:980`) was rewritten by W5.
-- **p04 — `metadata.version`:** MINOR-DRIFT with two corrected premises. `frontmatter.ts` +144 (W4); no version pins exist for the two template skills; `DR-260906-standing-claims-in-skills-name` and `DR-260906-one-version-bump-per-changed` constrain the work; `validateOatSkills` covers 64 `oat-*` of 82 skills, so the alias warning must also be emitted by the changed-skill bump validator.
+- **p04 — `metadata.version`:** MINOR-DRIFT with two corrected premises. `frontmatter.ts` +144 (W4); no version pins exist for the two template skills; `DR-260906-standing-claims-in-skills-name` and `DR-260906-one-version-bump-per-changed` constrain the work; `validateOatSkills` covers 64 `oat-*` of 82 skills, so its version-alias pass iterates every bundled skill (the alias warning stays out of the bump result; `check:skill-bumps` exit 0 unchanged).
 - **p05 — provider-view diagnostics:** PASS. Eight files changed, none of its seams; `DriftReport` and the manifest entry schema unchanged; `oat tools info` has no provider or drift section today.
 
 ## Phase 01: populate-provider-reachability-evidence (group 1)
@@ -306,16 +342,17 @@ git commit -m "fix(p05-t01): diagnose canonical skills missing from a provider v
 
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ----- | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| plan  | artifact | received | 2026-09-07 | reviews/artifact-plan-review-2026-09-07T235418Z.md | -             | -          | -           |
-| p01   | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02   | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p03   | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p04   | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p05   | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final | code     | pending  | -          | -                                                  | -             | -          | -           |
-| spec  | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target         |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------- |
+| plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T235418Z.md | -             | gate       | codex-5-6-sol-xhigh |
+| p01    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p02    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p03    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p04    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p05    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| final  | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| spec   | artifact | pending     | -          | -                                                           | -             | -          | -                   |
+| design | artifact | pending     | -          | -                                                           | -             | -          | -                   |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
