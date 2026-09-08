@@ -12,10 +12,10 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T14:05:37.111Z
-updated: 2026-09-08T21:33:57.000Z
+updated: 2026-09-08T21:57:08.000Z
 associated_issues: []
 external_plans:
-  - .oat/repo/reference/external-plans/2026-09-08-harden-normalized-config-maps.md
+  - .oat/repo/reference/external-plans/2026-09-08-warn-on-wrong-typed-documentation-root.md
 ---
 
 ## Description

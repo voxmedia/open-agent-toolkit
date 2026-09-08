@@ -4,8 +4,8 @@ oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260906-fix-sync-apply-branch.md
-oat_external_plan_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
-oat_external_plan_main_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
+oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
+oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
 oat_execution_status: READY
 oat_backlog_items:
@@ -26,8 +26,9 @@ created: '2026-09-08T21:19:08Z'
 
 > [!IMPORTANT]
 > **Execution status: READY.** No unsatisfied hard dependency blocks execution.
-> No open PR touches `packages/cli/src/commands/sync/**`, and the change is a
-> three-branch reorder in one function plus one regression test.
+> PR #273 merged on 2026-09-08 without touching `packages/cli/src/commands/sync/**`,
+> no open PR touches that directory, and the change is a three-branch reorder
+> in one function plus one regression test.
 
 ## Outcome
 
@@ -45,10 +46,13 @@ branch, and its three existing tests stay green.
 
 - Source backlog item:
   [BL-260906-fix-sync-apply-branch — Fix sync apply branch precedence when a rejected collection leaves zero planned operations](../../pjm/backlog/items/BL-260906-fix-sync-apply-branch.md)
-- Inspected `HEAD`: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the tree whose
-  content this plan read.
-- Comparison baseline: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the fetched
-  `origin/main` tip; identical to the inspected `HEAD` at planning time.
+- Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
+  content this plan read (branch `wave-7-plans`).
+- Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched
+  `origin/main` tip, which is PR #273's merge commit. `HEAD` is that tip plus
+  commits that touch only `.oat/repo/reference/external-plans/` and
+  `.oat/repo/pjm/backlog/` (`git diff --name-only origin/main..HEAD` lists
+  nothing else), so every code citation below is a citation of `origin/main`.
 - Planning date: `2026-09-08`
 - Working tree while planning: `git status --porcelain` was empty.
 - Verified evidence:
@@ -90,8 +94,10 @@ branch, and its three existing tests stay green.
     `reject-collection` plan to status `rejected`. So
     `plannedOperations === 0 && failed === 1` is reachable in production, not
     only in the unit harness.
-  - **Live end-to-end reproduction on the built CLI (`oat 0.2.65`,
-    `packages/cli/dist` built from this `HEAD`).** In a throwaway `mktemp -d`
+  - **Live end-to-end reproduction on the built CLI (`oat 0.2.66`,
+    `packages/cli/dist` built from this `HEAD`; reproduced twice, by the
+    drafting author on `0.2.65` and again by the reviewing author on
+    `0.2.66`).** In a throwaway `mktemp -d`
     project: `git init`, one canonical skill under `.agents/skills/`,
     `oat init --scope project --no-project-guidance --no-hook`,
     `oat providers set --scope project --enabled claude`, then
@@ -113,9 +119,11 @@ branch, and its three existing tests stay green.
     ```
 
     The `foreign-target` proof reason comes from
-    `packages/cli/src/engine/collection-sync.ts:186-192`, and
-    `packages/cli/src/engine/compute-plan.ts:850-856` turns any non
-    `real-directory` ineligible proof into `action: 'reject-collection'`.
+    `packages/cli/src/engine/collection-sync.ts:187-194`, and
+    `packages/cli/src/engine/compute-plan.ts:850-857` turns any non
+    `real-directory` ineligible proof into `action: 'reject-collection'`
+    (`const fallback = proof.reason === 'real-directory'` at `:850`,
+    `action: fallback ? 'fallback-per-entry' : 'reject-collection'` at `:857`).
 
   - Existing tests that pin the surrounding contract, all in
     `packages/cli/src/commands/sync/index.test.ts`:
@@ -135,6 +143,10 @@ restamped` (the negative control for the body-suffix suppression).
     `packages/cli/src/commands/sync/index.test.ts:237-287`,
     `createManifest` at `:130`, `createHarness` at `:312`, and the
     `useRealSyncPlanFormatter` harness option at `:66`.
+  - `packages/cli/src/commands/sync/index.test.ts:534-543` — the `describe`
+    block's `beforeEach` saves and clears `process.exitCode` and its
+    `afterEach` restores it, so an exit-code assertion in the new case cannot
+    inherit a value from a neighbouring case and needs no per-test reset.
 
 - Corrections to the source item's claims, verified live:
   - The item cites "`sync/apply.ts:539` ordering" — correct at this `HEAD`.
@@ -153,22 +165,25 @@ warning` (`:1505`), which never reaches the applied-output branch. The second
 
 ## Dependencies
 
-| Type              | Dependency                                                                     | Required state                                                                                                         | Current state                                                       |
-| ----------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Soft adjacency    | PR #273 (remote project management), PR #190 (ReviewPlan Stage A), PR #125     | No coordination required; verified via the paginated file lists that none touches `packages/cli/src/commands/sync/**`. | Open. None of the three touches this plan's write surfaces.         |
-| Soft ordering     | Any wave-7 lane that also edits `packages/cli/src/commands/sync/index.test.ts` | Never in the same parallel group as this lane.                                                                         | No sibling wave-7 lane in this authoring batch writes that file.    |
-| Satisfied premise | `reject-collection` is reachable in production                                 | The failure state must be producible without the unit harness.                                                         | Satisfied — reproduced end-to-end on the built CLI, recorded above. |
+| Type                | Dependency                                                                                                                  | Required state                                                                                                                                                   | Current state                                                                                                                                                                    |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Satisfied adjacency | PR #273 (remote project management)                                                                                         | Must not touch `packages/cli/src/commands/sync/**`.                                                                                                              | Merged 2026-09-08 as `7d70ac307`; `git diff --stat c9f2e147a..7d70ac307 -- packages/cli/src/commands/sync packages/cli/src/engine/execute-plan.ts` is empty.                     |
+| Soft adjacency      | PR #190 (ReviewPlan Stage A, draft), PR #125 (brainstorm companion)                                                         | No coordination required; verified via the paginated file lists that neither touches `packages/cli/src/commands/sync/**` or `packages/cli/src/engine/**`.        | Open. Neither touches this plan's write surfaces.                                                                                                                                |
+| Soft adjacency      | [Converge copy-strategy skill projections](./2026-09-08-converge-copy-strategy-skill-projections.md)                        | May run in any group relative to this lane: it edits `packages/cli/src/engine/compute-plan.ts`, which this plan reads as reachability evidence and never writes. | Authored in the same batch. If it integrates first, the drift check prints a `compute-plan.ts` line; re-read `:850-857` and confirm the `reject-collection` mapping still holds. |
+| Soft ordering       | Any wave-7 lane that also edits `packages/cli/src/commands/sync/apply.ts` or `packages/cli/src/commands/sync/index.test.ts` | Never in the same parallel group as this lane.                                                                                                                   | None. Of the seventeen `2026-09-08-*.md` plans, this is the only one that names `packages/cli/src/commands/sync/`.                                                               |
+| Satisfied premise   | `reject-collection` is reachable in production                                                                              | The failure state must be producible without the unit harness.                                                                                                   | Satisfied — reproduced end-to-end on the built CLI at this `HEAD`, recorded above.                                                                                               |
 
 No unsatisfied hard dependency remains, so `oat_execution_status` is `READY`.
 
 ## Landing-event impact
 
-| Event                                                                | Affected | Files in common                                                               | Required update                                                                                                                   |
-| -------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| PR #273 `feat: add provider-neutral remote project management` lands | None     | None. Its 143 files include no `packages/cli/src/commands/sync/**` path.      | No plan change. Re-run the focused sync suite on the merged state.                                                                |
-| PR #190 `ReviewPlan Stage A compatibility release` (draft) lands     | None     | None. Its 217 files include no `packages/cli/src/commands/sync/**` path.      | No plan change.                                                                                                                   |
-| PR #125 `oat-brainstorm visual companion` lands                      | None     | None (26 files, all brainstorm/skill surfaces).                               | No plan change.                                                                                                                   |
-| A predecessor wave-7 lane integrates ahead of this one               | Minor    | `packages/cli/src/commands/sync/index.test.ts` if any lane adds a case there. | Re-run the drift check against the integrated execution `HEAD` and re-anchor the `it(` line numbers before editing the test file. |
+| Event                                                                              | Affected | Files in common                                                                                          | Required update                                                                                                                                                      |
+| ---------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PR #273 `feat: add provider-neutral remote project management` (merged 2026-09-08) | None     | None. Its 143 files include no `packages/cli/src/commands/sync/**` or `packages/cli/src/engine/**` path. | Already reflected: this plan's inspected `HEAD` sits on top of its merge commit.                                                                                     |
+| PR #190 `ReviewPlan Stage A compatibility release` (draft) lands                   | None     | None. Its 217 files include no `packages/cli/src/commands/sync/**` path.                                 | No plan change.                                                                                                                                                      |
+| PR #125 `oat-brainstorm visual companion` lands                                    | None     | None (26 files, all brainstorm/skill surfaces).                                                          | No plan change.                                                                                                                                                      |
+| Sibling lane `converge-copy-strategy-skill-projections` integrates first           | Minor    | `packages/cli/src/engine/compute-plan.ts` (evidence only; this plan does not write it).                  | Re-read `compute-plan.ts:850-857` and confirm the `reject-collection` mapping survived; the drift-check line for that file is expected and is not a STOP on its own. |
+| A predecessor wave-7 lane integrates ahead of this one                             | Minor    | `packages/cli/src/commands/sync/index.test.ts` if any lane adds a case there.                            | Re-run the drift check against the integrated execution `HEAD` and re-anchor the `it(` line numbers before editing the test file.                                    |
 
 ## Drift check
 
@@ -176,10 +191,13 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat c9f2e147ac0674e73a60735e0c1727ccc6048756..origin/main -- packages/cli/src/commands/sync/apply.ts packages/cli/src/commands/sync/index.test.ts packages/cli/src/commands/sync/sync.utils.ts packages/cli/src/engine/execute-plan.ts packages/cli/src/engine/compute-plan.ts packages/cli/src/ui/output.ts
+git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..origin/main -- packages/cli/src/commands/sync/apply.ts packages/cli/src/commands/sync/index.test.ts packages/cli/src/commands/sync/sync.utils.ts packages/cli/src/engine/execute-plan.ts packages/cli/src/engine/compute-plan.ts packages/cli/src/engine/collection-sync.ts packages/cli/src/ui/output.ts
 ```
 
-Expected at the authored baseline: no output. If `apply.ts` changed, re-read
+Expected at the authored baseline: no output. A line for
+`packages/cli/src/engine/compute-plan.ts` alone is expected once the sibling
+`converge-copy-strategy-skill-projections` lane integrates; re-read `:850-857`
+and continue if the `reject-collection` mapping is intact. If `apply.ts` changed, re-read
 `:516-557` and confirm the branch chain and the `restampOnly` computation still
 have the shape described in `## Current state` before editing. A material
 mismatch is a STOP condition. When this plan runs as a wave lane, run the same
@@ -399,8 +417,9 @@ four of:
 - the existing assertions still hold (`Manifest version refreshed` absent,
   `capture.warn` contains the version-skew warning).
 
-Reset `process.exitCode` inside the test if the surrounding suite does not
-already, so the assertion cannot leak into or inherit from a neighbouring case.
+The suite's `beforeEach` at `:536-539` already clears `process.exitCode` and
+its `afterEach` at `:541-543` restores it, so the exit-code assertion cannot
+inherit a value from a neighbouring case; do not add a second reset.
 
 **Verify:** `pnpm exec vitest run src/commands/sync/index.test.ts -t 'never
 calls a failed run restamp-only'` from `packages/cli` → passes.
@@ -532,9 +551,10 @@ Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;
 - `origin/main` advances materially from
-  `c9f2e147ac0674e73a60735e0c1727ccc6048756`;
-- PR #273, PR #190, or PR #125 lands (apply the `## Landing-event impact` table;
-  none is expected to affect this plan);
+  `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`;
+- PR #190 or PR #125 lands, or the sibling `converge-copy-strategy` lane
+  integrates (apply the `## Landing-event impact` table; none is expected to
+  affect this plan);
 - a dependency named in `## Dependencies` changes state;
 - the `it(` line anchors in `packages/cli/src/commands/sync/index.test.ts`
   (`:1320`, `:1340`, `:1387`, `:1408`) or the branch anchors in

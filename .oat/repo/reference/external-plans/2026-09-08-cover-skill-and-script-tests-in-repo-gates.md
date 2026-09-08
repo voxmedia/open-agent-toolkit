@@ -5,8 +5,8 @@ oat_external_plan_source: backlog-item
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260906-cover-skill-test-files-under.md
   - .oat/repo/pjm/backlog/items/BL-260906-run-scripts-worktree-init-test.md
-oat_external_plan_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
-oat_external_plan_main_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
+oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
+oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
 oat_execution_status: READY
 oat_backlog_items:
@@ -29,15 +29,18 @@ created: '2026-09-08T21:19:08Z'
 > [!IMPORTANT]
 > **Execution status: READY.** No unsatisfied hard dependency blocks execution.
 > The change is confined to three root-level files, adds no dependency, and both
-> newly-gated surfaces are verified clean at the planning `HEAD`, so wiring them
-> in cannot turn CI red on pre-existing debt.
+> newly-gated surfaces are verified clean at the planning `HEAD` (which sits on
+> PR #273's merge commit), so wiring them in cannot turn CI red on pre-existing
+> debt. One sibling wave-7 lane also edits `AGENTS.md` (a different paragraph);
+> the two must never share a parallel group.
 
 ## Outcome
 
 Two verification surfaces that exist but are gated by nothing become gated by
 the two commands CI runs. `pnpm check` gains the `oxfmt` coverage that only
-`pnpm format` had, so a mis-formatted `.agents/skills/**` asset — a skill test
-`.mjs` in particular — fails the gate CI runs first instead of passing it.
+`pnpm format` had, so a mis-formatted `.agents/skills/**` or `tools/smoke/**`
+asset — a skill test `.mjs` in particular — fails the gate CI runs first
+instead of passing it.
 `.lintstagedrc.mjs` gains an `.mjs`/`.cjs` task, so the same file is
 auto-formatted at commit instead of silently drifting. `pnpm test` gains a
 `test:scripts` entry that runs `scripts/worktree/init.test.mjs`, the journal
@@ -56,10 +59,13 @@ proved by a deliberate failing control that the gate catches.
   independently. The first is "Cover skill test files under `.agents/skills` in
   `pnpm check` and lint-staged"; the second is "Run
   `scripts/worktree/init.test.mjs` under a repository gate".
-- Inspected `HEAD`: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the tree whose
-  content this plan read.
-- Comparison baseline: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the fetched
-  `origin/main` tip; identical to the inspected `HEAD` at planning time.
+- Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
+  content this plan read (branch `wave-7-plans`).
+- Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched
+  `origin/main` tip, which is PR #273's merge commit. `HEAD` is that tip plus
+  commits that touch only `.oat/repo/reference/external-plans/` and
+  `.oat/repo/pjm/backlog/` (`git diff --name-only origin/main..HEAD` lists
+  nothing else), so every citation below is a citation of `origin/main`.
 - Planning date: `2026-09-08`
 - Working tree while planning: `git status --porcelain` was empty.
 - Verified evidence:
@@ -73,12 +79,18 @@ proved by a deliberate failing control that the gate catches.
     `pnpm exec oxfmt --check '.agents/skills/**/*.{md,mjs,js,cjs}'
 'apps/oat-docs/docs/**/*.md' 'tools/smoke/**/*.{mjs,md,json}'`. That trailing
     `oxfmt --check` is the entire coverage CI is missing.
-  - `packages/cli/package.json` `"check"` is
+  - `packages/cli/package.json:32` `"check"` is
     `oxlint . && oxlint --type-aware … && oxfmt --check .`, so `turbo run check`
-    already subsumes each workspace package's `format` script. The only thing
-    `pnpm format` adds over `pnpm check` today is the root-level glob above —
-    which means adding that one command to `check` makes `check` a strict
-    superset of `format`.
+    already subsumes each workspace package's `format` script (`:34`).
+    `apps/oat-docs/package.json:11` `"check"` is
+    `oxfmt --check 'docs/**/*.md' && markdownlint-cli2 'docs/**/*.md'`, so the
+    `apps/oat-docs/docs/**/*.md` third of the root glob is _already_ inside
+    `pnpm check` through `turbo run check`. The surfaces `pnpm check` misses
+    today are therefore exactly `.agents/skills/**/*.{md,mjs,js,cjs}` and
+    `tools/smoke/**/*.{mjs,md,json}`; the docs glob is retained in the shared
+    script only so the list stays byte-identical to `"format"`'s and has a
+    single definition. Adding that one command to `check` makes `check` a
+    strict superset of `format`.
   - `package.json:33-34` — `"test"` is
     `turbo run test && pnpm test:smoke && pnpm test:skills && pnpm test:release`,
     and `"test:smoke"` is
@@ -86,19 +98,41 @@ proved by a deliberate failing control that the gate catches.
     glob reaches `scripts/`.
   - `pnpm-workspace.yaml` lists only `apps/*` and `packages/*`, so `scripts/` is
     not a workspace package and `turbo run test` never sees it.
-  - `scripts/worktree/init.test.mjs` exists (12 KB, one `node:test` case at
+  - `scripts/worktree/init.test.mjs` exists (11.7 KB, one `node:test` case at
     `:148`, `isolates nested smoke bootstrap from normal worktree
 initialization`) and imports
     `tools/smoke/runner/cleanup.mjs` and `tools/smoke/runner/provision.mjs`
     (`:18-19`). It resolves the repository root from `import.meta.dirname`
-    (`:22`), so it is invocable from the repository root. **Run live at this
-    `HEAD`: `node --test scripts/worktree/init.test.mjs` → exit 0, `# pass 1`,
-    `# fail 0`, 1.5 s wall clock, and `git status --porcelain` was empty
+    (`:22`), so it is invocable from the repository root, and its host
+    repository is created under `mkdtemp(join(tmpdir(), 'oat-smoke-init-'))`
+    (`:59`), so it never registers a worktree against the checkout's own
+    `.git`. **Run live at this `HEAD` by both the drafting and the reviewing
+    author: `node --test scripts/worktree/init.test.mjs` → exit 0, `# pass 1`,
+    `# fail 0`, about 1.5 s wall clock, and `git status --porcelain` was empty
     afterwards.**
+  - **`node --test` glob semantics on Node `22.17.0` (`.nvmrc`), verified
+    live:** `node --test 'scripts/nope/*.test.mjs'` (a pattern that matches
+    nothing, quoted or shell-expanded) exits **0** and runs zero tests, while
+    `node --test scripts/nonexistent.test.mjs` (an explicit path that does not
+    exist) prints `Could not find 'scripts/nonexistent.test.mjs'` and exits
+    **1**. A `test:scripts` script must therefore name the file explicitly, as
+    `test:release` already does, so a deleted or renamed test cannot pass
+    vacuously. This also fixes the shape of the negative control: a scratch
+    file dropped beside the real test would not be matched by an explicit
+    path, so the deliberate failure is injected into the real test and
+    reverted.
   - `.lintstagedrc.mjs:1-15` — three tasks: `'*.{ts,tsx,js,jsx}'`, `'*.json'`,
     `'*.md'`. There is no `*.mjs` or `*.cjs` entry, so a staged
     `.agents/skills/*/tests/*.test.mjs` is neither linted nor formatted at
-    commit. 43 such files exist.
+    commit. 44 such files exist.
+  - **Why the gate is `pnpm check` and not lint-staged alone.** lint-staged
+    runs only inside a local commit hook, is skipped by `git commit
+--no-verify`, never runs in CI (`.github/workflows/ci.yml` installs and runs
+    scripts; it does not install hooks), and cannot see a file that was
+    formatted incorrectly by a tool other than the hook. The source item's
+    second criterion names `pnpm check` explicitly. So lint-staged is the
+    convenience layer that keeps the gate quiet, and `pnpm check` is the gate;
+    this plan wires both.
   - `AGENTS.md:28-34` — the paragraph asserting that "Only `pnpm lint` and
     `pnpm format` apply their respective lint/format coverage to `tools/smoke`
     and `.agents/skills/**/*.md`". `AGENTS.md:103-104` — "CI runs neither
@@ -109,14 +143,15 @@ initialization`) and imports
   - **Both newly-gated surfaces are clean today**, so the wiring cannot turn CI
     red on pre-existing debt:
     - `pnpm exec oxfmt --check '.agents/skills/**/*.{md,mjs,js,cjs}'` → exit 0,
-      313 files.
+      316 files.
     - `pnpm exec oxfmt --check 'tools/smoke/**/*.{mjs,md,json}'` → exit 0,
-      80 files.
-    - `pnpm exec oxfmt --check '**/*.{mjs,cjs}'` → exit 0, 174 files (so a
+      81 files (PR #273's new `tools/smoke/pjm-remote/no-secret-output.test.mjs`
+      included).
+    - `pnpm exec oxfmt --check '**/*.{mjs,cjs}'` → exit 0, 176 files (so a
       repository-wide lint-staged `.mjs` formatting task has nothing to churn).
     - `node --test scripts/worktree/init.test.mjs` → exit 0.
     - `pnpm exec oxlint tools/smoke .agents/skills` → exit 0, 0 warnings,
-      0 errors, 155 files (recorded for the deferred follow-up below; this plan
+      0 errors, 157 files (recorded for the deferred follow-up below; this plan
       does not wire oxlint).
 - Corrections to the source items' claims:
   - `BL-260906-cover-skill-test-files-under` says `pnpm check` "does not" cover
@@ -126,7 +161,8 @@ initialization`) and imports
     gate" — verified true. Its acceptance criterion asks for CI coverage
     "verified by a deliberate failure in a scratch branch"; this plan satisfies
     that with a local deliberate failure instead, because the wave workflow does
-    not authorize pushing a scratch branch (see step 6's rationale).
+    not authorize pushing a scratch branch (see the `## Test plan` rationale:
+    `.github/workflows/ci.yml:36-37` runs exactly `pnpm test`).
   - The planning brief cited `AGENTS.md:32-34,103-104`. The CI sentence is
     indeed at `:103-104`, but the coverage paragraph the brief clipped to
     `:32-34` actually spans `:28-34` and must be rewritten whole;
@@ -135,23 +171,26 @@ initialization`) and imports
 
 ## Dependencies
 
-| Type              | Dependency                                                                     | Required state                                                                                                                   | Current state                                                                                        |
-| ----------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Soft ordering     | Any wave-7 lane that edits `package.json`, `.lintstagedrc.mjs`, or `AGENTS.md` | Never in the same parallel group as this lane.                                                                                   | Pending. `AGENTS.md` and `.lintstagedrc.mjs` are the likely collision points for a repo-gates wave.  |
-| Soft adjacency    | PR #273 (remote project management)                                            | Re-run `pnpm test:smoke` on the merged state.                                                                                    | Open. Adds `tools/smoke/pjm-remote/no-secret-output.test.mjs`, already inside the `test:smoke` glob. |
-| Soft adjacency    | PR #190 (ReviewPlan Stage A, draft), PR #125                                   | No coordination required; neither touches `package.json`, `.lintstagedrc.mjs`, `AGENTS.md`, `.github/workflows/`, or `scripts/`. | Open. Verified against the paginated file lists.                                                     |
-| Satisfied premise | The newly-gated surfaces are already clean                                     | Wiring them in must not turn CI red on pre-existing debt.                                                                        | Satisfied — all five commands recorded above exit 0 at the planning `HEAD`.                          |
+| Type                | Dependency                                                                                   | Required state                                                                                                                                                                                    | Current state                                                                                                                                                                                                           |
+| ------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Soft ordering       | [Tighten the skill version validators](./2026-09-08-tighten-the-skill-version-validators.md) | Never in the same parallel group as this lane; either order. Its step 3 rewrites `AGENTS.md:11` (the skills-system version-bump sentence); this plan rewrites `:28-34`, `:67-68`, and `:103-104`. | Authored in the same batch, not merged. Whichever lane integrates second re-anchors its `AGENTS.md` paragraphs by text; the paragraphs do not overlap, so no prose reconciliation is expected.                          |
+| Soft adjacency      | [Guard bare proto in Markdown records](./2026-09-08-guard-bare-proto-in-markdown-records.md) | No group constraint: it cites `.lintstagedrc.mjs:14` and `AGENTS.md` as evidence and writes neither.                                                                                              | Authored in the same batch. If this lane lands first, that plan re-anchors `.lintstagedrc.mjs:14` in its test header comment.                                                                                           |
+| Soft ordering       | Any other wave-7 lane that edits root `package.json`, `.lintstagedrc.mjs`, or `AGENTS.md`    | Never in the same parallel group as this lane.                                                                                                                                                    | None. Of the seventeen `2026-09-08-*.md` plans, only the two rows above name any of the three files, and only this plan writes root `package.json` or `.lintstagedrc.mjs`.                                              |
+| Satisfied adjacency | PR #273 (remote project management)                                                          | Its new smoke test must sit inside the `test:smoke` glob and pass `oxfmt --check`.                                                                                                                | Merged 2026-09-08 as `7d70ac307`. `tools/smoke/pjm-remote/no-secret-output.test.mjs` matches `tools/smoke/*/*.test.mjs` and is one of the 81 clean files above; it also bumped `packages/cli/package.json` to `0.2.66`. |
+| Soft adjacency      | PR #190 (ReviewPlan Stage A, draft), PR #125                                                 | No coordination required; neither touches `package.json`, `.lintstagedrc.mjs`, `AGENTS.md`, `.github/workflows/`, or `scripts/`.                                                                  | Open. Verified against the paginated file lists.                                                                                                                                                                        |
+| Satisfied premise   | The newly-gated surfaces are already clean                                                   | Wiring them in must not turn CI red on pre-existing debt.                                                                                                                                         | Satisfied — all five commands recorded above exit 0 at the planning `HEAD`.                                                                                                                                             |
 
 No unsatisfied hard dependency remains, so `oat_execution_status` is `READY`.
 
 ## Landing-event impact
 
-| Event                                                                | Affected | Files in common                                                | Required update                                                                                                   |
-| -------------------------------------------------------------------- | -------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| PR #273 `feat: add provider-neutral remote project management` lands | Minor    | `tools/smoke/pjm-remote/no-secret-output.test.mjs` (new file). | No plan change; the file is already inside `test:smoke`'s glob. Re-run `pnpm test:smoke` and `pnpm check` merged. |
-| PR #190 `ReviewPlan Stage A compatibility release` (draft) lands     | None     | None of its 217 files is a root gate file or under `scripts/`. | No plan change.                                                                                                   |
-| PR #125 `oat-brainstorm visual companion` lands                      | Minor    | `.agents/skills/**` assets newly covered by `pnpm check`.      | Re-run `pnpm check` on the merged state; repair formatting rather than narrowing the glob.                        |
-| A wave-7 lane edits `AGENTS.md` ahead of this one                    | Material | `AGENTS.md:28-34` and `:103-104`.                              | Re-anchor both paragraphs against the integrated tree before editing; the line numbers here will have moved.      |
+| Event                                                                              | Affected | Files in common                                                                | Required update                                                                                                                                            |
+| ---------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PR #273 `feat: add provider-neutral remote project management` (merged 2026-09-08) | None     | `tools/smoke/pjm-remote/no-secret-output.test.mjs` (new file).                 | Already reflected: this plan's inspected `HEAD` sits on top of its merge commit; the file is inside `test:smoke`'s glob and formats clean.                 |
+| PR #190 `ReviewPlan Stage A compatibility release` (draft) lands                   | None     | None of its 217 files is a root gate file or under `scripts/`.                 | No plan change.                                                                                                                                            |
+| PR #125 `oat-brainstorm visual companion` lands                                    | Minor    | `.agents/skills/**` assets newly covered by `pnpm check`.                      | Re-run `pnpm check` on the merged state; repair formatting rather than narrowing the glob.                                                                 |
+| Sibling lane `tighten-the-skill-version-validators` integrates first               | Minor    | `AGENTS.md:11` (its edit) versus `:28-34`, `:67-68`, `:103-104` (this plan's). | Re-anchor this plan's three paragraphs by their text before editing; the line numbers here will have moved by the size of its `:11` rewrite.               |
+| Any other wave-7 lane edits `AGENTS.md` ahead of this one                          | Material | `AGENTS.md:28-34` and `:103-104`.                                              | Re-anchor both paragraphs against the integrated tree before editing; if either paragraph was already rewritten, STOP and reconcile with the orchestrator. |
 
 ## Drift check
 
@@ -159,10 +198,12 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat c9f2e147ac0674e73a60735e0c1727ccc6048756..origin/main -- package.json .lintstagedrc.mjs AGENTS.md .github/workflows/ci.yml scripts/worktree/init.test.mjs scripts/worktree/init.sh tools/smoke pnpm-workspace.yaml .oxfmtrc.jsonc packages/cli/package.json
+git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..origin/main -- package.json .lintstagedrc.mjs AGENTS.md .github/workflows/ci.yml scripts/worktree/init.test.mjs scripts/worktree/init.sh tools/smoke pnpm-workspace.yaml .oxfmtrc.jsonc packages/cli/package.json apps/oat-docs/package.json
 ```
 
-Expected at the authored baseline: no output. If `package.json`'s scripts block
+Expected at the authored baseline: no output. A `packages/cli/package.json`
+line whose only hunk is the lockstep `version` field is the wave fan-in's bump
+and is not a STOP. If `package.json`'s scripts block
 changed, re-read `"check"`, `"format"`, `"format:fix"`, `"test"`, and
 `"test:smoke"` before editing. If `AGENTS.md` changed, re-locate both paragraphs
 by their text rather than by line number. A material mismatch is a STOP
@@ -263,7 +304,10 @@ the exact execution `HEAD` after predecessor lanes integrate.
 - `turbo.json` — the new root-level commands are chained after `turbo run …` in
   the root scripts, matching the existing pattern; no new Turborepo task.
 - `scripts/worktree/init.sh`, `scripts/worktree/validate.sh`, and the content of
-  `scripts/worktree/init.test.mjs` — the test is run as-is, not modified.
+  `scripts/worktree/init.test.mjs` — the test is run as-is. The only edit this
+  plan makes to it is the temporary `assert.fail` control injection in steps 1
+  and 5, reverted with `git checkout` each time; it must not appear in the
+  final diff.
 - `tools/smoke/**` — `test:smoke`'s globs are unchanged; the worktree test is
   wired through a separate `test:scripts` entry rather than by moving the file
   or widening the smoke glob, so smoke's contract stays what
@@ -277,11 +321,13 @@ Two independent gaps, one shared cause: the root `package.json` splits its
 verification surface across four scripts, and CI runs only two of them.
 
 **Formatting.** `turbo run check` reaches every workspace package, and each
-package's own `check` already includes `oxfmt --check .`. What no workspace
-package covers is the three root-level trees — `.agents/skills`,
-`apps/oat-docs/docs`, and `tools/smoke` — and the only command that checks those
-is the trailing `oxfmt --check` on `package.json:20`'s `"format"`, which CI does
-not run. The practical failure mode is the one both wave-2 lanes hit: edit a
+package's own `check` already includes an `oxfmt --check` (`packages/cli` over
+`.`, `apps/oat-docs` over `docs/**/*.md`). What no workspace package covers is
+the two root-level trees outside any package — `.agents/skills` and
+`tools/smoke` — and the only command that checks those is the trailing
+`oxfmt --check` on `package.json:20`'s `"format"`, which CI does not run. (That
+root glob also lists `apps/oat-docs/docs/**/*.md`; the docs app already checks
+it, so that third is redundant rather than missing.) The practical failure mode is the one both wave-2 lanes hit: edit a
 skill test `.mjs`, watch `pnpm check` pass, and discover at review that
 `pnpm format` fails — with no commit hook to have fixed it, because
 `.lintstagedrc.mjs` has no `.mjs` task at all.
@@ -314,36 +360,50 @@ breakages, and revert each one immediately.
    `pnpm check > gate.log 2>&1; echo "exit=$?"`.
 2. With that file still mis-formatted, run
    `pnpm exec oxfmt --check '.agents/skills/**/*.{md,mjs,js,cjs}'` and record
-   its exit code.
-3. Add a scratch failing test file under `scripts/worktree/` containing a single
-   `node:test` case that asserts `false`. Run
-   `pnpm test > gate.log 2>&1; echo "exit=$?"`.
+   its exit code. Delete the scratch copy.
+3. Inject a deliberate failure into the real `scripts/worktree/init.test.mjs`:
+   insert `assert.fail('deliberate control failure');` as the first statement
+   of the `test(...)` callback at `:148` (`assert` is already imported from
+   `node:assert/strict` at `:1`). Confirm the
+   injection is real with
+   `node --test scripts/worktree/init.test.mjs > direct.log 2>&1; echo "exit=$?"`
+   → `exit=1`, `# fail 1`. Then run
+   `pnpm test > gate.log 2>&1; echo "exit=$?"`. Do **not** use a scratch file
+   under `scripts/` for this control: the wiring in step 4 names the real file
+   explicitly, so a scratch neighbour would prove nothing.
 
 **Verify:** step 1's `pnpm check` prints `exit=0` **despite** the mis-formatted
 file; step 2's direct `oxfmt --check` prints a non-zero exit naming that file
-(so the violation is real, not imagined); step 3's `pnpm test` prints `exit=0`
-**despite** the failing test under `scripts/`. Record all three. Then delete
-both scratch files and confirm `git status --porcelain` is empty.
+(so the violation is real, not imagined); step 3's direct `node --test` prints
+`exit=1` and its `pnpm test` prints `exit=0` **despite** the failing test under
+`scripts/`. Record all four. Then revert the injection
+(`git checkout -- scripts/worktree/init.test.mjs`) and confirm
+`git status --porcelain` is empty.
 
 ### 2. Centralize the root-level format globs and add them to `check`
 
 In `package.json`, add one script holding the existing glob list and call it from
-both `"check"` and `"format"`, so the list has a single definition:
+both `"check"` and `"format"`, so the list has a single definition. The name
+`format:root` follows the repository's existing convention that `format` means
+the non-mutating check and `format:fix` the write:
 
 ```json
-    "check:format-extras": "pnpm exec oxfmt --check '.agents/skills/**/*.{md,mjs,js,cjs}' 'apps/oat-docs/docs/**/*.md' 'tools/smoke/**/*.{mjs,md,json}'",
-    "check": "turbo run check && pnpm oat:validate-skills && pnpm check:format-extras",
-    "format": "turbo run format && pnpm check:format-extras",
+    "format:root": "pnpm exec oxfmt --check '.agents/skills/**/*.{md,mjs,js,cjs}' 'apps/oat-docs/docs/**/*.md' 'tools/smoke/**/*.{mjs,md,json}'",
+    "check": "turbo run check && pnpm oat:validate-skills && pnpm format:root",
+    "format": "turbo run format && pnpm format:root",
 ```
 
 Keep `"format:fix"` as it is; it is the mutating counterpart and keeps its own
 `--write` glob list. Keep the glob list byte-identical to
 `package.json:20`'s current one — widening it (to `.oat/**`, for instance) is
-out of scope and risks reaching an OAT `state.md`.
+out of scope and risks reaching an OAT `state.md`; narrowing it (dropping the
+docs third because the docs app already checks it) is a separate cleanup and
+would make the `"format"` refactor non-identical.
 
 **Verify:** `pnpm check > gate.log 2>&1; echo "exit=$?"` → `exit=0` on the clean
-tree, and `gate.log` contains an `oxfmt` summary line reporting the
-`.agents/skills` file count (313 at the planning `HEAD`). Also
+tree, and `gate.log` contains an `oxfmt` summary line reporting the combined
+root-glob file count (`.agents/skills` 316 + docs 71 + `tools/smoke` 81 = 468
+at the planning `HEAD`). Also
 `pnpm format > format.log 2>&1; echo "exit=$?"` → `exit=0`, proving the
 refactor left `format` behaviorally identical.
 
@@ -376,21 +436,29 @@ In `package.json`:
 
 ```json
     "test": "turbo run test && pnpm test:smoke && pnpm test:scripts && pnpm test:skills && pnpm test:release",
-    "test:scripts": "node --test scripts/*/*.test.mjs",
+    "test:scripts": "node --test scripts/worktree/init.test.mjs",
 ```
 
 Place `test:scripts` after `test:smoke`: `scripts/worktree/init.test.mjs`
 imports `tools/smoke/runner/provision.mjs` and `cleanup.mjs`, so running it
 after the smoke suite keeps the shared runner's failures attributable to smoke
-rather than to `scripts/`. Use the `scripts/*/*.test.mjs` shape so a future
-`scripts/<area>/*.test.mjs` is picked up without another edit, matching
-`test:smoke`'s glob style.
+rather than to `scripts/`. **Name the file explicitly; do not use a
+`scripts/*/*.test.mjs` glob.** On Node `22.17.0` an unmatched glob makes
+`node --test` run zero tests and exit 0, so a glob would let a deleted or
+renamed test pass vacuously, whereas an explicit missing path exits 1 with
+`Could not find …` (both verified live, recorded in `## Source and live
+evidence`). This matches `test:release`'s explicit-file style. A future
+`scripts/<area>/*.test.mjs` is added to the list by hand, which is the price of
+a gate that cannot pass on nothing.
 
 **Verify:** `pnpm test:scripts > scripts.log 2>&1; echo "exit=$?"` → `exit=0`
-and `scripts.log` reports `# pass 1` / `# fail 0` for
+and `scripts.log` reports `# tests 1` / `# pass 1` / `# fail 0` for
 `isolates nested smoke bootstrap from normal worktree initialization`. Then
 `git status --porcelain` → empty (the test provisions and cleans up its own
-worktrees; a dirty tree afterwards is a STOP condition).
+host repository under `tmpdir()`; a dirty tree afterwards is a STOP
+condition). Finally, prove the explicit path cannot pass on nothing:
+temporarily rename the test file, run `pnpm test:scripts`, confirm a non-zero
+exit with `Could not find`, and rename it back.
 
 ### 5. Prove each wiring with a direct failing control (green-then-red, one per gate)
 
@@ -398,15 +466,20 @@ Repeat step 1's two breakages against the wired tree, one at a time:
 
 1. Mis-format a scratch `.agents/skills/*/tests/*.test.mjs` copy; run
    `pnpm check > gate.log 2>&1; echo "exit=$?"`.
-2. Restore, then add the scratch always-failing `node:test` file under
-   `scripts/worktree/`; run `pnpm test > gate.log 2>&1; echo "exit=$?"`.
+2. Delete the scratch copy, then re-inject the same `assert.fail(...)` line
+   into `scripts/worktree/init.test.mjs:148` as in step 1.3; run
+   `pnpm test:scripts > scripts.log 2>&1; echo "exit=$?"` and then
+   `pnpm test > gate.log 2>&1; echo "exit=$?"`.
 
 **Verify:** breakage 1 makes `pnpm check` print a **non-zero** exit and name the
-mis-formatted file in `gate.log`; breakage 2 makes `pnpm test` print a
-**non-zero** exit and name the failing scratch test. Delete both scratch files
-after each control and confirm `git status --porcelain` is empty and both gates
-return to `exit=0`. Record the exact commands, exit codes, and the naming lines
-— the before/after pair from steps 1 and 5 is this change's whole evidence.
+mis-formatted file in `gate.log`; breakage 2 makes `pnpm test:scripts` and
+`pnpm test` each print a **non-zero** exit and name
+`isolates nested smoke bootstrap from normal worktree initialization` with
+`deliberate control failure` in the log. Delete the scratch copy and revert the
+injection (`git checkout -- scripts/worktree/init.test.mjs`), confirm
+`git status --porcelain` is empty, and confirm both gates return to `exit=0`.
+Record the exact commands, exit codes, and the naming lines — the before/after
+pair from steps 1 and 5 is this change's whole evidence.
 
 ### 6. Update `AGENTS.md` to describe the new coverage exactly
 
@@ -416,7 +489,7 @@ Rewrite, do not append:
   package's own lint/format checks through `turbo run check`, validates
   canonical OAT skill structure through `oat:validate-skills`, runs markdownlint
   over the docs app, **and** applies `oxfmt` to `.agents/skills/**`,
-  `apps/oat-docs/docs/**`, and `tools/smoke/**` through `check:format-extras` —
+  `apps/oat-docs/docs/**`, and `tools/smoke/**` through `format:root` —
   so `pnpm check` now contains everything `pnpm format` checks. It must also say
   what is still uncovered: the root-level `oxlint tools/smoke .agents/skills`
   that only `pnpm lint` runs.
@@ -430,9 +503,11 @@ Rewrite, do not append:
   it runs `scripts/worktree/init.test.mjs`.
 
 Do not renumber or extend the eight-item Definition-of-Done gate list at
-`:40-47`: it mirrors CI's steps exactly, and CI's steps do not change.
+`:40-47`: it mirrors CI's steps exactly, and CI's steps do not change. Do not
+touch the `<skills_system>` block at `:7-14`: its version-bump sentence at
+`:11` belongs to the sibling `tighten-the-skill-version-validators` lane.
 
-**Verify:** `grep -n 'check:format-extras\|test:scripts' AGENTS.md` → both
+**Verify:** `grep -n 'format:root\|test:scripts' AGENTS.md` → both
 appear; `grep -n 'CI runs neither' AGENTS.md` → no match (the stale sentence is
 gone, not merely qualified); and the eight-item list at `:40-47` is unchanged in
 `git diff`.
@@ -466,10 +541,14 @@ is a matched pair of gate observations per wiring rather than a new assertion.
   - Preserve the exact mis-formatting used and its expected categorical outcome
     in the PR body so independent review can repeat it.
 - **Wiring 2 — `scripts/worktree/init.test.mjs` in `pnpm test`.**
-  - Red-then-green negative control: step 1.3 shows `pnpm test` exiting 0 with a
-    deliberately failing `node:test` file under `scripts/worktree/`; step 5.2
-    shows `pnpm test` exiting non-zero and naming it on the wired tree; and
-    `pnpm test:scripts` on the clean tree reports `# pass 1` / `# fail 0`.
+  - Red-then-green negative control: step 1.3 shows `pnpm test` exiting 0 with
+    a deliberate `assert.fail` injected into `scripts/worktree/init.test.mjs`
+    (and a direct `node --test` of the same file exiting 1, so the failure is
+    real); step 5.2 shows `pnpm test:scripts` and `pnpm test` exiting non-zero
+    and naming it on the wired tree; `pnpm test:scripts` on the clean tree
+    reports `# tests 1` / `# pass 1` / `# fail 0`; and the rename control in
+    step 4 shows the explicit path failing with `Could not find` rather than
+    passing on zero tests.
   - The source item asks for CI coverage "verified by a deliberate failure in a
     scratch branch". The local control above is the same evidence without
     pushing: `.github/workflows/ci.yml:36-37` runs exactly `pnpm test`, so a
@@ -509,7 +588,11 @@ neither' AGENTS.md` returns no match.
 - [ ] Every step-1 and step-5 control is recorded with its exact command and
       exit code, showing accepted-before and rejected-after for each wiring.
 - [ ] `git diff --stat` touches exactly `package.json`, `.lintstagedrc.mjs`, and
-      `AGENTS.md`; no dependency is added and `pnpm-lock.yaml` is unchanged.
+      `AGENTS.md`; no dependency is added, `pnpm-lock.yaml` is unchanged, and
+      `scripts/worktree/init.test.mjs` carries no trace of the control
+      injection.
+- [ ] `"test:scripts"` names `scripts/worktree/init.test.mjs` explicitly (no
+      glob), and the rename control in step 4 is recorded.
 - [ ] Lane mode: `pnpm check`, `pnpm type-check`,
       `HOME=$(mktemp -d) pnpm exec turbo run test --force`,
       `pnpm run check:skill-bumps`, `pnpm lint`, `pnpm format`, and
@@ -517,7 +600,7 @@ neither' AGENTS.md` returns no match.
       explicitly, and no lockstep release file is edited. Standalone mode: one
       lockstep bump and all eight AGENTS.md gates pass in order.
 - [ ] `git status --short` contains no unexplained or out-of-scope files; every
-      scratch control file was deleted.
+      scratch control file was deleted and every control injection reverted.
 
 ## STOP conditions
 
@@ -527,7 +610,7 @@ Stop and report instead of improvising when:
   mis-formatted skill asset, or `pnpm test` already fails on a failing
   `scripts/` test, the gap has been closed by someone else and this plan's
   premise is false;
-- adding `check:format-extras` to `pnpm check` makes the clean tree fail —
+- adding `format:root` to `pnpm check` makes the clean tree fail —
   something in `.agents/skills`, `apps/oat-docs/docs`, or `tools/smoke` is
   mis-formatted at the execution `HEAD`. Repair the formatting; **never** narrow
   the glob to make the gate pass;
@@ -545,9 +628,9 @@ Stop and report instead of improvising when:
   input, file, or run that the pre-change gates rejected and the post-change
   gates accept is a Critical finding. Watch specifically for: a `"format"`
   refactor that silently drops a glob; a `"test"` chain edit that reorders or
-  removes `test:smoke`, `test:skills`, or `test:release`; a `test:scripts` glob
-  that matches nothing and therefore passes vacuously (`node --test` with an
-  unmatched glob must not be treated as success — assert the pass count);
+  removes `test:smoke`, `test:skills`, or `test:release`; a `test:scripts`
+  entry written as a glob (`node --test` exits 0 on an unmatched glob, verified
+  on Node `22.17.0`, so only an explicit file path can fail on a missing test);
 - a named verification gate fails twice after one bounded correction;
 - the work would expose, copy, or rotate a credential without explicit
   authority.
@@ -558,13 +641,18 @@ Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;
 - `origin/main` advances materially from
-  `c9f2e147ac0674e73a60735e0c1727ccc6048756`;
-- PR #273, PR #190, or PR #125 lands (apply the `## Landing-event impact`
-  table);
+  `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`;
+- PR #190 or PR #125 lands, or the sibling `tighten-the-skill-version-validators`
+  lane integrates (apply the `## Landing-event impact` table);
 - a dependency named in `## Dependencies` changes state;
 - the cited anchors move — `package.json:12`, `:20`, `:33-34`;
-  `.lintstagedrc.mjs:1-15`; `AGENTS.md:28-34`, `:40-47`, `:60-72`, `:103-104`;
-  `.github/workflows/ci.yml:30-52`; `scripts/worktree/init.test.mjs:148`;
+  `.lintstagedrc.mjs:1-15`; `AGENTS.md:11`, `:28-34`, `:40-47`, `:60-72`,
+  `:103-104`; `.github/workflows/ci.yml:30-52`;
+  `scripts/worktree/init.test.mjs:59` and `:148`; `apps/oat-docs/package.json:11`;
+  `packages/cli/package.json:32-34`;
+- `.nvmrc` moves off Node `22.17.0` — re-verify the unmatched-glob and
+  missing-path exit codes of `node --test` before trusting the explicit-path
+  rationale;
 - either newly-gated surface stops being clean (re-run the five commands in
   `## Source and live evidence`), or `node --test scripts/worktree/init.test.mjs`
   no longer passes;
@@ -578,11 +666,13 @@ Executed inside a wave, refresh the drift check against the exact execution
 ## Review focus
 
 - That the `"format"` refactor is behavior-preserving: the glob list moved into
-  `check:format-extras` must be byte-identical to the one it replaced, and
+  `format:root` must be byte-identical to the one it replaced, and
   `pnpm format` must still exercise `turbo run format` plus that list.
 - That `"test"`'s chain still contains `test:smoke`, `test:skills`, and
   `test:release` in an order where each suite's failure remains attributable,
-  and that `test:scripts` cannot pass vacuously on an unmatched glob.
+  and that `test:scripts` names its file explicitly so it cannot pass vacuously.
+- That the control injection into `scripts/worktree/init.test.mjs` was fully
+  reverted: the file must be absent from `git diff --stat`.
 - That the controls in steps 1 and 5 were genuinely executed as a matched pair —
   accepted before, rejected after — and not asserted. A gate wired without a
   demonstrated failure is precisely the class of defect this repository has

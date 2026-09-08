@@ -4,8 +4,8 @@ oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260906-harden-dispatch-launch.md
-oat_external_plan_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
-oat_external_plan_main_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
+oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
+oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
 oat_execution_status: READY
 oat_backlog_items:
@@ -26,9 +26,9 @@ created: '2026-09-08T21:21:53Z'
 
 > [!IMPORTANT]
 > **Execution status: READY.** No unsatisfied hard dependency blocks execution.
-> One `Soft` row records that this lane writes version pins in
-> `packages/cli/src/validation/skills.test.ts` and must not share a wave-7
-> parallel group with the other lanes that write the same file.
+> The `Soft` rows record ordering only: this lane writes version pins in
+> `packages/cli/src/validation/skills.test.ts`, as do seven other wave-7 lanes,
+> so it is never composed into a parallel group with any of them.
 
 ## Outcome
 
@@ -37,14 +37,14 @@ A managed phase dispatch stops invalidating its own base. The root records
 landed, so the first authorized dispatch of a phase is valid at the moment the
 child verifies it. The acceptance dispatch record is still written the instant
 the host returns, but its commit is deferred to the phase-outcome bookkeeping —
-the same rule `oat-project-implement` already applies to the project log — so no
-root commit lands in the child's checkout between baseline capture and the
-child's base check. `oat project dispatch record` stamps the baseline it
-actually observed, from git, into the record's namespaced `oat` evidence, so the
-ordering is auditable from the journal itself rather than inferred from
-surrounding prose. A genuinely stale or unrelated base still fails closed before
-any implementation edit: the phase implementer's exact-equality check is
-unchanged.
+the same rule `oat-project-implement` already applies to the project log and to
+review appends — so no root commit lands in the child's checkout between
+baseline capture and the child's base check. `oat project dispatch record`
+stamps the `HEAD` it actually observed, from git, into the record's namespaced
+`oat` evidence, so the ordering is auditable from the journal itself rather
+than inferred from surrounding prose. A genuinely stale or unrelated base still
+fails closed before any implementation edit: the phase implementer's
+exact-equality check is not touched by this plan.
 
 This plan covers **only** GitHub issue
 [#265](https://github.com/voxmedia/open-agent-toolkit/issues/265). Issue
@@ -61,18 +61,32 @@ lane must not archive it; it updates the item's #265 acceptance criteria only.
 - Source backlog item:
   [BL-260906-harden-dispatch-launch — Harden dispatch launch baselines and terminal reconciliation](../../pjm/backlog/items/BL-260906-harden-dispatch-launch.md)
 - Source issue: [#265 — Calculate execution baselines after mandatory launch journaling](https://github.com/voxmedia/open-agent-toolkit/issues/265)
-  (state OPEN, labels `bug`, `tracked-in-backlog`)
-- Inspected `HEAD`: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the tree whose
-  content this plan read.
-- Comparison baseline: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the fetched
-  `origin/main` tip, identical to the inspected `HEAD` because the planning
-  branch is at `origin/main`.
+  (state OPEN, labels `bug`, `tracked-in-backlog`; re-read 2026-09-08). Its
+  four acceptance criteria are quoted in `## Done criteria`.
+- Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
+  content this plan read (branch `wave-7-plans`).
+- Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched
+  `origin/main` tip (PR #273 merged 2026-09-08), also the merge-base; `HEAD`
+  differs from it only by commits under `.oat/repo/`. Every source file this
+  plan cites is byte-identical on the two.
 - Planning date: `2026-09-08`
-- Working tree while planning: `git status --porcelain` was empty when this plan
-  was started; sibling plan authors later added untracked files under
-  `.oat/repo/reference/external-plans/` and modified
-  `.oat/repo/pjm/backlog/items/BL-260908-correct-the-factual-skill.md`. Neither
-  path is a surface of this plan.
+- Working tree while planning: `git status --porcelain` was empty at the
+  inspected `HEAD`. Other reviewers were rewriting sibling plans under
+  `.oat/repo/reference/external-plans/` concurrently; none of those paths is a
+  surface of this plan.
+
+### The production occurrence this plan repairs
+
+The defect is not hypothetical. The `lite-workflow-mode` project's log records
+it at `.oat/projects/archived/lite-workflow-mode/implementation.md:1901-1910`
+("p06 invalid-run abort before implementation"): expected phase base
+`7e636cf2…`, accepted-run `HEAD` `8b985078…`, outcome `INVALID_RUN_ABORT` with
+0/3 tasks executed — "The sole intervening commit recorded the p06 launch
+journal, but the payload retained the pre-journal SHA. The canonical
+implementer rejected the mismatch before editing." The retro at
+`references/project-retro.md:143-147` and `:297-309` filed it as UP-01 → issue
+#265. The child did exactly what its contract says; the root moved `HEAD`
+under it.
 
 ### Where the baseline and the journaling actually live
 
@@ -82,42 +96,56 @@ does not, and the executor needs the true split before editing.
 - **The baseline is captured in skill prose, not in TypeScript.**
   `.agents/skills/oat-project-implement/references/phase-execution.md:59` is
   step 4 of the phase launch sequence: `Record PHASE_BASE_HEAD=$(git rev-parse
-HEAD) and require a clean worktree.` Step 5 (`:60-100`) then sends the Phase
-  Scope carrying `phase_base_head: {PHASE_BASE_HEAD}` (`:74`) and
-  `expected_base_sha: {group base or PHASE_BASE_HEAD}` (`:77`). Nothing between
-  steps 4 and 5 forbids a further root commit.
-- **The journaling is a CLI write plus a caller-owned commit.**
+HEAD) and require a clean worktree.` Step 3 (`:54-58`) precedes it: "Build the
+  provider invocation before recording target, model/effort axes, selection
+  reason, candidates, and formal dispatch stamp" — that recording is the
+  prelaunch journal. Step 5 (`:60-100`) then sends the Phase Scope carrying
+  `phase_base_head: {PHASE_BASE_HEAD}` (`:74`) and
+  `expected_base_sha: {group base or PHASE_BASE_HEAD}` (`:77`). Nothing in
+  steps 3–5 says when the step-3 journal is committed, and nothing forbids a
+  root commit between step 4 and the child's check.
+- **The bookkeeping commit is mandatory and root-owned.**
+  `.agents/skills/oat-project-implement/SKILL.md:101-102`: "Bookkeeping commits
+  are mandatory, not optional … you MUST commit the OAT tracking files … as a
+  separate bookkeeping commit." That is the commit that moved `HEAD` in the
+  p06 occurrence.
+- **The acceptance journal is a CLI write plus a caller-owned commit.**
   `.agents/skills/oat-dispatch-subagents/SKILL.md:142-146` requires that
   "Immediately after the host returns, record either `launch_status: accepted`
   or `launch_status: blocked-before-start` in the generic dispatch record."
   `:180-187` shows the call —
-  `oat project dispatch record --project "$PROJECT_PATH" --event-file - --json` —
-  and states "The command validates and persists evidence only. It never
-  launches a provider."
+  `oat project dispatch record --project "$PROJECT_PATH" --event-file - --json`
+  — and states "The command validates and persists evidence only. It never
+  launches a provider." The project-aware callers are
+  `oat-project-implement/references/dispatch-and-dry-run.md:396-400` and
+  `oat-project-dispatch-subagents/SKILL.md:157-167`.
 - **The command writes files; it does not commit.**
-  `packages/cli/src/commands/project/dispatch/index.ts:1-56` wires the command;
+  `packages/cli/src/commands/project/dispatch/index.ts:1-56` wires the command
+  and `:116-119` calls `recordProjectDispatch({ projectPath, input })`;
   `packages/cli/src/commands/project/dispatch/record.ts:502-533`
   (`recordProjectDispatch`) resolves `dispatchDir = join(projectPath,
 'dispatch')` and `record.ts:457-493` (`publishRevision`) writes
   `dispatch/<request-id>[@NNNN].json` through `publishContainedJsonRevision`.
   There is no `git` invocation anywhere in
-  `packages/cli/src/commands/project/dispatch/`. The comment at `record.ts:470-474`
-  states the intent plainly: "the journal is committed to a shared repository".
-  The commit is the caller's, and it is what moves `HEAD`.
+  `packages/cli/src/commands/project/dispatch/` (the only match for `git` is
+  the word "legitimately" in a comment at `record.ts:267`). The comment at
+  `record.ts:470-474` states the intent plainly: "the journal is committed to
+  a shared repository". The commit is the caller's, and it is what moves
+  `HEAD`.
 - **The child then checks exact equality.**
-  `.agents/agents/oat-phase-implementer.md:344-347` (Mode: Implement, step
-  1 "Verify Phase Base"): "Confirm the current worktree is clean and its HEAD
+  `.agents/agents/oat-phase-implementer.md:343-348` (Mode: Implement, step 1
+  "Verify Phase Base"): "Confirm the current worktree is clean and its HEAD
   exactly equals `phase_base_head`. When `expected_base_sha` is supplied,
   separately confirm that `phase_base_head` equals it or is an explicitly
   allowed descendant. Never use ancestry from `expected_base_sha` as a
   substitute for the exact `phase_base_head` check." That clause is pinned by
   `packages/cli/src/validation/skills.test.ts:3345-3347`, so it cannot be
-  weakened without the pin failing.
+  weakened without the pin failing. **This plan does not edit that file.**
 
-So the failure is exactly: capture at `phase-execution.md:59` → launch → journal
-write → **caller commits the journal** → `HEAD` advances → the child's
-`phase-implementer.md:344` equality check fails on a base that was never stale
-in any meaningful sense.
+So the failure is exactly: capture at `phase-execution.md:59` → root commits
+the step-3 launch journal as mandatory bookkeeping → `HEAD` advances → the
+child's `phase-implementer.md:343` equality check fails on a base that was
+never stale in any meaningful sense.
 
 ### The repository already states the governing principle
 
@@ -129,9 +157,11 @@ dispatch record's _content_ — "After every accepted subagent dispatch, record
 the acceptance in the generic dispatch record at
 `$PROJECT_PATH/implementation.md#<run-anchor>` … Do not write the project log at
 acceptance; append it with the phase-outcome entry after the child's report
-returns" — but says nothing about when the dispatch record's own **commit**
-lands. That gap is the defect. This plan extends the existing rule rather than
-inventing a new one.
+returns" — and `:64-67` applies the same deferral to review-orchestration
+appends ("appending when the reviewer returns dirties the tree before a fix
+child is dispatched into it"). Neither says when the prelaunch journal or the
+acceptance record's own **commit** lands. That gap is the defect. This plan
+extends the existing rule rather than inventing a new one.
 
 ### Constraints the fix must respect
 
@@ -139,7 +169,7 @@ inventing a new one.
   `sameGenericRecord` compares `JSON.stringify` of the whole generic part, and
   `record.ts:534-541` throws `Existing generic fields are immutable and cannot
 be redefined.` So a _generic_ field added on a later revision of the same
-  `request_id` is rejected. A baseline that must be stamped at journal time
+  `request_id` is rejected. An observation that must be stamped at journal time
   therefore cannot live in the generic block.
 - `packages/cli/src/providers/identity/oat-dispatch-record.test.ts:550-560`
   (`covers every generic dispatch field with an explicit mutability decision`)
@@ -148,44 +178,60 @@ be redefined.` So a _generic_ field added on a later revision of the same
   Any new generic field must be classified there or this case fails.
 - `packages/cli/src/providers/identity/oat-dispatch-record.ts:589-598` —
   `oatRecordSchema` is the namespaced evidence block: `schemaVersion`,
-  `canonicalRole`, `preStartRejection`, `fallbackClaim`, `fallback`,
-  `runtimeObservation`, `.strict()`. `initialOatRecord()` (`:668-677`) seeds it
-  and `genericPart` (`:679-684`) strips it, so `oat` is exempt from generic
-  revision immutability and from the mutability-coverage case. This is the
-  correct home for recorder-observed evidence.
+  `canonicalRole`, `preStartRejection`, `fallbackClaim` (already
+  `.nullable().default(null)`, the precedent for an additive slot), `fallback`,
+  `runtimeObservation`, `.strict()`. `initialOatRecord()` (`:668-677`) seeds it,
+  `genericPart` (`:679-684`) strips it, and `oatPart` (`:686-692`) re-parses a
+  stored block with `oatRecordSchema.parse`, so an additive slot must carry a
+  default or every existing journal file stops parsing. `oat` is exempt from
+  generic revision immutability and from the mutability-coverage case. This is
+  the correct home for recorder-observed evidence.
 - `.agents/skills/oat-dispatch-subagents/SKILL.md:147-149` — "Preserve the exact
   target and controls … Namespaced evidence cannot redefine any generic field."
-  The baseline defines no generic field, so it is admissible namespaced
+  The observed head defines no generic field, so it is admissible namespaced
   evidence.
 - `packages/cli/src/providers/identity/generic-dispatch-record.ts:237` —
   `launch_status: z.enum(['planned', 'accepted', 'blocked-before-start'])`. The
-  `planned` value already exists in the schema but **no skill in
-  `.agents/skills` ever writes it** (verified: `grep -rn "launch_status"
-.agents/skills` returns only `accepted` and `blocked-before-start`, in
+  `planned` value exists in the schema but **no skill in `.agents/skills` ever
+  writes it** (verified: `grep -rn "launch_status" .agents/skills` returns only
+  `accepted` and `blocked-before-start`, in
   `oat-dispatch-subagents/SKILL.md:143-144` and
   `references/record-schema.md:105,150,185,222,226`). This plan does not
   introduce a mandatory `planned` revision; it is recorded here only so the
   executor does not mistake the unused enum member for an existing prelaunch
   journaling step.
+- **Host model.** The launch contract's "immediately after the host returns"
+  is written for hosts that return when the child finishes (a foreground
+  Claude Code `Agent` call, `codex exec`). For such hosts the acceptance record
+  is written after the child's work, so deferring only its commit is
+  sufficient. A host that returns a handle while the child is still live and
+  sharing the root's checkout is a different launch shape; this plan records
+  it as a STOP condition rather than redesigning the acceptance contract.
 
 ## Dependencies
 
-| Type                  | Dependency                                                                                                                                                                                    | Required state                                                                                                                              | Current state                                                                                           |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Soft ordering         | Every other wave-7 lane that writes version pins in `packages/cli/src/validation/skills.test.ts` — the stray-fence lane, the skill-version validator lane, the doctor lane, and the seal lane | Never composed into one parallel group with this lane.                                                                                      | Recorded; the wave composer serializes them.                                                            |
-| Soft adjacency        | GitHub issue [#266](https://github.com/voxmedia/open-agent-toolkit/issues/266), the other half of `BL-260906-harden-dispatch-launch`                                                          | Stays out of this lane entirely. The backlog item closes only when both halves land, so this lane updates the item but must not archive it. | Not admitted to a wave; the item's triage split holds it back pending a producer and an outcome matrix. |
-| Satisfied predecessor | `DR-260906-one-version-bump-per-changed`                                                                                                                                                      | Accepted, so a later lane in the same PR carries an already-bumped skill value and moves no pin.                                            | Accepted.                                                                                               |
+| Type                  | Dependency                                                                                                                           | Required state                                                                                                                              | Current state                                                                                           |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Soft ordering         | [Repair stray fences in lifecycle skills](./2026-09-08-repair-stray-fences-in-lifecycle-skills.md)                                   | Never in one parallel group; both write `packages/cli/src/validation/skills.test.ts` version pins. Re-anchor pins on merge.                 | Authored in the same wave; the composer serializes them.                                                |
+| Soft ordering         | [Tighten the skill version validators](./2026-09-08-tighten-the-skill-version-validators.md)                                         | Never in one parallel group; both write `skills.test.ts`. Re-anchor on merge.                                                               | Authored in the same wave.                                                                              |
+| Soft ordering         | [Read stdin in finalize-synced-archive](./2026-09-08-read-stdin-in-finalize-synced-archive.md)                                       | Never in one parallel group; both write `skills.test.ts` pins. Re-anchor on merge.                                                          | Authored in the same wave.                                                                              |
+| Soft ordering         | [Make the completion seal idempotent](./2026-09-08-make-the-completion-seal-idempotent.md)                                           | Never in one parallel group; both write `skills.test.ts` pins. Re-anchor on merge.                                                          | Authored in the same wave.                                                                              |
+| Soft ordering         | [Reconcile the oat doctor example](./2026-09-08-reconcile-the-oat-doctor-example.md)                                                 | Never in one parallel group; both write `skills.test.ts`. Re-anchor on merge.                                                               | Authored in the same wave.                                                                              |
+| Soft ordering         | [Keep plan writes on the caller's model](./2026-09-08-keep-plan-writes-on-the-callers-model.md)                                      | Never in one parallel group; both write `skills.test.ts` pins. Re-anchor on merge.                                                          | Authored in the same wave.                                                                              |
+| Soft ordering         | [Correct skill authoring facts](./2026-09-08-correct-skill-authoring-facts.md)                                                       | Never in one parallel group; both write `skills.test.ts`. Re-anchor on merge.                                                               | Authored in the same wave.                                                                              |
+| Soft adjacency        | GitHub issue [#266](https://github.com/voxmedia/open-agent-toolkit/issues/266), the other half of `BL-260906-harden-dispatch-launch` | Stays out of this lane entirely. The backlog item closes only when both halves land, so this lane updates the item but must not archive it. | Not admitted to a wave; the item's triage split holds it back pending a producer and an outcome matrix. |
+| Satisfied predecessor | `DR-260906-one-version-bump-per-changed`                                                                                             | Accepted, so a later lane in the same PR carries an already-bumped skill value and moves no pin.                                            | Accepted.                                                                                               |
 
 No unsatisfied hard dependency remains, so `oat_execution_status` is `READY`.
 
 ## Landing-event impact
 
-| Event                                                                | Affected | Files in common                                                                                                                                                     | Required update                                                                                                                                                                                                                    |
-| -------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PR #190 (ReviewPlan Stage A compatibility release, OPEN draft) lands | Major    | `.agents/skills/oat-project-implement/SKILL.md`, `.agents/skills/oat-project-implement/references/phase-execution.md`, `packages/cli/src/validation/skills.test.ts` | Re-derive `phase-execution.md:59`, `:74`, `:77` and `oat-project-implement/SKILL.md:47-54` before editing, and re-read the `2.3.7` pins. Do not apply this plan's line numbers unchecked.                                          |
-| PR #273 (provider-neutral remote project management, OPEN) lands     | None     | none — its files are `oat-doctor/SKILL.md` and `oat-pjm-remote/**`                                                                                                  | No update. Reconfirm with `gh api --paginate repos/voxmedia/open-agent-toolkit/pulls/273/files --jq '.[].filename'`.                                                                                                               |
-| PR #125 (oat-brainstorm visual companion, OPEN) lands                | None     | none                                                                                                                                                                | No update.                                                                                                                                                                                                                         |
-| Issue #266 is planned and lands                                      | Minor    | `packages/cli/src/providers/identity/oat-dispatch-record.ts`, `record.ts`                                                                                           | #266 adds a terminal-reconciliation slot to the same `oat` evidence block. Whichever lands second re-reads `oatRecordSchema` and `initialOatRecord()` before extending them; the two slots are independent and must not be merged. |
+| Event                                                                | Affected | Files in common                                                                                                                                                                                     | Required update                                                                                                                                                                                                                    |
+| -------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PR #190 (ReviewPlan Stage A compatibility release, OPEN draft) lands | Major    | `.agents/skills/oat-project-implement/SKILL.md`, `.agents/skills/oat-project-implement/references/phase-execution.md`, `packages/cli/src/validation/skills.test.ts` (all verified in its file list) | Re-derive `phase-execution.md:54-60`, `:74`, `:77` and `oat-project-implement/SKILL.md:47-54` before editing, and re-read the `2.3.7` pins. Do not apply this plan's line numbers unchecked.                                       |
+| PR #273 (provider-neutral remote project management)                 | None     | none — its files were `oat-doctor/SKILL.md`, `oat-pjm-remote/**`, and the pjm remote command tree                                                                                                   | **Merged 2026-09-08 as `7d70ac307`.** The drift check from the prior baseline shows no in-scope file changed.                                                                                                                      |
+| PR #125 (oat-brainstorm visual companion, OPEN) lands                | None     | none                                                                                                                                                                                                | No update.                                                                                                                                                                                                                         |
+| Issue #266 is planned and lands                                      | Minor    | `packages/cli/src/providers/identity/oat-dispatch-record.ts`, `record.ts`                                                                                                                           | #266 adds a terminal-reconciliation slot to the same `oat` evidence block. Whichever lands second re-reads `oatRecordSchema` and `initialOatRecord()` before extending them; the two slots are independent and must not be merged. |
 
 ## Drift check
 
@@ -193,9 +239,10 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat c9f2e147ac0674e73a60735e0c1727ccc6048756..origin/main -- \
+git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..HEAD -- \
   .agents/skills/oat-project-implement/SKILL.md \
   .agents/skills/oat-project-implement/references/phase-execution.md \
+  .agents/skills/oat-project-implement/references/dispatch-and-dry-run.md \
   .agents/skills/oat-dispatch-subagents/SKILL.md \
   .agents/skills/oat-dispatch-subagents/references/record-schema.md \
   .agents/agents/oat-phase-implementer.md \
@@ -204,19 +251,23 @@ git diff --stat c9f2e147ac0674e73a60735e0c1727ccc6048756..origin/main -- \
   packages/cli/src/commands/project/dispatch/record.test.ts \
   packages/cli/src/providers/identity/oat-dispatch-record.ts \
   packages/cli/src/providers/identity/oat-dispatch-record.test.ts \
+  packages/cli/src/providers/identity/generic-dispatch-record.ts \
   packages/cli/src/validation/skills.test.ts \
   .oat/repo/pjm/backlog/items/BL-260906-harden-dispatch-launch.md
 ```
 
 Expected at the authored commit: empty output. Any non-empty result means a
-cited anchor may have moved; re-locate it before editing. Executing inside a
-wave, run the same diff from the actual execution `HEAD` after predecessor lanes
-integrate.
+cited anchor may have moved; re-locate it before editing.
+`oat-phase-implementer.md`, `dispatch-and-dry-run.md`, and
+`generic-dispatch-record.ts` are read-only anchors here; they are in the diff
+so a change to the check this plan relies on is noticed. Executing inside a
+wave, run the same diff from the actual execution `HEAD` after predecessor
+lanes integrate.
 
 ## Repository conventions
 
 - Build: `pnpm build` → all packages build; required before `pnpm test:smoke`
-  and `pnpm test:release`.
+  and `pnpm test:release`, and before running the built CLI in Step 1.
 - Typecheck: `pnpm type-check` → passes.
 - Focused test: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch src/providers/identity/oat-dispatch-record.test.ts`
   → all cases pass.
@@ -228,25 +279,23 @@ integrate.
   `.agents/skills/**/*.md` and CI runs neither.
 - Skill versioning: one `metadata.version` bump per changed canonical skill per
   PR; the top-level `version:` key is gone from bundled skills since CLI 0.2.65.
-  `.agents/agents/*.md` roles still declare a **top-level** `version:` per
-  `DR-260908-bundled-skills-declare`, which deliberately leaves them
-  unmigrated — bump `oat-phase-implementer.md` in that shape, not in
-  `metadata.version`.
+  This plan bumps two skills and **no** agent role.
 - Locating pins: search the **old version literal** across `packages/cli/src`,
   `tools/smoke`, and `.agents/skills/*/tests`, then move only the hits that
-  belong to the file you bumped. `1.1.5` is a live example of why: it pins both
-  `.agents/agents/oat-phase-implementer.md` (`skills.test.ts:3026`, `:3334`,
-  `:6017`, `:7954`) and an unrelated adapter (`skills.test.ts:5950`).
+  belong to the file you bumped. `1.1.5` is a live example of why the sweep is
+  by literal, not by name: it pins both `.agents/agents/oat-phase-implementer.md`
+  and the unrelated `oat-project-dispatch-subagents` adapter
+  (`skills.test.ts:5950`); this plan moves neither.
 - `DR-260906-standing-claims-in-skills-name`: a standing claim added to a skill
   needs a named executable backstop. The ordering clause added in Step 4 is
   backstopped by the pin added in Step 8.
 - Implementation pattern for the git-backed test:
-  `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`,
-  which builds a real `git init` fixture repo.
+  `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+  (`git init -q .` fixtures at `:2338`, `:2836`, `:2980`, `:4304`).
 - Implementation pattern for injected git: `gitExecFile` in
-  `packages/cli/src/validation/skills.ts:943-969`, which defaults to
-  `execFileAsync` and is overridable through a dependencies object.
-- `.oat/config.json` keys parity: not touched by this plan.
+  `packages/cli/src/validation/skills.ts:948`, which defaults to
+  `execFileAsync = promisify(execFile)` (`:1`, `:4`, `:76`) and is overridable
+  through a dependencies object.
 - Never run `oxfmt` on an OAT `state.md`.
 - Git/PR convention: commit on the lane worktree branch. Do not push or open a
   PR; the wave fan-in owns that.
@@ -257,35 +306,38 @@ integrate.
 
 - `.agents/skills/oat-project-implement/references/phase-execution.md` — reorder
   the launch sequence so the baseline is captured after mandatory prelaunch
-  journaling, and forbid a root commit into the child's checkout between capture
-  and the child's base check.
+  journaling has been committed, and forbid a root commit into the child's
+  checkout between capture and the child's base check.
 - `.agents/skills/oat-project-implement/SKILL.md` — extend the "Never append
   while a dispatched child owns the worktree" rule at `:47-54` to the acceptance
   dispatch-record commit; `metadata.version` bump.
 - `.agents/skills/oat-dispatch-subagents/SKILL.md` — state the ordering rule at
-  the launch contract and document that the recorder stamps the observed
-  baseline; `metadata.version` bump.
+  the launch contract and document that the recorder stamps the observed head;
+  `metadata.version` bump.
 - `.agents/skills/oat-dispatch-subagents/references/record-schema.md` — document
-  the new `oat.executionBaseline` evidence slot.
-- `.agents/agents/oat-phase-implementer.md` — say that `phase_base_head` is the
-  post-journal baseline and that a supplied `oat.executionBaseline` with
-  `status: 'unobserved'` or `tree_clean: false` is not an authoritative
-  baseline; keep the exact-equality check verbatim; top-level `version:` bump.
+  the new `oat.observedHead` evidence slot in the `## Record` section (`:113`).
 - `packages/cli/src/providers/identity/oat-dispatch-record.ts` — add the
-  `executionBaseline` slot to `oatRecordSchema` and `initialOatRecord()`.
+  `observedHead` slot to `oatRecordSchema` and `initialOatRecord()`.
 - `packages/cli/src/commands/project/dispatch/record.ts` — observe git at
-  publish time and stamp the slot; add the injectable `gitExecFile` dependency.
-- `packages/cli/src/commands/project/dispatch/index.ts` — wire the dependency.
+  publish time and stamp the slot; accept an injectable `gitExecFile`.
 - `packages/cli/src/providers/identity/oat-dispatch-record.test.ts`,
   `packages/cli/src/commands/project/dispatch/record.test.ts`, and one new
   git-backed regression file.
-- `packages/cli/src/validation/skills.test.ts` — version pins.
+- `packages/cli/src/validation/skills.test.ts` — version pins and one new
+  ordering-clause pin.
 - `.oat/repo/pjm/backlog/items/BL-260906-harden-dispatch-launch.md` — tick the
-  two #265 acceptance criteria and record the plan link. **Do not** change
-  `status`, and do not run `oat backlog archive`.
+  two #265 acceptance criteria. **Do not** change `status`, and do not run
+  `oat backlog archive`.
 
 ### Out of scope
 
+- `.agents/agents/oat-phase-implementer.md`. The child never reads the JSON
+  journal — it receives the Phase Scope — so a consumer clause about the new
+  slot would be unenforceable prose, and the glossary line at `:34`
+  ("root-recorded HEAD before phase dispatch") stays true after the reorder.
+  Leaving the file untouched also keeps the exact-equality check byte-identical
+  by construction, avoids an agent-role bump, and keeps this lane clear of the
+  agent-role gate the `tighten-the-skill-version-validators` lane adds.
 - GitHub issue #266 and every acceptance criterion that names it: terminal
   reconciliation, linked envelopes, append-only reconciliation events, and
   closeout detection for unresolved accepted dispatches. The item's triage split
@@ -296,23 +348,28 @@ integrate.
   member exists but no skill writes it; adding one is a separate behavioral
   change with its own review surface.
 - Any change to the `expected_base_sha` semantics, the parallel-group base rule,
-  or the recovery/continuation paths in `phase-execution.md:231-470`.
-- Weakening `.agents/agents/oat-phase-implementer.md:344-347`. See the
-  weaker-anywhere rule below.
+  or the recovery/continuation paths in `phase-execution.md:127-470`.
+- Redesigning the acceptance contract for hosts that return before the child
+  finishes while sharing the root's checkout (see the host-model constraint and
+  STOP condition 6).
+- `packages/cli/src/commands/project/dispatch/index.ts` — it already passes
+  only `{ projectPath, input }` at `:116-119` and needs no change when the
+  default `gitExecFile` is resolved inside `record.ts`.
 - The lockstep public package version bump and the release gates — the wave
   fan-in owns both.
 
 ## Current state
 
 `oat project dispatch record` is a validate-and-persist command. Given
-`--project`, `recordProjectDispatch` (`record.ts:502`) parses the input once
-(the comment at `:495-501` explains why parsing is deliberately non-idempotent),
-reads the latest revision per request id (`readLatestRevisions`, `:413`),
-refuses a generic-field redefinition (`:534-541`), collects related and trigger
-records, and publishes a new revision file (`publishRevision`, `:457`). Before
-bytes reach the journal it asserts no absolute path is present in identity
-fields (`:475`) and enforces a whole-record size ceiling (`:476`). It touches
-git nowhere.
+`--project`, `recordProjectDispatch` (`record.ts:502`, input
+`{ projectPath, input, raceBarriers? }` — there is no dependencies parameter
+today) parses the input once (the comment at `:495-501` explains why parsing is
+deliberately non-idempotent), reads the latest revision per request id
+(`readLatestRevisions`, `:413`), refuses a generic-field redefinition
+(`:534-541`), collects related and trigger records, and publishes a new
+revision file (`publishRevision`, `:457`). Before bytes reach the journal it
+asserts no absolute path is present in identity fields (`:475`) and enforces a
+whole-record size ceiling (`:476`). It touches git nowhere.
 
 The persisted record is `PersistedOatDispatchRecordV1` — the generic record
 (`generic-dispatch-record.ts:195-262`, `.strict()` with a `superRefine` at
@@ -321,7 +378,9 @@ The persisted record is `PersistedOatDispatchRecordV1` — the generic record
 `initialOatRecord()` and filled from validated evidence events
 (`oatDispatchEvidenceEventSchema`, `:620-662`). Caller-supplied evidence lands
 in `oat`; recorder-observed facts have no home there yet, which is the gap this
-plan fills.
+plan fills. `oat-dispatch-record.test.ts:760-800` and `:940-980` construct
+`oat` blocks inline as parse-rejection fixtures; because the new slot defaults,
+those literals keep parsing without edits.
 
 ### Weaker-anywhere rule
 
@@ -330,16 +389,16 @@ change and **accepted** after it is a Critical regression, and issue #265's
 third acceptance criterion says so directly ("A genuinely stale or unrelated
 base mismatch is still rejected before any implementation edit"). Concretely:
 
-- `.agents/agents/oat-phase-implementer.md:344-347` must keep "HEAD exactly
-  equals `phase_base_head`" and "Never use ancestry from `expected_base_sha` as
-  a substitute", byte-for-byte, and `skills.test.ts:3345-3347` must keep
-  matching it.
-- No clause may permit a descendant of `phase_base_head`, an ancestry check, or
-  a "recent enough" tolerance. The fix moves _when_ the baseline is captured; it
-  never relaxes _what_ is compared.
-- The new `executionBaseline` evidence must be additive: a record without it
-  stays valid, and its presence must never cause a base state to be accepted
-  that would otherwise be rejected.
+- `.agents/agents/oat-phase-implementer.md` is not in the diff at all
+  (`git diff --quiet HEAD -- .agents/agents/oat-phase-implementer.md` exits 0),
+  and `skills.test.ts:3345-3347` keeps matching it.
+- No clause added to `phase-execution.md` or either `SKILL.md` may permit a
+  descendant of `phase_base_head`, an ancestry check, or a "recent enough"
+  tolerance. The fix moves _when_ the baseline is captured; it never relaxes
+  _what_ is compared.
+- The new `observedHead` evidence must be additive: a record without it stays
+  valid, and its presence must never cause a base state to be accepted that
+  would otherwise be rejected.
 
 ## Implementation steps
 
@@ -347,29 +406,43 @@ base mismatch is still rejected before any implementation edit"). Concretely:
 
 In a `mktemp -d` scratch directory, `git init` a repo containing a minimal OAT
 project directory with a `state.md`. Capture `BASE_BEFORE=$(git rev-parse
-HEAD)`. Run the built CLI to write a dispatch record into
-`<project>/dispatch/`, `git add` and commit it, then capture
-`HEAD_AFTER=$(git rev-parse HEAD)`. Assert `BASE_BEFORE != HEAD_AFTER`, and that
-a check of the form `[ "$(git rev-parse HEAD)" = "$BASE_BEFORE" ]` — the exact
-shape of `oat-phase-implementer.md:344` — fails.
+HEAD)`. Run the built CLI
+(`node packages/cli/dist/index.js project dispatch record --project <dir> --event-file <event.json> --json`,
+after `pnpm build`) to write a dispatch record into `<project>/dispatch/`,
+`git add` and commit it, then capture `HEAD_AFTER=$(git rev-parse HEAD)`.
+Assert `BASE_BEFORE != HEAD_AFTER`, and that a check of the form
+`[ "$(git rev-parse HEAD)" = "$BASE_BEFORE" ]` — the exact shape of
+`oat-phase-implementer.md:343` — fails. Use a valid record and event; the
+`## Record` example in `record-schema.md:113` is the shape.
 
 **Verify:** the script prints two different SHAs and the equality check exits
-non-zero. This is the red half of the regression in Step 7 and the evidence that
-the reordering is necessary rather than cosmetic.
+non-zero. This is the red half of the regression in Step 7 and the synthetic
+twin of the p06 occurrence cited above.
 
-### 2. Add the `executionBaseline` slot to the namespaced evidence block
+### 2. Add the `observedHead` slot to the namespaced evidence block
 
 In `packages/cli/src/providers/identity/oat-dispatch-record.ts`:
 
-1. Define an `executionBaselineSchema` as a discriminated union on `status`:
-   - `{ status: 'observed', sha: /^[0-9a-f]{40}$/, tree_clean: boolean, observed_at: z.string().datetime() }`
-   - `{ status: 'unobserved', reason: <bounded identifier>, observed_at: z.string().datetime() }`
+1. Define an `observedHeadSchema` as a discriminated union on `status`:
+   - `{ status: 'observed', sha: z.string().regex(/^[0-9a-f]{40}$/), tree_clean: z.boolean(), observed_at: z.string().datetime() }`
+   - `{ status: 'unobserved', reason: z.string().min(1).max(200), observed_at: z.string().datetime() }`
+     (the module's other free-text slots use `z.string().min(1)`, e.g. `:259`;
+     the cap keeps a git error message from bloating the journal)
      Both `.strict()`.
-2. Add `executionBaseline: executionBaselineSchema.nullable().default(null)` to
-   `oatRecordSchema` (`:589-598`) and `executionBaseline: null` to
-   `initialOatRecord()` (`:668-677`). The `.default(null)` keeps every existing
-   persisted record parseable; `oatPart` (`:686-692`) parses stored `oat` blocks
-   and would otherwise reject them.
+2. Add `observedHead: observedHeadSchema.nullable().default(null)` to
+   `oatRecordSchema` (`:589-598`), following the `fallbackClaim` precedent on
+   the line above it, and `observedHead: null` to `initialOatRecord()`
+   (`:668-677`). The `.default(null)` keeps every existing persisted record
+   parseable through `oatPart` (`:686-692`).
+
+The slot's meaning is precise and narrow: **the `HEAD` of the repository
+containing the project at the moment this revision was written, and whether
+its tree was clean.** It is not the child's base; for a foreground host the
+acceptance revision is written after the child finishes, so `sha` will
+normally be the child's last task commit. What it makes auditable is the
+journal-write ordering: a revision whose `sha` equals the phase base proves the
+write did not precede capture, and a revision whose `sha` is a descendant of
+the base proves the child ran before the journal was written.
 
 Do **not** add a generic field. The generic block is immutable across revisions
 (`record.ts:378-383`, `:534-541`) and every generic field must be classified in
@@ -379,36 +452,35 @@ the mutability table asserted by `oat-dispatch-record.test.ts:550-560`.
 → passes, including the mutability-coverage case, which must be unaffected
 because no generic field was added.
 
-### 3. Stamp the observed baseline in the recorder
+### 3. Stamp the observed head in the recorder
 
 In `packages/cli/src/commands/project/dispatch/record.ts`:
 
-1. Add `gitExecFile` to the dependencies the module accepts, defaulting to the
-   real `execFile`, following `packages/cli/src/validation/skills.ts:943-969`.
+1. Add an optional `gitExecFile` member to the `recordProjectDispatch` input
+   object (beside `raceBarriers`, `:502-506`), typed like
+   `ValidateOatSkillsDependencies['gitExecFile']` in `skills.ts`, defaulting to
+   `promisify(execFile)` from `node:child_process`/`node:util` as
+   `skills.ts:1,4,76` does. `index.ts` passes nothing and needs no change.
 2. In `recordProjectDispatch`, when `input.projectPath !== null`, observe the
-   repository containing the project: `git rev-parse HEAD` and
-   `git status --porcelain`. Stamp
-   `oat.executionBaseline = { status: 'observed', sha, tree_clean: <porcelain
+   repository containing the project with `cwd: projectPath`:
+   `git rev-parse HEAD` and `git status --porcelain`. Stamp
+   `oat.observedHead = { status: 'observed', sha, tree_clean: <porcelain
 output is empty>, observed_at }`. On any git failure — not a repository, git
-   absent, non-zero exit — stamp
+   absent, non-zero exit, unparsable SHA — stamp
    `{ status: 'unobserved', reason, observed_at }` and continue. Recording is
    evidence collection; it must never become a new way for a dispatch to fail.
 3. Stamp it on **every** published revision, so a later revision records the
-   baseline as of its own write. The `oat` block is exempt from the generic
+   head as of its own write. The `oat` block is exempt from the generic
    immutability comparison (`genericPart` strips it at `record.ts:371-376`), so
    this does not collide with `sameGenericRecord`.
-4. The stamp is recorder-owned. If the caller supplies `oat.executionBaseline`
-   in its input, the recorder overwrites it; the value is an observation, not a
-   claim. That is what makes the ordering auditable "without inferring
+4. The stamp is recorder-owned. If the caller's input carries an
+   `oat.observedHead`, the recorder overwrites it; the value is an observation,
+   not a claim. That is what makes the ordering auditable "without inferring
    provenance" (issue #265, fourth acceptance criterion).
-
-Wire the dependency through `packages/cli/src/commands/project/dispatch/index.ts`
-alongside the existing `ProjectDispatchCommandDependencies` members.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch`
 → passes, and a manual run against the Step 1 scratch repo produces a journal
-file whose `oat.executionBaseline.sha` equals `git rev-parse HEAD` at write
-time.
+file whose `oat.observedHead.sha` equals `git rev-parse HEAD` at write time.
 
 ### 4. Reorder the phase launch sequence
 
@@ -416,8 +488,10 @@ In `.agents/skills/oat-project-implement/references/phase-execution.md`, rewrite
 the numbered sequence at `:54-60` so that:
 
 1. every mandatory prelaunch journal and bookkeeping write for this phase — the
-   `implementation.md` run anchor and any `state.md` transition the launch
-   requires — is written **and committed** first;
+   step-3 dispatch stamp and run anchor in `implementation.md`, and any
+   `state.md` transition the launch requires — is written **and committed**
+   first, as the mandatory bookkeeping commit `SKILL.md:101-102` already
+   requires;
 2. `PHASE_BASE_HEAD=$(git rev-parse HEAD)` is then recorded on a clean worktree
    (the existing step 4 text, moved, not reworded);
 3. the Phase Scope is sent with `phase_base_head` and `expected_base_sha` as
@@ -432,34 +506,34 @@ deferred to the phase-outcome bookkeeping.
 
 In `.agents/skills/oat-project-implement/SKILL.md`, extend the bullet at
 `:51-54` so the deferral covers the dispatch record's commit as well as the
-project-log append, and say it is the same rule stated at `:47-49`.
+project-log append, and say it is the same rule stated at `:47-49` and applied
+at `:64-67`.
 
 In `.agents/skills/oat-dispatch-subagents/SKILL.md`, add to the launch contract
-that the caller resolves any execution baseline **after** its mandatory
-prelaunch journaling has been committed, and that the recorder stamps the
-baseline it observed into `oat.executionBaseline`.
+(`:140-149`) that the caller resolves any execution baseline **after** its
+mandatory prelaunch journaling has been committed, and that the recorder stamps
+the head it observed into `oat.observedHead`.
 
 Document the slot in
-`.agents/skills/oat-dispatch-subagents/references/record-schema.md` next to the
-existing `launch_status` examples (`:105`, `:150`, `:185`, `:222`, `:226`).
+`.agents/skills/oat-dispatch-subagents/references/record-schema.md` in the
+`## Record` section (`:113`), next to the existing `launch_status` examples
+(`:150`, `:185`), with both the `observed` and `unobserved` shapes.
 
 **Verify:** `grep -n 'PHASE_BASE_HEAD' .agents/skills/oat-project-implement/references/phase-execution.md`
-→ the capture appears after the journaling step and before the scope send;
+→ the capture appears after the journaling-and-commit step and before the
+scope send;
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
 → passes (pins updated in Step 8).
 
-### 5. State the consumer side without weakening it
+### 5. Confirm the consumer side is untouched
 
-In `.agents/agents/oat-phase-implementer.md`, keep `:344-347` byte-for-byte and
-add, adjacent to it: `phase_base_head` is the baseline the root resolved after
-its mandatory launch journaling; when the dispatch record carries
-`oat.executionBaseline`, a `status: 'unobserved'` or `tree_clean: false` value
-means the baseline was not authoritative at journal time and the phase parks for
-direction rather than proceeding on a guess.
+Run `git diff --quiet HEAD -- .agents/agents/oat-phase-implementer.md`. This
+plan makes no edit there (see `## Scope`); the step exists so the executor
+proves it rather than assumes it.
 
-**Verify:** `git diff .agents/agents/oat-phase-implementer.md` shows only
-additions plus the `version:` line; the pinned regex at
-`skills.test.ts:3345-3347` still matches.
+**Verify:** exit 0, and
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t 'phase-implementer'`
+still passes the `:3345-3347` pin.
 
 ### 6. Update the backlog item without closing it
 
@@ -467,6 +541,7 @@ In `.oat/repo/pjm/backlog/items/BL-260906-harden-dispatch-launch.md`, tick the
 two acceptance criteria that name issue #265 and leave the two that name #266
 untouched. Add a dated note recording that #265 landed and that the item stays
 open until #266 does. Leave `status: open`. Do not run `oat backlog archive`.
+The `external_plans` link to this plan is already present; do not duplicate it.
 
 **Verify:** `grep -n 'status:' .oat/repo/pjm/backlog/items/BL-260906-harden-dispatch-launch.md`
 → `status: open`; the two #266 criteria remain unticked.
@@ -481,32 +556,30 @@ tree, with both exit codes recorded.
 
 ### 8. Bump the changed skills and move the pins
 
-Bump once per changed skill: `oat-project-implement` `2.3.7` → `2.3.8`
-(`metadata.version`); `oat-dispatch-subagents` `1.2.7` → `1.2.8`
-(`metadata.version`); `oat-phase-implementer` `1.1.5` → `1.1.6` (**top-level**
-`version:`, per `DR-260908-bundled-skills-declare`, which leaves agent roles
-unmigrated). Then sweep each old literal in plain and regex-escaped form across
+Bump once per changed skill: `oat-project-implement` `2.3.7` → `2.3.8` and
+`oat-dispatch-subagents` `1.2.7` → `1.2.8`, both in `metadata.version`. No agent
+role changes. Then sweep each old literal in plain and regex-escaped form across
 `packages/cli/src`, `tools/smoke`, and `.agents/skills/*/tests`, and move only
 the hits that belong to the bumped file.
 
-Expected pins: `2.3.7` at `skills.test.ts:1983`, `:2464`, `:2773`, `:2847`,
-`:3339`, `:4547`, `:5870`, `:7953`; `1.2.7` at `:5947`, `:6106`; `1.1.5` at
-`:3026`, `:3334`, `:6017`, `:7954` — and **not** at `:5950`, which pins an
-unrelated adapter at the same literal. Add one pin asserting the new ordering
-clause in `phase-execution.md`, so the standing claim has an executable backstop
+Expected pins (verified at the inspected `HEAD`): `2.3.7` at
+`skills.test.ts:1983`, `:2464`, `:2773`, `:2847`, `:3339`, `:4547`, `:5870`,
+`:7953`; `1.2.7` at `:5947`, `:6106`. `1.1.5` is **not** swept: this plan does
+not bump `oat-phase-implementer`. Add one pin asserting the new ordering clause
+in `phase-execution.md` (a regex over "PHASE_BASE_HEAD" following the
+journal-commit sentence), so the standing claim has an executable backstop
 (`DR-260906-standing-claims-in-skills-name`).
 
 **Verify:**
 
 ```bash
-for v in 2.3.7 1.2.7 1.1.5; do
+for v in 2.3.7 1.2.7; do
   echo "== $v"
   grep -rn --fixed-strings "$v" packages/cli/src tools/smoke .agents/skills/*/tests || true
 done
 ```
 
-→ the only remaining `1.1.5` hit is `skills.test.ts:5950` (the adapter);
-`2.3.7` and `1.2.7` have no hits. `pnpm run check:skill-bumps` → exit 0.
+→ no hits. `pnpm run check:skill-bumps` → exit 0 with two changed skills.
 
 ### 9. Run the lane gates
 
@@ -536,7 +609,7 @@ built on the `git init` fixture pattern in
    `postJournalHead`. Assert `preJournalHead !== postJournalHead`, that the
    baseline resolved _after_ the commit equals `postJournalHead`, and that the
    exact-equality check `HEAD === phase_base_head` — the shape at
-   `oat-phase-implementer.md:344` — passes for the post-journal baseline.
+   `oat-phase-implementer.md:343` — passes for the post-journal baseline.
    **Red control:** resolve the baseline before the journal commit (the pre-fix
    order); the same equality check must fail. Record both exit states.
 2. `a genuinely stale base is still rejected` — the weaker-anywhere control.
@@ -545,14 +618,17 @@ built on the `git init` fixture pattern in
    fail if anyone relaxes the check to an ancestry test — prove it by
    temporarily substituting `git merge-base --is-ancestor` and observing the
    case go green, then restore.
-3. `records the observed baseline on a dirty tree as not clean` — write an
+3. `records the observed head on a dirty tree as not clean` — write an
    uncommitted file, publish a revision, assert
-   `oat.executionBaseline.tree_clean === false`. **Red control:** neutralize the
+   `oat.observedHead.tree_clean === false`. **Red control:** neutralize the
    `git status --porcelain` observation in Step 3; the case must fail.
-4. `records an unobserved baseline outside a git repository` — publish into a
+4. `records an unobserved head outside a git repository` — publish into a
    project directory in a non-git temp dir; assert
-   `oat.executionBaseline.status === 'unobserved'` and that the publish still
+   `oat.observedHead.status === 'unobserved'` and that the publish still
    succeeds. **Red control:** make the git failure throw; the case must fail.
+5. `overwrites a caller-supplied observedHead` — pass an input whose `oat`
+   carries a fabricated `observedHead`; assert the persisted value is the
+   recorder's. **Red control:** skip the overwrite; the case must fail.
 
 **Changed cases**
 
@@ -564,12 +640,14 @@ built on the `git init` fixture pattern in
   before this change still parses.
 - `packages/cli/src/commands/project/dispatch/record.test.ts` — add a case
   proving that a second revision of the same `request_id` carrying a **different**
-  `oat.executionBaseline` is accepted while a changed generic field is still
+  `oat.observedHead` is accepted while a changed generic field is still
   rejected with `Existing generic fields are immutable and cannot be redefined.`
-  **Red control:** move the field into the generic block; the case must fail
-  with that exact message.
-- `packages/cli/src/validation/skills.test.ts` — pins at the eight `2.3.7`, two
-  `1.2.7`, and four `1.1.5` sites listed in Step 8, plus one new assertion that
+  Existing cases in this file publish into non-git temp dirs and now see
+  `status: 'unobserved'`; any that `toEqual` a whole `oat` block gain the new
+  key. **Red control:** move the field into the generic block; the case must
+  fail with that exact message.
+- `packages/cli/src/validation/skills.test.ts` — pins at the eight `2.3.7` and
+  two `1.2.7` sites listed in Step 8, plus one new assertion that
   `phase-execution.md` states the post-journal ordering. **Red control:** delete
   the ordering sentence from the skill; the new assertion must fail.
 
@@ -585,24 +663,30 @@ replay.
 
 ## Done criteria
 
-- [ ] `phase-execution.md` records `PHASE_BASE_HEAD` only after mandatory
-      prelaunch journal commits, and forbids a root commit into the child's
-      checkout between capture and the child's base check.
-- [ ] `oat-project-implement/SKILL.md` defers the acceptance dispatch-record
-      commit to the phase-outcome bookkeeping, alongside the project-log append.
-- [ ] `oat.executionBaseline` exists in `oatRecordSchema` and
-      `initialOatRecord()`, defaults to `null`, and is stamped by the recorder
-      from observed git state on every published revision.
+Issue #265's four acceptance criteria, mapped:
+
+- [ ] "The accepted execution baseline is calculated after every required
+      launch-journal commit" — `phase-execution.md` records `PHASE_BASE_HEAD`
+      only after mandatory prelaunch journal commits, and forbids a root commit
+      into the child's checkout between capture and the child's base check;
+      `oat-project-implement/SKILL.md` defers the acceptance dispatch-record
+      commit to the phase-outcome bookkeeping.
+- [ ] "A regression test advances Git `HEAD` through mandatory launch
+      journaling and proves the first authorized dispatch remains valid" —
+      `baseline-ordering.test.ts` case 1 is red on the pre-fix order and green
+      on the post-fix order, with both exit codes recorded.
+- [ ] "A genuinely stale or unrelated base mismatch is still rejected before
+      any implementation edit" — case 2 is red for an unrelated commit, and
+      `.agents/agents/oat-phase-implementer.md` is not in the diff.
+- [ ] "Dispatch and journal receipts make the baseline ordering auditable
+      without inferring provenance" — `oat.observedHead` exists in
+      `oatRecordSchema` and `initialOatRecord()`, defaults to `null`, is stamped
+      by the recorder from observed git state on every published revision, and
+      overrides any caller-supplied value (case 5).
 - [ ] No field was added to `genericDispatchRecordSchema`, and
       `oat-dispatch-record.test.ts:550-560` passes unchanged.
-- [ ] The regression in `baseline-ordering.test.ts` case 1 is red on the pre-fix
-      order and green on the post-fix order, with both exit codes recorded.
-- [ ] The stale-base control (case 2) is red for an unrelated commit, and
-      `.agents/agents/oat-phase-implementer.md:344-347` is byte-identical apart
-      from adjacent additions.
-- [ ] Three version bumps (`oat-project-implement`, `oat-dispatch-subagents` in
-      `metadata.version`; `oat-phase-implementer` top-level) with all pins moved
-      and `skills.test.ts:5950` left alone.
+- [ ] Two version bumps (`oat-project-implement`, `oat-dispatch-subagents` in
+      `metadata.version`) with all ten pins moved and no `1.1.5` pin touched.
 - [ ] `BL-260906-harden-dispatch-launch` has its two #265 criteria ticked, its
       two #266 criteria untouched, and `status: open`.
 - [ ] `pnpm check`, `pnpm type-check`, forced `turbo run test`,
@@ -616,22 +700,26 @@ Stop and report instead of improvising when:
 
 1. the reordering cannot be expressed without changing what the phase-base check
    compares — the fix moves _when_, never _what_;
-2. any change would make `.agents/agents/oat-phase-implementer.md:344-347`
-   accept a base state it rejects today, including via an ancestry, descendant,
-   or tolerance clause;
-3. the `executionBaseline` slot cannot be added without touching
+2. any change would touch `.agents/agents/oat-phase-implementer.md`, or would
+   make its `:343-348` check accept a base state it rejects today, including via
+   an ancestry, descendant, or tolerance clause;
+3. the `observedHead` slot cannot be added without touching
    `genericDispatchRecordSchema` — that path is closed by generic revision
    immutability and by the mutability-coverage case;
 4. a stored dispatch record from before this change fails to parse;
 5. observing git makes `oat project dispatch record` fail in any environment
    where it succeeds today — recording evidence must never become a launch
    blocker;
-6. work drifts toward issue #266 — terminal outcomes, envelopes, reconciliation
+6. the reordered sequence would only hold for a host that returns after the
+   child finishes, and the executor finds a project-aware launch path that
+   returns a live handle into a shared checkout — that is an acceptance-contract
+   redesign, not this plan;
+7. work drifts toward issue #266 — terminal outcomes, envelopes, reconciliation
    events, or closeout detection for unresolved dispatches;
-7. anyone proposes closing or archiving `BL-260906-harden-dispatch-launch`;
-8. the cited line anchors in `phase-execution.md`, `oat-phase-implementer.md`,
+8. anyone proposes closing or archiving `BL-260906-harden-dispatch-launch`;
+9. the cited line anchors in `phase-execution.md`, `oat-project-implement/SKILL.md`,
    or `record.ts` no longer match after the drift check;
-9. a named verification gate fails twice after one bounded correction.
+10. a named verification gate fails twice after one bounded correction.
 
 ## Revalidation Before Execution
 
@@ -639,7 +727,7 @@ Revalidate against live state before executing when:
 
 - substantial time passes after `2026-09-08`;
 - `origin/main` advances materially from
-  `c9f2e147ac0674e73a60735e0c1727ccc6048756`;
+  `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`;
 - PR #190 lands — it rewrites `oat-project-implement/SKILL.md`,
   `phase-execution.md`, and `skills.test.ts`, invalidating most anchors here;
 - issue #266 is planned or lands, changing the shared `oat` evidence block;
@@ -665,24 +753,29 @@ the lockstep public package version bump and the release gates
 this lane must not run them. A root review follows the lane.
 
 Because this lane writes `packages/cli/src/validation/skills.test.ts`, it must be
-serialized against the sibling lanes named in `## Dependencies`.
+serialized against the seven sibling lanes named in `## Dependencies`. It edits
+no `.agents/agents/*.md` file, so the agent-role gate introduced by the
+`tighten-the-skill-version-validators` lane does not apply to it.
 
 ## Review focus
 
-- **Weaker-anywhere on the phase-base check.** Diff
-  `.agents/agents/oat-phase-implementer.md` and confirm `:344-347` is unchanged
-  and that nothing added nearby creates an escape hatch. This is the criterion
-  issue #265 states explicitly and the one a reordering fix is most likely to
-  violate by accident.
+- **Weaker-anywhere on the phase-base check.** Confirm
+  `.agents/agents/oat-phase-implementer.md` is absent from the diff and that
+  nothing added to `phase-execution.md` or either `SKILL.md` creates an escape
+  hatch. This is the criterion issue #265 states explicitly and the one a
+  reordering fix is most likely to violate by accident.
 - **Ordering, not tolerance.** Read the rewritten sequence in
   `phase-execution.md` and confirm the baseline is captured after the journal
   commit rather than the check being loosened to accept a moved `HEAD`.
-- **Namespaced vs generic placement.** Confirm the baseline landed in the `oat`
+- **Namespaced vs generic placement.** Confirm the slot landed in the `oat`
   block and that `genericDispatchRecordSchema` is untouched; a generic field
   would be silently rejected on any second revision of the same request.
-- **Recorder-owned evidence.** Confirm a caller-supplied
-  `oat.executionBaseline` is overwritten rather than trusted; otherwise the
-  audit trail is a claim, which is what the issue asks to eliminate.
+- **Recorder-owned evidence.** Confirm a caller-supplied `oat.observedHead` is
+  overwritten rather than trusted (case 5); otherwise the audit trail is a
+  claim, which is what the issue asks to eliminate.
+- **Naming honesty.** Confirm the slot is documented as "the head observed at
+  journal-write time", not as the child's baseline; the two coincide only for
+  a prelaunch revision.
 - **Backward compatibility.** Confirm a record written before this change still
   parses, and that publishing outside a git repository still succeeds.
 - **Scope discipline.** Confirm nothing in the diff addresses issue #266, and

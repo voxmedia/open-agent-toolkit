@@ -4,8 +4,8 @@ oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260906-persist-status-native-skill.md
-oat_external_plan_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
-oat_external_plan_main_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
+oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
+oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
 oat_execution_status: READY
 oat_backlog_items:
@@ -25,18 +25,22 @@ created: '2026-09-08T21:20:00Z'
 > If a STOP condition occurs, stop and report instead of improvising.
 
 > [!IMPORTANT]
-> **Execution status: READY.** No unsatisfied hard dependency. Read the
+> **Execution status: READY.** No unsatisfied hard dependency, and no wave-7
+> sibling plan writes `commands/status/` or `commands/shared/`. Read the
 > "Correction to the source item" section before doing anything else: the
 > item's stated failure mode is not the one in the code, and this plan is
-> written against what the code actually does.
+> written against what the code actually does. It is a consistency fix plus
+> pins, not a data-loss fix; size XS–S.
 
 ## Outcome
 
 `oat status`'s interactive native-skill adoption path stops discarding the
 manifest value it just computed. Both `adopt` call sites set `manifestChanged`,
 so the manifest save at `status/index.ts:1539-1542` runs for a scope whose only
-migration was a native adoption — matching `oat init`, which has always saved
-unconditionally (`init/index.ts:1271`) — and the pre-save restamp advisory fires
+migration was a native adoption — matching `oat init`, which saves
+unconditionally after its migration loops (`init/index.ts:1271`), and
+`oat sync`, which saves even after a successful no-operation apply
+(`engine/execute-plan.ts:970-976`) — and the pre-save restamp advisory fires
 exactly once, before the save, on that path too. A disk-backed test drives the
 real `applyNativeSkillDisposition` and the real `saveManifest` against a
 temporary project root, re-reads `.oat/sync/manifest.json` from disk, and pins
@@ -48,7 +52,7 @@ abort-path guarantees (no advisory, no save) stay pinned and unchanged.
 
 Two of the item's three acceptance criteria are unachievable as written,
 because their shared premise is false. Verified at
-`c9f2e147ac0674e73a60735e0c1727ccc6048756`:
+`a594614024725979ebf24bd9a34b3565c30fbffb`:
 
 - The item says the adopt loop "mutates the in-memory manifest" and that the
   "adopted entry" is dropped. It is not. `applyNativeSkillDisposition`
@@ -62,14 +66,26 @@ because their shared premise is false. Verified at
   (`native-skill-disposition.ts:36-59`). So the native adopt path adds **no**
   manifest entry, and nothing is being dropped.
 - **Executable proof.** Against the built CLI
-  (`packages/cli/dist/index.js`, `0.2.65`) in a `mktemp -d` scratch tree
-  containing `.cursor/skills/adopt-me/SKILL.md`, calling
+  (`packages/cli/dist/index.js`, `0.2.66`) in a `mktemp -d` scratch tree
+  containing `.cursor/skills/adopt-me/SKILL.md`, an ESM probe importing
+  `adoptStrayToCanonical` from `packages/cli/dist/commands/shared/adopt-stray.js`
+  and `CURSOR_PROJECT_MAPPINGS` from `packages/cli/dist/providers/cursor/paths.js`,
+  calling
   `adoptStrayToCanonical(root, {provider:'cursor', report:{providerPath:'.cursor/skills/adopt-me'}, mapping}, manifest, {})`
   with the real Cursor project skill mapping
   (`{contentType:'skill', canonicalDir:'.agents/skills', providerDir:'.agents/skills', nativeRead:true, adoptionSourceDirs:['.cursor/skills']}`)
-  printed `entries after adopt: []` and `same object as input: true`, while the
+  printed `entries after adopt: [] same object as input: true`, while the
   tree showed `.agents/skills/adopt-me/SKILL.md` present and
   `.cursor/skills/adopt-me` gone.
+- **The invariant is already pinned**, contrary to the draft of this plan:
+  `packages/cli/src/commands/shared/adopt-stray.test.ts:148-186` ("moves a
+  native-read Cursor skill without recreating a provider view or manifest
+  row") and `:188-225` ("removes an identical native-read Cursor duplicate")
+  both call `adoptStrayToCanonical` with the real Cursor mapping and assert
+  `manifest.entries` has length 0 afterwards. What they do not assert is that a
+  **non-empty** input manifest comes back unchanged and as the same object; Step
+  1 strengthens the first case to say exactly that, rather than adding a new
+  one.
 - Therefore AC1's "the adopted entry persists (re-read from disk in the test)"
   has no entry to persist, and AC2's "a control shows the pre-fix tree dropping
   the entry and reporting the skill as a stray on the next `oat status`" cannot
@@ -80,25 +96,35 @@ because their shared premise is false. Verified at
   `scopeCollection.manifest = await dependencies.applyNativeSkillDisposition(...)`
   at `:1352-1359` and `:1404-1412` and then throws that value away unless an
   _ordinary_ stray also happened to set the flag. Today that is harmless; it is
-  harmless only because of an invariant nothing in the test suite states. It is
-  a latent defect and an honesty defect, not a live data-loss bug.
+  harmless only because of the `nativeRead` early return. It is a latent
+  defect and an honesty defect, not a live data-loss bug. It is also the one
+  place in the CLI where a completed migration does **not** persist and
+  restamp the manifest: `oat init` saves unconditionally (`init/index.ts:1271`)
+  and `oat sync` saves even when the plan applied nothing
+  (`execute-plan.ts:970-976`). Setting the flag makes status follow the same
+  rule.
 
 This plan therefore keeps the item's fix (set the flag) and its third criterion
 (pin the restamp behavior) verbatim, replaces AC1 and AC2 with criteria that are
-achievable and stronger, and adds the missing executable pin on the
+achievable and stronger, and strengthens the existing executable pin on the
 `nativeRead` neutrality invariant so that a future change to `adopt-stray.ts`
-cannot silently reintroduce the loss the item feared.
+cannot silently reintroduce the loss the item feared. The source item carries a
+planning note recording this correction.
 
 ## Source and live evidence
 
 - Source backlog item:
   [BL-260906-persist-status-native-skill — Persist status native-skill adoption by setting manifestChanged](../../pjm/backlog/items/BL-260906-persist-status-native-skill.md)
-- Inspected `HEAD`: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the tree whose
-  content this plan read.
-- Comparison baseline: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the fetched
-  `origin/main` tip; identical to the inspected `HEAD` on this planning branch.
+- Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
+  content this plan read (branch `wave-7-plans`, rebased onto `origin/main`).
+- Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched
+  `origin/main` tip (PR #273 merged), which is also the merge-base with `HEAD`.
+  Between `c9f2e147a` (the draft's baseline) and this `HEAD`, no file this plan
+  reads or writes changed.
 - Planning date: `2026-09-08`
-- Working tree while planning: `git status --porcelain` was empty.
+- Working tree while planning: `git status --porcelain` was empty apart from
+  the wave-7 plan files under `.oat/repo/reference/external-plans/` and their
+  source backlog items.
 - Verified evidence:
   - `packages/cli/src/commands/status/index.ts:1315` — `let manifestChanged = false;`
     is declared once per `scopeCollection`.
@@ -113,65 +139,79 @@ cannot silently reintroduce the loss the item feared.
     `--json`; `:1539-1542` — the single status-owned `saveManifest` call. (The
     item cites `:1527-1534`; the gate opens at `:1527` and the save is
     `:1539-1542`.)
-  - `packages/cli/src/commands/init/index.ts:1271` — `oat init` runs
+  - `packages/cli/src/commands/init/index.ts:1266-1271` — `oat init` emits the
+    same advisory and then runs
     `await dependencies.saveManifest(manifestPath, manifest);` unconditionally
-    after the same two loops, so init and status already disagree about whether
-    a native-only adoption warrants a write. That is the exemplar for the fixed
-    behavior.
+    after its loops. `packages/cli/src/engine/execute-plan.ts:970-976` —
+    `oat sync` saves when entries applied **or** when the plan was a
+    successful no-operation. That is the convention the fixed status path
+    joins.
   - `packages/cli/src/commands/shared/native-skill-disposition.ts:88-94` — an
     `adopt` delegates to `adoptStrayToCanonical`; a `keep` writes the sync
     config through `appendKnownStray` and returns the manifest untouched. So the
     `keep` disposition must **not** set the flag.
   - `packages/cli/src/commands/shared/adopt-stray.ts:140-142` — the
     `nativeRead` early return, reproduced above.
-  - `packages/cli/src/manifest/manager.ts:69-93` —
+  - `packages/cli/src/commands/shared/adopt-stray.test.ts:148-186,188-225` —
+    the two existing native-read cases, each asserting
+    `expect(manifest.entries).toHaveLength(0)` on an empty input manifest.
+  - `packages/cli/src/manifest/manager.ts:69-81` —
     `detectManifestVersionRestamp` compares `manifest.oatVersion` to
-    `OAT_VERSION` by plain string inequality, and
+    `OAT_VERSION` by plain string inequality; `:90-95` —
     `formatManifestVersionRestampWarning` renders the advisory. `saveManifest`
     unconditionally restamps `oatVersion`, which is why the advisory must be
     emitted before the save.
-  - `packages/cli/src/commands/status/index.test.ts:794-937` — the existing
-    `manifest version restamp advisory` block. Its four cases pin: the advisory
-    fires before the ordinary-stray save (`:811-830`); it is silent when the
-    producing version matches (`:832-847`); it is silent and no save happens
-    when the checklist is aborted (`:849-866`); it is silent and no save happens
-    when the **native** disposition prompt is aborted (`:868-914`); and JSON mode
-    neither mutates nor claims restamp evidence (`:920-937`).
-  - `:1099-1128` ("stops current and remaining status migration processing on
-    abort"), `:1133-1155` (scope-`all` sync config paths), and `:1040-1093`
-    (Copilot adopt-or-keep) all drive the native loop with `keep` or an abort,
-    so **no existing test covers a successful native `adopt`**. Nothing in the
-    suite goes red today, which is exactly why the defect survived.
-  - `packages/cli/src/commands/status/index.test.ts:330-545` — `createHarness`
-    injects every dependency, including `saveManifest`,
-    `applyNativeSkillDisposition`, `loadManifest` and `adoptStray`, all as
-    `vi.fn` stubs. `:1566-1667` is the file's one real-disk case (temp `home`
-    and `project` roots with `useDiskCodexExtension` / `useDiskBundledCodexAgents`
-    opting individual dependencies into their production implementations) — the
-    structural pattern for the new disk-backed option.
+  - `packages/cli/src/commands/status/index.test.ts:794-939` — the existing
+    `manifest version restamp advisory` block. Its five cases pin: the advisory
+    fires before the ordinary-stray save (`:811`); it is silent when the
+    producing version matches (`:833`); it is silent and no save happens when
+    the checklist is aborted (`:850`); it is silent and no save happens when the
+    **native** disposition prompt is aborted (`:869`); and JSON mode neither
+    mutates nor claims restamp evidence (`:920`).
+  - `:982` ("prompts for each Cursor skill with only adopt and keep choices"),
+    `:1047` (the Copilot `it.each` "offers explicit Copilot adoption or
+    keep-local in $scope status"), `:1097` ("stops current and remaining status
+    migration processing on abort"), `:1132` (scope-`all` sync config paths),
+    `:1159` (keep-local name collisions), and `:1187` (unavailable adoption
+    source) all drive the native loop with `keep`, an abort, or an error path.
+    Read each before adding cases: if one of them already asserts on
+    `saveManifest` after a successful native `adopt`, Step 2's "red before"
+    claim must be re-checked. At this `HEAD` none asserts a save on that path,
+    which is why the defect survived.
+  - `packages/cli/src/commands/status/index.test.ts:64-81` — the
+    `createHarness` options interface (`cwd`, `home`, `useDiskCodexExtension`,
+    `useDiskBundledCodexAgents`, `singleSelectResponses`, `manifestOatVersion`);
+    `:398-414` — how the two existing `useDisk…` options swap a `vi.fn` stub for
+    the production implementation; `:494-496` — `loadManifest` is a stub
+    returning `createManifest(manifestEntries, options.manifestOatVersion)`;
+    `:499` — `saveManifest` is the injected `vi.fn`. `:1566-1667` is the file's
+    one real-disk case (temp `home` and `project` roots) — the structural
+    pattern for the new disk-backed option.
   - Only Cursor and Copilot reach the native loop:
     `providers/cursor/paths.ts:9-15` and `providers/copilot/paths.ts:9-15,33-40`
     are the only `contentType: 'skill'` mappings with both `nativeRead: true`
-    and `adoptionSourceDirs`. Codex and Gemini skill mappings are `nativeRead`
-    but declare no `adoptionSourceDirs`, so `getNativeSkillProviderDetails`
-    returns `null` for them and they never enter this loop.
+    and `adoptionSourceDirs` (confirmed by grepping `adoptionSourceDirs` across
+    `providers/*/paths.ts`). Codex and Gemini skill mappings declare no
+    `adoptionSourceDirs`, so `getNativeSkillProviderDetails` returns `null` for
+    them and they never enter this loop.
 
 ## Dependencies
 
-| Type             | Dependency                                                          | Required state                                                             | Current state                                       |
-| ---------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------- |
-| Soft integration | Draft PR #190 (ReviewPlan Stage A), PR #273, PR #125                | Re-run the focused status suite if any merges before this lane integrates. | Open; none of the three touches `commands/status/`. |
-| Soft adjacency   | Any wave-7 lane that also edits `packages/cli/src/commands/status/` | Never run in the same group as this lane.                                  | None known at authoring time.                       |
+| Type             | Dependency                                                                                                 | Required state                                                                | Current state                                                                                    |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Satisfied        | PR #273 (remote project management)                                                                        | Merged before this lane starts.                                               | Merged 2026-09-08 (`7d70ac307`); touches no file this plan reads or writes.                      |
+| Soft integration | Draft PR #190 (ReviewPlan Stage A), PR #125 (brainstorm companion)                                         | Re-run the focused status suite if either merges before this lane integrates. | Open; neither touches `commands/status/` or `commands/shared/`.                                  |
+| Soft adjacency   | Any wave-7 lane that also edits `packages/cli/src/commands/status/` or `packages/cli/src/commands/shared/` | Never run in the same group as this lane.                                     | None: no other `2026-09-08-*.md` plan lists either directory in its In scope (swept 2026-09-08). |
 
 There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                      | Affected | Files in common | Required update                                  |
-| ------------------------------------------ | -------- | --------------- | ------------------------------------------------ |
-| PR #273 (remote project management) merges | None     | None            | Re-run the drift check; no plan change expected. |
-| Draft PR #190 (ReviewPlan Stage A) merges  | None     | None            | Re-run the drift check; no plan change expected. |
-| PR #125 (brainstorm companion) merges      | None     | None            | No action.                                       |
+| Event                                      | Affected | Files in common                                                                                                                                                    | Required update                                  |
+| ------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| PR #273 (remote project management) merged | None     | None — **merged; verified** at `7d70ac307`: its diff touches nothing under `commands/status/`, `commands/shared/`, `commands/init/`, `manifest/`, or `providers/`. | Done. Every anchor above was re-read post-merge. |
+| Draft PR #190 (ReviewPlan Stage A) merges  | None     | None                                                                                                                                                               | Re-run the drift check; no plan change expected. |
+| PR #125 (brainstorm companion) merges      | None     | None                                                                                                                                                               | No action.                                       |
 
 ## Drift check
 
@@ -179,7 +219,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat c9f2e147ac0674e73a60735e0c1727ccc6048756..origin/main -- packages/cli/src/commands/status/index.ts packages/cli/src/commands/status/index.test.ts packages/cli/src/commands/shared/native-skill-disposition.ts packages/cli/src/commands/shared/adopt-stray.ts packages/cli/src/commands/shared/adopt-stray.test.ts packages/cli/src/commands/init/index.ts packages/cli/src/manifest/manager.ts packages/cli/src/providers/cursor/paths.ts packages/cli/src/providers/copilot/paths.ts
+git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..HEAD -- packages/cli/src/commands/status/index.ts packages/cli/src/commands/status/index.test.ts packages/cli/src/commands/shared/native-skill-disposition.ts packages/cli/src/commands/shared/adopt-stray.ts packages/cli/src/commands/shared/adopt-stray.test.ts packages/cli/src/commands/init/index.ts packages/cli/src/engine/execute-plan.ts packages/cli/src/manifest/manager.ts packages/cli/src/manifest/index.ts packages/cli/src/providers/cursor/paths.ts packages/cli/src/providers/copilot/paths.ts
 ```
 
 Expected on an unchanged base: no output. If `status/index.ts` changed, re-locate
@@ -192,7 +232,7 @@ the item's original premise true, and the plan must be revalidated.
 ## Repository conventions
 
 - Build: `pnpm build` → `Tasks: … successful`. Required before `pnpm test:smoke`
-  or `pnpm test:release`.
+  or `pnpm test:release`, and before Step 0's `dist/` probe.
 - Typecheck: `pnpm type-check` → exit 0.
 - Focused test: from `packages/cli`,
   `pnpm exec vitest run src/commands/status/index.test.ts src/commands/shared/adopt-stray.test.ts`
@@ -203,20 +243,23 @@ the item's original premise true, and the plan must be revalidated.
 - Implementation pattern: the ordinary-stray assignments at
   `status/index.ts:1452` and `:1489` are the shape to mirror; `oat init`'s
   unconditional save at `init/index.ts:1271` is the reference for what a
-  post-migration write is expected to do; the disk-backed harness pattern is
-  `status/index.test.ts:1566-1667`.
-- Import policy (`packages/cli/AGENTS.md`): `./…` for same-directory modules and
-  a configured TypeScript alias for anything else (`@manifest/…`,
-  `@commands/shared/…`). No `../…`, no `src/…`, no `@/*`. `packages/cli/AGENTS.md`
-  also requires fake-cwd unit harnesses to mock every dependency that writes the
+  post-migration write is expected to do; the `useDisk…` option pattern is
+  `status/index.test.ts:398-414` and the real-disk case is `:1566-1667`.
+- Import policy (`packages/cli/AGENTS.md:26`): `./…` for same-directory modules
+  and a configured TypeScript alias for anything else (`@manifest/…`,
+  `@commands/shared/…` — `packages/cli/tsconfig.json:9-15`). No `../…`, no
+  `src/…`, no `@/*`. `packages/cli/AGENTS.md:32-35` also requires fake-cwd unit
+  harnesses (`cwd: '/tmp/workspace'`) to mock every dependency that writes the
   filesystem — the new disk-backed case deliberately does the opposite and must
-  therefore use a real temp root, never `/tmp/workspace`.
+  therefore use a real `mkdtemp` root, never `/tmp/workspace`.
 - Skill versioning: no `.agents/skills/**` file is edited, so no
-  `metadata.version` bump applies (top-level `version:` has been gone since CLI
-  0.2.65). `pnpm run check:skill-bumps` must still pass.
+  `metadata.version` bump applies (at this `HEAD` all 83 bundled skills carry
+  `metadata.version` and none carries a top-level `version:`).
+  `pnpm run check:skill-bumps` must still pass.
 - `DR-260906-standing-claims-in-skills-name`: the invariant this plan documents
   in a code comment (native-read adoption is manifest-neutral) names its
-  executable owner, the new `adopt-stray.test.ts` case, in the same change.
+  executable owner, the strengthened `adopt-stray.test.ts:148` case, in the
+  same change.
 - Never run `oxfmt` on a `state.md`.
 - **Lane mode (the default for this plan under wave 7).** This plan runs as a
   lane in wave 7, in a worktree at `.worktrees/wave-7/<lane>`, with a root
@@ -244,8 +287,9 @@ logs` or `>>> FULL TURBO` executed nothing. Use
 - `packages/cli/src/commands/status/index.test.ts` — a new
   `useDiskManifestPersistence` harness option and the new cases named in the
   Test plan.
-- `packages/cli/src/commands/shared/adopt-stray.test.ts` — one new case pinning
-  the `nativeRead` manifest-neutrality invariant.
+- `packages/cli/src/commands/shared/adopt-stray.test.ts` — strengthen the
+  existing `:148` case to pin the `nativeRead` manifest-neutrality invariant on
+  a non-empty manifest.
 
 ### Out of scope
 
@@ -254,8 +298,9 @@ logs` or `>>> FULL TURBO` executed nothing. Use
   (the provider reads `.agents/skills` directly, so there is nothing to track).
   Changing it would add manifest entries for views OAT does not project and is a
   separate design decision, not this plan.
-- `packages/cli/src/commands/init/index.ts` — already saves unconditionally;
-  read it as the exemplar, do not edit it.
+- `packages/cli/src/commands/init/index.ts` and
+  `packages/cli/src/engine/execute-plan.ts` — already save after a completed
+  run; read them as the exemplar, do not edit them.
 - The ordinary-stray loop, the Codex/Cursor regeneration block at `:1497-1525`,
   and the `keep` disposition — untouched.
 - `packages/cli/src/manifest/manager.ts` — the restamp semantics are pinned, not
@@ -269,7 +314,7 @@ logs` or `>>> FULL TURBO` executed nothing. Use
 
 `runStatus` collects one `scopeCollection` per resolved scope, each carrying its
 own `manifest`, `manifestPath`, and `versionRestamp`
-(`status/index.ts:1200-1208`). When strays exist and the run is interactive, it
+(`status/index.ts:1197-1209`). When strays exist and the run is interactive, it
 partitions the scope's stray candidates into native-skill candidates (Cursor and
 Copilot skills, identified by a `nativeRead` skill mapping with
 `adoptionSourceDirs`) and ordinary strays, prompts per native skill with
@@ -284,11 +329,13 @@ comment at `:1528-1530` explains the placement of the advisory relative to the
 save and is correct as far as it goes; it simply never fires on this path.
 
 Today that omission loses nothing, because a `nativeRead` adoption returns the
-manifest object unchanged. But nothing in the repository states that invariant,
-and the code at `:1352` and `:1404` is written as though the returned manifest
-could differ. Setting the flag makes the two loops consistent with each other
-and with `oat init`, and pinning the invariant makes the harmlessness a checked
-fact rather than an accident.
+manifest object unchanged, and `adopt-stray.test.ts:148-225` already says so
+for an empty manifest. But the code at `:1352` and `:1404` is written as though
+the returned manifest could differ, and every other completed migration in the
+CLI (init, sync) persists and restamps. Setting the flag makes the native loop
+consistent with the ordinary loop, with `oat init`, and with `oat sync`, and
+strengthening the invariant pin makes the harmlessness a checked fact on a
+non-empty manifest rather than an accident.
 
 ## Implementation steps
 
@@ -297,11 +344,11 @@ fact rather than an accident.
 Re-run the executable proof from "Correction to the source item": build the CLI
 (`pnpm build`), then in a `mktemp -d` scratch directory (never `rm -rf` a
 variable path — let the OS reclaim the temp dir) create
-`.cursor/skills/adopt-me/SKILL.md` and `.agents/skills/`, import
-`adoptStrayToCanonical` from `packages/cli/dist/commands/shared/adopt-stray.js`
-and the Cursor project skill mapping from
-`packages/cli/dist/providers/cursor/paths.js`, and call it with an empty
-manifest.
+`.cursor/skills/adopt-me/SKILL.md`, `.agents/skills/`, and `.git/`, write a
+small `.mjs` probe that imports `adoptStrayToCanonical` from
+`packages/cli/dist/commands/shared/adopt-stray.js` and `CURSOR_PROJECT_MAPPINGS`
+from `packages/cli/dist/providers/cursor/paths.js`, and call it with the
+`contentType === 'skill'` mapping and an empty manifest.
 
 **Verify:** the returned manifest has `entries.length === 0` and is the same
 object that was passed in; `.agents/skills/adopt-me/SKILL.md` exists and
@@ -309,28 +356,32 @@ object that was passed in; `.agents/skills/adopt-me/SKILL.md` exists and
 has changed, the source item's original premise may now be true, and this plan
 must be revalidated before any edit.
 
-### 1. Pin the native-read neutrality invariant first
+### 1. Strengthen the native-read neutrality pin
 
-Add a case to `packages/cli/src/commands/shared/adopt-stray.test.ts`:
-`returns the manifest unchanged when the mapping is natively read`. Seed a temp
-root with a provider skill directory, call `adoptStrayToCanonical` with a
-`nativeRead: true` skill mapping, and assert the returned manifest has the same
-entries as the input (and that the directory moved to the canonical location and
-no symlink was created back at the provider path). Write it before the
-production change so the invariant is recorded independently of the flag.
+In `packages/cli/src/commands/shared/adopt-stray.test.ts`, change the existing
+case at `:148` ("moves a native-read Cursor skill without recreating a provider
+view or manifest row") so the input manifest is **non-empty** (one unrelated
+entry) and the assertions are: the returned value `toBe(input)` (same object),
+`entries` deep-equal the input's entries, the directory moved to the canonical
+location, and no symlink was created back at the provider path. Keep `:188`
+unchanged. Do this before the production change so the invariant is recorded
+independently of the flag.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/adopt-stray.test.ts`
-→ pass.
+→ pass. Red control (run once, reported): neutralize the
+`if (stray.mapping.nativeRead) return manifest;` early return at
+`adopt-stray.ts:140-142`, confirm this case fails, restore.
 
 ### 2. Add the failing harness-level case
 
 In `packages/cli/src/commands/status/index.test.ts`, add
 `saves the manifest after a native-skill adoption` inside the existing
-`manifest version restamp advisory` describe block: a Cursor adapter, a single
-`.cursor/skills/adopt-me` stray, `singleSelectResponses: ['adopt']`, and **no**
-ordinary strays. Assert `saveManifest` was called exactly once with
-`scopeCollection.manifestPath` and the manifest object returned by
-`applyNativeSkillDisposition`.
+`manifest version restamp advisory` describe block (`:794-939`): a Cursor
+adapter, a single `.cursor/skills/adopt-me` stray, `singleSelectResponses: ['adopt']`,
+and **no** ordinary strays. Assert `saveManifest` was called exactly once with
+`scopeCollection.manifestPath` and the manifest object returned by the
+`applyNativeSkillDisposition` stub. In the same case, or a sibling, assert that
+`singleSelectResponses: ['keep']` performs **no** save.
 
 **Verify:** run it now, before the production change:
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/status/index.test.ts -t "saves the manifest after a native-skill adoption"`
@@ -340,16 +391,16 @@ the negative control for Step 4.
 ### 3. Add the restamp case for the same path
 
 Add `warns before the native-skill adoption save`, mirroring the existing
-`:811-830` case: `manifestOatVersion: '0.0.1'`, a native `adopt`, and a
+`:811` case: `manifestOatVersion: '0.0.1'`, a native `adopt`, and a
 `saveManifest.mockImplementationOnce` that snapshots `capture.warn` at call
 time. Assert the exact restamp string
 (`Manifest version restamp [status project]: manifest produced by oat "0.0.1"
 will be restamped to oat "<OAT_VERSION>".`) is present when the save happens and
-appears exactly once. Then confirm the four existing cases at `:811-937` are
+appears exactly once. Then confirm the five existing cases at `:811-937` are
 unchanged and still pass — in particular that an aborted native disposition
-still emits no advisory and performs no save.
+(`:869`) still emits no advisory and performs no save.
 
-**Verify:** the new case fails today (no save, no advisory) and the four
+**Verify:** the new case fails today (no save, no advisory) and the five
 existing cases pass. Record both.
 
 ### 4. Set the flag
@@ -357,12 +408,13 @@ existing cases pass. Record both.
 In `status/index.ts`, set `manifestChanged = true` immediately after
 `adoptedCount += 1;` at `:1361` (inside the `if (disposition === 'adopt')`
 branch, never in the `else` that logs a `keep`) and again after `:1413` in the
-`replaceCanonical` retry. Add a short comment stating the two facts a future
-reader needs: a `keep` writes only the sync config so it must not set the flag,
-and a `nativeRead` adoption is manifest-neutral today
-(`adopt-stray.ts:140-142`), so this write is a restamp-only refresh whose
-purpose is to keep the flag honest if that ever changes. Name
-`adopt-stray.test.ts`'s new case as the executable owner of that claim.
+`replaceCanonical` retry. Add a short comment stating the facts a future reader
+needs: a `keep` writes only the sync config so it must not set the flag; a
+`nativeRead` adoption is manifest-neutral today (`adopt-stray.ts:140-142`), so
+this write is a restamp-only refresh that keeps status consistent with
+`oat init` and `oat sync`, which both persist after a completed run; and name
+`adopt-stray.test.ts`'s strengthened `:148` case as the executable owner of the
+neutrality claim.
 
 **Verify:** the Step 2 and Step 3 cases now pass;
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/status/index.test.ts`
@@ -370,35 +422,38 @@ purpose is to keep the flag honest if that ever changes. Name
 
 ### 5. Add the disk-backed persistence case
 
-Add a `useDiskManifestPersistence?: boolean` option to `createHarness` that,
-when set, replaces the `saveManifest`, `loadManifest`, and
+Add a `useDiskManifestPersistence?: boolean` option to `createHarness`
+(`:64-81`) that, when set, replaces the `saveManifest` and
 `applyNativeSkillDisposition` stubs with the production implementations from
-`@manifest/index` and `@commands/shared/native-skill-disposition`, and requires
-the caller to pass a real `cwd` (a `mkdtemp` root) rather than
-`/tmp/workspace`. Then add
+`@manifest/index` and `@commands/shared/native-skill-disposition`, following the
+`useDiskCodexExtension` pattern at `:398-414`, and requires the caller to pass a
+real `cwd` (a `mkdtemp` root) rather than `/tmp/workspace`. `loadManifest` may
+stay stubbed: the harness already injects an in-memory manifest with
+`manifestOatVersion`, and the assertion below reads the file the real
+`saveManifest` wrote, not the loader's return. Then add
 `persists the native-skill adoption outcome to the manifest on disk`: seed the
 temp root with `.git/`, `.agents/skills/`, `.cursor/skills/adopt-me/SKILL.md`,
-and a `.oat/sync/manifest.json` whose `oatVersion` is `'0.0.1'` and which
+and `.oat/sync/`; inject a manifest whose `oatVersion` is `'0.0.1'` and which
 already contains one unrelated entry; drive a native `adopt`; then **read
 `.oat/sync/manifest.json` back from disk with `readFile` and `JSON.parse`** and
 assert:
 
-- the file's `oatVersion` is now `OAT_VERSION` and `lastUpdated` advanced (the
+- the file's `oatVersion` is now `OAT_VERSION` and `lastUpdated` is set (the
   restamp actually happened, not just the advisory);
-- the pre-existing unrelated entry survived byte-for-byte;
+- the pre-existing unrelated entry survived with identical fields;
 - **no** entry was added for the adopted skill, with a comment citing
   `adopt-stray.ts:140-142` and naming this as the invariant the source item
   assumed the opposite of;
 - `.agents/skills/adopt-me/SKILL.md` exists with the original content and
   `.cursor/skills/adopt-me` is gone.
 
-Nothing in this case may mock the writer or the reader it asserts about: the
-manifest is read from the filesystem, not from a spy's arguments.
+Nothing in this case may mock the writer it asserts about: the manifest is read
+from the filesystem, not from a spy's arguments.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/status/index.test.ts -t "persists the native-skill adoption outcome"`
 → pass. Then revert Step 4's two assignments only, re-run, and confirm the case
-fails because the file's `oatVersion` is still `'0.0.1'`; restore and report
-that.
+fails because no `.oat/sync/manifest.json` was written (or its `oatVersion` is
+still `'0.0.1'` if the seed wrote one); restore and report that.
 
 ### 6. Run the lane gates
 
@@ -415,37 +470,37 @@ in order.
 ## Test plan
 
 - **`packages/cli/src/commands/shared/adopt-stray.test.ts` (changed).**
-  `returns the manifest unchanged when the mapping is natively read` — pins
-  `adopt-stray.ts:140-142`. Regression proved: a future change that starts
-  adding manifest entries for natively read skills would silently change what
-  `oat status` and `oat init` write; this case makes that change loud.
-  Red control: neutralize the `if (stray.mapping.nativeRead) return manifest;`
-  early return, confirm the case fails, restore, and report.
+  Strengthen `:148` (`moves a native-read Cursor skill without recreating a
+provider view or manifest row`): non-empty input manifest, `toBe(input)`,
+  entries unchanged. Pins `adopt-stray.ts:140-142` on the shape that matters.
+  Regression proved: a future change that starts adding manifest entries for
+  natively read skills would silently change what `oat status` and `oat init`
+  write; this case makes that change loud. Red control: neutralize the early
+  return, confirm the case fails, restore, and report.
 - **`packages/cli/src/commands/status/index.test.ts` (changed).** Structural
   pattern for the first two: the `manifest version restamp advisory` block at
-  `:794-937`. Structural pattern for the third: the real-disk case at
-  `:1566-1667`.
+  `:794-939`. Structural pattern for the third: the `useDisk…` options at
+  `:398-414` and the real-disk case at `:1566-1667`.
   - `saves the manifest after a native-skill adoption` — native `adopt`, no
     ordinary strays, `saveManifest` called exactly once with the manifest the
-    disposition returned. **Red before Step 4** (called 0 times).
+    disposition returned; a `keep`-only run performs no save. **Red before
+    Step 4** (called 0 times).
   - `warns before the native-skill adoption save` — the exact restamp string is
     already in `capture.warn` when `saveManifest` runs, and appears exactly
     once. **Red before Step 4** (no save, no advisory).
   - `persists the native-skill adoption outcome to the manifest on disk` — the
     disk-backed case from Step 5, re-reading `.oat/sync/manifest.json` with
-    `readFile`. **Red before Step 4** (`oatVersion` stays `'0.0.1'`).
+    `readFile`. **Red before Step 4** (nothing written).
   - Unchanged and must stay green, as the "restamp behavior around the save is
-    unchanged and pinned" criterion: `:811-830`, `:832-847`, `:849-866`,
-    `:868-914`, `:920-937`, plus `:942-979` ("prompts with one checklist and
-    adopts only selected entries", `saveManifest` still called exactly once) and
-    `:1099-1128`, `:1133-1155`, `:1157-1185`, `:1187-1222`. A `keep`-only run
-    must still perform no save; assert that explicitly in one of the new cases
-    rather than assuming it.
+    unchanged and pinned" criterion: `:811`, `:833`, `:850`, `:869`, `:920`,
+    plus `:941` ("prompts with one checklist and adopts only selected entries",
+    `saveManifest` still called exactly once) and `:982`, `:1047`, `:1097`,
+    `:1132`, `:1159`, `:1187`.
 - **Negative controls, run once and reported.** Two clauses, two controls: (1)
   revert the two `manifestChanged = true` assignments and confirm all three new
   status cases fail; (2) neutralize the `nativeRead` early return in
-  `adopt-stray.ts` and confirm the new `adopt-stray.test.ts` case fails.
-  Restore after each. A test that cannot fail is not evidence.
+  `adopt-stray.ts` and confirm the strengthened `adopt-stray.test.ts:148` case
+  fails. Restore after each. A test that cannot fail is not evidence.
 - **Focused command:** from `packages/cli`,
   `pnpm exec vitest run src/commands/status src/commands/shared` → all pass.
 - **Full relevant suite:** `HOME=$(mktemp -d) pnpm exec turbo run test --force`
@@ -455,7 +510,7 @@ in order.
 ## Done criteria
 
 - [ ] Both `adopt` success paths in the native-skill loop set `manifestChanged`;
-      the `keep` path does not.
+      the `keep` path does not (asserted, not assumed).
 - [ ] `saves the manifest after a native-skill adoption` and
       `warns before the native-skill adoption save` pass, and both were observed
       red before the production change.
@@ -464,8 +519,9 @@ in order.
       stands between the assertion and the file — and pins the restamped
       `oatVersion`, the surviving unrelated entry, the absence of an entry for
       the natively read skill, and the moved directory.
-- [ ] `adopt-stray.test.ts` pins the `nativeRead` manifest-neutrality invariant,
-      and the code comment added in Step 4 names it as its owner.
+- [ ] `adopt-stray.test.ts:148` pins the `nativeRead` manifest-neutrality
+      invariant on a non-empty manifest, and the code comment added in Step 4
+      names it as its owner.
 - [ ] All five existing restamp-advisory cases and the ordinary-stray adoption
       case pass unchanged; an aborted migration still performs no save and emits
       no advisory.
@@ -487,15 +543,15 @@ Stop and report instead of improvising when:
   — that is a design change with projection consequences and belongs in its own
   item, not here;
 - setting the flag makes any existing test fail. Two are load-bearing: the
-  abort cases at `:849-866` and `:868-914` assert **no** save. If either goes
-  red, the flag has been set on a path that did not adopt anything, which is a
+  abort cases at `:850` and `:869` assert **no** save. If either goes red, the
+  flag has been set on a path that did not adopt anything, which is a
   correctness regression, not a test to update;
 - a `keep`-only run starts writing the manifest;
 - the restamp advisory fires more than once, in `--json` mode, or after the save
   rather than before it;
 - the new disk-backed harness option leaks into existing cases (any test whose
   `cwd` is `/tmp/workspace` must keep every filesystem-writing dependency
-  mocked, per `packages/cli/AGENTS.md`);
+  mocked, per `packages/cli/AGENTS.md:32-35`);
 - a named verification gate fails twice after one bounded correction;
 - the work would require editing `.agents/skills/**` or a lockstep release file.
 
@@ -505,15 +561,17 @@ Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;
 - `origin/main` advances materially from
-  `c9f2e147ac0674e73a60735e0c1727ccc6048756`;
-- PR #273, PR #190, or PR #125 lands;
+  `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`;
+- PR #190 or PR #125 lands;
 - `packages/cli/src/commands/shared/adopt-stray.ts` changes at all — the
   correction to the source item depends entirely on its `nativeRead` early
   return;
 - `status/index.ts`'s stray-migration block is restructured, moving the cited
   anchors (`:1315`, `:1361`, `:1413`, `:1452`, `:1489`, `:1527`, `:1539`);
 - a provider gains a `contentType: 'skill'` mapping with both `nativeRead: true`
-  and `adoptionSourceDirs`, widening who reaches the native loop.
+  and `adoptionSourceDirs`, widening who reaches the native loop;
+- a wave-7 sibling plan gains `commands/status/` or `commands/shared/` in its
+  In scope (none has at this `HEAD`).
 
 Apply the `## Landing-event impact` table when one of its events has occurred.
 Executed inside a wave, this plan refreshes its drift check against the exact
@@ -524,20 +582,22 @@ SHA to `origin/main`.
 
 - **The correction is the review's first job.** Confirm independently that
   `adopt-stray.ts:140-142` returns the manifest unmodified for every native-skill
-  candidate, and that the plan's replacement acceptance criteria are honest
-  about what is and is not being fixed. If the reviewer can produce a native-skill
-  candidate whose adoption _does_ mutate the manifest, the plan is wrong and the
-  item's original criteria apply.
+  candidate, that `adopt-stray.test.ts:148-225` already pinned the empty-manifest
+  shape before this plan, and that the plan's replacement acceptance criteria
+  are honest about what is and is not being fixed. If the reviewer can produce
+  a native-skill candidate whose adoption _does_ mutate the manifest, the plan
+  is wrong and the item's original criteria apply.
 - **The newly reachable write.** `oat status` now writes
   `.oat/sync/manifest.json` on a path where it previously wrote nothing —
   including at user scope under `--scope all`, where the file is
   `~/.oat/sync/manifest.json`. Confirm the write is confined to an adopt that
   actually succeeded, that a `keep` and every abort still write nothing, and
   that the restamp advisory is the user's warning that the file is about to be
-  rewritten by a different CLI version.
-- **Test fidelity.** The disk-backed case must not mock the writer or the reader
-  it asserts about; check that `saveManifest` and `loadManifest` are the real
-  implementations there and that the assertion reads the file, not a spy.
+  rewritten by a different CLI version. This is the same write `oat init` and
+  `oat sync` already perform after a completed run.
+- **Test fidelity.** The disk-backed case must not mock the writer it asserts
+  about; check that `saveManifest` and `applyNativeSkillDisposition` are the
+  real implementations there and that the assertion reads the file, not a spy.
 - **Follow-ups intentionally deferred.** Whether a natively read adoption should
   be tracked in the manifest at all is left open; so is the init/status
   divergence in _unconditional_ versus gated saving, which this plan narrows but

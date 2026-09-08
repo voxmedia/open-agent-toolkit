@@ -4,8 +4,8 @@ oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260907-finalize-synced-archive-mjs.md
-oat_external_plan_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
-oat_external_plan_main_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
+oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
+oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
 oat_execution_status: READY
 oat_backlog_items:
@@ -26,10 +26,11 @@ created: '2026-09-08T21:15:43Z'
 
 > [!IMPORTANT]
 > **Execution status: READY.** No unsatisfied hard dependency blocks
-> execution. The only ordering constraint is soft: this plan and
-> `2026-09-08-make-the-completion-seal-idempotent.md` both write
-> `.agents/skills/oat-project-complete/SKILL.md`, so they never run in one
-> parallel group and this plan merges first.
+> execution. Every ordering constraint is soft: this plan shares
+> `.agents/skills/oat-project-complete/SKILL.md` with
+> `2026-09-08-make-the-completion-seal-idempotent.md`, and shares the version
+> pins in `packages/cli/src/validation/skills.test.ts` with six other wave-7
+> plans, so it is never composed into one parallel group with any of them.
 
 ## Outcome
 
@@ -47,61 +48,81 @@ actually cleared end to end.
 
 - Source backlog item:
   [BL-260907-finalize-synced-archive-mjs — finalize-synced-archive.mjs reads stdin with fs/promises readFile(0), so the synced deferred clear always fails](../../pjm/backlog/items/BL-260907-finalize-synced-archive-mjs.md)
-- Inspected `HEAD`: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the tree whose
-  content this plan actually read (branch `wave-7-plans`).
-- Comparison baseline: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the fetched
-  `origin/main` tip; the inspected `HEAD` is identical to it.
+- Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
+  content this plan actually read (branch `wave-7-plans`; it is `origin/main`
+  plus the wave-7 program-ledger and plan commits, none of which touch this
+  plan's surfaces).
+- Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched
+  `origin/main` tip, which is the merge of PR #273 (remote project management,
+  merged 2026-09-08T21:27:49Z).
 - Planning date: `2026-09-08`
 - Working tree while planning: `git status --porcelain` was empty.
-- Verified evidence:
+- Verified evidence (every citation re-read at the inspected `HEAD`):
   - `.agents/skills/oat-project-complete/scripts/finalize-synced-archive.mjs:2`
     imports `readFile` from `node:fs/promises`; `:94` calls
     `JSON.parse(await readFile(0, 'utf8'))`. The promises API rejects a numeric
     fd.
   - Reproduced on Node `v22.17.0` in a `mktemp -d` copy of the script, piping a
-    valid terminal report on stdin:
+    valid terminal report on stdin through the directory's realpath:
     `{"ok":false,"code":"E_SYNCED_ARCHIVE_FINALIZATION","message":"Unable to parse synced archive terminal report: The \"path\" argument must be of type string or an instance of Buffer or URL. Received type number (0)"}`
     on stderr, exit `1`. Every synced archive completion that reaches Step 12
     therefore exits 1 and leaves the pointer set.
+  - Reproduced the whole Step 12 pipe form end to end in a scratch repository
+    with the branch-built CLI (`0.2.66`) as `oat` on `PATH`: after
+    `oat config set activeProject .oat/projects/synced/demo`, the exact
+    `SKILL.md:1616-1621` invocation exited `1` with the error above and
+    `oat config get activeProject` still returned the path. The pointer lives in
+    the CLI's local config tier (`.oat/config.local.json`), not in
+    `.oat/config.json`; only `oat config get` is a reliable probe of it.
   - `.agents/skills/oat-project-complete/SKILL.md:1616-1621` — Step 12 invokes
-    it exactly that way:
-    `SYNCED_ARCHIVE_FINALIZATION=$(printf '%s\n' "$ARCHIVE_OUTPUT" | node "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" --project-name "$PROJECT_NAME") || exit 1`.
+    the script exactly that way:
+    `SYNCED_ARCHIVE_FINALIZATION=$(printf '%s\n' "$ARCHIVE_OUTPUT" | node "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" --project-name "$PROJECT_NAME") || exit 1`,
+    guarded by `[[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]`.
     The `|| exit 1` makes the defect a hard completion failure, not a warning.
   - `.agents/skills/oat-project-complete/scripts/finalize-synced-archive.mjs:113-116`
     — the main-module guard is
     `process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href`,
-    with realpath applied to neither side. Reproduced in the same scratch copy:
-    invoking the script through the `/var/folders/...` symlink alias of a
-    `/private/var/folders/...` realpath exits `0` with no output at all —
-    `main()` never runs. A caller that checks only the exit status reads that
-    silence as success.
+    with realpath applied to neither side. Reproduced in the same scratch copy
+    two ways: invoking the script through the `/var/folders/...` alias of its
+    `/private/var/folders/...` realpath, and through an explicit `symlink` to
+    its parent directory. Both exit `0` with no output at all — `main()` never
+    runs. A caller that checks only the exit status reads that silence as
+    success.
   - `.agents/skills/oat-project-implement/scripts/capture-dirty-tree.mjs:1046-1067`
     — the repository already owns the correct pattern and documents exactly this
     failure mode: `isDirectInvocation` compares
     `realpathSync(fileURLToPath(import.meta.url))` against
     `realpathSync(resolve(invokedPath))`, "canonicalizing only one side has the
-    same effect under `--preserve-symlinks-main`". Nothing else in
-    `.agents/skills/*/scripts/*.mjs` uses it: fourteen other scripts, including
-    all seven siblings under `oat-project-complete/scripts/`, carry the raw
-    comparison.
+    same effect under `--preserve-symlinks-main`".
+  - Guard inventory across the thirty `.agents/skills/*/scripts/*.mjs` files:
+    **eighteen** carry the raw one-sided comparison (this script plus
+    seventeen others — six of its seven siblings under
+    `oat-project-complete/scripts/`, five under `explainer-kit/scripts/`, two
+    under `oat-explainer-kit/scripts/`, four under `recon/scripts/`); only
+    `capture-dirty-tree.mjs` canonicalizes both sides; the seventh sibling,
+    `validate-nonarchive-lifecycle-receipt.mjs`, has no main-module guard at
+    all and runs at top level; the remaining eleven carry neither pattern. The
+    seventeen raw siblings are a follow-up sweep, not this plan.
   - `finalize-synced-archive.mjs` is the only script under `.agents/skills`
-    that reads a numeric fd at all: sweeping
-    `.agents/skills/*/scripts/*.mjs` for `readFile(0` and `readFileSync(0`
-    returns exactly this file's `:94`. The stdin defect is isolated to one
-    file.
+    that reads a numeric fd at all: sweeping `.agents/skills/*/scripts/*.mjs`
+    for `readFile(0`, `readFileSync(0`, and `process.stdin` returns exactly
+    this file's `:94`. The stdin defect is isolated to one file.
   - Test coverage today: `.agents/skills/oat-project-complete/tests/` holds
     `resolve-synced-archive-entry.test.mjs` and `check-terminal-outcome.test.mjs`.
     The first imports `finalizeSyncedArchive` and
     `validateSyncedArchiveTerminalReport` from the module
     (`resolve-synced-archive-entry.test.mjs:20-23`) and calls
     `finalizeSyncedArchive({...})` with injected dependencies at `:335`, `:477`,
-    `:558`, `:574`. Nothing spawns the script as a subprocess, which is why a
-    green suite coexists with a CLI entry point that cannot run.
+    `:558`, `:574`. Its only `execFile` use (`:42`) runs `git`; nothing runs
+    the script itself as a subprocess, which is why a green suite coexists with
+    a CLI entry point that cannot run.
   - `package.json:35` — `test:skills` is
     `node --test .agents/skills/*/tests/*.test.mjs`, so a new `.test.mjs` under
-    that directory is picked up with no registration.
-  - `packages/cli/scripts/bundle-assets.sh:48-49` copies each skill into
-    `packages/cli/assets/skills/` with `cp -RL` and then
+    that directory is picked up with no registration. `package.json:20` and
+    `:26` show `format` and `lint` are the only coverage for
+    `.agents/skills/**/*.{md,mjs}`.
+  - `packages/cli/scripts/bundle-assets.sh:48-49` copies each skill into the
+    staging tree with `cp -RL` and then
     `rm -rf "${STAGING}/skills/${skill}/tests"`. `.gitignore:25`
     (`packages/cli/assets/*`) ignores the whole bundled tree. The canonical
     `.agents/skills/...` file is the only write surface, and the new test does
@@ -114,34 +135,47 @@ actually cleared end to end.
     (`expect(readDeclaredVersion(content)).toBe('1.7.9')`) and
     `packages/cli/src/validation/skills.test.ts:4550`
     (`['oat-project-complete', '1.7.9']`).
-  - `packages/cli/src/validation/skills.ts:943-969` — `listChangedSkillFiles`
+  - `packages/cli/src/validation/skills.ts:943-960` — `listChangedSkillFiles`
     diffs only `.agents/skills/*/SKILL.md`, so `pnpm run check:skill-bumps`
-    would not notice a scripts-only change. The bump in this plan is therefore
+    cannot see a scripts-only skill change. The bump in this plan is therefore
     carried by the repository's release convention (AGENTS.md: assets under
     `.agents/skills` count as shipped CLI functionality), and bumping
     `SKILL.md` also makes the gate fire and pass rather than stay silent.
   - Probe of the replacement API on Node `v22.17.0`: `readFileSync(0, 'utf8')`
-    read a 5 MiB payload delivered as eighty 64 KiB writes from a slow producer
-    (`sync-bytes=5242880`, exit 0), and returned `''` for
-    `< /dev/null`. It does not truncate at the pipe buffer and does not hang.
+    returned a 5 MiB payload intact (`len=5242880`) when it arrived as eighty
+    64 KiB writes from a slow producer, and returned `''` (`len=0`) for
+    `< /dev/null`. It neither truncates at the pipe buffer nor hangs. A copy
+    of the script with only the two-line stdin substitution applied printed the
+    documented success JSON and exit `0` with a stub `oat` on `PATH`, and
+    exited `1` with `Unexpected end of JSON input` under
+    `E_SYNCED_ARCHIVE_FINALIZATION` on empty stdin — the empty-input path
+    stays fail-closed with no extra code.
+  - `HOME=$(mktemp -d)` matters for the forced test gate: a maintainer with
+    `~/.oat/templates/` from a user-scope install resolves bundle-tier
+    templates against real files (AGENTS.md, Definition of Done).
 
 ## Dependencies
 
-| Type          | Dependency                                                                                                                                                            | Required state                                                                                                                                                                                          | Current state                                           |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Soft ordering | [Make the completion seal idempotent](./2026-09-08-make-the-completion-seal-idempotent.md)                                                                            | Never in one parallel group: both plans write `.agents/skills/oat-project-complete/SKILL.md`. This plan merges first; that plan rebases onto it and does not re-bump the skill inside the same wave PR. | Pending; the wave composition serializes the two lanes. |
-| Soft ordering | Shared write: the skill version pins in `packages/cli/src/validation/skills.test.ts` and `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` | Never in one parallel group with another lane that writes either file; the wave orders those groups.                                                                                                    | Pending; the wave composition serializes them.          |
-| Soft evidence | PR #254 (delivered the synced deferred-clear path)                                                                                                                    | Already merged; its script is the subject of this fix. No further state needed.                                                                                                                         | Landed.                                                 |
+| Type          | Dependency                                                                                                     | Required state                                                                                                                                                                                                                                                                                                                | Current state                                           |
+| ------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Soft ordering | [Make the completion seal idempotent](./2026-09-08-make-the-completion-seal-idempotent.md)                     | Never in one parallel group: both write `.agents/skills/oat-project-complete/SKILL.md`, `review-skill-contracts.test.ts`, and `skills.test.ts`. One `metadata.version` bump for `oat-project-complete` per PR: whichever of the two merges second adopts the first's value and takes no second bump. Re-anchor pins on merge. | Pending; the wave composition serializes the two lanes. |
+| Soft ordering | [Reconcile the oat doctor example](./2026-09-08-reconcile-the-oat-doctor-example.md)                           | Never in one parallel group; both write `packages/cli/src/validation/skills.test.ts`. Re-anchor pins on merge.                                                                                                                                                                                                                | Pending; the wave composition serializes them.          |
+| Soft ordering | [Repair stray fences in lifecycle skills](./2026-09-08-repair-stray-fences-in-lifecycle-skills.md)             | Never in one parallel group; both write `packages/cli/src/validation/skills.test.ts`. Re-anchor pins on merge.                                                                                                                                                                                                                | Pending; the wave composition serializes them.          |
+| Soft ordering | [Tighten the skill version validators](./2026-09-08-tighten-the-skill-version-validators.md)                   | Never in one parallel group; both write `packages/cli/src/validation/skills.test.ts`. Re-anchor pins on merge.                                                                                                                                                                                                                | Pending; the wave composition serializes them.          |
+| Soft ordering | [Keep plan writes on the caller's model](./2026-09-08-keep-plan-writes-on-the-callers-model.md)                | Never in one parallel group; both write `packages/cli/src/validation/skills.test.ts`. Re-anchor pins on merge.                                                                                                                                                                                                                | Pending; the wave composition serializes them.          |
+| Soft ordering | [Calculate dispatch baselines after journaling](./2026-09-08-calculate-dispatch-baselines-after-journaling.md) | Never in one parallel group; both write `packages/cli/src/validation/skills.test.ts`. Re-anchor pins on merge.                                                                                                                                                                                                                | Pending; the wave composition serializes them.          |
+| Soft ordering | [Correct skill authoring facts](./2026-09-08-correct-skill-authoring-facts.md)                                 | Never in one parallel group; both write `packages/cli/src/validation/skills.test.ts` (that plan adds two cases). Re-anchor pins on merge.                                                                                                                                                                                     | Pending; the wave composition serializes them.          |
+| Soft evidence | PR #254 (delivered the synced deferred-clear path)                                                             | Already merged; its script is the subject of this fix. No further state needed.                                                                                                                                                                                                                                               | Landed.                                                 |
 
 There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                        | Affected | Files in common                                                                                                                                                      | Required update                                                                                                                                          |
-| -------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ReviewPlan Stage A` (draft PR #190) merges  | Minor    | `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` — both appear in PR #190's changed files. | Rebase, then re-locate the two `oat-project-complete` version pins by the OLD VERSION LITERAL rather than by the line numbers cited here before editing. |
-| `remote project management` (PR #273) merges | None     | None: none of its 144 changed files touch `oat-project-complete`, `packages/cli/src/commands/project/log`, or either pin file.                                       | No action.                                                                                                                                               |
-| `brainstorm companion` (PR #125) merges      | None     | None of its 26 changed files touch this plan's surfaces.                                                                                                             | No action.                                                                                                                                               |
+| Event                                        | Affected | Files in common                                                                                                                                                                                                                            | Required update                                                                                                                                          |
+| -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ReviewPlan Stage A` (draft PR #190) merges  | Minor    | `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`, `packages/cli/src/validation/skills.test.ts` — both appear in PR #190's 217 changed files (paginated listing), as do the five lockstep `package.json` files. | Rebase, then re-locate the two `oat-project-complete` version pins by the OLD VERSION LITERAL rather than by the line numbers cited here before editing. |
+| `remote project management` (PR #273) merges | None     | None: none of its 143 changed files touch `oat-project-complete`, `packages/cli/src/commands/project/log`, `capture-dirty-tree.*`, `bundle-assets.sh`, or either pin file.                                                                 | Merged 2026-09-08 and verified: this plan's inspected `HEAD` already contains it. No action.                                                             |
+| `brainstorm companion` (PR #125) merges      | None     | None of its 26 changed files touch this plan's surfaces.                                                                                                                                                                                   | No action.                                                                                                                                               |
 
 ## Drift check
 
@@ -149,7 +183,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat c9f2e147ac0674e73a60735e0c1727ccc6048756..origin/main -- .agents/skills/oat-project-complete/scripts/finalize-synced-archive.mjs .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-project-complete/tests .agents/skills/oat-project-implement/scripts/capture-dirty-tree.mjs .agents/skills/oat-project-implement/tests/capture-dirty-tree.test.mjs packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/validation/skills.test.ts packages/cli/scripts/bundle-assets.sh package.json
+git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..origin/main -- .agents/skills/oat-project-complete/scripts/finalize-synced-archive.mjs .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-project-complete/tests .agents/skills/oat-project-implement/scripts/capture-dirty-tree.mjs .agents/skills/oat-project-implement/tests/capture-dirty-tree.test.mjs packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/validation/skills.test.ts packages/cli/scripts/bundle-assets.sh package.json
 ```
 
 If `finalize-synced-archive.mjs` changed shape, if Step 12's pipe form moved,
@@ -225,12 +259,15 @@ condition.
 - `packages/cli/assets/skills/oat-project-complete/**` — a gitignored byte copy
   regenerated by `packages/cli/scripts/bundle-assets.sh`. Never edit it; never
   add it to a commit.
-- The fourteen other `.mjs` scripts under `.agents/skills/*/scripts/` that carry
-  the same raw main-module comparison. Fixing them is a separate sweep with its
-  own bumps across many skills, and folding it in here would collide with every
-  other wave lane. Record it as a follow-up instead.
-- The completion seal's idempotency, `oat project log check`'s status union, and
-  the parked wave-5 p09 patch — all owned by
+- The seventeen other `.mjs` scripts under `.agents/skills/*/scripts/` that
+  carry the same raw main-module comparison (inventory above). Fixing them is a
+  separate sweep with its own bumps across five skills, and folding it in here
+  would collide with every other wave lane. Record it as a follow-up backlog
+  item instead; note that the sibling seal plan re-applies a parked script
+  (`validate-durable-archive-receipt.mjs`) whose parked copy carries the raw
+  shape and is told to adopt the canonical guard from this plan.
+- The completion seal's idempotency, `oat project log check`'s result shape,
+  and the parked wave-5 p09 patch — all owned by
   `2026-09-08-make-the-completion-seal-idempotent.md`.
 - Any change to Step 12's ordering, to `ARCHIVE_OUTPUT`, or to what counts as a
   valid terminal report.
@@ -241,7 +278,7 @@ condition.
 (`validateSyncedArchiveTerminalReport`, `finalizeSyncedArchive`) and wraps them
 in a `main(argv)` that supplies two side-effecting dependencies: reading the
 terminal report from stdin, and clearing the pointer with
-`execFile('oat', ['config', 'set', 'activeProject', ''])` (`:101`). Both
+`execFile('oat', ['config', 'set', 'activeProject', ''])` (`:101-109`). Both
 dependencies are injected as closures, which is why the existing test can
 exercise `finalizeSyncedArchive` fully while the two lines that actually run in
 production are untested.
@@ -255,12 +292,12 @@ fail-late:
   `E_SYNCED_ARCHIVE_FINALIZATION`. Step 12's `|| exit 1` turns that into a hard
   completion failure with the pointer retained, so the synced deferred-clear
   path from PR #254 has never once succeeded.
-- `:113-116` — the guard compares `import.meta.url` (always the real path,
-  because Node canonicalizes the main module unless `--preserve-symlinks-main`
-  is set) against `pathToFileURL(process.argv[1])` (whatever the caller typed).
-  When a skill is installed or reached through a symlink — user-scope installs,
-  and `/var` → `/private/var` on macOS — the two differ, `main()` is skipped,
-  and the process exits 0 having done nothing. That is strictly worse than the
+- `:113-116` — the guard compares `import.meta.url` (the real path, because
+  Node canonicalizes the main module unless `--preserve-symlinks-main` is set)
+  against `pathToFileURL(process.argv[1])` (whatever the caller typed). When a
+  skill is installed or reached through a symlink — user-scope installs, and
+  `/var` → `/private/var` on macOS — the two differ, `main()` is skipped, and
+  the process exits 0 having done nothing. That is strictly worse than the
   stdin bug: the caller cannot tell it apart from success.
 
 Fixing only the stdin read would leave a fail-open guard sitting directly behind
@@ -272,11 +309,12 @@ the fix, so this plan fixes both and proves each one red first.
 
 In a `mktemp -d` scratch directory (never `rm -rf` a variable path; let the
 temp directory be reclaimed), copy the current script, pipe a valid terminal
-report into it through the directory's realpath, and record the stderr JSON and
-exit code. Then invoke the same copy through the directory's non-canonical
-alias (on macOS, the `/var/folders/...` form of a `/private/var/folders/...`
-realpath; elsewhere, create an explicit `symlink` to the script's parent) and
-record exit 0 with empty stdout.
+report into it through the directory's realpath (`cd "$DIR" && pwd -P`), and
+record the stderr JSON and exit code. Then invoke the same copy through a
+non-canonical path — on macOS the `/var/folders/...` form of a
+`/private/var/folders/...` realpath is enough; elsewhere, `ln -s "$REAL"
+"$REAL/link/root"` and invoke `"$REAL/link/root/<script>"` — and record exit 0
+with empty stdout.
 
 **Verify:** the realpath run prints
 `"code":"E_SYNCED_ARCHIVE_FINALIZATION"` with
@@ -302,15 +340,16 @@ only if it keeps the same fail-closed behavior on empty input.
 **Verify:** rerun step 1's realpath pipe against the edited file →
 `{"status":"ok","pointerCleared":true,...}` on stdout with exit `0` when a stub
 `oat` is first on `PATH`; and piping `''` still exits `1` with
-`E_SYNCED_ARCHIVE_FINALIZATION`.
+`E_SYNCED_ARCHIVE_FINALIZATION` and `Unexpected end of JSON input`.
 
 ### 3. Canonicalize both sides of the main-module guard
 
 Replace the guard at `:113-116` with an `isDirectInvocation(invokedPath)`
 helper modeled on
 `.agents/skills/oat-project-implement/scripts/capture-dirty-tree.mjs:1046-1067`:
-import `realpathSync` from `node:fs` and `fileURLToPath` from `node:url`,
-compare `realpathSync(fileURLToPath(import.meta.url))` with
+import `realpathSync` from `node:fs`, `resolve` from `node:path`, and
+`fileURLToPath` from `node:url` (drop the now-unused `pathToFileURL`), compare
+`realpathSync(fileURLToPath(import.meta.url))` with
 `realpathSync(resolve(invokedPath))`, return `false` on a falsy path or a
 thrown `realpathSync`, and keep the existing `main(...).then(...).catch(...)`
 body unchanged. Carry the same explanatory comment the exemplar carries: a
@@ -319,21 +358,23 @@ caller reads "exited 0" as "verified".
 
 **Verify:** rerun step 1's aliased invocation → the script now runs and
 produces the same stdout JSON as the realpath invocation; adding
-`--preserve-symlinks-main` and `NODE_OPTIONS=--preserve-symlinks-main` produces
-the same result.
+`--preserve-symlinks-main` as a node argument and
+`NODE_OPTIONS=--preserve-symlinks-main` in the environment produces the same
+result.
 
 ### 4. Add the CLI entry-point test
 
 Create `.agents/skills/oat-project-complete/tests/finalize-synced-archive-cli.test.mjs`
 using `node:test` and `node:assert/strict`, following the structure of
 `capture-dirty-tree.test.mjs` (a promisified `execFile` helper that returns
-`{ code, stdout, stderr }` for both success and failure). Because `main`'s
-`clearActiveProject` shells out to `oat` (`:101`), every case writes a stub
-`oat` executable into a `mkdtemp` bin directory, `chmod 0o755`, and runs the
-script with `env: { ...process.env, PATH: \`${bin}:${process.env.PATH}\` }`—
-the precedent is`tools/smoke/runner/preflight.test.mjs:553`and`tools/smoke/runner/cursor-broker.test.mjs:50`. The stub appends its argv to a
-file so the test can assert the exact
-`config set activeProject ''`invocation. Never let a case reach a real`oat`or touch a real`.oat/config.json`.
+`{ code, stdout, stderr }` for both success and failure; pass the report on
+stdin through the child's `stdin` stream, or spawn `node` with `input` via
+`execFile`'s `stdio` piping). Because `main`'s `clearActiveProject` shells out
+to `oat` (`:101-109`), every case writes a stub `oat` executable into a
+`mkdtemp` bin directory, `chmod 0o755`, and runs the script with
+`env: { ...process.env, PATH: \`${bin}:${process.env.PATH}\` }`— the
+precedent is`tools/smoke/runner/preflight.test.mjs:553`and`tools/smoke/runner/cursor-broker.test.mjs:50`. The stub appends its argv to a
+file so the test can assert the exact `config set activeProject ''`invocation. Never let a case reach a real`oat`or touch a real`.oat/config.local.json`.
 
 Cases:
 
@@ -379,21 +420,26 @@ and must be rewritten before continuing.
 
 ### 6. End-to-end synced deferred-clear control in a scratch project
 
-In a fresh `mktemp -d`, build a scratch repository with `.oat/config.json`,
-`.oat/projects/synced/<name>/state.md`, and
-`activeProject` set to that project via the branch-built CLI
-(`node packages/cli/dist/index.js config set activeProject <path>`, after
-`pnpm build`). Confirm `oat config get activeProject` echoes the path, then run
-Step 12's exact pipe form from `SKILL.md:1616-1621` with a valid
-`ARCHIVE_OUTPUT` for that project name, using the branch-built CLI as `oat` on
-`PATH`. This is the plan's answer to the item's third acceptance criterion and
-is a manual control, not an automated test — it is the only step that exercises
-the real `oat config set` write.
+After `pnpm build`, in a fresh `mktemp -d`: `git init` a scratch repository
+with `.oat/config.json` (`{}` is enough) and
+`.oat/projects/synced/<name>/state.md`; put a wrapper script named `oat` that
+runs `exec node <repo>/packages/cli/dist/index.js "$@"` first on `PATH`; run
+`oat config set activeProject .oat/projects/synced/<name>` and confirm
+`oat config get activeProject` echoes the path (the pointer is stored in the
+local config tier, so do not expect it in `.oat/config.json`). Then run Step
+12's exact pipe form from `SKILL.md:1616-1621` — `SYNCED_ARCHIVE_FINALIZE_SCRIPT`
+pointing at the edited canonical script, `PROJECT_NAME=<name>`, and a valid
+`ARCHIVE_OUTPUT` whose `completedRef` is `refs/oat/completed/<name>`. This is
+the plan's answer to the item's third acceptance criterion and is a manual
+control, not an automated test — it is the only step that exercises the real
+`oat config set` write.
 
 **Verify:** the finalizer prints its success JSON and exits 0, and
-`oat config get activeProject` afterwards returns empty. Re-running the same
-pipe form against the now-cleared pointer must still exit 0 (the finalizer only
-validates the report and clears; it must not become order-dependent).
+`oat config get activeProject` afterwards prints an empty value. Re-running the
+same pipe form against the now-cleared pointer must still exit 0 (the finalizer
+only validates the report and clears; it must not become order-dependent).
+Before the edit, the same sequence exits 1 and the pointer survives — record
+that as the pre-fix control.
 
 ### 7. Bump the skill and its pins
 
@@ -445,7 +491,8 @@ fetched `origin/main` and run the eight AGENTS.md gates in order.
 - Red-then-green negative controls (step 5, both mandatory and both recorded):
   - restore `readFile` from `node:fs/promises` → cases 1 and 5 fail with
     `Received type number (0)`; this is the pre-fix state the backlog item
-    describes and it must be shown red before the fix is accepted;
+    describes, reproduced at the inspected `HEAD`, and it must be shown red
+    before the fix is accepted;
   - restore the raw one-sided main-module guard → case 5 fails on all three
     invocation forms with exit 0 and empty stdout.
 - Unchanged and expected green:
@@ -460,7 +507,8 @@ fetched `origin/main` and run the eight AGENTS.md gates in order.
   the bump and pass once both pins are updated — that failure is itself the
   control proving the pins are live.
 - Manual control (step 6): the scratch-project end-to-end synced deferred
-  clear, with `oat config get activeProject` empty afterwards.
+  clear, with `oat config get activeProject` empty afterwards, and the pre-fix
+  run of the same sequence exiting 1 with the pointer retained.
 - Regression proved: a piped terminal report reaches the validator instead of
   dying in the reader; a symlink-reached invocation cannot report success by
   doing nothing.
@@ -477,7 +525,7 @@ fetched `origin/main` and run the eight AGENTS.md gates in order.
       exists, drives the script as a subprocess through a pipe, and its two
       neutralization controls were each observed red and are recorded.
 - [ ] A synced deferred clear completes end to end in a scratch project and
-      `oat config get activeProject` returns empty afterwards.
+      `oat config get activeProject` prints an empty value afterwards.
 - [ ] `resolve-synced-archive-entry.test.mjs` passes unmodified.
 - [ ] Exactly one `oat-project-complete` `metadata.version` bump exists in the
       PR diff and `rg -n '<old literal>' packages/cli/src tools/smoke .agents/skills`
@@ -514,7 +562,9 @@ Stop and report instead of improvising when:
   guard change deliberately makes the script do _more_ work, never less
   validation;
 - a required change crosses into `packages/cli/src/commands/project/log/**`,
-  the seal, or the parked wave-5 p09 patch (owned by the sibling plan);
+  the seal, or the parked wave-5 p09 patch (owned by the sibling plan), or
+  into any of the seventeen sibling scripts with the raw guard (the follow-up
+  sweep);
 - a named verification gate fails twice after one bounded correction;
 - an unsatisfied hard dependency in `## Dependencies` still blocks execution,
   whatever `oat_execution_status` claims.
@@ -525,8 +575,8 @@ Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;
 - `origin/main` advances materially from
-  `c9f2e147ac0674e73a60735e0c1727ccc6048756`;
-- PR #190, #273, or #125 lands (apply the `## Landing-event impact` table);
+  `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`;
+- PR #190 or #125 lands (apply the `## Landing-event impact` table);
 - a dependency named in `## Dependencies` changes state — in particular if
   `2026-09-08-make-the-completion-seal-idempotent.md` merges first, in which
   case `oat-project-complete` is already bumped in this PR and step 7 adopts
@@ -550,12 +600,15 @@ Executed inside a wave, refresh the drift check against the exact execution
 - The exported contract (`validateSyncedArchiveTerminalReport`,
   `finalizeSyncedArchive`, the JSON shapes, the error code) is byte-stable, and
   `resolve-synced-archive-entry.test.mjs` was not edited.
-- The new test never reaches a real `oat` binary or a real `.oat/config.json`;
-  the `PATH` stub is in place for every case, including the failure cases where
-  the assertion is that the stub was **not** called.
+- The new test never reaches a real `oat` binary or a real
+  `.oat/config.local.json`; the `PATH` stub is in place for every case,
+  including the failure cases where the assertion is that the stub was **not**
+  called.
 - Nothing under `packages/cli/assets/` is staged.
 - Exactly one `oat-project-complete` bump in the PR diff, with both pins moved
   by literal sweep rather than by the line numbers this plan quotes.
-- Deferred on purpose: the fourteen sibling scripts carrying the same
-  one-sided main-module guard. They are a separate sweep with bumps across many
-  skills; file it as a follow-up rather than widening this lane.
+- Deferred on purpose: the seventeen sibling scripts carrying the same
+  one-sided main-module guard (six under `oat-project-complete/scripts/`, five
+  under `explainer-kit/scripts/`, two under `oat-explainer-kit/scripts/`, four
+  under `recon/scripts/`). They are a separate sweep with bumps across five
+  skills; file it as a follow-up backlog item rather than widening this lane.

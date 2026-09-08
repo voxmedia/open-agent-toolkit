@@ -4,8 +4,8 @@ oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md
-oat_external_plan_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
-oat_external_plan_main_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
+oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
+oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
 oat_execution_status: READY
 oat_backlog_items:
@@ -26,9 +26,13 @@ created: '2026-09-08T21:19:08Z'
 
 > [!IMPORTANT]
 > **Execution status: READY.** No unsatisfied hard dependency blocks execution.
-> One `Soft ordering` row records that the sibling `harden-normalized-config-maps`
-> lane edits a decision record inside this guard's scope, so this lane should
-> land first; that is an ordering preference, not a block.
+> PR #273 merged on 2026-09-08 and added five decision records and eight docs
+> pages inside this guard's scope; re-enumerated on top of its merge commit,
+> the violation set is unchanged (eight occurrences in six files). One
+> `Soft ordering` row records that the sibling `harden-normalized-config-maps`
+> lane edits a decision record inside this guard's scope, so this lane lands
+> first and never shares a parallel group with it; that is an ordering
+> preference, not a block.
 
 ## Outcome
 
@@ -50,18 +54,25 @@ meaning-destroying rewrite loud.
   [BL-260908-keep-a-bare-proto-in-markdown — Keep a bare prototype-key literal in Markdown prose from being formatted into bold](../../pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md)
 - Read that item's `## Triage widening (2026-09-08)` section before executing;
   it is what widens the guard beyond decision records and docs.
-- Inspected `HEAD`: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the tree whose
-  content this plan read.
-- Comparison baseline: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the fetched
-  `origin/main` tip; identical to the inspected `HEAD` at planning time.
+- Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
+  content this plan read (branch `wave-7-plans`).
+- Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched
+  `origin/main` tip, which is PR #273's merge commit. `HEAD` is that tip plus
+  commits that touch only `.oat/repo/reference/external-plans/` and
+  `.oat/repo/pjm/backlog/` (`git diff --name-only origin/main..HEAD` lists
+  nothing else). The backlog-item edits on the branch are `external_plans`
+  reverse links and `updated` stamps; none adds or removes an occurrence.
 - Planning date: `2026-09-08`
 - Working tree while planning: `git status --porcelain` was empty.
 - Verified evidence:
   - **The rewrite reproduces.** In a `mktemp -d` scratch file containing
     `A bare __proto__ in prose.` and ``Backticked `__proto__` stays.``, running
     `pnpm exec oxfmt --write <file>` rewrote the first line's literal into a
-    bold `proto` and left the backticked one untouched. `oxfmt` 0.36.x is pinned
-    at `package.json:49`.
+    bold `proto` and left the backticked one untouched. A third line carrying
+    a bare literal _and_ an unrelated inline code span (``… next to `code` span``)
+    was mangled the same way, so the presence of a code span elsewhere on the
+    line does not protect a bare occurrence. `oxfmt` 0.36.x is pinned at
+    `package.json:49`.
   - **The mangling vector is lint-staged, not `pnpm format`.** `package.json:20`
     scopes the root `oxfmt --check` to `.agents/skills/**`,
     `apps/oat-docs/docs/**`, and `tools/smoke/**` — `.oat/repo/**` is not in it.
@@ -79,27 +90,46 @@ meaning-destroying rewrite loud.
     | ------------------------------------------------------------------------- | ---- | -------------------------- |
     | `.oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md`     | 14   | mangled (1)                |
     | `.oat/repo/pjm/backlog/completed.md`                                      | 19   | mangled (2 on the line)    |
-    | `.oat/repo/pjm/backlog/index.md`                                          | 265  | mangled (1, generated row) |
-    | `.oat/repo/pjm/backlog/index.md`                                          | 270  | mangled (1, generated row) |
+    | `.oat/repo/pjm/backlog/index.md`                                          | 269  | mangled (1, generated row) |
+    | `.oat/repo/pjm/backlog/index.md`                                          | 274  | mangled (1, generated row) |
     | `.oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md`   | 3    | bare, in the YAML `title`  |
     | `.oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md`  | 3    | bare, in the YAML `title`  |
     | `.oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md` | 3    | bare, in the YAML `title`  |
 
-    That is six files. The same scan over `apps/oat-docs/docs` (70 files),
-    `.agents/skills` (214 files), and `.oat/projects` (146 files) returns zero,
-    and over all 615 tracked Markdown files in `.oat/repo` returns exactly the
-    seven rows above — so widening the scope from the item's
-    `.oat/repo/reference/decisions/**` + `.oat/repo/pjm/**` to all of
-    `.oat/repo/**` costs no additional repair.
+    That is six files and eight occurrences. At this `HEAD` the scan covers
+    712 tracked Markdown files across `.oat/repo` (641) and
+    `apps/oat-docs/docs` (71) and returns exactly the seven rows above; the
+    same scan over `.agents/skills` (216 files), `.oat/projects` (134 files),
+    and `.oat/templates` (29 files) returns zero, and over every tracked
+    Markdown file in the repository (1,207) returns the same seven rows. So
+    widening the scope from the item's `.oat/repo/reference/decisions/**` +
+    `.oat/repo/pjm/**` to all of `.oat/repo/**` costs no additional repair,
+    and PR #273's five new decision records and eight docs pages are clean.
 
   - **The generated index is downstream of the item titles, not an independent
     source.** `packages/cli/src/commands/backlog/regenerate-index.ts:51` reads
     `frontmatter.title` verbatim; `:98-113` renders it into a table cell through
-    `encodeMarkdownTableCell` (`:88-96`), which escapes `\`, `|`, `<`, and `>`
-    and passes backticks through untouched. So the item title is the source, the
-    generator copies it faithfully, and `oxfmt` mangles the result on the next
-    commit that stages `index.md`. `.oat/repo/pjm/backlog/index.md:3` states the
-    table lives in a managed section regenerated by the CLI.
+    `encodeMarkdownTableCell` (`:87-96`), which escapes `&`, `\`, `|`, `<`, and
+    `>` and passes backticks through untouched. So the item title is the source,
+    the generator copies it faithfully, and `oxfmt` mangles the result on the
+    next commit that stages `index.md`. `.oat/repo/pjm/backlog/index.md:3`
+    states the table lives in a managed section regenerated by the CLI.
+  - **`completed.md` is downstream of the archived item's title in the same
+    way.** `packages/cli/src/commands/backlog/archive.ts:269` reads the item
+    title from its frontmatter and `:284` writes the entry line as
+    `- <date> — <id> — <title> — <summary>`; the archived item's bare title
+    became the two bold tokens on `completed.md:19` at the commit that staged
+    it. Repairing the archived title and the `completed.md` line together keeps
+    the two consistent.
+  - **The index is current and the generator's output is not
+    formatter-normalized.** In a scratch copy of `.oat/` at this `HEAD`,
+    `oat backlog regenerate-index` rewrote the whole managed table (no blank
+    line after the `<!-- OAT BACKLOG-INDEX -->` marker, unpadded columns —
+    111 insertions / 113 deletions against the committed file), and a following
+    `oxfmt --write .oat/repo/pjm/backlog/index.md` restored the committed file
+    byte for byte. So (a) no row is stale today, and (b) step 5 must run
+    `oxfmt --write` on the regenerated index before diffing, exactly as the
+    commit hook would, or the diff will not be confined to the two rows.
   - **Backticks survive a YAML round-trip in a plain scalar.** Parsing
     ``title: Keep a bare `__proto__` in Markdown prose from being formatted into bold``
     with the repository's `yaml` package returns the string intact and
@@ -110,6 +140,10 @@ meaning-destroying rewrite loud.
     is already clean** — six occurrences, all backticked, including the `title`
     and the H1. It is the file the sibling `harden-normalized-config-maps` lane
     edits.
+  - **`.oat/repo/reference/decisions/index.md` carries no occurrence.** It is
+    generated from record titles by `oat decision regenerate-index`, and every
+    record title that names the key already backticks it; the scan above
+    confirms the generated index is clean and this plan does not regenerate it.
   - **`markdownlint` exists but is scoped to the docs app.**
     `apps/oat-docs/.markdownlint.jsonc` is the only markdownlint configuration
     in the repository, `markdownlint-cli2` is a devDependency of
@@ -142,25 +176,27 @@ meaning-destroying rewrite loud.
 
 ## Dependencies
 
-| Type              | Dependency                                                                               | Required state                                                                           | Current state                                                                              |
-| ----------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Soft ordering     | Sibling wave-7 lane `harden-normalized-config-maps`                                      | Land this guard first, or re-run the guard test after that lane integrates.              | Pending. It edits `DR-260907-oat-config-reads-materialize.md`, which is inside this scope. |
-| Soft integration  | Any wave-7 lane that adds, closes, or renames a backlog item                             | Regenerate `.oat/repo/pjm/backlog/index.md` after integration and re-run the guard test. | Pending. `index.md` is a shared generated write surface for the whole wave.                |
-| Soft adjacency    | PR #273 (remote project management)                                                      | Re-run the guard test on the merged state; repair any new occurrence it introduces.      | Open. It writes `.oat/repo/pjm/backlog/index.md`, five decision records, and 8 docs pages. |
-| Soft adjacency    | PR #190 (ReviewPlan Stage A, draft)                                                      | Re-run the guard test on the merged state.                                               | Open draft. It writes `.oat/repo/pjm/backlog/index.md`, two items, and 8 docs pages.       |
-| Satisfied premise | `.oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md` already passes | The guard must not require repairing a file another lane owns.                           | Satisfied — verified clean (six occurrences, all backticked).                              |
+| Type                | Dependency                                                                                               | Required state                                                                                                                                                                          | Current state                                                                                                                                                                                                    |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Soft ordering       | [Harden normalized config maps](./2026-09-08-harden-normalized-config-maps.md)                           | Never in the same parallel group; this guard lands **first**, so that lane's edit to `DR-260907-oat-config-reads-materialize.md` is checked by the guard when it runs `turbo run test`. | Authored in the same batch, not merged. Its own `## Dependencies` carries the reciprocal row (keyed by `BL-260908-keep-a-bare-proto-in-markdown`) and its landing table rates this guard merging first as Minor. |
+| Soft adjacency      | [Cover skill and script tests in repo gates](./2026-09-08-cover-skill-and-script-tests-in-repo-gates.md) | No group constraint: that lane writes `.lintstagedrc.mjs` and `AGENTS.md`, which this plan cites as evidence and never writes.                                                          | Authored in the same batch. If it lands first and the `'*.md'` task moved, re-anchor `.lintstagedrc.mjs:14` in the test header comment.                                                                          |
+| Soft integration    | Any wave-7 lane that adds, closes, or renames a backlog item                                             | Regenerate `.oat/repo/pjm/backlog/index.md` after integration, `oxfmt --write` it, and re-run the guard test.                                                                           | Pending. `index.md` is a shared generated write surface for the whole wave.                                                                                                                                      |
+| Satisfied adjacency | PR #273 (remote project management)                                                                      | Re-run the enumeration on the merged state; repair any new occurrence it introduces.                                                                                                    | Merged 2026-09-08 as `7d70ac307`. Re-enumerated on top of it: its five new `DR-260907-*` records, its decision-index rows, and its eight docs pages carry no occurrence; the set is still the seven rows above.  |
+| Soft adjacency      | PR #190 (ReviewPlan Stage A, draft)                                                                      | Re-run the guard test on the merged state.                                                                                                                                              | Open draft. It writes `.oat/repo/pjm/backlog/index.md`, two items, and 8 docs pages.                                                                                                                             |
+| Satisfied premise   | `.oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md` already passes                 | The guard must not require repairing a file another lane owns.                                                                                                                          | Satisfied — verified clean at this `HEAD` (six occurrences, all backticked).                                                                                                                                     |
 
 No unsatisfied hard dependency remains, so `oat_execution_status` is `READY`.
 
 ## Landing-event impact
 
-| Event                                                                | Affected | Files in common                                                                                                                                                                    | Required update                                                                                                                                |
-| -------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| PR #273 `feat: add provider-neutral remote project management` lands | Material | `.oat/repo/pjm/backlog/index.md`; `.oat/repo/reference/decisions/DR-260907-*.md` (five new records) and `.oat/repo/reference/decisions/index.md`; 8 `apps/oat-docs/docs/**` pages. | Re-run the guard test against the merged tree before opening the lane PR. Repair any new occurrence by backticking it; do not relax the guard. |
-| PR #190 `ReviewPlan Stage A compatibility release` (draft) lands     | Material | `.oat/repo/pjm/backlog/index.md`; two `.oat/repo/pjm/backlog/items/*.md`; one archived item; 8 `apps/oat-docs/docs/**` pages.                                                      | Same: re-run the guard test, repair by backticking.                                                                                            |
-| PR #125 `oat-brainstorm visual companion` lands                      | None     | None of its 26 files is under `.oat/repo/**` or `apps/oat-docs/docs/**`.                                                                                                           | No plan change.                                                                                                                                |
-| Sibling lane `harden-normalized-config-maps` integrates first        | Minor    | `.oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md`.                                                                                                         | Re-run the guard test and repair by backticking if that lane wrote a bare literal; then re-run the drift check.                                |
-| Any wave-7 lane regenerates the backlog index                        | Minor    | `.oat/repo/pjm/backlog/index.md`.                                                                                                                                                  | Re-run `oat backlog regenerate-index` after integration and confirm the guard is still green.                                                  |
+| Event                                                                                      | Affected | Files in common                                                                                                                                 | Required update                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| PR #273 `feat: add provider-neutral remote project management` (merged 2026-09-08)         | None     | `.oat/repo/pjm/backlog/index.md`; five new `DR-260907-*` records and `.oat/repo/reference/decisions/index.md`; 8 `apps/oat-docs/docs/**` pages. | Already reflected: this plan's inspected `HEAD` sits on top of its merge commit and the re-enumeration found no new occurrence.                                                |
+| PR #190 `ReviewPlan Stage A compatibility release` (draft) lands                           | Material | `.oat/repo/pjm/backlog/index.md`; two `.oat/repo/pjm/backlog/items/*.md`; one archived item; 8 `apps/oat-docs/docs/**` pages.                   | Same: re-run the guard test, repair by backticking.                                                                                                                            |
+| PR #125 `oat-brainstorm visual companion` lands                                            | None     | None of its 26 files is under `.oat/repo/**` or `apps/oat-docs/docs/**`.                                                                        | No plan change.                                                                                                                                                                |
+| Sibling lane `harden-normalized-config-maps` integrates first (against the recorded order) | Minor    | `.oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md`.                                                                      | Re-run the guard test and repair by backticking if that lane wrote a bare literal; then re-run the drift check.                                                                |
+| Sibling lane `cover-skill-and-script-tests-in-repo-gates` integrates first                 | None     | `.lintstagedrc.mjs` (evidence only).                                                                                                            | Re-anchor `.lintstagedrc.mjs:14` in the test header comment if the `'*.md'` task moved; the vector is unchanged unless that lane narrowed the glob, which it does not plan to. |
+| Any wave-7 lane regenerates the backlog index                                              | Minor    | `.oat/repo/pjm/backlog/index.md`.                                                                                                               | Re-run `oat backlog regenerate-index` after integration, `oxfmt --write` the result, and confirm the guard is still green.                                                     |
 
 ## Drift check
 
@@ -168,7 +204,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat c9f2e147ac0674e73a60735e0c1727ccc6048756..origin/main -- packages/cli/src/validation .oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md .oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md .oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md .oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md packages/cli/src/commands/backlog/regenerate-index.ts .lintstagedrc.mjs .oxfmtrc.jsonc
+git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..origin/main -- packages/cli/src/validation .oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md .oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md .oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md .oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md .oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md packages/cli/src/commands/backlog/regenerate-index.ts packages/cli/src/commands/backlog/archive.ts .lintstagedrc.mjs .oxfmtrc.jsonc
 ```
 
 Expected at the authored baseline: no output. Then re-run the enumeration in
@@ -275,7 +311,10 @@ predecessor lanes integrate.
   they must not be "repaired".
 - `AGENTS.md` — the convention is documented in the test file's header comment,
   not in repository instructions. `AGENTS.md` is concurrently owned by the
-  wave-7 repo-gates lane.
+  wave-7 repo-gates lane
+  ([Cover skill and script tests in repo gates](./2026-09-08-cover-skill-and-script-tests-in-repo-gates.md)).
+- `.oat/repo/reference/decisions/index.md` — generated, verified clean, and not
+  regenerated by this plan; no record title changes here.
 - Any escape hatch or opt-out marker for the guard. Backticks are always
   available and always correct; a suppression comment would reintroduce the
   silence this guard exists to remove.
@@ -351,8 +390,8 @@ the repository; never delete a variable path with `rm -rf`) that:
   mangled form.
 
 **Verify:** the script reports exactly the seven rows in the evidence table
-above and a total of eight occurrences (`completed.md:19` carries two). Record
-the output verbatim; it is this change's red control.
+above and a total of eight occurrences (`completed.md:19` carries two) across
+712 scanned files. Record the output verbatim; it is this change's red control.
 
 ### 3. Add the contract test
 
@@ -409,19 +448,28 @@ unchanged. Do not change `id`, `updated`, or any other field beyond what the
 title edit requires, and do not touch the archived item's body.
 
 Then, after confirming `oat pjm doctor --json` reports `adoption.state` of
-`declared` or `inferred-legacy`, regenerate the managed index rather than
-editing it:
+`declared` or `inferred-legacy` (it reports `declared` at this `HEAD`),
+regenerate the managed index rather than editing it, and normalize the
+generator's output with the same formatter the commit hook applies:
 
 ```bash
 pnpm run cli -- backlog regenerate-index
+pnpm exec oxfmt --write .oat/repo/pjm/backlog/index.md
 ```
+
+The second command is not optional. The generator emits an unpadded table with
+no blank line after the `<!-- OAT BACKLOG-INDEX -->` marker, so the raw diff
+against the committed, formatter-normalized file is a whole-table rewrite
+(verified: 111 insertions / 113 deletions at this `HEAD`, collapsing to zero
+after `oxfmt --write`). Running `oxfmt` here is also the point of the change:
+the two repaired rows now carry backticks, so the formatter leaves them alone.
 
 **Verify:** `git diff -- .oat/repo/pjm/backlog/index.md` shows changes confined
 to the two rows for `BL-260908-guard-normalized-config-maps` and
-`BL-260908-keep-a-bare-proto-in-markdown` (column-alignment whitespace on the
-managed table may shift; no row is added, removed, or reordered). If any other
-row changes, STOP — the index was stale for an unrelated reason and that is a
-separate change.
+`BL-260908-keep-a-bare-proto-in-markdown` (at this `HEAD`, `:269` and `:274`);
+no row is added, removed, or reordered, and no whitespace-only hunk remains. If
+any other row changes, STOP — the index was stale for an unrelated reason and
+that is a separate change.
 
 ### 6. Turn the guard green and prove it can still fail
 
@@ -549,14 +597,15 @@ Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;
 - `origin/main` advances materially from
-  `c9f2e147ac0674e73a60735e0c1727ccc6048756`;
-- PR #273 or PR #190 lands, or the sibling `harden-normalized-config-maps` lane
-  integrates — apply the `## Landing-event impact` table and re-enumerate;
+  `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`;
+- PR #190 lands, or the sibling `harden-normalized-config-maps` or
+  `cover-skill-and-script-tests-in-repo-gates` lane integrates — apply the
+  `## Landing-event impact` table and re-enumerate;
 - a dependency named in `## Dependencies` changes state;
 - the cited line anchors move (`DR-260908-a-stop-whose-remedy-lies.md:14`,
-  `completed.md:19`, `index.md:265` and `:270`, the three `title:` lines at `:3`,
-  `regenerate-index.ts:51` and `:88-113`, `.lintstagedrc.mjs:14`,
-  `package.json:20`);
+  `completed.md:19`, `index.md:269` and `:274`, the three `title:` lines at `:3`,
+  `regenerate-index.ts:51` and `:87-113`, `archive.ts:269-284`,
+  `.lintstagedrc.mjs:14`, `package.json:20`);
 - the `oxfmt` pin at `package.json:49` moves — re-run the scratch reproduction
   first; if the rewrite no longer happens, the guard is still worth landing but
   its rationale must be updated rather than copied forward;

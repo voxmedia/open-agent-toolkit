@@ -4,8 +4,8 @@ oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260906-guard-packed-asset-directories.md
-oat_external_plan_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
-oat_external_plan_main_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
+oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
+oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
 oat_execution_status: READY
 oat_backlog_items:
@@ -26,9 +26,13 @@ created: '2026-09-08T21:20:00Z'
 
 > [!IMPORTANT]
 > **Execution status: READY.** No unsatisfied hard dependency. The only shared
-> surface with other open work is
-> `apps/oat-docs/docs/cli-utilities/configuration.md`, which PR #273 and draft
-> PR #190 also edit; that is an ordering nuisance, not a block.
+> write surface with other work is
+> `apps/oat-docs/docs/cli-utilities/configuration.md`: the wave-7 sibling
+> [name-the-resolved-symlink-target](./2026-09-08-name-the-resolved-symlink-target.md)
+> edits one sentence at `:95` and draft PR #190 also edits it; both are in a
+> different section from this plan's `:255-282`, so that is an ordering
+> nuisance, not a block. PR #273, which also edited it, has merged and was
+> verified.
 
 ## Outcome
 
@@ -47,16 +51,27 @@ guarantee alongside the runtime `OAT_ASSETS_DIR` contract it already documents.
 
 - Source backlog item:
   [BL-260906-guard-packed-asset-directories — Guard packed asset directories and document the OAT_ASSETS_DIR contract](../../pjm/backlog/items/BL-260906-guard-packed-asset-directories.md)
-- Inspected `HEAD`: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the tree whose
-  content this plan read.
-- Comparison baseline: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the fetched
-  `origin/main` tip; identical to the inspected `HEAD` on this planning branch.
+- Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
+  content this plan read (branch `wave-7-plans`, rebased onto `origin/main`).
+- Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched
+  `origin/main` tip (PR #273 merged), which is also the merge-base with `HEAD`.
+  Between `c9f2e147a` (the draft's baseline) and this `HEAD`, exactly two
+  in-scope files changed, both by PR #273:
+  `apps/oat-docs/docs/cli-utilities/configuration.md` (+19/−1, all above the
+  `OAT_ASSETS_DIR` section, which moved from `:237-264` to `:255-282`) and
+  `packages/cli/scripts/bundle-inputs.mjs` (+1: `oat-pjm-remote` added to the
+  `skills` inventory; `agents`, `oatScripts`, and `docsRoot` untouched). Every
+  anchor below is from the post-merge tree.
 - Planning date: `2026-09-08`
-- Working tree while planning: `git status --porcelain` was empty.
+- Working tree while planning: `git status --porcelain` was empty apart from
+  the wave-7 plan files under `.oat/repo/reference/external-plans/` and their
+  source backlog items.
 - Verified evidence:
   - `packages/cli/src/fs/assets.ts:81-89` — `REQUIRED_BUNDLE_DIRECTORIES` is
     exactly `['skills','agents','templates','scripts','docs','migration','config']`,
-    in producer order.
+    in producer order. It is a module-private `const` (not exported);
+    `packages/cli/src/fs/assets.test.ts:53` restates the same seven names in a
+    local copy.
   - `packages/cli/src/fs/assets.ts:136-167` — `validateBundleStructure` `stat`s
     each one and throws `CliError(..., 2)` on the first that is missing or is not
     a directory; `:181-223` runs it from `validateAssetsBundle`, and `:244-276`
@@ -78,70 +93,78 @@ guarantee alongside the runtime `OAT_ASSETS_DIR` contract it already documents.
     _or_ starts with `"<required>/"`. The bare `assets` entry is therefore
     satisfied by any single packed file under `assets/`, which is why an emptied
     subdirectory passes today.
-  - `packages/cli/scripts/bundle-assets.sh:44` creates all seven directories
+  - `packages/cli/scripts/bundle-assets.sh:42` creates all seven directories
     unconditionally in staging, and populates `docs/` only
-    `if [ -d "${DOCS_SOURCE}" ]` (`:105-107`) — a conditional population whose
+    `if [ -d "${DOCS_SOURCE}" ]` (`:106-108`) — a conditional population whose
     failure mode is a directory that exists locally and vanishes from the
     tarball, because `npm pack` drops empty directories. Same shape for
     `agents/`, `templates/`, and `scripts/`, each driven by a
-    `node bundle-inputs.mjs --list …` loop.
+    `node bundle-inputs.mjs --list …` loop (`:110-118` for scripts, which
+    hard-fails if a listed source is missing).
   - Stable, non-optional members exist in each unguarded directory, confirmed
     both in `packages/cli/scripts/bundle-inputs.mjs` and in the built bundle at
-    `packages/cli/assets/`:
-    `agents/` → `oat-reviewer.md` (`bundle-inputs.mjs` `agents` list);
-    `scripts/` → `generate-oat-state.sh` (`oatScripts` list, and
-    `bundle-assets.sh:110-118` hard-fails if a listed script source is missing);
-    `docs/` → `index.md` (`docsRoot` is `apps/oat-docs/docs`, whose
-    `index.md` is an authored file, not the generated `apps/oat-docs/index.md`);
-    `config/` → `dispatch-matrix-recommendation.json`
+    `packages/cli/assets/` (rebuilt 2026-09-08 at this `HEAD`):
+    `agents/` → `oat-reviewer.md` (`bundle-inputs.mjs:83-86`, the `agents`
+    list); `scripts/` → `generate-oat-state.sh` (`:116-117`, the `oatScripts`
+    list); `docs/` → `index.md` (`:149`, `docsRoot: 'apps/oat-docs/docs'`,
+    whose `index.md` is an authored file, not the generated
+    `apps/oat-docs/index.md`); `config/` → `dispatch-matrix-recommendation.json`
     (`bundle-assets.sh:124`, an unconditional `cp`).
   - `packages/cli/src/release/public-package-contract.test.ts:228-254` — the
-    `findMissingPackedPaths` unit fixture. It already lists
-    `assets/docs/index.md` and does **not** list any `assets/agents/…`,
-    `assets/scripts/…`, or `assets/config/…` path, so adding three of the four
-    new contract entries turns this existing test red — a free red-then-green
-    control at the unit level.
-  - `packages/cli/src/release/public-package-contract.test.ts:256-297` — the
+    `findMissingPackedPaths` unit fixture (`packedPaths` at `:230-246`). It
+    already lists `assets/docs/index.md` and does **not** list any
+    `assets/agents/…`, `assets/scripts/…`, or `assets/config/…` path, so adding
+    three of the four new contract entries turns this existing test red — a free
+    red-then-green control at the unit level.
+  - `packages/cli/src/release/public-package-contract.test.ts:256-298` — the
     real-pack test. It `mkdtemp`s a package directory, writes a minimal
     `package.json` with `files: ['dist','assets','README.md']`, runs
     `bash packages/cli/scripts/bundle-assets.sh` with `OAT_ASSETS_DIR` pointed at
     it, then `packPublicPackage(cliContract, packageDir)` and asserts
-    `findMissingPackedPaths(...)` is `[]`. This is the exact harness the negative
-    pack control needs, and it already runs inside the ordinary vitest suite with
-    a 20s timeout.
-  - `tools/release/validate-public-packages.ts:274-320` — `validatePackage`
-    calls `findMissingPackedPaths` on the real tarball listing and reports
-    `missing packed paths: …`; `:331-355` is `runReleaseValidation`, whose
-    failures make `main` set `process.exitCode = 1`. So a contract addition is
-    enforced by `pnpm release:validate` with no further wiring.
-  - `apps/oat-docs/docs/cli-utilities/configuration.md:237-264` — the
+    `findMissingPackedPaths(...)` is `[]` (`:291`). This is the exact harness the
+    negative pack control needs, and it already runs inside the ordinary vitest
+    suite with a 20s timeout. `:300-333` is the sibling that proves packing
+    does not mutate `packages/cli/dist` or `assets` (30s timeout).
+  - `tools/release/validate-public-packages.ts:280-3xx` — `validatePackage`
+    calls `findMissingPackedPaths` on the real tarball listing at `:309` and
+    reports `missing packed paths: …` at `:339-341`; `:375` is
+    `runReleaseValidation`, whose failures make `main` set
+    `process.exitCode = 1` at `:424`; the success line is
+    `release validation passed for N public packages` at `:407-409`. So a
+    contract addition is enforced by `pnpm release:validate` with no further
+    wiring.
+  - `apps/oat-docs/docs/cli-utilities/configuration.md:255-282` — the
     `### Bundled assets root (OAT_ASSETS_DIR)` section. **The item's third
-    acceptance criterion is already satisfied**: `:246-254` already names the
+    acceptance criterion is already satisfied**: `:264-272` already names the
     seven directories, the exit code 2, the first-offending-path diagnosis, and
-    `:255-258` already describes the source-aware remedies. Nothing there is
+    `:273-276` already describes the source-aware remedies. Nothing there is
     stale. What is missing is the _packed_-path guarantee this plan adds, so the
     docs work is one added statement, not a rewrite.
   - `packages/cli/assets/**` is a build output ignored by `.gitignore:25`
-    (three legacy files remain tracked; none of them is touched here), so the
-    bundle itself is never hand-edited.
+    (`packages/cli/assets/*`). Four legacy files remain tracked
+    (`config/dispatch-matrix-recommendation.json`, `migration/pjm-restructure.md`,
+    `public-package-versions.json`, `templates/plan-lite.md`); none of them is
+    touched here, and the bundle itself is never hand-edited.
 
 ## Dependencies
 
-| Type             | Dependency                                                                 | Required state                                                                                                                | Current state                                     |
-| ---------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| Soft integration | PR #273 (remote project management) and draft PR #190 (ReviewPlan Stage A) | Both edit `apps/oat-docs/docs/cli-utilities/configuration.md`; re-anchor the `OAT_ASSETS_DIR` section if either merges first. | Open. Neither touches the release contract files. |
-| Soft integration | PR #273 also edits `packages/cli/scripts/bundle-inputs.mjs`                | If it adds or removes a bundled agent or script, re-verify that the four guarded paths still exist in a fresh bundle.         | Open.                                             |
-| Soft adjacency   | The wave fan-in's `pnpm release:validate` run                              | The lane proves the guard with a focused test; the fan-in runs the gate itself.                                               | Standing wave-7 convention.                       |
+| Type             | Dependency                                                                           | Required state                                                                                                                                    | Current state                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Satisfied        | PR #273 (remote project management)                                                  | Merged before this lane starts; its `configuration.md` and `bundle-inputs.mjs` edits re-anchored.                                                 | Merged 2026-09-08 (`7d70ac307`); re-anchored above. The four guarded paths are unaffected by its inventory change. |
+| Soft adjacency   | [Name the resolved symlink target](./2026-09-08-name-the-resolved-symlink-target.md) | Never in the same lane group: it writes one sentence at `configuration.md:95`; this plan writes inside `:255-282`. Re-anchor after it integrates. | READY in wave 7; different section, trivially mergeable.                                                           |
+| Soft integration | Draft PR #190 (ReviewPlan Stage A)                                                   | Also edits `apps/oat-docs/docs/cli-utilities/configuration.md`; re-anchor the `OAT_ASSETS_DIR` section if it merges first.                        | Open draft. Does not touch the release contract files.                                                             |
+| Soft adjacency   | The wave fan-in's `pnpm release:validate` run                                        | The lane proves the guard with a focused test; the fan-in runs the gate itself.                                                                   | Standing wave-7 convention.                                                                                        |
 
 There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                      | Affected | Files in common                                                                               | Required update                                                                                                                  |
-| ------------------------------------------ | -------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| PR #273 (remote project management) merges | Minor    | `apps/oat-docs/docs/cli-utilities/configuration.md`, `packages/cli/scripts/bundle-inputs.mjs` | Re-anchor `:237-264` before editing the docs; re-run Step 1's existence probe for the four guarded paths against a fresh bundle. |
-| Draft PR #190 (ReviewPlan Stage A) merges  | Minor    | `apps/oat-docs/docs/cli-utilities/configuration.md`                                           | Re-anchor `:237-264` before editing; no code change expected.                                                                    |
-| PR #125 (brainstorm companion) merges      | None     | None                                                                                          | No action.                                                                                                                       |
+| Event                                                | Affected | Files in common                                                                               | Required update                                                                                                                                                                                                                                                        |
+| ---------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PR #273 (remote project management) merged           | Minor    | `apps/oat-docs/docs/cli-utilities/configuration.md`, `packages/cli/scripts/bundle-inputs.mjs` | **Merged; verified** at `7d70ac307`: `configuration.md`'s `OAT_ASSETS_DIR` section re-anchored to `:255-282` (`:264-272`, `:273-276`); `bundle-inputs.mjs` gained only `oat-pjm-remote` under `skills`, so the four guarded paths still exist in a fresh bundle. Done. |
+| Draft PR #190 (ReviewPlan Stage A) merges            | Minor    | `apps/oat-docs/docs/cli-utilities/configuration.md`                                           | Re-anchor `:255-282` before editing; no code change expected.                                                                                                                                                                                                          |
+| Wave-7 lane `name-the-resolved-symlink-target` lands | Minor    | `apps/oat-docs/docs/cli-utilities/configuration.md`                                           | Re-anchor `:255-282` (its edit is at `:95`, so the section may shift by a line); no code change expected.                                                                                                                                                              |
+| PR #125 (brainstorm companion) merges                | None     | None                                                                                          | No action.                                                                                                                                                                                                                                                             |
 
 ## Drift check
 
@@ -149,27 +172,33 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat c9f2e147ac0674e73a60735e0c1727ccc6048756..origin/main -- packages/cli/src/release/public-package-contract.ts packages/cli/src/release/public-package-contract.test.ts packages/cli/src/fs/assets.ts packages/cli/src/fs/assets.test.ts packages/cli/scripts/bundle-assets.sh packages/cli/scripts/bundle-inputs.mjs tools/release/validate-public-packages.ts apps/oat-docs/docs/cli-utilities/configuration.md
+git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..HEAD -- packages/cli/src/release/public-package-contract.ts packages/cli/src/release/public-package-contract.test.ts packages/cli/src/fs/assets.ts packages/cli/src/fs/assets.test.ts packages/cli/scripts/bundle-assets.sh packages/cli/scripts/bundle-inputs.mjs tools/release/validate-public-packages.ts apps/oat-docs/docs/cli-utilities/configuration.md
 ```
 
 Expected on an unchanged base: no output. If `bundle-inputs.mjs` or
 `bundle-assets.sh` changed, re-run Step 1's existence probe before choosing the
 guarded paths — a path this plan names may no longer be produced. If
 `fs/assets.ts` changed, re-read `REQUIRED_BUNDLE_DIRECTORIES`: the contract
-entries must stay in one-to-one correspondence with it.
+entries must stay in one-to-one correspondence with it. If `configuration.md`
+changed, re-anchor the `### Bundled assets root` section by heading, not by
+line.
 
 ## Repository conventions
 
 - Build: `pnpm build` → `Tasks: … successful`. Required before any pack-based
-  test, because `packPublicPackage` packs what is on disk.
+  test, because `packPublicPackage` packs what is on disk. A `>>> FULL TURBO`
+  replay is acceptable only if nothing under `packages/cli` changed since the
+  last real build; the bundle step (`bundle-assets.sh`) reruns on every real
+  build.
 - Typecheck: `pnpm type-check` → exit 0.
 - Focused test: from `packages/cli`,
   `pnpm exec vitest run src/release/public-package-contract.test.ts` → all pass.
   Two of its cases run a real `pnpm pack` and are already given 20s/30s
-  timeouts; the new negative control needs the same treatment.
+  timeouts; the new negative controls need the same treatment.
 - Lint/format check (non-mutating): `pnpm check` (which is what runs
-  markdownlint over `apps/oat-docs/docs`), plus `pnpm lint` and `pnpm format`.
-  `pnpm check` and the lint/format pair overlap but neither contains the other.
+  markdownlint over `apps/oat-docs/docs`, via `pnpm --filter oat-docs check`),
+  plus `pnpm lint` and `pnpm format`. `pnpm check` and the lint/format pair
+  overlap but neither contains the other.
 - Release gate: `pnpm release:validate` is a **standalone/fan-in** gate. In lane
   mode this plan proves the new guard with the focused test above and does not
   run the gate; the wave fan-in runs `pnpm release:validate` (and
@@ -177,14 +206,17 @@ entries must stay in one-to-one correspondence with it.
 - Implementation pattern: add entries to the existing `requiredPaths` array in
   `PUBLIC_PACKAGE_CONTRACTS`; do not introduce a second mechanism. The negative
   pack control copies the harness at
-  `public-package-contract.test.ts:256-297` verbatim in shape.
-- Import policy (`packages/cli/AGENTS.md`): `./…` for same-directory modules and
-  a configured alias otherwise. The test file already reaches
+  `public-package-contract.test.ts:256-298` verbatim in shape.
+- Import policy (`packages/cli/AGENTS.md:26`): `./…` for same-directory modules
+  and a configured alias otherwise. The test file already reaches
   `tools/release/…` by relative path, matching its existing imports at `:17-20`;
-  keep that, do not invent a new alias.
+  keep that, do not invent a new alias. `fs/assets.ts` is reachable from the
+  test as `@fs/assets` if that alias exists in `packages/cli/tsconfig.json`;
+  otherwise follow whatever the nearest test in `src/release` already uses.
 - Skill versioning: no `.agents/skills/**` file is edited, so no
-  `metadata.version` bump applies (top-level `version:` has been gone since CLI
-  0.2.65). `pnpm run check:skill-bumps` must still pass.
+  `metadata.version` bump applies (at this `HEAD` all 83 bundled skills carry
+  `metadata.version` and none carries a top-level `version:`).
+  `pnpm run check:skill-bumps` must still pass.
 - `DR-260906-standing-claims-in-skills-name`: the sentence added to
   `configuration.md` is a standing claim about release behavior and must name
   its executable owner — the negative pack control — in the same change.
@@ -212,17 +244,22 @@ logs` or `>>> FULL TURBO` executed nothing. Use
 - `packages/cli/src/release/public-package-contract.ts` — four entries added to
   the CLI contract's `requiredPaths`, plus a comment tying the list to
   `fs/assets.ts`'s `REQUIRED_BUNDLE_DIRECTORIES`.
+- `packages/cli/src/fs/assets.ts` — `export` added to
+  `REQUIRED_BUNDLE_DIRECTORIES` at `:81` so the correspondence test can import
+  it. No other change to that file.
 - `packages/cli/src/release/public-package-contract.test.ts` — the updated unit
   fixture, a correspondence test between the contract and
-  `REQUIRED_BUNDLE_DIRECTORIES`, and the negative pack control.
-- `apps/oat-docs/docs/cli-utilities/configuration.md` — one added statement in
-  the existing `### Bundled assets root (OAT_ASSETS_DIR)` section.
+  `REQUIRED_BUNDLE_DIRECTORIES`, and the negative pack controls.
+- `apps/oat-docs/docs/cli-utilities/configuration.md` — one added bullet in
+  the existing `### Bundled assets root (OAT_ASSETS_DIR)` section (`:255-282`).
 
 ### Out of scope
 
-- `packages/cli/src/fs/assets.ts` — the runtime validator is correct and is the
-  authority this plan aligns to. Do not add, remove, or reorder
-  `REQUIRED_BUNDLE_DIRECTORIES`.
+- The contents and order of `REQUIRED_BUNDLE_DIRECTORIES` — the runtime
+  validator is correct and is the authority this plan aligns to. Do not add,
+  remove, or reorder its entries; the export is the only permitted change.
+- `packages/cli/src/fs/assets.test.ts:53` — its local restatement of the seven
+  names may be replaced by the new export in a follow-up; not required here.
 - `packages/cli/scripts/bundle-assets.sh` and `bundle-inputs.mjs` — the producer
   is not changed. Making `docs/` population unconditional, or adding a
   keep-file, is a different fix; this plan guards the _consumer_ contract so a
@@ -231,6 +268,8 @@ logs` or `>>> FULL TURBO` executed nothing. Use
   `requiredPaths`; no wiring change is needed and none should be made.
 - The other four public packages' contracts — none of them bundles assets.
 - `packages/cli/assets/**` — a git-ignored build output; never hand-edited.
+- `configuration.md` outside `:255-282` — in particular `:95`, which the
+  sibling plan `name-the-resolved-symlink-target` owns.
 - Lockstep release files
   (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`,
   `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never
@@ -270,12 +309,13 @@ each of `packages/cli/assets/agents/oat-reviewer.md`,
 `packages/cli/assets/docs/index.md`, and
 `packages/cli/assets/config/dispatch-matrix-recommendation.json` exists, and
 cross-check each against its producer in `packages/cli/scripts/bundle-inputs.mjs`
-(`agents`, `oatScripts`, `docsRoot`) and `bundle-assets.sh:124`.
+(`agents` at `:83-86`, `oatScripts` at `:116-117`, `docsRoot` at `:149`) and
+`bundle-assets.sh:124`.
 
 **Verify:** `ls packages/cli/assets/agents/oat-reviewer.md packages/cli/assets/scripts/generate-oat-state.sh packages/cli/assets/docs/index.md packages/cli/assets/config/dispatch-matrix-recommendation.json`
-→ all four listed, exit 0. If any is absent, STOP and choose a different member
-of that directory from the inventory rather than guarding a path the producer
-does not emit.
+→ all four listed, exit 0 (confirmed at this `HEAD` on 2026-09-08). If any is
+absent, STOP and choose a different member of that directory from the inventory
+rather than guarding a path the producer does not emit.
 
 ### 2. Add the four contract entries
 
@@ -301,34 +341,33 @@ and the negative pack control from Step 4 as its executable owners.
 fixture lacks (`assets/agents/oat-reviewer.md`,
 `assets/scripts/generate-oat-state.sh`,
 `assets/config/dispatch-matrix-recommendation.json`; `assets/docs/index.md` was
-already in the fixture). Record that red output — it is the first negative
-control, and it is free.
+already in the fixture at `:233`). Record that red output — it is the first
+negative control, and it is free.
 
 ### 3. Update the two contract-shape tests
 
 Add the three missing paths to the `packedPaths` fixture at
-`public-package-contract.test.ts:230-245`, and add all four to the
-`requiredPaths: expect.arrayContaining([...])` assertion at `:100-111` so the
+`public-package-contract.test.ts:230-246`, and add all four to the
+`requiredPaths: expect.arrayContaining([...])` assertion at `:100-112` so the
 contract shape is pinned rather than merely satisfied.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts`
-→ the two shape cases pass; the two real-pack cases at `:256-297` and `:300-333`
+→ the two shape cases pass; the two real-pack cases at `:256-298` and `:300-333`
 also pass, proving the four new paths are present in a genuinely packed CLI.
 
 ### 4. Add the correspondence test and the negative pack control
 
-Add two cases to `public-package-contract.test.ts`:
+Export `REQUIRED_BUNDLE_DIRECTORIES` from `packages/cli/src/fs/assets.ts:81`
+(add `export`; change nothing else in that file). Then add two cases to
+`public-package-contract.test.ts`:
 
 1. `guards a packed path under every required bundle directory` — import
-   `REQUIRED_BUNDLE_DIRECTORIES` from `packages/cli/src/fs/assets.ts` (export it
-   if it is not already exported; that is the only production change permitted
-   in `fs/assets.ts`, and it must not alter its contents or order) and assert
-   that for each directory name, the CLI contract's `requiredPaths` contains at
-   least one entry starting with `assets/<name>/`. This is the test that makes
-   an eighth required directory fail loudly instead of silently going
-   unguarded.
+   `REQUIRED_BUNDLE_DIRECTORIES` from `fs/assets.ts` and assert that for each
+   directory name, the CLI contract's `requiredPaths` contains at least one
+   entry starting with `assets/<name>/`. This is the test that makes an eighth
+   required directory fail loudly instead of silently going unguarded.
 2. `fails release validation when a required bundle directory is empty in the
-tarball` — the negative pack control. Following the harness at `:256-297`:
+tarball` — the negative pack control. Following the harness at `:256-298`:
    `mkdtemp` a package directory, write the minimal `package.json` with
    `files: ['dist','assets','README.md']`, run `bundle-assets.sh` with
    `OAT_ASSETS_DIR` pointed there, then remove the contents of exactly one
@@ -346,8 +385,10 @@ tarball` — the negative pack control. Following the harness at `:256-297`:
    test itself created.
 
 Repeat the control's assertion shape for a second directory (`assets/docs`, the
-one with the conditional producer) so the guard is proven for more than one
-member of the four.
+one with the conditional producer; expected `['assets/docs/index.md']`) so the
+guard is proven for more than one member of the four. Share one bundled package
+directory between the two controls if that keeps the suite under its timeout;
+each control must still pack its own mutated copy.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts`
 → all pass. Then revert Step 2's four contract entries alone, re-run, and
@@ -357,16 +398,18 @@ and report that.
 ### 5. State the packed-path guarantee in the docs
 
 In `apps/oat-docs/docs/cli-utilities/configuration.md`, inside the existing
-`### Bundled assets root (OAT_ASSETS_DIR)` section (`:237-264`), add one bullet
-after the fail-closed bullet at `:246-254`: the published CLI tarball is held to
-the same seven-directory shape by release validation, which requires a concrete
-packed file under each of them because `npm pack` drops empty directories, so a
-published package cannot ship a bundle that would make every command exit 2.
-Name `public-package-contract.test.ts`'s negative pack control as the check that
+`### Bundled assets root (OAT_ASSETS_DIR)` section (`:255-282`; locate it by
+heading), add one bullet after the source-aware-remedies bullet at `:273-276`:
+the published CLI tarball is held to the same seven-directory shape by release
+validation, which requires a concrete packed file under each of them because
+`npm pack` drops empty directories, so a published package cannot ship a bundle
+that would make every command exit 2. Name
+`public-package-contract.test.ts`'s negative pack control as the check that
 owns the claim. Leave the rest of the section as it is — its description of the
-runtime contract is already accurate and satisfies the item's third acceptance
-criterion. Do not touch `apps/oat-docs/docs/index.md`'s `## Contents` (no new
-page is added) and do not hand-edit `apps/oat-docs/index.md`.
+runtime contract at `:264-276` is already accurate and satisfies the item's
+third acceptance criterion. Do not touch `:95` (owned by the sibling plan), do
+not touch `apps/oat-docs/docs/index.md`'s `## Contents` (no new page is added),
+and do not hand-edit `apps/oat-docs/index.md`.
 
 **Verify:** `pnpm --filter oat-docs check` → oxfmt and markdownlint both pass.
 
@@ -392,22 +435,23 @@ validation` — fixture gains the three missing `assets/*` paths. **Red between
   actually enforced by `findMissingPackedPaths`.
 - **`packages/cli/src/release/public-package-contract.test.ts:85-197`
   (changed).** `captures role and artifact expectations for each package` —
-  `requiredPaths` assertion gains all four entries, pinning the contract shape.
+  `requiredPaths` assertion at `:100-112` gains all four entries, pinning the
+  contract shape.
 - **New: `guards a packed path under every required bundle directory`.** Derives
-  its expectation from `REQUIRED_BUNDLE_DIRECTORIES` rather than restating the
-  seven names, so adding an eighth required runtime directory without a
-  corresponding guard fails here. Regression proved: the two lists silently
-  diverging, which is the root cause of this item.
+  its expectation from the exported `REQUIRED_BUNDLE_DIRECTORIES` rather than
+  restating the seven names, so adding an eighth required runtime directory
+  without a corresponding guard fails here. Regression proved: the two lists
+  silently diverging, which is the root cause of this item.
 - **New: `fails release validation when a required bundle directory is empty in
 the tarball`.** The reproduction-grade negative pack control the item asks
   for: a real `bundle-assets.sh` bundle, one guarded directory emptied but still
   present on disk, a real `pnpm pack`, and an exact-array assertion on
   `findMissingPackedPaths`. Run once for `assets/agents` and once for
   `assets/docs`. Structural pattern:
-  `public-package-contract.test.ts:256-297`.
+  `public-package-contract.test.ts:256-298`.
   - Accepted control (required alongside the rejected one): the unmodified
     bundle from the same harness must still report `[]`. That case already
-    exists at `:290-296`; assert it in the same run so a control that rejects
+    exists at `:291`; assert it in the same run so a control that rejects
     everything cannot pass as evidence.
 - **Negative controls, run once and reported.** Revert Step 2's four contract
   entries and confirm the correspondence test and both pack controls fail;
@@ -426,8 +470,8 @@ the tarball`.** The reproduction-grade negative pack control the item asks
 - [ ] The CLI contract's `requiredPaths` contains at least one
       `assets/<dir>/…` entry for every name in
       `fs/assets.ts`'s `REQUIRED_BUNDLE_DIRECTORIES`, and the correspondence
-      test derives that expectation from the runtime list rather than restating
-      it.
+      test derives that expectation from the exported runtime list rather than
+      restating it.
 - [ ] The negative pack control fails release validation when `assets/agents` is
       empty in the tarball, and again when `assets/docs` is, each with an exact
       `findMissingPackedPaths` array; the unmodified control bundle still
@@ -446,7 +490,8 @@ the tarball`.** The reproduction-grade negative pack control the item asks
       left to the fan-in. Standalone mode: `pnpm release:validate` reports
       `release validation passed for 5 public packages`.
 - [ ] `git status --short` contains no unexplained or out-of-scope files (in
-      particular nothing under `packages/cli/assets/` or `packages/cli/dist/`).
+      particular nothing under `packages/cli/assets/` or `packages/cli/dist/`,
+      and no change to `configuration.md` outside the `OAT_ASSETS_DIR` section).
 
 ## STOP conditions
 
@@ -458,8 +503,9 @@ Stop and report instead of improvising when:
 - guarding a directory appears to require changing
   `packages/cli/scripts/bundle-assets.sh` or `bundle-inputs.mjs` — the producer
   is out of scope, and a producer change is a different item;
-- `REQUIRED_BUNDLE_DIRECTORIES` would have to change to make the correspondence
-  test pass — the runtime validator is the authority, not the release contract;
+- `REQUIRED_BUNDLE_DIRECTORIES` would have to change in content or order to make
+  the correspondence test pass — the runtime validator is the authority, not
+  the release contract;
 - the negative pack control passes without the fix, or fails with a message
   naming a path other than the one that was emptied — the control is not
   reproducing the failure mode it claims to;
@@ -474,14 +520,15 @@ Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;
 - `origin/main` advances materially from
-  `c9f2e147ac0674e73a60735e0c1727ccc6048756`;
-- PR #273 or draft PR #190 lands (both edit `configuration.md`; #273 also edits
-  `bundle-inputs.mjs`);
+  `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`;
+- draft PR #190 lands, or the wave-7 lane
+  `name-the-resolved-symlink-target` integrates (both edit `configuration.md`);
 - `REQUIRED_BUNDLE_DIRECTORIES` in `packages/cli/src/fs/assets.ts` changes;
 - `bundle-inputs.mjs`'s `agents`, `oatScripts`, or `docsRoot` entries change, or
   `bundle-assets.sh`'s `config/` copy at `:124` changes;
 - any cited line anchor in `public-package-contract.ts`,
-  `public-package-contract.test.ts`, or `configuration.md` moves.
+  `public-package-contract.test.ts`, `validate-public-packages.ts`, or
+  `configuration.md` moves.
 
 Apply the `## Landing-event impact` table when one of its events has occurred.
 Executed inside a wave, this plan refreshes its drift check against the exact
@@ -502,11 +549,13 @@ SHA to `origin/main`.
   `findMissingBuildArtifacts` would already have caught.
 - **Correspondence, not restatement.** The new test must read
   `REQUIRED_BUNDLE_DIRECTORIES` from the runtime module. A test that hardcodes
-  the seven names would go stale in exactly the way this item exists to prevent.
-- **Test runtime.** Three pack-based cases now run in the ordinary suite. Check
-  the timeouts and that they share the harness rather than each rebuilding a
-  bundle unnecessarily.
+  the seven names would go stale in exactly the way this item exists to prevent
+  (`fs/assets.test.ts:53` already does this and is the cautionary example).
+- **Test runtime.** Four pack-based cases now run in the ordinary suite. Check
+  the timeouts and that the two new controls share one bundle build rather than
+  each rebuilding from scratch unnecessarily.
 - **Follow-ups intentionally deferred.** Making `docs/` population
-  unconditional, adding keep-files to the bundle, and extending guards to
-  per-file manifests or checksums are all out of scope; this plan guards the
-  shape, which is what `fs/assets.ts` itself checks.
+  unconditional, adding keep-files to the bundle, replacing the restated list in
+  `fs/assets.test.ts:53` with the new export, and extending guards to per-file
+  manifests or checksums are all out of scope; this plan guards the shape,
+  which is what `fs/assets.ts` itself checks.

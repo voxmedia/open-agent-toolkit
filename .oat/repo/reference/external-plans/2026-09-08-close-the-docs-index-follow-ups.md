@@ -4,8 +4,8 @@ oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260906-docs-index-follow-ups-from.md
-oat_external_plan_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
-oat_external_plan_main_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
+oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
+oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
 oat_execution_status: READY
 oat_backlog_items:
@@ -14,7 +14,7 @@ oat_issue_url: null
 created: '2026-09-08T21:19:11Z'
 ---
 
-# Close the five docs-index follow-ups from the wave-1 reviews
+# Close the docs-index follow-ups from the wave-1 reviews
 
 > [!NOTE]
 > This is an external implementation plan, not a canonical OAT project
@@ -26,9 +26,11 @@ created: '2026-09-08T21:19:11Z'
 
 > [!IMPORTANT]
 > **Execution status: READY.** No unsatisfied hard dependency. Every surface
-> this plan writes exists today at the cited anchors and every claimed defect
-> was reproduced on the built CLI or read at `file:line` at the inspected
-> `HEAD`.
+> this plan writes exists at the cited anchors, and every claimed defect was
+> reproduced on the CLI built from the inspected `HEAD` or read at `file:line`.
+> One of the source item's five acceptance criteria is already met on the
+> inspected tree (see "Current state"); this plan verifies it rather than
+> duplicating it.
 
 ## Outcome
 
@@ -36,80 +38,110 @@ created: '2026-09-08T21:19:11Z'
 file" when `documentation.index` is seeded with the generated app-root
 manifest: the AGENTS.md section it writes names both files with the roles the
 config actually records. `oat docs generate-index` stops misdirecting an
-operator whose _docs directory_ is the unusable symlink chain — the hop-cap
-refusal names the flag that owns the offending path and exits `2` when the
-chain is on the derived docs directory, matching this command's existing
-"unusable path configuration" exit code. Generation says so when the exclusion
-list leaves the manifest empty instead of reporting a bare `0 entries`, and its
-`--json` payload reports the effective `excludes` alongside `docsDir` and
-`docsDirSource`. `DEFAULT_SHARED_CONFIG.documentation` gains the two missing
-`*Excludes` defaults, which — contrary to the source item — is _not_ inert:
-`oat config dump` currently omits both keys entirely. A regression test pins
-the bare-invocation refusal in `config-root` mode, the one resolution shape
-where the derived output lands inside the directory it indexes.
+operator whose _docs directory_ is the unusable symlink chain: the hop-cap
+refusal names the operator-facing path and the flag that owns it, and exits `2`
+when the chain is on the docs directory derived from `documentation.root`,
+matching this command's existing "unusable path configuration" exit code.
+Generation says so when the exclusion list leaves the manifest empty instead of
+reporting a bare `0 entries`, and its `--json` payload reports the effective
+`excludes` alongside `docsDir` and `docsDirSource`.
+`DEFAULT_SHARED_CONFIG.documentation` gains the two missing `*Excludes`
+defaults, which — contrary to the source item — is _not_ inert: `oat config
+dump` omits both keys entirely while they are unset. The bare-invocation
+refusal in `config-root` mode is already pinned by an existing case; this plan
+confirms that pin and records its neutralization instead of adding a duplicate.
 
 ## Source and live evidence
 
 - Source backlog item:
   [BL-260906-docs-index-follow-ups-from — Docs-index follow-ups from wave 1 reviews](../../pjm/backlog/items/BL-260906-docs-index-follow-ups-from.md)
-- Inspected `HEAD`: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the tree whose
-  content this plan read (branch `wave-7-plans`).
-- Comparison baseline: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the fetched
-  `origin/main` tip, identical to the inspected `HEAD` at authoring time.
+- Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — branch
+  `wave-7-plans`, which is `origin/main` plus three commits that only add or
+  edit files under `.oat/repo/reference/external-plans/`; every code surface
+  cited below is byte-identical to `origin/main`.
+- Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the
+  fetched `origin/main` tip (the squash merge of PR #273, merged
+  2026-09-08T21:27:49Z), which is also the merge-base with `HEAD`.
 - Planning date: `2026-09-08`.
-- Working tree while planning: the tracked tree was clean. The only untracked
-  entries were sibling wave-7 external plan files being authored concurrently
-  under `.oat/repo/reference/external-plans/`; none is read or written here.
-- Verified evidence (each reproduced at the inspected `HEAD`):
-  - `packages/cli/src/commands/docs/init/index.ts:196` —
-    `buildDocsSectionBody` emits
-    `` `- **Index file:** \`${options.targetDir}/docs/index.md\`` ``for **both**
-frameworks.`packages/cli/src/commands/docs/init/scaffold.ts:413-430`
-(`buildDocumentationConfig`) seeds `index: join(targetDir, 'index.md')`for
-Fumadocs — the generated app-root manifest — and`index: join(targetDir, 'mkdocs.yml')`for MkDocs. So for Fumadocs the
-printed label and the seeded`documentation.index`name two different
-files, and for MkDocs they name two different files as well. This
-repository's own`AGENTS.md:263`uses the distinguishing wording
-("**Generated index:**`apps/oat-docs/index.md`— regenerated by`oat docs generate-index`").
-  - Pinned by `packages/cli/src/commands/docs/init/index.test.ts:497` (Fumadocs
-    case, `expect(body).toContain('`apps/my-docs/docs/index.md`')`) and `:521`
-    (MkDocs case,
-    `expect(body).toContain('**Index file:** \`docs/docs/index.md\`')`). No
-other repository surface pins the string `Index file`— swept over`packages/cli/src`, `.agents`, `tools`, `apps/oat-docs/docs`.
-  - `packages/cli/src/commands/docs/index-generate/index.ts:202-207` — the
+- Working tree while planning: `git status --porcelain` was empty.
+- Verified evidence (each reproduced or read at the inspected `HEAD`):
+  - `packages/cli/src/commands/docs/init/index.ts:190-204` —
+    `buildDocsSectionBody` emits one bullet labelled **Index file** whose
+    value is `<targetDir>/docs/index.md` (`:196`) for **both** frameworks, and
+    adds a **Config** bullet for `<targetDir>/mkdocs.yml` only for MkDocs
+    (`:199-201`). `packages/cli/src/commands/docs/init/scaffold.ts:404-431`
+    (`buildDocumentationConfig`) seeds `index: join(targetDir, 'index.md')`
+    (`:421`) for Fumadocs — the generated app-root manifest, as the comment at
+    `:407-409` states — and `index: join(targetDir, 'mkdocs.yml')` (`:429`)
+    for MkDocs. So for Fumadocs the printed label and the seeded
+    `documentation.index` name two different files. This repository's own
+    `AGENTS.md:263` uses the distinguishing wording: a **Generated index**
+    bullet for `apps/oat-docs/index.md`, "regenerated by
+    `oat docs generate-index`; do not hand-edit".
+  - Pinned by `packages/cli/src/commands/docs/init/index.test.ts:481-501`
+    (`builds fumadocs section with correct paths`; the assertion at `:499`
+    expects the body to contain the code-spanned path
+    `apps/my-docs/docs/index.md`) and `:503-522`
+    (`builds mkdocs section with config path`; the assertion at `:521` expects
+    the literal **Index file** label followed by the code-spanned path
+    `docs/docs/index.md`). No other surface pins the string `Index file` —
+    swept with
+    `git grep -n "Index file" -- packages/cli/src .agents tools apps/oat-docs/docs`,
+    which returns only `init/index.ts:196` and `init/index.test.ts:521`.
+  - `packages/cli/src/commands/docs/index-generate/index.ts:202-209` — the
     hop-cap refusal is
     `` `Refusing to resolve ${target}: its symlink chain exceeds ${MAX_SYMLINK_HOPS} hops. ` + 'Pass --output with a path that is not a deep symlink chain.' ``
-    with `REFUSAL_EXIT_CODE` (`= 1`, `:42`). `canonicalize` is a shared helper:
-    `canonicalizeIndexGeneratePaths` (`:373-399`) calls it on
-    `resolved.docsDir` **first**, then on `resolved.outputPath`, then on the
-    configured root and tool config. A chain on the docs directory therefore
-    refuses with advice to pass `--output`, which cannot fix it.
+    with `REFUSAL_EXIT_CODE` (`= 1`, `:44`; `CONFIGURATION_EXIT_CODE = 2` at
+    `:45`; `MAX_SYMLINK_HOPS = 32` at `:160`). `canonicalize` (`:173-212`) is
+    one recursive helper: the recursion passes `linkHops` (`:194`, `:211`) but
+    nothing about which caller supplied the path, and `target` at the throwing
+    depth is the intermediate link (`resolve(canonicalParent, linkTarget)` at
+    `:211`), not the operator-facing path. `canonicalizeIndexGeneratePaths`
+    (`:374-402`) calls it on `resolved.docsDir` **first** (`:387`), then on
+    `resolved.outputPath` (`:388`); the configured root and the tool config go
+    through `canonicalizeOrNull` (`:363-372`), which swallows every error. A
+    chain on the docs directory therefore refuses with advice to pass
+    `--output`, which cannot fix it, and names a link the operator never typed.
   - The same file already distinguishes the two exit codes on purpose:
-    `REFUSAL_EXIT_CODE = 1` and `CONFIGURATION_EXIT_CODE = 2` (`:41-42`), with
-    `missingRootError` (`:266-274`) and the "not a directory" refusal
-    (`:314-320`) both using `2`. `packages/cli/AGENTS.md:29` states the
-    taxonomy: "0 success, 1 actionable/user error, 2 system/runtime error".
-  - Reachability nuance verified live: on macOS a real 41-link dangling chain
-    makes `realpath` throw `ELOOP`, which `canonicalize` re-throws at
-    `:184-189` before the hop counter is consulted. `sh -c "cd <scratch repo>
-&& node packages/cli/dist/index.js docs generate-index --docs-dir chain/l0
---output out.md"` printed
-    `ELOOP: too many symbolic links encountered, realpath '<...>/chain/l0'`
-    (exit 1); a 21-link chain resolved normally (`exit 0`). The hop-cap branch
-    is exercised through injected `realpath` / `readLinkIfSymlink`
-    dependencies, which is exactly how the existing case
+    `missingRootError` (`:268-276`) and the "not a directory" refusal
+    (`:310-315`) both use `CONFIGURATION_EXIT_CODE`, and the doc comment at
+    `:404-407` states the rule "Messages name the operator-supplied path".
+    `packages/cli/AGENTS.md:29` states the taxonomy: "0 success, 1
+    actionable/user error, 2 system/runtime error".
+    `docsDirSource` is assigned at `:319-330`: `'flag'` when `--docs-dir` was
+    passed, `'config-docs-subdirectory'` when `<root>/docs` exists,
+    `'config-root'` otherwise.
+  - The existing hop-cap case
     `packages/cli/src/commands/docs/index-generate/index.test.ts:1192-1206`
-    ("fails closed when the symlink chain exceeds the hop cap") reaches it.
+    (`fails closed when the symlink chain exceeds the hop cap`) passes
+    `--output apps/docs/manifest.md` but in fact trips the cap on the
+    **derived docs directory**: its harness's `realpath` always throws `ENOENT`
+    (`:1182`), its `readLinkIfSymlink` links every candidate (`:1197`), and the
+    docs directory is canonicalized before the output path (`index.ts:387`).
+    The case asserts only `'symlink chain'` and exit `1` (`:1204-1205`), so it
+    cannot tell the two roles apart. Step 2's tests must shape the mocks per
+    role (see "Test plan").
+  - Reachability verified live on macOS with the CLI built from `HEAD`: a real
+    41-link chain (dangling, or ending in a directory) supplied as `--docs-dir`
+    or as `--output` made `realpath` throw
+    `ELOOP: too many symbolic links encountered`, which `canonicalize`
+    re-throws at `:183-186` before the hop counter is consulted (raw error,
+    exit `1`, not the refusal message). A 21-link chain ending in a directory
+    resolved normally (exit `0`), and a 21-link _dangling_ chain as `--output`
+    was written through (exit `0`). The hop-cap branch is therefore reachable
+    only through injected `realpath` / `readLinkIfSymlink` dependencies, which
+    is how the existing case reaches it.
   - `packages/cli/src/commands/docs/index-generate/index.ts:523-568`
-    (`runIndexGenerate`) — after `deps.generateIndex`, the human branch prints
-    only
+    (`runIndexGenerate`) — after `deps.generateIndex(docsDir, { excludes:
+resolved.excludes })` (`:534-536`), the `--json` branch (`:554-563`) emits
+    `{ status, entriesGenerated, docsDir, docsDirSource, outputPath }` and the
+    human branch prints only
     `` `Generated index with ${entries.length} entries from ${docsDir} → ${outputPath}` ``
-    (`:566-568`) and the `--json` branch (`:555-562`) emits
-    `{ status, entriesGenerated, docsDir, docsDirSource, outputPath }`. Neither
-    mentions exclusions and neither reports `resolved.excludes`, which is
-    computed at `:345` by `resolveExcludes` (`:229-247`, config list extended
-    by repeated `--exclude`).
-  - Reproduced live in a scratch repo with
+    (`:565-567`). Neither mentions exclusions and neither reports
+    `resolved.excludes`, which is computed at `:345` by `resolveExcludes`
+    (`:236-251`: config list extended by repeated `--exclude`, trimmed,
+    de-duplicated, first-seen order).
+  - Reproduced live in a scratch repo (`mktemp -d`) with
     `documentation.excludes: ["**/*.md"]` over a docs tree containing one page:
     human output `Generated index with 0 entries from <...> → <...>` (exit 0)
     and the `--json` payload
@@ -118,36 +150,48 @@ other repository surface pins the string `Index file`— swept over`packages/cli
   - `packages/cli/src/config/resolve.ts:74-80` —
     `DEFAULT_SHARED_CONFIG.documentation` is
     `{ root: null, tooling: null, config: null, index: null, requireForProjectCompletion: false }`.
-    Both `documentation.excludes` (parsed at
-    `packages/cli/src/config/oat-config.ts:1378-1384`, catalogued as a
-    `ConfigKey` at `packages/cli/src/commands/config/index.ts:114,248,395`) and
-    its sibling `documentation.instructionPointerExcludes` (parsed at
-    `oat-config.ts:1385-1391`, catalogued and asserted present in
-    `packages/cli/src/commands/config/index.test.ts:4931`) are absent from the
-    defaults block.
+    Both `documentation.excludes` and `documentation.instructionPointerExcludes`
+    are typed (`packages/cli/src/config/oat-config.ts:47`, `:54`), parsed
+    (`:1722-1734`, through `normalizeDocumentationExcludes` at `:1474-1494` and
+    `normalizeInstructionPointerExcludes` at `:1517-1545`), and catalogued as
+    `ConfigKey`s (`packages/cli/src/commands/config/index.ts:132-133`, in
+    `KEY_ORDER` at `:300-301`, described at `:490-510`, exercised by the
+    `describe` blocks at `packages/cli/src/commands/config/index.test.ts:3747`
+    and `:3979`), but absent from the defaults block.
   - **The source item's "(behaviorally inert)" parenthetical is false.**
-    `oat config dump --json` enumerates `Object.entries(result.resolved)`
-    (`packages/cli/src/commands/config/dump.ts:35`), and `resolved` is keyed by
-    the union of the four flattened default blocks and the three config files
-    (`packages/cli/src/config/resolve.ts:180-186`). Live in a scratch repo with
-    only `documentation.root` set, `config dump --json` returned exactly
-    `['documentation.config', 'documentation.index',
-'documentation.requireForProjectCompletion', 'documentation.root',
-'documentation.tooling']` — both `*Excludes` keys are missing from the
-    dump. `oat config list --json` is unaffected (it is catalogue-driven and
-    already reports `documentation.excludes` and
-    `documentation.instructionPointerExcludes` as `{value: null, source:
-'default'}`).
-  - `config-root` refusal reproduced live: in a scratch repo whose
-    `documentation.root` is `apps/docs` and which has **no** `apps/docs/docs`
+    `oat config dump --json` spreads the whole `ResolvedConfig`
+    (`packages/cli/src/commands/config/dump.ts` `runConfigDump`, and the human
+    formatter enumerates `Object.entries(result.resolved)` at `:35`), and
+    `resolved` is keyed by the union of the four flattened default blocks and
+    the three config files (`packages/cli/src/config/resolve.ts:173-185`). Live
+    in a scratch repo with only `documentation.root` and
+    `documentation.tooling` set, `config dump --json` returned exactly
+    `['documentation.config', 'documentation.index', 'documentation.requireForProjectCompletion', 'documentation.root', 'documentation.tooling']`
+    — both `*Excludes` keys missing. With `documentation.excludes` set in
+    shared config the key appeared with `source: 'shared'`, so the gap is
+    exactly the unset-default case. `oat config list --json` is unaffected: it
+    is catalogue-driven and already reports both keys as
+    `{ value: null, source: 'default' }` (verified in the same scratch repo).
+  - `config-root` bare-invocation refusal reproduced live: in a scratch repo
+    whose `documentation.root` is `apps/docs` with **no** `apps/docs/docs`
     subdirectory, `oat docs generate-index` with no flags printed
-    `Refusing to write the generated index inside the docs directory it
-indexes: <...>/apps/docs/index.md is inside <...>/apps/docs. Pass --output
-with a path outside the docs directory.` and exited `1`. The
-    `docsDirSource` cases in
-    `packages/cli/src/commands/docs/index-generate/index.test.ts:740-800` cover
-    `config-docs-subdirectory`, `config-root`, and `flag` for the `--json`
-    payload, but no case asserts this bare-invocation refusal.
+    `Refusing to write the generated index inside the docs directory it indexes: <...>/apps/docs/index.md is inside <...>/apps/docs. Pass --output with a path outside the docs directory.`
+    and exited `1`. **This refusal is already pinned**:
+    `packages/cli/src/commands/docs/index-generate/index.test.ts:701-717`
+    (`refuses the bare run on a legacy source root rather than writing into the indexed tree`)
+    configures `documentation.root: 'apps/docs/docs'` with no `docs` child (so
+    `docsDirSource` is `config-root` by `index.ts:327-329`), runs the command
+    with no flags, and asserts `generateIndex` and `writeFile` were not
+    called, the message contains `inside the docs directory`, and
+    `process.exitCode === 1`. The source item's fifth criterion is therefore
+    met at the inspected `HEAD`; step 5 verifies it.
+  - Sibling wave-7 plans that write a file this plan writes (swept over the
+    `### In scope` sections of every `2026-09-08-*.md` in this directory):
+    `2026-09-08-fix-oat-config-unset-and-adopt.md` and
+    `2026-09-08-harden-normalized-config-maps.md` both write
+    `packages/cli/src/config/resolve.ts` (and its test). No wave-7 plan writes
+    `docs/init/**`, `docs/index-generate/**`, or
+    `apps/oat-docs/docs/docs-tooling/commands.md`.
 - Constraining decisions: `DR-260906-standing-claims-in-skills-name` governs
   skill prose and is not engaged — this plan writes no skill. The exit-code
   taxonomy in `packages/cli/AGENTS.md:29` and the existing
@@ -156,22 +200,24 @@ with a path outside the docs directory.` and exited `1`. The
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                                     | Required state                                                                                                           | Current state                                                        |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| Soft ordering    | Any wave-7 lane that writes `packages/cli/src/config/resolve.ts` or `packages/cli/src/commands/config/index.ts` (config lanes) | Never in one parallel group with this lane; this plan adds two keys to `DEFAULT_SHARED_CONFIG.documentation`.            | Pending; the wave groups serialize writers of the config module.     |
-| Soft integration | Draft PR #190 (edits `packages/cli/src/config/resolve.ts` and `resolve.test.ts`)                                               | Land this after #190, or re-run `src/config/resolve.test.ts` and `src/commands/config` on the merged state.              | Open draft (head `63161897dd40a66e1b29cf19e286665895c40dde`).        |
-| Soft integration | PR #273 (edits `packages/cli/src/config/resolve.test.ts` and `packages/cli/src/commands/config/index.ts` / `index.test.ts`)    | Re-anchor the `resolve.test.ts` default-source assertions if #273 lands first; it does not touch `resolve.ts` itself.    | Open, not a draft (head `ae3002c08b1ae0eee42be8bbe7cf96c461f7d7bd`). |
-| Satisfied        | The `documentation.excludes` / `instructionPointerExcludes` parsers and catalogue entries this plan adds defaults for          | Present and catalogued before this plan runs (`config/oat-config.ts:1378-1391`, `commands/config/index.ts:114,248,395`). | Satisfied — verified at `c9f2e147ac0674e73a60735e0c1727ccc6048756`.  |
+| Type             | Dependency                                                                                                                                                                           | Required state                                                                                                                                                         | Current state                                                                                                                                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Soft ordering    | [Fix `oat config unset` and `adopt`](./2026-09-08-fix-oat-config-unset-and-adopt.md) — writes `packages/cli/src/config/resolve.ts` (exports `resolveEnvOverride`) and its test       | Never in one parallel group with this lane; whichever lane runs second re-anchors the `DEFAULT_SHARED_CONFIG.documentation` block and the `resolve.test.ts` insertion. | Pending; that plan does not yet name this one, so the batch must add the reciprocal row.                                                                                                  |
+| Soft ordering    | [Harden normalized config maps](./2026-09-08-harden-normalized-config-maps.md) — writes `packages/cli/src/config/resolve.ts` (`mergeExecTargetLayer`) and `commands/config/index.ts` | Never in one parallel group with this lane; same re-anchoring rule.                                                                                                    | Pending; that plan does not yet name this one, so the batch must add the reciprocal row.                                                                                                  |
+| Soft integration | Draft PR #190 (`ReviewPlan Stage A`; edits `packages/cli/src/config/resolve.ts`, `resolve.test.ts`, `commands/config/index.ts`, `index.test.ts`)                                     | Land this after #190, or re-run `src/config/resolve.test.ts` and `src/commands/config` on the merged state.                                                            | Open draft (head `63161897dd40a66e1b29cf19e286665895c40dde`, 217 files).                                                                                                                  |
+| Satisfied        | PR #273 (`feat: add provider-neutral remote project management`)                                                                                                                     | Merged before this lane branches, so its edits to `commands/config/index.ts`, `index.test.ts`, and `config/resolve.test.ts` are the base this plan re-anchored on.     | Merged — squash `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` on 2026-09-08; every anchor above was read on that base. It did not touch `resolve.ts`, `docs/init`, or `docs/index-generate`. |
+| Satisfied        | The `documentation.excludes` / `instructionPointerExcludes` parsers and catalogue entries this plan adds defaults for                                                                | Present and catalogued before this plan runs.                                                                                                                          | Satisfied — verified at `a594614024725979ebf24bd9a34b3565c30fbffb` (`oat-config.ts:1722-1734`, `commands/config/index.ts:132-133,300-301,490-510`).                                       |
 
 There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                             | Affected | Files in common                                                                             | Required update                                                                                                                                                             |
-| ------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ReviewPlan Stage A` (draft PR #190) merges       | Minor    | `packages/cli/src/config/resolve.ts`, `packages/cli/src/config/resolve.test.ts`             | Rebase; re-anchor the `DEFAULT_SHARED_CONFIG.documentation` block (cited at `:74-80`) and the default-source assertions before editing. No behavioural change to this plan. |
-| `remote project management` (PR #273) merges      | Minor    | `packages/cli/src/config/resolve.test.ts`, `packages/cli/src/commands/config/index.test.ts` | Rebase and re-run `src/config` and `src/commands/config`; #273 does not touch `resolve.ts`, `docs/init`, or `docs/index-generate`, so no plan step changes.                 |
-| `oat-brainstorm visual companion` (PR #125) lands | None     | None — its 26 files touch no docs command, config module, or docs app page written here.    | No action.                                                                                                                                                                  |
+| Event                                             | Affected | Files in common                                                                                                           | Required update                                                                                                                                                                   |
+| ------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Either config sibling lane above merges first     | Minor    | `packages/cli/src/config/resolve.ts`, `packages/cli/src/config/resolve.test.ts`                                           | Re-anchor the `DEFAULT_SHARED_CONFIG.documentation` block (cited at `:74-80`) and the `resolve.test.ts` insertion point; re-run `src/config`. No behavioural change to this plan. |
+| `ReviewPlan Stage A` (draft PR #190) merges       | Minor    | `packages/cli/src/config/resolve.ts`, `packages/cli/src/config/resolve.test.ts`, `packages/cli/src/commands/config/**`    | Rebase; re-anchor the same block and the default-source assertions before editing. No behavioural change to this plan.                                                            |
+| `remote project management` (PR #273)             | None     | Already merged into the inspected `HEAD`.                                                                                 | No action; the anchors above already reflect it.                                                                                                                                  |
+| `oat-brainstorm visual companion` (PR #125) lands | None     | None — its 26 files touch no docs command, config module, or docs app page written here (verified from the PR file list). | No action.                                                                                                                                                                        |
 
 ## Drift check
 
@@ -179,7 +225,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat c9f2e147ac0674e73a60735e0c1727ccc6048756..origin/main -- packages/cli/src/commands/docs/init/index.ts packages/cli/src/commands/docs/init/index.test.ts packages/cli/src/commands/docs/init/scaffold.ts packages/cli/src/commands/docs/index-generate/index.ts packages/cli/src/commands/docs/index-generate/index.test.ts packages/cli/src/config/resolve.ts packages/cli/src/config/resolve.test.ts packages/cli/src/commands/config/dump.ts packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts apps/oat-docs/docs/docs-tooling/commands.md packages/cli/AGENTS.md
+git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..origin/main -- packages/cli/src/commands/docs/init/index.ts packages/cli/src/commands/docs/init/index.test.ts packages/cli/src/commands/docs/init/scaffold.ts packages/cli/src/commands/docs/index-generate/index.ts packages/cli/src/commands/docs/index-generate/index.test.ts packages/cli/src/config/resolve.ts packages/cli/src/config/resolve.test.ts packages/cli/src/config/oat-config.ts packages/cli/src/commands/config/dump.ts packages/cli/src/commands/config/dump.test.ts packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts apps/oat-docs/docs/docs-tooling/commands.md packages/cli/AGENTS.md AGENTS.md
 ```
 
 In a wave lane, re-run the same command against the exact execution `HEAD`
@@ -205,15 +251,15 @@ cited line before editing. A material mismatch is a STOP condition.
   actionable/user error, `2` system/runtime error. The command already binds
   `CONFIGURATION_EXIT_CODE = 2` to unusable path _configuration_.
 - Implementation pattern for the refusal: follow `missingRootError`
-  (`index-generate/index.ts:266-274`) — one message that names the offending
+  (`index-generate/index.ts:268-276`) — one message that names the offending
   value, the owning flag, and the repair.
 - Skill versions: no skill changes here, so no `metadata.version` bump and no
   version-pin sweep applies. (`version:` at the top level of a skill has been
   gone since CLI 0.2.65; pins are located by OLD VERSION LITERAL across
   `packages/cli/src`, `tools/smoke`, `.agents/skills/*/tests` when a skill does
   change.)
-- `.oat/config.json` keys parity: a new key that OAT reads must exist in the
-  catalogue (`commands/config/index.ts` `KEY_ORDER`), in the parser
+- `.oat/config.json` key parity: a key that OAT reads exists in the catalogue
+  (`commands/config/index.ts` `KEY_ORDER`), in the parser
   (`config/oat-config.ts`), and in `DEFAULT_SHARED_CONFIG`. This plan closes
   the third leg for two already-catalogued, already-parsed keys.
 - **Lane mode (the default here): this plan runs as a lane in wave 7, in a
@@ -224,10 +270,10 @@ cited line before editing. A material mismatch is a STOP condition.
   `pnpm oat:validate-skills`, each with its exit code captured explicitly. Do
   **not** edit any lockstep release file and do not run
   `pnpm release:check-versions` or `pnpm release:validate`; the wave fan-in
-  owns the single lockstep bump of `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}`
-  and the release gates. **Standalone mode only:** bump the five public
-  packages above freshly fetched `origin/main` and run the eight AGENTS.md
-  gates in order.
+  owns the single lockstep bump of
+  `packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}` and the
+  release gates. **Standalone mode only:** bump the five public packages above
+  freshly fetched `origin/main` and run the eight AGENTS.md gates in order.
 - Git/PR convention: commit on the lane branch; do not push or open a PR unless
   the wave orchestrator instructs it.
 
@@ -236,26 +282,28 @@ cited line before editing. A material mismatch is a STOP condition.
 ### In scope
 
 - `packages/cli/src/commands/docs/init/index.ts` — `buildDocsSectionBody`
-  (`:190-203`): name the authored source page and the generated manifest
+  (`:190-204`): name the authored source page and the generated manifest
   distinctly, per framework, consistently with `buildDocumentationConfig`.
 - `packages/cli/src/commands/docs/init/index.test.ts` — the two
-  `buildDocsSectionBody` cases (`:481-523`).
+  `buildDocsSectionBody` cases (`:480-523`) plus one new equality case.
 - `packages/cli/src/commands/docs/index-generate/index.ts` — `canonicalize`
-  (`:174-210`) gains a caller-supplied path role so the hop-cap refusal names
-  the owning flag and selects its exit code; `runIndexGenerate` (`:523-568`)
-  gains the empty-manifest signal and the `excludes` field in the `--json`
-  payload.
+  (`:173-212`) gains a caller-supplied path role and the operator-facing
+  origin path, so the hop-cap refusal names the right path and flag and
+  selects its exit code; `canonicalizeIndexGeneratePaths` (`:374-402`) passes
+  the role; `runIndexGenerate` (`:523-568`) gains the empty-manifest signal
+  and the `excludes` field in the `--json` payload.
 - `packages/cli/src/commands/docs/index-generate/index.test.ts` — the hop-cap
-  case (`:1192-1206`), the `--json` payload cases (`:740-800`), and the new
-  `config-root` bare-invocation refusal regression case.
+  case (`:1192-1206`, reshaped per role), two new hop-cap cases, the `--json`
+  payload cases (`:749-800`), and the empty-manifest signal cases.
 - `packages/cli/src/config/resolve.ts:74-80` — add `excludes: null` and
   `instructionPointerExcludes: null` to `DEFAULT_SHARED_CONFIG.documentation`.
-- `packages/cli/src/config/resolve.test.ts` — a case asserting both keys
-  resolve to `{ value: null, source: 'default' }` and appear in the resolved
-  map.
+- `packages/cli/src/config/resolve.test.ts` — cases asserting both keys
+  resolve to `{ value: null, source: 'default' }` and that a configured array
+  still wins.
 - `apps/oat-docs/docs/docs-tooling/commands.md` — the `oat docs generate-index`
-  key-behavior bullets: the `--json` payload now reports `excludes`; the
-  empty-manifest notice; the hop-cap refusal's flag and exit code.
+  "Key behavior" bullets (`:126-140`): the `--json` payload now reports
+  `excludes`; the empty-manifest notice; the hop-cap refusal's flag and exit
+  code.
 
 ### Out of scope
 
@@ -266,9 +314,12 @@ cited line before editing. A material mismatch is a STOP condition.
   (`isFumadocsManifestTransition`, `buildDocumentationIndexValue`) — the
   Fumadocs manifest transition is correct as shipped and the label fix must not
   alter it.
-- `MAX_SYMLINK_HOPS` itself and the `ELOOP` passthrough at `:184-189` — the
+- `MAX_SYMLINK_HOPS` itself and the `ELOOP` passthrough at `:183-186` — the
   kernel's own limit shadowing the CLI cap on macOS is recorded as a finding,
-  not fixed here; changing the cap would change which chains are refused.
+  not fixed here; changing the cap or wrapping `ELOOP` would change which
+  chains are refused and how.
+- A new `config-root` bare-invocation test — the existing case at
+  `index-generate/index.test.ts:701-717` already pins it (step 5 verifies).
 - Every other `oat docs` subcommand (`migrate`, `nav sync`) and every other
   `DEFAULT_SHARED_CONFIG` family.
 - Adding a new `ConfigKey`; both keys this plan defaults are already
@@ -282,17 +333,22 @@ cited line before editing. A material mismatch is a STOP condition.
 `buildDocumentationConfig` seeds `documentation.index` with
 `<targetDir>/index.md` for Fumadocs (the generated app-root manifest, produced
 later by `oat docs generate-index`) and `<targetDir>/mkdocs.yml` for MkDocs.
-The scaffold's own comment (`scaffold.ts:405-412`) states the distinction
+The scaffold's own comment (`scaffold.ts:404-412`) states the distinction
 explicitly; the printed section does not, so a fresh Fumadocs app documents a
 file the config does not name.
 
 `oat docs generate-index` resolves its two paths, canonicalizes them through a
 single recursive `canonicalize` helper, and then applies output-safety checks.
-`canonicalize` knows nothing about which of its callers supplied the path, so
-its only refusal — the symlink hop cap — always advises `--output` and always
-exits `1`, even when the chain is the derived docs directory that only
-`--docs-dir` (or a config repair) can move. Every other unusable-configuration
-condition in this command already exits `2`.
+`canonicalize` knows nothing about which of its callers supplied the path, and
+at the depth where the cap trips, `target` is the last intermediate link rather
+than the path the operator supplied or the CLI derived. Its only refusal — the
+symlink hop cap — therefore always advises `--output`, always names a link the
+operator never typed, and always exits `1`, even when the chain is the derived
+docs directory that only `--docs-dir` (or a config repair) can move. Every
+other unusable-configuration condition in this command already exits `2`. The
+existing hop-cap test happens to exercise the docs-directory role while
+appearing to exercise `--output`, because its mocks link every candidate and
+the docs directory is canonicalized first.
 
 Generation itself reports a count and nothing else. `resolveExcludes` merges
 `documentation.excludes` with the repeatable `--exclude` flags into
@@ -304,22 +360,29 @@ exclusions swallowed everything".
 `DEFAULT_SHARED_CONFIG` is the source of the default layer in
 `resolveEffectiveConfig` and, through it, of the key set `oat config dump`
 prints. Its `documentation` block omits both list-valued keys, so `config dump`
-silently has no row for either — the source item's assumption that the omission
-is inert holds only for `oat config list`, which is catalogue-driven.
+silently has no row for either while they are unset — the source item's
+assumption that the omission is inert holds only for `oat config list`, which
+is catalogue-driven.
+
+The fifth acceptance criterion — a regression test for the bare-invocation
+refusal in `config-root` mode — is already satisfied by
+`index-generate/index.test.ts:701-717`. This plan does not add a duplicate; it
+runs that case, records its neutralization once, and cites it in the review
+note.
 
 ## Implementation steps
 
 ### 1. Name the authored page and the generated manifest distinctly in `docs init`
 
 In `packages/cli/src/commands/docs/init/index.ts`, rewrite
-`buildDocsSectionBody` (`:190-203`) so the section names the file each role
+`buildDocsSectionBody` (`:190-204`) so the section names the file each role
 actually owns, per framework, in agreement with `buildDocumentationConfig`:
 
 - Fumadocs: a **Docs source index** bullet for
   `` `<targetDir>/docs/index.md` `` and a **Generated index** bullet for
   `` `<targetDir>/index.md` `` annotated as regenerated by
   `oat docs generate-index` (do not hand-edit) — the same two-role wording this
-  repository uses at `AGENTS.md:262-263`.
+  repository uses at `AGENTS.md:261-263`.
 - MkDocs: keep the authored source bullet for `` `<targetDir>/docs/index.md` ``
   and keep the existing **Config** bullet for `` `<targetDir>/mkdocs.yml` ``;
   MkDocs has no generated manifest, so it gets no generated-index bullet.
@@ -327,51 +390,64 @@ actually owns, per framework, in agreement with `buildDocumentationConfig`:
 Derive the generated-index path from the same `targetDir` the seed uses; do not
 re-implement `join` semantics or read config here. Do not change
 `buildDocumentationConfig`, the created-file list, or the `logger.info` lines
-at `:166-173`.
+at `:166-171`.
 
 **Verify:** `pnpm exec vitest run src/commands/docs/init/index.test.ts` from
 `packages/cli` → the two `buildDocsSectionBody` cases pass with their updated
 expectations, including the Fumadocs case asserting both bullets and the MkDocs
 case asserting no generated-index bullet.
 
-### 2. Make the hop-cap refusal name the owning flag and pick the right exit code
+### 2. Make the hop-cap refusal name the owning path and flag and pick the right exit code
 
 In `packages/cli/src/commands/docs/index-generate/index.ts`, give `canonicalize`
-an explicit role for the path it is resolving — an argument such as
-`role: 'docs-dir' | 'output' | 'other'` threaded through the recursive call
-(the recursion already threads `linkHops`). At `:202-207` build the refusal from
-that role:
+(`:173-212`) two extra pieces of context threaded through **both** recursive
+calls (`:194` for the parent, `:211` for the link target), exactly as
+`linkHops` already is:
 
-- `output` → keep `Pass --output with a path that is not a deep symlink chain.`
-  and `REFUSAL_EXIT_CODE`.
-- `docs-dir` → name `--docs-dir` and, when the docs directory was **derived**
-  from `documentation.root` (`docsDirSource !== 'flag'`), also name the config
-  repair the way `missingRootError` (`:266-274`) does, and use
-  `CONFIGURATION_EXIT_CODE`. A `--docs-dir` supplied explicitly on the command
-  line stays an actionable flag error (`REFUSAL_EXIT_CODE`), matching the
-  existing "messages name the operator-supplied path" rule at `:400-404`.
-- `other` (configured root, tool config) → keep today's message and
-  `REFUSAL_EXIT_CODE`; those two are canonicalized through
-  `canonicalizeOrNull` (`:362-370`) and never surface this error.
+- a role, e.g. `role: { kind: 'docs-dir'; derived: boolean } | { kind: 'output' } | { kind: 'other' }`;
+- the origin path — the value the top-level caller passed — so the refusal
+  names the path the operator supplied or the CLI derived, not the
+  intermediate link that happened to be the 32nd hop.
+
+At `:202-209` build the refusal from the role:
+
+- `output` → `Refusing to resolve <origin>: its symlink chain exceeds 32
+hops. Pass --output with a path that is not a deep symlink chain.` with
+  `REFUSAL_EXIT_CODE` — today's advice, now naming the origin path.
+- `docs-dir` with `derived: true` (`resolved.docsDirSource !== 'flag'`) → name
+  `--docs-dir` **and** the config repair the way `missingRootError`
+  (`:268-276`) does (`documentation.root` in `.oat/config.json`, repaired with
+  `oat config set documentation.root <path>`), and use
+  `CONFIGURATION_EXIT_CODE`.
+- `docs-dir` with `derived: false` → name `--docs-dir` and use
+  `REFUSAL_EXIT_CODE`: an explicitly supplied path stays an actionable flag
+  error, matching the "messages name the operator-supplied path" rule at
+  `:404-407`.
+- `other` (configured root, tool config) → keep today's text and
+  `REFUSAL_EXIT_CODE`; those two go through `canonicalizeOrNull` (`:363-372`)
+  and never surface this error.
 
 Pass the role at each call site in `canonicalizeIndexGeneratePaths`
-(`:373-399`). Do not change `MAX_SYMLINK_HOPS`, the `ELOOP` passthrough at
-`:184-189`, or any other refusal message.
+(`:387-388` for the two that can throw; `:392` and `:398` through
+`canonicalizeOrNull`). Do not change the resolution order (docs directory
+first, then output), `MAX_SYMLINK_HOPS`, the `ELOOP` passthrough at
+`:183-186`, or any other refusal message.
 
-**Verify:** `pnpm exec vitest run src/commands/docs/index-generate/index.test.ts`
-→ the existing hop-cap case still passes; three new cases assert (a) a chain on
-the derived docs directory refuses naming `--docs-dir` and
-`documentation.root`, with `process.exitCode === 2`; (b) a chain on an explicit
-`--docs-dir` names `--docs-dir` with `process.exitCode === 1`; (c) a chain on
-the output path is unchanged in message and exits `1`.
+**Verify:** `pnpm exec vitest run src/commands/docs/index-generate/index.test.ts -t 'hop cap'`
+→ three cases pass: (a) a chain on the derived docs directory refuses naming
+the docs directory, `--docs-dir`, and `documentation.root`, with
+`process.exitCode === 2`; (b) a chain on an explicit `--docs-dir` names that
+path and `--docs-dir` with `process.exitCode === 1`; (c) a chain on the
+output path names that path and `--output` with `process.exitCode === 1`.
+In all three, `generateIndex` and `writeFile` are never called.
 
 ### 3. Report empty-by-exclusion generation and the effective excludes
 
 In `runIndexGenerate` (`:523-568`):
 
-- add `excludes: resolved.excludes` to the `--json` payload (`:555-562`), after
+- add `excludes: resolved.excludes` to the `--json` payload (`:555-561`), after
   `docsDirSource` and before `outputPath`, so the payload reports exactly the
-  list handed to `deps.generateIndex` at `:545-547`;
+  list handed to `deps.generateIndex` at `:534-536`;
 - when `entries.length === 0` **and** `resolved.excludes.length > 0`, follow the
   human `Generated index with 0 entries …` line with a second `logger.info`
   line naming the exclusion count and the patterns, and saying they are the
@@ -380,9 +456,9 @@ In `runIndexGenerate` (`:523-568`):
   extra line when `entries.length > 0`.
 
 Keep the exit code `0` in both cases — an empty manifest is a report, not a
-failure — and keep the write unconditional so the generated file is never left
-stale. Do not touch `resolveExcludes`, `assertOutputIsSafe`, or the
-config-write branch.
+failure — and keep the write unconditional (`:539`) so the generated file is
+never left stale. Do not touch `resolveExcludes`, `assertOutputIsSafe`, or the
+config-write branch (`:541-552`).
 
 **Verify:** in a scratch repo (`mktemp -d`) with `documentation.root` set,
 `documentation.excludes` set to `["**/*.md"]`, and one page under the docs
@@ -400,56 +476,54 @@ In `packages/cli/src/config/resolve.ts:74-80`, add `excludes: null` and
 `instructionPointerExcludes: null` to `DEFAULT_SHARED_CONFIG.documentation`,
 keeping the block's existing key order (`root`, `tooling`, `config`, `index`,
 then the two lists, then `requireForProjectCompletion`). Add nothing else, and
-do not change `isResolvedValue` (`:574-576`) — `null` must keep meaning "not set
-here" so a real configured array still wins.
+do not change `isResolvedValue` (`:574-576`) — `null` must keep meaning "not
+set here" so a real configured array still wins.
 
 The source item calls this inert; it is not. It adds two rows to
-`oat config dump`, which enumerates the resolved map
-(`commands/config/dump.ts:35`). That is the intended, observable outcome.
+`oat config dump` (human and `--json`), which enumerate the resolved map. That
+is the intended, observable outcome.
 
 **Verify:** `pnpm exec vitest run src/config/resolve.test.ts src/commands/config/dump.test.ts`
-→ the new case asserts `result.resolved['documentation.excludes']` and
+→ the new cases assert `result.resolved['documentation.excludes']` and
 `result.resolved['documentation.instructionPointerExcludes']` both equal
 `{ value: null, source: 'default' }`, and that a shared config setting either
-key still resolves with `source: 'shared'`. Then, in a scratch repo:
+key still resolves with `source: 'shared'`. Then, in a scratch repo with only
+`documentation.root` set:
 `node packages/cli/dist/index.js config dump --json` → the `resolved` object
 now contains both `documentation.excludes` and
 `documentation.instructionPointerExcludes`;
 `node packages/cli/dist/index.js --json config list` → unchanged.
 
-### 5. Pin the bare-invocation refusal in `config-root` mode
+### 5. Confirm the existing `config-root` bare-invocation pin
 
-Add a regression case to
-`packages/cli/src/commands/docs/index-generate/index.test.ts`, beside the
-`docsDirSource` cases at `:740-800`: with `documentation.root` set, **no**
-`<root>/docs` subdirectory (so `docsDirSource` resolves to `config-root`,
-`index.ts:325-329`), and neither `--docs-dir` nor `--output` supplied, the
-command refuses with the "inside the docs directory it indexes" message and
-`process.exitCode === 1`, and neither `generateIndex` nor `writeFile` is
-called. Use the same harness shape the surrounding cases use.
+Run
+`pnpm exec vitest run src/commands/docs/index-generate/index.test.ts -t 'refuses the bare run'`
+→ the case at `:701-717` passes. Prove it can fail once: temporarily make
+`isAtOrInside` (`index.ts:144-147`) return `false`, re-run the same filter,
+confirm the case turns red, restore, and record both runs in the review note.
+Do not add a second case for the same behaviour, and do not edit the existing
+one.
 
-**Verify:** `pnpm exec vitest run src/commands/docs/index-generate/index.test.ts -t 'config-root'`
-→ the new case passes. Independently reproduce on the built CLI in a scratch
-repo whose `documentation.root` names a directory with no `docs/`
-subdirectory: `node packages/cli/dist/index.js docs generate-index` → the
-refusal message and `exit=1`.
+**Verify:** the recorded transcript shows green → red (under neutralization) →
+green, and `git diff --stat -- packages/cli/src/commands/docs/index-generate/index.test.ts`
+shows no change attributable to this step.
 
 ### 6. Update the docs-tooling page
 
 In `apps/oat-docs/docs/docs-tooling/commands.md`, under `## oat docs
-generate-index`:
+generate-index` "Key behavior" (`:126-140`):
 
-- extend the `--json` bullet ("reports the derived docs directory in human
-  output and as `docsDir` / `docsDirSource` under `--json`") to include
+- extend the `--json` bullet at `:139` ("reports the derived docs directory in
+  human output and as `docsDir` / `docsDirSource` under `--json`") to include
   `excludes`;
 - add a bullet for the empty-manifest signal, stating that an empty manifest
   still writes the file and still exits `0`;
-- extend the refusal bullet so it records that an unusable _docs directory_
-  symlink chain names `--docs-dir` (and, when derived, the
+- extend the refusal bullet at `:134` so it records that an unusable _docs
+  directory_ symlink chain names `--docs-dir` (and, when derived, the
   `documentation.root` repair) and exits `2`, while an unusable output chain
   names `--output` and exits `1`.
 
-Do not restate the exclusion-pattern table and do not touch
+Do not restate the exclusion-pattern table (`:148`) and do not touch
 `apps/oat-docs/index.md` (generated; `oat docs generate-index` owns it).
 
 **Verify:** `pnpm check` → markdownlint over `apps/oat-docs/docs` passes and
@@ -459,7 +533,7 @@ Do not restate the exclusion-pattern table and do not touch
 ### 7. Gate
 
 **Verify (lane mode, the default under the execution program):** run the
-focused suites from step 1–5, then `pnpm check`, `pnpm type-check`,
+focused suites from steps 1–5, then `pnpm check`, `pnpm type-check`,
 `HOME=$(mktemp -d) pnpm exec turbo run test --force`,
 `pnpm run check:skill-bumps`, `pnpm lint`, and `pnpm format`, each with its exit
 code captured explicitly (`pnpm <gate> > gate.log 2>&1; echo "exit=$?"`), never
@@ -472,7 +546,7 @@ the output means it proved nothing). Do not edit any lockstep release file.
 ## Test plan
 
 - `packages/cli/src/commands/docs/init/index.test.ts`
-  - Update `builds fumadocs section with correct paths` (`:481-500`): assert a
+  - Update `builds fumadocs section with correct paths` (`:481-501`): assert a
     docs-source bullet for `` `apps/my-docs/docs/index.md` `` **and** a
     generated-index bullet for `` `apps/my-docs/index.md` ``; assert the
     generated bullet names `oat docs generate-index`.
@@ -488,16 +562,26 @@ the output means it proved nothing). Do not edit any lockstep release file.
     bullet and no generated-index bullet). Record the failure output before
     applying step 1.
 - `packages/cli/src/commands/docs/index-generate/index.test.ts`
-  - `hop cap on a derived docs directory`: injected `readLinkIfSymlink` returns
-    a fresh name for every candidate under the configured root; expect the
-    error to contain `--docs-dir` and `documentation.root`, to **not** contain
-    `Pass --output`, and `process.exitCode === 2`.
-  - `hop cap on an explicit --docs-dir`: same chain reached through
-    `--docs-dir`; expect `--docs-dir` in the message and
-    `process.exitCode === 1`.
-  - `hop cap on the output path` (extend `:1192-1206`): assert the message
-    still contains `Pass --output` and `process.exitCode === 1`, so the fix
-    cannot silently repoint the existing advice.
+  - Mock shape for the hop-cap cases (extend `createChainHarness`,
+    `:1139-1190`): `realpath` resolves `REPO_ROOT`, `apps/docs`, and
+    `apps/docs/docs` to themselves **except** the chain target, for which it
+    throws `ENOENT`; `readLinkIfSymlink` returns a fresh `link-<n>` **only**
+    for the chain target and for candidates whose basename starts with
+    `link-`, and `null` for everything else. That is what makes each case
+    exercise exactly one role; the current harness (`realpath` always
+    `ENOENT`, every candidate linked) cannot.
+  - `hop cap on the derived docs directory`: no `--docs-dir`; chain target
+    `apps/docs/docs`; expect the error to name that path, `--docs-dir`, and
+    `documentation.root`, to **not** contain `Pass --output`, and
+    `process.exitCode === 2`.
+  - `hop cap on an explicit --docs-dir`: `--docs-dir apps/docs/guides`; chain
+    target `apps/docs/guides`; expect that path and `--docs-dir` in the message
+    and `process.exitCode === 1`.
+  - `hop cap on the output path` (reshape `:1192-1206`): `--output
+apps/docs/manifest.md`; chain target `apps/docs/manifest.md`; assert the
+    message names that path and still contains `Pass --output`, and
+    `process.exitCode === 1`, so the fix cannot silently repoint the existing
+    advice.
   - `--json payload reports the effective excludes`: config `excludes` plus one
     `--exclude` flag; expect the payload's `excludes` to equal the merged,
     trimmed, de-duplicated list in first-seen order, matching
@@ -508,20 +592,20 @@ the output means it proved nothing). Do not edit any lockstep release file.
     is `0`.
   - `empty manifest with no exclusions says the tree was empty`: same, with an
     empty exclusion list → the other message, never the exclusion one.
-  - `bare invocation in config-root mode is refused`: the step-5 regression
-    case.
-  - **Red-then-green controls:** each of the seven cases is run against the
-    pre-fix module first. Expected pre-fix failures: the two docs-dir hop-cap
-    cases fail on message and exit code; the `excludes` payload case fails with
-    `excludes` undefined; both empty-manifest cases fail on the missing second
-    line; the `config-root` case is the one case that **passes** pre-fix — it
-    is a regression pin for behaviour that is already correct, so its control
-    is inverted: neutralize the guard by making `isAtOrInside`
-    (`index.ts:143-147`) return `false`, confirm the case turns red, restore,
-    and record both runs.
+  - **Red-then-green controls:** each new or reshaped case is run against the
+    pre-fix module first. Expected pre-fix results: the derived docs-dir case
+    fails on message and exit code; the explicit docs-dir case fails on message;
+    the output case **passes** pre-fix once reshaped (it is the pin that the
+    `--output` advice survives; note that before reshaping it was exercising
+    the docs-dir role); the `excludes` payload case fails with `excludes`
+    undefined; both empty-manifest cases fail on the missing second line.
+    Record every pre-fix run.
+  - `refuses the bare run on a legacy source root …` (`:701-717`): unchanged;
+    step 5's neutralization record is its evidence.
 - `packages/cli/src/config/resolve.test.ts`
   - `documentation list keys carry a null default`: assert both keys resolve to
-    `{ value: null, source: 'default' }`.
+    `{ value: null, source: 'default' }`. Structural pattern: the
+    `source: 'shared'` assertion on `documentation.tooling` at `:182-185`.
   - `a configured documentation.excludes still wins over the default`: shared
     config sets the array; assert `source: 'shared'` and the array value.
   - **Red-then-green control:** the first case fails pre-fix because the keys
@@ -544,18 +628,19 @@ the output means it proved nothing). Do not edit any lockstep release file.
 - [ ] `buildDocsSectionBody` names the authored source page and, for Fumadocs
       only, the generated manifest, and the generated path is asserted equal to
       `buildDocumentationConfig('fumadocs', targetDir).index`.
-- [ ] The hop-cap refusal names `--docs-dir` for a docs-directory chain and
-      `--output` for an output chain; a chain on a _derived_ docs directory
-      exits `2`, an explicit `--docs-dir` chain exits `1`, an output chain
-      exits `1`; no previously refused path is now accepted.
+- [ ] The hop-cap refusal names the operator-facing path and `--docs-dir` for
+      a docs-directory chain, or `--output` for an output chain; a chain on a
+      _derived_ docs directory exits `2`, an explicit `--docs-dir` chain exits
+      `1`, an output chain exits `1`; no previously refused path is now
+      accepted.
 - [ ] `oat docs generate-index --json` reports `excludes`, and both empty
       manifest cases print a distinct human line while still writing the file
       and exiting `0`.
 - [ ] `DEFAULT_SHARED_CONFIG.documentation` carries `excludes: null` and
       `instructionPointerExcludes: null`, and `oat config dump --json` lists
-      both keys in `resolved`.
-- [ ] A regression case asserts the bare-invocation refusal (exit `1`) in
-      `config-root` mode, and its inverted neutralization control is recorded.
+      both keys in `resolved` when they are unset.
+- [ ] The existing `config-root` bare-invocation case (`:701-717`) is green,
+      its neutralization is recorded, and no duplicate case was added.
 - [ ] Every new or changed test has its recorded red-then-green (or
       neutralization) evidence.
 - [ ] `apps/oat-docs/docs/docs-tooling/commands.md` documents the `excludes`
@@ -575,10 +660,10 @@ Stop and report instead of improvising when:
 - the hop-cap change would make any path that the pre-fix `canonicalize`
   refused become accepted (weaker-anywhere: Critical), or would change the exit
   code of a refusal this plan does not name;
-- `canonicalize`'s recursion cannot carry the role without changing which paths
-  are canonicalized or in what order (`canonicalizeIndexGeneratePaths`
-  resolves the docs directory before the output path, and the safety checks
-  depend on that);
+- `canonicalize`'s recursion cannot carry the role and origin without changing
+  which paths are canonicalized or in what order
+  (`canonicalizeIndexGeneratePaths` resolves the docs directory before the
+  output path, and the safety checks depend on that);
 - the empty-manifest signal cannot be added without changing the exit code, the
   written file, or the `documentation.index` write eligibility;
 - adding the two defaults changes any `oat config get`, `oat config list`,
@@ -589,7 +674,7 @@ Stop and report instead of improvising when:
   excluded from the defaults by a decision record or test this plan did not
   find — then ship `excludes` alone, record the reason, and file the sibling as
   a follow-up;
-- the `config-root` regression case cannot be made to fail under
+- the existing `config-root` case cannot be made to fail under the step-5
   neutralization (a test that cannot fail is not evidence);
 - a named verification gate fails twice after one bounded correction;
 - live state materially contradicts the drift-check evidence.
@@ -598,23 +683,26 @@ Stop and report instead of improvising when:
 
 Revalidate against live state before executing when: substantial time passes
 after `2026-09-08`; `origin/main` advances materially from
-`c9f2e147ac0674e73a60735e0c1727ccc6048756`; PR #190 or PR #273 lands (apply the
-`## Landing-event impact` rows); a dependency row changes state; the cited line
-anchors in `docs/init/index.ts`, `docs/index-generate/index.ts`, or
-`config/resolve.ts` move; `documentation.excludes` or
-`documentation.instructionPointerExcludes` gains a default from another change;
-or a load-bearing evidence claim above cannot be reproduced. A plan executed
-inside a wave refreshes its drift check against the exact execution `HEAD`
-after predecessor lanes integrate, not only from the authored SHA to
-`origin/main`.
+`7d70ac307717b95917b8f92aa3fb9f236d1f75ba`; PR #190 lands or either config
+sibling lane merges first (apply the `## Landing-event impact` rows); a
+dependency row changes state; the cited line anchors in `docs/init/index.ts`,
+`docs/index-generate/index.ts`, or `config/resolve.ts` move;
+`documentation.excludes` or `documentation.instructionPointerExcludes` gains a
+default from another change; or a load-bearing evidence claim above cannot be
+reproduced. A plan executed inside a wave refreshes its drift check against the
+exact execution `HEAD` after predecessor lanes integrate, not only from the
+authored SHA to `origin/main`.
 
 ## Review focus
 
 - The refusal change is direction-safe: read every branch of `canonicalize` and
   confirm no input moves from refused to accepted. The exit-code move from `1`
   to `2` applies **only** to a derived docs directory and is justified by the
-  command's own `CONFIGURATION_EXIT_CODE` precedent at `:266-274` and
-  `:314-320`.
+  command's own `CONFIGURATION_EXIT_CODE` precedent at `:268-276` and
+  `:310-315`.
+- The reshaped hop-cap test exercises the `--output` role for the first time;
+  confirm the mock shape links only the chain target so each of the three cases
+  proves exactly one role.
 - The `docs init` label and the `documentation.index` seed are now asserted
   equal in a test rather than merely edited in agreement — that assertion is
   what stops the two from drifting again.
@@ -624,6 +712,8 @@ after predecessor lanes integrate, not only from the authored SHA to
   the only observable change and that the source item's "behaviorally inert"
   note has been corrected in the item or the review record.
 - Deferred deliberately: `MAX_SYMLINK_HOPS` is shadowed by the kernel's own
-  32-hop `ELOOP` limit on macOS, so the hop-cap branch is reachable in
-  production only where the platform limit is higher; it is exercised here
-  through injected dependencies. Raising or lowering the cap is out of scope.
+  32-hop `ELOOP` limit on macOS (reproduced: a 41-link chain fails in
+  `realpath` with a raw `ELOOP`, exit `1`, on either path), so the hop-cap
+  branch is reachable in production only where the platform limit is higher; it
+  is exercised here through injected dependencies. Raising or lowering the cap,
+  or turning `ELOOP` into a refusal, is out of scope.

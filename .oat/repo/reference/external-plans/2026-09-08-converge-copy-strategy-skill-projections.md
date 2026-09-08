@@ -4,8 +4,8 @@ oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260908-make-copy-strategy-skill.md
-oat_external_plan_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
-oat_external_plan_main_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
+oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
+oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
 oat_execution_status: READY
 oat_backlog_items:
@@ -27,8 +27,9 @@ created: '2026-09-08T21:20:00Z'
 > [!IMPORTANT]
 > **Execution status: READY.** No unsatisfied hard dependency. The one ordering
 > constraint is soft: `BL-260908-align-the-provider-view-json` edits the same
-> `skill-view-diagnostic.ts` and `manifest-and-drift.md`, and it is **not** in
-> wave 7, so nothing here waits on it.
+> `skill-view-diagnostic.ts` and `manifest-and-drift.md`, and it has no plan in
+> wave 7 (`external_plans: []`), so nothing here waits on it. No wave-7 sibling
+> plan writes any file this plan writes.
 
 ## Outcome
 
@@ -50,14 +51,18 @@ section because the limitation is gone.
 
 - Source backlog item:
   [BL-260908-make-copy-strategy-skill — Make copy-strategy skill projections converge after sync instead of reading as drifted](../../pjm/backlog/items/BL-260908-make-copy-strategy-skill.md)
-- Inspected `HEAD`: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the tree whose
-  content this plan read.
-- Comparison baseline: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the fetched
-  `origin/main` tip; identical to the inspected `HEAD` on this planning branch.
+- Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
+  content this plan read (branch `wave-7-plans`, rebased onto `origin/main`).
+- Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched
+  `origin/main` tip (PR #273 merged), which is also the merge-base with `HEAD`.
+  Between `c9f2e147a` (the draft's baseline) and this `HEAD`, no file this plan
+  reads or writes changed (`git diff --stat` over the in-scope set is empty).
 - Planning date: `2026-09-08`
-- Working tree while planning: `git status --porcelain` was empty.
+- Working tree while planning: `git status --porcelain` was empty apart from
+  the wave-7 plan files under `.oat/repo/reference/external-plans/` and their
+  source backlog items.
 - Verified evidence (all reproduced at this `HEAD`, on the built CLI at
-  `packages/cli/dist/index.js`, version `0.2.65`, in a `mktemp -d` scratch
+  `packages/cli/dist/index.js`, version `0.2.66`, in a `mktemp -d` scratch
   repository with `.oat/sync/config.json` `defaultStrategy: "copy"` and one
   canonical skill `.agents/skills/demo-skill`):
   - **The loop is real.** `oat sync --scope project` applied
@@ -65,30 +70,32 @@ section because the limitation is gone.
     `{"status":"drifted","reason":"modified"}` with `summary.drifted: 1` and
     exit code 1, and `oat sync --scope project --dry-run` planned
     `update_copy claude/demo-skill (copied content differs from canonical
-content)`. Running the real (non-dry-run) sync again applied `update_copy`
-    and the very next `--dry-run` planned `update_copy` again. The loop does not
+content)`. Running the real (non-dry-run) sync again applies `update_copy`
+    and the very next `--dry-run` plans `update_copy` again. The loop does not
     terminate.
   - **The exact numbers.** In that scratch repo the canonical directory hash and
     the manifest `contentHash` were both
-    `0f203a13099f104b2d5f83ecc00a6eb08c2460a6046ffffc60a3d99179fa23ef`; the raw
+    `0c59d7bb1ec0362147283705c5f9695bd48f1870d485ad6d04d30552dc939fc2`; the raw
     provider directory hash was
-    `8eaf8c7cc797420a377fc37b08aecdfe740e2ade3acedffa90761e07a1431503`. The
+    `4fbd9b56dc95ceb8f130194cfe7effe9bb053e0935d7f66ee007ec09d631b566`. The
     provider tree held exactly two files: `SKILL.md` (banner-prefixed) and
-    `.oat-generated`.
+    `.oat-generated`. (The digests depend on the fixture content; the equality
+    and inequality are what matter.)
   - **Where the manifest hash comes from.**
-    `packages/cli/src/engine/execute-plan.ts:319-326` — the directory branch of
+    `packages/cli/src/engine/execute-plan.ts:318-326` — the directory branch of
     `create_copy`/`update_copy` runs `copyDirectoryImpl`, then `applyCopyMarker`
     (`:211-232`, which writes the sentinel and inserts the banner), and only
     then calls `toManifestEntry(planEntry, 'copy')` (`:173-198`), whose
     `contentHash` for a directory is
-    `computeContentHash(entry.canonical.canonicalPath, false)` — the
+    `computeContentHash(resolve(entry.canonical.canonicalPath), false)` — the
     **canonical** tree, without banner or sentinel.
   - **Where the detector reads it back.** `packages/cli/src/drift/detector.ts:106`
     computes `computeContentHash(providerPath, entry.isFile)` — the **provider**
     tree, _with_ banner and sentinel — so the equality at `:107` can never hold
     for a directory copy. The transformed-hash fallback at `:115-124` is gated
     on `copyTransform && entry.isFile`, so a directory projection never reaches
-    it. (The backlog item cites `:106-128`; the branch actually ends at `:129`.)
+    it and falls through to `drifted:modified` at `:126-129`. (The backlog item
+    cites `:106-128`; the branch actually ends at `:129`.)
   - **Where the planner re-plans it.**
     `packages/cli/src/engine/compute-plan.ts:543-565` (`classifyOperation`,
     copy branch) compares `canonicalHash` against
@@ -104,12 +111,28 @@ content)`. Running the real (non-dry-run) sync again applied `update_copy`
     `` `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->\n` `` exactly, excludes
     the sentinel from the file list, strips exactly that marker line from
     `SKILL.md`/`AGENT.md`, and otherwise hashes byte-for-byte with the same
-    algorithm as `computeDirectoryHash` (`packages/cli/src/manifest/hash.ts:64-104`:
-    sorted `relative` path, `\0`, content, `\0`, sha256). I reimplemented that
-    algorithm against the scratch repo's provider tree and it produced
-    `0f203a13…` — **byte-identical to the canonical hash and to the manifest
+    algorithm as `computeDirectoryHash` (`packages/cli/src/manifest/hash.ts:66-107`:
+    sorted `relative` path, `\0`, content, `\0`, sha256). That algorithm,
+    reimplemented against the scratch repo's provider tree, produced
+    `0c59d7bb…` — **byte-identical to the canonical hash and to the manifest
     `contentHash`**. Reusing it is therefore a convergence, not a new hash
     format.
+  - **The sentinel match is an exact string on an absolute path.**
+    `applyCopyMarker` passes `entry.canonical.canonicalPath` — the absolute path
+    the scanner built with `join(contentDir, name)`
+    (`packages/cli/src/engine/scanner.ts:300`) — to `writeDirectorySentinel`
+    and `insertMarker` (`packages/cli/src/engine/markers.ts:7-9,16-36`), so the
+    sentinel in the scratch repo reads
+    `<!-- OAT-managed: do not edit directly. Source: /private/var/…/.agents/skills/demo-skill -->`.
+    The manifest stores that path relative to `inferScopeRoot(...)`
+    (`execute-plan.ts:148-171`), and the two readers rebuild the absolute form
+    with `resolve(scopeRoot, entry.canonicalPath)` (`detector.ts:32`;
+    `compute-plan.ts:377` in the retirement classifier). The helper therefore
+    returns a digest only when the reader's `scopeRoot` is the same string the
+    scanner used at sync time; otherwise it returns `null` and the reader keeps
+    its raw comparison (drifted, never a false `in_sync`). The existing
+    retirement test at `compute-plan.test.ts:373-414` relies on exactly this
+    equality and passes, so it is established behavior, not a new assumption.
   - **Only directories are affected.** A file copy either goes through
     `renderedContent` (hashed with `computeStringHash`, `execute-plan.ts:180-181`)
     or through `copySingleFile` verbatim (`:313-317`); `applyCopyMarker` runs
@@ -124,17 +147,19 @@ content)`. Running the real (non-dry-run) sync again applied `update_copy`
   - **The tests that pin the defect.**
     `packages/cli/src/drift/skill-view-diagnostic.test.ts:620-662` ("offers no
     repair for a drifted copy whose version still matches canonical") and
-    `packages/cli/src/commands/tools/info/skill-view-convergence.integration.test.ts:224-275`
+    `packages/cli/src/commands/tools/info/skill-view-convergence.integration.test.ts:225-277`
     ("reads a projected copy view version past the OAT-managed banner", which
     asserts `viewClass: 'modified'`, `driftState.reason: 'modified'`,
     `suggestion: null`, and `stdout` without `Repair:`). The integration file's
-    module comment at `:37-42` states the limitation as pre-existing engine
-    behavior.
+    module comment at `:38-43` states the limitation as pre-existing engine
+    behavior. Both files pass at this `HEAD` (run 2026-09-08 together with
+    `detector.test.ts`, `compute-plan.test.ts`: 105 tests green), which is why
+    every convergence assertion in the Test plan is red on this tree.
   - **Fixture-fidelity finding.** The unit test at
     `skill-view-diagnostic.test.ts:620-662` builds its fixture with
-    `isFile: true`, but the condition it models occurs **only** for directory
-    copies. That fixture encodes a state the engine never produces. It is
-    deleted by this plan rather than corrected.
+    `isFile: true` (`:630`), but the condition it models occurs **only** for
+    directory copies. That fixture encodes a state the engine never produces.
+    It is deleted by this plan rather than corrected.
   - **The doc that states the limitation.**
     `apps/oat-docs/docs/provider-sync/manifest-and-drift.md:98` (the `modified`
     bullet's "A `copy` view also reaches this class through the known limitation
@@ -144,30 +169,34 @@ content)`. Running the real (non-dry-run) sync again applied `update_copy`
     `commands/status/index.ts:1067` (passes a `copyTransform`),
     `commands/providers/list/list.ts:308` and
     `commands/providers/inspect/inspect.ts:228` (pass one when the mapping has
-    a transform), and `commands/tools/info/index.ts:88` (passes none). Because
-    the banner and sentinel are engine-owned rather than adapter-owned, the new
-    directory branch must **not** be gated on `copyTransform`, or `oat tools
-info` would keep diverging from `oat status`.
-  - `packages/cli/assets/docs/**` is a build output, ignored by
-    `.gitignore:25`; only `apps/oat-docs/docs/**` is edited by hand.
+    a transform), and `commands/tools/info/index.ts:88` (passes none; reached
+    through `skill-views.ts:397`). Because the banner and sentinel are
+    engine-owned rather than adapter-owned, the new directory branch must
+    **not** be gated on `copyTransform`, or `oat tools info` would keep
+    diverging from `oat status`.
+  - `packages/cli/assets/**` is a build output, ignored by
+    `.gitignore:25` (`packages/cli/assets/*`); only `apps/oat-docs/docs/**` is
+    edited by hand.
 
 ## Dependencies
 
-| Type             | Dependency                                                                                                  | Required state                                                                                          | Current state                                                              |
-| ---------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Soft adjacency   | [BL-260908-align-the-provider-view-json](../../pjm/backlog/items/BL-260908-align-the-provider-view-json.md) | Never edited in the same lane; it also rewrites `skill-view-diagnostic.ts` and `manifest-and-drift.md`. | Open, priority `low`, **not scheduled in wave 7**. No coordination needed. |
-| Soft integration | Draft PR #190 (ReviewPlan Stage A) and PR #273 (remote project management)                                  | Re-run the focused suites if either merges before this lane integrates.                                 | Open; neither touches any file this plan writes.                           |
+| Type             | Dependency                                                                                                  | Required state                                                                                                                                                       | Current state                                                                                                   |
+| ---------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Soft adjacency   | [BL-260908-align-the-provider-view-json](../../pjm/backlog/items/BL-260908-align-the-provider-view-json.md) | Never edited in the same lane; it also rewrites `skill-view-diagnostic.ts` and `manifest-and-drift.md`.                                                              | Open, priority `low`, `external_plans: []` — **not scheduled in wave 7**. No coordination needed.               |
+| Soft adjacency   | [Fix the sync apply failure summary](./2026-09-08-fix-sync-apply-failure-summary.md)                        | Reads `engine/compute-plan.ts` and `engine/execute-plan.ts` as evidence but writes only `commands/sync/apply.ts` and `commands/sync/index.test.ts`; no shared write. | READY in wave 7. May run in the same group; re-run `src/engine` tests after integration either way.             |
+| Satisfied        | PR #273 (remote project management)                                                                         | Merged before this lane starts.                                                                                                                                      | Merged 2026-09-08 (`7d70ac307`); touches none of this plan's files.                                             |
+| Soft integration | Draft PR #190 (ReviewPlan Stage A), PR #125 (brainstorm companion)                                          | Re-run the focused suites if either merges before this lane integrates.                                                                                              | Open; neither touches any file this plan writes (#190's only docs overlap with the wave is `configuration.md`). |
 
 There are no unsatisfied hard dependencies.
 
 ## Landing-event impact
 
-| Event                                          | Affected | Files in common                                                                                                                                                                 | Required update                                                                                                                                   |
-| ---------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PR #273 (remote project management) merges     | None     | None. Its only overlaps with this wave are `apps/oat-docs/docs/cli-utilities/configuration.md` and `packages/cli/scripts/bundle-inputs.mjs`, neither of which this plan writes. | Re-run the drift check; no plan change expected.                                                                                                  |
-| Draft PR #190 (ReviewPlan Stage A) merges      | None     | None (its docs overlap is `cli-utilities/configuration.md`).                                                                                                                    | Re-run the drift check; no plan change expected.                                                                                                  |
-| PR #125 (brainstorm companion) merges          | None     | None.                                                                                                                                                                           | No action.                                                                                                                                        |
-| `BL-260908-align-the-provider-view-json` lands | Minor    | `packages/cli/src/drift/skill-view-diagnostic.ts`, `packages/cli/src/drift/skill-view-diagnostic.test.ts`, `apps/oat-docs/docs/provider-sync/manifest-and-drift.md`             | Re-anchor `:522-538`, `:544-548`, `:573-576`, and the doc line numbers before editing; the `unrepairableCopy` deletion is unchanged in substance. |
+| Event                                          | Affected | Files in common                                                                                                                                                                                               | Required update                                                                                                                                   |
+| ---------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PR #273 (remote project management) merged     | None     | None — **merged; verified** at `7d70ac307`: its diff against `c9f2e147a` touches `apps/oat-docs/docs/cli-utilities/configuration.md` and `packages/cli/scripts/bundle-inputs.mjs` only, neither written here. | Done. Every anchor above was re-read on the post-merge tree.                                                                                      |
+| Draft PR #190 (ReviewPlan Stage A) merges      | None     | None (its docs overlap is `cli-utilities/configuration.md`).                                                                                                                                                  | Re-run the drift check; no plan change expected.                                                                                                  |
+| PR #125 (brainstorm companion) merges          | None     | None.                                                                                                                                                                                                         | No action.                                                                                                                                        |
+| `BL-260908-align-the-provider-view-json` lands | Minor    | `packages/cli/src/drift/skill-view-diagnostic.ts`, `packages/cli/src/drift/skill-view-diagnostic.test.ts`, `apps/oat-docs/docs/provider-sync/manifest-and-drift.md`                                           | Re-anchor `:522-538`, `:544-548`, `:573-576`, and the doc line numbers before editing; the `unrepairableCopy` deletion is unchanged in substance. |
 
 ## Drift check
 
@@ -175,11 +204,11 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat c9f2e147ac0674e73a60735e0c1727ccc6048756..origin/main -- packages/cli/src/drift/detector.ts packages/cli/src/drift/detector.test.ts packages/cli/src/drift/skill-view-diagnostic.ts packages/cli/src/drift/skill-view-diagnostic.test.ts packages/cli/src/engine/compute-plan.ts packages/cli/src/engine/compute-plan.test.ts packages/cli/src/engine/execute-plan.ts packages/cli/src/engine/index.ts packages/cli/src/engine/managed-copy-hash.ts packages/cli/src/engine/managed-copy-hash.test.ts packages/cli/src/engine/markers.ts packages/cli/src/manifest/hash.ts packages/cli/src/commands/tools/info/skill-view-convergence.integration.test.ts packages/cli/src/commands/tools/info/skill-views.ts apps/oat-docs/docs/provider-sync/manifest-and-drift.md
+git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..HEAD -- packages/cli/src/drift/detector.ts packages/cli/src/drift/detector.test.ts packages/cli/src/drift/skill-view-diagnostic.ts packages/cli/src/drift/skill-view-diagnostic.test.ts packages/cli/src/engine/compute-plan.ts packages/cli/src/engine/compute-plan.test.ts packages/cli/src/engine/execute-plan.ts packages/cli/src/engine/index.ts packages/cli/src/engine/managed-copy-hash.ts packages/cli/src/engine/managed-copy-hash.test.ts packages/cli/src/engine/markers.ts packages/cli/src/engine/scanner.ts packages/cli/src/manifest/hash.ts packages/cli/src/commands/tools/info/skill-view-convergence.integration.test.ts packages/cli/src/commands/tools/info/skill-views.ts packages/cli/src/commands/tools/info/index.ts apps/oat-docs/docs/provider-sync/manifest-and-drift.md
 ```
 
 Expected on an unchanged base: no output. If `detector.ts`, `compute-plan.ts`,
-`execute-plan.ts`, or `hash.ts` changed, re-derive the four hashes in
+`execute-plan.ts`, `markers.ts`, or `hash.ts` changed, re-derive the hashes in
 "Verified evidence" before editing; a material mismatch is a STOP condition.
 
 Also re-run the live loop reproduction in Step 0 before writing any code. The
@@ -188,7 +217,9 @@ plan's whole justification is that the loop exists on the execution base.
 ## Repository conventions
 
 - Build (needed before any smoke/release suite, and to refresh
-  `packages/cli/dist`): `pnpm build` → `Tasks: … successful`.
+  `packages/cli/dist`): `pnpm build` → `Tasks: … successful`. A `>>> FULL TURBO`
+  replay is fine here only if `packages/cli/src` is unchanged since the last
+  real build; after editing `src/`, confirm `dist/` is newer than your edits.
 - Typecheck: `pnpm type-check` → exit 0.
 - Focused tests, run from `packages/cli`:
   `pnpm exec vitest run src/drift src/engine src/commands/tools/info` → all pass.
@@ -196,20 +227,23 @@ plan's whole justification is that the loop exists on the execution base.
   `pnpm format` (this plan touches `apps/oat-docs/docs`, which `pnpm format`
   covers through its `oxfmt --check 'apps/oat-docs/docs/**/*.md'` leg, and
   `pnpm check` covers through `markdownlint-cli2` in the docs app's `check`
-  script). Markdownlint config for the docs app is
-  `apps/oat-docs/.markdownlint.jsonc` (`MD013` off, so long narrative lines are
-  fine; a fenced block still needs a language and heading levels must not skip).
+  script, `pnpm --filter oat-docs check`). Markdownlint config for the docs app
+  is `apps/oat-docs/.markdownlint.jsonc` (`MD013` off, so long narrative lines
+  are fine; a fenced block still needs a language and heading levels must not
+  skip).
 - Implementation pattern: the file-copy transformed-hash fallback already in
   `drift/detector.ts:111-124` is the shape to mirror for directories; the
   managed-copy comparison already in
   `engine/compute-plan.ts:453-467` is the shape to mirror in
   `classifyOperation`.
-- Import policy (`packages/cli/AGENTS.md`): same-directory `./…` imports only;
-  anything outside the current directory uses a configured TypeScript alias
-  (`@engine/…`, `@manifest/…`). No `../…`, no `src/…`, no `@/*`.
+- Import policy (`packages/cli/AGENTS.md:26`): same-directory `./…` imports
+  only; anything outside the current directory uses a configured TypeScript
+  alias (`@engine/…`, `@manifest/…`, `@drift/…` — `packages/cli/tsconfig.json:9-15`).
+  No `../…`, no `src/…`, no `@/*`.
 - Skill versioning: no `.agents/skills/**` file is edited by this plan, so no
-  `metadata.version` bump applies (top-level `version:` has been gone since CLI
-  0.2.65). If the executor finds itself editing a skill, that is out of scope.
+  `metadata.version` bump applies (at this `HEAD` all 83 bundled skills carry
+  `metadata.version` and none carries a top-level `version:`). If the executor
+  finds itself editing a skill, that is out of scope.
 - `DR-260906-standing-claims-in-skills-name`: a standing claim must name the
   code that owns it and ship an executable backstop in the same change. The
   doc sentences this plan writes into `manifest-and-drift.md` are standing
@@ -246,8 +280,9 @@ plan's whole justification is that the loop exists on the execution base.
 - `packages/cli/src/engine/compute-plan.ts` — import the extracted helper
   (deleting the private copy) and use it in `classifyOperation`'s copy branch
   for directory entries.
-- `packages/cli/src/engine/index.ts` — re-export the helper if and only if a
-  consumer outside `engine/` needs it through the alias barrel.
+- `packages/cli/src/engine/index.ts` — re-export the helper only if a consumer
+  outside `engine/` cannot reach it through the `@engine/managed-copy-hash`
+  alias path (it can; the re-export is expected to be unnecessary).
 - `packages/cli/src/drift/detector.ts` — add the directory branch of the
   transformed-hash fallback, ungated on `copyTransform`.
 - `packages/cli/src/drift/skill-view-diagnostic.ts` — delete the
@@ -266,15 +301,16 @@ plan's whole justification is that the loop exists on the execution base.
   `packages/cli/src/engine/markers.ts` — the writer is **not** changed. The
   manifest hash it records is already the canonical directory hash, which is
   exactly the value the fixed readers compare against; changing the writer would
-  invalidate every existing manifest instead of converging it.
+  invalidate every existing manifest instead of converging it. The absolute
+  path it writes into the sentinel is likewise unchanged (see STOP conditions).
 - `packages/cli/src/manifest/hash.ts` — `computeDirectoryHash` is the shared
   baseline both sides agree on and must not move.
 - File copies and rule transforms — already convergent (evidence above).
 - `collection` and `symlink` strategies — untouched branches of both readers.
-- The three other items in
+- The four items in
   `BL-260908-align-the-provider-view-json` (`--json` `providerPath`,
-  `versionEvidence: not-read`, `projectedVersionNote` attribution) — a separate
-  item, not in wave 7.
+  `versionEvidence: not-read`, `projectedVersionNote` attribution, the
+  redaction sentence) — a separate item, not in wave 7.
 - Lockstep release files
   (`packages/{cli,control-plane,docs-config,docs-theme,docs-transforms}/package.json`,
   `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`): never
@@ -304,7 +340,10 @@ algorithm as `computeDirectoryHash` over the identical logical content. So its
 result equals the canonical hash **iff** the copy is a faithful managed copy —
 verified numerically in the scratch repo above. A tampered copy still returns a
 different digest, and a copy missing its sentinel or banner returns `null` and
-falls back to the existing raw comparison.
+falls back to the existing raw comparison. Its `canonicalPath` argument must be
+the same absolute string the writer put in the sentinel; both readers already
+have that string (`detector.ts:32`, and `canonicalEntry.canonicalPath` in
+`classifyOperation`, which is what `applyCopyMarker` received).
 
 `diagnoseSkillViews` (`drift/skill-view-diagnostic.ts`) currently compensates
 for all of this at the presentation layer: when the detector says `modified` and
@@ -324,7 +363,7 @@ condition and stays.
 Do not write code first. In a `mktemp -d` scratch directory (never `rm -rf` a
 variable path; let the OS reclaim the temp dir), `git init`, create
 `.agents/skills/demo-skill/SKILL.md` with `metadata.version: 1.0.0`
-frontmatter, and write `.oat/sync/config.json` with
+frontmatter, create `.claude/`, and write `.oat/sync/config.json` with
 `{"version":1,"defaultStrategy":"copy","providers":{"claude":{"enabled":true,"strategy":"copy"}},"knownStrays":[]}`.
 Build the CLI first (`pnpm build`) so `packages/cli/dist/index.js` matches the
 execution base, then run, from the scratch directory:
@@ -347,24 +386,32 @@ means "this is not a verifiable managed copy", never "it matches". Import
 `OAT_DIRECTORY_SENTINEL` and `OAT_MARKER_PREFIX` from `./markers`. In
 `compute-plan.ts`, delete the private function and import the new module with
 `./managed-copy-hash`; leave `classifyObsoleteMappingRetirement:453-467`
-otherwise untouched. Re-export from `engine/index.ts` only if `drift/` cannot
-reach it through the `@engine/…` alias without one.
+otherwise untouched. `drift/detector.ts` imports it as
+`@engine/managed-copy-hash` (the same alias shape as its existing
+`@engine/collection-sync` import at `detector.ts:4`); add a re-export to
+`engine/index.ts` only if that alias import fails to type-check.
 
 Document, in the module's header comment, the standing claim this module now
 owns: _the digest it returns for a faithful managed directory copy is equal to
-`computeDirectoryHash` of the canonical directory_, and name
-`managed-copy-hash.test.ts` as its executable backstop.
+`computeDirectoryHash` of the canonical directory, and it returns `null` rather
+than a digest whenever the sentinel does not name exactly this canonical path_ —
+and name `managed-copy-hash.test.ts` as its executable backstop.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/compute-plan.test.ts`
 → all existing cases pass unchanged, including
-`compute-plan.test.ts:411` ("obsolete mapping has verified clean managed copy").
+`compute-plan.test.ts:373` ("removes a verified clean generated directory copy
+for an obsolete mapping", whose expected reason at `:411` is "obsolete mapping
+has verified clean managed copy").
 
 ### 2. Pin the extracted helper's equivalence to the canonical hash
 
 Add `packages/cli/src/engine/managed-copy-hash.test.ts` with the cases in the
 Test plan. The load-bearing one asserts equality with
 `computeDirectoryHash(canonicalDir)` for a faithful managed copy — the property
-every later step depends on.
+every later step depends on. Build the managed copy the way the engine does:
+write the sentinel and the banner with `writeDirectorySentinel` and
+`insertMarker` from `./markers`, passing the same absolute canonical path the
+test later passes to the helper.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/engine/managed-copy-hash.test.ts`
 → all cases pass.
@@ -374,8 +421,10 @@ every later step depends on.
 In `classifyOperation` (`compute-plan.ts:535-565`), after computing
 `canonicalHash` and the raw `providerHash`, when the raw hashes differ **and**
 `strategy === 'copy'` **and** `!canonicalEntry.isFile`, compute
-`computeManagedDirectoryCopyHash(providerPath, resolve(canonicalEntry.canonicalPath), canonicalEntry.type)`
-and return `{ operation: 'skip', reason: 'already in sync' }` when it equals
+`computeManagedDirectoryCopyHash(providerPath, canonicalEntry.canonicalPath, canonicalEntry.type)`
+— pass `canonicalEntry.canonicalPath` exactly as it is, because that is the
+string `applyCopyMarker` wrote into the sentinel — and return
+`{ operation: 'skip', reason: 'already in sync' }` when it equals
 `canonicalHash`. A `null` result, or any other digest, keeps the existing
 `update_copy` return. Do not reorder the existing early returns and do not touch
 the symlink branch.
@@ -389,10 +438,13 @@ In `detectDrift` (`drift/detector.ts`), after the raw-hash equality check at
 `:107` and **before** the file-only `copyTransform` fallback at `:115`, add a
 directory branch: when `!entry.isFile` and `entry.contentHash !== null`, compute
 `computeManagedDirectoryCopyHash(providerPath, canonicalPath, entry.contentType)`
-and return `in_sync` when it equals `entry.contentHash`. The branch must not be
-gated on `copyTransform` — `commands/tools/info/index.ts:88` passes none, and
-gating it there would leave `oat tools info` disagreeing with `oat status`.
-Leave the file fallback and the final `drifted:modified` return as they are.
+— `canonicalPath` is the `resolve(scopeRoot, entry.canonicalPath)` already
+computed at `:32`, the same derivation the retirement classifier uses at
+`compute-plan.ts:377` — and return `in_sync` when it equals
+`entry.contentHash`. The branch must not be gated on `copyTransform` —
+`commands/tools/info/index.ts:88` passes none, and gating it there would leave
+`oat tools info` disagreeing with `oat status`. Leave the file fallback and the
+final `drifted:modified` return as they are.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/drift/detector.test.ts`
 → pass, including the existing `:186` case ("returns drifted:modified when copy
@@ -402,11 +454,11 @@ hash differs", whose fixture has no sentinel and must stay red-for-the-right-rea
 ### 5. Delete the diagnostic's apology branch
 
 In `drift/skill-view-diagnostic.ts`, delete the `unrepairableCopy` constant
-(`:522-538`), its arm of the `staleCopy ? … : unrepairableCopy ? … :
-classification` ternary (`:544-548`), and the `&& !unrepairableCopy` guard on
-`suggestion` (`:573-576`), leaving `REPAIRABLE.includes(viewClass)`. Keep
-`staleCopy` and every other branch untouched. Remove the explanatory comment
-block that names the backlog item.
+(`:522-538`, including its comment block), its arm of the
+`staleCopy ? … : unrepairableCopy ? … : classification` ternary (`:544-548`),
+and the `&& !unrepairableCopy` guard on `suggestion` (`:573-576`), leaving
+`REPAIRABLE.includes(viewClass)`. Keep `staleCopy` and every other branch
+untouched.
 
 **Verify:** `grep -rn "BL-260908-make-copy-strategy-skill" packages/cli/src apps/oat-docs/docs`
 → no matches.
@@ -417,13 +469,13 @@ Delete `skill-view-diagnostic.test.ts:620-662` ("offers no repair for a drifted
 copy whose version still matches canonical") — its fixture models a
 directory-only condition with `isFile: true` and the behavior it pins is gone.
 Replace it with the repairable-copy case from the Test plan. Rewrite
-`skill-view-convergence.integration.test.ts:224-275` into the convergence case:
+`skill-view-convergence.integration.test.ts:225-277` into the convergence case:
 same setup, but asserting `viewClass: 'in-sync'`,
 `driftState: { status: 'in_sync' }`, `versionComparable: true`,
 `viewVersion === canonicalVersion === '1.4.2'`, and `suggestion: null` (an
 `in-sync` view is not in `REPAIRABLE`, so no repair line is expected for a
 _converged_ copy — this is a different reason from the deleted suppression, and
-the test comment must say so). Correct the file's module comment at `:37-42`,
+the test comment must say so). Correct the file's module comment at `:38-43`,
 which currently states the limitation as pre-existing behavior.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/drift src/commands/tools/info`
@@ -432,13 +484,16 @@ which currently states the limitation as pre-existing behavior.
 ### 7. Prove convergence end to end through the real CLI
 
 Extend `skill-view-convergence.integration.test.ts` with the case named in the
-Test plan: `createProjectRoot('copy')` → `runCli(['sync','--scope','project'])`
+Test plan: `createProjectRoot('copy')` → `runCli(root, home, ['sync','--scope','project'])`
 → assert the copied `SKILL.md` still starts with `<!-- OAT-managed` and
 `.claude/skills/<SKILL>/.oat-generated` exists (the writer is unchanged) →
-`runCli(['status','--scope','project','--json'])` reports the entry `in_sync`
-with `summary.drifted === 0` and `exitCode === 0` →
-`runCli(['sync','--scope','project','--dry-run'])` prints no `update_copy` for
-it. This is the acceptance criterion, executable.
+`runCli(root, home, ['status','--scope','project','--json'])` reports the entry
+`in_sync` with `summary.drifted === 0` and `exitCode === 0` →
+`runCli(root, home, ['sync','--scope','project','--dry-run'])` prints no
+`update_copy` for it. This is the acceptance criterion, executable. The harness
+passes `--cwd root` for every invocation (`runCli`, `:76-108`), so the scope
+root string is identical across sync and status, which is what the sentinel
+match requires.
 
 **Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/info/skill-view-convergence.integration.test.ts`
 → pass, and re-run the Step 0 scratch reproduction against a freshly built
@@ -452,9 +507,10 @@ view also reaches this class through the known limitation below, where the
 difference may be nothing but the generated banner" clause from the `modified`
 bullet at `:98`; delete the whole "### Known limitation: copy-strategy skill
 views" section at `:176-190`. Add one sentence where the copy semantics are
-described (near `:99` or `:144-148`) stating that a managed directory copy is
-compared with its banner and `.oat-generated` sentinel excluded, so a freshly
-synced copy reads `in_sync` — and name the test that owns that claim, per
+described (the `in-sync` bullet at `:99`, or the drift paragraph at `:144-148`)
+stating that a managed directory copy is compared with its banner and
+`.oat-generated` sentinel excluded, so a freshly synced copy reads `in_sync` —
+and name the test that owns that claim, per
 `DR-260906-standing-claims-in-skills-name`. Do not hand-edit
 `apps/oat-docs/index.md` or `packages/cli/assets/docs/**`.
 
@@ -482,15 +538,18 @@ be observed before the fix is applied.
 
 - **`packages/cli/src/engine/managed-copy-hash.test.ts` (new).** Structural
   pattern: `packages/cli/src/drift/detector.test.ts:1-42` (temp-root seeding and
-  `afterEach` cleanup).
+  `afterEach` cleanup) and the managed-copy fixture at
+  `packages/cli/src/engine/compute-plan.test.ts:373-392`.
   - `equals computeDirectoryHash of the canonical directory for a faithful
 managed copy` — seed a canonical skill directory, copy it, add the sentinel
-    and the banner exactly as `engine/markers.ts` writes them, and assert
+    and the banner with `writeDirectorySentinel`/`insertMarker`, and assert
     `computeManagedDirectoryCopyHash(...) === await computeDirectoryHash(canonicalDir)`.
     This is the load-bearing property. Red control: change the banner text by one
     character and re-run — the helper must return `null`, so the assertion fails.
-  - `returns null when the sentinel is absent, is for a different canonical
-path, or has trailing content` (three cases).
+  - `returns null when the sentinel is absent, names a different canonical
+path, or has trailing content` (three cases). The "different canonical path"
+    case is the sentinel-path-sensitivity guard: a sentinel written for another
+    absolute path must not buy a digest.
   - `returns null when the marker file does not start with the expected banner`.
   - `returns null when the provider tree contains a symlink or other non-regular
 entry`.
@@ -504,8 +563,9 @@ entry`.
 edited` — the weaker-anywhere control for the planner.
   - `still plans update_copy for a directory copy with no sentinel` (the
     pre-`applyCopyMarker` legacy shape).
-  - `compute-plan.test.ts:411` (`obsolete mapping has verified clean managed
-copy`) must pass unchanged — proof the extraction in Step 1 changed nothing.
+  - `compute-plan.test.ts:373` (`removes a verified clean generated directory
+copy for an obsolete mapping`) must pass unchanged — proof the extraction in
+    Step 1 changed nothing.
 - **`packages/cli/src/drift/detector.test.ts` (changed).**
   - `returns in_sync for a managed directory copy whose manifest hash is the
 canonical hash` — red before Step 4 (`drifted:modified`), green after.
@@ -520,9 +580,10 @@ path` — a hand-forged sentinel must not buy an `in_sync` verdict.
   `:620-662`; add `offers the scope repair for a copy the detector reports as
 modified`, asserting `viewClass: 'modified'` with
   `suggestion: 'oat sync --scope project'` and a detail that no longer mentions
-  the backlog item. Red before Step 5 (`suggestion` is `null`), green after.
+  the backlog item. Use `isFile: false` in the fixture. Red before Step 5
+  (`suggestion` is `null`), green after.
 - **`packages/cli/src/commands/tools/info/skill-view-convergence.integration.test.ts`
-  (changed).** Rewrite `:224-275` as described in Step 6, and add the end-to-end
+  (changed).** Rewrite `:225-277` as described in Step 6, and add the end-to-end
   convergence case from Step 7. The convergence case is the plan's acceptance
   criterion and is red on the execution base in three independent ways
   (`viewClass`, `status --json`, `--dry-run` output).
@@ -578,6 +639,12 @@ Stop and report instead of improvising when:
   the plan's central claim is false and the fix must be redesigned (do not
   "fix" it by changing the writer's manifest hash, which would invalidate every
   existing manifest);
+- Step 7's end-to-end case stays `drifted` while Step 2 and Step 4's unit cases
+  pass — that is the sentinel-path shape: the scope root string `oat status`
+  resolves differs from the one the scanner used at sync time (for example a
+  realpath'd `/private/var/…` against `/var/…`). Report it with both strings.
+  Do not widen the helper to a fuzzy path match or change what the writer puts
+  in the sentinel; that is a design decision outside this plan;
 - converging the readers would require changing what
   `execute-plan.ts:173-198` records in `contentHash`, or any other manifest
   field — that is a migration, not this plan;
@@ -598,12 +665,15 @@ Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;
 - `origin/main` advances materially from
-  `c9f2e147ac0674e73a60735e0c1727ccc6048756`;
-- PR #273, PR #190, or PR #125 lands;
-- `BL-260908-align-the-provider-view-json` is scheduled or lands, changing
+  `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`;
+- PR #190 or PR #125 lands;
+- `BL-260908-align-the-provider-view-json` gains a plan or lands, changing
   `skill-view-diagnostic.ts` or `manifest-and-drift.md`;
+- the wave-7 lane for `2026-09-08-fix-sync-apply-failure-summary.md` integrates
+  before this lane (re-run `src/engine` and `src/commands/sync` tests; no
+  shared write is expected);
 - any cited line anchor in `detector.ts`, `compute-plan.ts`, `execute-plan.ts`,
-  `skill-view-diagnostic.ts`, or `manifest-and-drift.md` moves;
+  `markers.ts`, `skill-view-diagnostic.ts`, or `manifest-and-drift.md` moves;
 - the Step 0 reproduction cannot be reproduced.
 
 Apply the `## Landing-event impact` table when one of its events has occurred.
@@ -620,6 +690,12 @@ SHA to `origin/main`.
   the detector branch is reached only for `!entry.isFile` copy entries with a
   non-null `contentHash`, and that the planner branch is reached only for
   `strategy === 'copy'` directory entries.
+- **The sentinel path argument.** The helper only answers when the sentinel
+  names exactly the `canonicalPath` it is given. Confirm the planner passes
+  `canonicalEntry.canonicalPath` unmodified (the writer's input) and the
+  detector passes `resolve(scopeRoot, entry.canonicalPath)` (the retirement
+  classifier's derivation), and that a mismatch degrades to the raw comparison
+  rather than to a false `in_sync`.
 - **The ungated detector branch.** Verify it is _not_ conditioned on
   `copyTransform`; a gated branch would leave `oat tools info`
   (`commands/tools/info/index.ts:88`, which passes none) disagreeing with
@@ -630,8 +706,11 @@ SHA to `origin/main`.
   directory-only condition. Confirm no replacement fixture repeats that: the
   convergence evidence should come from the real-CLI integration test, not from
   a hand-built state the engine never produces.
-- **Follow-ups intentionally deferred.** The other four items in
+- **Follow-ups intentionally deferred.** The four items in
   `BL-260908-align-the-provider-view-json` (JSON `providerPath` for
   non-projected rows, a `not-read` `versionEvidence` state, canonical-conflict
   attribution in `projectedVersionNote`, and the redaction sentence) are not in
-  wave 7 and are untouched here.
+  wave 7 and are untouched here. Whether the sentinel should record a
+  scope-relative rather than absolute canonical path (which would make the
+  match robust to symlinked or realpath'd scope roots) is a writer-side design
+  question, also deferred.

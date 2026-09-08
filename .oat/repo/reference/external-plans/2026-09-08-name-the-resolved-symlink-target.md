@@ -4,8 +4,8 @@ oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
   - .oat/repo/pjm/backlog/items/BL-260907-name-the-resolved-target.md
-oat_external_plan_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
-oat_external_plan_main_commit: c9f2e147ac0674e73a60735e0c1727ccc6048756
+oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
+oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
 oat_execution_status: READY
 oat_backlog_items:
@@ -28,10 +28,11 @@ created: '2026-09-08T21:50:00Z'
 > **Execution status: READY.** No unsatisfied hard dependency. The change is
 > confined to one function and one warning string in
 > `packages/cli/src/commands/instructions/instructions.utils.ts`, plus its test
-> file and one documentation sentence. It is independent of the two sibling
-> wave-7 config lanes: they write no file this plan writes, and this plan
-> writes no file they write, so it may run in the same parallel group as
-> either.
+> file and one documentation sentence. It is independent of the three sibling
+> wave-7 config lanes (they write no file this plan writes) and may share a
+> parallel group with them. It shares
+> `apps/oat-docs/docs/cli-utilities/configuration.md` with one other wave-7
+> lane, so it must not share a group with that one.
 
 ## Outcome
 
@@ -51,71 +52,79 @@ directory.
 
 - Source backlog item:
   [BL-260907-name-the-resolved-target — Name the resolved target in the symlink inert-exclusion warning](../../pjm/backlog/items/BL-260907-name-the-resolved-target.md)
-- Inspected `HEAD`: `c9f2e147ac0674e73a60735e0c1727ccc6048756`
-- Comparison baseline: `c9f2e147ac0674e73a60735e0c1727ccc6048756` — the
-  fetched `origin/main` tip; branch and tip coincide here.
+- Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree
+  whose content this plan read (branch `wave-7-plans`, rebased onto the merged
+  PR #273).
+- Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched
+  `origin/main` tip, also the merge-base; the branch adds only plan files.
 - Planning date: `2026-09-08`
 - Working tree while planning: `git status --porcelain` was empty.
+- CLI version at the inspected `HEAD`: `0.2.66`; `packages/cli/dist` was built
+  from this tree and is the module the reproduction below imported.
 
 ### Verified evidence
 
 - `packages/cli/src/commands/instructions/instructions.utils.ts:246-262` —
   `isCaseExactDirectory(dependencies, repoRoot, relativePath)` returns a single
   `boolean`. It realpaths `repoRoot` at `:252`, joins the candidate at `:253`,
-  returns `false` when `directoryExists` is false at `:254-255`, realpaths the
+  returns `false` when `directoryExists` is false at `:254-256`, realpaths the
   candidate at `:257`, and at `:258` returns
   `toPosixPath(relative(realRoot, realCandidate)) === relativePath`. The
-  `catch` at `:259-260` also returns `false`. Four distinct situations —
+  `catch` at `:259-261` also returns `false`. Four distinct situations —
   absent, unstat-able, resolved elsewhere by symlink, resolved elsewhere by
   case — collapse into one `false`.
 - `packages/cli/src/commands/instructions/instructions.utils.ts:352-357` — the
   only consumer. When the probe is false it pushes
   `` `${source} entry ${JSON.stringify(normalizedPath)} matches no directory
 in this repository (matching is case-sensitive), so it excludes nothing.` ``
-  and `continue`s, keeping the entry out of `effective`.
+  (`:354`) and `continue`s (`:356`), keeping the entry out of `effective`
+  (`:359`).
 - `packages/cli/src/commands/instructions/instructions.utils.ts:316-324` —
   both warning sources flow through the same loop: `documentation.root` (via
-  the derived content root) and each
-  `documentation.instructionPointerExcludes` entry. The `source` label is
-  interpolated into the message, so both inherit whatever this plan writes.
-- Reproduced live against the built CLI's module in a scratch repository, with
-  a symlink `link-dir -> ../elsewhere/target` where `elsewhere/target` is a
-  real directory inside the repository and shared config
-  `{"version":1,"documentation":{"instructionPointerExcludes":["link-dir"]}}`:
+  the derived content root, `:319`) and each
+  `documentation.instructionPointerExcludes` entry (`:322`). The `source`
+  label is interpolated into the message, so both inherit whatever this plan
+  writes.
+- Reproduced at this `HEAD` by importing `resolveInstructionPointerExcludes`
+  from the built `packages/cli/dist/commands/instructions/instructions.utils.js`
+  in a scratch repository containing `real-docs/`, `alias -> real-docs`,
+  `link-out -> <mkdtemp dir outside the repository>/target`, and shared config
+  `{"version":1,"documentation":{"instructionPointerExcludes":["alias","link-out","missing-dir"]}}`:
 
   ```text
-  configured: ["link-dir"]
+  configured: ["alias","link-out","missing-dir"]
   effective:  []
-  warnings:   ["documentation.instructionPointerExcludes entry \"link-dir\"
-               matches no directory in this repository (matching is
-               case-sensitive), so it excludes nothing."]
+  warnings:   three entries, all identical apart from the entry name:
+              'documentation.instructionPointerExcludes entry "<name>" matches
+              no directory in this repository (matching is case-sensitive), so
+              it excludes nothing.'
   ```
 
-  The directory exists and the entry names it correctly; the message is wrong
-  on both counts.
+  Two of the three directories exist and are named correctly; the message is
+  wrong on both counts for them, and the operator cannot tell any of the three
+  apart.
 
-- Reproduced the same collapse for an in-repository alias
-  (`alias -> real-docs`) together with a genuinely absent entry
-  (`missing-dir`): both produced the identical message, so the operator cannot
-  tell the two apart.
 - `packages/cli/src/commands/instructions/instructions.utils.test.ts:1002-1035`
   — the existing case-mismatch test simulates a case-insensitive filesystem by
   injecting `stat` and `realpath`, and asserts
-  `expect(exclusions.warnings[0]).toContain('case-sensitive')`. The case
-  branch must keep that substring or this test has to change; this plan keeps
-  it.
-- `packages/cli/src/commands/instructions/instructions.utils.test.ts:927-1050`
+  `expect(exclusions.warnings[0]).toContain('case-sensitive')` (`:1034`). The
+  case branch must keep that substring or this test has to change; this plan
+  keeps it.
+- `packages/cli/src/commands/instructions/instructions.utils.test.ts:927-1074`
   — `describe('resolveInstructionPointerExcludes', ...)` with the
-  `writeConfig(repoRoot, documentation)` helper and `createRepoRoot()`; this is
-  the structural pattern for the new cases.
-- `apps/oat-docs/docs/cli-utilities/configuration.md:95` — the prose behind the
-  message says inert entries include "paths that match no directory (matching
-  is case-sensitive)". It is the only documentation sentence that describes
-  this warning; `apps/oat-docs/docs/provider-sync/instruction-sync.md:115-133`
+  `writeConfig(repoRoot, documentation)` helper (`:928`) and
+  `createRepoRoot()`; this is the structural pattern for the new cases.
+- `apps/oat-docs/docs/cli-utilities/configuration.md:96` — the prose behind
+  the message says inert entries include "paths that match no directory
+  (matching is case-sensitive)". It is the only documentation sentence that
+  describes this warning (PR #273 moved it from `:95` to `:96` and did not
+  change it); `apps/oat-docs/docs/provider-sync/instruction-sync.md:115-133`
   describes the `--json` fields but pins no message text.
 - A repository-wide search for the message string
-  (`grep -rn 'matches no directory'`) finds exactly two occurrences outside
-  `dist/`: the source line and the backlog item. Nothing else pins it.
+  (`grep -rln 'matches no directory'`, excluding `node_modules` and `dist`)
+  finds the source line, the backlog item, this plan, and one archived wave-5
+  review. No code, test, or documentation page other than the source pins it.
+- The focused suite `src/commands/instructions` passes at this `HEAD`.
 
 ### Source claims found true, and one narrower
 
@@ -124,13 +133,14 @@ in this repository (matching is case-sensitive), so it excludes nothing.` ``
   symlink.
 - Narrower than the item implies: the item's criterion says the warning should
   distinguish "no such directory" from "resolves **outside the docs tree** via
-  a symlink". The code's actual comparison is not against the docs tree — it is
-  `relative(realRoot, realCandidate) === relativePath`, i.e. "does the entry
+  a symlink". The code's actual comparison is not against the docs tree — it
+  is `relative(realRoot, realCandidate) === relativePath`, i.e. "does the entry
   resolve to _itself_". A symlink to a sibling directory **inside** the
   repository is reported inert for exactly the same reason as one pointing
-  outside it (verified: `alias -> real-docs` warns identically). This plan
-  implements the code's real distinction — resolved-to-a-different-path — and
-  names the target in both cases, which covers the item's case as a subset.
+  outside it (reproduced above: `alias -> real-docs` and `link-out` warn
+  identically). This plan implements the code's real distinction —
+  resolved-to-a-different-path — and names the target in both cases, which
+  covers the item's case as a subset.
 - Also narrower: the item names only the symlink cause. The same branch fires
   for a case-insensitive filesystem, which is the branch the existing test at
   `:1002` exercises. The two are separated here so each keeps an accurate
@@ -138,22 +148,27 @@ in this repository (matching is case-sensitive), so it excludes nothing.` ``
 
 ## Dependencies
 
-| Type                  | Dependency                                                                                                                      | Required state                                                                                                   | Current state                                                         |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Satisfied predecessor | Wave-5 p02 [Keep instruction sync pointers out of docs trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md) | Merged, so the warning this plan refines exists.                                                                 | Merged; `resolveInstructionPointerExcludes` verified at this `HEAD`.  |
-| Soft distinct         | [Fix oat config unset and adopt](./2026-09-08-fix-oat-config-unset-and-adopt.md)                                                | No file in common; may share a parallel group.                                                                   | Authored 2026-09-08 in the same wave-7 batch; disjoint write surface. |
-| Soft distinct         | [Harden normalized config maps](./2026-09-08-harden-normalized-config-maps.md)                                                  | No file in common; may share a parallel group. That plan is explicitly scoped out of `commands/instructions/**`. | Authored 2026-09-08 in the same wave-7 batch; disjoint write surface. |
+| Type                  | Dependency                                                                                                                      | Required state                                                                                                                                                                                              | Current state                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Satisfied predecessor | Wave-5 p02 [Keep instruction sync pointers out of docs trees](./2026-09-02-keep-instruction-sync-pointers-out-of-docs-trees.md) | Merged, so the warning this plan refines exists.                                                                                                                                                            | Merged; `resolveInstructionPointerExcludes` verified at this `HEAD`.                                                                         |
+| Satisfied             | PR #273 (`feat: add provider-neutral remote project management`)                                                                | Merged; it touched `cli-utilities/configuration.md` (the sentence moved one line) and no `commands/instructions/` path.                                                                                     | Merged 2026-09-08 (`7d70ac307`); `:96` re-anchored.                                                                                          |
+| Soft adjacency        | [Guard every packed asset directory](./2026-09-08-guard-every-packed-asset-directory.md)                                        | Never in the same parallel group; both write `apps/oat-docs/docs/cli-utilities/configuration.md` (that plan near its `OAT_ASSETS_DIR` section, this one at `:96`). Either order; re-anchor after the other. | Authored 2026-09-08 in the same wave-7 batch; its Dependencies table does not yet name this lane — the wave composition must serialize them. |
+| Soft distinct         | [Fix oat config unset and adopt](./2026-09-08-fix-oat-config-unset-and-adopt.md)                                                | No file in common; may share a parallel group.                                                                                                                                                              | Authored 2026-09-08 in the same wave-7 batch; disjoint write surface.                                                                        |
+| Soft distinct         | [Harden normalized config maps](./2026-09-08-harden-normalized-config-maps.md)                                                  | No file in common; may share a parallel group. That plan is explicitly scoped out of `commands/instructions/**`.                                                                                            | Authored 2026-09-08 in the same wave-7 batch; disjoint write surface.                                                                        |
+| Soft distinct         | [Warn on a wrong-typed documentation.root](./2026-09-08-warn-on-wrong-typed-documentation-root.md)                              | No file in common; may share a parallel group. That plan defers its `oat instructions` wiring precisely because this lane owns `instructions.utils.ts`.                                                     | Authored 2026-09-08 in the same wave-7 batch; disjoint write surface.                                                                        |
 
 No unsatisfied hard dependency remains, so `oat_execution_status` is `READY`.
 
 ## Landing-event impact
 
-| Event                                                      | Affected | Files in common                                                                                                  | Required update                                                                                                                            |
-| ---------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| PR #273 (provider-neutral remote project management) lands | None     | None (verified: its changed-file list contains no `packages/cli/src/commands/instructions/` path).               | No action.                                                                                                                                 |
-| PR #190 (ReviewPlan Stage A) lands                         | None     | None (verified: its changed-file list contains no `packages/cli/src/commands/instructions/` path).               | No action.                                                                                                                                 |
-| PR #125 (`oat-brainstorm` visual companion) lands          | None     | None (verified: its changed-file list contains no `packages/cli/src/commands/instructions/` path).               | No action.                                                                                                                                 |
-| Either sibling wave-7 config lane merges                   | None     | None. Both are scoped out of `commands/instructions/**`; the harden lane says so explicitly in its Out of scope. | If a later lane does wire a config warning into `resolveInstructionPointerExcludes`, re-anchor `:316-324` before editing the warning loop. |
+| Event                                                                 | Affected | Files in common                                                                                                                   | Required update                                                                                                                                                                                                        |
+| --------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PR #273 (provider-neutral remote project management) — **landed**     | Done     | `apps/oat-docs/docs/cli-utilities/configuration.md` (its hunks are at `:15` and `:101-127`; the `:96` sentence is unchanged)      | Merged before this revision; `:96` re-anchored. No further action.                                                                                                                                                     |
+| PR #190 (ReviewPlan Stage A) lands                                    | Minor    | `apps/oat-docs/docs/cli-utilities/configuration.md` only (verified on its paginated file list: no `commands/instructions/` path). | Re-anchor `:96` before Step 4.                                                                                                                                                                                         |
+| PR #125 (`oat-brainstorm` visual companion) lands                     | None     | None (verified: its paginated file list contains no `packages/cli/src/commands/instructions/` path).                              | No action.                                                                                                                                                                                                             |
+| Sibling wave-7 lane `guard-every-packed-asset-directory` merges first | Minor    | `apps/oat-docs/docs/cli-utilities/configuration.md`                                                                               | Re-anchor `:96` and confirm `oat docs generate-index` still leaves `apps/oat-docs/index.md` unchanged.                                                                                                                 |
+| Any sibling wave-7 config lane merges                                 | None     | None. All three are scoped out of `commands/instructions/**`.                                                                     | If a later lane does wire a config warning into `resolveInstructionPointerExcludes` (the `warn-on-wrong-typed-documentation-root` plan names it as a follow-up), re-anchor `:316-324` before editing the warning loop. |
+| Any wave-7 lane that archives a backlog item merges                   | Minor    | `.oat/repo/pjm/backlog/index.md`                                                                                                  | Regenerate with `oat backlog regenerate-index` at close-out rather than hand-merging.                                                                                                                                  |
 
 ## Drift check
 
@@ -161,7 +176,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat c9f2e147ac0674e73a60735e0c1727ccc6048756..origin/main -- \
+git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..origin/main -- \
   packages/cli/src/commands/instructions/instructions.utils.ts \
   packages/cli/src/commands/instructions/instructions.utils.test.ts \
   packages/cli/src/commands/instructions/instructions.types.ts \
@@ -192,10 +207,11 @@ warning string already naming a resolved path — is a STOP condition.
 ## Repository conventions
 
 - Build: `pnpm build` → all packages compile to `dist/`. Required before any
-  built-CLI reproduction and before `pnpm test:smoke` / `pnpm test:release`.
+  built-module reproduction and before `pnpm test:smoke` / `pnpm test:release`.
 - Typecheck: `pnpm type-check` → passes.
 - Focused test: from `packages/cli`,
-  `pnpm exec vitest run src/commands/instructions` → passes.
+  `pnpm exec vitest run src/commands/instructions` → passes (green at this
+  `HEAD`).
 - Full test (uncached, evidence-grade): from the repository root,
   `HOME=$(mktemp -d) pnpm exec turbo run test --force`. A plain `pnpm test` is
   frequently a Turborepo cache replay; `pnpm test --force` does not force a
@@ -213,8 +229,7 @@ warning string already naming a resolved path — is a STOP condition.
   functionality for the lockstep bump. In lane mode the wave fan-in owns that
   bump; this lane makes none.
 - Skill versioning: **not applicable.** This plan changes no
-  `.agents/skills/*/SKILL.md`, so there is no `metadata.version` bump (the
-  top-level `version:` field is gone since CLI 0.2.65).
+  `.agents/skills/*/SKILL.md`, so there is no `metadata.version` bump.
   `pnpm run check:skill-bumps` must still pass, reporting nothing.
 - Implementation pattern: the discriminated-result shape follows
   `InstructionPointerExclusions` in
@@ -251,7 +266,7 @@ fetched `origin/main`, and runs all eight gates in order.
   two messages that result selects.
 - `packages/cli/src/commands/instructions/instructions.utils.test.ts` — the new
   and extended cases in [Test plan](#test-plan).
-- `apps/oat-docs/docs/cli-utilities/configuration.md:95` — one sentence, so the
+- `apps/oat-docs/docs/cli-utilities/configuration.md:96` — one sentence, so the
   documented reason list matches the messages the command now emits.
 
 ### Out of scope
@@ -271,11 +286,14 @@ fetched `origin/main`, and runs all eight gates in order.
 - `UNEXCLUDABLE_PATHS` and the normalization warnings at `:333-338` and
   `:345-350` — different branches, untouched.
 - Any file under `packages/cli/src/config/` or
-  `packages/cli/src/commands/config/`. Those belong to the two sibling wave-7
-  lanes; this plan must not touch them, and does not need to.
+  `packages/cli/src/commands/config/`. Those belong to the three sibling
+  wave-7 config lanes; this plan must not touch them, and does not need to.
 - Symlink handling in the directory scan itself
   (`scanInstructionDirectories`, `:365`). This plan changes a diagnostic, not
   traversal.
+- Wiring the `documentation.root` typed warning into this function; the
+  `warn-on-wrong-typed-documentation-root` lane defers that to a follow-up
+  after this lane lands.
 
 ## Current state
 
@@ -334,15 +352,16 @@ Promise<ExclusionDirectoryProbe>` that keeps every existing step in order:
   `resolvedPath` is `resolved` when it stays inside the repository
   (it does not start with `..`) and the absolute `realCandidate` otherwise, so
   a link out of the tree is named plainly instead of as a chain of `../`;
-- any throw → `{ kind: 'absent' }` (today's `catch` at `:259-260`).
+- any throw → `{ kind: 'absent' }` (today's `catch` at `:259-261`).
 
 Keep the existing doc comment's explanation of _why_ `realpath` is used and why
-`repoRoot` is realpathed too; it is still the reason the check exists.
+`repoRoot` is realpathed too (`:232-245`); it is still the reason the check
+exists.
 
-**Verify:** from `packages/cli`, `pnpm type-check` at the repository root
-passes and `pnpm exec vitest run src/commands/instructions` → passes with the
-existing assertions still green (the messages have not changed yet, because
-Step 2 has not run).
+**Verify:** `pnpm type-check` at the repository root passes and, from
+`packages/cli`, `pnpm exec vitest run src/commands/instructions` → passes with
+the existing assertions still green (the messages have not changed yet,
+because Step 2 has not run).
 
 ### 2. Emit the reason that applies
 
@@ -368,15 +387,17 @@ Handle every `kind` exhaustively — no `default` that silently absorbs a future
 variant.
 
 **Verify:** after `pnpm build`, re-run the symlink reproduction from
-[Verified evidence](#verified-evidence) against the built module: the warning
-must name the resolved target and must **not** contain `case-sensitive`.
+[Verified evidence](#verified-evidence) against the built module: the `alias`
+and `link-out` warnings must name `real-docs` and the absolute target
+respectively and must **not** contain `case-sensitive`; the `missing-dir`
+warning must be byte-identical to today's.
 
 ### 3. Add and extend the tests
 
 Add the cases in [Test plan](#test-plan) to
 `packages/cli/src/commands/instructions/instructions.utils.test.ts`, inside the
 existing `describe('resolveInstructionPointerExcludes', ...)` block at `:927`,
-reusing `createRepoRoot()` and `writeConfig()`. Extend the existing
+reusing `createRepoRoot()` and `writeConfig()` (`:928`). Extend the existing
 case-mismatch case at `:1002` to also assert the on-disk spelling is named.
 
 **Verify:** from `packages/cli`,
@@ -385,11 +406,11 @@ case-mismatch case at `:1002` to also assert the on-disk spelling is named.
 
 ### 4. Update the documented reason list
 
-In `apps/oat-docs/docs/cli-utilities/configuration.md:95`, change the inert-entry
-list so it distinguishes the two: an entry that matches no directory (matching
-is case-sensitive) and an entry that resolves elsewhere through a symlink, with
-the warning naming the resolved target in the second case. Change nothing else
-in the sentence, and add no heading.
+In `apps/oat-docs/docs/cli-utilities/configuration.md:96`, change the
+inert-entry list so it distinguishes the two: an entry that matches no
+directory (matching is case-sensitive) and an entry that resolves elsewhere
+through a symlink, with the warning naming the resolved target in the second
+case. Change nothing else in the sentence, and add no heading.
 
 **Verify:**
 
@@ -464,8 +485,9 @@ repository`** — create the link target outside the repository root (a second
    `source` label at `:319` still flows into the new messages.
    _Red before Step 2:_ the old message.
 6. **Unchanged neighbours that must stay green**: the effective-entry case at
-   `:940`, the normalization-drop case at `:973`, and the carve-in case at
-   `:988`.
+   `:940`, the normalization-drop case at `:973`, the carve-in case at `:988`,
+   the carve-in-descendant case at `:1037`, and the nested-exclusion case at
+   `:1053`.
 
 ### Red-then-green negative controls
 
@@ -506,7 +528,7 @@ previously told was unprotected.
 - [ ] The resolved-elsewhere warning names the resolved target and omits the
       case-sensitivity hint; the case-only variant keeps the hint and adds the
       on-disk spelling.
-- [ ] A live reproduction on the built CLI with a real symlinked directory
+- [ ] A live reproduction on the built module with a real symlinked directory
       shows the new message (`pnpm build`, then the probe from
       [Verified evidence](#verified-evidence)).
 - [ ] `effective` is unchanged for every case in the suite; no previously inert
@@ -554,11 +576,12 @@ Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;
 - `origin/main` advances materially from
-  `c9f2e147ac0674e73a60735e0c1727ccc6048756`;
-- PR #273, PR #190, or PR #125 lands — none touches
-  `packages/cli/src/commands/instructions/` today, so re-check that before
-  relying on the "no action" rows in
-  [Landing-event impact](#landing-event-impact);
+  `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`;
+- PR #190 or PR #125 lands — neither touches
+  `packages/cli/src/commands/instructions/` today; #190 touches
+  `cli-utilities/configuration.md`, so re-anchor `:96`;
+- the sibling `guard-every-packed-asset-directory` lane merges, since it edits
+  the same documentation page;
 - a later lane wires an additional warning source into
   `resolveInstructionPointerExcludes`, which would move the `:316-324` and
   `:330-360` anchors;
@@ -566,7 +589,7 @@ Revalidate this plan against live state before executing when:
   `instructions.utils.test.ts`, or
   `apps/oat-docs/docs/cli-utilities/configuration.md` moves;
 - the symlink reproduction in [Verified evidence](#verified-evidence) cannot be
-  reproduced on the built CLI.
+  reproduced on the built module.
 
 Executed inside a wave, refresh the drift check against the exact execution
 `HEAD` after predecessor lanes integrate, not only from the authored SHA to
@@ -588,7 +611,7 @@ authored provenance.
   outside the repository should read as a plain path, not as a `../` chain.
 - **Independence:** confirm the diff touches no file under
   `packages/cli/src/config/` or `packages/cli/src/commands/config/`, which
-  belong to the two sibling wave-7 lanes.
+  belong to the sibling wave-7 lanes.
 - **Deliberately deferred:** resolved-elsewhere entries stay inert rather than
   being followed to their target; and `scanInstructionDirectories`' own symlink
   handling is untouched.
