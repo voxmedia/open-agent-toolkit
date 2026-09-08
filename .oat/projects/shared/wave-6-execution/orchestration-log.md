@@ -56,3 +56,25 @@ signal (gap):** prototype-method greps do not find implicit-coercion hazards
 should grep coercion sites too.
 
 ---
+
+### 2026-09-08 · structural · oat-wave-execute · group 2 fan-in and closeout
+
+Group 2 merged p04 first (`88a8d75df`) so p05's projected-copy reader could
+adopt p04's exported resolver: the p05 worktree was rebased onto the merged
+tip, its deferred Important landed as a third commit, and the original
+reviewer verified it in a third round before the merge (`386a32b11`).
+Lockstep retained at 0.2.64; the eight gates plus smoke, skills, and the root
+test ran sequentially with exit codes (CLI 6242, 0 cached). Closeout: the five
+backlog items archived with outcome summaries, five follow-ups filed (seven
+across the wave), Deviations / Deferred Findings / Final Summary written, then
+the root final review and the configured exit gate. **Skill signal
+(strengthens):** merging the upstream lane of a sibling dependency first and
+rebasing the dependent lane before its last fix let the dependent lane consume
+the real shared contract instead of a fan-in reconciliation patch; the
+reviewer running the suggested repair (rather than reasoning about it) settled
+a brief-versus-implementation disagreement on evidence. **Skill signal
+(gap):** a fix round that introduced a Critical (p02's `git check-ignore`
+acceptance) shows fix-round briefs should restate the weaker-anywhere rule
+explicitly, not only the findings to close.
+
+---

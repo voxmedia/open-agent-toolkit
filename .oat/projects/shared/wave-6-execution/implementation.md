@@ -218,9 +218,15 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact      | Planned / Documented                                          | Actual / Accepted                                                                                              | Reason                                                                                                          | Source of Truth                     | Follow-up                                                                    |
+| ------------- | -------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------- |
+| p01-t01       | plan step 4          | `provider-inactive` for every never-detected provider         | fires only for `activation.source === 'config-disabled'` (documented in `tool-packs.md`)                       | a never-detected provider produces no row; the matrix row overstated the code                                   | implementation                      | wave-close plan correction (matrix row 2)                                    |
+| p02-t01 fix 1 | review round 2       | an absent ledger artifact is excused when git ignores it      | excused only inside `reviews/archived/` after containment, and only when that directory was never materialized | `.gitignore` ignores whole `local`/`synced` project trees, so `git check-ignore` accepted everything (Critical) | implementation                      | none (fixed in the wave)                                                     |
+| p03-t01       | plan steps 1–2       | `parseTree` + `getNodeValue` returning null-prototype objects | `parseTree` for errors, iterative materialization into plain objects with own-key `defineProperty`             | the plan's own STOP fired (depth regression; `String()` coercion on a null-prototype value)                     | dated post-STOP refresh `03e1aa576` | wave-close corrections (depth figure, empty-content bullet, Outcome wording) |
+| p04-t01       | plan step 3          | numeric version scalars stringified                           | non-string scalars rejected (`version: 1.10` → `null`, blocking)                                               | YAML 1.1 floats lose precision; a decorated scalar is not a version                                             | implementation                      | recorded in the execution record; no bundled skill affected                  |
+| p04-t01       | plan step 6          | update the two template skills' pins                          | no pins exist anywhere in `packages/cli/src` or `tools/smoke`                                                  | refresh false premise 1                                                                                         | recon                               | wave-close plan correction                                                   |
+| p05-t01       | plan step 2          | four view classes; `ExpectedProjection.strategy`              | six classes (`untracked`, native-read `in-sync` added); no `strategy` (resolved by the sync engine)            | real providers exhibit states the plan did not enumerate                                                        | implementation                      | none                                                                         |
+| p05-t01 fix 2 | review brief round 3 | no repair offered for a conflicting-but-different pair        | a repair is offered because it provably works (`update_copy → changed`, re-diagnosis `resolved`)               | the reviewer ran the repair; suppression stays for the provably no-op case                                      | review round 3 ruling               | none                                                                         |
 
 ## Test Results
 
@@ -232,27 +238,63 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p04   | 6190 (forced CLI suite) + 844 focused + test:smoke | all    | 0      | -        |
 | p05   | 6242 (forced CLI suite, post-rebase) + 155 focused | all    | 0      | -        |
 
+## Deferred Findings
+
+### Deferred Findings (Medium)
+
+- p01 review round 2 M1 — `visibilityFor`'s exhaustive `never` switch throws on an unrecognized catalog-refresh policy state that `normalizeSyncEvidence` casts from payload data (latent while sync is in-process) → `BL-260908-validate-the-catalog-refresh`.
+- p03 review round 1 I1/M1 (Codex M1) — `normalizeRecordMap` and `dispatch-matrix.ts:343` reinstall a preserved `__proto__` key as the normalized map's prototype (no execution path) → `BL-260908-guard-normalized-config-maps`.
+- p05 review round 1 I2 — a copy-strategy skill directory reports `drifted/modified` immediately after a successful sync (pre-existing engine defect: the banner and `.oat-generated` sentinel sit outside the manifest hash) → `BL-260908-make-copy-strategy-skill`; such views carry no `Repair:` line until it lands.
+- p02 sweep residue — the ledger-path guard run over every `.oat/projects/**/plan.md` passes 59 of 94: two genuinely dangling rows in archived projects, two partially materialized `reviews/archived/` trees, 31 non-path Artifact cells → `BL-260908-repair-or-exempt-archived`.
+
+### Deferred Findings (Minor)
+
+- p04 review round 2 m4 — a changed skill with no frontmatter block at all is still skipped silently by the bump validator (pre-existing) → `BL-260908-report-a-changed-skill-with-no`.
+- p04 review round 2 m1 — `tools/release/build-explainer-rc.mjs:684` and three regex test pins still read `^version:` → attached to `BL-260904-migrate-bundled-skills-from` (raised to high 2026-09-08; runs next as a standalone project).
+- p04 (plan-sanctioned) — `pnpm oat:validate-skills` and `pnpm check` print 82 `skill-version-alias` warnings per run until that migration lands; exit codes unaffected.
+- p03 lane — `oat decision new` dates record ids in UTC (the lane used `--created-at`) → `BL-260908-date-decision-record-ids`.
+- p03 lane — oxfmt rewrites a bare `__proto__` in Markdown prose into `**proto**` → `BL-260908-keep-a-bare-proto-in-markdown`.
+- p05 review round 3 m5 — a cosmetic colon in `redactScopeRoot` output (no leak) — not filed.
+- Plan-text corrections applied at wave close (see the execution records): p01 matrix row 2; p02 test-case labels, the review-receive citation, and drift omissions; p03 depth figure, empty-content bullet, Outcome wording, `:1826→:1828`; p04 Step 6 pins and drift omissions.
+
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- (filled at closeout)
+- p01 — pack evidence carries real provider reachability: a `provider-reachability` mapper, in-process sync evidence (the spawned `--json` subprocess is gone), every production `providers: []` literal removed, real emitters for the six dead diagnostic codes with the pinned severity matrix; `list`/`info` agree with `status`/`doctor`; failed sync runs report through the evidence.
+- p02 — `oat-project-pr-final` 1.6.3: only terminal review rows are archived (event identity, enumerated rewrites, idempotent names) and a fail-closed ledger-path guard runs before `gh pr create` (containment incl. symlink chains, fenced/blockquoted rows skipped, per-table header recognition, `PRFINAL-05`).
+- p03 — `config/json.ts` materializes the parsed tree iteratively into plain objects with own-key `defineProperty`, so a `__proto__` key survives as an own data property instead of being dropped or injected; decision record `DR-260907-oat-config-reads-materialize`.
+- p04 — `metadata.version` is the canonical skill version through one parsed-input contract (`parseSkillFrontmatter` + `resolveSkillVersion`) shared by the runtime helper, both validators, canonical-role resolution, and doctor; conflict is an error, alias-only a structural warning over all 82 skills, unusable/malformed declarations block on both sides; templates `create-agnostic-skill` 1.4.2 and `create-oat-skill` 1.5.2.
+- p05 — `oat tools info <skill>` gains an additive provider-view section (human and JSON) from a pure diagnostic mapper: `inactive`, `unsupported`, `excluded`, `untracked`, `unverified`, `missing-additive` (with a scope-correct repair), and manifest-backed additive/removed/modified classes; copies compared through the shared version resolver; manifest failures degrade to `unavailable`.
+- One lockstep bump 0.2.63 → 0.2.64 with the sync-manifest restamp; five backlog items archived; five follow-ups filed plus two filed mid-wave.
 
 **Behavioral changes (user-facing):**
 
-- (filled at closeout)
+- `oat tools install/update/remove/list/info` report per-provider reachability with real diagnostic codes; a materialization failure now yields `partial` / exit 1 instead of a silent success.
+- `oat tools info <skill>` prints a provider-view section; JSON gains `providerViews`.
+- `oat config get` no longer injects a `__proto__` key into the parsed config; deep nesting and error messages unchanged.
+- `pnpm run check:skill-bumps` and `oat:validate-skills` read `metadata.version` first; a conflicting or unusable declaration blocks; 82 alias warnings print until the migration item lands.
+- `oat-project-pr-final` refuses to open a PR when a review-ledger row points outside the project or at a missing artifact.
 
 **Key files / modules:**
 
-- (filled at closeout)
+- `packages/cli/src/commands/tools/shared/{provider-reachability,sync-evidence}.ts`, `pack-evidence.ts`, `sync/index.ts` (p01)
+- `.agents/skills/oat-project-pr-final/SKILL.md`, `review-skill-contracts.test.ts`, `post-implement-sequence-contracts.test.ts` (p02)
+- `packages/cli/src/config/json.ts` (+ `json.test.ts`), `.oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md` (p03)
+- `packages/cli/src/commands/shared/frontmatter.ts`, `validation/skills.ts`, `commands/internal/validate-skill-version-bumps.ts`, `agents/canonical/resolve.ts`, `apps/oat-docs/docs/contributing/skills.md` (p04)
+- `packages/cli/src/drift/skill-view-diagnostic.ts`, `commands/tools/info/skill-views.ts` (new), `info-tool.ts`, `apps/oat-docs/docs/cli-utilities/tool-packs.md`, `provider-sync/manifest-and-drift.md` (p05)
 
 **Verification performed:**
 
-- (filled at closeout)
+- Per lane: forced `check`/`type-check`/`test` with `Cached: 0`, focused suites, two Codex rounds, red-then-green negative controls (see the Phase sections); root reviews p01 ×2, p02 ×3, p03 ×2, p04 ×2, p05 ×3, all PASS at the final round.
+- Group fan-ins: eight definition-of-done gates sequential with exit codes plus `test:smoke`, `test:skills`, root `pnpm test` (group 1 CLI 6135; group 2 CLI 6242, 338 files, 0 cached); `git patch-id --stable` identity for every re-hashed lane commit.
+- Root final review and the configured exit gate: recorded under Autonomy Gate Provenance.
 
 **Design deltas (if any):**
 
-- (filled at closeout)
+- p03's mechanism changed under a dated post-STOP refresh (plain objects with own-key `defineProperty` instead of null-prototype objects).
+- p04's alias warning runs over every bundled skill (the `oat-*` filter applies only to the other structural checks) — the refresh's contract amendment.
+- p05 adds two view classes beyond the plan's four and offers a repair for a conflicting copy because the repair provably works.
 
 ## References
 
