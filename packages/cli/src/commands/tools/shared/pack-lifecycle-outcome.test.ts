@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ToolPackEvidence } from './pack-evidence';
+import type {
+  ProviderReachabilityEvidence,
+  ToolPackEvidence,
+} from './pack-evidence';
 import {
   evaluatePackLifecycleOutcome,
+  notRunProviderSyncOutcome,
   providerSyncOutcomeFromAutoSync,
   resolveAdditivePackScopeSelection,
 } from './pack-lifecycle-outcome';
@@ -164,5 +168,122 @@ describe('pack lifecycle outcome', () => {
       providers: [],
       error: 'provider failed',
     });
+  });
+});
+
+function reachability(
+  overrides: Partial<ProviderReachabilityEvidence> = {},
+): ProviderReachabilityEvidence {
+  return {
+    provider: 'codex',
+    scope: 'user',
+    contentKind: 'agent',
+    assets: ['~/.agents/agents/skeptical-evaluator.md'],
+    activation: {
+      state: 'active',
+      source: 'config-enabled',
+      reason: 'Explicitly enabled in sync config',
+    },
+    capability: {
+      support: 'supported',
+      projectionModes: ['materialization-extension'],
+      reason: 'codex projects user agent content',
+    },
+    projection: { state: 'projected', mode: 'materialization-extension' },
+    materialization: { state: 'materialized', detail: 'materialized' },
+    visibility: { state: 'live', reason: 'codex reads without a refresh' },
+    recovery: [],
+    ...overrides,
+  };
+}
+
+describe('provider sync outcome evidence', () => {
+  it('carries provider evidence into a complete outcome', () => {
+    const providers = [reachability()];
+    const sync = providerSyncOutcomeFromAutoSync(
+      { synced: true, scopes: ['user'], error: null, evidence: [] },
+      providers,
+    );
+
+    expect(sync.status).toBe('complete');
+    expect(sync.providers).toEqual(providers);
+
+    const outcome = evaluatePackLifecycleOutcome({
+      selection: resolveAdditivePackScopeSelection({
+        pack: 'ideas',
+        requested: 'user',
+        knownRealizedScopes: ['user'],
+        unknownScopes: [],
+      }),
+      lifecycle: [],
+      sync,
+      finalEvidence: evidence(['user']),
+    });
+
+    expect(outcome.status).toBe('complete');
+    expect(outcome.sync.providers).toEqual(providers);
+  });
+
+  it('degrades a successful sync to partial when a provider materialization failed', () => {
+    const sync = providerSyncOutcomeFromAutoSync(
+      { synced: true, scopes: ['user'], error: null, evidence: [] },
+      [
+        reachability({
+          materialization: { state: 'failed', detail: 'permission denied' },
+        }),
+      ],
+    );
+
+    expect(sync.status).toBe('partial');
+
+    const outcome = evaluatePackLifecycleOutcome({
+      selection: resolveAdditivePackScopeSelection({
+        pack: 'ideas',
+        requested: 'user',
+        knownRealizedScopes: ['user'],
+        unknownScopes: [],
+      }),
+      lifecycle: [],
+      sync,
+      finalEvidence: evidence(['user']),
+    });
+
+    expect(outcome.status).toBe('partial');
+    expect(
+      outcome.recovery.some(({ code }) => code === 'provider-sync-incomplete'),
+    ).toBe(true);
+  });
+
+  it('keeps info-only provider states complete so a healthy install exits 0', () => {
+    const sync = providerSyncOutcomeFromAutoSync(
+      { synced: true, scopes: ['user'], error: null, evidence: [] },
+      [
+        reachability({
+          visibility: { state: 'restart-required', reason: 'new session' },
+        }),
+        reachability({
+          provider: 'gemini',
+          activation: {
+            state: 'inactive',
+            source: 'config-disabled',
+            reason: 'Explicitly disabled in sync config',
+          },
+        }),
+      ],
+    );
+
+    expect(sync.status).toBe('complete');
+  });
+
+  it('reports not-run with its reason and still carries evidence', () => {
+    const providers = [reachability()];
+    const sync = notRunProviderSyncOutcome(providers, 'auto-sync was skipped');
+
+    expect(sync).toMatchObject({
+      scopes: [],
+      status: 'not-run',
+      error: 'auto-sync was skipped',
+    });
+    expect(sync.providers).toEqual(providers);
   });
 });

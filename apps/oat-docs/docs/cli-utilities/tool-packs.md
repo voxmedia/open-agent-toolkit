@@ -307,6 +307,45 @@ application-process restart requirement, or proof of visibility. No advice is
 emitted for current/no-op, planned-only, failed, missing, inactive, or
 unsupported materialization.
 
+Every pack lifecycle outcome (`install`, `update`, `remove`, and the aggregate
+init path) and every pack inventory surface (`oat tools list`, `oat tools
+info`, `oat status`, `oat doctor`) carries per-provider reachability evidence
+in its JSON, derived from the same config-aware registry the sync engine uses:
+activation, content capability, projection, materialization, catalog-refresh
+visibility, and recovery guidance. Human output names the provider on its own
+line and on any provider-attributed diagnostic. Reachability is never inferred
+from the presence of a provider directory on disk.
+
+The four inventory surfaces agree on managed user-scope roles. `list` and
+`info` resolve the same provider surface as `status` and `doctor`, so an
+active Codex or Cursor adapter that supplies managed roles suppresses the
+unmaterialized-user-agent report on all four rather than only two.
+
+Each provider state maps to exactly one row below. Pack evidence status and
+the lifecycle exit code derive from the **severity** column, never from the
+code name, so adding a code later cannot silently change an exit code.
+
+| Provider state (per provider, scope, content kind)                     | Diagnostic code                         | Severity  | Pack evidence status | Lifecycle outcome / exit code                    |
+| ---------------------------------------------------------------------- | --------------------------------------- | --------- | -------------------- | ------------------------------------------------ |
+| Active, supported, projection and materialization succeeded            | none                                    | --        | `ok`                 | `complete` / 0                                   |
+| Explicitly disabled in sync config for this scope                      | `provider-inactive`                     | `info`    | `ok`                 | `complete` / 0                                   |
+| Active but the content kind is unsupported by the adapter              | `provider-unsupported`                  | `info`    | `ok`                 | `complete` / 0                                   |
+| Active, supported, no projection exists (never synced or sync skipped) | `provider-materialization-missing`      | `warning` | `partial`            | `complete` / 0 (install succeeded; sync advised) |
+| Active, supported, the sync operation for this asset failed            | `provider-materialization-failed`       | `error`   | `partial`            | `partial` / 1                                    |
+| Active, projected, no sourced refresh contract for the host            | `visibility-unknown`                    | `info`    | `ok`                 | `complete` / 0                                   |
+| Active, projected, host catalog needs a refresh or a restart           | `refresh-required` / `restart-required` | `info`    | `ok`                 | `complete` / 0                                   |
+| Read-only inventory (`list`, `info`, `status`, `doctor`): no sync ran  | registry-derived codes only             | as above  | as above             | not applicable                                   |
+| Auto-sync not run (disabled or skipped) after a lifecycle operation    | none; `providerSync.status: 'not-run'`  | --        | `ok`                 | `complete` / 0                                   |
+
+Rows with `info` severity are visible in JSON and in the human provider line
+but do not turn `ok` into `partial`. A provider that was never detected and
+never configured is not reported per pack: its inactive state is still carried
+on the evidence row, but emitting a diagnostic for every registered provider on
+every pack would bury the actionable rows. `unknown` visibility is reported as
+unknown; it never claims reachability and never fails an otherwise successful
+install. A read-only inventory surface ran no sync, so it never reports
+`provider-materialization-failed`.
+
 Repository templates under `.oat/templates/` are **owner-owned seeds**. OAT
 compares a source-backed seed with its bundled default: a byte-equivalent copy
 is reported as current, while an edited copy is retained and reported as a

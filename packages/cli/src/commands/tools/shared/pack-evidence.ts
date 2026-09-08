@@ -1,3 +1,9 @@
+import type {
+  ManagedContentKind,
+  ProviderActivationSource,
+  ProviderCapabilitySupport,
+  ProviderProjectionMode,
+} from '@providers/shared/registry';
 import type { ConcreteScope } from '@shared/types';
 
 import type { PackInventory, ScopedPackInventory } from './pack-inventory';
@@ -61,12 +67,81 @@ export interface PackEvidenceDiagnostic {
   recovery: readonly RecoveryAction[];
 }
 
+/**
+ * Provider diagnostic codes and their pinned severities.
+ *
+ * `packEvidenceBlock` and the lifecycle-outcome status derive from the
+ * severity, never from the code name, so adding a code later cannot silently
+ * change a pack evidence block status or an install exit code.
+ */
+export const PROVIDER_DIAGNOSTIC_SEVERITY = {
+  'provider-inactive': 'info',
+  'provider-unsupported': 'info',
+  'provider-materialization-missing': 'warning',
+  'provider-materialization-failed': 'error',
+  'visibility-unknown': 'info',
+  'refresh-required': 'info',
+  'restart-required': 'info',
+} as const satisfies Record<string, PackEvidenceDiagnostic['severity']>;
+
+export type ProviderDiagnosticCode = keyof typeof PROVIDER_DIAGNOSTIC_SEVERITY;
+
+/**
+ * Marks a diagnostic as projected from provider reachability evidence.
+ *
+ * Consumers that re-project an evidence item use this to replace the previous
+ * provider rows without disturbing canonical or inventory-derived diagnostics.
+ */
+export const PROVIDER_DIAGNOSTIC_SOURCE = 'provider-registry';
+
+export type ProviderProjectionState = 'projected' | 'absent' | 'not-applicable';
+
+export type ProviderMaterializationState =
+  | 'materialized'
+  | 'missing'
+  | 'failed'
+  | 'not-applicable';
+
+export type ProviderVisibilityState =
+  | 'live'
+  | 'manual-refresh'
+  | 'restart-required'
+  | 'unknown';
+
+/**
+ * Per provider, scope, and content kind reachability, derived from the
+ * config-aware provider registry the sync engine uses. Every field is
+ * required: a permissive interface is what let every production path emit
+ * `providers: []` while still type-checking.
+ */
 export interface ProviderReachabilityEvidence {
   provider: string;
   scope: ConcreteScope;
-  contentKind: 'skill' | 'agent' | 'rule' | 'directory';
+  contentKind: ManagedContentKind;
   assets: readonly string[];
-  [key: string]: unknown;
+  activation: {
+    state: 'active' | 'inactive';
+    source: ProviderActivationSource;
+    reason: string;
+  };
+  capability: {
+    support: ProviderCapabilitySupport;
+    projectionModes: readonly ProviderProjectionMode[];
+    reason: string;
+  };
+  projection: {
+    state: ProviderProjectionState;
+    mode: ProviderProjectionMode | null;
+  };
+  materialization: {
+    state: ProviderMaterializationState;
+    detail: string;
+  };
+  visibility: {
+    state: ProviderVisibilityState;
+    reason: string;
+  };
+  recovery: readonly RecoveryAction[];
 }
 
 export interface ToolPackEvidence {
@@ -215,10 +290,135 @@ function canonicalDiagnostics(
   return diagnostics;
 }
 
+function providerDiagnostic(
+  pack: PackName,
+  evidence: ProviderReachabilityEvidence,
+  code: ProviderDiagnosticCode,
+  detail: string,
+): PackEvidenceDiagnostic {
+  return {
+    code,
+    severity: PROVIDER_DIAGNOSTIC_SEVERITY[code],
+    pack,
+    scope: evidence.scope,
+    provider: evidence.provider,
+    contentKind: evidence.contentKind,
+    affectedAssets: evidence.assets,
+    source: PROVIDER_DIAGNOSTIC_SOURCE,
+    detail,
+    recovery: evidence.recovery,
+  };
+}
+
+/**
+ * Emits the pinned severity-matrix diagnostics for provider reachability.
+ *
+ * `mode` is load-bearing rather than cosmetic: a read-only inventory surface
+ * (`list`, `info`, `status`, `doctor`) ran no sync, so it can never have
+ * observed a materialization failure. Emitting `provider-materialization-failed`
+ * there would report an error severity from evidence that does not exist.
+ */
+export function providerDiagnostics(input: {
+  pack: PackName;
+  providers: readonly ProviderReachabilityEvidence[];
+  mode: 'lifecycle' | 'inventory';
+}): PackEvidenceDiagnostic[] {
+  const diagnostics: PackEvidenceDiagnostic[] = [];
+  for (const evidence of input.providers) {
+    if (evidence.activation.state === 'inactive') {
+      // Only an explicitly disabled provider is reportable. A provider that
+      // was never detected and never configured is not a finding about this
+      // pack: emitting one per registered provider, per content kind, per
+      // pack would bury the actionable rows under inventory noise. The
+      // inactive state itself is still carried on the evidence row.
+      if (evidence.activation.source === 'config-disabled') {
+        diagnostics.push(
+          providerDiagnostic(
+            input.pack,
+            evidence,
+            'provider-inactive',
+            `${evidence.provider} is not active for ${evidence.scope} scope: ${evidence.activation.reason}`,
+          ),
+        );
+      }
+      continue;
+    }
+    if (evidence.capability.support !== 'supported') {
+      diagnostics.push(
+        providerDiagnostic(
+          input.pack,
+          evidence,
+          'provider-unsupported',
+          evidence.capability.reason,
+        ),
+      );
+      continue;
+    }
+    if (evidence.materialization.state === 'failed') {
+      if (input.mode === 'lifecycle') {
+        diagnostics.push(
+          providerDiagnostic(
+            input.pack,
+            evidence,
+            'provider-materialization-failed',
+            evidence.materialization.detail,
+          ),
+        );
+      }
+      continue;
+    }
+    if (evidence.materialization.state === 'missing') {
+      diagnostics.push(
+        providerDiagnostic(
+          input.pack,
+          evidence,
+          'provider-materialization-missing',
+          evidence.materialization.detail,
+        ),
+      );
+    }
+    if (evidence.projection.state !== 'projected') continue;
+    if (evidence.visibility.state === 'unknown') {
+      diagnostics.push(
+        providerDiagnostic(
+          input.pack,
+          evidence,
+          'visibility-unknown',
+          evidence.visibility.reason,
+        ),
+      );
+    } else if (evidence.visibility.state === 'manual-refresh') {
+      diagnostics.push(
+        providerDiagnostic(
+          input.pack,
+          evidence,
+          'refresh-required',
+          evidence.visibility.reason,
+        ),
+      );
+    } else if (evidence.visibility.state === 'restart-required') {
+      diagnostics.push(
+        providerDiagnostic(
+          input.pack,
+          evidence,
+          'restart-required',
+          evidence.visibility.reason,
+        ),
+      );
+    }
+  }
+  return diagnostics;
+}
+
 export function projectPackEvidence(input: {
   canonical: PackInventory | null;
   scopes: readonly PackScopeFacts[];
   providers?: readonly ProviderReachabilityEvidence[];
+  /**
+   * Defaults to the conservative read-only reading. A surface that actually
+   * ran a sync opts in to `lifecycle` so an observed failure can be reported.
+   */
+  providerMode?: 'lifecycle' | 'inventory';
 }): ToolPackEvidence {
   const pack =
     input.canonical?.pack ??
@@ -228,6 +428,7 @@ export function projectPackEvidence(input: {
         'Pack evidence requires canonical inventory or scope facts',
       );
     })();
+  const providers = input.providers ?? [];
   return {
     schemaVersion: 1,
     pack,
@@ -240,7 +441,14 @@ export function projectPackEvidence(input: {
       .filter(({ realization }) => realization === 'unknown')
       .map(({ scope }) => scope),
     realizedPlacement: placementForScopes(input.scopes),
-    providers: input.providers ?? [],
-    diagnostics: canonicalDiagnostics(pack, input.scopes),
+    providers,
+    diagnostics: [
+      ...canonicalDiagnostics(pack, input.scopes),
+      ...providerDiagnostics({
+        pack,
+        providers,
+        mode: input.providerMode ?? 'inventory',
+      }),
+    ],
   };
 }

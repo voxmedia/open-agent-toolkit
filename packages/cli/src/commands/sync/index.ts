@@ -649,3 +649,43 @@ export function createSyncCommand(
       );
     });
 }
+
+/**
+ * Runs the sync command in-process against a caller-supplied context.
+ *
+ * The tools lifecycle uses this instead of spawning `oat sync --json` and
+ * parsing its stdout: the caller passes a JSON-capturing logger and receives
+ * the evidence object the sync run already builds, with no serialization
+ * round trip and no subprocess. Canonical path filters are validated here
+ * with the same rules the CLI flags use.
+ */
+export async function runSyncInProcess(
+  context: CommandContext,
+  filter?: {
+    installedCanonicalPaths?: string[];
+    removedCanonicalPaths?: string[];
+  },
+  overrides: Partial<ContextualSyncDependencies> = {},
+): Promise<void> {
+  const installPaths = validateInstallCanonicalPaths(
+    filter?.installedCanonicalPaths,
+  );
+  const removePaths = validateRemoveCanonicalPaths(
+    filter?.removedCanonicalPaths,
+  );
+  if (installPaths?.length && removePaths?.length) {
+    throw new CliError(
+      '--install-canonical and --remove-canonical cannot be combined',
+      1,
+    );
+  }
+  await runSyncCommand(
+    context,
+    { ...defaultDependencies(), ...overrides },
+    installPaths?.length
+      ? { mode: 'install', paths: installPaths }
+      : removePaths?.length
+        ? { mode: 'remove', paths: removePaths }
+        : undefined,
+  );
+}

@@ -1,6 +1,11 @@
 import type { CommandContext } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
+import type { ProviderContextDependencies } from '@commands/tools/shared/provider-context';
 import type { ToolInfo } from '@commands/tools/shared/types';
+import type {
+  ProviderProjectionMode,
+  ProviderRegistration,
+} from '@providers/shared/registry';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -269,5 +274,167 @@ describe('runInfoTool', () => {
       ],
     });
     expect(JSON.stringify(capture.jsonPayloads[0])).not.toContain('/home/user');
+  });
+});
+
+/**
+ * Provider surface doubles: `list` and `info` must agree with `status` and
+ * `doctor` on whether an active provider materializes managed user-scope
+ * roles. These build the same config-aware context those commands resolve.
+ */
+function providerContextDependencies(input: {
+  activeProviders: string[];
+  userAgentProjectionMode?: ProviderProjectionMode;
+}): ProviderContextDependencies {
+  const capabilities = (['project', 'user'] as const).flatMap((scope) =>
+    (['skill', 'agent', 'rule', 'directory'] as const).map((contentKind) => ({
+      scope,
+      contentKind,
+      support: 'supported' as const,
+      projectionModes:
+        contentKind === 'agent' && scope === 'user'
+          ? [input.userAgentProjectionMode ?? 'entry-sync']
+          : ['entry-sync' as const],
+      nativeRoleSurface: contentKind === 'agent',
+      collectionAlias: 'unsupported' as const,
+      catalogRefresh: {
+        state: 'live' as const,
+        provenance: {
+          kind: 'official-contract' as const,
+          reference: 'https://example.invalid/contract',
+          verifiedAt: '2026-01-01',
+        },
+      },
+    })),
+  );
+  const registration = {
+    adapter: { name: 'codex' },
+    extensions: [],
+    capabilities,
+  } as unknown as ProviderRegistration;
+  return {
+    loadSyncConfig: async () => ({ providers: {} }) as never,
+    resolveProviderScopeContext: async ({ scope }) => ({
+      scope,
+      configSource: '~/.oat/sync/config.json',
+      activeProviders: input.activeProviders,
+      detectedProviders: input.activeProviders,
+      mismatches: { detectedUnset: [], detectedDisabled: [] },
+      activation: [
+        {
+          provider: 'codex',
+          state: input.activeProviders.includes('codex')
+            ? ('active' as const)
+            : ('inactive' as const),
+          source: input.activeProviders.includes('codex')
+            ? ('config-enabled' as const)
+            : ('config-disabled' as const),
+          reason: 'test activation',
+        },
+      ],
+      registrations: [registration],
+    }),
+  };
+}
+
+function unmaterializedUserPack(pack: string) {
+  return {
+    pack,
+    placement: 'user' as const,
+    scopes: [
+      {
+        pack,
+        scope: 'user' as const,
+        intent: {
+          pack,
+          scope: 'user' as const,
+          enabled: true,
+          source: 'declared',
+          configPath: '/home/user/.oat/config.json',
+          diagnostics: [],
+        },
+        completeness: 'complete' as const,
+        assets: [
+          {
+            definition: {
+              id: 'skeptical-evaluator',
+              kind: 'agent' as const,
+              destination: '.agents/agents/skeptical-evaluator.md',
+              scopes: ['user' as const],
+              ownership: { user: 'managed' as const },
+            },
+            path: '/home/user/.agents/agents/skeptical-evaluator.md',
+            status: 'current' as const,
+            installedVersion: null,
+            bundledVersion: null,
+          },
+        ],
+        diagnostics: [
+          {
+            code: 'user-agent-unmaterialized' as const,
+            message: 'Pack installs user-scope canonical agents',
+            paths: ['/home/user/.agents/agents/skeptical-evaluator.md'],
+          },
+        ],
+      },
+    ],
+    diagnostics: [
+      {
+        code: 'user-agent-unmaterialized' as const,
+        message: 'Pack installs user-scope canonical agents',
+        paths: ['/home/user/.agents/agents/skeptical-evaluator.md'],
+      },
+    ],
+  } as never;
+}
+
+describe('runInfoTool provider agreement', () => {
+  it('does not report unmaterialized user agents when an active provider supplies managed roles', async () => {
+    const received: Array<boolean | undefined> = [];
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ json: true, logger: capture.logger, scope: 'user' }),
+      'research',
+      {
+        ...createDeps(),
+        inventoryPack: async ({ pack, userManagedRoleMaterialization }) => {
+          received.push(userManagedRoleMaterialization);
+          return unmaterializedUserPack(pack);
+        },
+        providerContext: providerContextDependencies({
+          activeProviders: ['codex'],
+        }),
+      },
+    );
+
+    // `status` and `doctor` already passed this argument; `info` did not.
+    expect(received).toEqual([true]);
+    expect(
+      result.packEvidence?.diagnostics.map(({ code }) => code),
+    ).not.toContain('provider-materialization-missing');
+    expect(result.packEvidence?.status).toBe('ok');
+  });
+
+  it('still reports unmaterialized user agents when no active provider supplies managed roles', async () => {
+    const received: Array<boolean | undefined> = [];
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ json: true, logger: capture.logger, scope: 'user' }),
+      'research',
+      {
+        ...createDeps(),
+        inventoryPack: async ({ pack, userManagedRoleMaterialization }) => {
+          received.push(userManagedRoleMaterialization);
+          return unmaterializedUserPack(pack);
+        },
+        providerContext: providerContextDependencies({ activeProviders: [] }),
+      },
+    );
+
+    expect(received).toEqual([false]);
+    expect(result.packEvidence?.diagnostics.map(({ code }) => code)).toContain(
+      'provider-materialization-missing',
+    );
+    expect(result.packEvidence?.status).toBe('partial');
   });
 });

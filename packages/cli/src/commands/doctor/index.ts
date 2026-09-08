@@ -1218,7 +1218,9 @@ async function createPackStateChecks(
     checks,
     evidence: packEvidenceBlock(
       inventories.map((canonical) =>
-        projectRenderablePackEvidence(canonical, roots),
+        projectRenderablePackEvidence(canonical, roots, [
+          ...providerContexts.values(),
+        ]),
       ),
     ),
   };

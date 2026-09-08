@@ -65,7 +65,6 @@ vi.mock('./update-tools', async (importOriginal) => ({
 }));
 
 import {
-  buildSyncSubprocessArgs,
   createToolsUpdateCommand,
   formatUpdatedToolMessage,
   shouldBackfillWorkflowGitignore,
@@ -476,31 +475,5 @@ describe('formatUpdatedToolMessage', () => {
         false,
       ),
     ).toBe('Updated: oat-idea-new (1.0.0 -> 2.0.0)');
-  });
-});
-
-describe('buildSyncSubprocessArgs', () => {
-  it('passes the target project through --cwd and places --scope after the sync subcommand', () => {
-    // `--scope` is a per-command option on `sync`, so it must follow the
-    // subcommand token; `--cwd` stays a global flag before it.
-    expect(
-      buildSyncSubprocessArgs(
-        '/repo/packages/cli/src/index.ts',
-        ['--import', 'tsx/loader'],
-        {
-          cwd: '/tmp/project',
-          scope: 'project',
-        },
-      ),
-    ).toEqual([
-      '--import',
-      'tsx/loader',
-      '/repo/packages/cli/src/index.ts',
-      '--cwd',
-      '/tmp/project',
-      'sync',
-      '--scope',
-      'project',
-    ]);
   });
 });
