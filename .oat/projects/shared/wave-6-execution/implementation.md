@@ -229,8 +229,8 @@ Wave base `fab304fe7a2b0eb04f39f45b9de17934e8019fed` (origin/main after the wave
 | p03   | `.worktrees/wave-6/p03`  | DONE_WITH_CONCERNS after a STOP → refresh → resume (`9f714cb56`; forced CLI suite 6048) | passed (round 1 0C/1I/1M/3m → record fix → round 2 0C/0I/0M/1m)                                                       | 1 (record)                    |
 | p05   | `.worktrees/wave-6/p05`  | DONE (`bfa0c7c8e`; forced CLI suite 6164)                                               | passed (round 1 1C/2I/1M/4m → round 2 0C/1I/0M/2m, Important 1 deferred to the post-p04 rebase → round 3 0C/0I/0M/2m) | 2 (+ rebase onto `88a8d75df`) |
 | p04   | `.worktrees/wave-6/p04`  | DONE (`5ad26a195`; forced CLI suite 6190, check:skill-bumps 3)                          | passed (round 1 1C/2I/2M/3m → round 2 0C/0I/0M/3m)                                                                    | 1                             |
-| p06a  | `.worktrees/wave-6/p06a` | DONE (`c2ae4aa2b`, `2ee40cb7a`, `f3855f680`; forced CLI suite 6286)                     | round 2 pending (final reviewer)                                                                                      | -                             |
-| p06b  | `.worktrees/wave-6/p06b` | DONE (`35fe92b66`, `e4b8be284`; forced CLI suite 6286+)                                 | round 2 pending (final reviewer)                                                                                      | -                             |
+| p06a  | `.worktrees/wave-6/p06a` | DONE (`c2ae4aa2b`, `2ee40cb7a`, `f3855f680`; forced CLI suite 6286)                     | passed (final review round 2 0C/0I/2M/7m)                                                                             | 0                             |
+| p06b  | `.worktrees/wave-6/p06b` | DONE (`35fe92b66`, `e4b8be284`; forced CLI suite 6286+)                                 | passed (final review round 2 0C/0I/2M/7m)                                                                             | 0                             |
 
 #### Group 1 fan-in — p01, p02, p03 (2026-09-08)
 
