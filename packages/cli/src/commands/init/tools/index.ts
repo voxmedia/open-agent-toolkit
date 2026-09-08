@@ -49,11 +49,18 @@ import {
 } from '@commands/tools/shared/pack-lifecycle';
 import {
   evaluatePackLifecycleOutcome,
+  notRunProviderSyncOutcome,
+  providerSyncOutcomeFromAutoSync,
   resolveAdditivePackScopeSelection,
   type PackLifecycleOutcome,
 } from '@commands/tools/shared/pack-lifecycle-outcome';
 import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
+import {
+  lifecycleProviderEvidence,
+  withLifecycleProviderEvidence,
+} from '@commands/tools/shared/pack-provider-evidence';
 import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
+import { resolveProviderScopeContexts } from '@commands/tools/shared/provider-context';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { ToolInfo } from '@commands/tools/shared/types';
@@ -65,6 +72,7 @@ import {
 } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import type { ProviderScopeContext } from '@providers/shared/registry';
 import {
   adviseProviderRefresh,
   type ProviderVisibilityEvidence,
@@ -1035,6 +1043,10 @@ export async function runInitTools(
   let attemptedPacks: ToolPack[] = [];
   let attemptedSelections: PackLifecycleOutcome['selection'][] = [];
   let lifecycleOutcomes: PackLifecycleOutcome[] = [];
+  // Resolved once and reused by every outcome in this run, including the
+  // failure path: activation and capability are knowable even when the
+  // canonical apply failed.
+  let providerContexts: ProviderScopeContext[] = [];
 
   try {
     const userRoot = dependencies.resolveScopeRoot(
@@ -1049,6 +1061,12 @@ export async function runInitTools(
     } catch (error) {
       if (context.scope === 'project') throw error;
     }
+    providerContexts = await resolveProviderScopeContexts({
+      scopeRoots: {
+        ...(projectRoot ? { project: projectRoot } : {}),
+        user: userRoot,
+      },
+    });
     const initialPackStates = await loadInstalledPackStates(
       projectRoot,
       userRoot,
@@ -1160,11 +1178,20 @@ export async function runInitTools(
           const selection = attemptedSelections.find(
             ({ pack }) => pack === evidence.pack,
           )!;
+          const providers = lifecycleProviderEvidence({
+            pack: evidence.pack,
+            scopedInventories: evidence.canonical?.scopes ?? [],
+            providerContexts,
+            scopes: selection.targetScopes,
+          });
           return evaluatePackLifecycleOutcome({
             selection,
             lifecycle: packResults,
-            sync: { scopes: [], status: 'not-run', providers: [] },
-            finalEvidence: evidence,
+            sync: notRunProviderSyncOutcome(
+              providers,
+              'Auto-sync has not run for this operation',
+            ),
+            finalEvidence: withLifecycleProviderEvidence(evidence, providers),
           });
         });
         for (const evidence of finalEvidence) {
@@ -1567,26 +1594,32 @@ export async function runInitTools(
         context,
         canonicalPathsForPacks(selectedPacks),
       );
-      lifecycleOutcomes = lifecycleOutcomes.map((outcome) =>
-        evaluatePackLifecycleOutcome({
+      lifecycleOutcomes = lifecycleOutcomes.map((outcome) => {
+        const providers = lifecycleProviderEvidence({
+          pack: outcome.selection.pack,
+          scopedInventories: outcome.finalEvidence?.canonical?.scopes ?? [],
+          providerContexts,
+          scopes: outcome.selection.targetScopes,
+          sync,
+        });
+        return evaluatePackLifecycleOutcome({
           selection: outcome.selection,
           lifecycle: outcome.canonical.results,
-          sync: {
-            scopes: sync.scopes.filter((scope) =>
-              outcome.selection.targetScopes.includes(scope),
-            ),
-            status:
-              sync.scopes.length === 0
-                ? 'not-run'
-                : sync.synced
-                  ? 'complete'
-                  : 'failed',
-            providers: [],
-            ...(sync.error ? { error: sync.error } : {}),
-          },
-          finalEvidence: outcome.finalEvidence,
-        }),
-      );
+          sync: providerSyncOutcomeFromAutoSync(
+            {
+              ...sync,
+              scopes: sync.scopes.filter((scope) =>
+                outcome.selection.targetScopes.includes(scope),
+              ),
+            },
+            providers,
+          ),
+          finalEvidence: withLifecycleProviderEvidence(
+            outcome.finalEvidence,
+            providers,
+          ),
+        });
+      });
     }
     lastRunInitToolsMetadata = {
       affectedScopes: affectedScopesList,
@@ -1632,11 +1665,14 @@ export async function runInitTools(
                         targetScopes: [],
                       },
                       canonical: { status: 'failed' as const, results: [] },
-                      sync: {
-                        scopes: [],
-                        status: 'not-run' as const,
-                        providers: [],
-                      },
+                      sync: notRunProviderSyncOutcome(
+                        lifecycleProviderEvidence({
+                          pack,
+                          scopedInventories: [],
+                          providerContexts,
+                        }),
+                        'Canonical apply failed before auto-sync',
+                      ),
                       finalEvidence: null,
                       status: 'failed' as const,
                       recovery: [{ code: 'canonical-apply-failed', message }],
@@ -1762,6 +1798,7 @@ function createReconciledPackCommand(
       );
       let lifecycleOutcome: PackLifecycleOutcome | null = null;
       let selection: PackLifecycleOutcome['selection'] | null = null;
+      let providerContexts: ProviderScopeContext[] = [];
       try {
         const explicitProjectGuidance =
           pack === 'workflows'
@@ -1810,6 +1847,11 @@ function createReconciledPackCommand(
           ),
         );
         const results = await dependencies.reconcilePacks!(requests);
+        providerContexts = await resolveProviderScopeContexts({
+          scopeRoots: Object.fromEntries(
+            requests.map(({ scope, scopeRoot }) => [scope, scopeRoot]),
+          ),
+        });
         let finalEvidence: ToolPackEvidence | null = null;
         if (dependencies.inventoryPack) {
           finalEvidence = await loadPackEvidence(
@@ -1825,7 +1867,15 @@ function createReconciledPackCommand(
         lifecycleOutcome = evaluatePackLifecycleOutcome({
           selection,
           lifecycle: results,
-          sync: { scopes: [], status: 'not-run', providers: [] },
+          sync: notRunProviderSyncOutcome(
+            lifecycleProviderEvidence({
+              pack,
+              scopedInventories: finalEvidence?.canonical?.scopes ?? [],
+              providerContexts,
+              scopes,
+            }),
+            'Auto-sync has not run for this operation',
+          ),
           finalEvidence,
         });
         if (finalEvidence) assertVerifiedPackScopes(finalEvidence, scopes);
@@ -1846,21 +1896,21 @@ function createReconciledPackCommand(
             context,
             canonicalPathsForPacks([pack]),
           );
+          const providers = lifecycleProviderEvidence({
+            pack,
+            scopedInventories: finalEvidence?.canonical?.scopes ?? [],
+            providerContexts,
+            scopes,
+            sync,
+          });
           lifecycleOutcome = evaluatePackLifecycleOutcome({
             selection,
             lifecycle: results,
-            sync: {
-              scopes: sync.scopes,
-              status:
-                sync.scopes.length === 0
-                  ? 'not-run'
-                  : sync.synced
-                    ? 'complete'
-                    : 'failed',
-              providers: [],
-              ...(sync.error ? { error: sync.error } : {}),
-            },
-            finalEvidence,
+            sync: providerSyncOutcomeFromAutoSync(sync, providers),
+            finalEvidence: withLifecycleProviderEvidence(
+              finalEvidence,
+              providers,
+            ),
           });
         }
 
@@ -1975,7 +2025,14 @@ function createReconciledPackCommand(
             targetScopes: [],
           },
           canonical: { status: 'failed', results: [] },
-          sync: { scopes: [], status: 'not-run', providers: [] },
+          sync: notRunProviderSyncOutcome(
+            lifecycleProviderEvidence({
+              pack,
+              scopedInventories: [],
+              providerContexts,
+            }),
+            'Canonical apply failed before auto-sync',
+          ),
           finalEvidence: null,
           status: 'failed',
           recovery: [{ code: 'canonical-apply-failed', message }],

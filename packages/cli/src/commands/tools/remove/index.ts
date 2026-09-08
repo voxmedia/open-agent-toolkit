@@ -1,4 +1,3 @@
-import { execFile } from 'node:child_process';
 import { lstat, rm } from 'node:fs/promises';
 import { relative } from 'node:path';
 
@@ -13,8 +12,15 @@ import {
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
+import { inProcessSyncDependencies } from '@commands/tools/shared/in-process-sync';
 import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
-import type { PackLifecycleOutcome } from '@commands/tools/shared/pack-lifecycle-outcome';
+import {
+  providerSyncOutcomeFromAutoSync,
+  type PackLifecycleOutcome,
+} from '@commands/tools/shared/pack-lifecycle-outcome';
+import { withLifecycleProviderEvidence } from '@commands/tools/shared/pack-provider-evidence';
+import { resolveProviderScopeContexts } from '@commands/tools/shared/provider-context';
+import { applySyncEvidence } from '@commands/tools/shared/provider-reachability';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import {
   hasScopedPackOwnershipEvidence,
@@ -70,26 +76,7 @@ const defaultDependencies: RemoveToolsDependencies = {
   writeScopedPackIntent,
 };
 
-const defaultSyncDependencies: AutoSyncDependencies = {
-  runSync: async ({ scope, cwd, removedCanonicalPaths }) => {
-    const args = [
-      ...process.execArgv,
-      process.argv[1]!,
-      'sync',
-      '--scope',
-      scope,
-    ];
-    for (const canonicalPath of removedCanonicalPaths ?? []) {
-      args.push('--remove-canonical', canonicalPath);
-    }
-    await new Promise<void>((resolve, reject) => {
-      execFile(process.execPath, args, { cwd }, (error) => {
-        if (error) reject(error);
-        else resolve();
-      });
-    });
-  },
-};
+const defaultSyncDependencies: AutoSyncDependencies = inProcessSyncDependencies;
 
 const VALID_PACKS = [
   'core',
@@ -225,6 +212,23 @@ export function createToolsRemoveCommand(
               result.packOutcomes,
               false,
               finalInventories,
+              await resolveProviderScopeContexts({
+                scopeRoots: Object.fromEntries(
+                  await Promise.all(
+                    scopes.map(
+                      async (scope) =>
+                        [
+                          scope,
+                          await dependencies.resolveScopeRoot(
+                            scope,
+                            context.cwd,
+                            context.home,
+                          ),
+                        ] as const,
+                    ),
+                  ),
+                ),
+              }),
             );
           }
         } catch (error) {
@@ -342,27 +346,38 @@ function finalizeRemovalLifecycle(
     const relevant = syncResults.filter(({ scopes }) =>
       scopes.some((scope) => outcome.selection.targetScopes.includes(scope)),
     );
-    if (relevant.length === 0 || relevant.every(({ synced }) => synced)) {
-      return relevant.length === 0
-        ? outcome
-        : {
-            ...outcome,
-            sync: {
-              scopes: [...new Set(relevant.flatMap(({ scopes }) => scopes))],
-              status: 'complete',
-              providers: [],
-            },
-          };
+    const merged: AutoSyncResult = {
+      synced: relevant.every(({ synced }) => synced),
+      scopes: [...new Set(relevant.flatMap(({ scopes }) => scopes))],
+      error: relevant.find((result) => result.error)?.error ?? null,
+      evidence: relevant.flatMap(({ evidence }) => evidence),
+    };
+    const providers = applySyncEvidence(outcome.sync.providers, {
+      syncRan: merged.evidence.some(({ ran }) => ran),
+      syncOperationResults: merged.evidence.flatMap(
+        ({ operationResults }) => operationResults,
+      ),
+      extensionResults: merged.evidence.flatMap(
+        ({ extensionResults }) => extensionResults,
+      ),
+    });
+    if (relevant.length === 0) return outcome;
+    // The status comes from the shared severity-matrix rule rather than from
+    // `synced` alone: a sync that returned successfully can still carry an
+    // observed provider materialization failure, which is a `partial`.
+    const sync = providerSyncOutcomeFromAutoSync(merged, providers);
+    const finalEvidence = withLifecycleProviderEvidence(
+      outcome.finalEvidence,
+      providers,
+    );
+    if (sync.status === 'complete') {
+      return { ...outcome, sync, finalEvidence };
     }
-    const error = relevant.find((result) => result.error)?.error;
+    const error = merged.error ?? undefined;
     return {
       ...outcome,
-      sync: {
-        scopes: [...new Set(relevant.flatMap(({ scopes }) => scopes))],
-        status: 'failed',
-        providers: [],
-        ...(error ? { error } : {}),
-      },
+      sync,
+      finalEvidence,
       status: 'partial',
       recovery: [
         ...outcome.recovery,

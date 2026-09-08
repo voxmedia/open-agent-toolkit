@@ -47,7 +47,12 @@ const {
   scanToolsMock: vi.fn(),
 }));
 
-vi.mock('@config/oat-config', () => ({
+// Partial module mock: the provider registry the removal command now consults
+// for reachability evidence pulls the Codex sync extension, which reads local
+// OAT config. Only the two writers below are stubbed, so the rest of the
+// module is re-exported rather than dropped.
+vi.mock('@config/oat-config', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@config/oat-config')>()),
   readOatConfig,
   writeOatConfig,
 }));

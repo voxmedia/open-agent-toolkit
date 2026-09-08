@@ -14,6 +14,11 @@ import {
   type PackInventory,
 } from '@commands/tools/shared/pack-inventory';
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
+import { applyUserAgentCoverage } from '@commands/tools/shared/pack-provider-evidence';
+import {
+  resolvePackProviderSurface,
+  type ProviderContextDependencies,
+} from '@commands/tools/shared/provider-context';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { ToolInfo } from '@commands/tools/shared/types';
 
@@ -37,6 +42,7 @@ export interface InfoToolDependencies {
     scopeRoot: string,
   ) => Promise<Omit<ToolDetail, keyof ToolInfo>>;
   inventoryPack?: (input: InventoryPackInput) => Promise<PackInventory>;
+  providerContext?: ProviderContextDependencies;
 }
 
 export interface InfoToolResult {
@@ -73,13 +79,35 @@ export async function runInfoTool(
     let pack: PackInventory | null = null;
     let evidence;
     try {
-      pack = await (dependencies.inventoryPack ?? inventoryPack)({
-        pack: packName,
-        assetsRoot,
-        projectRoot: roots.project,
-        userRoot: roots.user,
+      // `info` resolves the same config-aware provider surface as `status` and
+      // `doctor`; omitting it made `info` report user agents as unmaterialized
+      // that an active Codex or Cursor adapter supplies.
+      const providerSurface = await resolvePackProviderSurface({
+        scopeRoots: roots,
+        ...(dependencies.providerContext
+          ? { dependencies: dependencies.providerContext }
+          : {}),
       });
-      evidence = projectRenderablePackEvidence(pack, packRoots);
+      pack = applyUserAgentCoverage(
+        await (dependencies.inventoryPack ?? inventoryPack)({
+          pack: packName,
+          assetsRoot,
+          projectRoot: roots.project,
+          userRoot: roots.user,
+          ...(roots.user
+            ? {
+                userManagedRoleMaterialization:
+                  providerSurface.userAgentCoverage !== 'none',
+              }
+            : {}),
+        }),
+        providerSurface.userAgentCoverage,
+      );
+      evidence = projectRenderablePackEvidence(
+        pack,
+        packRoots,
+        providerSurface.contexts,
+      );
     } catch (error) {
       evidence = unavailablePackEvidence({
         pack: packName,

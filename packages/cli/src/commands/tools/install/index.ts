@@ -1,5 +1,3 @@
-import { execFile } from 'node:child_process';
-
 import { buildCommandContext } from '@app/command-context';
 import {
   consumeInitToolsRunMetadata,
@@ -17,33 +15,12 @@ import {
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
+import { inProcessSyncDependencies } from '@commands/tools/shared/in-process-sync';
 import { getInstalledCanonicalPaths as getInstallSyncCanonicalPaths } from '@commands/tools/shared/install-sync-context';
 import type { Command } from 'commander';
 
-const defaultSyncDependencies: AutoSyncDependencies = {
-  runSync: async ({ scope, cwd, installedCanonicalPaths }) => {
-    const syncArgs = [
-      ...process.execArgv,
-      process.argv[1]!,
-      'sync',
-      '--scope',
-      scope,
-    ];
-    for (const canonicalPath of installedCanonicalPaths ?? []) {
-      syncArgs.push('--install-canonical', canonicalPath);
-    }
-
-    await new Promise<void>((resolve, reject) => {
-      execFile(process.execPath, syncArgs, { cwd }, (error) => {
-        if (error) reject(error);
-        else resolve();
-      });
-    });
-  },
-};
-
 export function createToolsInstallCommand(
-  syncDependencies: AutoSyncDependencies = defaultSyncDependencies,
+  syncDependencies: AutoSyncDependencies = inProcessSyncDependencies,
   initOverrides: Partial<InitToolsDependencies> = {},
   createBaseCommand?: () => Command,
 ): Command {
@@ -61,7 +38,7 @@ export function createToolsInstallCommand(
             syncDependencies,
             { installedCanonicalPaths },
           )
-        : { synced: false, scopes: [], error: null },
+        : { synced: false, scopes: [], error: null, evidence: [] },
   };
   const cmd =
     createBaseCommand === undefined

@@ -1,3 +1,4 @@
+import type { ProviderScopeContext } from '@providers/shared/registry';
 import type { ConcreteScope } from '@shared/types';
 
 import {
@@ -9,6 +10,7 @@ import {
 } from './pack-evidence';
 import type { PackInventory } from './pack-inventory';
 import { formatPackPath, type PackPathRoots } from './pack-paths';
+import { packProviderEvidence } from './pack-provider-evidence';
 import type { PackName } from './types';
 
 export interface PackEvidenceBlockV1 {
@@ -87,19 +89,54 @@ function redactPackInventory(
   };
 }
 
+/**
+ * Projects a renderable pack evidence item.
+ *
+ * `providerContexts` is the config-aware provider context per scope. When it
+ * is supplied, provider reachability is mapped from the registry and the
+ * resulting `provider-materialization-missing` diagnostics name the provider.
+ * When it is absent — a surface that could not resolve a sync config — the
+ * unattributed inventory-derived diagnostic is emitted instead, so the
+ * warning is never silently lost.
+ */
 export function projectRenderablePackEvidence(
   canonical: PackInventory,
   roots: PackPathRoots,
+  providerContexts?: readonly ProviderScopeContext[],
 ): ToolPackEvidence {
   const redacted = redactPackInventory(canonical, roots);
+  const providers =
+    providerContexts && providerContexts.length > 0
+      ? packProviderEvidence({
+          pack: redacted.pack,
+          scopedInventories: redacted.scopes,
+          providerContexts,
+          mode: 'inventory',
+        })
+      : [];
   const evidence = projectPackEvidence({
     canonical: redacted,
     scopes: redacted.scopes.map(packScopeFactsFromInventory),
+    providers,
+    providerMode: 'inventory',
   });
-  const providerDiagnostics: PackEvidenceDiagnostic[] = redacted.scopes.flatMap(
+  // Assets a provider row already reports as missing are covered by the
+  // named diagnostic. Anything left over has no responsible active provider,
+  // so the unattributed pack-level warning is still the only report of it and
+  // must not be dropped just because provider rows exist.
+  const attributedAssets = new Set(
+    providers
+      .filter(({ materialization }) => materialization.state === 'missing')
+      .flatMap(({ assets }) => assets),
+  );
+  const legacyDiagnostics: PackEvidenceDiagnostic[] = redacted.scopes.flatMap(
     (scoped) =>
       scoped.diagnostics
-        .filter(({ code }) => code === 'user-agent-unmaterialized')
+        .filter(
+          ({ code, paths }) =>
+            code === 'user-agent-unmaterialized' &&
+            paths.some((path) => !attributedAssets.has(path)),
+        )
         .map((diagnostic) => ({
           code: 'provider-materialization-missing' as const,
           severity: 'warning' as const,
@@ -121,7 +158,7 @@ export function projectRenderablePackEvidence(
   );
   return {
     ...evidence,
-    diagnostics: [...evidence.diagnostics, ...providerDiagnostics],
+    diagnostics: [...evidence.diagnostics, ...legacyDiagnostics],
   };
 }
 
@@ -129,9 +166,16 @@ export function packEvidenceBlock(
   items: readonly ToolPackEvidence[],
 ): PackEvidenceBlockV1 {
   const diagnostics = items.flatMap(({ diagnostics: values }) => values);
+  // Severity, never the diagnostic count, decides the block status. `info`
+  // rows (an inactive provider, an unsupported content kind, a host that
+  // needs a catalog refresh) are reportable facts about a healthy install,
+  // so counting them would turn every correctly configured host `partial`.
+  const actionable = diagnostics.some(
+    ({ severity }) => severity === 'warning' || severity === 'error',
+  );
   return {
     schemaVersion: 1,
-    status: diagnostics.length > 0 ? 'partial' : 'ok',
+    status: actionable ? 'partial' : 'ok',
     items,
     diagnostics,
   };
@@ -158,9 +202,19 @@ export function formatPackEvidenceDetails(
       lines.push(`${indent}  Inventory: ${scoped.inventory.reason}`);
     }
   }
+  // Human output names the provider; the structured evidence stays in JSON.
+  // The materialization detail is rendered alongside the state because
+  // `not-applicable` alone collapses two different situations: a provider
+  // that is inactive or cannot project this content, and an active provider
+  // on a read-only surface that simply observed no sync.
+  for (const provider of evidence.providers) {
+    lines.push(
+      `${indent}${provider.provider} [${provider.scope} ${provider.contentKind}]: ${provider.activation.state}; capability=${provider.capability.support}; projection=${provider.projection.state}; materialization=${provider.materialization.state} (${provider.materialization.detail}); visibility=${provider.visibility.state}`,
+    );
+  }
   for (const diagnostic of evidence.diagnostics) {
     lines.push(
-      `${indent}${diagnostic.code}: ${diagnostic.detail}`,
+      `${indent}${diagnostic.code}${diagnostic.provider ? ` [${diagnostic.provider}]` : ''}: ${diagnostic.detail}`,
       ...(diagnostic.affectedAssets.length > 0
         ? [`${indent}  Affected: ${diagnostic.affectedAssets.join(', ')}`]
         : []),

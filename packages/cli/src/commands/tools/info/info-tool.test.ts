@@ -1,6 +1,11 @@
 import type { CommandContext } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
+import type { ProviderContextDependencies } from '@commands/tools/shared/provider-context';
 import type { ToolInfo } from '@commands/tools/shared/types';
+import type {
+  ProviderProjectionMode,
+  ProviderRegistration,
+} from '@providers/shared/registry';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -269,5 +274,275 @@ describe('runInfoTool', () => {
       ],
     });
     expect(JSON.stringify(capture.jsonPayloads[0])).not.toContain('/home/user');
+  });
+});
+
+/**
+ * Provider surface doubles: `list` and `info` must agree with `status` and
+ * `doctor` on whether an active provider materializes managed user-scope
+ * roles. These build the same config-aware context those commands resolve.
+ */
+function providerContextDependencies(input: {
+  activeProviders: string[];
+  userAgentProjectionMode?: ProviderProjectionMode;
+}): ProviderContextDependencies {
+  const capabilities = (['project', 'user'] as const).flatMap((scope) =>
+    (['skill', 'agent', 'rule', 'directory'] as const).map((contentKind) => ({
+      scope,
+      contentKind,
+      support: 'supported' as const,
+      projectionModes:
+        contentKind === 'agent' && scope === 'user'
+          ? [input.userAgentProjectionMode ?? 'entry-sync']
+          : ['entry-sync' as const],
+      nativeRoleSurface: contentKind === 'agent',
+      collectionAlias: 'unsupported' as const,
+      // `restart-required` rather than `live`: a `live` policy emits no
+      // visibility diagnostic at all, which would make the read-only
+      // suppression guard below vacuous.
+      catalogRefresh: {
+        state: 'restart-required' as const,
+        provenance: {
+          kind: 'repository-decision' as const,
+          reference: 'DR-260831-provider-aware-reachability',
+          verifiedAt: '2026-01-01',
+        },
+      },
+    })),
+  );
+  const registration = {
+    adapter: { name: 'codex' },
+    extensions: [],
+    capabilities,
+  } as unknown as ProviderRegistration;
+  return {
+    loadSyncConfig: async () => ({ providers: {} }) as never,
+    resolveProviderScopeContext: async ({ scope }) => ({
+      scope,
+      configSource: '~/.oat/sync/config.json',
+      activeProviders: input.activeProviders,
+      detectedProviders: input.activeProviders,
+      mismatches: { detectedUnset: [], detectedDisabled: [] },
+      activation: [
+        {
+          provider: 'codex',
+          state: input.activeProviders.includes('codex')
+            ? ('active' as const)
+            : ('inactive' as const),
+          source: input.activeProviders.includes('codex')
+            ? ('config-enabled' as const)
+            : ('config-disabled' as const),
+          reason: 'test activation',
+        },
+      ],
+      registrations: [registration],
+    }),
+  };
+}
+
+function unmaterializedUserPack(pack: string) {
+  return {
+    pack,
+    placement: 'user' as const,
+    scopes: [
+      {
+        pack,
+        scope: 'user' as const,
+        intent: {
+          pack,
+          scope: 'user' as const,
+          enabled: true,
+          source: 'declared',
+          configPath: '/home/user/.oat/config.json',
+          diagnostics: [],
+        },
+        completeness: 'complete' as const,
+        assets: [
+          {
+            definition: {
+              id: 'skeptical-evaluator',
+              kind: 'agent' as const,
+              destination: '.agents/agents/skeptical-evaluator.md',
+              scopes: ['user' as const],
+              ownership: { user: 'managed' as const },
+            },
+            path: '/home/user/.agents/agents/skeptical-evaluator.md',
+            status: 'current' as const,
+            installedVersion: null,
+            bundledVersion: null,
+          },
+        ],
+        diagnostics: [
+          {
+            code: 'user-agent-unmaterialized' as const,
+            message: 'Pack installs user-scope canonical agents',
+            paths: ['/home/user/.agents/agents/skeptical-evaluator.md'],
+          },
+        ],
+      },
+    ],
+    diagnostics: [
+      {
+        code: 'user-agent-unmaterialized' as const,
+        message: 'Pack installs user-scope canonical agents',
+        paths: ['/home/user/.agents/agents/skeptical-evaluator.md'],
+      },
+    ],
+  } as never;
+}
+
+describe('runInfoTool provider agreement', () => {
+  it('does not report unmaterialized user agents when an active provider supplies managed roles', async () => {
+    const received: Array<boolean | undefined> = [];
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ json: true, logger: capture.logger, scope: 'user' }),
+      'research',
+      {
+        ...createDeps(),
+        inventoryPack: async ({ pack, userManagedRoleMaterialization }) => {
+          received.push(userManagedRoleMaterialization);
+          return unmaterializedUserPack(pack);
+        },
+        providerContext: providerContextDependencies({
+          activeProviders: ['codex'],
+        }),
+      },
+    );
+
+    // `status` and `doctor` already passed this argument; `info` did not.
+    expect(received).toEqual([true]);
+    expect(
+      result.packEvidence?.diagnostics.map(({ code }) => code),
+    ).not.toContain('provider-materialization-missing');
+    expect(result.packEvidence?.status).toBe('ok');
+  });
+
+  it('still reports unmaterialized user agents when no active provider supplies managed roles', async () => {
+    const received: Array<boolean | undefined> = [];
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ json: true, logger: capture.logger, scope: 'user' }),
+      'research',
+      {
+        ...createDeps(),
+        inventoryPack: async ({ pack, userManagedRoleMaterialization }) => {
+          received.push(userManagedRoleMaterialization);
+          return unmaterializedUserPack(pack);
+        },
+        providerContext: providerContextDependencies({ activeProviders: [] }),
+      },
+    );
+
+    expect(received).toEqual([false]);
+    expect(result.packEvidence?.diagnostics.map(({ code }) => code)).toContain(
+      'provider-materialization-missing',
+    );
+    expect(result.packEvidence?.status).toBe('partial');
+  });
+});
+
+describe('runInfoTool read-only diagnostic suppression', () => {
+  const VISIBILITY_CODES = [
+    'visibility-unknown',
+    'refresh-required',
+    'restart-required',
+  ];
+
+  it('never emits visibility or failure codes on a read-only surface', async () => {
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ json: true, logger: capture.logger, scope: 'user' }),
+      'research',
+      {
+        ...createDeps(),
+        inventoryPack: async ({ pack }) => unmaterializedUserPack(pack),
+        providerContext: providerContextDependencies({
+          activeProviders: ['codex'],
+        }),
+      },
+    );
+
+    const codes = (result.packEvidence?.diagnostics ?? []).map(
+      ({ code }) => code,
+    );
+    // Matrix row 8: a read-only surface ran no sync, so it can neither observe
+    // a materialization failure nor establish the projection the visibility
+    // codes presuppose.
+    expect(codes).not.toContain('provider-materialization-failed');
+    for (const code of VISIBILITY_CODES) expect(codes).not.toContain(code);
+
+    // The registered catalog state is still readable on the row itself, and
+    // the reachable row's policy really is one that WOULD emit a diagnostic
+    // in a lifecycle run — otherwise the assertions above are vacuous.
+    const rows = result.packEvidence?.items[0]?.providers ?? [];
+    expect(rows.length).toBeGreaterThan(0);
+    expect(
+      rows.some(({ visibility }) => visibility.state === 'restart-required'),
+    ).toBe(true);
+    expect(
+      rows.every(
+        ({ materialization }) => materialization.state !== 'materialized',
+      ),
+    ).toBe(true);
+  });
+
+  it('reports an inactive provider without catalog visibility advice', async () => {
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ json: true, logger: capture.logger, scope: 'user' }),
+      'research',
+      {
+        ...createDeps(),
+        inventoryPack: async ({ pack }) => unmaterializedUserPack(pack),
+        providerContext: providerContextDependencies({ activeProviders: [] }),
+      },
+    );
+
+    const inactiveRows = result.packEvidence?.items[0]?.providers ?? [];
+    const inactive = inactiveRows.find(
+      ({ activation }) => activation.state === 'inactive',
+    );
+    expect(inactive).toBeDefined();
+    // Refresh or restart advice about a provider that is not active reads as
+    // guidance the user should act on.
+    expect(inactive?.visibility.state).toBe('not-applicable');
+    expect(inactive?.projection.state).toBe('not-applicable');
+  });
+
+  it('reports a bundled-coverage absence as missing, never as failed', async () => {
+    // The read-only path that DOES reach the absence branch: an active
+    // provider whose user-agent projection is extension-only supplies managed
+    // roles for bundled agents only, so the unmaterialized diagnostic
+    // survives and is attributed to that provider.
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ json: true, logger: capture.logger, scope: 'user' }),
+      'research',
+      {
+        ...createDeps(),
+        inventoryPack: async ({ pack }) => unmaterializedUserPack(pack),
+        providerContext: providerContextDependencies({
+          activeProviders: ['codex'],
+          userAgentProjectionMode: 'materialization-extension',
+        }),
+      },
+    );
+
+    const rows = result.packEvidence?.items[0]?.providers ?? [];
+    const codes = (result.packEvidence?.diagnostics ?? []).map(
+      ({ code }) => code,
+    );
+
+    expect(
+      rows.some(({ materialization }) => materialization.state === 'missing'),
+    ).toBe(true);
+    expect(codes).toContain('provider-materialization-missing');
+    // Matrix row 8: even with a real absence, a read-only surface reports it
+    // as a warning, never as the error-severity failure code.
+    expect(
+      rows.every(({ materialization }) => materialization.state !== 'failed'),
+    ).toBe(true);
+    expect(codes).not.toContain('provider-materialization-failed');
   });
 });
