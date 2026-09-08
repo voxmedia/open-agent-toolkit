@@ -253,12 +253,12 @@ git commit -m "chore(p02-t02): record the alias retirement schedule and bump loc
 
 ## Reviews
 
-| Scope | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ----- | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01   | code     | pending | -    | -        | -             | -          | -           |
-| p02   | code     | pending | -    | -        | -             | -          | -           |
-| final | code     | pending | -    | -        | -             | -          | -           |
-| plan  | artifact | pending | -    | -        | -             | -          | -           |
+| Scope | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
+| ----- | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01   | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p02   | code     | pending  | -          | -                                                  | -             | -          | -           |
+| final | code     | pending  | -          | -                                                  | -             | -          | -           |
+| plan  | artifact | received | 2026-09-08 | reviews/artifact-plan-review-2026-09-08T080653Z.md | -             | -          | -           |
 
 > Reviews are recorded newest-last. For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events. Writers must preserve every existing row and every unknown trailing cell.
 
