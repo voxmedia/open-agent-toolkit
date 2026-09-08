@@ -37,8 +37,8 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.65` (`migrate-skill-versions`, quick mode, in PR
-  `migrate-skill-versions`) moves every bundled skill's version to
+- CLI `0.2.65` (`migrate-skill-versions`, quick mode, merged as
+  PR #280) moves every bundled skill's version to
   `metadata.version` with no top-level alias (82 skills, one patch bump each,
   zero `oat:validate-skills` warnings), makes the explainer RC builder read
   through the CLI's built resolver and the bundled `check-core.mjs` reader

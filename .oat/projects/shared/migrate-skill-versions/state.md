@@ -116,7 +116,7 @@ oat_dispatch_policy: # managed/high per operator routing preference
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: merged # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/280' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-08T07:48:14.811Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-09-08T12:36:18.000Z' # ISO 8601 UTC timestamp — set when project is completed/archived
@@ -133,7 +133,7 @@ oat_lifecycle: complete
 
 ## Current Phase
 
-Lifecycle complete — PR #280 open; the orchestrator merges after CI and Bugbot, then updates PJM to the merged PR.
+Lifecycle complete — PR #280 merged (squash) on 2026-09-08; PJM points at the merged PR.
 
 ## Artifacts
 
@@ -166,4 +166,4 @@ None
 
 ## Next Milestone
 
-None. Project complete; merge PR #280 on green checks.
+None. Project complete and merged.
