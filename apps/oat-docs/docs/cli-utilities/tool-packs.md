@@ -582,18 +582,18 @@ probe-skill
   Provider views (project):
     claude:  missing-additive  .claude/skills/probe-skill
       Canonical skill has never been projected to this view: no manifest entry and nothing at the expected path.
-    cursor:  inactive (native read)  .agents/skills/probe-skill
+    cursor:  inactive
     Repair: oat sync --scope project
 ```
 
 The section is additive in `--json` output as `providerViews`, an array of one
 entry per concrete scope where the canonical skill exists. The command reads the
 manifest, the sync config, and the filesystem; it never writes, and it never
-runs a sync. If the sync config or the manifest cannot be read, or drift
-detection fails, that scope's section reports `unavailable` with a redacted
-reason and the tool detail and exit code are unchanged. An absent sync config is
-not a failure: it resolves to the defaults and the scope is diagnosed normally.
-See
+runs a sync. If the sync config or the manifest cannot be read, that scope's
+section reports `unavailable` with a redacted reason and the tool detail and exit
+code are unchanged; a failure reading one provider's view degrades only that row,
+to `unverified` with the same redacted reason. An absent sync config is not a
+failure: it resolves to the defaults and the scope is diagnosed normally. See
 [Manifest and Drift](../provider-sync/manifest-and-drift.md#resolution-time-skill-view-classes)
 for the view classes.
 

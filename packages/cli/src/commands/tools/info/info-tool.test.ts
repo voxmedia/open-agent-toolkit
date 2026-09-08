@@ -1208,13 +1208,439 @@ describe('runInfoTool provider-view diagnostic', () => {
       },
     );
 
-    expect(result.providerViews?.[0]).toMatchObject({
-      result: 'unavailable',
+    // The scope is still diagnosed: one unreadable provider path degrades one
+    // row, not the section (m13). The redaction is asserted on that row.
+    expect(result.providerViews?.[0]).toMatchObject({ result: 'diagnosed' });
+    const claude = result.providerViews?.[0]?.views.find(
+      ({ provider }) => provider === 'claude',
+    );
+    expect(claude).toMatchObject({ viewClass: 'unverified' });
+    expect(claude?.detail).toContain(
+      "The diagnostic could not read this view, so its state is unverified: ENOTDIR: not a directory, lstat '<path>'",
+    );
+    expect(JSON.stringify(capture.jsonPayloads[0])).not.toContain('/dev/null');
+  });
+
+  it('degrades only the failing provider, leaving the other rows intact', async () => {
+    // Final review m13: `detectDrift` throws before `readProjectedVersion`'s own
+    // catch can classify, so the scope-level catch used to fire and the
+    // uninvolved providers lost their rows too.
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ scope: 'project', logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude', 'codex'] },
+        }),
+        skillViews: {
+          ...skillViewDependencies({
+            existingPaths: [PROJECT_CANONICAL],
+            manifestEntries: {
+              '/project/.oat/sync/manifest.json': [
+                {
+                  canonicalPath: '.agents/skills/oat-idea-new',
+                  providerPath: '.claude/skills/oat-idea-new',
+                  provider: 'claude',
+                  contentType: 'skill',
+                  contentHash: null,
+                  isFile: false,
+                  lastSynced: '2026-09-01T00:00:00.000Z',
+                  strategy: 'symlink',
+                } as ManifestEntryV2,
+              ],
+            },
+          }),
+          detectDrift: async () => {
+            throw new Error(
+              "EACCES: permission denied, lstat '/project/.claude/skills/oat-idea-new'",
+            );
+          },
+        },
+      },
+    );
+
+    const views = result.providerViews?.[0];
+    expect(views).toMatchObject({ result: 'diagnosed' });
+    expect(views?.views.map(({ provider }) => provider)).toEqual([
+      'claude',
+      'codex',
+    ]);
+    expect(
+      views?.views.find(({ provider }) => provider === 'claude'),
+    ).toMatchObject({ viewClass: 'unverified', suggestion: null });
+    // The uninvolved provider keeps its real row.
+    expect(
+      views?.views.find(({ provider }) => provider === 'codex'),
+    ).toMatchObject({ viewClass: 'in-sync', nativeRead: true });
+
+    const output = capture.info.join('\n');
+    expect(output).not.toContain('Provider views (project): unavailable');
+    expect(output).toContain('codex');
+    // The reason still reaches the user, still redacted.
+    expect(output).toContain(
+      "EACCES: permission denied, lstat '<project>/.claude/skills/oat-idea-new'",
+    );
+    expect(capture.error).toEqual([]);
+  });
+
+  it('suppresses the projection qualifier and path for a provider that projects nothing', async () => {
+    // Final review m14: `qualifier()` ran before the class was considered, so an
+    // `inactive` row still advertised `(native read)` and an expected path for a
+    // view that is never produced.
+    const capture = createLoggerCapture();
+    await runInfoTool(
+      createContext({ scope: 'project', logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: skillViewDependencies({
+          existingPaths: [PROJECT_CANONICAL],
+        }),
+      },
+    );
+
+    const rows = capture.info.filter((line) => line.includes('codex:'));
+    expect(rows).toEqual(['    codex:  inactive']);
+    // The active provider keeps both.
+    expect(
+      capture.info.some((line) =>
+        line.includes('claude: missing-additive  .claude/skills/oat-idea-new'),
+      ),
+    ).toBe(true);
+  });
+
+  describe('reason redaction', () => {
+    // Final review m11: the second pass only fired after start-of-string,
+    // whitespace, a quote, or `(`, so a path after `=`, `:`, `[`, a backtick, or
+    // `<` was forwarded verbatim, a path containing a space was redacted only up
+    // to that space, and `/project-private/...` was rewritten to
+    // `<project>-private/...` -- a partly redacted path that was never inside
+    // the scope root.
+    async function reasonFor(
+      message: string,
+      scope: ConcreteScope = 'project',
+    ): Promise<string | undefined> {
+      const result = await runInfoTool(
+        createContext({ scope, json: true }),
+        'oat-idea-new',
+        {
+          ...createDeps(
+            scope === 'project'
+              ? { project: [sampleSkill] }
+              : { user: [{ ...sampleSkill, scope: 'user' }] },
+          ),
+          providerContext: skillProviderContext({
+            activeByScope: { [scope]: ['claude'] },
+          }),
+          skillViews: {
+            ...skillViewDependencies({
+              existingPaths: [PROJECT_CANONICAL, USER_CANONICAL],
+            }),
+            loadManifest: async () => {
+              throw new Error(message);
+            },
+          },
+        },
+      );
+      return result.providerViews?.[0]?.reason;
+    }
+
+    for (const [label, message, expected] of [
+      [
+        'after an equals sign',
+        'EACCES: permission denied, path=/Users/jdoe/secret/x',
+        'EACCES: permission denied, path=<path>',
+      ],
+      [
+        // Adjacent to the colon, with no space: a space alone was already a
+        // delimiter the old pass recognised, so this is the real colon case.
+        'after a colon',
+        'ENOENT: no such file:/Users/jdoe/secret/x',
+        'ENOENT: no such file:<path>',
+      ],
+      [
+        // The closing bracket is swallowed with the path: a `]` is legal in a
+        // filename, so treating it as a terminator would end the match inside
+        // a real path and forward its tail.
+        'inside brackets',
+        'EACCES: denied at [/Users/jdoe/secret/x]',
+        'EACCES: denied at [<path>',
+      ],
+      [
+        'inside backticks',
+        'EACCES: denied `/Users/jdoe/secret/x`',
+        'EACCES: denied `<path>`',
+      ],
+      [
+        'inside angle brackets',
+        'ENOENT: open </Users/jdoe/secret/x>',
+        'ENOENT: open <<path>',
+      ],
+      [
+        'containing a space',
+        "ENOTDIR: not a directory, lstat '/dev/null/Private Client/secret'",
+        "ENOTDIR: not a directory, lstat '<path>'",
+      ],
+    ] as const) {
+      it(`redacts an absolute path ${label}`, async () => {
+        expect(await reasonFor(message)).toBe(expected);
+      });
+    }
+
+    it('does not rewrite a sibling directory that merely shares the scope-root prefix', async () => {
+      // `/project-private` was never inside `/project`. Replacing the prefix
+      // anywhere produced `<project>-private/secret`, which both lies about the
+      // location and forwards the rest of an outside path.
+      expect(
+        await reasonFor(
+          "ENOENT: no such file or directory, open '/project-private/secret'",
+        ),
+      ).toBe("ENOENT: no such file or directory, open '<path>'");
     });
+
+    it('still redacts the scope root itself to its placeholder', async () => {
+      // The accepted control: an inside-the-scope path keeps its readable
+      // shape, in both scopes.
+      expect(
+        await reasonFor(
+          "EACCES: permission denied, open '/project/.oat/sync/manifest.json'",
+        ),
+      ).toBe(
+        "EACCES: permission denied, open '<project>/.oat/sync/manifest.json'",
+      );
+      expect(
+        await reasonFor(
+          "EACCES: permission denied, open '/home/user/.oat/sync/manifest.json'",
+          'user',
+        ),
+      ).toBe("EACCES: permission denied, open '~/.oat/sync/manifest.json'");
+    });
+
+    it('leaves a relative path alone', async () => {
+      expect(
+        await reasonFor('Manifest at .oat/sync/manifest.json is invalid'),
+      ).toBe('Manifest at .oat/sync/manifest.json is invalid');
+    });
+  });
+
+  it('redacts a path whose tail contains characters that are legal in a filename', async () => {
+    // A comma, a bracket, and a brace are all legal in a filename, so a
+    // terminator set that treats one as the end of the path ends the match
+    // inside a real path and forwards its tail. `manifest/hash.ts` emits this
+    // exact unquoted shape.
+    const result = await runInfoTool(
+      createContext({ scope: 'project', json: true }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: {
+          ...skillViewDependencies({ existingPaths: [PROJECT_CANONICAL] }),
+          loadManifest: async () => {
+            throw new Error(
+              'File does not exist: /outside/public,PrivateSecret',
+            );
+          },
+        },
+      },
+    );
+
+    expect(result.providerViews?.[0]?.reason).toBe(
+      'File does not exist: <path>',
+    );
+  });
+
+  it('redacts a quoted path that contains a space or a stray quote', async () => {
+    const result = await runInfoTool(
+      createContext({ scope: 'project', json: true }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: {
+          ...skillViewDependencies({ existingPaths: [PROJECT_CANONICAL] }),
+          loadManifest: async () => {
+            throw new Error(
+              "ENOTDIR: not a directory, lstat '/dev/null/a,PrivateSecret\"x'",
+            );
+          },
+        },
+      },
+    );
+
     expect(result.providerViews?.[0]?.reason).toBe(
       "ENOTDIR: not a directory, lstat '<path>'",
     );
-    expect(JSON.stringify(capture.jsonPayloads[0])).not.toContain('/dev/null');
+  });
+
+  it('does not treat a sibling that merely starts with the scope root as contained', async () => {
+    // `/project private` is not inside `/project`. Replacing the root here
+    // produced `<project> private/secret`, which reads as an in-scope path and
+    // forwards the rest of one that never was.
+    const result = await runInfoTool(
+      createContext({ scope: 'project', json: true }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: {
+          ...skillViewDependencies({ existingPaths: [PROJECT_CANONICAL] }),
+          loadManifest: async () => {
+            throw new Error("EACCES: open '/project private/secret'");
+          },
+        },
+      },
+    );
+
+    expect(result.providerViews?.[0]?.reason).toBe("EACCES: open '<path>'");
+  });
+
+  it('never reads a version from a tracked copy that escapes the scope root', async () => {
+    // The row already redacts an escaping path; reading its `SKILL.md` would
+    // put content from outside the scope into `viewVersion` and the detail, and
+    // compare the canonical skill against a file that is not a view of it.
+    const result = await runInfoTool(
+      createContext({ scope: 'project', json: true }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: skillViewDependencies({
+          // `join('/project', '../../outside/probe')` normalizes to
+          // `/outside/probe`, which is the path the probe and the version read
+          // actually use.
+          existingPaths: [PROJECT_CANONICAL, '/outside/probe'],
+          manifestEntries: {
+            '/project/.oat/sync/manifest.json': [
+              {
+                canonicalPath: '.agents/skills/oat-idea-new',
+                providerPath: '../../outside/probe',
+                provider: 'claude',
+                contentType: 'skill',
+                contentHash: null,
+                isFile: false,
+                lastSynced: '2026-09-01T00:00:00.000Z',
+                strategy: 'copy',
+              } as ManifestEntryV2,
+            ],
+          },
+          driftStates: { '../../outside/probe': { status: 'in_sync' } },
+          versions: { '/outside/probe': 'SECRET-CLIENT-9.9.9' },
+        }),
+      },
+    );
+
+    const claude = result.providerViews?.[0]?.views.find(
+      ({ provider }) => provider === 'claude',
+    );
+    expect(claude).toMatchObject({
+      providerPath: '<path>',
+      viewVersion: null,
+      versionComparable: false,
+    });
+    expect(JSON.stringify(result.providerViews)).not.toContain('SECRET-CLIENT');
+  });
+
+  it('never claims the expected path is empty when the view could not be read', async () => {
+    // A failed observation leaves `viewPresent` at its default. Reporting that
+    // default as absence replaces one false claim about the expected path with
+    // another.
+    const result = await runInfoTool(
+      createContext({ scope: 'project', json: true }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: {
+          ...skillViewDependencies({
+            existingPaths: [
+              PROJECT_CANONICAL,
+              '/project/.claude/skills/oat-idea-new',
+            ],
+            manifestEntries: {
+              '/project/.oat/sync/manifest.json': [
+                {
+                  canonicalPath: '.agents/skills/oat-idea-new',
+                  providerPath: '.claude/skills-legacy/oat-idea-new',
+                  provider: 'claude',
+                  contentType: 'skill',
+                  contentHash: null,
+                  isFile: false,
+                  lastSynced: '2026-09-01T00:00:00.000Z',
+                  strategy: 'symlink',
+                } as ManifestEntryV2,
+              ],
+            },
+          }),
+          detectDrift: async () => {
+            throw new Error('EACCES: permission denied');
+          },
+        },
+      },
+    );
+
+    const claude = result.providerViews?.[0]?.views.find(
+      ({ provider }) => provider === 'claude',
+    );
+    expect(claude?.viewClass).toBe('unverified');
+    expect(claude?.detail).toContain(
+      'Whether anything exists at the expected path was not established',
+    );
+    expect(claude?.detail).not.toContain('Nothing exists at the expected path');
+  });
+
+  it('never renders a manifest path that escapes the scope root', async () => {
+    // A tracked row names the manifest's own path (M4), so a manifest entry
+    // pointing outside the scope must not turn that row into a disclosure.
+    const result = await runInfoTool(
+      createContext({ scope: 'project', json: true }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: skillViewDependencies({
+          existingPaths: [PROJECT_CANONICAL],
+          manifestEntries: {
+            '/project/.oat/sync/manifest.json': [
+              {
+                canonicalPath: '.agents/skills/oat-idea-new',
+                providerPath: '../../dev/null/probe',
+                provider: 'claude',
+                contentType: 'skill',
+                contentHash: null,
+                isFile: false,
+                lastSynced: '2026-09-01T00:00:00.000Z',
+                strategy: 'symlink',
+              } as ManifestEntryV2,
+            ],
+          },
+          driftStates: { '../../dev/null/probe': { status: 'missing' } },
+        }),
+      },
+    );
+
+    const claude = result.providerViews?.[0]?.views.find(
+      ({ provider }) => provider === 'claude',
+    );
+    expect(claude?.providerPath).toBe('<path>');
+    expect(JSON.stringify(result.providerViews)).not.toContain('/dev/null');
   });
 
   it('keeps the not-found wording and emits no provider-view block for an unknown name', async () => {
