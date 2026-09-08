@@ -3,8 +3,9 @@ import { lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 
 import {
+  getFrontmatterBlock,
+  parseSkillFrontmatter,
   resolveSkillVersion,
-  toParsedSkillFrontmatter,
 } from '@commands/shared/frontmatter';
 
 import { parseCanonicalAgentMarkdown } from './parse';
@@ -178,14 +179,28 @@ function resolveRoleIdentity(
   try {
     const content = readFileSync(resolved.canonicalFile, 'utf8');
     const document = parseCanonicalAgentMarkdown(content, '<canonical-role>');
-    // The frontmatter is already parsed here, so hand the object to the shared
-    // resolver rather than re-parsing the block. A conflicting version is an
-    // invalid identity: the role has no single resolvable version.
-    const resolvedVersion = resolveSkillVersion(
-      toParsedSkillFrontmatter(document.frontmatter),
-    );
+    // Resolve the version from the raw frontmatter block, the same input
+    // `getAgentVersion` reads, so the two readers of this very file cannot
+    // disagree. An already-parsed object no longer carries YAML node
+    // information, so it cannot tell a tagged or anchored scalar
+    // (`!!str 1.2.3`, `&pin 1.2.3`) from a plain string and would accept a
+    // value every other reader rejects. This is one parser over one input
+    // shape, not a second parser.
+    const block = getFrontmatterBlock(content);
+    const parsed = block === null ? null : parseSkillFrontmatter(block);
+    const resolvedVersion =
+      parsed === null ? null : resolveSkillVersion(parsed);
+    // An identity needs one unambiguous version. A conflict, unreadable
+    // frontmatter, or a declaration the resolver cannot read (empty, a
+    // non-string scalar, or a tagged/anchored value) all disqualify the role
+    // even when another position still resolves: otherwise a decorated
+    // `version:` beside a usable `metadata.version` would be accepted here
+    // while both validators reject the same file.
     if (
       document.name !== input.canonicalRole ||
+      parsed === null ||
+      parsed.malformed ||
+      parsed.unusableVersionDeclaration ||
       resolvedVersion === null ||
       resolvedVersion.conflict !== undefined
     ) {

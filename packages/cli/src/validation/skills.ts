@@ -7,7 +7,6 @@ import {
   getFrontmatterBlock,
   parseSkillFrontmatter,
   resolveSkillVersion,
-  type ResolvedSkillVersion,
 } from '@commands/shared/frontmatter';
 
 export interface ValidationFinding {
@@ -692,18 +691,6 @@ function hasTrueFrontmatterValue(frontmatter: string, key: string): boolean {
   );
 }
 
-/**
- * Resolve a skill's canonical version from a raw frontmatter block through the
- * shared `metadata.version` → top-level `version` contract, so validation and
- * the runtime helper can never disagree about which field wins.
- */
-function resolveFrontmatterVersion(
-  frontmatter: string | null,
-): ResolvedSkillVersion | null {
-  if (frontmatter === null) return null;
-  return resolveSkillVersion(parseSkillFrontmatter(frontmatter));
-}
-
 function unreadableFrontmatterFinding(file: string): ValidationFinding {
   return {
     file,
@@ -727,6 +714,56 @@ function pushUniqueFinding(
   if (!duplicate) {
     findings.push(finding);
   }
+}
+
+/**
+ * A `version` key is present but carries no usable value (empty, or a
+ * non-string scalar such as `1.10`, which YAML reads as the number 1.1).
+ *
+ * This is reported rather than skipped: the value the author wrote is a
+ * version OAT cannot read, and letting it resolve to nothing would silently
+ * disable both the semver check and bump enforcement for that skill.
+ */
+function unusableVersionFinding(file: string): ValidationFinding {
+  return {
+    file,
+    code: 'skill-version-unusable',
+    severity: 'error',
+    message:
+      'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+  };
+}
+
+function uncomparableBaseFinding(
+  file: string,
+  baseRef: string,
+  reason: 'unreadable' | 'unusable',
+): ValidationFinding {
+  return {
+    file,
+    code:
+      reason === 'unreadable'
+        ? 'skill-frontmatter-unreadable'
+        : 'skill-version-unusable',
+    severity: 'error',
+    message:
+      reason === 'unreadable'
+        ? `Changed canonical skill cannot be version-checked against ${baseRef}: the base frontmatter is not a valid YAML mapping with unique keys`
+        : `Changed canonical skill cannot be version-checked against ${baseRef}: the base frontmatter declares a version that cannot be read`,
+  };
+}
+
+function uncomparableBaseConflictFinding(
+  file: string,
+  baseRef: string,
+  conflict: { metadata: string; topLevel: string },
+): ValidationFinding {
+  return {
+    file,
+    code: 'skill-version-conflict',
+    severity: 'error',
+    message: `Changed canonical skill cannot be version-checked against ${baseRef}: the base frontmatter metadata.version (${conflict.metadata}) and top-level version (${conflict.topLevel}) differ`,
+  };
 }
 
 function versionConflictFinding(
@@ -974,22 +1011,37 @@ async function collectChangedSkillVersionBumpFindings(
     const currentBlock = getFrontmatterBlock(currentContent);
     const parsedCurrent =
       currentBlock === null ? null : parseSkillFrontmatter(currentBlock);
+    const baseBlock = getFrontmatterBlock(baseContent);
+    const parsedBase =
+      baseBlock === null ? null : parseSkillFrontmatter(baseBlock);
 
-    // Unreadable frontmatter would otherwise skip the bump check silently:
-    // adding a malformed `metadata:` block to a changed skill would let it keep
-    // a stale version. Report it instead of falling through to `continue`.
+    // Frontmatter that carries no readable version must never fall through to
+    // the `continue` below: a value the resolver cannot read would otherwise
+    // disable bump enforcement for that skill entirely. Both sides are
+    // guarded, because either one being uncomparable defeats the comparison.
+    // `validateOatSkills` runs the structural version-source pass before this
+    // collector, so the same file can already carry the current-side finding.
     if (parsedCurrent?.malformed) {
-      // `validateOatSkills` runs the structural version-source pass before this
-      // collector, so the same file can already carry this finding.
       pushUniqueFinding(findings, unreadableFrontmatterFinding(skillPath));
+      continue;
+    }
+    if (parsedCurrent?.unusableVersionDeclaration) {
+      pushUniqueFinding(findings, unusableVersionFinding(skillPath));
+      continue;
+    }
+    if (parsedBase?.malformed) {
+      findings.push(uncomparableBaseFinding(skillPath, baseRef, 'unreadable'));
+      continue;
+    }
+    if (parsedBase?.unusableVersionDeclaration) {
+      findings.push(uncomparableBaseFinding(skillPath, baseRef, 'unusable'));
       continue;
     }
 
     const resolvedCurrent =
       parsedCurrent === null ? null : resolveSkillVersion(parsedCurrent);
-    const resolvedBase = resolveFrontmatterVersion(
-      getFrontmatterBlock(baseContent),
-    );
+    const resolvedBase =
+      parsedBase === null ? null : resolveSkillVersion(parsedBase);
 
     // A conflicting skill has no resolvable version, so it cannot be bump
     // checked. This is the only version-source finding the bump validator
@@ -999,6 +1051,20 @@ async function collectChangedSkillVersionBumpFindings(
     if (resolvedCurrent?.conflict) {
       findings.push(
         versionConflictFinding(skillPath, resolvedCurrent.conflict),
+      );
+      continue;
+    }
+
+    // A conflicting base has no single version to compare against either:
+    // silently taking its metadata side would accept a downgrade relative to
+    // the top-level version the base also declares.
+    if (resolvedBase?.conflict) {
+      findings.push(
+        uncomparableBaseConflictFinding(
+          skillPath,
+          baseRef,
+          resolvedBase.conflict,
+        ),
       );
       continue;
     }
@@ -1095,6 +1161,15 @@ async function collectSkillVersionSourceFindings(
       // frontmatter is exactly the state that would otherwise make a version
       // silently unreadable everywhere.
       findings.push(unreadableFrontmatterFinding(skillPath));
+      continue;
+    }
+
+    // Declaration usability is checked here, before the unresolved bail, so it
+    // covers every bundled skill. Inside the `oat-*` loop it could never fire
+    // for the 18 skills that are not named `oat-*`, which is how an unusable
+    // declaration became invisible to validation.
+    if (parsed.unusableVersionDeclaration) {
+      findings.push(unusableVersionFinding(skillPath));
       continue;
     }
 
@@ -1204,26 +1279,15 @@ export async function validateOatSkills(
       }
     }
 
-    // Malformed frontmatter is reported once, for every skill, by
-    // collectSkillVersionSourceFindings.
-    const parsedFrontmatter = parseSkillFrontmatter(fm);
-    const resolvedVersion = resolveSkillVersion(parsedFrontmatter);
-    if (!parsedFrontmatter.malformed) {
-      // A declared version that resolves to nothing (empty, or a non-string
-      // scalar such as `1.10`, which YAML reads as the number 1.1) is not a
-      // usable version, at either position.
-      // An unusable declaration is reported even when the other position still
-      // resolves: `version: 1.10` beside a valid `metadata.version` is still a
-      // version the author wrote and OAT cannot read.
-      if (
-        parsedFrontmatter.unusableVersionDeclaration ||
-        (resolvedVersion !== null && !isValidSemver(resolvedVersion.version))
-      ) {
-        findings.push({
-          file: skillPath,
-          message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
-        });
-      }
+    // Malformed frontmatter and unusable version declarations are reported
+    // once, for every skill, by collectSkillVersionSourceFindings; this is the
+    // `oat-*` structural rule for a version that does resolve.
+    const resolvedVersion = resolveSkillVersion(parseSkillFrontmatter(fm));
+    if (resolvedVersion !== null && !isValidSemver(resolvedVersion.version)) {
+      findings.push({
+        file: skillPath,
+        message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
+      });
     }
 
     if (!hasProgressIndicatorsSection(content)) {

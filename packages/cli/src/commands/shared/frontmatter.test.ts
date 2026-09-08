@@ -18,7 +18,6 @@ import {
   parseSkillFrontmatter,
   parseSkillGateOverrides,
   resolveSkillVersion,
-  toParsedSkillFrontmatter,
   GATE_AWARE_SKILLS,
   SKILL_GATE_OVERRIDE_SOURCE,
 } from './frontmatter';
@@ -376,37 +375,6 @@ describe('frontmatter', () => {
       });
     });
 
-    it('builds the same shape from an already-parsed frontmatter object', () => {
-      expect(
-        resolveSkillVersion(
-          toParsedSkillFrontmatter({
-            name: 'demo',
-            version: '1.2.3',
-            metadata: { version: '2.0.0' },
-          }),
-        ),
-      ).toEqual({
-        version: '2.0.0',
-        source: 'metadata',
-        conflict: { metadata: '2.0.0', topLevel: '1.2.3' },
-      });
-      expect(
-        resolveSkillVersion(
-          toParsedSkillFrontmatter({ metadata: { version: '2.0.0' } }),
-        ),
-      ).toEqual({ version: '2.0.0', source: 'metadata' });
-      expect(
-        resolveSkillVersion(toParsedSkillFrontmatter({ version: '1.2.3' })),
-      ).toEqual({ version: '1.2.3', source: 'top-level' });
-      expect(toParsedSkillFrontmatter({ metadata: 'nope' }).malformed).toBe(
-        true,
-      );
-      expect(toParsedSkillFrontmatter('nope').malformed).toBe(true);
-      expect(
-        resolveSkillVersion(toParsedSkillFrontmatter({ version: 1.1 })),
-      ).toBeNull();
-    });
-
     const unusable = (block: string) =>
       parseSkillFrontmatter(block).unusableVersionDeclaration;
 
@@ -419,13 +387,6 @@ describe('frontmatter', () => {
       expect(unusable('version: 1.10')).toBe(true);
       expect(unusable('metadata:\n  version: 1.10')).toBe(true);
       expect(unusable('metadata:\n  author: oat')).toBe(false);
-      expect(
-        toParsedSkillFrontmatter({ metadata: { version: 1.1 } })
-          .unusableVersionDeclaration,
-      ).toBe(true);
-      expect(
-        toParsedSkillFrontmatter({ name: 'demo' }).unusableVersionDeclaration,
-      ).toBe(false);
     });
 
     it('records an unusable declaration even when the other position resolves', () => {
@@ -433,55 +394,39 @@ describe('frontmatter', () => {
       // cannot read.
       expect(unusable('version: 1.10\nmetadata:\n  version: 1.0.1')).toBe(true);
       expect(unusable('version: 1.0.1\nmetadata:\n  version: 1.10')).toBe(true);
-      expect(
-        toParsedSkillFrontmatter({
-          version: 1.1,
-          metadata: { version: '1.0.1' },
-        }).unusableVersionDeclaration,
-      ).toBe(true);
     });
 
-    it('treats present-but-null metadata as malformed through both inputs', () => {
-      // The two input shapes must agree: `metadata:` with no map is not the
-      // same as no metadata block at all.
+    it('treats present-but-null metadata as malformed', () => {
+      // `metadata:` with no map is not the same as no metadata block at all.
       expect(parseSkillFrontmatter('version: 1.2.3\nmetadata:').malformed).toBe(
         true,
       );
-      expect(
-        toParsedSkillFrontmatter({ version: '1.2.3', metadata: null })
-          .malformed,
-      ).toBe(true);
-      expect(
-        resolveSkillVersion(
-          toParsedSkillFrontmatter({ version: '1.2.3', metadata: null }),
-        ),
-      ).toBeNull();
-      expect(toParsedSkillFrontmatter({ version: '1.2.3' }).malformed).toBe(
-        false,
-      );
+      expect(resolve('version: 1.2.3\nmetadata:')).toBeNull();
+      expect(parseSkillFrontmatter('version: 1.2.3').malformed).toBe(false);
     });
 
-    it('documents that a parsed object cannot see YAML tags or anchors', () => {
-      // The block parser rejects a decorated scalar; an already-parsed object
-      // no longer carries the node, so the adapter sees a plain string. The
-      // resolved value is the same either way, and every caller that must
-      // reject decoration hands over the raw block.
+    it('never returns a decorated scalar, and marks the declaration unusable', () => {
+      // The boundary is accept-versus-reject at that position, not a
+      // differently spelled value: the resolver never returns a tagged or
+      // anchored value, and every reader takes the raw block, so no reader can
+      // return a decorated value another reader rejects.
       expect(resolve('version: !!str 1.2.3')).toBeNull();
-      expect(
-        resolveSkillVersion(toParsedSkillFrontmatter({ version: '1.2.3' })),
-      ).toEqual({ version: '1.2.3', source: 'top-level' });
-    });
+      expect(resolve('version: &pin 1.2.3')).toBeNull();
+      expect(resolve('metadata:\n  version: !!str 1.2.3')).toBeNull();
 
-    it('resolves the same version from the raw block and the parsed object', () => {
-      const block = 'name: demo\nversion: 1.2.3\nmetadata:\n  version: 2.0.0';
-
-      expect(resolveSkillVersion(parseSkillFrontmatter(block))).toEqual(
-        resolveSkillVersion(
-          toParsedSkillFrontmatter(
-            YAML.parse(block) as Record<string, unknown>,
-          ),
-        ),
+      // With a usable value at the other position the resolver still returns
+      // that value — the decorated field is unreadable, not the document. The
+      // declaration is flagged, and the callers that must not guess (both
+      // validators and canonical role identity, pinned in their own suites)
+      // reject the file on that flag.
+      const mixed = parseSkillFrontmatter(
+        'version: &pin 1.2.3\nmetadata:\n  version: 2.0.0',
       );
+      expect(mixed.unusableVersionDeclaration).toBe(true);
+      expect(resolveSkillVersion(mixed)).toEqual({
+        version: '2.0.0',
+        source: 'metadata',
+      });
     });
   });
 

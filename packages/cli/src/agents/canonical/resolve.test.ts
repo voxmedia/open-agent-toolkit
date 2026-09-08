@@ -251,6 +251,53 @@ describe('resolveCanonicalRole', () => {
       ).toMatchObject(invalidUserCandidate);
     });
 
+    it('rejects a tagged or anchored version, agreeing with getAgentVersion', () => {
+      // The block parser rejects a decorated scalar, so canonical role
+      // resolution must reject the same file rather than accepting a value
+      // every other reader of it returns null for.
+      expect(resolveWith(['version: !!str 1.2.3'])).toMatchObject(
+        invalidUserCandidate,
+      );
+      expect(resolveWith(['version: &pin 1.2.3'])).toMatchObject(
+        invalidUserCandidate,
+      );
+      expect(
+        resolveWith(['metadata:', '  version: !!str 1.2.3']),
+      ).toMatchObject(invalidUserCandidate);
+    });
+
+    it('rejects a decorated declaration even when the other position resolves', () => {
+      // The decorated value is unreadable, so the role has no unambiguous
+      // version: accepting the usable alternate here would make canonical
+      // identity accept a file both validators reject.
+      expect(
+        resolveWith(['version: &pin 1.2.3', 'metadata:', '  version: 2.0.0']),
+      ).toMatchObject(invalidUserCandidate);
+      expect(
+        resolveWith(['version: 2.0.0', 'metadata:', '  version: !!str 1.2.3']),
+      ).toMatchObject(invalidUserCandidate);
+      // Valid control: the same shape without decoration still resolves.
+      expect(
+        resolveWith(['version: 2.0.0', 'metadata:', '  version: 2.0.0']),
+      ).toMatchObject({ status: 'resolved', roleVersion: '2.0.0' });
+    });
+
+    it('treats malformed frontmatter as an invalid identity', () => {
+      expect(
+        resolveWith(['version: 1.2.3', 'metadata: not-a-map']),
+      ).toMatchObject(invalidUserCandidate);
+      expect(resolveWith(['version: 1.2.3', 'version: 1.2.4'])).toMatchObject(
+        invalidUserCandidate,
+      );
+    });
+
+    it('treats an unusable version declaration as an invalid identity', () => {
+      // YAML reads `1.10` as the number 1.1; no reader accepts it.
+      expect(resolveWith(['version: 1.10'])).toMatchObject(
+        invalidUserCandidate,
+      );
+    });
+
     it('treats a role with no resolvable version as an invalid identity', () => {
       expect(resolveWith(['metadata:', '  author: oat'])).toMatchObject(
         invalidUserCandidate,

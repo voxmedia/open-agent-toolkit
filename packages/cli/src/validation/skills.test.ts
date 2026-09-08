@@ -1175,7 +1175,9 @@ describe('validateOatSkills', () => {
       [
         '---',
         'name: oat-semver-invalid',
-        'version: 1.2',
+        // Quoted: an unquoted 1.2 is the *number* 1.2, which is an unusable
+        // declaration rather than an invalid semver string.
+        "version: '1.2'",
         'description: Use when validating invalid semver version metadata in frontmatter.',
         'disable-model-invocation: true',
         'user-invocable: true',
@@ -1198,6 +1200,8 @@ describe('validateOatSkills', () => {
         file: skillPath,
         message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
       }),
+      // The value is usable, just not semver, so the alias warning fires too.
+      aliasWarning(skillPath, '1.2'),
     ]);
   });
 
@@ -9193,6 +9197,27 @@ describe('skill version resolution across both validators', () => {
     });
   });
 
+  it('reports a metadata.version that YAML reads as a number', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-numeric',
+      skillContent('oat-metadata-numeric', ['metadata:', '  version: 1.2']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+      },
+    ]);
+  });
+
   it('reports malformed frontmatter instead of skipping the version silently', async () => {
     const root = await createRoot();
     const skillPath = await createSkillFile(
@@ -9279,7 +9304,10 @@ describe('skill version resolution across both validators', () => {
 
     expect(result.findings).toContainEqual({
       file: skillPath,
-      message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
+      code: 'skill-version-unusable',
+      severity: 'error',
+      message:
+        'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
     });
   });
 
@@ -9302,7 +9330,10 @@ describe('skill version resolution across both validators', () => {
     expect(result.findings).toEqual([
       {
         file: skillPath,
-        message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
       },
     ]);
   });
@@ -9335,6 +9366,158 @@ describe('skill version resolution across both validators', () => {
     ]);
   });
 
+  it('does not let an unusable version bypass bump enforcement', async () => {
+    const root = await createRoot();
+    // The base code's line regex read `1.10` as a string and enforced the
+    // bump ("still 1.10"). The strict resolver reads no version at all, so
+    // without this guard the changed skill would pass the gate untouched.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-unusable-bypass',
+      skillContent('oat-unusable-bypass', ['version: 1.10']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-unusable-bypass',
+        skillContent('oat-unusable-bypass', ['version: 1.10'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+      },
+    ]);
+  });
+
+  it('reports an unusable version on a non-oat-* skill from the structural pass', async () => {
+    const root = await createRoot();
+    // The `oat-*` structural loop can never see this file; the version-source
+    // pass iterates every skill, which is where the finding has to come from.
+    const skillPath = await createSkillFile(
+      root,
+      'nonoat-numeric',
+      skillContent('nonoat-numeric', ['version: 1.10']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+      },
+    ]);
+  });
+
+  it('does not let malformed base frontmatter bypass bump enforcement', async () => {
+    const root = await createRoot();
+    // The base copy carries `metadata:` with no map beside a valid version;
+    // the current copy is clean and keeps the same version while the body
+    // changes. Resolving the base to null must not skip the comparison.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-malformed-base',
+      skillContent('oat-malformed-base', ['version: 1.2.3']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-malformed-base',
+        skillContent(
+          'oat-malformed-base',
+          ['version: 1.2.3', 'metadata:'],
+          'Base.',
+        ),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-unreadable',
+        severity: 'error',
+        message:
+          'Changed canonical skill cannot be version-checked against origin/main: the base frontmatter is not a valid YAML mapping with unique keys',
+      },
+    ]);
+  });
+
+  it('does not let a conflicting base hide a downgrade', async () => {
+    const root = await createRoot();
+    // The base declares 2.0.0 at the top level and 1.0.0 under metadata.
+    // Comparing against the metadata side alone would read 1.1.0 as an
+    // increase and accept a downgrade from the version the base also declares.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-conflicting-base',
+      skillContent('oat-conflicting-base', ['version: 1.1.0']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-conflicting-base',
+        skillContent(
+          'oat-conflicting-base',
+          ['version: 2.0.0', 'metadata:', '  version: 1.0.0'],
+          'Base.',
+        ),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-conflict',
+        severity: 'error',
+        message:
+          'Changed canonical skill cannot be version-checked against origin/main: the base frontmatter metadata.version (1.0.0) and top-level version (2.0.0) differ',
+      },
+    ]);
+  });
+
+  it('does not let an unusable base version bypass bump enforcement', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-unusable-base',
+      skillContent('oat-unusable-base', ['version: 1.2.3']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-unusable-base',
+        skillContent('oat-unusable-base', ['version: 1.10'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Changed canonical skill cannot be version-checked against origin/main: the base frontmatter declares a version that cannot be read',
+      },
+    ]);
+  });
+
   it('reports a declared top-level version that resolves to nothing', async () => {
     const root = await createRoot();
     const skillPath = await createSkillFile(
@@ -9347,7 +9530,10 @@ describe('skill version resolution across both validators', () => {
 
     expect(result.findings).toContainEqual({
       file: skillPath,
-      message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
+      code: 'skill-version-unusable',
+      severity: 'error',
+      message:
+        'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
     });
   });
 });

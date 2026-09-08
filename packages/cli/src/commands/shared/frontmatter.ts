@@ -353,16 +353,6 @@ function uniqueMapValue(map: YAMLMap, key: string): unknown {
   return matches.length === 1 ? matches[0]?.value : undefined;
 }
 
-function objectStringValue(value: unknown): string | undefined {
-  if (typeof value !== 'string') return undefined;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
 /**
  * Parse a raw frontmatter block into the shared version-carrying shape.
  *
@@ -405,56 +395,6 @@ export function parseSkillFrontmatter(block: string): ParsedSkillFrontmatter {
     parsed.unusableVersionDeclaration =
       parsed.unusableVersionDeclaration ||
       (metadataVersion === undefined && hasKey(metadata, 'version'));
-    parsed.metadata =
-      metadataVersion === undefined ? {} : { version: metadataVersion };
-  }
-
-  return parsed;
-}
-
-/**
- * Build the shared version-carrying shape from frontmatter another reader
- * already parsed, so a caller that holds an object never re-parses text.
- *
- * Precedence and the null contract are identical to the block parser. One
- * difference is inherent to the input shape and not a policy choice: a parsed
- * object no longer carries YAML node information, so a tagged or anchored
- * value (`!!str 1.2.3`, `&pin 1.2.3`) is indistinguishable from a plain string
- * here, while the block parser rejects it. Callers that must reject decorated
- * values hand over the raw block instead.
- */
-export function toParsedSkillFrontmatter(
-  frontmatter: unknown,
-): ParsedSkillFrontmatter {
-  if (!isPlainObject(frontmatter)) {
-    return { malformed: true, unusableVersionDeclaration: false };
-  }
-
-  const version = objectStringValue(frontmatter.version);
-  const parsed: ParsedSkillFrontmatter = {
-    malformed: false,
-    unusableVersionDeclaration:
-      version === undefined && 'version' in frontmatter,
-  };
-  if (version !== undefined) {
-    parsed.version = version;
-  }
-
-  // `metadata: null` is a present-but-unusable metadata block, exactly as the
-  // block parser sees it; treating it as absent here would make the two input
-  // shapes disagree.
-  if ('metadata' in frontmatter) {
-    const metadata = frontmatter.metadata;
-    if (!isPlainObject(metadata)) {
-      return {
-        malformed: true,
-        unusableVersionDeclaration: parsed.unusableVersionDeclaration,
-      };
-    }
-    const metadataVersion = objectStringValue(metadata.version);
-    parsed.unusableVersionDeclaration =
-      parsed.unusableVersionDeclaration ||
-      (metadataVersion === undefined && 'version' in metadata);
     parsed.metadata =
       metadataVersion === undefined ? {} : { version: metadataVersion };
   }
