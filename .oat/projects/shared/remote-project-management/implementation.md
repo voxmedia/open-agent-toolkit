@@ -3385,3 +3385,80 @@ None.
 #### Deferred Findings (Minor)
 
 None.
+
+## Post-implementation Wave 5 Integration — 2026-09-08
+
+The operator requested integration with the recently merged wave and corrected
+the wave number from 6 to **5**. This is a post-implementation compatibility
+update, not a reopening or renumbering of the 90 completed tasks.
+
+### Integration basis and changes
+
+- Fetched `origin/main` at `1bef28fa1fb95e1473872ff9a511a6b42fa37889`
+  (Wave 5 PR #275 and closeout PR #276) and merged it in
+  `c55deca000af4f796abbf1f3487ffe77f9833079`. No reviewed SHA was rewritten.
+- Resolved the two generated backlog/decision indexes through their CLI
+  regenerators; preserved both adjacent additions in repository current-state.
+  Code auto-merged, but the handoff correctly predicted a semantic config gap.
+- `4a27306caa759d2ea0adc3c0bdad296bee879d89` adds remote-policy support to
+  Wave 5's `config unset`: shared-only leaves, read-only structural keys,
+  atomic removal from validated raw JSON, no resurrection of explicit defaults,
+  sibling preservation, an empty required policy container, and idempotence.
+- A bounded independent integration audit also found a pre-existing delivery
+  gap: the canonical remote skill was not registered in either the bundle
+  producer or installable project-management pack. The same commit corrects
+  both and adds actual bundled-source installation coverage.
+- `ba522d5d51cf94798e430032c4e650f187af97f9` aligns installer fixtures and
+  the doctor's five-skill project-management inventory; `oat-doctor` is bumped
+  to 1.2.2. The remote skill remains 1.0.1. Public packages are lockstep 0.2.64,
+  above main's 0.2.63, with rebuilt assets and project-only sync.
+- Corrected `oat_phase_status` to `pr_open`; public status still reports 90/90
+  and recognizes the existing PR. Retained all earlier reviews and gate
+  receipts, explicitly labeling them historical rather than fresh approval.
+- Updated the recap backlog note: Wave 5's autonomous capability-aware skip is
+  shipped, but the proposed simpler generation flow remains separate work.
+  The prior interactive `E_CONTENT` failure remains a failure, not a skip;
+  no recap retry, archive, user-scope sync, or provider mutation was performed.
+
+### Verification and negative controls
+
+- Before the unset fix, the 55-file focused suite failed its catalog-coverage
+  case, identifying 44 remote keys with no handler. Afterward all 1,296 tests
+  passed, including physical removal, shared-scope refusal, sibling storage,
+  structural refusal, and repeated-unset checks.
+- The real-bundle install regression first failed with `ENOENT` for the absent
+  `assets/skills/oat-pjm-remote/SKILL.md`. After adding the producer, removing
+  only its pack-ownership entry made both ownership and installation tests
+  fail. Restoring the manifest byte-for-byte made both pass; all 24 tests in
+  those two files passed. These probes use a temporary install destination,
+  not the operator's actual user installation.
+- The first post-pack full rerun caught five stale installer-fixture cases and
+  two doctor-inventory assertions. All seven were corrected; the focused
+  installation, manifest, script-reference, and skill-contract union passed
+  277/277. The corrected workspace suite passed 6,965 tests across 391 files.
+- The generic skill-creator validator rejects OAT's existing frontmatter keys
+  and was not treated as a valid OAT gate. The repository's authoritative
+  validator passed all 65 OAT skills, including the corrected doctor inventory.
+- Final CI-equivalent sequence passed in order, with each exit code recorded:
+  `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`,
+  `pnpm run check:skill-bumps`, fresh `git fetch origin main`,
+  `pnpm release:check-versions`, `pnpm release:validate`, and `pnpm build:docs`.
+  Lint and format also passed. Release validation covered all five public
+  packages and 65 visual measurements; two changed canonical skill bumps passed.
+- The separate `pnpm exec turbo run test --force` run passed 6,965/6,965 tests
+  across 391 files, with `Cached: 0` for all 10 tasks. Smoke passed 161/161;
+  skill scripts passed 861/861; release scripts passed 39 with one skipped.
+  Logs are `/tmp/remote-pjm-wave5-ready-*.log`. Plan validation and
+  `git diff --check` passed. Current main remains an ancestor of the candidate.
+- PJM adoption is declared. Its doctor retains four existing completed-log
+  references to unarchived backlog items; no unrelated archival was attempted.
+
+### Review and publication boundary
+
+The independent audit found no remaining blocking issue in the bounded
+integration patch after its config, install, state, and documentation findings
+were addressed. This does not replace the configured final lifecycle gate.
+The stored gate reviewed older heads; no old accepted run was retried or reused.
+A fresh configured final review, authorized publication, and new GitHub CI are
+still pending. PR #273's remote head remains the pre-integration commit until
+an explicit push occurs. The pre-existing untracked recap evidence is preserved.

@@ -220,6 +220,17 @@ Implementation completed at 90/90 tasks after passing final review and the confi
 
 retro artifact=.oat/projects/shared/remote-project-management/references/project-retro.md evidence_used=current-session,issue-backlog-history,lifecycle-artifacts,project-log,recap-run-evidence evidence_unavailable=historical-session-transcript,oat-execution-learnings promotions=1 upstream=1 apply=skipped filing=performed
 
+### 2026-09-08 · structural · post-implementation-integration · wave-5
+
+Integrated origin/main at 1bef28fa1fb95e1473872ff9a511a6b42fa37889 via
+c55deca00 without rewriting reviewed history. Fixed remote config-unset
+composition and a missing bundle/pack registration in 4a27306ca, then aligned
+installer fixtures and doctor inventory in ba522d5d5. Reconciled the recap
+follow-up against shipped Wave 5 work in 274b775fb. Original progress remains
+90/90 and PR routing is now pr_open. See implementation.md's post-implementation
+section for regression probes and current verification; the prior final gate
+remains historical, with fresh final review and publication pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

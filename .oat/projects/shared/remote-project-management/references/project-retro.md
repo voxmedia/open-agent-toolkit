@@ -184,10 +184,10 @@ was technically recorded but did not satisfy the user's reasonable expectation t
 - **Disposition:** file
 - **Status:** filed
 - **Destination:** `.oat/repo/pjm/backlog/items/BL-260907-replace-the-default-project.md`
-- **Destination-receipt:** `a58e03c5d4bc802c389139f57b3a744c7deaf952`
+- **Destination-receipt:** `274b775fb3fb100f2c74af0c12a9c0b4849df2c6`
 - **Remote-visibility:** unpushed
 - **Sanitized:** yes
-- **Disposition-note:** Created as high-priority feature `BL-260907-replace-the-default-project` with confirmed `M` estimate; destination commit excludes this retro.
+- **Disposition-note:** Created as high-priority feature `BL-260907-replace-the-default-project` with confirmed `M` estimate in `a58e03c5d4bc802c389139f57b3a744c7deaf952`. The current destination receipt adds the Wave 5 integration note and excludes this retro; remote visibility remains unpushed.
 
 Create a repository backlog item for a bounded replacement of the
 implementation-tail project recap. Keep the general Explainer Kit available for

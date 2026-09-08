@@ -1,13 +1,14 @@
 ---
 oat_current_task: null
-oat_last_commit: 52d9279fa37d5008080c6d427a928c8e138a17cc
-oat_blockers: []
+oat_last_commit: ba522d5d51cf94798e430032c4e650f187af97f9
+oat_blockers:
+  - 'Post-implementation Wave 5: fresh configured final review, publication, and post-push CI remain pending.'
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_orchestration_retry_limit: 3
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement
-oat_phase_status: complete # Status: in_progress | complete
+oat_phase_status: pr_open # Implementation complete; PR remains open
 oat_pr_status: open
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/273
 oat_execution_mode: single-thread # single-thread | subagent-driven
@@ -107,7 +108,7 @@ oat_post_implement_sequence:
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T12:17:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-08T00:57:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -119,12 +120,15 @@ oat_project_recap:
 
 **Status:** Implementation complete; PR open
 **Started:** 2026-03-15
-**Last Updated:** 2026-09-07
+**Last Updated:** 2026-09-08
 
 ## Current Phase
 
-Implementation complete — final review, exit gate, and closeout sequence passed;
-PR remains open.
+Implementation complete at 90/90 tasks; PR remains open. The original final
+review, exit gate, and closeout sequence passed before the post-implementation
+Wave 5 integration. That integration passed local CI-equivalent checks and an
+uncached 6,965-test run; the stored gate receipt is historical and does not
+attest to the new changes.
 
 ## Artifacts
 
@@ -334,12 +338,17 @@ PR remains open.
 
 ## Blockers
 
-No active blocker. The configured implementation exit gate is allowed and
-fresh.
+No original implementation-task blocker. Post-implementation Wave 5 integration
+requires fresh review of the integrated candidate before claiming current final
+gate approval. The stored configured exit gate remains historical evidence,
+not a fresh result for this integration.
 
 ## Next Milestone
 
-PR #273 is open for review and merge.
+PR #273 remains open. Local Wave 5 integration checks passed. Run a fresh
+configured final review of the integrated candidate and publish when
+authorized. Do not reuse the prior accepted gate run. Verify new GitHub CI after
+publishing before claiming merge readiness.
 
 - To incorporate feedback: run `oat-project-revise`
 - To complete/archive the project lifecycle: run `oat-project-complete`

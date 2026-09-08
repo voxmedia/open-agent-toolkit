@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-07
+oat_last_updated: 2026-09-08
 oat_generated: true
 oat_summary_last_task: p09-t04
 oat_summary_revision_count: 3
@@ -39,7 +39,8 @@ previewable, verifiable, and restart-safe.
   batches, multi-binding closeout, explicit approval previews, and public CLI
   workflows.
 - User and agent documentation, synced skill assets, lockstep package version
-  `0.2.63`, and evidence-grade release verification against merged current main.
+  `0.2.64`, and evidence-grade release verification; the post-implementation
+  Wave 5 integration is tracked separately below.
 
 ## Key Decisions
 
@@ -104,13 +105,20 @@ previewable, verifiable, and restart-safe.
 
 ## Integration Notes
 
+- **Post-implementation Wave 5:** merged main at
+  `1bef28fa1fb95e1473872ff9a511a6b42fa37889` through merge `c55deca00`.
+  Commits `4a27306ca` and `ba522d5d5` integrate remote config-unset behavior,
+  register the remote skill in the actual bundle and project-management pack,
+  and align installation fixtures and doctor inventory. Public packages are
+  `0.2.64`, above main's `0.2.63`. A fresh configured final gate and post-push CI
+  remain pending; the prior review and verification receipts below are history.
 - The complete remote-PJM contract is exposed through `oat pjm remote` and the
   `oat-pjm-remote` host skill. External execution remains host-owned; OAT must
   not grow provider-specific invocation mappings.
-- The branch includes the large mainline wave through merge commit
-  `6c73da33cf64fa2221def42a0b2fc6f7960ced73`; public packages are at `0.2.63`,
-  above the merged `origin/main` baseline `0.2.62`.
-- Final verification passed the CI-equivalent gate sequence, lint and format,
+- Before Wave 5, the branch integrated main through merge commit
+  `6c73da33cf64fa2221def42a0b2fc6f7960ced73`; public packages were at `0.2.63`,
+  above that merged `origin/main` baseline `0.2.62`.
+- Pre-Wave-5 final verification passed the CI-equivalent gate sequence, lint and format,
   an uncached 6,545-test workspace run, smoke, skill, release, and skill-schema
   suites. The configured cross-family exit gate then passed at the Important
   threshold and its sole Medium artifact finding was addressed.
