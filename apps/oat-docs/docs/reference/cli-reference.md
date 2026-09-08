@@ -179,12 +179,15 @@ Per-key restrictions apply identically to `set` and `unset`: structural keys can
 
 `oat config unset <key>` removes the key from the selected surface and prunes any parent object it empties, so the resolved value falls back through the remaining surfaces to the built-in default. Removing a key the surface does not hold is not an error: it reports an already-unset outcome and exits 0. With `--json` the envelope adds a `removed` boolean, which is the machine-readable way to tell a real removal from an already-unset no-op, since both exit 0. A stored value that fails validation is still removed, matching `oat config set`, which repairs the same file.
 
-`unset` refuses five classes of key, each with exit code 1:
+Remote settings under `pjm.remote.*` remain shared-only. Removing a mutable leaf preserves sibling settings and the required empty `policy` object, if necessary, so the remaining remote configuration stays readable. Explicit defaults are removed from disk rather than silently written back by normalization; effective values still use fail-closed defaults. Remote policy must pass strict validation before removal.
+
+`unset` refuses six classes of key, each with exit code 1:
 
 - **Unknown keys**, including keys OAT reads but does not expose in the `oat config` catalog (`documentation.index`). These are not removable by any `oat config` command.
 - **Lifecycle state** (`activeProject`, `lastPausedProject`) — cleared with `oat config set <key> ''` instead.
 - **Pack intent** (`tools.*`) — removed with `oat tools remove --pack <pack> --scope project`, which also removes the installed pack files. Clearing the intent alone would leave them behind.
 - **Aggregate read views** (`workflow.dispatchCeiling`, `workflow.dispatchCeiling.providers`) — these are assembled for `get` from the leaf keys and are not stored as such. Unset `workflow.dispatchCeiling.preset` or `workflow.dispatchCeiling.providers.<provider>` instead.
+- **Read-only remote-policy structure** (`pjm.remote`, `pjm.remote.policy`, `pjm.remote.schemaVersion`) — unset a documented mutable child key instead; removing the complete policy or its schema discriminator is not supported.
 - **Environment-shadowed keys with nothing stored on the target surface** — when `OAT_PROJECTS_ROOT`, `OAT_PROJECTS_DEFAULT_SCOPE`, or `OAT_WORKTREES_ROOT` supplies the effective value and the surface holds nothing to remove, clear the environment variable in your shell. When the surface _does_ hold a stored value, `unset` removes it (as `set` would rewrite it) and warns that the override still supplies the effective value.
 
 ## `workflow.*` preference keys

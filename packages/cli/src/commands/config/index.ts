@@ -68,6 +68,7 @@ import {
   type ResolvedConfigSource,
 } from '@config/resolve';
 import { resolveAssetsRoot } from '@fs/assets';
+import { atomicWriteJson } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import {
   normalizeMatrixCellAvailability,
@@ -268,6 +269,7 @@ interface ConfigCommandDependencies {
   ) => Promise<ResolvedConfig>;
   resolveAssetsRoot: () => Promise<string>;
   readFile: (path: string) => Promise<string>;
+  atomicWriteJson: (path: string, data: unknown) => Promise<void>;
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
   validateMatrixCell: (
     provider: string,
@@ -1264,6 +1266,7 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   resolveEffectiveConfig,
   resolveAssetsRoot,
   readFile: (path) => readFileDefault(path, 'utf8'),
+  atomicWriteJson,
   confirmAction,
   validateMatrixCell,
   createDispatchValidationPassContext,
@@ -2849,7 +2852,8 @@ function configPathForKey(key: ConfigKey): string[] {
   if (
     key.startsWith('explainers.') ||
     key.startsWith('documentation.') ||
-    key.startsWith('archive.')
+    key.startsWith('archive.') ||
+    isPjmRemoteConfigKey(key)
   ) {
     return key.split('.');
   }
@@ -2896,6 +2900,20 @@ async function unsetConfigValue(
   warn: (message: string) => void,
 ): Promise<ConfigUnsetResult> {
   validateSurfaceForKey(key, surface);
+
+  // These are structural views (and, for schemaVersion, the discriminator
+  // that makes the remote policy readable), just as they are for `set`.
+  // Refuse them before resolving config so an unset attempt can never be
+  // mistaken for permission to remove the whole policy boundary.
+  if (
+    key === 'pjm.remote' ||
+    key === 'pjm.remote.policy' ||
+    key === 'pjm.remote.schemaVersion'
+  ) {
+    throw new Error(
+      `Config key '${key}' is read-only; unset one of its documented child keys.`,
+    );
+  }
 
   const resolved = await dependencies.resolveEffectiveConfig(
     repoRoot,
@@ -3039,6 +3057,24 @@ async function removeFromSurface(
   }
 
   const configPath = join(repoRoot, '.oat', 'config.json');
+
+  if (isPjmRemoteConfigKey(key)) {
+    // PJM remote normalization materializes fail-closed defaults such as
+    // policy.description=none and authority.default=read-only. Removing a
+    // leaf from that normalized object and sending it through writeOatConfig
+    // would therefore write the leaf straight back while reporting success.
+    // The config has already passed the strict shared-policy reader in
+    // resolveEffectiveConfig, so perform this removal against the validated raw
+    // document and atomically persist only the requested structural change.
+    const repaired = await removeConfigPathOnDisk(configPath, path);
+    if (!repaired) {
+      return false;
+    }
+    preservePjmRemotePolicyBoundary(repaired, path);
+    await dependencies.atomicWriteJson(configPath, repaired);
+    return true;
+  }
+
   const sharedConfig =
     key === 'documentation.excludes'
       ? await dependencies.readOatConfigForDocumentationExcludesRepair(repoRoot)
@@ -3066,6 +3102,35 @@ async function removeFromSurface(
     return true;
   }
   return false;
+}
+
+/**
+ * Keep the required PJM remote policy object when unsetting its final leaf.
+ *
+ * The recursive remover normally prunes empty parents. For this one schema,
+ * however, `policy` is the structural boundary that keeps sibling remote state
+ * (notably `storage.state=shared`) readable. An empty policy is valid and
+ * normalizes to the fail-closed defaults; an absent policy makes the complete
+ * remote object unreadable.
+ */
+function preservePjmRemotePolicyBoundary(
+  config: Record<string, unknown>,
+  path: string[],
+): void {
+  if (path[0] !== 'pjm' || path[1] !== 'remote' || path[2] !== 'policy') {
+    return;
+  }
+  const pjm = config.pjm;
+  if (!isRecord(pjm)) {
+    return;
+  }
+  const remote = pjm.remote;
+  if (!isRecord(remote)) {
+    return;
+  }
+  if (!Object.prototype.hasOwnProperty.call(remote, 'policy')) {
+    remote.policy = {};
+  }
 }
 
 /**

@@ -301,6 +301,7 @@ export const PACK_MANIFEST: readonly PackDefinition[] = [
       ...[
         'oat-pjm-add-backlog-item',
         'oat-pjm-decision',
+        'oat-pjm-remote',
         'oat-pjm-update-repo-reference',
         'oat-pjm-review-backlog',
       ].map((name) => skill(name)),

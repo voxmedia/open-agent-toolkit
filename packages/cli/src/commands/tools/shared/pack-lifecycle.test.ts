@@ -130,6 +130,45 @@ describe('production pack lifecycle', () => {
     ).resolves.toMatchObject({ enabled: true, source: 'declared' });
   });
 
+  it('installs oat-pjm-remote from the real bundled project-management source', async () => {
+    const scopeRoot = await temporaryRoot('oat-lifecycle-pjm-remote-');
+    const assetsRoot = await resolveAssetsRoot();
+    const bundledSkillPath = join(
+      assetsRoot,
+      'skills',
+      'oat-pjm-remote',
+      'SKILL.md',
+    );
+    const bundledSkill = await readFile(bundledSkillPath, 'utf8');
+
+    const installed = await reconcilePackLifecycle({
+      pack: 'project-management',
+      scope: 'user',
+      scopeRoot,
+      assetsRoot,
+      action: 'install',
+    });
+
+    expect(installed.apply?.inventory.completeness).toBe('complete');
+    expect(
+      installed.apply?.inventory.assets.find(
+        ({ definition }) => definition.id === 'skill:oat-pjm-remote',
+      ),
+    ).toMatchObject({
+      status: 'current',
+      definition: {
+        source: 'skills/oat-pjm-remote',
+        destination: '.agents/skills/oat-pjm-remote',
+      },
+    });
+    await expect(
+      readFile(
+        join(scopeRoot, '.agents', 'skills', 'oat-pjm-remote', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe(bundledSkill);
+  });
+
   it('uses one exact plan for dry-run and apply across managed directories', async () => {
     const scopeRoot = await temporaryRoot('oat-lifecycle-dry-');
     const assetsRoot = await resolveAssetsRoot();

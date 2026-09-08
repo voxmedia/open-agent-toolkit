@@ -27,6 +27,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'oat-idea-summarize',
     'oat-pjm-add-backlog-item',
     'oat-pjm-decision',
+    'oat-pjm-remote',
     'oat-pjm-review-backlog',
     'oat-pjm-update-repo-reference',
     'oat-cursor-cloud-projects',
