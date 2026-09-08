@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import {
   existsSync,
   mkdirSync,
@@ -119,6 +119,55 @@ function extractQuickScaffoldBlock(content: string): string {
     throw new Error('Missing `oat project new` block in quick-start.');
   }
   return block[1];
+}
+
+const LEDGER_GUARD_ANCHOR = '**Ledger-path guard (both PR paths).**';
+
+/**
+ * The pr-final ledger-path guard, so the controls below run the skill's own
+ * block instead of a second model of it living in this test.
+ */
+function extractLedgerPathGuard(content: string): string {
+  const start = content.indexOf(LEDGER_GUARD_ANCHOR);
+  const end = content.indexOf(
+    'For a synced project, use this ordered flow',
+    start,
+  );
+  if (start < 0 || end <= start) {
+    throw new Error('Missing pr-final ledger-path guard.');
+  }
+  const block = content.slice(start, end).match(/```bash\n([\s\S]*?)\n```/);
+  if (!block?.[1]?.includes('PRFINAL-05')) {
+    throw new Error('Missing PRFINAL-05 guard block in pr-final.');
+  }
+  return block[1];
+}
+
+/**
+ * The repository's own `.oat` ignore rules. `local`, `synced`, and `archived`
+ * projects are ignored in their entirety, not just their `reviews/archived/`
+ * directories, so a fixture that reproduces only the archive rule cannot see
+ * how the guard behaves in three of the four scopes.
+ */
+function oatIgnoreRules(): string[] {
+  const rules = readRepoFile('.gitignore')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^!?\.oat\//.test(line));
+  if (!rules.includes('.oat/projects/local/**')) {
+    throw new Error(
+      'Missing OAT project ignore rules in the repository .gitignore.',
+    );
+  }
+  return rules;
+}
+
+/** `printf '%s\n' 'rule' 'rule' … > .gitignore`, one shell-quoted rule each. */
+function writeIgnoreRulesCommand(): string {
+  const quoted = oatIgnoreRules()
+    .map((rule) => `'${rule.replaceAll("'", `'\\''`)}'`)
+    .join(' ');
+  return `printf '%s\\n' ${quoted} > .gitignore`;
 }
 
 function builtCliEntry(): string {
@@ -2134,6 +2183,950 @@ printf 'artifact-read\\n'`,
     expect(completeContent).toContain(
       'Warning: Proceeding without summary generation.',
     );
+  });
+
+  // Step 0.5 is prose the executing agent follows; it has no bash block to run,
+  // so these three cases pin the wording of that contract. The executable
+  // control for this plan is the ledger-path guard case below, which runs the
+  // skill's own block.
+  it('archives only terminal review artifacts during pr-final preflight', () => {
+    const prFinal = readRepoFile(
+      '.agents/skills/oat-project-pr-final/SKILL.md',
+    );
+    const stepZeroFive = prFinal.slice(
+      prFinal.indexOf('### Step 0.5: Archive Residual Active Review Artifacts'),
+      prFinal.indexOf('### Step 1: Validate Required Artifacts (Mode-Aware)'),
+    );
+
+    // Eligibility is a predicate over the binding ledger event, not "every
+    // file in reviews/". The old rule moved a late final-review artifact that
+    // Step 2 had not consumed yet.
+    expect(stepZeroFive).toContain(
+      'An artifact is archive-eligible only when the `## Reviews` event that binds it — matched by `Scope` + `Type` + `Artifact` filename — has Status `passed` or `fixes_completed`.',
+    );
+    expect(stepZeroFive).toContain(
+      'A `pending`, `received`, or `fixes_added` event is still being consumed: leave its artifact in the top level of `reviews/` and report it.',
+    );
+    expect(stepZeroFive).toContain(
+      'Leave a top-level artifact that no ledger event binds in place and report it too.',
+    );
+    expect(stepZeroFive).not.toContain(
+      'Move each review artifact into `reviews/archived/`',
+    );
+
+    // Event selection by identity, so duplicate scope/type rows keep theirs.
+    expect(stepZeroFive).toContain(
+      "select the ledger event by `Scope` + `Type` + `Artifact` filename and rewrite only that event's Artifact cell",
+    );
+    expect(stepZeroFive).toContain(
+      'never rewrite a sibling row that merely shares the scope and type',
+    );
+
+    // The enumerated rewrite list, as in `oat-project-pr-progress`.
+    for (const referenceFile of [
+      '`"$PROJECT_PATH/plan.md"`',
+      '`"$PROJECT_PATH/implementation.md"`',
+      '`"$PROJECT_PATH/state.md"`',
+    ]) {
+      expect(stepZeroFive).toContain(referenceFile);
+    }
+
+    // References are rewritten before the move, matching
+    // `oat-project-review-receive`, so no window exists where the ledger row
+    // points at a path that no longer exists.
+    expect(stepZeroFive.indexOf('Rewrite references from')).toBeGreaterThan(0);
+    expect(stepZeroFive.indexOf('Rewrite references from')).toBeLessThan(
+      stepZeroFive.indexOf(
+        'Move the review artifact to `reviews/archived/{destination}` only after those references are rewritten.',
+      ),
+    );
+  });
+
+  it('keeps pr-final archive eligibility distinct from final approval', () => {
+    const prFinal = readRepoFile(
+      '.agents/skills/oat-project-pr-final/SKILL.md',
+    );
+    const stepZeroFive = prFinal.slice(
+      prFinal.indexOf('### Step 0.5: Archive Residual Active Review Artifacts'),
+      prFinal.indexOf('### Step 1: Validate Required Artifacts (Mode-Aware)'),
+    );
+    const stepTwo = prFinal.slice(
+      prFinal.indexOf('### Step 2: Check Final Review Status'),
+      prFinal.indexOf('### Step 3: Collect Project Summary'),
+    );
+
+    // `fixes_completed` is archive-eligible and still unapproved. Widening
+    // eligibility must never widen the gate.
+    expect(stepZeroFive).toContain(
+      'Archive eligibility is not the Step 2 final-review gate. Step 2 still requires the latest `final`/`code` event to be `passed`, so an archived `fixes_completed` final row still stops autonomous finalization at `PRFINAL-03`.',
+    );
+
+    // Step 2's approval rule is untouched: same ledger read, same autonomous
+    // stop, and completed fixes are still not approval.
+    expect(stepTwo).toContain(
+      'If `FINAL_ROW` is missing or does not contain `passed`:',
+    );
+    expect(stepTwo).toContain(
+      '- If `OAT_AUTONOMOUS=1`, gate `PRFINAL-03` is a boundary stop. Never select',
+    );
+    expect(stepTwo).toContain(
+      '  - If the status is `fixes_completed`, require that same re-review/receive\n    sequence to reach `passed`; completed fixes alone are not approval.',
+    );
+    // Archiving grants no exemption inside the gate.
+    expect(stepTwo).not.toContain('archived');
+  });
+
+  it('keeps pr-final Step 0.5 archiving idempotent across re-runs', () => {
+    const prFinal = readRepoFile(
+      '.agents/skills/oat-project-pr-final/SKILL.md',
+    );
+    const stepZeroFive = prFinal.slice(
+      prFinal.indexOf('### Step 0.5: Archive Residual Active Review Artifacts'),
+      prFinal.indexOf('### Step 1: Validate Required Artifacts (Mode-Aware)'),
+    );
+
+    // The collision rule resolves the destination name before anything is
+    // rewritten or moved, so the cell and the file agree on the suffixed name.
+    expect(stepZeroFive).toContain(
+      'This is the same collision-free identity rule as `oat-project-review-receive` Step 1, per DR-260706.',
+    );
+    // DR-260706 owns the timestamp token; a second format here would sort and
+    // parse differently from every other archived review artifact.
+    expect(stepZeroFive).toContain(
+      '`{stem}-$(date -u +%Y-%m-%dT%H%M%SZ).md`, then a `-2`, `-3`, … index while that name is also taken',
+    );
+    expect(stepZeroFive).toContain(
+      'Never overwrite an existing archive destination.',
+    );
+    expect(
+      stepZeroFive.indexOf('Resolve the destination filename'),
+    ).toBeLessThan(stepZeroFive.indexOf('Rewrite references from'));
+
+    // A second pass over the same artifact set is a no-op rather than a
+    // duplicate archive or a double-rewritten cell.
+    expect(stepZeroFive).toContain('Step 0.5 is idempotent.');
+    expect(stepZeroFive).toContain(
+      'an event whose Artifact cell already points inside `reviews/archived/` and whose top-level file is gone is already archived, so skip it — never rewrite its cell a second time and never write a second archived copy',
+    );
+    expect(stepZeroFive).toContain(
+      'Re-running over the same artifact set therefore neither duplicates nor clobbers an archived artifact.',
+    );
+    // An interruption between the reference rewrite and the move leaves the
+    // cell naming a destination that does not exist yet; deriving a second name
+    // on the rerun would strand the artifact behind PRFINAL-05.
+    expect(stepZeroFive).toContain(
+      'complete the move to that exact destination rather than deriving a second name',
+    );
+  });
+
+  it('stops pr-final at PRFINAL-05 when a Reviews ledger artifact path does not resolve', () => {
+    const prFinal = readRepoFile(
+      '.agents/skills/oat-project-pr-final/SKILL.md',
+    );
+    const guard = extractLedgerPathGuard(prFinal);
+    const { workspace, repository, env } =
+      createScaffoldWorkspace(builtCliEntry());
+
+    try {
+      // A real project directory created by the real CLI, so the skill's own
+      // block runs against the layout it ships for.
+      const setup = [
+        'set -eu',
+        'git init -q .',
+        'git config user.email pr-final@example.invalid',
+        'git config user.name "PR Final Control"',
+        "printf '# scratch\\n' > README.md",
+        // The repository's own `.oat` ignore rules, read from its `.gitignore`
+        // at test time. A hand-written subset hid the fact that `local`,
+        // `synced`, and `archived` projects are ignored in their entirety.
+        writeIgnoreRulesCommand(),
+        'git add -A',
+        'git commit -q -m init',
+        'oat config set projects.defaultScope shared --shared > /dev/null',
+        'oat project new "ledger-guard" --mode quick --json > /dev/null',
+        'PROJECT_PATH=$(oat config get activeProject)',
+        'mkdir -p "$PROJECT_PATH/reviews/archived"',
+        `printf 'archived\\n' > "$PROJECT_PATH/reviews/archived/final-code.md"`,
+        `printf 'active\\n' > "$PROJECT_PATH/reviews/p01-code.md"`,
+        'mkdir -p "$PROJECT_PATH/reviews/directory.md"',
+        `printf 'outside\\n' > outside.md`,
+        'ln -s "$PWD/outside.md" "$PROJECT_PATH/reviews/escape.md"',
+        // A symlink that stays inside the project is legitimate.
+        'ln -s "archived/final-code.md" "$PROJECT_PATH/reviews/inside-link.md"',
+        // A chain longer than the guard's hop limit, landing outside.
+        'ln -s "$PWD/outside.md" "$PROJECT_PATH/reviews/hop0.md"',
+        'i=1; while [ $i -le 25 ]; do ln -s "hop$((i - 1)).md" "$PROJECT_PATH/reviews/hop$i.md"; i=$((i + 1)); done',
+        // A symlinked directory whose `..` collapses back into the project
+        // under a logical `cd`, while the kernel resolves it elsewhere.
+        'mkdir -p outside-dir',
+        'ln -s "$PWD/outside-dir" "$PROJECT_PATH/reviews/linkdir"',
+        `printf 'decoy\\n' > "$PROJECT_PATH/reviews/decoy.md"`,
+        `printf '%s\\n' "$PROJECT_PATH"`,
+      ].join('\n');
+      const projectPath = execFileSync('/bin/bash', ['-c', setup], {
+        cwd: repository,
+        encoding: 'utf8',
+        env,
+      })
+        .trim()
+        .split('\n')
+        .at(-1)!;
+
+      const runGuard = (
+        rows: readonly string[],
+        separator = '| --- | --- | --- | --- | --- |',
+      ): ReturnType<typeof spawnSync> => {
+        writeFileSync(
+          join(repository, projectPath, 'plan.md'),
+          [
+            '# Plan',
+            '',
+            '## Reviews',
+            '',
+            '| Scope | Type | Status | Date | Artifact |',
+            separator,
+            ...rows,
+            '',
+            '## Tasks',
+            '',
+          ].join('\n'),
+          'utf8',
+        );
+        return spawnSync(
+          '/bin/bash',
+          [
+            '-c',
+            `set -eu\nPROJECT_PATH=${JSON.stringify(projectPath)}\n${guard}`,
+          ],
+          { cwd: repository, encoding: 'utf8', env },
+        );
+      };
+
+      // Accepted control: an archived terminal row, a non-terminal row that is
+      // still legitimately in the active top level, and an unbound `-`
+      // placeholder all resolve.
+      const accepted = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/archived/final-code.md |',
+        '| p01 | code | received | 2026-07-16 | reviews/p01-code.md |',
+        '| spec | artifact | pending | 2026-07-10 | - |',
+      ]);
+      expect(accepted.stderr).toBe('');
+      expect(accepted.status).toBe(0);
+
+      // Duplicate scope/type events with distinct artifacts both validate.
+      const duplicates = runGuard([
+        '| p01 | code | fixes_added | 2026-07-14 | reviews/p01-code.md |',
+        '| p01 | code | passed | 2026-07-16 | reviews/archived/final-code.md |',
+      ]);
+      expect(duplicates.status).toBe(0);
+
+      // The regression: Step 0.5 moved the artifact and the row still points at
+      // the old active path. `.gitignore` hides `reviews/archived/`, so no CI
+      // diff would ever show it.
+      const dangling = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/final-code.md |',
+      ]);
+      expect(dangling.status).toBe(1);
+      expect(dangling.stderr).toContain('PRFINAL-05');
+      expect(dangling.stderr).toContain(
+        'scope=final type=code artifact=reviews/final-code.md',
+      );
+      expect(dangling.stderr).toContain('artifact file does not exist');
+
+      const directory = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/directory.md |',
+      ]);
+      expect(directory.status).toBe(1);
+      expect(directory.stderr).toContain('artifact path is a directory');
+
+      const escaping = runGuard([
+        '| final | code | passed | 2026-07-15 | ../../../../outside.md |',
+      ]);
+      expect(escaping.status).toBe(1);
+      expect(escaping.stderr).toContain(
+        'artifact resolves outside the project',
+      );
+
+      const symlinked = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/escape.md |',
+      ]);
+      expect(symlinked.status).toBe(1);
+      expect(symlinked.stderr).toContain(
+        'artifact resolves outside the project',
+      );
+
+      // A chain longer than the hop limit resolves outside the project for the
+      // kernel, so giving up mid-chain and containment-checking the unresolved
+      // in-project pathname would wave it through.
+      const longChain = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/hop25.md |',
+      ]);
+      expect(longChain.status).toBe(1);
+      expect(longChain.stderr).toContain(
+        'artifact symlink chain does not resolve within 16 hops',
+      );
+
+      // A symlink that stays inside the project is still valid.
+      const insideLink = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/inside-link.md |',
+      ]);
+      expect(insideLink.status).toBe(0);
+
+      // Alignment colons are valid GFM separator syntax; treating that row as a
+      // ledger event blocked a healthy project.
+      const aligned = runGuard(
+        ['| final | code | passed | 2026-07-15 | reviews/p01-code.md |'],
+        '| :--- | :--- | :---: | ---: | :--- |',
+      );
+      expect(aligned.stderr).toBe('');
+      expect(aligned.status).toBe(0);
+
+      // `symlinked-dir/..` is collapsed by a logical `cd` before `pwd -P`, so
+      // logical traversal would validate `reviews/decoy.md` while the published
+      // path resolves to a file outside the project that does not exist.
+      const logicalParent = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/linkdir/../decoy.md |',
+      ]);
+      expect(logicalParent.status).toBe(1);
+      expect(logicalParent.stderr).toContain('PRFINAL-05');
+
+      // A row the parser cannot read is a stop, never a silent skip: skipping
+      // it would let exactly the dangling path this guard exists for through.
+      const unsupportedRow = runGuard([
+        'final | code | passed | 2026-07-15 | reviews/gone.md |',
+      ]);
+      expect(unsupportedRow.status).toBe(1);
+      expect(unsupportedRow.stderr).toContain(
+        'PRFINAL-05: unsupported review-ledger row (a row must start with |)',
+      );
+
+      // Blockquoted placeholder rows are the standing convention in this
+      // repository's wave plans; they are notes, not events.
+      const blockquoted = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '> Placeholder rows stay quoted out until an artifact exists:',
+        '> | spec | artifact | pending | - | - | - | - | - |',
+        '> | design | artifact | pending | - | - | - | - | - |',
+      ]);
+      expect(blockquoted.stderr).toBe('');
+      expect(blockquoted.status).toBe(0);
+
+      // A fenced example inside the section is documentation, so its rows are
+      // neither validated nor rejected.
+      const fenced = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '```text',
+        '| final | code | passed | 2026-07-15 | reviews/does-not-exist.md |',
+        '```',
+      ]);
+      expect(fenced.stderr).toBe('');
+      expect(fenced.status).toBe(0);
+
+      // A second table under a `###` subheading has its header and separator
+      // skipped by shape, so its real rows are validated. The scan boundary
+      // stays at the next level-two heading, exactly as Step 2's pinned block
+      // reads the ledger: ending at `###` would hide a `final`/`code` row that
+      // authorizes finalization from the guard that validates it.
+      const subsectionValid = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '### Superseded',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        '| --- | --- | --- | --- | --- |',
+        '| p02 | code | passed | 2026-07-15 | reviews/p01-code.md |',
+      ]);
+      expect(subsectionValid.stderr).toBe('');
+      expect(subsectionValid.status).toBe(0);
+
+      const subsectionDangling = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '### Superseded',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        '| --- | --- | --- | --- | --- |',
+        '| final | code | passed | 2026-07-15 | reviews/gone.md |',
+      ]);
+      expect(subsectionDangling.status).toBe(1);
+      expect(subsectionDangling.stderr).toContain(
+        'scope=final type=code artifact=reviews/gone.md',
+      );
+
+      // A table inside `## Reviews` that is not the ledger — the
+      // `### Artifact Review` iteration table that ships in
+      // `.oat/projects/archived/config-bug/plan.md` — is recognized by its
+      // header and skipped, instead of having its rows read as events.
+      const nonLedgerTable = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '### Artifact Review',
+        '',
+        '| Iteration | Reviewer | Outcome | Action |',
+        '| --- | --- | --- | --- |',
+        '| 1 | codex | fixes | applied |',
+      ]);
+      expect(nonLedgerTable.stderr).toBe('');
+      expect(nonLedgerTable.status).toBe(0);
+
+      // The ledger signature is `Scope` + `Type`, not `Scope` alone: a notes
+      // table whose first column happens to be `Scope` is not the ledger.
+      const scopeShapedTable = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '### Scope notes',
+        '',
+        '| Scope | Notes |',
+        '| --- | --- |',
+        '| p01 | rebased onto main |',
+      ]);
+      expect(scopeShapedTable.stderr).toBe('');
+      expect(scopeShapedTable.status).toBe(0);
+
+      // Each table establishes its own artifact column rather than inheriting
+      // the previous one's index.
+      const reorderedColumns = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '| Scope | Type | Artifact | Status | Date |',
+        '| --- | --- | --- | --- | --- |',
+        '| p02 | code | reviews/gone.md | passed | 2026-07-15 |',
+      ]);
+      expect(reorderedColumns.status).toBe(1);
+      expect(reorderedColumns.stderr).toContain(
+        'scope=p02 type=code artifact=reviews/gone.md',
+      );
+
+      // A fence is closed only by a matching marker at least as long as its
+      // opener, and tilde fences count. Toggling on any ``` prefix left the
+      // scanner inside a fence after a nested example and hid every real row
+      // that followed it.
+      const nestedFence = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '````text',
+        '```',
+        '| example | code | passed | 2026-07-15 | never-validated.md |',
+        '````',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        '| --- | --- | --- | --- | --- |',
+        '| final | code | passed | 2026-07-15 | reviews/gone.md |',
+      ]);
+      expect(nestedFence.status).toBe(1);
+      expect(nestedFence.stderr).toContain(
+        'scope=final type=code artifact=reviews/gone.md',
+      );
+      expect(nestedFence.stderr).not.toContain('never-validated.md');
+
+      const tildeFence = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '~~~text',
+        '| final | code | passed | 2026-07-15 | reviews/gone.md |',
+        '~~~',
+      ]);
+      expect(tildeFence.stderr).toBe('');
+      expect(tildeFence.status).toBe(0);
+
+      // A row whose Type is `artifact` is an event, not a header: keying
+      // header detection on any `artifact` cell skipped it and mis-set the
+      // artifact column for every row after it.
+      const artifactTypeRow = runGuard([
+        '| plan | artifact | passed | 2026-07-16 | reviews/gone.md |',
+      ]);
+      expect(artifactTypeRow.status).toBe(1);
+      expect(artifactTypeRow.stderr).toContain(
+        'scope=plan type=artifact artifact=reviews/gone.md',
+      );
+
+      // `reviews/archived/` exists in this fixture, so a file missing from it
+      // is an interrupted archive, not a fresh checkout: it stops. The
+      // never-materialized shape is covered below, after the tree is removed.
+      const missingFromArchive = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/archived/never-materialized.md |',
+      ]);
+      expect(missingFromArchive.status).toBe(1);
+      expect(missingFromArchive.stderr).toContain(
+        'artifact file does not exist',
+      );
+      expect(missingFromArchive.stdout).toBe('');
+
+      // That acceptance never reaches a tracked location (`dangling` above),
+      // and an ignored path that escapes is still rejected by containment.
+      const ignoredEscape = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/archived/../../../../outside.md |',
+      ]);
+      expect(ignoredEscape.status).toBe(1);
+      expect(ignoredEscape.stderr).toContain(
+        'artifact resolves outside the project',
+      );
+
+      // The lexical fallback below may only answer "contained?" and
+      // "ignored?": collapsing `..` onto a file that happens to exist would
+      // validate a different path than the one the PR body publishes.
+      const cancelledMissingDirectory = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/.missing/../p01-code.md |',
+      ]);
+      expect(cancelledMissingDirectory.status).toBe(1);
+      expect(cancelledMissingDirectory.stderr).toContain(
+        'artifact file does not exist',
+      );
+
+      const nonDirectoryComponent = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/p01-code.md/../p01-code.md |',
+      ]);
+      expect(nonDirectoryComponent.status).toBe(1);
+      expect(nonDirectoryComponent.stderr).toContain(
+        'artifact file does not exist',
+      );
+
+      // Archive acceptance must not inherit the lexical fallback's blind spot:
+      // if `reviews/archived` is a symlink out of the project and the artifact
+      // names a missing directory under it, physical resolution fails and the
+      // lexical path looks contained. The deepest existing ancestor decides.
+      rmSync(join(repository, projectPath, 'reviews/archived'), {
+        recursive: true,
+        force: true,
+      });
+      execFileSync(
+        '/bin/bash',
+        [
+          '-c',
+          [
+            'set -eu',
+            'mkdir -p outside-archive',
+            `ln -s "$PWD/outside-archive" ${JSON.stringify(projectPath)}/reviews/archived`,
+          ].join('\n'),
+        ],
+        { cwd: repository, encoding: 'utf8', env },
+      );
+      const escapingArchive = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/archived/missing/x.md |',
+      ]);
+      expect(escapingArchive.status).toBe(1);
+      expect(escapingArchive.stderr).toContain(
+        'artifact resolves outside the project',
+      );
+      execFileSync(
+        '/bin/bash',
+        [
+          '-c',
+          `set -eu\nrm ${JSON.stringify(projectPath)}/reviews/archived\nmkdir -p ${JSON.stringify(projectPath)}/reviews/archived`,
+        ],
+        { cwd: repository, encoding: 'utf8', env },
+      );
+
+      // An entire `reviews/` tree that was never materialized still classifies
+      // row by row instead of failing to resolve.
+      rmSync(join(repository, projectPath, 'reviews'), {
+        recursive: true,
+        force: true,
+      });
+      const unmaterialized = runGuard([
+        '| plan | artifact | passed | 2026-07-16 | reviews/archived/artifact-plan-review.md |',
+      ]);
+      expect(unmaterialized.stderr).toBe('');
+      expect(unmaterialized.status).toBe(0);
+      expect(unmaterialized.stdout).toContain(
+        'reviews/archived/ was never materialized in this checkout',
+      );
+      const unmaterializedTracked = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/final-code.md |',
+      ]);
+      expect(unmaterializedTracked.status).toBe(1);
+      expect(unmaterializedTracked.stderr).toContain(
+        'artifact file does not exist',
+      );
+
+      // Fail closed rather than reporting a clean ledger when it cannot be
+      // read. This is behavioral, not wording: the clause stops before any
+      // parsing, so no row is evaluated and awk is never reached.
+      rmSync(join(repository, projectPath, 'plan.md'));
+      const unreadable = spawnSync(
+        '/bin/bash',
+        [
+          '-c',
+          `set -eu\nPROJECT_PATH=${JSON.stringify(projectPath)}\n${guard}`,
+        ],
+        { cwd: repository, encoding: 'utf8', env },
+      );
+      expect(unreadable.status).toBe(1);
+      expect(unreadable.stderr).toContain(
+        'PRFINAL-05: cannot read the review ledger',
+      );
+      expect(unreadable.stderr).not.toContain('cannot parse the review ledger');
+      expect(unreadable.stderr).not.toContain('awk:');
+      expect(unreadable.stderr).not.toContain(
+        'unresolved review-ledger artifact',
+      );
+      expect(unreadable.stdout).toBe('');
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it('validates absent review-ledger paths in every project scope', () => {
+    const prFinal = readRepoFile(
+      '.agents/skills/oat-project-pr-final/SKILL.md',
+    );
+    const guard = extractLedgerPathGuard(prFinal);
+    const { workspace, repository, env } =
+      createScaffoldWorkspace(builtCliEntry());
+
+    try {
+      // `.gitignore` ignores `local`, `synced`, and `archived` projects in
+      // their entirety, so "git ignores this path" excuses every absent
+      // artifact there. Only `shared` is a tracked location, which is why a
+      // shared-only fixture cannot see the difference.
+      const setup = [
+        'set -eu',
+        'git init -q .',
+        'git config user.email pr-final@example.invalid',
+        'git config user.name "PR Final Control"',
+        "printf '# scratch\\n' > README.md",
+        writeIgnoreRulesCommand(),
+        'git add -A',
+        'git commit -q -m init',
+        // A `synced` project requires a pushable origin remote, and the CLI
+        // pushes from a context where a relative remote path does not resolve.
+        'ORIGIN_REMOTE="$(cd .. && pwd -P)/origin.git"',
+        'git init -q --bare "$ORIGIN_REMOTE"',
+        'git remote add origin "$ORIGIN_REMOTE"',
+        ...['shared', 'local', 'synced'].flatMap((scope) => [
+          `oat config set projects.defaultScope ${scope} --shared > /dev/null`,
+          `oat project new "guard-${scope}" --mode quick --json > /dev/null`,
+          // No `reviews/archived` directory: the fresh-checkout shape.
+          'mkdir -p "$(oat config get activeProject)/reviews"',
+          `printf '%s\\n' "$(oat config get activeProject)"`,
+        ]),
+      ].join('\n');
+      const projectPaths = execFileSync('/bin/bash', ['-c', setup], {
+        cwd: repository,
+        encoding: 'utf8',
+        env,
+      })
+        .trim()
+        .split('\n')
+        .slice(-3);
+      expect(projectPaths).toEqual([
+        '.oat/projects/shared/guard-shared',
+        '.oat/projects/local/guard-local',
+        '.oat/projects/synced/guard-synced',
+      ]);
+
+      const runGuard = (
+        projectPath: string,
+        artifact: string,
+      ): ReturnType<typeof spawnSync> => {
+        writeFileSync(
+          join(repository, projectPath, 'plan.md'),
+          [
+            '# Plan',
+            '',
+            '## Reviews',
+            '',
+            '| Scope | Type | Status | Date | Artifact |',
+            '| --- | --- | --- | --- | --- |',
+            `| final | code | passed | 2026-07-15 | ${artifact} |`,
+            '',
+            '## Tasks',
+            '',
+          ].join('\n'),
+          'utf8',
+        );
+        return spawnSync(
+          '/bin/bash',
+          [
+            '-c',
+            `set -eu\nPROJECT_PATH=${JSON.stringify(projectPath)}\n${guard}`,
+          ],
+          { cwd: repository, encoding: 'utf8', env },
+        );
+      };
+
+      for (const projectPath of projectPaths) {
+        // `reviews/archived/` does not exist here at all — a fresh clone, a
+        // remote workspace, or a lane worktree — so an absent path inside it
+        // is local-only and accepted.
+        const neverMaterialized = runGuard(
+          projectPath,
+          'reviews/archived/never-materialized.md',
+        );
+        expect(neverMaterialized.stderr, projectPath).toBe('');
+        expect(neverMaterialized.status, projectPath).toBe(0);
+        expect(neverMaterialized.stdout, projectPath).toContain(
+          'reviews/archived/ was never materialized in this checkout',
+        );
+
+        // Once the archive directory exists, a file missing from it is a
+        // dangling row — an archive interrupted between the reference rewrite
+        // and the move — and stops like any other absent path.
+        mkdirSync(join(repository, projectPath, 'reviews/archived'), {
+          recursive: true,
+        });
+        const missingFromArchive = runGuard(
+          projectPath,
+          'reviews/archived/never-materialized.md',
+        );
+        expect(missingFromArchive.status, projectPath).toBe(1);
+        expect(missingFromArchive.stderr, projectPath).toContain(
+          'artifact=reviews/archived/never-materialized.md',
+        );
+        expect(missingFromArchive.stderr, projectPath).toContain(
+          'artifact file does not exist',
+        );
+
+        // The same path resolves once the artifact is actually there.
+        writeFileSync(
+          join(
+            repository,
+            projectPath,
+            'reviews/archived/never-materialized.md',
+          ),
+          'archived\n',
+          'utf8',
+        );
+        const presentInArchive = runGuard(
+          projectPath,
+          'reviews/archived/never-materialized.md',
+        );
+        expect(presentInArchive.stderr, projectPath).toBe('');
+        expect(presentInArchive.status, projectPath).toBe(0);
+
+        // The regression this plan exists to stop: Step 0.5 archived the file
+        // and left the row on the old top-level path.
+        const dangling = runGuard(projectPath, 'reviews/final-code.md');
+        expect(dangling.status, projectPath).toBe(1);
+        expect(dangling.stderr, projectPath).toContain(
+          'artifact file does not exist',
+        );
+
+        // Free prose in the Artifact cell is not a path.
+        const prose = runGuard(projectPath, 'in-memory');
+        expect(prose.status, projectPath).toBe(1);
+        expect(prose.stderr, projectPath).toContain(
+          'artifact file does not exist',
+        );
+      }
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it('identifies the review-ledger table or stops rather than validating nothing', () => {
+    const prFinal = readRepoFile(
+      '.agents/skills/oat-project-pr-final/SKILL.md',
+    );
+    const guard = extractLedgerPathGuard(prFinal);
+    const { workspace, repository, env } =
+      createScaffoldWorkspace(builtCliEntry());
+
+    try {
+      const setup = [
+        'set -eu',
+        'git init -q .',
+        'git config user.email pr-final@example.invalid',
+        'git config user.name "PR Final Control"',
+        "printf '# scratch\\n' > README.md",
+        writeIgnoreRulesCommand(),
+        'git add -A',
+        'git commit -q -m init',
+        'oat config set projects.defaultScope shared --shared > /dev/null',
+        'oat project new "ledger-header" --mode quick --json > /dev/null',
+        'PROJECT_PATH=$(oat config get activeProject)',
+        'mkdir -p "$PROJECT_PATH/reviews/archived"',
+        `printf 'active\\n' > "$PROJECT_PATH/reviews/p01-code.md"`,
+        // A file whose name would be produced by stripping a trailing `_`.
+        `printf 'literal\\n' > "$PROJECT_PATH/reviews/AGENTS.md"`,
+        `printf '%s\\n' "$PROJECT_PATH"`,
+      ].join('\n');
+      const projectPath = execFileSync('/bin/bash', ['-c', setup], {
+        cwd: repository,
+        encoding: 'utf8',
+        env,
+      })
+        .trim()
+        .split('\n')
+        .at(-1)!;
+
+      const runGuard = (lines: readonly string[]) => {
+        writeFileSync(
+          join(repository, projectPath, 'plan.md'),
+          ['# Plan', '', ...lines, '', '## Tasks', ''].join('\n'),
+          'utf8',
+        );
+        return spawnSync(
+          '/bin/bash',
+          [
+            '-c',
+            `set -eu\nPROJECT_PATH=${JSON.stringify(projectPath)}\n${guard}`,
+          ],
+          { cwd: repository, encoding: 'utf8', env },
+        );
+      };
+      const separator = '| --- | --- | --- | --- | --- |';
+      const dangling =
+        '| final | code | passed | 2026-07-15 | reviews/gone.md |';
+
+      // Emphasis in a header cell is ordinary Markdown authoring, so the
+      // ledger is still recognized and its rows are still validated.
+      for (const header of [
+        '| **Scope** | **Type** | **Status** | **Date** | **Artifact** |',
+        '| `Scope` | `Type` | `Status` | `Date` | `Artifact` |',
+      ]) {
+        const emphasised = runGuard([
+          '## Reviews',
+          '',
+          header,
+          separator,
+          dangling,
+        ]);
+        expect(emphasised.status, header).toBe(1);
+        expect(emphasised.stderr, header).toContain('artifact=reviews/gone.md');
+      }
+
+      // Column order comes from the header, not from a fixed position.
+      const reordered = runGuard([
+        '## Reviews',
+        '',
+        '| Artifact | Scope | Type | Status | Date |',
+        separator,
+        '| reviews/gone.md | final | code | passed | 2026-07-15 |',
+      ]);
+      expect(reordered.status).toBe(1);
+      expect(reordered.stderr).toContain(
+        'scope=final type=code artifact=reviews/gone.md',
+      );
+
+      // A section with table rows but no recognizable ledger header must stop:
+      // validating zero rows and exiting 0 is the silent full skip.
+      const noHeader = runGuard(['## Reviews', '', separator, dangling]);
+      expect(noHeader.status).toBe(1);
+      expect(noHeader.stderr).toContain(
+        'PRFINAL-05: unrecognized review-ledger header',
+      );
+
+      const renamedHeader = runGuard([
+        '## Reviews',
+        '',
+        '| Phase | Kind | Status | Date | Artifact |',
+        separator,
+        dangling,
+      ]);
+      expect(renamedHeader.status).toBe(1);
+      expect(renamedHeader.stderr).toContain(
+        'PRFINAL-05: unrecognized review-ledger header',
+      );
+
+      // A fence that never closes must not swallow the ledger.
+      const unclosedFence = runGuard([
+        '```text',
+        'an example that forgets its closing fence',
+        '',
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+        dangling,
+      ]);
+      expect(unclosedFence.status).toBe(1);
+      expect(unclosedFence.stderr).toContain(
+        'PRFINAL-05: unclosed fenced block',
+      );
+
+      // A legitimately empty ledger and a section with no table at all still
+      // pass, so the backstop is not a blanket stop.
+      const emptyLedger = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+      ]);
+      expect(emptyLedger.stderr).toBe('');
+      expect(emptyLedger.status).toBe(0);
+
+      const noTable = runGuard(['## Reviews', '', 'No reviews recorded yet.']);
+      expect(noTable.stderr).toBe('');
+      expect(noTable.status).toBe(0);
+
+      // A non-ledger table alongside a recognized ledger is still skipped.
+      const mixedTables = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '### Artifact Review',
+        '',
+        '| Iteration | Reviewer | Outcome | Action |',
+        '| --- | --- | --- | --- |',
+        '| 1 | codex | fixes | applied |',
+      ]);
+      expect(mixedTables.stderr).toBe('');
+      expect(mixedTables.status).toBe(0);
+
+      // A code-span around an artifact path is authoring, not part of the name.
+      const backtickedCell = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+        '| p01 | code | passed | 2026-07-16 | `reviews/p01-code.md` |',
+      ]);
+      expect(backtickedCell.stderr).toBe('');
+      expect(backtickedCell.status).toBe(0);
+
+      // Only balanced wrappers come off. Stripping every leading and trailing
+      // `_`/`*`/backtick turned `reviews/AGENTS.md_` into a different file
+      // that happens to exist.
+      const literalTrailingUnderscore = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+        '| p01 | code | passed | 2026-07-16 | `reviews/AGENTS.md_` |',
+      ]);
+      expect(literalTrailingUnderscore.status).toBe(1);
+      expect(literalTrailingUnderscore.stderr).toContain(
+        'artifact=reviews/AGENTS.md_',
+      );
+
+      // A header may legally omit its trailing pipe.
+      const noTrailingPipe = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact',
+        separator,
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+      ]);
+      expect(noTrailingPipe.stderr).toBe('');
+      expect(noTrailingPipe.status).toBe(0);
+
+      // A second, ledger-shaped table with no Artifact column cannot have its
+      // rows validated, so it stops instead of being silently dropped because
+      // an earlier table was recognized.
+      const malformedSecondLedger = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '| Scope | Type | Status | Date | File |',
+        separator,
+        dangling,
+      ]);
+      expect(malformedSecondLedger.status).toBe(1);
+      expect(malformedSecondLedger.stderr).toContain(
+        'PRFINAL-05: review-ledger table has no Artifact column',
+      );
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
   });
 
   it('syncs the open PR description after archive so blob links keep resolving', () => {
