@@ -143,6 +143,33 @@ function extractLedgerPathGuard(content: string): string {
   return block[1];
 }
 
+/**
+ * The repository's own `.oat` ignore rules. `local`, `synced`, and `archived`
+ * projects are ignored in their entirety, not just their `reviews/archived/`
+ * directories, so a fixture that reproduces only the archive rule cannot see
+ * how the guard behaves in three of the four scopes.
+ */
+function oatIgnoreRules(): string[] {
+  const rules = readRepoFile('.gitignore')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^!?\.oat\//.test(line));
+  if (!rules.includes('.oat/projects/local/**')) {
+    throw new Error(
+      'Missing OAT project ignore rules in the repository .gitignore.',
+    );
+  }
+  return rules;
+}
+
+/** `printf '%s\n' 'rule' 'rule' … > .gitignore`, one shell-quoted rule each. */
+function writeIgnoreRulesCommand(): string {
+  const quoted = oatIgnoreRules()
+    .map((rule) => `'${rule.replaceAll("'", `'\\''`)}'`)
+    .join(' ');
+  return `printf '%s\\n' ${quoted} > .gitignore`;
+}
+
 function builtCliEntry(): string {
   const entry = repoFilePath('packages/cli/dist/index.js');
   if (!existsSync(entry)) {
@@ -2309,9 +2336,10 @@ printf 'artifact-read\\n'`,
         'git config user.email pr-final@example.invalid',
         'git config user.name "PR Final Control"',
         "printf '# scratch\\n' > README.md",
-        // The repository's own `.gitignore:85` rule, so `git check-ignore`
-        // classifies archived review artifacts exactly as it does in-repo.
-        "printf '.oat/**/reviews/archived/\\n' > .gitignore",
+        // The repository's own `.oat` ignore rules, read from its `.gitignore`
+        // at test time. A hand-written subset hid the fact that `local`,
+        // `synced`, and `archived` projects are ignored in their entirety.
+        writeIgnoreRulesCommand(),
         'git add -A',
         'git commit -q -m init',
         'oat config set projects.defaultScope shared --shared > /dev/null',
@@ -2623,7 +2651,7 @@ printf 'artifact-read\\n'`,
       expect(localOnly.stderr).toBe('');
       expect(localOnly.status).toBe(0);
       expect(localOnly.stdout).toContain(
-        'local-only review artifact, gitignored and absent from this checkout',
+        'local-only review artifact, absent from this checkout',
       );
 
       // That acceptance never reaches a tracked location (`dangling` above),
@@ -2653,6 +2681,42 @@ printf 'artifact-read\\n'`,
       expect(nonDirectoryComponent.status).toBe(1);
       expect(nonDirectoryComponent.stderr).toContain(
         'artifact file does not exist',
+      );
+
+      // Archive acceptance must not inherit the lexical fallback's blind spot:
+      // if `reviews/archived` is a symlink out of the project and the artifact
+      // names a missing directory under it, physical resolution fails and the
+      // lexical path looks contained. The deepest existing ancestor decides.
+      rmSync(join(repository, projectPath, 'reviews/archived'), {
+        recursive: true,
+        force: true,
+      });
+      execFileSync(
+        '/bin/bash',
+        [
+          '-c',
+          [
+            'set -eu',
+            'mkdir -p outside-archive',
+            `ln -s "$PWD/outside-archive" ${JSON.stringify(projectPath)}/reviews/archived`,
+          ].join('\n'),
+        ],
+        { cwd: repository, encoding: 'utf8', env },
+      );
+      const escapingArchive = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/archived/missing/x.md |',
+      ]);
+      expect(escapingArchive.status).toBe(1);
+      expect(escapingArchive.stderr).toContain(
+        'artifact resolves outside the project',
+      );
+      execFileSync(
+        '/bin/bash',
+        [
+          '-c',
+          `set -eu\nrm ${JSON.stringify(projectPath)}/reviews/archived\nmkdir -p ${JSON.stringify(projectPath)}/reviews/archived`,
+        ],
+        { cwd: repository, encoding: 'utf8', env },
       );
 
       // An entire `reviews/` tree that was never materialized still classifies
@@ -2696,6 +2760,326 @@ printf 'artifact-read\\n'`,
         'unresolved review-ledger artifact',
       );
       expect(unreadable.stdout).toBe('');
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it('validates absent review-ledger paths in every project scope', () => {
+    const prFinal = readRepoFile(
+      '.agents/skills/oat-project-pr-final/SKILL.md',
+    );
+    const guard = extractLedgerPathGuard(prFinal);
+    const { workspace, repository, env } =
+      createScaffoldWorkspace(builtCliEntry());
+
+    try {
+      // `.gitignore` ignores `local`, `synced`, and `archived` projects in
+      // their entirety, so "git ignores this path" excuses every absent
+      // artifact there. Only `shared` is a tracked location, which is why a
+      // shared-only fixture cannot see the difference.
+      const setup = [
+        'set -eu',
+        'git init -q .',
+        'git config user.email pr-final@example.invalid',
+        'git config user.name "PR Final Control"',
+        "printf '# scratch\\n' > README.md",
+        writeIgnoreRulesCommand(),
+        'git add -A',
+        'git commit -q -m init',
+        // A `synced` project requires a pushable origin remote, and the CLI
+        // pushes from a context where a relative remote path does not resolve.
+        'ORIGIN_REMOTE="$(cd .. && pwd -P)/origin.git"',
+        'git init -q --bare "$ORIGIN_REMOTE"',
+        'git remote add origin "$ORIGIN_REMOTE"',
+        ...['shared', 'local', 'synced'].flatMap((scope) => [
+          `oat config set projects.defaultScope ${scope} --shared > /dev/null`,
+          `oat project new "guard-${scope}" --mode quick --json > /dev/null`,
+          'mkdir -p "$(oat config get activeProject)/reviews/archived"',
+          `printf '%s\\n' "$(oat config get activeProject)"`,
+        ]),
+      ].join('\n');
+      const projectPaths = execFileSync('/bin/bash', ['-c', setup], {
+        cwd: repository,
+        encoding: 'utf8',
+        env,
+      })
+        .trim()
+        .split('\n')
+        .slice(-3);
+      expect(projectPaths).toEqual([
+        '.oat/projects/shared/guard-shared',
+        '.oat/projects/local/guard-local',
+        '.oat/projects/synced/guard-synced',
+      ]);
+
+      const runGuard = (
+        projectPath: string,
+        artifact: string,
+      ): ReturnType<typeof spawnSync> => {
+        writeFileSync(
+          join(repository, projectPath, 'plan.md'),
+          [
+            '# Plan',
+            '',
+            '## Reviews',
+            '',
+            '| Scope | Type | Status | Date | Artifact |',
+            '| --- | --- | --- | --- | --- |',
+            `| final | code | passed | 2026-07-15 | ${artifact} |`,
+            '',
+            '## Tasks',
+            '',
+          ].join('\n'),
+          'utf8',
+        );
+        return spawnSync(
+          '/bin/bash',
+          [
+            '-c',
+            `set -eu\nPROJECT_PATH=${JSON.stringify(projectPath)}\n${guard}`,
+          ],
+          { cwd: repository, encoding: 'utf8', env },
+        );
+      };
+
+      for (const projectPath of projectPaths) {
+        // Absent inside the archive location: local-only, accepted.
+        const archived = runGuard(
+          projectPath,
+          'reviews/archived/never-materialized.md',
+        );
+        expect(archived.stderr, projectPath).toBe('');
+        expect(archived.status, projectPath).toBe(0);
+
+        // The regression this plan exists to stop: Step 0.5 archived the file
+        // and left the row on the old top-level path.
+        const dangling = runGuard(projectPath, 'reviews/final-code.md');
+        expect(dangling.status, projectPath).toBe(1);
+        expect(dangling.stderr, projectPath).toContain(
+          'artifact file does not exist',
+        );
+
+        // Free prose in the Artifact cell is not a path.
+        const prose = runGuard(projectPath, 'in-memory');
+        expect(prose.status, projectPath).toBe(1);
+        expect(prose.stderr, projectPath).toContain(
+          'artifact file does not exist',
+        );
+      }
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+
+  it('identifies the review-ledger table or stops rather than validating nothing', () => {
+    const prFinal = readRepoFile(
+      '.agents/skills/oat-project-pr-final/SKILL.md',
+    );
+    const guard = extractLedgerPathGuard(prFinal);
+    const { workspace, repository, env } =
+      createScaffoldWorkspace(builtCliEntry());
+
+    try {
+      const setup = [
+        'set -eu',
+        'git init -q .',
+        'git config user.email pr-final@example.invalid',
+        'git config user.name "PR Final Control"',
+        "printf '# scratch\\n' > README.md",
+        writeIgnoreRulesCommand(),
+        'git add -A',
+        'git commit -q -m init',
+        'oat config set projects.defaultScope shared --shared > /dev/null',
+        'oat project new "ledger-header" --mode quick --json > /dev/null',
+        'PROJECT_PATH=$(oat config get activeProject)',
+        'mkdir -p "$PROJECT_PATH/reviews/archived"',
+        `printf 'active\\n' > "$PROJECT_PATH/reviews/p01-code.md"`,
+        // A file whose name would be produced by stripping a trailing `_`.
+        `printf 'literal\\n' > "$PROJECT_PATH/reviews/AGENTS.md"`,
+        `printf '%s\\n' "$PROJECT_PATH"`,
+      ].join('\n');
+      const projectPath = execFileSync('/bin/bash', ['-c', setup], {
+        cwd: repository,
+        encoding: 'utf8',
+        env,
+      })
+        .trim()
+        .split('\n')
+        .at(-1)!;
+
+      const runGuard = (lines: readonly string[]) => {
+        writeFileSync(
+          join(repository, projectPath, 'plan.md'),
+          ['# Plan', '', ...lines, '', '## Tasks', ''].join('\n'),
+          'utf8',
+        );
+        return spawnSync(
+          '/bin/bash',
+          [
+            '-c',
+            `set -eu\nPROJECT_PATH=${JSON.stringify(projectPath)}\n${guard}`,
+          ],
+          { cwd: repository, encoding: 'utf8', env },
+        );
+      };
+      const separator = '| --- | --- | --- | --- | --- |';
+      const dangling =
+        '| final | code | passed | 2026-07-15 | reviews/gone.md |';
+
+      // Emphasis in a header cell is ordinary Markdown authoring, so the
+      // ledger is still recognized and its rows are still validated.
+      for (const header of [
+        '| **Scope** | **Type** | **Status** | **Date** | **Artifact** |',
+        '| `Scope` | `Type` | `Status` | `Date` | `Artifact` |',
+      ]) {
+        const emphasised = runGuard([
+          '## Reviews',
+          '',
+          header,
+          separator,
+          dangling,
+        ]);
+        expect(emphasised.status, header).toBe(1);
+        expect(emphasised.stderr, header).toContain('artifact=reviews/gone.md');
+      }
+
+      // Column order comes from the header, not from a fixed position.
+      const reordered = runGuard([
+        '## Reviews',
+        '',
+        '| Artifact | Scope | Type | Status | Date |',
+        separator,
+        '| reviews/gone.md | final | code | passed | 2026-07-15 |',
+      ]);
+      expect(reordered.status).toBe(1);
+      expect(reordered.stderr).toContain(
+        'scope=final type=code artifact=reviews/gone.md',
+      );
+
+      // A section with table rows but no recognizable ledger header must stop:
+      // validating zero rows and exiting 0 is the silent full skip.
+      const noHeader = runGuard(['## Reviews', '', separator, dangling]);
+      expect(noHeader.status).toBe(1);
+      expect(noHeader.stderr).toContain(
+        'PRFINAL-05: unrecognized review-ledger header',
+      );
+
+      const renamedHeader = runGuard([
+        '## Reviews',
+        '',
+        '| Phase | Kind | Status | Date | Artifact |',
+        separator,
+        dangling,
+      ]);
+      expect(renamedHeader.status).toBe(1);
+      expect(renamedHeader.stderr).toContain(
+        'PRFINAL-05: unrecognized review-ledger header',
+      );
+
+      // A fence that never closes must not swallow the ledger.
+      const unclosedFence = runGuard([
+        '```text',
+        'an example that forgets its closing fence',
+        '',
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+        dangling,
+      ]);
+      expect(unclosedFence.status).toBe(1);
+      expect(unclosedFence.stderr).toContain(
+        'PRFINAL-05: unclosed fenced block',
+      );
+
+      // A legitimately empty ledger and a section with no table at all still
+      // pass, so the backstop is not a blanket stop.
+      const emptyLedger = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+      ]);
+      expect(emptyLedger.stderr).toBe('');
+      expect(emptyLedger.status).toBe(0);
+
+      const noTable = runGuard(['## Reviews', '', 'No reviews recorded yet.']);
+      expect(noTable.stderr).toBe('');
+      expect(noTable.status).toBe(0);
+
+      // A non-ledger table alongside a recognized ledger is still skipped.
+      const mixedTables = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '### Artifact Review',
+        '',
+        '| Iteration | Reviewer | Outcome | Action |',
+        '| --- | --- | --- | --- |',
+        '| 1 | codex | fixes | applied |',
+      ]);
+      expect(mixedTables.stderr).toBe('');
+      expect(mixedTables.status).toBe(0);
+
+      // A code-span around an artifact path is authoring, not part of the name.
+      const backtickedCell = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+        '| p01 | code | passed | 2026-07-16 | `reviews/p01-code.md` |',
+      ]);
+      expect(backtickedCell.stderr).toBe('');
+      expect(backtickedCell.status).toBe(0);
+
+      // Only balanced wrappers come off. Stripping every leading and trailing
+      // `_`/`*`/backtick turned `reviews/AGENTS.md_` into a different file
+      // that happens to exist.
+      const literalTrailingUnderscore = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+        '| p01 | code | passed | 2026-07-16 | `reviews/AGENTS.md_` |',
+      ]);
+      expect(literalTrailingUnderscore.status).toBe(1);
+      expect(literalTrailingUnderscore.stderr).toContain(
+        'artifact=reviews/AGENTS.md_',
+      );
+
+      // A header may legally omit its trailing pipe.
+      const noTrailingPipe = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact',
+        separator,
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+      ]);
+      expect(noTrailingPipe.stderr).toBe('');
+      expect(noTrailingPipe.status).toBe(0);
+
+      // A second, ledger-shaped table with no Artifact column cannot have its
+      // rows validated, so it stops instead of being silently dropped because
+      // an earlier table was recognized.
+      const malformedSecondLedger = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '| Scope | Type | Status | Date | File |',
+        separator,
+        dangling,
+      ]);
+      expect(malformedSecondLedger.status).toBe(1);
+      expect(malformedSecondLedger.stderr).toContain(
+        'PRFINAL-05: review-ledger table has no Artifact column',
+      );
     } finally {
       rmSync(workspace, { recursive: true, force: true });
     }

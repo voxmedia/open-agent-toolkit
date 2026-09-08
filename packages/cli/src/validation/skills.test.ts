@@ -4619,7 +4619,7 @@ describe('validateOatSkills', () => {
     expect(prFinal).toContain(
       "Parse each row's Artifact cell rather than grepping the section as free text",
     );
-    expect(guardBlock).toContain('tolower($i) == "artifact"');
+    expect(guardBlock).toContain('header_cell == "artifact"');
     expect(guardBlock).toContain(
       'LEDGER_PROJECT_ROOT=$(cd -P "$PROJECT_PATH" 2>/dev/null && pwd -P)',
     );
@@ -4679,29 +4679,53 @@ describe('validateOatSkills', () => {
     expect(guardBlock).toContain('close_length >= fence_length');
     // Header detection keys on the Scope column: a row whose Type is
     // `artifact` is an event, not a header.
-    expect(guardBlock).toContain(
-      'in_ledger_table = (tolower($2) == "scope" && tolower($3) == "type")',
-    );
-    // Each header re-establishes its own artifact column, and only a table
-    // whose header carries the ledger signature contributes events.
+    // Each header re-establishes its own columns, and only a table whose
+    // header carries the ledger signature contributes events.
     expect(guardBlock).toContain('artifact_column = 0');
     expect(guardBlock).toContain('!in_ledger_table { next }');
     // A lexically normalized path never stands in for an existing file.
     expect(guardBlock).toContain('ROW_MATERIALIZED=0');
     expect(guardBlock).toContain('elif [ "$ROW_MATERIALIZED" -eq 0 ]; then');
-    // Processed review artifacts are gitignored, so a path git ignores that is
-    // absent from this checkout is local-only rather than dangling, while a
-    // tracked location must exist.
+    // Local-only acceptance is scoped to the archive location, never to git's
+    // opinion about the tree: `.gitignore` ignores `local`, `synced`, and
+    // `archived` projects entirely, so ignore state cannot decide this.
+    expect(guardBlock).not.toContain('git check-ignore');
     expect(guardBlock).toContain(
-      'if git check-ignore -q -- "$ROW_RESOLVED" 2>/dev/null; then',
+      '"$LEDGER_PROJECT_ROOT"/reviews/archived/*) ROW_ARCHIVED_ONLY=1 ;;',
     );
     expect(guardBlock).toContain(
-      'local-only review artifact, gitignored and absent from this checkout',
+      'local-only review artifact, absent from this checkout',
     );
     // Containment is decided before that acceptance.
     expect(
       guardBlock.indexOf('artifact resolves outside the project'),
-    ).toBeLessThan(guardBlock.indexOf('git check-ignore'));
+    ).toBeLessThan(guardBlock.indexOf('ROW_ARCHIVED_ONLY=1 ;;'));
+    // The ledger table is recognized by its header, emphasis stripped, with
+    // every column derived from it; a section with rows but no recognizable
+    // ledger header, or an unclosed fence, stops instead of validating nothing.
+    expect(guardBlock).toContain('gsub(/[*_`]/, "", header_cell)');
+    expect(guardBlock).toContain(
+      'in_ledger_table = (scope_column > 0 && type_column > 0 && artifact_column > 0)',
+    );
+    expect(guardBlock).toContain(
+      'PRFINAL-05: unrecognized review-ledger header',
+    );
+    expect(guardBlock).toContain('PRFINAL-05: unclosed fenced block');
+    expect(guardBlock).toContain('if (saw_table && !recognized_ledger)');
+    // A ledger-shaped table with no Artifact column stops on its own terms,
+    // rather than being excused because an earlier table was recognized.
+    expect(guardBlock).toContain(
+      'PRFINAL-05: review-ledger table has no Artifact column',
+    );
+    // A header may omit its trailing pipe.
+    expect(guardBlock).toContain('last_cell = ($NF == "") ? NF - 1 : NF');
+    // Only balanced Markdown wrappers come off an artifact cell.
+    expect(guardBlock).toContain('while (unwrapping)');
+    // An unresolved path is contained only if its deepest existing directory
+    // resolves physically inside the project.
+    expect(guardBlock).toContain(
+      'ROW_ANCESTOR_REAL=$(cd -P "$ROW_ANCESTOR" 2>/dev/null && pwd -P)',
+    );
 
     // The gate code is registered rather than invented.
     const contract = await readRepoFile('.agents/docs/autonomy-contract.md');
