@@ -149,4 +149,103 @@ oat_template: false
       boundaryTier: 3,
     });
   });
+  it('reports quick plan readiness for plan.md only', async () => {
+    const projectDir = await createProjectDir();
+
+    await Promise.all([
+      writeFile(
+        join(projectDir, 'plan.md'),
+        `---
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_template: false
+---
+
+# Plan: demo
+
+## Phase 1: Foundation
+
+### Task p01-t01: Add the readiness predicate
+
+## Reviews
+
+| Scope | Type     | Status | Date       | Artifact |
+| ----- | -------- | ------ | ---------- | -------- |
+| plan  | artifact | passed | 2026-09-07 | -        |
+`,
+        'utf8',
+      ),
+      writeFile(
+        join(projectDir, 'design.md'),
+        `---
+oat_status: complete
+oat_template: false
+---
+# Design
+`,
+        'utf8',
+      ),
+    ]);
+
+    const artifacts = await scanArtifacts(projectDir);
+    const plan = artifacts.find((artifact) => artifact.type === 'plan');
+    const design = artifacts.find((artifact) => artifact.type === 'design');
+    const summary = artifacts.find((artifact) => artifact.type === 'summary');
+
+    expect(plan?.quickPlanReadiness).toEqual({ ready: true, failure: null });
+    // The predicate describes plan.md alone, so no other artifact carries a
+    // verdict about a file it does not describe.
+    expect(design).not.toHaveProperty('quickPlanReadiness');
+    expect(summary).not.toHaveProperty('quickPlanReadiness');
+  });
+
+  it('reports the first unmet readiness clause for a plan that is not ready', async () => {
+    const projectDir = await createProjectDir();
+
+    await writeFile(
+      join(projectDir, 'plan.md'),
+      `---
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_template: false
+---
+
+# Plan: demo
+
+## Phase 1: Foundation
+
+### Task p01-t01: Add the readiness predicate
+
+## Reviews
+
+| Scope | Type     | Status  | Date | Artifact |
+| ----- | -------- | ------- | ---- | -------- |
+| plan  | artifact | pending | -    | -        |
+`,
+      'utf8',
+    );
+
+    const artifacts = await scanArtifacts(projectDir);
+    const plan = artifacts.find((artifact) => artifact.type === 'plan');
+
+    // Boundary tier stays what it was; readiness is a separate verdict.
+    expect(plan).toMatchObject({ boundaryTier: 1, status: 'complete' });
+    expect(plan?.quickPlanReadiness).toEqual({
+      ready: false,
+      failure: 'review-disposition-missing',
+    });
+  });
+
+  it('reports a missing plan.md as not ready', async () => {
+    const projectDir = await createProjectDir();
+
+    const artifacts = await scanArtifacts(projectDir);
+    const plan = artifacts.find((artifact) => artifact.type === 'plan');
+
+    expect(plan).toMatchObject({ exists: false });
+    expect(plan?.quickPlanReadiness).toEqual({
+      ready: false,
+      failure: 'plan-missing',
+    });
+  });
 });

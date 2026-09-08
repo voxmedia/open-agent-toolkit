@@ -210,6 +210,7 @@ Key behavior:
 - Supports `--strategy pointer|symlink|copy` to validate the expected file shape
 - Reports `ok`, `missing`, `content_mismatch`, and `stray` states
 - Detects Claude-only adoptable directories and unreadable/broken instruction paths as drift
+- Skips the derived documentation content root and any `documentation.instructionPointerExcludes` paths, using the same exclusions as `oat instructions sync`
 - Exit code `0` when all entries are valid, `1` when drift is detected
 - Detailed behavior: [`Instruction Sync`](instruction-sync.md)
 
@@ -227,5 +228,7 @@ Key behavior:
 - Adopts Claude-only stray files by writing canonical `AGENTS.md` content first, then regenerating `CLAUDE.md`
 - Skips mismatched files unless `--force` is provided
 - Skips unreadable canonical or Claude-only sources and reports manual-repair guidance instead of forcing recovery
+- Skips the documentation content tree (`<documentation.root>/docs` when that is a directory, otherwise `documentation.root`) plus any `documentation.instructionPointerExcludes` paths, so authored pages never receive pointers; app-level instruction files such as `apps/oat-docs/AGENTS.md` are still synced
+- Never deletes an existing `CLAUDE.md` inside an excluded tree
 - Uses pointer content `@AGENTS.md\n`, file symlinks, or hard copies depending on the selected strategy
 - Detailed behavior and examples: [`Instruction Sync`](instruction-sync.md)

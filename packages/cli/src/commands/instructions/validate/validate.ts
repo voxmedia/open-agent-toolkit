@@ -8,6 +8,7 @@ import {
   buildInstructionsPayload,
   DEFAULT_INSTRUCTION_SYNC_STRATEGY,
   formatInstructionsReport,
+  resolveInstructionPointerExcludes,
   resolveInstructionSyncStrategy,
   scanInstructionFiles,
 } from '@commands/instructions/instructions.utils';
@@ -19,6 +20,7 @@ import { Command, Option } from 'commander';
 function defaultDependencies(): InstructionsValidateCommandDependencies {
   return {
     buildCommandContext,
+    resolveInstructionPointerExcludes,
     resolveProjectRoot,
     scanInstructionFiles,
   };
@@ -50,13 +52,24 @@ export function createInstructionsValidateCommand(
 
         try {
           const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+          const exclusions =
+            await dependencies.resolveInstructionPointerExcludes(repoRoot);
+          // Warned before any work: an operator whose opt-out silently matches
+          // nothing must hear about it even when validate then reports `ok`.
+          for (const warning of exclusions.warnings) {
+            context.logger.warn(warning);
+          }
           const entries = await dependencies.scanInstructionFiles(repoRoot, {
+            excludedPaths: exclusions.configured,
             strategy,
           });
           const payload = buildInstructionsPayload({
             mode: 'validate',
             entries,
             actions: [],
+            excludedPaths: exclusions.configured,
+            effectiveExcludedPaths: exclusions.effective,
+            exclusionWarnings: exclusions.warnings,
           });
 
           if (context.json) {

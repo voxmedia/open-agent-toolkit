@@ -311,7 +311,13 @@ describe(
         outcome: 'review_completed_targeting_correlation_failed',
         corroboration: { run: 'mismatched' },
         receiveEligible: false,
+        remediable: false,
+        handoff: null,
       });
+      // The reserved targeting cause keeps its exact shape; post-selection
+      // recovery never reuses or extends it.
+      expect(result.payload).not.toHaveProperty('postSelection');
+      expect(result.payload).not.toHaveProperty('postSelectionRecovery');
     });
 
     it('case 7: passing artifact preserves handoff and receive eligibility', async () => {
@@ -326,6 +332,9 @@ describe(
         receiveEligible: true,
       });
       expect(result.payload?.handoff).toContain('oat-project-review-receive');
+      // An ordinary pass carries no recovery marker, so the recovered
+      // envelope's extra field is purely additive for consumers.
+      expect(result.payload).not.toHaveProperty('postSelectionRecovery');
       const artifactPath = String(result.payload?.artifactPath);
       const artifact = await readFile(join(fixture.root, artifactPath), 'utf8');
       expect(artifact).toContain(

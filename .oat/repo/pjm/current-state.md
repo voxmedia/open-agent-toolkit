@@ -37,7 +37,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.63` (`remote-project-management`, implementation and independent
+- CLI `0.2.64` (`remote-project-management`, implementation and independent
   closeout reviews complete; pending PR/release) adds local-first remote PJM
   bindings for GitHub Issues, Linear, and Jira Cloud. `oat pjm remote` now
   supports explicit intake, publish, refresh, reconcile, discussion, closeout,
@@ -49,6 +49,23 @@ copying their content here. -->
   uncertain effects. OAT core, skills, and tests retain no provider MCP names,
   native schemas, captured catalogs, or CLI dialects.
 
+- CLI `0.2.63` (wave 5 of the 2026-08-31 execution program, wrapper project
+  `wave-5-execution`, "program-intake follow-ups", merged as PR #275; ten of
+  eleven lanes) makes gates recover a committed review artifact after a
+  post-selection failure and survive index-lock collisions with an idempotent
+  receipt-backed recovery command (`DR-260907-additive-post-selection`,
+  `DR-260907-gate-log-receipts-live-under`), keeps instruction-sync pointer
+  files out of docs content trees via `documentation.instructionPointerExcludes`,
+  adds `oat config unset`, routes incomplete quick projects to quick-start
+  through one shared readiness predicate, treats a project as terminal only
+  when its lifecycle is complete and no revision phase is open (heading
+  dialects normalized), makes the autonomous recap capability-aware and
+  non-blocking, retires consolidated projects through an advisory ownership
+  sweep before the seal, validates every shipped skill-to-script reference
+  against pack manifests, and enforces the external-plan readiness contract
+  in the repo-improve template and contract test. The eleventh lane (defer
+  activeProject clearing) parked on a false plan premise
+  (`BL-260907-make-the-completion-seal`).
 - CLI `0.2.60` (`lite-workflow-mode`, implementation complete; pending
   PR/release) adds Lite as a first-class workflow mode for single-sitting
   changes that still need an approved plan, atomic task commits, managed

@@ -2,14 +2,29 @@ import { execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, isAbsolute, join, relative } from 'node:path';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from 'node:path';
 
 import {
   buildCommandContext,
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
-import { appendProjectLog } from '@commands/project/log/append';
+import {
+  appendProjectLog,
+  commitProjectLog,
+  committedProjectLogIdentityState,
+  GATE_RECEIPTS_DIRNAME,
+  PROJECT_LOG_FILENAME,
+  type GateProjectLogReceipt,
+  type ProjectLogCommitResult,
+} from '@commands/project/log/append';
 import type { LatestReview } from '@commands/review/latest';
 import {
   getFrontmatterBlock,
@@ -138,6 +153,12 @@ interface GateCommandDependencies {
     path: string,
     warn: (message: string) => void,
   ) => Promise<void>;
+  writeGateProjectLogReceipt: (
+    path: string,
+    receipt: GateProjectLogReceipt,
+    warn: (message: string) => void,
+  ) => Promise<boolean>;
+  sleep: (ms: number) => Promise<void>;
   writeDiagnostic: (message: string) => void;
 }
 
@@ -246,6 +267,19 @@ type ReviewGateTerminalStatus =
   | 'artifact_missing'
   | 'targeting_correlation_failed'
   | 'artifact_validation_failed';
+/**
+ * Ordered labels for the work `runReviewGate` performs after a target is
+ * selected. The label is diagnostic context for the `review_failed` envelope;
+ * it is never evidence about whether a committed artifact is receive-eligible.
+ */
+type PostSelectionStep =
+  | 'target-dispatch'
+  | 'artifact-scan'
+  | 'artifact-correlation'
+  | 'artifact-validation'
+  | 'verdict-parse'
+  | 'invocation-corroboration'
+  | 'verdict-disposition';
 interface ReviewGateProjectLogFinalization {
   repoRoot: string;
   home: string;
@@ -257,6 +291,8 @@ interface ReviewGateProjectLogFinalization {
   exitCode: number;
   counts?: ReviewGateVerdict['counts'];
   artifactPath?: string;
+  artifactSignature?: string;
+  runId: string;
 }
 type ReviewProjectResolutionSource =
   | 'declared'
@@ -389,6 +425,10 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   processEnv: process.env,
   writeGateRunMarker,
   removeGateRunMarker,
+  writeGateProjectLogReceipt,
+  sleep: async (ms) => {
+    await new Promise((settle) => setTimeout(settle, ms));
+  },
   writeDiagnostic: (message) => process.stderr.write(message),
 };
 
@@ -438,6 +478,68 @@ async function writeGateRunMarker(
     const detail = error instanceof Error ? error.message : String(error);
     warn(`Unable to write gate run marker ${path}: ${detail}`);
     return false;
+  }
+}
+
+/**
+ * Writes a gate partial-finalization receipt.
+ *
+ * Injected like `writeGateRunMarker`, but deliberately not stored beside it:
+ * the run marker lives in `tmpdir()` because it dies with the run, while a
+ * receipt has to survive into the later process that finishes the
+ * finalization, so it lives under the project it belongs to.
+ */
+async function writeGateProjectLogReceipt(
+  path: string,
+  receipt: GateProjectLogReceipt,
+  warn: (message: string) => void,
+): Promise<boolean> {
+  try {
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, `${JSON.stringify(receipt, null, 2)}\n`, 'utf8');
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    warn(`Unable to write gate project log receipt ${path}: ${detail}`);
+    return false;
+  }
+  warnWhenReceiptIsTracked(path, warn);
+  return true;
+}
+
+/**
+ * Warns when the receipt just written is not ignored by git.
+ *
+ * "Untracked" is a property of the repository's ignore rules, not of this
+ * module: a repository that relocates `projects.root`, or drops the shipped
+ * repository-wide gate-receipts ignore rule, gets a receipt that the next
+ * `git add -A` would commit — the exact dirty worktree finalization exists to
+ * prevent. The
+ * receipt is still written, because losing the finalization would be worse
+ * than a tracked file; the operator is told instead. A repository this path
+ * cannot interrogate stays silent rather than warning speculatively.
+ */
+function warnWhenReceiptIsTracked(
+  path: string,
+  warn: (message: string) => void,
+): void {
+  try {
+    execFileSync('git', ['check-ignore', '--quiet', '--', path], {
+      cwd: dirname(path),
+      stdio: ['ignore', 'ignore', 'ignore'],
+    });
+  } catch (error) {
+    // Exit 1 means "not ignored"; anything else (not a repository, git
+    // missing) is not evidence either way.
+    const status =
+      error && typeof error === 'object' && 'status' in error
+        ? (error as { status?: number }).status
+        : undefined;
+    if (status !== 1) {
+      return;
+    }
+    warn(
+      `Gate project log receipt ${path} is not ignored by git. Add a gate-receipts ignore rule for this projects root, or the receipt will be committed by the next repository-wide add.`,
+    );
   }
 }
 
@@ -2474,6 +2576,7 @@ function writeReviewGateResult(
     dispatchReport: DispatchReportV1;
     corroboration: GateInvocationCorroboration;
     lateCompletion?: true;
+    postSelectionRecovery?: true;
   },
 ): void {
   const outcome = reviewGateOutcome(payload);
@@ -2607,6 +2710,24 @@ function formatGateActivityEvidenceDiagnostic(
   return `Activity evidence: ${transcriptScope} metadata ${baselineState}; observed ${observedAgoMs}ms ago; ${lastChangeTiming}.${attributionWarning}`;
 }
 
+/**
+ * A stable, routable code for the post-selection failure: the thrown error's
+ * own `code` when it has one, otherwise its constructor name.
+ */
+function postSelectionFailureCode(error: unknown): string {
+  const code = (error as { code?: unknown } | null | undefined)?.code;
+  if (typeof code === 'string' && code.trim().length > 0) {
+    return code;
+  }
+  if (typeof code === 'number') {
+    return String(code);
+  }
+  if (error instanceof Error) {
+    return error.constructor.name;
+  }
+  return 'UnknownError';
+}
+
 function writeReviewGateUnexpectedFailure(
   context: CommandContext,
   payload: {
@@ -2615,6 +2736,8 @@ function writeReviewGateUnexpectedFailure(
     target: string;
     gateInvocation: GateInvocationMetadata;
     dispatchReport: DispatchReportV1;
+    step: PostSelectionStep;
+    ineligibility?: PostSelectionRecoveryCause;
     error: unknown;
   },
 ): void {
@@ -2622,6 +2745,10 @@ function writeReviewGateUnexpectedFailure(
     payload.error instanceof Error
       ? payload.error.message
       : String(payload.error);
+  // When a committed artifact was found but did not survive re-validation, the
+  // eligibility cause is the routable code; the thrown sub-step still names
+  // what failed.
+  const code = payload.ineligibility ?? postSelectionFailureCode(payload.error);
   if (context.json) {
     context.logger.json({
       status: 'review_failed',
@@ -2632,13 +2759,14 @@ function writeReviewGateUnexpectedFailure(
       projectResolutionSource: payload.projectResolutionSource,
       gateInvocation: payload.gateInvocation,
       dispatchReport: payload.dispatchReport,
+      postSelection: { step: payload.step, code },
       message,
     });
     return;
   }
 
   context.logger.error(
-    `Review failed after target selection for ${payload.target}: ${message}`,
+    `Review failed after target selection for ${payload.target}: ${message} (post-selection step: ${payload.step})`,
   );
 }
 
@@ -2786,79 +2914,283 @@ function writeReviewGateTargetingFailure(
   );
 }
 
+const GATE_PROJECT_LOG_PRODUCER = 'oat gate review';
+const GATE_PROJECT_LOG_COMMIT_MESSAGE =
+  'chore(oat): record gate review in project log';
+
 /**
  * Commits `project-log.md` after this gate run appends to it.
  *
- * The log is tracked, so an uncommitted append leaves the worktree dirty for
- * whatever runs next — including a dispatched subagent whose preflight requires
- * a clean tree. The commit is pathspec-scoped to the log alone so unrelated
- * working-tree changes are never swept in.
+ * The retry, the index-lock classification, and the log mutation itself belong
+ * to the `oat project log` module (DR-260718), so this is a thin gate-side
+ * wrapper that supplies the gate's commit message and its injected sleep. The
+ * recovery entry point calls the same implementation, so a finalization
+ * completed later is the finalization the gate would have made.
  *
- * Scope note: this commits the whole log file, so a log that was already dirty
- * before the gate ran is committed along with this run's entry. That is
- * deliberate — leaving the earlier append uncommitted would reproduce the dirty
- * tree this exists to prevent — but it does mean the commit is not always
- * exactly one entry.
- *
- * Never throws: git failures are reported to the caller, which degrades to a
- * diagnostic rather than altering the gate's exit status. On failure the index
- * is restored so a partially staged log is not left behind.
+ * Never throws and never removes an index lock: git failures are reported to
+ * the caller, which degrades to a diagnostic rather than altering the gate's
+ * exit status.
  */
-function commitReviewGateProjectLog(
+async function commitReviewGateProjectLog(
   repoRoot: string,
   logPath: string,
-): { committed: boolean; error?: string } {
-  const run = (args: string[]): string =>
-    execFileSync('git', args, {
+  identity: { key: string; body: string },
+  sleep: (ms: number) => Promise<void>,
+): Promise<ProjectLogCommitResult> {
+  return commitProjectLog(
+    {
+      repoRoot,
+      logPath,
+      message: GATE_PROJECT_LOG_COMMIT_MESSAGE,
+      identity,
+    },
+    { sleep },
+  );
+}
+
+function resolveGateProjectPath(repoRoot: string, project: string): string {
+  return isAbsolute(project) ? project : join(repoRoot, project);
+}
+
+function resolveWorktreeRoot(repoRoot: string): string {
+  try {
+    return execFileSync('git', ['rev-parse', '--show-toplevel'], {
       cwd: repoRoot,
       encoding: 'utf8',
-      // Capture stderr rather than inheriting it so skip/failure probes do not
-      // leak raw `git fatal:` lines into gate output.
       stdio: ['ignore', 'pipe', 'pipe'],
     }).trim();
-
-  try {
-    run(['rev-parse', '--is-inside-work-tree']);
   } catch {
-    return { committed: false };
+    return repoRoot;
   }
+}
 
-  let staged = false;
+/**
+ * Quotes a value for the copy-pasteable recovery command. Anything outside the
+ * safe set is single-quoted so a body full of spaces and `=` tokens survives a
+ * shell round trip verbatim.
+ */
+function shellQuote(value: string): string {
+  return /^[\w@%+=:,./-]+$/.test(value)
+    ? value
+    : `'${value.replaceAll("'", `'\\''`)}'`;
+}
+
+function composeGateProjectLogRecoveryCommand(input: {
+  projectPath: string;
+  producer: string;
+  ref: string;
+  body: string;
+  runId: string;
+}): string {
+  return [
+    'oat project log append',
+    `--project ${shellQuote(input.projectPath)}`,
+    '--structural',
+    `--producer ${shellQuote(input.producer)}`,
+    `--ref ${shellQuote(input.ref)}`,
+    `--body ${shellQuote(input.body)}`,
+    `--idempotency-key ${shellQuote(input.runId)}`,
+    '--commit',
+  ].join(' ');
+}
+
+/**
+ * Warns once per pending gate project-log receipt at the start of a run.
+ *
+ * A receipt is `stale` only once the *committed* log carries its run id: the
+ * append landed and was committed, so the recovery command will observe
+ * `already-appended` and clear the receipt. Anything else is `pending`
+ * finalization work.
+ *
+ * Reading the working tree instead is what made this wrong. A run whose commit
+ * retries were exhausted leaves its entry in the working tree and nowhere else
+ * — that is precisely the state the receipt exists to describe — so a
+ * working-tree reader calls every unfinished finalization finished, and the
+ * receipt that would have completed it is dismissed as leftovers.
+ *
+ * The staleness question is answered by the log module, so the gate never reads
+ * `project-log.md` itself.
+ */
+async function warnPendingGateProjectLogReceipts(options: {
+  context: CommandContext;
+  dependencies: GateCommandDependencies;
+  repoRoot: string;
+  project: string;
+}): Promise<void> {
+  const projectDir = resolveGateProjectPath(options.repoRoot, options.project);
+  const receiptsDir = join(projectDir, GATE_RECEIPTS_DIRNAME);
+  // The staleness question is about the log of the project being gated. A
+  // receipt that travelled with a copied project directory records the other
+  // tree's absolute path, and reading that would make the verdict a statement
+  // about a log this run does not own.
+  const projectLogPath = join(projectDir, PROJECT_LOG_FILENAME);
+  let entries: string[];
   try {
-    if (run(['status', '--porcelain', '--', logPath]).length === 0) {
-      return { committed: false };
-    }
-
-    run(['add', '--', logPath]);
-    staged = true;
-    run([
-      'commit',
-      '-m',
-      'chore(oat): record gate review in project log',
-      '--',
-      logPath,
-    ]);
-    return { committed: true };
-  } catch (error) {
-    if (staged) {
-      try {
-        // A failed commit (hook, signing, identity) would otherwise leave the
-        // log staged, which is a worse state than the dirty tree we started in.
-        run(['reset', '--quiet', '--', logPath]);
-      } catch {
-        // Best effort: the reported commit failure already tells the caller the
-        // log needs attention.
-      }
-    }
-    const stderr =
-      error && typeof error === 'object' && 'stderr' in error
-        ? (error as { stderr?: Buffer | string }).stderr
-        : undefined;
-    const message =
-      (stderr != null ? stderr.toString().trim() : '') ||
-      (error instanceof Error ? error.message : String(error));
-    return { committed: false, error: message };
+    entries = await readdir(receiptsDir);
+  } catch {
+    return;
   }
+
+  for (const name of entries
+    .filter((entry) => entry.endsWith('.json'))
+    .sort()) {
+    const receiptPath = join(receiptsDir, name);
+    let receipt: GateProjectLogReceipt;
+    try {
+      receipt = JSON.parse(
+        await readFile(receiptPath, 'utf8'),
+      ) as GateProjectLogReceipt;
+    } catch {
+      continue;
+    }
+    const foreignLogPath =
+      typeof receipt.logPath === 'string' &&
+      resolve(receipt.logPath) !== resolve(projectLogPath)
+        ? receipt.logPath
+        : undefined;
+    // A receipt that names another tree's log cannot be shown to be stale
+    // here, so it stays pending and the disagreement is reported.
+    //
+    // `present` is required, not merely "not absent": a log the committed tree
+    // cannot answer for leaves the work pending, because an unfinished
+    // finalization that is reported as stale is one nobody will finish.
+    const stale =
+      foreignLogPath === undefined &&
+      (await committedProjectLogIdentityState(
+        options.repoRoot,
+        projectLogPath,
+        receipt.runId,
+        receipt.body,
+      )) === 'present';
+    const state = stale ? 'stale' : 'pending';
+    if (options.context.json) {
+      options.dependencies.writeDiagnostic(
+        `${JSON.stringify({
+          type: 'gate-project-log-receipt-pending',
+          state,
+          project: options.project,
+          receiptPath,
+          logPath: projectLogPath,
+          ...(foreignLogPath !== undefined
+            ? { recordedLogPath: foreignLogPath }
+            : {}),
+          runId: receipt.runId,
+          recovery: receipt.recovery?.command,
+        })}\n`,
+      );
+      continue;
+    }
+    options.context.logger.warn(
+      `Warning: a ${state} gate project log receipt exists at ${receiptPath}${
+        foreignLogPath !== undefined
+          ? ` (it records another tree's log at ${foreignLogPath})`
+          : ''
+      }. Complete it with: ${receipt.recovery?.command ?? 'oat project log append --commit'}`,
+    );
+  }
+}
+
+/**
+ * Emits the durable partial-finalization receipt and its diagnostic.
+ *
+ * Reached only when the retry budget is exhausted against an index lock: the
+ * entry is in the log but not in a commit, so a later process must finish the
+ * job. The receipt carries the exact recovery command, and the diagnostic
+ * prints it verbatim so an operator or orchestrator can run it without
+ * reconstructing any of the gate's state.
+ */
+async function emitGateProjectLogPartialFinalization(options: {
+  context: CommandContext;
+  dependencies: GateCommandDependencies;
+  finalization: ReviewGateProjectLogFinalization;
+  appendStatus: 'appended' | 'already-appended';
+  logPath: string;
+  body: string;
+  commit: ProjectLogCommitResult;
+}): Promise<void> {
+  const { commit, context, dependencies, finalization } = options;
+  const projectPath = resolveGateProjectPath(
+    finalization.repoRoot,
+    finalization.project,
+  );
+  const receiptPath = join(
+    projectPath,
+    GATE_RECEIPTS_DIRNAME,
+    `${finalization.runId}.json`,
+  );
+  const command = composeGateProjectLogRecoveryCommand({
+    projectPath,
+    producer: GATE_PROJECT_LOG_PRODUCER,
+    ref: finalization.ref,
+    body: options.body,
+    runId: finalization.runId,
+  });
+  const receipt: GateProjectLogReceipt = {
+    runId: finalization.runId,
+    project: finalization.project,
+    projectPath,
+    worktreeRoot: resolveWorktreeRoot(finalization.repoRoot),
+    logPath: options.logPath,
+    artifactPath: finalization.artifactPath ?? null,
+    artifactSignature: finalization.artifactSignature ?? null,
+    appendStatus: options.appendStatus,
+    commitStatus: commit.outcome,
+    lockClass: commit.lockClass ?? null,
+    attempts: commit.attempts,
+    producer: GATE_PROJECT_LOG_PRODUCER,
+    ref: finalization.ref,
+    body: options.body,
+    recovery: { command },
+  };
+
+  const written = await dependencies.writeGateProjectLogReceipt(
+    receiptPath,
+    receipt,
+    // `logger.warn` is suppressed in JSON mode, and a receipt warning is
+    // exactly what automation needs to see, so route it the same way the
+    // finalization diagnostics go.
+    (message) => {
+      if (context.json) {
+        dependencies.writeDiagnostic(
+          `${JSON.stringify({
+            type: 'gate-project-log-receipt-warning',
+            project: finalization.project,
+            receiptPath,
+            message,
+          })}\n`,
+        );
+        return;
+      }
+      context.logger.warn(message);
+    },
+  );
+  if (!written) {
+    return;
+  }
+
+  if (context.json) {
+    dependencies.writeDiagnostic(
+      `${JSON.stringify({
+        type: 'gate-project-log-partial-finalization',
+        project: finalization.project,
+        receiptPath,
+        logPath: options.logPath,
+        lockClass: receipt.lockClass,
+        attempts: receipt.attempts,
+        recovery: command,
+      })}\n`,
+    );
+    return;
+  }
+  context.logger.warn(
+    `Warning: the oat gate review project log entry is appended but not committed (${
+      receipt.commitStatus === 'entry-missing-after-commit'
+        ? 'the committed log does not carry this run'
+        : receipt.commitStatus === 'commit-unverified'
+          ? 'the committed log could not be read back'
+          : (receipt.lockClass ?? 'unknown')
+    } after ${receipt.attempts} attempts). Receipt: ${receiptPath}. Complete it with: ${command}`,
+  );
 }
 
 async function finalizeReviewGateProjectLog(
@@ -2872,7 +3204,11 @@ async function finalizeReviewGateProjectLog(
   const artifact = finalization.artifactPath
     ? ` artifact=${finalization.artifactPath}`
     : '';
-  const body = `target=${finalization.target} threshold=${finalization.threshold}${findings} exit=${finalization.exitCode} status=${finalization.status}${artifact}`;
+  // The run id is the finalization's stable event identity: it makes the entry
+  // recognizable to a retry or to a later recovery, so neither ever appends a
+  // second entry for the same run. It is an additive token on the one-line
+  // structural body, which no consumer parses.
+  const body = `target=${finalization.target} threshold=${finalization.threshold}${findings} exit=${finalization.exitCode} status=${finalization.status}${artifact} run=${finalization.runId}`;
 
   // Finalization runs after the JSON envelope is emitted, and `logger.warn` is
   // suppressed in JSON mode. Automation would otherwise get no signal that the
@@ -2908,19 +3244,46 @@ async function finalizeReviewGateProjectLog(
       home: finalization.home,
       project: finalization.project,
       structural: true,
-      producer: 'oat gate review',
+      producer: GATE_PROJECT_LOG_PRODUCER,
       ref: finalization.ref,
       body,
+      idempotencyKey: finalization.runId,
     });
 
-    if (result.status === 'appended') {
-      const commit = commitReviewGateProjectLog(
-        finalization.repoRoot,
-        result.logPath,
-      );
-      if (commit.error != null) {
-        report('gate-project-log-commit-failed', commit.error, result.logPath);
-      }
+    if (result.status === 'skipped') {
+      return;
+    }
+
+    // `already-appended` is success: this run's entry is in the log, so the
+    // only work left is the commit.
+    const commit = await commitReviewGateProjectLog(
+      finalization.repoRoot,
+      result.logPath,
+      { key: finalization.runId, body },
+      dependencies.sleep,
+    );
+    if (commit.error != null) {
+      report('gate-project-log-commit-failed', commit.error, result.logPath);
+    }
+    // Both dispositions leave the run's entry uncommitted, and both are
+    // finished by the same idempotent recovery command: the lock case never
+    // reached a commit, and the missing-entry case reached one that did not
+    // carry this run. Either way the durable receipt is what carries the work
+    // into the later process that completes it.
+    if (
+      commit.outcome === 'blocked-by-index-lock' ||
+      commit.outcome === 'entry-missing-after-commit' ||
+      commit.outcome === 'commit-unverified'
+    ) {
+      await emitGateProjectLogPartialFinalization({
+        context,
+        dependencies,
+        finalization,
+        appendStatus: result.status,
+        logPath: result.logPath,
+        body,
+        commit,
+      });
     }
   } catch (error) {
     report(
@@ -3307,6 +3670,319 @@ async function runCrossProviderExec(
   }
 }
 
+/**
+ * The immutable bytes and identity of the run-correlated artifact that was
+ * selected for this gate run. Recovery re-validates this snapshot, never the
+ * current contents of `path`.
+ */
+interface ReviewGateArtifactSnapshot {
+  path: string;
+  generatedAt: string | null;
+  generatedTime: number;
+  containingProject: string;
+  content: string;
+  signature: string;
+}
+
+/** Run identity the eligibility checks and their envelopes need. */
+interface ReviewArtifactDispositionIdentity {
+  runId: string;
+  repoRoot: string;
+  target: string;
+  project: string;
+  projectResolutionSource: ReviewProjectResolutionSource;
+  gateInvocation: GateInvocationMetadata;
+  dispatchReport: DispatchReportV1;
+  targetCorroboration: GateTargetCorroboration;
+  threshold: ReviewGateThreshold;
+}
+
+/** Why a selected artifact is not receive-eligible. */
+type ReviewArtifactIneligibilityCause =
+  | 'artifact_outside_review_project'
+  | 'declared_project_identity_missing'
+  | 'declared_project_identity_mismatched'
+  | 'artifact_generated_at_invalid'
+  | 'artifact_verdict_unparsable'
+  | 'gate_invocation_metadata_missing'
+  | 'gate_invocation_metadata_mismatched'
+  | 'gate_invocation_marker_missing';
+
+/**
+ * What `postSelection.code` reports when a committed artifact was found: either
+ * why it was ineligible, or that the recovery re-validation itself failed.
+ */
+type PostSelectionRecoveryCause =
+  | ReviewArtifactIneligibilityCause
+  | 'recovery_revalidation_failed';
+
+/**
+ * Collects the result envelope before any of it reaches the real logger.
+ *
+ * `writeReviewGateResult` makes several human-mode calls, so a failure partway
+ * through would otherwise leave a half-printed success followed by the
+ * `review_failed` line. Buffering keeps the recovery emission all-or-nothing.
+ */
+function createBufferedResultContext(context: CommandContext): {
+  context: CommandContext;
+  flush: () => void;
+} {
+  const pending: (() => void)[] = [];
+  return {
+    context: {
+      ...context,
+      logger: {
+        ...context.logger,
+        debug: (message: string) => {
+          pending.push(() => context.logger.debug(message));
+        },
+        info: (message: string) => {
+          pending.push(() => context.logger.info(message));
+        },
+        warn: (message: string) => {
+          pending.push(() => context.logger.warn(message));
+        },
+        error: (message: string) => {
+          pending.push(() => context.logger.error(message));
+        },
+        success: (message: string) => {
+          pending.push(() => context.logger.success(message));
+        },
+        json: (payload: unknown) => {
+          pending.push(() => context.logger.json(payload));
+        },
+      },
+    },
+    flush: () => {
+      for (const emit of pending) {
+        emit();
+      }
+      pending.length = 0;
+    },
+  };
+}
+
+type ReviewArtifactDisposition =
+  | {
+      eligible: true;
+      verdict: ReviewGateVerdict;
+      blocking: boolean;
+      corroboration: GateInvocationCorroboration;
+      generatedAt: string;
+    }
+  | {
+      eligible: false;
+      cause: ReviewArtifactIneligibilityCause;
+      status: 'targeting_correlation_failed' | 'artifact_validation_failed';
+      verdict?: ReviewGateVerdict;
+      writeEnvelope: (context: CommandContext) => void;
+    };
+
+interface ReviewArtifactDispositionHooks {
+  onStep?: (step: PostSelectionStep) => void;
+  onVerdict?: (verdict: ReviewGateVerdict) => void;
+}
+
+/**
+ * The single eligibility pipeline for a selected review artifact: project
+ * containment, timestamp validity, verdict parsing from the immutable
+ * snapshot, gate-invocation corroboration, the gate invocation marker, and the
+ * blocking threshold.
+ *
+ * Both the normal path and post-selection recovery call this function so that
+ * a recovered artifact can never skip a check the normal path applies. It
+ * never re-reads `snapshot.path`, never re-dispatches a reviewer, and never
+ * writes an envelope itself: an ineligible artifact returns the exact existing
+ * failure writer for its caller to invoke.
+ */
+async function disposeValidatedReviewArtifact(
+  snapshot: ReviewGateArtifactSnapshot,
+  identity: ReviewArtifactDispositionIdentity,
+  dependencies: GateCommandDependencies,
+  hooks: ReviewArtifactDispositionHooks = {},
+): Promise<ReviewArtifactDisposition> {
+  hooks.onStep?.('artifact-validation');
+  const outsideReviewProject = snapshot.containingProject !== identity.project;
+  if (
+    outsideReviewProject ||
+    (identity.projectResolutionSource === 'declared' &&
+      identity.targetCorroboration.project !== 'matched')
+  ) {
+    const message = outsideReviewProject
+      ? 'Review artifact was written outside the resolved review project.'
+      : identity.targetCorroboration.project === 'missing'
+        ? 'Review artifact is missing oat_project for the explicitly declared project.'
+        : 'Review artifact project identity does not match the explicitly declared project.';
+    return {
+      eligible: false,
+      status: 'targeting_correlation_failed',
+      cause: outsideReviewProject
+        ? 'artifact_outside_review_project'
+        : identity.targetCorroboration.project === 'missing'
+          ? 'declared_project_identity_missing'
+          : 'declared_project_identity_mismatched',
+      writeEnvelope: (context) => {
+        writeReviewGateTargetingFailure(context, {
+          runId: identity.runId,
+          target: identity.target,
+          project: identity.project,
+          projectResolutionSource: identity.projectResolutionSource,
+          artifactPath: snapshot.path,
+          generatedAt: snapshot.generatedAt,
+          message,
+          gateInvocation: identity.gateInvocation,
+          dispatchReport: identity.dispatchReport,
+          corroboration: identity.targetCorroboration,
+        });
+      },
+    };
+  }
+
+  const generatedAt = snapshot.generatedAt;
+  if (!generatedAt || !Number.isFinite(snapshot.generatedTime)) {
+    return {
+      eligible: false,
+      status: 'artifact_validation_failed',
+      cause: 'artifact_generated_at_invalid',
+      writeEnvelope: (context) => {
+        writeReviewGateArtifactValidationFailure(context, {
+          runId: identity.runId,
+          target: identity.target,
+          project: identity.project,
+          projectResolutionSource: identity.projectResolutionSource,
+          artifactPath: snapshot.path,
+          generatedAt: snapshot.generatedAt,
+          message:
+            'Review artifact oat_generated_at is missing or is not a valid timestamp.',
+          recovery: `Set oat_generated_at to a valid timestamp in ${snapshot.path}, then rerun the gate. Invoke oat-project-review-receive only after the gate returns a receive-eligible result.`,
+          gateInvocation: identity.gateInvocation,
+          dispatchReport: identity.dispatchReport,
+          corroboration: corroborateGateInvocation(
+            identity.gateInvocation,
+            undefined,
+            identity.targetCorroboration,
+          ),
+        });
+      },
+    };
+  }
+
+  hooks.onStep?.('verdict-parse');
+  let verdict: ReviewGateVerdict;
+  try {
+    verdict = await dependencies.parseReviewGateVerdict(
+      join(identity.repoRoot, snapshot.path),
+      {
+        normalizeMissingEmptySeveritySections: true,
+        artifactSnapshot: {
+          content: snapshot.content,
+          signature: snapshot.signature,
+        },
+      },
+    );
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return {
+      eligible: false,
+      status: 'artifact_validation_failed',
+      cause: 'artifact_verdict_unparsable',
+      writeEnvelope: (context) => {
+        writeReviewGateArtifactValidationFailure(context, {
+          runId: identity.runId,
+          target: identity.target,
+          project: identity.project,
+          projectResolutionSource: identity.projectResolutionSource,
+          artifactPath: snapshot.path,
+          generatedAt: snapshot.generatedAt,
+          message: detail,
+          recovery: `The review artifact was created at ${snapshot.path} but could not be consumed. Fix the artifact format, then rerun the gate to revalidate it. Invoke oat-project-review-receive only after the gate returns a receive-eligible result; if the only issue is a missing zero-count severity heading, rerun the gate to normalize the same artifact instead of creating a new review version.`,
+          gateInvocation: identity.gateInvocation,
+          dispatchReport: identity.dispatchReport,
+          corroboration: corroborateGateInvocation(
+            identity.gateInvocation,
+            undefined,
+            identity.targetCorroboration,
+          ),
+        });
+      },
+    };
+  }
+  hooks.onVerdict?.(verdict);
+
+  hooks.onStep?.('invocation-corroboration');
+  const corroboration = corroborateGateInvocation(
+    identity.gateInvocation,
+    verdict.gateInvocation,
+    identity.targetCorroboration,
+  );
+  if (
+    corroboration.run !== 'matched' ||
+    corroboration.invocation !== 'matched'
+  ) {
+    const missing =
+      corroboration.run === 'missing' || corroboration.invocation === 'missing';
+    return {
+      eligible: false,
+      status: 'artifact_validation_failed',
+      cause: missing
+        ? 'gate_invocation_metadata_missing'
+        : 'gate_invocation_metadata_mismatched',
+      verdict,
+      writeEnvelope: (context) => {
+        writeReviewGateArtifactValidationFailure(context, {
+          runId: identity.runId,
+          target: identity.target,
+          project: identity.project,
+          projectResolutionSource: identity.projectResolutionSource,
+          artifactPath: snapshot.path,
+          generatedAt: snapshot.generatedAt,
+          message: missing
+            ? 'Review artifact invocation metadata is missing required gate-owned values.'
+            : 'Review artifact invocation metadata does not match the gate-owned configured invocation.',
+          recovery: `Copy the exact gate invocation fields from the review prompt into ${snapshot.path}, then run oat-project-review-receive only after the artifact validates.`,
+          gateInvocation: identity.gateInvocation,
+          dispatchReport: identity.dispatchReport,
+          corroboration,
+        });
+      },
+    };
+  }
+
+  if (verdict.invocation !== 'gate') {
+    return {
+      eligible: false,
+      status: 'artifact_validation_failed',
+      cause: 'gate_invocation_marker_missing',
+      verdict,
+      writeEnvelope: (context) => {
+        writeReviewGateArtifactValidationFailure(context, {
+          runId: identity.runId,
+          target: identity.target,
+          project: identity.project,
+          projectResolutionSource: identity.projectResolutionSource,
+          artifactPath: snapshot.path,
+          generatedAt: snapshot.generatedAt,
+          message:
+            'Review artifact is missing the required gate invocation marker `oat_review_invocation: gate`.',
+          recovery: `Set oat_review_invocation: gate in ${snapshot.path}, then run oat-project-review-receive only after the artifact validates.`,
+          gateInvocation: identity.gateInvocation,
+          dispatchReport: identity.dispatchReport,
+          corroboration,
+        });
+      },
+    };
+  }
+
+  hooks.onStep?.('verdict-disposition');
+  return {
+    eligible: true,
+    verdict,
+    blocking: reviewBlocksAtThreshold(verdict, identity.threshold),
+    corroboration,
+    generatedAt,
+  };
+}
+
 async function runReviewGate(
   prompt: string[],
   options: ReviewGateOptions,
@@ -3326,6 +4002,11 @@ async function runReviewGate(
         target: string;
         gateInvocation: GateInvocationMetadata;
         dispatchReport: DispatchReportV1;
+        step: PostSelectionStep;
+        artifact?: ReviewGateArtifactSnapshot;
+        dispositionIdentity?: ReviewArtifactDispositionIdentity;
+        diversity?: GateDiversityMetadata;
+        lateCompletion?: true;
       }
     | undefined;
   try {
@@ -3384,6 +4065,12 @@ async function runReviewGate(
       target: selected.id,
       gateInvocation,
       dispatchReport,
+      step: 'target-dispatch',
+    };
+    const markPostSelectionStep = (step: PostSelectionStep): void => {
+      if (postSelectionContext) {
+        postSelectionContext.step = step;
+      }
     };
     const threshold = parseReviewGateThreshold(options.exitNonzeroOn);
     projectLogFinalization = {
@@ -3395,12 +4082,21 @@ async function runReviewGate(
       threshold,
       status: 'review_failed',
       exitCode: 1,
+      runId,
     };
+    await warnPendingGateProjectLogReceipts({
+      context,
+      dependencies,
+      repoRoot,
+      project: projectPath,
+    });
+    markPostSelectionStep('artifact-scan');
     const before = await listReviewGateArtifactCandidates({
       repoRoot,
       effective,
       reviewProject,
     });
+    markPostSelectionStep('target-dispatch');
     const reviewPrompt = assembleReviewGatePrompt([
       REVIEW_GATE_CONTEXT_NOTE,
       reviewGateProjectContext(reviewProject),
@@ -3508,20 +4204,23 @@ async function runReviewGate(
       return true;
     };
 
+    markPostSelectionStep('artifact-scan');
     const after = await listReviewGateArtifactCandidates({
       repoRoot,
       effective,
       reviewProject,
     });
+    markPostSelectionStep('artifact-correlation');
     const artifactResolution = resolveRunCorrelatedReviewArtifact({
       runId,
       before,
       after,
     });
     if (projectLogFinalization) {
-      projectLogFinalization.artifactPath =
-        artifactResolution.artifact?.path ??
-        artifactResolution.diagnosticArtifact?.path;
+      const correlated =
+        artifactResolution.artifact ?? artifactResolution.diagnosticArtifact;
+      projectLogFinalization.artifactPath = correlated?.path;
+      projectLogFinalization.artifactSignature = correlated?.signature;
     }
     if (!artifactResolution.artifact && writeRefusalFailure()) {
       return;
@@ -3638,193 +4337,66 @@ async function runReviewGate(
       return;
     }
 
-    if (
-      producedArtifact.containingProject !== reviewProject.path ||
-      (reviewProject.source === 'declared' &&
-        initialTargetCorroboration.project !== 'matched')
-    ) {
-      if (writeRefusalFailure()) {
-        return;
-      }
-      if (projectLogFinalization) {
-        projectLogFinalization.status = 'targeting_correlation_failed';
-        projectLogFinalization.exitCode = 1;
-      }
-      writeReviewGateTargetingFailure(context, {
-        runId,
-        target: selected.id,
-        project: projectPath,
-        projectResolutionSource: reviewProject.source,
-        artifactPath: producedArtifact.path,
-        generatedAt: producedArtifact.generatedAt,
-        message:
-          producedArtifact.containingProject !== reviewProject.path
-            ? 'Review artifact was written outside the resolved review project.'
-            : initialTargetCorroboration.project === 'missing'
-              ? 'Review artifact is missing oat_project for the explicitly declared project.'
-              : 'Review artifact project identity does not match the explicitly declared project.',
-        gateInvocation,
-        dispatchReport,
-        corroboration: initialTargetCorroboration,
-      });
-      process.exitCode = 1;
-      return;
-    }
-
-    if (
-      !producedArtifact.generatedAt ||
-      !Number.isFinite(producedArtifact.generatedTime)
-    ) {
-      if (writeRefusalFailure()) {
-        return;
-      }
-      if (projectLogFinalization) {
-        projectLogFinalization.status = 'artifact_validation_failed';
-        projectLogFinalization.exitCode = 1;
-      }
-      writeReviewGateArtifactValidationFailure(context, {
-        runId,
-        target: selected.id,
-        project: projectPath,
-        projectResolutionSource: reviewProject.source,
-        artifactPath: producedArtifact.path,
-        generatedAt: producedArtifact.generatedAt,
-        message:
-          'Review artifact oat_generated_at is missing or is not a valid timestamp.',
-        recovery: `Set oat_generated_at to a valid timestamp in ${producedArtifact.path}, then rerun the gate. Invoke oat-project-review-receive only after the gate returns a receive-eligible result.`,
-        gateInvocation,
-        dispatchReport,
-        corroboration: corroborateGateInvocation(
-          gateInvocation,
-          undefined,
-          initialTargetCorroboration,
-        ),
-      });
-      process.exitCode = 1;
-      return;
-    }
-
-    let verdict: ReviewGateVerdict;
-    try {
-      verdict = await dependencies.parseReviewGateVerdict(
-        join(repoRoot, producedArtifact.path),
-        {
-          normalizeMissingEmptySeveritySections: true,
-          artifactSnapshot: {
-            content: producedArtifact.content,
-            signature: producedArtifact.signature,
-          },
-        },
-      );
-    } catch (error) {
-      if (writeRefusalFailure()) {
-        return;
-      }
-      const detail = error instanceof Error ? error.message : String(error);
-      if (projectLogFinalization) {
-        projectLogFinalization.status = 'artifact_validation_failed';
-        projectLogFinalization.exitCode = 1;
-      }
-      writeReviewGateArtifactValidationFailure(context, {
-        runId,
-        target: selected.id,
-        project: projectPath,
-        projectResolutionSource: reviewProject.source,
-        artifactPath: producedArtifact.path,
-        generatedAt: producedArtifact.generatedAt,
-        message: detail,
-        recovery: `The review artifact was created at ${producedArtifact.path} but could not be consumed. Fix the artifact format, then rerun the gate to revalidate it. Invoke oat-project-review-receive only after the gate returns a receive-eligible result; if the only issue is a missing zero-count severity heading, rerun the gate to normalize the same artifact instead of creating a new review version.`,
-        gateInvocation,
-        dispatchReport,
-        corroboration: corroborateGateInvocation(
-          gateInvocation,
-          undefined,
-          initialTargetCorroboration,
-        ),
-      });
-      process.exitCode = 1;
-      return;
-    }
-    if (projectLogFinalization) {
-      projectLogFinalization.counts = verdict.counts;
-    }
-    const targetCorroboration = initialTargetCorroboration;
-    const corroboration = corroborateGateInvocation(
+    const artifactSnapshot: ReviewGateArtifactSnapshot = {
+      path: producedArtifact.path,
+      generatedAt: producedArtifact.generatedAt,
+      generatedTime: producedArtifact.generatedTime,
+      containingProject: producedArtifact.containingProject,
+      content: producedArtifact.content,
+      signature: producedArtifact.signature,
+    };
+    const dispositionIdentity: ReviewArtifactDispositionIdentity = {
+      runId,
+      repoRoot,
+      target: selected.id,
+      project: projectPath,
+      projectResolutionSource: reviewProject.source,
       gateInvocation,
-      verdict.gateInvocation,
-      targetCorroboration,
+      dispatchReport,
+      targetCorroboration: initialTargetCorroboration,
+      threshold,
+    };
+    if (postSelectionContext) {
+      postSelectionContext.artifact = artifactSnapshot;
+      postSelectionContext.dispositionIdentity = dispositionIdentity;
+      postSelectionContext.diversity = selected.diversity;
+      if (childResult.timedOut) {
+        postSelectionContext.lateCompletion = true;
+      }
+    }
+
+    const disposition = await disposeValidatedReviewArtifact(
+      artifactSnapshot,
+      dispositionIdentity,
+      dependencies,
+      {
+        onStep: markPostSelectionStep,
+        onVerdict: (parsed) => {
+          if (projectLogFinalization) {
+            projectLogFinalization.counts = parsed.counts;
+          }
+        },
+      },
     );
-    if (
-      corroboration.run !== 'matched' ||
-      corroboration.invocation !== 'matched'
-    ) {
-      if (writeRefusalFailure()) {
-        return;
-      }
-      const missing =
-        corroboration.run === 'missing' ||
-        corroboration.invocation === 'missing';
-      if (projectLogFinalization) {
-        projectLogFinalization.status = 'artifact_validation_failed';
-        projectLogFinalization.exitCode = 1;
-      }
-      writeReviewGateArtifactValidationFailure(context, {
-        runId,
-        target: selected.id,
-        project: projectPath,
-        projectResolutionSource: reviewProject.source,
-        artifactPath: producedArtifact.path,
-        generatedAt: producedArtifact.generatedAt,
-        message: missing
-          ? 'Review artifact invocation metadata is missing required gate-owned values.'
-          : 'Review artifact invocation metadata does not match the gate-owned configured invocation.',
-        recovery: `Copy the exact gate invocation fields from the review prompt into ${producedArtifact.path}, then run oat-project-review-receive only after the artifact validates.`,
-        gateInvocation,
-        dispatchReport,
-        corroboration,
-      });
-      process.exitCode = 1;
-      return;
-    }
-    if (verdict.invocation !== 'gate') {
+    if (!disposition.eligible) {
       if (writeRefusalFailure()) {
         return;
       }
       if (projectLogFinalization) {
-        projectLogFinalization.status = 'artifact_validation_failed';
+        projectLogFinalization.status = disposition.status;
         projectLogFinalization.exitCode = 1;
       }
-      writeReviewGateArtifactValidationFailure(context, {
-        runId,
-        target: selected.id,
-        project: projectPath,
-        projectResolutionSource: reviewProject.source,
-        artifactPath: producedArtifact.path,
-        generatedAt: producedArtifact.generatedAt,
-        message:
-          'Review artifact is missing the required gate invocation marker `oat_review_invocation: gate`.',
-        recovery: `Set oat_review_invocation: gate in ${producedArtifact.path}, then run oat-project-review-receive only after the artifact validates.`,
-        gateInvocation,
-        dispatchReport,
-        corroboration,
-      });
+      disposition.writeEnvelope(context);
       process.exitCode = 1;
       return;
     }
-    const blocking = reviewBlocksAtThreshold(verdict, threshold);
+    const { verdict, blocking, corroboration, generatedAt } = disposition;
     const handoff = buildReviewGateHandoff({
       artifactPath: producedArtifact.path,
       verdict,
       threshold,
       blocking,
     });
-    if (projectLogFinalization) {
-      projectLogFinalization.status = blocking ? 'blocked' : 'ok';
-      projectLogFinalization.exitCode = blocking ? 1 : 0;
-      projectLogFinalization.counts = verdict.counts;
-      projectLogFinalization.artifactPath = producedArtifact.path;
-    }
-
     writeReviewGateResult(context, {
       status: blocking ? 'blocked' : 'ok',
       runId,
@@ -3832,7 +4404,7 @@ async function runReviewGate(
       project: projectPath,
       projectResolutionSource: reviewProject.source,
       artifactPath: producedArtifact.path,
-      generatedAt: producedArtifact.generatedAt,
+      generatedAt,
       threshold,
       blocking,
       counts: verdict.counts,
@@ -3847,11 +4419,136 @@ async function runReviewGate(
       corroboration,
       ...(childResult.timedOut ? { lateCompletion: true } : {}),
     });
+    // Record the disposition only once the envelope is written, so a failed
+    // emission cannot leave the log claiming a result no caller received.
+    if (projectLogFinalization) {
+      projectLogFinalization.status = blocking ? 'blocked' : 'ok';
+      projectLogFinalization.exitCode = blocking ? 1 : 0;
+      projectLogFinalization.counts = verdict.counts;
+      projectLogFinalization.artifactPath = producedArtifact.path;
+      projectLogFinalization.artifactSignature = producedArtifact.signature;
+    }
     process.exitCode = blocking ? 1 : 0;
   } catch (error) {
     if (postSelectionContext) {
+      const snapshot = postSelectionContext.artifact;
+      const identity = postSelectionContext.dispositionIdentity;
+      let ineligibility: PostSelectionRecoveryCause | undefined;
+      if (snapshot && identity) {
+        // Recovery re-validates the already-committed snapshot through the same
+        // eligibility function the normal path uses, rather than re-parsing
+        // whatever the artifact path now holds, and never re-dispatches the
+        // reviewer. The path is still read to assert the artifact is present
+        // and unchanged, so a deleted or rewritten artifact fails closed.
+        let disposition: ReviewArtifactDisposition | undefined;
+        try {
+          disposition = await disposeValidatedReviewArtifact(
+            snapshot,
+            identity,
+            dependencies,
+          );
+        } catch (revalidationError) {
+          // The recovery attempt itself failed. Report that distinctly instead
+          // of letting the envelope blame the transient error that triggered
+          // recovery, and leave a diagnostic behind for the same reason.
+          disposition = undefined;
+          ineligibility = 'recovery_revalidation_failed';
+          try {
+            dependencies.writeDiagnostic(
+              `${JSON.stringify({
+                type: 'gate-recovery-failed',
+                runId: identity.runId,
+                target: identity.target,
+                project: identity.project,
+                step: postSelectionContext.step,
+                message:
+                  revalidationError instanceof Error
+                    ? revalidationError.message
+                    : String(revalidationError),
+              })}\n`,
+            );
+          } catch {
+            // Diagnostics are best effort and must never mask the terminal
+            // review_failed envelope written below.
+          }
+        }
+        if (disposition?.eligible) {
+          // Emission is the last thing that can fail. Build the human-mode
+          // lines into a buffer first so a mid-construction failure cannot
+          // half-print a recovered result and then print `review_failed` after
+          // it, and keep the project-log status at its pre-recovery
+          // `review_failed` value until the envelope is actually written.
+          let recoveryEmitted = false;
+          try {
+            const recoveredHandoff = buildReviewGateHandoff({
+              artifactPath: snapshot.path,
+              verdict: disposition.verdict,
+              threshold: identity.threshold,
+              blocking: disposition.blocking,
+            });
+            const buffered = createBufferedResultContext(context);
+            writeReviewGateResult(buffered.context, {
+              status: disposition.blocking ? 'blocked' : 'ok',
+              runId: identity.runId,
+              target: identity.target,
+              project: identity.project,
+              projectResolutionSource: identity.projectResolutionSource,
+              artifactPath: snapshot.path,
+              generatedAt: disposition.generatedAt,
+              threshold: identity.threshold,
+              blocking: disposition.blocking,
+              counts: disposition.verdict.counts,
+              reviewType: disposition.verdict.reviewType,
+              scope: disposition.verdict.scope,
+              invocation: disposition.verdict.invocation,
+              normalization: disposition.verdict.normalization,
+              handoff: recoveredHandoff,
+              diversity: postSelectionContext.diversity,
+              gateInvocation: identity.gateInvocation,
+              dispatchReport: identity.dispatchReport,
+              corroboration: disposition.corroboration,
+              ...(postSelectionContext.lateCompletion
+                ? { lateCompletion: true }
+                : {}),
+              postSelectionRecovery: true,
+            });
+            buffered.flush();
+            recoveryEmitted = true;
+          } catch {
+            recoveryEmitted = false;
+          }
+          if (recoveryEmitted) {
+            if (projectLogFinalization) {
+              projectLogFinalization.status = disposition.blocking
+                ? 'blocked'
+                : 'ok';
+              projectLogFinalization.exitCode = disposition.blocking ? 1 : 0;
+              projectLogFinalization.counts = disposition.verdict.counts;
+              projectLogFinalization.artifactPath = snapshot.path;
+              projectLogFinalization.artifactSignature = snapshot.signature;
+            }
+            process.exitCode = disposition.blocking ? 1 : 0;
+            return;
+          }
+        }
+        if (disposition && !disposition.eligible) {
+          ineligibility = disposition.cause;
+        }
+      }
+      // The terminal envelope is review_failed, so the log must say so even if
+      // an earlier disposition had already been staged.
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'review_failed';
+        projectLogFinalization.exitCode = 1;
+      }
       writeReviewGateUnexpectedFailure(context, {
-        ...postSelectionContext,
+        project: postSelectionContext.project,
+        projectResolutionSource: postSelectionContext.projectResolutionSource,
+        target: postSelectionContext.target,
+        gateInvocation: postSelectionContext.gateInvocation,
+        dispatchReport: postSelectionContext.dispatchReport,
+        step: postSelectionContext.step,
+        ...(ineligibility ? { ineligibility } : {}),
         error,
       });
       process.exitCode = 1;

@@ -3,6 +3,8 @@ import type {
   BoundaryTier,
   Phase,
   ProjectState,
+  QuickPlanReadiness,
+  QuickPlanReadinessFailure,
   SkillRecommendation,
   WorkflowMode,
 } from '../types';
@@ -112,6 +114,12 @@ export function recommendSkill(
       reason: 'Promoted quick project is explicitly ready for quick-start',
     };
   }
+
+  const quickPlanGate = getQuickPlanGate(state, currentArtifact);
+  if (quickPlanGate) {
+    return quickPlanGate;
+  }
+
   if (currentArtifact?.readyFor && currentArtifact.status === 'complete') {
     return {
       skill: normalizeImplementationSkill(currentArtifact.readyFor, state),
@@ -128,6 +136,58 @@ export function recommendSkill(
     skill: normalizeImplementationSkill(earlyRoute, state),
     reason: `Route ${state.workflowMode} ${state.phase} work based on boundary tier`,
   };
+}
+
+/**
+ * Quick mode's `plan` phase is decided by the named **quick plan readiness**
+ * predicate, exactly as `oat-project-quick-start`, `oat-project-plan`,
+ * `oat-project-progress`, and `oat-project-next` decide it. A ready plan keeps
+ * the ordinary route — its own `oat_ready_for` or the quick routing table — and
+ * a plan that is not ready resumes the quick workflow in place instead of being
+ * handed to implementation or to spec-driven planning.
+ *
+ * The gate applies to the `plan` phase only, after the boundary tier has
+ * already been classified, so tier semantics are unchanged: it discriminates
+ * the `plan` outcomes that would otherwise share one tier. Readiness the reader
+ * did not evaluate is not readiness, so an unevaluated plan artifact is not
+ * ready.
+ */
+function getQuickPlanGate(
+  state: Omit<ProjectState, 'recommendation'>,
+  currentArtifact: ArtifactStatus | undefined,
+): SkillRecommendation | null {
+  if (state.workflowMode !== 'quick' || state.phase !== 'plan') {
+    return null;
+  }
+
+  const readiness = currentArtifact?.quickPlanReadiness;
+  if (readiness?.ready) {
+    return null;
+  }
+
+  return {
+    skill: 'oat-project-quick-start',
+    reason: `Quick plan is not implementation-ready (${describeQuickPlanFailure(readiness)}); resume the quick workflow in place`,
+  };
+}
+
+const QUICK_PLAN_FAILURE_REASONS: Record<QuickPlanReadinessFailure, string> = {
+  'plan-missing': 'plan.md is missing',
+  'frontmatter-not-ready':
+    'frontmatter is not the recorded plan-complete state',
+  'review-disposition-missing':
+    'the Reviews section records no plan review disposition',
+  'substantive-task-missing': 'no phase carries a substantive task',
+};
+
+function describeQuickPlanFailure(
+  readiness: QuickPlanReadiness | undefined,
+): string {
+  if (!readiness?.failure) {
+    return 'plan readiness was not evaluated';
+  }
+
+  return QUICK_PLAN_FAILURE_REASONS[readiness.failure];
 }
 
 function getDecompositionRecommendation(
@@ -170,7 +230,14 @@ function getHillOverride(
 function getPostImplementationRecommendation(
   state: Omit<ProjectState, 'recommendation'>,
 ): SkillRecommendation {
-  if (hasIncompleteRevisionPhase(state)) {
+  // Terminal guard. `state.lifecycle === 'complete'` is the only terminal
+  // signal, and it applies in every workflow mode. Neither a null current task
+  // nor a `complete`/`pr_open` phase status is terminal: an active project
+  // legitimately reaches both while it still owns pending revision tasks, so
+  // keying the guard on either would swallow a genuine revision resume. For a
+  // completed project the revision phases are historical, and a stale or
+  // incomplete revision count must not reopen implementation.
+  if (state.lifecycle !== 'complete' && hasIncompleteRevisionPhase(state)) {
     return {
       skill: normalizeImplementationSkill('oat-project-implement', state),
       reason: 'Revision work remains incomplete',

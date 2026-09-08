@@ -209,7 +209,7 @@ two ways: revert step 2 (sweep absent), and move the sweep paragraph to just
 before the Step 8 archive block (the bad late-append placement) and confirm
 the ordering case fails before restoring it.
 
-**Verify:** `pnpm exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts -t 'absorbed'` → pass.
+**Verify:** `pnpm exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts -t 'absorbed|retirement'` → pass.
 
 ### 4. Inventory check, docs, bump
 
@@ -264,7 +264,13 @@ Stop and report instead of improvising when:
 - the sweep would become a hard block on raw grep hits; or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-07, wave 5)
+
+Executed as wave-5 p11 (PR #275 `wave-5-execution`, CLI 0.2.63): `oat-project-complete` (1.7.8 from the wave's p08 lane; prose only here) sweeps the `absorbed_projects` / `absorbed_backlog_ids` a quick-start consolidation recorded, runs an advisory sweep of the active planning surfaces for future-oriented ownership language naming an absorbed slug or backlog ID and records each disposition (incl. `deferred advisory`) in the project log INSIDE Step 3.7 — before the roll-up and seal, never after — detects an already-sealed log on a resumed completion by reading the log at `logPath` and matching the seal's structural heading (`ProjectLogCheckResult` has no seal field), resolves the configured `projects.root` for the still-active-project glob (the plan's literal `.oat/projects/*/state.md` matched zero files on this scope-nested layout; 93 matches after) and excludes terminal `oat_lifecycle: complete` projects; the match rule requires future-oriented ownership language and exempts the completing project's own `absorbed_*` fields; `oat-project-quick-start` (2.3.10 from p03) records the two fields; `lifecycle.md` documents the sweep and states the recording step is quick-mode only today. Strictly append-only diff (373 added, 0 deleted across the two commits); the sweep raises no user prompt. Review corrections and residue: a Lite consolidation (PR #264, in the base) records nothing — a plan-scope gap, `BL-260907-record-absorbed-projects`; quick-start resolves `PROJECT_PATH` before `oat project new` (pre-existing) — `BL-260907-re-resolve-project-path-after`; the step-3 verify filter `-t 'absorbed|retirement'` skipped the resume test — widened below. Exit gate (attempt 1) elevated the stale quick-start `PROJECT_PATH` to Medium because the consolidation write depends on it; fixed in the wave as p12-t06 (status-gated re-resolve after `oat project new --json` with a real-CLI create-path control).
+
 ## Revalidation Before Execution
+
+**Refresh applied 2026-09-07 (wave-5 boundary, per the execution program's pre-dispatch refresh clause; drift re-run against `0f47bf700` after waves 1–4 and the Lite workflow PR #264 merged):** On the wave-5 base `0f47bf700`: `skills.test.ts:4002` → `:4447` (`oat-project-complete`) plus `review-skill-contracts.test.ts:1089`; the quick-start pin `:5071` → four pins `:1862`, `:2928`, `:5556`, `:6559`; `review-skill-contracts.test.ts:1134` → use the `it(` titles at `:1038/:1053/:1083`; `lifecycle.md` +138 (Lite prose at `:330-340`); `autonomy-gate-inventory.test.ts` +20. The wave-5 p08 lane bumps `oat-project-complete` and the p03 lane bumps `oat-project-quick-start` before this lane; this lane edits prose only and leaves those pins at their values. `packages/cli/src/validation/named-skill-load-contract.test.ts` is a write surface and a verification gate for this plan: any new sentence pairing an execution verb with a named `oat-project-*` skill carries a load clause and a matrix row; no anchored heading is reworded without moving its rows; the corpus floor is not lowered; add the file to the drift check. Shared-skill bump rule (PR-scoped, wave-owned): the first wave-5 lane in plan order that edits a skill bumps it once; later lanes edit prose only and leave the pins at that value.
 
 Revalidate against current `origin/main`, the backlog item, issue #250, the
 gate-execution-contract-hardening retro, and the contract tests when

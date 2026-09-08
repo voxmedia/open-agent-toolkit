@@ -212,7 +212,9 @@ the raw heading spelling; otherwise `workflow-friction`'s
 drops every task. Keep a negative case proving a task whose id belongs to
 another phase is still rejected.
 
-**Verify:** same command → the `:94-127` negative expectations still hold;
+**Verify:** same command → the cross-phase negative expectations from
+`:94-127` still hold (the same-phase cross-spelling negatives necessarily
+flip to positives once heading dialects collapse — corrected at wave-5 close);
 `## Phase p01:` + `p01-t01`, `## Phase 1:` + `p1-t01`, and
 `## Revision Phase p-rev1:` + `prev1-t01` cases pass.
 
@@ -325,7 +327,13 @@ Stop and report instead of improvising when:
   and the same lines are being edited concurrently; or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-07, wave 5)
+
+Executed as wave-5 p10 (PR #275 `wave-5-execution`, CLI 0.2.63): heading-dialect normalization in `packages/control-plane/src/state/tasks.ts` (`## Phase p01:`/`## Phase 1:`/`## Revision Phase p-rev1:` with `p01-t01`/`p1-t01`/`prev1-t01`; string-only ordinal normalization so ordinals past `MAX_SAFE_INTEGER` stay distinct; `HeadingDialect` deleted); the router's terminal-status guard keys on `oat_lifecycle === 'complete'` alone (a `paused` project with incomplete revision work still resumes implement; no workflow-mode branch — three Lite router controls pin it); `oat-project-next` prose (no bump; stays at p03's 1.1.1). Two pre-existing same-phase cross-spelling negatives in `tasks.test.ts` necessarily flipped to positives (a dedicated wrong-phase / kind-mismatch case keeps the cross-phase negatives) — the Step 2 Verify sentence is corrected below. Real-artifact reproduction: `subagent-implement-refactor` now parses 9 phases / 36 tasks (was 2/6) and `workflow-friction` discovers both revision phases, yet both still report 0 completed because their implementation.md uses `**Status:** complete` without `### Task` headings — the completion-format class the plan declares out of scope; the review ruled "do not weaken — file and pin", so the case is pinned and `BL-260907` follow-up filed at wave close.
+
 ## Revalidation Before Execution
+
+**Refresh applied 2026-09-07 (wave-5 boundary, per the execution program's pre-dispatch refresh clause; drift re-run against `0f47bf700` after waves 1–4 and the Lite workflow PR #264 merged):** On the wave-5 base `0f47bf700` (the Lite workflow, PR #264, is in the base): the recommender ladder in `packages/control-plane/src/recommender/router.ts` now has `LITE_ROUTES` (`:79-85`), an early quick return (`:106-115`), `getPostImplementationRecommendation` (`:170`) with `hasIncompleteRevisionPhase` (`:173-178`, the branch this plan cited at `:154-162`), and a `workflowMode !== 'lite'` branch (`:218-224`); `types.ts:11-17` turned `WorkflowMode` into `WORKFLOW_MODES` with a fourth `'lite'` member and `state/parser.ts:6-13,25` imports it; `tasks.ts` anchors are exact. The terminal-status guard is written against this ladder and applies uniformly to every workflow mode including `lite`: a project whose plan still carries an incomplete revision phase is not terminal in any mode; the behavior/test matrix gains a positive and a negative control for `workflowMode: 'lite'` (an incomplete `p-revN` in a lite plan → not terminal, routed to the revision; all revision phases complete → terminal). `oat-project-next` Step 1's field table (`:124-140`) gains the `oat_lifecycle` row the discriminator reads (an explicit in-scope edit), and Step 5.2 `:354-358` → `:393-398` (a new Step 5.1 precedes it). Pins `skills.test.ts:4003` → `:4448` plus the bare `:5341`; the wave-5 p03 lane bumps `oat-project-next` before this lane, which edits prose only and leaves both pins at p03's value. `packages/cli/src/validation/named-skill-load-contract.test.ts` is a write surface and a verification gate for this plan: any new sentence pairing an execution verb with a named `oat-project-*` skill carries a load clause and a matrix row; no anchored heading is reworded without moving its rows; the corpus floor is not lowered; add the file to the drift check. Shared-skill bump rule (PR-scoped, wave-owned): the first wave-5 lane in plan order that edits a skill bumps it once; later lanes edit prose only and leave the pins at that value.
 
 Revalidate against current `origin/main`, the backlog item, the task parser,
 the recommender ladder, and the templates when substantial time passes, main

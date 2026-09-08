@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.3.9
+version: 2.3.10
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -125,6 +125,26 @@ PROJECTS_ROOT="${OAT_PROJECTS_ROOT:-$(oat config get projects.root 2>/dev/null |
 PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 ```
 
+**Resume in place (existing incomplete quick project).** When `PROJECT_PATH`
+resolves to an existing project whose `state.md` records
+`oat_workflow_mode: quick`, this skill resumes that project and never
+re-scaffolds it: `oat project new` is not re-run, and `discovery.md`,
+`design.md`, and any existing `plan.md` content are preserved as they stand.
+Evaluate **quick plan readiness** — the named predicate defined below, beside
+Step 3.7 — against `"$PROJECT_PATH/plan.md"`:
+
+- Not ready → re-enter this skill's own steps from the earliest one whose
+  output is missing or still pre-review, and carry on through Step 3.7 so the
+  plan reaches a durable review disposition. This is the in-place resume branch
+  that the lifecycle routers send a not-ready quick project to; nothing is
+  re-scaffolded and no artifact is overwritten from a template. On this path
+  Step 3 updates the existing `plan.md` in place: it reads `.oat/templates/plan.md`
+  only when `plan.md` is missing, re-asserts the Step 3 pre-review frontmatter
+  values, and never replaces phases, tasks, or `## Reviews` rows that the
+  earlier run already wrote.
+- Ready → there is nothing left to author here; load
+  `oat-project-implement/SKILL.md` and follow it to begin execution.
+
 If no valid active project exists:
 
 - Resolve startup input from `$ARGUMENTS` before doing any discovery work:
@@ -132,10 +152,41 @@ If no valid active project exists:
   - If `$ARGUMENTS` contains only a bare `{project-name}` (for example a slug or short title) without a substantive description, ask the user for a short project description before scanning the repo or drafting discovery.
   - Do not infer requirements from the project name alone or go exploring the codebase to guess what the project means.
   - If neither field is available, ask for both the project name and a short project description. One or two sentences is enough for the description.
-- Create project via the same scaffolding path used by `oat-project-new`:
+- Create project via the same scaffolding path used by `oat-project-new`, then
+  re-resolve `PROJECT_PATH` from the path the scaffold reports:
 
 ```bash
-oat project new "{project-name}" --mode quick
+SCAFFOLD=$(oat project new "{project-name}" --mode quick --json) || SCAFFOLD=''
+# Report what the scaffolder said, so a `commitStatus` of anything but
+# `committed`, and its `commitError`, stay as visible as they were before this
+# branch started capturing the output.
+printf '%s\n' "$SCAFFOLD"
+# Scaffolding creates the project directory and repoints `activeProject`, so
+# the Step 0.5 value of PROJECT_PATH is stale from here on. Left unresolved it
+# still names whatever project was active before this run -- sending the Step 1
+# and consolidation writes into a project this run is retiring -- or is empty,
+# which makes "$PROJECT_PATH/state.md" the absolute path /state.md. Re-resolve
+# from the report the scaffolder just made.
+SCAFFOLD_STATUS=$(printf '%s\n' "$SCAFFOLD" |
+  sed -n 's/.*"status"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' |
+  head -1)
+PROJECT_PATH=$(printf '%s\n' "$SCAFFOLD" |
+  sed -n 's/.*"projectPath"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' |
+  head -1)
+# Only a reported success may fall back to the pointer the scaffolder set. A
+# failed scaffold reports no path and leaves the old pointer untouched, so an
+# unconditional fallback would resolve straight back to the stale project and
+# pass the check below on that project state.md.
+if [ "$SCAFFOLD_STATUS" = "ok" ] && [ -z "$PROJECT_PATH" ]; then
+  PROJECT_PATH=$(oat config get activeProject 2>/dev/null || true)
+fi
+# Validate before anything writes. A failed scaffold, an unresolved path, or a
+# path with no state.md stops the run; it never silently writes somewhere else.
+if [ "$SCAFFOLD_STATUS" != "ok" ] || [ -z "$PROJECT_PATH" ] ||
+  [ ! -f "$PROJECT_PATH/state.md" ]; then
+  printf 'quick-start: scaffolding did not yield a project path with state.md\n' >&2
+  exit 1
+fi
 ```
 
 This guarantees:
@@ -143,10 +194,34 @@ This guarantees:
 - standard artifact scaffolding from `.oat/templates/`
 - `activeProject` update in `.oat/config.local.json`
 - repo dashboard refresh (`.oat/state.md`) via existing scaffolder behavior
+- a `PROJECT_PATH` that names the project this run just created, validated
+  before Step 1 and before the consolidation write below
+
+**Consolidating earlier scaffolds.** When this project absorbs work that earlier
+project scaffolds already started — those directories are being retired into
+this one rather than continued — record what was absorbed in
+`"$PROJECT_PATH/state.md"` frontmatter as part of the same Step 1 frontmatter
+write, so this branch adds fields to that single write rather than performing
+its own. `PROJECT_PATH` here is the re-resolved, validated path above, never the
+pre-scaffold value:
+
+- `absorbed_projects: [<slug>]` — the project slug of every retired scaffold,
+  which also names the scaffold directory under the projects root that this
+  project supersedes.
+- `absorbed_backlog_ids: [<BL-id>]` — every backlog ID those scaffolds carried
+  into this project.
+
+Record both fields only when a consolidation actually happened; an absent field
+and an empty list are equivalent. These two fields are the only inputs the
+absorbed-project retirement sweep reads at completion, where retiring a scaffold
+is treated as a semantic claim about the planning surfaces rather than the
+physical removal of a directory.
 
 ### Step 1: Set Quick Workflow Metadata
 
-Update `"$PROJECT_PATH/state.md"` frontmatter:
+Update `"$PROJECT_PATH/state.md"` frontmatter, using the `PROJECT_PATH` that
+Step 0.5 resolved for a resumed project or that scaffolding re-resolved and
+validated for a new one:
 
 - `oat_workflow_mode: quick`
 - `oat_workflow_origin: native`
@@ -515,6 +590,13 @@ preserved value is `null` or malformed for the phase-review contract.
 
 Create/update `"$PROJECT_PATH/plan.md"` from `.oat/templates/plan.md`.
 
+`.oat/templates/plan.md` is read only when `"$PROJECT_PATH/plan.md"` is missing.
+On the Step 0.5 resume path the file already exists, so this step updates it in
+place: it re-asserts the frontmatter values below and continues authoring the
+plan body, and it never replaces phases, tasks, or `## Reviews` rows an earlier
+run already wrote. Step 2.9's snapshot restore below is a frontmatter operation
+and does not license a template rewrite of existing content.
+
 Restore the exact snapshot into the resulting `plan.md` frontmatter as part of
 the first resulting plan write, before any later frontmatter rewrite and before
 Step 3.55 invokes the shared setup contract. Carry the snapshot losslessly
@@ -842,6 +924,183 @@ cannot be recorded, leave the Step 3 pre-review values unchanged and commit
 them before stopping. Never expose a partially reviewed quick plan to
 `oat-project-implement`.
 
+### Quick Plan Readiness (Named Predicate)
+
+**Quick plan readiness** is defined here, once. `oat-project-plan`,
+`oat-project-progress`, and `oat-project-next` reference it by this name and do
+not restate its conditions.
+
+A quick `plan.md` is implementation-ready only when all of the following hold:
+
+1. Frontmatter `oat_status: complete`, quoted or bare.
+2. Frontmatter `oat_ready_for: oat-project-implement`, quoted or bare.
+3. Frontmatter `oat_template` is not `true`: `oat_template: false`, an explicit
+   null, or an absent key, which is the same absent-or-false convention
+   `oat-project-next` applies when it classifies boundary tiers. A duplicated
+   `oat_template` key is contradictory, and an unrecognized value is not read as
+   ready.
+4. The `## Reviews` section records the Step 3.7 disposition: a `plan` artifact
+   row whose Status is something other than `pending` or `-`, or the explicit
+   `Plan artifact review: skipped (workflow.autoArtifactReview.plan=false)`
+   recorded on a line of its own, starting at column 0 — never quoted inside
+   other prose, never indented into a code block, and never inside a fenced
+   example. Fences are read as CommonMark reads them — a fence closes only on a
+   bare run of its own marker, at least as long as the one that opened it — so an
+   example nested inside another fence stays an example. Indentation is measured
+   in columns, with a tab advancing to the next multiple of four, so any line
+   indented four or more columns — including a single tab-indented apparent fence
+   marker — is example code rather than the record.
+5. At least one phase carries a substantive task — a `### Task pNN-tNN:`
+   heading under a `## Phase` heading, outside any fenced example, whose title
+   still reads as text once every `{placeholder}` is removed.
+
+Substantive tasks alone never make a plan ready. The plan that Step 3 writes
+already has concrete tasks, yet it carries the Step 3 pre-review frontmatter, so
+it fails conditions 1–3 and is NOT ready. Readiness is the frontmatter plus the
+durably recorded review disposition, never the presence of tasks. A not-ready
+plan resumes through the Step 0.5 resume branch above, in place.
+
+Evaluate the predicate mechanically with this guard. It reads `plan.md` only,
+needs no CLI probe, and exits `0` when the plan is ready and `1` when it is not:
+
+```bash
+quick_plan_ready() {
+  PLAN_FILE="$1"
+  [ -f "$PLAN_FILE" ] || return 1
+
+  # The frontmatter block must be closed. An unterminated delimiter would
+  # otherwise let an ordinary body line satisfy a readiness field.
+  FRONTMATTER=$(awk '
+    NR == 1 && /^---[[:space:]]*$/ { inside = 1; next }
+    inside && /^---[[:space:]]*$/ { closed = 1; exit }
+    inside { print }
+    END { if (!closed) exit 1 }
+  ' "$PLAN_FILE") || return 1
+
+  # Each field is declared exactly once, with exactly the required value, so a
+  # duplicated or contradictory key cannot be read as ready.
+  # Quotes must pair: `'complete` and `complete"` are different scalars to YAML
+  # and are not the required value here either.
+  quick_plan_key() { printf '[\"'\'']?%s[\"'\'']?[[:space:]]*:' "$1"; }
+  quick_plan_field() {
+    [ "$(printf '%s\n' "$FRONTMATTER" | grep -cE "^$(quick_plan_key "$1")")" = "1" ] || return 1
+    printf '%s\n' "$FRONTMATTER" |
+      grep -qE "^$(quick_plan_key "$1")[[:space:]]+($2|'$2'|\"$2\")[[:space:]]*(#.*)?$"
+  }
+  quick_plan_field oat_status complete || return 1
+  quick_plan_field oat_ready_for oat-project-implement || return 1
+
+  # `oat_template` follows the absent-or-false convention `oat-project-next`
+  # documents: only an explicit `true` disqualifies a plan. Absent, null, and
+  # false all mean "not a template"; a duplicated key is contradictory, and an
+  # unrecognized scalar is not read as ready.
+  TEMPLATE_KEY=$(quick_plan_key oat_template)
+  TEMPLATE_COUNT=$(printf '%s\n' "$FRONTMATTER" | grep -cE "^$TEMPLATE_KEY")
+  [ "$TEMPLATE_COUNT" -le 1 ] || return 1
+  if [ "$TEMPLATE_COUNT" = "1" ]; then
+    printf '%s\n' "$FRONTMATTER" |
+      grep -qE "^$TEMPLATE_KEY[[:space:]]*(false|'false'|\"false\"|null|~)?[[:space:]]*(#.*)?$" || return 1
+  fi
+
+  # Fenced examples are not the record: a sample review section inside a code
+  # block must not dispose of a real pending row.
+  REVIEWS=$(awk '
+    # CommonMark measures indentation in columns, not characters: a tab
+    # advances to the next multiple of four, so a single leading tab is
+    # already a four-column code indentation. Counting raw characters would
+    # let a tab-indented apparent closer end the fence used here while the
+    # document still reads it as example content.
+    function indent_columns(text,   i, column, character) {
+      column = 0
+      for (i = 1; i <= length(text); i++) {
+        character = substr(text, i, 1)
+        if (character == " ") column++
+        else if (character == "\t") column += 4 - (column % 4)
+        else break
+      }
+      return column
+    }
+    # CommonMark fences: a fence closes only on its own marker character, at
+    # least as long as the one that opened it, and a closing fence carries no
+    # info string. A marker indented four or more columns is indented code.
+    /^[[:space:]]*([`][`][`]|~~~)/ {
+      line = $0
+      if (indent_columns(line) < 4) {
+        sub(/^[[:space:]]*/, "", line)
+        marker = substr(line, 1, 1)
+        len = 0
+        while (substr(line, len + 1, 1) == marker) len++
+        rest = substr(line, len + 1)
+        if (!fence) { fence = 1; fmark = marker; flen = len }
+        else if (marker == fmark && len >= flen && rest ~ /^[[:space:]]*$/) fence = 0
+      }
+      next
+    }
+    fence { next }
+    indent_columns($0) >= 4 { next }
+    /^## Reviews[[:space:]]*$/ { inside = 1; next }
+    inside && /^##[[:space:]]/ { exit }
+    inside { print }
+  ' "$PLAN_FILE")
+  # The skip disposition counts only as its own recorded line, never as a
+  # substring of prose that merely quotes it.
+  if ! printf '%s\n' "$REVIEWS" | grep -qE '^(- )?Plan artifact review: skipped \(workflow\.autoArtifactReview\.plan=false\)[[:space:]]*$'; then
+    PLAN_STATUS=$(printf '%s\n' "$REVIEWS" |
+      grep -E '^\|[[:space:]]*plan[[:space:]]*\|[[:space:]]*artifact[[:space:]]*\|' |
+      tail -1 |
+      awk -F'|' '{ gsub(/^[[:space:]]+|[[:space:]]+$/, "", $4); print $4 }')
+    case "$PLAN_STATUS" in
+      '' | '-' | pending) return 1 ;;
+    esac
+  fi
+
+  # At least one real task heading, inside a phase and outside fenced examples,
+  # whose title still reads as text once every {placeholder} is removed.
+  awk '
+    # CommonMark measures indentation in columns, not characters: a tab
+    # advances to the next multiple of four, so a single leading tab is
+    # already a four-column code indentation. Counting raw characters would
+    # let a tab-indented apparent closer end the fence used here while the
+    # document still reads it as example content.
+    function indent_columns(text,   i, column, character) {
+      column = 0
+      for (i = 1; i <= length(text); i++) {
+        character = substr(text, i, 1)
+        if (character == " ") column++
+        else if (character == "\t") column += 4 - (column % 4)
+        else break
+      }
+      return column
+    }
+    # CommonMark fences: a fence closes only on its own marker character, at
+    # least as long as the one that opened it, and a closing fence carries no
+    # info string. A marker indented four or more columns is indented code.
+    /^[[:space:]]*([`][`][`]|~~~)/ {
+      line = $0
+      if (indent_columns(line) < 4) {
+        sub(/^[[:space:]]*/, "", line)
+        marker = substr(line, 1, 1)
+        len = 0
+        while (substr(line, len + 1, 1) == marker) len++
+        rest = substr(line, len + 1)
+        if (!fence) { fence = 1; fmark = marker; flen = len }
+        else if (marker == fmark && len >= flen && rest ~ /^[[:space:]]*$/) fence = 0
+      }
+      next
+    }
+    fence { next }
+    indent_columns($0) >= 4 { next }
+    /^##[[:space:]]/ { inphase = ($0 ~ /^##[[:space:]]+Phase/); next }
+    inphase && /^### Task p[0-9]+-t[0-9]+:[[:space:]]/ {
+      sub(/^### Task p[0-9]+-t[0-9]+:[[:space:]]*/, "")
+      print
+    }
+  ' "$PLAN_FILE" | sed -E 's/\{[^}]*\}//g' | grep -qE '[[:alnum:]]' || return 1
+
+  return 0
+}
+```
+
 ### Step 4: Sync Project State
 
 Update `"$PROJECT_PATH/state.md"`:
@@ -917,3 +1176,4 @@ Report:
 - ✅ `implementation.md` is initialized for resumable execution.
 - ✅ Changed quick-start artifacts are committed before handoff or pause; `.oat/state.md` is refreshed locally when available.
 - ✅ Configured gate has run, and only a corroborated, receive-eligible artifact has been handed off to `oat-project-review-receive` before it is treated as consumed.
+- ✅ An existing incomplete quick project resumed in place against **quick plan readiness** instead of being re-scaffolded.

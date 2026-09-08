@@ -8,9 +8,25 @@ const TERMINAL_OUTCOMES = new Set([
   'failed',
 ]);
 
-export function checkTerminalOutcome({ intent, outcome }) {
+/**
+ * A skip reason is the recorded `source` of the skip decision, so the guard
+ * accepts exactly the sources that may produce a `skip` recap record.
+ */
+const SKIP_REASONS = new Set(['interactive', 'capability_probe']);
+
+export function checkTerminalOutcome({ intent, outcome, reason }) {
+  if (reason !== undefined && !SKIP_REASONS.has(reason)) {
+    throw recapOutcomeError(
+      `Recap skip reason must be one of ${[...SKIP_REASONS].join(', ')}.`,
+    );
+  }
   if (intent === 'skip') {
-    return { ok: true, intent, outcome: null };
+    return { ok: true, intent, outcome: null, reason: reason ?? null };
+  }
+  if (reason !== undefined) {
+    throw recapOutcomeError(
+      'A recap skip reason applies only to a skip intent.',
+    );
   }
   if (intent !== 'generate') {
     throw recapOutcomeError('Recap intent must be generate or skip.');
@@ -24,7 +40,7 @@ export function checkTerminalOutcome({ intent, outcome }) {
 }
 
 async function main(argv) {
-  const { intent, manifestPath } = parseArguments(argv);
+  const { intent, manifestPath, reason } = parseArguments(argv);
   let outcome;
   if (manifestPath !== undefined) {
     let manifest;
@@ -37,12 +53,17 @@ async function main(argv) {
     }
     outcome = manifest?.outcome;
   }
-  return checkTerminalOutcome({ intent, outcome });
+  return checkTerminalOutcome({
+    intent,
+    outcome,
+    ...(reason !== undefined && { reason }),
+  });
 }
 
 function parseArguments(argv) {
   let intent;
   let manifestPath;
+  let reason;
   for (let index = 0; index < argv.length; index += 2) {
     const flag = argv[index];
     const value = argv[index + 1];
@@ -53,11 +74,13 @@ function parseArguments(argv) {
       intent = value;
     } else if (flag === '--manifest') {
       manifestPath = value;
+    } else if (flag === '--skip-reason') {
+      reason = value;
     } else {
       throw recapOutcomeError(`Unsupported argument: ${flag}.`);
     }
   }
-  return { intent, manifestPath };
+  return { intent, manifestPath, reason };
 }
 
 function recapOutcomeError(message) {

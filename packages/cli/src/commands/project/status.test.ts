@@ -1,3 +1,4 @@
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -461,5 +462,218 @@ describe('oat project status', () => {
       'Recommendation: oat-project-implement',
     );
     expect(process.exitCode).toBe(0);
+  });
+});
+
+// Public controls for the quick-plan readiness route. These run the real
+// control-plane reader and recommender through the real command against real
+// files, because the defect they pin was invisible to a stubbed
+// `getProjectState`: `oat project status` recommended implementation for a
+// plan that all four lifecycle skills reject.
+describe('oat project status quick plan readiness route', () => {
+  const tempDirs: string[] = [];
+  let originalExitCode: number | undefined;
+
+  beforeEach(() => {
+    originalExitCode = process.exitCode;
+    process.exitCode = undefined;
+  });
+
+  afterEach(async () => {
+    process.exitCode = originalExitCode;
+    await Promise.all(
+      tempDirs.map(async (dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  const QUICK_STATE = `---
+oat_project_name: demo
+oat_workflow_mode: quick
+oat_phase: plan
+oat_phase_status: complete
+oat_lifecycle: active
+oat_current_task: null
+oat_project_created: "2026-09-07T00:00:00Z"
+oat_project_state_updated: "2026-09-07T00:00:00Z"
+---
+
+# Project State: demo
+`;
+
+  const READY_FRONTMATTER = `---
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_phase_status: complete
+oat_template: false
+---
+`;
+
+  const SUBSTANTIVE_PHASE = `
+## Phase 1: Foundation
+
+### Task p01-t01: Add the readiness predicate
+
+**Status:** pending
+`;
+
+  const RECORDED_DISPOSITION = `
+## Reviews
+
+| Scope | Type     | Status | Date       | Artifact |
+| ----- | -------- | ------ | ---------- | -------- |
+| plan  | artifact | passed | 2026-09-07 | -        |
+`;
+
+  const PENDING_DISPOSITION = `
+## Reviews
+
+| Scope | Type     | Status  | Date | Artifact |
+| ----- | -------- | ------- | ---- | -------- |
+| plan  | artifact | pending | -    | -        |
+`;
+
+  async function createProject(
+    plan: string,
+    state: string = QUICK_STATE,
+  ): Promise<string> {
+    const projectPath = await mkdtemp(join(tmpdir(), 'oat-status-quick-'));
+    tempDirs.push(projectPath);
+    await writeFile(join(projectPath, 'state.md'), state, 'utf8');
+    await writeFile(join(projectPath, 'plan.md'), plan, 'utf8');
+    return projectPath;
+  }
+
+  /**
+   * The real command with the real `getProjectState`; only the logger is
+   * captured.
+   */
+  function createRealHarness(cwd: string): {
+    capture: LoggerCapture;
+    command: Command;
+  } {
+    const capture = createLoggerCapture();
+    const command = createProjectStatusCommand({
+      buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
+        scope: (globalOptions.scope ?? 'project') as 'project' | 'user' | 'all',
+        dryRun: false,
+        verbose: globalOptions.verbose ?? false,
+        json: globalOptions.json ?? false,
+        cwd: globalOptions.cwd ?? cwd,
+        home: '/tmp/home',
+        interactive: !(globalOptions.json ?? false),
+        logger: capture.logger,
+      }),
+    });
+
+    return { capture, command };
+  }
+
+  async function recommendationFor(
+    projectPath: string,
+  ): Promise<{ skill: string; reason: string }> {
+    const { capture, command } = createRealHarness(projectPath);
+    await runCommand(command, ['--project-path', projectPath], ['--json']);
+
+    const payload = capture.jsonPayloads[0] as {
+      status: string;
+      project: { recommendation: { skill: string; reason: string } };
+    };
+    expect(payload.status).toBe('ok');
+    expect(process.exitCode).toBe(0);
+    return payload.project.recommendation;
+  }
+
+  it('recommends quick-start for a substantive quick plan with no review disposition', async () => {
+    const projectPath = await createProject(
+      `---
+oat_status: in_progress
+oat_ready_for: null
+oat_phase_status: in_progress
+oat_template: false
+---
+
+# Plan: demo
+${SUBSTANTIVE_PHASE}${PENDING_DISPOSITION}`,
+      QUICK_STATE.replace(
+        'oat_phase_status: complete',
+        'oat_phase_status: in_progress',
+      ),
+    );
+
+    expect(await recommendationFor(projectPath)).toEqual({
+      skill: 'oat-project-quick-start',
+      reason:
+        'Quick plan is not implementation-ready (frontmatter is not the recorded plan-complete state); resume the quick workflow in place',
+    });
+  });
+
+  it('recommends quick-start for ready frontmatter with no substantive task', async () => {
+    const projectPath = await createProject(
+      `${READY_FRONTMATTER}
+# Plan: demo
+
+## Phase 1: Foundation
+
+### Task p01-t01: {Task title}
+${RECORDED_DISPOSITION}`,
+    );
+
+    expect(await recommendationFor(projectPath)).toEqual({
+      skill: 'oat-project-quick-start',
+      reason:
+        'Quick plan is not implementation-ready (no phase carries a substantive task); resume the quick workflow in place',
+    });
+  });
+
+  it('recommends quick-start for ready frontmatter with no review disposition', async () => {
+    const projectPath = await createProject(
+      `${READY_FRONTMATTER}
+# Plan: demo
+${SUBSTANTIVE_PHASE}${PENDING_DISPOSITION}`,
+    );
+
+    expect(await recommendationFor(projectPath)).toEqual({
+      skill: 'oat-project-quick-start',
+      reason:
+        'Quick plan is not implementation-ready (the Reviews section records no plan review disposition); resume the quick workflow in place',
+    });
+  });
+
+  it('recommends implement once frontmatter, disposition, and task are all recorded', async () => {
+    const projectPath = await createProject(
+      `${READY_FRONTMATTER}
+# Plan: demo
+${SUBSTANTIVE_PHASE}${RECORDED_DISPOSITION}`,
+    );
+
+    expect(await recommendationFor(projectPath)).toEqual({
+      skill: 'oat-project-implement',
+      reason:
+        'Current artifact is complete and explicitly points to the next skill',
+    });
+  });
+
+  it('leaves the lite route for the same not-ready plan unchanged', async () => {
+    const notReadyPlan = `---
+oat_status: in_progress
+oat_ready_for: null
+oat_phase_status: in_progress
+oat_template: false
+---
+
+# Plan: demo
+${SUBSTANTIVE_PHASE}${PENDING_DISPOSITION}`;
+    const liteState = QUICK_STATE.replace(
+      'oat_workflow_mode: quick',
+      'oat_workflow_mode: lite',
+    ).replace('oat_phase_status: complete', 'oat_phase_status: in_progress');
+
+    const projectPath = await createProject(notReadyPlan, liteState);
+
+    expect(await recommendationFor(projectPath)).toEqual({
+      skill: 'oat-project-implement',
+      reason: 'Route lite plan work based on boundary tier',
+    });
   });
 });

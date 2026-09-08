@@ -14,22 +14,45 @@ interface HarnessOptions {
   entries?: InstructionEntry[];
   json?: boolean;
   scanError?: Error;
+  excludedPaths?: string[];
+  effectiveExcludedPaths?: string[];
+  exclusionWarnings?: string[];
 }
 
 function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
+  resolveInstructionPointerExcludes: ReturnType<typeof vi.fn>;
   scanInstructionFiles: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const entries = options.entries ?? [];
+  const excludedPaths = options.excludedPaths ?? [];
 
-  const scanInstructionFiles = vi.fn(async () => {
-    if (options.scanError) {
-      throw options.scanError;
-    }
-    return entries;
-  });
+  // Injected for the same reason as the sync harness: the harness cwd is a fake
+  // path, so the production resolver must not read the developer's filesystem.
+  const resolveInstructionPointerExcludes = vi.fn(async () => ({
+    configured: excludedPaths,
+    effective: options.effectiveExcludedPaths ?? excludedPaths,
+    warnings: options.exclusionWarnings ?? [],
+  }));
+
+  const scanInstructionFiles = vi.fn(
+    async (_repoRoot: string, scanOptions?: { excludedPaths?: string[] }) => {
+      if (options.scanError) {
+        throw options.scanError;
+      }
+      const excluded = scanOptions?.excludedPaths ?? [];
+      return entries.filter(
+        (entry) =>
+          !excluded.some((excludedPath) =>
+            (entry.agentsPath ?? entry.claudePath).startsWith(
+              `/tmp/workspace/${excludedPath}/`,
+            ),
+          ),
+      );
+    },
+  );
 
   const command = createInstructionsValidateCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -42,6 +65,7 @@ function createHarness(options: HarnessOptions = {}): {
       interactive: false,
       logger: capture.logger,
     }),
+    resolveInstructionPointerExcludes,
     resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
     scanInstructionFiles,
   });
@@ -49,6 +73,7 @@ function createHarness(options: HarnessOptions = {}): {
   return {
     capture,
     command,
+    resolveInstructionPointerExcludes,
     scanInstructionFiles,
   };
 }
@@ -85,6 +110,71 @@ describe('createInstructionsValidateCommand', () => {
 
   afterEach(() => {
     process.exitCode = originalExitCode;
+  });
+
+  // Wiring only, for the same reason as the sync harness: this proves validate
+  // resolves and forwards the same exclusions sync does, not that the scanner
+  // honours them.
+  it('forwards the same resolved exclusions sync does, reporting no drift for an excluded directory', async () => {
+    const {
+      command,
+      capture,
+      resolveInstructionPointerExcludes,
+      scanInstructionFiles,
+    } = createHarness({
+      json: true,
+      excludedPaths: ['apps/oat-docs/docs'],
+      entries: [
+        {
+          agentsPath: '/tmp/workspace/apps/oat-docs/docs/AGENTS.md',
+          claudePath: '/tmp/workspace/apps/oat-docs/docs/CLAUDE.md',
+          status: 'missing',
+          detail: 'CLAUDE.md missing',
+        },
+      ],
+    });
+
+    await runValidateCommand(command, { globalArgs: ['--json'] });
+
+    // Validate resolves exclusions through the same dependency sync does, with
+    // the same repo root, so it cannot report drift sync would refuse to fix.
+    expect(resolveInstructionPointerExcludes).toHaveBeenCalledWith(
+      '/tmp/workspace',
+    );
+    expect(scanInstructionFiles).toHaveBeenCalledWith('/tmp/workspace', {
+      excludedPaths: ['apps/oat-docs/docs'],
+      strategy: 'pointer',
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      entries: [],
+      excludedPaths: ['apps/oat-docs/docs'],
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('still reports drift for a non-excluded sibling of the content root', async () => {
+    const { command, capture } = createHarness({
+      json: true,
+      excludedPaths: ['apps/oat-docs/docs'],
+      entries: [
+        {
+          agentsPath: '/tmp/workspace/apps/oat-docs/AGENTS.md',
+          claudePath: '/tmp/workspace/apps/oat-docs/CLAUDE.md',
+          status: 'missing',
+          detail: 'CLAUDE.md missing',
+        },
+      ],
+    });
+
+    await runValidateCommand(command, { globalArgs: ['--json'] });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'drift',
+      summary: { missing: 1 },
+    });
+    expect(process.exitCode).toBe(1);
   });
 
   it('returns exit code 0 when all entries are valid', async () => {
@@ -177,6 +267,7 @@ describe('createInstructionsValidateCommand', () => {
     });
 
     expect(scanInstructionFiles).toHaveBeenCalledWith('/tmp/workspace', {
+      excludedPaths: [],
       strategy: 'symlink',
     });
   });

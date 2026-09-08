@@ -41,7 +41,8 @@ existing incomplete quick project in place without re-scaffolding. One
 plan-readiness predicate is defined once and referenced everywhere: a quick
 plan is implementation-ready only when its frontmatter says so
 (`oat_status: complete`, `oat_ready_for: oat-project-implement`,
-`oat_template: false`), its `## Reviews` section carries the Step 3.7
+`oat_template` absent or `false` — corrected at wave-5 close to the
+repository convention), its `## Reviews` section carries the Step 3.7
 disposition (a review row or the explicit policy skip), and it has at least
 one phase with substantive tasks. Substantive tasks alone never make a plan
 ready.
@@ -167,7 +168,7 @@ Only `oat-project-next` tier 3 routes correctly. Nothing defines what
 In `oat-project-quick-start/SKILL.md` add one named predicate ("quick plan
 readiness") beside Step 3.7: a quick `plan.md` is implementation-ready only
 when all of the following hold — `oat_status: complete`,
-`oat_ready_for: oat-project-implement`, `oat_template: false`, the
+`oat_ready_for: oat-project-implement`, `oat_template` absent or `false`, the
 `## Reviews` section records the Step 3.7 disposition (a `plan` review row or
 the explicit `Plan artifact review: skipped (...)` line), and at least one
 phase has substantive tasks. A plan with substantive tasks but Step 3
@@ -258,7 +259,13 @@ Stop and report instead of improvising when:
 - any of the four skill bumps is missing at `check:skill-bumps`; or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-07, wave 5)
+
+Executed as wave-5 p03 (PR #275 `wave-5-execution`, CLI 0.2.63): one plan-readiness predicate (quick-start Step 3.7 sibling) referenced by plan 1.4.10, progress 1.4.1, next 1.1.1, quick-start 2.3.10; the readiness guard requires closed once-only frontmatter, a fence-aware `## Reviews` disposition (review row or line-anchored policy skip), and a substantive `### Task pNN-tNN:` under a `## Phase` heading; six quick `plan` rows in `oat-project-next` (incl. tier 1 and the readiness-column precedence exception over the generic tier-1 rule); quick-start resumes an incomplete quick project in place (Step 0.5/Step 3 never re-scaffold); nine version pins located by literal. Correction applied at wave close: the predicate treats `oat_template` ABSENT as false (the repository convention; 12 of 76 live quick plans flip not-ready → ready, none the other way) — the plan's `oat_template: false` wording is reworded below. Deferred: the quick-mode `discovery` rows in `oat-project-next` still route to `oat-project-plan` (a two-hop route, no longer a dead end) — follow-up filed at wave close. Exit gate (attempt 1) found that the plan's out-of-scope note "no routing code exists" was false for `packages/control-plane`: `oat project status` routed every quick plan at boundary tier 2 to implement; fixed in the wave as p12-t04 (an executable Quick Plan Readiness predicate in the control-plane reader, 34/34 parity with the skill guard) and p12-t05 (tab-aware fence indentation in the awk guard).
+
 ## Revalidation Before Execution
+
+**Refresh applied 2026-09-07 (wave-5 boundary, per the execution program's pre-dispatch refresh clause; drift re-run against `0f47bf700` after waves 1–4 and the Lite workflow PR #264 merged):** Pin set on the wave-5 base `0f47bf700`: the Scope statements "`oat-project-progress` has no pin" and "three pins" are superseded — four bumps (plan 1.4.9, progress 1.4.0, next 1.1.0, quick-start 2.3.9, each to the next patch) with eight pins in `packages/cli/src/validation/skills.test.ts` located by version literal: plan `:1854` (bare, gate-ordering table), `:5555`; progress `:5348` (bare); next `:4448`, `:5341` (bare; the `:5320-5342` tier-3 case now also asserts a `liteTable` row); quick-start `:1862`, `:2928`, `:5556`, `:6559`. `skills.test.ts` joins the drift check. Anchors: `oat-project-plan/SKILL.md:18-24` → `:17-26` (four mode bullets; `lite` at `:25`), `:108-125` → Step 1 `:111-135` (a `Mode: lite` STOP block at `:126-131`); `oat-project-progress:266` → `:279` (the dead-end row), with a Lite mode table at `:295+` that already uses a tier discriminator; `oat-project-next:245` → the Quick Mode table `:239-250` (target rows `:247-249`), Lite table at `:260`; `oat-project-quick-start:120-138` → `:121-140`; `review-skill-contracts.test.ts:1677` → `:1670-1685`. The base has four workflow modes; the readiness definition and routing rows remain quick-mode work, and the Lite tables are separate consumers handled under this plan's own sweep rule (report, do not narrow). Wave-5 lanes p10 (`oat-project-next`) and p11 (`oat-project-quick-start`) edit these skills after this plan and do not re-bump them. `packages/cli/src/validation/named-skill-load-contract.test.ts` is a write surface and a verification gate for this plan: any new sentence pairing an execution verb with a named `oat-project-*` skill carries a load clause and a matrix row; no anchored heading is reworded without moving its rows; the corpus floor is not lowered; add the file to the drift check. Shared-skill bump rule (PR-scoped, wave-owned): the first wave-5 lane in plan order that edits a skill bumps it once; later lanes edit prose only and leave the pins at that value.
 
 Revalidate against current `origin/main`, the backlog item, and the routing
 prose when substantial time passes, main advances materially from

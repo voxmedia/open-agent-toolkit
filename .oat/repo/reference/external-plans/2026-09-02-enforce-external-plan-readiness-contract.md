@@ -308,6 +308,10 @@ Stop and report instead of improvising when:
 - the template's fence nesting cannot be kept renderable; or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-07, wave 5)
+
+Executed as wave-5 p07 (PR #275 `wave-5-execution`, CLI 0.2.63): `oat-repo-improve` 2.1.2 → 2.1.3 with the plan template's readiness contract (line-anchored sections with exact counts, a four-column `## Dependencies` header, `BLOCKED ⇔ some row unsatisfied` as a biconditional, `Satisfied` rows must name a satisfied state, landing-event/revalidation non-vacuity, token-boundary type classification, ISO dates fail closed; the real corpus uses ad-hoc type words beyond the three classes — mapping documented in the template); the contract test's sweep covers all 44 dated plans (floor 44, explicit allowlist, 131 dependency rows, zero structure failures); readiness rules are local test helpers, not a shipped module (the plan's In-scope names only the test file). The fix round decoupled the negative control from the live plan by snapshotting `2026-09-02-add-exclusions-to-docs-index-generation.md` into the provenance-headed fixture `__fixtures__/blocked-plan-claiming-ready.md`, which let the stale `BLOCKED` Hard-ordering row in that plan be repaired at this wave close. Rejected: the stray four-backtick fence in the template (pre-existing, `BL-260906-repair-the-stray-fence-in-oat`). Exit gate (attempt 1) found no executable backstop for the plan↔source backlink; fixed in the wave as p12-t07, then tightened twice more from later gate runs as p12-t08 (the link must identify the declared source) and p12-t09 (bounded backlog-ID grammar; definitions inside HTML comments ignored); residue filed as `BL-260907-decode-entity-and-percent` and `BL-260907-harden-the-external-plan`.
+
 ## Revalidation Before Execution
 
 Revalidate against current `origin/main`, the backlog item, the alignment

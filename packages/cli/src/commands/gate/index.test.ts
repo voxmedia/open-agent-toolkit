@@ -20,6 +20,7 @@ import {
   appendProjectLog as appendProjectLogFromDisk,
   instantiateProjectLogTemplate,
   type AppendProjectLogInput,
+  type GateProjectLogReceipt,
   type ProjectLogAppendResult,
 } from '@commands/project/log/append';
 import { BUILTIN_EXEC_TARGETS, type ExecTarget } from '@config/oat-config';
@@ -63,6 +64,12 @@ interface HarnessOptions {
   appendProjectLog?: (
     input: AppendProjectLogInput,
   ) => Promise<ProjectLogAppendResult>;
+  writeGateProjectLogReceipt?: (
+    path: string,
+    receipt: GateProjectLogReceipt,
+    warn: (message: string) => void,
+  ) => Promise<boolean>;
+  sleep?: (ms: number) => Promise<void>;
 }
 
 interface ProcessCall {
@@ -166,6 +173,10 @@ function createHarness(options: HarnessOptions): {
     appendProjectLog:
       options.appendProjectLog ??
       (async () => ({ status: 'skipped', reason: 'projectLog=false' })),
+    ...(options.writeGateProjectLogReceipt
+      ? { writeGateProjectLogReceipt: options.writeGateProjectLogReceipt }
+      : {}),
+    ...(options.sleep ? { sleep: options.sleep } : {}),
   } as Parameters<typeof createGateCommand>[0];
 
   const command = createGateCommand(overrides);
@@ -387,6 +398,8 @@ async function runReviewGate(options: {
   readGateRouteReceipt?: HarnessOptions['readGateRouteReceipt'];
   createGateActivityProbe?: HarnessOptions['createGateActivityProbe'];
   appendProjectLog?: HarnessOptions['appendProjectLog'];
+  writeGateProjectLogReceipt?: HarnessOptions['writeGateProjectLogReceipt'];
+  sleep?: HarnessOptions['sleep'];
   args?: string[];
   globalArgs?: string[];
 }): Promise<LoggerCapture> {
@@ -403,6 +416,8 @@ async function runReviewGate(options: {
     readGateRouteReceipt: options.readGateRouteReceipt,
     createGateActivityProbe: options.createGateActivityProbe,
     appendProjectLog: options.appendProjectLog,
+    writeGateProjectLogReceipt: options.writeGateProjectLogReceipt,
+    sleep: options.sleep,
   });
   await runCommand(
     command,
@@ -5670,6 +5685,673 @@ describe('oat gate', () => {
     ).not.toBe('');
   });
 
+  interface GateProjectLogRun {
+    capture: LoggerCapture;
+    diagnostics: Record<string, unknown>[];
+    git: (args: string[]) => string;
+    home: string;
+    projectPath: string;
+    root: string;
+    runId: string;
+    sleep: ReturnType<typeof vi.fn>;
+  }
+
+  /**
+   * Runs one review gate against a real git repo, optionally under a held
+   * `.git/index.lock`, with the retry sleeps injected so the bound is
+   * observable and the test does not wait on wall-clock delays.
+   */
+  async function runGateWithProjectLog(
+    options: {
+      gitignore?: string;
+      projectDir?: string;
+      holdIndexLock?: boolean;
+      onSleep?: (input: {
+        call: number;
+        root: string;
+        projectPath: string;
+      }) => Promise<void>;
+      seedReceipt?: (input: {
+        root: string;
+        projectPath: string;
+      }) => Promise<void>;
+    } = {},
+  ): Promise<GateProjectLogRun> {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root, options.projectDir);
+    await writeActiveProject(root, projectPath);
+    if (options.gitignore !== undefined) {
+      await writeFile(join(root, '.gitignore'), options.gitignore, 'utf8');
+    }
+    const git = initGitRepo(root);
+    await options.seedReceipt?.({ root, projectPath });
+    if (options.holdIndexLock) {
+      await writeFile(join(root, '.git', 'index.lock'), '', 'utf8');
+    }
+    let sleepCalls = 0;
+    const sleep = vi.fn(async () => {
+      sleepCalls += 1;
+      await options.onSleep?.({ call: sleepCalls, root, projectPath });
+    });
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+    const diagnosticLines: string[] = [];
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeDiagnostic: (message) => diagnosticLines.push(message),
+      appendProjectLog: appendProjectLogFromDisk,
+      sleep,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    return {
+      capture,
+      diagnostics: diagnosticLines.map(
+        (line) => JSON.parse(line) as Record<string, unknown>,
+      ),
+      git,
+      home,
+      projectPath,
+      root,
+      runId: String(capture.jsonPayloads[0]?.runId),
+      sleep,
+    };
+  }
+
+  async function readGateReceipt(
+    run: GateProjectLogRun,
+  ): Promise<GateProjectLogReceipt> {
+    return JSON.parse(
+      await readFile(
+        join(run.root, run.projectPath, 'gate-receipts', `${run.runId}.json`),
+        'utf8',
+      ),
+    ) as GateProjectLogReceipt;
+  }
+
+  function countRunHeadings(content: string, runId: string): number {
+    return content.split('\n').filter((line) => line.includes(`run=${runId}`))
+      .length;
+  }
+
+  it('carries the gate run id into the structural project log body', async () => {
+    const run = await runGateWithProjectLog();
+
+    const content = await readFile(
+      join(run.root, run.projectPath, 'project-log.md'),
+      'utf8',
+    );
+    expect(run.runId).toMatch(/[0-9a-f-]{8,}/i);
+    expect(content).toContain(`run=${run.runId}`);
+    expect(countRunHeadings(content, run.runId)).toBe(1);
+    expect(run.sleep).not.toHaveBeenCalled();
+  });
+
+  it('retries and commits after a transient index lock clears', async () => {
+    const run = await runGateWithProjectLog({
+      holdIndexLock: true,
+      onSleep: async ({ root }) => {
+        await rm(join(root, '.git', 'index.lock'), { force: true });
+      },
+    });
+
+    expect(run.sleep).toHaveBeenCalledTimes(1);
+    expect(run.diagnostics).not.toContainEqual(
+      expect.objectContaining({ type: 'gate-project-log-commit-failed' }),
+    );
+    expect(run.diagnostics).not.toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-partial-finalization',
+      }),
+    );
+    expect(run.git(['show', '--name-only', '--format=', 'HEAD'])).toBe(
+      `${run.projectPath}/project-log.md`,
+    );
+    const content = await readFile(
+      join(run.root, run.projectPath, 'project-log.md'),
+      'utf8',
+    );
+    expect(countRunHeadings(content, run.runId)).toBe(1);
+    expect(
+      run.git([
+        'status',
+        '--porcelain',
+        '--',
+        `${run.projectPath}/project-log.md`,
+      ]),
+    ).toBe('');
+  });
+
+  it('classifies a held index lock as persistent after exhausting retries and never deletes it', async () => {
+    const run = await runGateWithProjectLog({ holdIndexLock: true });
+
+    // Three attempts means exactly two waits.
+    expect(run.sleep).toHaveBeenCalledTimes(2);
+    expect(run.sleep.mock.calls.map(([ms]) => ms)).toEqual([250, 500]);
+    const receipt = await readGateReceipt(run);
+    expect(receipt).toMatchObject({
+      lockClass: 'persistent-index-lock',
+      attempts: 3,
+      commitStatus: 'blocked-by-index-lock',
+    });
+    // The gate never removes a lock it did not take.
+    await expect(
+      readFile(join(run.root, '.git', 'index.lock'), 'utf8'),
+    ).resolves.toBe('');
+    expect(run.capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('emits a partial-finalization receipt when retries are exhausted', async () => {
+    const run = await runGateWithProjectLog({ holdIndexLock: true });
+    const receiptPath = join(
+      run.root,
+      run.projectPath,
+      'gate-receipts',
+      `${run.runId}.json`,
+    );
+    const receipt = await readGateReceipt(run);
+    const artifactPath = String(run.capture.jsonPayloads[0]?.artifactPath);
+
+    expect(receipt).toMatchObject({
+      runId: run.runId,
+      project: run.projectPath,
+      projectPath: join(run.root, run.projectPath),
+      logPath: join(run.root, run.projectPath, 'project-log.md'),
+      artifactPath,
+      appendStatus: 'appended',
+      commitStatus: 'blocked-by-index-lock',
+      lockClass: 'persistent-index-lock',
+      attempts: 3,
+      producer: 'oat gate review',
+      ref: 'p02',
+    });
+    expect(receipt.worktreeRoot).toBe(
+      run.git(['rev-parse', '--show-toplevel']),
+    );
+    expect(receipt.artifactSignature).toMatch(/^[0-9a-f]{64}$/);
+    expect(receipt.body).toContain(`run=${run.runId}`);
+    expect(receipt.recovery.command).toBe(
+      [
+        'oat project log append',
+        `--project ${join(run.root, run.projectPath)}`,
+        '--structural',
+        "--producer 'oat gate review'",
+        '--ref p02',
+        `--body '${receipt.body}'`,
+        `--idempotency-key ${run.runId}`,
+        '--commit',
+      ].join(' '),
+    );
+    expect(run.diagnostics).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-partial-finalization',
+        receiptPath,
+        lockClass: 'persistent-index-lock',
+        attempts: 3,
+        recovery: receipt.recovery.command,
+      }),
+    );
+  });
+
+  const LEGACY_RECEIPT_IGNORE_RULE = '.oat/projects/**/gate-receipts/\n';
+  const RELOCATED_PROJECT_DIR = 'docs/oat-projects/shared/demo';
+
+  it('ignores gate receipts under any projects root', () => {
+    // `projects.root` is a settable key, so the receipt path follows the
+    // resolved project rather than `.oat/projects`. The shipped rule has to
+    // cover both, or a relocated-root repository commits its receipts.
+    const repoRoot = join(process.cwd(), '..', '..');
+    const ignored = (candidate: string): number => {
+      try {
+        execFileSync('git', ['check-ignore', '--quiet', '--', candidate], {
+          cwd: repoRoot,
+          stdio: ['ignore', 'ignore', 'ignore'],
+        });
+        return 0;
+      } catch (error) {
+        return (error as { status?: number }).status ?? -1;
+      }
+    };
+
+    expect(ignored('.oat/projects/shared/demo/gate-receipts/x.json')).toBe(0);
+    expect(ignored(`${RELOCATED_PROJECT_DIR}/gate-receipts/r.json`)).toBe(0);
+    // The rule stays narrow: it must not swallow the log it protects.
+    expect(ignored('.oat/projects/shared/demo/project-log.md')).toBe(1);
+    expect(ignored('packages/cli/src/index.ts')).toBe(1);
+  });
+
+  it('warns when a written receipt is not ignored by git', async () => {
+    const run = await runGateWithProjectLog({
+      holdIndexLock: true,
+      projectDir: RELOCATED_PROJECT_DIR,
+      // The rule this lane replaced: rooted at `.oat/projects`, so it misses a
+      // relocated projects root entirely.
+      gitignore: LEGACY_RECEIPT_IGNORE_RULE,
+    });
+
+    expect(run.diagnostics).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-receipt-warning',
+        project: RELOCATED_PROJECT_DIR,
+        message: expect.stringContaining('is not ignored by git'),
+      }),
+    );
+    // The receipt is still written: losing the finalization would be worse
+    // than a tracked file.
+    await expect(readGateReceipt(run)).resolves.toMatchObject({
+      commitStatus: 'blocked-by-index-lock',
+    });
+    expect(run.capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+  });
+
+  it('stays silent when the repository ignores the receipt under a relocated projects root', async () => {
+    const run = await runGateWithProjectLog({
+      holdIndexLock: true,
+      projectDir: RELOCATED_PROJECT_DIR,
+      gitignore: '**/gate-receipts/\n',
+    });
+
+    expect(run.diagnostics).not.toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-receipt-warning',
+      }),
+    );
+    expect(run.diagnostics).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-partial-finalization',
+      }),
+    );
+    expect(
+      run.git(['status', '--porcelain', '--', RELOCATED_PROJECT_DIR]),
+    ).not.toContain('gate-receipts');
+  });
+
+  it('warns at gate start when a receipt is pending for the project', async () => {
+    let pendingReceiptPath = '';
+    const run = await runGateWithProjectLog({
+      seedReceipt: async ({ root, projectPath }) => {
+        pendingReceiptPath = join(
+          root,
+          projectPath,
+          'gate-receipts',
+          'earlier-run.json',
+        );
+        await mkdir(join(root, projectPath, 'gate-receipts'), {
+          recursive: true,
+        });
+        await writeFile(
+          pendingReceiptPath,
+          `${JSON.stringify({
+            runId: 'earlier-run',
+            logPath: join(root, projectPath, 'project-log.md'),
+            recovery: { command: 'oat project log append --commit' },
+          })}\n`,
+          'utf8',
+        );
+      },
+    });
+
+    expect(run.diagnostics).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-receipt-pending',
+        state: 'pending',
+        receiptPath: pendingReceiptPath,
+        runId: 'earlier-run',
+      }),
+    );
+    // The warning is discovery, not a gate failure.
+    expect(run.capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+  });
+
+  /**
+   * Installs an `oat` shim on PATH so a receipt's `recovery.command` can be run
+   * verbatim, in a genuinely separate process, through the real CLI entry
+   * point. Running the string itself (rather than a hand-rebuilt argv) is what
+   * proves the receipt's quoting and flags are actually replayable.
+   */
+  async function installOatShim(root: string): Promise<string> {
+    const cliRoot = join(process.cwd(), '..', '..');
+    const binDir = join(root, 'recovery-bin');
+    await mkdir(binDir, { recursive: true });
+    await writeFile(
+      join(binDir, 'oat'),
+      [
+        '#!/bin/sh',
+        `exec ${JSON.stringify(join(cliRoot, 'node_modules', '.bin', 'tsx'))} \\`,
+        `  --tsconfig ${JSON.stringify(join(cliRoot, 'packages', 'cli', 'tsconfig.json'))} \\`,
+        `  ${JSON.stringify(join(cliRoot, 'packages', 'cli', 'src', 'index.ts'))} "$@"`,
+        '',
+      ].join('\n'),
+      { encoding: 'utf8', mode: 0o755 },
+    );
+    return binDir;
+  }
+
+  function runRecoveryCommand(options: {
+    binDir: string;
+    command: string;
+    home: string;
+    root: string;
+    tmpDir: string;
+  }): { status: number; output: string } {
+    try {
+      const output = execFileSync('sh', ['-c', options.command], {
+        cwd: options.root,
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          HOME: options.home,
+          // A private TMPDIR makes any gate run in this child observable: every
+          // review gate writes `<tmp>/oat-gate-runs/<runId>.json` before it
+          // dispatches a reviewer.
+          TMPDIR: options.tmpDir,
+          PATH: `${options.binDir}:${process.env.PATH ?? ''}`,
+        },
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+      return { status: 0, output };
+    } catch (error) {
+      const failure = error as {
+        status?: number;
+        stdout?: string;
+        stderr?: string;
+      };
+      return {
+        status: failure.status ?? 1,
+        output: `${failure.stdout ?? ''}${failure.stderr ?? ''}`,
+      };
+    }
+  }
+
+  async function snapshotReviews(
+    root: string,
+    projectPath: string,
+  ): Promise<string> {
+    const dir = join(root, projectPath, 'reviews');
+    const names = (await readdir(dir)).sort();
+    const contents = await Promise.all(
+      names.map(
+        async (name) => `${name}:${await readFile(join(dir, name), 'utf8')}`,
+      ),
+    );
+    return contents.join('\n');
+  }
+
+  it('recovers finalization from the receipt in a fresh process without re-running the review', async () => {
+    const run = await runGateWithProjectLog({ holdIndexLock: true });
+    const receipt = await readGateReceipt(run);
+    const receiptPath = join(
+      run.root,
+      run.projectPath,
+      'gate-receipts',
+      `${run.runId}.json`,
+    );
+    const logPath = join(run.root, run.projectPath, 'project-log.md');
+    expect(
+      run.git([
+        'status',
+        '--porcelain',
+        '--',
+        `${run.projectPath}/project-log.md`,
+      ]),
+    ).not.toBe('');
+
+    // The other process finished with the index; nothing deleted the lock on
+    // its behalf.
+    await rm(join(run.root, '.git', 'index.lock'));
+    const headBefore = run.git(['rev-parse', 'HEAD']);
+    const reviewsBefore = await snapshotReviews(run.root, run.projectPath);
+    const binDir = await installOatShim(run.root);
+    const tmpDir = join(run.root, 'recovery-tmp');
+    await mkdir(tmpDir, { recursive: true });
+
+    const recovery = runRecoveryCommand({
+      binDir,
+      command: receipt.recovery.command,
+      home: run.home,
+      root: run.root,
+      tmpDir,
+    });
+
+    expect(recovery.status, recovery.output).toBe(0);
+    expect(run.git(['rev-list', '--count', `${headBefore}..HEAD`])).toBe('1');
+    expect(run.git(['show', '--name-only', '--format=', 'HEAD'])).toBe(
+      `${run.projectPath}/project-log.md`,
+    );
+    expect(
+      run.git([
+        'status',
+        '--porcelain',
+        '--',
+        `${run.projectPath}/project-log.md`,
+      ]),
+    ).toBe('');
+    const content = await readFile(logPath, 'utf8');
+    expect(countRunHeadings(content, run.runId)).toBe(1);
+    await expect(readFile(receiptPath, 'utf8')).rejects.toThrow();
+    // No reviewer ran: the review artifacts are byte-identical and the
+    // recovery process emitted no gate envelope.
+    await expect(snapshotReviews(run.root, run.projectPath)).resolves.toBe(
+      reviewsBefore,
+    );
+    expect(recovery.output).not.toContain('"runId"');
+    expect(recovery.output).not.toContain('receiveEligible');
+    // No gate ran in the child: a review gate always creates its run-marker
+    // directory under TMPDIR before it dispatches anything.
+    await expect(readdir(tmpDir)).resolves.not.toContain('oat-gate-runs');
+
+    const replay = runRecoveryCommand({
+      binDir,
+      command: receipt.recovery.command,
+      home: run.home,
+      root: run.root,
+      tmpDir,
+    });
+
+    expect(replay.status, replay.output).toBe(0);
+    expect(replay.output).toContain('already present');
+    await expect(readdir(tmpDir)).resolves.not.toContain('oat-gate-runs');
+    expect(run.git(['rev-list', '--count', `${headBefore}..HEAD`])).toBe('1');
+    await expect(readFile(logPath, 'utf8')).resolves.toBe(content);
+    expect(countRunHeadings(content, run.runId)).toBe(1);
+  }, 120_000);
+
+  it("keeps a receipt pending when it records another tree's log", async () => {
+    let pendingReceiptPath = '';
+    let foreignLogPath = '';
+    const run = await runGateWithProjectLog({
+      seedReceipt: async ({ root, projectPath }) => {
+        // A receipt that travelled with a copied project directory: the log it
+        // names carries the run id, but it is not this project's log.
+        foreignLogPath = join(root, 'elsewhere', 'project-log.md');
+        await mkdir(join(root, 'elsewhere'), { recursive: true });
+        await writeFile(
+          foreignLogPath,
+          '# Project Log: elsewhere\n\n## Entries\n\n### 2026-07-17 · structural · oat gate review · p01\n\nstatus=ok run=travelled-run\n',
+          'utf8',
+        );
+        pendingReceiptPath = join(
+          root,
+          projectPath,
+          'gate-receipts',
+          'travelled-run.json',
+        );
+        await mkdir(join(root, projectPath, 'gate-receipts'), {
+          recursive: true,
+        });
+        await writeFile(
+          pendingReceiptPath,
+          `${JSON.stringify({
+            runId: 'travelled-run',
+            logPath: foreignLogPath,
+            body: 'status=ok run=travelled-run',
+            recovery: { command: 'oat project log append --commit' },
+          })}\n`,
+          'utf8',
+        );
+      },
+    });
+
+    const pending = run.diagnostics.find(
+      (entry) => entry.type === 'gate-project-log-receipt-pending',
+    );
+    // Staleness is a statement about the log of the project being gated, so a
+    // receipt naming another tree's log cannot be called stale.
+    expect(pending).toMatchObject({
+      state: 'pending',
+      recordedLogPath: foreignLogPath,
+      logPath: join(run.root, run.projectPath, 'project-log.md'),
+    });
+  });
+
+  it('keeps a receipt pending while its entry is only in the working tree', async () => {
+    let pendingReceiptPath = '';
+    // The index lock is held for this whole run, so the seeded entry stays in
+    // the working tree and reaches no commit: the exact state an exhausted
+    // commit retry leaves behind, and the state the receipt exists to describe.
+    const run = await runGateWithProjectLog({
+      holdIndexLock: true,
+      seedReceipt: async ({ root, projectPath }) => {
+        const logPath = await writeExistingProjectLog(root, projectPath);
+        await writeFile(
+          logPath,
+          `${await readFile(logPath, 'utf8')}\n### 2026-07-17 · structural · oat gate review · p01\n\nstatus=ok run=earlier-run\n`,
+          'utf8',
+        );
+        pendingReceiptPath = join(
+          root,
+          projectPath,
+          'gate-receipts',
+          'earlier-run.json',
+        );
+        await mkdir(join(root, projectPath, 'gate-receipts'), {
+          recursive: true,
+        });
+        await writeFile(
+          pendingReceiptPath,
+          `${JSON.stringify({
+            runId: 'earlier-run',
+            logPath,
+            body: 'status=ok run=earlier-run',
+            recovery: { command: 'oat project log append --commit' },
+          })}\n`,
+          'utf8',
+        );
+      },
+    });
+
+    const logRelative = join(run.projectPath, 'project-log.md');
+    expect(() => run.git(['show', `HEAD:${logRelative}`])).toThrow();
+    expect(
+      run.diagnostics.filter(
+        (entry) => entry.receiptPath === pendingReceiptPath,
+      ),
+    ).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-receipt-pending',
+        state: 'pending',
+        runId: 'earlier-run',
+      }),
+    );
+
+    // Recovery's commit is the transition. Once the entry is in the committed
+    // log, the same receipt is finished work and reads as stale.
+    await rm(join(run.root, '.git', 'index.lock'), { force: true });
+    run.git(['add', '--', logRelative]);
+    run.git(['commit', '-q', '-m', 'chore(oat): recover finalization']);
+    expect(run.git(['show', `HEAD:${logRelative}`])).toContain(
+      'run=earlier-run',
+    );
+
+    const secondDiagnostics: string[] = [];
+    const secondRunner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root: run.root,
+          projectPath: run.projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+    await runReviewGate({
+      root: run.root,
+      home: run.home,
+      runProcess: secondRunner.runProcess,
+      writeDiagnostic: (message) => secondDiagnostics.push(message),
+      appendProjectLog: appendProjectLogFromDisk,
+      args: ['--target', 'codex-default', '--review-scope', 'p03', 'Review'],
+    });
+
+    expect(
+      secondDiagnostics
+        .map((line) => JSON.parse(line) as Record<string, unknown>)
+        .filter((entry) => entry.receiptPath === pendingReceiptPath),
+    ).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-receipt-pending',
+        state: 'stale',
+        runId: 'earlier-run',
+      }),
+    );
+  });
+
+  it('reports a receipt as stale once its run id is already in the log', async () => {
+    let pendingReceiptPath = '';
+    const run = await runGateWithProjectLog({
+      seedReceipt: async ({ root, projectPath }) => {
+        const logPath = await writeExistingProjectLog(root, projectPath);
+        await writeFile(
+          logPath,
+          `${await readFile(logPath, 'utf8')}\n### 2026-07-17 · structural · oat gate review · p01\n\nstatus=ok run=earlier-run\n`,
+          'utf8',
+        );
+        // Staleness is a statement about the committed log, so the entry has
+        // to be committed for this to be the stale case at all.
+        execFileSync('git', ['add', '--', logPath], {
+          cwd: root,
+          stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        execFileSync(
+          'git',
+          ['commit', '-q', '-m', 'chore(oat): record earlier run'],
+          { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] },
+        );
+        pendingReceiptPath = join(
+          root,
+          projectPath,
+          'gate-receipts',
+          'earlier-run.json',
+        );
+        await mkdir(join(root, projectPath, 'gate-receipts'), {
+          recursive: true,
+        });
+        await writeFile(
+          pendingReceiptPath,
+          `${JSON.stringify({
+            runId: 'earlier-run',
+            logPath,
+            recovery: { command: 'oat project log append --commit' },
+          })}\n`,
+          'utf8',
+        );
+      },
+    });
+
+    expect(run.diagnostics).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-receipt-pending',
+        state: 'stale',
+        receiptPath: pendingReceiptPath,
+      }),
+    );
+  });
+
   it('injects headless context and keeps JSON stdout envelope-only', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
@@ -6487,6 +7169,7 @@ describe('oat gate', () => {
         source: 'exec-target-config',
       },
       message: expect.stringContaining('spawn codex ENOENT'),
+      postSelection: { step: 'target-dispatch', code: 'Error' },
     });
     expect(capture.jsonPayloads[0]?.runId).toBe(
       capture.jsonPayloads[0]?.gateInvocation.runId,
@@ -6527,6 +7210,10 @@ describe('oat gate', () => {
         source: 'exec-target-config',
       },
       message: expect.any(String),
+      postSelection: {
+        step: 'artifact-scan',
+        code: expect.stringMatching(/^\S+$/),
+      },
     });
     expect(capture.jsonPayloads[0]?.runId).toBe(
       capture.jsonPayloads[0]?.gateInvocation.runId,
@@ -6535,6 +7222,674 @@ describe('oat gate', () => {
       [],
     );
     expect(process.exitCode).toBe(1);
+  });
+
+  /**
+   * A transient post-selection failure that lands *after* the reviewer has
+   * already committed a run-correlated artifact: the first verdict evaluation
+   * throws while the gate reads the parsed invocation metadata. Later calls
+   * (the recovery re-validation) behave normally unless overridden.
+   */
+  function createTransientPostSelectionParse(options?: {
+    beforeThrow?: (absolutePath: string) => Promise<void>;
+    onRecoveryCall?: () => Promise<
+      Awaited<ReturnType<typeof parseReviewGateVerdictFromDisk>>
+    >;
+    transformRecoveryVerdict?: (
+      verdict: Awaited<ReturnType<typeof parseReviewGateVerdictFromDisk>>,
+    ) => Awaited<ReturnType<typeof parseReviewGateVerdictFromDisk>>;
+    throwOnEveryCall?: boolean;
+  }): {
+    parse: typeof parseReviewGateVerdictFromDisk;
+    calls: {
+      absolutePath: string;
+      snapshot: { content: string; signature: string } | undefined;
+    }[];
+  } {
+    const calls: {
+      absolutePath: string;
+      snapshot: { content: string; signature: string } | undefined;
+    }[] = [];
+    const parse: typeof parseReviewGateVerdictFromDisk = async (
+      absolutePath,
+      parseOptions,
+    ) => {
+      calls.push({
+        absolutePath,
+        snapshot: parseOptions?.artifactSnapshot
+          ? {
+              content: parseOptions.artifactSnapshot.content,
+              signature: parseOptions.artifactSnapshot.signature,
+            }
+          : undefined,
+      });
+      if (calls.length > 1 && !options?.throwOnEveryCall) {
+        if (options?.onRecoveryCall) {
+          return await options.onRecoveryCall();
+        }
+        const recovered = await parseReviewGateVerdictFromDisk(
+          absolutePath,
+          parseOptions,
+        );
+        return options?.transformRecoveryVerdict
+          ? options.transformRecoveryVerdict(recovered)
+          : recovered;
+      }
+      const verdict = await parseReviewGateVerdictFromDisk(
+        absolutePath,
+        parseOptions,
+      );
+      await options?.beforeThrow?.(absolutePath);
+      return new Proxy(verdict, {
+        get(target, property, receiver) {
+          if (property === 'gateInvocation') {
+            throw new Error('transient post-selection corroboration failure');
+          }
+          return Reflect.get(target, property, receiver);
+        },
+      });
+    };
+    return { parse, calls };
+  }
+
+  it('recovers a committed passing artifact when post-selection corroboration throws', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    let artifactPath = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      outcome: 'review_completed_gate_passed',
+      artifactPath,
+      receiveEligible: true,
+      postSelectionRecovery: true,
+      handoff: expect.stringContaining('oat-project-review-receive'),
+      corroboration: { run: 'matched', invocation: 'matched' },
+    });
+    // Recovery is re-validation, never re-review: the reviewer ran once.
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('recovers a committed blocking artifact', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const appendProjectLog = vi.fn(
+      async (
+        _input: AppendProjectLogInput,
+      ): Promise<ProjectLogAppendResult> => ({
+        status: 'appended',
+        logPath: join(root, projectPath, 'project-log.md'),
+        heading: '### 2026-09-07 · structural · oat gate review · p01',
+        created: false,
+      }),
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'important',
+          counts: { critical: 0, important: 1, medium: 0, minor: 0 },
+        });
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog,
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      outcome: 'review_completed_blocking_findings',
+      receiveEligible: true,
+      postSelectionRecovery: true,
+      counts: { critical: 0, important: 1, medium: 0, minor: 0 },
+      handoff: expect.stringContaining('oat-project-review-receive'),
+    });
+    // The blocking disposition reaches the project log too, so a recovery
+    // that always logged `status=ok` would fail here.
+    expect(appendProjectLog).toHaveBeenCalledTimes(1);
+    expect(appendProjectLog.mock.calls[0]?.[0]?.body).toContain(
+      'status=blocked',
+    );
+    expect(appendProjectLog.mock.calls[0]?.[0]?.body).toContain('exit=1');
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('names the failing post-selection sub-step when no artifact exists', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        // The child leaves no artifact and poisons the reviews path, so the
+        // post-dispatch scan throws with nothing to recover.
+        await writeFile(
+          join(root, projectPath, 'reviews'),
+          'not a review directory',
+          'utf8',
+        );
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      postSelection: {
+        step: 'artifact-scan',
+        code: expect.stringMatching(/^\S+$/),
+      },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('keeps review_failed when the committed artifact does not validate', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+    const transient = createTransientPostSelectionParse({
+      onRecoveryCall: async () => {
+        throw new Error(
+          'Review artifact does not contain recognizable review findings or explicit verdict counts.',
+        );
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    // The thrown sub-step still names what failed; the eligibility cause is
+    // the routable code. The gate does not fabricate a passing verdict.
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      postSelection: {
+        step: 'invocation-corroboration',
+        code: 'artifact_verdict_unparsable',
+      },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('receiveEligible');
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('reports a distinct cause and diagnostic when recovery re-validation itself fails', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const diagnostics: string[] = [];
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+    // The same fault recurs during re-validation, so recovery throws too.
+    const transient = createTransientPostSelectionParse({
+      throwOnEveryCall: true,
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeDiagnostic: (message) => {
+        diagnostics.push(message);
+      },
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    // The envelope names the recovery attempt as the blocker rather than the
+    // transient error that triggered it, and leaves a diagnostic behind.
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      postSelection: { code: 'recovery_revalidation_failed' },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
+    expect(
+      diagnostics.map(
+        (message) => JSON.parse(message) as Record<string, unknown>,
+      ),
+    ).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-recovery-failed',
+        target: 'codex-default',
+        project: projectPath,
+        message: expect.stringContaining(
+          'transient post-selection corroboration failure',
+        ),
+      }),
+    );
+    expect(transient.calls).toHaveLength(2);
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('does not half-print a recovered result when human-mode emission fails', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+    const transient = createTransientPostSelectionParse({
+      transformRecoveryVerdict: (verdict) =>
+        ({
+          ...verdict,
+          // Rendering the normalization line throws partway through the
+          // human-mode result, after its first lines would have printed.
+          normalization: {
+            persisted: false,
+            get insertedSeverities(): never {
+              throw new Error('normalization rendering failed');
+            },
+          },
+        }) as Awaited<ReturnType<typeof parseReviewGateVerdictFromDisk>>,
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+      globalArgs: [],
+    });
+
+    // Exactly one terminal statement reaches the operator: no half-printed
+    // recovered result ahead of the failure line.
+    expect(
+      capture.info.filter((line) => line.startsWith('Review completed')),
+    ).toEqual([]);
+    expect(
+      capture.info.filter((line) => line.startsWith('Review artifact:')),
+    ).toEqual([]);
+    expect(
+      capture.error.filter((line) =>
+        line.includes('Review failed after target selection'),
+      ),
+    ).toHaveLength(1);
+    expect(capture.error.at(-1)).toContain('(post-selection step:');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('recovers from the selected snapshot, not the current path contents', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    let artifactPath = '';
+    let originalContent = '';
+    let replacementContent = '';
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        artifactPath = await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'important',
+          counts: { critical: 0, important: 1, medium: 0, minor: 0 },
+        });
+        originalContent = await readFile(join(root, artifactPath), 'utf8');
+        replacementContent = originalContent
+          .replace(
+            'oat_review_important_count: 1',
+            'oat_review_important_count: 0',
+          )
+          .replace('- Important finding that should block.', 'None.');
+      },
+    });
+    const transient = createTransientPostSelectionParse({
+      beforeThrow: async (absolutePath) => {
+        // A different, passing review body replaces the selected artifact
+        // after selection and before the post-selection failure.
+        await writeFile(absolutePath, replacementContent, 'utf8');
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    // Both the normal evaluation and the recovery re-validation were handed
+    // the selected snapshot; the replacement bytes were never parsed.
+    expect(transient.calls).toHaveLength(2);
+    for (const call of transient.calls) {
+      expect(call.snapshot?.content).toBe(originalContent);
+      expect(call.snapshot?.content).toContain(
+        '- Important finding that should block.',
+      );
+    }
+    // Replacement bytes never recover: the snapshot no longer matches the
+    // path, so the committed artifact fails re-validation and stays failed.
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      postSelection: { code: 'artifact_verdict_unparsable' },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
+    await expect(readFile(join(root, artifactPath), 'utf8')).resolves.toBe(
+      replacementContent,
+    );
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('does not recover an artifact whose invocation marker is not gate', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+          reviewInvocation: 'manual',
+        });
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      postSelection: { code: 'gate_invocation_marker_missing' },
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
+    // No second dispatch: recovery never re-reviews.
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('does not recover an artifact targeting another project', async () => {
+    const { root, home } = await setup();
+    const declaredProject = await writeProject(
+      root,
+      '.oat/projects/shared/declared',
+    );
+    const siblingProject = await writeProject(
+      root,
+      '.oat/projects/shared/sibling',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath: declaredProject,
+          artifactProject: siblingProject,
+          finding: 'clean',
+        });
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+      args: [
+        '--project',
+        declaredProject,
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+
+    // Containment is the first gate in the shared eligibility function, so a
+    // foreign-target artifact is rejected before any verdict exists — there
+    // is nothing a recovery could hand back.
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      receiveEligible: false,
+      handoff: null,
+    });
+    expect(transient.calls).toHaveLength(0);
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
+    expect(
+      runner.calls.filter((call) => call.purpose === 'execute'),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('normal and recovery paths share one eligibility function', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+    });
+
+    // One pipeline, one snapshot: the recovery call receives byte-identical
+    // arguments to the normal call, so no check can be skipped on recovery.
+    expect(transient.calls).toHaveLength(2);
+    expect(transient.calls[1]).toEqual(transient.calls[0]);
+    expect(transient.calls[0]?.snapshot).toBeDefined();
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      postSelectionRecovery: true,
+    });
+  });
+
+  it('recovers the same envelope the normal path would have written', async () => {
+    const writeCleanArtifact = async (
+      root: string,
+      projectPath: string,
+    ): Promise<void> => {
+      await writeReviewArtifact({ root, projectPath, finding: 'minor' });
+    };
+    // Normalize the only run-scoped value so the two envelopes are directly
+    // comparable.
+    const normalize = (payload: unknown, runId: string): unknown =>
+      JSON.parse(
+        JSON.stringify(payload).replaceAll(runId, '<run-id>'),
+      ) as unknown;
+
+    const baseline = await setup();
+    const baselineProject = await writeProject(baseline.root);
+    await writeActiveProject(baseline.root, baselineProject);
+    const baselineRunner = createProcessRunner({
+      onExecute: async () => {
+        await writeCleanArtifact(baseline.root, baselineProject);
+      },
+    });
+    const baselineCapture = await runReviewGate({
+      root: baseline.root,
+      home: baseline.home,
+      runProcess: baselineRunner.runProcess,
+    });
+    const baselinePayload = baselineCapture.jsonPayloads[0];
+    expect(baselinePayload).toMatchObject({ status: 'ok' });
+
+    const recoveredFixture = await setup();
+    const recoveredProject = await writeProject(recoveredFixture.root);
+    await writeActiveProject(recoveredFixture.root, recoveredProject);
+    const recoveredRunner = createProcessRunner({
+      onExecute: async () => {
+        await writeCleanArtifact(recoveredFixture.root, recoveredProject);
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+    const recoveredCapture = await runReviewGate({
+      root: recoveredFixture.root,
+      home: recoveredFixture.home,
+      runProcess: recoveredRunner.runProcess,
+      parseReviewGateVerdict: transient.parse,
+    });
+    const recoveredPayload = recoveredCapture.jsonPayloads[0];
+
+    // Recovery reuses the same run identity, threshold, corroboration,
+    // counts, handoff, and eligibility the normal path produces: the only
+    // difference is the additive marker.
+    expect(
+      normalize(recoveredPayload, String(recoveredPayload?.runId)),
+    ).toEqual({
+      ...(normalize(baselinePayload, String(baselinePayload?.runId)) as Record<
+        string,
+        unknown
+      >),
+      project: recoveredProject,
+      artifactPath: String(recoveredPayload?.artifactPath),
+      postSelectionRecovery: true,
+    });
+    expect(recoveredProject).toBe(baselineProject);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('preserves the artifact_missing envelope', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner();
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    // Byte-stable PR #246 envelope: exact key set and exact wording, so
+    // recovery can neither add a key here nor reword the guidance.
+    expect(capture.jsonPayloads[0]).toEqual({
+      status: 'artifact_missing',
+      outcome: 'review_completed_artifact_missing',
+      runId: expect.any(String),
+      target: 'codex-default',
+      project: projectPath,
+      projectResolutionSource: 'active-project',
+      artifactPath: null,
+      generatedAt: null,
+      gateInvocation: expect.objectContaining({ runId: expect.any(String) }),
+      dispatchReport: expect.anything(),
+      receiveEligible: false,
+      remediable: false,
+      handoff: null,
+      message:
+        'Review target codex-default completed without producing the required correlated review artifact.',
+      recovery:
+        'Fix the accepted headless target so it can write and finalize the review artifact before the process exits, then start a new gate run.',
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('records the recovered disposition in the project log', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const appendProjectLog = vi.fn(
+      async (
+        _input: AppendProjectLogInput,
+      ): Promise<ProjectLogAppendResult> => ({
+        status: 'appended',
+        logPath: join(root, projectPath, 'project-log.md'),
+        heading: '### 2026-09-07 · structural · oat gate review · p02',
+        created: false,
+      }),
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+    const transient = createTransientPostSelectionParse();
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog,
+      parseReviewGateVerdict: transient.parse,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    expect(appendProjectLog).toHaveBeenCalledTimes(1);
+    const input = appendProjectLog.mock.calls[0]?.[0];
+    // The log records the recovered disposition, not the transient failure.
+    expect(input?.body).toContain('status=ok');
+    expect(input?.body).toContain('exit=0');
+    expect(input?.body).toContain('artifact=');
+    expect(input?.body).toContain('findings=critical:');
+    expect(process.exitCode).toBe(0);
   });
 
   it.each([
@@ -7152,7 +8507,11 @@ describe('oat gate', () => {
       status: 'review_failed',
       outcome: 'unexpected_post_selection_failure',
       message: 'Branch-local gate route did not return JSON.',
+      postSelection: { step: 'target-dispatch', code: 'Error' },
     });
+    // The failure precedes artifact correlation, so no snapshot was ever
+    // selected and the recovery branch must stay inert.
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('postSelectionRecovery');
     expect(process.exitCode).toBe(1);
   });
 

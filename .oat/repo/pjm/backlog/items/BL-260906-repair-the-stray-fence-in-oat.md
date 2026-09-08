@@ -11,14 +11,14 @@ labels:
   - contract-tests
 assignee: null
 created: 2026-09-06T08:30:41.038Z
-updated: 2026-09-06T08:30:41.038Z
+updated: 2026-09-07T09:30:00.000Z
 associated_issues: []
 external_plans: []
 ---
 
 ## Description
 
-p04 review findings (wave 2). oat-project-review-provide/SKILL.md:1057 opens a bare four-backtick fence after prose that swallows lines 1057-1167 (Steps 8.5, 9, 9.5 render as code; the review-artifact template at :1013-1055 renders as live headings). The repair is indivisible with the contract matrix: insert an opener before :1013, narrow :1167 to three backticks, delete the coupled row in packages/cli/src/validation/named-skill-load-contract.test.ts (anchor Recommended Next Step), tighten findFenceDefects with the fence-length >= 4 discriminator, and bump review-provide (1.5.3) plus its skills.test.ts pin. Three more spurious fences of the same class sit outside the bounded surface (oat-repo-knowledge-index/SKILL.md:514, oat-repo-improve/references/plan-template.md:149, a create-oat-skill reference); run the rule over all of .agents/skills/\*\*.
+p04 review findings (wave 2). oat-project-review-provide/SKILL.md:1057 opens a bare four-backtick fence after prose that swallows lines 1057-1167 (Steps 8.5, 9, 9.5 render as code; the review-artifact template at :1013-1055 renders as live headings). The repair is indivisible with the contract matrix: insert an opener before :1013, narrow :1167 to three backticks, delete the coupled row in packages/cli/src/validation/named-skill-load-contract.test.ts (anchor Recommended Next Step), tighten findFenceDefects with the fence-length >= 4 discriminator, and bump review-provide (1.5.3) plus its skills.test.ts pin. Three more spurious fences of the same class sit outside the bounded surface (oat-repo-knowledge-index/SKILL.md:514, oat-repo-improve/references/plan-template.md:149, a create-oat-skill reference); run the rule over all of .agents/skills/\*\*. Scope note (wave-5 p07, 2026-09-07): the `oat-repo-improve` instance grew. That lane added `## Dependencies` and `## Landing-event impact` inside the template fence, but its new STOP clause and the whole `## Revalidation Before Execution` section landed in the outside-the-fence region, so they now render as real headings of `plan-template.md` itself. The fence topology is unchanged (opener/closer positions only shifted); the repair here should re-scope to the enlarged region.
 
 ## Acceptance Criteria
 
@@ -27,3 +27,7 @@ p04 review findings (wave 2). oat-project-review-provide/SKILL.md:1057 opens a b
 - [ ] The coupled matrix row (anchor `Recommended Next Step`) is deleted in the same commit and the contract suite passes
 - [ ] `oat-project-review-provide` version bumped once with its `skills.test.ts` pin updated
 - [ ] The fence rule (or a repo-wide balance check) runs over all of `.agents/skills/**` and the three out-of-surface instances are repaired
+
+## Scope note (2026-09-07, wave 5 p07)
+
+Wave 5 p07 (`2026-09-02-enforce-external-plan-readiness-contract.md`) added `## Revalidation Before Execution` and a new STOP clause to `.agents/skills/oat-repo-improve/references/plan-template.md`; they join the region already outside the stray fence (with `## STOP conditions`, `## Repository conventions`, `## Review focus`), so the repair must re-fence that whole trailing region, not only the sections present when this item was filed.

@@ -287,12 +287,19 @@ at `index.test.ts:5984` (poisoned `reviews` path) and the
 - `names the failing post-selection sub-step when no artifact exists` →
   `postSelection.step: 'artifact-scan'`.
 - `keeps review_failed when the committed artifact does not validate` →
-  `postSelection.step: 'verdict-parse'` with the validation cause.
+  `postSelection.code` names the validation cause; `step` is the sub-step
+  that actually threw and is left unpinned (corrected at wave-5 close: step
+  4 names the THROWN sub-step, and a parse failure on the normal path returns
+  an eligibility envelope instead of throwing).
 - `recovers from the selected snapshot, not the current path contents` →
   after selection, overwrite the artifact path with a different passing
-  review body, then throw in `verdict-disposition`; the recovered envelope
-  carries the original signature and verdict, and the replacement bytes are
-  never parsed (spy on `parseReviewGateVerdict` for `artifactSnapshot`).
+  review body, then throw in `verdict-disposition`; both parse calls receive
+  the original snapshot bytes and the replacement bytes are never parsed
+  (spy on `parseReviewGateVerdict` for `artifactSnapshot`), and because the
+  snapshot no longer matches the path the run stays `review_failed` with
+  `postSelection.code: artifact_verdict_unparsable` and no
+  `postSelectionRecovery` (corrected at wave-5 close per Done criterion 6:
+  replacement bytes never recover).
 - `does not recover an artifact whose invocation marker is not gate` →
   snapshot with `oat_review_invocation: review`; result is `review_failed`
   with `postSelection.code` naming the marker cause; no second dispatch
@@ -313,7 +320,9 @@ at `index.test.ts:5984` (poisoned `reviews` path) and the
 
 - [ ] A validating committed artifact is returned with its real disposition
       when post-selection work throws; no reviewer re-dispatch occurs.
-- [ ] Every `review_failed` envelope names `postSelection.step` and `code`.
+- [ ] Every `review_failed` envelope with `outcome: unexpected_post_selection_failure`
+      names `postSelection.step` and `code` (corrected at wave-5 close: the
+      `review_did_not_complete` envelope is out of scope and unchanged).
 - [ ] The six terminal statuses and the PR #246 envelopes are unchanged.
 - [ ] Docs describe recovery-by-revalidation; `skills.test.ts` still passes.
 - [ ] Decision record added.
@@ -340,7 +349,13 @@ Stop and report instead of improvising when:
   above (refresh this plan before editing); or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-07, wave 5)
+
+Executed as wave-5 p01 (PR #275 `wave-5-execution`, CLI 0.2.63): `postSelectionContext` widened with the six-step label set; `writeReviewGateUnexpectedFailure` carries `postSelection: { step, code }`; a committed artifact whose snapshot re-validates through the SAME eligibility function as the normal path (`disposeValidatedReviewArtifact`) is returned with its real disposition and `postSelectionRecovery: true` (no reviewer re-dispatch); replacement bytes never recover (fail-closed — `assertArtifactContentCurrent` in `review-verdict.ts` is out of scope and makes the Test-plan bullet's original wording unreachable, corrected below); decision record `DR-260907-additive-post-selection` (see the decisions index); docs in `workflow-gates.md`. Review corrections applied at wave close: Done checkbox 2 scoped to the `unexpected_post_selection_failure` envelope (the `review_did_not_complete` envelope from `writeReviewGateExecutionFailure` is byte-identical to base — plan scope, not byte preservation, is the governing argument since the PR #246 row names other envelopes); the `selected snapshot` bullet reworded to the fail-closed expectation; the `verdict-parse` bullet reworded because step 4's own rule names the THROWN sub-step and a parse failure on the normal path returns an eligibility envelope instead of throwing. Five negative controls (recovery branch, marker check, snapshot re-read, envelope field, threshold identity) each turned the intended tests red.
+
 ## Revalidation Before Execution
+
+**Refresh applied 2026-09-07 (wave-5 boundary, per the execution program's pre-dispatch refresh clause; drift re-run against `0f47bf700` after waves 1–4 and the Lite workflow PR #264 merged):** Anchors on the wave-5 base `0f47bf700` (uniform +157 in `gate/index.ts`): `runReviewGate` `:3310`, `postSelectionContext` declaration `:3322` and assignment `:3381`, the catch `:3851` with `writeReviewGateUnexpectedFailure` at `:3853`, `ReviewGateTerminalStatus` `:242-248` (still six values). `.oat/repo/reference/decisions/**` joins the drift check (this plan writes a decision record with `oat decision new` and regenerates the index; the wave-5 p04 lane also writes one after this plan). PR #190 is still open, so its landing row does not apply.
 
 Revalidate against current `origin/main`, the backlog item, issue #232, the
 decision records above, and the gate tests when substantial time passes, main

@@ -331,7 +331,13 @@ Stop and report instead of improvising when:
   cited shapes; or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-07, wave 5)
+
+Executed as wave-5 p04 (PR #275 `wave-5-execution`, CLI 0.2.63): bounded index-lock retry with git's own contention evidence as the detector (a hook merely mentioning `index.lock` is `lockClass: 'other'`, not retried); competing-writer settlement requires a clean log AND a moved HEAD AND the clean log carrying this exact entry; a durable receipt under `<project>/gate-receipts/` (gitignored stanza outside the CLI-managed blocks; decision `DR-260907-gate-log-receipts-live-under`) whose `recovery.command` is `oat project log append --commit --idempotency-key run=<uuid>` — the receipt binds producer/ref/body and refuses an artifact without a signature; dedupe matches the whole `run=<uuid>` token. Deliberate deviation from step 3's literal wording: the retry, classification, and dedupe scan live in the log module (`project/log/append.ts`; DR-260718 requires it and the literal reading creates an import cycle) with `commitReviewGateProjectLog` a thin gate-side wrapper. Ten neutralization probes each turned exactly the intended test red; the fresh-process recovery test runs the real CLI entry via `tsx` in a private `TMPDIR`. Exit gate (attempt 1) found the append window unserialized and a successful commit never verified in HEAD; fixed in the wave as p12-t01 (project-local advisory lock in the log module; HEAD read-back with `entry-missing-after-commit` / `commit-unverified` routed to the receipt; deterministic overlapping-writer control) and p12-t02 (staleness decided against `HEAD:project-log.md`).
+
 ## Revalidation Before Execution
+
+**Refresh applied 2026-09-07 (wave-5 boundary, per the execution program's pre-dispatch refresh clause; drift re-run against `0f47bf700` after waves 1–4 and the Lite workflow PR #264 merged):** Anchors on the wave-5 base `0f47bf700`: `commitReviewGateProjectLog` `:2807`, `finalizeReviewGateProjectLog` `:2864`, `runId = randomUUID()` `:3316`, the `projectLogFinalized` guard `:3872-3873`; `append.ts:187-196` → `:177-208` (`appendProjectLog` at `:329`); `gate/index.test.ts` is 8506 lines (re-locate by name). `.oat/repo/reference/decisions/**` joins the drift check (this plan writes a decision record after the wave-5 p01 lane writes one; the fan-in preserves both index rows). This lane runs after p01 in the same wave.
 
 Revalidate against current `origin/main`, the backlog item, issue #213, the
 decision records above, and the gate and log tests when substantial time

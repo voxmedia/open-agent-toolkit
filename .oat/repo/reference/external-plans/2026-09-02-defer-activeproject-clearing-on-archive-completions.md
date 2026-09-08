@@ -315,6 +315,8 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
+**Refresh applied 2026-09-07 (wave-5 boundary, per the execution program's pre-dispatch refresh clause; drift re-run against `0f47bf700` after waves 1–4 and the Lite workflow PR #264 merged):** On the wave-5 base `0f47bf700`: `oat-project-complete` Step 6 `:709-716` → `:704-720`, Step 12 `:1476-1486` → `:1481`, Step 8 `:940`, Step 3.7 `:595`, `NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT` `:51` exact (guard `:68`); pins `skills.test.ts:4002` → `:4447` plus `review-skill-contracts.test.ts:1089` (bare); `lifecycle.md:333-335` is now Lite prose (re-anchor by section); `picking-up-projects.md` unchanged. The wave-5 p08 lane bumps `oat-project-complete` before this lane; this lane edits prose only and leaves both pins at p08's value. `packages/cli/src/validation/named-skill-load-contract.test.ts` is a write surface and a verification gate for this plan: any new sentence pairing an execution verb with a named `oat-project-*` skill carries a load clause and a matrix row; no anchored heading is reworded without moving its rows; the corpus floor is not lowered; add the file to the drift check. Shared-skill bump rule (PR-scoped, wave-owned): the first wave-5 lane in plan order that edits a skill bumps it once; later lanes edit prose only and leave the pins at that value.
+
 Revalidate against current `origin/main`, the backlog item, issue #252, PR
 #254's delivered scripts, and the completion contract tests when substantial
 time passes, main advances materially from
