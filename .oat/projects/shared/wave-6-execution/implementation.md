@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 02 (validate-review-ledger-paths-before-final-pr)          | complete | 1     | 1/1       |
 | Phase 03 (preserve-proto-named-config-keys)                      | complete | 1     | 1/1       |
 | Phase 04 (honor-metadata-version-for-skills)                     | complete | 1     | 1/1       |
-| Phase 05 (diagnose-canonical-skills-missing-from-provider-views) | pending  | 1     | 0/1       |
+| Phase 05 (diagnose-canonical-skills-missing-from-provider-views) | complete | 1     | 1/1       |
 
-**Total:** 4/5 planned tasks completed
+**Total:** 5/5 planned tasks completed
 
 ---
 
@@ -86,15 +86,15 @@ oat_generated: false
 
 ## Phase 05: diagnose canonical skills missing from provider views (p05)
 
-**Status:** pending · **Group:** 2 · **Tasks:** p05-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 2 · **Tasks:** p05-t01
+**Outcome:** `oat tools info <skill>` gains an additive provider-view section (human and JSON): a pure `drift/skill-view-diagnostic.ts` mapper classifies each active provider's expected projection as `inactive`, `unsupported`, `excluded`, `missing-additive` (the only projection gap, with a scope-correct `oat sync --scope <scope>` repair), `untracked` (a file at the expected path with no manifest entry), or a manifest-backed state carrying the new additive/removed/modified class beside the unchanged `DriftState`; copies are compared by version to canonical through p04's shared resolver (`metadata.version` precedence; conflicts and unusable declarations carried as `versionEvidence`) (an `in-sync` copy claims only agreement with its last-sync record), native-read providers are `in-sync` with a `nativeRead` marker; manifest load, `detectDrift`, p01's provider scope context, and the expected-projection resolver are injected through `InfoToolDependencies`; a post-sync convergence integration case runs a real `sync --scope project`; `status/index.ts` untouched (negative case only); docs in `tool-packs.md` (`oat tools info`, re-anchored `:505 → :556`) and `manifest-and-drift.md` ("Drift states").
+**Verification:** focused drift + info suites 155; forced check/type-check/test `Cached: 0` (CLI 6164); check:skill-bumps, lint, format, validate-skills; premises reproduced before editing; four negative controls (missing-additive → in-sync, repair widened to `--scope all`, `inactive` branch removed, read-only tripwire) red then green; two Codex rounds (R1 2I/3M/1m, R2 1I/2M/2m, all fixed or dispositioned).
+**Deviations:** `ExpectedProjection` carries no `strategy` (resolved by the sync engine at sync time); two classes added beyond the plan's four (`untracked`; native-read `in-sync` with `nativeRead`); the original banner-fallback reader returned the top-level value where p04 resolves `metadata.version` (the fan-in reconciliation the review demanded) — replaced by the shared resolver after the p05 worktree was rebased onto the p04 merge; a pre-existing copy-strategy drift defect reported, not fixed.
 
 ### Task p05-t01: Execute external plan — Diagnose canonical skills missing from a provider view at resolution time
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `bfa0c7c8e`; fix `63b5f3c09`; fix `d2923f5ab` (post-rebase)
 
 ## Autonomy Gate Provenance
 
@@ -159,14 +159,19 @@ Wave base `fab304fe7a2b0eb04f39f45b9de17934e8019fed` (origin/main after the wave
 - `w6-p05-review-002` outcome: PASS pending the deferred Important 1, 0C/1I/0M/2m. Critical, Important 2, Medium, and three Minors resolved at source: a three-point comparison on the real CLI (base / pre-fix / fixed) for invalid JSON, schema failure, EACCES, and EISDIR at both manifests — base 0 with detail (it never read the manifest), pre-fix 1/2 with detail lost, fixed 0 with detail plus `unavailable`; per-scope isolation; unknown tool still exits 1; redaction clean across six adversarial shapes; repair suppression version-conditional and not leaking to four repairable cases; four negative controls red. Open: Important 1 (fan-in condition: p04 merged, p05 rebased, `readProjectedSkillVersion` delegating to `resolveSkillVersion(parseSkillFrontmatter(...))` on banner-stripped content, a both-fields-differing regression case) and the `skill-views.ts` inventory note (recorded here). `oat status`, pack info, and unknown-name output byte-identical to the base across both lane commits.
 - `w6-p04-fix-001` outcome: one commit `839321e746a540ce9b5b2bbbd9dbe642831f3613` (no re-bump; `parse.ts` untouched). Critical closed: `skill-version-unusable` is reported by the every-skill version-source pass before its unresolved bail and by the bump collector instead of falling through (a changed non-`oat-*` skill with `version: 1.10` now fails `check:skill-bumps` and the structural validator; pre-fix exit 0). Important 1 closed: the base block is parsed once and a malformed or unusable base emits a blocking finding naming the base ref. Important 2 closed in scope: `resolveRoleIdentity` parses the raw frontmatter block from the file content through the same `parseSkillFrontmatter` (extraction regexes proven identical; the `toParsedSkillFrontmatter` adapter deleted). Mediums: the boundary comment now distinguishes rejecting the decorated field from the document; the report's "pre-existing bypass" claim retracted (base exited 1; the strict parser would have introduced the bypass and the guard prevents it). Counts corrected (9 files / 418 focused; 22 + 76). Codex round (2I/1M, all fixed): canonical identity accepted a previously rejected conflict (decorated declaration beside a resolving alternate) and a conflicting base still permitted a downgrade — a phase regression the round-1 review did not catch, now blocking with both values named. Forced CLI suite 6198 `Cached: 0`; `check:skill-bumps` 3 changed skills, zero alias findings; `oat:validate-skills` 82 alias warnings, 0 unusable/unreadable. Round 2 `w6-p04-review-002` on the original reviewer handle.
 - `w6-p04-review-002` outcome: PASS (p04 merges first), 0C/0I/0M/3m. All four blocking findings verified at source: the gate matrix flips `0 → 1` for the unusable current declaration (G4) and the base side (G5), plus the Codex-round base-unusable (G7) and base-conflict downgrade (G8) cases; four-reader parity fixed at the root (`toParsedSkillFrontmatter` has zero references; the real `resolveCanonicalRole` yields `invalid-role` for `!!str`/`&pin`; capture-pattern parity probed across seven inputs incl. CRLF); the corrected counts match exactly; real-file sweep of 82 skills and 5 agents shows zero resolution differences. Minors: the release-tool reader + three regex test pins (on the migration item); the 82-warning PR note; `implementation.md`'s superseded "pre-existing bypass" framing (corrected in this record); a pre-existing residual — a changed skill with no frontmatter block at all is still skipped silently → follow-up.
+- Group-2 fan-in, first half: `wave-6/p04` rebased onto the integration tip and merged with `git merge --no-ff` as `88a8d75df` (lane commits re-hashed with identical patch-ids: `5ad26a195`→`49afab8a7`, `839321e74`→`f722f9f98`); the p05 worktree was then rebased onto that tip (`bfa0c7c8e`→`32bc1016c`, `63b5f3c09`→`c3565e618`, patch-ids preserved) so its deferred Important 1 can substitute p04's exported resolver — `w6-p05-fix-002`.
+- `w6-p05-fix-002` outcome: one commit `d2923f5ab0ed4e87142b66f58b6d28f99072c5cd` on the rebased worktree (eight files, no p04 surface). `readProjectedSkillVersion` now resolves through p04's `resolveSkillVersion(parseSkillFrontmatter(getFrontmatterBlock(stripped)))` on banner-stripped content, with the resolver's conflict/unusable state carried into the view (`versionEvidence`), a structured `readProjectedVersion` dependency, and the duplicated parser deleted; real-sync regressions: both-fields-differing resolves `2.0.0` with no false `modified` or repair (pre-fix view `1.0.0` + a repair line), metadata-only resolves, a conflicting pair reports `null`/`conflict` with the detail printed. Codex round (2I/2M, all fixed): a usable version beside an unusable sibling lost parity — resolver answers are never downgraded; conflict suppression could hide staleness and the human output withheld the warning — the detail now always prints when evidence is not clean and the docs state the cost; a string fallback could launder a conflict after a transient read failure — structured reader; vacuous negatives replaced by real-sync and direct-reader tests. No behavior change on this repository's 82 alias-only skills (410 views, all `in-sync`/`inactive`). Integrated `scan-tools`/`info`/`doctor`/`frontmatter`/`drift` suites 282 green on the rebased tree; forced CLI suite 6242 `Cached: 0`. Round 3 `w6-p05-review-003`.
+- `w6-p05-review-003` outcome: PASS (p05 merges; the group-2 gates run), 0C/0I/0M/2m, reconnaissance not-attempted. Important 1 resolved at source: `readProjectedSkillVersion` delegates to `parseSkillFrontmatter` + `resolveSkillVersion` (the functions `getSkillVersion` uses), verified live on a real copy-strategy sync at both heads (pre-fix `c3565e618` view `1.0.0` with a spurious repair; fixed `d2923f5ab` view `2.0.0`, no repair); an unusable sibling (`version: 1.10` beside `metadata.version: 2.0.0`) resolves `2.0.0` on both sides; an unreadable conflicting file returns `{version: null, state: 'absent'}`, never `resolved`; `getFrontmatterField` gone from `skill-views.ts`. One deviation from the brief ruled defensible on evidence: a conflicting-but-different pair still offers a repair because the reviewer RAN it and it worked (`update_copy → changed`, re-diagnosis `resolved`); suppression stays reserved for the provably no-op case. 82-skill `--json` sweep byte-identical across the fix (15,360 lines); `oat status`, pack info, and unknown-name output byte-identical to `88a8d75df`; integrated suites 12 files / 493 tests; seven gates green with three forced turbo runs `Cached: 0`; three negative controls red. Minors: the p05 phase record owed by the fan-in (this record); the cosmetic redaction colon (no leak).
 
 #### Phase Outcomes
 
-| Phase | Worktree                | Implementer outcome                                                                     | Review                                                               | Fix rounds |
-| ----- | ----------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------- |
-| p01   | `.worktrees/wave-6/p01` | DONE (`d5fb6e1d4`; forced CLI suite 6101)                                               | passed (round 1 0C/1I/3M/4m → round 2 0C/0I/1M/0m)                   | 1          |
-| p02   | `.worktrees/wave-6/p02` | DONE (`bad7d0e90`; forced CLI suite 6041, test:smoke)                                   | passed (round 1 0C/1I/1M/3m → round 2 1C/1I/1M/2m → round 3 0/0/0/0) | 3          |
-| p03   | `.worktrees/wave-6/p03` | DONE_WITH_CONCERNS after a STOP → refresh → resume (`9f714cb56`; forced CLI suite 6048) | passed (round 1 0C/1I/1M/3m → record fix → round 2 0C/0I/0M/1m)      | 1 (record) |
+| Phase | Worktree                | Implementer outcome                                                                     | Review                                                                                                                | Fix rounds                    |
+| ----- | ----------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| p01   | `.worktrees/wave-6/p01` | DONE (`d5fb6e1d4`; forced CLI suite 6101)                                               | passed (round 1 0C/1I/3M/4m → round 2 0C/0I/1M/0m)                                                                    | 1                             |
+| p02   | `.worktrees/wave-6/p02` | DONE (`bad7d0e90`; forced CLI suite 6041, test:smoke)                                   | passed (round 1 0C/1I/1M/3m → round 2 1C/1I/1M/2m → round 3 0/0/0/0)                                                  | 3                             |
+| p03   | `.worktrees/wave-6/p03` | DONE_WITH_CONCERNS after a STOP → refresh → resume (`9f714cb56`; forced CLI suite 6048) | passed (round 1 0C/1I/1M/3m → record fix → round 2 0C/0I/0M/1m)                                                       | 1 (record)                    |
+| p05   | `.worktrees/wave-6/p05` | DONE (`bfa0c7c8e`; forced CLI suite 6164)                                               | passed (round 1 1C/2I/1M/4m → round 2 0C/1I/0M/2m, Important 1 deferred to the post-p04 rebase → round 3 0C/0I/0M/2m) | 2 (+ rebase onto `88a8d75df`) |
+| p04   | `.worktrees/wave-6/p04` | DONE (`5ad26a195`; forced CLI suite 6190, check:skill-bumps 3)                          | passed (round 1 1C/2I/2M/3m → round 2 0C/0I/0M/3m)                                                                    | 1                             |
 
 #### Group 1 fan-in — p01, p02, p03 (2026-09-08)
 
@@ -193,6 +198,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-08
 
+- Group 2 reviews received: p04 `5ad26a195` + fix `839321e74` (passed round 2; merged first as `88a8d75df`); p05 `bfa0c7c8e` + fix `63b5f3c09` + post-rebase fix `d2923f5ab` (passed round 3).
 - Group 1 fan-in: merges `754e51e8d`, `fb3075a85`, `12d0a58af`; lockstep bump `43e204241` (0.2.64); eight gates + smoke + skills + root test green (CLI 6135).
 - Group 1 reviews received: p01 `d5fb6e1d4` + fix `c037e5ebf` (passed round 2); p02 `bad7d0e90` + fixes `1387b1c58`, `c9f195b30`, `ee6a69245` (passed round 3); p03 `9f714cb56` + record fix `58e00e20f` (passed round 2).
 
@@ -215,7 +221,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p02   | 6041 (forced CLI suite) + test:smoke               | all    | 0      | -        |
 | p03   | 6048 (forced CLI suite) + 730 focused              | all    | 0      | -        |
 | p04   | 6190 (forced CLI suite) + 844 focused + test:smoke | all    | 0      | -        |
-| p05   | -                                                  | -      | -      | -        |
+| p05   | 6242 (forced CLI suite, post-rebase) + 155 focused | all    | 0      | -        |
 
 ## Final Summary (for PR/docs)
 

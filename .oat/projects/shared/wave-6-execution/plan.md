@@ -370,6 +370,7 @@ git commit -m "fix(p05-t01): diagnose canonical skills missing from a provider v
 | p04    | code     | fixes_added | 2026-09-08 | reviews/archived/p04-review-2026-09-08T040044Z.md           | 5ad26a195cde3f3021ea87de3cd2fb2df50b266e | manual     | -                   |
 | p05    | code     | fixes_added | 2026-09-08 | reviews/archived/p05-review-2026-09-08T042114Z.md           | 63b5f3c0961d44afe2ecc59fe3f95d4982157977 | manual     | -                   |
 | p04    | code     | passed      | 2026-09-08 | reviews/archived/p04-review-2026-09-08T042834Z.md           | 839321e746a540ce9b5b2bbbd9dbe642831f3613 | manual     | -                   |
+| p05    | code     | passed      | 2026-09-08 | reviews/archived/p05-review-2026-09-08T045824Z.md           | d2923f5ab0ed4e87142b66f58b6d28f99072c5cd | manual     | -                   |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
