@@ -258,5 +258,66 @@ describe('oat tools info provider-view convergence', () => {
       status: 'drifted',
       reason: 'modified',
     });
+    // No repair is offered for that state, because running one changes
+    // nothing: the class is the engine's banner/sentinel condition, tracked as
+    // BL-260908-make-copy-strategy-skill.
+    expect(claude?.suggestion).toBeNull();
+    expect(claude?.detail).toContain('BL-260908-make-copy-strategy-skill');
+    const { stdout } = await runCli(root, home, [
+      'tools',
+      'info',
+      SKILL,
+      '--scope',
+      'project',
+    ]);
+    expect(stdout).not.toContain('Repair:');
   });
+
+  it.each([
+    ['invalid JSON', 'not json {{{'],
+    [
+      'a schema-invalid manifest',
+      '{"version":2,"oatVersion":"x","entries":[{"canonicalPath":".agents/skills/x"}],"collections":[],"lastUpdated":"2026-01-01T00:00:00.000Z"}',
+    ],
+  ])(
+    'keeps the tool detail and exit code when the manifest holds %s',
+    async (_label, contents) => {
+      const root = await createProjectRoot();
+      const home = await mkdtemp(join(tmpdir(), 'oat-skill-view-home-'));
+      temporaryRoots.push(home);
+      await mkdir(join(home, '.oat', 'sync'), { recursive: true });
+      await mkdir(join(home, '.agents', 'skills', SKILL), { recursive: true });
+      await writeFile(
+        join(home, '.agents', 'skills', SKILL, 'SKILL.md'),
+        `---\nname: ${SKILL}\ndescription: Convergence probe skill\nversion: 1.4.2\n---\n`,
+        'utf8',
+      );
+
+      for (const [scope, manifestPath] of [
+        ['project', join(root, '.oat', 'sync', 'manifest.json')],
+        ['user', join(home, '.oat', 'sync', 'manifest.json')],
+      ] as const) {
+        await rm(join(root, '.oat', 'sync', 'manifest.json'), { force: true });
+        await rm(join(home, '.oat', 'sync', 'manifest.json'), { force: true });
+        await writeFile(manifestPath, contents, 'utf8');
+
+        const { exitCode, stdout } = await runCli(root, home, [
+          'tools',
+          'info',
+          SKILL,
+          '--scope',
+          'all',
+        ]);
+
+        // Before this guard the whole command aborted on the manifest error,
+        // taking the tool detail with it — for a user-scope manifest, in every
+        // project on the machine.
+        expect(exitCode).toBe(0);
+        expect(stdout).toContain('Type:        skill');
+        expect(stdout).toContain('Version:     1.4.2');
+        expect(stdout).toContain(`Provider views (${scope}): unavailable`);
+        expect(stdout).not.toContain(scope === 'project' ? root : home);
+      }
+    },
+  );
 });

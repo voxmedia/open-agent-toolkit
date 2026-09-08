@@ -857,6 +857,135 @@ describe('runInfoTool provider-view diagnostic', () => {
     });
   });
 
+  it('degrades to an unavailable section when the manifest cannot be read', async () => {
+    const capture = createLoggerCapture();
+    const deps = skillViewDependencies({
+      existingPaths: [PROJECT_CANONICAL, USER_CANONICAL],
+    });
+    const result = await runInfoTool(
+      createContext({ scope: 'all', logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({
+          project: [sampleSkill],
+          user: [{ ...sampleSkill, scope: 'user' }],
+        }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'], user: ['claude'] },
+        }),
+        skillViews: {
+          ...deps,
+          loadManifest: async (manifestPath) => {
+            if (manifestPath.startsWith('/project')) {
+              throw new Error(
+                `Manifest at ${manifestPath} is not valid JSON. Delete or repair the file and re-run oat sync.`,
+              );
+            }
+            return deps.loadManifest(manifestPath);
+          },
+        },
+      },
+    );
+
+    // The tool detail is the answer the user asked for; unreadable diagnostic
+    // inputs may not remove it or change the exit path.
+    expect(result.found).toBe(true);
+    expect(result.tool?.name).toBe('oat-idea-new');
+    expect(result.providerViews?.[0]).toMatchObject({
+      scope: 'project',
+      result: 'unavailable',
+      views: [],
+    });
+    expect(result.providerViews?.[0]?.reason).toContain('not valid JSON');
+    // The healthy scope is still diagnosed.
+    expect(result.providerViews?.[1]).toMatchObject({
+      scope: 'user',
+      result: 'diagnosed',
+    });
+    const output = capture.info.join('\n');
+    expect(output).toContain('Provider views (project): unavailable');
+    expect(output).toContain('Version:');
+    expect(capture.error).toEqual([]);
+  });
+
+  it('redacts the scope root from an unavailable reason', async () => {
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ scope: 'user', json: true, logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({ user: [{ ...sampleSkill, scope: 'user' }] }),
+        providerContext: skillProviderContext({
+          activeByScope: { user: ['claude'] },
+        }),
+        skillViews: {
+          ...skillViewDependencies({ existingPaths: [USER_CANONICAL] }),
+          loadManifest: async (manifestPath) => {
+            throw new Error(
+              `EACCES: permission denied, open '${manifestPath}'`,
+            );
+          },
+        },
+      },
+    );
+
+    expect(result.providerViews?.[0]?.reason).toBe(
+      "EACCES: permission denied, open '~/.oat/sync/manifest.json'",
+    );
+    expect(JSON.stringify(capture.jsonPayloads[0])).not.toContain('/home/user');
+  });
+
+  it('redacts an absolute path that lies outside the scope root', async () => {
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ scope: 'project', json: true, logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: {
+          ...skillViewDependencies({ existingPaths: [PROJECT_CANONICAL] }),
+          // A manifest `providerPath` that escapes the scope root makes the
+          // real detector name a path the scope-root replacement cannot reach.
+          detectDrift: async () => {
+            throw new Error(
+              "ENOTDIR: not a directory, lstat '/dev/null/probe'",
+            );
+          },
+          loadManifest: async () =>
+            ({
+              version: 2,
+              oatVersion: '0.0.0-test',
+              entries: [
+                {
+                  canonicalPath: '.agents/skills/oat-idea-new',
+                  providerPath: '../../dev/null/probe',
+                  provider: 'claude',
+                  contentType: 'skill',
+                  contentHash: null,
+                  isFile: false,
+                  lastSynced: '2026-09-01T00:00:00.000Z',
+                  strategy: 'symlink',
+                },
+              ],
+              collections: [],
+              lastUpdated: '2026-09-01T00:00:00.000Z',
+            }) as unknown as Manifest,
+        },
+      },
+    );
+
+    expect(result.providerViews?.[0]).toMatchObject({
+      result: 'unavailable',
+    });
+    expect(result.providerViews?.[0]?.reason).toBe(
+      "ENOTDIR: not a directory, lstat '<path>'",
+    );
+    expect(JSON.stringify(capture.jsonPayloads[0])).not.toContain('/dev/null');
+  });
+
   it('keeps the not-found wording and emits no provider-view block for an unknown name', async () => {
     const capture = createLoggerCapture();
     const result = await runInfoTool(

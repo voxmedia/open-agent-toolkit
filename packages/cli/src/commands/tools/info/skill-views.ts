@@ -90,8 +90,12 @@ export async function probeProviderPath(
  * canonical reader will not look. Falls back to parsing the content after that
  * banner, so a copy-strategy view reports a version instead of a blank.
  *
- * `getSkillVersion` remains the source of truth for *where* a version lives; if
- * that reader learns a new location, this fallback has to follow it.
+ * `getSkillVersion` remains the source of truth for *where* a version lives.
+ * This fallback resolves the top-level `version` field only, so it agrees with
+ * that reader exactly as long as the top-level field is the only location. A
+ * reader that introduces a second location with its own precedence must
+ * replace this parse rather than sit beside it, because a SKILL.md carrying
+ * both would otherwise resolve differently here than canonically.
  */
 export async function readProjectedSkillVersion(
   skillDir: string,
@@ -126,7 +130,6 @@ export async function readProjectedSkillVersion(
 export async function collectSkillViewDiagnoses(
   input: CollectSkillViewsInput,
 ): Promise<SkillViewDiagnosis[]> {
-  const { dependencies: deps } = input;
   const canonicalRelative = canonicalSkillPath(input.skillName);
   const diagnoses: SkillViewDiagnosis[] = [];
 
@@ -134,81 +137,138 @@ export async function collectSkillViewDiagnoses(
     const scopeRoot = input.roots[scope];
     if (!scopeRoot) continue;
 
-    const canonicalDir = join(scopeRoot, canonicalRelative);
-    if (!(await deps.pathExists(canonicalDir))) continue;
-
-    // Provider reachability is additive evidence: a missing or unreadable sync
-    // config degrades to "no provider evidence" rather than failing `info`.
-    const providerScopeContext = await resolveScopeProviderContext({
-      scope,
-      scopeRoot,
-      ...(input.providerContext ? { dependencies: input.providerContext } : {}),
-    });
-    if (!providerScopeContext) continue;
-
-    const projections = deps.resolveExpectedProjections({
-      skillName: input.skillName,
-      scope,
-      registrations: providerScopeContext.registrations,
-    });
-    const manifest = await deps.loadManifest(
-      join(scopeRoot, '.oat', 'sync', 'manifest.json'),
-    );
-    // Collection entries ride in this compatibility view; the per-entry
-    // manifest reader narrows them, so read the V2 shape back for `strategy`.
-    const entries = manifest.entries as readonly ManifestEntryV2[];
-    const observations: SkillViewObservation[] = [];
-
-    for (const projection of projections) {
-      const manifestEntry =
-        entries.find(
-          (entry) =>
-            entry.canonicalPath === canonicalRelative &&
-            entry.provider === projection.provider,
-        ) ?? null;
-      const viewPresent = await deps.pathExists(
-        join(scopeRoot, projection.providerPath),
-      );
-      // `detectDrift` requires a manifest entry, so a never-synced projection
-      // is classified from the expected path alone and never probes drift.
-      const drift = manifestEntry
-        ? await deps.detectDrift(manifestEntry, scopeRoot)
-        : null;
-      const comparable =
-        manifestEntry?.strategy === 'copy' &&
-        !projection.nativeRead &&
-        viewPresent;
-
-      observations.push({
-        projection,
-        manifestEntry,
-        drift,
-        viewPresent,
-        viewVersion: comparable
-          ? await readProjectedSkillVersion(
-              join(scopeRoot, projection.providerPath),
-              deps.getSkillVersion,
-            )
-          : null,
+    try {
+      const diagnosis = await diagnoseScope({
+        ...input,
+        scope,
+        scopeRoot,
+        canonicalRelative,
+      });
+      if (diagnosis) diagnoses.push(diagnosis);
+    } catch (error) {
+      // Every input this diagnostic reads can fail independently of the tool
+      // the user asked about: `loadManifest` throws on a manifest that is
+      // present but invalid or unreadable, and the probes can fail on a
+      // permission error. None of that may remove the tool detail or change
+      // the exit code, so the section reports itself unavailable instead.
+      diagnoses.push({
+        skill: input.skillName,
+        scope,
+        result: 'unavailable',
+        reason: redactScopeRoot(
+          error instanceof Error ? error.message : String(error),
+          scope,
+          scopeRoot,
+        ),
+        views: [],
       });
     }
-
-    diagnoses.push(
-      diagnoseSkillViews({
-        skillName: input.skillName,
-        scope,
-        canonicalPresent: true,
-        canonicalVersion:
-          scope === input.resolvedScope
-            ? input.resolvedVersion
-            : await deps.getSkillVersion(canonicalDir),
-        providerScopeContext,
-        observations,
-      }),
-    );
   }
 
   return diagnoses;
+}
+
+/**
+ * Makes a failure reason safe to print and to paste into a bug report.
+ *
+ * The scope root becomes its conventional placeholder, matching how the pack
+ * surfaces redact paths. Any absolute path still standing after that is by
+ * definition outside the scope root — a manifest `providerPath` that escapes
+ * it, for instance, which the detector resolves and names verbatim in an
+ * `ENOTDIR`/`ENOENT` message — so it is replaced wholesale rather than
+ * forwarded. The second pass only matches a path at a token boundary, which
+ * leaves an already-redacted `<project>/…` or `~/…` untouched.
+ */
+function redactScopeRoot(
+  text: string,
+  scope: ConcreteScope,
+  scopeRoot: string,
+): string {
+  const placeholder = scope === 'project' ? '<project>' : '~';
+  return text
+    .replaceAll(`${scopeRoot}/`, `${placeholder}/`)
+    .replaceAll(scopeRoot, placeholder)
+    .replace(/(^|[\s'"(])(\/[^\s'")]*)/g, '$1<path>');
+}
+
+async function diagnoseScope(
+  input: CollectSkillViewsInput & {
+    scope: ConcreteScope;
+    scopeRoot: string;
+    canonicalRelative: string;
+  },
+): Promise<SkillViewDiagnosis | null> {
+  const { dependencies: deps, scope, scopeRoot, canonicalRelative } = input;
+  const canonicalDir = join(scopeRoot, canonicalRelative);
+  if (!(await deps.pathExists(canonicalDir))) return null;
+
+  // Provider reachability is additive evidence: a missing or unreadable sync
+  // config degrades to "no provider evidence" rather than failing `info`.
+  const providerScopeContext = await resolveScopeProviderContext({
+    scope,
+    scopeRoot,
+    ...(input.providerContext ? { dependencies: input.providerContext } : {}),
+  });
+  if (!providerScopeContext) return null;
+
+  const projections = deps.resolveExpectedProjections({
+    skillName: input.skillName,
+    scope,
+    registrations: providerScopeContext.registrations,
+  });
+  const manifest = await deps.loadManifest(
+    join(scopeRoot, '.oat', 'sync', 'manifest.json'),
+  );
+  // Collection entries ride in this compatibility view; the per-entry
+  // manifest reader narrows them, so read the V2 shape back for `strategy`.
+  const entries = manifest.entries as readonly ManifestEntryV2[];
+  const observations: SkillViewObservation[] = [];
+
+  for (const projection of projections) {
+    const manifestEntry =
+      entries.find(
+        (entry) =>
+          entry.canonicalPath === canonicalRelative &&
+          entry.provider === projection.provider,
+      ) ?? null;
+    const viewPresent = await deps.pathExists(
+      join(scopeRoot, projection.providerPath),
+    );
+    // `detectDrift` requires a manifest entry, so a never-synced projection
+    // is classified from the expected path alone and never probes drift.
+    const drift = manifestEntry
+      ? await deps.detectDrift(manifestEntry, scopeRoot)
+      : null;
+    const comparable =
+      manifestEntry?.strategy === 'copy' &&
+      !projection.nativeRead &&
+      viewPresent;
+
+    observations.push({
+      projection,
+      manifestEntry,
+      drift,
+      viewPresent,
+      viewVersion: comparable
+        ? await readProjectedSkillVersion(
+            join(scopeRoot, projection.providerPath),
+            deps.getSkillVersion,
+          )
+        : null,
+    });
+  }
+
+  return diagnoseSkillViews({
+    skillName: input.skillName,
+    scope,
+    canonicalPresent: true,
+    canonicalVersion:
+      scope === input.resolvedScope
+        ? input.resolvedVersion
+        : await deps.getSkillVersion(canonicalDir),
+    providerScopeContext,
+    observations,
+  });
 }
 
 function qualifier(view: SkillViewDiagnosis['views'][number]): string {
@@ -228,6 +288,11 @@ export function formatSkillViewLines(
   const lines: string[] = [];
 
   for (const diagnosis of diagnoses) {
+    if (diagnosis.result === 'unavailable') {
+      lines.push(`  Provider views (${diagnosis.scope}): unavailable`);
+      if (diagnosis.reason) lines.push(`    ${diagnosis.reason}`);
+      continue;
+    }
     if (diagnosis.result !== 'diagnosed' || diagnosis.views.length === 0) {
       continue;
     }

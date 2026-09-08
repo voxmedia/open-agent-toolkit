@@ -95,10 +95,18 @@ the manifest.
 
 - `missing-additive` — active, supported, no manifest entry, nothing at the expected path: the only true projection gap
 - `removed` — a manifest entry exists but the provider file is gone
-- `modified` — a manifest entry exists and the provider file diverged
-- `in-sync` — the view matches the canonical skill, including a native-read provider whose view is the canonical file
+- `modified` — a manifest entry exists and the view no longer agrees with what the last sync recorded, or its version has fallen behind canonical. A `copy` view also reaches this class through the known limitation below, where the difference may be nothing but the generated banner
+- `in-sync` — a symlinked, collection-aliased, or natively read view _is_ the canonical file; a `copy` view matches the content recorded at its last sync
 - `untracked` — something exists at the expected path that no manifest entry tracks; stray detection skips provider entries whose name matches a canonical entry, so `oat status` does not report it as a stray and reports the untracked projection as `missing` instead
+- `unverified` — a manifest entry tracks the view but no drift observation accompanied it, so its state is unknown
 - `inactive`, `unsupported`, `excluded` — no projection is expected in this scope, so none of them is reported as missing
+
+`unsupported`, `excluded`, and `unverified` are defensive: no shipped adapter,
+config, or `oat tools info` code path produces them today. Every shipped adapter
+maps skills in both scopes, the command passes no canonical-path filter, and it
+always pairs a manifest entry with a drift observation. The branches exist so a
+future adapter, filter, or consumer of the mapper cannot be silently reported as
+a projection gap.
 
 Only `missing-additive`, `removed`, and `modified` carry a repair, and it is
 always one concrete `oat sync --scope project` or `oat sync --scope user` for
@@ -106,11 +114,37 @@ the scope where the gap was observed. Versions are compared only for `copy`
 views: a symlinked, collection-aliased, or natively read view is the canonical
 file, so it has no second version.
 
+If reading the manifest or detecting drift fails — an invalid, unreadable, or
+otherwise non-loadable `.oat/sync/manifest.json`, for instance — the section for
+that scope reports `unavailable` with the reason, and the rest of the command is
+unaffected. The diagnostic is additive evidence, so it never changes the exit
+code or removes the tool detail of a user whose sync state is already broken.
+An unreadable sync config is handled one step earlier and differently: provider
+reachability degrades to no provider evidence, so that scope contributes no
+section at all. Reasons are redacted; the scope root becomes `<project>` or `~`,
+and any path outside it is replaced entirely.
+
 A drift state and a view class can legitimately disagree. Drift compares a copy
 against the hash recorded at its last sync, so a copy that was never re-synced
 after a canonical edit still matches its own manifest entry and reads as
 `in_sync`. When the two versions differ, the view class is `modified` and the
 drift state is reported unchanged beside it.
+
+### Known limitation: copy-strategy skill views
+
+A `copy` skill view is reported `modified` immediately after a successful sync,
+and stays that way. The engine writes an OAT-managed banner into the copied
+`SKILL.md` and an `.oat-generated` sentinel beside it, and neither is accounted
+for in the manifest hash, so `oat status` reports `drifted:modified` and every
+later `oat sync --dry-run` plans another `update_copy`. Because no sync clears
+that state, `oat tools info` prints no repair line when a `modified` copy's
+version still matches canonical.
+
+That suppression is a conservative heuristic rather than a proof: equal versions
+do not establish equal bodies, so an edit to the canonical source or to the copy
+that kept the version reaches the same branch, and a sync _would_ repair that
+one. The class detail says so and names the concrete scope command to run if you
+know either side was edited. Tracked as `BL-260908-make-copy-strategy-skill`.
 
 ## Stray adoption
 

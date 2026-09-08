@@ -494,6 +494,74 @@ describe('diagnoseSkillViews', () => {
     });
   });
 
+  it('offers no repair for a drifted copy whose version still matches canonical', () => {
+    const diagnosis = diagnose({
+      activeProviders: ['claude'],
+      registrations: [claude],
+      canonicalVersion: '1.4.2',
+      observations: [
+        observation('claude', {
+          manifestEntry: manifestEntry({
+            strategy: 'copy',
+            contentHash: 'sha256:written-at-sync',
+            isFile: true,
+          }),
+          drift: drift({ status: 'drifted', reason: 'modified' }),
+          viewPresent: true,
+          viewVersion: '1.4.2',
+        }),
+      ],
+    });
+
+    // The engine's banner and `.oat-generated` sentinel are not accounted for
+    // in the manifest hash, so a copy reads as drifted straight after a
+    // successful sync. Suggesting a sync there is a repair that repairs
+    // nothing.
+    expect(diagnosis.views[0]).toMatchObject({
+      viewClass: 'modified',
+      driftState: { status: 'drifted', reason: 'modified' },
+      canonicalVersion: '1.4.2',
+      viewVersion: '1.4.2',
+      suggestion: null,
+    });
+    expect(diagnosis.views[0]?.detail).toContain(
+      'BL-260908-make-copy-strategy-skill',
+    );
+    // Suppressing the repair is a heuristic: equal versions do not establish
+    // equal bodies, and a same-version edit on either side reaches this same
+    // branch where a sync WOULD help. The detail must not claim the content
+    // is current, and must name the concrete scope command for that case.
+    expect(diagnosis.views[0]?.detail).toContain(
+      'Equal versions do not prove the bodies match',
+    );
+    expect(diagnosis.views[0]?.detail).toContain('oat sync --scope project');
+    expect(diagnosis.views[0]?.detail).not.toContain('content is current');
+  });
+
+  it('reports a tracked entry with no drift observation as unverified, never untracked', () => {
+    const diagnosis = diagnose({
+      activeProviders: ['claude'],
+      registrations: [claude],
+      observations: [
+        observation('claude', {
+          manifestEntry: manifestEntry(),
+          drift: null,
+          viewPresent: true,
+        }),
+      ],
+    });
+
+    // `untracked` alongside `tracked: true` is self-contradictory on one
+    // record; the mapper is a public export, so the branch must stay honest
+    // for consumers other than `oat tools info`.
+    expect(diagnosis.views[0]).toMatchObject({
+      viewClass: 'unverified',
+      tracked: true,
+      suggestion: null,
+    });
+    expect(diagnosis.views[0]?.detail).toContain('unverified');
+  });
+
   it('reports an untracked file at the expected path as untracked, not missing', () => {
     const diagnosis = diagnose({
       activeProviders: ['claude'],
@@ -515,6 +583,10 @@ describe('diagnoseSkillViews', () => {
     expect(diagnosis.views[0]?.detail).toContain('not report it as a stray');
     expect(diagnosis.views[0]?.detail).toContain('missing');
     expect(diagnosis.views[0]?.detail).not.toContain('adopt');
+    // An on-disk anomaly still gets a next step, while `suggestion` stays
+    // null so the command never proposes a write over content OAT does not
+    // own.
+    expect(diagnosis.views[0]?.detail).toContain('Inspect the path');
   });
 
   it('keeps an unknown skill distinct from missing distribution', () => {

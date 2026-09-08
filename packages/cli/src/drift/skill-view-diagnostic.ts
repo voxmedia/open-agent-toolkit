@@ -29,8 +29,20 @@ import type { DriftReport, DriftState } from './drift.types';
  *   provider, whose view *is* the canonical file).
  * - `untracked`: something exists at the expected path with no manifest entry.
  *   Reported as such rather than as missing, because nothing is absent.
+ * - `unverified`: a manifest entry exists but no drift observation accompanied
+ *   it, so the view's state is unknown. Never `untracked`, which would
+ *   contradict `tracked: true` on the same record.
  * - `inactive`, `unsupported`, `excluded`: no projection is expected at all, so
  *   none of these ever carries a sync suggestion.
+ *
+ * Reachability today: `unsupported` needs a registered adapter with no `skill`
+ * mapping for the scope, and every shipped adapter maps skills in both scopes;
+ * `excluded` needs a canonical-path filter that the `oat tools info` wiring
+ * never passes; `unverified` needs a caller that supplies a manifest entry
+ * without a drift report, which that wiring never does. All three are
+ * defensive branches, covered by fixtures rather than by a live CLI path, and
+ * they exist so a future adapter, filter, or consumer cannot be silently
+ * misreported as a projection gap.
  */
 export type SkillViewClass =
   | 'in-sync'
@@ -38,6 +50,7 @@ export type SkillViewClass =
   | 'removed'
   | 'modified'
   | 'untracked'
+  | 'unverified'
   | 'inactive'
   | 'unsupported'
   | 'excluded';
@@ -108,8 +121,16 @@ export interface SkillViewDiagnosis {
    * `unknown-skill` is a distinct top-level result from a skill that exists
    * canonically but reaches no provider view, so missing distribution is never
    * confused with a name the repository does not have.
+   *
+   * `unavailable` means the diagnostic's own inputs could not be read (an
+   * unreadable or invalid manifest, for instance). It is reported in the
+   * section with its reason and never raised as a command failure: this
+   * diagnostic is additive evidence, so it must not take down the tool detail
+   * of the very user whose sync state is already broken.
    */
-  result: 'diagnosed' | 'unknown-skill';
+  result: 'diagnosed' | 'unknown-skill' | 'unavailable';
+  /** Why the diagnosis is `unavailable`; scope-root paths are redacted. */
+  reason?: string;
   views: SkillViewDiagnostic[];
 }
 
@@ -219,7 +240,7 @@ function classify(
       return {
         viewClass: 'untracked',
         detail:
-          'An untracked file occupies the expected path. Stray detection skips provider entries whose name matches a canonical entry, so "oat status" does not report it as a stray; it reports the untracked projection as missing instead.',
+          'An untracked file occupies the expected path. Stray detection skips provider entries whose name matches a canonical entry, so "oat status" does not report it as a stray; it reports the untracked projection as missing instead. Inspect the path and remove it if it is not wanted, then sync the scope; no repair is suggested here because a sync could overwrite content OAT does not own.',
       };
     }
     return {
@@ -230,10 +251,12 @@ function classify(
   }
 
   if (!drift) {
+    // A tracked entry must never be labelled `untracked`: the same record
+    // reports `tracked: true`, and the two together are self-contradictory.
     return {
-      viewClass: 'untracked',
+      viewClass: 'unverified',
       detail:
-        'A manifest entry exists but no drift observation was made for it.',
+        'A manifest entry tracks this view but no drift observation accompanied it, so its state is unverified.',
     };
   }
 
@@ -358,12 +381,34 @@ export function diagnoseSkillViews(input: {
       input.canonicalVersion !== null &&
       viewVersion !== null &&
       viewVersion !== input.canonicalVersion;
+    // The mirror case: the detector reports a copy as drifted while its
+    // version matches canonical. That is the expected state after a
+    // copy-strategy sync, because the OAT-managed banner and `.oat-generated`
+    // sentinel are not accounted for in the manifest hash
+    // (BL-260908-make-copy-strategy-skill), and no sync clears it.
+    //
+    // Suppressing the repair here is a conservative heuristic, not a proof:
+    // equal versions do not establish equal bodies, so an edit to either side
+    // that kept the version reaches this branch too, and a sync would fix
+    // that one. The detail therefore says which case it cannot distinguish
+    // and names the concrete scope command, rather than claiming the content
+    // is current.
+    const unrepairableCopy =
+      versionComparable &&
+      classification.viewClass === 'modified' &&
+      input.canonicalVersion !== null &&
+      viewVersion === input.canonicalVersion;
     const { viewClass, detail } = staleCopy
       ? {
           viewClass: 'modified' as const,
           detail: `The tracked copy still matches the hash recorded at its last sync, but its version (${viewVersion}) differs from the canonical version (${input.canonicalVersion}), so the view is stale.`,
         }
-      : classification;
+      : unrepairableCopy
+        ? {
+            viewClass: 'modified' as const,
+            detail: `The detector reports this copy as drifted while its version still matches canonical (${input.canonicalVersion}). That is expected after a copy-strategy sync until BL-260908-make-copy-strategy-skill lands: the OAT-managed banner and ".oat-generated" sentinel are not accounted for in the manifest hash, and no sync clears it. Equal versions do not prove the bodies match, so if either side was edited without a version change, compare them and run "oat sync --scope ${input.scope}" yourself.`,
+          }
+        : classification;
 
     views.push({
       skill: input.skillName,
@@ -381,9 +426,10 @@ export function diagnoseSkillViews(input: {
       // The narrowest safe repair is the single concrete scope where the gap
       // was observed. `--scope all` would widen a one-scope repair into a
       // two-scope write.
-      suggestion: REPAIRABLE.includes(viewClass)
-        ? `oat sync --scope ${input.scope}`
-        : null,
+      suggestion:
+        REPAIRABLE.includes(viewClass) && !unrepairableCopy
+          ? `oat sync --scope ${input.scope}`
+          : null,
       detail: versionComparable ? detail : `${detail}${versionNote(strategy)}`,
     });
   }
