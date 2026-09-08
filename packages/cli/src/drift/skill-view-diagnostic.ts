@@ -29,8 +29,9 @@ import type { DriftReport, DriftState } from './drift.types';
  *   provider, whose view *is* the canonical file).
  * - `untracked`: something exists at the expected path with no manifest entry.
  *   Reported as such rather than as missing, because nothing is absent.
- * - `unverified`: a manifest entry exists but no drift observation accompanied
- *   it, so the view's state is unknown. Never `untracked`, which would
+ * - `unverified`: the view's state is unknown — either a manifest entry arrived
+ *   with no drift observation, or reading this one view failed and the
+ *   observation carries the redacted reason. Never `untracked`, which would
  *   contradict `tracked: true` on the same record.
  * - `inactive`, `unsupported`, `excluded`: no projection is expected at all, so
  *   none of these ever carries a sync suggestion.
@@ -38,11 +39,11 @@ import type { DriftReport, DriftState } from './drift.types';
  * Reachability today: `unsupported` needs a registered adapter with no `skill`
  * mapping for the scope, and every shipped adapter maps skills in both scopes;
  * `excluded` needs a canonical-path filter that the `oat tools info` wiring
- * never passes; `unverified` needs a caller that supplies a manifest entry
- * without a drift report, which that wiring never does. All three are
- * defensive branches, covered by fixtures rather than by a live CLI path, and
- * they exist so a future adapter, filter, or consumer cannot be silently
- * misreported as a projection gap.
+ * never passes. Both are defensive branches, covered by fixtures rather than by
+ * a live CLI path, and they exist so a future adapter or filter cannot be
+ * silently misreported as a projection gap. `unverified` is reachable: an
+ * unreadable provider path makes `detectDrift` throw, and that one view
+ * degrades to `unverified` with its reason.
  */
 export type SkillViewClass =
   | 'in-sync'
@@ -103,6 +104,14 @@ export interface SkillViewObservation {
   /** Whether anything exists at the expected provider path. */
   viewPresent: boolean;
   /**
+   * Set when reading *this* view failed, carrying the already-redacted reason.
+   *
+   * A per-view read failure — `detectDrift` throwing on an unreadable provider
+   * path, for instance — says nothing about the other providers in the same
+   * scope, so it degrades one row instead of the whole section.
+   */
+  unavailableReason?: string;
+  /**
    * Version read from the provider copy, with the resolver's verdict. Only
    * meaningful for `copy` entries.
    */
@@ -116,8 +125,23 @@ export interface SkillViewDiagnostic {
   viewClass: SkillViewClass;
   /** Unchanged `DriftState`; `null` when no manifest entry allowed detection. */
   driftState: DriftState | null;
-  /** Scope-relative expected (or actual) provider path; `null` when none. */
+  /**
+   * Scope-relative path this row is about; `null` when no view is expected.
+   *
+   * When a manifest entry tracks the view at a path that is not the adapter's
+   * expected projection path, this is the *manifest's* path, because that is
+   * the path the drift verdict, the version, and the detail all describe. The
+   * expected path then travels separately in `expectedProviderPath`.
+   */
   providerPath: string | null;
+  /**
+   * The adapter's expected projection path, present only when the manifest
+   * tracks the view somewhere else.
+   *
+   * Absent on every ordinary row: a row whose manifest entry sits at the
+   * expected path has one path, not two.
+   */
+  expectedProviderPath?: string;
   tracked: boolean;
   strategy: ManifestEntryV2['strategy'] | null;
   nativeRead: boolean;
@@ -254,6 +278,38 @@ function projectedVersionNote(
   return '';
 }
 
+/**
+ * Says which path this row is really about when the manifest disagrees with the
+ * adapter.
+ *
+ * The manifest is keyed by `(canonicalPath, provider)` and never by path, so an
+ * entry can point somewhere other than the adapter's expected projection while a
+ * healthy file sits at the expected path — reachable after a `providerDir`
+ * change or from a manifest written under an older layout. Attaching the drift
+ * verdict for the tracked path to a row labelled with the expected path made the
+ * row state something false about a file that exists, so the row names the
+ * tracked path and this note says what the expected path looks like instead.
+ */
+function divergentPathNote(observation: SkillViewObservation): string {
+  const tracked = observation.manifestEntry?.providerPath;
+  if (
+    tracked === undefined ||
+    tracked === observation.projection.providerPath
+  ) {
+    return '';
+  }
+  // `viewPresent` is only evidence when the observation succeeded: a failed
+  // read leaves it at its default, and reporting that default as absence would
+  // replace one false claim about the expected path with another.
+  const expectedPathNote =
+    observation.unavailableReason !== undefined
+      ? 'Whether anything exists at the expected path was not established.'
+      : observation.viewPresent
+        ? 'Something does exist at the expected path, and this row says nothing about it.'
+        : 'Nothing exists at the expected path either.';
+  return ` The manifest tracks this view at ${tracked}, which is not the expected projection path ${observation.projection.providerPath}; the state, path, and version above all describe the tracked path. ${expectedPathNote} Syncing this scope re-projects the skill to the expected path.`;
+}
+
 function classify(
   observation: SkillViewObservation,
   isActive: boolean,
@@ -264,6 +320,16 @@ function classify(
     return {
       viewClass: 'inactive',
       detail: 'Provider is not active in this scope, so nothing is projected.',
+    };
+  }
+
+  if (observation.unavailableReason !== undefined) {
+    // `unverified` is the honest class: a read failure is not evidence of a
+    // projection gap, and reporting one as `missing-additive` or `removed`
+    // would send the user to a sync that fixes nothing.
+    return {
+      viewClass: 'unverified',
+      detail: `The diagnostic could not read this view, so its state is unverified: ${observation.unavailableReason}`,
     };
   }
 
@@ -406,9 +472,21 @@ export function diagnoseSkillViews(input: {
       continue;
     }
 
-    const classification = classify(observation, active.has(provider));
+    const isActive = active.has(provider);
+    const classification = classify(observation, isActive);
     const strategy = observation.manifestEntry?.strategy ?? null;
     const nativeRead = observation.projection.nativeRead;
+    // A drift verdict computed for the manifest's path may only appear on a row
+    // that names that path. The divergence is reported wherever the manifest
+    // entry is what drives the row: an inactive, excluded, or natively read
+    // provider has no drift verdict to misattribute.
+    const trackedPath = observation.manifestEntry?.providerPath;
+    const pathDiverges =
+      trackedPath !== undefined &&
+      trackedPath !== observation.projection.providerPath &&
+      isActive &&
+      !nativeRead &&
+      observation.projection.excludedReason === undefined;
     const copyViewReadable =
       strategy === 'copy' &&
       !nativeRead &&
@@ -476,7 +554,12 @@ export function diagnoseSkillViews(input: {
       provider,
       viewClass,
       driftState: observation.drift?.state ?? null,
-      providerPath: observation.projection.providerPath,
+      providerPath: pathDiverges
+        ? trackedPath
+        : observation.projection.providerPath,
+      ...(pathDiverges
+        ? { expectedProviderPath: observation.projection.providerPath }
+        : {}),
       tracked: observation.manifestEntry !== null,
       strategy,
       nativeRead,
@@ -495,7 +578,7 @@ export function diagnoseSkillViews(input: {
         copyViewReadable
           ? projectedVersionNote(projected, untrustworthyVersion)
           : ''
-      }`,
+      }${pathDiverges ? divergentPathNote(observation) : ''}`,
     });
   }
 

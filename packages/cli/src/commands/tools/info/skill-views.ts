@@ -1,5 +1,5 @@
 import { lstat, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 import {
   getFrontmatterBlock,
@@ -7,7 +7,7 @@ import {
   resolveSkillVersion,
 } from '@commands/shared/frontmatter';
 import type { ProviderContextDependencies } from '@commands/tools/shared/provider-context';
-import { resolveScopeProviderContext } from '@commands/tools/shared/provider-context';
+import { resolveScopeProviderContextOutcome } from '@commands/tools/shared/provider-context';
 import type {
   DriftReport,
   ExpectedProjection,
@@ -177,7 +177,7 @@ export async function collectSkillViewDiagnoses(
       if (diagnosis) diagnoses.push(diagnosis);
     } catch (error) {
       // Every input this diagnostic reads can fail independently of the tool
-      // the user asked about: `loadManifest` throws on a manifest that is
+      // the user asked about: the sync config and the manifest both throw when
       // present but invalid or unreadable, and the probes can fail on a
       // permission error. None of that may remove the tool detail or change
       // the exit code, so the section reports itself unavailable instead.
@@ -198,16 +198,60 @@ export async function collectSkillViewDiagnoses(
   return diagnoses;
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * An absolute path inside a quoted span, taken whole.
+ *
+ * A path may contain spaces, commas, and even a stray quote of the other kind,
+ * and every reachable producer of one of these messages quotes it
+ * (`lstat '/a/Private Client/x'`). Matching to the *matching* delimiter, rather
+ * than to the first character that looks like a separator, is what stops the
+ * bare pass below from redacting a prefix and forwarding the rest. The span must
+ * start with `/`, so an already-redacted `'<project>/…'` or `'~/…'` is left
+ * intact, and the match is lazy so two quoted spans in one message do not merge.
+ */
+const QUOTED_ABSOLUTE_PATH = /(['"`])(\/[^\n]*?)\1/g;
+
+/**
+ * An absolute path that is not quoted.
+ *
+ * The leading `/` may follow anything that is not a path character, which covers
+ * `=`, `:`, `[`, `<`, and a bare token boundary alike; requiring a specific
+ * delimiter is what let `path=/Users/…` through. Excluding `[A-Za-z0-9_~.>-]`
+ * before the slash is what keeps a relative `.oat/sync/…` and an
+ * already-redacted `<project>/…` or `~/…` intact.
+ *
+ * The path itself runs to whitespace or a quote and to nothing else. A comma, a
+ * bracket, and a brace are all legal in a filename, so treating one as a
+ * terminator would end the match inside a real path and forward its tail —
+ * `/outside/public,Private` would redact to `<path>,Private`. Swallowing a
+ * trailing bracket is the safe direction. A URL is redacted from its `//`
+ * onwards, which is over-redaction rather than a leak, and no producer of these
+ * messages emits one.
+ */
+const BARE_ABSOLUTE_PATH = /(^|[^A-Za-z0-9_~.>-])(\/[^\s'"`]*)/g;
+
 /**
  * Makes a failure reason safe to print and to paste into a bug report.
  *
  * The scope root becomes its conventional placeholder, matching how the pack
- * surfaces redact paths. Any absolute path still standing after that is by
- * definition outside the scope root — a manifest `providerPath` that escapes
- * it, for instance, which the detector resolves and names verbatim in an
- * `ENOTDIR`/`ENOENT` message — so it is replaced wholesale rather than
- * forwarded. The second pass only matches a path at a token boundary, which
- * leaves an already-redacted `<project>/…` or `~/…` untouched.
+ * surfaces redact paths, but only where the root genuinely contains what
+ * follows — a `/` or the end of the string. Replacing it anywhere turned a
+ * sibling that merely shares the prefix (`/project-private/secret`, or
+ * `/project private/secret`) into `<project>-private/secret`, which both lies
+ * about the location and forwards the rest of a path that was never inside the
+ * scope root. A non-contained sibling falls through to the passes below and is
+ * replaced wholesale instead.
+ *
+ * Any absolute path still standing after that is by definition outside the
+ * scope root — a manifest `providerPath` that escapes it, for instance, which
+ * the detector resolves and names verbatim in an `ENOTDIR`/`ENOENT` message —
+ * so it is replaced wholesale rather than forwarded. Redaction is deliberately
+ * greedy here: over-redacting a reason costs a user nothing, and under-redacting
+ * one puts a username or a private directory name into a bug report.
  */
 function redactScopeRoot(
   text: string,
@@ -216,9 +260,9 @@ function redactScopeRoot(
 ): string {
   const placeholder = scope === 'project' ? '<project>' : '~';
   return text
-    .replaceAll(`${scopeRoot}/`, `${placeholder}/`)
-    .replaceAll(scopeRoot, placeholder)
-    .replace(/(^|[\s'"(])(\/[^\s'")]*)/g, '$1<path>');
+    .replace(new RegExp(`${escapeRegExp(scopeRoot)}(?=/|$)`, 'g'), placeholder)
+    .replace(QUOTED_ABSOLUTE_PATH, '$1<path>$1')
+    .replace(BARE_ABSOLUTE_PATH, '$1<path>');
 }
 
 async function diagnoseScope(
@@ -232,14 +276,24 @@ async function diagnoseScope(
   const canonicalDir = join(scopeRoot, canonicalRelative);
   if (!(await deps.pathExists(canonicalDir))) return null;
 
-  // Provider reachability is additive evidence: a missing or unreadable sync
-  // config degrades to "no provider evidence" rather than failing `info`.
-  const providerScopeContext = await resolveScopeProviderContext({
+  // A sync config that is present but unreadable is exactly the failure this
+  // diagnostic exists to explain, so it degrades to `unavailable` with a
+  // reason like every other unreadable input. Dropping the scope instead would
+  // print nothing at all, which reads as "no providers configured" — the
+  // opposite of the truth — to the one user most likely to be running this.
+  // An absent config is not that case: `loadSyncConfig` answers `ENOENT` with
+  // the defaults, so it resolves normally and the scope is diagnosed.
+  const contextOutcome = await resolveScopeProviderContextOutcome({
     scope,
     scopeRoot,
     ...(input.providerContext ? { dependencies: input.providerContext } : {}),
   });
-  if (!providerScopeContext) return null;
+  if (contextOutcome.status === 'failed') {
+    throw contextOutcome.error instanceof Error
+      ? contextOutcome.error
+      : new Error(String(contextOutcome.error));
+  }
+  const providerScopeContext = contextOutcome.context;
 
   const projections = deps.resolveExpectedProjections({
     skillName: input.skillName,
@@ -261,32 +315,40 @@ async function diagnoseScope(
           entry.canonicalPath === canonicalRelative &&
           entry.provider === projection.provider,
       ) ?? null;
-    const viewPresent = await deps.pathExists(
-      join(scopeRoot, projection.providerPath),
-    );
-    // `detectDrift` requires a manifest entry, so a never-synced projection
-    // is classified from the expected path alone and never probes drift.
-    const drift = manifestEntry
-      ? await deps.detectDrift(manifestEntry, scopeRoot)
-      : null;
-    const comparable =
-      manifestEntry?.strategy === 'copy' &&
-      !projection.nativeRead &&
-      viewPresent;
-
-    observations.push({
-      projection,
-      manifestEntry,
-      drift,
-      viewPresent,
-      ...(comparable
-        ? {
-            projectedVersion: await deps.readProjectedVersion(
-              join(scopeRoot, projection.providerPath),
-            ),
-          }
-        : {}),
-    });
+    // The probes below use the real path; the row may not. An escaping path is
+    // replaced with the same placeholder a reason gets, so the divergence is
+    // still reported honestly without naming a location outside the scope.
+    const renderableEntry =
+      manifestEntry && escapesScope(manifestEntry.providerPath)
+        ? { ...manifestEntry, providerPath: '<path>' }
+        : manifestEntry;
+    // One provider's unreadable path is not evidence about the other four.
+    // `detectDrift` throws before `readProjectedVersion`'s own catch can
+    // classify, and letting that reach the scope-level catch took the whole
+    // section down with it. Only the failing row degrades now.
+    try {
+      observations.push(
+        await observeProjection({
+          deps,
+          scopeRoot,
+          projection,
+          manifestEntry,
+          renderableEntry,
+        }),
+      );
+    } catch (error) {
+      observations.push({
+        projection,
+        manifestEntry: renderableEntry,
+        drift: null,
+        viewPresent: false,
+        unavailableReason: redactScopeRoot(
+          error instanceof Error ? error.message : String(error),
+          scope,
+          scopeRoot,
+        ),
+      });
+    }
   }
 
   return diagnoseSkillViews({
@@ -302,6 +364,76 @@ async function diagnoseScope(
   });
 }
 
+/**
+ * Whether a manifest `providerPath` names something outside its own scope.
+ *
+ * Manifest paths are scope-relative by convention, so anything absolute or
+ * reaching back through `..` describes a location the scope root placeholder
+ * cannot stand in for. Such a path is never rendered verbatim: a row that named
+ * it would disclose a location outside the tree the user asked about, which is
+ * exactly what the reason redaction exists to prevent.
+ */
+function escapesScope(providerPath: string): boolean {
+  return isAbsolute(providerPath) || providerPath.split(/[\\/]/).includes('..');
+}
+
+/** Reads one provider's reality for one expected projection. */
+async function observeProjection(input: {
+  deps: SkillViewDependencies;
+  scopeRoot: string;
+  projection: ExpectedProjection;
+  /** The real entry, used for every filesystem probe. */
+  manifestEntry: ManifestEntryV2 | null;
+  /** The same entry with an escaping path redacted, used for the row. */
+  renderableEntry: ManifestEntryV2 | null;
+}): Promise<SkillViewObservation> {
+  const { deps, scopeRoot, projection, manifestEntry } = input;
+  const viewPresent = await deps.pathExists(
+    join(scopeRoot, projection.providerPath),
+  );
+  // `detectDrift` requires a manifest entry, so a never-synced projection
+  // is classified from the expected path alone and never probes drift.
+  const drift = manifestEntry
+    ? await deps.detectDrift(manifestEntry, scopeRoot)
+    : null;
+  // `detectDrift` resolves the manifest entry's own `providerPath`, and the
+  // manifest is keyed by `(canonicalPath, provider)` with no path check, so
+  // the two can name different files. Everything about a tracked row is then
+  // read from the tracked path, because that is the path the drift verdict
+  // already describes; mixing the two would report one file's version beside
+  // another file's state. The extra probe only runs when they actually
+  // diverge, so the ordinary row is unchanged.
+  const trackedPath = manifestEntry?.providerPath;
+  const pathDiverges =
+    trackedPath !== undefined && trackedPath !== projection.providerPath;
+  const trackedPresent = pathDiverges
+    ? await deps.pathExists(join(scopeRoot, trackedPath))
+    : viewPresent;
+  // A tracked path that escapes the scope is not read for a version. Its
+  // `SKILL.md` is a file outside the tree the user asked about, so reporting
+  // its version would both disclose content from outside the scope and compare
+  // the canonical skill against something that is not a view of it.
+  const comparable =
+    manifestEntry?.strategy === 'copy' &&
+    !projection.nativeRead &&
+    trackedPresent &&
+    !(trackedPath !== undefined && escapesScope(trackedPath));
+
+  return {
+    projection,
+    manifestEntry: input.renderableEntry,
+    drift,
+    viewPresent,
+    ...(comparable
+      ? {
+          projectedVersion: await deps.readProjectedVersion(
+            join(scopeRoot, trackedPath ?? projection.providerPath),
+          ),
+        }
+      : {}),
+  };
+}
+
 function qualifier(view: SkillViewDiagnosis['views'][number]): string {
   if (view.nativeRead) return ' (native read)';
   if (view.strategy === 'symlink') return ' (symlink)';
@@ -311,6 +443,15 @@ function qualifier(view: SkillViewDiagnosis['views'][number]): string {
 }
 
 const ACTIONABLE = new Set(['missing-additive', 'removed', 'modified']);
+
+/**
+ * Classes for which nothing is projected at all.
+ *
+ * These rows carry no projection qualifier and no path: `copilot: inactive
+ * (native read)  .agents/skills/x` named a file the provider was never going to
+ * read and described a strategy that was never going to run.
+ */
+const NO_PROJECTION = new Set(['inactive', 'unsupported', 'excluded']);
 
 /** Renders the human-readable provider-view block. Pure. */
 export function formatSkillViewLines(
@@ -334,14 +475,25 @@ export function formatSkillViewLines(
 
     for (const view of diagnosis.views) {
       const label = `${view.provider}:`.padEnd(width + 1);
-      const path = view.providerPath ? `  ${view.providerPath}` : '';
-      lines.push(`    ${label} ${view.viewClass}${qualifier(view)}${path}`);
+      const projected = !NO_PROJECTION.has(view.viewClass);
+      const path =
+        projected && view.providerPath ? `  ${view.providerPath}` : '';
+      lines.push(
+        `    ${label} ${view.viewClass}${projected ? qualifier(view) : ''}${path}`,
+      );
       // A withheld or ambiguous version comparison is exactly the case a user
       // cannot infer from the class word alone, so it is shown even when the
       // class itself is not actionable.
       if (
         ACTIONABLE.has(view.viewClass) ||
         view.viewClass === 'untracked' ||
+        // `unverified` is the class a per-view read failure degrades to, and
+        // its detail carries the redacted reason. Withholding it would hide
+        // exactly what the scope-level `unavailable` used to print.
+        view.viewClass === 'unverified' ||
+        // A row naming a path the adapter does not expect is unreadable
+        // without the sentence that says why, whatever its class.
+        view.expectedProviderPath !== undefined ||
         (view.versionEvidence !== undefined &&
           view.versionEvidence !== 'resolved' &&
           view.versionEvidence !== 'absent')

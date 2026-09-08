@@ -349,10 +349,36 @@ describe('frontmatter', () => {
       expect(resolveSkillVersion(parsed)).toBeNull();
     });
 
-    it('ignores a tagged or anchored value', () => {
+    it('ignores a tagged, anchored, or aliased value', () => {
       expect(resolve('version: !!str 1.2.3')).toBeNull();
       expect(resolve('version: &pin 1.2.3')).toBeNull();
       expect(resolve('metadata:\n  version: !!str 1.2.3')).toBeNull();
+      // An alias node is not a scalar at all, so it is rejected for a different
+      // reason than the two decorations above and by a different check. The
+      // readers' comments name all three because all three are rejected.
+      expect(resolve('anchor: &pin 1.2.3\nversion: *pin')).toBeNull();
+      expect(
+        resolve('anchor: &pin 1.2.3\nmetadata:\n  version: *pin'),
+      ).toBeNull();
+    });
+
+    it('resolves a folded or literal block scalar like any other string', () => {
+      // The accepted control for the rejections above: a block scalar is
+      // neither tagged, anchored, nor aliased, so nothing about it is
+      // decorated and every reader takes its value.
+      expect(resolve('version: >-\n  1.2.3')).toEqual({
+        version: '1.2.3',
+        source: 'top-level',
+      });
+      expect(resolve('version: |-\n  1.2.3')).toEqual({
+        version: '1.2.3',
+        source: 'top-level',
+      });
+      expect(resolve('metadata:\n  version: >-\n    1.2.3')).toEqual({
+        version: '1.2.3',
+        source: 'metadata',
+      });
+      expect(unusable('version: >-\n  1.2.3')).toBe(false);
     });
 
     it('ignores a non-string scalar rather than reporting a value the author never wrote', () => {

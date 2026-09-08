@@ -98,15 +98,20 @@ the manifest.
 - `modified` — a manifest entry exists and the view no longer agrees with what the last sync recorded, or its version has fallen behind canonical. A `copy` view also reaches this class through the known limitation below, where the difference may be nothing but the generated banner
 - `in-sync` — a symlinked, collection-aliased, or natively read view _is_ the canonical file; a `copy` view matches the content recorded at its last sync
 - `untracked` — something exists at the expected path that no manifest entry tracks; stray detection skips provider entries whose name matches a canonical entry, so `oat status` does not report it as a stray and reports the untracked projection as `missing` instead
-- `unverified` — a manifest entry tracks the view but no drift observation accompanied it, so its state is unknown
+- `unverified` — the view's state is unknown: either a manifest entry arrived with no drift observation, or reading that one view failed and the row carries the redacted reason
 - `inactive`, `unsupported`, `excluded` — no projection is expected in this scope, so none of them is reported as missing
 
-`unsupported`, `excluded`, and `unverified` are defensive: no shipped adapter,
-config, or `oat tools info` code path produces them today. Every shipped adapter
-maps skills in both scopes, the command passes no canonical-path filter, and it
-always pairs a manifest entry with a drift observation. The branches exist so a
-future adapter, filter, or consumer of the mapper cannot be silently reported as
-a projection gap.
+`unsupported` and `excluded` are defensive: no shipped adapter or config
+produces them today. Every shipped adapter maps skills in both scopes and the
+command passes no canonical-path filter. The branches exist so a future adapter
+or filter cannot be silently reported as a projection gap. `unverified` is
+reachable: an unreadable provider path makes drift detection throw, and that one
+view degrades to `unverified` with its reason.
+
+A row for `inactive`, `unsupported`, or `excluded` prints neither a projection
+qualifier nor a path, because no view is projected for it: naming an expected
+path and a sync strategy for a file that is never produced described work that
+is never going to happen.
 
 Only `missing-additive`, `removed`, and `modified` carry a repair, and it is
 always one concrete `oat sync --scope project` or `oat sync --scope user` for
@@ -114,21 +119,45 @@ the scope where the gap was observed. Versions are compared only for `copy`
 views: a symlinked, collection-aliased, or natively read view is the canonical
 file, so it has no second version.
 
-If reading the manifest or detecting drift fails — an invalid, unreadable, or
-otherwise non-loadable `.oat/sync/manifest.json`, for instance — the section for
-that scope reports `unavailable` with the reason, and the rest of the command is
-unaffected. The diagnostic is additive evidence, so it never changes the exit
-code or removes the tool detail of a user whose sync state is already broken.
-An unreadable sync config is handled one step earlier and differently: provider
-reachability degrades to no provider evidence, so that scope contributes no
-section at all. Reasons are redacted; the scope root becomes `<project>` or `~`,
-and any path outside it is replaced entirely.
+If reading the sync config or the manifest fails — an invalid, unreadable, or
+otherwise non-loadable `.oat/sync/config.json` or `.oat/sync/manifest.json`, for
+instance — the section for that scope reports `unavailable` with the reason, and
+the rest of the command is unaffected. A failure while reading one provider's
+view, such as drift detection throwing on an unreadable provider path, is
+narrower: only that row degrades, to `unverified` with the same redacted reason,
+and the other providers keep their real rows. The
+diagnostic is additive evidence, so it never changes the exit code or removes
+the tool detail of a user whose sync state is already broken. A broken sync
+config is one of the likeliest reasons a provider view is missing, which is
+exactly what this command is run to explain, so it is reported rather than
+dropped: printing no section at all would read as "no providers configured".
+An absent `.oat/sync/config.json` is a different case and not a failure — it
+resolves to the defaults, and the scope is diagnosed normally. Reasons are
+redacted; the scope root becomes `<project>` or `~` (only at a path boundary, so
+a sibling directory that merely shares the prefix is left alone), and any
+absolute path outside it is replaced entirely with `<path>`, quoted or not and
+whatever punctuation precedes it. A manifest `providerPath` that escapes its own
+scope is redacted the same way rather than rendered in the row, and no version
+is read from it: its `SKILL.md` is a file outside the tree the command was asked
+about.
 
 A drift state and a view class can legitimately disagree. Drift compares a copy
 against the hash recorded at its last sync, so a copy that was never re-synced
 after a canonical edit still matches its own manifest entry and reads as
 `in_sync`. When the two versions differ, the view class is `modified` and the
 drift state is reported unchanged beside it.
+
+The manifest is keyed by `(canonicalPath, provider)` and never by path, so a
+manifest entry can track a view somewhere other than the adapter's expected
+projection path — reachable after a `providerDir` change or from a manifest
+written under an older layout. Drift resolves the entry's own `providerPath`, so
+in that case the row names the tracked path rather than the expected one, and
+its `--json` record carries the expected path separately as
+`expectedProviderPath`. The detail says which path the state describes and
+whether anything exists at the expected path. A drift verdict computed for one
+path is never attached to a row labelled with another: doing so reported `removed`
+with "the provider file is gone from disk" against a healthy file that was
+sitting at the expected path all along.
 
 Both sides resolve their version through the same shared reader, so
 `metadata.version` takes precedence over the deprecated top-level `version`

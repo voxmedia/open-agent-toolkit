@@ -323,7 +323,13 @@ export interface ResolvedSkillVersion {
 }
 
 /**
- * Read a frontmatter value that is a plain, untagged, unanchored string.
+ * Read a frontmatter value that is a plain, undecorated string.
+ *
+ * A tagged (`!!str 1.2.3`) or anchored (`&pin 1.2.3`) scalar is rejected by the
+ * explicit checks below, and an aliased value (`*pin`) is rejected because an
+ * alias node is not a scalar at all. Folded (`>-`) and literal (`|`) block
+ * scalars are none of those: they are ordinary string scalars and resolve
+ * normally.
  *
  * Non-string scalars are deliberately rejected rather than stringified: YAML
  * reads `version: 1.10` as the number `1.1`, so accepting numbers would report
