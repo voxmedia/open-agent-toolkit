@@ -242,6 +242,7 @@
 | BL-260902-append-only-lifecycle-history  | Append-only lifecycle history after completion                                                                  | open   | medium   | feature    | M        |
 | BL-260830-cli-flag-help-p2-p3-cleanup    | CLI flag/help P2-P3 cleanup                                                                                     | open   | medium   | task       | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                          | open   | medium   | feature    | M        |
+| BL-260903-close-manual-only-agents-md    | Close manual-only AGENTS.md refresh loop                                                                        | open   | medium   | task       | M        |
 | BL-260830-complete-control-plane-backed  | Complete control-plane-backed lifecycle reads                                                                   | open   | medium   | initiative | M        |
 | BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path                      | open   | medium   | task       | S        |
 | BL-260830-decide-generic-oat-ownership   | Decide generic OAT ownership of Jira backlog refinement                                                         | open   | medium   | idea       | L        |
@@ -299,7 +300,6 @@
 | BL-260830-benchmark-listprojects-before  | Benchmark listProjects before approving a summary fast path                                                     | open   | low      | idea       | M        |
 | BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight                                                     | open   | low      | task       | M        |
 | BL-260903-close-claude-runtime-lineage   | Close Claude runtime lineage depth and unverified provider shapes                                               | open   | low      | task       | S        |
-| BL-260903-close-manual-only-agents-md    | Close manual-only AGENTS.md refresh loop                                                                        | open   | low      | task       | M        |
 | BL-260901-consolidate-terminal-remote    | Consolidate terminal remote-ref advertisement parsing                                                           | open   | low      | task       | M        |
 | BL-260906-cover-skill-test-files-under   | Cover skill test files under .agents/skills in pnpm check and lint-staged                                       | open   | low      | task       | XS       |
 | BL-260830-decide-whether-oat-owns        | Decide whether OAT owns dependency intelligence                                                                 | open   | low      | idea       | L        |
