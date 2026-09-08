@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: null
+oat_current_task: p02-t01
+oat_last_commit: 6c461e3fe4577b6bf78b4ace79e5bab1b5dfa510
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260904-migrate-bundled-skills-from' }
@@ -116,7 +116,8 @@ Implementation — the plan gate blocked four times on new surfaces (every findi
 - ✗ Plan gate attempt 2 blocked (0C/2I/3M/1m: duplicate parsers, Phase 1 release gates, decision skill present, control categories, HiLL confirmation) — fixed in-artifact
 - ✗ Plan gate attempt 3 blocked (0C/2I/1M) — fixed in-artifact
 - ✗ Plan gate attempt 4 blocked (0C/2I/2M) — fixed in-artifact; gate capped at four attempts (no Critical ever raised)
-- ⧗ Phase 1 (readers and shape-agnostic tests) on the root checkout
+- ✓ Phase 1 done (`d054384ee`, `8948bf1ea`, `6c461e3fe`); root review round 1 0C/2I/3M/3m, no code defect
+- ⧗ Phase 1 fix round (`mig-p01-fix-001`: check-core fail-open scalars, node-test reader bound, writer parity) and round 2
 
 ## Blockers
 

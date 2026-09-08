@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-08
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -23,53 +23,61 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 3     | 0/3       |
-| Phase 2 | pending | 2     | 0/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | pending  | 2     | 0/2       |
 
-**Total:** 0/5 tasks completed
+**Total:** 3/5 tasks completed
 
 ---
 
 ## Phase 1: Metadata-aware readers and shape-agnostic tests
 
-**Status:** pending
-**Started:** -
+**Status:** complete (root review round 1: 0C/2I/3M/3m — no code defect; fix round `mig-p01-fix-001` for the two code Mediums and one Minor, then round 2)
+**Started:** 2026-09-08
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- -
+- `tools/release/build-explainer-rc.mjs` reads bundled skill versions through the CLI's built canonical resolver (`packages/cli/dist/commands/shared/frontmatter.js`), loaded lazily after the builder's own `pnpm build`; conflict, unusable, malformed, and absent declarations each throw `E_SKILL_VERSION` with a category-specific message; no regex reader of the precedence rule remains in `tools/release`.
+- `.agents/skills/oat-explainer-kit/scripts/check-core.mjs` keeps a self-contained, dependency-free reader (accepted exception: an installed skill script cannot import the repository) bound by the new parity contract `tools/smoke/explainer-kit/check-core-version-parity.test.mjs` (39 fixtures plus every bundled skill; documented fail-closed limits pinned); the packaged-layout probe reads and mutates whichever declaration is present, confined to the frontmatter.
+- Every bundled-skill version reader in the test suites is shape-agnostic through the new test-support module `packages/cli/src/__tests__/skills/skill-version.ts` (resolver-backed read, shape-aware writer) and small local readers in the three `node --test` files; every pinned literal unchanged; the lifecycle mutation asserts the content changed; `review-skill-contracts.test.ts:359` keeps its raw agent-role read by design.
 
 **Key files touched:**
 
-- -
+- `tools/release/build-explainer-rc.mjs`, `build-explainer-rc.test.mjs` - lazy canonical resolver; fixture-local clean-checkout control
+- `.agents/skills/oat-explainer-kit/scripts/check-core.mjs`, `tests/check-core.test.mjs`, `tools/smoke/explainer-kit/check-core-version-parity.test.mjs`, `packaged-layout.test.mjs` - self-contained reader + parity contract
+- `packages/cli/src/validation/skills.test.ts`, `commands/tools/tool-pack-lifecycle.integration.test.ts`, `commands/init/tools/shared/{review-skill-contracts,agent-instructions-bundle-contract}.test.ts`, `packages/cli/src/__tests__/skills/skill-version.ts` (new), `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`, `.agents/skills/{explainer-kit,recon}/tests/*.mjs` - shape-agnostic readers
 
 **Verification:**
 
-- Run: -
-- Result: -
+- Run: Phase 1 set — `pnpm check`, `pnpm type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`, `pnpm build`, `pnpm run check:skill-bumps`, `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills`
+- Result: all exit 0 (`Cached: 0`; CLI 6287; smoke 165; skills 859; release 42 + 1 env-gated skip; 82 alias warnings expected until Phase 2); re-run by the root reviewer with the same results plus the env-gated real-RC integration test (2/2) against this checkout. Controls: t01 neutralization (additive module-top `dist` import → `ERR_MODULE_NOT_FOUND`), t02 regex revert (3 of 5 parity tests red), t03 full-corpus simulation (all 82 skills metadata-only → 43 vitest + 3 `node --test` failures on the old readers, 0 on the new).
 
 **Notes / Decisions:**
 
-- -
+- Deviation (p01-t01 case g): the clean-checkout control runs a fixture-local builder against a `dist`-free checkout instead of moving the repository's own `dist` aside (`pnpm test:release` runs four files in parallel against the shared checkout); strictly stronger.
+- Deviation (p01-t01 Step 2): the unusable-declaration message names the skill and the condition, not the scalar (the resolver exposes only a flag; the plan forbids a second parse) — plan amended at the review.
+- Mechanical widening: `packages/cli/src/__tests__/skills/skill-version.ts` added (one shared reader instead of four copies; type-checked by the existing test-support tsconfig).
+- Found for Phase 2: the `oat-project-implement` 245-line budget in `skills.test.ts` must become 246 (plan p02-t01 amended).
+- Pre-existing, out of scope: the builder's main-module guard compares `import.meta.url` against `process.argv[1]` without `realpath`, so a symlinked checkout silently no-ops (worked around in the test).
 
 ### Task p01-t01: Read metadata.version in the explainer RC builder
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `d054384ee`
 
 ### Task p01-t02: Read metadata.version in the explainer-kit core check and its packaged-layout probe
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8948bf1ea`
 
-### Task p01-t03: Make the skill test sweeps and mutation tests read through the resolver
+### Task p01-t03: Make every bundled-skill version reader in the test suites shape-agnostic
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `6c461e3fe`
 
 ## Phase 2: Migrate the 82 skills, repoint the pins, record the decision
 
@@ -162,6 +170,23 @@ oat_generated: false
 
 **Gate disposition:** four attempts, each blocking on a new surface (attempt 1: HiLL/archive owner/decision routing/control; 2: reader architecture, phase gates, decision skill, control categories, HiLL; 3: HiLL semantics, reader coverage, gate order; 4: format step, dist timing, diagnostics, staging). Every finding was fixed in the plan; no Critical was ever raised. Per the repository's recorded plan-gate experience (`lite-workflow-mode` blocked eleven times on the same pattern), the gate is capped here and the project proceeds to implementation with the root implementation-time reviews (per-phase and final) plus the configured exit gate as the review coverage. The plan ledger row stays `fixes_added` (not `passed`) to record that no gate run approved the final text.
 
+## Review Received: p01 (round 1)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/p01-review-2026-09-08T101506Z.md (reviewed head `6c461e3fe4577b6bf78b4ace79e5bab1b5dfa510`, invocation manual, request `mig-p01-review-001`, reconnaissance not-attempted)
+**Findings:** 0 Critical / 2 Important / 3 Medium / 3 Minor — no code defect; all five brief rulings verified first-hand (incl. the env-gated real-RC integration test 2/2 and a mechanical literal-invariance diff).
+
+**Dispositions:**
+
+- I1 (Phase 1 unrecorded in `implementation.md` / `state.md`) → recorded in this receive.
+- I2 (p02-t01 "values only" would fail on the 245-line budget) → plan p02-t01 amended to name the 246 budget edit and the shared test-support reader.
+- M1 (`check-core.mjs` `isReadableValue` fails OPEN for plain scalars containing `: ` or the reserved indicators `@` / backtick — seven divergences incl. `version: 1.2.3: x`; not a regression, `parseVersion` rejects downstream) → fix round `mig-p01-fix-001`: tighten the reader and pin the shapes in the parity corpus.
+- M2 (the three `node --test` local readers scan the whole document, not the frontmatter block — latent) → fix round: port the frontmatter bound.
+- M3 (the shipped unusable-declaration message names the condition, not the scalar; plan text stale) → plan amended; Deviations row.
+- m1 (`test:smoke` / `test:release` need a prior `pnpm build`) → plan Verification mode notes it; p02-t02 adds one sentence to `AGENTS.md`.
+- m2 (`withDeclaredVersion` rewrites only the resolved position while `withSkillVersion` rewrites every declaration) → fix round: rewrite every declaration present.
+- m3 (p01-t03 heading drift in `implementation.md`) → re-synced here.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -185,6 +210,7 @@ Chronological log of implementation progress.
 ### 2026-09-08
 
 - Project scaffolded (quick mode) on branch `migrate-skill-versions` from `origin/main` `5b3b82151` (the wave-6 close); discovery and plan authored from the 2026-09-08 recon.
+- Phase 1 done (`d054384ee`, `8948bf1ea`, `6c461e3fe`; Phase 1 gates green); root review round 1 0C/2I/3M/3m (no code defect) → records fixed here, fix round `mig-p01-fix-001` for M1/M2/m2, round 2 next.
 - Plan gate attempt 1 blocked (0C/2I/2M); all four findings fixed in the plan.
 - Plan gate attempt 2 blocked (0C/2I/3M/1m): reader architecture resolved (canonical resolver for the RC builder; accepted exception + parity contract for the bundled script), Phase 1 gate subset, decision via `oat-pjm-decision`, control categories, HiLL pending; attempt 3 blocked (0C/2I/1M: HiLL `[]` semantics, raw readers left to Phase 2, the exact eight-gate order) and fixed in-artifact; attempt 4 blocked (0C/2I/2M: Format step, dist import timing, resolver diagnostics, staging) and fixed in-artifact; the plan gate is capped at four attempts and the project proceeds to Phase 1 with root implementation-time reviews.
 
@@ -194,18 +220,21 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented                                                               | Actual / Accepted                                                                    | Reason                                                                      | Source of Truth                    | Follow-up |
+| ------------- | --------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ---------------------------------- | --------- |
+| p01-t01       | plan Step 1 (g) | move the repository's own `packages/cli/dist` aside for the clean-checkout control | a fixture-local builder runs against a `dist`-free checkout                          | `pnpm test:release` runs four files in parallel against the shared checkout | implementation                     | none      |
+| p01-t01       | plan Step 2     | the unusable case names the unusable value                                         | names the skill and the condition                                                    | the resolver exposes only a flag; the plan forbids a second parse           | implementation (plan amended)      | none      |
+| p01-t03       | plan Files      | seven listed files                                                                 | plus `packages/cli/src/__tests__/skills/skill-version.ts` (new shared reader/writer) | one module instead of four copies                                           | implementation                     | none      |
+| p02-t01       | plan Step 2     | "values only"                                                                      | plus the 245 → 246 line budget for `oat-project-implement`                           | the migration adds one frontmatter line                                     | plan amended at the Phase 1 review | none      |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                         | Passed | Failed | Coverage |
+| ----- | ----------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | CLI 6287 (forced, 0 cached) + smoke 165 + skills 859 + release 42 | all    | 0      | -        |
+| 2     | -                                                                 | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
