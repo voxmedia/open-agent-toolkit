@@ -10,6 +10,7 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-260908-a-stop-whose-remedy-lies       | 2026-09-08 | accepted   | A STOP whose remedy lies inside the plan's own file scope is closed by a dated refresh, not a park     | -       |
 | DR-260907-additive-post-selection        | 2026-09-07 | accepted   | Additive post-selection recovery envelopes                                                             | -       |
 | DR-260907-gate-log-receipts-live-under   | 2026-09-07 | accepted   | Gate log receipts live under the project                                                               | -       |
 | DR-260907-oat-config-reads-materialize   | 2026-09-07 | accepted   | OAT config reads materialize `__proto__`-named keys as own data properties                             | -       |

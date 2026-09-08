@@ -37,6 +37,19 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.64` (wave 6 of the 2026-08-31 execution program, wrapper project
+  `wave-6-execution`, "truthfulness residue", in PR `wave-6-execution-2026-09`;
+  all five lanes) makes pack evidence carry real per-provider reachability with
+  live diagnostic codes and in-process sync evidence, has `oat-project-pr-final`
+  1.6.3 archive only terminal reviews and refuse a PR whose review ledger
+  escapes the project or names a missing artifact, preserves `__proto__`-named
+  config keys as own properties of plain objects
+  (`DR-260907-oat-config-reads-materialize`), makes `metadata.version` the
+  canonical skill version through one shared resolver (conflict is an error,
+  alias-only a structural warning over every bundled skill; the bulk migration
+  is `BL-260904-migrate-bundled-skills-from`), and adds a provider-view
+  diagnostic section to `oat tools info <skill>`. The program's composed waves
+  are complete.
 - CLI `0.2.63` (wave 5 of the 2026-08-31 execution program, wrapper project
   `wave-5-execution`, "program-intake follow-ups", merged as PR #275; ten of
   eleven lanes) makes gates recover a committed review artifact after a
