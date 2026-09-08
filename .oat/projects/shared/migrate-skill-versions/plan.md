@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-09-08
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p02'] # phases to pause AFTER completing (final phase only)
+oat_plan_hill_phases: [] # provisional scaffold value — NOT a confirmed choice; oat-project-implement resolves it at start from workflow.hillCheckpointDefault (currently `final`)
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported | lite
 oat_import_reference: null # e.g., references/imported-plan.md
@@ -28,8 +28,8 @@ oat_generated: false
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints: final phase only (`['p02']`, the workflow default); the operator's standing preference is no cross-runtime phase-boundary review gates (`oat_phase_review_gate` stays absent), which is a different setting from HiLL
-- [x] Set `oat_plan_hill_phases` in frontmatter
+- [ ] HiLL checkpoints: no explicit operator confirmation exists for this project; the choice is resolved by `oat-project-implement` at start from `workflow.hillCheckpointDefault` (`final`). The operator's standing preference about cross-runtime phase-boundary review gates is a different setting and is not cited as confirmation.
+- [ ] `oat_plan_hill_phases` left at the scaffold value pending that resolution
 - [x] Evaluated phases for parallelism opportunities (Phase 2 rewrites files Phase 1 edits; sequential)
 - [x] Set `oat_plan_parallel_groups` in frontmatter
 
@@ -43,12 +43,13 @@ oat_generated: false
 
 ## Verification mode
 
-Standalone (not a wave lane): this project owns the lockstep bump and runs the full Definition of Done from root `AGENTS.md` in order with captured exit codes: `pnpm check`, `pnpm type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`, `pnpm build`, `pnpm run check:skill-bumps`, `git fetch origin && pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs`, plus `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills`. Per-task verification below is the focused subset; the full sequence runs at the end of each phase.
+Standalone (not a wave lane): this project owns the lockstep bump. **Phase 1 phase-wide verification** (a passing, phase-relevant subset — the release-version gates cannot pass before p02-t02 because the release gate treats any `.agents/skills` change as a public-package change): `pnpm check`, `pnpm type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`, `pnpm build`, `pnpm run check:skill-bumps`, `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills` — all expected exit 0. **Phase 2 phase-wide verification** (after p02-t02's bump): the complete root `AGENTS.md` Definition of Done in order with captured exit codes — `pnpm check`, `pnpm type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`, `pnpm build`, `pnpm run check:skill-bumps`, `git fetch origin && pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs` — plus `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills`. Per-task verification below is the focused subset.
 
 ## Recon facts the tasks rely on (2026-09-08, base `5b3b82151`)
 
-- 82 skills under `.agents/skills`, all with a top-level `version:` at frontmatter line 3 (none with `metadata.version`); `oat-repo-improve` and `triage-oat-issues` already carry a `metadata:` map with other keys, so their version is merged into the existing map.
+- 82 skills under `.agents/skills`, each with exactly one unquoted column-0 `version:` declaration in its frontmatter (usually line 3; `oat-project-clear-active` and `oat-project-open` place it at line 4) and none with `metadata.version`; `oat-repo-improve` and `triage-oat-issues` already carry a `metadata:` map with other keys, so their version is merged into the existing map.
 - Non-resolver readers: `tools/release/build-explainer-rc.mjs` (`parseSkillVersion`, `/^version:\s*(\S+)\s*$/m`, throws `E_SKILL_VERSION`) and `.agents/skills/oat-explainer-kit/scripts/check-core.mjs` (`readFrontmatterVersion`, returns `null` → `incompatible`). `packages/cli/assets/**` is a gitignored byte copy produced by `packages/cli/scripts/bundle-assets.sh`; fixes land in the canonical files.
+- Reader architecture (resolves the backlog item's "no second implementation of the precedence rule" rule): the built CLI exports the canonical reader at `packages/cli/dist/commands/shared/frontmatter.js` (`getFrontmatterBlock`, `parseSkillFrontmatter`, `resolveSkillVersion`; `pnpm build` precedes every consumer in the Definition of Done and `turbo run test` depends on `^build`), and `tools/release/build-explainer-rc.mjs` already imports repository modules (`../../packages/cli/scripts/bundle-inputs.mjs`), so the RC builder consumes the canonical resolver rather than re-implementing it. The bundled skill script `check-core.mjs` is installed into user projects by pack install and cannot import from this repository or from `yaml`; it keeps a self-contained reader as an ACCEPTED EXCEPTION (recorded in the p02-t02 decision) bound by a parity contract test that runs the same fixture corpus through both readers.
 - Test readers that anchor on the top-level key: `packages/cli/src/validation/skills.test.ts` (two corpus sweeps around `:1234` and `:1243` that go red 82× on key removal; 19 pinned `[name, version]` tuples in four blocks around `:1268`, `:4462`, `:5774`, `:5793`; about 28 `.toBe('x.y.z')` sites on a `^version:` capture; four `.toMatch(/^version:\s*x\.y\.z$/m)` sites; path/version arrays around `:2940`, `:5943`, `:5990`, `:6030`), `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts:356,1061,1398`, `packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts:23-25`, `packages/cli/src/commands/tools/tool-pack-lifecycle.integration.test.ts:334` (a `replace(/^version:.*$/m, 'version: 0.0.1')` mutation whose `outdated` assertion depends on it), `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs:434-435` (regex-escaped literals), `tools/smoke/explainer-kit/packaged-layout.test.mjs:65,114` (derived read; mutation), `.agents/skills/explainer-kit/tests/rebuildability.test.mjs:103`, `.agents/skills/recon/tests/skill-contract.test.mjs:26`. `named-skill-load-contract.test.ts` has no version pins.
 - The bump gate (`packages/cli/src/validation/skills.ts` `collectChangedSkillVersionBumpFindings`) resolves both sides through the shared reader, so base `version: X` → head `metadata.version: Y` with `Y > X` passes; the structural validator's required-key list does not include `version`.
 - No provider, sync, drift, or manifest surface reads the top-level field of a projected copy; the provider-view diagnostic reads through the resolver. Docs: `apps/oat-docs/docs/contributing/skills.md` lines ~204-208 say every bundled skill still uses the alias and that the migration is tracked separately — that paragraph must be rewritten. Both authoring templates already emit `metadata.version` only.
@@ -67,26 +68,26 @@ Re-anchor every cited line on the checked-out base before editing.
 
 **Step 1: Write test (RED)**
 
-In `tools/release/build-explainer-rc.test.mjs`, add cases for `parseSkillVersion` (export it or test through the builder's fixture path the file already uses): (a) a `SKILL.md` whose frontmatter carries only `metadata:\n  version: 1.2.3` resolves `1.2.3`; (b) both fields with the same value resolves that value; (c) a quoted value (`version: "1.2.3"` or `metadata.version: '1.2.3'`) resolves without quotes; (d) both fields with different values throws `E_SKILL_VERSION` naming both values (the builder must not guess); (e) neither field throws `E_SKILL_VERSION` as today.
+In `tools/release/build-explainer-rc.test.mjs`, add cases for `parseSkillVersion` (export it or test through the builder's fixture path the file already uses): (a) a `SKILL.md` whose frontmatter carries only `metadata:\n  version: 1.2.3` resolves `1.2.3`; (b) both fields with the same value resolves that value; (c) a quoted value (`version: "1.2.3"` or `metadata.version: '1.2.3'`) resolves without quotes; (d) both fields with different values throws `E_SKILL_VERSION` naming both values (the builder must not guess); (e) neither field throws `E_SKILL_VERSION` as today; (f) a malformed frontmatter block (duplicate key, unterminated quote) throws `E_SKILL_VERSION` naming the parse failure.
 
 Run: `node --test tools/release/build-explainer-rc.test.mjs`
 Expected: (a), (c), (d) fail (RED); (b) and (e) pass on the current regex.
 
 **Step 2: Implement (GREEN)**
 
-Replace the single regex with a small frontmatter-block parse: take the block between the leading `---` lines, find a top-level `version:` line (column 0) and a `version:` line indented under a top-level `metadata:` key (stop at the next column-0 key), strip matching surrounding quotes and a trailing `#` comment, apply metadata-first precedence, and throw `E_SKILL_VERSION` on both-present-and-different or neither. Keep the function synchronous and dependency-free (`tools/release` has no YAML library).
+Replace the single regex with the canonical resolver: `import { getFrontmatterBlock, parseSkillFrontmatter, resolveSkillVersion } from '../../packages/cli/dist/commands/shared/frontmatter.js'` (a dynamic import inside `parseSkillVersion` or at module top — if `dist` is absent, throw `RcBuildError('E_SKILL_VERSION', 'build the CLI first (pnpm build)')` rather than falling back to a regex), then map the resolver's outcome: a resolved version returns it; `conflict`, an unusable declaration, a malformed block, or no version throws `E_SKILL_VERSION` with the resolver's detail. No second implementation of the precedence rule exists in this file.
 
 Run: `node --test tools/release/build-explainer-rc.test.mjs`
 Expected: all cases pass (GREEN).
 
 **Step 3: Refactor**
 
-None beyond a doc comment naming the precedence and pointing at `packages/cli/src/commands/shared/frontmatter.ts` as the canonical implementation.
+A doc comment stating that the release tool consumes the CLI's built resolver and therefore requires `pnpm build` (already true of the Definition of Done ordering and of `turbo run test`'s `^build` dependency).
 
 **Step 4: Verify**
 
-Run: `pnpm test:release > /tmp/p01-t01-release.log 2>&1; echo exit=$?` then `pnpm release:validate > /tmp/p01-t01-validate.log 2>&1; echo exit=$?`
-Expected: both exit 0 on the unmigrated tree (every skill still carries the alias, so the fallback path is exercised).
+Run: `pnpm build > /tmp/p01-t01-build.log 2>&1; echo exit=$?` then `pnpm test:release > /tmp/p01-t01-release.log 2>&1; echo exit=$?`
+Expected: both exit 0 on the unmigrated tree (every skill still carries the alias, so the resolver's alias branch is exercised). `pnpm release:validate` is NOT run in Phase 1 (see Verification mode).
 
 **Step 5: Commit**
 
@@ -102,24 +103,25 @@ git commit -m "fix(p01-t01): read metadata.version in the explainer RC builder"
 **Files:**
 
 - Modify: `.agents/skills/oat-explainer-kit/scripts/check-core.mjs` (`readFrontmatterVersion`), `.agents/skills/oat-explainer-kit/tests/check-core.test.mjs`, `tools/smoke/explainer-kit/packaged-layout.test.mjs` (the derived read near `:65` and the incompatibility mutation near `:114`)
+- Create: `tools/smoke/explainer-kit/check-core-version-parity.test.mjs` — the parity contract: imports `readFrontmatterVersion` from the canonical `check-core.mjs` AND the built resolver from `packages/cli/dist/commands/shared/frontmatter.js`, runs a shared fixture corpus through both (metadata-only; alias-only; both-same; both-different; quoted single/double; trailing `#` comment; a tagged scalar `!!str 1.2.3`; a duplicate key; a non-string scalar `1.10`; an unterminated quote; no frontmatter block; CRLF line endings), and asserts `readFrontmatterVersion(content) === (resolved.version when the resolver reports a clean resolved version, else null)` for every fixture
 
 **Step 1: Write test (RED)**
 
-In `check-core.test.mjs`, add cases mirroring p01-t01 for `readFrontmatterVersion`: metadata-only resolves; quoted resolves unquoted; both-same resolves; both-different returns `null` (the check must fail closed, not guess); neither returns `null`. In `packaged-layout.test.mjs`, make the derived-version read and the `1.9.9` mutation shape-aware: read the packaged core's version through the same precedence (a tiny local helper that prefers an indented `version:` under `metadata:`), and mutate whichever field is present so the incompatibility case keeps being exercised after the migration.
+In `check-core.test.mjs`, add cases for `readFrontmatterVersion`: metadata-only resolves; quoted resolves unquoted; both-same resolves; both-different returns `null` (the check must fail closed, not guess); neither returns `null`. Write the parity test above; it is RED for the metadata-only, quoted, tagged, duplicate-key, and non-string fixtures on the current regex. In `packaged-layout.test.mjs`, make the derived-version read and the `1.9.9` mutation shape-aware: read the packaged core's version through the same precedence (a tiny local helper that prefers an indented `version:` under `metadata:`), and mutate whichever field is present so the incompatibility case keeps being exercised after the migration.
 
 Run: `node --test .agents/skills/oat-explainer-kit/tests/check-core.test.mjs`
 Expected: the metadata-only, quoted, and both-different cases fail (RED).
 
 **Step 2: Implement (GREEN)**
 
-Apply the same frontmatter-block parse as p01-t01 inside `check-core.mjs` (no shared import — the bundled skill must stay self-contained), returning `null` for conflict or absence.
+Implement a self-contained reader in `check-core.mjs` (ACCEPTED EXCEPTION: the installed skill script cannot import from this repository or from `yaml`; the exception and its parity contract are recorded in the p02-t02 decision): take the frontmatter block between the leading `---` lines; read the column-0 `version:` scalar and the `version:` scalar indented under a column-0 `metadata:` key (stop at the next column-0 key); strip matching quotes and a trailing `#` comment; return `null` for a duplicate key, a tagged/anchored/aliased scalar, a non-string-looking scalar, a conflict, or absence — the parity test defines exactly which inputs must be `null` by asking the canonical resolver.
 
-Run: `node --test .agents/skills/oat-explainer-kit/tests/check-core.test.mjs` and `node --test tools/smoke/explainer-kit/packaged-layout.test.mjs`
-Expected: pass (GREEN). Do NOT bump `oat-explainer-kit` in this task — Phase 2 takes the single PR-scoped bump for every skill.
+Run: `node --test .agents/skills/oat-explainer-kit/tests/check-core.test.mjs tools/smoke/explainer-kit/check-core-version-parity.test.mjs tools/smoke/explainer-kit/packaged-layout.test.mjs`
+Expected: pass (GREEN), every parity fixture agreeing. Do NOT bump `oat-explainer-kit` in this task — Phase 2 takes the single PR-scoped bump for every skill.
 
 **Step 3: Refactor**
 
-Keep the two parsers textually identical (comment in each pointing at the other) so a later change can be applied to both.
+A doc comment in `check-core.mjs` naming the parity test as the contract that keeps it aligned with `packages/cli/src/commands/shared/frontmatter.ts`.
 
 **Step 4: Verify**
 
@@ -129,7 +131,7 @@ Expected: all exit 0.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-explainer-kit/scripts/check-core.mjs .agents/skills/oat-explainer-kit/tests/check-core.test.mjs tools/smoke/explainer-kit/packaged-layout.test.mjs
+git add .agents/skills/oat-explainer-kit/scripts/check-core.mjs .agents/skills/oat-explainer-kit/tests/check-core.test.mjs tools/smoke/explainer-kit/packaged-layout.test.mjs tools/smoke/explainer-kit/check-core-version-parity.test.mjs
 git commit -m "fix(p01-t02): read metadata.version in the explainer-kit core check"
 ```
 
@@ -197,7 +199,7 @@ Expected: green; `pnpm oat:validate-skills` prints no warnings; `pnpm run check:
 
 **Step 3: Refactor**
 
-Negative control (record the failure line): re-add `version: <old>` at column 0 to one skill in a `mktemp -d` backup-restored probe → the tightened sweep is red and `oat:validate-skills` prints exactly one alias warning; restore with `cp`.
+Negative controls, each on one skill with a `mktemp -d` backup restored by `cp` afterwards (record every failure line and category): (1) same-value dual declaration — re-add `version: <new>` at column 0 beside `metadata.version: <new>` → the tightened sweep's "no column-0 `version:`" assertion is red; the resolver reports `source: 'metadata'` with no conflict, so `oat:validate-skills` prints NO alias warning and NO error (the sweep, not the validator, is the guard for this shape); (2) alias-only — remove the `metadata.version` line and re-add `version: <old>` at column 0 → the sweep's `source === 'metadata'` assertion is red for that skill and `oat:validate-skills` prints exactly one `skill-version-alias` warning; (3) different-value dual declaration — re-add `version: <old>` beside `metadata.version: <new>` → `oat:validate-skills` reports one `skill-version-conflict` error (exit 1) and the sweep is red on the conflict.
 
 **Step 4: Verify**
 
@@ -219,7 +221,7 @@ git commit -m "chore(p02-t01): migrate every bundled skill to metadata.version"
 
 **Files:**
 
-- Create: `.oat/repo/reference/decisions/DR-2609xx-*.md` through the repository's decision workflow — root `AGENTS.md` names `oat-pjm-decision` when that skill is installed and `oat decision new` otherwise; `oat-pjm-decision` is not installed in this repository (`.agents/skills` has no such directory), so use `oat decision new` with the preflight below (title: "Bundled skills declare metadata.version only; the top-level alias retires on a fixed schedule"), a follow-up backlog item via `oat backlog new` for the warning-to-error promotion and the later removal of the top-level read
+- Create: `.oat/repo/reference/decisions/DR-2609xx-*.md` through the installed `oat-pjm-decision` skill (`.agents/skills/oat-pjm-decision/SKILL.md`, Steps 0–5: adoption check, inputs, scaffold check, `oat decision new`, body, index regeneration — the inputs are all supplied in this task, so no interactive prompt is needed; the attempt-1 receive wrongly said the skill was absent) (title: "Bundled skills declare metadata.version only; the top-level alias retires on a fixed schedule"), a follow-up backlog item via `oat backlog new` for the warning-to-error promotion and the later removal of the top-level read
 - Modify: `apps/oat-docs/docs/contributing/skills.md` (the "Every bundled skill still uses it today … tracked separately" paragraph and the gate paragraph's "until the migration lands" clause), `.oat/repo/reference/decisions/index.md` (regenerated), `.oat/repo/pjm/backlog/items/BL-260904-migrate-bundled-skills-from.md` → `.oat/repo/pjm/backlog/archived/` (archived with an outcome summary), `.oat/repo/pjm/backlog/completed.md` and `.oat/repo/pjm/backlog/index.md` (regenerated), `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json` (restamp)
 
 **Step 1: Write test (RED)**
@@ -228,7 +230,7 @@ Not a code change; the executable checks are the gates in Step 4. Before writing
 
 **Step 2: Implement (GREEN)**
 
-Decision record (status `accepted`, pass `--created-at` in local time because `oat decision new` dates ids in UTC): context (spec places the version under `metadata`; wave-6 p04 made it canonical; this project migrated all 82 bundled skills; recon found no provider, sync, drift, manifest, or docs reader of a projected copy's top-level field; agent roles under `.agents/agents` are outside both gates and stay on the top-level field); decision (bundled skills declare `metadata.version` only from CLI 0.2.65; the `skill-version-alias` warning becomes an error in the first release after 0.2.65 that changes the validator, and the resolver's top-level read is removed one release after that error has produced no findings on the bundled tree; agent roles migrate when their own enforcement surface exists); consequences (the follow-up item owns both steps; third-party skills installed from packs keep resolving through the alias until the read is removed, with the error as advance notice). Then rewrite the docs paragraph to say every bundled skill declares `metadata.version` and the alias is retained for third-party skills on the recorded schedule, and drop the "until the migration lands" clause from the gate paragraph. Then the lockstep bump: fetch `origin/main`, bump the five public packages and `public-package-versions.json` to 0.2.65, rebuild, and run `pnpm run --silent cli -- sync --scope project` so the manifest restamp lands in the same commit. Then, once every acceptance criterion of the backlog item is satisfied on the tree (verify each against the item's `## Acceptance Criteria` and say so in the summary), close it out: `pnpm run --silent cli -- backlog archive BL-260904-migrate-bundled-skills-from --summary "<outcome: 82 skills migrated and bumped, readers fixed, decision id, follow-up item id, CLI 0.2.65>"` and `pnpm run --silent cli -- backlog regenerate-index`; the moved item, `completed.md`, and `index.md` ship in this task's commit.
+Decision record through `oat-pjm-decision` (status `accepted`, pass `--created-at` in local time because `oat decision new` dates ids in UTC): context (spec places the version under `metadata`; wave-6 p04 made it canonical; this project migrated all 82 bundled skills; recon found no provider, sync, drift, manifest, or docs reader of a projected copy's top-level field; agent roles under `.agents/agents` are outside both gates and stay on the top-level field; the release RC builder now consumes the CLI's built resolver); decision (bundled skills declare `metadata.version` only from CLI 0.2.65; the `skill-version-alias` warning becomes an error in the first release after 0.2.65 that changes the validator, and the resolver's top-level read is removed one release after that error has produced no findings on the bundled tree; agent roles migrate when their own enforcement surface exists; ACCEPTED EXCEPTION: the bundled `oat-explainer-kit/scripts/check-core.mjs` keeps a self-contained version reader because an installed skill script cannot import the repository's resolver, bound by the parity contract `tools/smoke/explainer-kit/check-core-version-parity.test.mjs`); consequences (the follow-up item owns both retirement steps; third-party skills installed from packs keep resolving through the alias until the read is removed, with the error as advance notice; any change to the resolver's precedence must update the parity fixtures). Then rewrite the docs paragraph to say every bundled skill declares `metadata.version` and the alias is retained for third-party skills on the recorded schedule, and drop the "until the migration lands" clause from the gate paragraph. Then the lockstep bump: fetch `origin/main`, bump the five public packages and `public-package-versions.json` to 0.2.65, rebuild, and run `pnpm run --silent cli -- sync --scope project` so the manifest restamp lands in the same commit. Then, once every acceptance criterion of the backlog item is satisfied on the tree (verify each against the item's `## Acceptance Criteria` and say so in the summary), close it out: `pnpm run --silent cli -- backlog archive BL-260904-migrate-bundled-skills-from --summary "<outcome: 82 skills migrated and bumped, readers fixed, decision id, follow-up item id, CLI 0.2.65>"` and `pnpm run --silent cli -- backlog regenerate-index`; the moved item, `completed.md`, and `index.md` ship in this task's commit.
 
 Run: `pnpm run --silent cli -- decision regenerate-index`; `pnpm check`
 Expected: index regenerated; markdownlint green.
@@ -259,7 +261,7 @@ git commit -m "chore(p02-t02): record the alias retirement schedule, archive the
 | p02   | code     | pending     | -          | -                                                           | -             | -          | -                   |
 | final | code     | pending     | -          | -                                                           | -             | -          | -                   |
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T080653Z.md | -             | gate       | codex-5-6-sol-xhigh |
-| plan  | artifact | received    | 2026-09-08 | reviews/artifact-plan-review-2026-09-08T082541Z.md          | -             | -          | -                   |
+| plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T082541Z.md | -             | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last. For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events. Writers must preserve every existing row and every unknown trailing cell.
 
