@@ -2,7 +2,7 @@
 id: BL-260906-harden-dispatch-launch
 title: Harden dispatch launch baselines and terminal reconciliation
 status: open
-priority: medium
+priority: high
 scope: feature
 scope_estimate: M
 labels:
@@ -13,7 +13,7 @@ labels:
   - retro
 assignee: null
 created: 2026-09-06T05:27:39.903Z
-updated: 2026-09-06T05:27:39.903Z
+updated: 2026-09-08T16:55:27.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -21,6 +21,10 @@ external_plans: []
 ## Description
 
 Tracks the two dispatch-lifecycle defects identified by the lite-workflow-mode retrospective: GitHub issue #265 (https://github.com/voxmedia/open-agent-toolkit/issues/265) covers calculating the accepted execution baseline after mandatory launch journaling, and GitHub issue #266 (https://github.com/voxmedia/open-agent-toolkit/issues/266) covers durable terminal reconciliation for every accepted dispatch. Treat these as related but independently closable mechanisms; the backlog item closes only when both issue contracts are satisfied.
+
+## Triage split (2026-09-08)
+
+Two lanes, one per issue, planned separately: #265 (calculate execution baselines after mandatory launch journaling) is bounded; #266 (reconcile every accepted dispatch to a terminal outcome) needs a concrete producer and a completion/failure/cancellation/invalid-run matrix before it is admitted to a wave. The item closes only when both contracts are satisfied.
 
 ## Acceptance Criteria
 

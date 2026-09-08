@@ -3,7 +3,7 @@ id: BL-260907-finalize-synced-archive-mjs
 title: finalize-synced-archive.mjs reads stdin with fs/promises readFile(0), so
   the synced deferred clear always fails
 status: open
-priority: high
+priority: urgent
 scope: task
 scope_estimate: XS
 labels:
@@ -13,7 +13,7 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T11:54:00.007Z
-updated: 2026-09-07T11:54:00.007Z
+updated: 2026-09-08T16:55:27.000Z
 associated_issues: []
 external_plans: []
 ---

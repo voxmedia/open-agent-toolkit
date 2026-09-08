@@ -2,7 +2,7 @@
 id: BL-260906-extend-check-skill-bumps
 title: Extend check:skill-bumps to canonical agent files
 status: open
-priority: low
+priority: medium
 scope: task
 scope_estimate: XS
 labels:
@@ -10,7 +10,7 @@ labels:
   - skills
 assignee: null
 created: 2026-09-06T13:43:57.770Z
-updated: 2026-09-06T13:43:57.770Z
+updated: 2026-09-08T16:55:27.000Z
 associated_issues: []
 external_plans: []
 ---

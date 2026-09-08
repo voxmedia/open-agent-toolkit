@@ -2,7 +2,7 @@
 id: BL-260908-repair-or-exempt-archived
 title: Repair or exempt archived project ledgers that fail the pr-final path guard
 status: open
-priority: medium
+priority: low
 scope: task
 scope_estimate: S
 labels:
@@ -11,7 +11,7 @@ labels:
   - wave-6-followup
 assignee: null
 created: 2026-09-08T05:08:01.802Z
-updated: 2026-09-08T05:08:01.802Z
+updated: 2026-09-08T16:55:27.000Z
 associated_issues: []
 external_plans: []
 ---
