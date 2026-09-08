@@ -352,18 +352,22 @@ git commit -m "fix(p05-t01): diagnose canonical skills missing from a provider v
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target         |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------- |
-| plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T235418Z.md | -             | gate       | codex-5-6-sol-xhigh |
-| p01    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p02    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p03    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p04    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p05    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| final  | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| spec   | artifact | pending     | -          | -                                                           | -             | -          | -                   |
-| design | artifact | pending     | -          | -                                                           | -             | -          | -                   |
-| plan   | artifact | passed      | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T001147Z.md | -             | gate       | codex-5-6-sol-xhigh |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
+| plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T235418Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
+| p04    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p05    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| final  | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
+| plan   | artifact | passed      | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T001147Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
+| p03    | code     | fixes_added | 2026-09-08 | reviews/archived/p03-review-2026-09-08T012336Z.md           | 9f714cb5612e06724d083bcdd1db6bbd4d0b5b49 | manual     | -                   |
+| p03    | code     | passed      | 2026-09-08 | reviews/archived/p03-review-2026-09-08T013112Z.md           | 58e00e20fd3feb1e3457678d832cde6525740bd5 | manual     | -                   |
+| p02    | code     | fixes_added | 2026-09-08 | reviews/archived/p02-review-2026-09-08T012908Z.md           | bad7d0e901584091ea8a0b002faca561caee7d23 | manual     | -                   |
+| p01    | code     | fixes_added | 2026-09-08 | reviews/archived/p01-review-2026-09-08T013142Z.md           | d5fb6e1d474b057e74323590feaa8974fd24efa3 | manual     | -                   |
+| p01    | code     | passed      | 2026-09-08 | reviews/archived/p01-review-2026-09-08T015542Z.md           | c037e5ebf198969b399ea175679b9aab75ff81b1 | manual     | -                   |
+| p02    | code     | fixes_added | 2026-09-08 | reviews/archived/p02-review-2026-09-08T020858Z.md           | 1387b1c5821b9df84b8a79f80a5ff7797a3dde83 | manual     | -                   |
+| p02    | code     | passed      | 2026-09-08 | reviews/archived/p02-review-2026-09-08T025226Z.md           | ee6a692450dcc568bf2b5cbb7c10dd344a1d7594 | manual     | -                   |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
