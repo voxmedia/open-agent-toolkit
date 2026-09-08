@@ -333,6 +333,23 @@ unset`; its optional seam keys live in `BL-260904-add-recap-seam-config-keys`.
   and #255 were refreshed. Review record:
   `.oat/repo/reference/reviews/2026-09-04-external-plan-independent-review.md`.
 
+- **2026-09-08 (program-close dispositions)** — Per the program contract's
+  two program-close checkpoints: (1) **Program recap: not run —** the default
+  `program-recap` path depends on the explainer-kit seam machinery that issue
+  #230 shows cannot be relied on (`BL-260907-replace-the-default-project`,
+  high, runs as its own spec-driven project); the program recap (W1–W6, and
+  W7 once it lands) is generated after that project ships. Recorded here so
+  discretion is distinguishable from oversight. (2) **Completion tail:
+  standing deferral** — the operator decided on 2026-09-08 not to run
+  `oat-project-complete`'s tail (archive, pointer clear) across the six wave
+  wrapper projects now; owner: the wave-7 close, which runs the tail for all
+  seven wrappers together after wave 7 lands the two completion-tail defects
+  (`BL-260907-finalize-synced-archive-mjs`, `BL-260907-make-the-completion-seal`).
+  The human-gated question has been asked once and answered; it is not
+  repeated per wave. Post-program triage (PR #282) re-tiered the 42 follow-ups
+  the program filed and scoped wave 7 (corrective lanes) plus two standalone
+  projects (recon intent restoration `BL-260908-restore-recon-s-cheap-fan-out`;
+  recap simplification).
 - **2026-09-08 (W6 closed; program complete)** — Wave 6 executed as wrapper
   project `wave-6-execution` (five lanes in two groups, one lockstep bump to
   0.2.64 with the sync-manifest restamp in the same commit) and merged as
