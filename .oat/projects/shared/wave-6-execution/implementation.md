@@ -159,12 +159,20 @@ Wave base `fab304fe7a2b0eb04f39f45b9de17934e8019fed` (origin/main after the wave
 | p02   | `.worktrees/wave-6/p02` | DONE (`bad7d0e90`; forced CLI suite 6041, test:smoke)                                   | passed (round 1 0C/1I/1M/3m → round 2 1C/1I/1M/2m → round 3 0/0/0/0) | 3          |
 | p03   | `.worktrees/wave-6/p03` | DONE_WITH_CONCERNS after a STOP → refresh → resume (`9f714cb56`; forced CLI suite 6048) | passed (round 1 0C/1I/1M/3m → record fix → round 2 0C/0I/0M/1m)      | 1 (record) |
 
+#### Group 1 fan-in — p01, p02, p03 (2026-09-08)
+
+- Merge order p01 → p02 → p03 with `git merge --no-ff` after rebasing each lane on the integration tip: `754e51e8d`, `fb3075a85`, `12d0a58af`. Lane commits re-hashed (identical `git patch-id --stable` pairs): p01 `d5fb6e1d4`→`1573a00c2`, `c037e5ebf`→`8f4b714ef`; p02 `bad7d0e90`→`c8aefe479`, `1387b1c58`→`10bf71fab`, `c9f195b30`→`8f1465ba7`, `ee6a69245`→`c5051717b`; p03 `9f714cb56`→`1ae0bea11`, `58e00e20f`→`b589d18a8`.
+- Fan-in-owned lockstep bump 0.2.63 → 0.2.64 above freshly fetched `origin/main` (`43e204241`: five package manifests, the regenerated `public-package-versions.json`, and `.oat/sync/manifest.json` restamped by `sync --scope project` — the W4 restamp advisory fired as expected).
+- Integration gates (group fan-in mode, sequential), exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached, 10 total; CLI 6135), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke`, `pnpm test:skills`, root `pnpm test` 0. Config-integrity check: all tracked `.oat/config.json` keys present.
+- Group-2 readiness on the merged tip: p04 re-anchors on `validation/skills.test.ts` after p02's inserts (pr-final 1.6.3 pins at their new lines); p05 re-anchors on `info-tool.ts` / `info-tool.test.ts` / `status/index.test.ts` / `tool-packs.md` after p01 (+39 lines below the docs insertion). Group-1 worktrees and branches removed.
+
 #### Parallel Groups
 
-- group 1: p01 + p02 + p03 (reviews passed; fan-in next); group 2: p04 + p05 (pending).
+- group 1: p01 + p02 + p03 (merged); group 2: p04 + p05 (next).
 
 #### Outstanding Items
 
+- Group 2 (p04 + p05) at the group-1 tip; then closeout.
 - Group-1 fan-in with the lockstep bump 0.2.63 → 0.2.64, then group 2 (p04 + p05).
 - Plan gate, then group 1.
 
@@ -176,6 +184,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-08
 
+- Group 1 fan-in: merges `754e51e8d`, `fb3075a85`, `12d0a58af`; lockstep bump `43e204241` (0.2.64); eight gates + smoke + skills + root test green (CLI 6135).
 - Group 1 reviews received: p01 `d5fb6e1d4` + fix `c037e5ebf` (passed round 2); p02 `bad7d0e90` + fixes `1387b1c58`, `c9f195b30`, `ee6a69245` (passed round 3); p03 `9f714cb56` + record fix `58e00e20f` (passed round 2).
 
 ### 2026-09-07

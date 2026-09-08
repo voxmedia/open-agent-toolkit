@@ -90,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T23:38:50.037Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-08T00:18:57.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-08T03:02:26.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -102,7 +102,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — plan gate passed on attempt 2; group 1 (p01 + p02 + p03) running in parallel worktrees at the wave base.
+Implementation — group 1 merged with the lockstep bump (0.2.64); group 2 (p04 + p05) dispatching at the group-1 tip.
 
 ## Artifacts
 
@@ -110,7 +110,7 @@ Implementation — plan gate passed on attempt 2; group 1 (p01 + p02 + p03) runn
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete; five pointer-only tasks, groups [p01, p02, p03], [p04, p05])
-- **Implementation:** `implementation.md` (instantiated; 0/5 tasks)
+- **Implementation:** `implementation.md` (3/5 tasks complete)
 
 ## Progress
 
@@ -120,7 +120,8 @@ Implementation — plan gate passed on attempt 2; group 1 (p01 + p02 + p03) runn
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
 - ✗ Plan gate attempt 1 blocked (0C/1I/2M: the p04 alias-warning contract contradiction, the file inventory, the design row) — fixed in-artifact
 - ✓ Plan gate attempt 2 passed (0C/0I/1M; the inventory Medium addressed in the receive)
-- ⧗ Group 1 (p01 + p02 + p03) dispatched at `fab304fe7`; p03 STOPped at its pre-commit review (depth regression + a `String()` coercion consumer break under null prototypes) → post-STOP plan refresh `03e1aa576` (iterative materialization into plain objects) → resumed as `w6-p03-impl-002`
+- ✓ Group 1 (p01 + p02 + p03) merged (`754e51e8d`, `fb3075a85`, `12d0a58af`); lockstep 0.2.64 (`43e204241`); eight gates + smoke + skills + root test green (CLI 6135)
+- ⧗ Group 2 (p04 + p05)
 
 ## Blockers
 
@@ -128,4 +129,4 @@ None
 
 ## Next Milestone
 
-Group 1 merged and gated (lockstep 0.2.63 → 0.2.64), then group 2 (p04 + p05).
+Group 2 (p04 + p05) merged and gated, then closeout (final review, exit gate, post-implement sequence, PR).
