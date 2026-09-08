@@ -124,7 +124,7 @@ Implementation — both groups merged (lockstep 0.2.64); backlog archived and cl
 - ✓ Group 2 (p04 + p05) merged (`88a8d75df`, `386a32b11`); lockstep retained at 0.2.64; eight gates + smoke + skills + root test green (CLI 6242)
 - ✓ Five backlog items archived, seven follow-ups filed, closeout records written (`b7d66565f`, `c5edecf98`)
 - ✓ Root final review passed with follow-ups (0C/1I/5M/13m, `final-review-2026-09-08T052928Z.md`)
-- ✓ Phase 06 final-review fixes merged (`4a2ed8e65`, `e8424949c`); thirteen gates green (CLI 6301)
+- ✓ Phase 06 final-review fixes merged (`4a2ed8e65`, `e8424949c`); thirteen gates green (CLI 6287)
 - ⧗ Round-2 verification by the final reviewer
 
 ## Blockers
