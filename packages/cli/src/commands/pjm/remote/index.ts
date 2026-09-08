@@ -469,7 +469,10 @@ function addBindingCommand(
       .option('--binding <id>', 'Existing remote binding ID')
       .option('--provider <provider>', 'Provider for a new remote issue')
       .option('--to-backlog <id>', 'Local backlog item to publish')
-      .option('--to-project <id>', 'Local project to publish')
+      .option(
+        '--to-project <path-or-id>',
+        'Local project path or unambiguous project ID to publish',
+      )
       .option(
         '--project-publication-file <path>',
         'Explicit normalized project publication JSON',

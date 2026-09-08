@@ -5,12 +5,29 @@ import {
   readFile,
   readdir,
   rename,
+  stat,
   unlink,
   writeFile,
 } from 'node:fs/promises';
-import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 import { isDeepStrictEqual, promisify } from 'node:util';
 
+import { resolveProjectsRoot } from '@commands/shared/oat-paths';
+import {
+  canonicalizePath,
+  PROJECT_SCOPES,
+  resolveProjectScope,
+  resolveScopeRoot,
+  type ProjectScope,
+} from '@commands/shared/project-scope';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import YAML from 'yaml';
 
@@ -2373,6 +2390,122 @@ async function prepareRefresh(
   );
 }
 
+async function resolveProjectCreateTarget(
+  projectRoot: string,
+  reference: string,
+): Promise<RemoteBindingMetadata['target']> {
+  const requested = reference.trim();
+  if (!requested) {
+    throw new Error('Unbound project publication target is empty.');
+  }
+
+  const projectsRoot = await resolveProjectsRoot(projectRoot, process.env);
+  const configuredSharedRoot = resolveScopeRoot(
+    projectRoot,
+    projectsRoot,
+    'shared',
+  );
+  const explicitPath =
+    isAbsolute(requested) ||
+    requested.includes('/') ||
+    requested.includes('\\');
+  const candidates: Array<{ scope: ProjectScope; path: string }> = [];
+
+  if (explicitPath) {
+    const absolutePath = canonicalizePath(
+      isAbsolute(requested) ? requested : resolve(projectRoot, requested),
+    );
+    const scope = resolveProjectScope(
+      absolutePath,
+      configuredSharedRoot,
+      projectRoot,
+    );
+    if (!scope) {
+      throw new Error(
+        `Project publication target is outside configured project scope roots: ${reference}`,
+      );
+    }
+    candidates.push({ scope, path: absolutePath });
+  } else {
+    if (
+      !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(requested) ||
+      requested.includes('..')
+    ) {
+      throw new Error('Unbound publication target ID is invalid.');
+    }
+    for (const scope of PROJECT_SCOPES) {
+      const scopeRoot = resolveScopeRoot(projectRoot, projectsRoot, scope);
+      const projectPath = join(scopeRoot, requested);
+      const materialized = await isDirectory(projectPath);
+      const recorded =
+        scope === 'synced' &&
+        (await isFile(join(scopeRoot, `${requested}.json`)));
+      if (materialized || recorded) {
+        candidates.push({
+          scope,
+          path: canonicalizePath(projectPath),
+        });
+      }
+    }
+    if (candidates.length === 0) {
+      candidates.push({
+        scope: 'shared',
+        path: canonicalizePath(join(configuredSharedRoot, requested)),
+      });
+    }
+  }
+
+  if (candidates.length > 1) {
+    throw new Error(
+      `Project publication target '${reference}' is ambiguous across scopes: ${candidates
+        .map((candidate) => candidate.scope)
+        .join(', ')}. Pass an explicit project path.`,
+    );
+  }
+  const target = candidates[0]!;
+  const id = basename(target.path);
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(id) || id.includes('..')) {
+    throw new Error('Unbound publication target ID is invalid.');
+  }
+  return {
+    kind: 'project',
+    scope: target.scope,
+    id,
+    path: projectPointerPath(projectRoot, target.path),
+  };
+}
+
+function projectPointerPath(projectRoot: string, projectPath: string): string {
+  const relativePath = relative(canonicalizePath(projectRoot), projectPath);
+  return relativePath === '..' ||
+    relativePath.startsWith(`..${sep}`) ||
+    isAbsolute(relativePath)
+    ? projectPath
+    : relativePath.split(sep).join('/');
+}
+
+async function isDirectory(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).isDirectory();
+  } catch (error) {
+    if (isNodeError(error) && ['ENOENT', 'ENOTDIR'].includes(error.code!)) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+async function isFile(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).isFile();
+  } catch (error) {
+    if (isNodeError(error) && ['ENOENT', 'ENOTDIR'].includes(error.code!)) {
+      return false;
+    }
+    throw error;
+  }
+}
+
 async function prepareCreate(
   request: RemoteCommandRequest,
   store: RemoteSyncStore,
@@ -2386,8 +2519,9 @@ async function prepareCreate(
     throw new Error('Unbound publication requires a supported provider.');
   }
   if (
-    !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(requested.localId) ||
-    requested.localId.includes('..')
+    requested.localKind === 'backlog' &&
+    (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(requested.localId) ||
+      requested.localId.includes('..'))
   ) {
     throw new Error('Unbound publication target ID is invalid.');
   }
@@ -2423,12 +2557,10 @@ async function prepareCreate(
           id: requested.localId,
           path: `.oat/repo/pjm/backlog/items/${requested.localId}.md`,
         }
-      : {
-          kind: 'project',
-          scope: 'shared',
-          id: requested.localId,
-          path: `.oat/projects/shared/${requested.localId}`,
-        };
+      : await resolveProjectCreateTarget(
+          request.projectRoot,
+          requested.localId,
+        );
   const explicitExisting = request.previewOperationId
     ? await requireOperation(request.previewOperationId, store)
     : null;

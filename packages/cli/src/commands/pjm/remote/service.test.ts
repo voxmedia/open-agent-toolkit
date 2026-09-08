@@ -2811,11 +2811,13 @@ describe('production lifecycle composition', () => {
     },
   );
 
-  it('uses only an explicit project publication in the default runner', async () => {
+  it('preserves a synced project target through publication and closeout', async () => {
     const repository = await mkdtemp(join(tmpdir(), 'oat-remote-service-'));
     temporaryDirectories.push(repository);
     execFileSync('git', ['init', '--quiet'], { cwd: repository });
     await mkdir(join(repository, '.oat'), { recursive: true });
+    const projectPath = '.oat/projects/synced/project-1';
+    await mkdir(join(repository, projectPath), { recursive: true });
     await writeFile(
       join(repository, '.oat', 'config.json'),
       `${JSON.stringify({
@@ -3019,7 +3021,12 @@ describe('production lifecycle composition', () => {
     await expect(
       store.readBindingMetadata('bnd_service-project'),
     ).resolves.toMatchObject({
-      target: { kind: 'project', id: 'project-1' },
+      target: {
+        kind: 'project',
+        scope: 'synced',
+        id: 'project-1',
+        path: projectPath,
+      },
       remoteIdentity: { stableId: 'issue-project-1' },
       publicationProjection: {
         title: 'plan',
@@ -3049,6 +3056,180 @@ describe('production lifecycle composition', () => {
         },
       },
     });
+
+    currentObservation = {
+      provider: 'linear',
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector',
+      availability: 'available',
+      semanticCapabilities: ['annotate', 'transition'],
+      evidenceDigest: 'sha256:closeout-capability',
+      observedAt: timestamp,
+    };
+    await expect(
+      restarted({
+        operation: 'closeout',
+        projectRoot: repository,
+        projectPath,
+        capabilityEvidenceStdin: true,
+      }),
+    ).resolves.toMatchObject({
+      status: 'blocked',
+      results: [
+        {
+          bindingId: 'bnd_service-project',
+          target: 'project-1',
+          status: 'blocked',
+        },
+      ],
+    });
+  });
+
+  it('records an explicit local project path in the create intent', async () => {
+    const repository = await mkdtemp(join(tmpdir(), 'oat-remote-local-'));
+    temporaryDirectories.push(repository);
+    execFileSync('git', ['init', '--quiet'], { cwd: repository });
+    const projectPath = '.oat/projects/local/project-1';
+    await mkdir(join(repository, projectPath), { recursive: true });
+    await writeFile(
+      join(repository, '.oat', 'config.json'),
+      `${JSON.stringify({
+        pjm: {
+          initialized: true,
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              description: 'none',
+              authority: {
+                default: 'read-only',
+                operations: { create: 'user-authorized' },
+              },
+            },
+          },
+        },
+      })}\n`,
+    );
+    const publicationFile = join(repository, '.oat', 'publication.json');
+    await writeFile(
+      publicationFile,
+      `${JSON.stringify({
+        title: 'Local project',
+        description: null,
+        priority: 'high',
+      })}\n`,
+    );
+    const authorityFile = join(repository, '.oat', 'invocation.json');
+    await writeFile(
+      authorityFile,
+      `${JSON.stringify({
+        schemaVersion: 1,
+        kind: 'interactive',
+        sourceId: 'host-session-1',
+        invocationId: 'invocation-1',
+        issuedAt: '2026-08-31T11:59:00.000Z',
+        expiresAt: '2026-08-31T12:05:00.000Z',
+        instruction: {
+          operationClass: 'create',
+          targetId: 'project:project-1',
+          evidenceDigest: 'sha256:instruction',
+        },
+        approval: null,
+      })}\n`,
+    );
+    const runner = createProductionRemoteRunner({
+      now: () => timestamp,
+      randomId: vi
+        .fn()
+        .mockReturnValueOnce('local-operation')
+        .mockReturnValueOnce('local-binding')
+        .mockReturnValueOnce('local-step'),
+      readObservationStdin: async () => ({
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        surfaceKind: 'connector',
+        availability: 'available',
+        semanticCapabilities: ['create'],
+        evidenceDigest: 'sha256:create-capability',
+        observedAt: timestamp,
+      }),
+    });
+
+    const prepared = await runner({
+      operation: 'publish',
+      projectRoot: repository,
+      createTarget: {
+        provider: 'linear',
+        localKind: 'project',
+        localId: projectPath,
+        publicationFile,
+      },
+      capabilityEvidenceStdin: true,
+      authorityEvidenceFile: authorityFile,
+    });
+    const store = new RemoteSyncStore(
+      resolveRemoteStorageLocations({
+        repoRoot: repository,
+        gitCommonDir: join(repository, '.git'),
+        repositoryIdentity: `local-repository:${resolve(repository)}`,
+        stateStorage: 'local',
+        target: { kind: 'backlog', scope: 'shared', path: null },
+      }),
+    );
+
+    await expect(
+      store.readOperation(prepared.externalAction!.operationId),
+    ).resolves.toMatchObject({
+      createIntent: {
+        target: {
+          kind: 'project',
+          scope: 'local',
+          id: 'project-1',
+          path: projectPath,
+        },
+      },
+    });
+  });
+
+  it('rejects an ambiguous project publication target across scopes', async () => {
+    const repository = await mkdtemp(join(tmpdir(), 'oat-remote-ambiguous-'));
+    temporaryDirectories.push(repository);
+    execFileSync('git', ['init', '--quiet'], { cwd: repository });
+    await mkdir(join(repository, '.oat', 'projects', 'shared', 'project-1'), {
+      recursive: true,
+    });
+    await mkdir(join(repository, '.oat', 'projects', 'local', 'project-1'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(repository, '.oat', 'config.json'),
+      `${JSON.stringify({ pjm: { initialized: true } })}\n`,
+    );
+    const runner = createProductionRemoteRunner({
+      now: () => timestamp,
+      readObservationStdin: async () => ({
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        surfaceKind: 'connector',
+        availability: 'available',
+        semanticCapabilities: ['create'],
+        evidenceDigest: 'sha256:create-capability',
+        observedAt: timestamp,
+      }),
+    });
+
+    await expect(
+      runner({
+        operation: 'publish',
+        projectRoot: repository,
+        createTarget: {
+          provider: 'linear',
+          localKind: 'project',
+          localId: 'project-1',
+          publicationFile: '.oat/project-publication.json',
+        },
+        capabilityEvidenceStdin: true,
+      }),
+    ).rejects.toThrow(/ambiguous across scopes.*explicit project path/i);
   });
 
   it('fails closed before materializing an incomplete persisted project create', async () => {
