@@ -4693,8 +4693,14 @@ describe('validateOatSkills', () => {
     expect(guardBlock).toContain(
       '"$LEDGER_PROJECT_ROOT"/reviews/archived/*) ROW_ARCHIVED_ONLY=1 ;;',
     );
+    // Only a checkout that never materialized `reviews/archived/` excuses an
+    // absent archived artifact; once the directory exists, a missing file
+    // there is an interrupted archive and stops.
     expect(guardBlock).toContain(
-      'local-only review artifact, absent from this checkout',
+      'if [ ! -d "$LEDGER_PROJECT_ROOT/reviews/archived" ]; then',
+    );
+    expect(guardBlock).toContain(
+      'reviews/archived/ was never materialized in this checkout',
     );
     // Containment is decided before that acceptance.
     expect(

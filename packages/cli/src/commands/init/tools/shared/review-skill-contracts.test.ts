@@ -2642,17 +2642,17 @@ printf 'artifact-read\\n'`,
         'scope=plan type=artifact artifact=reviews/gone.md',
       );
 
-      // Processed artifacts live in the gitignored `reviews/archived/`, so a
-      // fresh clone, a remote workspace, or a lane worktree legitimately has
-      // none of them on disk.
-      const localOnly = runGuard([
+      // `reviews/archived/` exists in this fixture, so a file missing from it
+      // is an interrupted archive, not a fresh checkout: it stops. The
+      // never-materialized shape is covered below, after the tree is removed.
+      const missingFromArchive = runGuard([
         '| final | code | passed | 2026-07-15 | reviews/archived/never-materialized.md |',
       ]);
-      expect(localOnly.stderr).toBe('');
-      expect(localOnly.status).toBe(0);
-      expect(localOnly.stdout).toContain(
-        'local-only review artifact, absent from this checkout',
+      expect(missingFromArchive.status).toBe(1);
+      expect(missingFromArchive.stderr).toContain(
+        'artifact file does not exist',
       );
+      expect(missingFromArchive.stdout).toBe('');
 
       // That acceptance never reaches a tracked location (`dangling` above),
       // and an ignored path that escapes is still rejected by containment.
@@ -2730,6 +2730,9 @@ printf 'artifact-read\\n'`,
       ]);
       expect(unmaterialized.stderr).toBe('');
       expect(unmaterialized.status).toBe(0);
+      expect(unmaterialized.stdout).toContain(
+        'reviews/archived/ was never materialized in this checkout',
+      );
       const unmaterializedTracked = runGuard([
         '| final | code | passed | 2026-07-15 | reviews/final-code.md |',
       ]);
@@ -2795,7 +2798,8 @@ printf 'artifact-read\\n'`,
         ...['shared', 'local', 'synced'].flatMap((scope) => [
           `oat config set projects.defaultScope ${scope} --shared > /dev/null`,
           `oat project new "guard-${scope}" --mode quick --json > /dev/null`,
-          'mkdir -p "$(oat config get activeProject)/reviews/archived"',
+          // No `reviews/archived` directory: the fresh-checkout shape.
+          'mkdir -p "$(oat config get activeProject)/reviews"',
           `printf '%s\\n' "$(oat config get activeProject)"`,
         ]),
       ].join('\n');
@@ -2844,13 +2848,53 @@ printf 'artifact-read\\n'`,
       };
 
       for (const projectPath of projectPaths) {
-        // Absent inside the archive location: local-only, accepted.
-        const archived = runGuard(
+        // `reviews/archived/` does not exist here at all — a fresh clone, a
+        // remote workspace, or a lane worktree — so an absent path inside it
+        // is local-only and accepted.
+        const neverMaterialized = runGuard(
           projectPath,
           'reviews/archived/never-materialized.md',
         );
-        expect(archived.stderr, projectPath).toBe('');
-        expect(archived.status, projectPath).toBe(0);
+        expect(neverMaterialized.stderr, projectPath).toBe('');
+        expect(neverMaterialized.status, projectPath).toBe(0);
+        expect(neverMaterialized.stdout, projectPath).toContain(
+          'reviews/archived/ was never materialized in this checkout',
+        );
+
+        // Once the archive directory exists, a file missing from it is a
+        // dangling row — an archive interrupted between the reference rewrite
+        // and the move — and stops like any other absent path.
+        mkdirSync(join(repository, projectPath, 'reviews/archived'), {
+          recursive: true,
+        });
+        const missingFromArchive = runGuard(
+          projectPath,
+          'reviews/archived/never-materialized.md',
+        );
+        expect(missingFromArchive.status, projectPath).toBe(1);
+        expect(missingFromArchive.stderr, projectPath).toContain(
+          'artifact=reviews/archived/never-materialized.md',
+        );
+        expect(missingFromArchive.stderr, projectPath).toContain(
+          'artifact file does not exist',
+        );
+
+        // The same path resolves once the artifact is actually there.
+        writeFileSync(
+          join(
+            repository,
+            projectPath,
+            'reviews/archived/never-materialized.md',
+          ),
+          'archived\n',
+          'utf8',
+        );
+        const presentInArchive = runGuard(
+          projectPath,
+          'reviews/archived/never-materialized.md',
+        );
+        expect(presentInArchive.stderr, projectPath).toBe('');
+        expect(presentInArchive.status, projectPath).toBe(0);
 
         // The regression this plan exists to stop: Step 0.5 archived the file
         // and left the row on the old top-level path.

@@ -409,7 +409,7 @@ Only include links to artifacts that actually exist in the project. Omit any tha
 
 After writing the PR artifact, push and create the PR automatically.
 
-**Ledger-path guard (both PR paths).** Before either `gh pr create` path runs, validate every artifact path in the project's `## Reviews` ledger. Parse each row's Artifact cell rather than grepping the section as free text, and skip a `-` placeholder. The ledger is the table rows of `## Reviews`: the scan ends at the next heading of any level, and a blockquoted line or a fenced block inside the section is a note or an example, never an event. Every other cell must normalize — `..` segments and symlinks resolved physically — to a regular file inside `$PROJECT_PATH`. The ledger is the table inside `## Reviews` whose header carries `Scope`, `Type`, and `Artifact` columns, matched after emphasis is stripped and in whatever order the header declares; a section that holds table rows but no such header, or an unclosed fenced block, stops rather than validating nothing. Processed review artifacts live in the gitignored `reviews/archived/`, so an absent path inside `reviews/archived/` is a local-only artifact: report it and continue. Every other absent path fails, in every project scope — git ignores whole project directories for `local`, `synced`, and `archived` projects, so ignore state says nothing about whether a row resolves. A missing file in a tracked location, a directory, a path that escapes the project, an unreadable ledger, a row the parser cannot read, or a ledger the guard could not check row for row stops this skill at gate `PRFINAL-05`, naming the offending row by scope, type, and artifact filename. Every stop fails closed. Both the synced flow below and the non-synced flow run after this block, so no PR is created from a ledger whose artifact paths do not resolve.
+**Ledger-path guard (both PR paths).** Before either `gh pr create` path runs, validate every artifact path in the project's `## Reviews` ledger. Parse each row's Artifact cell rather than grepping the section as free text, and skip a `-` placeholder. The ledger is the table rows of `## Reviews`: the scan ends at the next heading of any level, and a blockquoted line or a fenced block inside the section is a note or an example, never an event. Every other cell must normalize — `..` segments and symlinks resolved physically — to a regular file inside `$PROJECT_PATH`. The ledger is the table inside `## Reviews` whose header carries `Scope`, `Type`, and `Artifact` columns, matched after emphasis is stripped and in whatever order the header declares; a section that holds table rows but no such header, or an unclosed fenced block, stops rather than validating nothing. Processed review artifacts live in the gitignored `reviews/archived/`, so when that directory does not exist in this checkout at all — a fresh clone, a remote workspace, or a lane worktree — an absent path inside it is a local-only artifact: report it and continue. Once `reviews/archived/` exists, a file missing from it is a dangling row, usually an archive interrupted between the reference rewrite and the move, and it stops like any other absent path. Every other absent path fails, in every project scope — git ignores whole project directories for `local`, `synced`, and `archived` projects, so ignore state says nothing about whether a row resolves. A missing file in a tracked location, a directory, a path that escapes the project, an unreadable ledger, a row the parser cannot read, or a ledger the guard could not check row for row stops this skill at gate `PRFINAL-05`, naming the offending row by scope, type, and artifact filename. Every stop fails closed. Both the synced flow below and the non-synced flow run after this block, so no PR is created from a ledger whose artifact paths do not resolve.
 
 ````bash
 LEDGER_PROJECT_ROOT=$(cd -P "$PROJECT_PATH" 2>/dev/null && pwd -P) || {
@@ -589,11 +589,13 @@ while IFS="$(printf '\t')" read -r ROW_SCOPE ROW_TYPE ROW_ARTIFACT; do
       ROW_REASON="artifact resolves outside the project: $ROW_RESOLVED"
     elif [ "$ROW_MATERIALIZED" -eq 0 ]; then
       ROW_ARCHIVED_ONLY=0
-      case "$ROW_RESOLVED" in
-        "$LEDGER_PROJECT_ROOT"/reviews/archived/*) ROW_ARCHIVED_ONLY=1 ;;
-      esac
+      if [ ! -d "$LEDGER_PROJECT_ROOT/reviews/archived" ]; then
+        case "$ROW_RESOLVED" in
+          "$LEDGER_PROJECT_ROOT"/reviews/archived/*) ROW_ARCHIVED_ONLY=1 ;;
+        esac
+      fi
       if [ "$ROW_ARCHIVED_ONLY" -eq 1 ]; then
-        echo "oat: local-only review artifact, absent from this checkout | scope=$ROW_SCOPE type=$ROW_TYPE artifact=$ROW_ARTIFACT"
+        echo "oat: local-only review artifact; reviews/archived/ was never materialized in this checkout | scope=$ROW_SCOPE type=$ROW_TYPE artifact=$ROW_ARTIFACT"
       else
         ROW_REASON="artifact file does not exist"
       fi
@@ -603,11 +605,13 @@ while IFS="$(printf '\t')" read -r ROW_SCOPE ROW_TYPE ROW_ARTIFACT; do
       ROW_REASON="artifact path is a directory"
     elif [ ! -e "$ROW_RESOLVED" ]; then
       ROW_ARCHIVED_ONLY=0
-      case "$ROW_RESOLVED" in
-        "$LEDGER_PROJECT_ROOT"/reviews/archived/*) ROW_ARCHIVED_ONLY=1 ;;
-      esac
+      if [ ! -d "$LEDGER_PROJECT_ROOT/reviews/archived" ]; then
+        case "$ROW_RESOLVED" in
+          "$LEDGER_PROJECT_ROOT"/reviews/archived/*) ROW_ARCHIVED_ONLY=1 ;;
+        esac
+      fi
       if [ "$ROW_ARCHIVED_ONLY" -eq 1 ]; then
-        echo "oat: local-only review artifact, absent from this checkout | scope=$ROW_SCOPE type=$ROW_TYPE artifact=$ROW_ARTIFACT"
+        echo "oat: local-only review artifact; reviews/archived/ was never materialized in this checkout | scope=$ROW_SCOPE type=$ROW_TYPE artifact=$ROW_ARTIFACT"
       else
         ROW_REASON="artifact file does not exist"
       fi
