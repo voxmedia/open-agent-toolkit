@@ -24,7 +24,7 @@ import {
   runInfoTool,
   type ToolDetail,
 } from './info-tool';
-import { probeProviderPath } from './skill-views';
+import { probeProviderPath, readProjectedSkillVersion } from './skill-views';
 
 async function getToolDetail(
   tool: ToolInfo,
@@ -89,6 +89,7 @@ const defaultDependencies: InfoToolDependencies = {
     resolveExpectedProjections: resolveExpectedSkillProjections,
     pathExists: probeProviderPath,
     getSkillVersion,
+    readProjectedVersion: readProjectedSkillVersion,
   },
 };
 

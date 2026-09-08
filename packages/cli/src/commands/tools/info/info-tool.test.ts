@@ -18,7 +18,11 @@ import {
   runInfoTool,
   type ToolDetail,
 } from './info-tool';
-import { probeProviderPath, type SkillViewDependencies } from './skill-views';
+import {
+  formatSkillViewLines,
+  probeProviderPath,
+  type SkillViewDependencies,
+} from './skill-views';
 
 function createContext(
   overrides: Partial<CommandContext> = {},
@@ -642,6 +646,12 @@ function skillViewDependencies(input: {
     resolveExpectedProjections: resolveExpectedSkillProjections,
     pathExists: async (path) => existing.has(path),
     getSkillVersion: async (skillDir) => input.versions?.[skillDir] ?? null,
+    readProjectedVersion: async (skillDir) => {
+      const version = input.versions?.[skillDir] ?? null;
+      return version === null
+        ? { version: null, state: 'absent' }
+        : { version, state: 'resolved' };
+    },
   };
 }
 
@@ -1074,5 +1084,53 @@ describe('probeProviderPath', () => {
     await expect(probeProviderPath('/loop', failWith('ELOOP'))).resolves.toBe(
       true,
     );
+  });
+});
+
+describe('formatSkillViewLines', () => {
+  const view = (overrides: Record<string, unknown> = {}) => ({
+    skill: 'oat-idea-new',
+    scope: 'project' as const,
+    provider: 'claude',
+    viewClass: 'in-sync' as const,
+    driftState: { status: 'in_sync' as const },
+    providerPath: '.claude/skills/oat-idea-new',
+    tracked: true,
+    strategy: 'copy' as const,
+    nativeRead: false,
+    canonicalVersion: '3.0.0',
+    viewVersion: null,
+    versionComparable: false,
+    suggestion: null,
+    detail: 'Detail sentence about the withheld comparison.',
+    ...overrides,
+  });
+
+  it('shows the detail for a non-actionable class whose version evidence is not clean', () => {
+    // `in-sync` alone would hide the sentence explaining that the version
+    // comparison was skipped, which is the one thing the class word cannot
+    // convey.
+    const withheld = formatSkillViewLines([
+      {
+        skill: 'oat-idea-new',
+        scope: 'project',
+        result: 'diagnosed',
+        views: [view({ versionEvidence: 'conflict' })],
+      },
+    ]);
+    const clean = formatSkillViewLines([
+      {
+        skill: 'oat-idea-new',
+        scope: 'project',
+        result: 'diagnosed',
+        views: [view({ versionEvidence: 'resolved', viewVersion: '3.0.0' })],
+      },
+    ]);
+
+    expect(withheld.join('\n')).toContain(
+      'Detail sentence about the withheld comparison.',
+    );
+    // A clean reading stays quiet: the class line already says everything.
+    expect(clean.join('\n')).not.toContain('Detail sentence');
   });
 });

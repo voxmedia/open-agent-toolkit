@@ -17,6 +17,8 @@ import { registerCommands } from '@commands/index';
 import type { SkillViewDiagnosis } from '@drift/index';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { readProjectedSkillVersion } from './skill-views';
+
 const temporaryRoots: string[] = [];
 
 afterEach(async () => {
@@ -42,6 +44,7 @@ const SKILL = 'convergence-probe';
  */
 async function createProjectRoot(
   strategy: 'symlink' | 'copy' = 'symlink',
+  frontmatter = `name: ${SKILL}\ndescription: Convergence probe skill\nversion: 1.4.2`,
 ): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'oat-skill-view-'));
   temporaryRoots.push(root);
@@ -51,7 +54,7 @@ async function createProjectRoot(
   await mkdir(join(root, '.agents', 'skills', SKILL), { recursive: true });
   await writeFile(
     join(root, '.agents', 'skills', SKILL, 'SKILL.md'),
-    `---\nname: ${SKILL}\ndescription: Convergence probe skill\nversion: 1.4.2\n---\n\n# Convergence probe\n`,
+    `---\n${frontmatter}\n---\n\n# Convergence probe\n`,
     'utf8',
   );
   await writeFile(
@@ -271,6 +274,188 @@ describe('oat tools info provider-view convergence', () => {
       'project',
     ]);
     expect(stdout).not.toContain('Repair:');
+  });
+
+  it.each([
+    [
+      'both a top-level version and a differing metadata.version',
+      `name: ${SKILL}\ndescription: Convergence probe skill\nversion: 1.0.0\nmetadata:\n  version: 2.0.0`,
+      '2.0.0',
+    ],
+    [
+      'metadata.version only',
+      `name: ${SKILL}\ndescription: Convergence probe skill\nmetadata:\n  version: 2.0.0`,
+      '2.0.0',
+    ],
+  ])(
+    'resolves a projected copy version through the shared resolver with %s',
+    async (_label, frontmatter, expected) => {
+      const root = await createProjectRoot('copy', frontmatter);
+      const home = await mkdtemp(join(tmpdir(), 'oat-skill-view-home-'));
+      temporaryRoots.push(home);
+
+      expect(
+        (await runCli(root, home, ['sync', '--scope', 'project'])).exitCode,
+      ).toBe(0);
+      const [diagnosis] = await diagnose(root, home);
+      const claude = diagnosis?.views.find(
+        ({ provider }) => provider === 'claude',
+      );
+
+      // The view and its canonical source must resolve by the same precedence
+      // rule. A private top-level-only parse reported this byte-identical copy
+      // as stale (`canonical 2.0.0, view 1.0.0`) with a repair that would have
+      // rewritten an already-correct file.
+      expect(claude?.canonicalVersion).toBe(expected);
+      expect(claude?.viewVersion).toBe(expected);
+      expect(claude?.suggestion).toBeNull();
+      expect(claude?.detail).not.toContain(
+        'differs from the canonical version',
+      );
+      const { stdout } = await runCli(root, home, [
+        'tools',
+        'info',
+        SKILL,
+        '--scope',
+        'project',
+      ]);
+      expect(stdout).toContain(
+        `versions: canonical ${expected}, view ${expected}`,
+      );
+      expect(stdout).not.toContain('Repair:');
+    },
+  );
+
+  it('carries a conflicting projected declaration into the output and withholds the comparison', async () => {
+    const conflicting = `name: ${SKILL}\ndescription: Convergence probe skill\nversion: 1.0.0\nmetadata:\n  version: 2.0.0`;
+    const root = await createProjectRoot('copy', conflicting);
+    const home = await mkdtemp(join(tmpdir(), 'oat-skill-view-home-'));
+    temporaryRoots.push(home);
+
+    expect(
+      (await runCli(root, home, ['sync', '--scope', 'project'])).exitCode,
+    ).toBe(0);
+    // Canonical moves on; the projected copy keeps the conflicting pair.
+    await writeFile(
+      join(root, '.agents', 'skills', SKILL, 'SKILL.md'),
+      `---\nname: ${SKILL}\ndescription: Convergence probe skill\nmetadata:\n  version: 3.0.0\n---\n\n# Convergence probe\n`,
+      'utf8',
+    );
+
+    const [diagnosis] = await diagnose(root, home);
+    const claude = diagnosis?.views.find(
+      ({ provider }) => provider === 'claude',
+    );
+
+    // A reader that flattened the conflict to a plain string would report
+    // `canonical 3.0.0, view 2.0.0` here and claim a staleness it cannot
+    // establish from a file that contradicts itself.
+    expect(claude?.canonicalVersion).toBe('3.0.0');
+    expect(claude?.versionEvidence).toBe('conflict');
+    expect(claude?.viewVersion).toBeNull();
+    expect(claude?.versionComparable).toBe(false);
+
+    const { stdout } = await runCli(root, home, [
+      'tools',
+      'info',
+      SKILL,
+      '--scope',
+      'project',
+    ]);
+    expect(stdout).toContain('metadata.version 2.0.0');
+    expect(stdout).toContain('top-level version 1.0.0');
+    expect(stdout).toContain('version comparison was skipped');
+    expect(stdout).not.toContain('versions: canonical');
+  });
+
+  it('keeps view and canonical parity when an ignored sibling declaration is unusable', async () => {
+    // `version: 1.10` parses as a number, so the shared resolver cannot use it
+    // and takes `metadata.version` — on both sides. Downgrading the whole
+    // reading to "unusable" here would drop the view's version while canonical
+    // kept one, re-opening the false-mismatch this round exists to close.
+    const root = await createProjectRoot(
+      'copy',
+      `name: ${SKILL}\ndescription: Convergence probe skill\nversion: 1.10\nmetadata:\n  version: 2.0.0`,
+    );
+    const home = await mkdtemp(join(tmpdir(), 'oat-skill-view-home-'));
+    temporaryRoots.push(home);
+
+    expect(
+      (await runCli(root, home, ['sync', '--scope', 'project'])).exitCode,
+    ).toBe(0);
+    const [diagnosis] = await diagnose(root, home);
+    const claude = diagnosis?.views.find(
+      ({ provider }) => provider === 'claude',
+    );
+
+    expect(claude?.canonicalVersion).toBe('2.0.0');
+    expect(claude?.viewVersion).toBe('2.0.0');
+    expect(claude?.versionEvidence).toBe('resolved');
+    expect(claude?.suggestion).toBeNull();
+  });
+
+  describe('readProjectedSkillVersion', () => {
+    async function writeView(body: string, banner = true): Promise<string> {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-projected-view-'));
+      temporaryRoots.push(dir);
+      const marker = banner
+        ? '<!-- OAT-managed: do not edit directly. Source: .agents/skills/x -->\n'
+        : '';
+      await writeFile(join(dir, 'SKILL.md'), `${marker}${body}`, 'utf8');
+      return dir;
+    }
+
+    it('resolves through the shared resolver and reports the resolver state', async () => {
+      const conflict = await writeView(
+        '---\nname: x\nversion: 1.0.0\nmetadata:\n  version: 2.0.0\n---\n',
+      );
+      const metadataOnly = await writeView(
+        '---\nname: x\nmetadata:\n  version: 2.0.0\n---\n',
+      );
+      const unusableSibling = await writeView(
+        '---\nname: x\nversion: 1.10\nmetadata:\n  version: 2.0.0\n---\n',
+      );
+      const unusableOnly = await writeView(
+        '---\nname: x\nversion: 1.10\n---\n',
+      );
+      const malformed = await writeView('---\nname: x\n  bad: [\n---\n');
+      const unbannered = await writeView(
+        '---\nname: x\nversion: 1.0.0\nmetadata:\n  version: 2.0.0\n---\n',
+        false,
+      );
+
+      await expect(readProjectedSkillVersion(conflict)).resolves.toEqual({
+        version: '2.0.0',
+        state: 'conflict',
+        conflict: { metadata: '2.0.0', topLevel: '1.0.0' },
+      });
+      await expect(readProjectedSkillVersion(metadataOnly)).resolves.toEqual({
+        version: '2.0.0',
+        state: 'resolved',
+      });
+      // Resolved wins over an ignored unusable sibling: canonical resolution
+      // reports the same value, and parity is the whole point.
+      await expect(readProjectedSkillVersion(unusableSibling)).resolves.toEqual(
+        { version: '2.0.0', state: 'resolved' },
+      );
+      await expect(readProjectedSkillVersion(unusableOnly)).resolves.toEqual({
+        version: null,
+        state: 'unusable',
+      });
+      await expect(readProjectedSkillVersion(malformed)).resolves.toEqual({
+        version: null,
+        state: 'malformed',
+      });
+      // The banner is the only difference from a canonical read, so a view
+      // without one resolves identically.
+      await expect(
+        readProjectedSkillVersion(unbannered),
+      ).resolves.toMatchObject({ version: '2.0.0', state: 'conflict' });
+      // A read failure yields no version rather than a guess.
+      await expect(
+        readProjectedSkillVersion(join(tmpdir(), 'oat-absent-view-dir')),
+      ).resolves.toEqual({ version: null, state: 'absent' });
+    });
   });
 
   it.each([

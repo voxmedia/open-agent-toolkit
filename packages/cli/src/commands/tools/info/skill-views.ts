@@ -3,13 +3,15 @@ import { join } from 'node:path';
 
 import {
   getFrontmatterBlock,
-  getFrontmatterField,
+  parseSkillFrontmatter,
+  resolveSkillVersion,
 } from '@commands/shared/frontmatter';
 import type { ProviderContextDependencies } from '@commands/tools/shared/provider-context';
 import { resolveScopeProviderContext } from '@commands/tools/shared/provider-context';
 import type {
   DriftReport,
   ExpectedProjection,
+  ProjectedSkillVersion,
   SkillViewDiagnosis,
   SkillViewObservation,
 } from '@drift/index';
@@ -39,8 +41,15 @@ export interface SkillViewDependencies {
   }) => ExpectedProjection[];
   /** Existence probe for a canonical or provider path. */
   pathExists: (path: string) => Promise<boolean>;
-  /** Reads a SKILL.md version from a skill directory. */
+  /** Reads a SKILL.md version from a canonical skill directory. */
   getSkillVersion: (skillDir: string) => Promise<string | null>;
+  /**
+   * Reads a projected view's version *with* the resolver's verdict. Separate
+   * from `getSkillVersion` on purpose: a string alone cannot say whether the
+   * declaration behind it conflicted, so a double that returned one would let
+   * a conflicting view read as cleanly resolved.
+   */
+  readProjectedVersion: (skillDir: string) => Promise<ProjectedSkillVersion>;
 }
 
 export interface CollectSkillViewsInput {
@@ -83,39 +92,60 @@ export async function probeProviderPath(
 }
 
 /**
- * Reads the version of a projected skill copy.
+ * Reads the version of a projected skill copy, with the state of that reading.
  *
- * The engine prepends an OAT-managed provenance banner to a copied `SKILL.md`
- * (`engine/markers.ts`), which puts the frontmatter past byte zero where the
- * canonical reader will not look. Falls back to parsing the content after that
- * banner, so a copy-strategy view reports a version instead of a blank.
+ * The only thing this does differently from the canonical reader is strip the
+ * OAT-managed provenance banner the engine prepends to a copied `SKILL.md`
+ * (`engine/markers.ts`), which puts the frontmatter past byte zero where
+ * `getFrontmatterBlock`'s start-anchored match will not look. Everything after
+ * that is `parseSkillFrontmatter` + `resolveSkillVersion` — the same functions
+ * `getSkillVersion` uses — so a view and its canonical source can never
+ * resolve by different precedence rules. A private parse here previously read
+ * the deprecated top-level `version` while the canonical side had already
+ * moved to `metadata.version`, which reported a byte-identical copy as stale.
  *
- * `getSkillVersion` remains the source of truth for *where* a version lives.
- * This fallback resolves the top-level `version` field only, so it agrees with
- * that reader exactly as long as the top-level field is the only location. A
- * reader that introduces a second location with its own precedence must
- * replace this parse rather than sit beside it, because a SKILL.md carrying
- * both would otherwise resolve differently here than canonically.
+ * The state follows the resolver, never the parse in isolation: once the
+ * resolver returns a version, that version is what canonical resolution would
+ * report too, so an ignored sibling declaration that happens to be unusable
+ * must not downgrade it. `unusable` and `malformed` are reserved for readings
+ * that produced no version at all. A read failure yields no version rather
+ * than a guess, so a transient failure can never launder a conflicting
+ * declaration into a clean one.
  */
 export async function readProjectedSkillVersion(
   skillDir: string,
-  getSkillVersion: (dir: string) => Promise<string | null>,
-): Promise<string | null> {
-  const direct = await getSkillVersion(skillDir);
-  if (direct !== null) return direct;
-
+): Promise<ProjectedSkillVersion> {
+  let content: string;
   try {
-    const content = await readFile(join(skillDir, 'SKILL.md'), 'utf8');
-    if (!content.startsWith(OAT_MARKER_PREFIX)) return null;
-    const stripped = content.slice(content.indexOf('\n') + 1);
-    const block = getFrontmatterBlock(stripped);
-    const version = block ? getFrontmatterField(block, 'version') : null;
-    // The canonical reader normalizes an empty or comment-only value to
-    // `null`; this fallback must not report `''` where that reports nothing.
-    return version !== null && version.length > 0 ? version : null;
+    content = await readFile(join(skillDir, 'SKILL.md'), 'utf8');
   } catch {
-    return null;
+    return { version: null, state: 'absent' };
   }
+
+  const stripped = content.startsWith(OAT_MARKER_PREFIX)
+    ? content.slice(content.indexOf('\n') + 1)
+    : content;
+  const block = getFrontmatterBlock(stripped);
+  if (!block) return { version: null, state: 'absent' };
+
+  const parsed = parseSkillFrontmatter(block);
+  if (parsed.malformed) return { version: null, state: 'malformed' };
+
+  const resolved = resolveSkillVersion(parsed);
+  if (!resolved) {
+    return {
+      version: null,
+      state: parsed.unusableVersionDeclaration ? 'unusable' : 'absent',
+    };
+  }
+  if (resolved.conflict) {
+    return {
+      version: resolved.version,
+      state: 'conflict',
+      conflict: resolved.conflict,
+    };
+  }
+  return { version: resolved.version, state: 'resolved' };
 }
 
 /**
@@ -249,12 +279,13 @@ async function diagnoseScope(
       manifestEntry,
       drift,
       viewPresent,
-      viewVersion: comparable
-        ? await readProjectedSkillVersion(
-            join(scopeRoot, projection.providerPath),
-            deps.getSkillVersion,
-          )
-        : null,
+      ...(comparable
+        ? {
+            projectedVersion: await deps.readProjectedVersion(
+              join(scopeRoot, projection.providerPath),
+            ),
+          }
+        : {}),
     });
   }
 
@@ -305,7 +336,16 @@ export function formatSkillViewLines(
       const label = `${view.provider}:`.padEnd(width + 1);
       const path = view.providerPath ? `  ${view.providerPath}` : '';
       lines.push(`    ${label} ${view.viewClass}${qualifier(view)}${path}`);
-      if (ACTIONABLE.has(view.viewClass) || view.viewClass === 'untracked') {
+      // A withheld or ambiguous version comparison is exactly the case a user
+      // cannot infer from the class word alone, so it is shown even when the
+      // class itself is not actionable.
+      if (
+        ACTIONABLE.has(view.viewClass) ||
+        view.viewClass === 'untracked' ||
+        (view.versionEvidence !== undefined &&
+          view.versionEvidence !== 'resolved' &&
+          view.versionEvidence !== 'absent')
+      ) {
         lines.push(`      ${view.detail}`);
       }
       if (view.versionComparable) {

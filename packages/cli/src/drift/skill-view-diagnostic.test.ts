@@ -333,7 +333,7 @@ describe('diagnoseSkillViews', () => {
           }),
           drift: drift({ status: 'drifted', reason: 'modified' }),
           viewPresent: true,
-          viewVersion: '1.1.0',
+          projectedVersion: { version: '1.1.0', state: 'resolved' },
         }),
       ],
     });
@@ -357,7 +357,7 @@ describe('diagnoseSkillViews', () => {
           manifestEntry: manifestEntry({ strategy: 'symlink' }),
           drift: drift({ status: 'in_sync' }),
           viewPresent: true,
-          viewVersion: '1.2.1',
+          projectedVersion: { version: '1.2.1', state: 'resolved' },
         }),
         observation('codex', { viewPresent: true }),
       ],
@@ -416,7 +416,7 @@ describe('diagnoseSkillViews', () => {
           // last sync, so a canonical-only edit leaves it reading `in_sync`.
           drift: drift({ status: 'in_sync' }),
           viewPresent: true,
-          viewVersion: '1.0.0',
+          projectedVersion: { version: '1.0.0', state: 'resolved' },
         }),
       ],
     });
@@ -450,7 +450,7 @@ describe('diagnoseSkillViews', () => {
           }),
           drift: drift({ status: 'in_sync' }),
           viewPresent: true,
-          viewVersion: null,
+          projectedVersion: { version: null, state: 'absent' },
         }),
       ],
     });
@@ -481,7 +481,7 @@ describe('diagnoseSkillViews', () => {
           }),
           drift: drift({ status: 'in_sync' }),
           viewPresent: true,
-          viewVersion: '2.0.0',
+          projectedVersion: { version: '2.0.0', state: 'resolved' },
         }),
       ],
     });
@@ -508,7 +508,7 @@ describe('diagnoseSkillViews', () => {
           }),
           drift: drift({ status: 'drifted', reason: 'modified' }),
           viewPresent: true,
-          viewVersion: '1.4.2',
+          projectedVersion: { version: '1.4.2', state: 'resolved' },
         }),
       ],
     });
@@ -536,6 +536,109 @@ describe('diagnoseSkillViews', () => {
     );
     expect(diagnosis.views[0]?.detail).toContain('oat sync --scope project');
     expect(diagnosis.views[0]?.detail).not.toContain('content is current');
+  });
+
+  it('never reports a copy as stale on a version declaration the resolver could not take at face value', () => {
+    const copyObservation = (projectedVersion: {
+      version: string | null;
+      state: 'resolved' | 'absent' | 'conflict' | 'unusable' | 'malformed';
+      conflict?: { metadata: string; topLevel: string };
+    }) =>
+      observation('claude', {
+        manifestEntry: manifestEntry({
+          strategy: 'copy',
+          contentHash: 'sha256:matches-last-sync',
+          isFile: true,
+        }),
+        drift: drift({ status: 'in_sync' }),
+        viewPresent: true,
+        projectedVersion,
+      });
+
+    // A declaration that contradicts itself and disagrees with canonical is a
+    // parse artifact, not evidence of divergence.
+    const conflicting = diagnose({
+      activeProviders: ['claude'],
+      registrations: [claude],
+      canonicalVersion: '3.0.0',
+      observations: [
+        copyObservation({
+          version: '2.0.0',
+          state: 'conflict',
+          conflict: { metadata: '2.0.0', topLevel: '1.0.0' },
+        }),
+      ],
+    });
+    const unusable = diagnose({
+      activeProviders: ['claude'],
+      registrations: [claude],
+      canonicalVersion: '3.0.0',
+      observations: [copyObservation({ version: null, state: 'unusable' })],
+    });
+    const malformed = diagnose({
+      activeProviders: ['claude'],
+      registrations: [claude],
+      canonicalVersion: '3.0.0',
+      observations: [copyObservation({ version: null, state: 'malformed' })],
+    });
+
+    expect(conflicting.views[0]).toMatchObject({
+      viewClass: 'in-sync',
+      viewVersion: null,
+      versionComparable: false,
+      suggestion: null,
+    });
+    expect(conflicting.views[0]?.detail).toContain('metadata.version 2.0.0');
+    expect(conflicting.views[0]?.detail).toContain('top-level version 1.0.0');
+    expect(conflicting.views[0]?.detail).toContain(
+      'version comparison was skipped',
+    );
+    for (const diagnosis of [unusable, malformed]) {
+      expect(diagnosis.views[0]).toMatchObject({
+        viewClass: 'in-sync',
+        viewVersion: null,
+        versionComparable: false,
+        suggestion: null,
+      });
+      expect(diagnosis.views[0]?.detail).toContain('no version comparison');
+    }
+  });
+
+  it('keeps a conflicting declaration comparable when it agrees with canonical', () => {
+    const diagnosis = diagnose({
+      activeProviders: ['claude'],
+      registrations: [claude],
+      canonicalVersion: '2.0.0',
+      observations: [
+        observation('claude', {
+          manifestEntry: manifestEntry({
+            strategy: 'copy',
+            contentHash: 'sha256:matches-last-sync',
+            isFile: true,
+          }),
+          drift: drift({ status: 'in_sync' }),
+          viewPresent: true,
+          projectedVersion: {
+            version: '2.0.0',
+            state: 'conflict',
+            conflict: { metadata: '2.0.0', topLevel: '1.0.0' },
+          },
+        }),
+      ],
+    });
+
+    // The resolver's answer matches canonical, so nothing is at stake: the
+    // view stays comparable and the ambiguity is reported, not hidden.
+    expect(diagnosis.views[0]).toMatchObject({
+      viewClass: 'in-sync',
+      viewVersion: '2.0.0',
+      versionComparable: true,
+      suggestion: null,
+    });
+    expect(diagnosis.views[0]?.detail).toContain('metadata.version 2.0.0');
+    // Nothing was withheld in this case, so the note must not say it was.
+    expect(diagnosis.views[0]?.detail).toContain('the version compared above');
+    expect(diagnosis.views[0]?.detail).not.toContain('was skipped');
   });
 
   it('reports a tracked entry with no drift observation as unverified, never untracked', () => {

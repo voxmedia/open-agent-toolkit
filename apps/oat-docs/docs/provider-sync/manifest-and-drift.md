@@ -130,6 +130,20 @@ after a canonical edit still matches its own manifest entry and reads as
 `in_sync`. When the two versions differ, the view class is `modified` and the
 drift state is reported unchanged beside it.
 
+Both sides resolve their version through the same shared reader, so
+`metadata.version` takes precedence over the deprecated top-level `version`
+alias for a projected view exactly as it does for the canonical source; the only
+extra step for a view is stripping the generated banner. When a projected
+`SKILL.md` contradicts itself — a top-level `version` and a differing
+`metadata.version` — or declares a version the reader cannot use at all, the
+comparison is withheld rather than decided: no version is reported for that
+view, and the class is left to the drift state alone. That is deliberately
+conservative and has a cost, since a copy in that state could be genuinely
+stale and would not be reported as such. The view's detail names the two
+declared values and says the comparison was skipped, so the ambiguity is
+visible rather than silently resolved. When the resolver's answer happens to
+agree with canonical, nothing is withheld and the detail says so instead.
+
 ### Known limitation: copy-strategy skill views
 
 A `copy` skill view is reported `modified` immediately after a successful sync,

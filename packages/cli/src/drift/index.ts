@@ -14,6 +14,7 @@ export {
 } from './skill-view-diagnostic';
 export type {
   ExpectedProjection,
+  ProjectedSkillVersion,
   SkillViewClass,
   SkillViewDiagnosis,
   SkillViewDiagnostic,

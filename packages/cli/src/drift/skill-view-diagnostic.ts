@@ -80,6 +80,19 @@ export interface ExpectedProjection {
   excludedReason?: string;
 }
 
+/**
+ * How the projected view's own version declaration read.
+ *
+ * Carries the shared resolver's verdict rather than just a string: a
+ * `conflict`, `unusable`, or `malformed` declaration is a parse artifact, and
+ * a copy must never be reported as stale on that evidence.
+ */
+export interface ProjectedSkillVersion {
+  version: string | null;
+  state: 'resolved' | 'absent' | 'conflict' | 'unusable' | 'malformed';
+  conflict?: { metadata: string; topLevel: string };
+}
+
 /** One provider's observed reality for the expected projection. */
 export interface SkillViewObservation {
   projection: ExpectedProjection;
@@ -89,8 +102,11 @@ export interface SkillViewObservation {
   drift: DriftReport | null;
   /** Whether anything exists at the expected provider path. */
   viewPresent: boolean;
-  /** Version read from the provider copy. Only meaningful for `copy` entries. */
-  viewVersion?: string | null;
+  /**
+   * Version read from the provider copy, with the resolver's verdict. Only
+   * meaningful for `copy` entries.
+   */
+  projectedVersion?: ProjectedSkillVersion;
 }
 
 export interface SkillViewDiagnostic {
@@ -109,6 +125,11 @@ export interface SkillViewDiagnostic {
   viewVersion: string | null;
   /** Versions are comparable only for `copy` views that exist. */
   versionComparable: boolean;
+  /**
+   * How the view's own version declaration read. `conflict`, `unusable`, and
+   * `malformed` are why a comparison may have been withheld.
+   */
+  versionEvidence?: ProjectedSkillVersion['state'];
   /** Narrowest safe repair: one concrete scope, never `--scope all`. */
   suggestion: string | null;
   detail: string;
@@ -203,6 +224,32 @@ function versionNote(strategy: ManifestEntryV2['strategy'] | null): string {
   }
   if (strategy === 'collection') {
     return ' The view is inherited from a collection alias, so it has no separate version.';
+  }
+  return '';
+}
+
+/** Names a version declaration the resolver could not take at face value. */
+function projectedVersionNote(
+  projected: ProjectedSkillVersion | undefined,
+  withheld: boolean,
+): string {
+  if (!projected) return '';
+  if (projected.state === 'conflict' && projected.conflict) {
+    const declaration = `The projected SKILL.md declares metadata.version ${projected.conflict.metadata} and top-level version ${projected.conflict.topLevel}; reconcile the two fields.`;
+    // The resolver is deterministic — it takes `metadata.version` — so a
+    // conflicting copy can genuinely be stale. When the comparison is
+    // withheld, say the check was skipped rather than implying the view is
+    // fine; when the resolved value agrees with canonical, nothing was
+    // withheld and claiming otherwise would be its own falsehood.
+    return withheld
+      ? ` ${declaration} A self-contradicting declaration is not usable as evidence, so the version comparison was skipped: a real difference from canonical would not be reported here.`
+      : ` ${declaration} The shared resolver takes metadata.version, which is the version compared above.`;
+  }
+  if (projected.state === 'unusable') {
+    return ' The projected SKILL.md declares a version that cannot be read, so no version comparison is made.';
+  }
+  if (projected.state === 'malformed') {
+    return ' The projected SKILL.md frontmatter does not parse, so no version comparison is made.';
   }
   return '';
 }
@@ -362,14 +409,26 @@ export function diagnoseSkillViews(input: {
     const classification = classify(observation, active.has(provider));
     const strategy = observation.manifestEntry?.strategy ?? null;
     const nativeRead = observation.projection.nativeRead;
-    const versionComparable =
+    const copyViewReadable =
       strategy === 'copy' &&
       !nativeRead &&
       (classification.viewClass === 'modified' ||
         classification.viewClass === 'in-sync');
-    const viewVersion = versionComparable
-      ? (observation.viewVersion ?? null)
+    const projected = observation.projectedVersion;
+    const resolvedViewVersion = copyViewReadable
+      ? (projected?.version ?? null)
       : null;
+    const versionState = projected?.state ?? 'absent';
+    // A declaration the resolver could not read, or one that contradicts
+    // itself while disagreeing with canonical, is not usable as evidence of
+    // divergence. Report no comparable version instead of a stale claim.
+    const untrustworthyVersion =
+      versionState === 'unusable' ||
+      versionState === 'malformed' ||
+      (versionState === 'conflict' &&
+        resolvedViewVersion !== input.canonicalVersion);
+    const viewVersion = untrustworthyVersion ? null : resolvedViewVersion;
+    const versionComparable = copyViewReadable && viewVersion !== null;
     // `detectDrift` compares a copy against the hash recorded at the last
     // sync, so a copy that was never re-synced after a canonical edit matches
     // its own manifest entry and reads as `in_sync`. Two different versions
@@ -377,6 +436,7 @@ export function diagnoseSkillViews(input: {
     // agrees with. `driftState` still reports exactly what the detector said.
     const staleCopy =
       versionComparable &&
+      versionState === 'resolved' &&
       classification.viewClass === 'in-sync' &&
       input.canonicalVersion !== null &&
       viewVersion !== null &&
@@ -423,6 +483,7 @@ export function diagnoseSkillViews(input: {
       canonicalVersion: input.canonicalVersion,
       viewVersion,
       versionComparable,
+      ...(copyViewReadable ? { versionEvidence: versionState } : {}),
       // The narrowest safe repair is the single concrete scope where the gap
       // was observed. `--scope all` would widen a one-scope repair into a
       // two-scope write.
@@ -430,7 +491,11 @@ export function diagnoseSkillViews(input: {
         REPAIRABLE.includes(viewClass) && !unrepairableCopy
           ? `oat sync --scope ${input.scope}`
           : null,
-      detail: versionComparable ? detail : `${detail}${versionNote(strategy)}`,
+      detail: `${versionComparable ? detail : `${detail}${versionNote(strategy)}`}${
+        copyViewReadable
+          ? projectedVersionNote(projected, untrustworthyVersion)
+          : ''
+      }`,
     });
   }
 
