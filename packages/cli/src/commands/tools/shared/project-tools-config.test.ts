@@ -254,12 +254,8 @@ describe('FR10 project config sibling preservation', () => {
     // `preserved[key] = value` invokes the legacy prototype setter, so a
     // sibling named `__proto__` vanished during normalization. This drives
     // the production writer with a config a library caller could hold.
-    //
-    // Scope note: reading such a sibling back from disk still loses it, one
-    // layer earlier and outside this boundary — `parseJsonConfig` uses
-    // `jsonc-parser`, which builds objects by assignment and drops
-    // `__proto__` before normalization ever runs. `constructor` is unaffected
-    // in both layers.
+    // `constructor` is unaffected. The read side is covered by the full disk
+    // cycle below.
     const repoRoot = await mkdtemp(join(tmpdir(), 'oat-fr10-'));
     roots.push(repoRoot);
     await mkdir(join(repoRoot, '.oat'), { recursive: true });
@@ -276,6 +272,59 @@ describe('FR10 project config sibling preservation', () => {
     expect(raw).toContain('"__proto__"');
     expect(raw).toContain('"constructor"');
     expect(raw).toContain('".p"');
+  });
+
+  it('preserves a __proto__ sibling through a real read-write-read cycle', async () => {
+    // Closes the gap the write-path case above used to scope out. The
+    // production reader dropped `__proto__` one layer earlier than
+    // normalization — `parseJsonConfig` built objects by assignment — so a
+    // sibling written correctly by `writeOatConfig` was erased by the next
+    // read-modify-write. Both production functions are under test here, with
+    // the file on disk as the only medium between them.
+    const repoRoot = await mkdtemp(join(tmpdir(), 'oat-fr10-'));
+    roots.push(repoRoot);
+    await mkdir(join(repoRoot, '.oat'), { recursive: true });
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      '{"version":1,"projects":{"root":".custom/projects","__proto__":{"keep":"me"},"constructor":{"c":1}}}\n',
+      'utf8',
+    );
+
+    // Read: the sibling arrives as an own key rather than as a prototype.
+    const loaded = (await readOatConfig(repoRoot)) as OatConfig & {
+      projects?: Record<string, unknown>;
+    };
+    expect(
+      Object.prototype.hasOwnProperty.call(loaded.projects ?? {}, '__proto__'),
+    ).toBe(true);
+    expect(loaded.projects?.['__proto__']).toEqual({ keep: 'me' });
+
+    await reconcileProjectToolsConfig(
+      { repoRoot },
+      {
+        resolveAssetsRoot: async () => '/assets',
+        scanTools: async () => [createTool('docs', 'project')],
+        readOatConfig,
+        writeOatConfig,
+      },
+    );
+
+    // Read back from disk with a parser that cannot be blamed for the result.
+    const after = JSON.parse(
+      await readFile(join(repoRoot, '.oat', 'config.json'), 'utf8'),
+    ) as {
+      projects?: Record<string, unknown>;
+      tools?: Record<string, unknown>;
+    };
+
+    expect(
+      Object.prototype.hasOwnProperty.call(after.projects ?? {}, '__proto__'),
+    ).toBe(true);
+    expect(after.projects?.['__proto__']).toEqual({ keep: 'me' });
+    expect(after.projects?.constructor).toEqual({ c: 1 });
+    expect(after.projects?.root).toBe('.custom/projects');
+    // The write actually happened, so this is not a vacuous pass.
+    expect(after.tools?.docs).toBe(true);
   });
 
   it('preserves siblings even when no known projects key is set', async () => {
