@@ -11,7 +11,7 @@ labels:
   - simplification
 assignee: null
 created: 2026-09-07T13:44:01.781Z
-updated: 2026-09-07T13:44:01.781Z
+updated: 2026-09-08T00:54:40Z
 associated_issues: []
 external_plans: []
 ---
@@ -42,3 +42,13 @@ Replace the implementation-tail project recap path with one dependable agent-aut
   `BL-260902-make-autonomous-project-recap` and
   `BL-260904-add-recap-seam-config-keys` so the backlog does not simultaneously direct
   contributors to add the seam machinery this item removes from the default path.
+
+## Integration note: Wave 5
+
+Wave 5 (PR #275) shipped and archived **BL-260902-make-autonomous-project-recap —
+Make autonomous project recap capability-aware and non-blocking**. Its capability
+probe is now the integration baseline, not pending work to cancel. The direct
+agent-authored replacement remains distinct: it changes the default generation
+mechanism and the handling of an explicitly requested recap that fails after its
+capabilities resolve. **BL-260904-add-recap-seam-config-keys — Add recap seam config
+keys** remains a separate open item to reconcile before implementation.

@@ -37,8 +37,9 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.64` (`remote-project-management`, implementation and independent
-  closeout reviews complete; pending PR/release) adds local-first remote PJM
+- CLI `0.2.64` (`remote-project-management`, original implementation and
+  closeout reviews complete; Wave 5 integration awaiting a fresh final gate,
+  publication, and release) adds local-first remote PJM
   bindings for GitHub Issues, Linear, and Jira Cloud. `oat pjm remote` now
   supports explicit intake, publish, refresh, reconcile, discussion, closeout,
   relink, detach, recreate, and restart-safe operation continuation through a
