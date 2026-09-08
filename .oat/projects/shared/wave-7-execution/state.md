@@ -122,7 +122,7 @@ oat_generated: false
 
 ## Current Phase
 
-Plan (complete). Twenty pointer-only tasks in six parallel groups of three plus two sequential finale lanes; the plan gate runs next, then group 1 dispatch.
+Plan (complete). Twenty pointer-only tasks in six parallel groups of three plus two sequential finale lanes; plan gate attempt 1 blocked and was repaired in-artifact; attempt 2 runs next, then group 1 dispatch.
 
 ## Artifacts
 
@@ -137,7 +137,8 @@ Plan (complete). Twenty pointer-only tasks in six parallel groups of three plus 
 - ✓ Preflight: `wave-7-execution` created from `origin/main` `684bd3be32e65fc8db0646f336ab4335c317ba2c` (after the wave-7 composition PR #284); build and type-check green
 - ✓ Drift checks run mechanically for all twenty plans: 20 PASS / 0 MINOR-DRIFT / 0 STOP (zero code movement since the plans' inspected head)
 - ✓ Wrapper artifacts written; `oat project validate-plan` passed
-- ☐ Plan gate
+- ✗ Plan gate attempt 1 blocked (1C/2I/1M: the lost p09 patch, the archive set, the program ledger, the p19 `AGENTS.md` claim) — fixed in-artifact; parked p09 bytes recovered under `parked/wave-5-p09/`
+- ☐ Plan gate attempt 2
 - ☐ Groups 1–6, then p19 and p20; fan-in gates after each
 - ☐ Closeout: synthesis, archival, root final review, exit gate, post-implement sequence, PR
 

@@ -47,14 +47,14 @@ governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
 3. **Confirm the source plan's `## Done criteria`**, then run the lane-mode DoD gates: the plan's focused tests, then `pnpm check`, `pnpm type-check`, `pnpm run check:skill-bumps`, `pnpm lint`, `pnpm format`, and `pnpm oat:validate-skills` (uniform across lanes), each with captured exit codes; a lane that bumps a skill also sweeps the old version literal repo-wide (plain and regex-escaped forms, `packages/cli/src`, `tools/smoke`, and `.agents/skills/*/tests`) and runs `pnpm test:smoke` and `pnpm test:skills`. Lanes never edit the lockstep release files (five public package manifests, `packages/cli/assets/public-package-versions.json`, `pnpm-lock.yaml`) and never run `pnpm release:check-versions` or `pnpm release:validate`; the wave fan-in owns the single lockstep bump (0.2.66 → 0.2.67, above freshly fetched `origin/main` at that time) and runs the full eight-gate sequence at every fan-in boundary — after each group's merges and after p19 and p20 — always before that fan-in's bookkeeping edit.
 4. **STOP → BLOCKED at phase level (bundle exception).** A source-plan STOP parks the phase (record in `state.md` `oat_blockers` + `implementation.md`); sibling phases continue. **Bundle phases:** a STOP parks only the stopped task; the implementer records the blocker and continues remaining independent tasks; the phase is terminal when every task is completed or parked (DR-260713-bundle-stop-semantics-park).
 5. **Group-dependency rule:** a group starts when every phase of the previous group is terminal — merged, or parked with completed commits merged. A park never blocks the next group. The two ungrouped finale phases run in plan order after the group-6 fan-in (p19, then p20), each with its own fan-in.
-6. **Merge serialization:** within a group, merge phase branches one at a time in plan order, rebasing each on the updated tip first. Deliberately sequenced shared files (from the index dependency notes and the mechanical write-surface intersection below): `packages/cli/src/validation/skills.test.ts` (written by p01, p04, p07, p10, p13, p16, p19, p20 — one per group, each re-anchoring its pins by the old version literal on the merged tip); the config chain `packages/cli/src/commands/config/index.ts`, `config/resolve.ts`, `config/oat-config.ts` (p02 → p05 → p08 → p11); `.agents/skills/oat-project-complete/SKILL.md`, `scripts/finalize-synced-archive.mjs`, and `commands/init/tools/shared/review-skill-contracts.test.ts` (p01 → p04); `apps/oat-docs/docs/cli-utilities/configuration.md` (p06 → p09); `.agents/skills/create-agnostic-skill/SKILL.md` and `references/skill-template.md` (p10 → p19); `.agents/skills/oat-repo-improve/SKILL.md` (p10 → p20); `commands/init/tools/shared/skills-bundled-docs-contract.test.ts` and `apps/oat-docs/docs/workflows/wave-workflows.md` (p17 → p20); root `AGENTS.md` (p13 → p18 → p19); `.oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md` (p03 repairs its title before p05 runs). One `metadata.version` bump per skill per PR: `oat-project-complete` (p01, inherited by p04), `create-agnostic-skill` (p10, inherited by p19), `oat-repo-improve` (p10, inherited by p20); every other bumped skill has one writer (`oat-doctor` p07; `oat-project-review-provide`, `oat-repo-knowledge-index`, `oat-agent-instructions-apply` p10; `oat-project-implement`, `oat-dispatch-subagents` p16; `oat-wave-program` p17; `create-oat-skill` p19; `oat-wave-execute` p20). Each lane that edits a canonical skill runs `pnpm run cli -- sync --scope project` after its edits and commits any manifest restamp; `--scope all` is operator-only. The fan-in bump commit also runs the project-scope sync so `.oat/sync/manifest.json` restamps with the lockstep. Every fan-in that follows a lane that edits, closes, or renames a backlog item regenerates `.oat/repo/pjm/backlog/index.md` (`oat backlog regenerate-index`, then `oxfmt --write`).
+6. **Merge serialization:** within a group, merge phase branches one at a time in plan order, rebasing each on the updated tip first. Deliberately sequenced shared files (from the index dependency notes and the mechanical write-surface intersection below): `packages/cli/src/validation/skills.test.ts` (written by p01, p04, p07, p10, p13, p16, p19, p20 — one per group, each re-anchoring its pins by the old version literal on the merged tip); the config chain `packages/cli/src/commands/config/index.ts`, `config/resolve.ts`, `config/oat-config.ts` (p02 → p05 → p08 → p11); `.agents/skills/oat-project-complete/SKILL.md`, `scripts/finalize-synced-archive.mjs`, and `commands/init/tools/shared/review-skill-contracts.test.ts` (p01 → p04); `apps/oat-docs/docs/cli-utilities/configuration.md` (p06 → p09); `.agents/skills/create-agnostic-skill/SKILL.md` and `references/skill-template.md` (p10 → p19); `.agents/skills/oat-repo-improve/SKILL.md` (p10 → p20); `commands/init/tools/shared/skills-bundled-docs-contract.test.ts` and `apps/oat-docs/docs/workflows/wave-workflows.md` (p17 → p20); root `AGENTS.md` (p13 → p18); `.oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md` (p03 repairs its title before p05 runs). One `metadata.version` bump per skill per PR: `oat-project-complete` (p01, inherited by p04), `create-agnostic-skill` (p10, inherited by p19), `oat-repo-improve` (p10, inherited by p20); every other bumped skill has one writer (`oat-doctor` p07; `oat-project-review-provide`, `oat-repo-knowledge-index`, `oat-agent-instructions-apply` p10; `oat-project-implement`, `oat-dispatch-subagents` p16; `oat-wave-program` p17; `create-oat-skill` p19; `oat-wave-execute` p20). Each lane that edits a canonical skill runs `pnpm run cli -- sync --scope project` after its edits and commits any manifest restamp; `--scope all` is operator-only. The fan-in bump commit also runs the project-scope sync so `.oat/sync/manifest.json` restamps with the lockstep. Every fan-in that follows a lane that edits, closes, or renames a backlog item regenerates `.oat/repo/pjm/backlog/index.md` (`oat backlog regenerate-index`, then `oxfmt --write`).
 7. **Backlog archival is NOT part of any task** — once, serialized on the integration branch after all merges (DR-260713-shared-tracked-surfaces).
 8. **Phase review checklist = the source plan's `## Review focus`.**
 9. **Artifact hygiene:** every agent runs `pnpm exec oxfmt <file>` (or `pnpm format:fix`) on markdown it writes and reports observations for `orchestration-log.md` (workers report; the root appends). Never format `state.md`.
 10. **Commit verification after ambiguous results:** inspect `git log`/HEAD before retrying; record SHAs pasted from `git rev-parse` in `implementation.md`.
 11. **Repo-local CLI:** the global `oat` trails the branch; every `oat` invocation that reads or writes repository state (`sync`, `docs generate-index`, validators, `status`, `config`, `tools info`) uses `pnpm run cli -- <command>` or `node packages/cli/dist/index.js` after `pnpm build`.
 12. **Verification evidence:** `pnpm check` and `pnpm type-check` replay Turbo caches; evidence runs use `HOME=$(mktemp -d) pnpm exec turbo run <gate> --force` (`Cached: 0`). Disposition-verification rounds execute prose shell snippets verbatim in a fresh shell and walk every failure sequence of a contract; reviewers of command-surface lanes probe the built CLI in a scratch project; `oat gate review` writes its own Reviews row, which the receive step moves forward in place. Probe edits are restored from a `mktemp -d` backup copy, never with `git checkout --` on uncommitted work. Pins are located by grepping the version literal, never the skill name. A test that simulates filesystem case-insensitivity runs under a mocked directory probe (or a case-sensitive image), never only on APFS. Every fix ships with a negative control that is red before and green after, and every P0 test is proven able to fail once per clause.
-13. **Root final-review brief:** enumerates every sibling-plan dependency row (p01→p04, p02→p05→p08→p11, p03→p05, p06→p09, p10→p19, p10→p20, p17→p20, p13/p18/p19 on `AGENTS.md`, the eight `skills.test.ts` writers) and every plan premise about another package, and probes each; the configured exit gate then runs in the foreground with no other agents active.
+13. **Root final-review brief:** enumerates every sibling-plan dependency row (p01→p04, p02→p05→p08→p11, p03→p05, p06→p09, p10→p19, p10→p20, p17→p20, p13/p18 on `AGENTS.md`, the eight `skills.test.ts` writers) and every plan premise about another package, and probes each; the configured exit gate then runs in the foreground with no other agents active.
 
 ## Parallelism
 
@@ -67,7 +67,7 @@ groups as six triples plus two singletons without changing any ordering the
 index or the program states: every group still holds exactly one
 `skills.test.ts` writer, the config chain still runs p02 → p05 → p08 → p11
 across groups 1–4, the skill-bump pairs (p01 → p04, p10 → p19, p10 → p20) and
-the docs/contract seams (p06 → p09, p17 → p20, p13/p18/p19 on `AGENTS.md`)
+the docs/contract seams (p06 → p09, p17 → p20, p13/p18 on `AGENTS.md`)
 stay in distinct groups, and `oat project validate-plan` rejects singleton
 groups, so p19 and p20 run ungrouped in plan order after group 6. The
 mechanical pairwise intersection of every lane's `### In scope` write surface
@@ -97,7 +97,7 @@ mechanical pairwise intersection of every lane's `### In scope` write surface
 - p16 (group 6) — writes: `.agents/skills/oat-dispatch-subagents/SKILL.md`, `.agents/skills/oat-dispatch-subagents/references/record-schema.md`, `.agents/skills/oat-project-implement/SKILL.md`, `.agents/skills/oat-project-implement/references/phase-execution.md`, `.oat/repo/pjm/backlog/items/BL-260906-harden-dispatch-launch.md`, `packages/cli/src/commands/project/dispatch/record.test.ts`, `packages/cli/src/commands/project/dispatch/record.ts`, `packages/cli/src/providers/identity/oat-dispatch-record.test.ts`, `packages/cli/src/providers/identity/oat-dispatch-record.ts`, `packages/cli/src/validation/skills.test.ts`.
 - p17 (group 6) — writes: `.agents/skills/oat-wave-program/SKILL.md`, `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`.
 - p18 (group 6) — writes: `.lintstagedrc.mjs`, `AGENTS.md`, `package.json`.
-- p19 (group none — sequential) — writes: `.agents/docs/skills-guide.md`, `.agents/skills/create-agnostic-skill/SKILL.md`, `.agents/skills/create-agnostic-skill/references/skill-template.md`, `.agents/skills/create-oat-skill/SKILL.md`, `AGENTS.md`, `packages/cli/src/validation/skills.test.ts`.
+- p19 (group none — sequential) — writes: `.agents/docs/skills-guide.md`, `.agents/skills/create-agnostic-skill/SKILL.md`, `.agents/skills/create-agnostic-skill/references/skill-template.md`, `.agents/skills/create-oat-skill/SKILL.md`, `packages/cli/src/validation/skills.test.ts` (it edits references to `AGENTS.md` inside two skills, not the root file).
 - p20 (group none — sequential) — writes: `.agents/skills/oat-repo-improve/SKILL.md`, `.agents/skills/oat-wave-execute/SKILL.md`, `apps/oat-docs/docs/workflows/skills/repo-improve.md`, `packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`, `packages/cli/src/validation/skills.test.ts`.
 - Within-group write intersections, recomputed mechanically from these lists
   (`writes.py` over the twenty `### In scope` sections, glob-aware): group 1
@@ -138,10 +138,11 @@ row is un-triggered; PR #273 is the baseline every plan was verified against.
 The lockstep on the base is 0.2.66 and `.oat/sync/manifest.json` is at 0.2.66
 (`sync --scope project --dry-run`: no changes), so the group-1 fan-in bump is
 0.2.66 → 0.2.67 with the manifest restamped in the same commit. The parked
-wave-5 p09 patch p04 depends on is preserved on the local branch `wave-5/p09`
-(its worktree checkout is gone; the plan's `git -C .worktrees/wave-5/p09` line
-is replaced by a branch read in the p04 brief — a location change, not a
-narrowing). This record is non-authoritative recon evidence; no recon subagent
+wave-5 p09 work p04 depends on was gone (worktree removed at the wave-5 close,
+scratchpad copy lost, no commit on `wave-5/p09`); the root recovered its exact
+bytes into `.oat/projects/shared/wave-7-execution/parked/wave-5-p09/` and verified them against
+the plan's own step-1 figures (117/17, 218 lines, 165 and 249 lines) — see the
+p04 ordering note and `parked/wave-5-p09/README.md`. This record is non-authoritative recon evidence; no recon subagent
 was dispatched because the drift set is empty (logged in
 `orchestration-log.md` as a skill deviation).
 
@@ -246,7 +247,7 @@ git commit -m "chore(p03-t01): guard bare proto in Markdown records"
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-08-make-the-completion-seal-idempotent.md`
 
-**Ordering:** group 2; starts after the group-1 fan-in (p01 has released `oat-project-complete`, `finalize-synced-archive.mjs`, `review-skill-contracts.test.ts`, and the pins) in parallel with p05 and p06 and merges first within the group. No second `oat-project-complete` bump: adopt the value p01 landed (the plan's own instruction). The parked wave-5 p09 patch is preserved on the local branch `wave-5/p09` (its `.worktrees/wave-5/p09` checkout no longer exists; read it with `git log`/`git diff origin/main...wave-5/p09`, never re-create the worktree). Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p04-t01` prefix.
+**Ordering:** group 2; starts after the group-1 fan-in (p01 has released `oat-project-complete`, `finalize-synced-archive.mjs`, `review-skill-contracts.test.ts`, and the pins) in parallel with p05 and p06 and merges first within the group. No second `oat-project-complete` bump: adopt the value p01 landed (the plan's own instruction). The parked wave-5 p09 work no longer exists as a dirty worktree (removed at the wave-5 close; its scratchpad copy was lost to a session restart) and the branch `wave-5/p09` carries no p09 commit; its exact bytes were recovered by the root and committed at `.oat/projects/shared/wave-7-execution/parked/wave-5-p09/` — `p09-parked-tracked.patch` (218 lines; `git apply --stat` = 3 files, 117 insertions, 17 deletions; `git apply --check` exit 0 at the wave base), `validate-durable-archive-receipt.mjs` (165 lines), and `validate-durable-archive-receipt.test.mjs` (249 lines) — exactly the figures the plan's step 1 Verify records, so step 1 runs against that directory instead of the worktree (`git apply --check` on the patch; `cp` of the two files). This is a recovery of the same bytes, not a re-derivation; the recovery record is `parked/wave-5-p09/README.md`. Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p04-t01` prefix.
 
 **Step 1: Drift check** — per the source plan's `## Drift check`.
 
@@ -666,7 +667,7 @@ git commit -m "fix(p17-t01): harden the external-plan readiness contract"
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-08-cover-skill-and-script-tests-in-repo-gates.md`
 
-**Ordering:** group 6; starts after the group-5 fan-in in parallel with p16 and p17 and merges third within the group. Sole writer of root `package.json`, `.lintstagedrc.mjs`, and root `AGENTS.md` in its group; never in one group with p13, p19, or p03. Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p18-t01` prefix.
+**Ordering:** group 6; starts after the group-5 fan-in in parallel with p16 and p17 and merges third within the group. Sole writer of root `package.json`, `.lintstagedrc.mjs`, and root `AGENTS.md` in its group; never in one group with p13 (both write root `AGENTS.md`). Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p18-t01` prefix.
 
 **Step 1: Drift check** — per the source plan's `## Drift check`.
 
@@ -696,7 +697,7 @@ git commit -m "chore(p18-t01): cover skill and script tests in the repo gates"
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-08-correct-skill-authoring-facts.md`
 
-**Ordering:** ungrouped; runs alone after the group-6 fan-in (p10 has released `create-agnostic-skill/SKILL.md` and `skill-template.md`; p18 has released root `AGENTS.md`). Seventh writer of the `validation/skills.test.ts` chain; adopts p10's `create-agnostic-skill` bump (no second bump) and bumps `create-oat-skill` itself. Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p19-t01` prefix.
+**Ordering:** ungrouped; runs alone after the group-6 fan-in (p10 has released `create-agnostic-skill/SKILL.md` and `skill-template.md`). Seventh writer of the `validation/skills.test.ts` chain; adopts p10's `create-agnostic-skill` bump (no second bump) and bumps `create-oat-skill` itself. Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p19-t01` prefix.
 
 **Step 1: Drift check** — per the source plan's `## Drift check`.
 
@@ -749,32 +750,32 @@ git commit -m "docs(p20-t01): keep plan writes on the caller's model"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p05    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p06    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p07    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p08    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p09    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p10    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p11    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p12    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p13    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p14    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p15    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p16    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p17    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p18    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p19    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p20    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-09-08 | reviews/artifact-plan-review-2026-09-08T224620Z.md | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target         |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------- |
+| p01    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p02    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p03    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p04    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p05    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p06    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p07    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p08    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p09    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p10    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p11    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p12    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p13    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p14    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p15    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p16    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p17    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p18    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p19    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p20    | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| final  | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| plan   | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T224620Z.md | -             | gate       | codex-5-6-sol-xhigh |
+| spec   | artifact | pending     | -          | -                                                           | -             | -          | -                   |
+| design | artifact | pending     | -          | -                                                           | -             | -          | -                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -784,7 +785,7 @@ git commit -m "docs(p20-t01): keep plan writes on the caller's model"
 
 - [ ] 20/20 phases, 20/20 tasks complete
 - [ ] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
-- [ ] **Serialized backlog bookkeeping** (integration branch, after all merges): `oat backlog archive` with real outcome summaries for `BL-260906-cover-skill-test-files-under`, `BL-260906-docs-index-follow-ups-from`, `BL-260906-extend-check-skill-bumps`, `BL-260906-fix-sync-apply-branch`, `BL-260906-guard-packed-asset-directories`, `BL-260906-harden-dispatch-launch`, `BL-260906-persist-status-native-skill`, `BL-260906-reconcile-the-oat-doctor`, `BL-260906-repair-the-stray-fence-in-oat`, `BL-260906-run-scripts-worktree-init-test`, `BL-260907-finalize-synced-archive-mjs`, `BL-260907-fold-oat-config-adopt-onto`, `BL-260907-harden-the-external-plan`, `BL-260907-let-oat-config-unset-remove`, `BL-260907-make-the-completion-seal`, `BL-260907-name-the-resolved-target`, `BL-260907-settle-the-oat-wave-program`, `BL-260907-warn-when-documentation-root`, `BL-260908-correct-the-factual-skill`, `BL-260908-guard-normalized-config-maps`, `BL-260908-keep-a-bare-proto-in-markdown`, `BL-260908-keep-external-plan-writes`, `BL-260908-make-copy-strategy-skill`, `BL-260908-report-a-changed-skill-with-no`, `BL-260908-retire-the-top-level-skill`, one commit (`BL-260906-harden-dispatch-launch` stays open until its issue #266 half lands; `BL-260908-retire-the-top-level-skill` closes at its step 1 only if its item says so)
+- [ ] **Serialized backlog bookkeeping** (integration branch, after all merges): `oat backlog archive` with real outcome summaries for exactly these twenty-three items — `BL-260906-cover-skill-test-files-under`, `BL-260906-docs-index-follow-ups-from`, `BL-260906-extend-check-skill-bumps`, `BL-260906-fix-sync-apply-branch`, `BL-260906-guard-packed-asset-directories`, `BL-260906-persist-status-native-skill`, `BL-260906-reconcile-the-oat-doctor`, `BL-260906-repair-the-stray-fence-in-oat`, `BL-260906-run-scripts-worktree-init-test`, `BL-260907-finalize-synced-archive-mjs`, `BL-260907-fold-oat-config-adopt-onto`, `BL-260907-harden-the-external-plan`, `BL-260907-let-oat-config-unset-remove`, `BL-260907-make-the-completion-seal`, `BL-260907-name-the-resolved-target`, `BL-260907-settle-the-oat-wave-program`, `BL-260907-warn-when-documentation-root`, `BL-260908-correct-the-factual-skill`, `BL-260908-guard-normalized-config-maps`, `BL-260908-keep-a-bare-proto-in-markdown`, `BL-260908-keep-external-plan-writes`, `BL-260908-make-copy-strategy-skill`, `BL-260908-report-a-changed-skill-with-no` — one commit. **Update-only, never archived by this wave:** `BL-260906-harden-dispatch-launch` (p16 lands its baseline half; the item stays `status: open` with the issue #266 half as its remaining acceptance criterion, per the p16 plan) and `BL-260908-retire-the-top-level-skill` (p13 lands step 1; the item stays `status: open` with step 2 unticked and its one-release-later criterion, per the p13 plan).
 - [ ] Orchestration-log end-of-run synthesis written; roll-up into `summary.md` before any archive step
 - [ ] Full DoD gates green on the integration branch (fan-in lockstep bump above freshly fetched `origin/main`)
 

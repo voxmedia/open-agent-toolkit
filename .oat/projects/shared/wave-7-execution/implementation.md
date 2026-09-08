@@ -295,6 +295,21 @@ oat_generated: false
 
 _Recorded when the configured implementation exit gate runs._
 
+### Review Received: plan (attempt 1)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-08T224620Z.md (gate-invoked, run `f905852e-4f03-417e-a51f-6fbd79b6db99`, target `codex-5-6-sol-xhigh`, blocked)
+**Findings:** Critical 1 · Important 2 · Medium 1 · Minor 0 — all resolved in-artifact (gate mode, auto-disposition):
+
+- C1 — the wrapper pointed p04 at the branch `wave-5/p09`, which carries no p09 commit, while the immutable plan makes a missing worktree a STOP: **fixed** — the parked bytes were recovered from the wave-5 implementer transcript (`agent-a1873311371d94721`: Write/Edit replay on the group-4 base `956773dc6` plus the lane's two post-edit Python patches) and committed at `.oat/projects/shared/wave-7-execution/parked/wave-5-p09/`; verification: `git apply --stat` = 3 files, 117 insertions, 17 deletions; patch 218 lines; the two files 165 and 249 lines — identical to the plan's step-1 Verify figures; `SKILL.md` after replay is byte-identical to the surviving dangling blob `c814b0605`; the recovered test passes 13/13 under `node --test`; `git apply --check` exit 0 at the wave base. The p04 ordering note, the Drift Refresh Record, and discovery now name that directory; no plan text changed.
+- I1 — the archive checklist named `BL-260906-harden-dispatch-launch` and `BL-260908-retire-the-top-level-skill` in the archive set: **fixed** — both removed from the set (now an exact list of twenty-three) with explicit update-only instructions that keep each `status: open` and its remaining criterion.
+- I2 — the program artifact still recorded W7 as `composed` awaiting approval while discovery recorded the approval: **fixed** — the program ledger row is now `in-progress` with the wrapper link and the approval evidence (operator "approve" on 2026-09-08 after PR #284, merged as `684bd3be3`), the approval prose and the operator checkpoint paragraph record the same, and a revalidation entry marks execution start.
+- M1 — the write-surface inventory listed root `AGENTS.md` for p19 (its plan edits references to `AGENTS.md` inside two skills, not the root file): **fixed** — p19 removed from the root-`AGENTS.md` chain in contract items 6 and 13, the Parallelism paragraph, its writes line, and the p18/p19 ordering notes; the same stale clause corrected in the Wave 7 index row and the program's Wave Table note; the intersection re-run from the immutable `### In scope` sections stays empty.
+
+**Verification record:** what — the four in-artifact repairs, the recovered parked directory, the program ledger flip, and the index/program note corrections; how — `oat project validate-plan` exit 0; `git apply --check` on the recovered patch exit 0 with the recorded stat; the plan-corpus contract test green; where — this section and the commit that carries it.
+
+**Plan row (attempt 1) → `fixes_added`** (gate-written row moved forward in place with the archived path); the gate re-runs (attempt 2).
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -315,6 +330,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-08
 
+- Plan gate attempt 1 blocked (1C/2I/1M: the lost p09 patch, the archive set, the program ledger, the p19 `AGENTS.md` claim) → repaired in-artifact; the parked p09 bytes recovered and committed under `parked/wave-5-p09/`.
 - Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after PR #284); wrapper scaffolded and authored; drift 20 PASS / 0 / 0 by mechanical run.
 
 ## Deviations from Plan / Design

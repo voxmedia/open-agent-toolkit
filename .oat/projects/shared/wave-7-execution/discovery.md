@@ -72,8 +72,8 @@ baseline. This wave's base is `origin/main` after PR #284
   skill-bump pairs p01 → p04 (`oat-project-complete`), p10 → p19
   (`create-agnostic-skill`), p10 → p20 (`oat-repo-improve`), the docs and
   contract seams p06 → p09 (`configuration.md`), p17 → p20
-  (`skills-bundled-docs-contract.test.ts`, `wave-workflows.md`), and the
-  `AGENTS.md` writers p13, p18, p19 in three different steps. Every within-group
+  (`skills-bundled-docs-contract.test.ts`, `wave-workflows.md`), and the two
+  root `AGENTS.md` writers p13 and p18 in different groups. Every within-group
   write intersection is empty by mechanical check.
 - **Drift:** zero code drift between the plans' inspected head (`a59461402`)
   and the wave base; no plan refresh entries were needed and no recon subagent
@@ -85,8 +85,12 @@ baseline. This wave's base is `origin/main` after PR #284
 - **One bump per skill per PR:** three skills are edited by two ordered lanes
   (`oat-project-complete` p01 → p04; `create-agnostic-skill` p10 → p19;
   `oat-repo-improve` p10 → p20); the later lane adopts the landed value.
-- **Parked p09 patch:** preserved on the local branch `wave-5/p09` (no worktree
-  remains); the p04 brief points the lane at the branch.
+- **Parked p09 work:** its dirty worktree was removed at the wave-5 close and
+  the scratchpad copy was lost to a session restart, and `wave-5/p09` carries no
+  p09 commit; the root recovered the exact bytes from the wave-5 implementer
+  transcript (Write/Edit replay plus the lane's two post-edit scripts, checked
+  against the plan's recorded figures and a surviving dangling blob for
+  `SKILL.md`) and committed them at `.oat/projects/shared/wave-7-execution/parked/wave-5-p09/`; the p04 brief points the lane there.
 - **Review posture:** every lane gets a root-owned adversarial review with
   disposition-verification rounds that execute prose snippets verbatim and
   probe the built CLI in a scratch project; a root final review whose brief

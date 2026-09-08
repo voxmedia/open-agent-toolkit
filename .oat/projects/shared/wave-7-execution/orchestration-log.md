@@ -48,8 +48,25 @@ sections) is empty inside every group. **Skill signal (strengthens):** the
 recomposition; the program artifact's Wave 7 section will record the executed
 batching at wave-close.
 
-### 2026-09-08 · structural · oat-wave-execute · parked p09 location
+### 2026-09-08 · structural · oat-wave-execute · plan gate attempt 1 → parked p09 recovery
 
-The seal plan (p04) cites `.worktrees/wave-5/p09` for the parked wave-5 patch;
-the worktree is gone but the branch `wave-5/p09` survives locally. The p04
-brief names the branch; no plan text changes (a location, not a requirement).
+Plan gate attempt 1 (run `f905852e`, codex-5-6-sol-xhigh) blocked: 1C/2I/1M.
+The Critical was real and mine: I had pointed p04 at the branch `wave-5/p09`
+without checking that it carries a p09 commit (it does not — the lane never
+committed), while the wave-5 close had removed the parked worktree and the
+scratchpad patch it relied on was lost to a session restart. Recovery: the
+wave-5 implementer transcript still holds every Write/Edit and the two
+post-edit Python patches; replaying them on the group-4 base `956773dc6`
+reproduces the plan's recorded figures exactly (117/17, 218 lines, 165 and 249
+lines) and a dangling blob (`c814b0605`) confirms `SKILL.md` byte-for-byte. The
+bytes now live at `.oat/projects/shared/wave-7-execution/parked/wave-5-p09/`. Also fixed: the
+archive set (two update-only items), the program ledger (W7 `in-progress` with
+the approval evidence), and a false root-`AGENTS.md` write for p19 that my
+In-scope regex had invented from a skill-internal reference.
+**Skill signal (gap):** parking a lane at wave close must preserve its patch
+inside the wrapper project directory (tracked), never in an orchestrator
+scratchpad — a session restart destroys scratch; the wave-5 close recorded
+"patch preserved in the orchestrator scratchpad" and that was the only copy.
+**Skill signal (strengthens):** the plan gate's "immutable plan STOP replaced
+by a workaround" check caught a substitution that would have sent p04 into a
+STOP or, worse, a silent re-derivation.
