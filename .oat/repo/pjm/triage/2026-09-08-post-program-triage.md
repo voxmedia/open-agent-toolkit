@@ -1,7 +1,7 @@
 ---
 oat_triage_record: true
 schema_version: 1
-status: proposed
+status: approved
 scope: GitHub issues #274 (recon per-wave routing) and #277 (skill authoring guidance refresh), plus a priority/validity re-triage of the 42 open backlog items the 2026-08-31 execution program filed as follow-ups (waves 1–6 and the skill-version migration) and the recap cluster (#230)
 baseline_sha: bb93ad233
 triage_pr: null
@@ -36,7 +36,7 @@ Verification: five read-only opus workers on 2026-09-08 against `bb93ad233` (dis
 - Proposed GitHub action: keep open; add `enhancement` and `tracked-in-backlog` after merge; comment with the backlog item, the governing decisions, and the note that the launched-target provenance criterion is scoped down pending a real producer.
 - Backlog action: create — "Route recon waves to per-wave targets under one approval envelope" — priority medium, scope feature, estimate L; acceptance criteria from the issue minus the launched-target provenance clause (deferred until a launcher emits it), plus a superseding decision for `DR-260831-approval-bound-homogeneous` and a back-compat path for single-target packets.
 - Priority and size rationale: real, recurring cost (every multi-phase run pays the strongest phase's target) but a working workaround (split runs / accept the target), nothing blocked, no correctness or safety invariant violated; size driven by the closed-object schema change fanning across the 4,000-line validator, five test files, the bundled asset mirror, docs, and a decision.
-- Approval: pending
+- Approval: approved 2026-09-08 by the operator ("Approve"), with the priority raised to high after the operator classified the issue as contract drift from the skill's intent; item `BL-260908-restore-recon-s-cheap-fan-out` created.
 - Post-merge result: pending
 
 ### GH-277 — Refresh skill authoring guidance: progressive disclosure, proactive use, portability, and scoped authorization
@@ -50,7 +50,7 @@ Verification: five read-only opus workers on 2026-09-08 against `bb93ad233` (dis
 - Proposed GitHub action: keep open; add `tracked-in-backlog` after merge; comment with the two backlog items and the two proposals not substantiated.
 - Backlog action: create two — (a) "Correct the factual skill-authoring claims and consolidate the duplicated guidance" — medium, task, M: tokens wording, drop or source the Codex 500-char claim, one dated provider-compatibility reference, scoped `oat sync`, the separator, the scoped-authorization sentence, one canonical frontmatter matrix and one Detail Level home, bumps 1.4.3 → 1.5.0 and 1.5.3 → 1.5.4; (b) "Restructure the authoring skills for progressive disclosure and decide proactive invocation" — low, feature, M: proposals 2, 6, 8, 9, which are editorial redesigns and a policy flip needing a decision record.
 - Priority and size rationale: the factual half teaches every skill author a false provider claim and is exactly the failure mode DR-260906 exists to prevent (medium); the redesign half has no verified defect behind it (low), and bundling both would put pressure on the `named-skill-load-contract.test.ts` prose pins.
-- Approval: pending
+- Approval: approved 2026-09-08; items `BL-260908-correct-the-factual-skill` (medium/M) and `BL-260908-restructure-the-authoring` (low/M) created.
 - Post-merge result: pending
 
 ### The program's follow-up backlog (42 open items) and the recap cluster
@@ -90,6 +90,8 @@ Close (with the reason recorded in each archive summary):
 - `BL-260904-add-recap-seam-config-keys` — superseded by `BL-260907-replace-the-default-project`; issue #230 comment 2 rejects the more-seams direction by name; `recapSeams` was never implemented.
 - `BL-260902-defer-activeproject-clearing` — superseded by `BL-260907-make-the-completion-seal`, which owns the parked plan, its patch, and its unblock condition.
 - `BL-260907-decode-entity-and-percent` and `BL-260907-fail-closed-on-unparsable` — merged into `BL-260907-harden-the-external-plan` (claims verified; not invalid).
+
+**Applied 2026-09-08 (approved as one set, incl. the two Codex-driven row changes: `date-decision-record-ids` to low; `guard-packed-asset-directories` a committed lane at medium):** four items created (the three above plus `BL-260908-remove-the-top-level-skill`, the release-gated step 2 split out of `retire-the-top-level-skill`); priorities changed as tabled; five items archived (`scope-the-restamp-only-sync`, `add-recap-seam-config-keys`, `defer-activeproject-clearing`, and the two merged into `harden-the-external-plan`, all `wont_do` with the reason in `completed.md`); text amendments on `replace-the-default-project` (program clause, browser-less rule, kept/dropped kit parts, migration scope, reconcile clause), `make-the-completion-seal` (narrowed), `harden-dispatch-launch` (split by issue), `keep-a-bare-proto-in-markdown` (widened), `harden-the-external-plan` (absorbed criteria).
 
 Lane clusters the recon found (for the wave-7 composition that follows this triage, not part of it): gate coverage (`cover-skill-test-files-under` + `run-scripts-worktree-init-test` + an XS slice of `type-check-cli-test-files`); bump validator (`extend-check-skill-bumps` + `report-a-changed-skill-with-no` + retire step 1, one `skills.ts` touch); sync apply (`fix-sync-apply-branch`); readiness contract (`harden-the-external-plan` absorbing two, plus `settle-the-oat-wave-program`'s bump); config commands (`fold-oat-config-adopt-onto` + `let-oat-config-unset-remove` + `guard-normalized-config-maps`); config diagnostics (`warn-when-documentation-root` + `name-the-resolved-target`); provider views (`make-copy-strategy-skill` then `align-the-provider-view-json`, serialized on `skill-view-diagnostic.ts`); the seal/deferred-clear chain (`finalize-synced-archive-mjs` first and independent, then `make-the-completion-seal` with its plan refresh); the recap cluster (a spec/decision lane before implementation).
 

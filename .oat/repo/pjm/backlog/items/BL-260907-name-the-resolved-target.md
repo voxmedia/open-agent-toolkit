@@ -2,7 +2,7 @@
 id: BL-260907-name-the-resolved-target
 title: Name the resolved target in the symlink inert-exclusion warning
 status: open
-priority: medium
+priority: low
 scope: task
 scope_estimate: XS
 labels:
@@ -11,7 +11,7 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T14:05:38.688Z
-updated: 2026-09-07T14:05:38.688Z
+updated: 2026-09-08T16:55:27.000Z
 associated_issues: []
 external_plans: []
 ---

@@ -1,7 +1,7 @@
 ---
 id: BL-260902-defer-activeproject-clearing
 title: Defer activeProject clearing on shared and local archive completions
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - durability
 assignee: null
 created: 2026-09-02T23:48:40.445Z
-updated: 2026-09-03T00:08:42Z
+updated: '2026-09-08T16:55:31Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/252

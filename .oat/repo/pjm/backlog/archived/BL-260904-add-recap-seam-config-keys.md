@@ -1,7 +1,7 @@
 ---
 id: BL-260904-add-recap-seam-config-keys
 title: Add recap seam config keys
-status: open
+status: wont_do
 priority: low
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - cli
 assignee: null
 created: 2026-09-04T23:21:01.028Z
-updated: 2026-09-04T23:21:01Z
+updated: '2026-09-08T16:55:30Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/230

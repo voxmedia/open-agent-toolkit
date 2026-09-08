@@ -1,7 +1,7 @@
 ---
 id: BL-260906-scope-the-restamp-only-sync
 title: Scope the restamp-only sync body suppression per scope under --scope all
-status: open
+status: wont_do
 priority: low
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - wave-4-followup
 assignee: null
 created: 2026-09-06T19:21:32.718Z
-updated: 2026-09-06T19:21:32.718Z
+updated: '2026-09-08T16:55:28Z'
 associated_issues: []
 external_plans: []
 ---
