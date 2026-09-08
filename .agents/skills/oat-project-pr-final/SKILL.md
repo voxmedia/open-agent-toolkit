@@ -1,10 +1,11 @@
 ---
 name: oat-project-pr-final
-version: 1.6.2
 description: Use when the user requests or confirms opening the final PR for an active OAT project — e.g. "open the final PR", "ship it", "run oat-project-pr-final", or confirms a previously offered final-PR step. Do NOT auto-invoke when phases are marked complete. Generates the final lifecycle PR description from artifacts and creates the PR.
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(awk:*), Bash(gh:*), Bash(git:*), Bash(mktemp:*), Bash(oat:*), Bash(rm:*), Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.6.4
 ---
 
 # Project PR (Final)
@@ -131,17 +132,30 @@ Before generating the final PR, detect any leftover active review artifacts in t
 find "$PROJECT_PATH/reviews" -maxdepth 1 -type f -name "*.md" 2>/dev/null
 ```
 
-If any active review artifacts exist:
+**Archive eligibility is its own predicate.** An artifact is archive-eligible only when the `## Reviews` event that binds it — matched by `Scope` + `Type` + `Artifact` filename — has Status `passed` or `fixes_completed`. Those are the two processed statuses in `oat-project-review-receive`; `fixes_completed` still awaits re-review, and archiving it keeps the artifact discoverable without treating that re-review as done. A `pending`, `received`, or `fixes_added` event is still being consumed: leave its artifact in the top level of `reviews/` and report it. Leave a top-level artifact that no ledger event binds in place and report it too.
+
+Archive eligibility is not the Step 2 final-review gate. Step 2 still requires the latest `final`/`code` event to be `passed`, so an archived `fixes_completed` final row still stops autonomous finalization at `PRFINAL-03`.
+
+For each archive-eligible artifact:
 
 1. Create `"$PROJECT_PATH/reviews/archived"` if needed.
-2. Rewrite any plan/implementation/state references touched during this preflight from `reviews/{filename}.md` to `reviews/archived/{filename}.md`.
-3. Move each review artifact into `reviews/archived/`, adding a timestamp suffix when needed to avoid collisions.
-4. Report the archived paths before continuing.
+2. Resolve the destination filename before anything is rewritten or moved: keep `{filename}.md` when `reviews/archived/{filename}.md` is free; otherwise `{stem}-$(date -u +%Y-%m-%dT%H%M%SZ).md`, then a `-2`, `-3`, … index while that name is also taken. Never overwrite an existing archive destination. This is the same collision-free identity rule as `oat-project-review-receive` Step 1, per DR-260706.
+3. Rewrite references from `reviews/{filename}.md` to `reviews/archived/{destination}` in exactly these files:
+   - `"$PROJECT_PATH/plan.md"`
+   - `"$PROJECT_PATH/implementation.md"`
+   - `"$PROJECT_PATH/state.md"`
+
+   In `plan.md`, select the ledger event by `Scope` + `Type` + `Artifact` filename and rewrite only that event's Artifact cell. Duplicate scope/type rows keep their own identity; never rewrite a sibling row that merely shares the scope and type.
+
+4. Move the review artifact to `reviews/archived/{destination}` only after those references are rewritten.
+5. Report the archived paths before continuing.
 
 Rules:
 
 - Only archive top-level active review artifacts. Leave `reviews/archived/` untouched.
 - Keep archive destinations inside the project so worktree runs do not depend on the shared-project archive flow.
+- Step 0.5 is idempotent. A re-run re-derives eligibility from the ledger: an event whose Artifact cell already points inside `reviews/archived/` and whose top-level file is gone is already archived, so skip it — never rewrite its cell a second time and never write a second archived copy. Re-running over the same artifact set therefore neither duplicates nor clobbers an archived artifact.
+- If a rewritten reference names an archived destination that does not exist while the source artifact is still in the top level, a previous run stopped between the rewrite and the move: complete the move to that exact destination rather than deriving a second name.
 
 ### Step 1: Validate Required Artifacts (Mode-Aware)
 
@@ -396,6 +410,267 @@ Only include links to artifacts that actually exist in the project. Omit any tha
 
 After writing the PR artifact, push and create the PR automatically.
 
+**Ledger-path guard (both PR paths).** Before either `gh pr create` path runs, validate every artifact path in the project's `## Reviews` ledger. Parse each row's Artifact cell rather than grepping the section as free text, and skip a `-` placeholder. The ledger is the table rows of `## Reviews`: the scan starts at the first exact `## Reviews` heading and ends at the next level-two heading — a `###` subsection inside that section is still scanned, exactly as Step 2 reads the ledger — and a blockquoted line or a fenced block inside the section is a note or an event example, never an event. Columns are split on `|`, so an escaped `\|` anywhere in a ledger header or ledger row stops rather than shifting the Artifact column onto a neighbouring cell: no ledger value needs a literal pipe, and reading one cell while naming another is exactly the silent skip this gate exists to prevent. Every other cell must normalize — `..` segments and symlinks resolved physically — to a regular file inside `$PROJECT_PATH`. The ledger is the table inside `## Reviews` whose header carries `Scope`, `Type`, and `Artifact` columns, matched after emphasis is stripped and in whatever order the header declares; a section that holds table rows but no such header, or an unclosed fenced block, stops rather than validating nothing. Processed review artifacts live in the gitignored `reviews/archived/`, so when that directory does not exist in this checkout at all — a fresh clone, a remote workspace, or a lane worktree — an absent path inside it is a local-only artifact: report it and continue. Once `reviews/archived/` exists, a file missing from it is a dangling row, usually an archive interrupted between the reference rewrite and the move, and it stops like any other absent path. That excuse covers a location that was never materialized, so it requires the path to be absent outright: a regular file, a dangling symlink, or any other non-directory at `reviews/archived` is an anomaly, not a fresh checkout, and it stops rather than excusing the row. Every other absent path fails, in every project scope — git ignores whole project directories for `local`, `synced`, and `archived` projects, so ignore state says nothing about whether a row resolves. A missing file in a tracked location, a directory, a path that escapes the project, a non-directory at `reviews/archived`, an unreadable ledger, a plan with no `## Reviews` section, an escaped pipe in a ledger header or row, a row the parser cannot read, or a ledger the guard could not check row for row stops this skill at gate `PRFINAL-05`, naming the offending row by scope, type, and artifact filename. Every stop fails closed. Both the synced flow below and the non-synced flow run after this block, so no PR is created from a ledger whose artifact paths do not resolve.
+
+````bash
+LEDGER_PROJECT_ROOT=$(cd -P "$PROJECT_PATH" 2>/dev/null && pwd -P) || {
+  echo "PRFINAL-05: project path does not resolve: $PROJECT_PATH" >&2
+  exit 1
+}
+if [ ! -r "$PROJECT_PATH/plan.md" ]; then
+  echo "PRFINAL-05: cannot read the review ledger: $PROJECT_PATH/plan.md" >&2
+  exit 1
+fi
+LEDGER_ARCHIVE_DIR="$LEDGER_PROJECT_ROOT/reviews/archived"
+# Classify the archive location before excusing an absent artifact under it.
+# `[ ! -d ]` is also true for a regular file and for a dangling symlink, so
+# keying the "never materialized" excuse on it re-opens the dangling row this
+# gate exists to catch. Absent means absent: `-e` alone still misses a dangling
+# symlink, which is why `-L` is tested too.
+classify_absent_ledger_artifact() {
+  LEDGER_ABSENT_CLASS=missing
+  case "$1" in
+    "$LEDGER_ARCHIVE_DIR"/*) ;;
+    *) return 0 ;;
+  esac
+  if [ -d "$LEDGER_ARCHIVE_DIR" ]; then
+    return 0
+  fi
+  if [ -e "$LEDGER_ARCHIVE_DIR" ] || [ -L "$LEDGER_ARCHIVE_DIR" ]; then
+    LEDGER_ABSENT_CLASS=not-a-directory
+    return 0
+  fi
+  LEDGER_ABSENT_CLASS=local-only
+}
+LEDGER_ROWS=$(awk -F'|' '
+  !in_fence && /^[[:space:]]*(```|~~~)/ {
+    marker = $0
+    sub(/^[[:space:]]*/, "", marker)
+    fence_char = substr(marker, 1, 1)
+    fence_length = 0
+    while (substr(marker, fence_length + 1, 1) == fence_char) fence_length++
+    in_fence = 1
+    next
+  }
+  in_fence {
+    marker = $0
+    sub(/^[[:space:]]*/, "", marker)
+    close_length = 0
+    while (substr(marker, close_length + 1, 1) == fence_char) close_length++
+    if (close_length >= fence_length && substr(marker, close_length + 1) ~ /^[[:space:]]*$/) in_fence = 0
+    next
+  }
+  /^## Reviews[[:space:]]*$/ { in_reviews = 1; at_table_start = 1; next }
+  !in_reviews { next }
+  /^##[[:space:]]/ { exit }
+  /^#+[[:space:]]/ { at_table_start = 1; in_ledger_table = 0; next }
+  /^[[:space:]]*>/ { next }
+  /^[[:space:]]*$/ { at_table_start = 1; in_ledger_table = 0; next }
+  $0 !~ /^[[:space:]]*\|/ {
+    if ($0 ~ /\|/) {
+      print "PRFINAL-05: unsupported review-ledger row (a row must start with |): " $0 > "/dev/stderr"
+      exit 3
+    }
+    next
+  }
+  {
+    escaped_pipe_row = $0
+    for (i = 1; i <= NF; i++) {
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
+    }
+  }
+  at_table_start {
+    if (index(escaped_pipe_row, "\\|") > 0) {
+      print "PRFINAL-05: review-ledger table header contains an escaped |; its columns cannot be identified: " escaped_pipe_row > "/dev/stderr"
+      exit 3
+    }
+    at_table_start = 0
+    saw_table = 1
+    scope_column = 0
+    type_column = 0
+    artifact_column = 0
+    last_cell = ($NF == "") ? NF - 1 : NF
+    for (i = 2; i <= last_cell; i++) {
+      header_cell = tolower($i)
+      gsub(/[*_`]/, "", header_cell)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", header_cell)
+      if (header_cell == "scope") scope_column = i
+      if (header_cell == "type") type_column = i
+      if (header_cell == "artifact") artifact_column = i
+    }
+    in_ledger_table = (scope_column > 0 && type_column > 0 && artifact_column > 0)
+    if (in_ledger_table) {
+      recognized_ledger = 1
+    } else if (scope_column > 0 && type_column > 0) {
+      print "PRFINAL-05: review-ledger table has no Artifact column; its rows cannot be validated" > "/dev/stderr"
+      exit 3
+    }
+    next
+  }
+  !in_ledger_table { next }
+  index(escaped_pipe_row, "\\|") > 0 {
+    print "PRFINAL-05: unsupported review-ledger row (an escaped | cannot be assigned to a column): " escaped_pipe_row > "/dev/stderr"
+    exit 3
+  }
+  {
+    last_cell = ($NF == "") ? NF - 1 : NF
+    is_separator = (last_cell >= 2)
+    for (i = 2; i <= last_cell; i++) {
+      if ($i !~ /^:?-+:?$/) is_separator = 0
+    }
+  }
+  is_separator { next }
+  {
+    artifact_value = $artifact_column
+    unwrapping = 1
+    while (unwrapping) {
+      unwrapping = 0
+      if (length(artifact_value) > 2 && artifact_value ~ /^`.*`$/) {
+        artifact_value = substr(artifact_value, 2, length(artifact_value) - 2)
+        unwrapping = 1
+      } else if (length(artifact_value) > 4 && artifact_value ~ /^\*\*.*\*\*$/) {
+        artifact_value = substr(artifact_value, 3, length(artifact_value) - 4)
+        unwrapping = 1
+      } else if (length(artifact_value) > 2 && artifact_value ~ /^\*.*\*$/) {
+        artifact_value = substr(artifact_value, 2, length(artifact_value) - 2)
+        unwrapping = 1
+      } else if (length(artifact_value) > 2 && artifact_value ~ /^_.*_$/) {
+        artifact_value = substr(artifact_value, 2, length(artifact_value) - 2)
+        unwrapping = 1
+      }
+    }
+    print $scope_column "\t" $type_column "\t" artifact_value
+  }
+  END {
+    if (in_fence) {
+      print "PRFINAL-05: unclosed fenced block; the review ledger was never scanned" > "/dev/stderr"
+      exit 3
+    }
+    if (!in_reviews) {
+      print "PRFINAL-05: no ## Reviews section; the review ledger was never scanned" > "/dev/stderr"
+      exit 3
+    }
+    if (saw_table && !recognized_ledger) {
+      print "PRFINAL-05: unrecognized review-ledger header; no table in ## Reviews carries Scope, Type, and Artifact columns" > "/dev/stderr"
+      exit 3
+    }
+  }
+' "$PROJECT_PATH/plan.md") || {
+  echo "PRFINAL-05: cannot parse the review ledger: $PROJECT_PATH/plan.md" >&2
+  exit 1
+}
+LEDGER_ROW_COUNT=$(printf '%s\n' "$LEDGER_ROWS" | grep -c '[^[:space:]]') || LEDGER_ROW_COUNT=0
+LEDGER_ROWS_SEEN=0
+LEDGER_PATH_FAILURES=0
+while IFS="$(printf '\t')" read -r ROW_SCOPE ROW_TYPE ROW_ARTIFACT; do
+  [ -n "$ROW_SCOPE$ROW_TYPE$ROW_ARTIFACT" ] || continue
+  LEDGER_ROWS_SEEN=$((LEDGER_ROWS_SEEN + 1))
+  if [ "$ROW_ARTIFACT" = "-" ]; then continue; fi
+  ROW_REASON=""
+  if [ -z "$ROW_ARTIFACT" ]; then
+    ROW_REASON="artifact cell is empty"
+  else
+    ROW_TARGET="$PROJECT_PATH/$ROW_ARTIFACT"
+    ROW_DIR=$(cd -P "$(dirname "$ROW_TARGET")" 2>/dev/null && pwd -P) || ROW_DIR=""
+    ROW_RESOLVED=""
+    if [ -n "$ROW_DIR" ]; then
+      ROW_RESOLVED="$ROW_DIR/$(basename "$ROW_TARGET")"
+      ROW_HOPS=0
+      while [ -L "$ROW_RESOLVED" ] && [ "$ROW_HOPS" -lt 16 ]; do
+        ROW_LINK=$(readlink "$ROW_RESOLVED")
+        ROW_DIR=$(cd -P "$(dirname "$ROW_RESOLVED")" 2>/dev/null && cd -P "$(dirname "$ROW_LINK")" 2>/dev/null && pwd -P) || ROW_DIR=""
+        if [ -z "$ROW_DIR" ]; then
+          ROW_RESOLVED=""
+          break
+        fi
+        ROW_RESOLVED="$ROW_DIR/$(basename "$ROW_LINK")"
+        ROW_HOPS=$((ROW_HOPS + 1))
+      done
+    fi
+    ROW_MATERIALIZED=1
+    if [ -z "$ROW_RESOLVED" ]; then
+      ROW_MATERIALIZED=0
+      ROW_RESOLVED=$(printf '%s\n' "$LEDGER_PROJECT_ROOT/$ROW_ARTIFACT" | awk -F'/' '{
+        depth = 0
+        for (i = 1; i <= NF; i++) {
+          if ($i == "" || $i == ".") continue
+          if ($i == "..") { if (depth > 0) depth--; continue }
+          segment[++depth] = $i
+        }
+        normalized = ""
+        for (i = 1; i <= depth; i++) normalized = normalized "/" segment[i]
+        print (normalized == "" ? "/" : normalized)
+      }')
+    fi
+    ROW_CONTAINED=0
+    case "$ROW_RESOLVED" in
+      "$LEDGER_PROJECT_ROOT"/*) ROW_CONTAINED=1 ;;
+    esac
+    if [ "$ROW_CONTAINED" -eq 1 ] && [ "$ROW_MATERIALIZED" -eq 0 ]; then
+      ROW_ANCESTOR="$ROW_RESOLVED"
+      while [ ! -e "$ROW_ANCESTOR" ] && [ "$ROW_ANCESTOR" != "/" ]; do
+        ROW_ANCESTOR=$(dirname "$ROW_ANCESTOR")
+      done
+      if [ ! -d "$ROW_ANCESTOR" ]; then
+        ROW_ANCESTOR=$(dirname "$ROW_ANCESTOR")
+      fi
+      ROW_ANCESTOR_REAL=$(cd -P "$ROW_ANCESTOR" 2>/dev/null && pwd -P) || ROW_ANCESTOR_REAL=""
+      case "$ROW_ANCESTOR_REAL" in
+        "$LEDGER_PROJECT_ROOT" | "$LEDGER_PROJECT_ROOT"/*) ;;
+        *) ROW_CONTAINED=0 ;;
+      esac
+    fi
+    if [ "$ROW_CONTAINED" -eq 0 ]; then
+      ROW_REASON="artifact resolves outside the project: $ROW_RESOLVED"
+    elif [ "$ROW_MATERIALIZED" -eq 0 ]; then
+      classify_absent_ledger_artifact "$ROW_RESOLVED"
+      case "$LEDGER_ABSENT_CLASS" in
+        local-only)
+          echo "oat: local-only review artifact; reviews/archived/ was never materialized in this checkout | scope=$ROW_SCOPE type=$ROW_TYPE artifact=$ROW_ARTIFACT"
+          ;;
+        not-a-directory)
+          ROW_REASON="reviews/archived exists but is not a directory"
+          ;;
+        *)
+          ROW_REASON="artifact file does not exist"
+          ;;
+      esac
+    elif [ -L "$ROW_RESOLVED" ]; then
+      ROW_REASON="artifact symlink chain does not resolve within 16 hops"
+    elif [ -d "$ROW_RESOLVED" ]; then
+      ROW_REASON="artifact path is a directory"
+    elif [ ! -e "$ROW_RESOLVED" ]; then
+      classify_absent_ledger_artifact "$ROW_RESOLVED"
+      case "$LEDGER_ABSENT_CLASS" in
+        local-only)
+          echo "oat: local-only review artifact; reviews/archived/ was never materialized in this checkout | scope=$ROW_SCOPE type=$ROW_TYPE artifact=$ROW_ARTIFACT"
+          ;;
+        not-a-directory)
+          ROW_REASON="reviews/archived exists but is not a directory"
+          ;;
+        *)
+          ROW_REASON="artifact file does not exist"
+          ;;
+      esac
+    elif [ ! -f "$ROW_RESOLVED" ]; then
+      ROW_REASON="artifact is not a regular file"
+    fi
+  fi
+  [ -n "$ROW_REASON" ] || continue
+  echo "PRFINAL-05: unresolved review-ledger artifact | scope=$ROW_SCOPE type=$ROW_TYPE artifact=$ROW_ARTIFACT | $ROW_REASON" >&2
+  LEDGER_PATH_FAILURES=$((LEDGER_PATH_FAILURES + 1))
+done <<LEDGER
+$LEDGER_ROWS
+LEDGER
+if [ "$LEDGER_ROWS_SEEN" -ne "$LEDGER_ROW_COUNT" ]; then
+  echo "PRFINAL-05: validated $LEDGER_ROWS_SEEN of $LEDGER_ROW_COUNT review-ledger rows; the ledger was not fully checked" >&2
+  exit 1
+fi
+[ "$LEDGER_PATH_FAILURES" -eq 0 ] || exit 1
+````
+
+On `PRFINAL-05`, stop and repair the offending ledger row — usually a `reviews/` path whose artifact Step 0.5 moved into `reviews/archived/` — then re-run. Never create the PR with an unresolved ledger path.
+
 For a synced project, use this ordered flow; do not reorder it:
 
 1. Finish or refresh `summary.md` and the PR artifact.
@@ -482,7 +757,8 @@ If `state.md` is missing, skip with a warning.
 
 ## Success Criteria
 
-- Residual active review artifacts are archived before final PR generation continues
+- Residual review artifacts whose ledger event is `passed` or `fixes_completed` are archived before final PR generation continues, with their ledger event rewritten; other rows keep their active path
+- Every `## Reviews` artifact path resolves to a regular file inside the project before `gh pr create` runs
 - Final PR description artifact written to `{PROJECT_PATH}/pr/`
 - Final review status checked and referenced
 - User has clear next step to open PR (manual or gh)

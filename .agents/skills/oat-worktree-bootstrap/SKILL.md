@@ -1,11 +1,12 @@
 ---
 name: oat-worktree-bootstrap
-version: 1.3.1
 description: Use when creating or resuming a git worktree for OAT implementation. Creates or validates a worktree and runs OAT bootstrap checks.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--existing]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.3.2
 ---
 
 # Worktree Bootstrap

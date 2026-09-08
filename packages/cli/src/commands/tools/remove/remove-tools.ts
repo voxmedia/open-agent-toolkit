@@ -13,8 +13,12 @@ import {
   type PackLifecycleRequest,
   type PackLifecycleResult,
 } from '@commands/tools/shared/pack-lifecycle';
-import type { PackLifecycleOutcome } from '@commands/tools/shared/pack-lifecycle-outcome';
+import {
+  notRunProviderSyncOutcome,
+  type PackLifecycleOutcome,
+} from '@commands/tools/shared/pack-lifecycle-outcome';
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
+import { lifecycleProviderEvidence } from '@commands/tools/shared/pack-provider-evidence';
 import { resolveSharedOwnerRetentions } from '@commands/tools/shared/pack-reconcile';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type {
@@ -27,6 +31,7 @@ import {
   resolveManagedScopeRoots,
   validateManagedPath,
 } from '@fs/paths';
+import type { ProviderScopeContext } from '@providers/shared/registry';
 import type { ConcreteScope } from '@shared/types';
 
 export type RemoveTarget =
@@ -540,6 +545,7 @@ export function removalLifecycleOutcomes(
   outcomes: readonly PackRemovalOutcome[],
   dryRun: boolean,
   finalInventories: readonly ScopedPackInventory[],
+  providerContexts: readonly ProviderScopeContext[] = [],
 ): PackLifecycleOutcome[] {
   if (finalInventories.length === 0) return [];
   return packs.map((pack) => {
@@ -598,7 +604,18 @@ export function removalLifecycleOutcomes(
         status: removed && !dryRun ? 'applied' : 'unchanged',
         results: [],
       },
-      sync: { scopes: [], status: 'not-run', providers: [] },
+      // After a completed removal the pack has no realized assets, so the
+      // mapper legitimately produces no rows; a retained or dry-run pack still
+      // reports its providers.
+      sync: notRunProviderSyncOutcome(
+        lifecycleProviderEvidence({
+          pack,
+          scopedInventories: packInventories,
+          providerContexts,
+          scopes,
+        }),
+        'Auto-sync has not run for this operation',
+      ),
       finalEvidence,
       status: verified ? 'complete' : inventoryVerified ? 'partial' : 'failed',
       recovery,
@@ -624,7 +641,10 @@ export function failedRemovalLifecycleOutcomes(
       targetScopes: scopes,
     },
     canonical: { status: 'failed', results: [] },
-    sync: { scopes: [], status: 'not-run', providers: [] },
+    sync: notRunProviderSyncOutcome(
+      [],
+      'Canonical removal failed before auto-sync',
+    ),
     finalEvidence: null,
     status: 'failed',
     recovery: [{ code: 'canonical-apply-failed', message }],
@@ -667,7 +687,10 @@ export function failedPostRemovalLifecycleOutcomes(
         status: canonicalApplied ? 'applied' : 'unchanged',
         results: [],
       },
-      sync: { scopes: [], status: 'not-run', providers: [] },
+      sync: notRunProviderSyncOutcome(
+        [],
+        `Auto-sync did not run because the ${stageLabel}`,
+      ),
       finalEvidence: null,
       status: 'failed',
       recovery: scopes.map((scope) => ({

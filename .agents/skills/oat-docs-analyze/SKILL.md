@@ -1,10 +1,11 @@
 ---
 name: oat-docs-analyze
-version: 1.5.0
 description: Run when you need to evaluate documentation structure, navigation, and coverage against the OAT docs app contract. Produces a severity-rated analysis artifact for oat-docs-apply.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion, Task
+metadata:
+  version: 1.5.1
 ---
 
 # Docs Analysis

@@ -1,10 +1,11 @@
 ---
 name: oat-project-retro-file
-version: 1.0.2
 description: Use when the user requests or confirms filing proposed feedback from a project retro into repository or upstream GitHub issues and OAT backlog items. Runs destination capability, duplicate, approval, and sanitization checks before filing, then writes destinations and statuses back to the retro artifact.
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(pnpm:*), Bash(gh:*), Bash(oat backlog:*), Bash(oat config:*), Bash(oat project push:*), Bash(oat project scope:*), Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.0.3
 ---
 
 # File Project Retro Feedback

@@ -86,7 +86,100 @@ describe('autoSync', () => {
       synced: true,
       scopes: ['project'],
       error: null,
+      // A dependency that returns nothing still records that the scope ran;
+      // the evidence is empty rather than absent.
+      evidence: [
+        {
+          scope: 'project',
+          ran: true,
+          failedOperations: 0,
+          operationResults: [],
+          extensionResults: [],
+          refreshAdvice: [],
+        },
+      ],
     });
+  });
+
+  it('returns the evidence a sync run reports on success', async () => {
+    const deps: AutoSyncDependencies = {
+      runSync: async ({ scope }) => ({
+        scope,
+        ran: true,
+        failedOperations: 0,
+        operationResults: [
+          {
+            provider: 'claude',
+            scope,
+            contentKind: 'skill' as const,
+            asset: '.agents/skills/analyze',
+            status: 'changed' as const,
+          },
+        ],
+        extensionResults: [],
+        refreshAdvice: [],
+      }),
+    };
+    const capture = createLoggerCapture();
+
+    const result = await autoSync(
+      ['project'],
+      '/cwd',
+      '/home',
+      capture.logger,
+      deps,
+    );
+
+    expect(result.synced).toBe(true);
+    expect(result.evidence[0]?.operationResults).toEqual([
+      {
+        provider: 'claude',
+        scope: 'project',
+        contentKind: 'skill',
+        asset: '.agents/skills/analyze',
+        status: 'changed',
+      },
+    ]);
+  });
+
+  it('preserves evidence collected before a failing scope', async () => {
+    const deps: AutoSyncDependencies = {
+      runSync: async ({ scope }) => {
+        if (scope === 'user') throw new Error('sync exploded');
+        return {
+          scope,
+          ran: true,
+          failedOperations: 0,
+          operationResults: [
+            {
+              provider: 'claude',
+              scope,
+              contentKind: 'skill' as const,
+              asset: '.agents/skills/analyze',
+              status: 'changed' as const,
+            },
+          ],
+          extensionResults: [],
+          refreshAdvice: [],
+        };
+      },
+    };
+    const capture = createLoggerCapture();
+
+    const result = await autoSync(
+      ['project', 'user'],
+      '/cwd',
+      '/home',
+      capture.logger,
+      deps,
+    );
+
+    expect(result.synced).toBe(false);
+    expect(result.error).toBe('sync exploded');
+    // The project scope did run: discarding its evidence would report a
+    // reachable provider as unknown.
+    expect(result.evidence).toHaveLength(1);
+    expect(result.evidence[0]?.scope).toBe('project');
   });
 
   it('forwards installed canonical paths to sync', async () => {
@@ -148,5 +241,46 @@ describe('autoSync', () => {
         removedCanonicalPaths: ['.agents/agents/oat-reviewer.md'],
       }),
     );
+  });
+});
+
+describe('autoSync failure without a thrown error', () => {
+  it('reports a failed sync and keeps the evidence that names the failure', async () => {
+    const deps: AutoSyncDependencies = {
+      runSync: async ({ scope }) => ({
+        scope,
+        ran: true,
+        failedOperations: 2,
+        operationResults: [
+          {
+            provider: 'codex',
+            scope,
+            contentKind: 'agent' as const,
+            asset: 'reviewer',
+            status: 'failed' as const,
+            failure: 'permission denied',
+          },
+        ],
+        extensionResults: [],
+        refreshAdvice: [],
+      }),
+    };
+    const capture = createLoggerCapture();
+
+    const result = await autoSync(
+      ['user'],
+      '/cwd',
+      '/home',
+      capture.logger,
+      deps,
+    );
+
+    // A sync that fails without throwing must not report success.
+    expect(result.synced).toBe(false);
+    expect(result.error).toContain('2 failed operation(s)');
+    // The evidence is what emits `provider-materialization-failed`, so a
+    // failure must never discard it.
+    expect(result.evidence).toHaveLength(1);
+    expect(result.evidence[0]?.operationResults[0]?.status).toBe('failed');
   });
 });

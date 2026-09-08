@@ -1,10 +1,11 @@
 ---
 name: oat-project-clear-active
 description: Use when switching context or cleaning up project state. Clears the active OAT project.
-version: 1.2.0
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
+metadata:
+  version: 1.2.1
 ---
 
 # Clear Active Project

@@ -10,10 +10,13 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-260908-a-stop-whose-remedy-lies       | 2026-09-08 | accepted   | A STOP whose remedy lies inside the plan's own file scope is closed by a dated refresh, not a park     | -       |
+| DR-260908-bundled-skills-declare         | 2026-09-08 | accepted   | Bundled skills declare metadata.version only; the top-level alias retires on a fixed schedule          | -       |
 | DR-260907-additive-post-selection        | 2026-09-07 | accepted   | Additive post-selection recovery envelopes                                                             | -       |
 | DR-260907-gate-log-receipts-live-under   | 2026-09-07 | accepted   | Gate log receipts live under the project                                                               | -       |
 | DR-260907-host-discovered-provider       | 2026-09-07 | accepted   | Host-discovered provider-neutral execution                                                             | -       |
 | DR-260907-local-first-per-binding-remote | 2026-09-07 | accepted   | Local-first per-binding remote management                                                              | -       |
+| DR-260907-oat-config-reads-materialize   | 2026-09-07 | accepted   | OAT config reads materialize `__proto__`-named keys as own data properties                             | -       |
 | DR-260907-persist-before-effect-verify   | 2026-09-07 | accepted   | Persist before effect, verify after effect                                                             | -       |
 | DR-260907-pre-dispatch-refreshes-live    | 2026-09-07 | accepted   | Pre-dispatch refreshes live in the source plans                                                        | -       |
 | DR-260907-universal-outbound-projection  | 2026-09-07 | accepted   | Universal outbound projection gate                                                                     | -       |

@@ -1,0 +1,322 @@
+---
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-09-08
+oat_current_task_id: null
+oat_generated: false
+---
+
+# Implementation: migrate-skill-versions
+
+**Started:** 2026-09-08
+**Last Updated:** 2026-09-08
+
+> This document is used to resume interrupted implementation sessions.
+>
+> Conventions:
+>
+> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
+> - When all plan tasks are complete, set `oat_current_task_id: null`.
+> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
+> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
+
+## Progress Overview
+
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 3     | 3/3       |
+| Phase 2 | complete | 2     | 2/2       |
+
+**Total:** 5/5 tasks completed
+
+---
+
+## Phase 1: Metadata-aware readers and shape-agnostic tests
+
+**Status:** complete (root review round 1 0C/2I/3M/3m → fix round `ad1c33082` → round 2 PASS 0C/0I/0M/3m)
+**Started:** 2026-09-08
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- `tools/release/build-explainer-rc.mjs` reads bundled skill versions through the CLI's built canonical resolver (`packages/cli/dist/commands/shared/frontmatter.js`), loaded lazily after the builder's own `pnpm build`; conflict, unusable, malformed, and absent declarations each throw `E_SKILL_VERSION` with a category-specific message; no regex reader of the precedence rule remains in `tools/release`.
+- `.agents/skills/oat-explainer-kit/scripts/check-core.mjs` keeps a self-contained, dependency-free reader (accepted exception: an installed skill script cannot import the repository) bound by the new parity contract `tools/smoke/explainer-kit/check-core-version-parity.test.mjs` (62 fixtures after the fix round, plus every bundled skill; documented fail-closed limits pinned; the fix round routes every key and value through one `isPlainScalar` guard — the reviewer's ~2,100-case differential shows zero fail-open divergences); the packaged-layout probe reads and mutates whichever declaration is present, confined to the frontmatter.
+- Every bundled-skill version reader in the test suites is shape-agnostic through the new test-support module `packages/cli/src/__tests__/skills/skill-version.ts` (resolver-backed read, shape-aware writer) and small local readers in the three `node --test` files; every pinned literal unchanged; the lifecycle mutation asserts the content changed; `review-skill-contracts.test.ts:359` keeps its raw agent-role read by design.
+
+**Key files touched:**
+
+- `tools/release/build-explainer-rc.mjs`, `build-explainer-rc.test.mjs` - lazy canonical resolver; fixture-local clean-checkout control
+- `.agents/skills/oat-explainer-kit/scripts/check-core.mjs`, `tests/check-core.test.mjs`, `tools/smoke/explainer-kit/check-core-version-parity.test.mjs`, `packaged-layout.test.mjs` - self-contained reader + parity contract
+- `packages/cli/src/validation/skills.test.ts`, `commands/tools/tool-pack-lifecycle.integration.test.ts`, `commands/init/tools/shared/{review-skill-contracts,agent-instructions-bundle-contract}.test.ts`, `packages/cli/src/__tests__/skills/skill-version.ts` (new), `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`, `.agents/skills/{explainer-kit,recon}/tests/*.mjs` - shape-agnostic readers
+
+**Verification:**
+
+- Run: Phase 1 set — `pnpm check`, `pnpm type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`, `pnpm build`, `pnpm run check:skill-bumps`, `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills`
+- Result: all exit 0 (`Cached: 0`; CLI 6287 at the task commits, 6295 after the fix round; smoke 165; skills 859; release 42 + 1 env-gated skip; 82 alias warnings expected until Phase 2); re-run by the root reviewer with the same results plus the env-gated real-RC integration test (2/2) against this checkout. Controls: t01 neutralization (additive module-top `dist` import → `ERR_MODULE_NOT_FOUND`), t02 regex revert (3 of 5 parity tests red), t03 full-corpus simulation (all 82 skills metadata-only → 43 vitest + 3 `node --test` failures on the old readers, 0 on the new).
+
+**Notes / Decisions:**
+
+- Deviation (p01-t01 case g): the clean-checkout control runs a fixture-local builder against a `dist`-free checkout instead of moving the repository's own `dist` aside (`pnpm test:release` runs four files in parallel against the shared checkout); strictly stronger.
+- Deviation (p01-t01 Step 2): the unusable-declaration message names the skill and the condition, not the scalar (the resolver exposes only a flag; the plan forbids a second parse) — plan amended at the review.
+- Mechanical widening: `packages/cli/src/__tests__/skills/skill-version.ts` added (one shared reader instead of four copies; type-checked by the existing test-support tsconfig).
+- Found for Phase 2: the `oat-project-implement` 245-line budget in `skills.test.ts` must become 246 (plan p02-t01 amended).
+- Fix round `ad1c33082` (`fix(p01): close the Phase 1 review's reader findings`, 8 files): M1 `isPlainScalar` guard + 62-fixture parity corpus; M2 frontmatter bound ported into the three `node --test` readers and into `packaged-layout`'s own helper (Codex found it carried the same comment/indent defect); m2 `withDeclaredVersion` rewrites every declaration, pinned by the new `packages/cli/src/__tests__/skills/skill-version.test.ts`; Codex 0C/0I/5M/3m all fixed except the NBSP trailing-colon Minor (fail-closed, rejected with reason). Round 2 verified every disposition at source (weaker-anywhere both ways: zero true weakenings; 0 new rejections across the 87 real files).
+- Pre-existing, out of scope: the builder's main-module guard compares `import.meta.url` against `process.argv[1]` without `realpath`, so a symlinked checkout silently no-ops (worked around in the test).
+
+### Task p01-t01: Read metadata.version in the explainer RC builder
+
+**Status:** completed
+**Commit:** `d054384ee`
+
+### Task p01-t02: Read metadata.version in the explainer-kit core check and its packaged-layout probe
+
+**Status:** completed
+**Commit:** `8948bf1ea`
+
+### Task p01-t03: Make every bundled-skill version reader in the test suites shape-agnostic
+
+**Status:** completed
+**Commit:** `6c461e3fe`
+
+## Phase 2: Migrate the 82 skills, repoint the pins, record the decision
+
+**Status:** complete (root review round 1 PASS 0C/0I/0M/4m)
+**Started:** 2026-09-08
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- All 82 bundled skills declare `metadata.version` (merged into the existing `metadata:` map for `oat-repo-improve` and `triage-oat-issues`) and no top-level `version:`; each bumped exactly one patch step; every non-version line byte-identical (82 removals / 80 new maps / 82 metadata versions in the diff); the five agent roles unchanged.
+- Every pin repointed (75 canonical pins; agent-role pins untouched); the corpus sweeps assert `source === 'metadata'` and no column-0 `version:` for every skill, and a meta-test re-reads the suite's own pins and compares each to the tree (32 pins; floor raised from 25 to 30 at the review); the `oat-project-implement` line budget 245 → 246; `tools/smoke/skill-version/reader-sameness.test.mjs` pins the three `node --test` readers byte-identical.
+- Decision `DR-260908-bundled-skills-declare` (accepted, through `oat-pjm-decision`): metadata-only bundled skills from 0.2.65, the alias warning becomes an error in the first release after 0.2.65 that changes the validator, the top-level read is removed one release after that error has been quiet, agent roles migrate when their own enforcement surface exists, the `check-core.mjs` exception bound by the parity contract; follow-up `BL-260908-retire-the-top-level-skill`; `BL-260904-migrate-bundled-skills-from` archived.
+- `contributing/skills.md` no longer says every bundled skill uses the alias (and states the retirement schedule with its conditions); `AGENTS.md` notes the `pnpm build` prerequisite for the smoke and release suites; lockstep 0.2.64 → 0.2.65 with the `.oat/sync/manifest.json` restamp; `oat:validate-skills` prints zero alias warnings.
+
+**Key files touched:**
+
+- `.agents/skills/*/SKILL.md` (82) - version moved under `metadata`, patch bump
+- `packages/cli/src/validation/skills.test.ts`, `commands/init/tools/shared/{review-skill-contracts,agent-instructions-bundle-contract}.test.ts`, `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`, `.agents/skills/{explainer-kit,recon}/tests/*.mjs` - pins repointed; sweeps tightened; pin meta-test
+- `tools/smoke/skill-version/reader-sameness.test.mjs` (new) - reader sameness
+- `.oat/repo/reference/decisions/DR-260908-bundled-skills-declare.md`, `.oat/repo/pjm/backlog/{items/BL-260908-retire-the-top-level-skill.md,archived/BL-260904-migrate-bundled-skills-from.md,completed.md,index.md}` - records
+- `AGENTS.md`, `apps/oat-docs/docs/contributing/skills.md`, five `packages/*/package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json` - docs and release
+
+**Verification:**
+
+- Run: the eight root `AGENTS.md` gates in CI order, then `HOME=$(mktemp -d) pnpm exec turbo run test --force`, `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills`
+- Result: all exit 0 (forced run `Cached: 0`, CLI 340 files / 6296 tests; smoke 166; skills 859; release 42 + 1 env-gated skip; zero alias warnings; `check:skill-bumps` 82 changed skills validated); re-run by the root reviewer with the same results. Negative controls with exact categories: same-value dual → sweep red only; alias-only → sweep red + one `deprecated top-level alias` warning; different-value dual → one `skill-version-conflict` error. Codex: round 1 (89-file migration diff) no findings; round 2 (p02-t02) 1I/1M/1m all fixed before commit.
+
+**Notes / Decisions:**
+
+- Deviation (plan p02-t01 Files): `tools/smoke/skill-version/reader-sameness.test.mjs` added (the Phase 1 round-2 m3 carry-in); plan amended at the review.
+- Deviation (plan p02-t01 Step 2): provider views did not change in p02-t01 — `.claude/skills/*` are symlinks to the canonical tree and `.codex`/`.cursor` project only agent roles — so `oat sync --scope project` reported no changes and the manifest restamp landed with p02-t02's CLI bump; `check:skill-bumps` reports 82 only after the commit (it diffs `origin/main...HEAD`); plan amended.
+- Review probe B (pre-existing, filed): an `oat-*` skill with a `metadata:` map and no `version` child passes both validators and is caught only by the corpus sweeps → `BL-260908-report-a-changed-skill-with-no` widened.
+- Review m4: the pin meta-test's count floor raised from 25 to 30 (real count 32) in the receive commit.
+- Version literals collide across skills (13 duplicated values; 14 old values equal some skill's new value), so pins were bound to their target file before editing rather than swept blindly; one multiline `.toBe` was caught by the suite, not the sweep.
+
+### Task p02-t01: Move every bundled skill's version to metadata.version and bump it
+
+**Status:** completed
+**Commit:** `ddfca906a`
+
+### Task p02-t02: Record the alias retirement decision, update the docs, and take the lockstep bump
+
+**Status:** completed
+**Commit:** `872ce02c6`
+
+## Autonomy Gate Provenance
+
+### Review Received: plan (attempt 1 — blocked)
+
+**Date:** 2026-09-08
+**Gate:** run `4fac934c-78bf-4e2d-9148-93739e006cf5`, target `codex-5-6-sol-xhigh`, outcome `review_completed_blocking_findings`, 0C/2I/2M/0m.
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-08T080653Z.md
+
+**Dispositions (all fixed in-artifact before attempt 2):**
+
+- I1 (`oat_plan_hill_phases: []` means every phase, contradicting the "no phase gates" prose) → set to `['p02']` (final phase only, the workflow default) and the checklist line now distinguishes HiLL from the operator's declined phase-boundary review gates.
+- I2 (the backlog archive had no executable owner) → p02-t02's last step archives `BL-260904-migrate-bundled-skills-from` with an outcome summary after verifying its acceptance criteria; the moved item and regenerated `completed.md`/`index.md` are in the task's file boundary and commit.
+- M1 (route the decision through `oat-pjm-decision`) → that skill is not installed in this repository, so root `AGENTS.md`'s fallback (`oat decision new`) applies; the task says so explicitly and keeps the preflight.
+- M2 (the p01-t03 negative control was not runnable — the corpus tests anchor on `process.cwd()`) → replaced with a backup-and-restore mutation of one real canonical skill run against the exact named test before and after the rewrite, with the failing assertion recorded.
+
+### Review Received: plan (attempt 2 — blocked)
+
+**Date:** 2026-09-08
+**Gate:** target `codex-5-6-sol-xhigh`, outcome `review_completed_blocking_findings`, 0C/2I/3M/1m.
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-08T082541Z.md
+
+**Dispositions (all fixed in-artifact before attempt 3):**
+
+- I1 (two new indentation parsers would duplicate the precedence rule the backlog item forbids) → architecture resolved: the RC builder imports the CLI's built canonical resolver (`packages/cli/dist/commands/shared/frontmatter.js`; `pnpm build` precedes it in the Definition of Done and `turbo run test` depends on `^build`); the bundled `check-core.mjs` keeps a self-contained reader as an accepted exception (an installed skill script cannot import the repository or `yaml`) bound by a new parity contract test over a shared fixture corpus; the exception is recorded in the p02-t02 decision.
+- I2 (Phase 1's full-gate promise cannot pass before the bump) → Phase 1 phase-wide verification is a passing subset without the release-version gates; the complete Definition of Done runs at the end of Phase 2.
+- M1 (`oat-pjm-decision` IS installed; the attempt-1 receive said otherwise because a `ls | grep` under the `lsd` alias returned nothing) → p02-t02 routes the decision through the skill's Steps 0–5 with the inputs supplied.
+- M2 (re-adding the old alias beside the new metadata value is a conflict, not an alias warning) → three controls with their exact categories: same-value dual (sweep red, no validator finding), alias-only (sweep red, one alias warning), different-value dual (one conflict error).
+- M3 (HiLL recorded as confirmed without confirmation) → `oat_plan_hill_phases` left at the scaffold value and marked pending for the implementation-start resolver (`workflow.hillCheckpointDefault` = `final`).
+- m1 (line-3 claim) → reworded (two skills declare at line 4).
+
+### Review Received: plan (attempt 3 — blocked)
+
+**Date:** 2026-09-08
+**Gate:** target `codex-5-6-sol-xhigh`, outcome `review_completed_blocking_findings`, 0C/2I/1M/0m.
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-08T084454Z.md
+
+**Dispositions (all fixed in-artifact before attempt 4 — the last rerun under the plan-gate cap):**
+
+- I1 (`[]` is a valid every-phase HiLL selection, not a sentinel; autonomous implementation would pause after p01) → the field removed from the frontmatter entirely, unset pending implementation-start resolution.
+- I2 (p01-t03 left the other raw readers untouched until p02-t01 changed their keys) → every bundled-skill reader from the recon inventory moved into p01-t03 (the two `review-skill-contracts` skill sites, `agent-instructions-bundle-contract`, the four `.toMatch` sites, and the three `node --test` files with a tiny local metadata-first reader); `:356` retained as an agent-role assertion; p02-t01 changes pinned values only.
+- M1 (the Definition of Done substituted the forced Turbo run for `pnpm test`) → the eight CI gates in their exact order, with the forced run and the separate suites as supplemental evidence.
+
+### Review Received: plan (attempt 4 — blocked; gate capped)
+
+**Date:** 2026-09-08
+**Gate:** target `codex-5-6-sol-xhigh`, outcome `review_completed_blocking_findings`, 0C/2I/2M/0m.
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-08T090611Z.md
+
+**Dispositions (fixed in-artifact; no further rerun):**
+
+- I1 (no concrete write/fix Format step in any task) → a file-scoped `pnpm exec oxfmt --write …` Format line added before Step 4 of every task (p02-t01 also `pnpm format:fix` for the generated provider projections), with `pnpm format` kept as the check.
+- I2 (a module-top import of `packages/cli/dist` would break the documented clean-checkout RC command, since the builder runs `pnpm build` itself) → the resolver is loaded lazily after the builder's own build, `parseSkillVersion` becomes async, and a clean-checkout control (dist moved aside) proves the builder reaches its internal build first.
+- M1 (the canonical resolver exposes only a `malformed` flag, not a parser diagnostic) → the malformed case throws the generic `E_SKILL_VERSION` malformed-frontmatter message and the test asserts the category; no second YAML parse.
+- M2 (whole-tree staging with error suppression) → p02-t01 stages an exact changed-file manifest (transformation paths, named pin files, `oat sync`'s reported rewrites) with no deletions and no suppression; p02-t02 lists the five package manifests literally.
+
+**Gate disposition:** four attempts, each blocking on a new surface (attempt 1: HiLL/archive owner/decision routing/control; 2: reader architecture, phase gates, decision skill, control categories, HiLL; 3: HiLL semantics, reader coverage, gate order; 4: format step, dist timing, diagnostics, staging). Every finding was fixed in the plan; no Critical was ever raised. Per the repository's recorded plan-gate experience (`lite-workflow-mode` blocked eleven times on the same pattern), the gate is capped here and the project proceeds to implementation with the root implementation-time reviews (per-phase and final) plus the configured exit gate as the review coverage. The plan ledger row stays `fixes_added` (not `passed`) to record that no gate run approved the final text.
+
+## Review Received: p01 (round 1)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/p01-review-2026-09-08T101506Z.md (reviewed head `6c461e3fe4577b6bf78b4ace79e5bab1b5dfa510`, invocation manual, request `mig-p01-review-001`, reconnaissance not-attempted)
+**Findings:** 0 Critical / 2 Important / 3 Medium / 3 Minor — no code defect; all five brief rulings verified first-hand (incl. the env-gated real-RC integration test 2/2 and a mechanical literal-invariance diff).
+
+**Dispositions:**
+
+- I1 (Phase 1 unrecorded in `implementation.md` / `state.md`) → recorded in this receive.
+- I2 (p02-t01 "values only" would fail on the 245-line budget) → plan p02-t01 amended to name the 246 budget edit and the shared test-support reader.
+- M1 (`check-core.mjs` `isReadableValue` fails OPEN for plain scalars containing `: ` or the reserved indicators `@` / backtick — seven divergences incl. `version: 1.2.3: x`; not a regression, `parseVersion` rejects downstream) → fix round `mig-p01-fix-001`: tighten the reader and pin the shapes in the parity corpus.
+- M2 (the three `node --test` local readers scan the whole document, not the frontmatter block — latent) → fix round: port the frontmatter bound.
+- M3 (the shipped unusable-declaration message names the condition, not the scalar; plan text stale) → plan amended; Deviations row.
+- m1 (`test:smoke` / `test:release` need a prior `pnpm build`) → plan Verification mode notes it; p02-t02 adds one sentence to `AGENTS.md`.
+- m2 (`withDeclaredVersion` rewrites only the resolved position while `withSkillVersion` rewrites every declaration) → fix round: rewrite every declaration present.
+- m3 (p01-t03 heading drift in `implementation.md`) → re-synced here.
+
+## Review Received: p01 (round 2 — passed)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/p01-review-2026-09-08T104940Z.md (reviewed head `ad1c330821d69e87c7e6dce2bfab1debe7b3611d`, request `mig-p01-review-002`, reconnaissance not-attempted)
+**Findings:** 0 Critical / 0 Important / 0 Medium / 3 Minor — PASS; Phase 2 dispatches.
+
+**Dispositions:** m1 (`state.md` `oat_last_commit` one commit behind) → fixed here; m2 (fixture and test counts in this record: 62 fixtures, CLI 6295) → fixed here; m3 (the three `node --test` readers are byte-identical copies with nothing pinning their sameness; full sharing is impossible because two ship as skill assets) → deferred to the Phase 2 lane as a small addition to p02-t01's verification (a sameness assertion in `tools/smoke/explainer-kit/check-core-version-parity.test.mjs` or a sibling smoke test), recorded in the p02 brief.
+
+## Review Received: p02 (round 1 — passed)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/p02-review-2026-09-08T115234Z.md (reviewed head `872ce02c6eddb961e3241fbceb22b445b558baa4`, request `mig-p02-review-001`, reconnaissance not-attempted)
+**Findings:** 0 Critical / 0 Important / 0 Medium / 4 Minor — PASS. All eight rulings verified first-hand (independent frontmatter parse of the 82 skills, `--numstat` shape, context-bound pin sweep, eight gates + forced run, three controls both ways, dry-run sync, lockstep files, decision/follow-up/archive, docs); three reviewer probes (budget exactness, the metadata-map-without-version validator gap, a tuple-only bump caught by the meta-test).
+
+**Dispositions:** m1 (plan Files omits the sameness test) and m2 (two plan expectations contradicted by the repository: provider-view rewrites in p02-t01; `check:skill-bumps` pre-commit) → plan amended in the receive commit `c6c3ecd31`; m3 (a present frontmatter block with no resolvable version passes both validators) → `BL-260908-report-a-changed-skill-with-no` widened (`c6c3ecd31`); m4 (pin-count floor 25 vs 32 real) → raised to 30 (`c6c3ecd31`, verified by the final review). Records advanced here (Phase 2 complete, `oat_current_task_id: null`, `oat_last_commit`).
+
+## Review Received: final (root final review — passed)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/final-review-2026-09-08T121229Z.md (reviewed head `48d9bfdc52d562776a05867ba899bdc8bcbe5285`, request `mig-final-review-001`, reconnaissance not-attempted)
+**Findings:** 0 Critical / 0 Important / 0 Medium / 2 Minor — PASS; the configured exit gate runs next.
+
+**Verified first-hand by the reviewer:** the 82-file diff reduces to exactly the three version lines; 32 in-file pins re-resolved with zero stale and zero surviving old literals (four sweep hits all false positives, incl. the `MINIMUM_CORE_VERSION` publish-request floor); dist-free load probe of the RC builder plus a neutralization control; a 6,358-case differential of `check-core.mjs` against the canonical resolver with zero fail-open and every fail-closed divergence attributed to the four documented refusal classes; old-vs-new reader on all 87 real files: 82 intended widenings, zero tightenings; lockstep 0.2.65 in exactly the six release files, `pnpm-lock.yaml` untouched, `buildExplainerRc` returns the migrated explainer-family versions, real-RC integration 2/2, `sync --dry-run` no changes; all eight gates in CI order exit 0 (`check` and `build:docs` re-run forced after cache replays), forced test `Cached: 0`, smoke 166, skills 859, release 42; the three plan controls and the two new meta-tests proven able to fail; the no-resolvable-version validator gap reproduces on the base shape (not a regression).
+
+**Dispositions:** m1 (p02-t01 Files still named provider views and the manifest) → fixed in this receive; m2 (the reader-sameness pin covers three of five copies of the frontmatter walk — `readSkillVersionSites` in `packaged-layout.test.mjs` and `withDeclaredVersion` in `skill-version.ts` are unpinned) → carried into `BL-260908-retire-the-top-level-skill` as a note (the copies collapse when the alias read is removed) rather than a code change after the reviewed head.
+
+## Review Received: final (configured exit gate, attempt 1 — passed)
+
+**Date:** 2026-09-08
+**Gate:** run `d888e4e6-a1cc-4b68-8a00-6b84497680d6`, target `codex-5-6-sol-xhigh` (diversity: unknown-producer), envelope `ok`, outcome `review_completed_gate_passed`, `receiveEligible: true`, threshold important, blocking false, attempt `mig-exit-gate-20260908T121611Z` (background launch with no other agents active; completed with a receipt).
+**Review artifact:** reviews/archived/final-review-2026-09-08T123009Z.md (reviewed head `843ec7f17ae380c8a92f4919c0d33a0ba13cb10a`, invocation gate)
+
+**Findings:** 0 Critical / 0 Important / 1 Medium / 1 Minor — judgment-sweep mode (passing gate).
+
+**Dispositions:**
+
+- M1 (`check-core.mjs` `keyIdentity` does not normalize YAML infinity key spellings, so a block with both `.inf:` and `.Inf:` is malformed to the canonical parser but readable to the bundled reader — fail-open for a shape no skill produces) → deferred, not fixed after the reviewed head: recorded on `BL-260908-retire-the-top-level-skill` beside the unpinned-copy note (the reader copies collapse when the alias read is removed); a fix means normalizing signed and case-varied `.inf` in `keyIdentity` plus parity fixtures.
+- m1 (the p02-t01 Format instruction embedded prose inside the code span, so it is not a copyable shell command) → fixed in the plan in this receive.
+- Judgment-sweep mode (passing gate): no product change after the reviewed head; the gate basis stays fresh.
+
+**Gate row `final` (attempt 1) → `passed`** (gate-written row moved forward in place with the archived path); `oat_implement_exit_gate` → `allowed / passed` in the same state checkpoint.
+
+## Orchestration Runs
+
+_Each run from `oat-project-implement` appends an entry below with:_
+_- Run header (number, timestamp, branch, tier, policy, phase counts)_
+_- Phase Outcomes table_
+_- Parallel Groups list_
+_- Outstanding Items_
+
+<!-- orchestration-runs-start -->
+
+_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
+<!-- orchestration-runs-end -->
+
+---
+
+## Implementation Log
+
+Chronological log of implementation progress.
+
+### 2026-09-08
+
+- Project scaffolded (quick mode) on branch `migrate-skill-versions` from `origin/main` `5b3b82151` (the wave-6 close); discovery and plan authored from the 2026-09-08 recon.
+- Phase 2 done (`ddfca906a` migration + pins, `872ce02c6` decision/docs/bump; full DoD green); root review PASS (0/0/0/4m) received.
+- Root final review PASS (0/0/0/2m, `reviews/archived/final-review-2026-09-08T121229Z.md`) received.
+- Configured exit gate attempt 1 passed (run `d888e4e6`, codex-5-6-sol-xhigh, 0/0/1/1; artifact `reviews/archived/final-review-2026-09-08T123009Z.md`) and received; the Medium (infinity key normalization in the bundled reader) deferred to `BL-260908-retire-the-top-level-skill`.
+- Phase 1 done (`d054384ee`, `8948bf1ea`, `6c461e3fe`; Phase 1 gates green); root review round 1 0C/2I/3M/3m (no code defect) → records fixed, fix round `ad1c33082`, round 2 PASS (0/0/0/3m); Phase 2 dispatched.
+- Plan gate attempt 1 blocked (0C/2I/2M); all four findings fixed in the plan.
+- Plan gate attempt 2 blocked (0C/2I/3M/1m): reader architecture resolved (canonical resolver for the RC builder; accepted exception + parity contract for the bundled script), Phase 1 gate subset, decision via `oat-pjm-decision`, control categories, HiLL pending; attempt 3 blocked (0C/2I/1M: HiLL `[]` semantics, raw readers left to Phase 2, the exact eight-gate order) and fixed in-artifact; attempt 4 blocked (0C/2I/2M: Format step, dist import timing, resolver diagnostics, staging) and fixed in-artifact; the plan gate is capped at four attempts and the project proceeds to Phase 1 with root implementation-time reviews.
+
+---
+
+## Deviations from Plan / Design
+
+Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
+
+| Task / Review | Source Artifact     | Planned / Documented                                                                      | Actual / Accepted                                                                                                   | Reason                                                                      | Source of Truth                    | Follow-up |
+| ------------- | ------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ---------------------------------- | --------- |
+| p01-t01       | plan Step 1 (g)     | move the repository's own `packages/cli/dist` aside for the clean-checkout control        | a fixture-local builder runs against a `dist`-free checkout                                                         | `pnpm test:release` runs four files in parallel against the shared checkout | implementation                     | none      |
+| p01-t01       | plan Step 2         | the unusable case names the unusable value                                                | names the skill and the condition                                                                                   | the resolver exposes only a flag; the plan forbids a second parse           | implementation (plan amended)      | none      |
+| p01-t03       | plan Files          | seven listed files                                                                        | plus `packages/cli/src/__tests__/skills/skill-version.ts` (new shared reader/writer)                                | one module instead of four copies                                           | implementation                     | none      |
+| p02-t01       | plan Step 2         | "values only"                                                                             | plus the 245 → 246 line budget for `oat-project-implement`                                                          | the migration adds one frontmatter line                                     | plan amended at the Phase 1 review | none      |
+| p02-t01       | plan Files / Step 2 | provider views rewritten by `oat sync`; `check:skill-bumps` 82 before commit; seven files | no view change (symlinked Claude views; agents-only Codex/Cursor); 82 after commit; plus `reader-sameness.test.mjs` | repository facts; the Phase 1 m3 carry-in                                   | implementation (plan amended)      | none      |
+
+## Test Results
+
+Track test execution during implementation.
+
+| Phase | Tests Run                                                                          | Passed | Failed | Coverage |
+| ----- | ---------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | CLI 6287 (forced, 0 cached) + smoke 165 + skills 859 + release 42                  | all    | 0      | -        |
+| 2     | eight DoD gates + forced CLI 6296 (0 cached) + smoke 166 + skills 859 + release 42 | all    | 0      | -        |
+
+## Final Summary (for PR/docs)
+
+**What shipped:**
+
+- (filled at closeout)
+
+**Behavioral changes (user-facing):**
+
+- (filled at closeout)
+
+**Key files / modules:**
+
+- (filled at closeout)
+
+**Verification performed:**
+
+- (filled at closeout)
+
+**Design deltas (if any):**
+
+- (filled at closeout)
+
+## References
+
+- Plan: `plan.md`
+- Discovery: `discovery.md`

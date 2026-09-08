@@ -19,11 +19,17 @@ import {
 } from '@commands/tools/shared/pack-lifecycle';
 import {
   evaluatePackLifecycleOutcome,
+  notRunProviderSyncOutcome,
   resolveAdditivePackScopeSelection,
   type PackLifecycleOutcome,
 } from '@commands/tools/shared/pack-lifecycle-outcome';
 import { getPackDefinition } from '@commands/tools/shared/pack-manifest';
+import {
+  lifecycleProviderEvidence,
+  withLifecycleProviderEvidence,
+} from '@commands/tools/shared/pack-provider-evidence';
 import type { PackReconcilePlan } from '@commands/tools/shared/pack-reconcile';
+import { resolveProviderScopeContexts } from '@commands/tools/shared/provider-context';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import type { ConcreteScope } from '@shared/types';
@@ -194,7 +200,7 @@ export async function updateTools(
       return result;
     }
     const lifecycle = await dependencies.reconcilePacks(requests, { dryRun });
-    result.lifecycle = updateLifecycleOutcomes(lifecycle);
+    result.lifecycle = await updateLifecycleOutcomes(lifecycle);
     result.plans.push(...lifecycle.map(({ plan }) => plan));
     for (const entry of lifecycle) {
       const definition = getPackDefinition(entry.request.pack);
@@ -408,14 +414,21 @@ export async function updateTools(
   return result;
 }
 
-function updateLifecycleOutcomes(
+async function updateLifecycleOutcomes(
   results: readonly PackLifecycleResult[],
-): PackLifecycleOutcome[] {
+): Promise<PackLifecycleOutcome[]> {
   const verifiable = results.filter(
     ({ apply }) =>
       apply === null || ('inventory' in apply && apply.inventory !== undefined),
   );
   const packs = [...new Set(verifiable.map(({ request }) => request.pack))];
+  // Every request carries the scope root it acted on, so the config-aware
+  // provider context is resolvable without re-deriving paths here.
+  const providerContexts = await resolveProviderScopeContexts({
+    scopeRoots: Object.fromEntries(
+      verifiable.map(({ request }) => [request.scope, request.scopeRoot]),
+    ),
+  });
   return packs.map((pack) => {
     const lifecycle = verifiable.filter(({ request }) => request.pack === pack);
     const requestedScopes = lifecycle.map(({ request }) => request.scope);
@@ -437,13 +450,27 @@ function updateLifecycleOutcomes(
         .map(({ request }) => request.scope),
       unknownScopes: [],
     });
+    const providers = lifecycleProviderEvidence({
+      pack,
+      scopedInventories: finalScopes,
+      providerContexts,
+      scopes: selection.targetScopes,
+    });
+    const sync = notRunProviderSyncOutcome(
+      providers,
+      'Auto-sync has not run for this operation',
+    );
+    const providerEvidence = withLifecycleProviderEvidence(
+      finalEvidence,
+      providers,
+    );
     if (lifecycle.every(({ apply }) => apply === null)) {
       return {
         schemaVersion: 1,
         selection,
         canonical: { status: 'unchanged', results: lifecycle },
-        sync: { scopes: [], status: 'not-run', providers: [] },
-        finalEvidence,
+        sync,
+        finalEvidence: providerEvidence,
         status: 'complete',
         recovery: [],
       };
@@ -451,8 +478,8 @@ function updateLifecycleOutcomes(
     return evaluatePackLifecycleOutcome({
       selection,
       lifecycle,
-      sync: { scopes: [], status: 'not-run', providers: [] },
-      finalEvidence,
+      sync,
+      finalEvidence: providerEvidence,
     });
   });
 }
@@ -475,7 +502,10 @@ export function failedUpdateLifecycleOutcomes(
       targetScopes: scopes,
     },
     canonical: { status: 'failed', results: [] },
-    sync: { scopes: [], status: 'not-run', providers: [] },
+    sync: notRunProviderSyncOutcome(
+      [],
+      'Canonical apply failed before auto-sync',
+    ),
     finalEvidence: null,
     status: 'failed',
     recovery: [{ code: 'canonical-apply-failed', message }],

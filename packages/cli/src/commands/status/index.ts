@@ -702,6 +702,7 @@ async function collectPackReport(
   scopeRoots: Map<ConcreteScope, string>,
   unavailableScopes: ConcreteScope[],
   userAgentCoverage: UserAgentMaterializationCoverage,
+  providerContexts: readonly ProviderScopeContext[],
   dependencies: StatusDependencies,
 ): Promise<StatusPackReport> {
   const roots: PackPathRoots = {
@@ -765,7 +766,7 @@ async function collectPackReport(
     .filter((state): state is StatusPackState => state !== null);
   const evidence = packEvidenceBlock(
     inventories.map((canonical) =>
-      projectRenderablePackEvidence(canonical, roots),
+      projectRenderablePackEvidence(canonical, roots, providerContexts),
     ),
   );
 
@@ -1271,6 +1272,12 @@ async function runStatusCommand(
           )
         ? 'bundled'
         : 'none',
+    scopeCollections
+      .map(({ providerContext }) => providerContext)
+      .filter(
+        (providerContext): providerContext is ProviderScopeContext =>
+          providerContext !== null,
+      ),
     dependencies,
   );
 

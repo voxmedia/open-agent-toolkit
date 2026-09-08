@@ -1,11 +1,12 @@
 ---
 name: oat-docs
-version: 1.0.2
 description: Use when a user asks questions about OAT workflows, CLI commands, skill authoring, configuration, or project lifecycle. Answers questions by reading locally-bundled OAT documentation.
 argument-hint: '[question]'
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.0.3
 ---
 
 # OAT Docs

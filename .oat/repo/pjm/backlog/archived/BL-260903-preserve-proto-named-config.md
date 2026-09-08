@@ -1,7 +1,7 @@
 ---
 id: BL-260903-preserve-proto-named-config
 title: Preserve __proto__-named config keys through jsonc parsing
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - parser
 assignee: null
 created: 2026-09-03T15:55:01.416Z
-updated: 2026-09-04T03:55:32Z
+updated: '2026-09-08T05:07:53Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-03-preserve-proto-named-config-keys.md

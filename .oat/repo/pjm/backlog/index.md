@@ -247,7 +247,9 @@
 | BL-260902-append-only-lifecycle-history  | Append-only lifecycle history after completion                                                                  | open   | medium   | feature    | M        |
 | BL-260830-cli-flag-help-p2-p3-cleanup    | CLI flag/help P2-P3 cleanup                                                                                     | open   | medium   | task       | M        |
 | BL-260819-classify-canonical-skills-by   | Classify canonical skills by distribution, lifecycle, and tenant scope                                          | open   | medium   | feature    | M        |
+| BL-260903-close-manual-only-agents-md    | Close manual-only AGENTS.md refresh loop                                                                        | open   | medium   | task       | M        |
 | BL-260830-complete-control-plane-backed  | Complete control-plane-backed lifecycle reads                                                                   | open   | medium   | initiative | M        |
+| BL-260908-date-decision-record-ids       | Date decision-record IDs in local time or document UTC                                                          | open   | medium   | task       | XS       |
 | BL-260817-decide-and-pin-the-system      | Decide and pin the system-Chromium requirement introduced by test:skills on the merge path                      | open   | medium   | task       | S        |
 | BL-260830-decide-generic-oat-ownership   | Decide generic OAT ownership of Jira backlog refinement                                                         | open   | medium   | idea       | L        |
 | BL-260902-decide-test-only-freshness     | Decide test-only freshness exception for the implement exit gate                                                | open   | medium   | idea       | S        |
@@ -261,28 +263,32 @@
 | BL-260906-fix-sync-apply-branch          | Fix sync apply branch precedence when a rejected collection leaves zero planned operations                      | open   | medium   | task       | S        |
 | BL-260907-fold-oat-config-adopt-onto     | Fold oat config adopt onto the shared surface-flag resolver                                                     | open   | medium   | task       | XS       |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                               | open   | medium   | feature    | L        |
+| BL-260908-guard-normalized-config-maps   | Guard normalized config maps against a preserved **proto** key                                                  | open   | medium   | task       | XS       |
 | BL-260906-guard-packed-asset-directories | Guard packed asset directories and document the OAT_ASSETS_DIR contract                                         | open   | medium   | task       | S        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                                    | open   | medium   | feature    | M        |
 | BL-260907-harden-the-external-plan       | Harden the external-plan backlink matcher: full extension consumption and comments before fences                | open   | medium   | task       | XS       |
-| BL-260904-honor-metadata-version         | Honor metadata.version as the canonical skill version                                                           | open   | medium   | feature    | M        |
 | BL-260907-ignore-backslash-escaped       | Ignore backslash-escaped emphasis in skill-script reference extraction                                          | open   | medium   | task       | XS       |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                          | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                              | open   | medium   | feature    | M        |
+| BL-260908-keep-a-bare-proto-in-markdown  | Keep a bare **proto** in Markdown prose from being formatted into bold                                          | open   | medium   | task       | XS       |
 | BL-260907-let-oat-config-unset-remove    | Let oat config unset remove a malformed stored value                                                            | open   | medium   | task       | XS       |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                                    | open   | medium   | task       | M        |
+| BL-260908-make-copy-strategy-skill       | Make copy-strategy skill projections converge after sync instead of reading as drifted                          | open   | medium   | task       | S        |
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                                   | open   | medium   | feature    | M        |
 | BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                               | open   | medium   | feature    | L        |
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions            | open   | medium   | task       | S        |
 | BL-260907-name-the-resolved-target       | Name the resolved target in the symlink inert-exclusion warning                                                 | open   | medium   | task       | XS       |
 | BL-260830-persist-instruction-sync       | Persist instruction sync strategy in config and init                                                            | open   | medium   | feature    | M        |
 | BL-260906-persist-status-native-skill    | Persist status native-skill adoption by setting manifestChanged                                                 | open   | medium   | task       | S        |
-| BL-260903-populate-provider-reachability | Populate provider reachability evidence across pack and lifecycle surfaces                                      | open   | medium   | feature    | M        |
 | BL-260830-re-evaluate-same-target-gate   | Re-evaluate same-target gate execution                                                                          | open   | medium   | idea       | L        |
 | BL-260906-re-evaluate-universal-plan     | Re-evaluate universal plan proof strategy and test-first guidance                                               | open   | medium   | feature    | L        |
 | BL-260907-recognize-phase-level          | Recognize phase-level completion records so bullet-list revision phases do not read as incomplete               | open   | medium   | task       | S        |
 | BL-260907-record-absorbed-projects       | Record absorbed projects and backlog items for Lite consolidations                                              | open   | medium   | task       | S        |
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags           | open   | medium   | task       | S        |
+| BL-260908-repair-or-exempt-archived      | Repair or exempt archived project ledgers that fail the pr-final path guard                                     | open   | medium   | task       | S        |
 | BL-260906-repair-the-stray-fence-in-oat  | Repair the stray fence in oat-project-review-provide and tighten the fence rule repo-wide                       | open   | medium   | task       | S        |
+| BL-260908-report-a-changed-skill-with-no | Report a changed skill with no frontmatter block in the bump validator                                          | open   | medium   | task       | XS       |
+| BL-260908-retire-the-top-level-skill     | Retire the top-level skill version alias on the recorded schedule                                               | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                                   | open   | medium   | feature    | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                                      | open   | medium   | feature    | S        |
 | BL-260907-route-quick-mode-discovery     | Route quick-mode discovery rows in oat-project-next and oat-project-progress straight to quick-start            | open   | medium   | task       | XS       |
@@ -292,32 +298,29 @@
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                                                   | open   | medium   | task       |          |
 | BL-260907-type-check-cli-test-files      | Type-check CLI test files with a test-scoped tsconfig gate                                                      | open   | medium   | task       | M        |
 | BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                                                   | open   | medium   | task       | S        |
+| BL-260908-validate-the-catalog-refresh   | Validate the catalog-refresh policy state in normalizeSyncEvidence                                              | open   | medium   | task       | XS       |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                                                      | open   | medium   | task       | S        |
 | BL-260817-verify-protected-mode-public   | Verify protected-mode public URLs with an authenticated end-to-end GET                                          | open   | medium   | task       | M        |
 | BL-260907-warn-when-documentation-root   | Warn when documentation.root has the wrong type instead of dropping it                                          | open   | medium   | task       | S        |
 | BL-260830-wire-bounded-durable-reference | Wire bounded durable-reference reads into lifecycle skills                                                      | open   | medium   | feature    | M        |
 | BL-260830-wire-provide-remote-skills     | Wire provide-remote skills to the review-remote helper CLI                                                      | open   | medium   | feature    | L        |
-| BL-260903-pr-final-archives-reviews      | pr-final archives reviews before a late final review exists                                                     | open   | medium   | task       | S        |
 | BL-260830-add-per-claude-md-adoption-opt | Add per-CLAUDE.md adoption opt-out for instruction sync                                                         | open   | low      | feature    | M        |
 | BL-260904-add-recap-seam-config-keys     | Add recap seam config keys                                                                                      | open   | low      | task       | S        |
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                                                                     | open   | low      | feature    | L        |
+| BL-260908-align-the-provider-view-json   | Align the provider-view JSON, evidence states, and docs with the human row                                      | open   | low      | task       | XS       |
 | BL-260830-benchmark-listprojects-before  | Benchmark listProjects before approving a summary fast path                                                     | open   | low      | idea       | M        |
 | BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight                                                     | open   | low      | task       | M        |
 | BL-260903-close-claude-runtime-lineage   | Close Claude runtime lineage depth and unverified provider shapes                                               | open   | low      | task       | S        |
-| BL-260903-close-manual-only-agents-md    | Close manual-only AGENTS.md refresh loop                                                                        | open   | low      | task       | M        |
 | BL-260901-consolidate-terminal-remote    | Consolidate terminal remote-ref advertisement parsing                                                           | open   | low      | task       | M        |
 | BL-260906-cover-skill-test-files-under   | Cover skill test files under .agents/skills in pnpm check and lint-staged                                       | open   | low      | task       | XS       |
 | BL-260830-decide-whether-oat-owns        | Decide whether OAT owns dependency intelligence                                                                 | open   | low      | idea       | L        |
 | BL-260826-decide-whether-test-only-paths | Decide whether test-only paths under packages/cli/src count as publishable                                      | open   | low      | task       | S        |
-| BL-260904-diagnose-canonical-skills      | Diagnose canonical skills missing from a provider view at resolution time                                       | open   | low      | task       | S        |
 | BL-260906-docs-index-follow-ups-from     | Docs-index follow-ups from wave 1 reviews                                                                       | open   | low      | task       | S        |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization                                          | open   | low      | feature    | M        |
 | BL-260906-extend-check-skill-bumps       | Extend check:skill-bumps to canonical agent files                                                               | open   | low      | task       | XS       |
 | BL-260906-give-project-state-frontmatter | Give PROJECT_STATE_FRONTMATTER_FIELDS a production consumer or delete it                                        | open   | low      | task       | S        |
 | BL-260906-make-the-phase-implementer     | Make the phase-implementer sweep contract test negation-aware                                                   | open   | low      | task       | S        |
 | BL-260830-memory-subsystem-ownership     | Memory subsystem ownership decision for OAT                                                                     | open   | low      | idea       | XL       |
-| BL-260904-migrate-bundled-skills-from    | Migrate bundled skills from top-level version to metadata.version                                               | open   | low      | task       | M        |
-| BL-260903-preserve-proto-named-config    | Preserve **proto**-named config keys through jsonc parsing                                                      | open   | low      | task       | S        |
 | BL-260906-project-journal-reservation    | Project journal reservation state into the smoke evidence bundle                                                | open   | low      | task       | S        |
 | BL-260906-reconcile-the-oat-doctor       | Reconcile the oat-doctor example table with its inventory sentence                                              | open   | low      | task       | XS       |
 | BL-260906-report-errno-for-asset-root    | Report errno for asset root stat failures and reset the statRedirects test seam                                 | open   | low      | task       | XS       |
@@ -325,6 +328,7 @@
 | BL-260906-run-scripts-worktree-init-test | Run scripts/worktree/init.test.mjs under a repository gate                                                      | open   | low      | task       | XS       |
 | BL-260906-scope-the-restamp-only-sync    | Scope the restamp-only sync body suppression per scope under --scope all                                        | open   | low      | task       | XS       |
 | BL-260904-stabilize-the-collection       | Stabilize the collection-detach engine integration test                                                         | open   | low      | task       | S        |
+| BL-260908-tighten-the-pr-final-ledger    | Tighten the pr-final ledger guard's prose and escaped-pipe boundary                                             | open   | low      | task       | XS       |
 | BL-260903-verify-the-packs-inventory     | Verify the packs:inventory path-redaction claim in troubleshooting docs                                         | open   | low      | task       | XS       |
 | BL-260903-project-document-should-prompt | project-document should prompt a re-run when review fixes change a shipped contract                             | open   | low      | task       | S        |
 

@@ -1,10 +1,11 @@
 ---
 name: oat-pjm-remote
-version: 1.0.1
 description: Use when explicitly intaking, publishing, refreshing, reconciling, or continuing an OAT PJM remote binding through a live host capability. Keeps policy, approval, state, and success verdicts in the OAT CLI while the host discovers and invokes currently granted execution capabilities.
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Bash, AskUserQuestion
+metadata:
+  version: 1.0.2
 ---
 
 # Operate Remote Project Bindings

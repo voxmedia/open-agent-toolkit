@@ -71,8 +71,9 @@ guard's position; the pinned Step 2 block is untouched.
     ledger path is invisible in a PR diff.
   - Pins: `validation/skills.test.ts:4118-4131` (the Step 2 awk/grep block,
     verbatim), `:4047-4056` (append-ordered events), `:2776` and `:4000`
-    (version `1.6.0`); `review-skill-contracts.test.ts:1134` (ordering guard)
-    and `:1538` (adjacent, unrelated);
+    (version `1.6.0`); `review-skill-contracts.test.ts:1134` (corrected at
+    wave-6 close: this is the `oat-project-complete` mutation-delegation
+    case, not an ordering guard) and `:1538` (adjacent, unrelated);
     `post-implement-sequence-contracts.test.ts:779-788` (a Step 3 string
     spanning a hard newline); `autonomy-gate-inventory.test.ts:360-368`
     (byte-equal autonomy-contract mirror).
@@ -174,7 +175,8 @@ Step 2 pins still pass.
 
 Define archive eligibility as its own predicate: a row is archive-eligible
 when its status is `passed` or `fixes_completed` (both are processed per
-`oat-project-review-receive/SKILL.md:457-460`; `fixes_completed` still awaits
+`oat-project-review-receive/SKILL.md:462-465` (corrected at wave-6 close from
+`:457-460`); `fixes_completed` still awaits
 re-review). Archive only eligible rows. When moving a file, select the ledger
 event by scope, type, and artifact filename (`oat-project-plan-writing/SKILL.md:535-540`)
 so duplicate scope/type rows keep their identity, and rewrite that event's
@@ -224,8 +226,9 @@ artifact path before creating the final PR` — guard text present, parses
   fails; an escaping path (`../outside.md` or a symlink leaving the project)
   fails; a missing file fails; a valid `reviews/archived/<file>` passes.
   Each failing case names the offending row.
-- `review-skill-contracts.test.ts` (pattern: the indexOf ordering guard at
-  `:1134`; the summary-handling case at `:1538` is unrelated): `archives only
+- `review-skill-contracts.test.ts` (pattern: the mutation-delegation case at
+  `:1134` — corrected at wave-6 close, it is not an ordering guard; the
+  summary-handling case at `:1538` is unrelated): `archives only
 terminal review artifacts during pr-final preflight` — exclusion clause and
   enumerated rewrite list present, event selection by scope, type, and
   artifact filename present, and the guard precedes both `gh pr create`
@@ -256,8 +259,13 @@ Stop and report instead of improvising when:
 - the autonomy-contract symlink is broken or replaced by a copy; or
 - a named verification gate fails twice after one bounded correction.
 
+## Execution record (2026-09-08, wave 6)
+
+Executed as wave-6 p02 (PR #278 `wave-6-execution`, CLI 0.2.64): `oat-project-pr-final` 1.6.2 → 1.6.3; Step 0.5 archives only terminal review rows (`passed`/`fixes_completed`, event identity, an enumerated rewrite list, idempotent collision-free names) and a fail-closed ledger-path guard runs before the only `git push` and every `gh pr create` (containment incl. symlink chains and `cd -P`, fenced and blockquoted rows skipped, per-table header recognition, absent `reviews/archived/` artifacts excused only when that directory was never materialized in the checkout, `PRFINAL-05` registered in the gate inventory). Three fix rounds: the first introduced a Critical (`git check-ignore` accepted every absent path under the `local`/`synced` scopes because `.gitignore` ignores those whole project trees) — replaced by the archived-directory rule; the third adopted the reviewer's Medium (excuse only when `reviews/archived` is absent). Run verbatim over every `.oat/projects/**/plan.md` the guard passes 59 of 94 ledgers and found two genuinely dangling rows in archived projects — sweep residue filed at wave close. Corrections applied at wave close: the `review-skill-contracts.test.ts:1134` label named the wrong case (it is the `oat-project-complete` mutation-delegation case; `:1538→:2098` was right); the review-receive status-ladder citation is `:462-465`, not `:457-460`; the drift command omits `named-skill-load-contract.test.ts`, and `.agents/docs/autonomy-contract.md` is in the drift command but missing from `## In scope`. The root final review added a fix round (wave-6 Phase 06): the archived-location excuse now keys on existence rather than directory-ness with a stop for a non-directory at `reviews/archived`, a missing `## Reviews` section stops instead of validating nothing, escaped pipes no longer shift the artifact column, and the prose states the level-two boundary. Wave close: the root final review passed with follow-ups (one Important fixed in the wave as Phase 06) and its round 2 passed; the configured cross-family exit gate passed on attempt 1 with no findings.
+
 ## Revalidation Before Execution
 
+**Refresh applied 2026-09-07 (wave-6 boundary, per the execution program's pre-dispatch refresh clause; drift re-run against `cc91a2d21` = `origin/main` after waves 1–5 and the Lite workflow merged; PR #190 is still an open draft, so its landing-event rows do not apply):** `oat-project-pr-final` is now **1.6.2** (not 1.6.0; bump to 1.6.3). Pins relocated and revalued: `skills.test.ts:2776→:2927` (`['.agents/skills/oat-project-pr-final/SKILL.md','1.6.2']`, inside the artifact-hygiene equivalence case at `:2919`) and `:4000→:4445` (`['oat-project-pr-final','1.6.2']`, inside `defines append-ordered monotonic review events…` at `:4438`); the verbatim Step-2 awk/grep block pin `:4118-4131` now lives at `:4556-4590` (`in_reviews` asserts at `:4572`, `:4586`) — inside the same `:4438` case, so this lane edits one contiguous region twice; `review-skill-contracts.test.ts:1134→:1486`, `:1538→:2098`; `post-implement-sequence-contracts.test.ts:779-788→:970-982` (hard-newline pin at `:981`); `autonomy-gate-inventory.test.ts:360-368` still lists the four mirrors (pr-final `:363`). SKILL.md: Step 0.5 `:125→:126` (block `:126-144`); Step 2 `:167→:168`, `:172-179→:173-180`, `:180-186→:181-187`; the two `gh pr create` paths `:378/:415→:404/:441`; Success Criteria `:459→:483` (archive bullet `:485`). Cross-skill evidence: `plan-writing:537-540` collapsed to the single line `:635`; `complete:355` exact, `complete:650→:778`; `pr-progress:108-122` exact; `.gitignore:85` exact; the autonomy-contract symlink intact. Every W2/W3/W5 dependency row is satisfied (`done` in the program ledger). `named-skill-load-contract.test.ts` pins pr-final prose in 9 `file:` rows and 10 `skills:` rows (181-row matrix) — every rewritten routed sentence needs its row moved; the drift command omits that file. Test-plan gap to close: Step 0.5's timestamp-suffix collision rule has no re-run/idempotency case — add one. Locate pins by version literal across `packages/cli/src` and `tools/smoke` (no smoke pin names this skill today).
 Revalidate against current `origin/main`, the backlog item, the two decision
 records, and the four pinned tests when substantial time passes, main
 advances materially from `dd41adb9bed53aa2389e911b601615fc2b26f0b7`, PR #190 lands, W5 lanes

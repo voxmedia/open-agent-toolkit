@@ -1952,6 +1952,14 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     reason:
       'Recommendation printed to the user when the final summary is empty.',
   },
+  {
+    file: '.agents/skills/oat-project-pr-final/SKILL.md',
+    anchor: 'Success Criteria',
+    match: 'Next milestone references both `oat-project-revise`',
+    classification: 'non-executing',
+    skills: ['oat-project-revise', 'oat-project-complete'],
+    reason: 'Success checklist.',
+  },
 
   // -------------------------------------------------- pr-progress and progress
   {

@@ -1,10 +1,11 @@
 ---
 name: oat-project-revise
-version: 1.0.2
 description: Use when a project has an open PR and human feedback needs to be incorporated. Creates revision tasks and re-enters implementation.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.0.3
 ---
 
 # Project Revise

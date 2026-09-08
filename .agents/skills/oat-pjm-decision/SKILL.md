@@ -1,10 +1,11 @@
 ---
 name: oat-pjm-decision
-version: 1.1.0
 description: Use when the user requests or confirms recording a durable repo decision — e.g. "capture that as a decision", "write an ADR for X", "record this architectural choice", or confirms a previously offered decision capture. Creates a file-per-record decision under reference/decisions/ via `oat decision new` and refreshes the generated decision index. Do NOT auto-invoke for routine choices that do not warrant durable history.
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.1.1
 ---
 
 # Record Repo Decision

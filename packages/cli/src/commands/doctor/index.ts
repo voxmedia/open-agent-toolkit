@@ -291,7 +291,13 @@ async function checkProvidersDefault(
   );
 }
 
-async function checkSkillVersionsDefault(
+/**
+ * Exported so the installed-versus-bundled comparison can be exercised
+ * directly against a real filesystem: the doctor command's own tests stub the
+ * `checkSkillVersions` dependency, which would leave this consumer of the
+ * shared version resolver unproven.
+ */
+export async function checkSkillVersionsDefault(
   scopeRoot: string,
   assetsRoot: string,
   pathExists: (path: string) => Promise<boolean>,
@@ -1218,7 +1224,9 @@ async function createPackStateChecks(
     checks,
     evidence: packEvidenceBlock(
       inventories.map((canonical) =>
-        projectRenderablePackEvidence(canonical, roots),
+        projectRenderablePackEvidence(canonical, roots, [
+          ...providerContexts.values(),
+        ]),
       ),
     ),
   };

@@ -1,11 +1,12 @@
 ---
 name: review-backlog
-version: 1.3.0
 description: Retired. Use oat-pjm-review-backlog instead. The active backlog and roadmap moved from .oat/repo/reference/ to the two-layer .oat/repo/pjm/ taxonomy.
 argument-hint: '[backlog-path] [--roadmap=<path>] [--output=<path>]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep, Bash(git:*), AskUserQuestion, Task
 user-invocable: true
+metadata:
+  version: 1.3.1
 ---
 
 # Review Backlog

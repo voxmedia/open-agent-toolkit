@@ -1,11 +1,12 @@
 ---
 name: docs-completed-projects-gap-review
-version: 1.2.0
 description: Audit documentation for gaps left by completed OAT projects. Cross-references shipped work against the docs surface and produces a prioritized fix plan.
 argument-hint: '[--since=<date>] [--output=<path>] [--scope=<area>] [--dry-run]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep, Bash(git:*), AskUserQuestion, Task
 user-invocable: true
+metadata:
+  version: 1.2.1
 ---
 
 # Docs Completed-Projects Gap Review

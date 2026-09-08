@@ -1,10 +1,11 @@
 ---
 name: oat-project-summary
-version: 1.5.3
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat pjm:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.5.4
 ---
 
 # Project Summary

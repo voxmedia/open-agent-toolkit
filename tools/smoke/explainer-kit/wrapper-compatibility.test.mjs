@@ -431,10 +431,69 @@ test('skill documents freeze the pre/core/post seam and migration controls', asy
   assert.match(adapterSkill, /references\/migration\.md/);
   assert.match(personalDraft, /https:\/\/dy4vzrzaexuy5\.cloudfront\.net/);
 
-  assert.match(coreSkill, /^version: 2\.1\.0$/m);
-  assert.match(adapterSkill, /^version: 1\.0\.7$/m);
+  assert.equal(readSkillVersion(coreSkill), '2.1.1');
+  assert.equal(readSkillVersion(adapterSkill), '1.0.8');
   assert.doesNotMatch(coreTree, /dy4vzrzaexuy5\.cloudfront\.net/);
 });
+
+/**
+ * Read the version a canonical skill declares: `metadata.version` first, the
+ * deprecated top-level `version` as the fallback.
+ *
+ * A `node --test` file cannot import the TypeScript resolver in
+ * `packages/cli/src/commands/shared/frontmatter.ts`, so it reads the two
+ * positions directly. Only the opening frontmatter block is scanned, and only
+ * direct children of `metadata:`, so a `metadata:` example in the skill's own
+ * prose can never override the declaration. Comment lines carry no structure in
+ * YAML, so they are skipped rather than allowed to end a block or set its
+ * indentation, and a repeated declaration reads as none at all. The pinned
+ * value below is what this assertion is about; the shape it is written in is
+ * not.
+ */
+function readSkillVersion(content) {
+  const lines = content.split('\n');
+  const end = lines[0] === '---' ? lines.indexOf('---', 1) : -1;
+  let inMetadata = false;
+  let seenMetadata = false;
+  let childIndent = null;
+  let duplicated = false;
+  let topLevel;
+  let metadata;
+
+  for (let index = 1; index < end; index += 1) {
+    const line = lines[index];
+    if (line.trim() === '' || line.trimStart().startsWith('#')) {
+      continue;
+    }
+    if (/^\S/.test(line)) {
+      inMetadata = /^metadata:[ \t]*(?:#.*)?$/.test(line);
+      duplicated ||= inMetadata && seenMetadata;
+      seenMetadata ||= inMetadata;
+      childIndent = null;
+      const declared = line.match(/^version:[ \t]+([^\s#]+)/)?.[1];
+      if (declared !== undefined) {
+        duplicated ||= topLevel !== undefined;
+        topLevel = declared;
+      }
+      continue;
+    }
+    if (!inMetadata) {
+      continue;
+    }
+    const indent = line.length - line.trimStart().length;
+    childIndent ??= indent;
+    if (indent !== childIndent) {
+      continue;
+    }
+    const declared = line.trimStart().match(/^version:[ \t]+([^\s#]+)/)?.[1];
+    if (declared !== undefined) {
+      duplicated ||= metadata !== undefined;
+      metadata = declared;
+    }
+  }
+
+  return duplicated ? undefined : (metadata ?? topLevel);
+}
 
 async function read(relativePath) {
   return readFile(join(REPO_ROOT, relativePath), 'utf8');

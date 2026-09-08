@@ -61,9 +61,7 @@ test('runs the packaged adapter against the user-scoped packaged core', async ()
     `${fixture.coreRoot}/SKILL.md`,
     'utf8',
   );
-  const packagedCoreVersion = packagedCoreSkill.match(
-    /^version:\s*([^\s#]+)\s*$/m,
-  )?.[1];
+  const packagedCoreVersion = readSkillVersion(packagedCoreSkill);
   assert.equal(result.compatibility.installedVersion, packagedCoreVersion);
   assert.equal(result.request.recipe.id, 'project-explainer');
   assert.equal(result.result.outcome, 'built-not-durable');
@@ -109,10 +107,12 @@ test('packaged adapter fails closed when its packaged core is missing or incompa
 
   const skillPath = `${fixture.coreRoot}/SKILL.md`;
   const compatibleSkill = await readFile(skillPath, 'utf8');
-  await writeFile(
-    skillPath,
-    compatibleSkill.replace(/^version:\s*[^\s#]+\s*$/m, 'version: 1.9.9'),
-  );
+  const incompatibleSkill = withSkillVersion(compatibleSkill, '1.9.9');
+  // A shape-blind rewrite would silently no-op once the core declares its
+  // version under `metadata`, and this case would stop testing anything.
+  assert.notEqual(incompatibleSkill, compatibleSkill);
+  assert.equal(readSkillVersion(incompatibleSkill), '1.9.9');
+  await writeFile(skillPath, incompatibleSkill);
   const incompatible = await runJsonFailure(fixture.adapterRunArgs);
   assert.equal(incompatible.outcome, 'failed');
   assert.deepEqual(incompatible.reasons, [
@@ -161,6 +161,88 @@ async function assertAuthoredRun(runRoot, manifest) {
   // module's backdated claim never reaches the hash-pinned record.
   assert.notEqual(generatedAt, '2026-07-18T14:00:00.000Z');
   assert.equal(new Date(generatedAt).toISOString(), generatedAt);
+}
+
+/**
+ * Locate every version declaration in a packaged skill's opening frontmatter:
+ * the direct `metadata.version` child and the deprecated top-level `version`
+ * alias. Only the frontmatter block is scanned, so a `version:` line inside the
+ * skill's prose is never mistaken for a declaration, and only direct children
+ * of `metadata:` count.
+ *
+ * Comment lines carry no structure in YAML, so they neither end a block nor set
+ * its indentation; a repeated declaration reads as none at all, which fails the
+ * callers loudly rather than picking one silently.
+ */
+function readSkillVersionSites(content) {
+  const lines = content.split('\n');
+  const end = lines[0] === '---' ? lines.indexOf('---', 1) : -1;
+  const sites = { topLevel: null, metadata: null };
+  let inMetadata = false;
+  let seenMetadata = false;
+  let childIndent = null;
+  let duplicated = false;
+
+  for (let index = 1; index < end; index += 1) {
+    const line = lines[index];
+    if (line.trim() === '' || line.trimStart().startsWith('#')) {
+      continue;
+    }
+    if (/^\S/.test(line)) {
+      inMetadata = /^metadata:[ \t]*(?:#.*)?$/.test(line);
+      duplicated ||= inMetadata && seenMetadata;
+      seenMetadata ||= inMetadata;
+      childIndent = null;
+      const value = line.match(/^version:[ \t]+([^\s#]+)/)?.[1];
+      if (value !== undefined) {
+        duplicated ||= sites.topLevel !== null;
+        sites.topLevel = { index, indent: 0, value };
+      }
+      continue;
+    }
+    if (!inMetadata) {
+      continue;
+    }
+    const indent = line.length - line.trimStart().length;
+    childIndent ??= indent;
+    if (indent !== childIndent) {
+      continue;
+    }
+    const value = line.trimStart().match(/^version:[ \t]+([^\s#]+)/)?.[1];
+    if (value !== undefined) {
+      duplicated ||= sites.metadata !== null;
+      sites.metadata = { index, indent, value };
+    }
+  }
+
+  return {
+    lines,
+    sites: duplicated ? { topLevel: null, metadata: null } : sites,
+  };
+}
+
+/** `metadata.version` wins over the deprecated top-level alias. */
+function readSkillVersion(content) {
+  const { sites } = readSkillVersionSites(content);
+  return (sites.metadata ?? sites.topLevel)?.value;
+}
+
+/**
+ * Rewrite every version declaration the frontmatter carries, replacing the
+ * whole line so no quote or comment survives. Rewriting only one of two
+ * declarations would leave the core self-contradictory, and the adapter would
+ * then reject a conflict rather than the incompatible version under test.
+ */
+function withSkillVersion(content, version) {
+  const { lines, sites } = readSkillVersionSites(content);
+  const targets = [sites.topLevel, sites.metadata].filter(
+    (site) => site !== null,
+  );
+  assert.notEqual(targets.length, 0, 'the packaged core declares no version');
+  for (const target of targets) {
+    lines[target.index] = `${' '.repeat(target.indent)}version: ${version}`;
+  }
+  return lines.join('\n');
 }
 
 function escapeRegExp(value) {

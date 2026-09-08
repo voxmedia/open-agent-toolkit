@@ -1,10 +1,11 @@
 ---
 name: analyze
-version: 0.2.0
 description: Multi-angle analysis of existing artifacts, codebases, documents, or systems. Examines what you have from six analysis angles and produces structured findings with prioritized recommendations.
 argument-hint: 'target [--context path]'
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash, WebSearch, WebFetch, AskUserQuestion, Agent, mcp__*
+metadata:
+  version: 0.2.1
 ---
 
 # /analyze

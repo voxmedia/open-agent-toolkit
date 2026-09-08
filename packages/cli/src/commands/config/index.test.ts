@@ -236,6 +236,129 @@ describe('oat config', () => {
     });
   });
 
+  // End-to-end control for the `__proto__`-keyed config document.
+  // `jsonc-parser`'s `parse` filled its result by assignment, and assigning to
+  // a member literally named `__proto__` reaches the legacy prototype setter:
+  // the key vanished as data and its value became the parsed object's
+  // prototype, so `config get git.defaultBranch` answered `INJECTED` from a
+  // file declaring no `git` key at all. `config/json.ts` now materializes the
+  // parse tree with `Object.defineProperty`, so `__proto__` is an ordinary own
+  // data key. The unit control lives in `config/json.test.ts`; this one runs
+  // the real `oat config` command surface end to end, which is what the source
+  // plan put in scope and what nothing executable pinned.
+  //
+  // The vector replaces the config object's own prototype rather than mutating
+  // the global `Object.prototype`, so an assertion about the global would be
+  // one that cannot fail. The observable difference is the value the commands
+  // report and whether the key survives a read-mutate-write cycle.
+  it('never resolves config values through a __proto__ key in a config file', async () => {
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      '{"version":1,"unknownBenignKey":{"a":1},"__proto__":{"git":{"defaultBranch":"INJECTED"}}}\n',
+      'utf8',
+    );
+
+    const get = createHarness({ cwd: root });
+    await runCommand(get.command, ['get', 'git.defaultBranch']);
+    expect(get.capture.info[0]).toBe('main');
+    expect(process.exitCode).toBe(0);
+
+    // `list` agrees, and attributes the value to `default` rather than to the
+    // shared file: the injected object is unrecognized data, never a source.
+    const list = createHarness({ cwd: root });
+    await runCommand(list.command, ['list'], ['--json']);
+    expect(list.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      values: expect.arrayContaining([
+        { key: 'git.defaultBranch', value: 'main', source: 'default' },
+      ]),
+    });
+    expect(process.exitCode).toBe(0);
+
+    // `unset` sees the same nothing. The injected branch is the document's
+    // only `git` entry, so if it were reachable the command would report a
+    // removal and rewrite the file; it must report "already unset" and leave
+    // the bytes alone. This runs on its own fixture because the `set` below
+    // rewrites `root`'s file, after which no hostile key is left to test.
+    const unsetRoot = await createRepoRoot();
+    const unsetPath = join(unsetRoot, '.oat', 'config.json');
+    const untouched =
+      '{"version":1,"__proto__":{"git":{"defaultBranch":"INJECTED"}}}\n';
+    await writeFile(unsetPath, untouched, 'utf8');
+    const unset = createHarness({ cwd: unsetRoot });
+    await runCommand(unset.command, ['unset', 'git.defaultBranch']);
+    expect(unset.capture.info[0]).toContain('already unset');
+    expect(process.exitCode).toBe(0);
+    expect(await readFile(unsetPath, 'utf8')).toBe(untouched);
+
+    const set = createHarness({ cwd: root });
+    await runCommand(set.command, ['set', 'git.defaultBranch', 'develop']);
+    expect(process.exitCode).toBe(0);
+    const written = JSON.parse(
+      await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+    ) as Record<string, unknown>;
+    expect(written['git']).toEqual({ defaultBranch: 'develop' });
+    // At the top level the write path drops `__proto__` exactly as it drops
+    // any other key the schema does not recognize — `unknownBenignKey` goes
+    // the same way — so the entry is discarded rather than honoured.
+    expect(Object.hasOwn(written, 'unknownBenignKey')).toBe(false);
+    expect(Object.hasOwn(written, '__proto__')).toBe(false);
+
+    const afterSet = createHarness({ cwd: root });
+    await runCommand(afterSet.command, ['get', 'git.defaultBranch']);
+    expect(afterSet.capture.info[0]).toBe('develop');
+    expect(process.exitCode).toBe(0);
+
+    // The `projects` subtree is where "preserved as an own key" is the real
+    // contract: FR10 carries unknown siblings through every read-mutate-write
+    // cycle, so a sibling named `__proto__` must be inert on read and must
+    // still survive the rewrite. Losing it silently is exactly the failure
+    // `normalizeOatConfig` builds that subtree with `Object.fromEntries` to
+    // avoid.
+    const nested = await createRepoRoot();
+    await writeFile(
+      join(nested, '.oat', 'config.json'),
+      '{"version":1,"projects":{"__proto__":{"root":".oat/projects/INJECTED"},"futureKey":"kept"}}\n',
+      'utf8',
+    );
+    const baseline = await createRepoRoot();
+    await writeFile(
+      join(baseline, '.oat', 'config.json'),
+      '{"version":1,"projects":{"futureKey":"kept"}}\n',
+      'utf8',
+    );
+
+    // Compared against the same document without the hostile sibling, so this
+    // cannot drift with the shipped default for `projects.root`.
+    const nestedGet = createHarness({ cwd: nested });
+    await runCommand(nestedGet.command, ['get', 'projects.root']);
+    const baselineGet = createHarness({ cwd: baseline });
+    await runCommand(baselineGet.command, ['get', 'projects.root']);
+    expect(nestedGet.capture.info[0]).not.toBe('.oat/projects/INJECTED');
+    expect(nestedGet.capture.info[0]).toBe(baselineGet.capture.info[0]);
+    expect(process.exitCode).toBe(0);
+
+    const nestedSet = createHarness({ cwd: nested });
+    await runCommand(nestedSet.command, [
+      'set',
+      'projects.defaultScope',
+      'local',
+    ]);
+    expect(process.exitCode).toBe(0);
+    const rewritten = JSON.parse(
+      await readFile(join(nested, '.oat', 'config.json'), 'utf8'),
+    ) as { projects: Record<string, unknown> };
+    expect(Object.keys(rewritten.projects)).toEqual(
+      expect.arrayContaining(['__proto__', 'futureKey', 'defaultScope']),
+    );
+    expect(Object.hasOwn(rewritten.projects, '__proto__')).toBe(true);
+    expect(rewritten.projects['__proto__']).toEqual({
+      root: '.oat/projects/INJECTED',
+    });
+    expect(rewritten.projects['futureKey']).toBe('kept');
+  });
+
   it('sets projects.defaultScope only to a supported scope', async () => {
     const root = await createRepoRoot();
     const valid = createHarness({ cwd: root });

@@ -1,10 +1,11 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.23
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Glob, Grep
+metadata:
+  version: 1.2.24
 ---
 
 # Plan Writing Contract

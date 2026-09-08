@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ToolPackEvidence } from './pack-evidence';
+import type {
+  ProviderReachabilityEvidence,
+  ToolPackEvidence,
+} from './pack-evidence';
 import {
   evaluatePackLifecycleOutcome,
+  notRunProviderSyncOutcome,
   providerSyncOutcomeFromAutoSync,
   resolveAdditivePackScopeSelection,
 } from './pack-lifecycle-outcome';
@@ -164,5 +168,163 @@ describe('pack lifecycle outcome', () => {
       providers: [],
       error: 'provider failed',
     });
+  });
+});
+
+function reachability(
+  overrides: Partial<ProviderReachabilityEvidence> = {},
+): ProviderReachabilityEvidence {
+  return {
+    provider: 'codex',
+    scope: 'user',
+    contentKind: 'agent',
+    assets: ['~/.agents/agents/skeptical-evaluator.md'],
+    activation: {
+      state: 'active',
+      source: 'config-enabled',
+      reason: 'Explicitly enabled in sync config',
+    },
+    capability: {
+      support: 'supported',
+      projectionModes: ['materialization-extension'],
+      reason: 'codex projects user agent content',
+    },
+    projection: { state: 'projected', mode: 'materialization-extension' },
+    materialization: { state: 'materialized', detail: 'materialized' },
+    visibility: { state: 'live', reason: 'codex reads without a refresh' },
+    recovery: [],
+    ...overrides,
+  };
+}
+
+describe('provider sync outcome evidence', () => {
+  it('carries provider evidence into a complete outcome', () => {
+    const providers = [reachability()];
+    const sync = providerSyncOutcomeFromAutoSync(
+      { synced: true, scopes: ['user'], error: null, evidence: [] },
+      providers,
+    );
+
+    expect(sync.status).toBe('complete');
+    expect(sync.providers).toEqual(providers);
+
+    const outcome = evaluatePackLifecycleOutcome({
+      selection: resolveAdditivePackScopeSelection({
+        pack: 'ideas',
+        requested: 'user',
+        knownRealizedScopes: ['user'],
+        unknownScopes: [],
+      }),
+      lifecycle: [],
+      sync,
+      finalEvidence: evidence(['user']),
+    });
+
+    expect(outcome.status).toBe('complete');
+    expect(outcome.sync.providers).toEqual(providers);
+  });
+
+  it('degrades a successful sync to partial when a provider materialization failed', () => {
+    const sync = providerSyncOutcomeFromAutoSync(
+      { synced: true, scopes: ['user'], error: null, evidence: [] },
+      [
+        reachability({
+          materialization: { state: 'failed', detail: 'permission denied' },
+        }),
+      ],
+    );
+
+    expect(sync.status).toBe('partial');
+
+    const outcome = evaluatePackLifecycleOutcome({
+      selection: resolveAdditivePackScopeSelection({
+        pack: 'ideas',
+        requested: 'user',
+        knownRealizedScopes: ['user'],
+        unknownScopes: [],
+      }),
+      lifecycle: [],
+      sync,
+      finalEvidence: evidence(['user']),
+    });
+
+    expect(outcome.status).toBe('partial');
+    expect(
+      outcome.recovery.some(({ code }) => code === 'provider-sync-incomplete'),
+    ).toBe(true);
+  });
+
+  it('keeps a warning-severity missing materialization complete at exit code 0', () => {
+    // Pinned severity matrix row 4: "Active, supported, no projection exists
+    // (never synced or sync skipped)" is a `warning` that turns the pack
+    // evidence block `partial` but leaves the install `complete` / exit 0 —
+    // "install succeeded; sync advised". Only `failed` degrades the outcome.
+    const providers = [
+      reachability({
+        projection: { state: 'absent', mode: 'materialization-extension' },
+        materialization: {
+          state: 'missing',
+          detail: 'codex has no user agent materialization for 1 asset',
+        },
+      }),
+    ];
+    const sync = providerSyncOutcomeFromAutoSync(
+      { synced: true, scopes: ['user'], error: null, evidence: [] },
+      providers,
+    );
+
+    expect(sync.status).toBe('complete');
+
+    const outcome = evaluatePackLifecycleOutcome({
+      selection: resolveAdditivePackScopeSelection({
+        pack: 'ideas',
+        requested: 'user',
+        knownRealizedScopes: ['user'],
+        unknownScopes: [],
+      }),
+      lifecycle: [],
+      sync,
+      finalEvidence: evidence(['user']),
+    });
+
+    // `runInitTools` sets exit code 1 for any outcome whose status is not
+    // `complete`, so this assertion is the exit-code guarantee.
+    expect(outcome.status).toBe('complete');
+    expect(
+      outcome.recovery.some(({ code }) => code === 'provider-sync-incomplete'),
+    ).toBe(false);
+  });
+
+  it('keeps info-only provider states complete so a healthy install exits 0', () => {
+    const sync = providerSyncOutcomeFromAutoSync(
+      { synced: true, scopes: ['user'], error: null, evidence: [] },
+      [
+        reachability({
+          visibility: { state: 'restart-required', reason: 'new session' },
+        }),
+        reachability({
+          provider: 'gemini',
+          activation: {
+            state: 'inactive',
+            source: 'config-disabled',
+            reason: 'Explicitly disabled in sync config',
+          },
+        }),
+      ],
+    );
+
+    expect(sync.status).toBe('complete');
+  });
+
+  it('reports not-run with its reason and still carries evidence', () => {
+    const providers = [reachability()];
+    const sync = notRunProviderSyncOutcome(providers, 'auto-sync was skipped');
+
+    expect(sync).toMatchObject({
+      scopes: [],
+      status: 'not-run',
+      error: 'auto-sync was skipped',
+    });
+    expect(sync.providers).toEqual(providers);
   });
 });

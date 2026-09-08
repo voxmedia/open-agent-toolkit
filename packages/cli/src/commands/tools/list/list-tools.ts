@@ -14,6 +14,11 @@ import {
   type PackInventory,
 } from '@commands/tools/shared/pack-inventory';
 import { PACK_MANIFEST } from '@commands/tools/shared/pack-manifest';
+import { applyUserAgentCoverage } from '@commands/tools/shared/pack-provider-evidence';
+import {
+  resolvePackProviderSurface,
+  type ProviderContextDependencies,
+} from '@commands/tools/shared/provider-context';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { ToolInfo } from '@commands/tools/shared/types';
 
@@ -26,6 +31,7 @@ export interface ListToolsDependencies {
   ) => Promise<string>;
   resolveAssetsRoot: () => Promise<string>;
   inventoryPack?: (input: InventoryPackInput) => Promise<PackInventory>;
+  providerContext?: ProviderContextDependencies;
 }
 
 export interface ListToolsResult {
@@ -63,6 +69,15 @@ export async function runListTools(
     userRoot: roots.user,
   };
   const inspectPack = dependencies.inventoryPack ?? inventoryPack;
+  // `list` reports the same packs as `status` and `doctor`, so it resolves the
+  // same config-aware provider surface. Without it, `list` reported user
+  // agents as unmaterialized that an active Codex or Cursor adapter supplies.
+  const providerSurface = await resolvePackProviderSurface({
+    scopeRoots: roots,
+    ...(dependencies.providerContext
+      ? { dependencies: dependencies.providerContext }
+      : {}),
+  });
   const inspected = await Promise.all(
     PACK_MANIFEST.map(({ name }) =>
       inspectPack({
@@ -70,11 +85,27 @@ export async function runListTools(
         assetsRoot,
         projectRoot: roots.project,
         userRoot: roots.user,
+        ...(roots.user
+          ? {
+              userManagedRoleMaterialization:
+                providerSurface.userAgentCoverage !== 'none',
+            }
+          : {}),
       }).then(
-        (canonical) => ({
-          canonical,
-          evidence: projectRenderablePackEvidence(canonical, packRoots),
-        }),
+        (raw) => {
+          const canonical = applyUserAgentCoverage(
+            raw,
+            providerSurface.userAgentCoverage,
+          );
+          return {
+            canonical,
+            evidence: projectRenderablePackEvidence(
+              canonical,
+              packRoots,
+              providerSurface.contexts,
+            ),
+          };
+        },
         (error: unknown) => ({
           canonical: null,
           evidence: unavailablePackEvidence({

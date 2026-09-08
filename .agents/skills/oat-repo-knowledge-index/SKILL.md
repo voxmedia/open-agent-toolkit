@@ -1,10 +1,11 @@
 ---
 name: oat-repo-knowledge-index
-version: 1.3.0
 description: Use when onboarding OAT to a repository or when knowledge artifacts are stale. Generates or refreshes the codebase knowledge index using parallel mapper agents.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion, Task
+metadata:
+  version: 1.3.1
 ---
 
 # Knowledge Base Generation

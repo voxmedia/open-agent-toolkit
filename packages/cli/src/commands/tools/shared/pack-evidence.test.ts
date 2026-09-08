@@ -4,7 +4,9 @@ import {
   hasScopedPackRealizationEvidence,
   packScopeFactsFromInventory,
   projectPackEvidence,
+  providerDiagnostics,
   unavailablePackScopeFacts,
+  type ProviderReachabilityEvidence,
 } from './pack-evidence';
 import type { ScopedPackInventory } from './pack-inventory';
 
@@ -154,5 +156,199 @@ describe('pack evidence', () => {
     const inventory = scoped({ scope: 'user', statuses: ['current'] });
     inventory.assets[0]!.definition.sharedOwner = 'shared';
     expect(hasScopedPackRealizationEvidence(inventory)).toBe(false);
+  });
+});
+
+function providerEvidence(
+  overrides: Partial<ProviderReachabilityEvidence> = {},
+): ProviderReachabilityEvidence {
+  return {
+    provider: 'codex',
+    scope: 'user',
+    contentKind: 'agent',
+    assets: ['~/.agents/agents/skeptical-evaluator.md'],
+    activation: {
+      state: 'active',
+      source: 'config-enabled',
+      reason: 'Explicitly enabled in sync config',
+    },
+    capability: {
+      support: 'supported',
+      projectionModes: ['materialization-extension'],
+      reason: 'codex projects user agent content via materialization-extension',
+    },
+    projection: { state: 'projected', mode: 'materialization-extension' },
+    materialization: { state: 'materialized', detail: 'materialized' },
+    visibility: { state: 'live', reason: 'codex reads without a refresh' },
+    recovery: [],
+    ...overrides,
+  };
+}
+
+describe('providerDiagnostics', () => {
+  it('emits provider-inactive for a config-disabled provider', () => {
+    const diagnostics = providerDiagnostics({
+      pack: 'research',
+      mode: 'inventory',
+      providers: [
+        providerEvidence({
+          activation: {
+            state: 'inactive',
+            source: 'config-disabled',
+            reason: 'Explicitly disabled in sync config',
+          },
+        }),
+      ],
+    });
+
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0]).toMatchObject({
+      code: 'provider-inactive',
+      severity: 'info',
+      provider: 'codex',
+      scope: 'user',
+      contentKind: 'agent',
+    });
+  });
+
+  it('does not report a provider that was never detected or configured', () => {
+    expect(
+      providerDiagnostics({
+        pack: 'research',
+        mode: 'inventory',
+        providers: [
+          providerEvidence({
+            activation: {
+              state: 'inactive',
+              source: 'undetected-unset',
+              reason: 'Not detected and no explicit provider setting',
+            },
+          }),
+        ],
+      }),
+    ).toEqual([]);
+  });
+
+  it('emits provider-unsupported carrying the registry reason', () => {
+    const diagnostics = providerDiagnostics({
+      pack: 'research',
+      mode: 'inventory',
+      providers: [
+        providerEvidence({
+          capability: {
+            support: 'unsupported',
+            projectionModes: ['unsupported'],
+            reason: 'Codex has no user rule projection',
+          },
+        }),
+      ],
+    });
+
+    expect(diagnostics[0]).toMatchObject({
+      code: 'provider-unsupported',
+      severity: 'info',
+      detail: 'Codex has no user rule projection',
+    });
+  });
+
+  it('names the provider and the affected assets on a missing materialization', () => {
+    const diagnostics = providerDiagnostics({
+      pack: 'research',
+      mode: 'inventory',
+      providers: [
+        providerEvidence({
+          projection: { state: 'absent', mode: 'materialization-extension' },
+          materialization: {
+            state: 'missing',
+            detail: 'codex has no user agent materialization for 1 asset',
+          },
+        }),
+      ],
+    });
+
+    expect(diagnostics).toHaveLength(1);
+    expect(diagnostics[0]).toMatchObject({
+      code: 'provider-materialization-missing',
+      severity: 'warning',
+      provider: 'codex',
+      affectedAssets: ['~/.agents/agents/skeptical-evaluator.md'],
+    });
+  });
+
+  it('emits refresh and restart codes from catalog state', () => {
+    const refresh = providerDiagnostics({
+      pack: 'research',
+      mode: 'inventory',
+      providers: [
+        providerEvidence({
+          visibility: {
+            state: 'manual-refresh',
+            reason: 'refresh the catalog',
+          },
+        }),
+      ],
+    });
+    const restart = providerDiagnostics({
+      pack: 'research',
+      mode: 'inventory',
+      providers: [
+        providerEvidence({
+          visibility: { state: 'restart-required', reason: 'start a session' },
+        }),
+      ],
+    });
+
+    expect(refresh[0]).toMatchObject({
+      code: 'refresh-required',
+      severity: 'info',
+    });
+    expect(restart[0]).toMatchObject({
+      code: 'restart-required',
+      severity: 'info',
+    });
+  });
+
+  it('suppresses a materialization failure on a read-only inventory surface', () => {
+    const providers = [
+      providerEvidence({
+        materialization: { state: 'failed', detail: 'permission denied' },
+      }),
+    ];
+
+    expect(
+      providerDiagnostics({ pack: 'research', mode: 'inventory', providers }),
+    ).toEqual([]);
+    expect(
+      providerDiagnostics({
+        pack: 'research',
+        mode: 'lifecycle',
+        providers,
+      })[0],
+    ).toMatchObject({
+      code: 'provider-materialization-failed',
+      severity: 'error',
+    });
+  });
+
+  it('merges provider diagnostics into projected pack evidence', () => {
+    const evidence = projectPackEvidence({
+      canonical: null,
+      scopes: [packScopeFactsFromInventory(scoped({ scope: 'user' }))],
+      providers: [
+        providerEvidence({
+          activation: {
+            state: 'inactive',
+            source: 'config-disabled',
+            reason: 'Explicitly disabled in sync config',
+          },
+        }),
+      ],
+      providerMode: 'inventory',
+    });
+
+    expect(evidence.providers).toHaveLength(1);
+    expect(
+      evidence.diagnostics.some(({ code }) => code === 'provider-inactive'),
+    ).toBe(true);
   });
 });

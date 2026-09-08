@@ -28,9 +28,6 @@ Adjust based on complexity—not all sections are required:
 name: skill-name
 # Required: kebab-case, max 64 chars, must match directory name
 
-version: 1.0.0
-# Required: semver. Start new skills at 1.0.0.
-
 description: Use when [trigger condition]. [What it does as disambiguation keywords].
 # Required: Single line, ≤ 500 chars. Lead with "when to use" — this is the routing trigger.
 # Agents load ONLY name+description at startup to decide relevance.
@@ -38,9 +35,13 @@ description: Use when [trigger condition]. [What it does as disambiguation keywo
 # === Spec-optional fields (recognized by some providers) ===
 # license: Apache-2.0
 # compatibility: Requires Node.js 18+
-# metadata:
-#   author: my-org
-#   version: "1.0"
+
+metadata:
+  version: 1.0.0
+  # Required: semver. Start new skills at 1.0.0. The spec carries the version
+  # under `metadata`; a top-level `version:` is a deprecated alias that is read
+  # only when `metadata.version` is absent.
+  # author: my-org
 
 # === Claude Code / Cursor extension fields (ignored by Codex, safe to include) ===
 argument-hint: '[required-arg] [--optional-flag]'
@@ -187,9 +188,10 @@ Successful completion means:
 
 ## Versioning Guidance
 
-- Include `version:` in frontmatter for every skill and use semver (`MAJOR.MINOR.PATCH`).
+- Include `metadata.version` in frontmatter for every skill and use semver (`MAJOR.MINOR.PATCH`).
 - Start new skills at `1.0.0`.
 - Bump patch for fixes/clarifications, minor for backward-compatible behavior additions, major for breaking workflow/interface changes.
+- A top-level `version:` is the deprecated alias for the same value: it is read only when `metadata.version` is absent, and a skill that carries both with different values is reported as a conflict that validation rejects. `resolveSkillVersion` in `packages/cli/src/commands/shared/frontmatter.ts` owns that order.
 
 ## Cross-Provider Portability Notes
 

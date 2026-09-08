@@ -1,11 +1,12 @@
 ---
 name: create-oat-skill
-version: 1.5.1
 description: Use when adding a new oat-* workflow skill or lifecycle action. Scaffolds the skill with OAT conventions like mode assertions, progress banners, and project-root resolution.
 argument-hint: '[skill-name]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
+metadata:
+  version: 1.5.3
 ---
 
 # Create OAT Skill
@@ -17,7 +18,7 @@ Create a new OAT workflow skill under `.agents/skills/` that follows OAT convent
 This skill is a specialization of the general skill-creation workflow.
 
 - Follow the baseline principles and structure from `.agents/skills/create-agnostic-skill/SKILL.md` (progressive disclosure, section layout, examples, troubleshooting, success criteria).
-- Apply the same frontmatter versioning rules from `create-agnostic-skill`: include `version: 1.0.0` for new skills and bump patch/minor/major on future edits.
+- Apply the same frontmatter versioning rules from `create-agnostic-skill`: include `metadata.version: 1.0.0` for new skills and bump patch/minor/major on future edits.
 - This skill adds/overrides only the OAT-specific requirements (progress banners, `{PROJECTS_ROOT}` + local-config active-project resolution, and OAT-safe bash patterns).
 
 ## When to Use
@@ -67,7 +68,8 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
 
 **Required frontmatter metadata:**
 
-- Include `version: 1.0.0` for new skills.
+- Include `metadata.version: 1.0.0` for new skills. OAT resolves `metadata.version` first and the top-level `version` second; `resolveSkillVersion` in `packages/cli/src/commands/shared/frontmatter.ts` owns that order and `packages/cli/src/commands/shared/frontmatter.test.ts` backstops it.
+- A top-level `version:` is the deprecated alias, read only when `metadata.version` is absent. Carrying both with different values is a conflict: `pnpm oat:validate-skills` reports it as an error and canonical role identity rejects it, even though the runtime readers still return the `metadata.version` value.
 - On later edits, bump patch for fixes/clarifications, minor for backward-compatible behavior additions, major for breaking workflow/interface changes.
 
 **Progress indicators (required):**
@@ -327,7 +329,7 @@ We should add a new OAT skill to archive completed projects. Create the skill wi
 ## Success Criteria
 
 - ✅ New skill created at `.agents/skills/{skill-name}/SKILL.md`
-- ✅ Skill frontmatter includes valid semver `version:` (`1.0.0` for new skills)
+- ✅ Skill frontmatter includes valid semver `metadata.version:` (`1.0.0` for new skills)
 - ✅ Skill includes required OAT sections (mode + progress + project resolution if applicable)
 - ✅ Skill registered in `AGENTS.md`
 - ✅ `pnpm oat:validate-skills` passes

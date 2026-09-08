@@ -1,11 +1,12 @@
 ---
 name: oat-doctor
-version: 1.2.2
 description: Use when you need to diagnose your OAT setup, check for outdated skills, identify misconfigurations, or get a summary of installed tools and config. Runs health checks and recommends corrective actions.
 argument-hint: '[--summary]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.2.3
 ---
 
 # OAT Doctor
