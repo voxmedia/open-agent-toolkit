@@ -36,8 +36,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -116,13 +116,13 @@ oat_generated: false
 
 # Project State: wave-7-execution
 
-**Status:** Plan complete — awaiting the plan gate
+**Status:** Implementing — group 1 dispatching
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-08
 
 ## Current Phase
 
-Plan (complete). Twenty pointer-only tasks in six parallel groups of three plus two sequential finale lanes; plan gate attempt 1 blocked and was repaired in-artifact; attempt 2 runs next, then group 1 dispatch.
+Implement. Plan gate passed on attempt 2; group 1 (p01 + p02 + p03) bootstraps at the post-gate tip.
 
 ## Artifacts
 
@@ -138,7 +138,7 @@ Plan (complete). Twenty pointer-only tasks in six parallel groups of three plus 
 - ✓ Drift checks run mechanically for all twenty plans: 20 PASS / 0 MINOR-DRIFT / 0 STOP (zero code movement since the plans' inspected head)
 - ✓ Wrapper artifacts written; `oat project validate-plan` passed
 - ✗ Plan gate attempt 1 blocked (1C/2I/1M: the lost p09 patch, the archive set, the program ledger, the p19 `AGENTS.md` claim) — fixed in-artifact; parked p09 bytes recovered under `parked/wave-5-p09/`
-- ☐ Plan gate attempt 2
+- ✓ Plan gate attempt 2 passed (0C/0I/1M; the write-inventory Medium addressed in the receive)
 - ☐ Groups 1–6, then p19 and p20; fan-in gates after each
 - ☐ Closeout: synthesis, archival, root final review, exit gate, post-implement sequence, PR
 
@@ -148,4 +148,4 @@ None
 
 ## Next Milestone
 
-Plan gate, then group 1 (p01 + p02 + p03) dispatch at the wave base.
+Group 1 (p01 + p02 + p03) reviewed and merged; lockstep 0.2.67; fan-in gates green.

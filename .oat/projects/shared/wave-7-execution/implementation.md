@@ -310,13 +310,23 @@ _Recorded when the configured implementation exit gate runs._
 
 **Plan row (attempt 1) → `fixes_added`** (gate-written row moved forward in place with the archived path); the gate re-runs (attempt 2).
 
+### Review Received: plan (attempt 2 — passed)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-08T231038Z.md (gate-invoked, run `c023731b-5c88-4e5c-a384-2061370d75e6`, target `codex-5-6-sol-xhigh`)
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 0 — passing gate, judgment-sweep mode:
+
+- M1 — the write-surface inventory was built from `### In scope` alone and omitted test files the plans' Test plans and Implementation steps add cases to (p04 `append.test.ts`, `lifecycle.integration.test.ts`; p05 six config/gate tests; p08 two config tests; p16 `review-skill-contracts.test.ts` and the new `baseline-ordering.test.ts`) and the `oat-project-summary` bump p04 takes: **addressed now** (evidence-only, contained): the inventory is regenerated from In scope + Test plan + Implementation-step test files + pin implications, the four writes lines and the single-writer bump list are corrected, `review-skill-contracts.test.ts` is recorded as a p01 → p04 → p16 seam (one writer per group), and the within-group intersections re-run from the complete set stay empty; no group recomposition.
+
+**Plan row (attempt 2) → `passed`** (gate-written row moved forward in place with the archived path). Gate history: `f905852e` blocked (lost p09 patch, archive set, program ledger, p19 `AGENTS.md`), `c023731b` passed.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
 
 ### Run 1 — 2026-09-08 — branch `wave-7-execution`, Tier 1 (native Claude Task dispatch), policy managed/high
 
-Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave-7 composition PR #284); plan gate pending.
+Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave-7 composition PR #284); plan gate passed on attempt 2 (attempt 1 blocked on the lost p09 patch, the archive set, the program ledger, and the p19 `AGENTS.md` claim).
 
 #### Dispatch Notes
 
@@ -330,6 +340,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-08
 
+- Plan gate attempt 2 passed (0C/0I/1M; the inventory Medium addressed in the receive); group 1 bootstraps next.
 - Plan gate attempt 1 blocked (1C/2I/1M: the lost p09 patch, the archive set, the program ledger, the p19 `AGENTS.md` claim) → repaired in-artifact; the parked p09 bytes recovered and committed under `parked/wave-5-p09/`.
 - Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after PR #284); wrapper scaffolded and authored; drift 20 PASS / 0 / 0 by mechanical run.
 
