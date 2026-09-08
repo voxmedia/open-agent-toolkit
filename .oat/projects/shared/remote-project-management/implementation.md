@@ -3448,8 +3448,12 @@ update, not a reopening or renumbering of the 90 completed tasks.
 - The separate `pnpm exec turbo run test --force` run passed 6,965/6,965 tests
   across 391 files, with `Cached: 0` for all 10 tasks. Smoke passed 161/161;
   skill scripts passed 861/861; release scripts passed 39 with one skipped.
-  Logs are `/tmp/remote-pjm-wave5-ready-*.log`. Plan validation and
-  `git diff --check` passed. Current main remains an ancestor of the candidate.
+  Logs are `/tmp/remote-pjm-wave5-ready-*.log`. Plan validation and the
+  integration-only `git diff --check c55deca00 HEAD` passed. Current main
+  remains an ancestor of the candidate. Aggregate `git diff --check origin/main
+HEAD` still flags Markdown hard-break trailing spaces in four archived
+  Phase 1 reviews; these pre-existing review files are byte-for-byte unchanged
+  by the integration and were preserved as requested.
 - PJM adoption is declared. Its doctor retains four existing completed-log
   references to unarchived backlog items; no unrelated archival was attempted.
 
