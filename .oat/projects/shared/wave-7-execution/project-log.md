@@ -44,6 +44,10 @@ Entries are chronological and append-only.
 
 target=codex-5-6-sol-xhigh threshold=important findings=critical:1,important:2,medium:1,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/wave-7-execution/reviews/artifact-plan-review-2026-09-08T224620Z.md run=f905852e-4f03-417e-a51f-6fbd79b6db99
 
+### 2026-09-08 · structural · oat gate review · plan
+
+target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-7-execution/reviews/artifact-plan-review-2026-09-08T231038Z.md run=c023731b-5c88-4e5c-a384-2061370d75e6
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
