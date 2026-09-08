@@ -1,6 +1,6 @@
 ---
 name: oat-doctor
-version: 1.2.1
+version: 1.2.2
 description: Use when you need to diagnose your OAT setup, check for outdated skills, identify misconfigurations, or get a summary of installed tools and config. Runs health checks and recommends corrective actions.
 argument-hint: '[--summary]'
 disable-model-invocation: true
@@ -194,7 +194,7 @@ it, and lists every skill that pack ships.
 
 `project-management` pack skills:
 
-- oat-pjm-add-backlog-item, oat-pjm-decision
+- oat-pjm-add-backlog-item, oat-pjm-decision, oat-pjm-remote
 - oat-pjm-update-repo-reference, oat-pjm-review-backlog
 
 `research` pack skills:
@@ -240,7 +240,7 @@ OAT ▸ DOCTOR SUMMARY
 | docs      | project | 7/7    | current  |
 | workflows | project | 40/40  | current  |
 | ideas     | user    | 4/4    | current  |
-| project-management | project | 4/4 | current |
+| project-management | project | 5/5 | current |
 | research  | project | 6/6    | current  |
 | utility   | project | 10/10  | outdated |
 
@@ -254,7 +254,7 @@ OAT ▸ DOCTOR SUMMARY
 
 - **docs** pack: authoring-docs, oat-agent-instructions-analyze, oat-agent-instructions-apply, oat-docs-analyze, oat-docs-apply, oat-docs-authoring, oat-docs-bootstrap (7 skills available)
   → Run: oat tools install docs --scope {scope}
-- **project-management** pack: oat-pjm-add-backlog-item, oat-pjm-decision, oat-pjm-update-repo-reference, oat-pjm-review-backlog (4 skills available)
+- **project-management** pack: oat-pjm-add-backlog-item, oat-pjm-decision, oat-pjm-remote, oat-pjm-update-repo-reference, oat-pjm-review-backlog (5 skills available)
   → Run: oat tools install project-management --scope {scope}
 - **research** pack: analyze, compare, deep-research, recon, skeptic, synthesize (6 skills available)
   → Run: oat tools install research --scope {scope}
