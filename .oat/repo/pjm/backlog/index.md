@@ -230,6 +230,7 @@
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                                    | open   | high     | feature    | L        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                                                    | open   | high     | task       | M        |
 | BL-260907-make-the-completion-seal       | Make the completion seal append idempotent so pre-archive interruptions can resume                              | open   | high     | task       | M        |
+| BL-260904-migrate-bundled-skills-from    | Migrate bundled skills from top-level version to metadata.version                                               | open   | high     | task       | M        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                                        | open   | high     | task       | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                                     | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                                   | open   | high     | feature    | L        |
@@ -312,7 +313,6 @@
 | BL-260906-give-project-state-frontmatter | Give PROJECT_STATE_FRONTMATTER_FIELDS a production consumer or delete it                                        | open   | low      | task       | S        |
 | BL-260906-make-the-phase-implementer     | Make the phase-implementer sweep contract test negation-aware                                                   | open   | low      | task       | S        |
 | BL-260830-memory-subsystem-ownership     | Memory subsystem ownership decision for OAT                                                                     | open   | low      | idea       | XL       |
-| BL-260904-migrate-bundled-skills-from    | Migrate bundled skills from top-level version to metadata.version                                               | open   | low      | task       | M        |
 | BL-260903-preserve-proto-named-config    | Preserve **proto**-named config keys through jsonc parsing                                                      | open   | low      | task       | S        |
 | BL-260906-project-journal-reservation    | Project journal reservation state into the smoke evidence bundle                                                | open   | low      | task       | S        |
 | BL-260906-reconcile-the-oat-doctor       | Reconcile the oat-doctor example table with its inventory sentence                                              | open   | low      | task       | XS       |
