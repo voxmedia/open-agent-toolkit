@@ -1,10 +1,11 @@
 ---
 name: synthesize
-version: 0.1.0
 description: Merge multiple analysis artifacts into a single coherent report with provenance tracking. Reads existing artifacts from /deep-research, /analyze, and /compare.
 argument-hint: '[directory | file1 file2 ...] [--inline]'
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion
+metadata:
+  version: 0.1.1
 ---
 
 # /synthesize

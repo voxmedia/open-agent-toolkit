@@ -21,7 +21,7 @@ describe('agent instructions bundle contract', () => {
       'utf8',
     );
 
-    expect(readDeclaredVersion(analyzeSkill)).toBe('1.12.0');
+    expect(readDeclaredVersion(analyzeSkill)).toBe('1.12.1');
     expect(analyzeSkill).toContain(
       "Fill in all template sections with findings from Steps 2–7, including Step\n3.5's existing-rule validation.",
     );

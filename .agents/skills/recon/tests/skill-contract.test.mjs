@@ -23,7 +23,7 @@ async function readContracts() {
 test('recon is a provider-neutral user-invocable skill', async () => {
   const { skill } = await readContracts();
   assert.match(skill, /^name:\s*recon$/m);
-  assert.equal(readSkillVersion(skill), '1.1.0');
+  assert.equal(readSkillVersion(skill), '1.1.1');
   assert.match(skill, /^user-invocable:\s*true$/m);
   assert.match(skill, /provider-neutral/i);
   assert.doesNotMatch(skill, /(?:must|required to) use GPT-|Claude-|Gemini-/i);

@@ -1,11 +1,12 @@
 ---
 name: oat-idea-ideate
-version: 1.2.2
 description: Use when continuing an existing tracked idea or expanding an explicit scratchpad seed from {IDEAS_ROOT}/scratchpad.md. Do NOT use to start a brand-new, destinationless brainstorm; use oat-brainstorm for that.
 argument-hint: '[--global]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, AskUserQuestion
+metadata:
+  version: 1.2.3
 ---
 
 # Ideate

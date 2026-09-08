@@ -1,10 +1,11 @@
 ---
 name: oat-project-review-provide-remote
-version: 1.1.3
 description: Use when reviewing a GitHub PR opened on another machine for an active OAT project and posting findings back as a single PR review. Resolves the project from the PR diff, reads project artifacts for mode-aware review, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, Task, AskUserQuestion
+metadata:
+  version: 1.1.4
 ---
 
 # Remote Review Provide (Project-Scoped GitHub PR)

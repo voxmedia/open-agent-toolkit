@@ -1,10 +1,11 @@
 ---
 name: oat-project-dispatch-subagents
-version: 1.1.4
 description: Use when an OAT project lifecycle skill needs to translate project state, phase or task scope, gates, and write authority into a provider-neutral subagent dispatch.
 disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Bash
+metadata:
+  version: 1.1.5
 ---
 
 # Dispatching OAT Project Subagents

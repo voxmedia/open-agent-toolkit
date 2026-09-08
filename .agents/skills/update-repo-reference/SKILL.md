@@ -1,9 +1,10 @@
 ---
 name: update-repo-reference
-version: 1.3.0
 description: Retired. Use oat-pjm-update-repo-reference instead. The repo reference layer moved from .oat/repo/reference/ to the two-layer .oat/repo/pjm/ + reference/ taxonomy.
 disable-model-invocation: true
 user-invocable: true
+metadata:
+  version: 1.3.1
 ---
 
 # Update OAT Repo Reference

@@ -1,11 +1,12 @@
 ---
 name: oat-wave-program
-version: 1.5.0
 description: Use when decomposing a corpus of external implementation plans into an ordered wave program — coverage inventory, dependency mapping, wave composition, and the durable execution-program artifact that oat-wave-execute consumes and updates.
 argument-hint: '[new|refresh|wave-close <wave-id>] (default: refresh against the current artifact)'
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
+metadata:
+  version: 1.5.1
 ---
 
 # Program a Corpus of External Plans into Waves

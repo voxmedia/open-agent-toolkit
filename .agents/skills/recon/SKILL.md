@@ -1,11 +1,12 @@
 ---
 name: recon
-version: 1.1.0
 description: Use when a bounded investigation needs source-grounded evidence before analysis or implementation. Produces a validated evidence-packet directory through approved provider-neutral worker waves.
 argument-hint: '<question-or-target> [--profile quick|standard|thorough] [--scope description] [--context path] [--output directory] [--strict]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Glob, Grep, Bash, AskUserQuestion, Agent, mcp__*
+metadata:
+  version: 1.1.1
 ---
 
 # Recon

@@ -1,11 +1,12 @@
 ---
 name: oat-project-plan
-version: 1.4.10
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.4.11
 ---
 
 # Planning Phase

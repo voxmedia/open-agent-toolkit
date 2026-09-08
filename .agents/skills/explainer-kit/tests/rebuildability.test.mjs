@@ -100,7 +100,7 @@ test('bundles self-contained visual authoring and review guidance', async () => 
     readFile(join(skillRoot, 'references/visual-review.md'), 'utf8'),
   ]);
 
-  assert.equal(readSkillVersion(skill), '2.1.0');
+  assert.equal(readSkillVersion(skill), '2.1.1');
   assert.match(skill, /references\/visual-authoring\.md/);
   assert.match(skill, /references\/visual-review\.md/);
   for (const [name, guidance] of [

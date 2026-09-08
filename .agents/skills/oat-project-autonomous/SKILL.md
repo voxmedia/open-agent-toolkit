@@ -1,11 +1,12 @@
 ---
 name: oat-project-autonomous
-version: 1.0.13
 description: Use when a user explicitly asks to run an OAT project autonomously end-to-end. Activates session-only autonomy, resumes the correct lifecycle phase, and drives the existing OAT skills through final PR or a reported boundary.
 argument-hint: '<goal | project-slug | ticket-ref>'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion, Task
+metadata:
+  version: 1.0.14
 ---
 
 # Autonomous OAT Project

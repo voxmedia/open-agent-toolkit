@@ -1,10 +1,11 @@
 ---
 name: oat-review-receive-remote
-version: 1.3.0
 description: Use when processing GitHub PR review comments outside project context. Fetches PR comments via agent-reviews and converts them into actionable task lists.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.3.1
 ---
 
 # Remote Review Receive (Ad-hoc GitHub PR)

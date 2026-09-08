@@ -431,8 +431,8 @@ test('skill documents freeze the pre/core/post seam and migration controls', asy
   assert.match(adapterSkill, /references\/migration\.md/);
   assert.match(personalDraft, /https:\/\/dy4vzrzaexuy5\.cloudfront\.net/);
 
-  assert.equal(readSkillVersion(coreSkill), '2.1.0');
-  assert.equal(readSkillVersion(adapterSkill), '1.0.7');
+  assert.equal(readSkillVersion(coreSkill), '2.1.1');
+  assert.equal(readSkillVersion(adapterSkill), '1.0.8');
   assert.doesNotMatch(coreTree, /dy4vzrzaexuy5\.cloudfront\.net/);
 });
 

@@ -1,12 +1,13 @@
 ---
 name: oat-project-lite
-version: 1.1.1
 description: Use when a single-sitting change needs a critical interview, an approved single-phase plan, and resumable OAT implementation with minimal ceremony.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.1.2
 ---
 
 # Lite Project
