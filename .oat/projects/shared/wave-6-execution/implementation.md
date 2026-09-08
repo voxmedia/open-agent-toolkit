@@ -112,6 +112,16 @@ oat_generated: false
 
 **Plan row (attempt 1) → `fixes_added`** (gate-written row moved forward in place with the archived path); the gate re-runs (attempt 2).
 
+### Review Received: plan (attempt 2 — passed)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-08T001147Z.md (gate-invoked, run `8d154521-b9de-4949-a78f-a393bcef2991`, target `codex-5-6-sol-xhigh`)
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 0 — passing gate, judgment-sweep mode:
+
+- M1 — the write inventory still omitted planned test edits (p01's `list-tools.test.ts` / `info-tool.test.ts` regression cases and `format-pack-inventory.test.ts`; p05's `info-tool.test.ts` and its `status/index.test.ts` negative case) and the p01 → p05 ordered seam omitted `info-tool.test.ts`: **addressed now** (small, contained, evidence-only): test files a lane edits are reclassified as writes in both inventories, the ordered seam and the merge-serialization rule name `info-tool.test.ts` and `status/index.test.ts`, intersections restated (all empty); no group recomposition; the gate is not re-run for a non-contract inventory edit.
+
+**Plan row (attempt 2) → `passed`** (gate-written row moved forward in place with the archived path). Gate history: `e5ddc829` blocked (contract contradiction in the p04 refresh, inventory paths, design row), `8d154521` passed.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -141,6 +151,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-07
 
+- Plan gate: attempt 1 blocked (0C/1I/2M) → repaired `061841159`; attempt 2 passed (0C/0I/1M, M1 addressed in the receive). Group 1 bootstrapped at `fab304fe7`.
 - Wave base `1bef28fa1fb95e1473872ff9a511a6b42fa37889` (origin/main after the wave-5 close PR #276); wrapper scaffolded and authored; refreshes applied to the five plans (`ceeac1149`).
 
 ## Deviations from Plan / Design

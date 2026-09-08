@@ -16,8 +16,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -90,19 +90,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T23:38:50.037Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-07T23:43:04.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-08T00:18:57.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-6-execution
 
-**Status:** Plan complete — plan gate pending
+**Status:** Implementation in progress
 **Started:** 2026-09-07
 **Last Updated:** 2026-09-07
 
 ## Current Phase
 
-Plan — wrapper authored from the program's Wave 6 section and the wave-boundary recon; the configured plan gate runs next, then implementation (group 1: p01 + p02 + p03; group 2: p04 + p05).
+Implementation — plan gate passed on attempt 2; group 1 (p01 + p02 + p03) running in parallel worktrees at the wave base.
 
 ## Artifacts
 
@@ -119,7 +119,8 @@ Plan — wrapper authored from the program's Wave 6 section and the wave-boundar
 - ✓ Refreshes applied to the five source plans as dated entries (`ceeac1149`)
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
 - ✗ Plan gate attempt 1 blocked (0C/1I/2M: the p04 alias-warning contract contradiction, the file inventory, the design row) — fixed in-artifact
-- ⧗ Plan gate attempt 2
+- ✓ Plan gate attempt 2 passed (0C/0I/1M; the inventory Medium addressed in the receive)
+- ⧗ Group 1 (p01 + p02 + p03) dispatched at `fab304fe7`
 
 ## Blockers
 
@@ -127,4 +128,4 @@ None
 
 ## Next Milestone
 
-Plan gate passed; then bootstrap group 1 worktrees and dispatch p01, p02, p03.
+Group 1 merged and gated (lockstep 0.2.63 → 0.2.64), then group 2 (p04 + p05).
