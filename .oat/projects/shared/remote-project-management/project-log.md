@@ -245,6 +245,10 @@ Original progress remains 90/90. The configured final gate remains historical;
 fresh final review, authorized publication, and post-push CI are pending.
 No push, merge of PR #273, project archive, or recap retry occurred.
 
+### 2026-09-08 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/remote-project-management/reviews/final-review-2026-09-08T155545Z.md run=b64bfa7c-093b-46c7-84fb-dcf66dd58f60
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
