@@ -14,7 +14,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -115,24 +115,25 @@ oat_dispatch_policy: # managed/high per operator routing preference
 #   receive_completed: false
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
-oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/280' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-08T07:48:14.811Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_completed: '2026-09-08T12:36:18.000Z' # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-09-08T12:35:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_lifecycle: complete
 ---
 
 # Project State: migrate-skill-versions
 
-**Status:** Implementation in progress
+**Status:** Complete
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-08
 
 ## Current Phase
 
-Implementation — the plan gate blocked four times on new surfaces (every finding fixed in the plan; no Critical) and is capped; Phase 1 dispatched on branch `migrate-skill-versions` (from `origin/main` `5b3b82151`) with root implementation-time reviews as coverage.
+Lifecycle complete — PR #280 open; the orchestrator merges after CI and Bugbot, then updates PJM to the merged PR.
 
 ## Artifacts
 
@@ -156,7 +157,8 @@ Implementation — the plan gate blocked four times on new surfaces (every findi
 - ✓ Phase 2 done (`ddfca906a`, `872ce02c6`); root review PASS (0C/0I/0M/4m)
 - ✓ Root final review PASS (0C/0I/0M/2m)
 - ✓ Configured exit gate passed on attempt 1 (run `d888e4e6`, codex-5-6-sol-xhigh, 0/0/1/1; the Medium deferred) and received
-- ⧗ Post-implement sequence, then the PR
+- ✓ Post-implement sequence (summary.md, PJM current-state/roadmap, PR artifact) `d80cf7312`
+- ✓ PR #280 open on `origin/migrate-skill-versions`
 
 ## Blockers
 
@@ -164,4 +166,4 @@ None
 
 ## Next Milestone
 
-Post-implement sequence, then the PR on `origin/migrate-skill-versions`.
+None. Project complete; merge PR #280 on green checks.
