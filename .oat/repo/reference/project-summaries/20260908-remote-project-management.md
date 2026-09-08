@@ -1,44 +1,164 @@
 ---
-oat_generated: false
-purpose: project-observations
-oat_last_updated: 2026-08-31
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-09-08
+oat_generated: true
+oat_summary_last_task: p09-t04
+oat_summary_revision_count: 3
+oat_summary_includes_revisions: [p-rev1, p-rev2, p-rev3]
 ---
 
-# Project Log: remote-project-management
+# Summary: Remote Project Management
 
-This append-only log serves two audiences: the project team learning from this project's execution, and maintainers improving the general OAT workflow and tooling.
+## Overview
 
-## Logging contract
+This project added deliberate, local-first integration between OAT PJM and
+GitHub Issues, Linear, and Jira Cloud. It preserves the local backlog and
+project artifacts as the complete offline-capable working surface while making
+remote reads and mutations explicit, independently governed per binding,
+previewable, verifiable, and restart-safe.
 
-Append when something breaks, surprises you, requires a workaround, or works notably well enough to preserve as do-not-regress evidence. Record evidence, not a running narrative. Prior entries are never edited or struck through; append corrections as a new judgment entry that references the original entry and explains the correction. Add a version note to tool-related observations. Create entries only with `oat project log append`; run `oat project log append --help` for the complete entry contract. Reference supporting artifacts by path instead of inlining them. Never record secret values such as tokens, keys, signed URLs, or credentials because this log rolls up into tracked surfaces; reference secrets by name or source, never by value.
+## What Was Implemented
 
-Judgment entries default to 1–3 sentences covering what happened, the impact or workaround, and any follow-up. High-value entries may instead use this structured body:
+- A strict per-binding domain model for provider identity, purpose, authority,
+  normalized snapshots, reconciliation baselines, operation journals, batches,
+  uncertainty, aliases, and tombstones.
+- Repository-, local-, and user-owned configuration with tighten-only authority
+  composition, compact backward-compatible associations, privacy-aware storage,
+  atomic persistence, migration, and remote doctor diagnostics.
+- Preview-first intake, publish, refresh, reconcile, discussion, closeout,
+  relink, detach, recreate, and operation-continuation workflows.
+- Provider-neutral semantic adapters for GitHub Issues, Linear, and Jira Cloud,
+  including managed descriptions, duplicate recovery, bounded discussion
+  evidence, lifecycle transitions, and immutable cross-provider conformance.
+- A host-executor boundary where the live agent discovers an available
+  connector or an already configured CLI and returns sanitized observations;
+  OAT retains policy, approval, journaling, verification, and state authority.
+- End-to-end recovery for partial or uncertain writes, immutable reviewed
+  batches, multi-binding closeout, explicit approval previews, and public CLI
+  workflows.
+- User and agent documentation, synced skill assets, lockstep package version
+  `0.2.66`, and evidence-grade release verification; the post-implementation
+  integrations are tracked separately below.
 
-```text
-Observation: What happened and the supporting evidence.
-Impact: Why it mattered or what workaround was required.
-Recommendation: What should change or be preserved.
-```
+## Key Decisions
 
-Shared tracked surfaces must be written only from the root checkout, never from parallel worktrees.
+- **Local-first per-binding remote management.** Remote providers are optional
+  views and collaboration surfaces. Each binding carries its own purpose,
+  policy, state, and receipts; no change propagates transitively between
+  providers.
+- **Host-discovered provider-neutral execution.** OAT core and reusable skills
+  encode semantic intent and sanitized evidence, not MCP names, captured
+  catalogs, native schemas, executable names, flags, or provider CLI dialects.
+- **Universal outbound projection gate.** Every create or update consumes only
+  an explicit normalized projection and must pass the same provider-neutral
+  privacy/safety gate whose result digest is bound to preview and approval.
+- **Whole-field sensitive-content suppression.** Inbound content is limited to
+  bounded field allowlists. A conservative signal suppresses the entire field
+  and marks it incomplete; the product does not claim credential parsing or
+  general DLP.
+- **Persist before effect, verify after effect.** Mutation intent is durable
+  before one external attempt, uncertain outcomes block blind retry, and only
+  authoritative read-back can establish success.
 
-## Entry format
+## Design Deltas
 
-Judgment entries:
+- The early credential-value parser was replaced with conservative whole-field
+  suppression and explicit incompleteness evidence, avoiding repository-wide
+  scanning and general-DLP claims.
+- Static transport catalogs and provider CLI machinery were removed in favor of
+  live host capability discovery and a provider-neutral action/observation
+  bridge.
+- Production approval, restart, anomaly, and lifecycle-proof gaps discovered by
+  review were closed through three corrective revision phases without rewriting
+  the exhausted review history.
+- The final exit-gate sweep found that 54 completed tasks used compact prose
+  receipts that the public status parser did not count. Canonical artifact
+  receipts now make the public status surface agree with the authoritative
+  90/90 completion record.
 
-```text
-### 2026-08-31 · <project|general> · <bug|friction|worked-well|feedback> · <area>
-```
+## Notable Challenges
 
-Structural entries:
+- Independent reviews repeatedly exposed subtle restart-safety, approval,
+  duplicate-recovery, and production-routing gaps. Bounded fix loops and three
+  corrective revisions preserved evidence while tightening behavior.
+- Phase 7 production routing required an explicitly authorized recovery to
+  connect provider-neutral runner composition through the real shared-storage
+  path rather than proving only isolated modules.
+- Main advanced during the project. It was merged rather than rebased so every
+  reviewed implementation and repair SHA remained reachable, then the focused
+  and release baselines were re-established.
 
-```text
-### 2026-08-31 · structural · <producer> · <ref>
-```
+## Tradeoffs Made
 
-## Entries
+- V1 deliberately omits webhooks, continuous polling, distributed locking, and
+  automatic provider-to-provider mirroring. Fresh reads, reviewed previews,
+  exclusive journals, single attempts, and hard uncertainty stops provide a
+  safer local-first boundary without claiming distributed coordination.
+- Provider-native features remain extensions and are advertised only when the
+  live host surface proves them. Unsupported Jira metadata or workflow detail
+  degrades explicitly instead of silently adding a native REST fallback.
+- Successful bindings in a reviewed batch are not rolled back when another
+  binding fails; every binding retains its own durable outcome and recovery
+  path.
 
-Entries are chronological and append-only.
+## Integration Notes
+
+- **Post-implementation Wave 6 and skill migration:** merged main
+  `bb93ad233` (PRs #278–#281) in `5c70a9cb`. The remote and doctor skills now
+  use only `metadata.version`, preserving their bodies and the five-skill PJM
+  inventory. Public packages are 0.2.66, above main's 0.2.65. Restored five
+  missing original reviews byte-for-byte in `dd86a7401`; the new ledger-path
+  guard passes. Bounded independent integration review found no remaining
+  compatibility issue. All local CI-equivalent gates, lint, format, and 7,225
+  uncached workspace tests passed. Fresh configured gate
+  `b64bfa7c-093b-46c7-84fb-dcf66dd58f60` passed at `4ea2dc5c4` with zero
+  Critical/Important/Medium findings. Its sole Minor was dispositioned by
+  preserving the failed recap as intentional historical evidence. Completion
+  awaits the recap choice, archive/publication, and post-push CI; earlier
+  receipts below are historical.
+- **Post-implementation Wave 5:** merged main at
+  `1bef28fa1fb95e1473872ff9a511a6b42fa37889` through merge `c55deca00`.
+  Commits `4a27306ca` and `ba522d5d5` integrate remote config-unset behavior,
+  register the remote skill in the actual bundle and project-management pack,
+  and align installation fixtures and doctor inventory. Public packages are
+  `0.2.64`, above main's `0.2.63`. The fresh review pending at that checkpoint
+  passed after Wave 6 integration; the prior review and verification receipts
+  below are history.
+- The complete remote-PJM contract is exposed through `oat pjm remote` and the
+  `oat-pjm-remote` host skill. External execution remains host-owned; OAT must
+  not grow provider-specific invocation mappings.
+- Before Wave 5, the branch integrated main through merge commit
+  `6c73da33cf64fa2221def42a0b2fc6f7960ced73`; public packages were at `0.2.63`,
+  above that merged `origin/main` baseline `0.2.62`.
+- Pre-Wave-5 final verification passed the CI-equivalent gate sequence, lint and format,
+  an uncached 6,545-test workspace run, smoke, skill, release, and skill-schema
+  suites. The configured cross-family exit gate then passed at the Important
+  threshold and its sole Medium artifact finding was addressed.
+
+## Revision History
+
+- **Revision 1 — production contract closure.** Four tasks tightened approval,
+  persistence, restart, and production-runner behavior after Phase 3 review.
+  Its capped review history remained intact when later work was split out.
+- **Revision 2 — verification handoff and incomplete intent closure.** Two
+  tasks made mutation-to-readback recovery durable and rejected incomplete
+  project-create provenance rather than synthesizing authority.
+- **Revision 3 — anomaly and approval closure.** Two tasks restored recreate
+  handling across supported non-active anomalies and exposed exact lifecycle
+  approval previews. The revision passed its independent review before Phase 8
+  release work resumed.
+
+## Explainer Outcome
+
+- **project-recap:** degraded `failed` —
+  `explainers/remote-project-management-recap`. The retained build record and
+  terminal evidence name an authoring pipeline failure. The operator explicitly
+  skipped a retry during completion; no durable or published lifecycle recap
+  was produced.
+
+## Workflow Observations
 
 ### 2026-08-31 · structural · oat gate review · design
 
@@ -253,6 +373,6 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0
 
 Received gate b64bfa7c-093b-46c7-84fb-dcf66dd58f60 at 4ea2dc5c465660f508f269ac057942b8acc8b45c: zero Critical/Important/Medium, one Minor rejected as required cleanup because failed recap files are intentionally retained evidence. No tasks added; final review passed. Recap choice remains pending before confirmed archive/publication.
 
-## End-of-run synthesis (pending — do not skip at project completion)
+### 2026-09-08 · structural · oat-project-complete · retirement-sweep
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Retirement sweep: no absorbed projects recorded.
