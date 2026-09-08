@@ -4690,10 +4690,28 @@ describe('validateOatSkills', () => {
       'unsupported review-ledger row (a row must start with |)',
     );
     // The ledger is the table rows of the section: fenced examples and
-    // blockquoted placeholder rows are notes, and the scan ends at the next
-    // heading of any level, so a `###` subsection is not scanned.
+    // blockquoted placeholder rows are notes, not events.
     expect(guardBlock).toContain('in_fence = 1');
     expect(guardBlock).toContain('/^[[:space:]]*>/ { next }');
+    // Columns are split on `|`, so an escaped `\|` shifted `artifact_column`
+    // onto a neighbouring cell and, on a `-` placeholder, skipped the row in
+    // silence. No ledger value needs a literal pipe, so both the header and
+    // the row stop rather than being reinterpreted: unescaping instead would
+    // merge two cells and could turn a previously rejected artifact into an
+    // accepted `-`, or hide a whole table by merging its header cells.
+    expect(guardBlock).toContain('index(escaped_pipe_row, "\\\\|") > 0');
+    expect(guardBlock).toContain(
+      'PRFINAL-05: review-ledger table header contains an escaped |',
+    );
+    expect(guardBlock).toContain(
+      'PRFINAL-05: unsupported review-ledger row (an escaped | cannot be assigned to a column)',
+    );
+    // The header stop is decided before the header's columns are read.
+    expect(
+      guardBlock.indexOf('index(escaped_pipe_row, "\\\\|") > 0'),
+    ).toBeLessThan(
+      guardBlock.indexOf('if (header_cell == "scope") scope_column = i'),
+    );
     // The guard scans exactly the rows Step 2 reads: same level-two
     // boundary, so no subsection can hide a row from validation.
     expect(guardBlock).toContain('/^##[[:space:]]/ { exit }');
@@ -4713,22 +4731,34 @@ describe('validateOatSkills', () => {
     // opinion about the tree: `.gitignore` ignores `local`, `synced`, and
     // `archived` projects entirely, so ignore state cannot decide this.
     expect(guardBlock).not.toContain('git check-ignore');
-    expect(guardBlock).toContain(
-      '"$LEDGER_PROJECT_ROOT"/reviews/archived/*) ROW_ARCHIVED_ONLY=1 ;;',
-    );
+    expect(guardBlock).toContain('"$LEDGER_ARCHIVE_DIR"/*) ;;');
     // Only a checkout that never materialized `reviews/archived/` excuses an
     // absent archived artifact; once the directory exists, a missing file
     // there is an interrupted archive and stops.
-    expect(guardBlock).toContain(
-      'if [ ! -d "$LEDGER_PROJECT_ROOT/reviews/archived" ]; then',
-    );
+    expect(guardBlock).toContain('if [ -d "$LEDGER_ARCHIVE_DIR" ]; then');
     expect(guardBlock).toContain(
       'reviews/archived/ was never materialized in this checkout',
+    );
+    // `[ ! -d ]` is also true for a regular file and for a dangling symlink,
+    // so keying the excuse on it re-opened the dangling row this gate exists
+    // to catch. Absent means absent — `-e` alone still misses a dangling
+    // symlink — and any other non-directory at that path stops.
+    expect(guardBlock).toContain(
+      '[ -e "$LEDGER_ARCHIVE_DIR" ] || [ -L "$LEDGER_ARCHIVE_DIR" ]',
+    );
+    expect(guardBlock).toContain('LEDGER_ABSENT_CLASS=not-a-directory');
+    expect(guardBlock).toContain(
+      'ROW_REASON="reviews/archived exists but is not a directory"',
+    );
+    expect(guardBlock).not.toContain(
+      'if [ ! -d "$LEDGER_PROJECT_ROOT/reviews/archived" ]; then',
     );
     // Containment is decided before that acceptance.
     expect(
       guardBlock.indexOf('artifact resolves outside the project'),
-    ).toBeLessThan(guardBlock.indexOf('ROW_ARCHIVED_ONLY=1 ;;'));
+    ).toBeLessThan(
+      guardBlock.indexOf('classify_absent_ledger_artifact "$ROW_RESOLVED"'),
+    );
     // The ledger table is recognized by its header, emphasis stripped, with
     // every column derived from it; a section with rows but no recognizable
     // ledger header, or an unclosed fence, stops instead of validating nothing.
@@ -4741,6 +4771,14 @@ describe('validateOatSkills', () => {
     );
     expect(guardBlock).toContain('PRFINAL-05: unclosed fenced block');
     expect(guardBlock).toContain('if (saw_table && !recognized_ledger)');
+    // A plan whose ledger is not under an exact `## Reviews` heading left the
+    // table state untouched, so the guard exited 0 having checked no row. A
+    // section the guard cannot find is the same silent full skip as a header
+    // it cannot recognize.
+    expect(guardBlock).toContain('if (!in_reviews)');
+    expect(guardBlock).toContain(
+      'PRFINAL-05: no ## Reviews section; the review ledger was never scanned',
+    );
     // A ledger-shaped table with no Artifact column stops on its own terms,
     // rather than being excused because an earlier table was recognized.
     expect(guardBlock).toContain(
