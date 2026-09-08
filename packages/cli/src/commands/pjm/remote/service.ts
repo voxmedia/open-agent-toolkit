@@ -20,6 +20,7 @@ import {
 } from 'node:path';
 import { isDeepStrictEqual, promisify } from 'node:util';
 
+import { readSyncedRecord } from '@commands/project/sync/record';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import {
   canonicalizePath,
@@ -196,11 +197,17 @@ async function prepareCloseout(
   if (!request.projectPath) {
     throw new Error('Closeout requires an explicit local project path.');
   }
+  const target = await resolveProjectCreateTarget(
+    request.projectRoot,
+    request.projectPath,
+  );
   const metadata = (await store.listBindingMetadata()).filter(
     (binding) =>
       binding.target.kind === 'project' &&
-      (binding.target.id === request.projectPath ||
-        binding.target.path === request.projectPath),
+      binding.target.scope === target.scope &&
+      binding.target.id === target.id &&
+      canonicalizePath(resolve(request.projectRoot, binding.target.path)) ===
+        canonicalizePath(resolve(request.projectRoot, target.path)),
   );
   const eligible = metadata.filter((binding) =>
     binding.purposes.some((purpose) =>
@@ -2425,6 +2432,12 @@ async function resolveProjectCreateTarget(
         `Project publication target is outside configured project scope roots: ${reference}`,
       );
     }
+    if (scope === 'synced') {
+      await assertActiveSyncedProject(
+        resolveScopeRoot(projectRoot, projectsRoot, scope),
+        basename(absolutePath),
+      );
+    }
     candidates.push({ scope, path: absolutePath });
   } else {
     if (
@@ -2437,10 +2450,11 @@ async function resolveProjectCreateTarget(
       const scopeRoot = resolveScopeRoot(projectRoot, projectsRoot, scope);
       const projectPath = join(scopeRoot, requested);
       const materialized = await isDirectory(projectPath);
-      const recorded =
-        scope === 'synced' &&
-        (await isFile(join(scopeRoot, `${requested}.json`)));
-      if (materialized || recorded) {
+      const activeSynced =
+        scope === 'synced'
+          ? await activeSyncedProject(scopeRoot, requested, materialized)
+          : false;
+      if ((scope !== 'synced' && materialized) || activeSynced) {
         candidates.push({
           scope,
           path: canonicalizePath(projectPath),
@@ -2475,6 +2489,43 @@ async function resolveProjectCreateTarget(
   };
 }
 
+async function activeSyncedProject(
+  scopeRoot: string,
+  id: string,
+  materialized: boolean,
+): Promise<boolean> {
+  const record = await readSyncedRecord(join(scopeRoot, `${id}.json`));
+  if (record?.status === 'active') return true;
+  if (record?.status === 'complete') {
+    throw new Error(
+      `Synced project '${id}' is complete and cannot be published as an active target.`,
+    );
+  }
+  if (materialized) {
+    throw new Error(
+      `Synced project '${id}' has a checkout but no active record; refusing to publish a potentially archived project.`,
+    );
+  }
+  return false;
+}
+
+async function assertActiveSyncedProject(
+  scopeRoot: string,
+  id: string,
+): Promise<void> {
+  if (
+    !(await activeSyncedProject(
+      scopeRoot,
+      id,
+      await isDirectory(join(scopeRoot, id)),
+    ))
+  ) {
+    throw new Error(
+      `Synced project '${id}' has no active record and cannot be published.`,
+    );
+  }
+}
+
 function projectPointerPath(projectRoot: string, projectPath: string): string {
   const relativePath = relative(canonicalizePath(projectRoot), projectPath);
   return relativePath === '..' ||
@@ -2487,17 +2538,6 @@ function projectPointerPath(projectRoot: string, projectPath: string): string {
 async function isDirectory(path: string): Promise<boolean> {
   try {
     return (await stat(path)).isDirectory();
-  } catch (error) {
-    if (isNodeError(error) && ['ENOENT', 'ENOTDIR'].includes(error.code!)) {
-      return false;
-    }
-    throw error;
-  }
-}
-
-async function isFile(path: string): Promise<boolean> {
-  try {
-    return (await stat(path)).isFile();
   } catch (error) {
     if (isNodeError(error) && ['ENOENT', 'ENOTDIR'].includes(error.code!)) {
       return false;
@@ -2715,7 +2755,10 @@ async function prepareCreate(
     preview,
     expected: {
       operationClass: 'create',
-      targetId: `${target.kind}:${target.id}`,
+      targetId:
+        target.kind === 'project'
+          ? `${target.kind}:${target.scope}:${target.id}`
+          : `${target.kind}:${target.id}`,
       workflowId: target.id,
       workflowRevision: local.sourceRevision,
     },

@@ -11,6 +11,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
+import { buildSyncedRecord } from '@commands/project/sync/record';
 import { Command } from 'commander';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -213,13 +214,15 @@ describe('production lifecycle composition', () => {
         target: { kind: 'backlog', scope: 'shared', path: null },
       }),
     );
+    const closeoutProjectPath = '.oat/projects/shared/example';
+    await mkdir(join(repository, closeoutProjectPath), { recursive: true });
     const projectBinding: RemoteBindingMetadata = {
       ...binding(['source', 'planning']),
       target: {
         kind: 'project',
         scope: 'shared',
-        id: 'shared/example',
-        path: 'shared/example',
+        id: 'example',
+        path: closeoutProjectPath,
       },
     };
     await store.materializeIntakeBinding(projectBinding);
@@ -292,7 +295,7 @@ describe('production lifecycle composition', () => {
     const closeout = await runner({
       operation: 'closeout',
       projectRoot: repository,
-      projectPath: 'shared/example',
+      projectPath: closeoutProjectPath,
       capabilityEvidenceStdin: true,
     });
     expect(closeout).toMatchObject({
@@ -438,7 +441,7 @@ describe('production lifecycle composition', () => {
       const actionHandoff = await runner({
         operation: 'closeout',
         projectRoot: repository,
-        projectPath: 'shared/example',
+        projectPath: closeoutProjectPath,
         previewOperationId: closeoutBatchId,
         capabilityEvidenceStdin: true,
         authorityEvidenceFile: authorityPath,
@@ -2819,6 +2822,14 @@ describe('production lifecycle composition', () => {
     const projectPath = '.oat/projects/synced/project-1';
     await mkdir(join(repository, projectPath), { recursive: true });
     await writeFile(
+      join(repository, '.oat', 'projects', 'synced', 'project-1.json'),
+      `${JSON.stringify(
+        buildSyncedRecord('project-1', new Date(timestamp)),
+        null,
+        2,
+      )}\n`,
+    );
+    await writeFile(
       join(repository, '.oat', 'config.json'),
       `${JSON.stringify({
         version: 1,
@@ -2850,7 +2861,7 @@ describe('production lifecycle composition', () => {
         expiresAt: '2026-08-31T12:05:00.000Z',
         instruction: {
           operationClass: 'create',
-          targetId: 'project:project-1',
+          targetId: 'project:synced:project-1',
           evidenceDigest: 'sha256:instruction',
         },
         approval: null,
@@ -3085,7 +3096,7 @@ describe('production lifecycle composition', () => {
     });
   });
 
-  it('records an explicit local project path in the create intent', async () => {
+  it('binds project create authority and intent to the explicit local scope', async () => {
     const repository = await mkdtemp(join(tmpdir(), 'oat-remote-local-'));
     temporaryDirectories.push(repository);
     execFileSync('git', ['init', '--quiet'], { cwd: repository });
@@ -3119,30 +3130,28 @@ describe('production lifecycle composition', () => {
       })}\n`,
     );
     const authorityFile = join(repository, '.oat', 'invocation.json');
+    const authority = (targetId: string) => ({
+      schemaVersion: 1,
+      kind: 'interactive',
+      sourceId: 'host-session-1',
+      invocationId: 'invocation-1',
+      issuedAt: '2026-08-31T11:59:00.000Z',
+      expiresAt: '2026-08-31T12:05:00.000Z',
+      instruction: {
+        operationClass: 'create',
+        targetId,
+        evidenceDigest: 'sha256:instruction',
+      },
+      approval: null,
+    });
     await writeFile(
       authorityFile,
-      `${JSON.stringify({
-        schemaVersion: 1,
-        kind: 'interactive',
-        sourceId: 'host-session-1',
-        invocationId: 'invocation-1',
-        issuedAt: '2026-08-31T11:59:00.000Z',
-        expiresAt: '2026-08-31T12:05:00.000Z',
-        instruction: {
-          operationClass: 'create',
-          targetId: 'project:project-1',
-          evidenceDigest: 'sha256:instruction',
-        },
-        approval: null,
-      })}\n`,
+      `${JSON.stringify(authority('project:project-1'))}\n`,
     );
+    let localSequence = 0;
     const runner = createProductionRemoteRunner({
       now: () => timestamp,
-      randomId: vi
-        .fn()
-        .mockReturnValueOnce('local-operation')
-        .mockReturnValueOnce('local-binding')
-        .mockReturnValueOnce('local-step'),
+      randomId: () => `local-${(localSequence += 1)}`,
       readObservationStdin: async () => ({
         provider: 'linear',
         context: { workspaceId: 'workspace-1' },
@@ -3153,6 +3162,25 @@ describe('production lifecycle composition', () => {
         observedAt: timestamp,
       }),
     });
+
+    await expect(
+      runner({
+        operation: 'publish',
+        projectRoot: repository,
+        createTarget: {
+          provider: 'linear',
+          localKind: 'project',
+          localId: projectPath,
+          publicationFile,
+        },
+        capabilityEvidenceStdin: true,
+        authorityEvidenceFile: authorityFile,
+      }),
+    ).rejects.toThrow(/does not authorize this mutation/i);
+    await writeFile(
+      authorityFile,
+      `${JSON.stringify(authority('project:local:project-1'))}\n`,
+    );
 
     const prepared = await runner({
       operation: 'publish',
@@ -3230,6 +3258,173 @@ describe('production lifecycle composition', () => {
         capabilityEvidenceStdin: true,
       }),
     ).rejects.toThrow(/ambiguous across scopes.*explicit project path/i);
+  });
+
+  it('rejects an ambiguous bare project closeout and selects an explicit scope', async () => {
+    const repository = await mkdtemp(join(tmpdir(), 'oat-remote-closeout-'));
+    temporaryDirectories.push(repository);
+    execFileSync('git', ['init', '--quiet'], { cwd: repository });
+    const sharedPath = '.oat/projects/shared/project-1';
+    const localPath = '.oat/projects/local/project-1';
+    await Promise.all([
+      mkdir(join(repository, sharedPath), { recursive: true }),
+      mkdir(join(repository, localPath), { recursive: true }),
+    ]);
+    await writeFile(
+      join(repository, '.oat', 'config.json'),
+      `${JSON.stringify({ pjm: { initialized: true } })}\n`,
+    );
+    const store = new RemoteSyncStore(
+      resolveRemoteStorageLocations({
+        repoRoot: repository,
+        gitCommonDir: join(repository, '.git'),
+        repositoryIdentity: `local-repository:${resolve(repository)}`,
+        stateStorage: 'local',
+        target: { kind: 'backlog', scope: 'shared', path: null },
+      }),
+    );
+    const fixtures = [
+      {
+        bindingId: 'bnd_shared_project',
+        scope: 'shared' as const,
+        path: sharedPath,
+        stableId: 'issue-shared',
+      },
+      {
+        bindingId: 'bnd_local_project',
+        scope: 'local' as const,
+        path: localPath,
+        stableId: 'issue-local',
+      },
+    ];
+    for (const fixture of fixtures) {
+      const metadata: RemoteBindingMetadata = {
+        ...binding(['planning']),
+        bindingId: fixture.bindingId,
+        target: {
+          kind: 'project',
+          scope: fixture.scope,
+          id: 'project-1',
+          path: fixture.path,
+        },
+        remoteIdentity: {
+          stableId: fixture.stableId,
+          context: { workspaceId: 'workspace-1' },
+          aliases: [],
+        },
+        provenanceToken: `oat-binding:${fixture.bindingId}`,
+      };
+      await store.materializeIntakeBinding(metadata);
+      const bindingState = state();
+      await store.writeBindingState({
+        ...bindingState,
+        bindingId: fixture.bindingId,
+        snapshot: {
+          ...bindingState.snapshot!,
+          snapshotId: `snap_${fixture.bindingId}`,
+          bindingId: fixture.bindingId,
+          identity: metadata.remoteIdentity,
+        },
+      });
+    }
+    const capability = {
+      provider: 'linear' as const,
+      context: { workspaceId: 'workspace-1' },
+      surfaceKind: 'connector' as const,
+      availability: 'available' as const,
+      semanticCapabilities: ['annotate', 'transition'],
+      evidenceDigest: 'sha256:closeout-capability',
+      observedAt: timestamp,
+    };
+    let closeoutSequence = 0;
+    const runner = createProductionRemoteRunner({
+      now: () => timestamp,
+      randomId: () => `scoped-closeout-${(closeoutSequence += 1)}`,
+      readObservationStdin: async () => capability,
+    });
+
+    await expect(
+      runner({
+        operation: 'closeout',
+        projectRoot: repository,
+        projectPath: 'project-1',
+        capabilityEvidenceStdin: true,
+      }),
+    ).rejects.toThrow(/ambiguous across scopes.*explicit project path/i);
+
+    await expect(
+      runner({
+        operation: 'closeout',
+        projectRoot: repository,
+        projectPath: localPath,
+        capabilityEvidenceStdin: true,
+      }),
+    ).resolves.toMatchObject({
+      status: 'blocked',
+      results: [{ bindingId: 'bnd_local_project', target: 'project-1' }],
+    });
+  });
+
+  it('refuses a recordless synced checkout as an active publication target', async () => {
+    const repository = await mkdtemp(join(tmpdir(), 'oat-remote-retired-'));
+    temporaryDirectories.push(repository);
+    execFileSync('git', ['init', '--quiet'], { cwd: repository });
+    await mkdir(join(repository, '.oat', 'projects', 'synced', 'project-1'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(repository, '.oat', 'config.json'),
+      `${JSON.stringify({
+        pjm: {
+          initialized: true,
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              description: 'none',
+              authority: {
+                default: 'read-only',
+                operations: { create: 'user-authorized' },
+              },
+            },
+          },
+        },
+      })}\n`,
+    );
+    const publicationFile = join(repository, '.oat', 'publication.json');
+    await writeFile(
+      publicationFile,
+      `${JSON.stringify({
+        title: 'Retired synced project',
+        description: null,
+        priority: null,
+      })}\n`,
+    );
+    const runner = createProductionRemoteRunner({
+      now: () => timestamp,
+      readObservationStdin: async () => ({
+        provider: 'linear',
+        context: { workspaceId: 'workspace-1' },
+        surfaceKind: 'connector',
+        availability: 'available',
+        semanticCapabilities: ['create'],
+        evidenceDigest: 'sha256:create-capability',
+        observedAt: timestamp,
+      }),
+    });
+
+    await expect(
+      runner({
+        operation: 'publish',
+        projectRoot: repository,
+        createTarget: {
+          provider: 'linear',
+          localKind: 'project',
+          localId: 'project-1',
+          publicationFile,
+        },
+        capabilityEvidenceStdin: true,
+      }),
+    ).rejects.toThrow(/synced.*active record/i);
   });
 
   it('fails closed before materializing an incomplete persisted project create', async () => {
@@ -3533,7 +3728,10 @@ describe('production lifecycle composition', () => {
         expiresAt: '2026-08-31T12:05:00.000Z',
         instruction: {
           operationClass: 'create',
-          targetId: `${localKind}:${localId}`,
+          targetId:
+            localKind === 'project'
+              ? `${localKind}:shared:${localId}`
+              : `${localKind}:${localId}`,
           evidenceDigest: 'sha256:instruction',
         },
         approval,

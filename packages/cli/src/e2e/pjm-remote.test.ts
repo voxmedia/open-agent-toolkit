@@ -300,7 +300,7 @@ describe('pjm remote end-to-end command workflows', () => {
           expiresAt: '2026-09-05T12:05:00.000Z',
           instruction: {
             operationClass: 'create',
-            targetId: 'project:project-1',
+            targetId: 'project:shared:project-1',
             evidenceDigest: `sha256:${provider}-publish-instruction`,
           },
           approval: null,
@@ -446,6 +446,8 @@ describe('pjm remote end-to-end command workflows', () => {
         },
       })}\n`,
     );
+    const projectPath = '.oat/projects/shared/e2e-cross-provider';
+    await mkdir(join(repository, projectPath), { recursive: true });
     const store = new RemoteSyncStore(
       resolveRemoteStorageLocations({
         repoRoot: repository,
@@ -469,8 +471,8 @@ describe('pjm remote end-to-end command workflows', () => {
         target: {
           kind: 'project',
           scope: 'shared',
-          id: 'shared/e2e-cross-provider',
-          path: 'shared/e2e-cross-provider',
+          id: 'e2e-cross-provider',
+          path: projectPath,
         },
         remoteIdentity: {
           stableId: `${provider}-issue-1`,
@@ -569,12 +571,7 @@ describe('pjm remote end-to-end command workflows', () => {
       readObservationStdin: async () => runnerInput,
     });
     const result = await runRemoteCommand(
-      [
-        'closeout',
-        '--project',
-        'shared/e2e-cross-provider',
-        '--capability-evidence-stdin',
-      ],
+      ['closeout', '--project', projectPath, '--capability-evidence-stdin'],
       'needs-review',
       true,
       { projectRoot: repository, run: runner },
@@ -631,7 +628,7 @@ describe('pjm remote end-to-end command workflows', () => {
       [
         'closeout',
         '--project',
-        'shared/e2e-cross-provider',
+        projectPath,
         '--apply-preview',
         batchId,
         '--capability-evidence-stdin',
@@ -768,7 +765,7 @@ describe('pjm remote end-to-end command workflows', () => {
       [
         'closeout',
         '--project',
-        'shared/e2e-cross-provider',
+        projectPath,
         '--apply-preview',
         batchId,
         '--capability-evidence-stdin',

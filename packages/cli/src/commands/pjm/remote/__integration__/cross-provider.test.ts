@@ -147,6 +147,8 @@ describe('representative cross-provider workflows', () => {
         },
       })}\n`,
     );
+    const projectPath = '.oat/projects/shared/cross-provider';
+    await mkdir(join(repository, projectPath), { recursive: true });
     const store = new RemoteSyncStore(
       resolveRemoteStorageLocations({
         repoRoot: repository,
@@ -170,8 +172,8 @@ describe('representative cross-provider workflows', () => {
       target: {
         kind: 'project',
         scope: 'shared',
-        id: 'shared/cross-provider',
-        path: 'shared/cross-provider',
+        id: 'cross-provider',
+        path: projectPath,
       },
       remoteIdentity: {
         stableId: `${provider}-issue-${index + 1}`,
@@ -212,7 +214,7 @@ describe('representative cross-provider workflows', () => {
     const preview = await runner({
       operation: 'closeout',
       projectRoot: repository,
-      projectPath: 'shared/cross-provider',
+      projectPath,
       capabilityEvidenceStdin: true,
     });
 
