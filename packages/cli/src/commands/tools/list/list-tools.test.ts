@@ -296,11 +296,14 @@ function providerContextDependencies(input: {
           : ['entry-sync' as const],
       nativeRoleSurface: contentKind === 'agent',
       collectionAlias: 'unsupported' as const,
+      // `restart-required` rather than `live`: a `live` policy emits no
+      // visibility diagnostic at all, which would make the read-only
+      // suppression guard below vacuous.
       catalogRefresh: {
-        state: 'live' as const,
+        state: 'restart-required' as const,
         provenance: {
-          kind: 'official-contract' as const,
-          reference: 'https://example.invalid/contract',
+          kind: 'repository-decision' as const,
+          reference: 'DR-260831-provider-aware-reachability',
           verifiedAt: '2026-01-01',
         },
       },
@@ -425,5 +428,31 @@ describe('runListTools provider agreement', () => {
     expect(result.packEvidence.diagnostics.map(({ code }) => code)).toContain(
       'provider-materialization-missing',
     );
+  });
+});
+
+describe('runListTools read-only diagnostic suppression', () => {
+  it('never emits visibility or failure codes on a read-only surface', async () => {
+    const capture = createLoggerCapture();
+    const result = await runListTools(
+      createContext({ json: true, logger: capture.logger, scope: 'user' }),
+      {
+        ...createDeps(),
+        inventoryPack: async ({ pack }) => unmaterializedUserPack(pack),
+        providerContext: providerContextDependencies({
+          activeProviders: ['codex'],
+        }),
+      },
+    );
+
+    const codes = result.packEvidence.diagnostics.map(({ code }) => code);
+    expect(codes).not.toContain('provider-materialization-failed');
+    for (const code of [
+      'visibility-unknown',
+      'refresh-required',
+      'restart-required',
+    ]) {
+      expect(codes).not.toContain(code);
+    }
   });
 });

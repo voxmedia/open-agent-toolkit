@@ -113,29 +113,43 @@ function projectionModeFor(
   );
 }
 
+/**
+ * Maps a registered catalog-refresh policy onto visibility evidence.
+ *
+ * The switch is exhaustive with a `never` default rather than a fall-through:
+ * a policy state added later must fail to compile instead of silently
+ * becoming "needs a new session", which would be advice this repository never
+ * sourced.
+ */
 function visibilityFor(
   policy: ProviderCatalogRefreshPolicy,
   provider: string,
 ): { state: ProviderVisibilityState; reason: string } {
-  if (policy.state === 'unknown') {
-    return { state: 'unknown', reason: policy.reason };
+  switch (policy.state) {
+    case 'unknown':
+      return { state: 'unknown', reason: policy.reason };
+    case 'live':
+      return {
+        state: 'live',
+        reason: `${provider} reads the projected content without a refresh`,
+      };
+    case 'manual-refresh':
+      return {
+        state: 'manual-refresh',
+        reason: `${provider} needs a catalog refresh before the change is visible`,
+      };
+    case 'restart-required':
+      return {
+        state: 'restart-required',
+        reason: `${provider} needs a new session before the change is visible`,
+      };
+    default: {
+      const unhandled: never = policy;
+      throw new Error(
+        `Unhandled provider catalog refresh state: ${JSON.stringify(unhandled)}`,
+      );
+    }
   }
-  if (policy.state === 'live') {
-    return {
-      state: 'live',
-      reason: `${provider} reads the projected content without a refresh`,
-    };
-  }
-  if (policy.state === 'manual-refresh') {
-    return {
-      state: 'manual-refresh',
-      reason: `${provider} needs a catalog refresh before the change is visible`,
-    };
-  }
-  return {
-    state: 'restart-required',
-    reason: `${provider} needs a new session before the change is visible`,
-  };
 }
 
 function syncRecovery(scope: ConcreteScope): RecoveryAction {
@@ -289,7 +303,20 @@ export function projectProviderReachability(
           state: 'unknown' as const,
           reason: `No ${provider} ${scope} ${contentKind} refresh contract is registered`,
         };
-      const visibility = visibilityFor(policy, provider);
+      const reachable = activationState === 'active' && support === 'supported';
+      // Projection and materialization already collapse to `not-applicable`
+      // for a provider that is inactive or cannot carry this content kind.
+      // Visibility follows them: refresh or restart advice about a provider
+      // that is not even active reads as guidance the user should act on.
+      const visibility = reachable
+        ? visibilityFor(policy, provider)
+        : {
+            state: 'not-applicable' as const,
+            reason:
+              activationState === 'inactive'
+                ? `${provider} is inactive for ${scope} scope, so it has no catalog visibility`
+                : `${provider} does not project ${scope} ${contentKind} content, so it has no catalog visibility`,
+          };
       const projected = materialization.state === 'materialized';
       const projectionState =
         activationState === 'inactive' || support !== 'supported'

@@ -297,11 +297,14 @@ function providerContextDependencies(input: {
           : ['entry-sync' as const],
       nativeRoleSurface: contentKind === 'agent',
       collectionAlias: 'unsupported' as const,
+      // `restart-required` rather than `live`: a `live` policy emits no
+      // visibility diagnostic at all, which would make the read-only
+      // suppression guard below vacuous.
       catalogRefresh: {
-        state: 'live' as const,
+        state: 'restart-required' as const,
         provenance: {
-          kind: 'official-contract' as const,
-          reference: 'https://example.invalid/contract',
+          kind: 'repository-decision' as const,
+          reference: 'DR-260831-provider-aware-reachability',
           verifiedAt: '2026-01-01',
         },
       },
@@ -436,5 +439,110 @@ describe('runInfoTool provider agreement', () => {
       'provider-materialization-missing',
     );
     expect(result.packEvidence?.status).toBe('partial');
+  });
+});
+
+describe('runInfoTool read-only diagnostic suppression', () => {
+  const VISIBILITY_CODES = [
+    'visibility-unknown',
+    'refresh-required',
+    'restart-required',
+  ];
+
+  it('never emits visibility or failure codes on a read-only surface', async () => {
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ json: true, logger: capture.logger, scope: 'user' }),
+      'research',
+      {
+        ...createDeps(),
+        inventoryPack: async ({ pack }) => unmaterializedUserPack(pack),
+        providerContext: providerContextDependencies({
+          activeProviders: ['codex'],
+        }),
+      },
+    );
+
+    const codes = (result.packEvidence?.diagnostics ?? []).map(
+      ({ code }) => code,
+    );
+    // Matrix row 8: a read-only surface ran no sync, so it can neither observe
+    // a materialization failure nor establish the projection the visibility
+    // codes presuppose.
+    expect(codes).not.toContain('provider-materialization-failed');
+    for (const code of VISIBILITY_CODES) expect(codes).not.toContain(code);
+
+    // The registered catalog state is still readable on the row itself, and
+    // the reachable row's policy really is one that WOULD emit a diagnostic
+    // in a lifecycle run — otherwise the assertions above are vacuous.
+    const rows = result.packEvidence?.items[0]?.providers ?? [];
+    expect(rows.length).toBeGreaterThan(0);
+    expect(
+      rows.some(({ visibility }) => visibility.state === 'restart-required'),
+    ).toBe(true);
+    expect(
+      rows.every(
+        ({ materialization }) => materialization.state !== 'materialized',
+      ),
+    ).toBe(true);
+  });
+
+  it('reports an inactive provider without catalog visibility advice', async () => {
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ json: true, logger: capture.logger, scope: 'user' }),
+      'research',
+      {
+        ...createDeps(),
+        inventoryPack: async ({ pack }) => unmaterializedUserPack(pack),
+        providerContext: providerContextDependencies({ activeProviders: [] }),
+      },
+    );
+
+    const inactiveRows = result.packEvidence?.items[0]?.providers ?? [];
+    const inactive = inactiveRows.find(
+      ({ activation }) => activation.state === 'inactive',
+    );
+    expect(inactive).toBeDefined();
+    // Refresh or restart advice about a provider that is not active reads as
+    // guidance the user should act on.
+    expect(inactive?.visibility.state).toBe('not-applicable');
+    expect(inactive?.projection.state).toBe('not-applicable');
+  });
+
+  it('reports a bundled-coverage absence as missing, never as failed', async () => {
+    // The read-only path that DOES reach the absence branch: an active
+    // provider whose user-agent projection is extension-only supplies managed
+    // roles for bundled agents only, so the unmaterialized diagnostic
+    // survives and is attributed to that provider.
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ json: true, logger: capture.logger, scope: 'user' }),
+      'research',
+      {
+        ...createDeps(),
+        inventoryPack: async ({ pack }) => unmaterializedUserPack(pack),
+        providerContext: providerContextDependencies({
+          activeProviders: ['codex'],
+          userAgentProjectionMode: 'materialization-extension',
+        }),
+      },
+    );
+
+    const rows = result.packEvidence?.items[0]?.providers ?? [];
+    const codes = (result.packEvidence?.diagnostics ?? []).map(
+      ({ code }) => code,
+    );
+
+    expect(
+      rows.some(({ materialization }) => materialization.state === 'missing'),
+    ).toBe(true);
+    expect(codes).toContain('provider-materialization-missing');
+    // Matrix row 8: even with a real absence, a read-only surface reports it
+    // as a warning, never as the error-severity failure code.
+    expect(
+      rows.every(({ materialization }) => materialization.state !== 'failed'),
+    ).toBe(true);
+    expect(codes).not.toContain('provider-materialization-failed');
   });
 });

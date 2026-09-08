@@ -203,9 +203,13 @@ export function formatPackEvidenceDetails(
     }
   }
   // Human output names the provider; the structured evidence stays in JSON.
+  // The materialization detail is rendered alongside the state because
+  // `not-applicable` alone collapses two different situations: a provider
+  // that is inactive or cannot project this content, and an active provider
+  // on a read-only surface that simply observed no sync.
   for (const provider of evidence.providers) {
     lines.push(
-      `${indent}${provider.provider} [${provider.scope} ${provider.contentKind}]: ${provider.activation.state}; capability=${provider.capability.support}; projection=${provider.projection.state}; materialization=${provider.materialization.state}; visibility=${provider.visibility.state}`,
+      `${indent}${provider.provider} [${provider.scope} ${provider.contentKind}]: ${provider.activation.state}; capability=${provider.capability.support}; projection=${provider.projection.state}; materialization=${provider.materialization.state} (${provider.materialization.detail}); visibility=${provider.visibility.state}`,
     );
   }
   for (const diagnostic of evidence.diagnostics) {

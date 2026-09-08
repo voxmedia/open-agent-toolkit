@@ -106,7 +106,9 @@ export type ProviderVisibilityState =
   | 'live'
   | 'manual-refresh'
   | 'restart-required'
-  | 'unknown';
+  | 'unknown'
+  /** The row is inactive or unsupported, so catalog visibility is moot. */
+  | 'not-applicable';
 
 /**
  * Per provider, scope, and content kind reachability, derived from the

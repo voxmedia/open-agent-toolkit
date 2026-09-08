@@ -736,3 +736,95 @@ describe('extension operation attribution', () => {
     expect(single(evidence).materialization.state).toBe('failed');
   });
 });
+
+describe('visibility is scoped to reachable rows', () => {
+  it.each([
+    [
+      'inactive',
+      {
+        active: false,
+        capabilities: [
+          capability({
+            scope: 'user' as const,
+            support: 'supported' as const,
+            projectionModes: ['entry-sync' as const],
+            catalogRefresh: LIVE_REFRESH,
+          }),
+        ],
+      },
+    ],
+    [
+      'unsupported',
+      {
+        capabilities: [
+          capability({
+            scope: 'user' as const,
+            support: 'unsupported' as const,
+            projectionModes: ['unsupported' as const],
+            catalogRefresh: UNKNOWN_REFRESH,
+            unsupportedReason: 'Codex has no user skill projection',
+          }),
+        ],
+      },
+    ],
+  ])('reports no catalog visibility for an %s row', (_label, options) => {
+    const row = single(
+      projectProviderReachability({
+        providerScopeContext: context(options),
+        assets: ASSETS,
+        mode: 'inventory',
+      }),
+    );
+
+    // Projection and materialization already collapse; visibility follows, so
+    // the row never reads as refresh or restart advice for a provider that
+    // cannot receive this content at all.
+    expect(row.visibility.state).toBe('not-applicable');
+    expect(row.projection.state).toBe('not-applicable');
+    expect(row.materialization.state).toBe('not-applicable');
+  });
+
+  it('still reports the registered catalog state for a reachable row', () => {
+    const row = single(
+      projectProviderReachability({
+        providerScopeContext: context({
+          capabilities: [
+            capability({
+              scope: 'user',
+              support: 'supported',
+              projectionModes: ['entry-sync'],
+              catalogRefresh: LIVE_REFRESH,
+            }),
+          ],
+        }),
+        assets: ASSETS,
+        mode: 'inventory',
+      }),
+    );
+
+    expect(row.visibility.state).toBe('live');
+  });
+
+  it('rejects an unrecognized catalog refresh state instead of assuming a restart', () => {
+    // The exhaustive switch must not silently render a future policy state as
+    // "needs a new session", which is advice this repository never sourced.
+    expect(() =>
+      projectProviderReachability({
+        providerScopeContext: context({
+          capabilities: [
+            capability({
+              scope: 'user',
+              support: 'supported',
+              projectionModes: ['entry-sync'],
+              catalogRefresh: {
+                state: 'future-policy',
+              } as unknown as ProviderContentCapability['catalogRefresh'],
+            }),
+          ],
+        }),
+        assets: ASSETS,
+        mode: 'inventory',
+      }),
+    ).toThrow(/Unhandled provider catalog refresh state/);
+  });
+});

@@ -321,6 +321,153 @@ describe('createToolsUpdateCommand target validation', () => {
   });
 });
 
+describe('provider visibility diagnostics on the update command surface', () => {
+  // This describe is a sibling of the one above, so it inherits none of its
+  // hooks: the accumulated payloads and the retained `updateTools` rejection
+  // would otherwise leak in and be read as this test's own output.
+  beforeEach(() => {
+    loggerCapture.error.length = 0;
+    loggerCapture.info.length = 0;
+    loggerCapture.jsonPayloads.length = 0;
+    updateTools.mockReset();
+    reconcileProjectToolsConfig.mockResolvedValue({
+      action: 'unchanged',
+      adoptedPacks: [],
+    });
+  });
+
+  function projectedProviderRow() {
+    return {
+      provider: 'claude',
+      scope: 'user' as const,
+      contentKind: 'skill' as const,
+      assets: ['~/.agents/skills/analyze'],
+      activation: {
+        state: 'active' as const,
+        source: 'config-enabled' as const,
+        reason: 'Explicitly enabled in sync config',
+      },
+      capability: {
+        support: 'supported' as const,
+        projectionModes: ['entry-sync' as const],
+        reason: 'claude projects user skill content',
+      },
+      // The genuine pre-sync state: a `not-run` outcome has established no
+      // projection. Seeding `projected`/`materialized` here would let the
+      // test pass even if the command stopped applying the sync results, so
+      // the emitted diagnostic must depend on `applySyncEvidence` promoting
+      // this row from the supplied operation.
+      projection: {
+        state: 'not-applicable' as const,
+        mode: 'entry-sync' as const,
+      },
+      materialization: {
+        state: 'not-applicable' as const,
+        detail: 'No sync ran for this operation',
+      },
+      visibility: {
+        state: 'restart-required' as const,
+        reason: 'claude needs a new session before the change is visible',
+      },
+      recovery: [],
+    };
+  }
+
+  function lifecycleWithProvider() {
+    return [
+      {
+        schemaVersion: 1 as const,
+        selection: {
+          pack: 'docs' as const,
+          requested: 'user' as const,
+          retainedRealizedScopes: ['user' as const],
+          targetScopes: ['user' as const],
+        },
+        canonical: { status: 'unchanged' as const, results: [] },
+        sync: {
+          scopes: [] as const,
+          status: 'not-run' as const,
+          providers: [projectedProviderRow()],
+        },
+        finalEvidence: {
+          schemaVersion: 1 as const,
+          pack: 'docs' as const,
+          canonical: null,
+          scopes: [],
+          knownRealizedScopes: ['user' as const],
+          unknownScopes: [],
+          realizedPlacement: 'user' as const,
+          providers: [],
+          diagnostics: [],
+        },
+        status: 'complete' as const,
+        recovery: [],
+      },
+    ];
+  }
+
+  it('surfaces restart-required in the lifecycle output of a real command run', async () => {
+    // A command-surface guard, not a unit assertion: the diagnostic has to
+    // survive `finalizeUpdateLifecycle` and reach the emitted JSON.
+    const dependencies = createUpdateDependencies();
+    updateTools.mockResolvedValue(
+      createResult({
+        lifecycle: lifecycleWithProvider(),
+        updated: [
+          {
+            name: 'oat-docs-analyze',
+            type: 'skill',
+            scope: 'user',
+            version: '1.0.0',
+            bundledVersion: '2.0.0',
+            pack: 'docs',
+            status: 'outdated',
+          },
+        ],
+      }),
+    );
+
+    await runUpdateCommand(
+      createToolsUpdateCommand(dependencies, {
+        runSync: async ({ scope }) => ({
+          scope,
+          ran: true,
+          failedOperations: 0,
+          operationResults: [
+            {
+              provider: 'claude',
+              scope,
+              contentKind: 'skill' as const,
+              asset: 'analyze',
+              status: 'changed' as const,
+            },
+          ],
+          extensionResults: [],
+          refreshAdvice: [],
+        }),
+      }),
+      ['--pack', 'docs', '--scope', 'user'],
+      ['--json'],
+    );
+
+    const payload = loggerCapture.jsonPayloads[0] as {
+      lifecycle?: Array<{
+        status: string;
+        finalEvidence: {
+          diagnostics: Array<{ code: string; severity: string }>;
+        } | null;
+      }>;
+    };
+    const diagnostics =
+      payload.lifecycle?.[0]?.finalEvidence?.diagnostics ?? [];
+    expect(
+      diagnostics.map(({ code, severity }) => [code, severity]),
+    ).toContainEqual(['restart-required', 'info']);
+    // An `info` visibility row must not degrade the lifecycle outcome.
+    expect(payload.lifecycle?.[0]?.status).toBe('complete');
+  });
+});
+
 function createResult(overrides: Partial<UpdateResult> = {}): UpdateResult {
   return {
     updated: [],

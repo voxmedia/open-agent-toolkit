@@ -122,8 +122,61 @@ describe('formatPackEvidenceDetails provider line', () => {
     const lines = formatPackEvidenceDetails(evidence([], [providerRow()]));
 
     expect(lines).toContain(
-      '  codex [user skill]: active; capability=supported; projection=projected; materialization=materialized; visibility=restart-required',
+      '  codex [user skill]: active; capability=supported; projection=projected; materialization=materialized (1 codex user skill operation(s) succeeded); visibility=restart-required',
     );
+  });
+
+  it('distinguishes an inactive provider from a read-only non-claim', () => {
+    // Both render `materialization=not-applicable`; only the detail says
+    // which situation the reader is looking at.
+    const inactive = formatPackEvidenceDetails(
+      evidence(
+        [],
+        [
+          {
+            ...providerRow(),
+            provider: 'cursor',
+            activation: {
+              state: 'inactive',
+              source: 'config-disabled',
+              reason: 'Explicitly disabled in sync config',
+            },
+            projection: { state: 'not-applicable', mode: null },
+            materialization: {
+              state: 'not-applicable',
+              detail: 'cursor is inactive for user scope',
+            },
+            visibility: {
+              state: 'not-applicable',
+              reason: 'cursor is inactive for user scope',
+            },
+          },
+        ],
+      ),
+    );
+    const notObserved = formatPackEvidenceDetails(
+      evidence(
+        [],
+        [
+          {
+            ...providerRow(),
+            projection: { state: 'not-applicable', mode: 'entry-sync' },
+            materialization: {
+              state: 'not-applicable',
+              detail: 'No sync was observed for codex user skill content',
+            },
+          },
+        ],
+      ),
+    );
+
+    expect(
+      inactive.some((line) => line.includes('is inactive for user scope')),
+    ).toBe(true);
+    expect(
+      notObserved.some((line) => line.includes('No sync was observed')),
+    ).toBe(true);
+    expect(inactive[1]).not.toEqual(notObserved[1]);
   });
 
   it('names the provider on a provider-attributed diagnostic', () => {

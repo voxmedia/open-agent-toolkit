@@ -90,7 +90,17 @@ export function normalizeSyncEvidence(
       const operation = asRecord(entry);
       const provider = asString(operation?.provider);
       const status = asString(operation?.status);
-      if (!operation || provider === undefined || status === undefined) {
+      // `contentKind` is required on the same footing as `provider` and
+      // `status`: defaulting it would let an operation of unknown kind be
+      // attributed to a skill row it never touched. An absent field is
+      // dropped rather than guessed.
+      const contentKind = asString(operation?.contentKind);
+      if (
+        !operation ||
+        provider === undefined ||
+        status === undefined ||
+        contentKind === undefined
+      ) {
         return [];
       }
       return [
@@ -99,9 +109,7 @@ export function normalizeSyncEvidence(
           scope:
             (asString(operation.scope) as ConcreteScope | undefined) ?? scope,
           contentKind:
-            (asString(operation.contentKind) as
-              | ProviderSyncOperationEvidence['contentKind']
-              | undefined) ?? 'skill',
+            contentKind as ProviderSyncOperationEvidence['contentKind'],
           asset: asString(operation.asset) ?? '',
           status: status as ProviderSyncOperationEvidence['status'],
           ...(asString(operation.failure) !== undefined

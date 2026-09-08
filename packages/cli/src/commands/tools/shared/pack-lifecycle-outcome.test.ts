@@ -254,6 +254,47 @@ describe('provider sync outcome evidence', () => {
     ).toBe(true);
   });
 
+  it('keeps a warning-severity missing materialization complete at exit code 0', () => {
+    // Pinned severity matrix row 4: "Active, supported, no projection exists
+    // (never synced or sync skipped)" is a `warning` that turns the pack
+    // evidence block `partial` but leaves the install `complete` / exit 0 —
+    // "install succeeded; sync advised". Only `failed` degrades the outcome.
+    const providers = [
+      reachability({
+        projection: { state: 'absent', mode: 'materialization-extension' },
+        materialization: {
+          state: 'missing',
+          detail: 'codex has no user agent materialization for 1 asset',
+        },
+      }),
+    ];
+    const sync = providerSyncOutcomeFromAutoSync(
+      { synced: true, scopes: ['user'], error: null, evidence: [] },
+      providers,
+    );
+
+    expect(sync.status).toBe('complete');
+
+    const outcome = evaluatePackLifecycleOutcome({
+      selection: resolveAdditivePackScopeSelection({
+        pack: 'ideas',
+        requested: 'user',
+        knownRealizedScopes: ['user'],
+        unknownScopes: [],
+      }),
+      lifecycle: [],
+      sync,
+      finalEvidence: evidence(['user']),
+    });
+
+    // `runInitTools` sets exit code 1 for any outcome whose status is not
+    // `complete`, so this assertion is the exit-code guarantee.
+    expect(outcome.status).toBe('complete');
+    expect(
+      outcome.recovery.some(({ code }) => code === 'provider-sync-incomplete'),
+    ).toBe(false);
+  });
+
   it('keeps info-only provider states complete so a healthy install exits 0', () => {
     const sync = providerSyncOutcomeFromAutoSync(
       { synced: true, scopes: ['user'], error: null, evidence: [] },

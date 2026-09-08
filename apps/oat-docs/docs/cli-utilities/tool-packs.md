@@ -346,6 +346,18 @@ unknown; it never claims reachability and never fails an otherwise successful
 install. A read-only inventory surface ran no sync, so it never reports
 `provider-materialization-failed`.
 
+The three visibility codes — `visibility-unknown`, `refresh-required`, and
+`restart-required` — are lifecycle-only for the same reason. They require an
+established projection, and a read-only surface never establishes one: it
+observed no sync, so it reports materialization as a non-claim rather than
+asserting the provider view exists. For an active provider that supports the
+content kind, the registered catalog state remains readable in the row's
+`visibility` field on every surface; only the diagnostics are withheld. Run
+`oat tools install`, `update`, or `remove` to see them emitted. An inactive or
+unsupported row reports `not-applicable` visibility instead, matching its
+`not-applicable` projection: catalog advice about a provider that cannot
+receive the content would read as a step to act on.
+
 Repository templates under `.oat/templates/` are **owner-owned seeds**. OAT
 compares a source-backed seed with its bundled default: a byte-equivalent copy
 is reported as current, while an edited copy is retained and reported as a

@@ -205,3 +205,71 @@ describe('inProcessSyncDependencies', () => {
     }
   });
 });
+
+describe('normalizeSyncEvidence required fields', () => {
+  async function evidenceFor(payload: unknown) {
+    runSyncInProcess.mockImplementation(async (context: CommandContext) => {
+      context.logger.json(payload);
+    });
+    return inProcessSyncDependencies.runSync({
+      scope: 'project',
+      cwd: '/tmp/project',
+      home: '/tmp/home',
+    });
+  }
+
+  it('drops an operation with no contentKind instead of defaulting it', async () => {
+    // Defaulting to `skill` would let an operation of unknown kind be
+    // attributed to a skill row it never touched; `provider` and `status` are
+    // already dropped on the same footing.
+    const evidence = await evidenceFor({
+      operationResults: [
+        {
+          provider: 'claude',
+          scope: 'project',
+          asset: 'analyze',
+          status: 'changed',
+        },
+      ],
+    });
+
+    expect(evidence?.operationResults).toEqual([]);
+  });
+
+  it.each([
+    [
+      'provider',
+      { scope: 'project', contentKind: 'skill', asset: 'a', status: 'changed' },
+    ],
+    [
+      'status',
+      {
+        provider: 'claude',
+        scope: 'project',
+        contentKind: 'skill',
+        asset: 'a',
+      },
+    ],
+  ])('drops an operation with no %s', async (_field, operation) => {
+    const evidence = await evidenceFor({ operationResults: [operation] });
+
+    expect(evidence?.operationResults).toEqual([]);
+  });
+
+  it('keeps a fully specified operation', async () => {
+    const evidence = await evidenceFor({
+      operationResults: [
+        {
+          provider: 'claude',
+          scope: 'project',
+          contentKind: 'skill',
+          asset: 'analyze',
+          status: 'changed',
+        },
+      ],
+    });
+
+    expect(evidence?.operationResults).toHaveLength(1);
+    expect(evidence?.operationResults[0]?.contentKind).toBe('skill');
+  });
+});
