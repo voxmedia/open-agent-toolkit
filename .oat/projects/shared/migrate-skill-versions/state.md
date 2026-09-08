@@ -155,7 +155,8 @@ Implementation — the plan gate blocked four times on new surfaces (every findi
 - ✓ Phase 1 fix round `ad1c33082`; review round 2 PASS (0C/0I/0M/3m)
 - ✓ Phase 2 done (`ddfca906a`, `872ce02c6`); root review PASS (0C/0I/0M/4m)
 - ✓ Root final review PASS (0C/0I/0M/2m)
-- ⧗ Configured exit gate
+- ✓ Configured exit gate passed on attempt 1 (run `d888e4e6`, codex-5-6-sol-xhigh, 0/0/1/1; the Medium deferred) and received
+- ⧗ Post-implement sequence, then the PR
 
 ## Blockers
 
@@ -163,4 +164,4 @@ None
 
 ## Next Milestone
 
-Final review passed and the exit gate received, then the post-implement sequence and the PR.
+Post-implement sequence, then the PR on `origin/migrate-skill-versions`.

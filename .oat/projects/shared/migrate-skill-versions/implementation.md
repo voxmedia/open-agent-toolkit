@@ -249,7 +249,8 @@ Chronological log of implementation progress.
 
 - Project scaffolded (quick mode) on branch `migrate-skill-versions` from `origin/main` `5b3b82151` (the wave-6 close); discovery and plan authored from the 2026-09-08 recon.
 - Phase 2 done (`ddfca906a` migration + pins, `872ce02c6` decision/docs/bump; full DoD green); root review PASS (0/0/0/4m) received.
-- Root final review PASS (0/0/0/2m, `reviews/archived/final-review-2026-09-08T121229Z.md`) received; exit gate next.
+- Root final review PASS (0/0/0/2m, `reviews/archived/final-review-2026-09-08T121229Z.md`) received.
+- Configured exit gate attempt 1 passed (run `d888e4e6`, codex-5-6-sol-xhigh, 0/0/1/1; artifact `reviews/archived/final-review-2026-09-08T123009Z.md`) and received; the Medium (infinity key normalization in the bundled reader) deferred to `BL-260908-retire-the-top-level-skill`.
 - Phase 1 done (`d054384ee`, `8948bf1ea`, `6c461e3fe`; Phase 1 gates green); root review round 1 0C/2I/3M/3m (no code defect) → records fixed, fix round `ad1c33082`, round 2 PASS (0/0/0/3m); Phase 2 dispatched.
 - Plan gate attempt 1 blocked (0C/2I/2M); all four findings fixed in the plan.
 - Plan gate attempt 2 blocked (0C/2I/3M/1m): reader architecture resolved (canonical resolver for the RC builder; accepted exception + parity contract for the bundled script), Phase 1 gate subset, decision via `oat-pjm-decision`, control categories, HiLL pending; attempt 3 blocked (0C/2I/1M: HiLL `[]` semantics, raw readers left to Phase 2, the exact eight-gate order) and fixed in-artifact; attempt 4 blocked (0C/2I/2M: Format step, dist import timing, resolver diagnostics, staging) and fixed in-artifact; the plan gate is capped at four attempts and the project proceeds to Phase 1 with root implementation-time reviews.
