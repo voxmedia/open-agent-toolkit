@@ -279,10 +279,23 @@ async function diagnoseScope(
     const drift = manifestEntry
       ? await deps.detectDrift(manifestEntry, scopeRoot)
       : null;
+    // `detectDrift` resolves the manifest entry's own `providerPath`, and the
+    // manifest is keyed by `(canonicalPath, provider)` with no path check, so
+    // the two can name different files. Everything about a tracked row is then
+    // read from the tracked path, because that is the path the drift verdict
+    // already describes; mixing the two would report one file's version beside
+    // another file's state. The extra probe only runs when they actually
+    // diverge, so the ordinary row is unchanged.
+    const trackedPath = manifestEntry?.providerPath;
+    const pathDiverges =
+      trackedPath !== undefined && trackedPath !== projection.providerPath;
+    const trackedPresent = pathDiverges
+      ? await deps.pathExists(join(scopeRoot, trackedPath))
+      : viewPresent;
     const comparable =
       manifestEntry?.strategy === 'copy' &&
       !projection.nativeRead &&
-      viewPresent;
+      trackedPresent;
 
     observations.push({
       projection,
@@ -292,7 +305,7 @@ async function diagnoseScope(
       ...(comparable
         ? {
             projectedVersion: await deps.readProjectedVersion(
-              join(scopeRoot, projection.providerPath),
+              join(scopeRoot, trackedPath ?? projection.providerPath),
             ),
           }
         : {}),
@@ -352,6 +365,9 @@ export function formatSkillViewLines(
       if (
         ACTIONABLE.has(view.viewClass) ||
         view.viewClass === 'untracked' ||
+        // A row naming a path the adapter does not expect is unreadable
+        // without the sentence that says why, whatever its class.
+        view.expectedProviderPath !== undefined ||
         (view.versionEvidence !== undefined &&
           view.versionEvidence !== 'resolved' &&
           view.versionEvidence !== 'absent')

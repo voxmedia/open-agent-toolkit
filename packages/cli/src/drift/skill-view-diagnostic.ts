@@ -116,8 +116,23 @@ export interface SkillViewDiagnostic {
   viewClass: SkillViewClass;
   /** Unchanged `DriftState`; `null` when no manifest entry allowed detection. */
   driftState: DriftState | null;
-  /** Scope-relative expected (or actual) provider path; `null` when none. */
+  /**
+   * Scope-relative path this row is about; `null` when no view is expected.
+   *
+   * When a manifest entry tracks the view at a path that is not the adapter's
+   * expected projection path, this is the *manifest's* path, because that is
+   * the path the drift verdict, the version, and the detail all describe. The
+   * expected path then travels separately in `expectedProviderPath`.
+   */
   providerPath: string | null;
+  /**
+   * The adapter's expected projection path, present only when the manifest
+   * tracks the view somewhere else.
+   *
+   * Absent on every ordinary row: a row whose manifest entry sits at the
+   * expected path has one path, not two.
+   */
+  expectedProviderPath?: string;
   tracked: boolean;
   strategy: ManifestEntryV2['strategy'] | null;
   nativeRead: boolean;
@@ -252,6 +267,33 @@ function projectedVersionNote(
     return ' The projected SKILL.md frontmatter does not parse, so no version comparison is made.';
   }
   return '';
+}
+
+/**
+ * Says which path this row is really about when the manifest disagrees with the
+ * adapter.
+ *
+ * The manifest is keyed by `(canonicalPath, provider)` and never by path, so an
+ * entry can point somewhere other than the adapter's expected projection while a
+ * healthy file sits at the expected path — reachable after a `providerDir`
+ * change or from a manifest written under an older layout. Attaching the drift
+ * verdict for the tracked path to a row labelled with the expected path made the
+ * row state something false about a file that exists, so the row names the
+ * tracked path and this note says what the expected path looks like instead.
+ */
+function divergentPathNote(observation: SkillViewObservation): string {
+  const tracked = observation.manifestEntry?.providerPath;
+  if (
+    tracked === undefined ||
+    tracked === observation.projection.providerPath
+  ) {
+    return '';
+  }
+  return ` The manifest tracks this view at ${tracked}, which is not the expected projection path ${observation.projection.providerPath}; the state, path, and version above all describe the tracked path. ${
+    observation.viewPresent
+      ? 'Something does exist at the expected path, and this row says nothing about it.'
+      : 'Nothing exists at the expected path either.'
+  } Syncing this scope re-projects the skill to the expected path.`;
 }
 
 function classify(
@@ -406,9 +448,21 @@ export function diagnoseSkillViews(input: {
       continue;
     }
 
-    const classification = classify(observation, active.has(provider));
+    const isActive = active.has(provider);
+    const classification = classify(observation, isActive);
     const strategy = observation.manifestEntry?.strategy ?? null;
     const nativeRead = observation.projection.nativeRead;
+    // A drift verdict computed for the manifest's path may only appear on a row
+    // that names that path. The divergence is reported wherever the manifest
+    // entry is what drives the row: an inactive, excluded, or natively read
+    // provider has no drift verdict to misattribute.
+    const trackedPath = observation.manifestEntry?.providerPath;
+    const pathDiverges =
+      trackedPath !== undefined &&
+      trackedPath !== observation.projection.providerPath &&
+      isActive &&
+      !nativeRead &&
+      observation.projection.excludedReason === undefined;
     const copyViewReadable =
       strategy === 'copy' &&
       !nativeRead &&
@@ -476,7 +530,12 @@ export function diagnoseSkillViews(input: {
       provider,
       viewClass,
       driftState: observation.drift?.state ?? null,
-      providerPath: observation.projection.providerPath,
+      providerPath: pathDiverges
+        ? trackedPath
+        : observation.projection.providerPath,
+      ...(pathDiverges
+        ? { expectedProviderPath: observation.projection.providerPath }
+        : {}),
       tracked: observation.manifestEntry !== null,
       strategy,
       nativeRead,
@@ -495,7 +554,7 @@ export function diagnoseSkillViews(input: {
         copyViewReadable
           ? projectedVersionNote(projected, untrustworthyVersion)
           : ''
-      }`,
+      }${pathDiverges ? divergentPathNote(observation) : ''}`,
     });
   }
 

@@ -134,6 +134,18 @@ after a canonical edit still matches its own manifest entry and reads as
 `in_sync`. When the two versions differ, the view class is `modified` and the
 drift state is reported unchanged beside it.
 
+The manifest is keyed by `(canonicalPath, provider)` and never by path, so a
+manifest entry can track a view somewhere other than the adapter's expected
+projection path — reachable after a `providerDir` change or from a manifest
+written under an older layout. Drift resolves the entry's own `providerPath`, so
+in that case the row names the tracked path rather than the expected one, and
+its `--json` record carries the expected path separately as
+`expectedProviderPath`. The detail says which path the state describes and
+whether anything exists at the expected path. A drift verdict computed for one
+path is never attached to a row labelled with another: doing so reported `removed`
+with "the provider file is gone from disk" against a healthy file that was
+sitting at the expected path all along.
+
 Both sides resolve their version through the same shared reader, so
 `metadata.version` takes precedence over the deprecated top-level `version`
 alias for a projected view exactly as it does for the canonical source; the only

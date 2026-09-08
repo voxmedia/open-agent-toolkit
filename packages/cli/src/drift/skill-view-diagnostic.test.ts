@@ -255,6 +255,129 @@ describe('diagnoseSkillViews', () => {
     );
   });
 
+  describe('a manifest entry that tracks a different path', () => {
+    const LEGACY = '.claude/skills-legacy/oat-idea-new';
+
+    it('names the tracked path, never the expected one, for a removed view', () => {
+      // The manifest is keyed by (canonicalPath, provider) with no path check,
+      // so a divergent entry used to render `removed  .claude/skills/...` with
+      // "the provider file is gone from disk" while a healthy file sat at that
+      // very path. The verdict describes the tracked path, so the row must.
+      const result = diagnose({
+        activeProviders: ['claude'],
+        registrations: [claude],
+        observations: [
+          observation('claude', {
+            manifestEntry: manifestEntry({ providerPath: LEGACY }),
+            drift: drift({ status: 'missing' }),
+            viewPresent: true,
+          }),
+        ],
+      });
+
+      const view = result.views[0];
+      expect(view).toMatchObject({
+        viewClass: 'removed',
+        providerPath: LEGACY,
+        expectedProviderPath: `.claude/skills/${SKILL}`,
+      });
+      expect(view?.detail).toContain(
+        `The manifest tracks this view at ${LEGACY}`,
+      );
+      expect(view?.detail).toContain(
+        `which is not the expected projection path .claude/skills/${SKILL}`,
+      );
+      // The false claim the finding is about: the row must not assert that the
+      // expected path is gone while something exists there.
+      expect(view?.detail).toContain(
+        'Something does exist at the expected path',
+      );
+    });
+
+    it('says so plainly when nothing is at the expected path either', () => {
+      const result = diagnose({
+        activeProviders: ['claude'],
+        registrations: [claude],
+        observations: [
+          observation('claude', {
+            manifestEntry: manifestEntry({ providerPath: LEGACY }),
+            drift: drift({ status: 'missing' }),
+            viewPresent: false,
+          }),
+        ],
+      });
+
+      expect(result.views[0]?.detail).toContain(
+        'Nothing exists at the expected path either',
+      );
+    });
+
+    it('reports the divergence even when the tracked path is in sync', () => {
+      // An `in-sync` verdict about an unexpected path is still a row the user
+      // cannot read without being told which path it describes.
+      const result = diagnose({
+        activeProviders: ['claude'],
+        registrations: [claude],
+        observations: [
+          observation('claude', {
+            manifestEntry: manifestEntry({ providerPath: LEGACY }),
+            drift: drift({ status: 'in_sync' }),
+            viewPresent: false,
+          }),
+        ],
+      });
+
+      expect(result.views[0]).toMatchObject({
+        viewClass: 'in-sync',
+        providerPath: LEGACY,
+        expectedProviderPath: `.claude/skills/${SKILL}`,
+      });
+    });
+
+    it('leaves an ordinary row with one path and no divergence note', () => {
+      // The accepted control: an entry at the expected path must be reported
+      // byte-identically to before, with no second path field.
+      const result = diagnose({
+        activeProviders: ['claude'],
+        registrations: [claude],
+        observations: [
+          observation('claude', {
+            manifestEntry: manifestEntry(),
+            drift: drift({ status: 'missing' }),
+            viewPresent: false,
+          }),
+        ],
+      });
+
+      const view = result.views[0];
+      expect(view?.providerPath).toBe(`.claude/skills/${SKILL}`);
+      expect(view).not.toHaveProperty('expectedProviderPath');
+      expect(view?.detail).not.toContain('The manifest tracks this view at');
+    });
+
+    it('does not report a divergence for an inactive provider', () => {
+      // An inactive provider has no drift verdict to misattribute, and its row
+      // reports that nothing is projected at all.
+      const result = diagnose({
+        activeProviders: [],
+        registrations: [claude],
+        observations: [
+          observation('claude', {
+            manifestEntry: manifestEntry({ providerPath: LEGACY }),
+            drift: drift({ status: 'missing' }),
+            viewPresent: true,
+          }),
+        ],
+      });
+
+      expect(result.views[0]).toMatchObject({
+        viewClass: 'inactive',
+        providerPath: `.claude/skills/${SKILL}`,
+      });
+      expect(result.views[0]).not.toHaveProperty('expectedProviderPath');
+    });
+  });
+
   it('never suggests a sync for inactive, unsupported, or excluded providers', () => {
     const diagnosis = diagnose({
       activeProviders: [],

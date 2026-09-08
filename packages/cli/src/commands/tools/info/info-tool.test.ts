@@ -900,6 +900,113 @@ describe('runInfoTool provider-view diagnostic', () => {
     });
   });
 
+  it('names the manifest path, not the expected one, when a tracked entry diverges', async () => {
+    // Final review M4: the manifest lookup keys on (canonicalPath, provider)
+    // only, so an entry pointing elsewhere used to render the drift verdict for
+    // its own path under the expected path's label -- "the provider file is
+    // gone from disk" about a file that exists.
+    const LEGACY = '.claude/skills-legacy/oat-idea-new';
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ scope: 'project', logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: skillViewDependencies({
+          // A healthy file sits at the expected path; the manifest points away.
+          existingPaths: [
+            PROJECT_CANONICAL,
+            '/project/.claude/skills/oat-idea-new',
+          ],
+          manifestEntries: {
+            '/project/.oat/sync/manifest.json': [
+              {
+                canonicalPath: '.agents/skills/oat-idea-new',
+                providerPath: LEGACY,
+                provider: 'claude',
+                contentType: 'skill',
+                contentHash: null,
+                isFile: false,
+                lastSynced: '2026-09-01T00:00:00.000Z',
+                strategy: 'symlink',
+              } as ManifestEntryV2,
+            ],
+          },
+          driftStates: { [LEGACY]: { status: 'missing' } },
+        }),
+      },
+    );
+
+    const claude = result.providerViews?.[0]?.views.find(
+      ({ provider }) => provider === 'claude',
+    );
+    expect(claude).toMatchObject({
+      viewClass: 'removed',
+      providerPath: LEGACY,
+      expectedProviderPath: '.claude/skills/oat-idea-new',
+    });
+    const output = capture.info.join('\n');
+    expect(output).toContain(LEGACY);
+    // The detail is printed, so the unexpected path is never left unexplained.
+    expect(output).toContain('The manifest tracks this view at');
+    expect(output).toContain('Something does exist at the expected path');
+  });
+
+  it('reads the projected version from the tracked path when the entry diverges', async () => {
+    // The other half of the same mix: a version read from the expected path
+    // would be reported beside a state computed for the tracked path.
+    const LEGACY = '.claude/skills-legacy/oat-idea-new';
+    const result = await runInfoTool(
+      createContext({ scope: 'project' }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: skillViewDependencies({
+          existingPaths: [
+            PROJECT_CANONICAL,
+            `/project/${LEGACY}`,
+            '/project/.claude/skills/oat-idea-new',
+          ],
+          manifestEntries: {
+            '/project/.oat/sync/manifest.json': [
+              {
+                canonicalPath: '.agents/skills/oat-idea-new',
+                providerPath: LEGACY,
+                provider: 'claude',
+                contentType: 'skill',
+                contentHash: null,
+                isFile: false,
+                lastSynced: '2026-09-01T00:00:00.000Z',
+                strategy: 'copy',
+              } as ManifestEntryV2,
+            ],
+          },
+          driftStates: { [LEGACY]: { status: 'in_sync' } },
+          versions: {
+            [`/project/${LEGACY}`]: '2.0.0',
+            '/project/.claude/skills/oat-idea-new': '9.9.9',
+          },
+        }),
+      },
+    );
+
+    expect(
+      result.providerViews?.[0]?.views.find(
+        ({ provider }) => provider === 'claude',
+      ),
+    ).toMatchObject({
+      providerPath: LEGACY,
+      viewVersion: '2.0.0',
+      versionComparable: true,
+    });
+  });
+
   it('degrades to an unavailable section when the manifest cannot be read', async () => {
     const capture = createLoggerCapture();
     const deps = skillViewDependencies({
