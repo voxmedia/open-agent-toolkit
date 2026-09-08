@@ -2924,7 +2924,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.3'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.2'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.2'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.3'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.10'],
     ] as const;
 
@@ -4442,7 +4442,7 @@ describe('validateOatSkills', () => {
       ['oat-project-review-receive', '1.6.2'],
       ['oat-project-review-receive-remote', '1.5.1'],
       ['oat-project-implement', '2.3.6'],
-      ['oat-project-pr-final', '1.6.2'],
+      ['oat-project-pr-final', '1.6.3'],
       ['oat-project-pr-progress', '1.3.1'],
       ['oat-project-complete', '1.7.8'],
       ['oat-project-next', '1.1.1'],
@@ -4588,6 +4588,98 @@ describe('validateOatSkills', () => {
     expect(progressPr, 'progress PR latest ledger event').toMatch(
       /reviews_section[\s\S]{0,500}phase[\s\S]{0,100}code[\s\S]{0,180}tail -1/i,
     );
+  });
+
+  it('validates every Reviews ledger artifact path before creating the final PR', async () => {
+    const prFinal = await readRepoFile(
+      '.agents/skills/oat-project-pr-final/SKILL.md',
+    );
+
+    const guardIndex = prFinal.indexOf(
+      '**Ledger-path guard (both PR paths).**',
+    );
+    const syncedCreateIndex = prFinal.indexOf(
+      'Push the code branch, then run `gh pr create`',
+    );
+    const nonSyncedCreateIndex = prFinal.indexOf(
+      'gh pr create --base "$BASE_BRANCH"',
+    );
+
+    expect(guardIndex).toBeGreaterThanOrEqual(0);
+    expect(syncedCreateIndex).toBeGreaterThanOrEqual(0);
+    expect(nonSyncedCreateIndex).toBeGreaterThanOrEqual(0);
+    // One block that both the synced and non-synced paths pass through, so
+    // neither can create a PR from an unresolved ledger row.
+    expect(syncedCreateIndex).toBeGreaterThan(guardIndex);
+    expect(nonSyncedCreateIndex).toBeGreaterThan(guardIndex);
+
+    const guardBlock = prFinal.slice(guardIndex, syncedCreateIndex);
+    // Cells, not a textual grep of the section: grepping is what let a row
+    // whose artifact path no longer resolves reach `gh pr create`.
+    expect(prFinal).toContain(
+      "Parse each row's Artifact cell rather than grepping the section as free text",
+    );
+    expect(guardBlock).toContain('tolower($i) == "artifact"');
+    expect(guardBlock).toContain(
+      'LEDGER_PROJECT_ROOT=$(cd -P "$PROJECT_PATH" 2>/dev/null && pwd -P)',
+    );
+    // Contained in the project, and a regular file.
+    expect(guardBlock).toContain('"$LEDGER_PROJECT_ROOT"/*) ROW_CONTAINED=1');
+    expect(guardBlock).toContain('[ ! -f "$ROW_RESOLVED" ]');
+    expect(guardBlock).toContain('artifact resolves outside the project');
+    // The `-` placeholder stays legal.
+    expect(guardBlock).toContain(
+      'if [ "$ROW_ARTIFACT" = "-" ]; then continue; fi',
+    );
+    // A named gate code plus the offending row's identity.
+    expect(guardBlock).toContain(
+      'PRFINAL-05: unresolved review-ledger artifact',
+    );
+    expect(guardBlock).toContain(
+      'scope=$ROW_SCOPE type=$ROW_TYPE artifact=$ROW_ARTIFACT',
+    );
+    expect(guardBlock).toContain('exit 1');
+
+    // Every failure mode fails closed: an unreadable or unparsable ledger and a
+    // ledger the loop did not fully consume all stop, rather than reporting a
+    // clean ledger by default.
+    expect(guardBlock).toContain('if [ ! -r "$PROJECT_PATH/plan.md" ]; then');
+    expect(guardBlock).toContain('cannot parse the review ledger');
+    expect(guardBlock).toContain(
+      '[ "$LEDGER_ROWS_SEEN" -ne "$LEDGER_ROW_COUNT" ]',
+    );
+    // A symlink chain that outruns the hop limit is rejected instead of being
+    // containment-checked on its unresolved in-project pathname.
+    expect(guardBlock).toContain(
+      'artifact symlink chain does not resolve within 16 hops',
+    );
+    // Alignment colons are valid separator syntax, not a ledger event.
+    expect(guardBlock).toContain('$2 ~ /^:?-+:?$/ { next }');
+    // Physical traversal: a logical `cd` collapses `symlink/..` before
+    // `pwd -P`, which validates a different file than the one published.
+    expect(guardBlock).toContain('cd -P "$PROJECT_PATH"');
+    expect(guardBlock).toContain('cd -P "$(dirname "$ROW_TARGET")"');
+    expect(guardBlock).not.toMatch(/\bcd "\$\(dirname/);
+    // An unreadable row stops instead of being skipped.
+    expect(guardBlock).toContain(
+      'unsupported review-ledger row (a row must start with |)',
+    );
+
+    // The gate code is registered rather than invented.
+    const contract = await readRepoFile('.agents/docs/autonomy-contract.md');
+    expect(contract).toMatch(
+      /\|\s*PRFINAL-05\s*\|\s*`oat-project-pr-final`\s*\|\s*Unresolved review-ledger artifact path\s*\|/,
+    );
+
+    // The guard is a new block; Step 2's pinned ledger read is not where it
+    // lives.
+    const stepTwo = prFinal.slice(
+      prFinal.indexOf('### Step 2: Check Final Review Status'),
+      prFinal.indexOf('### Step 3: Collect Project Summary'),
+    );
+    expect(stepTwo).not.toContain('PRFINAL-05');
+    expect(stepTwo).toContain('/^## Reviews[[:space:]]*$/');
+    expect(stepTwo).toContain('in_reviews && /^##[[:space:]]/ { exit }');
   });
 
   it('resolves collision-free archive identity before receive mutations', async () => {
