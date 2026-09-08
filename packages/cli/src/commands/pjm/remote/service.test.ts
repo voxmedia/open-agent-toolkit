@@ -2820,9 +2820,16 @@ describe('production lifecycle composition', () => {
     execFileSync('git', ['init', '--quiet'], { cwd: repository });
     await mkdir(join(repository, '.oat'), { recursive: true });
     const projectPath = '.oat/projects/synced/project-1';
+    const syncedRecordPath = join(
+      repository,
+      '.oat',
+      'projects',
+      'synced',
+      'project-1.json',
+    );
     await mkdir(join(repository, projectPath), { recursive: true });
     await writeFile(
-      join(repository, '.oat', 'projects', 'synced', 'project-1.json'),
+      syncedRecordPath,
       `${JSON.stringify(
         buildSyncedRecord('project-1', new Date(timestamp)),
         null,
@@ -3068,6 +3075,7 @@ describe('production lifecycle composition', () => {
       },
     });
 
+    await unlink(syncedRecordPath);
     currentObservation = {
       provider: 'linear',
       context: { workspaceId: 'workspace-1' },

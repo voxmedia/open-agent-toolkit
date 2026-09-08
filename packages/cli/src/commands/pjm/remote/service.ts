@@ -197,17 +197,10 @@ async function prepareCloseout(
   if (!request.projectPath) {
     throw new Error('Closeout requires an explicit local project path.');
   }
-  const target = await resolveProjectCreateTarget(
+  const metadata = await selectProjectBindingsForCloseout(
     request.projectRoot,
     request.projectPath,
-  );
-  const metadata = (await store.listBindingMetadata()).filter(
-    (binding) =>
-      binding.target.kind === 'project' &&
-      binding.target.scope === target.scope &&
-      binding.target.id === target.id &&
-      canonicalizePath(resolve(request.projectRoot, binding.target.path)) ===
-        canonicalizePath(resolve(request.projectRoot, target.path)),
+    await store.listBindingMetadata(),
   );
   const eligible = metadata.filter((binding) =>
     binding.purposes.some((purpose) =>
@@ -2419,26 +2412,21 @@ async function resolveProjectCreateTarget(
   const candidates: Array<{ scope: ProjectScope; path: string }> = [];
 
   if (explicitPath) {
-    const absolutePath = canonicalizePath(
-      isAbsolute(requested) ? requested : resolve(projectRoot, requested),
-    );
-    const scope = resolveProjectScope(
-      absolutePath,
-      configuredSharedRoot,
+    const explicitTarget = resolveProjectPathTarget(
       projectRoot,
+      projectsRoot,
+      reference,
     );
-    if (!scope) {
-      throw new Error(
-        `Project publication target is outside configured project scope roots: ${reference}`,
-      );
-    }
-    if (scope === 'synced') {
+    if (explicitTarget.scope === 'synced') {
       await assertActiveSyncedProject(
-        resolveScopeRoot(projectRoot, projectsRoot, scope),
-        basename(absolutePath),
+        resolveScopeRoot(projectRoot, projectsRoot, explicitTarget.scope),
+        explicitTarget.id,
       );
     }
-    candidates.push({ scope, path: absolutePath });
+    candidates.push({
+      scope: explicitTarget.scope,
+      path: canonicalProjectTargetPath(projectRoot, explicitTarget.path),
+    });
   } else {
     if (
       !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(requested) ||
@@ -2487,6 +2475,93 @@ async function resolveProjectCreateTarget(
     id,
     path: projectPointerPath(projectRoot, target.path),
   };
+}
+
+async function selectProjectBindingsForCloseout(
+  projectRoot: string,
+  reference: string,
+  bindings: readonly RemoteBindingMetadata[],
+): Promise<RemoteBindingMetadata[]> {
+  const requested = reference.trim();
+  if (!requested) {
+    throw new Error('Closeout project target is empty.');
+  }
+  const projects = bindings.filter(
+    (binding) => binding.target.kind === 'project',
+  );
+  const explicitPath =
+    isAbsolute(requested) ||
+    requested.includes('/') ||
+    requested.includes('\\');
+  if (!explicitPath) {
+    if (
+      !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(requested) ||
+      requested.includes('..')
+    ) {
+      throw new Error('Closeout project target ID is invalid.');
+    }
+    const matches = projects.filter(
+      (binding) => binding.target.id === requested,
+    );
+    const identities = new Set(
+      matches.map((binding) =>
+        projectTargetIdentity(projectRoot, binding.target),
+      ),
+    );
+    if (identities.size > 1) {
+      throw new Error(
+        `Project closeout target '${reference}' is ambiguous across scopes. Pass an explicit project path.`,
+      );
+    }
+    return matches;
+  }
+
+  const projectsRoot = await resolveProjectsRoot(projectRoot, process.env);
+  const target = resolveProjectPathTarget(projectRoot, projectsRoot, reference);
+  const identity = projectTargetIdentity(projectRoot, target);
+  return projects.filter(
+    (binding) =>
+      projectTargetIdentity(projectRoot, binding.target) === identity,
+  );
+}
+
+function resolveProjectPathTarget(
+  projectRoot: string,
+  projectsRoot: string,
+  reference: string,
+): RemoteBindingMetadata['target'] {
+  const absolutePath = canonicalProjectTargetPath(projectRoot, reference);
+  const scope = resolveProjectScope(
+    absolutePath,
+    resolveScopeRoot(projectRoot, projectsRoot, 'shared'),
+    projectRoot,
+  );
+  if (!scope) {
+    throw new Error(
+      `Project target is outside configured project scope roots: ${reference}`,
+    );
+  }
+  const id = basename(absolutePath);
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(id) || id.includes('..')) {
+    throw new Error('Project target ID is invalid.');
+  }
+  return {
+    kind: 'project',
+    scope,
+    id,
+    path: projectPointerPath(projectRoot, absolutePath),
+  };
+}
+
+function projectTargetIdentity(
+  projectRoot: string,
+  target: RemoteBindingMetadata['target'],
+): string {
+  return `${target.scope}\0${target.id}\0${canonicalProjectTargetPath(projectRoot, target.path)}`;
+}
+
+function canonicalProjectTargetPath(projectRoot: string, path: string): string {
+  return canonicalizePath(isAbsolute(path) ? path : resolve(projectRoot, path));
 }
 
 async function activeSyncedProject(
