@@ -5,206 +5,108 @@ oat_blockers: []
 oat_last_updated: 2026-09-08
 oat_current_task_id: p01-t01
 oat_generated: false
+oat_template: false
 ---
 
-# Implementation: recon-rework
+# Implementation: Recon rework
 
-**Started:** 2026-09-08
+**Started:** Not started — tracker initialized during planning on 2026-09-08.
 **Last Updated:** 2026-09-08
 
-> This document is used to resume interrupted implementation sessions.
->
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+The next task pointer identifies the first future implementation task, not
+authorization to run it. Resume the pre-review quick plan through handoff.md.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase                                      | Status  | Tasks | Completed |
+| ------------------------------------------ | ------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | pending | 2     | 0/2       |
+| Phase 2: Proposal, conditions, integration | pending | 3     | 0/3       |
+| Phase 3: Guidance and consumer output      | pending | 2     | 0/2       |
+| Phase 4: Distribution and verification     | pending | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/9 tasks completed. All implementation reviews pending.
 
----
+## Task Status
 
-## Phase 1: {Phase Name}
+| Task    | Outcome                                       | Commit |
+| ------- | --------------------------------------------- | ------ |
+| p01-t01 | Pending: superseding decision                 | -      |
+| p01-t02 | Pending: versioned manifest and normalization | -      |
+| p02-t01 | Pending: economical routing preview           | -      |
+| p02-t02 | Pending: conditional escalation/outcomes      | -      |
+| p02-t03 | Pending: complete profile/harness controls    | -      |
+| p03-t01 | Pending: controller/worker/shared guidance    | -      |
+| p03-t02 | Pending: renderer and public docs             | -      |
+| p04-t01 | Pending: bundle and release versions          | -      |
+| p04-t02 | Pending: full verification/evidence           | -      |
 
-**Status:** in_progress
-**Started:** 2026-09-08
+## Phase Outcomes
 
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
----
+No implementation phase has run. Add actual delivered behavior, exact commits,
+verification commands/results, and deviations per phase during implementation.
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+No implementation orchestration runs.
 
 <!-- orchestration-runs-end -->
 
----
-
 ## Implementation Log
 
-Chronological log of implementation progress.
+### 2026-09-08 — Planning only
 
-### 2026-09-08
+- User supplied the existing worktree and requested quick discovery capture,
+  lightweight design, and plan drafting.
+- User explicitly deferred self-review, artifact review, configured gates, and
+  implementation to the receiving agent.
+- Root retained design/plan synthesis; two bounded read-only workers mapped
+  schema consumers and policy/test surfaces. They did not review these drafts.
+- Scaffold created through the source CLI and committed at
+  `dca0c54bfbe209107cd5bf8911319303112367b7`.
+- Discovery completed through the CLI validation boundary.
+- Draft design/plan, source map, and handoff authored. Plan remains pre-review.
+- No product tests have run for the proposed implementation; it does not exist yet.
 
-**Session Start:** {time}
+## Planning Verification
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+| Check                                                                 | Result                          | Scope                                                                |
+| --------------------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------- |
+| Initial target git status                                             | Clean                           | Branch recon-rework at baseline bb93ad233                            |
+| worktree:init with SKIP_S3_ARCHIVE_SYNC=1                             | Exit 0                          | Bootstrap/build/sync; no tracked change                              |
+| PJM doctor                                                            | Exit 1, warn; adoption declared | Existing unrelated ledger warnings retained                          |
+| project new --mode quick --scope shared --json                        | Exit 0, committed               | Exact project path validated                                         |
+| project scope --format value                                          | Exit 0, shared                  | Scope resolution                                                     |
+| project complete-discovery --ready-for oat-project-quick-start --json | Exit 0                          | Discovery structure/completion                                       |
+| Artifact formatting (oxfmt --write)                                   | Exit 0                          | Seven project Markdown files only                                    |
+| project validate-plan --project-path ... --json                       | Exit 0, valid true              | Parallelism metadata only; not review                                |
+| Draft metadata/task inventory check                                   | Exit 0                          | 4 phases, 9 unique tasks, 7 artifacts; pre-review readiness retained |
+| Active pointer and git diff --check                                   | Exit 0                          | Exact project pointer and whitespace check                           |
+| state refresh                                                         | Exit 0                          | Generated local dashboard; not staged                                |
 
-**What changed (high level):**
+## Deviations from Standard Quick-Start Completion
 
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-09-08
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
-
-## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+The user requested a deliberate pre-review handoff. Therefore the normal design
+self-review, plan review loop, policy/gate prompts, gate execution, and
+implementation-ready state transition have not run. Configuration is unchanged;
+no fake disabled-review skip or passed disposition was written.
 
 ## Test Results
 
-Track test execution during implementation.
-
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+No implementation suite results. Bootstrap build output is environment setup,
+not evidence that the proposed recon behavior works.
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+Nothing shipped. This branch currently contains planning artifacts only.
+Fill this section with actual behavior and verification after implementation.
 
 ## References
 
-- Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- [Plan](plan.md)
+- [Lightweight design](design.md)
+- [Discovery](discovery.md)
+- [Handoff](handoff.md)
+- [Source context](references/source-context.md)

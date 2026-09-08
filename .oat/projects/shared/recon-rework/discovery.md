@@ -1,142 +1,117 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-09-08
 oat_generated: false
+oat_template: false
 ---
 
-# Discovery: recon-rework
-
-## Phase Guardrails (Discovery)
-
-Discovery is for requirements and decisions, not implementation details.
-
-- Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
+# Discovery: Recon rework
 
 ## Initial Request
 
-{Copy of user's initial request}
+Restore recon's intended purpose: cheap, high-volume, multi-wave collection of traceable evidence for an intelligent calling agent. Independently approve and route each wave across supported harnesses, with bounded preapproved escalation. The caller evaluates the packet and owns consequential conclusions.
+
+On 2026-09-08 Thomas selected a native **quick** project in the existing `recon-rework` worktree, asked this agent to synthesize the already-covered discovery, draft lightweight design and plan, and hand off **before self-review, plan review, configured gate execution, or implementation**. These are draft planning artifacts, not an implementation authorization or a passed review.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Where should the intelligence live?
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+Thomas: "the whole idea of the recon skill was like super cheap fan out, high volume, multiple waves" and "it's still up to whoever is consuming the recon to ... do so intelligently."
+
+**Decision:** Workers collect observations, exact locators, excerpts, counterexamples, contradictions, and gaps. The calling agent judges sufficiency and conclusions. A packet is not a final product or architecture verdict.
+
+### Are verification and adversarial work automatically expensive?
+
+Thomas explicitly rejected that premise: looking for disagreeing evidence can be another cheap pass. Bounded synthesis is a plausible escalation point when reconciliation actually needs judgment.
+
+**Decision:** Classify the concrete assignment, not the words "adversarial," "verification," or "synthesis." Cheap citation reopening and counterexample search remain the default. Preserve disagreement instead of requiring a worker to resolve it. Do not silently weaken a genuine capability floor to save money.
+
+### How should this work across harnesses?
+
+Thomas described inexpensive Claude workers such as Haiku/Sonnet, Cursor workers such as Composer with stronger consolidation when appropriate, and Codex Luna workers with Terra when reconciliation needs judgment. These are examples of roles, not fixed selectors or newly verified provider qualifications.
+
+**Decision:** Resolve current targets through existing orchestration guidance and the dispatch dependency for the active harness. Model, effort, reasoning mode, and service tier remain separate, provider-native controls. Recon does not own a second provider/model ladder or assume every harness exposes every control.
+
+### Why propose targets before launch?
+
+Thomas wants the user to see the proposed subagent model and effort for each assignment and push back when a more expensive route is unnecessary.
+
+**Decision:** One explicit approval covers a complete per-wave table, topology, authority, limits, and any bounded escalation. Explain choices above the economical default. A harder wave must not raise unrelated workers' targets.
+
+### What does the approval guarantee?
+
+Thomas confirmed **approved per-wave selection**. Actual-launch verification is only available where a harness provides real evidence.
+
+**Decision:** Preserve the distinction between approved intent, constructed invocation, accepted execution, and observed runtime evidence. No invented launcher receipts, controller self-attestation as proof, or stronger publication claims based on a model name.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+Chosen direction: one recon-specific compatibility change combining economical assignment defaults with per-wave approved targets. This project is separate from wave 7 and the recap redesign. The user explicitly requested drafting now; discovery does not require another interview.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+- **Keep one target but lower compile's default:** rejected as the general fix. Any genuinely harder required or conditional wave still inflates the run.
+- **Per-wave targets with automatic adversarial escalation:** rejected; it preserves unnecessary cost within those waves.
+- **Cheap bounded work, caller judgment, per-wave approval and bounded escalation:** selected product direction; concrete schema/helper choices in `design.md` are draft engineering decisions for review.
+- **Build actual-launch provenance infrastructure now:** excluded. The existing packet contract deliberately removed an unsupported receipt chain.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. Economical workers and sufficient provider-native reasoning are the starting point for bounded evidence passes, including redundant and challenge work.
+2. Decompose an overly broad task before escalating. Escalation needs work-specific reasoning or observed difficulty, not a phase label or total file count.
+3. Mechanical synthesis groups/deduplicates evidence and preserves competing claims. Interpretation-heavy reconciliation may use a stronger worker or return to the caller.
+4. The user sees and approves exact per-wave choices. Conditional escalation requires named targets, concrete triggers, and finite execution limits.
+5. No run-wide maximum. Homogeneity is within a wave; split a wave if its lanes require different targets or floors.
+6. Preserve source, locator, secret, authority, review independence, assurance, immutable-artifact, and atomic-publication safeguards.
+7. Quick remains capped at supported evidence; standard/thorough retain their required independent passes and derived assurance. The root still judges use.
+8. Accepted failed lanes cannot be silently retried or replaced under an escalation label. Partial outcomes remain visible.
+9. Preserve valid legacy v1 packets and their original approval meaning.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Planning baseline: `bb93ad233befc75d0da9bd699ffc57db80dfe393`, CLI 0.2.65, recon 1.1.1. Target branch/worktree: `recon-rework` on this Mac.
+- Narrowly align shared classification guidance so bounded counterexample searches do not inherit the floor for a final consequential review. Preserve stronger floors for actual judgment.
+- Reuse the existing `ValidatedRun` boundary and canonical fingerprint machinery.
+- Edit canonical skills/roles; generate bundled/provider copies with repository tooling.
+- No live-provider launch during planning. Future live tests need exact bounded dispatch approval.
+- No triage, GitHub, release, push, or merge changes are authorized by this draft.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- Standard-profile collection, checking, and challenge can stay inexpensive even when one wave needs stronger judgment.
+- Approval shows every required/redundant/conditional wave, supported exact controls, rationale, scope, and worst-case execution cap.
+- Unapproved target/topology/limit changes are refused. Preapproved escalation follows its declared trigger without changing the approved envelope.
+- Provider-neutral tests cover Claude, Cursor, and Codex-shaped selections, unavailable controls, exact-target preservation, and opaque selectors.
+- Valid v1 packets validate/render unchanged; v2 never silently reinterprets approval or accepts untyped extensions.
+- Activated conditional work supplies an outcome or honest material gap; non-triggered work cannot count as a completed pass.
+- Packets expose evidence and intended routing without claiming actual-launch proof or final correctness.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+Recap generation; wave-7 corrective lanes; generic lifecycle integration of recon; unrelated dispatch ceilings/project review policy/native launchers; a new cost database; provider benchmarking; broad provider ladder refresh; automatic fallback after accepted failure; publication or deployment.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+Launcher-produced provenance and provider billing telemetry may be integrated later when real producers exist. Do not recreate the removed receipt architecture as a prerequisite for ordinary recon.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+No product-discovery question blocks drafting. Receiving-agent review must assess the proposed version boundary, conditional escalation representation, and evidence checks in `design.md`. Implementation dispatch ceiling, optional phase gates, and implementation HiLL checkpoints remain deliberately unresolved until handoff.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+The calling agent can evaluate evidence. Additional cheap passes reduce omissions but do not guarantee their absence. "Cheapest" means the least costly qualified route supported by current harness guidance, not a globally verified price minimum or minimum reasoning effort for every task.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- Classification language could reintroduce expensive defaults: cover all ten modes, bounded-work examples, and a tested policy helper.
+- Schema fields could overclaim enforcement: distinguish structural/integrity checks from caller-owned semantic judgments.
+- Conditional work could become retries: predeclare identities, triggers, outputs, caps, and accepted-failure behavior.
+- Old recommendations conflict with later user direction: this discovery and its chronology supersede withdrawn proposal tiers.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Read `design.md`, `plan.md`, and `handoff.md`. Resume quick-start in place for design/plan review and readiness setup. Do not restart discovery or implement merely because substantive tasks exist.

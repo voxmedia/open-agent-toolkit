@@ -5,166 +5,538 @@ oat_blockers: []
 oat_last_updated: 2026-09-08
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported | lite
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_parallel_groups: []
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
+oat_template: true
 ---
 
-# Implementation Plan: recon-rework
+# Implementation Plan: Recon rework
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> **Draft for handoff, not implementation-ready.** The user requested authoring
+> only and explicitly deferred self-review, plan review, and gates to the next
+> agent. Resume quick-start in place; retain all task IDs and review rows.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Restore inexpensive evidence fan-out across harnesses with caller-owned
+judgment, independently approved per-wave targets, and bounded conditional
+escalation.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** A v2 manifest with per-wave effective targets and finite
+conditional waves normalizes beside unchanged v1 evidence into the existing
+ValidatedRun boundary. Pure routing/proposal helpers support the controller;
+existing provider guidance and generic dispatch retain selection/launch ownership.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** Existing Node.js ESM skill scripts, Node test runner, TypeScript
+CLI contract tests with Vitest, Markdown skills/docs, pnpm/Turborepo. No new runtime
+dependencies or native launcher.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+**Commit Convention:** `type(pNN-tNN): description`; every task is an atomic
+commit with its exact write set staged.
 
-## Planning Checklist
+## Planning Status
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
+- Discovery: captured and completed through the CLI validation boundary.
+- Lightweight design: drafted; technical choices await review.
+- This plan: 4 sequential phases, 9 tasks; no tasks started.
+- Design/plan self-review and artifact review: deferred by explicit user request.
+- Project dispatch policy, optional phase gates, lifecycle gate posture, and
+  implementation HiLL: not selected in this drafting run.
+- Do not write a fake review skip, a passed row, or implementation readiness.
+- The low-cost policy describes recon workers **as product behavior**; it does
+  not require implementing or reviewing this contract with an inadequate model.
 
----
+## Before Implementation
+
+The receiving agent must follow `handoff.md`: verify the worktree, resume
+`oat-project-quick-start`, review the draft bundle, resolve dispatch/gate choices
+through the current shared contracts, run and receive any configured gate,
+and only then establish implementation readiness. No repeated discovery interview
+is required unless review reveals a substantive product ambiguity.
+
+Do not automatically merge the backlog-triage branch. Issue #274 is the scope
+source; discover any canonical backlog record created by the separate triage
+and link it without duplicating or claiming other wave-7 work.
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
+`oat_plan_parallel_groups: []` is deliberate. Phase 1 defines schema/decision
+semantics; phase 2 consumes them in helpers, validation, and workflow fixtures;
+phase 3 binds the resulting behavior to controller guidance and rendering;
+phase 4 verifies the composed released assets.
 
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
+Adjacent phases share `contracts.mjs`, recon fixtures/tests, packet contract
+docs, or CLI skill pins. Their tests depend on predecessor behavior. Do not split
+these phases into parallel implementation worktrees on the current design.
+Read-only source inventories or evidence collection may be delegated independently.
+
+## Common Execution Rules
+
+All commands below run from the `recon-rework` repository root unless a command
+sets a package working directory. Use the canonical source CLI via
+`pnpm run --silent cli:source -- ...` after `pnpm run worktree:init` has built
+workspace dependencies. Use `pnpm run cli -- ...` when asset rebundling is needed.
+
+The documented file-scoped formatter is `pnpm exec oxfmt --write <paths>`,
+derived from root `package.json`'s `format:fix` script. Each task supplies paths.
+Format project tracking files changed by the task too:
+
+```bash
+pnpm exec oxfmt --write .oat/projects/shared/recon-rework/implementation.md .oat/projects/shared/recon-rework/state.md .oat/projects/shared/recon-rework/plan.md
 ```
 
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
+Record test commands, exit codes, fixture/probe provenance, and outcome categories
+in implementation.md. Do not mistake a filtered pipeline exit or replayed Turbo
+log for an executed passing test. Scope file tests with `exec vitest run`, not
+an ambiguous package script forwarding shortcut.
 
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+For approval, evidence, and conditional guards preserve positive and negative
+controls. For new v2-only fields, old-schema rejection is not the semantic negative
+control: neutralize the new guard in a disposable tracked test experiment, prove
+the test fails, restore the guard, and prove the valid control passes. Never leave
+the guard neutralized or claim fake fixtures are live-provider evidence.
 
----
+## Phase 1: Decision and versioned contract
 
-## Dispatch Profile
-
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
-
----
-
-RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Other task-body shapes, including non-TDD shapes, are allowed when appropriate, provided the plan preserves stable `pNN-tNN` IDs, per-task verification, and atomic commits.
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Record the intended division of labor and superseding decision
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Create: one CLI-generated decision record under `.oat/repo/reference/decisions/`.
+- Modify: `DR-260831-approval-bound-homogeneous.md`,
+  `DR-260904-remove-dispatch-receipt-chain.md`, generated decision index.
+- Modify: project discovery/design only if the received review established a
+  technical correction; preserve the user intent and review history.
 
-**Step 1: Write test (RED)**
+**Implement:**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+1. Read decision guidance/index and load `oat-pjm-decision`. Run
+   `pnpm run --silent cli:source -- pjm doctor --json`; inspect adoption before
+   any decision write. Unrelated backlog-ledger warnings are not project approval.
+2. Record cheap evidence acquisition, caller judgment, economical per-wave
+   selection, explicit approval, predeclared bounded escalation, and the distinction
+   between intended targets and actual-launch proof.
+3. Supersede the homogeneous-per-run decision. Amend both singular-selection
+   wording and its reaffirmation in DR-260904; preserve the removal of unsupported
+   receipts and prior evidence/publication invariants.
+4. Cite DR-260719-separate-recon-authority-from and DR-260719-keep-final-judgment.
+   Do not rewrite those decisions as though final reviewers became cheap workers.
+5. Generate the record ID and index using their owning commands; do not hand-name
+   a supposedly accepted decision.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+**Format:** `pnpm exec oxfmt --write .oat/repo/reference/decisions/DR-260831-approval-bound-homogeneous.md .oat/repo/reference/decisions/DR-260904-remove-dispatch-receipt-chain.md .oat/repo/reference/decisions/index.md`, plus the exact new decision path returned by the CLI and changed project artifacts.
 
-**Step 2: Implement (GREEN)**
+**Verify:** Run the decision index regeneration command and PJM doctor. Confirm
+the new record/index link resolves and the supersession preserves the receipt
+boundary. Capture any inherited PJM warnings separately.
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
+**Commit:** `docs(p01-t01): restore economical recon and caller-owned judgment`.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
-
-**Step 3: Refactor**
-
-{Any cleanup or improvements while tests stay green}
-
-**Step 4: Verify**
-
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
-
-**Step 5: Commit**
-
-```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
-```
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add a v2 manifest shape with lossless v1 normalization
 
 **Files:**
 
-- {File list}
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`,
+  `scripts/validate-packet.mjs`, `references/packet-contract.md`.
+- Create: `.agents/skills/recon/scripts/lib/routing.mjs`,
+  `tests/routing-contracts.test.mjs`.
+- Modify: `.agents/skills/recon/tests/fixtures/packet-fixture.mjs`,
+  `tests/packet-validation.test.mjs`, `tests/integrity-contracts.test.mjs`.
 
-**Step 1: Write test (RED)**
+**Implement:**
 
-{Test code}
+1. Retain a v1 fixture path with its original flat execution fields and fingerprint
+   algorithm. Do not convert every fixture to v2 and lose compatibility evidence.
+2. Replace the global version gate with a closed kind/version dispatch:
+   manifest 1/2; unchanged evidence kinds 1. Reject other combinations.
+3. Implement the reviewed v2 execution shape from design: inherited full target,
+   whole-target wave overrides, class/floor/reason, conditions, approval.
+4. Add pure effective-wave resolution. Validate original wire shape and original
+   fingerprint before normalization; preserve original artifact byte digests.
+5. Keep v1 semantics intact, including previously legal expensive homogeneous
+   selections. V1 compatibility must not retroactively demand v2 rationale fields.
+6. New v2 fields stay closed and nullable effort is explicit unsupported/no-request
+   behavior, never an unknown-value fallback.
+7. Thread the normalized routing view into ValidatedRun without creating a second
+   evidence-validation boundary or permitting the renderer to parse raw data.
 
-**Step 2: Implement (GREEN)**
-
-{Implementation code or signatures}
-
-**Step 3: Refactor**
-
-{Optional cleanup}
-
-**Step 4: Verify**
-
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
-
-**Step 5: Commit**
+**Format:**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
+pnpm exec oxfmt --write .agents/skills/recon/scripts/lib/contracts.mjs .agents/skills/recon/scripts/lib/routing.mjs .agents/skills/recon/scripts/validate-packet.mjs .agents/skills/recon/references/packet-contract.md .agents/skills/recon/tests/fixtures/packet-fixture.mjs .agents/skills/recon/tests/routing-contracts.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs .agents/skills/recon/tests/integrity-contracts.test.mjs
 ```
 
----
+**Verify:**
 
-## Phase 2: {Phase Name}
+```bash
+node --test .agents/skills/recon/tests/routing-contracts.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs .agents/skills/recon/tests/integrity-contracts.test.mjs
+```
 
-### Task p02-t01: {Task Name}
+Controls: v1 accepted unchanged; v2 manifest/v1 evidence accepted; unknown versions
+and v2 keys in v1 rejected; full-target inheritance exact; axis/fingerprint
+mutation rejected. Temporary unsupported-condition publication may remain refused
+until phase 2; do not ship or label an incomplete intermediate state ready.
 
-{Continue TDD pattern...}
+**Commit:** `feat(p01-t02): version recon per-wave execution contracts`.
 
----
+## Phase 2: Proposal, conditional execution, and integration
+
+### Task p02-t01: Implement economical routing preview and exact target checking
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/routing.mjs`.
+- Create: `.agents/skills/recon/scripts/prepare-routing.mjs`,
+  `tests/routing-preview.test.mjs`.
+- Modify: `.agents/skills/recon/tests/routing-contracts.test.mjs`.
+
+**Implement:**
+
+1. Define and exhaustively test bounded economical defaults for all ten wave modes.
+   Require explicit selection rationale; do not hard-code models or provider prices.
+2. Implement the draft proposal CLI described in design. Print per-wave
+   assignments, counts, effective target axes, class/floor, rationale, conditions,
+   and worst-case limits in Markdown/JSON.
+3. Preview may accept missing approval but may not publish, write approval, or
+   launch. Keep that structural path separate from packet validation.
+4. Add approved-wave target checking: require valid approval, known wave, exact
+   supported axes, and no normalization of opaque selectors.
+5. Include reasons for stronger selection and unsupported controls. The tool
+   checks structure/identity, not model capability from names or semantic adequacy.
+6. Test directly and through subprocess CLI output, including malformed inputs
+   and nonzero exits.
+
+**Format:**
+
+```bash
+pnpm exec oxfmt --write .agents/skills/recon/scripts/lib/routing.mjs .agents/skills/recon/scripts/prepare-routing.mjs .agents/skills/recon/tests/routing-preview.test.mjs .agents/skills/recon/tests/routing-contracts.test.mjs
+```
+
+**Verify:**
+
+```bash
+node --test .agents/skills/recon/tests/routing-preview.test.mjs .agents/skills/recon/tests/routing-contracts.test.mjs
+```
+
+Controls: cheap defaults across modes; stronger reconciliation does not alter
+gather targets; absent effort is explicit; post-approval target change is rejected;
+declining or editing a preview produces zero launches. Use synthetic opaque
+selectors and label them as preservation fixtures, not qualified live models.
+
+**Commit:** `feat(p02-t01): preview economical recon wave selections`.
+
+### Task p02-t02: Enforce finite conditional escalation and outcome accounting
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`,
+  `scripts/lib/routing.mjs`, `scripts/validate-packet.mjs`,
+  `references/packet-contract.md`.
+- Create: `.agents/skills/recon/tests/conditional-routing.test.mjs`.
+- Modify: `.agents/skills/recon/tests/fixtures/packet-fixture.mjs`,
+  `tests/integrity-contracts.test.mjs`.
+
+**Implement:**
+
+1. Implement predeclared condition-to-wave binding, forward-only dependencies,
+   unique identities/outputs, single activation, and profile hard-cap accounting.
+2. Validate finalized v2 conditional dispositions and artifact references through
+   the existing digest/trust-root machinery.
+3. Triggered conditional lanes need complete outcomes or material PASS\_\* gaps;
+   not-triggered lanes cannot contribute artifacts or achieved passes.
+4. Preserve required-profile checks independently of conditional annotations.
+   An unresolved condition cannot erase missing required evidence.
+5. Conditions require completed predecessor evidence and cannot use accepted
+   failure, cancellation, timeout, or missing output to launch a replacement.
+6. Include conditions/targets/limits in the approval fingerprint. Outcomes remain
+   outside immutable approval and are labeled root-recorded dispositions.
+7. Add executable checks of concrete typed predicate evidence where possible;
+   explicitly retain root judgment where semantic necessity is not machine-proven.
+
+**Format:**
+
+```bash
+pnpm exec oxfmt --write .agents/skills/recon/scripts/lib/contracts.mjs .agents/skills/recon/scripts/lib/routing.mjs .agents/skills/recon/scripts/validate-packet.mjs .agents/skills/recon/references/packet-contract.md .agents/skills/recon/tests/conditional-routing.test.mjs .agents/skills/recon/tests/fixtures/packet-fixture.mjs .agents/skills/recon/tests/integrity-contracts.test.mjs
+```
+
+**Verify:**
+
+```bash
+node --test .agents/skills/recon/tests/conditional-routing.test.mjs .agents/skills/recon/tests/integrity-contracts.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs
+```
+
+Negative controls cover a valid old conditional omission fixture where applicable,
+new guard neutralization, unknown/cyclic rules, unapproved stronger targets,
+activated missing outputs, skipped artifacts, and cap overflow. A complete valid
+conditional follow-up passes; a failed accepted predecessor remains failed.
+
+**Commit:** `feat(p02-t02): validate bounded recon escalation outcomes`.
+
+### Task p02-t03: Exercise complete profiles across provider-shaped dispatch controls
+
+**Files:**
+
+- Modify: `.agents/skills/recon/tests/helpers/fake-recon-run.mjs`,
+  `tests/workflow.integration.test.mjs`, `tests/fixtures/packet-fixture.mjs`.
+- Modify: `.agents/skills/recon/tests/review-brief.test.mjs` only for explicit
+  mixed-version producer/consumer compatibility controls.
+
+**Implement:**
+
+1. Make the fake workflow call production routing/preview/check helpers. It must
+   not contain a separate fake implementation of selection enforcement.
+2. Exercise quick, standard, and thorough profiles with v1 and v2 manifests.
+   Cover redundant/conditional modes, not only map plus gather.
+3. Model Claude controls with no separately requested effort, Codex effort as an
+   independent axis, and Cursor opaque selectors. Unsupported requested controls
+   stop before acceptance. No provider SDK or live credential is required.
+4. Retain existing authority, pre-start fallback, accepted failure/cancellation,
+   and no-dispatch-directory tests.
+5. Assert cheap map/gather/check/challenge remains unchanged when a stronger
+   conditional reconciliation is approved and when it activates.
+6. Show the single envelope before any launch; user refusal yields no calls.
+   Fingerprint mutation or constructed-target mismatch refuses affected work.
+7. Describe the fixture honestly: it proves production helper and control-flow
+   behavior, not actual native runtime launch identity.
+
+**Format:**
+
+```bash
+pnpm exec oxfmt --write .agents/skills/recon/tests/helpers/fake-recon-run.mjs .agents/skills/recon/tests/workflow.integration.test.mjs .agents/skills/recon/tests/fixtures/packet-fixture.mjs .agents/skills/recon/tests/review-brief.test.mjs
+```
+
+**Verify:**
+
+```bash
+node --test .agents/skills/recon/tests/workflow.integration.test.mjs .agents/skills/recon/tests/review-brief.test.mjs
+```
+
+Preserve the exact generated fixture and invocation/output log for representative
+v1 and v2 successful and partial runs. If later real-provider acceptance is
+requested, load the active provider reference, propose exact worker targets and
+limits, obtain approval, and record observations separately from fixture results.
+
+**Commit:** `test(p02-t03): cover recon routing across profile and harness shapes`.
+
+## Phase 3: Controller, shared guidance, and consumer output
+
+### Task p03-t01: Align controller and worker guidance with economical evidence work
+
+**Files:**
+
+- Modify: `.agents/skills/recon/SKILL.md`,
+  `references/profiles.md`, `references/worker-contract.md`,
+  `references/packet-contract.md`.
+- Modify: `.agents/skills/subagent-orchestration/SKILL.md`,
+  `references/model-selection-principles.md`.
+- Modify: `.agents/agents/recon-worker.md` for the reviewed assignment contract.
+- Modify: `.agents/skills/recon/tests/skill-contract.test.mjs`,
+  `packages/cli/src/validation/skills.test.ts`.
+
+**Implement:**
+
+1. Put confirmed intent near the opening. Replace all run-wide maximum and
+   same-target-per-run rules with the production helper-backed per-wave workflow.
+2. Link the complete mode policy; describe narrowing/escalation by actual task
+   difficulty and preserve stronger capability for judgment-bearing work.
+3. Load same-scope dependencies and exactly one active-harness selection/mechanics
+   pair. Do not add a second named provider ladder or cross-harness effort mapping.
+4. Make the complete proposal explicit before approval; show supported effort,
+   model, reasoning mode, service tier, lane counts, rationale, and finite limits.
+5. Consume conditional outcomes, preserve accepted-failure rules, and require
+   root assessment of contradictions and downstream sufficiency.
+6. Preserve quick supported assurance and standard/thorough independent typed
+   review requirements. Model mix is not review independence.
+7. Clarify shared classification without weakening final consequential reviewers.
+   Do not rewrite the dispatch engine; if a concrete dependency change is proven
+   necessary, return to the root with the exact scope before editing it.
+8. Increment each modified canonical skill's metadata.version once for the PR,
+   following the current SemVer convention. Update the role under its current
+   version policy. Sweep existing version pins, including tools/smoke.
+
+**Format:**
+
+```bash
+pnpm exec oxfmt --write .agents/skills/recon/SKILL.md .agents/skills/recon/references/profiles.md .agents/skills/recon/references/worker-contract.md .agents/skills/recon/references/packet-contract.md .agents/skills/subagent-orchestration/SKILL.md .agents/skills/subagent-orchestration/references/model-selection-principles.md .agents/agents/recon-worker.md .agents/skills/recon/tests/skill-contract.test.mjs packages/cli/src/validation/skills.test.ts
+```
+
+**Verify:**
+
+```bash
+node --test .agents/skills/recon/tests/skill-contract.test.mjs .agents/skills/recon/tests/routing-contracts.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+pnpm oat:validate-skills
+```
+
+Check the actual prose against executable owners; text pins alone do not prove
+behavior. Preserve provider-neutral consumers and package layout.
+
+**Commit:** `feat(p03-t01): restore cheap recon fan-out across harnesses`.
+
+### Task p03-t02: Render intended selections and document the consumer boundary
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/render-packet.mjs`,
+  `tests/render-packet.test.mjs`, `references/packet-contract.md`.
+- Modify: `apps/oat-docs/docs/workflows/skills/recon.md`.
+- Modify: `apps/oat-docs/docs/workflows/skills/index.md` only if its recon summary
+  describes the superseded behavior; no unrelated navigation rebuild.
+
+**Implement:**
+
+1. Read only normalized ValidatedRun to render a compact intended-routing summary
+   and conditional dispositions. Preserve atomic writes, digest revalidation,
+   trust-root checks, and stale-output withdrawal.
+2. Preserve evidence/claims/gaps as the main consumer context; never dump dossiers
+   or turn the packet into a final recommendation.
+3. Label approved intent versus real runtime observations. Do not fabricate
+   actual-launch targets, receipts, cost totals, or universal correctness.
+4. Document v1/v2 support, preview/check commands, inexpensive defaults, escalation
+   examples, unsupported controls, and renewed approval boundaries.
+5. Read docs-app AGENTS.md before editing. Avoid fixed currently-live model claims;
+   direct readers to the active provider guidance instead.
+6. Do not re-bump recon if already bumped in p03-t01.
+
+**Format:**
+
+```bash
+pnpm exec oxfmt --write .agents/skills/recon/scripts/render-packet.mjs .agents/skills/recon/tests/render-packet.test.mjs .agents/skills/recon/references/packet-contract.md apps/oat-docs/docs/workflows/skills/recon.md
+```
+
+Include the exact index path only if modified.
+
+**Verify:**
+
+```bash
+node --test .agents/skills/recon/tests/render-packet.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs
+pnpm --filter oat-docs check
+```
+
+Controls: unchanged v1 source bytes; v2 routing shown accurately; revoked/mutated
+approval cannot publish; partial outcome remains visible; fabricated launch-proof
+labels absent.
+
+**Commit:** `docs(p03-t02): expose recon routing intent and evidence limits`.
+
+## Phase 4: Distribution and composed verification
+
+### Task p04-t01: Bundle the runtime and apply one lockstep release bump
+
+**Files:**
+
+- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`,
+  `packages/docs-config/package.json`, `packages/docs-theme/package.json`,
+  `packages/docs-transforms/package.json`.
+- Modify: `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts`.
+- Generated if changed: `pnpm-lock.yaml`, `.oat/sync/manifest.json`, configured
+  provider views, and ignored `packages/cli/assets/**` build outputs.
+- Modify: pack manifests only if the existing directory-copy contract does not
+  include the new script; verify actual manifest ownership first.
+
+**Implement:**
+
+1. Fetch origin/main and choose one lockstep version strictly greater than the
+   current base. Do not assume 0.2.66 remains available or change main's branch.
+2. Ensure new runtime scripts ship in the research pack while tests remain
+   excluded according to existing packaging policy.
+3. Extend bundle consistency to include the proposal helper and shared routing
+   library. Test installed package layout using existing fixture facilities.
+4. Build/bundle canonical assets and sync project-scoped views. Never manually
+   edit generated copies or synchronize user-wide installs as part of this task.
+5. Reconcile all required skill/role pins once per final PR diff. Do not adopt the
+   stale AGENTS.md top-level skill-version wording over the newer migration.
+
+**Format:**
+
+```bash
+pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts
+```
+
+Also format each actually changed tracked manifest/pin file; do not format the
+entire generated asset tree or rewrite pnpm's lockfile with a generic formatter.
+
+**Verify:**
+
+```bash
+pnpm build
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts
+pnpm run cli -- sync --scope project
+pnpm run check:skill-bumps
+pnpm release:check-versions
+```
+
+Confirm generated runtime contains the new helper/library and actual package
+scope remains intact. Stage only intended tracked outputs.
+
+**Commit:** `chore(p04-t01): bundle recon routing and align release versions`.
+
+### Task p04-t02: Record full validation and repeatable negative controls
+
+**Files:**
+
+- Modify: project `implementation.md`, `state.md`, and `plan.md` tracking only.
+- Create: bounded evidence notes/probe instructions under project
+  `references/verification/`; keep raw machine logs outside tracked artifacts.
+- Any product defect found here becomes an explicit fix task with its own write
+  set/commit and repeated relevant checks; do not hide it in bookkeeping.
+
+**Implement and verify:**
+
+Run the eight CI gates sequentially, in this exact order, capturing every exit
+status. A failure stops the gate sequence for diagnosis; rerun after its repair.
+
+1. `pnpm check`
+2. `pnpm type-check`
+3. `pnpm test`
+4. `pnpm build`
+5. `pnpm run check:skill-bumps`
+6. `pnpm release:check-versions` (refresh origin/main before this gate)
+7. `pnpm release:validate`
+8. `pnpm build:docs`
+
+Also run `pnpm lint` and `pnpm format` because skills are changed. Record
+cache replay as such; do not present cached tests as executed evidence. For fresh
+Turbo execution, use `pnpm exec turbo run test --force` with isolated test-home
+behavior supplied by fixtures/test harness, never repurpose the shell HOME
+variable. If a test resolves maintainer templates, inject a temporary home through
+that test's supported API and record it. Do not silently change global installs.
+
+Run focused `node --test .agents/skills/recon/tests/*.test.mjs` and
+`pnpm test:skills`, `pnpm test:smoke`, `pnpm test:release` as fresh non-Turbo
+supplements when preceding root output does not already supply actual execution.
+Build before standalone smoke/release suites. Preserve observed results rather
+than guessed counts.
+
+Record v1 compatibility, v2 per-wave selection, valid/invalid conditional controls,
+guard-neutralization evidence, and limits of synthetic harness tests. No live
+native launch is claimed unless separately approved and observed.
+
+**Format:**
+
+```bash
+pnpm exec oxfmt --write .oat/projects/shared/recon-rework/implementation.md .oat/projects/shared/recon-rework/state.md .oat/projects/shared/recon-rework/plan.md
+```
+
+Format each concrete verification note created. Include exact commands and
+categorical expected outcomes sufficient for independent repetition.
+
+**Commit:** `test(p04-t02): record recon compatibility and approval controls`.
+
+After this task, continue the normal authorized implementation review/final gate
+workflow. This plan does not authorize push, PR publication, merge, backlog
+closure, or live-provider spending. At approved shipping closeout, reconcile #274
+and any canonical backlog record through their owning workflows; do not close
+recap or wave-7 items.
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
+Review work is **deferred to the receiving agent**, not passed or disabled.
+Keep the unbound template rows below. The spec row is N/A for quick mode; its
+placeholder is retained solely to preserve scaffold review rows and is not a new
+spec requirement. No explicit auto-review-disabled configuration was written.
 
 | Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
 | ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
@@ -173,40 +545,27 @@ git commit -m "feat(p01-t02): {description}"
 | final  | code     | pending | -    | -        | -             | -          | -           |
 | spec   | artifact | pending | -    | -        | -             | -          | -           |
 | design | artifact | pending | -    | -        | -             | -          | -           |
-
-For code-review events, `Reviewed Head` is the full 40-character SHA at the
-head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
-`Gate Target` is populated only for gate events. Legacy five-column rows remain
-valid. Writers must preserve every existing row and every unknown trailing
-cell; never truncate a widened row back to five columns.
-
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
-
----
+| plan   | artifact | pending | -    | -        | -             | -          | -           |
+| p03    | code     | pending | -    | -        | -             | -          | -           |
+| p04    | code     | pending | -    | -        | -             | -          | -           |
 
 ## Implementation Complete
 
-**Summary:**
+**Not complete; 0 of 9 tasks started.**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 2 tasks — decision and versioned contract.
+- Phase 2: 3 tasks — preview, conditional validation, integrated controls.
+- Phase 3: 2 tasks — guidance and consumer output.
+- Phase 4: 2 tasks — distribution and complete verification.
 
-**Total: {N} tasks**
-
-Ready for code review and merge.
-
----
+**Total: 4 phases, 9 tasks.** First task after readiness: `p01-t01`.
+Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
-- Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- [Discovery](discovery.md)
+- [Lightweight design draft](design.md)
+- [Implementation tracker](implementation.md)
+- [Receiving-agent handoff](handoff.md)
+- [Source context and evidence map](references/source-context.md)
+- Source issue: https://github.com/voxmedia/open-agent-toolkit/issues/274
