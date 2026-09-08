@@ -249,6 +249,10 @@ No push, merge of PR #273, project archive, or recap retry occurred.
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/remote-project-management/reviews/final-review-2026-09-08T155545Z.md run=b64bfa7c-093b-46c7-84fb-dcf66dd58f60
 
+### 2026-09-08 · structural · oat-project-review-receive · completion-gate
+
+Received gate b64bfa7c-093b-46c7-84fb-dcf66dd58f60 at 4ea2dc5c465660f508f269ac057942b8acc8b45c: zero Critical/Important/Medium, one Minor rejected as required cleanup because failed recap files are intentionally retained evidence. No tasks added; final review passed. Recap choice remains pending before confirmed archive/publication.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

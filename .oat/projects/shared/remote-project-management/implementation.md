@@ -3545,3 +3545,45 @@ reviews and the configured exit-gate receipt still predate these integrations.
 A fresh configured final gate, authorized publication, and post-push GitHub CI
 remain separate pending steps. No push, PR merge, project archive, recap retry,
 user-scope sync, or remote-provider mutation was performed.
+
+## Completion Gate Review Received — 2026-09-08
+
+**Review artifact:** reviews/archived/final-review-2026-09-08T155545Z.md
+
+**Reviewed head:** `4ea2dc5c465660f508f269ac057942b8acc8b45c`
+
+**Gate run:** `b64bfa7c-093b-46c7-84fb-dcf66dd58f60`
+
+**Receipt:** `reviews/gate-result-closeout-2026-09-08.json`
+
+**Findings:** 0 Critical, 0 Important, 0 Medium, 1 Minor.
+
+- Fresh execution of the configured cross-family final-review command exited
+  0 at the Important threshold. The single structured envelope reports
+  `status: ok`, `receiveEligible: true`, and matching run, project, and
+  invocation corroboration. This is a new run, not reuse of the old exit gate.
+- Configured target: `cursor-fable-5-1-high`; configured runtime: `cursor`;
+  configured model: `claude-fable-5-1-high`; configured effort: `unknown`.
+  Independently observed runtime model/effort remain not reported.
+- Review range was narrowed through guarded same-target gate provenance from
+  `6946819c31fd63db54af6f67397d3f511f9651b9` to the reviewed head. Requirements
+  outside that delta remain inherited from the previous review. The reviewer
+  reported 1,691 passing focused tests across 88 files and passing CLI types,
+  package versions, skill bumps, and skill validation.
+- **m1 — Untracked recap residue:** rejected as a required cleanup change.
+  **Task Scope:** Negligible. These files are deliberately preserved evidence
+  of the failed recap, documented in the implementation and retro; deleting
+  them or publishing them as product output would misrepresent that outcome.
+  The operator-approved archive will retain them with the project. Until then
+  their untracked status is intentional, not unfinished implementation.
+- Deferred Medium and Minor ledgers were resurfaced: both are empty. No
+  fix tasks were added. The final review event is passed after this explicit
+  passing-gate judgment sweep; no repeat review is required for this
+  non-code disposition.
+
+The September 7 `oat_implement_exit_gate` envelope remains historical; this
+section and the new receipt are the completion review authority for the
+integrated candidate. Completion, archive, and publication were confirmed by
+the operator. The saved recap generation choice still requires resolution
+before lifecycle mutation because the retained failed run has no reusable
+manifest. No PR merge is authorized by lifecycle completion.
