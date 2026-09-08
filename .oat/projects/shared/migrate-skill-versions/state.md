@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: ad1c330821d69e87c7e6dce2bfab1debe7b3611d
+oat_current_task: null
+oat_last_commit: 872ce02c6eddb961e3241fbceb22b445b558baa4
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260904-migrate-bundled-skills-from' }
@@ -105,7 +105,7 @@ Implementation — the plan gate blocked four times on new surfaces (every findi
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete; two sequential phases, five tasks)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Implementation:** `implementation.md` (5/5 tasks complete; both phases root-reviewed)
 
 ## Progress
 
@@ -118,7 +118,8 @@ Implementation — the plan gate blocked four times on new surfaces (every findi
 - ✗ Plan gate attempt 4 blocked (0C/2I/2M) — fixed in-artifact; gate capped at four attempts (no Critical ever raised)
 - ✓ Phase 1 done (`d054384ee`, `8948bf1ea`, `6c461e3fe`); root review round 1 0C/2I/3M/3m, no code defect
 - ✓ Phase 1 fix round `ad1c33082`; review round 2 PASS (0C/0I/0M/3m)
-- ⧗ Phase 2 (82-skill migration, pins, decision, docs, lockstep 0.2.65)
+- ✓ Phase 2 done (`ddfca906a`, `872ce02c6`); root review PASS (0C/0I/0M/4m)
+- ⧗ Root final review, then the configured exit gate
 
 ## Blockers
 
@@ -126,4 +127,4 @@ None
 
 ## Next Milestone
 
-Phase 2 done and root-reviewed, then the final review, the exit gate, and the PR.
+Final review passed and the exit gate received, then the post-implement sequence and the PR.

@@ -1320,9 +1320,8 @@ describe('validateOatSkills', () => {
     }
 
     // A regex that stops matching would turn this guard into a no-op, so the
-    // pin count is itself asserted.
-    // 32 pins at the metadata.version migration (2026-09-08); the floor keeps a regex that
-    // silently stops matching from turning this guard into a no-op.
+    // pin count is itself asserted (32 pins at the metadata.version migration,
+    // 2026-09-08).
     expect(pins.size).toBeGreaterThanOrEqual(30);
 
     const stale: string[] = [];
