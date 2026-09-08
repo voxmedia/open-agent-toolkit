@@ -52,6 +52,10 @@ target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:2,m
 
 target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:2,medium:1,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/migrate-skill-versions/reviews/artifact-plan-review-2026-09-08T084454Z.md run=a36db529-98ba-4a7b-b04f-06f45bb037e1
 
+### 2026-09-08 · structural · oat gate review · plan
+
+target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:2,medium:2,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/migrate-skill-versions/reviews/artifact-plan-review-2026-09-08T090611Z.md run=ccc5d92e-4ae9-43e6-8722-5d97ea1b8749
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
