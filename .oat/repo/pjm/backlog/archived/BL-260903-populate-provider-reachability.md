@@ -1,7 +1,7 @@
 ---
 id: BL-260903-populate-provider-reachability
 title: Populate provider reachability evidence across pack and lifecycle surfaces
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: M
@@ -14,7 +14,7 @@ labels:
   - fr3
 assignee: null
 created: 2026-09-03T15:19:40.186Z
-updated: 2026-09-04T03:55:32Z
+updated: '2026-09-08T05:07:50Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-03-populate-provider-reachability-evidence.md

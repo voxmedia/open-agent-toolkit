@@ -5,15 +5,18 @@ import { buildCommandContext } from '@app/command-context';
 import {
   getFrontmatterBlock,
   getFrontmatterField,
+  getSkillVersion,
   parseFrontmatterField,
 } from '@commands/shared/frontmatter';
 import { withScopeOption } from '@commands/shared/scope-option';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { ToolInfo } from '@commands/tools/shared/types';
+import { detectDrift, resolveExpectedSkillProjections } from '@drift/index';
 import { resolveAssetsRoot } from '@fs/assets';
 import { fileExists } from '@fs/io';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
+import { loadManifest } from '@manifest/manager';
 import { Command } from 'commander';
 
 import {
@@ -21,6 +24,7 @@ import {
   runInfoTool,
   type ToolDetail,
 } from './info-tool';
+import { probeProviderPath, readProjectedSkillVersion } from './skill-views';
 
 async function getToolDetail(
   tool: ToolInfo,
@@ -77,6 +81,16 @@ const defaultDependencies: InfoToolDependencies = {
   },
   resolveAssetsRoot,
   getToolDetail,
+  // Read-only by construction: load, detect, probe, and read a version. No
+  // manifest save and no writer is reachable from `oat tools info`.
+  skillViews: {
+    loadManifest,
+    detectDrift: (entry, scopeRoot) => detectDrift(entry, scopeRoot),
+    resolveExpectedProjections: resolveExpectedSkillProjections,
+    pathExists: probeProviderPath,
+    getSkillVersion,
+    readProjectedVersion: readProjectedSkillVersion,
+  },
 };
 
 export function createToolsInfoCommand(

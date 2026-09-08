@@ -2,6 +2,12 @@ import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 
+import {
+  getFrontmatterBlock,
+  parseSkillFrontmatter,
+  resolveSkillVersion,
+} from '@commands/shared/frontmatter';
+
 import { parseCanonicalAgentMarkdown } from './parse';
 
 export type CanonicalRoleTier = 'loaded' | 'user' | 'project';
@@ -173,14 +179,35 @@ function resolveRoleIdentity(
   try {
     const content = readFileSync(resolved.canonicalFile, 'utf8');
     const document = parseCanonicalAgentMarkdown(content, '<canonical-role>');
-    const version = document.frontmatter.version;
+    // Resolve the version from the raw frontmatter block, the same input
+    // `getAgentVersion` reads, so the two readers of this very file cannot
+    // disagree. An already-parsed object no longer carries YAML node
+    // information, so it cannot tell a tagged, anchored, or aliased scalar
+    // (`!!str 1.2.3`, `&pin 1.2.3`, `*pin`) from a plain string and would
+    // accept a value every other reader rejects. Folded and literal block
+    // scalars are none of those and resolve normally. This is one parser over
+    // one input shape, not a second parser.
+    const block = getFrontmatterBlock(content);
+    const parsed = block === null ? null : parseSkillFrontmatter(block);
+    const resolvedVersion =
+      parsed === null ? null : resolveSkillVersion(parsed);
+    // An identity needs one unambiguous version. A conflict, unreadable
+    // frontmatter, or a declaration the resolver cannot read (empty, a
+    // non-string scalar, or a tagged, anchored, or aliased value) disqualify it
+    // even when another position still resolves: otherwise a decorated
+    // `version:` beside a usable `metadata.version` would be accepted here
+    // while both validators reject the same file.
     if (
       document.name !== input.canonicalRole ||
-      typeof version !== 'string' ||
-      version.trim() === ''
+      parsed === null ||
+      parsed.malformed ||
+      parsed.unusableVersionDeclaration ||
+      resolvedVersion === null ||
+      resolvedVersion.conflict !== undefined
     ) {
       throw new Error('Canonical role identity is invalid');
     }
+    const version = resolvedVersion.version;
     const canonicalPath = redactedCandidate(
       canonicalTier(
         candidate,
@@ -197,7 +224,7 @@ function resolveRoleIdentity(
       validation: resolved.validation,
       canonicalPath,
       selectedPath: redactedCandidate(candidate.tier, input.canonicalRole),
-      roleVersion: version.trim(),
+      roleVersion: version,
       contentDigest: `sha256:${createHash('sha256').update(content).digest('hex')}`,
       candidateMisses,
     };

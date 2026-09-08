@@ -1,7 +1,7 @@
 ---
 id: BL-260904-diagnose-canonical-skills
 title: Diagnose canonical skills missing from a provider view at resolution time
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - cli
 assignee: null
 created: 2026-09-04T21:32:37.762Z
-updated: 2026-09-04T22:34:57Z
+updated: '2026-09-08T05:07:55Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/203

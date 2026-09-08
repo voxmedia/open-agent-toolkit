@@ -130,6 +130,15 @@ function currentSkillContent(
   ].join('\n');
 }
 
+function aliasWarning(file: string, version: string) {
+  return {
+    file,
+    code: 'skill-version-alias',
+    severity: 'warning',
+    message: `Frontmatter version ${version} uses the deprecated top-level alias; move it to metadata.version (metadata.version wins when both are present)`,
+  };
+}
+
 const implementSkillPath = '.agents/skills/oat-project-implement/SKILL.md';
 
 function sliceFromLastGateExecutionHeading(
@@ -1144,7 +1153,17 @@ describe('validateOatSkills', () => {
     );
 
     const result = await validateOatSkills(root);
-    expect(result.findings).toEqual([]);
+    // A top-level `version` is still accepted, but it is the deprecated alias:
+    // the only finding is that non-blocking warning.
+    expect(result.findings).toEqual([
+      {
+        file: join(root, '.agents', 'skills', 'oat-semver-valid', 'SKILL.md'),
+        code: 'skill-version-alias',
+        severity: 'warning',
+        message:
+          'Frontmatter version 1.2.3 uses the deprecated top-level alias; move it to metadata.version (metadata.version wins when both are present)',
+      },
+    ]);
   });
 
   it('reports invalid semver version frontmatter', async () => {
@@ -1156,7 +1175,9 @@ describe('validateOatSkills', () => {
       [
         '---',
         'name: oat-semver-invalid',
-        'version: 1.2',
+        // Quoted: an unquoted 1.2 is the *number* 1.2, which is an unusable
+        // declaration rather than an invalid semver string.
+        "version: '1.2'",
         'description: Use when validating invalid semver version metadata in frontmatter.',
         'disable-model-invocation: true',
         'user-invocable: true',
@@ -1179,6 +1200,8 @@ describe('validateOatSkills', () => {
         file: skillPath,
         message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
       }),
+      // The value is usable, just not semver, so the alias warning fires too.
+      aliasWarning(skillPath, '1.2'),
     ]);
   });
 
@@ -2924,7 +2947,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.3'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.2'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.2'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.3'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.10'],
     ] as const;
 
@@ -4442,7 +4465,7 @@ describe('validateOatSkills', () => {
       ['oat-project-review-receive', '1.6.2'],
       ['oat-project-review-receive-remote', '1.5.1'],
       ['oat-project-implement', '2.3.6'],
-      ['oat-project-pr-final', '1.6.2'],
+      ['oat-project-pr-final', '1.6.3'],
       ['oat-project-pr-progress', '1.3.1'],
       ['oat-project-complete', '1.7.8'],
       ['oat-project-next', '1.1.1'],
@@ -4588,6 +4611,204 @@ describe('validateOatSkills', () => {
     expect(progressPr, 'progress PR latest ledger event').toMatch(
       /reviews_section[\s\S]{0,500}phase[\s\S]{0,100}code[\s\S]{0,180}tail -1/i,
     );
+  });
+
+  it('validates every Reviews ledger artifact path before creating the final PR', async () => {
+    const prFinal = await readRepoFile(
+      '.agents/skills/oat-project-pr-final/SKILL.md',
+    );
+
+    const guardIndex = prFinal.indexOf(
+      '**Ledger-path guard (both PR paths).**',
+    );
+    const syncedCreateIndex = prFinal.indexOf(
+      'Push the code branch, then run `gh pr create`',
+    );
+    const nonSyncedCreateIndex = prFinal.indexOf(
+      'gh pr create --base "$BASE_BRANCH"',
+    );
+
+    expect(guardIndex).toBeGreaterThanOrEqual(0);
+    expect(syncedCreateIndex).toBeGreaterThanOrEqual(0);
+    expect(nonSyncedCreateIndex).toBeGreaterThanOrEqual(0);
+    // One block that both the synced and non-synced paths pass through, so
+    // neither can create a PR from an unresolved ledger row.
+    expect(syncedCreateIndex).toBeGreaterThan(guardIndex);
+    expect(nonSyncedCreateIndex).toBeGreaterThan(guardIndex);
+
+    const guardBlock = prFinal.slice(guardIndex, syncedCreateIndex);
+    // Cells, not a textual grep of the section: grepping is what let a row
+    // whose artifact path no longer resolves reach `gh pr create`.
+    expect(prFinal).toContain(
+      "Parse each row's Artifact cell rather than grepping the section as free text",
+    );
+    expect(guardBlock).toContain('header_cell == "artifact"');
+    expect(guardBlock).toContain(
+      'LEDGER_PROJECT_ROOT=$(cd -P "$PROJECT_PATH" 2>/dev/null && pwd -P)',
+    );
+    // Contained in the project, and a regular file.
+    expect(guardBlock).toContain('"$LEDGER_PROJECT_ROOT"/*) ROW_CONTAINED=1');
+    expect(guardBlock).toContain('[ ! -f "$ROW_RESOLVED" ]');
+    expect(guardBlock).toContain('artifact resolves outside the project');
+    // The `-` placeholder stays legal.
+    expect(guardBlock).toContain(
+      'if [ "$ROW_ARTIFACT" = "-" ]; then continue; fi',
+    );
+    // A named gate code plus the offending row's identity.
+    expect(guardBlock).toContain(
+      'PRFINAL-05: unresolved review-ledger artifact',
+    );
+    expect(guardBlock).toContain(
+      'scope=$ROW_SCOPE type=$ROW_TYPE artifact=$ROW_ARTIFACT',
+    );
+    expect(guardBlock).toContain('exit 1');
+
+    // Every failure mode fails closed: an unreadable or unparsable ledger and a
+    // ledger the loop did not fully consume all stop, rather than reporting a
+    // clean ledger by default.
+    expect(guardBlock).toContain('if [ ! -r "$PROJECT_PATH/plan.md" ]; then');
+    expect(guardBlock).toContain('cannot parse the review ledger');
+    expect(guardBlock).toContain(
+      '[ "$LEDGER_ROWS_SEEN" -ne "$LEDGER_ROW_COUNT" ]',
+    );
+    // A symlink chain that outruns the hop limit is rejected instead of being
+    // containment-checked on its unresolved in-project pathname.
+    expect(guardBlock).toContain(
+      'artifact symlink chain does not resolve within 16 hops',
+    );
+    // Alignment colons are valid separator syntax, and a separator is
+    // recognized by the shape of every cell, not just the first.
+    expect(guardBlock).toContain('if ($i !~ /^:?-+:?$/) is_separator = 0');
+    expect(guardBlock).toContain('is_separator { next }');
+    // Physical traversal: a logical `cd` collapses `symlink/..` before
+    // `pwd -P`, which validates a different file than the one published.
+    expect(guardBlock).toContain('cd -P "$PROJECT_PATH"');
+    expect(guardBlock).toContain('cd -P "$(dirname "$ROW_TARGET")"');
+    expect(guardBlock).not.toMatch(/\bcd "\$\(dirname/);
+    // An unreadable row stops instead of being skipped.
+    expect(guardBlock).toContain(
+      'unsupported review-ledger row (a row must start with |)',
+    );
+    // The ledger is the table rows of the section: fenced examples and
+    // blockquoted placeholder rows are notes, not events.
+    expect(guardBlock).toContain('in_fence = 1');
+    expect(guardBlock).toContain('/^[[:space:]]*>/ { next }');
+    // Columns are split on `|`, so an escaped `\|` shifted `artifact_column`
+    // onto a neighbouring cell and, on a `-` placeholder, skipped the row in
+    // silence. No ledger value needs a literal pipe, so both the header and
+    // the row stop rather than being reinterpreted: unescaping instead would
+    // merge two cells and could turn a previously rejected artifact into an
+    // accepted `-`, or hide a whole table by merging its header cells.
+    expect(guardBlock).toContain('index(escaped_pipe_row, "\\\\|") > 0');
+    expect(guardBlock).toContain(
+      'PRFINAL-05: review-ledger table header contains an escaped |',
+    );
+    expect(guardBlock).toContain(
+      'PRFINAL-05: unsupported review-ledger row (an escaped | cannot be assigned to a column)',
+    );
+    // The header stop is decided before the header's columns are read.
+    expect(
+      guardBlock.indexOf('index(escaped_pipe_row, "\\\\|") > 0'),
+    ).toBeLessThan(
+      guardBlock.indexOf('if (header_cell == "scope") scope_column = i'),
+    );
+    // The guard scans exactly the rows Step 2 reads: same level-two
+    // boundary, so no subsection can hide a row from validation.
+    expect(guardBlock).toContain('/^##[[:space:]]/ { exit }');
+    // A fence closes only on a matching marker at least as long as its
+    // opener; tilde fences count.
+    expect(guardBlock).toContain('close_length >= fence_length');
+    // Header detection keys on the Scope column: a row whose Type is
+    // `artifact` is an event, not a header.
+    // Each header re-establishes its own columns, and only a table whose
+    // header carries the ledger signature contributes events.
+    expect(guardBlock).toContain('artifact_column = 0');
+    expect(guardBlock).toContain('!in_ledger_table { next }');
+    // A lexically normalized path never stands in for an existing file.
+    expect(guardBlock).toContain('ROW_MATERIALIZED=0');
+    expect(guardBlock).toContain('elif [ "$ROW_MATERIALIZED" -eq 0 ]; then');
+    // Local-only acceptance is scoped to the archive location, never to git's
+    // opinion about the tree: `.gitignore` ignores `local`, `synced`, and
+    // `archived` projects entirely, so ignore state cannot decide this.
+    expect(guardBlock).not.toContain('git check-ignore');
+    expect(guardBlock).toContain('"$LEDGER_ARCHIVE_DIR"/*) ;;');
+    // Only a checkout that never materialized `reviews/archived/` excuses an
+    // absent archived artifact; once the directory exists, a missing file
+    // there is an interrupted archive and stops.
+    expect(guardBlock).toContain('if [ -d "$LEDGER_ARCHIVE_DIR" ]; then');
+    expect(guardBlock).toContain(
+      'reviews/archived/ was never materialized in this checkout',
+    );
+    // `[ ! -d ]` is also true for a regular file and for a dangling symlink,
+    // so keying the excuse on it re-opened the dangling row this gate exists
+    // to catch. Absent means absent — `-e` alone still misses a dangling
+    // symlink — and any other non-directory at that path stops.
+    expect(guardBlock).toContain(
+      '[ -e "$LEDGER_ARCHIVE_DIR" ] || [ -L "$LEDGER_ARCHIVE_DIR" ]',
+    );
+    expect(guardBlock).toContain('LEDGER_ABSENT_CLASS=not-a-directory');
+    expect(guardBlock).toContain(
+      'ROW_REASON="reviews/archived exists but is not a directory"',
+    );
+    expect(guardBlock).not.toContain(
+      'if [ ! -d "$LEDGER_PROJECT_ROOT/reviews/archived" ]; then',
+    );
+    // Containment is decided before that acceptance.
+    expect(
+      guardBlock.indexOf('artifact resolves outside the project'),
+    ).toBeLessThan(
+      guardBlock.indexOf('classify_absent_ledger_artifact "$ROW_RESOLVED"'),
+    );
+    // The ledger table is recognized by its header, emphasis stripped, with
+    // every column derived from it; a section with rows but no recognizable
+    // ledger header, or an unclosed fence, stops instead of validating nothing.
+    expect(guardBlock).toContain('gsub(/[*_`]/, "", header_cell)');
+    expect(guardBlock).toContain(
+      'in_ledger_table = (scope_column > 0 && type_column > 0 && artifact_column > 0)',
+    );
+    expect(guardBlock).toContain(
+      'PRFINAL-05: unrecognized review-ledger header',
+    );
+    expect(guardBlock).toContain('PRFINAL-05: unclosed fenced block');
+    expect(guardBlock).toContain('if (saw_table && !recognized_ledger)');
+    // A plan whose ledger is not under an exact `## Reviews` heading left the
+    // table state untouched, so the guard exited 0 having checked no row. A
+    // section the guard cannot find is the same silent full skip as a header
+    // it cannot recognize.
+    expect(guardBlock).toContain('if (!in_reviews)');
+    expect(guardBlock).toContain(
+      'PRFINAL-05: no ## Reviews section; the review ledger was never scanned',
+    );
+    // A ledger-shaped table with no Artifact column stops on its own terms,
+    // rather than being excused because an earlier table was recognized.
+    expect(guardBlock).toContain(
+      'PRFINAL-05: review-ledger table has no Artifact column',
+    );
+    // A header may omit its trailing pipe.
+    expect(guardBlock).toContain('last_cell = ($NF == "") ? NF - 1 : NF');
+    // Only balanced Markdown wrappers come off an artifact cell.
+    expect(guardBlock).toContain('while (unwrapping)');
+    // An unresolved path is contained only if its deepest existing directory
+    // resolves physically inside the project.
+    expect(guardBlock).toContain(
+      'ROW_ANCESTOR_REAL=$(cd -P "$ROW_ANCESTOR" 2>/dev/null && pwd -P)',
+    );
+
+    // The gate code is registered rather than invented.
+    const contract = await readRepoFile('.agents/docs/autonomy-contract.md');
+    expect(contract).toMatch(
+      /\|\s*PRFINAL-05\s*\|\s*`oat-project-pr-final`\s*\|\s*Unresolved review-ledger artifact path\s*\|/,
+    );
+
+    // The guard is a new block; Step 2's pinned ledger read is not where it
+    // lives.
+    const stepTwo = prFinal.slice(
+      prFinal.indexOf('### Step 2: Check Final Review Status'),
+      prFinal.indexOf('### Step 3: Collect Project Summary'),
+    );
+    expect(stepTwo).not.toContain('PRFINAL-05');
+    expect(stepTwo).toContain('/^## Reviews[[:space:]]*$/');
+    expect(stepTwo).toContain('in_reviews && /^##[[:space:]]/ { exit }');
   });
 
   it('resolves collision-free archive identity before receive mutations', async () => {
@@ -6738,7 +6959,14 @@ describe('validateOatSkills', () => {
     );
 
     const result = await validateOatSkills(root);
-    expect(result.findings).toEqual([]);
+    // The fixture keeps the deprecated top-level version alias, so that
+    // non-blocking warning is the only finding expected.
+    expect(result.findings).toEqual([
+      aliasWarning(
+        join(root, '.agents', 'skills', 'oat-project-quick-start', 'SKILL.md'),
+        '1.0.0',
+      ),
+    ]);
   });
 
   it('requires changed canonical skills to bump version relative to base ref', async () => {
@@ -6891,7 +7119,14 @@ describe('validateOatSkills', () => {
       },
     );
 
-    expect(result.findings).toEqual([]);
+    // The bumped fixture still uses the deprecated top-level alias, so that
+    // warning is the only finding expected.
+    expect(result.findings).toEqual([
+      aliasWarning(
+        join(root, '.agents', 'skills', 'oat-version-bumped', 'SKILL.md'),
+        '1.2.4',
+      ),
+    ]);
   });
 
   it('allows brand-new canonical skills that do not exist at the base ref', async () => {
@@ -8704,5 +8939,639 @@ describe('authoring contract — executable backstops for standing claims', () =
     expect(iterator).toContain('**Step a (Requirement-to-Test Mapping):**');
     expect(iterator).toContain('**Step b (Test Levels):**');
     expect(iterator).toContain('`ID | Verification | Key Scenarios`');
+  });
+});
+
+describe('skill version resolution across both validators', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  async function createRoot(): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'oat-version-source-'));
+    tempDirs.push(root);
+    return root;
+  }
+
+  function skillContent(
+    skillName: string,
+    versionLines: readonly string[],
+    body = 'Current instructions.',
+  ): string {
+    return [
+      '---',
+      `name: ${skillName}`,
+      ...versionLines,
+      'description: Use when validating skill version resolution. Provides a fixture for resolver tests.',
+      'disable-model-invocation: true',
+      'user-invocable: true',
+      'allowed-tools: Read, Write',
+      '---',
+      '',
+      '# Demo',
+      '',
+      '## Progress Indicators (User-Facing)',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ' OAT ▸ DEMO',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '',
+      body,
+    ].join('\n');
+  }
+
+  function changedSkillGit(skillName: string, baseContent: string) {
+    const relativePath = `.agents/skills/${skillName}/SKILL.md`;
+    return {
+      gitExecFile: async (_file: string, args: string[]) => {
+        if (args[0] === 'diff') {
+          return { stdout: `${relativePath}\n`, stderr: '' };
+        }
+        if (args[0] === 'show' && args[1] === `origin/main:${relativePath}`) {
+          return { stdout: baseContent, stderr: '' };
+        }
+        throw new Error(`Unexpected command: git ${args.join(' ')}`);
+      },
+    };
+  }
+
+  it('accepts a metadata-only skill with no alias warning', async () => {
+    const root = await createRoot();
+    await createSkillFile(
+      root,
+      'oat-metadata-version',
+      skillContent('oat-metadata-version', ['metadata:', '  version: 1.2.3']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([]);
+  });
+
+  it('resolves nested and quoted metadata.version through the validator path', async () => {
+    const root = await createRoot();
+    await createSkillFile(
+      root,
+      'oat-metadata-quoted',
+      skillContent('oat-metadata-quoted', [
+        'metadata:',
+        '  author: oat',
+        '  version: "1.2.3"',
+      ]),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([]);
+  });
+
+  it('warns exactly once for a non-oat-* alias-only skill', async () => {
+    const root = await createRoot();
+    // The structural checks are `oat-*` only, so before the version-alias pass
+    // iterated every skill this skill could never be reported at all.
+    const aliasSkillPath = await createSkillFile(
+      root,
+      'create-oat-skill',
+      skillContent('create-oat-skill', ['version: 1.5.2']),
+    );
+    await createSkillFile(
+      root,
+      'oat-metadata-version',
+      skillContent('oat-metadata-version', ['metadata:', '  version: 1.2.3']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: aliasSkillPath,
+        code: 'skill-version-alias',
+        severity: 'warning',
+        message:
+          'Frontmatter version 1.5.2 uses the deprecated top-level alias; move it to metadata.version (metadata.version wins when both are present)',
+      },
+    ]);
+    expect(result.validatedSkillCount).toBe(1);
+  });
+
+  it('keeps the alias warning out of the bump result for a non-oat-* skill', async () => {
+    const root = await createRoot();
+    await createSkillFile(
+      root,
+      'create-oat-skill',
+      skillContent('create-oat-skill', ['version: 1.5.2']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'create-oat-skill',
+        skillContent('create-oat-skill', ['version: 1.5.1'], 'Base.'),
+      ),
+    );
+
+    // `validate-skill-version-bumps.ts` sets exit 1 on any finding regardless
+    // of severity, so an alias warning here would fail the bump gate for every
+    // changed skill in the repository.
+    expect(result.findings).toEqual([]);
+  });
+
+  it('reports a version conflict as an error from the structural validator', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-version-conflict',
+      skillContent('oat-version-conflict', [
+        'version: 1.2.3',
+        'metadata:',
+        '  version: 2.0.0',
+      ]),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-conflict',
+        severity: 'error',
+        message:
+          'Frontmatter metadata.version (2.0.0) and top-level version (1.2.3) differ; a conflicting skill has no resolvable version',
+      },
+    ]);
+  });
+
+  it('reports a version conflict as an error from the bump validator', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-version-conflict',
+      skillContent('oat-version-conflict', [
+        'version: 1.2.3',
+        'metadata:',
+        '  version: 2.0.0',
+      ]),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-version-conflict',
+        skillContent('oat-version-conflict', ['version: 1.2.3'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-conflict',
+        severity: 'error',
+        message:
+          'Frontmatter metadata.version (2.0.0) and top-level version (1.2.3) differ; a conflicting skill has no resolvable version',
+      },
+    ]);
+  });
+
+  it('enforces the bump on a metadata-only skill', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-bump',
+      skillContent('oat-metadata-bump', ['metadata:', '  version: 1.2.3']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-metadata-bump',
+        skillContent(
+          'oat-metadata-bump',
+          ['metadata:', '  version: 1.2.3'],
+          'Base.',
+        ),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        message:
+          'Changed canonical skill must bump frontmatter version relative to origin/main (still 1.2.3)',
+      },
+    ]);
+  });
+
+  it('accepts a bumped metadata-only skill', async () => {
+    const root = await createRoot();
+    await createSkillFile(
+      root,
+      'oat-metadata-bump',
+      skillContent('oat-metadata-bump', ['metadata:', '  version: 1.2.4']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-metadata-bump',
+        skillContent(
+          'oat-metadata-bump',
+          ['metadata:', '  version: 1.2.3'],
+          'Base.',
+        ),
+      ),
+    );
+
+    expect(result.findings).toEqual([]);
+  });
+
+  it('compares a migrated metadata.version against a top-level base version', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-migrated',
+      skillContent('oat-metadata-migrated', ['metadata:', '  version: 1.2.2']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-metadata-migrated',
+        skillContent('oat-metadata-migrated', ['version: 1.2.3'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        message:
+          'Changed canonical skill version must increase relative to origin/main (base 1.2.3, current 1.2.2)',
+      },
+    ]);
+  });
+
+  it('runs the semver check on metadata.version', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-semver',
+      skillContent('oat-metadata-semver', ['metadata:', '  version: "1.2"']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
+    });
+  });
+
+  it('reports a metadata.version that YAML reads as a number', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-numeric',
+      skillContent('oat-metadata-numeric', ['metadata:', '  version: 1.2']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+      },
+    ]);
+  });
+
+  it('reports malformed frontmatter instead of skipping the version silently', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-malformed',
+      skillContent('oat-metadata-malformed', ['metadata: not-a-map']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-frontmatter-unreadable',
+      severity: 'error',
+      message:
+        'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+    });
+  });
+
+  it('reports malformed frontmatter for a non-oat-* skill too', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'create-oat-skill',
+      skillContent('create-oat-skill', ['version: 1.5.2', 'metadata: broken']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-unreadable',
+        severity: 'error',
+        message:
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+      },
+    ]);
+  });
+
+  it('does not let malformed frontmatter bypass bump enforcement', async () => {
+    const root = await createRoot();
+    // Before the resolver was strict, a line regex still read the untouched
+    // top-level version here and enforced the bump. Skipping the check on an
+    // unreadable block would turn a broken `metadata:` entry into a way to
+    // keep a stale version.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-bump-bypass',
+      skillContent('oat-bump-bypass', ['version: 1.2.3', 'metadata: broken']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-bump-bypass',
+        skillContent('oat-bump-bypass', ['version: 1.2.3'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-unreadable',
+        severity: 'error',
+        message:
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+      },
+    ]);
+  });
+
+  it('reports a declared metadata.version that resolves to nothing', async () => {
+    const root = await createRoot();
+    // YAML reads `1.10` as the number 1.1, so no usable version resolves; the
+    // declaration still has to be reported rather than read as "unversioned".
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-unusable',
+      skillContent('oat-metadata-unusable', ['metadata:', '  version: 1.10']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-version-unusable',
+      severity: 'error',
+      message:
+        'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+    });
+  });
+
+  it('reports an unusable declaration even when the other position resolves', async () => {
+    const root = await createRoot();
+    // `version: 1.10` is a version the author wrote and OAT cannot read; a
+    // valid metadata.version beside it must not mask that.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-mixed-declaration',
+      skillContent('oat-mixed-declaration', [
+        'version: 1.10',
+        'metadata:',
+        '  version: 1.0.1',
+      ]),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+      },
+    ]);
+  });
+
+  it('reports unreadable frontmatter once when both passes run', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-bump-bypass',
+      skillContent('oat-bump-bypass', ['version: 1.2.3', 'metadata: broken']),
+    );
+
+    const result = await validateOatSkills(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-bump-bypass',
+        skillContent('oat-bump-bypass', ['version: 1.2.3'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-unreadable',
+        severity: 'error',
+        message:
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+      },
+    ]);
+  });
+
+  it('does not let an unusable version bypass bump enforcement', async () => {
+    const root = await createRoot();
+    // The base code's line regex read `1.10` as a string and enforced the
+    // bump ("still 1.10"). The strict resolver reads no version at all, so
+    // without this guard the changed skill would pass the gate untouched.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-unusable-bypass',
+      skillContent('oat-unusable-bypass', ['version: 1.10']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-unusable-bypass',
+        skillContent('oat-unusable-bypass', ['version: 1.10'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+      },
+    ]);
+  });
+
+  it('reports an unusable version on a non-oat-* skill from the structural pass', async () => {
+    const root = await createRoot();
+    // The `oat-*` structural loop can never see this file; the version-source
+    // pass iterates every skill, which is where the finding has to come from.
+    const skillPath = await createSkillFile(
+      root,
+      'nonoat-numeric',
+      skillContent('nonoat-numeric', ['version: 1.10']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+      },
+    ]);
+  });
+
+  it('does not let malformed base frontmatter bypass bump enforcement', async () => {
+    const root = await createRoot();
+    // The base copy carries `metadata:` with no map beside a valid version;
+    // the current copy is clean and keeps the same version while the body
+    // changes. Resolving the base to null must not skip the comparison.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-malformed-base',
+      skillContent('oat-malformed-base', ['version: 1.2.3']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-malformed-base',
+        skillContent(
+          'oat-malformed-base',
+          ['version: 1.2.3', 'metadata:'],
+          'Base.',
+        ),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-unreadable',
+        severity: 'error',
+        message:
+          'Changed canonical skill cannot be version-checked against origin/main: the base frontmatter is not a valid YAML mapping with unique keys',
+      },
+    ]);
+  });
+
+  it('does not let a conflicting base hide a downgrade', async () => {
+    const root = await createRoot();
+    // The base declares 2.0.0 at the top level and 1.0.0 under metadata.
+    // Comparing against the metadata side alone would read 1.1.0 as an
+    // increase and accept a downgrade from the version the base also declares.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-conflicting-base',
+      skillContent('oat-conflicting-base', ['version: 1.1.0']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-conflicting-base',
+        skillContent(
+          'oat-conflicting-base',
+          ['version: 2.0.0', 'metadata:', '  version: 1.0.0'],
+          'Base.',
+        ),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-conflict',
+        severity: 'error',
+        message:
+          'Changed canonical skill cannot be version-checked against origin/main: the base frontmatter metadata.version (1.0.0) and top-level version (2.0.0) differ',
+      },
+    ]);
+  });
+
+  it('does not let an unusable base version bypass bump enforcement', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-unusable-base',
+      skillContent('oat-unusable-base', ['version: 1.2.3']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-unusable-base',
+        skillContent('oat-unusable-base', ['version: 1.10'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Changed canonical skill cannot be version-checked against origin/main: the base frontmatter declares a version that cannot be read',
+      },
+    ]);
+  });
+
+  it('reports a declared top-level version that resolves to nothing', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-empty-version',
+      skillContent('oat-empty-version', ['version:']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-version-unusable',
+      severity: 'error',
+      message:
+        'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+    });
   });
 });

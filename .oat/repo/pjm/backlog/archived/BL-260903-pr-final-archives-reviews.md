@@ -1,7 +1,7 @@
 ---
 id: BL-260903-pr-final-archives-reviews
 title: pr-final archives reviews before a late final review exists
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - retro
 assignee: null
 created: 2026-09-03T17:54:40.503Z
-updated: 2026-09-07T01:12:43Z
+updated: '2026-09-08T05:07:51Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-03-validate-review-ledger-paths-before-final-pr.md

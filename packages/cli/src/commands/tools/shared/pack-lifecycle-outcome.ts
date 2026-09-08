@@ -69,20 +69,47 @@ export function resolveAdditivePackScopeSelection(input: {
   };
 }
 
+/**
+ * Derives the provider sync outcome from an auto-sync run and its evidence.
+ *
+ * Status follows the pinned severity matrix rather than the diagnostic code
+ * name: only an observed `failed` materialization degrades an otherwise
+ * successful run to `partial`. An inactive provider, an unsupported content
+ * kind, or a host that needs a catalog refresh are `info`-severity facts and
+ * leave the outcome `complete`, so a healthy install keeps exit code 0.
+ */
 export function providerSyncOutcomeFromAutoSync(
   result: AutoSyncResult,
   providers: readonly ProviderReachabilityEvidence[] = [],
 ): ProviderSyncOutcome {
+  const materializationFailed = providers.some(
+    ({ materialization }) => materialization.state === 'failed',
+  );
   return {
     scopes: result.scopes,
     status:
       result.scopes.length === 0
         ? 'not-run'
-        : result.synced
-          ? 'complete'
-          : 'failed',
+        : !result.synced
+          ? 'failed'
+          : materializationFailed
+            ? 'partial'
+            : 'complete',
     providers,
     ...(result.error ? { error: result.error } : {}),
+  };
+}
+
+/** A `not-run` sync outcome that still carries registry-derived evidence. */
+export function notRunProviderSyncOutcome(
+  providers: readonly ProviderReachabilityEvidence[] = [],
+  reason?: string,
+): ProviderSyncOutcome {
+  return {
+    scopes: [],
+    status: 'not-run',
+    providers,
+    ...(reason ? { error: reason } : {}),
   };
 }
 

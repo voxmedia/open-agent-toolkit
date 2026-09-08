@@ -2636,4 +2636,65 @@ describe('createStatusCommand', () => {
       expect(resolvePjmAdoption).not.toHaveBeenCalled();
     });
   });
+
+  describe('status output boundary', () => {
+    // Negative control for the per-skill provider-view diagnostic, which is
+    // hosted only in `oat tools info`. `status` is owned by other lanes, so
+    // this pins its JSON surface: a diagnostic key appearing here means the
+    // diagnostic leaked out of the resolution-time seam it was scoped to.
+    it('keeps the status JSON keys unchanged, with no per-skill view diagnostic', async () => {
+      const { capture, command } = createHarness({
+        driftReports: [
+          {
+            canonical: '.agents/skills/skill-one',
+            provider: 'claude',
+            providerPath: '.claude/skills/skill-one',
+            state: { status: 'missing' },
+          },
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project', '--json']);
+
+      const payload = capture.jsonPayloads[0] as Record<string, unknown>;
+      expect(Object.keys(payload).sort()).toEqual([
+        'packEvidence',
+        'packs',
+        'providerRefreshAdvice',
+        'reports',
+        'scope',
+        'summary',
+      ]);
+      const report = (payload.reports as Array<Record<string, unknown>>)[0];
+      expect(Object.keys(report ?? {}).sort()).toEqual([
+        'canonical',
+        'provider',
+        'providerPath',
+        'state',
+      ]);
+      expect(JSON.stringify(payload)).not.toContain('oat sync --scope');
+    });
+
+    it('still suggests no scoped sync in human status output', async () => {
+      // The narrowest-repair suggestion lives with the name that resolved it,
+      // so the human surface must stay free of it too. Asserted on a non-JSON
+      // run, where `capture.info` is actually populated.
+      const { capture, command } = createHarness({
+        driftReports: [
+          {
+            canonical: '.agents/skills/skill-one',
+            provider: 'claude',
+            providerPath: '.claude/skills/skill-one',
+            state: { status: 'missing' },
+          },
+        ],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      const output = [...capture.info, ...capture.warn].join('\n');
+      expect(output).toContain('missing');
+      expect(output).not.toContain('oat sync --scope');
+    });
+  });
 });

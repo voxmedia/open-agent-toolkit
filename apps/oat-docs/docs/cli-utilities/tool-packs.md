@@ -307,6 +307,57 @@ application-process restart requirement, or proof of visibility. No advice is
 emitted for current/no-op, planned-only, failed, missing, inactive, or
 unsupported materialization.
 
+Every pack lifecycle outcome (`install`, `update`, `remove`, and the aggregate
+init path) and every pack inventory surface (`oat tools list`, `oat tools
+info`, `oat status`, `oat doctor`) carries per-provider reachability evidence
+in its JSON, derived from the same config-aware registry the sync engine uses:
+activation, content capability, projection, materialization, catalog-refresh
+visibility, and recovery guidance. Human output names the provider on its own
+line and on any provider-attributed diagnostic. Reachability is never inferred
+from the presence of a provider directory on disk.
+
+The four inventory surfaces agree on managed user-scope roles. `list` and
+`info` resolve the same provider surface as `status` and `doctor`, so an
+active Codex or Cursor adapter that supplies managed roles suppresses the
+unmaterialized-user-agent report on all four rather than only two.
+
+Each provider state maps to exactly one row below. Pack evidence status and
+the lifecycle exit code derive from the **severity** column, never from the
+code name, so adding a code later cannot silently change an exit code.
+
+| Provider state (per provider, scope, content kind)                     | Diagnostic code                         | Severity  | Pack evidence status | Lifecycle outcome / exit code                    |
+| ---------------------------------------------------------------------- | --------------------------------------- | --------- | -------------------- | ------------------------------------------------ |
+| Active, supported, projection and materialization succeeded            | none                                    | --        | `ok`                 | `complete` / 0                                   |
+| Explicitly disabled in sync config for this scope                      | `provider-inactive`                     | `info`    | `ok`                 | `complete` / 0                                   |
+| Active but the content kind is unsupported by the adapter              | `provider-unsupported`                  | `info`    | `ok`                 | `complete` / 0                                   |
+| Active, supported, no projection exists (never synced or sync skipped) | `provider-materialization-missing`      | `warning` | `partial`            | `complete` / 0 (install succeeded; sync advised) |
+| Active, supported, the sync operation for this asset failed            | `provider-materialization-failed`       | `error`   | `partial`            | `partial` / 1                                    |
+| Active, projected, no sourced refresh contract for the host            | `visibility-unknown`                    | `info`    | `ok`                 | `complete` / 0                                   |
+| Active, projected, host catalog needs a refresh or a restart           | `refresh-required` / `restart-required` | `info`    | `ok`                 | `complete` / 0                                   |
+| Read-only inventory (`list`, `info`, `status`, `doctor`): no sync ran  | registry-derived codes only             | as above  | as above             | not applicable                                   |
+| Auto-sync not run (disabled or skipped) after a lifecycle operation    | none; `providerSync.status: 'not-run'`  | --        | `ok`                 | `complete` / 0                                   |
+
+Rows with `info` severity are visible in JSON and in the human provider line
+but do not turn `ok` into `partial`. A provider that was never detected and
+never configured is not reported per pack: its inactive state is still carried
+on the evidence row, but emitting a diagnostic for every registered provider on
+every pack would bury the actionable rows. `unknown` visibility is reported as
+unknown; it never claims reachability and never fails an otherwise successful
+install. A read-only inventory surface ran no sync, so it never reports
+`provider-materialization-failed`.
+
+The three visibility codes — `visibility-unknown`, `refresh-required`, and
+`restart-required` — are lifecycle-only for the same reason. They require an
+established projection, and a read-only surface never establishes one: it
+observed no sync, so it reports materialization as a non-claim rather than
+asserting the provider view exists. For an active provider that supports the
+content kind, the registered catalog state remains readable in the row's
+`visibility` field on every surface; only the diagnostics are withheld. Run
+`oat tools install`, `update`, or `remove` to see them emitted. An inactive or
+unsupported row reports `not-applicable` visibility instead, matching its
+`not-applicable` projection: catalog advice about a provider that cannot
+receive the content would read as a step to act on.
+
 Repository templates under `.oat/templates/` are **owner-owned seeds**. OAT
 compares a source-backed seed with its bundled default: a byte-equivalent copy
 is reported as current, while an edited copy is retained and reported as a
@@ -512,7 +563,39 @@ Key behavior:
 
 - Displays name, type (skill/agent), version, bundled version, pack, scope, and status
 - Reports whether the tool is invocable (for skills) and whether an update is available
+- For a skill, adds a read-only provider-view section per active provider and scope: the expected provider path, the view class, and versions where a copy makes them comparable
+- Suggests the narrowest safe repair, one `oat sync --scope <concrete>` per affected scope and never `--scope all`
 - Returns exit code 1 if the tool is not found in any scope
+
+An unknown name keeps the existing `Tool '<name>' not found.` wording and prints
+no provider-view section, so a skill that exists but was never distributed is
+never confused with a name the repository does not have.
+
+```text
+$ oat tools info probe-skill --scope project
+probe-skill
+  Type:        skill
+  Version:     1.4.2
+  Pack:        custom
+  Scope:       project
+  Status:      not-bundled
+  Provider views (project):
+    claude:  missing-additive  .claude/skills/probe-skill
+      Canonical skill has never been projected to this view: no manifest entry and nothing at the expected path.
+    cursor:  inactive
+    Repair: oat sync --scope project
+```
+
+The section is additive in `--json` output as `providerViews`, an array of one
+entry per concrete scope where the canonical skill exists. The command reads the
+manifest, the sync config, and the filesystem; it never writes, and it never
+runs a sync. If the sync config or the manifest cannot be read, that scope's
+section reports `unavailable` with a redacted reason and the tool detail and exit
+code are unchanged; a failure reading one provider's view degrades only that row,
+to `unverified` with the same redacted reason. An absent sync config is not a
+failure: it resolves to the defaults and the scope is diagnosed normally. See
+[Manifest and Drift](../provider-sync/manifest-and-drift.md#resolution-time-skill-view-classes)
+for the view classes.
 
 ### `oat tools has <pack>`
 

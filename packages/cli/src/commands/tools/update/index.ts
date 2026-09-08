@@ -1,4 +1,3 @@
-import { execFile } from 'node:child_process';
 import { chmod } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -19,13 +18,17 @@ import {
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
+import { inProcessSyncDependencies } from '@commands/tools/shared/in-process-sync';
 import { inventoryScopedPack } from '@commands/tools/shared/pack-inventory';
 import { reconcilePackLifecycles } from '@commands/tools/shared/pack-lifecycle';
 import {
   evaluatePackLifecycleOutcome,
+  providerSyncOutcomeFromAutoSync,
   type PackLifecycleOutcome,
 } from '@commands/tools/shared/pack-lifecycle-outcome';
+import { withLifecycleProviderEvidence } from '@commands/tools/shared/pack-provider-evidence';
 import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
+import { applySyncEvidence } from '@commands/tools/shared/provider-reachability';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
@@ -59,43 +62,7 @@ const defaultDependencies: UpdateToolsDependencies = {
   reconcilePacks: reconcilePackLifecycles,
 };
 
-export function buildSyncSubprocessArgs(
-  entrypoint: string,
-  execArgv: string[],
-  options: { cwd: string; scope: 'project' | 'user' },
-): string[] {
-  // `--scope` is a per-command option on `sync` (not a global flag), so it must
-  // come AFTER the `sync` subcommand token. `--cwd` remains a global flag and
-  // can precede the subcommand.
-  return [
-    ...execArgv,
-    entrypoint,
-    '--cwd',
-    options.cwd,
-    'sync',
-    '--scope',
-    options.scope,
-  ];
-}
-
-const defaultSyncDependencies: AutoSyncDependencies = {
-  runSync: async ({ scope, cwd }) => {
-    await new Promise<void>((resolve, reject) => {
-      execFile(
-        process.execPath,
-        buildSyncSubprocessArgs(process.argv[1]!, process.execArgv, {
-          cwd,
-          scope,
-        }),
-        { cwd: process.cwd() },
-        (error) => {
-          if (error) reject(error);
-          else resolve();
-        },
-      );
-    });
-  },
-};
+const defaultSyncDependencies: AutoSyncDependencies = inProcessSyncDependencies;
 
 const VALID_PACKS = [
   'core',
@@ -377,18 +344,33 @@ function finalizeUpdateLifecycle(
       scopes.some((scope) => outcome.selection.targetScopes.includes(scope)),
     );
     if (relevant.length === 0) return outcome;
+    const merged: AutoSyncResult = {
+      synced: relevant.every(({ synced }) => synced),
+      scopes: [...new Set(relevant.flatMap(({ scopes }) => scopes))],
+      error: relevant.find(({ error }) => error)?.error ?? null,
+      evidence: relevant.flatMap(({ evidence }) => evidence),
+    };
+    // The pre-sync outcome already carries registry-derived activation and
+    // capability evidence; the sync run only refines projection and
+    // materialization, so the existing rows are re-projected rather than
+    // dropped.
+    const providers = applySyncEvidence(outcome.sync.providers, {
+      syncRan: merged.evidence.some(({ ran }) => ran),
+      syncOperationResults: merged.evidence.flatMap(
+        ({ operationResults }) => operationResults,
+      ),
+      extensionResults: merged.evidence.flatMap(
+        ({ extensionResults }) => extensionResults,
+      ),
+    });
     return evaluatePackLifecycleOutcome({
       selection: outcome.selection,
       lifecycle: outcome.canonical.results,
-      sync: {
-        scopes: [...new Set(relevant.flatMap(({ scopes }) => scopes))],
-        status: relevant.every(({ synced }) => synced) ? 'complete' : 'failed',
-        providers: [],
-        ...(relevant.find(({ error }) => error)?.error
-          ? { error: relevant.find(({ error }) => error)!.error! }
-          : {}),
-      },
-      finalEvidence: outcome.finalEvidence,
+      sync: providerSyncOutcomeFromAutoSync(merged, providers),
+      finalEvidence: withLifecycleProviderEvidence(
+        outcome.finalEvidence,
+        providers,
+      ),
     });
   });
 }

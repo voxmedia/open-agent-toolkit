@@ -1,7 +1,7 @@
 ---
 id: BL-260904-honor-metadata-version
 title: Honor metadata.version as the canonical skill version
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: M
@@ -13,7 +13,7 @@ labels:
   - cli
 assignee: null
 created: 2026-09-04T04:07:43.900Z
-updated: 2026-09-04T04:09:33Z
+updated: '2026-09-08T05:07:54Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/258
