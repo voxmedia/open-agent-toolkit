@@ -2,14 +2,14 @@
 id: BL-260906-reconcile-the-oat-doctor
 title: Reconcile the oat-doctor example table with its inventory sentence
 status: open
-priority: low
+priority: medium
 scope: task
 scope_estimate: XS
 labels:
   - skills
 assignee: null
 created: 2026-09-06T08:30:44.036Z
-updated: 2026-09-06T08:30:44.036Z
+updated: 2026-09-08T16:55:27.000Z
 associated_issues: []
 external_plans: []
 ---

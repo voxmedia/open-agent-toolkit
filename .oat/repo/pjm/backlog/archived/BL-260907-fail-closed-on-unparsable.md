@@ -1,7 +1,7 @@
 ---
 id: BL-260907-fail-closed-on-unparsable
 title: Fail closed on unparsable program dates in the readiness contract
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T14:05:43.381Z
-updated: 2026-09-07T14:05:43.381Z
+updated: '2026-09-08T16:55:35Z'
 associated_issues: []
 external_plans: []
 ---

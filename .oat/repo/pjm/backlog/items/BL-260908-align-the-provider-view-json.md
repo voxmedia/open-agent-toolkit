@@ -11,7 +11,7 @@ labels:
   - wave-6-followup
 assignee: null
 created: 2026-09-08T06:58:17.586Z
-updated: 2026-09-08T06:58:17.586Z
+updated: 2026-09-08T17:36:27.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -22,5 +22,7 @@ Wave-6 final review round 2 polish on the p05/p06 provider-view diagnostic (`oat
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] `--json` `providerViews` rows for `inactive`, `unsupported`, and `excluded` carry `providerPath: null` (or the JSDoc at `skill-view-diagnostic.ts:129` is scoped to the human row), pinned by a `--json` assertion
+- [ ] An escaping tracked path reports a distinct `versionEvidence` state (`not-read`) or omits the field; never `absent`
+- [ ] A conflicting `metadata.version` / `version` pair present in the canonical file is named as the canonical file's conflict in the detail
+- [ ] `manifest-and-drift.md`'s redaction sentence matches `BARE_ABSOLUTE_PATH`'s actual delimiter exclusions

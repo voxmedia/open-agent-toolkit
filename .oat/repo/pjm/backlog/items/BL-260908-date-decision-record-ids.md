@@ -2,7 +2,7 @@
 id: BL-260908-date-decision-record-ids
 title: Date decision-record IDs in local time or document UTC
 status: open
-priority: medium
+priority: low
 scope: task
 scope_estimate: XS
 labels:
@@ -11,7 +11,7 @@ labels:
   - wave-6-followup
 assignee: null
 created: 2026-09-08T05:08:03.315Z
-updated: 2026-09-08T05:08:03.315Z
+updated: 2026-09-08T16:55:27.000Z
 associated_issues: []
 external_plans: []
 ---

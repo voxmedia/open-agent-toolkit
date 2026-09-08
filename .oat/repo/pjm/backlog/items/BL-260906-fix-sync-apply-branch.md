@@ -12,7 +12,7 @@ labels:
   - wave-4-followup
 assignee: null
 created: 2026-09-06T19:21:28.376Z
-updated: 2026-09-06T19:21:28.376Z
+updated: 2026-09-08T17:36:27.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -23,5 +23,6 @@ runSyncApply checks plannedOperations === 0 before failed > 0, so a rejected col
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] A rejected collection that leaves zero planned operations exits 1 and prints the failure summary, never `No changes required.` (`sync/apply.ts:539` ordering), pinned by a test
+- [ ] The intentional restamp-only whole-run suppression at `apply.ts:286-291` is preserved and its existing tests still pass
+- [ ] A control shows the pre-fix tree printing `No changes required.` on an exit-1 run

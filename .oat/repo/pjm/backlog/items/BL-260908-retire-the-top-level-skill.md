@@ -12,7 +12,7 @@ labels:
   - migration
 assignee: null
 created: 2026-09-08T11:15:21.665Z
-updated: 2026-09-08T11:15:21.665Z
+updated: 2026-09-08T16:55:27.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -52,6 +52,10 @@ first or scope the removal to skills. Confirm which before doing the removal.
 
 - Final review of `migrate-skill-versions` (2026-09-08, m2): the frontmatter walk exists in five test-helper copies — three pinned byte-identical by `tools/smoke/skill-version/reader-sameness.test.mjs`, plus `readSkillVersionSites` in `tools/smoke/explainer-kit/packaged-layout.test.mjs` and `withDeclaredVersion` in `packages/cli/src/__tests__/skills/skill-version.ts`, which are unpinned. When the top-level read is removed, collapse the copies or extend the sameness pin.
 - Exit gate of `migrate-skill-versions` (2026-09-08, Medium, deferred): `check-core.mjs` `keyIdentity` normalizes integer, float, boolean, and null key spellings for duplicate detection but not YAML infinity spellings, so a frontmatter block with both `.inf:` and `.Inf:` (or `-.inf:`/`-.INF:`) is malformed to the canonical parser yet readable to the bundled reader (fail-open for a shape no skill produces). Fix: normalize signed and case-varied `.inf` in `keyIdentity` and add root/nested duplicate-infinity fixtures to `tools/smoke/explainer-kit/check-core-version-parity.test.mjs`; the consumer result must stay `null` whenever the canonical parser marks the block malformed.
+
+## Split (2026-09-08 triage)
+
+This item now covers step 1 only: the `skill-version-alias` warning becomes an error in the first validator-changing release after 0.2.65. Step 2 (removing the top-level read, the agent-role migration, the frontmatter-walk collapse, and the `.inf` key normalization) moved to `BL-260908-remove-the-top-level-skill`.
 
 ## Acceptance Criteria
 

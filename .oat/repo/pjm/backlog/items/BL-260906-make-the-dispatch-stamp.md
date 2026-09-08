@@ -12,7 +12,7 @@ labels:
   - wave-4-followup
 assignee: null
 created: 2026-09-06T20:34:36.753Z
-updated: 2026-09-06T20:34:36.753Z
+updated: 2026-09-08T17:36:27.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -23,5 +23,6 @@ packages/cli/src/**tests**/skills/dispatch-stamp-contract.ts (wave 4 p03) regist
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] `dispatch-stamp-contract.ts`'s intervening-heading detection treats bold step markers as section boundaries (not only ATX headings), with a red-then-green control
+- [ ] A direct 'the shim may be the normal path' sentence is rejected by the document-wide negatives, with a control
+- [ ] The shipped `oat-dispatch-subagents` prose still passes

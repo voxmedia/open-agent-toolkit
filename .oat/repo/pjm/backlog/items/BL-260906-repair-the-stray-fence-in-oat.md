@@ -3,7 +3,7 @@ id: BL-260906-repair-the-stray-fence-in-oat
 title: Repair the stray fence in oat-project-review-provide and tighten the
   fence rule repo-wide
 status: open
-priority: medium
+priority: high
 scope: task
 scope_estimate: S
 labels:
@@ -11,7 +11,7 @@ labels:
   - contract-tests
 assignee: null
 created: 2026-09-06T08:30:41.038Z
-updated: 2026-09-07T09:30:00.000Z
+updated: 2026-09-08T16:55:27.000Z
 associated_issues: []
 external_plans: []
 ---

@@ -1,7 +1,7 @@
 ---
 id: BL-260907-decode-entity-and-percent
 title: Decode entity and percent escapes before matching external-plan backlinks
-status: open
+status: wont_do
 priority: medium
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T18:28:15.428Z
-updated: 2026-09-07T18:28:15.428Z
+updated: '2026-09-08T16:55:33Z'
 associated_issues: []
 external_plans: []
 ---

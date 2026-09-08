@@ -11,7 +11,7 @@ labels:
   - wave-4-followup
 assignee: null
 created: 2026-09-06T19:21:31.267Z
-updated: 2026-09-06T19:21:31.267Z
+updated: 2026-09-08T17:36:27.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -22,5 +22,5 @@ packages/cli/src/commands/shared/frontmatter.ts exports PROJECT_STATE_FRONTMATTE
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] Decide: either `PROJECT_STATE_FRONTMATTER_FIELDS` / `isProjectStateFrontmatterField` gain a production consumer (a state writer validates against them) or both exports and their tests are deleted
+- [ ] No dead export remains in `commands/shared/frontmatter.ts` after the change
