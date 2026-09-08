@@ -749,32 +749,32 @@ git commit -m "docs(p20-t01): keep plan writes on the caller's model"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| p03    | code     | pending | -    | -        | -             | -          | -           |
-| p04    | code     | pending | -    | -        | -             | -          | -           |
-| p05    | code     | pending | -    | -        | -             | -          | -           |
-| p06    | code     | pending | -    | -        | -             | -          | -           |
-| p07    | code     | pending | -    | -        | -             | -          | -           |
-| p08    | code     | pending | -    | -        | -             | -          | -           |
-| p09    | code     | pending | -    | -        | -             | -          | -           |
-| p10    | code     | pending | -    | -        | -             | -          | -           |
-| p11    | code     | pending | -    | -        | -             | -          | -           |
-| p12    | code     | pending | -    | -        | -             | -          | -           |
-| p13    | code     | pending | -    | -        | -             | -          | -           |
-| p14    | code     | pending | -    | -        | -             | -          | -           |
-| p15    | code     | pending | -    | -        | -             | -          | -           |
-| p16    | code     | pending | -    | -        | -             | -          | -           |
-| p17    | code     | pending | -    | -        | -             | -          | -           |
-| p18    | code     | pending | -    | -        | -             | -          | -           |
-| p19    | code     | pending | -    | -        | -             | -          | -           |
-| p20    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| plan   | artifact | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
+| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p05    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p06    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p07    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p08    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p09    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p10    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p11    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p12    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p13    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p14    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p15    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p16    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p17    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p18    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p19    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| p20    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
+| plan   | artifact | received | 2026-09-08 | reviews/artifact-plan-review-2026-09-08T224620Z.md | -             | -          | -           |
+| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
+| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
