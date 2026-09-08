@@ -1,10 +1,10 @@
 ---
 oat_triage_record: true
 schema_version: 1
-status: approved
+status: pr_open
 scope: GitHub issues #274 (recon per-wave routing) and #277 (skill authoring guidance refresh), plus a priority/validity re-triage of the 42 open backlog items the 2026-08-31 execution program filed as follow-ups (waves 1–6 and the skill-version migration) and the recap cluster (#230)
 baseline_sha: bb93ad233
-triage_pr: null
+triage_pr: 'https://github.com/voxmedia/open-agent-toolkit/pull/282'
 created: 2026-09-08
 updated: 2026-09-08
 ---
@@ -101,4 +101,10 @@ Lane clusters the recon found (for the wave-7 composition that follows this tria
 
 ## Resume instructions
 
-(set at PR open)
+After merging this PR, invoke:
+
+```text
+/triage-oat-issues resume post-merge PR #282
+```
+
+Post-merge GitHub actions (apply in order, then set `status: post_merge_complete` and fill each ledger row's `Post-merge result`): #274 add `enhancement` + `tracked-in-backlog`, comment with `BL-260908-restore-recon-s-cheap-fan-out`, the governing decisions (`DR-260831`, `DR-260904`, `DR-260719`), and the note that launched-target provenance is scoped down pending a real producer; #277 add `tracked-in-backlog`, comment with `BL-260908-correct-the-factual-skill` and `BL-260908-restructure-the-authoring` and the two unsubstantiated proposals (5 and 8); #230 comment that `BL-260904-add-recap-seam-config-keys` was superseded by `BL-260907-replace-the-default-project`; #252 comment that the parked plan is owned by `BL-260907-make-the-completion-seal`. No issue is closed by this triage.
