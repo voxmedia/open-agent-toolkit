@@ -114,15 +114,19 @@ the scope where the gap was observed. Versions are compared only for `copy`
 views: a symlinked, collection-aliased, or natively read view is the canonical
 file, so it has no second version.
 
-If reading the manifest or detecting drift fails — an invalid, unreadable, or
-otherwise non-loadable `.oat/sync/manifest.json`, for instance — the section for
-that scope reports `unavailable` with the reason, and the rest of the command is
-unaffected. The diagnostic is additive evidence, so it never changes the exit
-code or removes the tool detail of a user whose sync state is already broken.
-An unreadable sync config is handled one step earlier and differently: provider
-reachability degrades to no provider evidence, so that scope contributes no
-section at all. Reasons are redacted; the scope root becomes `<project>` or `~`,
-and any path outside it is replaced entirely.
+If reading the sync config or the manifest fails, or drift detection fails —
+an invalid, unreadable, or otherwise non-loadable `.oat/sync/config.json` or
+`.oat/sync/manifest.json`, for instance — the section for that scope reports
+`unavailable` with the reason, and the rest of the command is unaffected. The
+diagnostic is additive evidence, so it never changes the exit code or removes
+the tool detail of a user whose sync state is already broken. A broken sync
+config is one of the likeliest reasons a provider view is missing, which is
+exactly what this command is run to explain, so it is reported rather than
+dropped: printing no section at all would read as "no providers configured".
+An absent `.oat/sync/config.json` is a different case and not a failure — it
+resolves to the defaults, and the scope is diagnosed normally. Reasons are
+redacted; the scope root becomes `<project>` or `~`, and any path outside it is
+replaced entirely.
 
 A drift state and a view class can legitimately disagree. Drift compares a copy
 against the hash recorded at its last sync, so a copy that was never re-synced

@@ -589,10 +589,11 @@ probe-skill
 The section is additive in `--json` output as `providerViews`, an array of one
 entry per concrete scope where the canonical skill exists. The command reads the
 manifest, the sync config, and the filesystem; it never writes, and it never
-runs a sync. If the manifest cannot be read or drift detection fails, that
-scope's section reports `unavailable` with a redacted reason and the tool detail
-and exit code are unchanged; an unreadable sync config instead leaves the scope
-without a section. See
+runs a sync. If the sync config or the manifest cannot be read, or drift
+detection fails, that scope's section reports `unavailable` with a redacted
+reason and the tool detail and exit code are unchanged. An absent sync config is
+not a failure: it resolves to the defaults and the scope is diagnosed normally.
+See
 [Manifest and Drift](../provider-sync/manifest-and-drift.md#resolution-time-skill-view-classes)
 for the view classes.
 

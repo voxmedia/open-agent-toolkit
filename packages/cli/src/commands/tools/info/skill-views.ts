@@ -7,7 +7,7 @@ import {
   resolveSkillVersion,
 } from '@commands/shared/frontmatter';
 import type { ProviderContextDependencies } from '@commands/tools/shared/provider-context';
-import { resolveScopeProviderContext } from '@commands/tools/shared/provider-context';
+import { resolveScopeProviderContextOutcome } from '@commands/tools/shared/provider-context';
 import type {
   DriftReport,
   ExpectedProjection,
@@ -177,7 +177,7 @@ export async function collectSkillViewDiagnoses(
       if (diagnosis) diagnoses.push(diagnosis);
     } catch (error) {
       // Every input this diagnostic reads can fail independently of the tool
-      // the user asked about: `loadManifest` throws on a manifest that is
+      // the user asked about: the sync config and the manifest both throw when
       // present but invalid or unreadable, and the probes can fail on a
       // permission error. None of that may remove the tool detail or change
       // the exit code, so the section reports itself unavailable instead.
@@ -232,14 +232,24 @@ async function diagnoseScope(
   const canonicalDir = join(scopeRoot, canonicalRelative);
   if (!(await deps.pathExists(canonicalDir))) return null;
 
-  // Provider reachability is additive evidence: a missing or unreadable sync
-  // config degrades to "no provider evidence" rather than failing `info`.
-  const providerScopeContext = await resolveScopeProviderContext({
+  // A sync config that is present but unreadable is exactly the failure this
+  // diagnostic exists to explain, so it degrades to `unavailable` with a
+  // reason like every other unreadable input. Dropping the scope instead would
+  // print nothing at all, which reads as "no providers configured" — the
+  // opposite of the truth — to the one user most likely to be running this.
+  // An absent config is not that case: `loadSyncConfig` answers `ENOENT` with
+  // the defaults, so it resolves normally and the scope is diagnosed.
+  const contextOutcome = await resolveScopeProviderContextOutcome({
     scope,
     scopeRoot,
     ...(input.providerContext ? { dependencies: input.providerContext } : {}),
   });
-  if (!providerScopeContext) return null;
+  if (contextOutcome.status === 'failed') {
+    throw contextOutcome.error instanceof Error
+      ? contextOutcome.error
+      : new Error(String(contextOutcome.error));
+  }
+  const providerScopeContext = contextOutcome.context;
 
   const projections = deps.resolveExpectedProjections({
     skillName: input.skillName,

@@ -563,8 +563,35 @@ describe('runInfoTool read-only diagnostic suppression', () => {
  * so the concrete provider path in these assertions is derived from the adapter
  * mappings exactly as the command derives it.
  */
+/**
+ * The failure shapes `loadSyncConfig` really produces for a sync config that is
+ * present but unreadable. Copied from `config/sync-config.ts`'s own wording so
+ * the redaction under test operates on the message a user would actually see;
+ * `ENOENT` is absent on purpose, because that path returns the defaults instead
+ * of throwing.
+ */
+const SYNC_CONFIG_FAILURES = {
+  'invalid-json': (configPath: string) =>
+    new Error(
+      `Sync config at ${configPath} is not valid JSON. Fix the file and retry.`,
+    ),
+  eacces: (configPath: string) =>
+    new Error(
+      `Unable to load sync config from ${configPath}: EACCES: permission denied, open '${configPath}'`,
+    ),
+  eisdir: (configPath: string) =>
+    new Error(
+      `Unable to load sync config from ${configPath}: EISDIR: illegal operation on a directory, read`,
+    ),
+} as const;
+
 function skillProviderContext(input: {
   activeByScope: Partial<Record<ConcreteScope, string[]>>;
+  /** Scope root whose sync config fails to load, and how it fails. */
+  syncConfigFailure?: {
+    scopeRoot: string;
+    shape: keyof typeof SYNC_CONFIG_FAILURES;
+  };
 }): ProviderContextDependencies {
   const skillMapping = (
     providerDir: string,
@@ -594,7 +621,13 @@ function skillProviderContext(input: {
       }) as unknown as ProviderRegistration,
   );
   return {
-    loadSyncConfig: async () => ({ providers: {} }) as never,
+    loadSyncConfig: async (configPath) => {
+      const failure = input.syncConfigFailure;
+      if (failure && configPath.startsWith(`${failure.scopeRoot}/`)) {
+        throw SYNC_CONFIG_FAILURES[failure.shape](configPath);
+      }
+      return { providers: {} } as never;
+    },
     resolveProviderScopeContext: async ({ scope }) => {
       const activeProviders = input.activeByScope[scope] ?? [];
       return {
@@ -916,6 +949,87 @@ describe('runInfoTool provider-view diagnostic', () => {
     expect(output).toContain('Provider views (project): unavailable');
     expect(output).toContain('Version:');
     expect(capture.error).toEqual([]);
+  });
+
+  for (const [shape, scope, scopeRoot, placeholder] of [
+    ['invalid-json', 'project', '/project', '<project>'],
+    ['eacces', 'project', '/project', '<project>'],
+    ['eisdir', 'project', '/project', '<project>'],
+    ['invalid-json', 'user', '/home/user', '~'],
+    ['eacces', 'user', '/home/user', '~'],
+    ['eisdir', 'user', '/home/user', '~'],
+  ] as const) {
+    it(`degrades the ${scope} scope to unavailable when its sync config is unreadable (${shape})`, async () => {
+      // A broken sync config is one of the likeliest reasons a provider view is
+      // missing, which is exactly what this command is run to explain.
+      // Dropping the scope silently prints no row and no reason at all, which
+      // reads as "no providers configured" — the opposite of the truth.
+      const capture = createLoggerCapture();
+      const result = await runInfoTool(
+        createContext({ scope: 'all', logger: capture.logger }),
+        'oat-idea-new',
+        {
+          ...createDeps({
+            project: [sampleSkill],
+            user: [{ ...sampleSkill, scope: 'user' }],
+          }),
+          providerContext: skillProviderContext({
+            activeByScope: { project: ['claude'], user: ['claude'] },
+            syncConfigFailure: { scopeRoot, shape },
+          }),
+          skillViews: skillViewDependencies({
+            existingPaths: [PROJECT_CANONICAL, USER_CANONICAL],
+          }),
+        },
+      );
+
+      // The tool detail is still the answer the user asked for.
+      expect(result.found).toBe(true);
+      expect(result.tool?.name).toBe('oat-idea-new');
+
+      const broken = result.providerViews?.find(
+        (diagnosis) => diagnosis.scope === scope,
+      );
+      expect(broken).toMatchObject({ result: 'unavailable', views: [] });
+      expect(broken?.reason).toContain(`${placeholder}/.oat/sync/config.json`);
+      // The scope root never survives into the reason.
+      expect(broken?.reason).not.toContain(scopeRoot);
+
+      // The healthy scope keeps its rows.
+      expect(
+        result.providerViews?.find((diagnosis) => diagnosis.scope !== scope),
+      ).toMatchObject({ result: 'diagnosed' });
+
+      const output = capture.info.join('\n');
+      expect(output).toContain(`Provider views (${scope}): unavailable`);
+      expect(output).toContain('Version:');
+      expect(capture.error).toEqual([]);
+    });
+  }
+
+  it('still diagnoses a scope whose sync config is simply absent', async () => {
+    // The accepted control for the six cases above. `loadSyncConfig` answers
+    // ENOENT with the defaults, so "no sync config" is a legitimately empty
+    // result and must stay silent rather than degrading to `unavailable`.
+    const result = await runInfoTool(
+      createContext({ scope: 'project' }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: skillViewDependencies({
+          existingPaths: [PROJECT_CANONICAL],
+        }),
+      },
+    );
+
+    expect(result.providerViews?.[0]).toMatchObject({
+      scope: 'project',
+      result: 'diagnosed',
+    });
+    expect(result.providerViews?.[0]?.views.length).toBeGreaterThan(0);
   });
 
   it('redacts the scope root from an unavailable reason', async () => {
