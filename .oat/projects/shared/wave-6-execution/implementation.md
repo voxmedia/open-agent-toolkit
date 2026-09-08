@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-08
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 03 (preserve-proto-named-config-keys)                      | complete | 1     | 1/1       |
 | Phase 04 (honor-metadata-version-for-skills)                     | complete | 1     | 1/1       |
 | Phase 05 (diagnose-canonical-skills-missing-from-provider-views) | complete | 1     | 1/1       |
-| Phase 06 (final-review fixes)                                    | pending  | 5     | 0/5       |
+| Phase 06 (final-review fixes)                                    | complete | 5     | 5/5       |
 
-**Total:** 5/10 planned tasks completed (five plan tasks done; the five final-review fix tasks pending)
+**Total:** 10/10 planned tasks completed (five plan tasks; five final-review fix tasks)
 
 ---
 
@@ -99,35 +99,35 @@ oat_generated: false
 
 ## Phase 06: final-review fixes (p06)
 
-**Status:** pending · **Group:** final-review fix round (worktrees A = p06-t01/t02/t03, B = p06-t04/t05)
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete (merged `4a2ed8e65`, `e8424949c`; round-2 verification by the final reviewer pending) · **Group:** final-review fix round (worktrees A = p06-t01/t02/t03, B = p06-t04/t05)
+**Outcome:** I1: an unreadable or invalid sync config degrades the scope to `unavailable` with a redacted reason (absent config stays silent; the shared helper's `null` contract to its other callers byte-identical); M4: a manifest entry whose path diverges from the expected projection renders its own path with an honest divergence note and never borrows the other path's verdict, and an escaping tracked path is redacted and never read; m13: a failing provider degrades alone (`unverified` with the reason in its detail); m14: no qualifier or path on `inactive`/`unsupported`/`excluded`; m11: redaction covers any absolute path token with a scope-root boundary; m10: comments fixed. M1: the archived-artifact excuse requires `! -e` and `! -L` with a stop for a non-directory at `reviews/archived`; m1: no `## Reviews` section is a `PRFINAL-05` stop; m3: an escaped pipe in a ledger header or row is a fail-closed stop; m2: prose states the level-two boundary. M2: the `__proto__` injection, the `projects` sibling contract, and `unset` are pinned through the real `oat config` entry.
+**Verification:** every finding reproduced before editing; lane A: forced CLI suite 6286 `Cached: 0`, the 82-skill `--json` sweep byte-identical after each task, two Codex rounds (1C/1m; 4C — all fixed before commit, incl. a redaction tail-forwarding regression caught by a 17-case A/B against the base function); lane B: 35-shape differential plus all 94 real `plan.md` files under three awks, two Codex rounds (3C fixed by replacing the sentinel design with a stop; round 2 204 cases, no findings), eight negative controls; fan-in: thirteen gates green (CLI 6301, 0 cached).
+**Deviations:** M1 needed `! -L` beyond the review's `! -e`; m3 implemented as a stop, not a sentinel; the review's `set`/`unset`/`list` own-key wording is true only in the `projects` subtree (top-level `__proto__` is dropped like any unrecognized key) — the test pins the true contract; lane A reused `unverified` for a per-view read failure rather than adding a state (docs contract unchanged); both docs pages updated where they documented the now-false behavior; the task text's test-file path for p06-t04 was wrong (`commands/init/tools/shared/review-skill-contracts.test.ts`).
 
 ### Task p06-t01: (review) Degrade a scope with an unreadable sync config to unavailable in the provider-view diagnostic
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `c2ae4aa2b`→`5143472ab`
 
 ### Task p06-t02: (review) Never attach a drift verdict computed for one path to a provider-view row that names another
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `2ee40cb7a`→`9998d8c29`
 
 ### Task p06-t03: (review) Harden the provider-view redaction, degradation granularity, and row cosmetics
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `f3855f680`→`b0d49fa55`
 
 ### Task p06-t04: (review) Close the non-directory reviews/archived hole and the silent no-ledger path in the pr-final guard
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `35fe92b66`→`b449b7295`
 
 ### Task p06-t05: (review) Pin the end-to-end proto-keyed config control through the real oat config command
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `e4b8be284`→`41346f2d6`
 
 ## Autonomy Gate Provenance
 
@@ -215,16 +215,21 @@ Wave base `fab304fe7a2b0eb04f39f45b9de17934e8019fed` (origin/main after the wave
 - Group-2 fan-in, first half: `wave-6/p04` rebased onto the integration tip and merged with `git merge --no-ff` as `88a8d75df` (lane commits re-hashed with identical patch-ids: `5ad26a195`→`49afab8a7`, `839321e74`→`f722f9f98`); the p05 worktree was then rebased onto that tip (`bfa0c7c8e`→`32bc1016c`, `63b5f3c09`→`c3565e618`, patch-ids preserved) so its deferred Important 1 can substitute p04's exported resolver — `w6-p05-fix-002`.
 - `w6-p05-fix-002` outcome: one commit `d2923f5ab0ed4e87142b66f58b6d28f99072c5cd` on the rebased worktree (eight files, no p04 surface). `readProjectedSkillVersion` now resolves through p04's `resolveSkillVersion(parseSkillFrontmatter(getFrontmatterBlock(stripped)))` on banner-stripped content, with the resolver's conflict/unusable state carried into the view (`versionEvidence`), a structured `readProjectedVersion` dependency, and the duplicated parser deleted; real-sync regressions: both-fields-differing resolves `2.0.0` with no false `modified` or repair (pre-fix view `1.0.0` + a repair line), metadata-only resolves, a conflicting pair reports `null`/`conflict` with the detail printed. Codex round (2I/2M, all fixed): a usable version beside an unusable sibling lost parity — resolver answers are never downgraded; conflict suppression could hide staleness and the human output withheld the warning — the detail now always prints when evidence is not clean and the docs state the cost; a string fallback could launder a conflict after a transient read failure — structured reader; vacuous negatives replaced by real-sync and direct-reader tests. No behavior change on this repository's 82 alias-only skills (410 views, all `in-sync`/`inactive`). Integrated `scan-tools`/`info`/`doctor`/`frontmatter`/`drift` suites 282 green on the rebased tree; forced CLI suite 6242 `Cached: 0`. Round 3 `w6-p05-review-003`.
 - `w6-p05-review-003` outcome: PASS (p05 merges; the group-2 gates run), 0C/0I/0M/2m, reconnaissance not-attempted. Important 1 resolved at source: `readProjectedSkillVersion` delegates to `parseSkillFrontmatter` + `resolveSkillVersion` (the functions `getSkillVersion` uses), verified live on a real copy-strategy sync at both heads (pre-fix `c3565e618` view `1.0.0` with a spurious repair; fixed `d2923f5ab` view `2.0.0`, no repair); an unusable sibling (`version: 1.10` beside `metadata.version: 2.0.0`) resolves `2.0.0` on both sides; an unreadable conflicting file returns `{version: null, state: 'absent'}`, never `resolved`; `getFrontmatterField` gone from `skill-views.ts`. One deviation from the brief ruled defensible on evidence: a conflicting-but-different pair still offers a repair because the reviewer RAN it and it worked (`update_copy → changed`, re-diagnosis `resolved`); suppression stays reserved for the provably no-op case. 82-skill `--json` sweep byte-identical across the fix (15,360 lines); `oat status`, pack info, and unknown-name output byte-identical to `88a8d75df`; integrated suites 12 files / 493 tests; seven gates green with three forced turbo runs `Cached: 0`; three negative controls red. Minors: the p05 phase record owed by the fan-in (this record); the cosmetic redaction colon (no leak).
+- `w6-p06a-impl-001` outcome: DONE, three commits `c2ae4aa2b6eb082e92542eaecdfa4addac55c212` (p06-t01), `2ee40cb7aff43c40b6fd406ba4d3a4f60fd94a1c` (p06-t02), `f3855f68019ba007466574371dc9030329aabf50` (p06-t03); 11 files, +1446/−101. Every finding reproduced on the built CLI before editing (I1: `{`, `chmod 000`, a directory, and a schema-invalid sync config all yielded `providerViews: []` with no reason; M4: a retargeted manifest `providerPath` rendered `removed` against a healthy symlink; m13: one `ENOTDIR` entry collapsed all five rows; m14 verbatim; m10 confirmed with the real `yaml` parser). I1: `resolveScopeProviderContext` gains an outcome API distinguishing absent from failed (its `null` contract to existing callers byte-identical, pinned), and a failed read degrades the scope to `unavailable` with a redacted reason. M4: a manifest entry whose path diverges from the expected projection renders its own path with an honest divergence note and never borrows the other path's verdict. m13: the catch moved to the per-view loop (a failing provider degrades to `unverified` with the redacted reason in its detail; siblings keep their rows). m14: no qualifier or path on `inactive`/`unsupported`/`excluded`. m10: both comments fixed. Two Codex rounds (R1 1C/1m; R2 4C — all fixed before commit): the redaction stopped at whitespace and the scope-root replacement lacked a boundary (pre-existing); an escaping tracked copy could leak its version (the reader now refuses an escaping path); the new bare-path terminators forwarded a path tail (a real regression, fixed with a 17-case A/B table against the base function showing every difference strictly more redacted); a sibling directory with a space was accepted as contained; a failed probe asserted absence. The 82-skill `--json` sweep byte-identical after every task; forced CLI suite 6286 (base 6242) `Cached: 0`; check, type-check, check:skill-bumps, lint, format, validate-skills, build exit 0; docs pages `tool-packs.md` and `manifest-and-drift.md` updated where they documented the now-false behavior. Judgment call for the reviewer: the per-view read failure reuses `unverified` rather than adding a state.
+- `w6-p06b-impl-001` outcome: DONE, two commits `35fe92b6625ecea4908d43d51928bd314824a358` (p06-t04) and `e4b8be284bee0ffb86cc230febc1148590676dea` (p06-t05). Every finding reproduced before editing (M1: a regular file and a dangling symlink at `reviews/archived` both exit 0 with the local-only notice; m1: `## Review Ledger` and `### Reviews` exit 0 with zero rows checked; m3: an escaped pipe plus a `-` Date cell skips the dangling artifact; M2: the neutralized source answered `INJECTED` on the live CLI). M1: absence is `! -e` AND `! -L` (the review's literal `! -e` alone leaves a dangling symlink open — proven by neutralization) through one `classify_absent_ledger_artifact` helper at both sites, plus a stop for a non-directory; m1: `PRFINAL-05` when no `## Reviews` section was seen; m2: prose corrected to the level-two boundary (the second-`## Reviews` blind spot stated explicitly); m3: implemented as a fail-closed stop on `\|` in a ledger header or row rather than the sentinel the review listed first — the sentinel introduced three Codex Criticals (a header escaped pipe hid a whole table; a merged cell turned a rejected artifact into a `-` placeholder; a literal `0x01` byte aliased a filename), so the design was replaced and round 2 (204 adversarial differential cases) returned no findings. Weaker-anywhere: a 35-shape pre/post differential plus all 94 real `plan.md` files show the only exit-code changes are the two intended m1 stops, identical under BSD awk, gawk, and mawk. M2: `commands/config/index.test.ts` pins the `__proto__` injection through the real `oat config` entry (red under a neutralized `defineOwnProperty`), the `projects` FR10 sibling contract (red under an assignment loop), and `unset` on its own hostile fixture; Codex (2M/1m, all fixed) caught a vacuous prototype assertion and the unpinned nested surface. Deviations: the task text's `validation/review-skill-contracts.test.ts` path is wrong (the file is `commands/init/tools/shared/review-skill-contracts.test.ts`); `validation/skills.test.ts` added to the file set (it pins the guard block's literal text); both commit headers shortened under commitlint's 100-char cap; `config set` drops a top-level `__proto__` exactly as any unrecognized key, so the test pins the `projects` subtree where the own-key claim is true. `oat-project-pr-final` stays 1.6.3; `check:skill-bumps` still reports 3 changed skills; `gawk` and `mawk` installed on the machine for the portability differential.
+- Phase 06 fan-in: `wave-6/p06a` rebased and merged `4a2ed8e65` (`c2ae4aa2b`→`5143472ab`, `2ee40cb7a`→`9998d8c29`, `f3855f680`→`b0d49fa55`), then `wave-6/p06b` `e8424949c` (`35fe92b66`→`b449b7295`, `e4b8be284`→`41346f2d6`); all five `git patch-id --stable` values identical. Lockstep retained at 0.2.64. Gates (retain mode, sequential): check 0, type-check 0, forced test 0 (0 cached, 10 total; CLI 6301), build 0, check:skill-bumps 0, release:check-versions 0, release:validate 0, build:docs 0; test:smoke 0, test:skills 0, root test 0, lint 0, format 0; `.oat/config.json` keys at parity with `origin/main`. Worktrees removed.
 
 #### Phase Outcomes
 
-| Phase | Worktree                | Implementer outcome                                                                     | Review                                                                                                                | Fix rounds                    |
-| ----- | ----------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| p01   | `.worktrees/wave-6/p01` | DONE (`d5fb6e1d4`; forced CLI suite 6101)                                               | passed (round 1 0C/1I/3M/4m → round 2 0C/0I/1M/0m)                                                                    | 1                             |
-| p02   | `.worktrees/wave-6/p02` | DONE (`bad7d0e90`; forced CLI suite 6041, test:smoke)                                   | passed (round 1 0C/1I/1M/3m → round 2 1C/1I/1M/2m → round 3 0/0/0/0)                                                  | 3                             |
-| p03   | `.worktrees/wave-6/p03` | DONE_WITH_CONCERNS after a STOP → refresh → resume (`9f714cb56`; forced CLI suite 6048) | passed (round 1 0C/1I/1M/3m → record fix → round 2 0C/0I/0M/1m)                                                       | 1 (record)                    |
-| p05   | `.worktrees/wave-6/p05` | DONE (`bfa0c7c8e`; forced CLI suite 6164)                                               | passed (round 1 1C/2I/1M/4m → round 2 0C/1I/0M/2m, Important 1 deferred to the post-p04 rebase → round 3 0C/0I/0M/2m) | 2 (+ rebase onto `88a8d75df`) |
-| p04   | `.worktrees/wave-6/p04` | DONE (`5ad26a195`; forced CLI suite 6190, check:skill-bumps 3)                          | passed (round 1 1C/2I/2M/3m → round 2 0C/0I/0M/3m)                                                                    | 1                             |
+| Phase | Worktree                 | Implementer outcome                                                                     | Review                                                                                                                | Fix rounds                    |
+| ----- | ------------------------ | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| p01   | `.worktrees/wave-6/p01`  | DONE (`d5fb6e1d4`; forced CLI suite 6101)                                               | passed (round 1 0C/1I/3M/4m → round 2 0C/0I/1M/0m)                                                                    | 1                             |
+| p02   | `.worktrees/wave-6/p02`  | DONE (`bad7d0e90`; forced CLI suite 6041, test:smoke)                                   | passed (round 1 0C/1I/1M/3m → round 2 1C/1I/1M/2m → round 3 0/0/0/0)                                                  | 3                             |
+| p03   | `.worktrees/wave-6/p03`  | DONE_WITH_CONCERNS after a STOP → refresh → resume (`9f714cb56`; forced CLI suite 6048) | passed (round 1 0C/1I/1M/3m → record fix → round 2 0C/0I/0M/1m)                                                       | 1 (record)                    |
+| p05   | `.worktrees/wave-6/p05`  | DONE (`bfa0c7c8e`; forced CLI suite 6164)                                               | passed (round 1 1C/2I/1M/4m → round 2 0C/1I/0M/2m, Important 1 deferred to the post-p04 rebase → round 3 0C/0I/0M/2m) | 2 (+ rebase onto `88a8d75df`) |
+| p04   | `.worktrees/wave-6/p04`  | DONE (`5ad26a195`; forced CLI suite 6190, check:skill-bumps 3)                          | passed (round 1 1C/2I/2M/3m → round 2 0C/0I/0M/3m)                                                                    | 1                             |
+| p06a  | `.worktrees/wave-6/p06a` | DONE (`c2ae4aa2b`, `2ee40cb7a`, `f3855f680`; forced CLI suite 6286)                     | round 2 pending (final reviewer)                                                                                      | -                             |
+| p06b  | `.worktrees/wave-6/p06b` | DONE (`35fe92b66`, `e4b8be284`; forced CLI suite 6286+)                                 | round 2 pending (final reviewer)                                                                                      | -                             |
 
 #### Group 1 fan-in — p01, p02, p03 (2026-09-08)
 
@@ -246,7 +251,7 @@ Wave base `fab304fe7a2b0eb04f39f45b9de17934e8019fed` (origin/main after the wave
 
 #### Outstanding Items
 
-- Closeout: archive the five backlog items, file follow-ups, Deferred Findings / Final Summary, root final review, exit gate, PR.
+- Round-2 verification of Phase 06 by the final reviewer, then the configured exit gate, the post-implement sequence, and the PR.
 - Group 2 (p04 + p05) at the group-1 tip; then closeout.
 - Group-1 fan-in with the lockstep bump 0.2.63 → 0.2.64, then group 2 (p04 + p05).
 - Plan gate, then group 1.
@@ -259,6 +264,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-08
 
+- Phase 06 fix lanes merged (`4a2ed8e65`, `e8424949c`); thirteen gates green (CLI 6301, 0 cached); round 2 dispatched to the final reviewer.
 - Root final review received (`reviews/archived/final-review-2026-09-08T052928Z.md`, PASS with follow-ups, 0C/1I/5M/13m): product findings → Phase 06 (p06-t01..t05, two lanes); record findings fixed in the receive commit; M3 promoted to a blocking criterion on the migration item.
 - Group 2 fan-in: p04 `88a8d75df`, p05 `386a32b11`; lockstep retained at 0.2.64; eight gates + smoke + skills + root test green (0 cached).
 - Group 2 reviews received: p04 `5ad26a195` + fix `839321e74` (passed round 2; merged first as `88a8d75df`); p05 `bfa0c7c8e` + fix `63b5f3c09` + post-rebase fix `d2923f5ab` (passed round 3).
@@ -284,13 +290,14 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Test Results
 
-| Phase | Tests Run                                          | Passed | Failed | Coverage |
-| ----- | -------------------------------------------------- | ------ | ------ | -------- |
-| p01   | 6101 (forced CLI suite) + 1270 focused             | all    | 0      | -        |
-| p02   | 6041 (forced CLI suite) + test:smoke               | all    | 0      | -        |
-| p03   | 6048 (forced CLI suite) + 730 focused              | all    | 0      | -        |
-| p04   | 6190 (forced CLI suite) + 844 focused + test:smoke | all    | 0      | -        |
-| p05   | 6242 (forced CLI suite, post-rebase) + 155 focused | all    | 0      | -        |
+| Phase | Tests Run                                              | Passed | Failed | Coverage |
+| ----- | ------------------------------------------------------ | ------ | ------ | -------- |
+| p01   | 6101 (forced CLI suite) + 1270 focused                 | all    | 0      | -        |
+| p02   | 6041 (forced CLI suite) + test:smoke                   | all    | 0      | -        |
+| p03   | 6048 (forced CLI suite) + 730 focused                  | all    | 0      | -        |
+| p04   | 6190 (forced CLI suite) + 844 focused + test:smoke     | all    | 0      | -        |
+| p05   | 6242 (forced CLI suite, post-rebase) + 155 focused     | all    | 0      | -        |
+| p06   | 6301 (forced CLI suite at the fan-in) + smoke + skills | all    | 0      | -        |
 
 ## Deferred Findings
 

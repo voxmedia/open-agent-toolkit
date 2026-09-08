@@ -90,7 +90,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T23:38:50.037Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-08T05:37:22.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-08T06:38:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -102,7 +102,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — both groups merged (lockstep 0.2.64); backlog archived and closeout records written; root final review passed with follow-ups; Phase 06 (five fix tasks in two lanes) dispatching, then round 2 and the configured exit gate.
+Implementation — both groups merged (lockstep 0.2.64); backlog archived and closeout records written; root final review passed with follow-ups; Phase 06 (five fix tasks in two lanes) merged and gated; round-2 verification running, then the configured exit gate.
 
 ## Artifacts
 
@@ -110,7 +110,7 @@ Implementation — both groups merged (lockstep 0.2.64); backlog archived and cl
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete; five pointer-only tasks, groups [p01, p02, p03], [p04, p05]; Phase 06 final-review fixes added 2026-09-08)
-- **Implementation:** `implementation.md` (5/5 plan tasks complete; 0/5 fix tasks)
+- **Implementation:** `implementation.md` (5/5 plan tasks and 5/5 fix tasks complete)
 
 ## Progress
 
@@ -124,7 +124,8 @@ Implementation — both groups merged (lockstep 0.2.64); backlog archived and cl
 - ✓ Group 2 (p04 + p05) merged (`88a8d75df`, `386a32b11`); lockstep retained at 0.2.64; eight gates + smoke + skills + root test green (CLI 6242)
 - ✓ Five backlog items archived, seven follow-ups filed, closeout records written (`b7d66565f`, `c5edecf98`)
 - ✓ Root final review passed with follow-ups (0C/1I/5M/13m, `final-review-2026-09-08T052928Z.md`)
-- ⧗ Phase 06 final-review fixes (lanes A: p06-t01..t03, B: p06-t04..t05), then round 2
+- ✓ Phase 06 final-review fixes merged (`4a2ed8e65`, `e8424949c`); thirteen gates green (CLI 6301)
+- ⧗ Round-2 verification by the final reviewer
 
 ## Blockers
 
