@@ -2,10 +2,15 @@ import type { CommandContext } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
 import type { ProviderContextDependencies } from '@commands/tools/shared/provider-context';
 import type { ToolInfo } from '@commands/tools/shared/types';
+import type { DriftReport } from '@drift/index';
+import { resolveExpectedSkillProjections } from '@drift/index';
+import type { Manifest, ManifestEntryV2 } from '@manifest/manifest.types';
+import type { PathMapping } from '@providers/shared/adapter.types';
 import type {
   ProviderProjectionMode,
   ProviderRegistration,
 } from '@providers/shared/registry';
+import type { ConcreteScope } from '@shared/types';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -13,6 +18,11 @@ import {
   runInfoTool,
   type ToolDetail,
 } from './info-tool';
+import {
+  formatSkillViewLines,
+  probeProviderPath,
+  type SkillViewDependencies,
+} from './skill-views';
 
 function createContext(
   overrides: Partial<CommandContext> = {},
@@ -544,5 +554,583 @@ describe('runInfoTool read-only diagnostic suppression', () => {
       rows.every(({ materialization }) => materialization.state !== 'failed'),
     ).toBe(true);
     expect(codes).not.toContain('provider-materialization-failed');
+  });
+});
+
+/**
+ * Provider-view diagnostic doubles. Only the filesystem, manifest, and drift
+ * facts are faked: the expected-projection resolver under test is the real one,
+ * so the concrete provider path in these assertions is derived from the adapter
+ * mappings exactly as the command derives it.
+ */
+function skillProviderContext(input: {
+  activeByScope: Partial<Record<ConcreteScope, string[]>>;
+}): ProviderContextDependencies {
+  const skillMapping = (
+    providerDir: string,
+    nativeRead: boolean,
+  ): PathMapping => ({
+    contentType: 'skill',
+    canonicalDir: '.agents/skills',
+    providerDir,
+    nativeRead,
+  });
+  const registrations = [
+    { name: 'claude', providerDir: '.claude/skills', nativeRead: false },
+    { name: 'codex', providerDir: '.agents/skills', nativeRead: true },
+  ].map(
+    ({ name, providerDir, nativeRead }) =>
+      ({
+        adapter: {
+          name,
+          displayName: name,
+          defaultStrategy: 'symlink',
+          projectMappings: [skillMapping(providerDir, nativeRead)],
+          userMappings: [skillMapping(providerDir, nativeRead)],
+          detect: async () => true,
+        },
+        extensions: [],
+        capabilities: [],
+      }) as unknown as ProviderRegistration,
+  );
+  return {
+    loadSyncConfig: async () => ({ providers: {} }) as never,
+    resolveProviderScopeContext: async ({ scope }) => {
+      const activeProviders = input.activeByScope[scope] ?? [];
+      return {
+        scope,
+        configSource: '<project>/.oat/sync/config.json',
+        activeProviders,
+        detectedProviders: activeProviders,
+        mismatches: { detectedUnset: [], detectedDisabled: [] },
+        activation: registrations.map(({ adapter }) => ({
+          provider: adapter.name,
+          state: activeProviders.includes(adapter.name)
+            ? ('active' as const)
+            : ('inactive' as const),
+          source: 'config-enabled' as const,
+          reason: 'test activation',
+        })),
+        registrations,
+      };
+    },
+  };
+}
+
+function skillViewDependencies(input: {
+  existingPaths: string[];
+  manifestEntries?: Record<string, ManifestEntryV2[]>;
+  driftStates?: Record<string, DriftReport['state']>;
+  versions?: Record<string, string | null>;
+  detectDriftCalls?: string[];
+}): SkillViewDependencies {
+  const existing = new Set(input.existingPaths);
+  return {
+    loadManifest: async (manifestPath) =>
+      ({
+        version: 2,
+        oatVersion: '0.0.0-test',
+        entries: input.manifestEntries?.[manifestPath] ?? [],
+        collections: [],
+        lastUpdated: '2026-09-01T00:00:00.000Z',
+      }) as unknown as Manifest,
+    detectDrift: async (entry, scopeRoot) => {
+      input.detectDriftCalls?.push(`${scopeRoot}:${entry.providerPath}`);
+      return {
+        canonical: entry.canonicalPath,
+        provider: entry.provider,
+        providerPath: entry.providerPath,
+        state: input.driftStates?.[entry.providerPath] ?? { status: 'in_sync' },
+      };
+    },
+    resolveExpectedProjections: resolveExpectedSkillProjections,
+    pathExists: async (path) => existing.has(path),
+    getSkillVersion: async (skillDir) => input.versions?.[skillDir] ?? null,
+    readProjectedVersion: async (skillDir) => {
+      const version = input.versions?.[skillDir] ?? null;
+      return version === null
+        ? { version: null, state: 'absent' }
+        : { version, state: 'resolved' };
+    },
+  };
+}
+
+const PROJECT_CANONICAL = '/project/.agents/skills/oat-idea-new';
+const USER_CANONICAL = '/home/user/.agents/skills/oat-idea-new';
+
+describe('runInfoTool provider-view diagnostic', () => {
+  it('reports a never-synced skill as missing-additive with the concrete path and a concrete-scope repair', async () => {
+    const detectDriftCalls: string[] = [];
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ scope: 'project', logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude', 'codex'] },
+        }),
+        skillViews: skillViewDependencies({
+          existingPaths: [PROJECT_CANONICAL],
+          detectDriftCalls,
+        }),
+      },
+    );
+
+    const claude = result.providerViews?.[0]?.views.find(
+      ({ provider }) => provider === 'claude',
+    );
+    expect(claude).toMatchObject({
+      viewClass: 'missing-additive',
+      providerPath: '.claude/skills/oat-idea-new',
+      tracked: false,
+      driftState: null,
+      suggestion: 'oat sync --scope project',
+    });
+    // A native-read provider sees the canonical skill itself; reporting it as
+    // missing would send the user to a sync that creates nothing.
+    expect(
+      result.providerViews?.[0]?.views.find(
+        ({ provider }) => provider === 'codex',
+      ),
+    ).toMatchObject({
+      viewClass: 'in-sync',
+      nativeRead: true,
+      suggestion: null,
+    });
+    const output = capture.info.join('\n');
+    expect(output).toContain('Provider views (project):');
+    expect(output).toContain('.claude/skills/oat-idea-new');
+    expect(output).toContain('Repair: oat sync --scope project');
+    // `detectDrift` needs a manifest entry; the never-synced case must not
+    // pretend to have one.
+    expect(detectDriftCalls).toEqual([]);
+  });
+
+  it('reports an inactive provider as inactive, never as missing, and suggests nothing', async () => {
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ scope: 'user', logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({ user: [{ ...sampleSkill, scope: 'user' }] }),
+        providerContext: skillProviderContext({ activeByScope: { user: [] } }),
+        skillViews: skillViewDependencies({ existingPaths: [USER_CANONICAL] }),
+      },
+    );
+
+    expect(
+      result.providerViews?.[0]?.views.map(({ viewClass, suggestion }) => ({
+        viewClass,
+        suggestion,
+      })),
+    ).toEqual([
+      { viewClass: 'inactive', suggestion: null },
+      { viewClass: 'inactive', suggestion: null },
+    ]);
+    expect(capture.info.join('\n')).not.toContain('oat sync');
+  });
+
+  it('reports a stale user-scope copy view as modified with both versions', async () => {
+    const capture = createLoggerCapture();
+    const entry: ManifestEntryV2 = {
+      canonicalPath: '.agents/skills/oat-idea-new',
+      providerPath: '.claude/skills/oat-idea-new',
+      provider: 'claude',
+      contentType: 'skill',
+      contentHash: 'sha256:stale',
+      isFile: false,
+      lastSynced: '2026-09-01T00:00:00.000Z',
+      strategy: 'copy',
+    };
+    const result = await runInfoTool(
+      createContext({ scope: 'user', logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({
+          user: [{ ...sampleSkill, scope: 'user', version: '1.2.1' }],
+        }),
+        providerContext: skillProviderContext({
+          activeByScope: { user: ['claude'] },
+        }),
+        skillViews: skillViewDependencies({
+          existingPaths: [
+            USER_CANONICAL,
+            '/home/user/.claude/skills/oat-idea-new',
+          ],
+          manifestEntries: {
+            '/home/user/.oat/sync/manifest.json': [entry],
+          },
+          driftStates: {
+            '.claude/skills/oat-idea-new': {
+              status: 'drifted',
+              reason: 'modified',
+            },
+          },
+          versions: {
+            '/home/user/.claude/skills/oat-idea-new': '1.0.0',
+          },
+        }),
+      },
+    );
+
+    expect(result.providerViews?.[0]?.views[0]).toMatchObject({
+      viewClass: 'modified',
+      driftState: { status: 'drifted', reason: 'modified' },
+      canonicalVersion: '1.2.1',
+      viewVersion: '1.0.0',
+      versionComparable: true,
+      suggestion: 'oat sync --scope user',
+    });
+    expect(capture.info.join('\n')).toContain('Repair: oat sync --scope user');
+    expect(capture.info.join('\n')).toContain(
+      'versions: canonical 1.2.1, view 1.0.0',
+    );
+  });
+
+  it('emits one concrete-scope repair per affected scope and never --scope all', async () => {
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ scope: 'all', logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({
+          project: [sampleSkill],
+          user: [{ ...sampleSkill, scope: 'user' }],
+        }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'], user: ['claude'] },
+        }),
+        skillViews: skillViewDependencies({
+          existingPaths: [PROJECT_CANONICAL, USER_CANONICAL],
+        }),
+      },
+    );
+
+    expect(result.providerViews?.map(({ scope }) => scope)).toEqual([
+      'project',
+      'user',
+    ]);
+    const suggestions = (result.providerViews ?? []).flatMap(({ views }) =>
+      views.map(({ suggestion }) => suggestion).filter(Boolean),
+    );
+    expect(suggestions).toEqual([
+      'oat sync --scope project',
+      'oat sync --scope user',
+    ]);
+    const repairs = capture.info.filter((line) => line.includes('Repair:'));
+    expect(repairs).toEqual([
+      '    Repair: oat sync --scope project',
+      '    Repair: oat sync --scope user',
+    ]);
+    expect(capture.info.join('\n')).not.toContain('--scope all');
+  });
+
+  it('keeps every current JSON field and adds the diagnostic additively', async () => {
+    const capture = createLoggerCapture();
+    await runInfoTool(
+      createContext({ scope: 'project', json: true, logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: skillViewDependencies({
+          existingPaths: [PROJECT_CANONICAL],
+        }),
+      },
+    );
+
+    const payload = capture.jsonPayloads[0] as {
+      tool: ToolDetail;
+      providerViews: Array<{ scope: string; result: string }>;
+    };
+    expect(Object.keys(payload.tool).sort()).toEqual(
+      [
+        'allowedTools',
+        'argumentHint',
+        'bundledVersion',
+        'description',
+        'name',
+        'pack',
+        'scope',
+        'status',
+        'type',
+        'userInvocable',
+        'version',
+      ].sort(),
+    );
+    expect(payload.providerViews[0]).toMatchObject({
+      scope: 'project',
+      result: 'diagnosed',
+    });
+  });
+
+  it('degrades to an unavailable section when the manifest cannot be read', async () => {
+    const capture = createLoggerCapture();
+    const deps = skillViewDependencies({
+      existingPaths: [PROJECT_CANONICAL, USER_CANONICAL],
+    });
+    const result = await runInfoTool(
+      createContext({ scope: 'all', logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({
+          project: [sampleSkill],
+          user: [{ ...sampleSkill, scope: 'user' }],
+        }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'], user: ['claude'] },
+        }),
+        skillViews: {
+          ...deps,
+          loadManifest: async (manifestPath) => {
+            if (manifestPath.startsWith('/project')) {
+              throw new Error(
+                `Manifest at ${manifestPath} is not valid JSON. Delete or repair the file and re-run oat sync.`,
+              );
+            }
+            return deps.loadManifest(manifestPath);
+          },
+        },
+      },
+    );
+
+    // The tool detail is the answer the user asked for; unreadable diagnostic
+    // inputs may not remove it or change the exit path.
+    expect(result.found).toBe(true);
+    expect(result.tool?.name).toBe('oat-idea-new');
+    expect(result.providerViews?.[0]).toMatchObject({
+      scope: 'project',
+      result: 'unavailable',
+      views: [],
+    });
+    expect(result.providerViews?.[0]?.reason).toContain('not valid JSON');
+    // The healthy scope is still diagnosed.
+    expect(result.providerViews?.[1]).toMatchObject({
+      scope: 'user',
+      result: 'diagnosed',
+    });
+    const output = capture.info.join('\n');
+    expect(output).toContain('Provider views (project): unavailable');
+    expect(output).toContain('Version:');
+    expect(capture.error).toEqual([]);
+  });
+
+  it('redacts the scope root from an unavailable reason', async () => {
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ scope: 'user', json: true, logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({ user: [{ ...sampleSkill, scope: 'user' }] }),
+        providerContext: skillProviderContext({
+          activeByScope: { user: ['claude'] },
+        }),
+        skillViews: {
+          ...skillViewDependencies({ existingPaths: [USER_CANONICAL] }),
+          loadManifest: async (manifestPath) => {
+            throw new Error(
+              `EACCES: permission denied, open '${manifestPath}'`,
+            );
+          },
+        },
+      },
+    );
+
+    expect(result.providerViews?.[0]?.reason).toBe(
+      "EACCES: permission denied, open '~/.oat/sync/manifest.json'",
+    );
+    expect(JSON.stringify(capture.jsonPayloads[0])).not.toContain('/home/user');
+  });
+
+  it('redacts an absolute path that lies outside the scope root', async () => {
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ scope: 'project', json: true, logger: capture.logger }),
+      'oat-idea-new',
+      {
+        ...createDeps({ project: [sampleSkill] }),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: {
+          ...skillViewDependencies({ existingPaths: [PROJECT_CANONICAL] }),
+          // A manifest `providerPath` that escapes the scope root makes the
+          // real detector name a path the scope-root replacement cannot reach.
+          detectDrift: async () => {
+            throw new Error(
+              "ENOTDIR: not a directory, lstat '/dev/null/probe'",
+            );
+          },
+          loadManifest: async () =>
+            ({
+              version: 2,
+              oatVersion: '0.0.0-test',
+              entries: [
+                {
+                  canonicalPath: '.agents/skills/oat-idea-new',
+                  providerPath: '../../dev/null/probe',
+                  provider: 'claude',
+                  contentType: 'skill',
+                  contentHash: null,
+                  isFile: false,
+                  lastSynced: '2026-09-01T00:00:00.000Z',
+                  strategy: 'symlink',
+                },
+              ],
+              collections: [],
+              lastUpdated: '2026-09-01T00:00:00.000Z',
+            }) as unknown as Manifest,
+        },
+      },
+    );
+
+    expect(result.providerViews?.[0]).toMatchObject({
+      result: 'unavailable',
+    });
+    expect(result.providerViews?.[0]?.reason).toBe(
+      "ENOTDIR: not a directory, lstat '<path>'",
+    );
+    expect(JSON.stringify(capture.jsonPayloads[0])).not.toContain('/dev/null');
+  });
+
+  it('keeps the not-found wording and emits no provider-view block for an unknown name', async () => {
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ scope: 'project', logger: capture.logger }),
+      'nonexistent',
+      {
+        ...createDeps({}),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: skillViewDependencies({
+          existingPaths: [PROJECT_CANONICAL],
+        }),
+      },
+    );
+
+    // Missing distribution and an unknown name must never read alike.
+    expect(result.found).toBe(false);
+    expect(result.providerViews).toBeUndefined();
+    expect(capture.error).toEqual(["Tool 'nonexistent' not found."]);
+    expect(capture.info.join('\n')).not.toContain('Provider views');
+  });
+
+  it('runs no diagnostic for an agent and never mutates on the read-only path', async () => {
+    const detectDriftCalls: string[] = [];
+    const capture = createLoggerCapture();
+    const result = await runInfoTool(
+      createContext({ scope: 'project', logger: capture.logger }),
+      'oat-reviewer',
+      {
+        ...createDeps(
+          { project: [sampleAgent] },
+          {
+            description: 'A review agent',
+            argumentHint: null,
+            allowedTools: null,
+            userInvocable: false,
+          },
+        ),
+        providerContext: skillProviderContext({
+          activeByScope: { project: ['claude'] },
+        }),
+        skillViews: skillViewDependencies({
+          existingPaths: [PROJECT_CANONICAL],
+          detectDriftCalls,
+        }),
+      },
+    );
+
+    expect(result.providerViews).toBeUndefined();
+    expect(detectDriftCalls).toEqual([]);
+    expect(capture.info.join('\n')).not.toContain('Provider views');
+  });
+});
+
+describe('probeProviderPath', () => {
+  function failWith(code: string) {
+    return async () => {
+      const error = new Error(code) as Error & { code: string };
+      error.code = code;
+      throw error;
+    };
+  }
+
+  it('reports an existing path as present', async () => {
+    await expect(
+      probeProviderPath('/anything', async () => ({})),
+    ).resolves.toBe(true);
+  });
+
+  it('reports only a genuinely absent path as absent', async () => {
+    await expect(
+      probeProviderPath('/missing', failWith('ENOENT')),
+    ).resolves.toBe(false);
+    await expect(
+      probeProviderPath('/missing', failWith('ENOTDIR')),
+    ).resolves.toBe(false);
+  });
+
+  it('never reports an unreadable path as absent', async () => {
+    // An EACCES probe reported as absent would classify a path we cannot read
+    // as `missing-additive` and tell the user to run a sync that cannot help.
+    await expect(
+      probeProviderPath('/denied', failWith('EACCES')),
+    ).resolves.toBe(true);
+    await expect(probeProviderPath('/loop', failWith('ELOOP'))).resolves.toBe(
+      true,
+    );
+  });
+});
+
+describe('formatSkillViewLines', () => {
+  const view = (overrides: Record<string, unknown> = {}) => ({
+    skill: 'oat-idea-new',
+    scope: 'project' as const,
+    provider: 'claude',
+    viewClass: 'in-sync' as const,
+    driftState: { status: 'in_sync' as const },
+    providerPath: '.claude/skills/oat-idea-new',
+    tracked: true,
+    strategy: 'copy' as const,
+    nativeRead: false,
+    canonicalVersion: '3.0.0',
+    viewVersion: null,
+    versionComparable: false,
+    suggestion: null,
+    detail: 'Detail sentence about the withheld comparison.',
+    ...overrides,
+  });
+
+  it('shows the detail for a non-actionable class whose version evidence is not clean', () => {
+    // `in-sync` alone would hide the sentence explaining that the version
+    // comparison was skipped, which is the one thing the class word cannot
+    // convey.
+    const withheld = formatSkillViewLines([
+      {
+        skill: 'oat-idea-new',
+        scope: 'project',
+        result: 'diagnosed',
+        views: [view({ versionEvidence: 'conflict' })],
+      },
+    ]);
+    const clean = formatSkillViewLines([
+      {
+        skill: 'oat-idea-new',
+        scope: 'project',
+        result: 'diagnosed',
+        views: [view({ versionEvidence: 'resolved', viewVersion: '3.0.0' })],
+      },
+    ]);
+
+    expect(withheld.join('\n')).toContain(
+      'Detail sentence about the withheld comparison.',
+    );
+    // A clean reading stays quiet: the class line already says everything.
+    expect(clean.join('\n')).not.toContain('Detail sentence');
   });
 });

@@ -84,6 +84,82 @@ An exact alias is `in_sync`; an absent alias is `missing`; and a broken,
 replaced, foreign, or otherwise unverifiable alias is `drifted`. Provider list
 and inspect output summarize collection ownership separately from copy mode.
 
+### Resolution-time skill view classes
+
+Drift states answer "does the tracked view still match?", which presupposes a
+manifest entry. A canonical skill that was never synced has no entry at all, so
+`oat tools info <name>` adds a second, additive classification beside the
+unchanged drift state. Provider and path identity for an untracked projection
+come from the active provider set and the adapter's scope mappings, not from
+the manifest.
+
+- `missing-additive` — active, supported, no manifest entry, nothing at the expected path: the only true projection gap
+- `removed` — a manifest entry exists but the provider file is gone
+- `modified` — a manifest entry exists and the view no longer agrees with what the last sync recorded, or its version has fallen behind canonical. A `copy` view also reaches this class through the known limitation below, where the difference may be nothing but the generated banner
+- `in-sync` — a symlinked, collection-aliased, or natively read view _is_ the canonical file; a `copy` view matches the content recorded at its last sync
+- `untracked` — something exists at the expected path that no manifest entry tracks; stray detection skips provider entries whose name matches a canonical entry, so `oat status` does not report it as a stray and reports the untracked projection as `missing` instead
+- `unverified` — a manifest entry tracks the view but no drift observation accompanied it, so its state is unknown
+- `inactive`, `unsupported`, `excluded` — no projection is expected in this scope, so none of them is reported as missing
+
+`unsupported`, `excluded`, and `unverified` are defensive: no shipped adapter,
+config, or `oat tools info` code path produces them today. Every shipped adapter
+maps skills in both scopes, the command passes no canonical-path filter, and it
+always pairs a manifest entry with a drift observation. The branches exist so a
+future adapter, filter, or consumer of the mapper cannot be silently reported as
+a projection gap.
+
+Only `missing-additive`, `removed`, and `modified` carry a repair, and it is
+always one concrete `oat sync --scope project` or `oat sync --scope user` for
+the scope where the gap was observed. Versions are compared only for `copy`
+views: a symlinked, collection-aliased, or natively read view is the canonical
+file, so it has no second version.
+
+If reading the manifest or detecting drift fails — an invalid, unreadable, or
+otherwise non-loadable `.oat/sync/manifest.json`, for instance — the section for
+that scope reports `unavailable` with the reason, and the rest of the command is
+unaffected. The diagnostic is additive evidence, so it never changes the exit
+code or removes the tool detail of a user whose sync state is already broken.
+An unreadable sync config is handled one step earlier and differently: provider
+reachability degrades to no provider evidence, so that scope contributes no
+section at all. Reasons are redacted; the scope root becomes `<project>` or `~`,
+and any path outside it is replaced entirely.
+
+A drift state and a view class can legitimately disagree. Drift compares a copy
+against the hash recorded at its last sync, so a copy that was never re-synced
+after a canonical edit still matches its own manifest entry and reads as
+`in_sync`. When the two versions differ, the view class is `modified` and the
+drift state is reported unchanged beside it.
+
+Both sides resolve their version through the same shared reader, so
+`metadata.version` takes precedence over the deprecated top-level `version`
+alias for a projected view exactly as it does for the canonical source; the only
+extra step for a view is stripping the generated banner. When a projected
+`SKILL.md` contradicts itself — a top-level `version` and a differing
+`metadata.version` — or declares a version the reader cannot use at all, the
+comparison is withheld rather than decided: no version is reported for that
+view, and the class is left to the drift state alone. That is deliberately
+conservative and has a cost, since a copy in that state could be genuinely
+stale and would not be reported as such. The view's detail names the two
+declared values and says the comparison was skipped, so the ambiguity is
+visible rather than silently resolved. When the resolver's answer happens to
+agree with canonical, nothing is withheld and the detail says so instead.
+
+### Known limitation: copy-strategy skill views
+
+A `copy` skill view is reported `modified` immediately after a successful sync,
+and stays that way. The engine writes an OAT-managed banner into the copied
+`SKILL.md` and an `.oat-generated` sentinel beside it, and neither is accounted
+for in the manifest hash, so `oat status` reports `drifted:modified` and every
+later `oat sync --dry-run` plans another `update_copy`. Because no sync clears
+that state, `oat tools info` prints no repair line when a `modified` copy's
+version still matches canonical.
+
+That suppression is a conservative heuristic rather than a proof: equal versions
+do not establish equal bodies, so an edit to the canonical source or to the copy
+that kept the version reaches the same branch, and a sync _would_ repair that
+one. The class detail says so and names the concrete scope command to run if you
+know either side was edited. Tracked as `BL-260908-make-copy-strategy-skill`.
+
 ## Stray adoption
 
 `oat init` and `oat status` can offer adoption of unmanaged provider entries into canonical `.agents`.

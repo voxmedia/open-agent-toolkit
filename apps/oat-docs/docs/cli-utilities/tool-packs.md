@@ -563,7 +563,38 @@ Key behavior:
 
 - Displays name, type (skill/agent), version, bundled version, pack, scope, and status
 - Reports whether the tool is invocable (for skills) and whether an update is available
+- For a skill, adds a read-only provider-view section per active provider and scope: the expected provider path, the view class, and versions where a copy makes them comparable
+- Suggests the narrowest safe repair, one `oat sync --scope <concrete>` per affected scope and never `--scope all`
 - Returns exit code 1 if the tool is not found in any scope
+
+An unknown name keeps the existing `Tool '<name>' not found.` wording and prints
+no provider-view section, so a skill that exists but was never distributed is
+never confused with a name the repository does not have.
+
+```text
+$ oat tools info probe-skill --scope project
+probe-skill
+  Type:        skill
+  Version:     1.4.2
+  Pack:        custom
+  Scope:       project
+  Status:      not-bundled
+  Provider views (project):
+    claude:  missing-additive  .claude/skills/probe-skill
+      Canonical skill has never been projected to this view: no manifest entry and nothing at the expected path.
+    cursor:  inactive (native read)  .agents/skills/probe-skill
+    Repair: oat sync --scope project
+```
+
+The section is additive in `--json` output as `providerViews`, an array of one
+entry per concrete scope where the canonical skill exists. The command reads the
+manifest, the sync config, and the filesystem; it never writes, and it never
+runs a sync. If the manifest cannot be read or drift detection fails, that
+scope's section reports `unavailable` with a redacted reason and the tool detail
+and exit code are unchanged; an unreadable sync config instead leaves the scope
+without a section. See
+[Manifest and Drift](../provider-sync/manifest-and-drift.md#resolution-time-skill-view-classes)
+for the view classes.
 
 ### `oat tools has <pack>`
 

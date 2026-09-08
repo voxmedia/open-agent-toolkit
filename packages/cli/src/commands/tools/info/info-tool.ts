@@ -21,6 +21,13 @@ import {
 } from '@commands/tools/shared/provider-context';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { ToolInfo } from '@commands/tools/shared/types';
+import type { SkillViewDiagnosis } from '@drift/index';
+
+import {
+  collectSkillViewDiagnoses,
+  formatSkillViewLines,
+  type SkillViewDependencies,
+} from './skill-views';
 
 export interface ToolDetail extends ToolInfo {
   description: string | null;
@@ -43,6 +50,12 @@ export interface InfoToolDependencies {
   ) => Promise<Omit<ToolDetail, keyof ToolInfo>>;
   inventoryPack?: (input: InventoryPackInput) => Promise<PackInventory>;
   providerContext?: ProviderContextDependencies;
+  /**
+   * Read-only manifest, drift, and expected-projection access for the
+   * provider-view diagnostic. Omitted in unit harnesses that only exercise the
+   * inventory surface; the command wiring always supplies it.
+   */
+  skillViews?: SkillViewDependencies;
 }
 
 export interface InfoToolResult {
@@ -50,6 +63,8 @@ export interface InfoToolResult {
   tool: ToolDetail | null;
   pack: PackInventory | null;
   packEvidence?: PackEvidenceBlockV1;
+  /** Per-scope provider-view diagnosis; additive, skills only. */
+  providerViews?: SkillViewDiagnosis[];
 }
 
 export async function runInfoTool(
@@ -141,10 +156,34 @@ export async function runInfoTool(
 
     const detail = await dependencies.getToolDetail(match, scopeRoot);
     const toolDetail: ToolDetail = { ...match, ...detail };
+    // Resolution time is the only place a name is already bound to canonical
+    // content, so it is where "installed but not distributed" can be answered.
+    const providerViews =
+      toolDetail.type === 'skill' && dependencies.skillViews
+        ? await collectSkillViewDiagnoses({
+            skillName: toolDetail.name,
+            scopes,
+            roots,
+            resolvedScope: scope,
+            resolvedVersion: toolDetail.version,
+            dependencies: dependencies.skillViews,
+            ...(dependencies.providerContext
+              ? { providerContext: dependencies.providerContext }
+              : {}),
+          })
+        : undefined;
 
     if (context.json) {
-      logger.json({ tool: toolDetail });
-      return { found: true, tool: toolDetail, pack: null };
+      logger.json({
+        tool: toolDetail,
+        ...(providerViews ? { providerViews } : {}),
+      });
+      return {
+        found: true,
+        tool: toolDetail,
+        pack: null,
+        ...(providerViews ? { providerViews } : {}),
+      };
     }
 
     logger.info(`${toolDetail.name}`);
@@ -170,8 +209,16 @@ export async function runInfoTool(
         `  Update available: ${toolDetail.version ?? '?'} -> ${toolDetail.bundledVersion ?? '?'}`,
       );
     }
+    for (const line of formatSkillViewLines(providerViews ?? [])) {
+      logger.info(line);
+    }
 
-    return { found: true, tool: toolDetail, pack: null };
+    return {
+      found: true,
+      tool: toolDetail,
+      pack: null,
+      ...(providerViews ? { providerViews } : {}),
+    };
   }
 
   if (context.json) {
