@@ -135,9 +135,10 @@ export async function buildExplainerRc({
         const skillRoot = join(bundledSkillsRoot, name);
         skills.push({
           name,
-          version: parseSkillVersion(
+          version: await parseSkillVersion(
             await readFile(join(skillRoot, 'SKILL.md'), 'utf8'),
             name,
+            root,
           ),
           package: '@open-agent-toolkit/cli',
           path: `package/assets/skills/${name}`,
@@ -681,15 +682,85 @@ async function readJson(path) {
   return JSON.parse(await readFile(path, 'utf8'));
 }
 
-function parseSkillVersion(content, name) {
-  const match = content.match(/^version:\s*(\S+)\s*$/m);
-  if (!match) {
+const CLI_VERSION_RESOLVER_PATH =
+  'packages/cli/dist/commands/shared/frontmatter.js';
+let cachedVersionResolver;
+
+/**
+ * Load the CLI's built frontmatter resolver.
+ *
+ * The release tool consumes that resolver instead of re-implementing the
+ * `metadata.version` precedence rule; a second implementation here would drift
+ * from `packages/cli/src/commands/shared/frontmatter.ts`, which is the only
+ * definition of how a skill version resolves.
+ *
+ * The import is deliberately lazy. The documented RC command
+ * (`.agents/skills/oat-explainer-kit/references/migration.md`) runs this
+ * builder on a clean checkout with no prior build, and the builder runs
+ * `pnpm build` itself before the first version read. A module-top import of
+ * the built module would make the builder unloadable on that clean checkout.
+ */
+async function loadVersionResolver(repoRoot) {
+  const modulePath = join(repoRoot, CLI_VERSION_RESOLVER_PATH);
+  if (cachedVersionResolver?.path === modulePath) {
+    return cachedVersionResolver.module;
+  }
+  let module;
+  try {
+    module = await import(pathToFileURL(modulePath).href);
+  } catch (error) {
+    throw new RcBuildError(
+      'E_SKILL_VERSION',
+      `Cannot load the CLI version resolver at ${CLI_VERSION_RESOLVER_PATH} after the build: ${error.message}`,
+    );
+  }
+  cachedVersionResolver = { path: modulePath, module };
+  return module;
+}
+
+async function parseSkillVersion(content, name, repoRoot) {
+  const { getFrontmatterBlock, parseSkillFrontmatter, resolveSkillVersion } =
+    await loadVersionResolver(repoRoot);
+  const block = getFrontmatterBlock(content);
+  if (block === null) {
     throw new RcBuildError(
       'E_SKILL_VERSION',
       `Bundled ${name} has no frontmatter version.`,
     );
   }
-  return match[1];
+
+  const parsed = parseSkillFrontmatter(block);
+  if (parsed.malformed) {
+    throw new RcBuildError(
+      'E_SKILL_VERSION',
+      `Bundled ${name} has malformed frontmatter.`,
+    );
+  }
+  // A declared but unreadable version is a broken skill even when the other
+  // position still resolves, so it fails closed before the resolved value is
+  // trusted. The resolver reports only the flag; naming the offending scalar
+  // would need a second parse of the same block.
+  if (parsed.unusableVersionDeclaration) {
+    throw new RcBuildError(
+      'E_SKILL_VERSION',
+      `Bundled ${name} declares an unusable frontmatter version.`,
+    );
+  }
+
+  const resolved = resolveSkillVersion(parsed);
+  if (resolved === null) {
+    throw new RcBuildError(
+      'E_SKILL_VERSION',
+      `Bundled ${name} has no frontmatter version.`,
+    );
+  }
+  if (resolved.conflict) {
+    throw new RcBuildError(
+      'E_SKILL_VERSION',
+      `Bundled ${name} declares conflicting versions: metadata.version ${resolved.conflict.metadata} and top-level version ${resolved.conflict.topLevel}.`,
+    );
+  }
+  return resolved.version;
 }
 
 function requiredString(value, label) {

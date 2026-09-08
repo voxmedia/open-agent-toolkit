@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import {
   chmod,
+  cp,
   mkdir,
   mkdtemp,
   readFile,
   readdir,
+  realpath,
   rm,
   symlink,
   writeFile,
@@ -13,10 +16,25 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { afterEach, test } from 'node:test';
+import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 const BUILDER = resolve(import.meta.dirname, 'build-explainer-rc.mjs');
+const REPO_ROOT = resolve(import.meta.dirname, '../..');
+/**
+ * The builder resolves bundled skill versions through the CLI's built
+ * resolver, which a real `pnpm build` produces inside the repository being
+ * built. The fixture's stub `pnpm` stands in for that build, so it materializes
+ * the same module path as a re-export of this repository's built resolver —
+ * the fixture never re-implements the precedence rule it is testing.
+ */
+const CLI_RESOLVER_DIST = join(
+  REPO_ROOT,
+  'packages/cli/dist/commands/shared/frontmatter.js',
+);
+const CLI_RESOLVER_MODULE_PATH =
+  'packages/cli/dist/commands/shared/frontmatter.js';
 const PACKAGE_NAMES = [
   '@open-agent-toolkit/cli',
   '@open-agent-toolkit/control-plane',
@@ -271,7 +289,124 @@ test('atomically replaces only an RC output carrying the ownership marker', asyn
   assert.equal(marker.schemaVersion, 'explainer-kit.rc-output-owner/v1');
 });
 
-async function createFixture({ prepareInputs = async () => {} } = {}) {
+test('resolves bundled skill versions through the CLI metadata precedence', async () => {
+  const metadataOnly = await createFixture({
+    prepareInputs: explainerSkillsWith('metadata:\n  version: 3.4.5\n'),
+  });
+  const metadataResult = await runBuilder(metadataOnly, 'metadata-only');
+  assert.deepEqual(
+    metadataResult.record.skills.map(({ name, version }) => [name, version]),
+    [
+      ['explainer-kit', '3.4.5'],
+      ['oat-explainer-kit', '3.4.5'],
+    ],
+  );
+
+  const bothAgreeing = await createFixture({
+    prepareInputs: explainerSkillsWith(
+      'version: 3.4.5\nmetadata:\n  version: 3.4.5\n',
+    ),
+  });
+  const agreeingResult = await runBuilder(bothAgreeing, 'both-agreeing');
+  assert.deepEqual(
+    agreeingResult.record.skills.map(({ version }) => version),
+    ['3.4.5', '3.4.5'],
+  );
+
+  const quoted = await createFixture({
+    prepareInputs: explainerSkillsWith((name) =>
+      name === 'explainer-kit'
+        ? 'version: "3.4.5"\n'
+        : "metadata:\n  version: '3.4.5'\n",
+    ),
+  });
+  const quotedResult = await runBuilder(quoted, 'quoted');
+  assert.deepEqual(
+    quotedResult.record.skills.map(({ version }) => version),
+    ['3.4.5', '3.4.5'],
+  );
+});
+
+test('fails closed on unresolvable bundled skill version declarations', async () => {
+  const conflicting = await createFixture({
+    prepareInputs: explainerSkillsWith(
+      'version: 3.4.5\nmetadata:\n  version: 9.9.9\n',
+    ),
+  });
+  const conflict = await runBuilderFailure(conflicting);
+  assert.equal(conflict.code, 'E_SKILL_VERSION');
+  assert.match(conflict.message, /9\.9\.9/);
+  assert.match(conflict.message, /3\.4\.5/);
+
+  const absent = await createFixture({
+    prepareInputs: explainerSkillsWith(''),
+  });
+  const missing = await runBuilderFailure(absent);
+  assert.equal(missing.code, 'E_SKILL_VERSION');
+  assert.match(missing.message, /has no frontmatter version/);
+
+  const unusable = await createFixture({
+    prepareInputs: explainerSkillsWith('version: 1.10\n'),
+  });
+  const unusableFailure = await runBuilderFailure(unusable);
+  assert.equal(unusableFailure.code, 'E_SKILL_VERSION');
+  assert.match(unusableFailure.message, /unusable frontmatter version/);
+
+  const duplicated = await createFixture({
+    prepareInputs: explainerSkillsWith('version: 3.4.5\nversion: 3.4.6\n'),
+  });
+  const duplicate = await runBuilderFailure(duplicated);
+  assert.equal(duplicate.code, 'E_SKILL_VERSION');
+  assert.match(duplicate.message, /malformed frontmatter/);
+
+  const unterminated = await createFixture({
+    prepareInputs: explainerSkillsWith('version: "3.4.5\n'),
+  });
+  const malformed = await runBuilderFailure(unterminated);
+  assert.equal(malformed.code, 'E_SKILL_VERSION');
+  assert.match(malformed.message, /malformed frontmatter/);
+});
+
+/**
+ * Clean-checkout control for the version resolver.
+ *
+ * Both cases run a builder copied into the fixture, so every relative import it
+ * declares resolves inside a checkout that has no `packages/cli/dist` until the
+ * builder's own `pnpm build` writes one. A module-top import of the built
+ * resolver — even an unused one — makes that builder unloadable and turns both
+ * cases red, which a builder spawned from this already-built repository would
+ * not do.
+ */
+test('loads the built version resolver only after its own pnpm build', async () => {
+  const built = await createFixture({ withLocalBuilder: true });
+  const result = await runBuilder(built, 'clean-checkout');
+  assert.deepEqual(
+    result.record.skills.map(({ version }) => version),
+    ['1.0.0', '1.0.0'],
+  );
+  assert.match(await readFile(built.commandLog, 'utf8'), /^build$/m);
+
+  const unbuilt = await createFixture({ withLocalBuilder: true });
+  const failure = await runBuilderFailure(unbuilt, {
+    SKIP_RESOLVER_DIST: '1',
+  });
+  assert.equal(failure.code, 'E_SKILL_VERSION');
+  assert.match(
+    failure.message,
+    /packages\/cli\/dist\/commands\/shared\/frontmatter\.js/,
+  );
+  assert.match(await readFile(unbuilt.commandLog, 'utf8'), /^build$/m);
+});
+
+async function createFixture({
+  prepareInputs = async () => {},
+  withLocalBuilder = false,
+} = {}) {
+  if (!existsSync(CLI_RESOLVER_DIST)) {
+    throw new Error(
+      `Missing ${CLI_RESOLVER_MODULE_PATH}; run \`pnpm build\` before \`pnpm test:release\`.`,
+    );
+  }
   const root = await mkdtemp(join(tmpdir(), 'explainer-rc-'));
   tempRoots.push(root);
   const bin = join(root, 'bin');
@@ -281,7 +416,10 @@ async function createFixture({ prepareInputs = async () => {} } = {}) {
     ...PACKAGE_NAMES.map((name) =>
       writeJson(
         join(root, 'packages', packageDirectory(name), 'package.json'),
-        { name, version: '1.2.3' },
+        // `type: module` matches the real packages: without it Node warns on
+        // stderr when it loads the built resolver, which corrupts the
+        // structured failure output these tests parse.
+        { name, version: '1.2.3', type: 'module' },
       ),
     ),
     writeText(
@@ -319,6 +457,9 @@ async function createFixture({ prepareInputs = async () => {} } = {}) {
         version: '1',
       },
     ),
+    // Build output is ignored here exactly as it is in the repository, so the
+    // resolver the stub `pnpm build` writes is never a candidate input.
+    writeText(join(root, '.gitignore'), 'packages/*/dist/\n'),
     writeText(join(root, 'apps/oat-docs/docs/release.md'), '# Release\n'),
     writeText(
       join(root, '.agents/skills/oat-project-plan/SKILL.md'),
@@ -379,6 +520,9 @@ async function createFixture({ prepareInputs = async () => {} } = {}) {
       ),
     ),
   ]);
+  if (withLocalBuilder) {
+    await copyLocalBuilder(root);
+  }
   await prepareInputs(root);
   await mkdir(bin, { recursive: true });
   await writeFile(
@@ -397,6 +541,19 @@ if (args[0] === 'build') {
       join(process.cwd(), '.agents/skills', skill),
       join(assets, skill),
       { recursive: true },
+    );
+  }
+  if (process.env.SKIP_RESOLVER_DIST !== '1') {
+    const resolverDirectory = join(
+      process.cwd(),
+      'packages/cli/dist/commands/shared',
+    );
+    await mkdir(resolverDirectory, { recursive: true });
+    await writeFile(
+      join(resolverDirectory, 'frontmatter.js'),
+      'export * from ' +
+        JSON.stringify(process.env.CLI_RESOLVER_URL) +
+        ';\\n',
     );
   }
   if (process.env.MUTATE_CANDIDATE === '1') {
@@ -440,11 +597,53 @@ await writeFile(
   return {
     root,
     commandLog,
+    // `realpath` matters on macOS, where the fixture lives under the
+    // `/var` -> `/private/var` symlink: the builder's main-module guard
+    // compares `import.meta.url` against the spawned path, and a symlinked
+    // path would make it load without running.
+    builder: withLocalBuilder
+      ? await realpath(join(root, 'tools/release/build-explainer-rc.mjs'))
+      : BUILDER,
     env: {
       ...process.env,
       PATH: `${bin}:${process.env.PATH ?? ''}`,
       COMMAND_LOG: commandLog,
+      CLI_RESOLVER_URL: pathToFileURL(CLI_RESOLVER_DIST).href,
     },
+  };
+}
+
+/**
+ * Copy the builder and the two repository modules it imports into the fixture
+ * so a spawned builder resolves every relative import inside the fixture rather
+ * than inside this already-built checkout.
+ */
+async function copyLocalBuilder(root) {
+  const files = [
+    'tools/release/build-explainer-rc.mjs',
+    'tools/release/explainer-rc-contract.mjs',
+    'packages/cli/scripts/bundle-inputs.mjs',
+  ];
+  for (const file of files) {
+    const destination = join(root, file);
+    await mkdir(dirname(destination), { recursive: true });
+    await cp(join(REPO_ROOT, file), destination);
+  }
+}
+
+/**
+ * Rewrite both bundled explainer skills with one frontmatter version block so a
+ * fixture can exercise a declaration shape end to end.
+ */
+function explainerSkillsWith(block) {
+  const render = typeof block === 'function' ? block : () => block;
+  return async (root) => {
+    for (const name of ['explainer-kit', 'oat-explainer-kit']) {
+      await writeText(
+        join(root, `.agents/skills/${name}/SKILL.md`),
+        `---\nname: ${name}\n${render(name)}---\n`,
+      );
+    }
   };
 }
 
@@ -453,7 +652,7 @@ async function runBuilder(fixture, label) {
   const recordPath = join(fixture.root, `record-${label}.json`);
   await execFileAsync(
     process.execPath,
-    [BUILDER, '--output', output, '--record', recordPath],
+    [fixture.builder, '--output', output, '--record', recordPath],
     { cwd: fixture.root, env: fixture.env },
   );
   const recordText = await readFile(recordPath, 'utf8');
@@ -469,7 +668,7 @@ async function runBuilderFailure(fixture, extraEnv = {}) {
     await execFileAsync(
       process.execPath,
       [
-        BUILDER,
+        fixture.builder,
         '--output',
         join(fixture.root, 'out'),
         '--record',
@@ -489,7 +688,7 @@ async function assertBuilderFailure(fixture, output, expectedCode) {
     await execFileAsync(
       process.execPath,
       [
-        BUILDER,
+        fixture.builder,
         '--output',
         output,
         '--record',
