@@ -257,6 +257,7 @@
 | BL-260906-fix-sync-apply-branch          | Fix sync apply branch precedence when a rejected collection leaves zero planned operations                      | open   | medium   | task       | S        |
 | BL-260907-fold-oat-config-adopt-onto     | Fold oat config adopt onto the shared surface-flag resolver                                                     | open   | medium   | task       | XS       |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                               | open   | medium   | feature    | L        |
+| BL-260908-guard-normalized-config-maps   | Guard normalized config maps against a preserved **proto** key                                                  | open   | medium   | task       | XS       |
 | BL-260906-guard-packed-asset-directories | Guard packed asset directories and document the OAT_ASSETS_DIR contract                                         | open   | medium   | task       | S        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                                    | open   | medium   | feature    | M        |
 | BL-260907-harden-the-external-plan       | Harden the external-plan backlink matcher: full extension consumption and comments before fences                | open   | medium   | task       | XS       |
