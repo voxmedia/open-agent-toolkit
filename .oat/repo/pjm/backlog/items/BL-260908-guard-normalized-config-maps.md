@@ -25,4 +25,5 @@ Wave-6 p03 (2026-09-03-preserve-proto-named-config-keys.md) makes `config/json.t
 
 - [ ] `normalizeRecordMap` and the `dispatch-matrix.ts:343` provider assignment build their maps with `Object.fromEntries` (or define own keys), with a control proving a `__proto__` entry stays an own key and never becomes the map's prototype
 - [ ] `commands/config/index.ts:1921` guards the user-named provider lookup with `Object.prototype.hasOwnProperty.call`, with a control
+- [ ] A sweep leaves no remaining unguarded user-named lookup on a config-derived map (candidates the wave-6 final review named beyond the three sites above: `config/sync-config.ts:177-179`, `commands/providers/set/index.ts:85-93`, `commands/init/index.ts:992-993`, `commands/config/index.ts:2947-2955`; none shown reachable today because zod strips `__proto__` before `mergeProviderConfigs`)
 - [ ] The wave-6 `json.test.ts` preservation tests still pass and `DR-260907-oat-config-reads-materialize` is updated to drop the residual scoping sentence

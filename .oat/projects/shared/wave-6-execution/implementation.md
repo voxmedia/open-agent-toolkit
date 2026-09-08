@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-07
-oat_current_task_id: p05-t01
+oat_last_updated: 2026-09-08
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
 # Implementation: wave-6-execution
 
 **Started:** 2026-09-07
-**Last Updated:** 2026-09-07
+**Last Updated:** 2026-09-08
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -31,8 +31,9 @@ oat_generated: false
 | Phase 03 (preserve-proto-named-config-keys)                      | complete | 1     | 1/1       |
 | Phase 04 (honor-metadata-version-for-skills)                     | complete | 1     | 1/1       |
 | Phase 05 (diagnose-canonical-skills-missing-from-provider-views) | complete | 1     | 1/1       |
+| Phase 06 (final-review fixes)                                    | pending  | 5     | 0/5       |
 
-**Total:** 5/5 planned tasks completed
+**Total:** 5/10 planned tasks completed (five plan tasks done; the five final-review fix tasks pending)
 
 ---
 
@@ -53,7 +54,7 @@ oat_generated: false
 **Status:** complete · **Group:** 1 · **Tasks:** p02-t01
 **Outcome:** `oat-project-pr-final` 1.6.2 → 1.6.3: Step 0.5 archives only terminal review rows with event-identity selection, the enumerated rewrite list, and a collision-free `{stem}-<UTC>.md` (+ index) rule that is idempotent on re-run; a ledger-path guard before both `gh pr create` paths fails closed on a missing or directory path, an escaping relative path, symlink chains (25-hop limit, `cd -P`), empty cells, pipe-less rows, and an unreadable ledger, accepts aligned separators, in-project symlinks, duplicate rows, `-` placeholders, and extra columns, and names `PRFINAL-05` (registered in `.agents/docs/autonomy-contract.md`); pins moved by literal (`skills.test.ts:2927`, `:4445`; `review-skill-contracts.test.ts`); `named-skill-load-contract.test.ts` rows moved. The fix round scoped the guard to real ledger rows (blockquotes, fenced examples, and non-ledger tables are notes) and excuses an absent artifact only inside `reviews/archived/` when that directory is absent from the checkout (never via `git check-ignore`, which ignores whole `local`/`synced`/`archived` project trees); ledger headers are recognized per table, fail-closed.
 **Verification:** focused four + named-skill; forced check/type-check/test `Cached: 0` (CLI 6041); check:skill-bumps 1; lint, format, validate-skills, test:smoke; `sync --scope project` no changes; guard controls executed verbatim against a real `oat project new` project; seven clause-level negative controls red/green; two Codex rounds (R1 2I/3M/1m, R2 2I/1M; one Medium rejected on evidence).
-**Deviations:** a `PRFINAL-05` row added to `.agents/docs/autonomy-contract.md` (outside In-scope; the gate registry the named code requires; mirrors are symlinks); plan-internal inconsistencies for wave close: the `review-skill-contracts.test.ts:1134→:1486` label names the wrong case, the review-receive status-ladder citation is `:462-465`, the drift command omits `named-skill-load-contract.test.ts` and the autonomy contract.
+**Deviations:** a `PRFINAL-05` row added to `.agents/docs/autonomy-contract.md` (outside In-scope; the gate registry the named code requires; mirrors are symlinks); plan-internal inconsistencies for wave close: the `review-skill-contracts.test.ts:1134→:1486` label ("ordering guard") names the wrong case — `:1486` at the base is `delegates project completion state mutation to the CLI command`; the review-receive status-ladder citation is `:462-465`; the drift command omits `named-skill-load-contract.test.ts`, and `.agents/docs/autonomy-contract.md` is in the drift command but missing from `## In scope`.
 
 ### Task p02-t01: Execute external plan — Validate review-ledger paths and archive only terminal reviews before the final PR
 
@@ -63,7 +64,7 @@ oat_generated: false
 ## Phase 03: preserve proto-named config keys (p03)
 
 **Status:** complete · **Group:** 1 · **Tasks:** p03-t01 (one commit after a STOP → post-STOP plan refresh → resume)
-**Outcome:** `config/json.ts` keeps `parseTree` for error collection (errors first; `SyntaxError` message and options unchanged; empty content still throws `ValueExpected`) and materializes the tree iteratively into plain `Object.prototype`-backed objects and arrays with own-key `Object.defineProperty`, so a `__proto__` key survives as an own data property (the base both dropped it and INJECTED it: `{"__proto__":{"git":{"defaultBranch":"INJECTED"}}}` answered `oat config get git.defaultBranch` with `INJECTED` from the shared surface), consumers receive plain objects (the `String(rawDefaultScope)` diagnostic is byte-identical), a `__proto__`-keyed config survives `get/set/unset/list/adopt`, and depth capacity is at parity with the old parser (a fixed-document A/B at depth 2400); decision record `DR-260907-oat-config-reads-materialize`.
+**Outcome:** `config/json.ts` keeps `parseTree` for error collection (errors first; `SyntaxError` message and options unchanged; empty content still throws `ValueExpected`) and materializes the tree iteratively into plain `Object.prototype`-backed objects and arrays with own-key `Object.defineProperty`, so a `__proto__` key survives as an own data property (the base both dropped it and INJECTED it: `{"__proto__":{"git":{"defaultBranch":"INJECTED"}}}` answered `oat config get git.defaultBranch` with `INJECTED` from the shared surface), consumers receive plain objects (the `String(rawDefaultScope)` diagnostic is byte-identical), a `__proto__`-keyed config survives `get/set/unset/list/adopt`, and depth capacity is within one stack frame of the old parser (cold bisection: base accepts 3585 nested arrays, head 3584; a fixed-document A/B at depth 2400 pins it); decision record `DR-260907-oat-config-reads-materialize`.
 **Verification:** focused 730; forced check/type-check/test `Cached: 0` (CLI 6048), check:skill-bumps, lint, format, validate-skills; 31-document differential against `getNodeValue` and `JSON.parse` (zero differences); negative controls both ways (4 red on the old parser, 4 red on the rejected `getNodeValue` variant); end-to-end CLI controls in scratch repos.
 **Deviations:** the plan's prescribed `getNodeValue` path was replaced by iterative materialization through a dated post-STOP refresh (`03e1aa576`) after the lane reproduced a depth regression and a consumer `String()` break under null prototypes; the refresh's 5000-depth control is unachievable (`parseTree` recurses) → parity control at 2400 and a wave-close correction; `normalizeRecordMap` / `dispatch-matrix.ts:343` reinstall a preserved `__proto__` as a map prototype (out of scope) → follow-up.
 
@@ -96,7 +97,59 @@ oat_generated: false
 **Status:** completed
 **Commit:** `bfa0c7c8e`; fix `63b5f3c09`; fix `d2923f5ab` (post-rebase)
 
+## Phase 06: final-review fixes (p06)
+
+**Status:** pending · **Group:** final-review fix round (worktrees A = p06-t01/t02/t03, B = p06-t04/t05)
+**Outcome:** -
+**Verification:** -
+**Deviations:** -
+
+### Task p06-t01: (review) Degrade a scope with an unreadable sync config to unavailable in the provider-view diagnostic
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t02: (review) Never attach a drift verdict computed for one path to a provider-view row that names another
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t03: (review) Harden the provider-view redaction, degradation granularity, and row cosmetics
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t04: (review) Close the non-directory reviews/archived hole and the silent no-ledger path in the pr-final guard
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t05: (review) Pin the end-to-end proto-keyed config control through the real oat config command
+
+**Status:** pending
+**Commit:** -
+
 ## Autonomy Gate Provenance
+
+## Review Received: final (root final review, round 1 — passed with follow-ups)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/final-review-2026-09-08T052928Z.md (reviewed head `7219ae837a720648da86e9e377a6bb5c5fb864bb`, invocation manual, request `w6-final-review-001`, reconnaissance attempted: four consequential safety-surface lanes and two Done-criteria lanes, every finding re-verified by the reviewer)
+**Findings:** 0 Critical / 1 Important / 5 Medium / 13 Minor — verdict PASS with follow-ups.
+
+**Verified clean by the review:** 15/15 rebased lane commits with identical `git patch-id --stable`; 12/12 ledger heads resolve to artifacts whose `oat_review_head_sha` matches and whose `Findings:` lines match the Phase Outcomes table; the ledger append-only (8 → 17 rows); `43e204241` the only release-file or sync-manifest commit (`oatVersion` 0.2.63 → 0.2.64 exactly; `sync --scope project --dry-run` no changes); no lane commit touched `.oat/projects/` or the external plans; all gates green under forced cache bypass (338 files / 6242 tests; smoke 160; skills 857; validate-skills 82 alias warnings exit 0); five base-rejected → head-accepted candidates cleared with source evidence (base validated raw frontmatter text; the bump gate now blocks a quoted no-bump and a quoted downgrade that base missed; the p03 case was base rejecting its own pollution symptom).
+
+**Dispositions:**
+
+- I1 (sync-config read failure drops a scope's provider-view section silently) → `p06-t01`.
+- M1 (`! -d` excuse re-opens the dangling-row hole for a regular file or dangling symlink at `reviews/archived`) + m1 (no `## Reviews` → validates nothing) + m2 (prose overstates the boundary) + m3 (escaped pipe shifts the artifact column) → `p06-t04`.
+- M2 (no executable pin for the p03 end-to-end `oat config` control) → `p06-t05`.
+- M3 (the scaffolds emit metadata-only frontmatter that `tools/release/build-explainer-rc.mjs:684` throws on and `check-core.mjs:107` reads as incompatible) → promoted to a blocking acceptance criterion on `BL-260904-migrate-bundled-skills-from` (runs next; all 82 bundled skills still carry the alias, so `release:validate` is green on this tree); the templates are not changed in this wave.
+- M4 (a row's drift verdict computed for the manifest's path while the row names the expected path) → `p06-t02`.
+- m10 (comment drift), m11 (redaction delimiters), m13 (scope-level catch granularity), m14 (qualifier on inactive rows) → `p06-t03`.
+- M5 (closeout records stale: `state.md`, `implementation.md` frontmatter, the plan's completion checklist) + m4 (parity wording → "within one stack frame", measured base 3585 / head 3584 cold) + m5 (`BL-260908-guard-normalized-config-maps` gains a sweep criterion) + m6 (p02 key-files line) + m7 (p02 correction accuracy: the `:1486` label is the `oat-project-complete` delegation case; the autonomy contract is in the drift command but missing from In scope) + m8 (the plan-text corrections are recorded here and applied at wave close, not yet applied) + m9 (p04 refresh attribution) → fixed at source in this receive commit.
+
+**Round 2:** the same reviewer verifies the p06 dispositions on the fixed tip before the exit gate.
 
 ### Review Received: plan (attempt 1)
 
@@ -206,6 +259,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-08
 
+- Root final review received (`reviews/archived/final-review-2026-09-08T052928Z.md`, PASS with follow-ups, 0C/1I/5M/13m): product findings → Phase 06 (p06-t01..t05, two lanes); record findings fixed in the receive commit; M3 promoted to a blocking criterion on the migration item.
 - Group 2 fan-in: p04 `88a8d75df`, p05 `386a32b11`; lockstep retained at 0.2.64; eight gates + smoke + skills + root test green (0 cached).
 - Group 2 reviews received: p04 `5ad26a195` + fix `839321e74` (passed round 2; merged first as `88a8d75df`); p05 `bfa0c7c8e` + fix `63b5f3c09` + post-rebase fix `d2923f5ab` (passed round 3).
 - Group 1 fan-in: merges `754e51e8d`, `fb3075a85`, `12d0a58af`; lockstep bump `43e204241` (0.2.64); eight gates + smoke + skills + root test green (CLI 6135).
@@ -253,9 +307,11 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - p04 review round 2 m1 — `tools/release/build-explainer-rc.mjs:684` and three regex test pins still read `^version:` → attached to `BL-260904-migrate-bundled-skills-from` (raised to high 2026-09-08; runs next as a standalone project).
 - p04 (plan-sanctioned) — `pnpm oat:validate-skills` and `pnpm check` print 82 `skill-version-alias` warnings per run until that migration lands; exit codes unaffected.
 - p03 lane — `oat decision new` dates record ids in UTC (the lane used `--created-at`) → `BL-260908-date-decision-record-ids`.
+- final review m4 — head accepts exactly one fewer nesting level than base (3584 vs 3585, cold); the parity wording softened in this record and the decision record.
+- final review m5 — `BL-260908-guard-normalized-config-maps` under-scoped the unguarded-lookup surface (candidates in `sync-config.ts:177`, `providers/set/index.ts:85`, `init/index.ts:992`, `config/index.ts:2947`) → a sweep acceptance criterion added to the item.
 - p03 lane — oxfmt rewrites a bare `__proto__` in Markdown prose into `**proto**` → `BL-260908-keep-a-bare-proto-in-markdown`.
 - p05 review round 3 m5 — a cosmetic colon in `redactScopeRoot` output (no leak) — not filed.
-- Plan-text corrections applied at wave close (see the execution records): p01 matrix row 2; p02 test-case labels, the review-receive citation, and drift omissions; p03 depth figure, empty-content bullet, Outcome wording, `:1826→:1828`; p04 Step 6 pins and drift omissions.
+- Plan-text corrections recorded here and applied to the source plans at wave close (not yet applied on this branch; the `:1826→:1828` fix in `5f2438c1c` touched the decision record and a backlog item, not a plan): p01 matrix row 2; p02 test-case labels, the review-receive citation, and drift omissions; p03 depth figure, empty-content bullet, Outcome wording, `:1826→:1828`; p04 Step 6 pins and drift omissions.
 
 ## Final Summary (for PR/docs)
 
@@ -279,7 +335,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 **Key files / modules:**
 
 - `packages/cli/src/commands/tools/shared/{provider-reachability,sync-evidence}.ts`, `pack-evidence.ts`, `sync/index.ts` (p01)
-- `.agents/skills/oat-project-pr-final/SKILL.md`, `review-skill-contracts.test.ts`, `post-implement-sequence-contracts.test.ts` (p02)
+- `.agents/skills/oat-project-pr-final/SKILL.md`, `.agents/docs/autonomy-contract.md`, `review-skill-contracts.test.ts`, `named-skill-load-contract.test.ts`, `validation/skills.test.ts` (p02)
 - `packages/cli/src/config/json.ts` (+ `json.test.ts`), `.oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md` (p03)
 - `packages/cli/src/commands/shared/frontmatter.ts`, `validation/skills.ts`, `commands/internal/validate-skill-version-bumps.ts`, `agents/canonical/resolve.ts`, `apps/oat-docs/docs/contributing/skills.md` (p04)
 - `packages/cli/src/drift/skill-view-diagnostic.ts`, `commands/tools/info/skill-views.ts` (new), `info-tool.ts`, `apps/oat-docs/docs/cli-utilities/tool-packs.md`, `provider-sync/manifest-and-drift.md` (p05)

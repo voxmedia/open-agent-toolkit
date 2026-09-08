@@ -169,7 +169,7 @@ then-current state and apply the listed refreshes, and each plan's
 advances materially. Those refreshes were applied to the plan files themselves
 (`DR-260907-pre-dispatch-refreshes-live`), as a dated
 **Refresh applied 2026-09-07 (wave-6 boundary)** entry at the top of each
-plan's Revalidation section (commit `ceeac1149`): p01 (anchors; live premises
+plan's Revalidation section (commit `ceeac1149`; p04's entry amended by `061841159` after the plan gate's attempt 1): p01 (anchors; live premises
 reproduced; seam ownership with p05), p02 (pr-final is 1.6.2; relocated and
 revalued pins; the `named-skill-load-contract.test.ts` rows; an idempotency
 case for the timestamp-suffix rule), p03 (the caller inventory is ten, not
@@ -350,12 +350,147 @@ git commit -m "fix(p05-t01): diagnose canonical skills missing from a provider v
 
 ---
 
+## Phase 06: final-review fixes (p06)
+
+**Milestone:** the root final review's Important and the fixable Mediums/Minors resolved with negative controls; the fix round verified by the same reviewer; then the configured exit gate.
+
+**Lanes:** A = p06-t01, p06-t02, p06-t03 (`packages/cli` p04/p05 surfaces, worktree `.worktrees/wave-6/p06a`); B = p06-t04, p06-t05 (`oat-project-pr-final` skill prose and tests — no re-bump, 1.6.3 is already this PR's bump — and the p03 end-to-end test, worktree `.worktrees/wave-6/p06b`). Record-only findings (M5, m4–m9) were fixed by the root in the receive commit; M3 (the two `^version:` regex readers) became a blocking acceptance criterion on `BL-260904-migrate-bundled-skills-from`.
+
+### Task p06-t01: (review) Degrade a scope with an unreadable sync config to unavailable in the provider-view diagnostic
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/info/skill-views.ts` (`diagnoseScope`, `:242`), `packages/cli/src/commands/tools/shared/provider-context.ts:50-52` if the shared helper must surface the distinction, `skill-views.test.ts` / `info-tool.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Final review I1: `resolveScopeProviderContext` swallows every error in a bare `catch { return null }` and `diagnoseScope` turns that `null` into `return null`, so a scope whose `.oat/sync/config.json` is invalid JSON, `chmod 000`, or a directory is dropped from `providerViews` entirely (no row, no reason, human and `--json`) instead of the `unavailable` degradation the contract comment at `:178-183` declares. Reproduced at both scopes.
+Location: `reviews/archived/final-review-2026-09-08T052928Z.md`
+
+**Step 2: Implement fix**
+
+Distinguish "no sync config present" (keep the current silence) from "sync config present but unreadable or invalid": surface the distinction from `resolveScopeProviderContext` (or probe `join(scopeRoot, '.oat', 'sync', 'config.json')` in `diagnoseScope` before calling it and treat exists-but-null as the failure) so the existing scope-level catch emits `{ result: 'unavailable', reason: <redacted> }`. Add regression cases beside the existing manifest-failure cases for invalid JSON, EACCES, and EISDIR at both the project and user scope; neutralize the guard to prove each is red.
+
+**Step 3: Verify**
+
+Run: `pnpm exec vitest run src/commands/tools/info src/commands/tools/shared/provider-context.test.ts` (from `packages/cli`), then the lane-mode gates
+Expected: the new cases are red before the fix and green after; `oat tools info <skill>` still exits 0 with full tool detail; all gates green
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p06-t01): degrade a scope with an unreadable sync config to unavailable in the provider-view diagnostic"
+```
+
+### Task p06-t02: (review) Never attach a drift verdict computed for one path to a provider-view row that names another
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/info/skill-views.ts:257-266`, `packages/cli/src/drift/skill-view-diagnostic.ts` if a new state is added, their tests, `apps/oat-docs/docs/provider-sync/manifest-and-drift.md` if the state set changes
+
+**Step 1: Understand the issue**
+
+Review finding: Final review M4: `providerPath` comes from the adapter's expected projection while `drift` comes from `detectDrift(manifestEntry, …)`, which resolves the manifest entry's own `providerPath`; the manifest lookup keys on `(canonicalPath, provider)` only, so a manifest entry pointing elsewhere with a healthy file at the expected path renders `removed (copy) <expected path>` with "the provider file is gone from disk" — a false statement about a file that exists.
+Location: `reviews/archived/final-review-2026-09-08T052928Z.md`
+
+**Step 2: Implement fix**
+
+When `manifestEntry.providerPath !== projection.providerPath`, render the manifest's path in the row or classify the row as a distinct tracked-at-a-different-path state with an honest detail line; never combine a drift verdict for one path with another path's label. Pin the divergent-entry case red then green.
+
+**Step 3: Verify**
+
+Run: `pnpm exec vitest run src/commands/tools/info src/drift` (from `packages/cli`), then the lane-mode gates
+Expected: the divergent case is red before the fix and green after; the 82-skill `--json` sweep on this repository is byte-identical; all gates green
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p06-t02): never attach a drift verdict computed for one path to a provider-view row that names another"
+```
+
+### Task p06-t03: (review) Harden the provider-view redaction, degradation granularity, and row cosmetics
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/info/skill-views.ts` (`:221` redaction, `:178-194` catch placement, `:305-311` qualifier), `packages/cli/src/agents/canonical/resolve.ts:181-186` and `packages/cli/src/commands/shared/frontmatter.ts:337-341` (comment drift), tests
+
+**Step 1: Understand the issue**
+
+Review finding: Final review m11 (the second redaction pass fires only after start, whitespace, quotes, or `(`; paths after `=`, `:`, `[`, backtick, or `<` pass), m13 (one unreadable provider path collapses every provider row for the scope because the catch sits at scope level), m14 (`inactive`/`unsupported`/`excluded` rows print a projection qualifier and path), m10 (both comments say "tagged or anchored" while aliased scalars are also rejected and block scalars accepted).
+Location: `reviews/archived/final-review-2026-09-08T052928Z.md`
+
+**Step 2: Implement fix**
+
+Widen the redaction to any absolute path token with a containment test; move the catch to the per-observation loop so only the failing provider degrades; suppress the qualifier and path for `inactive`/`unsupported`/`excluded`; fix both comments. Pin the `path=<absolute>` redaction shape and the per-provider degradation red then green.
+
+**Step 3: Verify**
+
+Run: `pnpm exec vitest run src/commands/tools/info src/agents/canonical src/commands/shared/frontmatter.test.ts` (from `packages/cli`), then the lane-mode gates
+Expected: new cases red before, green after; all gates green
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p06-t03): harden the provider-view redaction, degradation granularity, and row cosmetics"
+```
+
+### Task p06-t04: (review) Close the non-directory reviews/archived hole and the silent no-ledger path in the pr-final guard
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-pr-final/SKILL.md` (`:441`, `:472`, `:493`, `:592`, `:608`, prose at `:412`; no version re-bump — 1.6.3 is this PR's bump), `packages/cli/src/validation/review-skill-contracts.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Final review M1: the "never materialized" excuse keys on `[ ! -d ]`, so a regular file or a dangling symlink at `reviews/archived` re-opens the round-2 Critical (reproduced verbatim from the fenced block: exit 0 with the local-only notice). m1: a plan whose ledger is not under an exact `## Reviews` heading leaves `saw_table` at 0 and the guard exits 0 having checked nothing. m2: the prose says the scan ends at any heading while only `##` exits. m3: an escaped `\|` in an earlier cell shifts `artifact_column` onto a `-` placeholder and the row is skipped.
+Location: `reviews/archived/final-review-2026-09-08T052928Z.md`
+
+**Step 2: Implement fix**
+
+Replace `! -d` with `! -e` at both sites and stop with `PRFINAL-05: reviews/archived exists but is not a directory` when the path exists and is not a directory; raise `PRFINAL-05` in the `END` block when no `## Reviews` section was seen; correct the prose to the level-two boundary (or scan every section); substitute a sentinel for `\|` before splitting or reject rows whose field count differs from the header's. Add the regular-file, dangling-symlink, missing-heading, and escaped-pipe shapes to the contract test, each proven red by reverting the guard line.
+
+**Step 3: Verify**
+
+Run: `pnpm exec vitest run src/validation/review-skill-contracts.test.ts src/validation/named-skill-load-contract.test.ts src/validation/skills.test.ts` (from `packages/cli`), `pnpm run check:skill-bumps`, `pnpm lint`, `pnpm format`, `pnpm test:smoke`, then the lane-mode gates
+Expected: the four new shapes red before and green after; `check:skill-bumps` reports pr-final 1.6.3 unchanged (no second bump); all gates green
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p06-t04): close the non-directory reviews/archived hole and the silent no-ledger path in the pr-final guard"
+```
+
+### Task p06-t05: (review) Pin the end-to-end proto-keyed config control through the real oat config command
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding: Final review M2: the p03 refresh added an end-to-end control to In scope (a `__proto__`-keyed scratch config must flow through `oat config get/set/unset/list/adopt` unchanged), the lane and both reviewers verified it live, but no test pins it — `grep -rln __proto__` finds no case in `commands/config/index.test.ts` or `tools/smoke`.
+Location: `reviews/archived/final-review-2026-09-08T052928Z.md`
+
+**Step 2: Implement fix**
+
+Add one case that writes `{"__proto__":{"git":{"defaultBranch":"INJECTED"}}}` to a scratch config, asserts `config get git.defaultBranch` returns the real value, and asserts the `__proto__` key survives `set`/`unset`/`list` as an own key; neutralize `materializeTree`'s `defineProperty` once to prove the case goes red.
+
+**Step 3: Verify**
+
+Run: `pnpm exec vitest run src/commands/config/index.test.ts src/config/json.test.ts` (from `packages/cli`), then the lane-mode gates
+Expected: the case is red under the neutralized materializer and green after restoring it; all gates green
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(p06-t05): pin the end-to-end proto-keyed config control through the real oat config command"
+```
+
 ## Reviews
 
 | Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
 | ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
 | plan   | artifact | fixes_added | 2026-09-07 | reviews/archived/artifact-plan-review-2026-09-07T235418Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
-| final  | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
 | spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
 | design | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
 | plan   | artifact | passed      | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T001147Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
@@ -371,15 +506,16 @@ git commit -m "fix(p05-t01): diagnose canonical skills missing from a provider v
 | p05    | code     | fixes_added | 2026-09-08 | reviews/archived/p05-review-2026-09-08T042114Z.md           | 63b5f3c0961d44afe2ecc59fe3f95d4982157977 | manual     | -                   |
 | p04    | code     | passed      | 2026-09-08 | reviews/archived/p04-review-2026-09-08T042834Z.md           | 839321e746a540ce9b5b2bbbd9dbe642831f3613 | manual     | -                   |
 | p05    | code     | passed      | 2026-09-08 | reviews/archived/p05-review-2026-09-08T045824Z.md           | d2923f5ab0ed4e87142b66f58b6d28f99072c5cd | manual     | -                   |
+| final  | code     | fixes_added | 2026-09-08 | reviews/archived/final-review-2026-09-08T052928Z.md         | 7219ae837a720648da86e9e377a6bb5c5fb864bb | manual     | -                   |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
 ## Implementation Complete
 
-- [ ] 5/5 phases, 5/5 tasks complete
-- [ ] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`)
-- [ ] **Serialized backlog bookkeeping** (integration branch, after all merges): `oat backlog archive` with real outcome summaries for `BL-260903-populate-provider-reachability`, `BL-260903-pr-final-archives-reviews`, `BL-260903-preserve-proto-named-config`, `BL-260904-honor-metadata-version`, `BL-260904-diagnose-canonical-skills`, one commit
-- [ ] Orchestration-log end-of-run synthesis written; roll-up into `summary.md` before any archive step — `summary.md` is produced by the post-implement sequence after the exit gate (archive tail deferred to program close)
+- [x] 5/5 phases, 5/5 tasks complete (plus the final-review fix round, Phase 06)
+- [x] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`; re-verified by the root final review)
+- [x] **Serialized backlog bookkeeping** (integration branch, after all merges): `oat backlog archive` with real outcome summaries for `BL-260903-populate-provider-reachability`, `BL-260903-pr-final-archives-reviews`, `BL-260903-preserve-proto-named-config`, `BL-260904-honor-metadata-version`, `BL-260904-diagnose-canonical-skills`, one commit
+- [x] Orchestration-log end-of-run synthesis written; roll-up into `summary.md` before any archive step — `summary.md` is produced by the post-implement sequence after the exit gate (archive tail deferred to program close)
 - [ ] Full DoD gates green on the integration branch (fan-in lockstep bump above freshly fetched `origin/main`)
 
 ## References
