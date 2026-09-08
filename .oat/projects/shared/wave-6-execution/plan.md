@@ -508,7 +508,7 @@ git commit -m "fix(p06-t05): pin the end-to-end proto-keyed config control throu
 | p05    | code     | passed      | 2026-09-08 | reviews/archived/p05-review-2026-09-08T045824Z.md           | d2923f5ab0ed4e87142b66f58b6d28f99072c5cd | manual     | -                   |
 | final  | code     | fixes_added | 2026-09-08 | reviews/archived/final-review-2026-09-08T052928Z.md         | 7219ae837a720648da86e9e377a6bb5c5fb864bb | manual     | -                   |
 | final  | code     | passed      | 2026-09-08 | reviews/archived/final-review-2026-09-08T065445Z.md         | 985e4ad0e9bc578e880deb58b6d2ff7d12c89bba | manual     | -                   |
-| final  | code     | received    | 2026-09-08 | reviews/final-review-2026-09-08T072250Z.md                  | deeac5a46927f99fe9f3121d54370d3f9310c494 | gate       | codex-5-6-sol-xhigh |
+| final  | code     | passed      | 2026-09-08 | reviews/archived/final-review-2026-09-08T072250Z.md         | deeac5a46927f99fe9f3121d54370d3f9310c494 | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 

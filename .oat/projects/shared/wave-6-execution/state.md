@@ -48,40 +48,40 @@ oat_phase_recovery_policy:
 oat_workflow_mode: quick # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0
-  reviewed_head: null
+  attempts_completed: 1
+  reviewed_head: deeac5a46927f99fe9f3121d54370d3f9310c494
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:dc92870713afaed119976570c93bda47df3b06cb7980d6888e0f81f82f02b171'
-  freshness_head: null
-  freshness_fingerprint: null
-  launch_state: intent_persisted
+  freshness_head: deeac5a46927f99fe9f3121d54370d3f9310c494
+  freshness_fingerprint: 'sha256:effective-delta-v1:dc92870713afaed119976570c93bda47df3b06cb7980d6888e0f81f82f02b171'
+  launch_state: result_persisted
   launch_attempt_id: 'w6-exit-gate-20260908T065937Z'
   launch_started_at: '2026-09-08T06:59:37Z'
-  launch_result_receipt: null
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/4c160d56-a1dd-44c3-bfa5-cfc55bca5521/scratchpad/w6/w6-exit-gate-20260908T065937Z.receipt.json'
+  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/f458f4c1-dbf0-4fa2-b0d0-1b99593c4fd1.json'
+  gate_run_id: f458f4c1-dbf0-4fa2-b0d0-1b99593c4fd1
+  envelope_status: ok
+  artifact: '.oat/projects/shared/wave-6-execution/reviews/archived/final-review-2026-09-08T072250Z.md'
+  handoff: 'Gate attempt 1 passed (run f458f4c1, 0/0/0/0) and was received; no product change after the reviewed head'
+  receive_state: completed
+  receive_correlation: 'run=f458f4c1-dbf0-4fa2-b0d0-1b99593c4fd1; handoff=receive; source=reviews/final-review-2026-09-08T072250Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/wave-6-execution/reviews/final-review-2026-09-08T072250Z.md'
+  receive_archived_artifact: '.oat/projects/shared/wave-6-execution/reviews/archived/final-review-2026-09-08T072250Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-08T072250Z.md'
+  receive_pre_head: 60c337c6ccc6d138a2508e4c01627b1ea4cd2b53
   receive_commit: null
-  receive_eligible: false
-  receive_completed: false
+  receive_eligible: true
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-08T06:59:37Z'
+  updated_at: '2026-09-08T07:29:21Z'
 # oat_skill_gate_overrides: # optional; per-project posture for configured lifecycle gates
 #   oat-project-implement: disabled # only the literal value `disabled`; absence means follow configuration
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -125,7 +125,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T23:38:50.037Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-08T06:59:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-08T07:29:21.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -137,7 +137,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — both groups merged (lockstep 0.2.64); backlog archived and closeout records written; root final review passed with follow-ups; Phase 06 (five fix tasks in two lanes) merged and gated; round 2 passed; the configured exit gate runs next.
+Implementation — both groups merged (lockstep 0.2.64); backlog archived and closeout records written; root final review passed with follow-ups; Phase 06 (five fix tasks in two lanes) merged and gated; round 2 passed; the configured exit gate passed on attempt 1 and was received; the post-implement sequence and the PR follow.
 
 ## Artifacts
 
@@ -161,7 +161,8 @@ Implementation — both groups merged (lockstep 0.2.64); backlog archived and cl
 - ✓ Root final review passed with follow-ups (0C/1I/5M/14m, `final-review-2026-09-08T052928Z.md`)
 - ✓ Phase 06 final-review fixes merged (`4a2ed8e65`, `e8424949c`); thirteen gates green (CLI 6287)
 - ✓ Final review round 2 passed (0C/0I/2M/7m, `final-review-2026-09-08T065445Z.md`); two polish follow-ups filed
-- ⧗ Configured exit gate
+- ✓ Configured exit gate passed on attempt 1 (run `f458f4c1`, codex-5-6-sol-xhigh, 0/0/0/0) and received
+- ⧗ Post-implement sequence (summary, roll-up, PJM, PR artifact), then the PR
 
 ## Blockers
 
@@ -169,4 +170,4 @@ None
 
 ## Next Milestone
 
-Configured exit gate passed and received, then the post-implement sequence and the PR.
+Post-implement sequence, then the PR on `origin/wave-6-execution-2026-09`.

@@ -252,7 +252,7 @@ Wave base `fab304fe7a2b0eb04f39f45b9de17934e8019fed` (origin/main after the wave
 
 #### Outstanding Items
 
-- The configured exit gate, then the post-implement sequence and the PR.
+- Post-implement sequence (summary, roll-up, PJM, PR artifact), then the PR.
 - Group 2 (p04 + p05) at the group-1 tip; then closeout.
 - Group-1 fan-in with the lockstep bump 0.2.63 → 0.2.64, then group 2 (p04 + p05).
 - Plan gate, then group 1.
@@ -265,6 +265,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-08
 
+- Configured exit gate attempt 1 passed (run `f458f4c1`, codex-5-6-sol-xhigh, 0/0/0/0; artifact `reviews/archived/final-review-2026-09-08T072250Z.md`) and received.
 - Final review round 2 received (`reviews/archived/final-review-2026-09-08T065445Z.md`, PASS 0C/0I/2M/7m): two polish follow-ups filed; the exit gate runs next.
 - Phase 06 fix lanes merged (`4a2ed8e65`, `e8424949c`); thirteen gates green (CLI 6287, 0 cached); round 2 dispatched to the final reviewer.
 - Root final review received (`reviews/archived/final-review-2026-09-08T052928Z.md`, PASS with follow-ups, 0C/1I/5M/13m): product findings → Phase 06 (p06-t01..t05, two lanes); record findings fixed in the receive commit; M3 promoted to a blocking criterion on the migration item.
@@ -317,6 +318,22 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - m2' (m14 closed for human output only; `--json` still names a path for `inactive` rows while the new JSDoc says `null`), m3' (`versionEvidence: 'absent'` for a deliberately unread escaping copy), m4' (the redaction docs sentence overclaims its delimiter coverage) → `BL-260908-align-the-provider-view-json`.
 - m6' (the reviewer's own round-1 m3 characterization was imprecise: the plain shift exited 1 with a garbled wrong-cell message; only the `-` landing was silent) → record correction, no action.
 - m7' (`plan.md` frontmatter date; completion box 5) → fixed in this receive.
+
+## Review Received: final (configured exit gate, attempt 1 — passed)
+
+**Date:** 2026-09-08
+**Gate:** run `f458f4c1-dbf0-4fa2-b0d0-1b99593c4fd1`, target `codex-5-6-sol-xhigh` (diversity: unknown-producer), envelope `ok`, outcome `review_completed_gate_passed`, `receiveEligible: true`, threshold important, blocking false, attempt `w6-exit-gate-20260908T065937Z` (launched in the foreground; the harness moved it to the background after ten minutes and it completed with a receipt).
+**Review artifact:** reviews/archived/final-review-2026-09-08T072250Z.md (reviewed head `deeac5a46927f99fe9f3121d54370d3f9310c494`, invocation gate)
+
+**Findings:** 0 Critical / 0 Important / 0 Medium / 0 Minor — judgment-sweep mode (passing gate).
+
+**Dispositions:**
+
+- No findings at any severity; the gate reviewer (codex-5-6-sol-xhigh, reconnaissance attempted) re-verified the five source-plan contracts, the Phase 06 fix round, and the seven record-only commits after the round-2 manual final review with cache-bypassed gates.
+- The four Medium deferrals were reconsidered explicitly and each accepted as deferred with its owning backlog item (`BL-260908-validate-the-catalog-refresh`, `BL-260908-guard-normalized-config-maps`, `BL-260908-make-copy-strategy-skill`, `BL-260908-repair-or-exempt-archived`); every deferred Minor was confirmed durably owned.
+- The gate route validated as `inline` for runtime `codex`; the artifact was committed by the gate (`60c337c6c`) with its project-log entry (`ea33cc5b8`) before this receive.
+
+**Gate row `final` (attempt 1) → `passed`** (gate-written row moved forward in place with the archived path); `oat_implement_exit_gate` → `allowed / passed` in the following state checkpoint.
 
 ## Deferred Findings
 
