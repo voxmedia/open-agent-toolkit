@@ -37,3 +37,22 @@ at recon (executing each plan's current-state claims on the built CLI) caught
 three false premises before dispatch — the wave-5 p09 lesson applied.
 
 ---
+
+### 2026-09-08 · structural · oat-wave-execute · p03 STOP → refresh → resume
+
+p03 stopped before committing: the plan's prescribed `getNodeValue` path
+regressed accepted nesting depth (`RangeError` above ≈2111 levels where
+`parse` accepted ≈4792) and a null-prototype value broke a consumer's
+`String()` coercion (`oat-config.ts:1252`) — both reproduced by the lane's
+Codex round and confirmed by the lane. The STOP's own remedy (a normalization
+layer) was applied as a dated post-STOP refresh to the plan (`03e1aa576`):
+iterative materialization into plain objects with own-key `defineProperty`.
+The lane resumed on its staged work. **Skill signal (strengthens):** the
+"reproduce, report, never improvise" rule produced a precise design change
+instead of a silent workaround; a STOP whose remedy is inside the plan's own
+file scope can be closed with a dated refresh rather than a park. **Skill
+signal (gap):** prototype-method greps do not find implicit-coercion hazards
+(`String(x)`, template literals) — consumer audits for object-shape changes
+should grep coercion sites too.
+
+---

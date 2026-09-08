@@ -120,7 +120,7 @@ Implementation — plan gate passed on attempt 2; group 1 (p01 + p02 + p03) runn
 - ✓ Wrapper artifacts written and `oat project validate-plan` passed
 - ✗ Plan gate attempt 1 blocked (0C/1I/2M: the p04 alias-warning contract contradiction, the file inventory, the design row) — fixed in-artifact
 - ✓ Plan gate attempt 2 passed (0C/0I/1M; the inventory Medium addressed in the receive)
-- ⧗ Group 1 (p01 + p02 + p03) dispatched at `fab304fe7`
+- ⧗ Group 1 (p01 + p02 + p03) dispatched at `fab304fe7`; p03 STOPped at its pre-commit review (depth regression + a `String()` coercion consumer break under null prototypes) → post-STOP plan refresh `03e1aa576` (iterative materialization into plain objects) → resumed as `w6-p03-impl-002`
 
 ## Blockers
 
