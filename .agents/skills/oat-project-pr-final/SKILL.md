@@ -409,9 +409,9 @@ Only include links to artifacts that actually exist in the project. Omit any tha
 
 After writing the PR artifact, push and create the PR automatically.
 
-**Ledger-path guard (both PR paths).** Before either `gh pr create` path runs, validate every artifact path in the project's `## Reviews` ledger. Parse each row's Artifact cell rather than grepping the section as free text, and skip a `-` placeholder. Every other cell must normalize — `..` segments and symlinks resolved — to a regular file inside `$PROJECT_PATH`. A missing file, a directory, a path that escapes the project, an unreadable ledger, a row the parser cannot read, or a ledger the guard could not check row for row stops this skill at gate `PRFINAL-05`, naming the offending row by scope, type, and artifact filename. Every failure mode fails closed. Both the synced flow below and the non-synced flow run after this block, so no PR is created from a ledger whose artifact paths do not resolve.
+**Ledger-path guard (both PR paths).** Before either `gh pr create` path runs, validate every artifact path in the project's `## Reviews` ledger. Parse each row's Artifact cell rather than grepping the section as free text, and skip a `-` placeholder. The ledger is the table rows of `## Reviews`: the scan ends at the next heading of any level, and a blockquoted line or a fenced block inside the section is a note or an example, never an event. Every other cell must normalize — `..` segments and symlinks resolved physically — to a regular file inside `$PROJECT_PATH`. Processed review artifacts live in the gitignored `reviews/archived/`, so a path that git ignores and that is absent from the current checkout is a local-only artifact: report it and continue. A path in a tracked location must exist. A missing file in a tracked location, a directory, a path that escapes the project, an unreadable ledger, a row the parser cannot read, or a ledger the guard could not check row for row stops this skill at gate `PRFINAL-05`, naming the offending row by scope, type, and artifact filename. Every stop fails closed. Both the synced flow below and the non-synced flow run after this block, so no PR is created from a ledger whose artifact paths do not resolve.
 
-```bash
+````bash
 LEDGER_PROJECT_ROOT=$(cd -P "$PROJECT_PATH" 2>/dev/null && pwd -P) || {
   echo "PRFINAL-05: project path does not resolve: $PROJECT_PATH" >&2
   exit 1
@@ -421,27 +421,60 @@ if [ ! -r "$PROJECT_PATH/plan.md" ]; then
   exit 1
 fi
 LEDGER_ROWS=$(awk -F'|' '
-  /^## Reviews[[:space:]]*$/ { in_reviews = 1; next }
-  in_reviews && /^##[[:space:]]/ { exit }
-  !in_reviews { next }
-  $0 ~ /\|/ && $0 !~ /^[[:space:]]*\|/ {
-    print "PRFINAL-05: unsupported review-ledger row (a row must start with |): " $0 > "/dev/stderr"
-    exit 3
+  !in_fence && /^[[:space:]]*(```|~~~)/ {
+    marker = $0
+    sub(/^[[:space:]]*/, "", marker)
+    fence_char = substr(marker, 1, 1)
+    fence_length = 0
+    while (substr(marker, fence_length + 1, 1) == fence_char) fence_length++
+    in_fence = 1
+    next
   }
-  $0 !~ /^[[:space:]]*\|/ { next }
+  in_fence {
+    marker = $0
+    sub(/^[[:space:]]*/, "", marker)
+    close_length = 0
+    while (substr(marker, close_length + 1, 1) == fence_char) close_length++
+    if (close_length >= fence_length && substr(marker, close_length + 1) ~ /^[[:space:]]*$/) in_fence = 0
+    next
+  }
+  /^## Reviews[[:space:]]*$/ { in_reviews = 1; at_table_start = 1; next }
+  !in_reviews { next }
+  /^##[[:space:]]/ { exit }
+  /^#+[[:space:]]/ { at_table_start = 1; in_ledger_table = 0; next }
+  /^[[:space:]]*>/ { next }
+  /^[[:space:]]*$/ { at_table_start = 1; in_ledger_table = 0; next }
+  $0 !~ /^[[:space:]]*\|/ {
+    if ($0 ~ /\|/) {
+      print "PRFINAL-05: unsupported review-ledger row (a row must start with |): " $0 > "/dev/stderr"
+      exit 3
+    }
+    next
+  }
   {
     for (i = 1; i <= NF; i++) {
       gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
     }
   }
-  !header_seen {
-    for (i = 2; i < NF; i++) {
-      if (tolower($i) == "artifact") artifact_column = i
+  at_table_start {
+    at_table_start = 0
+    in_ledger_table = (tolower($2) == "scope" && tolower($3) == "type")
+    artifact_column = 0
+    if (in_ledger_table) {
+      for (i = 2; i < NF; i++) {
+        if (tolower($i) == "artifact") artifact_column = i
+      }
     }
-    header_seen = 1
     next
   }
-  $2 ~ /^:?-+:?$/ { next }
+  !in_ledger_table { next }
+  {
+    is_separator = (NF > 2)
+    for (i = 2; i < NF; i++) {
+      if ($i !~ /^:?-+:?$/) is_separator = 0
+    }
+  }
+  is_separator { next }
   { print $2 "\t" $3 "\t" (artifact_column ? $artifact_column : $6) }
 ' "$PROJECT_PATH/plan.md") || {
   echo "PRFINAL-05: cannot parse the review ledger: $PROJECT_PATH/plan.md" >&2
@@ -475,20 +508,43 @@ while IFS="$(printf '\t')" read -r ROW_SCOPE ROW_TYPE ROW_ARTIFACT; do
         ROW_HOPS=$((ROW_HOPS + 1))
       done
     fi
+    ROW_MATERIALIZED=1
+    if [ -z "$ROW_RESOLVED" ]; then
+      ROW_MATERIALIZED=0
+      ROW_RESOLVED=$(printf '%s\n' "$LEDGER_PROJECT_ROOT/$ROW_ARTIFACT" | awk -F'/' '{
+        depth = 0
+        for (i = 1; i <= NF; i++) {
+          if ($i == "" || $i == ".") continue
+          if ($i == "..") { if (depth > 0) depth--; continue }
+          segment[++depth] = $i
+        }
+        normalized = ""
+        for (i = 1; i <= depth; i++) normalized = normalized "/" segment[i]
+        print (normalized == "" ? "/" : normalized)
+      }')
+    fi
     ROW_CONTAINED=0
     case "$ROW_RESOLVED" in
       "$LEDGER_PROJECT_ROOT"/*) ROW_CONTAINED=1 ;;
     esac
-    if [ -z "$ROW_RESOLVED" ]; then
-      ROW_REASON="artifact path does not resolve"
+    if [ "$ROW_CONTAINED" -eq 0 ]; then
+      ROW_REASON="artifact resolves outside the project: $ROW_RESOLVED"
+    elif [ "$ROW_MATERIALIZED" -eq 0 ]; then
+      if git check-ignore -q -- "$ROW_RESOLVED" 2>/dev/null; then
+        echo "oat: local-only review artifact, gitignored and absent from this checkout | scope=$ROW_SCOPE type=$ROW_TYPE artifact=$ROW_ARTIFACT"
+      else
+        ROW_REASON="artifact file does not exist"
+      fi
     elif [ -L "$ROW_RESOLVED" ]; then
       ROW_REASON="artifact symlink chain does not resolve within 16 hops"
-    elif [ "$ROW_CONTAINED" -eq 0 ]; then
-      ROW_REASON="artifact resolves outside the project: $ROW_RESOLVED"
     elif [ -d "$ROW_RESOLVED" ]; then
       ROW_REASON="artifact path is a directory"
     elif [ ! -e "$ROW_RESOLVED" ]; then
-      ROW_REASON="artifact file does not exist"
+      if git check-ignore -q -- "$ROW_RESOLVED" 2>/dev/null; then
+        echo "oat: local-only review artifact, gitignored and absent from this checkout | scope=$ROW_SCOPE type=$ROW_TYPE artifact=$ROW_ARTIFACT"
+      else
+        ROW_REASON="artifact file does not exist"
+      fi
     elif [ ! -f "$ROW_RESOLVED" ]; then
       ROW_REASON="artifact is not a regular file"
     fi
@@ -504,7 +560,7 @@ if [ "$LEDGER_ROWS_SEEN" -ne "$LEDGER_ROW_COUNT" ]; then
   exit 1
 fi
 [ "$LEDGER_PATH_FAILURES" -eq 0 ] || exit 1
-```
+````
 
 On `PRFINAL-05`, stop and repair the offending ledger row — usually a `reviews/` path whose artifact Step 0.5 moved into `reviews/archived/` — then re-run. Never create the PR with an unresolved ledger path.
 

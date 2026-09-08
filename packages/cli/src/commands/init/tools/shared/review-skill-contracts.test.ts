@@ -2309,6 +2309,9 @@ printf 'artifact-read\\n'`,
         'git config user.email pr-final@example.invalid',
         'git config user.name "PR Final Control"',
         "printf '# scratch\\n' > README.md",
+        // The repository's own `.gitignore:85` rule, so `git check-ignore`
+        // classifies archived review artifacts exactly as it does in-repo.
+        "printf '.oat/**/reviews/archived/\\n' > .gitignore",
         'git add -A',
         'git commit -q -m init',
         'oat config set projects.defaultScope shared --shared > /dev/null',
@@ -2469,7 +2472,211 @@ printf 'artifact-read\\n'`,
         'PRFINAL-05: unsupported review-ledger row (a row must start with |)',
       );
 
-      // Fail closed rather than reporting a clean ledger when it cannot be read.
+      // Blockquoted placeholder rows are the standing convention in this
+      // repository's wave plans; they are notes, not events.
+      const blockquoted = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '> Placeholder rows stay quoted out until an artifact exists:',
+        '> | spec | artifact | pending | - | - | - | - | - |',
+        '> | design | artifact | pending | - | - | - | - | - |',
+      ]);
+      expect(blockquoted.stderr).toBe('');
+      expect(blockquoted.status).toBe(0);
+
+      // A fenced example inside the section is documentation, so its rows are
+      // neither validated nor rejected.
+      const fenced = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '```text',
+        '| final | code | passed | 2026-07-15 | reviews/does-not-exist.md |',
+        '```',
+      ]);
+      expect(fenced.stderr).toBe('');
+      expect(fenced.status).toBe(0);
+
+      // A second table under a `###` subheading has its header and separator
+      // skipped by shape, so its real rows are validated. The scan boundary
+      // stays at the next level-two heading, exactly as Step 2's pinned block
+      // reads the ledger: ending at `###` would hide a `final`/`code` row that
+      // authorizes finalization from the guard that validates it.
+      const subsectionValid = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '### Superseded',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        '| --- | --- | --- | --- | --- |',
+        '| p02 | code | passed | 2026-07-15 | reviews/p01-code.md |',
+      ]);
+      expect(subsectionValid.stderr).toBe('');
+      expect(subsectionValid.status).toBe(0);
+
+      const subsectionDangling = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '### Superseded',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        '| --- | --- | --- | --- | --- |',
+        '| final | code | passed | 2026-07-15 | reviews/gone.md |',
+      ]);
+      expect(subsectionDangling.status).toBe(1);
+      expect(subsectionDangling.stderr).toContain(
+        'scope=final type=code artifact=reviews/gone.md',
+      );
+
+      // A table inside `## Reviews` that is not the ledger — the
+      // `### Artifact Review` iteration table that ships in
+      // `.oat/projects/archived/config-bug/plan.md` — is recognized by its
+      // header and skipped, instead of having its rows read as events.
+      const nonLedgerTable = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '### Artifact Review',
+        '',
+        '| Iteration | Reviewer | Outcome | Action |',
+        '| --- | --- | --- | --- |',
+        '| 1 | codex | fixes | applied |',
+      ]);
+      expect(nonLedgerTable.stderr).toBe('');
+      expect(nonLedgerTable.status).toBe(0);
+
+      // The ledger signature is `Scope` + `Type`, not `Scope` alone: a notes
+      // table whose first column happens to be `Scope` is not the ledger.
+      const scopeShapedTable = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '### Scope notes',
+        '',
+        '| Scope | Notes |',
+        '| --- | --- |',
+        '| p01 | rebased onto main |',
+      ]);
+      expect(scopeShapedTable.stderr).toBe('');
+      expect(scopeShapedTable.status).toBe(0);
+
+      // Each table establishes its own artifact column rather than inheriting
+      // the previous one's index.
+      const reorderedColumns = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '| Scope | Type | Artifact | Status | Date |',
+        '| --- | --- | --- | --- | --- |',
+        '| p02 | code | reviews/gone.md | passed | 2026-07-15 |',
+      ]);
+      expect(reorderedColumns.status).toBe(1);
+      expect(reorderedColumns.stderr).toContain(
+        'scope=p02 type=code artifact=reviews/gone.md',
+      );
+
+      // A fence is closed only by a matching marker at least as long as its
+      // opener, and tilde fences count. Toggling on any ``` prefix left the
+      // scanner inside a fence after a nested example and hid every real row
+      // that followed it.
+      const nestedFence = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '````text',
+        '```',
+        '| example | code | passed | 2026-07-15 | never-validated.md |',
+        '````',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        '| --- | --- | --- | --- | --- |',
+        '| final | code | passed | 2026-07-15 | reviews/gone.md |',
+      ]);
+      expect(nestedFence.status).toBe(1);
+      expect(nestedFence.stderr).toContain(
+        'scope=final type=code artifact=reviews/gone.md',
+      );
+      expect(nestedFence.stderr).not.toContain('never-validated.md');
+
+      const tildeFence = runGuard([
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '~~~text',
+        '| final | code | passed | 2026-07-15 | reviews/gone.md |',
+        '~~~',
+      ]);
+      expect(tildeFence.stderr).toBe('');
+      expect(tildeFence.status).toBe(0);
+
+      // A row whose Type is `artifact` is an event, not a header: keying
+      // header detection on any `artifact` cell skipped it and mis-set the
+      // artifact column for every row after it.
+      const artifactTypeRow = runGuard([
+        '| plan | artifact | passed | 2026-07-16 | reviews/gone.md |',
+      ]);
+      expect(artifactTypeRow.status).toBe(1);
+      expect(artifactTypeRow.stderr).toContain(
+        'scope=plan type=artifact artifact=reviews/gone.md',
+      );
+
+      // Processed artifacts live in the gitignored `reviews/archived/`, so a
+      // fresh clone, a remote workspace, or a lane worktree legitimately has
+      // none of them on disk.
+      const localOnly = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/archived/never-materialized.md |',
+      ]);
+      expect(localOnly.stderr).toBe('');
+      expect(localOnly.status).toBe(0);
+      expect(localOnly.stdout).toContain(
+        'local-only review artifact, gitignored and absent from this checkout',
+      );
+
+      // That acceptance never reaches a tracked location (`dangling` above),
+      // and an ignored path that escapes is still rejected by containment.
+      const ignoredEscape = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/archived/../../../../outside.md |',
+      ]);
+      expect(ignoredEscape.status).toBe(1);
+      expect(ignoredEscape.stderr).toContain(
+        'artifact resolves outside the project',
+      );
+
+      // The lexical fallback below may only answer "contained?" and
+      // "ignored?": collapsing `..` onto a file that happens to exist would
+      // validate a different path than the one the PR body publishes.
+      const cancelledMissingDirectory = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/.missing/../p01-code.md |',
+      ]);
+      expect(cancelledMissingDirectory.status).toBe(1);
+      expect(cancelledMissingDirectory.stderr).toContain(
+        'artifact file does not exist',
+      );
+
+      const nonDirectoryComponent = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/p01-code.md/../p01-code.md |',
+      ]);
+      expect(nonDirectoryComponent.status).toBe(1);
+      expect(nonDirectoryComponent.stderr).toContain(
+        'artifact file does not exist',
+      );
+
+      // An entire `reviews/` tree that was never materialized still classifies
+      // row by row instead of failing to resolve.
+      rmSync(join(repository, projectPath, 'reviews'), {
+        recursive: true,
+        force: true,
+      });
+      const unmaterialized = runGuard([
+        '| plan | artifact | passed | 2026-07-16 | reviews/archived/artifact-plan-review.md |',
+      ]);
+      expect(unmaterialized.stderr).toBe('');
+      expect(unmaterialized.status).toBe(0);
+      const unmaterializedTracked = runGuard([
+        '| final | code | passed | 2026-07-15 | reviews/final-code.md |',
+      ]);
+      expect(unmaterializedTracked.status).toBe(1);
+      expect(unmaterializedTracked.stderr).toContain(
+        'artifact file does not exist',
+      );
+
+      // Fail closed rather than reporting a clean ledger when it cannot be
+      // read. This is behavioral, not wording: the clause stops before any
+      // parsing, so no row is evaluated and awk is never reached.
       rmSync(join(repository, projectPath, 'plan.md'));
       const unreadable = spawnSync(
         '/bin/bash',
@@ -2483,6 +2690,12 @@ printf 'artifact-read\\n'`,
       expect(unreadable.stderr).toContain(
         'PRFINAL-05: cannot read the review ledger',
       );
+      expect(unreadable.stderr).not.toContain('cannot parse the review ledger');
+      expect(unreadable.stderr).not.toContain('awk:');
+      expect(unreadable.stderr).not.toContain(
+        'unresolved review-ledger artifact',
+      );
+      expect(unreadable.stdout).toBe('');
     } finally {
       rmSync(workspace, { recursive: true, force: true });
     }

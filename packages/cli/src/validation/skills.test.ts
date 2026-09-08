@@ -4653,8 +4653,10 @@ describe('validateOatSkills', () => {
     expect(guardBlock).toContain(
       'artifact symlink chain does not resolve within 16 hops',
     );
-    // Alignment colons are valid separator syntax, not a ledger event.
-    expect(guardBlock).toContain('$2 ~ /^:?-+:?$/ { next }');
+    // Alignment colons are valid separator syntax, and a separator is
+    // recognized by the shape of every cell, not just the first.
+    expect(guardBlock).toContain('if ($i !~ /^:?-+:?$/) is_separator = 0');
+    expect(guardBlock).toContain('is_separator { next }');
     // Physical traversal: a logical `cd` collapses `symlink/..` before
     // `pwd -P`, which validates a different file than the one published.
     expect(guardBlock).toContain('cd -P "$PROJECT_PATH"');
@@ -4664,6 +4666,42 @@ describe('validateOatSkills', () => {
     expect(guardBlock).toContain(
       'unsupported review-ledger row (a row must start with |)',
     );
+    // The ledger is the table rows of the section: fenced examples and
+    // blockquoted placeholder rows are notes, and the scan ends at the next
+    // heading of any level, so a `###` subsection is not scanned.
+    expect(guardBlock).toContain('in_fence = 1');
+    expect(guardBlock).toContain('/^[[:space:]]*>/ { next }');
+    // The guard scans exactly the rows Step 2 reads: same level-two
+    // boundary, so no subsection can hide a row from validation.
+    expect(guardBlock).toContain('/^##[[:space:]]/ { exit }');
+    // A fence closes only on a matching marker at least as long as its
+    // opener; tilde fences count.
+    expect(guardBlock).toContain('close_length >= fence_length');
+    // Header detection keys on the Scope column: a row whose Type is
+    // `artifact` is an event, not a header.
+    expect(guardBlock).toContain(
+      'in_ledger_table = (tolower($2) == "scope" && tolower($3) == "type")',
+    );
+    // Each header re-establishes its own artifact column, and only a table
+    // whose header carries the ledger signature contributes events.
+    expect(guardBlock).toContain('artifact_column = 0');
+    expect(guardBlock).toContain('!in_ledger_table { next }');
+    // A lexically normalized path never stands in for an existing file.
+    expect(guardBlock).toContain('ROW_MATERIALIZED=0');
+    expect(guardBlock).toContain('elif [ "$ROW_MATERIALIZED" -eq 0 ]; then');
+    // Processed review artifacts are gitignored, so a path git ignores that is
+    // absent from this checkout is local-only rather than dangling, while a
+    // tracked location must exist.
+    expect(guardBlock).toContain(
+      'if git check-ignore -q -- "$ROW_RESOLVED" 2>/dev/null; then',
+    );
+    expect(guardBlock).toContain(
+      'local-only review artifact, gitignored and absent from this checkout',
+    );
+    // Containment is decided before that acceptance.
+    expect(
+      guardBlock.indexOf('artifact resolves outside the project'),
+    ).toBeLessThan(guardBlock.indexOf('git check-ignore'));
 
     // The gate code is registered rather than invented.
     const contract = await readRepoFile('.agents/docs/autonomy-contract.md');
