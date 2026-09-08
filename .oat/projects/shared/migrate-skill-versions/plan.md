@@ -186,7 +186,7 @@ git commit -m "test(p01-t03): make every bundled-skill version reader shape-agno
 
 **Files:**
 
-- Modify: `.agents/skills/*/SKILL.md` (82 files), `packages/cli/src/validation/skills.test.ts` (19 tuples, ~28 `.toBe`, 4 `.toMatch`, the path/version arrays, the 245 → 246 budget), `tools/smoke/skill-version/reader-sameness.test.mjs` (new; the Phase 1 round-2 m3 sameness assertion over the three `node --test` readers), `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts:1061,1398`, `packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts:23-25`, `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs:434-435`, `.agents/skills/explainer-kit/tests/rebuildability.test.mjs:103`, `.agents/skills/recon/tests/skill-contract.test.mjs:26`, provider views under `.claude/`, `.codex/`, `.cursor/` etc. as `oat sync --scope project` rewrites them, `.oat/sync/manifest.json`
+- Modify: `.agents/skills/*/SKILL.md` (82 files), `packages/cli/src/validation/skills.test.ts` (19 tuples, ~28 `.toBe`, 4 `.toMatch`, the path/version arrays, the 245 → 246 budget), `tools/smoke/skill-version/reader-sameness.test.mjs` (new; the Phase 1 round-2 m3 sameness assertion over the three `node --test` readers), `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts:1061,1398`, `packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts:23-25`, `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs:434-435`, `.agents/skills/explainer-kit/tests/rebuildability.test.mjs:103`, `.agents/skills/recon/tests/skill-contract.test.mjs:26`, (provider views and `.oat/sync/manifest.json` are NOT this task's artifacts in this repository — `.claude/skills/*` are symlinks and the Codex/Cursor projections carry only agent roles; the manifest restamp belongs to p02-t02 — corrected at the final review)
 
 **Step 1: Write test (RED)**
 
@@ -269,7 +269,7 @@ git commit -m "chore(p02-t02): record the alias retirement schedule, archive the
 | ----- | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
 | p01   | code     | fixes_added | 2026-09-08 | reviews/archived/p01-review-2026-09-08T101506Z.md           | 6c461e3fe4577b6bf78b4ace79e5bab1b5dfa510 | manual     | -                   |
 | p02   | code     | passed      | 2026-09-08 | reviews/archived/p02-review-2026-09-08T115234Z.md           | 872ce02c6eddb961e3241fbceb22b445b558baa4 | manual     | -                   |
-| final | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| final | code     | passed      | 2026-09-08 | reviews/archived/final-review-2026-09-08T121229Z.md         | 48d9bfdc52d562776a05867ba899bdc8bcbe5285 | manual     | -                   |
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T080653Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T082541Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T084454Z.md | -                                        | gate       | codex-5-6-sol-xhigh |

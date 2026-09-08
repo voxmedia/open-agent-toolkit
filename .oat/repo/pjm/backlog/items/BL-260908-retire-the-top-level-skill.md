@@ -48,6 +48,10 @@ outside both enforcement surfaces. Removing the resolver's top-level read would
 break their identity resolution, so step 2 must either migrate the agent roles
 first or scope the removal to skills. Confirm which before doing the removal.
 
+## Notes
+
+- Final review of `migrate-skill-versions` (2026-09-08, m2): the frontmatter walk exists in five test-helper copies — three pinned byte-identical by `tools/smoke/skill-version/reader-sameness.test.mjs`, plus `readSkillVersionSites` in `tools/smoke/explainer-kit/packaged-layout.test.mjs` and `withDeclaredVersion` in `packages/cli/src/__tests__/skills/skill-version.ts`, which are unpinned. When the top-level read is removed, collapse the copies or extend the sameness pin.
+
 ## Acceptance Criteria
 
 - Step 1 has landed: `skill-version-alias` is reported at `error` severity, in

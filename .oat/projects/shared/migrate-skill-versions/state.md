@@ -119,7 +119,8 @@ Implementation — the plan gate blocked four times on new surfaces (every findi
 - ✓ Phase 1 done (`d054384ee`, `8948bf1ea`, `6c461e3fe`); root review round 1 0C/2I/3M/3m, no code defect
 - ✓ Phase 1 fix round `ad1c33082`; review round 2 PASS (0C/0I/0M/3m)
 - ✓ Phase 2 done (`ddfca906a`, `872ce02c6`); root review PASS (0C/0I/0M/4m)
-- ⧗ Root final review, then the configured exit gate
+- ✓ Root final review PASS (0C/0I/0M/2m)
+- ⧗ Configured exit gate
 
 ## Blockers
 

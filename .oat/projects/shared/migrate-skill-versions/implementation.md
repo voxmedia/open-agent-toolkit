@@ -215,6 +215,16 @@ oat_generated: false
 
 **Dispositions:** m1 (plan Files omits the sameness test) and m2 (two plan expectations contradicted by the repository: provider-view rewrites in p02-t01; `check:skill-bumps` pre-commit) → plan amended in the receive commit `c6c3ecd31`; m3 (a present frontmatter block with no resolvable version passes both validators) → `BL-260908-report-a-changed-skill-with-no` widened (`c6c3ecd31`); m4 (pin-count floor 25 vs 32 real) → raised to 30 (`c6c3ecd31`, verified by the final review). Records advanced here (Phase 2 complete, `oat_current_task_id: null`, `oat_last_commit`).
 
+## Review Received: final (root final review — passed)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/final-review-2026-09-08T121229Z.md (reviewed head `48d9bfdc52d562776a05867ba899bdc8bcbe5285`, request `mig-final-review-001`, reconnaissance not-attempted)
+**Findings:** 0 Critical / 0 Important / 0 Medium / 2 Minor — PASS; the configured exit gate runs next.
+
+**Verified first-hand by the reviewer:** the 82-file diff reduces to exactly the three version lines; 32 in-file pins re-resolved with zero stale and zero surviving old literals (four sweep hits all false positives, incl. the `MINIMUM_CORE_VERSION` publish-request floor); dist-free load probe of the RC builder plus a neutralization control; a 6,358-case differential of `check-core.mjs` against the canonical resolver with zero fail-open and every fail-closed divergence attributed to the four documented refusal classes; old-vs-new reader on all 87 real files: 82 intended widenings, zero tightenings; lockstep 0.2.65 in exactly the six release files, `pnpm-lock.yaml` untouched, `buildExplainerRc` returns the migrated explainer-family versions, real-RC integration 2/2, `sync --dry-run` no changes; all eight gates in CI order exit 0 (`check` and `build:docs` re-run forced after cache replays), forced test `Cached: 0`, smoke 166, skills 859, release 42; the three plan controls and the two new meta-tests proven able to fail; the no-resolvable-version validator gap reproduces on the base shape (not a regression).
+
+**Dispositions:** m1 (p02-t01 Files still named provider views and the manifest) → fixed in this receive; m2 (the reader-sameness pin covers three of five copies of the frontmatter walk — `readSkillVersionSites` in `packaged-layout.test.mjs` and `withDeclaredVersion` in `skill-version.ts` are unpinned) → carried into `BL-260908-retire-the-top-level-skill` as a note (the copies collapse when the alias read is removed) rather than a code change after the reviewed head.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -238,7 +248,8 @@ Chronological log of implementation progress.
 ### 2026-09-08
 
 - Project scaffolded (quick mode) on branch `migrate-skill-versions` from `origin/main` `5b3b82151` (the wave-6 close); discovery and plan authored from the 2026-09-08 recon.
-- Phase 2 done (`ddfca906a` migration + pins, `872ce02c6` decision/docs/bump; full DoD green); root review PASS (0/0/0/4m) received; final review next.
+- Phase 2 done (`ddfca906a` migration + pins, `872ce02c6` decision/docs/bump; full DoD green); root review PASS (0/0/0/4m) received.
+- Root final review PASS (0/0/0/2m, `reviews/archived/final-review-2026-09-08T121229Z.md`) received; exit gate next.
 - Phase 1 done (`d054384ee`, `8948bf1ea`, `6c461e3fe`; Phase 1 gates green); root review round 1 0C/2I/3M/3m (no code defect) → records fixed, fix round `ad1c33082`, round 2 PASS (0/0/0/3m); Phase 2 dispatched.
 - Plan gate attempt 1 blocked (0C/2I/2M); all four findings fixed in the plan.
 - Plan gate attempt 2 blocked (0C/2I/3M/1m): reader architecture resolved (canonical resolver for the RC builder; accepted exception + parity contract for the bundled script), Phase 1 gate subset, decision via `oat-pjm-decision`, control categories, HiLL pending; attempt 3 blocked (0C/2I/1M: HiLL `[]` semantics, raw readers left to Phase 2, the exact eight-gate order) and fixed in-artifact; attempt 4 blocked (0C/2I/2M: Format step, dist import timing, resolver diagnostics, staging) and fixed in-artifact; the plan gate is capped at four attempts and the project proceeds to Phase 1 with root implementation-time reviews.
