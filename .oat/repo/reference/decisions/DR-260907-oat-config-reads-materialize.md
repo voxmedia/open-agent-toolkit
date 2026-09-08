@@ -1,0 +1,21 @@
+---
+id: DR-260907-oat-config-reads-materialize
+title: OAT config reads materialize `__proto__`-named keys as own data properties
+date: 2026-09-07
+status: accepted
+legacy_id: null
+---
+
+# OAT config reads materialize `__proto__`-named keys as own data properties
+
+## Context
+
+`packages/cli/src/config/json.ts` is the single parse chokepoint for every OAT config read. It used `jsonc-parser`'s `parse`, which fills a plain object by assignment, so a member literally named `__proto__` reached the legacy prototype setter. That produced two defects at once: the key was lost as data, and its value became the parsed object's prototype, after which normalization read the injected members as though they had been configured. Reproduced end-to-end on the wave-6 base: a shared config holding only `{"__proto__":{"git":{"defaultBranch":"INJECTED"}}}` made `oat config get git.defaultBranch` answer `INJECTED`, and `oat config list` and `oat config dump` attributed it to the shared surface. The write path already preserved such siblings (`normalizeOatConfig` builds them with `Object.fromEntries` under a comment naming this hazard), so the read side was the remaining gap, documented as a scope-out in the FR10 write-path test.
+
+## Decision
+
+Read `packages/cli/src/config/json.ts`. `parseJsonConfig` keeps `parseTree` for error collection, then materializes the tree itself with an explicit stack, defining every own key through `Object.defineProperty` (enumerable, writable, configurable). `Object.defineProperty` stores `__proto__` as an ordinary own data property and never invokes the prototype setter, so the key survives while nothing is inherited. The objects are otherwise completely ordinary and keep `Object.prototype`. The obvious alternative, `jsonc-parser`'s own `getNodeValue`, was implemented first and rejected under cross-model review for two measured regressions: it returns null-prototype objects, which made `String(rawDefaultScope)` in the invalid-scope diagnostic at `config/oat-config.ts` throw `TypeError: Cannot convert object to primitive value` where it had produced an actionable `CliError`; and it recurses, capping accepted nesting near 2112 levels where the previous `parse` reached about 4068, turning deep-but-valid documents into a `RangeError` instead of the contracted `SyntaxError`. Materializing iteratively into plain objects avoids both, so no consumer normalization layer is needed. The error contract is unchanged: the same documents are rejected with the same `SyntaxError` message, and empty or whitespace-only content still throws `ValueExpected` rather than returning `undefined`. The alternative close, documenting the limitation and closing the backlog item as will-not-do, was rejected because the defect is not only a lost pathological key but a config-file-driven prototype injection that the resolver reports as real configuration.
+
+## Consequences
+
+Consumers see ordinary objects, so every implicit coercion, prototype method, `JSON.stringify` round-trip and zod `safeParse` behaves byte-identically to before; the parsed result also round-trips through `JSON.stringify` with the `__proto__` key intact, so a read-modify-write cycle no longer erases it. All ten production callers (`config/oat-config.ts`, `config/sync-config.ts`, `config/user-sync-config.ts`, `commands/gate/index.ts`, `commands/config/index.ts`) pass unchanged, and a `__proto__`-keyed config now flows through `oat config get`, `set`, `unset`, `list` and `adopt` without loss. Accepted nesting depth returns to parity with the previous `parse`, rather than to the roughly halved ceiling a recursive materializer imposed. Parity is the honest claim and a guarantee is not available: `parseTree` still recurses while scanning, so the hard limit is a stack depth that moves with the host and the JIT's warm-up state, and the two implementations can differ by a frame or two in either direction. The depth test therefore compares both implementations on one fixed document instead of searching for each one's maximum, because two moving maxima converge once warm and make such a comparison flaky. Out of scope and unchanged: the write path still drops unknown top-level keys, which is key-name-agnostic normalization behavior owned by `config/oat-config.ts`, not by this decision.
