@@ -13,8 +13,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -91,13 +91,13 @@ oat_generated: false
 
 # Project State: migrate-skill-versions
 
-**Status:** Plan complete (plan gate next)
+**Status:** Implementation in progress
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-08
 
 ## Current Phase
 
-Plan — discovery and plan authored from the 2026-09-08 recon; the configured plan gate runs next, then implementation on branch `migrate-skill-versions` (from `origin/main` `5b3b82151`).
+Implementation — the plan gate blocked four times on new surfaces (every finding fixed in the plan; no Critical) and is capped; Phase 1 dispatched on branch `migrate-skill-versions` (from `origin/main` `5b3b82151`) with root implementation-time reviews as coverage.
 
 ## Artifacts
 
@@ -115,7 +115,8 @@ Plan — discovery and plan authored from the 2026-09-08 recon; the configured p
 - ✗ Plan gate attempt 1 blocked (0C/2I/2M: HiLL value vs prose, unowned backlog archive, decision routing, an unrunnable negative control) — fixed in-artifact
 - ✗ Plan gate attempt 2 blocked (0C/2I/3M/1m: duplicate parsers, Phase 1 release gates, decision skill present, control categories, HiLL confirmation) — fixed in-artifact
 - ✗ Plan gate attempt 3 blocked (0C/2I/1M) — fixed in-artifact
-- ⧗ Plan gate attempt 4 (the last rerun under the cap)
+- ✗ Plan gate attempt 4 blocked (0C/2I/2M) — fixed in-artifact; gate capped at four attempts (no Critical ever raised)
+- ⧗ Phase 1 (readers and shape-agnostic tests) on the root checkout
 
 ## Blockers
 
@@ -123,4 +124,4 @@ None
 
 ## Next Milestone
 
-Plan gate passed and received, then Phase 1.
+Phase 1 done and root-reviewed, then Phase 2.

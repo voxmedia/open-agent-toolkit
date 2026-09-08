@@ -67,21 +67,23 @@ Re-anchor every cited line on the checked-out base before editing.
 
 **Step 1: Write test (RED)**
 
-In `tools/release/build-explainer-rc.test.mjs`, add cases for `parseSkillVersion` (export it or test through the builder's fixture path the file already uses): (a) a `SKILL.md` whose frontmatter carries only `metadata:\n  version: 1.2.3` resolves `1.2.3`; (b) both fields with the same value resolves that value; (c) a quoted value (`version: "1.2.3"` or `metadata.version: '1.2.3'`) resolves without quotes; (d) both fields with different values throws `E_SKILL_VERSION` naming both values (the builder must not guess); (e) neither field throws `E_SKILL_VERSION` as today; (f) a malformed frontmatter block (duplicate key, unterminated quote) throws `E_SKILL_VERSION` naming the parse failure.
+In `tools/release/build-explainer-rc.test.mjs`, add cases for `parseSkillVersion` (export it or test through the builder's fixture path the file already uses): (a) a `SKILL.md` whose frontmatter carries only `metadata:\n  version: 1.2.3` resolves `1.2.3`; (b) both fields with the same value resolves that value; (c) a quoted value (`version: "1.2.3"` or `metadata.version: '1.2.3'`) resolves without quotes; (d) both fields with different values throws `E_SKILL_VERSION` naming both values (the builder must not guess); (e) neither field throws `E_SKILL_VERSION` as today; (f) a malformed frontmatter block (duplicate key, unterminated quote) throws `E_SKILL_VERSION` with the generic malformed-frontmatter message (category test: the error code and the word "malformed", not a parser diagnostic); (g) a clean-checkout control: with `packages/cli/dist` moved aside to a `mktemp -d` directory (restored afterwards), the builder reaches its own internal `pnpm build` before the first version read and completes — proving no module-top import of `dist` exists.
 
 Run: `node --test tools/release/build-explainer-rc.test.mjs`
 Expected: (a), (c), (d) fail (RED); (b) and (e) pass on the current regex.
 
 **Step 2: Implement (GREEN)**
 
-Replace the single regex with the canonical resolver: `import { getFrontmatterBlock, parseSkillFrontmatter, resolveSkillVersion } from '../../packages/cli/dist/commands/shared/frontmatter.js'` (a dynamic import inside `parseSkillVersion` or at module top — if `dist` is absent, throw `RcBuildError('E_SKILL_VERSION', 'build the CLI first (pnpm build)')` rather than falling back to a regex), then map the resolver's outcome: a resolved version returns it; `conflict`, an unusable declaration, a malformed block, or no version throws `E_SKILL_VERSION` with the resolver's detail. No second implementation of the precedence rule exists in this file.
+Replace the single regex with the canonical resolver, loaded LAZILY: the builder already runs `pnpm build` itself before it reads bundled skill versions (`build-explainer-rc.mjs` near `:83-84`), and the operator RC instructions (`.agents/skills/oat-explainer-kit/references/migration.md` near `:62-71`) invoke the builder on a clean checkout with no prior build, so a top-level `import` of `packages/cli/dist/...` is forbidden. Make `parseSkillVersion` async: `const { getFrontmatterBlock, parseSkillFrontmatter, resolveSkillVersion } = await import(pathToFileURL(join(repoRoot, 'packages/cli/dist/commands/shared/frontmatter.js')).href)` executed only after the builder's internal build has succeeded (cache the module after the first load), and await it in the skill loop. If the module still cannot be loaded after that build, throw `RcBuildError('E_SKILL_VERSION', ...)` naming the missing dist path — never fall back to a regex. Map the resolver's outcome: a resolved version returns it; `conflict` throws `E_SKILL_VERSION` naming both values; an unusable declaration throws `E_SKILL_VERSION` naming the unusable value; a malformed block throws the generic `E_SKILL_VERSION` message "Bundled <name> has malformed frontmatter" (the canonical resolver exposes only a `malformed` flag, not a parser diagnostic — do not add a second YAML parse to manufacture one); no version throws `E_SKILL_VERSION` as today. No second implementation of the precedence rule exists in this file.
 
 Run: `node --test tools/release/build-explainer-rc.test.mjs`
 Expected: all cases pass (GREEN).
 
 **Step 3: Refactor**
 
-A doc comment stating that the release tool consumes the CLI's built resolver and therefore requires `pnpm build` (already true of the Definition of Done ordering and of `turbo run test`'s `^build` dependency).
+A doc comment stating that the release tool consumes the CLI's built resolver, loaded lazily after the builder's own `pnpm build`, so the documented clean-checkout RC command keeps working.
+
+**Format (write/fix, before verification):** `pnpm exec oxfmt --write tools/release/build-explainer-rc.mjs tools/release/build-explainer-rc.test.mjs`; then `pnpm format` as the check.
 
 **Step 4: Verify**
 
@@ -122,6 +124,8 @@ Expected: pass (GREEN), every parity fixture agreeing. Do NOT bump `oat-explaine
 
 A doc comment in `check-core.mjs` naming the parity test as the contract that keeps it aligned with `packages/cli/src/commands/shared/frontmatter.ts`.
 
+**Format (write/fix, before verification):** `pnpm exec oxfmt --write .agents/skills/oat-explainer-kit/scripts/check-core.mjs .agents/skills/oat-explainer-kit/tests/check-core.test.mjs tools/smoke/explainer-kit/packaged-layout.test.mjs tools/smoke/explainer-kit/check-core-version-parity.test.mjs`; then `pnpm format` as the check.
+
 **Step 4: Verify**
 
 Run: `pnpm test:skills > /tmp/p01-t02-skills.log 2>&1; echo exit=$?`; `pnpm test:smoke > /tmp/p01-t02-smoke.log 2>&1; echo exit=$?`; `pnpm lint`; `pnpm format`
@@ -159,6 +163,8 @@ Expected: pass (GREEN), test count unchanged or higher.
 **Step 3: Refactor**
 
 Delete the now-unused raw-regex helpers.
+
+**Format (write/fix, before verification):** `pnpm exec oxfmt --write packages/cli/src/validation/skills.test.ts packages/cli/src/commands/tools/tool-pack-lifecycle.integration.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts tools/smoke/explainer-kit/wrapper-compatibility.test.mjs .agents/skills/explainer-kit/tests/rebuildability.test.mjs .agents/skills/recon/tests/skill-contract.test.mjs`; then `pnpm format` as the check.
 
 **Step 4: Verify**
 
@@ -200,6 +206,8 @@ Expected: green; `pnpm oat:validate-skills` prints no warnings; `pnpm run check:
 
 Negative controls, each on one skill with a `mktemp -d` backup restored by `cp` afterwards (record every failure line and category): (1) same-value dual declaration — re-add `version: <new>` at column 0 beside `metadata.version: <new>` → the tightened sweep's "no column-0 `version:`" assertion is red; the resolver reports `source: 'metadata'` with no conflict, so `oat:validate-skills` prints NO alias warning and NO error (the sweep, not the validator, is the guard for this shape); (2) alias-only — remove the `metadata.version` line and re-add `version: <old>` at column 0 → the sweep's `source === 'metadata'` assertion is red for that skill and `oat:validate-skills` prints exactly one `skill-version-alias` warning; (3) different-value dual declaration — re-add `version: <old>` beside `metadata.version: <new>` → `oat:validate-skills` reports one `skill-version-conflict` error (exit 1) and the sweep is red on the conflict.
 
+**Format (write/fix, before verification):** `pnpm exec oxfmt --write .agents/skills/*/SKILL.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts tools/smoke/explainer-kit/wrapper-compatibility.test.mjs .agents/skills/explainer-kit/tests/rebuildability.test.mjs .agents/skills/recon/tests/skill-contract.test.mjs && pnpm format:fix (the provider projections `oat sync`rewrote are generated from the formatted canonical files;`pnpm format:fix` is the documented broad path for that generated scope)`; then `pnpm format` as the check.
+
 **Step 4: Verify**
 
 Run: `pnpm test:smoke > /tmp/p02-t01-smoke.log 2>&1; echo exit=$?`; `pnpm test:skills > /tmp/p02-t01-skills.log 2>&1; echo exit=$?`; `pnpm test:release > /tmp/p02-t01-release.log 2>&1; echo exit=$?`; `HOME=$(mktemp -d) pnpm exec turbo run test --force > /tmp/p02-t01-test.log 2>&1; echo exit=$?`; `pnpm lint`; `pnpm format`
@@ -208,11 +216,12 @@ Expected: all exit 0 with `Cached: 0`; the explainer RC builder reads the migrat
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills packages/cli/src tools/smoke .oat/sync/manifest.json .claude .codex .cursor .github 2>/dev/null
+# Build the exact manifest first: the 82 SKILL.md paths from the transformation, the pin files named in this task's Files list, and the paths `oat sync --scope project` reported as rewritten (from its output); verify the manifest contains no deletion and no path outside those sets, then stage it literally, e.g.
+git add $(cat /tmp/p02-t01-manifest.txt)
 git commit -m "chore(p02-t01): migrate every bundled skill to metadata.version"
 ```
 
-(Stage exactly the provider-view paths `oat sync --scope project` rewrote; do not stage unrelated files.)
+(No whole-tree `git add`; no error suppression — a missing expected projection must stay visible. `git status --short` after the commit must be empty.)
 
 ---
 
@@ -238,6 +247,8 @@ Expected: index regenerated; markdownlint green.
 
 None.
 
+**Format (write/fix, before verification):** `pnpm exec oxfmt --write apps/oat-docs/docs/contributing/skills.md .oat/repo/reference/decisions/DR-*.md .oat/repo/reference/decisions/index.md .oat/repo/pjm/backlog/items/*.md .oat/repo/pjm/backlog/archived/BL-260904-migrate-bundled-skills-from.md .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md`; then `pnpm format` as the check.
+
 **Step 4: Verify**
 
 Run the eight root `AGENTS.md` gates in their exact order with captured exit codes — `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`, `git fetch origin && pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs` — then the supplemental evidence: `HOME=$(mktemp -d) pnpm exec turbo run test --force` (`Cached: 0`), `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills`.
@@ -246,7 +257,7 @@ Expected: every gate exit 0; `release:check-versions` sees 0.2.65 strictly above
 **Step 5: Commit**
 
 ```bash
-git add .oat/repo/reference/decisions .oat/repo/pjm/backlog apps/oat-docs/docs/contributing/skills.md packages/*/package.json packages/cli/assets/public-package-versions.json .oat/sync/manifest.json
+git add .oat/repo/reference/decisions/DR-<generated-id>.md .oat/repo/reference/decisions/index.md .oat/repo/pjm/backlog/items/BL-<follow-up-id>.md .oat/repo/pjm/backlog/archived/BL-260904-migrate-bundled-skills-from.md .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md apps/oat-docs/docs/contributing/skills.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json .oat/sync/manifest.json
 git commit -m "chore(p02-t02): record the alias retirement schedule, archive the item, bump lockstep to 0.2.65"
 ```
 
@@ -262,7 +273,7 @@ git commit -m "chore(p02-t02): record the alias retirement schedule, archive the
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T080653Z.md | -             | gate       | codex-5-6-sol-xhigh |
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T082541Z.md | -             | gate       | codex-5-6-sol-xhigh |
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T084454Z.md | -             | gate       | codex-5-6-sol-xhigh |
-| plan  | artifact | received    | 2026-09-08 | reviews/artifact-plan-review-2026-09-08T090611Z.md          | -             | -          | -                   |
+| plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T090611Z.md | -             | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last. For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events. Writers must preserve every existing row and every unknown trailing cell.
 
