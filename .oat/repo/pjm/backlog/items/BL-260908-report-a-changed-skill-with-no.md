@@ -23,4 +23,5 @@ After wave-6 p04, unusable and malformed version declarations block in both vali
 ## Acceptance Criteria
 
 - [ ] A changed skill with no frontmatter block yields a blocking `skill-frontmatter-unreadable` (or equivalent) finding from the bump validator and the structural validator
+- [ ] A skill whose frontmatter block is present but declares no resolvable version (for example a `metadata:` map with no `version` child, now that bundled skills are metadata-only) yields a blocking finding from both validators — the migrate-skill-versions Phase 2 review (2026-09-08) showed such an `oat-*` skill passes `oat:validate-skills` and `check:skill-bumps` today and is caught only by the corpus sweeps in `skills.test.ts`
 - [ ] A control proves the case was previously skipped and now fails `pnpm run check:skill-bumps`

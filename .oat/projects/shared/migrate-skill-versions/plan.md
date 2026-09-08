@@ -186,7 +186,7 @@ git commit -m "test(p01-t03): make every bundled-skill version reader shape-agno
 
 **Files:**
 
-- Modify: `.agents/skills/*/SKILL.md` (82 files), `packages/cli/src/validation/skills.test.ts` (19 tuples, ~28 `.toBe`, 4 `.toMatch`, the path/version arrays), `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts:1061,1398`, `packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts:23-25`, `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs:434-435`, `.agents/skills/explainer-kit/tests/rebuildability.test.mjs:103`, `.agents/skills/recon/tests/skill-contract.test.mjs:26`, provider views under `.claude/`, `.codex/`, `.cursor/` etc. as `oat sync --scope project` rewrites them, `.oat/sync/manifest.json`
+- Modify: `.agents/skills/*/SKILL.md` (82 files), `packages/cli/src/validation/skills.test.ts` (19 tuples, ~28 `.toBe`, 4 `.toMatch`, the path/version arrays, the 245 → 246 budget), `tools/smoke/skill-version/reader-sameness.test.mjs` (new; the Phase 1 round-2 m3 sameness assertion over the three `node --test` readers), `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts:1061,1398`, `packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts:23-25`, `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs:434-435`, `.agents/skills/explainer-kit/tests/rebuildability.test.mjs:103`, `.agents/skills/recon/tests/skill-contract.test.mjs:26`, provider views under `.claude/`, `.codex/`, `.cursor/` etc. as `oat sync --scope project` rewrites them, `.oat/sync/manifest.json`
 
 **Step 1: Write test (RED)**
 
@@ -197,10 +197,10 @@ Expected: red 82× (every skill still carries the alias).
 
 **Step 2: Implement (GREEN)**
 
-Transformation, applied by a scratch script and reviewed as a diff: for each `.agents/skills/*/SKILL.md`, parse the frontmatter block; take the top-level `version:` value (all 82 have exactly one, unquoted, at column 0); bump the patch component; delete the top-level line; if a column-0 `metadata:` key exists (`oat-repo-improve`, `triage-oat-issues`) append `  version: <new>` as the last entry of that map, otherwise append `metadata:\n  version: <new>` as the last frontmatter key before the closing `---`. Preserve every other line byte-for-byte. Then repoint every pin by grepping each OLD version literal (plain and regex-escaped, e.g. `2\.1\.0`) across `packages/cli/src`, `tools/smoke`, and `.agents/skills/*/tests` and replacing it with the new value only where it is paired with that skill (tuples, `.toBe`, `.toMatch`, `assert.match`, path/version arrays) — values only; every reader is already shape-agnostic after p01-t03, so a reader change in this task is a deviation to report. One named non-value edit is part of this task: `packages/cli/src/validation/skills.test.ts` asserts a 245-line budget for `oat-project-implement/SKILL.md` (`entry.split('\n').length` is exactly 245 today, `toBeLessThanOrEqual(245)` near `:2515`) and the migration adds one frontmatter line, so raise that budget to 246 with a comment naming this migration (the Phase 1 review confirmed it is the only line-count budget in the suites). Use the Phase 1 test-support module `packages/cli/src/__tests__/skills/skill-version.ts` for any resolver-backed read or shape-aware rewrite; do not add another reader. Run `pnpm run --silent cli -- sync --scope project` and inspect the provider-view diff (rewrites only; a deletion is a STOP). Run `pnpm oat:validate-skills` and require zero `skill-version-alias` warnings and exit 0.
+Transformation, applied by a scratch script and reviewed as a diff: for each `.agents/skills/*/SKILL.md`, parse the frontmatter block; take the top-level `version:` value (all 82 have exactly one, unquoted, at column 0); bump the patch component; delete the top-level line; if a column-0 `metadata:` key exists (`oat-repo-improve`, `triage-oat-issues`) append `  version: <new>` as the last entry of that map, otherwise append `metadata:\n  version: <new>` as the last frontmatter key before the closing `---`. Preserve every other line byte-for-byte. Then repoint every pin by grepping each OLD version literal (plain and regex-escaped, e.g. `2\.1\.0`) across `packages/cli/src`, `tools/smoke`, and `.agents/skills/*/tests` and replacing it with the new value only where it is paired with that skill (tuples, `.toBe`, `.toMatch`, `assert.match`, path/version arrays) — values only; every reader is already shape-agnostic after p01-t03, so a reader change in this task is a deviation to report. One named non-value edit is part of this task: `packages/cli/src/validation/skills.test.ts` asserts a 245-line budget for `oat-project-implement/SKILL.md` (`entry.split('\n').length` is exactly 245 today, `toBeLessThanOrEqual(245)` near `:2515`) and the migration adds one frontmatter line, so raise that budget to 246 with a comment naming this migration (the Phase 1 review confirmed it is the only line-count budget in the suites). Use the Phase 1 test-support module `packages/cli/src/__tests__/skills/skill-version.ts` for any resolver-backed read or shape-aware rewrite; do not add another reader. Run `pnpm run --silent cli -- sync --scope project` and inspect the provider-view diff (a deletion is a STOP; in this repository `.claude/skills/*` are symlinks to the canonical tree and `.codex`/`.cursor` project only agent roles, so "No changes to apply" is the expected outcome and the manifest restamp lands with p02-t02's CLI bump — corrected at the Phase 2 review). Run `pnpm oat:validate-skills` and require zero alias warnings (the validator prints the message `deprecated top-level alias`, not the rule id) and exit 0.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared src/commands/tools`
-Expected: green; `pnpm oat:validate-skills` prints no warnings; `pnpm run check:skill-bumps` reports 82 changed skills validated with zero findings.
+Expected: green; `pnpm oat:validate-skills` prints no warnings; `pnpm run check:skill-bumps` reports 82 changed skills validated with zero findings AFTER the commit (it diffs `origin/main...HEAD`, committed state only — corrected at the Phase 2 review).
 
 **Step 3: Refactor**
 
@@ -268,7 +268,7 @@ git commit -m "chore(p02-t02): record the alias retirement schedule, archive the
 | Scope | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
 | ----- | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
 | p01   | code     | fixes_added | 2026-09-08 | reviews/archived/p01-review-2026-09-08T101506Z.md           | 6c461e3fe4577b6bf78b4ace79e5bab1b5dfa510 | manual     | -                   |
-| p02   | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p02   | code     | passed      | 2026-09-08 | reviews/archived/p02-review-2026-09-08T115234Z.md           | 872ce02c6eddb961e3241fbceb22b445b558baa4 | manual     | -                   |
 | final | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T080653Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T082541Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
@@ -284,10 +284,10 @@ git commit -m "chore(p02-t02): record the alias retirement schedule, archive the
 
 ## Implementation Complete
 
-- [ ] Phase 1: 3 tasks — metadata-aware readers (RC builder, explainer-kit core check, packaged-layout probe) and resolver-based test sweeps
-- [ ] Phase 2: 2 tasks — 82 skills migrated and bumped with every pin repointed; decision record, docs, follow-up item, lockstep 0.2.65
-- [ ] Backlog bookkeeping: `BL-260904-migrate-bundled-skills-from` archived with an outcome summary (owned by p02-t02, its last step)
-- [ ] Full standalone Definition of Done green with captured exit codes
+- [x] Phase 1: 3 tasks — metadata-aware readers (RC builder, explainer-kit core check, packaged-layout probe) and resolver-based test sweeps (review rounds 1–2)
+- [x] Phase 2: 2 tasks — 82 skills migrated and bumped with every pin repointed; decision record, docs, follow-up item, lockstep 0.2.65 (review round 1 PASS)
+- [x] Backlog bookkeeping: `BL-260904-migrate-bundled-skills-from` archived with an outcome summary (p02-t02)
+- [x] Full standalone Definition of Done green with captured exit codes (p02-t02 and the Phase 2 review, forced run `Cached: 0`)
 
 **Total: 5 tasks**
 
