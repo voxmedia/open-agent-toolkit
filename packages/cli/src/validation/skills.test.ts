@@ -130,6 +130,15 @@ function currentSkillContent(
   ].join('\n');
 }
 
+function aliasWarning(file: string, version: string) {
+  return {
+    file,
+    code: 'skill-version-alias',
+    severity: 'warning',
+    message: `Frontmatter version ${version} uses the deprecated top-level alias; move it to metadata.version (metadata.version wins when both are present)`,
+  };
+}
+
 const implementSkillPath = '.agents/skills/oat-project-implement/SKILL.md';
 
 function sliceFromLastGateExecutionHeading(
@@ -1144,7 +1153,17 @@ describe('validateOatSkills', () => {
     );
 
     const result = await validateOatSkills(root);
-    expect(result.findings).toEqual([]);
+    // A top-level `version` is still accepted, but it is the deprecated alias:
+    // the only finding is that non-blocking warning.
+    expect(result.findings).toEqual([
+      {
+        file: join(root, '.agents', 'skills', 'oat-semver-valid', 'SKILL.md'),
+        code: 'skill-version-alias',
+        severity: 'warning',
+        message:
+          'Frontmatter version 1.2.3 uses the deprecated top-level alias; move it to metadata.version (metadata.version wins when both are present)',
+      },
+    ]);
   });
 
   it('reports invalid semver version frontmatter', async () => {
@@ -1156,7 +1175,9 @@ describe('validateOatSkills', () => {
       [
         '---',
         'name: oat-semver-invalid',
-        'version: 1.2',
+        // Quoted: an unquoted 1.2 is the *number* 1.2, which is an unusable
+        // declaration rather than an invalid semver string.
+        "version: '1.2'",
         'description: Use when validating invalid semver version metadata in frontmatter.',
         'disable-model-invocation: true',
         'user-invocable: true',
@@ -1179,6 +1200,8 @@ describe('validateOatSkills', () => {
         file: skillPath,
         message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
       }),
+      // The value is usable, just not semver, so the alias warning fires too.
+      aliasWarning(skillPath, '1.2'),
     ]);
   });
 
@@ -6898,7 +6921,14 @@ describe('validateOatSkills', () => {
     );
 
     const result = await validateOatSkills(root);
-    expect(result.findings).toEqual([]);
+    // The fixture keeps the deprecated top-level version alias, so that
+    // non-blocking warning is the only finding expected.
+    expect(result.findings).toEqual([
+      aliasWarning(
+        join(root, '.agents', 'skills', 'oat-project-quick-start', 'SKILL.md'),
+        '1.0.0',
+      ),
+    ]);
   });
 
   it('requires changed canonical skills to bump version relative to base ref', async () => {
@@ -7051,7 +7081,14 @@ describe('validateOatSkills', () => {
       },
     );
 
-    expect(result.findings).toEqual([]);
+    // The bumped fixture still uses the deprecated top-level alias, so that
+    // warning is the only finding expected.
+    expect(result.findings).toEqual([
+      aliasWarning(
+        join(root, '.agents', 'skills', 'oat-version-bumped', 'SKILL.md'),
+        '1.2.4',
+      ),
+    ]);
   });
 
   it('allows brand-new canonical skills that do not exist at the base ref', async () => {
@@ -8864,5 +8901,639 @@ describe('authoring contract — executable backstops for standing claims', () =
     expect(iterator).toContain('**Step a (Requirement-to-Test Mapping):**');
     expect(iterator).toContain('**Step b (Test Levels):**');
     expect(iterator).toContain('`ID | Verification | Key Scenarios`');
+  });
+});
+
+describe('skill version resolution across both validators', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  async function createRoot(): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'oat-version-source-'));
+    tempDirs.push(root);
+    return root;
+  }
+
+  function skillContent(
+    skillName: string,
+    versionLines: readonly string[],
+    body = 'Current instructions.',
+  ): string {
+    return [
+      '---',
+      `name: ${skillName}`,
+      ...versionLines,
+      'description: Use when validating skill version resolution. Provides a fixture for resolver tests.',
+      'disable-model-invocation: true',
+      'user-invocable: true',
+      'allowed-tools: Read, Write',
+      '---',
+      '',
+      '# Demo',
+      '',
+      '## Progress Indicators (User-Facing)',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      ' OAT ▸ DEMO',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '',
+      body,
+    ].join('\n');
+  }
+
+  function changedSkillGit(skillName: string, baseContent: string) {
+    const relativePath = `.agents/skills/${skillName}/SKILL.md`;
+    return {
+      gitExecFile: async (_file: string, args: string[]) => {
+        if (args[0] === 'diff') {
+          return { stdout: `${relativePath}\n`, stderr: '' };
+        }
+        if (args[0] === 'show' && args[1] === `origin/main:${relativePath}`) {
+          return { stdout: baseContent, stderr: '' };
+        }
+        throw new Error(`Unexpected command: git ${args.join(' ')}`);
+      },
+    };
+  }
+
+  it('accepts a metadata-only skill with no alias warning', async () => {
+    const root = await createRoot();
+    await createSkillFile(
+      root,
+      'oat-metadata-version',
+      skillContent('oat-metadata-version', ['metadata:', '  version: 1.2.3']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([]);
+  });
+
+  it('resolves nested and quoted metadata.version through the validator path', async () => {
+    const root = await createRoot();
+    await createSkillFile(
+      root,
+      'oat-metadata-quoted',
+      skillContent('oat-metadata-quoted', [
+        'metadata:',
+        '  author: oat',
+        '  version: "1.2.3"',
+      ]),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([]);
+  });
+
+  it('warns exactly once for a non-oat-* alias-only skill', async () => {
+    const root = await createRoot();
+    // The structural checks are `oat-*` only, so before the version-alias pass
+    // iterated every skill this skill could never be reported at all.
+    const aliasSkillPath = await createSkillFile(
+      root,
+      'create-oat-skill',
+      skillContent('create-oat-skill', ['version: 1.5.2']),
+    );
+    await createSkillFile(
+      root,
+      'oat-metadata-version',
+      skillContent('oat-metadata-version', ['metadata:', '  version: 1.2.3']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: aliasSkillPath,
+        code: 'skill-version-alias',
+        severity: 'warning',
+        message:
+          'Frontmatter version 1.5.2 uses the deprecated top-level alias; move it to metadata.version (metadata.version wins when both are present)',
+      },
+    ]);
+    expect(result.validatedSkillCount).toBe(1);
+  });
+
+  it('keeps the alias warning out of the bump result for a non-oat-* skill', async () => {
+    const root = await createRoot();
+    await createSkillFile(
+      root,
+      'create-oat-skill',
+      skillContent('create-oat-skill', ['version: 1.5.2']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'create-oat-skill',
+        skillContent('create-oat-skill', ['version: 1.5.1'], 'Base.'),
+      ),
+    );
+
+    // `validate-skill-version-bumps.ts` sets exit 1 on any finding regardless
+    // of severity, so an alias warning here would fail the bump gate for every
+    // changed skill in the repository.
+    expect(result.findings).toEqual([]);
+  });
+
+  it('reports a version conflict as an error from the structural validator', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-version-conflict',
+      skillContent('oat-version-conflict', [
+        'version: 1.2.3',
+        'metadata:',
+        '  version: 2.0.0',
+      ]),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-conflict',
+        severity: 'error',
+        message:
+          'Frontmatter metadata.version (2.0.0) and top-level version (1.2.3) differ; a conflicting skill has no resolvable version',
+      },
+    ]);
+  });
+
+  it('reports a version conflict as an error from the bump validator', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-version-conflict',
+      skillContent('oat-version-conflict', [
+        'version: 1.2.3',
+        'metadata:',
+        '  version: 2.0.0',
+      ]),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-version-conflict',
+        skillContent('oat-version-conflict', ['version: 1.2.3'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-conflict',
+        severity: 'error',
+        message:
+          'Frontmatter metadata.version (2.0.0) and top-level version (1.2.3) differ; a conflicting skill has no resolvable version',
+      },
+    ]);
+  });
+
+  it('enforces the bump on a metadata-only skill', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-bump',
+      skillContent('oat-metadata-bump', ['metadata:', '  version: 1.2.3']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-metadata-bump',
+        skillContent(
+          'oat-metadata-bump',
+          ['metadata:', '  version: 1.2.3'],
+          'Base.',
+        ),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        message:
+          'Changed canonical skill must bump frontmatter version relative to origin/main (still 1.2.3)',
+      },
+    ]);
+  });
+
+  it('accepts a bumped metadata-only skill', async () => {
+    const root = await createRoot();
+    await createSkillFile(
+      root,
+      'oat-metadata-bump',
+      skillContent('oat-metadata-bump', ['metadata:', '  version: 1.2.4']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-metadata-bump',
+        skillContent(
+          'oat-metadata-bump',
+          ['metadata:', '  version: 1.2.3'],
+          'Base.',
+        ),
+      ),
+    );
+
+    expect(result.findings).toEqual([]);
+  });
+
+  it('compares a migrated metadata.version against a top-level base version', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-migrated',
+      skillContent('oat-metadata-migrated', ['metadata:', '  version: 1.2.2']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-metadata-migrated',
+        skillContent('oat-metadata-migrated', ['version: 1.2.3'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        message:
+          'Changed canonical skill version must increase relative to origin/main (base 1.2.3, current 1.2.2)',
+      },
+    ]);
+  });
+
+  it('runs the semver check on metadata.version', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-semver',
+      skillContent('oat-metadata-semver', ['metadata:', '  version: "1.2"']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
+    });
+  });
+
+  it('reports a metadata.version that YAML reads as a number', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-numeric',
+      skillContent('oat-metadata-numeric', ['metadata:', '  version: 1.2']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+      },
+    ]);
+  });
+
+  it('reports malformed frontmatter instead of skipping the version silently', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-malformed',
+      skillContent('oat-metadata-malformed', ['metadata: not-a-map']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-frontmatter-unreadable',
+      severity: 'error',
+      message:
+        'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+    });
+  });
+
+  it('reports malformed frontmatter for a non-oat-* skill too', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'create-oat-skill',
+      skillContent('create-oat-skill', ['version: 1.5.2', 'metadata: broken']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-unreadable',
+        severity: 'error',
+        message:
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+      },
+    ]);
+  });
+
+  it('does not let malformed frontmatter bypass bump enforcement', async () => {
+    const root = await createRoot();
+    // Before the resolver was strict, a line regex still read the untouched
+    // top-level version here and enforced the bump. Skipping the check on an
+    // unreadable block would turn a broken `metadata:` entry into a way to
+    // keep a stale version.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-bump-bypass',
+      skillContent('oat-bump-bypass', ['version: 1.2.3', 'metadata: broken']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-bump-bypass',
+        skillContent('oat-bump-bypass', ['version: 1.2.3'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-unreadable',
+        severity: 'error',
+        message:
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+      },
+    ]);
+  });
+
+  it('reports a declared metadata.version that resolves to nothing', async () => {
+    const root = await createRoot();
+    // YAML reads `1.10` as the number 1.1, so no usable version resolves; the
+    // declaration still has to be reported rather than read as "unversioned".
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-unusable',
+      skillContent('oat-metadata-unusable', ['metadata:', '  version: 1.10']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-version-unusable',
+      severity: 'error',
+      message:
+        'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+    });
+  });
+
+  it('reports an unusable declaration even when the other position resolves', async () => {
+    const root = await createRoot();
+    // `version: 1.10` is a version the author wrote and OAT cannot read; a
+    // valid metadata.version beside it must not mask that.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-mixed-declaration',
+      skillContent('oat-mixed-declaration', [
+        'version: 1.10',
+        'metadata:',
+        '  version: 1.0.1',
+      ]),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+      },
+    ]);
+  });
+
+  it('reports unreadable frontmatter once when both passes run', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-bump-bypass',
+      skillContent('oat-bump-bypass', ['version: 1.2.3', 'metadata: broken']),
+    );
+
+    const result = await validateOatSkills(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-bump-bypass',
+        skillContent('oat-bump-bypass', ['version: 1.2.3'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-unreadable',
+        severity: 'error',
+        message:
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+      },
+    ]);
+  });
+
+  it('does not let an unusable version bypass bump enforcement', async () => {
+    const root = await createRoot();
+    // The base code's line regex read `1.10` as a string and enforced the
+    // bump ("still 1.10"). The strict resolver reads no version at all, so
+    // without this guard the changed skill would pass the gate untouched.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-unusable-bypass',
+      skillContent('oat-unusable-bypass', ['version: 1.10']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-unusable-bypass',
+        skillContent('oat-unusable-bypass', ['version: 1.10'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+      },
+    ]);
+  });
+
+  it('reports an unusable version on a non-oat-* skill from the structural pass', async () => {
+    const root = await createRoot();
+    // The `oat-*` structural loop can never see this file; the version-source
+    // pass iterates every skill, which is where the finding has to come from.
+    const skillPath = await createSkillFile(
+      root,
+      'nonoat-numeric',
+      skillContent('nonoat-numeric', ['version: 1.10']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+      },
+    ]);
+  });
+
+  it('does not let malformed base frontmatter bypass bump enforcement', async () => {
+    const root = await createRoot();
+    // The base copy carries `metadata:` with no map beside a valid version;
+    // the current copy is clean and keeps the same version while the body
+    // changes. Resolving the base to null must not skip the comparison.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-malformed-base',
+      skillContent('oat-malformed-base', ['version: 1.2.3']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-malformed-base',
+        skillContent(
+          'oat-malformed-base',
+          ['version: 1.2.3', 'metadata:'],
+          'Base.',
+        ),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-unreadable',
+        severity: 'error',
+        message:
+          'Changed canonical skill cannot be version-checked against origin/main: the base frontmatter is not a valid YAML mapping with unique keys',
+      },
+    ]);
+  });
+
+  it('does not let a conflicting base hide a downgrade', async () => {
+    const root = await createRoot();
+    // The base declares 2.0.0 at the top level and 1.0.0 under metadata.
+    // Comparing against the metadata side alone would read 1.1.0 as an
+    // increase and accept a downgrade from the version the base also declares.
+    const skillPath = await createSkillFile(
+      root,
+      'oat-conflicting-base',
+      skillContent('oat-conflicting-base', ['version: 1.1.0']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-conflicting-base',
+        skillContent(
+          'oat-conflicting-base',
+          ['version: 2.0.0', 'metadata:', '  version: 1.0.0'],
+          'Base.',
+        ),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-conflict',
+        severity: 'error',
+        message:
+          'Changed canonical skill cannot be version-checked against origin/main: the base frontmatter metadata.version (1.0.0) and top-level version (2.0.0) differ',
+      },
+    ]);
+  });
+
+  it('does not let an unusable base version bypass bump enforcement', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-unusable-base',
+      skillContent('oat-unusable-base', ['version: 1.2.3']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-unusable-base',
+        skillContent('oat-unusable-base', ['version: 1.10'], 'Base.'),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-unusable',
+        severity: 'error',
+        message:
+          'Changed canonical skill cannot be version-checked against origin/main: the base frontmatter declares a version that cannot be read',
+      },
+    ]);
+  });
+
+  it('reports a declared top-level version that resolves to nothing', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-empty-version',
+      skillContent('oat-empty-version', ['version:']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toContainEqual({
+      file: skillPath,
+      code: 'skill-version-unusable',
+      severity: 'error',
+      message:
+        'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
+    });
   });
 });

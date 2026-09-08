@@ -15,7 +15,9 @@ import {
   getSkillVersion,
   parseFrontmatterField,
   parseGeneratedTime,
+  parseSkillFrontmatter,
   parseSkillGateOverrides,
+  resolveSkillVersion,
   GATE_AWARE_SKILLS,
   SKILL_GATE_OVERRIDE_SOURCE,
 } from './frontmatter';
@@ -188,6 +190,39 @@ describe('frontmatter', () => {
 
       await expect(getSkillVersion(dir)).resolves.toBeNull();
     });
+
+    it('reads metadata.version when the top-level alias is absent', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-skill-'));
+      tempDirs.push(dir);
+      await writeFile(
+        join(dir, 'SKILL.md'),
+        '---\nname: oat-demo\nmetadata:\n  author: oat\n  version: 2.5.0\n---\n# Body',
+      );
+
+      expect(await getSkillVersion(dir)).toBe('2.5.0');
+    });
+
+    it('prefers metadata.version over the top-level alias', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-skill-'));
+      tempDirs.push(dir);
+      await writeFile(
+        join(dir, 'SKILL.md'),
+        '---\nname: oat-demo\nversion: 1.2.3\nmetadata:\n  version: "2.0.0"\n---\n# Body',
+      );
+
+      expect(await getSkillVersion(dir)).toBe('2.0.0');
+    });
+
+    it('returns null when the frontmatter block is malformed', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-skill-'));
+      tempDirs.push(dir);
+      await writeFile(
+        join(dir, 'SKILL.md'),
+        '---\nname: oat-demo\nversion: 1.2.3\nversion: 1.2.4\n---\n# Body',
+      );
+
+      expect(await getSkillVersion(dir)).toBeNull();
+    });
   });
 
   describe('getAgentVersion', () => {
@@ -216,6 +251,182 @@ describe('frontmatter', () => {
       await expect(
         getAgentVersion('/nonexistent/agent.md'),
       ).resolves.toBeNull();
+    });
+
+    it('reads metadata.version from agent frontmatter', async () => {
+      const dir = await mkdtemp(join(tmpdir(), 'oat-agent-'));
+      tempDirs.push(dir);
+      const agentPath = join(dir, 'oat-reviewer.md');
+      await writeFile(
+        agentPath,
+        '---\nname: oat-reviewer\nmetadata:\n  version: 3.1.0\n---\n## Role',
+      );
+
+      expect(await getAgentVersion(agentPath)).toBe('3.1.0');
+    });
+  });
+
+  describe('parseSkillFrontmatter and resolveSkillVersion', () => {
+    const resolve = (block: string) =>
+      resolveSkillVersion(parseSkillFrontmatter(block));
+
+    it('resolves metadata.version with source metadata', () => {
+      expect(resolve('name: demo\nmetadata:\n  version: 1.2.3')).toEqual({
+        version: '1.2.3',
+        source: 'metadata',
+      });
+    });
+
+    it('resolves the top-level alias with source top-level', () => {
+      expect(resolve('name: demo\nversion: 1.2.3')).toEqual({
+        version: '1.2.3',
+        source: 'top-level',
+      });
+    });
+
+    it('reports no conflict when both fields agree', () => {
+      expect(
+        resolve('name: demo\nversion: 1.2.3\nmetadata:\n  version: 1.2.3'),
+      ).toEqual({ version: '1.2.3', source: 'metadata' });
+    });
+
+    it('reports the conflict when both fields differ', () => {
+      expect(
+        resolve('name: demo\nversion: 1.2.3\nmetadata:\n  version: 2.0.0'),
+      ).toEqual({
+        version: '2.0.0',
+        source: 'metadata',
+        conflict: { metadata: '2.0.0', topLevel: '1.2.3' },
+      });
+    });
+
+    it('returns null when neither field is present', () => {
+      expect(resolve('name: demo\ndescription: none')).toBeNull();
+    });
+
+    it('resolves quoted values to the bare string', () => {
+      expect(resolve('metadata:\n  version: "1.2.3"')).toEqual({
+        version: '1.2.3',
+        source: 'metadata',
+      });
+      expect(resolve("version: '1.2.3'")).toEqual({
+        version: '1.2.3',
+        source: 'top-level',
+      });
+    });
+
+    it('does not confuse a nested version with a top-level one', () => {
+      const parsed = parseSkillFrontmatter(
+        'name: demo\nmetadata:\n  version: 1.2.3',
+      );
+
+      expect(parsed).toEqual({
+        malformed: false,
+        unusableVersionDeclaration: false,
+        metadata: { version: '1.2.3' },
+      });
+      expect(parsed.version).toBeUndefined();
+    });
+
+    it('treats a scalar metadata value as malformed', () => {
+      const parsed = parseSkillFrontmatter('version: 1.2.3\nmetadata: nope');
+
+      expect(parsed.malformed).toBe(true);
+      expect(resolveSkillVersion(parsed)).toBeNull();
+    });
+
+    it('treats a broken document as malformed', () => {
+      const parsed = parseSkillFrontmatter('name: demo\n  version: [1.2.3');
+
+      expect(parsed.malformed).toBe(true);
+      expect(resolveSkillVersion(parsed)).toBeNull();
+    });
+
+    it('treats duplicate version keys as malformed', () => {
+      const parsed = parseSkillFrontmatter('version: 1.2.3\nversion: 1.2.4');
+
+      expect(parsed.malformed).toBe(true);
+      expect(resolveSkillVersion(parsed)).toBeNull();
+    });
+
+    it('ignores a tagged or anchored value', () => {
+      expect(resolve('version: !!str 1.2.3')).toBeNull();
+      expect(resolve('version: &pin 1.2.3')).toBeNull();
+      expect(resolve('metadata:\n  version: !!str 1.2.3')).toBeNull();
+    });
+
+    it('ignores a non-string scalar rather than reporting a value the author never wrote', () => {
+      // YAML reads `1.10` as the number 1.1; stringifying it would report a
+      // version that is not in the file.
+      expect(resolve('version: 1.10')).toBeNull();
+      expect(resolve('metadata:\n  version: 1.10')).toBeNull();
+    });
+
+    it('ignores an empty value', () => {
+      expect(resolve('version:')).toBeNull();
+      expect(resolve("version: ''")).toBeNull();
+      expect(resolve('metadata:\n  version: ""')).toBeNull();
+    });
+
+    it('falls back to the alias when metadata carries no version', () => {
+      expect(resolve('version: 1.2.3\nmetadata:\n  author: oat')).toEqual({
+        version: '1.2.3',
+        source: 'top-level',
+      });
+    });
+
+    const unusable = (block: string) =>
+      parseSkillFrontmatter(block).unusableVersionDeclaration;
+
+    it('records a declared version that resolves to nothing, at either position', () => {
+      // Validation needs to tell "no version" apart from "an unusable
+      // version" without re-reading the block with a regex.
+      expect(unusable('name: demo')).toBe(false);
+      expect(unusable('version: 1.2.3')).toBe(false);
+      expect(unusable('version:')).toBe(true);
+      expect(unusable('version: 1.10')).toBe(true);
+      expect(unusable('metadata:\n  version: 1.10')).toBe(true);
+      expect(unusable('metadata:\n  author: oat')).toBe(false);
+    });
+
+    it('records an unusable declaration even when the other position resolves', () => {
+      // A usable field must not mask a version the author wrote and OAT
+      // cannot read.
+      expect(unusable('version: 1.10\nmetadata:\n  version: 1.0.1')).toBe(true);
+      expect(unusable('version: 1.0.1\nmetadata:\n  version: 1.10')).toBe(true);
+    });
+
+    it('treats present-but-null metadata as malformed', () => {
+      // `metadata:` with no map is not the same as no metadata block at all.
+      expect(parseSkillFrontmatter('version: 1.2.3\nmetadata:').malformed).toBe(
+        true,
+      );
+      expect(resolve('version: 1.2.3\nmetadata:')).toBeNull();
+      expect(parseSkillFrontmatter('version: 1.2.3').malformed).toBe(false);
+    });
+
+    it('never returns a decorated scalar, and marks the declaration unusable', () => {
+      // The boundary is accept-versus-reject at that position, not a
+      // differently spelled value: the resolver never returns a tagged or
+      // anchored value, and every reader takes the raw block, so no reader can
+      // return a decorated value another reader rejects.
+      expect(resolve('version: !!str 1.2.3')).toBeNull();
+      expect(resolve('version: &pin 1.2.3')).toBeNull();
+      expect(resolve('metadata:\n  version: !!str 1.2.3')).toBeNull();
+
+      // With a usable value at the other position the resolver still returns
+      // that value — the decorated field is unreadable, not the document. The
+      // declaration is flagged, and the callers that must not guess (both
+      // validators and canonical role identity, pinned in their own suites)
+      // reject the file on that flag.
+      const mixed = parseSkillFrontmatter(
+        'version: &pin 1.2.3\nmetadata:\n  version: 2.0.0',
+      );
+      expect(mixed.unusableVersionDeclaration).toBe(true);
+      expect(resolveSkillVersion(mixed)).toEqual({
+        version: '2.0.0',
+        source: 'metadata',
+      });
     });
   });
 

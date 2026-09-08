@@ -1,6 +1,6 @@
 ---
 name: create-agnostic-skill
-version: 1.4.1
+version: 1.4.2
 description: Use when adding a reusable workflow skill for AI coding agents. Scaffolds a new .agents/skills skill using the Agent Skills open standard.
 argument-hint: '[skill-name]'
 disable-model-invocation: true
@@ -98,12 +98,13 @@ For detailed guidance, see `references/skill-template.md`.
 ```markdown
 ---
 name: skill-name
-version: 1.0.0
 description: Use when [trigger condition]. [What it does for disambiguation].
 argument-hint: '[arg1] [--flag]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep
 user-invocable: true
+metadata:
+  version: 1.0.0
 ---
 
 # Skill Title
@@ -172,9 +173,10 @@ Natural language request that triggers this skill
 - `argument-hint`, `allowed-tools`, `user-invocable`, `context`, `hooks` are Claude Code specific
 - Other agents ignore unknown frontmatter fields, so it's safe to include Claude-specific fields everywhere
 - `name`: max 64 chars for cross-provider portability (Codex allows 100, but 64 is the spec limit)
-- `version`: include valid semver and start new skills at `1.0.0`
+- `metadata.version`: include valid semver and start new skills at `1.0.0`. The Agent Skills specification puts the version under `metadata`, and OAT resolves `metadata.version` first and the top-level `version` second — `resolveSkillVersion` in `packages/cli/src/commands/shared/frontmatter.ts` owns that order, backstopped by `packages/cli/src/commands/shared/frontmatter.test.ts`
+- `version` (top-level): the deprecated alias, still read when `metadata.version` is absent. Do not set both to different values: OAT reports the conflict, skill validation fails on it, and canonical role identity rejects it
 - `description`: **single line, ≤ 500 chars** (Codex enforces single-line ≤ 500 chars; spec allows 1024)
-- Bump `version` on future edits: patch for fixes/clarifications, minor for backward-compatible behavior additions, major for breaking workflow/interface changes
+- Bump `metadata.version` on future edits: patch for fixes/clarifications, minor for backward-compatible behavior additions, major for breaking workflow/interface changes
 
 **Writing the `description` field:**
 
@@ -200,7 +202,7 @@ Create the skill at `.agents/skills/{skill-name}/SKILL.md`
 **Key requirements:**
 
 - Skill name matches directory name
-- New skills include `version: 1.0.0` in frontmatter
+- New skills include `metadata.version: 1.0.0` in frontmatter
 - Workflow steps use "Step 1, 2, 3..." naming
 - Include both "Basic Usage" and "Conversational" example styles
 - Use imperative form for instructions
@@ -238,7 +240,7 @@ Verify:
 
 - File created at `.agents/skills/{skill-name}/SKILL.md`
 - Frontmatter syntax is valid
-- Frontmatter includes valid semver `version:` (new skills start at `1.0.0`)
+- Frontmatter includes valid semver `metadata.version:` (new skills start at `1.0.0`)
 - Skill appears in `AGENTS.md`
 - Examples include both invocation styles
 - If the skill name starts with `oat-`, run `pnpm oat:validate-skills` and fix any findings
@@ -264,7 +266,7 @@ Provide:
 
 - **Context window is a public good**—keep skills lean, challenge every paragraph
 - Description is the trigger—include "when to use" in frontmatter, not just body
-- Bump `version` for edits: patch = fixes/clarifications, minor = backward-compatible additions, major = breaking changes
+- Bump `metadata.version` for edits: patch = fixes/clarifications, minor = backward-compatible additions, major = breaking changes
 - Keep SKILL.md **under 500 lines / ~5,000 tokens** (spec constraint)
 - Use clear, task-based headings
 - Include working examples for both invocation styles

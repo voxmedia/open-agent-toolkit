@@ -179,20 +179,55 @@ direct managed-role intent still retains the canonical agent.
 
 - `name`
 - `description`
-- `version`
+- `metadata.version` (top-level `version` is the deprecated alias)
 - `disable-model-invocation`
 - `user-invocable`
 - `allowed-tools`
 - `oat_gateable`
 
-### The `version` field is gated
+### How a skill's version is resolved
+
+The Agent Skills specification carries a skill's version under `metadata`, so
+that is where a new skill declares it:
+
+```yaml
+metadata:
+  version: 1.0.0
+```
+
+OAT resolves a version from `metadata.version` first and from the top-level
+`version` field second, and it resolves it the same way everywhere it reads
+one: the installed-versus-bundled comparison behind `oat tools list`,
+`oat tools update`, and `oat doctor`; skill validation; and canonical role
+resolution. `resolveSkillVersion` in
+`packages/cli/src/commands/shared/frontmatter.ts` owns that order, so the
+runtime helper and the validators cannot disagree.
+
+The top-level `version` field remains supported as a deprecated alias. Every
+bundled skill still uses it today, so `pnpm oat:validate-skills` reports each
+one as a non-blocking warning; the value is still read, and nothing breaks.
+Migrating the bundled skills is tracked separately.
+
+A skill that carries both fields with different values is a conflict. The
+resolver reports the `metadata.version` value together with the conflict, and
+the callers that must not guess act on it: validation reports an error rather
+than silently picking one, and canonical role resolution treats the identity as
+invalid. The runtime version readers still return the `metadata.version` value,
+so an installed-versus-bundled comparison keeps working while the conflict is
+being fixed. Carrying both with the _same_ value is accepted.
+
+### The version is gated
 
 Changing any canonical skill's `SKILL.md` requires bumping its frontmatter
-`version` in the same PR — one bump per changed skill in the final PR diff,
-even if the skill was edited multiple times on the branch. The rule is
-enforced by `pnpm run check:skill-bumps`, which runs locally (root `AGENTS.md`
-Definition of Done) and in CI; a changed skill whose version matches
-`origin/main` fails the gate.
+version in the same PR — one bump per changed skill in the final PR diff,
+even if the skill was edited multiple times on the branch. The gate reads the
+resolved version, so it enforces the bump whether the skill declares
+`metadata.version` or the top-level alias. The rule is enforced by
+`pnpm run check:skill-bumps`, which runs locally (root `AGENTS.md` Definition
+of Done) and in CI; a changed skill whose version matches `origin/main` fails
+the gate. The deprecation warning above is deliberately not part of that gate:
+`check:skill-bumps` fails on any finding it receives, so an alias warning
+routed through it would fail every changed skill until the migration lands.
 
 ## Practical Authoring Flow
 

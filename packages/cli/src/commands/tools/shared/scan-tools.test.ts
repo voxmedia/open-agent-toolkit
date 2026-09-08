@@ -1,4 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { afterEach, describe, expect, it } from 'vitest';
 
 import type { ScanToolsDependencies } from './scan-tools';
 import { scanTools } from './scan-tools';
@@ -366,5 +370,91 @@ describe('scanTools', () => {
     const agents = result.filter((t) => t.type === 'agent');
     expect(agents).toHaveLength(1);
     expect(agents[0]!.pack).toBe('research');
+  });
+});
+
+describe('scanTools version resolution with real dependencies', () => {
+  const tempDirs: string[] = [];
+
+  afterEach(async () => {
+    await Promise.all(
+      tempDirs.map((dir) => rm(dir, { recursive: true, force: true })),
+    );
+    tempDirs.length = 0;
+  });
+
+  async function writeSkill(
+    root: string,
+    relativeSkillsDir: readonly string[],
+    skillName: string,
+    versionLines: readonly string[],
+  ): Promise<void> {
+    const skillDir = join(root, ...relativeSkillsDir, skillName);
+    await mkdir(skillDir, { recursive: true });
+    await writeFile(
+      join(skillDir, 'SKILL.md'),
+      [
+        '---',
+        `name: ${skillName}`,
+        ...versionLines,
+        '---',
+        '',
+        '# Demo',
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+  }
+
+  it('compares installed and bundled skills across both version forms', async () => {
+    // No injected `getSkillVersion`: this exercises the default dependency, so
+    // the production resolver is what reads these files.
+    const root = await mkdtemp(join(tmpdir(), 'oat-scan-tools-'));
+    tempDirs.push(root);
+    const scopeRoot = join(root, 'scope');
+    const assetsRoot = join(root, 'assets');
+
+    await writeSkill(scopeRoot, ['.agents', 'skills'], 'oat-mixed-forms', [
+      'version: 1.1.0',
+    ]);
+    await writeSkill(assetsRoot, ['skills'], 'oat-mixed-forms', [
+      'metadata:',
+      '  version: 1.2.0',
+    ]);
+    await writeSkill(scopeRoot, ['.agents', 'skills'], 'oat-metadata-only', [
+      'metadata:',
+      '  version: 2.0.0',
+    ]);
+    await writeSkill(assetsRoot, ['skills'], 'oat-metadata-only', [
+      'metadata:',
+      '  version: 2.0.0',
+    ]);
+
+    const result = await scanTools({
+      scope: 'project',
+      scopeRoot,
+      assetsRoot,
+    });
+
+    expect(result).toEqual([
+      {
+        name: 'oat-metadata-only',
+        type: 'skill',
+        scope: 'project',
+        version: '2.0.0',
+        bundledVersion: '2.0.0',
+        pack: 'custom',
+        status: 'current',
+      },
+      {
+        name: 'oat-mixed-forms',
+        type: 'skill',
+        scope: 'project',
+        version: '1.1.0',
+        bundledVersion: '1.2.0',
+        pack: 'custom',
+        status: 'outdated',
+      },
+    ]);
   });
 });
