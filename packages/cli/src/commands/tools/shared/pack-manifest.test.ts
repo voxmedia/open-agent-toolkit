@@ -52,6 +52,23 @@ describe('PACK_MANIFEST', () => {
     );
   });
 
+  it('registers oat-pjm-remote in the project-management pack', () => {
+    const projectManagement = PACK_MANIFEST.find(
+      ({ name }) => name === 'project-management',
+    );
+
+    expect(projectManagement?.assets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'skill:oat-pjm-remote',
+          source: 'skills/oat-pjm-remote',
+          destination: '.agents/skills/oat-pjm-remote',
+          ownership: { project: 'managed', user: 'managed' },
+        }),
+      ]),
+    );
+  });
+
   it('covers every PackName exactly once', () => {
     expect(PACK_MANIFEST.map(({ name }) => name).sort()).toEqual(
       [...ALL_PACKS].sort(),

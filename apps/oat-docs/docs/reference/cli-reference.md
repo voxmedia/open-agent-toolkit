@@ -14,6 +14,7 @@ The CLI is also a standalone value path. You can use `oat init`, `oat sync`, `oa
 - [CLI Bootstrap](../cli-utilities/bootstrap.md) - Bootstrap a repo with `oat init`, guided setup, and initial provider adoption.
 - [Tool Packs](../cli-utilities/tool-packs.md) - Install, update, inspect, migrate, and remove bundled OAT skills and agents at project or user scope.
 - [Config and Local State](../cli-utilities/config-and-local-state.md) - Config, backlog, local paths, diagnostics, and related utility commands.
+- [Remote Project Management](../cli-utilities/remote-project-management.md) - Explicit remote bindings, policy, host handoffs, and recovery.
 - [Workflow Gates](../cli-utilities/workflow-gates.md) - Per-skill final commands, review gates, and cross-runtime prompt dispatch.
 - [Docs Tooling Commands](../docs-tooling/commands.md) - Docs app scaffolding, migration, index generation, and nav sync.
 - [Provider Sync](../provider-sync/index.md) - Sync behavior, provider capabilities, config, and drift management.
@@ -43,6 +44,7 @@ The first practical expansion path is to keep improving the existing owners: [Do
 | `oat init`                                      | Bootstrap canonical OAT directories, sync config, optional hooks, and guided setup.                                                                                                                                        | [CLI Bootstrap](../cli-utilities/bootstrap.md)                                     |
 | `oat tools ...`                                 | Install, inspect, update, remove, and migrate bundled OAT tool packs and assets across project and user scope.                                                                                                             | [Tool Packs](../cli-utilities/tool-packs.md)                                       |
 | `oat pjm ...`                                   | Adopt PJM for a repository and record it (`init`), run read-only adoption and reference diagnostics (`doctor`), and migrate legacy layouts to `pjm/` + `reference/` (`migrate`). Adoption is separate from pack placement. | [Install vs. initialize](../cli-utilities/tool-packs.md#install-vs-initialize)     |
+| `oat pjm remote ...`                            | Intake, publish, refresh, reconcile, close out, inspect discussion, resolve anomalies, diagnose, migrate, and continue durable host actions for explicit remote bindings.                                                  | [Remote Project Management](../cli-utilities/remote-project-management.md)         |
 | `oat decision ...`                              | Create, index, and migrate file-per-record repo decisions under `reference/decisions/` (`init`, `new`, `regenerate-index`, `migrate`).                                                                                     | [Config and Local State](../cli-utilities/config-and-local-state.md#oat-decision-) |
 | `oat backlog ...` / `oat local ...`             | File-backed backlog helpers, local path sync, and local-only operational support.                                                                                                                                          | [Config and Local State](../cli-utilities/config-and-local-state.md)               |
 | `oat config ...` / `oat instructions ...`       | Config discovery, source-aware config dumps, supported mutations, and instruction-integrity helpers.                                                                                                                       | [Config and Local State](../cli-utilities/config-and-local-state.md)               |
@@ -134,6 +136,12 @@ Notable commands introduced in the current CLI surface:
   never converted into a `recorded-absent` row or pull guidance.
 - `oat tools migrate --pack <pack> --from <scope> --to <scope>` - move one installed pack between project and user scope. Always previews first, installs and re-inventories the destination before touching the source, and offers source removal only after the destination is verified complete. Declining or running non-interactively leaves the pack installed at both scopes rather than failing. `--dry-run` stops after the preview; there is no force flag. See [Tool Packs](../cli-utilities/tool-packs.md#oat-tools-migrate).
 - `oat pjm doctor --json` - read-only repository PJM diagnostics whose result carries an additive `adoption` object (`state` of `declared` | `inferred-legacy` | `partial-initialization` | `none`, `repoRoot`, and `recovery`). This, not `oat tools has project-management`, is the check that answers whether _this repository_ adopted PJM.
+- `oat pjm remote ... --json` - operate one explicit provider-neutral binding.
+  The family includes `intake`, `publish`, `refresh`, `reconcile`, `closeout`,
+  `discussion`, `resolve`, `doctor`, `migrate`, `storage`, and
+  `operation continue`. An `ok` envelope exits 0, a system `failed` envelope exits 2, and
+  every safely persisted nonterminal or blocked status exits 1. A `pending`
+  envelope with `externalAction` is a durable host handoff, not remote success.
 - `oat config dump --json` - merged config with source attribution
 - `oat project status --json` - full parsed state for the active tracked project. **Stable contract for skills:** the JSON output is a typed read interface for OAT skills; the field set consumed by migrated skills is locked by `MIGRATED_FIELDS` in `packages/cli/src/commands/project/status.test.ts`. Removing or renaming any of `project.{name, path, phase, phaseStatus, workflowMode, docsUpdated, lastCommit, prStatus, prUrl}` is a breaking change and will fail the contract test.
 - `oat project status --field <path>` - print one arbitrary dot-path field from the same status payload, e.g. `project.workflowMode` or `project.timestamps.stateUpdated`. Missing/null fields print `null`; object and array fields print compact JSON.
@@ -171,12 +179,15 @@ Per-key restrictions apply identically to `set` and `unset`: structural keys can
 
 `oat config unset <key>` removes the key from the selected surface and prunes any parent object it empties, so the resolved value falls back through the remaining surfaces to the built-in default. Removing a key the surface does not hold is not an error: it reports an already-unset outcome and exits 0. With `--json` the envelope adds a `removed` boolean, which is the machine-readable way to tell a real removal from an already-unset no-op, since both exit 0. A stored value that fails validation is still removed, matching `oat config set`, which repairs the same file.
 
-`unset` refuses five classes of key, each with exit code 1:
+Remote settings under `pjm.remote.*` remain shared-only. Removing a mutable leaf preserves sibling settings and the required empty `policy` object, if necessary, so the remaining remote configuration stays readable. Explicit defaults are removed from disk rather than silently written back by normalization; effective values still use fail-closed defaults. Remote policy must pass strict validation before removal.
+
+`unset` refuses six classes of key, each with exit code 1:
 
 - **Unknown keys**, including keys OAT reads but does not expose in the `oat config` catalog (`documentation.index`). These are not removable by any `oat config` command.
 - **Lifecycle state** (`activeProject`, `lastPausedProject`) — cleared with `oat config set <key> ''` instead.
 - **Pack intent** (`tools.*`) — removed with `oat tools remove --pack <pack> --scope project`, which also removes the installed pack files. Clearing the intent alone would leave them behind.
 - **Aggregate read views** (`workflow.dispatchCeiling`, `workflow.dispatchCeiling.providers`) — these are assembled for `get` from the leaf keys and are not stored as such. Unset `workflow.dispatchCeiling.preset` or `workflow.dispatchCeiling.providers.<provider>` instead.
+- **Read-only remote-policy structure** (`pjm.remote`, `pjm.remote.policy`, `pjm.remote.schemaVersion`) — unset a documented mutable child key instead; removing the complete policy or its schema discriminator is not supported.
 - **Environment-shadowed keys with nothing stored on the target surface** — when `OAT_PROJECTS_ROOT`, `OAT_PROJECTS_DEFAULT_SCOPE`, or `OAT_WORKTREES_ROOT` supplies the effective value and the surface holds nothing to remove, clear the environment variable in your shell. When the surface _does_ hold a stored value, `unset` removes it (as `set` would rewrite it) and warns that the override still supplies the effective value.
 
 ## `workflow.*` preference keys

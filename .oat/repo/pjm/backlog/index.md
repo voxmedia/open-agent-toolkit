@@ -4,6 +4,10 @@
 
 ## Curated Overview
 
+- 2026-09-07: `BL-260907-replace-the-default-project` proposes a simpler,
+  direct agent-authored visual recap after another implementation-tail run produced
+  no visual artifact. It should reconcile or supersede the capability-probe and seam
+  configuration direction tracked under issue #230 before implementation.
 - 2026-09-06: `BL-260906-re-evaluate-universal-plan` reopens the default-policy
   question in `DR-260714-flexible-plan-task-bodies`: objective,
   risk-proportionate proof should prevent both proof-free plans and low-value

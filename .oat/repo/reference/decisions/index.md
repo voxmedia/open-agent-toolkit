@@ -14,8 +14,13 @@
 | DR-260908-bundled-skills-declare         | 2026-09-08 | accepted   | Bundled skills declare metadata.version only; the top-level alias retires on a fixed schedule          | -       |
 | DR-260907-additive-post-selection        | 2026-09-07 | accepted   | Additive post-selection recovery envelopes                                                             | -       |
 | DR-260907-gate-log-receipts-live-under   | 2026-09-07 | accepted   | Gate log receipts live under the project                                                               | -       |
+| DR-260907-host-discovered-provider       | 2026-09-07 | accepted   | Host-discovered provider-neutral execution                                                             | -       |
+| DR-260907-local-first-per-binding-remote | 2026-09-07 | accepted   | Local-first per-binding remote management                                                              | -       |
 | DR-260907-oat-config-reads-materialize   | 2026-09-07 | accepted   | OAT config reads materialize `__proto__`-named keys as own data properties                             | -       |
+| DR-260907-persist-before-effect-verify   | 2026-09-07 | accepted   | Persist before effect, verify after effect                                                             | -       |
 | DR-260907-pre-dispatch-refreshes-live    | 2026-09-07 | accepted   | Pre-dispatch refreshes live in the source plans                                                        | -       |
+| DR-260907-universal-outbound-projection  | 2026-09-07 | accepted   | Universal outbound projection gate                                                                     | -       |
+| DR-260907-whole-field-sensitive-content  | 2026-09-07 | accepted   | Whole-field sensitive-content suppression                                                              | -       |
 | DR-260906-anaphor-only-attachment        | 2026-09-06 | accepted   | Anaphor-only attachment for the codex-skill below-floor guard                                          | -       |
 | DR-260906-cross-cutting-option-changes   | 2026-09-06 | accepted   | Cross-cutting option changes sweep the repository and widen mechanically or stop                       | -       |
 | DR-260906-dirty-tree-capture-fails       | 2026-09-06 | accepted   | Dirty-tree capture fails closed on anything it cannot restore faithfully                               | -       |

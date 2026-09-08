@@ -27,9 +27,7 @@
   "guidance_verified_at": "2026-09-05",
   "guidance_status": "fresh",
   "selection_source": "native-default",
-  "candidates_considered": [
-    "opus"
-  ],
+  "candidates_considered": ["opus"],
   "selection_reason": "native-catalog",
   "selected_route": "native",
   "deadline_seconds": 7200,

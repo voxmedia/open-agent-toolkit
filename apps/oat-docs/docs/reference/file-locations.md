@@ -82,9 +82,31 @@ Config ownership note:
 - Runtime sync state: `.oat/sync/`
 - Repo knowledge: `.oat/repo/knowledge/`
 - Active PJM operational layer: `.oat/repo/pjm/` (`current-state.md`, `roadmap.md`, `backlog/`)
+- Shared backlog remote-binding metadata: `.oat/repo/pjm/remote/bindings/`
 - Durable repo references: `.oat/repo/reference/` (file-per-record decisions under `decisions/`)
 - Repo reviews: `.oat/repo/reviews/`
 - Repo archive: `.oat/repo/archive/`
+
+### Remote PJM binding and operation state
+
+Remote binding metadata follows the local owner:
+
+- shared backlog bindings: `.oat/repo/pjm/remote/bindings/`
+- shared or synced project bindings: `<project>/remote/bindings/`
+- local project bindings: the local operational store's `metadata/bindings/`
+
+Operational snapshots, journals, batches, and receipts default to
+`<git-common-dir>/oat/pjm-remote/<repository-fingerprint>/`. Git linked
+worktrees resolve the same common directory and therefore share this local
+state. A separate clone has a different Git directory and begins without the
+first clone's operational snapshot; run `oat pjm remote refresh` through a live
+host capability before relying on remote freshness.
+
+When shared state is explicitly previewed and approved,
+`.oat/repo/pjm/remote/state/` or `<project>/remote/state/` replaces the local
+operational root. Shared state can contain remote planning content and is not
+available for local projects. See
+[Remote Project Management](../cli-utilities/remote-project-management.md).
 
 ## Project artifact trees
 

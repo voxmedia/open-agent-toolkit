@@ -18,6 +18,7 @@ async function seedAssets(assetsRoot: string): Promise<void> {
   for (const skill of [
     'oat-pjm-add-backlog-item',
     'oat-pjm-decision',
+    'oat-pjm-remote',
     'oat-pjm-update-repo-reference',
     'oat-pjm-review-backlog',
   ]) {
@@ -101,6 +102,7 @@ describe('installProjectManagement', () => {
     expect(result.copiedSkills).toEqual([
       'oat-pjm-add-backlog-item',
       'oat-pjm-decision',
+      'oat-pjm-remote',
       'oat-pjm-update-repo-reference',
       'oat-pjm-review-backlog',
     ]);
@@ -150,6 +152,7 @@ describe('installProjectManagement', () => {
     expect(result.skippedSkills).toEqual([
       'oat-pjm-add-backlog-item',
       'oat-pjm-decision',
+      'oat-pjm-remote',
       'oat-pjm-update-repo-reference',
       'oat-pjm-review-backlog',
     ]);
@@ -199,7 +202,7 @@ describe('installProjectManagement', () => {
     });
 
     expect(result.updatedSkills).toEqual(['oat-pjm-add-backlog-item']);
-    expect(result.skippedSkills).toHaveLength(3);
+    expect(result.skippedSkills).toHaveLength(4);
     expect(result.updatedTemplates).toEqual(['roadmap.md']);
     expect(result.skippedTemplates).toHaveLength(8);
     await expect(

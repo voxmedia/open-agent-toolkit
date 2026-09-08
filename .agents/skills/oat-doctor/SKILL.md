@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.2.2
+  version: 1.2.3
 ---
 
 # OAT Doctor
@@ -195,7 +195,7 @@ it, and lists every skill that pack ships.
 
 `project-management` pack skills:
 
-- oat-pjm-add-backlog-item, oat-pjm-decision
+- oat-pjm-add-backlog-item, oat-pjm-decision, oat-pjm-remote
 - oat-pjm-update-repo-reference, oat-pjm-review-backlog
 
 `research` pack skills:
@@ -241,7 +241,7 @@ OAT ▸ DOCTOR SUMMARY
 | docs      | project | 7/7    | current  |
 | workflows | project | 40/40  | current  |
 | ideas     | user    | 4/4    | current  |
-| project-management | project | 4/4 | current |
+| project-management | project | 5/5 | current |
 | research  | project | 6/6    | current  |
 | utility   | project | 10/10  | outdated |
 
@@ -255,7 +255,7 @@ OAT ▸ DOCTOR SUMMARY
 
 - **docs** pack: authoring-docs, oat-agent-instructions-analyze, oat-agent-instructions-apply, oat-docs-analyze, oat-docs-apply, oat-docs-authoring, oat-docs-bootstrap (7 skills available)
   → Run: oat tools install docs --scope {scope}
-- **project-management** pack: oat-pjm-add-backlog-item, oat-pjm-decision, oat-pjm-update-repo-reference, oat-pjm-review-backlog (4 skills available)
+- **project-management** pack: oat-pjm-add-backlog-item, oat-pjm-decision, oat-pjm-remote, oat-pjm-update-repo-reference, oat-pjm-review-backlog (5 skills available)
   → Run: oat tools install project-management --scope {scope}
 - **research** pack: analyze, compare, deep-research, recon, skeptic, synthesize (6 skills available)
   → Run: oat tools install research --scope {scope}

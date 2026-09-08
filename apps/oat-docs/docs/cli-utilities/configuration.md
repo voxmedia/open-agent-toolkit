@@ -15,6 +15,7 @@ For the deep file-by-file reference, see:
 - [File Locations](../reference/file-locations.md)
 - [`.oat` Directory Structure](../reference/oat-directory-structure.md)
 - [Sync Config (`.oat/sync/config.json`)](../provider-sync/config.md)
+- [Remote Project Management](remote-project-management.md)
 
 ## The five config surfaces
 
@@ -51,7 +52,7 @@ What each command is for:
 - `oat config list` shows the currently resolved command-surface values for shared and repo-local keys.
 - `oat config get <key>` reads one supported key value.
 - `oat config set <key> <value>` updates supported shared or repo-local keys.
-- `oat config unset <key>` removes a supported key from one surface, using the same `--shared`/`--local`/`--user` flags and per-key restrictions as `set`. The resolved value then falls back to the next surface down, or to the built-in default. A key the surface does not hold exits 0 as already-unset (`--json` adds a `removed` boolean to tell the two apart). Unknown keys, lifecycle state, `tools.*` pack intent, the `workflow.dispatchCeiling` aggregate read views, and environment-shadowed keys with nothing stored are refused with exit 1 — see [CLI Reference](../reference/cli-reference.md#oat-config-surface-flags).
+- `oat config unset <key>` removes a supported key from one surface, using the same `--shared`/`--local`/`--user` flags and per-key restrictions as `set`. The resolved value then falls back to the next surface down, or to the built-in default. A key the surface does not hold exits 0 as already-unset (`--json` adds a `removed` boolean to tell the two apart). Unknown keys, lifecycle state, `tools.*` pack intent, aggregate read views, read-only remote-policy structure, and environment-shadowed keys with nothing stored are refused with exit 1 — see [CLI Reference](../reference/cli-reference.md#oat-config-surface-flags).
 - `oat config describe` shows the supported config catalog across shared repo, repo-local, user, and sync/provider surfaces.
 - `oat config describe <key>` shows file, scope, default, mutability, owning command, and description for one key.
 
@@ -101,9 +102,26 @@ Common keys in `.oat/config.json`:
 - `archive.awsProfile` — optional AWS named profile forwarded as `AWS_PROFILE` to every `aws` invocation in archive flows
 - `archive.awsRegion` — optional AWS region forwarded as `AWS_REGION` to every `aws` invocation in archive flows
 - `tools.<pack>` — project-scope intent for a bundled tool pack (`true` or absent)
+- `pjm.remote.storage.state` — `local` by default; `shared` requires an
+  explicit preview and fresh approval and is unavailable to local projects
+- `pjm.remote.policy.description` — `none`, `managed-section`, or `replace`;
+  the default is `none`
+- `pjm.remote.policy.authority.*` — repository defaults and operation-specific
+  authority for remote creates, field updates, transitions, annotations,
+  deletion, relink, detach, and recreate; the default is `read-only`
+- `pjm.remote.policy.providers.<provider>.*` — optional GitHub, Linear, or Jira
+  replacement policy; its operation override or default may broaden the
+  repository result before later restrictions apply
 - `pjm.initialized` / `pjm.schemaVersion` — explicit repository PJM adoption written by `oat pjm init`
 - `workflow.gates.skills` / `workflow.gates.execTargets` — per-skill gates and cross-runtime exec targets; manage with `oat gate`
 - `workflow.gateTimeouts.code` / `workflow.gateTimeouts.artifact` — default review budgets in milliseconds
+
+Remote authority resolves the repository operation override, repository
+default, or built-in read-only fallback first. Matching provider policy replaces
+that result. Binding defaults and operation restrictions then clamp authority,
+and purpose field grants intersect to narrow outbound fields. No configured
+layer bypasses hard approval floors or current caller-owned authority evidence;
+missing, stale, or mismatched evidence fails closed.
 
 Tool-pack intent example:
 

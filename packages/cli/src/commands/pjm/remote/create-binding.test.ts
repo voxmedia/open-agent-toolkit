@@ -1,0 +1,354 @@
+import { describe, expect, it, vi } from 'vitest';
+
+import {
+  createAndBindRemoteIssue,
+  type BindingCreateIntent,
+  type CreateBindingDependencies,
+} from './create-binding';
+import { assessOutboundProjectionSafety } from './outbound-projection-safety';
+
+const projection = { title: 'Published title', description: 'Public summary' };
+const safety = assessOutboundProjectionSafety(projection, {
+  assessedAt: '2026-08-31T12:00:00.000Z',
+});
+const intent: BindingCreateIntent = {
+  bindingId: 'bnd_create_001',
+  operationId: 'op_create_001',
+  provider: 'linear',
+  context: { workspaceId: 'workspace-1', teamId: 'team-1' },
+  target: { kind: 'backlog', id: 'item-1', scope: 'shared' },
+  projection,
+  previewDigest: 'sha256:preview',
+  projectionDigest: safety.projectionDigest,
+  safetyResultDigest: safety.resultDigest,
+  capabilityEvidenceDigest: 'sha256:capability',
+  provenanceToken: 'oat-binding:bnd_create_001',
+};
+
+function harness(
+  crashAt?: Parameters<NonNullable<CreateBindingDependencies['crash']>>[0],
+) {
+  const calls: string[] = [];
+  let persisted: BindingCreateIntent | null = null;
+  const dependencies: CreateBindingDependencies = {
+    reserveIntent: vi.fn(async (value) => {
+      calls.push('intent');
+      persisted = value;
+    }),
+    readIntent: vi.fn(async () => persisted),
+    readAction: vi.fn(async () => currentAction),
+    recordAction: vi.fn(async () => {
+      calls.push('action');
+    }),
+    recordVerificationPending: vi.fn(async (_operationId, action) => {
+      calls.push('verification-pending');
+      currentAction = action;
+    }),
+    recordTerminal: vi.fn(async () => {
+      calls.push('terminal');
+    }),
+    materialize: vi.fn(async () => {
+      calls.push('materialize');
+    }),
+    writeAssociation: vi.fn(async () => {
+      calls.push('association');
+    }),
+    crash: (point) => {
+      if (point === crashAt) throw new Error(`crash:${point}`);
+    },
+  };
+  let currentAction: Awaited<ReturnType<typeof prepare>>['action'] | null =
+    null;
+  const recordAction = dependencies.recordAction;
+  dependencies.recordAction = vi.fn(async (operationId, action) => {
+    currentAction = action;
+    await recordAction(operationId, action);
+  });
+  return {
+    dependencies,
+    calls,
+    setPersisted(value: BindingCreateIntent) {
+      persisted = value;
+    },
+  };
+}
+
+function observation(
+  action: Awaited<ReturnType<typeof prepare>>['action'],
+  classification: 'observed' | 'rejected' | 'unknown' = 'observed',
+) {
+  return {
+    schemaVersion: 1,
+    operationId: action.operationId,
+    stepId: action.stepId,
+    actionDigest: action.actionDigest,
+    observedAt: '2026-08-31T12:01:00.000Z',
+    surfaceKind: 'connector',
+    capabilityEvidenceDigest: 'sha256:capability',
+    provider: 'linear',
+    context: intent.context,
+    outcome: {
+      classification,
+      identity:
+        classification === 'observed'
+          ? { stableId: 'issue-1', aliases: ['ENG-1'] }
+          : null,
+      fields: classification === 'observed' ? projection : {},
+      revisionDigest: classification === 'observed' ? 'sha256:revision' : null,
+      diagnosticCode: classification === 'observed' ? null : classification,
+    },
+  };
+}
+
+async function prepare(h = harness()) {
+  const result = await createAndBindRemoteIssue(
+    { intent, safety },
+    h.dependencies,
+  );
+  if (result.status !== 'pending') throw new Error('expected pending create');
+  return result;
+}
+
+describe('initial remote binding creation', () => {
+  it.each(['backlog', 'project'] as const)(
+    'persists %s intent before emitting one digest-bound create action',
+    async (kind) => {
+      const h = harness();
+      const result = await createAndBindRemoteIssue(
+        { intent: { ...intent, target: { ...intent.target, kind } }, safety },
+        h.dependencies,
+      );
+      expect(result.status).toBe('pending');
+      expect(h.calls).toEqual(['intent', 'action']);
+      if (result.status === 'pending') {
+        expect(result.action.outboundSafety).toEqual({
+          projectionDigest: safety.projectionDigest,
+          resultDigest: safety.resultDigest,
+        });
+        expect(result.action.intent).toMatchObject({
+          provenanceToken: intent.provenanceToken,
+        });
+      }
+    },
+  );
+
+  it('creates no action when safety evidence is absent, blocked, stale, or mismatched', async () => {
+    for (const unsafe of [
+      null,
+      { ...safety, verdict: 'blocked' as const },
+      { ...safety, projectionDigest: 'sha256:stale' },
+    ]) {
+      const h = harness();
+      await expect(
+        createAndBindRemoteIssue({ intent, safety: unsafe }, h.dependencies),
+      ).rejects.toThrow(/missing|blocks|stale|mismatch/);
+      expect(h.calls).toEqual(['intent']);
+    }
+  });
+
+  it('persists verification-pending and a distinct read before materialization', async () => {
+    const h = harness();
+    h.setPersisted(intent);
+    const pending = await prepare(h);
+    const verificationPending = await createAndBindRemoteIssue(
+      {
+        intent,
+        safety,
+        continuation: {
+          observation: observation(pending.action),
+        },
+      },
+      h.dependencies,
+    );
+    expect(verificationPending.status).toBe('pending');
+    if (verificationPending.status !== 'pending')
+      throw new Error('expected read');
+    expect(verificationPending.action.semanticOperation).toBe('read');
+    expect(h.calls).not.toContain('materialize');
+    const result = await createAndBindRemoteIssue(
+      {
+        intent,
+        safety,
+        continuation: {
+          observation: observation(verificationPending.action),
+        },
+      },
+      h.dependencies,
+    );
+    expect(result).toEqual({ status: 'verified', bindingId: intent.bindingId });
+    expect(h.calls.slice(-2)).toEqual(['materialize', 'association']);
+  });
+
+  it('rejects unsafe created identity evidence before journaling or materialization', async () => {
+    const h = harness();
+    h.setPersisted(intent);
+    const pending = await prepare(h);
+    const unsafe = observation(pending.action);
+    unsafe.outcome.identity = {
+      stableId: 'Authorization Bearer private-tail',
+      aliases: ['ENG-1'],
+    };
+    const callsBeforeObservation = [...h.calls];
+    await expect(
+      createAndBindRemoteIssue(
+        {
+          intent,
+          safety,
+          continuation: { observation: unsafe },
+        },
+        h.dependencies,
+      ),
+    ).rejects.toThrow(/identity evidence is unsafe/i);
+    expect(h.calls).toEqual(callsBeforeObservation);
+    expect(h.calls).not.toContain('terminal');
+    expect(h.calls).not.toContain('materialize');
+    expect(h.calls).not.toContain('association');
+  });
+
+  it.each(['rejected', 'unknown'] as const)(
+    'does not materialize a %s create and never retries',
+    async (classification) => {
+      const h = harness();
+      h.setPersisted(intent);
+      const pending = await prepare(h);
+      const result = await createAndBindRemoteIssue(
+        {
+          intent,
+          safety,
+          continuation: {
+            observation: observation(pending.action, classification),
+          },
+        },
+        h.dependencies,
+      );
+      expect(result.status).toBe(
+        classification === 'rejected' ? 'rejected' : 'uncertain',
+      );
+      expect(h.calls).not.toContain('materialize');
+      expect(h.calls).not.toContain('association');
+    },
+  );
+
+  it.each(['after-intent', 'after-observation', 'after-materialize'] as const)(
+    'exposes crash boundary %s without reordering durable steps',
+    async (crashAt) => {
+      const h = harness(crashAt);
+      if (crashAt === 'after-intent') {
+        await expect(
+          createAndBindRemoteIssue({ intent, safety }, h.dependencies),
+        ).rejects.toThrow(/crash/);
+        expect(h.calls).toEqual(['intent']);
+        return;
+      }
+      h.setPersisted(intent);
+      const pending = await prepare(h);
+      const firstContinuation = createAndBindRemoteIssue(
+        {
+          intent,
+          safety,
+          continuation: { observation: observation(pending.action) },
+        },
+        h.dependencies,
+      );
+      if (crashAt === 'after-observation') {
+        await expect(firstContinuation).rejects.toThrow(/crash/);
+      } else {
+        const verificationPending = await firstContinuation;
+        if (verificationPending.status !== 'pending')
+          throw new Error('expected verification read');
+        await expect(
+          createAndBindRemoteIssue(
+            {
+              intent,
+              safety,
+              continuation: {
+                observation: observation(verificationPending.action),
+              },
+            },
+            h.dependencies,
+          ),
+        ).rejects.toThrow(/crash/);
+      }
+      if (crashAt === 'after-materialize')
+        expect(h.calls).toContain('materialize');
+      expect(h.calls).not.toContain('association');
+    },
+  );
+
+  it.each([
+    'after-materialize',
+    'after-association',
+    'after-terminal',
+  ] as const)(
+    'resumes local create progress after %s without repeating a completed step',
+    async (crashAt) => {
+      const h = harness(crashAt);
+      const progress = new Set<'materialized' | 'associated' | 'terminal'>();
+      h.dependencies.readMaterializationProgress = vi.fn(async () => [
+        ...progress,
+      ]);
+      h.dependencies.recordMaterializationProgress = vi.fn(
+        async (_operationId, step) => {
+          progress.add(step);
+        },
+      );
+      h.dependencies.recordVerified = vi.fn(async () => {
+        h.calls.push('verified');
+      });
+      h.setPersisted(intent);
+      const pending = await prepare(h);
+      const verificationPending = await createAndBindRemoteIssue(
+        {
+          intent,
+          safety,
+          continuation: { observation: observation(pending.action) },
+        },
+        h.dependencies,
+      );
+      if (verificationPending.status !== 'pending') {
+        throw new Error('expected verification read');
+      }
+      const finalObservation = observation(verificationPending.action);
+      await expect(
+        createAndBindRemoteIssue(
+          {
+            intent,
+            safety,
+            continuation: { observation: finalObservation },
+          },
+          h.dependencies,
+        ),
+      ).rejects.toThrow(`crash:${crashAt}`);
+
+      const restarted = { ...h.dependencies, crash: undefined };
+      if (crashAt === 'after-terminal') {
+        await expect(
+          createAndBindRemoteIssue(
+            {
+              intent,
+              safety,
+              continuation: { observation: finalObservation },
+            },
+            restarted,
+          ),
+        ).rejects.toThrow(/terminal.*replay/i);
+      } else {
+        await expect(
+          createAndBindRemoteIssue(
+            {
+              intent,
+              safety,
+              continuation: { observation: finalObservation },
+            },
+            restarted,
+          ),
+        ).resolves.toEqual({
+          status: 'verified',
+          bindingId: intent.bindingId,
+        });
+      }
+      expect(h.calls.filter((call) => call === 'materialize')).toHaveLength(1);
+      expect(h.calls.filter((call) => call === 'association')).toHaveLength(1);
+    },
+  );
+});

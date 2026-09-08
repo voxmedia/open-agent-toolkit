@@ -700,6 +700,401 @@ describe('oat-config', () => {
     });
   });
 
+  it('reads and writes shared PJM remote policy and storage config', async () => {
+    const repoRoot = await createRepoRoot();
+
+    await writeOatConfig(repoRoot, {
+      version: 1,
+      pjm: {
+        initialized: true,
+        schemaVersion: 1,
+        remote: {
+          schemaVersion: 1,
+          storage: { state: 'shared' },
+          policy: {
+            description: 'managed-section',
+            authority: {
+              default: 'read-only',
+              operations: { annotate: 'user-approved' },
+            },
+            providers: {
+              github: {
+                description: 'replace',
+                authority: { operations: { create: 'user-authorized' } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+      pjm: {
+        remote: {
+          schemaVersion: 1,
+          storage: { state: 'shared' },
+          policy: {
+            description: 'managed-section',
+            authority: {
+              default: 'read-only',
+              operations: { annotate: 'user-approved' },
+            },
+          },
+        },
+      },
+    });
+  });
+
+  it('fails closed when malformed narrowing policy is combined with permissive defaults', async () => {
+    const repoRoot = await createRepoRoot();
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            policy: {
+              description: 'replace',
+              authority: {
+                default: 'autonomous',
+                operations: {
+                  'update-fields': 'misspelled-read-only',
+                },
+              },
+              providers: {
+                github: {
+                  description: 'unsafe-description',
+                  authority: {
+                    operations: { delete: 'misspelled-read-only' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+      'utf8',
+    );
+
+    await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+      pjm: {
+        remote: {
+          policy: {
+            authority: {
+              default: 'autonomous',
+              operations: { 'update-fields': 'read-only' },
+            },
+            providers: {
+              github: {
+                description: 'none',
+                authority: { operations: { delete: 'read-only' } },
+              },
+            },
+          },
+        },
+      },
+    });
+  });
+
+  it.each([
+    [
+      'operation',
+      {
+        authority: {
+          default: 'autonomous',
+          operations: { 'update-fileds': 'read-only' },
+        },
+      },
+      /pjm\.remote\.policy\.authority\.operations\.update-fileds/,
+    ],
+    [
+      'provider',
+      {
+        authority: { default: 'autonomous' },
+        providers: {
+          gitub: { authority: { default: 'read-only' } },
+        },
+      },
+      /pjm\.remote\.policy\.providers\.gitub/,
+    ],
+  ] as const)(
+    'rejects an unknown %s narrowing key before permissive authority reaches runtime',
+    async (_kind, policy, expectedPath) => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          pjm: {
+            remote: {
+              schemaVersion: 1,
+              policy: { description: 'replace', ...policy },
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      await expect(readOatConfig(repoRoot)).rejects.toThrow(expectedPath);
+    },
+  );
+
+  it.each([
+    [
+      'providers string',
+      { providers: 'ghp_structure_value_must_not_leak' },
+      /pjm\.remote\.policy\.providers.*expected object.*string/i,
+    ],
+    [
+      'providers array',
+      { providers: ['ghp_structure_value_must_not_leak'] },
+      /pjm\.remote\.policy\.providers.*expected object.*array/i,
+    ],
+    [
+      'providers null',
+      { providers: null },
+      /pjm\.remote\.policy\.providers.*expected object.*null/i,
+    ],
+    [
+      'known provider string',
+      {
+        providers: { github: 'ghp_structure_value_must_not_leak' },
+      },
+      /pjm\.remote\.policy\.providers\.github.*expected object.*string/i,
+    ],
+    [
+      'known provider array',
+      {
+        providers: { github: ['ghp_structure_value_must_not_leak'] },
+      },
+      /pjm\.remote\.policy\.providers\.github.*expected object.*array/i,
+    ],
+    [
+      'known provider null',
+      { providers: { github: null } },
+      /pjm\.remote\.policy\.providers\.github.*expected object.*null/i,
+    ],
+    [
+      'repository authority string',
+      { authority: 'ghp_structure_value_must_not_leak' },
+      /pjm\.remote\.policy\.authority.*expected object.*string/i,
+    ],
+    [
+      'repository authority array',
+      { authority: ['ghp_structure_value_must_not_leak'] },
+      /pjm\.remote\.policy\.authority.*expected object.*array/i,
+    ],
+    [
+      'repository authority null',
+      { authority: null },
+      /pjm\.remote\.policy\.authority.*expected object.*null/i,
+    ],
+    [
+      'repository operations string',
+      {
+        authority: {
+          default: 'autonomous',
+          operations: 'ghp_structure_value_must_not_leak',
+        },
+      },
+      /pjm\.remote\.policy\.authority\.operations.*expected object.*string/i,
+    ],
+    [
+      'repository operations array',
+      {
+        authority: {
+          default: 'autonomous',
+          operations: ['ghp_structure_value_must_not_leak'],
+        },
+      },
+      /pjm\.remote\.policy\.authority\.operations.*expected object.*array/i,
+    ],
+    [
+      'repository operations null',
+      { authority: { default: 'autonomous', operations: null } },
+      /pjm\.remote\.policy\.authority\.operations.*expected object.*null/i,
+    ],
+    [
+      'provider authority scalar',
+      {
+        authority: { default: 'autonomous' },
+        providers: {
+          github: { authority: 'ghp_structure_value_must_not_leak' },
+        },
+      },
+      /pjm\.remote\.policy\.providers\.github\.authority.*expected object.*string/i,
+    ],
+    [
+      'provider authority array',
+      {
+        authority: { default: 'autonomous' },
+        providers: {
+          github: { authority: ['ghp_structure_value_must_not_leak'] },
+        },
+      },
+      /pjm\.remote\.policy\.providers\.github\.authority.*expected object.*array/i,
+    ],
+    [
+      'provider authority null',
+      {
+        authority: { default: 'autonomous' },
+        providers: { github: { authority: null } },
+      },
+      /pjm\.remote\.policy\.providers\.github\.authority.*expected object.*null/i,
+    ],
+    [
+      'provider operations string',
+      {
+        authority: { default: 'autonomous' },
+        providers: {
+          github: {
+            authority: {
+              operations: 'ghp_structure_value_must_not_leak',
+            },
+          },
+        },
+      },
+      /pjm\.remote\.policy\.providers\.github\.authority\.operations.*expected object.*string/i,
+    ],
+    [
+      'provider operations array',
+      {
+        authority: { default: 'autonomous' },
+        providers: {
+          github: {
+            authority: {
+              operations: ['ghp_structure_value_must_not_leak'],
+            },
+          },
+        },
+      },
+      /pjm\.remote\.policy\.providers\.github\.authority\.operations.*expected object.*array/i,
+    ],
+    [
+      'provider operations null',
+      {
+        authority: { default: 'autonomous' },
+        providers: {
+          github: { authority: { operations: null } },
+        },
+      },
+      /pjm\.remote\.policy\.providers\.github\.authority\.operations.*expected object.*null/i,
+    ],
+  ] as const)(
+    'rejects malformed %s policy structure without exposing values',
+    async (_kind, policy, expectedMessage) => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          pjm: {
+            remote: {
+              schemaVersion: 1,
+              policy: {
+                description: 'replace',
+                authority: { default: 'autonomous' },
+                ...policy,
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      let failure: unknown;
+      try {
+        await readOatConfig(repoRoot);
+      } catch (error) {
+        failure = error;
+      }
+      expect(failure).toBeInstanceOf(Error);
+      const message = failure instanceof Error ? failure.message : '';
+      expect(message).toMatch(expectedMessage);
+      expect(message).not.toContain('ghp_structure_value_must_not_leak');
+    },
+  );
+
+  it('rejects retired execution preferences from local and user PJM config', async () => {
+    const repoRoot = await createRepoRoot();
+    const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-remote-'));
+    tempDirs.push(userConfigDir);
+
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      JSON.stringify({
+        version: 1,
+        pjm: { remote: { transports: { github: ['legacy'] } } },
+      }),
+      'utf8',
+    );
+    await writeFile(
+      join(userConfigDir, 'config.json'),
+      JSON.stringify({
+        version: 1,
+        pjm: { remote: { transports: { jira: ['legacy'] } } },
+      }),
+      'utf8',
+    );
+
+    await expect(readOatLocalConfig(repoRoot)).rejects.toThrow(
+      /retired.*discover live/i,
+    );
+    await expect(readUserConfig(userConfigDir)).rejects.toThrow(
+      /retired.*discover live/i,
+    );
+  });
+
+  it('rejects transport config on the shared surface', async () => {
+    const repoRoot = await createRepoRoot();
+    await writeFile(
+      join(repoRoot, '.oat', 'config.json'),
+      JSON.stringify({
+        version: 1,
+        pjm: {
+          remote: { transports: { github: ['legacy-native-surface'] } },
+        },
+      }),
+      'utf8',
+    );
+
+    await expect(readOatConfig(repoRoot)).rejects.toThrow(
+      /pjm\.remote\.transports.*retired/i,
+    );
+  });
+
+  it('rejects shared policy and storage config on local and user surfaces', async () => {
+    const repoRoot = await createRepoRoot();
+    const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-remote-'));
+    tempDirs.push(userConfigDir);
+    const remote = {
+      schemaVersion: 1,
+      storage: { state: 'shared' },
+      policy: {
+        description: 'none',
+        authority: { default: 'read-only' },
+      },
+    };
+    await writeFile(
+      join(repoRoot, '.oat', 'config.local.json'),
+      JSON.stringify({ version: 1, pjm: { remote } }),
+      'utf8',
+    );
+    await writeFile(
+      join(userConfigDir, 'config.json'),
+      JSON.stringify({ version: 1, pjm: { remote } }),
+      'utf8',
+    );
+
+    await expect(readOatLocalConfig(repoRoot)).rejects.toThrow(
+      /pjm\.remote\.(policy|storage).*shared/i,
+    );
+    await expect(readUserConfig(userConfigDir)).rejects.toThrow(
+      /pjm\.remote\.(policy|storage).*shared/i,
+    );
+  });
+
   it('preserves tools.brainstorm through readOatConfig round-trip', async () => {
     const repoRoot = await createRepoRoot();
 

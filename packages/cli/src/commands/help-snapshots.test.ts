@@ -23,6 +23,29 @@ function getCommandByPath(program: Command, path: string[]): Command {
 }
 
 describe('help output snapshots', () => {
+  it('pjm remote help lists convergence and recovery workflows', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['pjm', 'remote']).helpInformation();
+    expect(help).toContain('closeout');
+    expect(help).toContain('discussion');
+    expect(help).toContain('resolve');
+    expect(help).toContain('doctor');
+    expect(help).toContain('migrate');
+    expect(
+      getCommandByPath(program, [
+        'pjm',
+        'remote',
+        'closeout',
+      ]).helpInformation(),
+    ).toContain('--project <path>');
+    expect(
+      getCommandByPath(program, [
+        'pjm',
+        'remote',
+        'discussion',
+      ]).helpInformation(),
+    ).toContain('--limit <count>');
+  });
   it('leaf subcommand help shows Global Options with json/verbose/cwd', () => {
     const program = createRegisteredProgram();
     const syncHelp = getCommandByPath(program, ['sync']).helpInformation();

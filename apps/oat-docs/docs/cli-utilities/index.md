@@ -14,6 +14,7 @@ Use this section when you want bootstrap guidance, tool-pack lifecycle details, 
 - [CLI Bootstrap](bootstrap.md) - Foundational `oat init` guidance outside provider-sync-specific onboarding.
 - [Tool Packs and Installed Assets](tool-packs.md) - Bundled packs and `oat tools` lifecycle commands.
 - [Configuration](configuration.md) - OAT configuration guidance across shared, local, user, and provider-sync surfaces.
+- [Remote Project Management](remote-project-management.md) - Provider-neutral remote bindings, policy, previews, approvals, storage, and recovery.
 - [Config and Local State](config-and-local-state.md) - Utility command groups for config, local state, diagnostics, and related inspection flows.
 - [Project Log](project-log.md) - Append-only project observations, synthesis, inspection, and durable roll-up.
 - [Backlog Lifecycle](backlog-lifecycle.md) - Backlog item states, atomic close-out with `oat backlog archive`, and lifecycle drift detection in `oat pjm doctor`.
@@ -51,6 +52,7 @@ Use CLI Utilities when:
 - Use [CLI Bootstrap](bootstrap.md) when you are starting with `oat init`.
 - Go to [Tool Packs](tool-packs.md) when you are managing bundled OAT packs and installed assets.
 - Read [Configuration](configuration.md) for config semantics, or [Config and Local State](config-and-local-state.md) for inspection and diagnostic command groups.
+- Read [Remote Project Management](remote-project-management.md) before binding local planning records to GitHub, Linear, or Jira.
 - Use [Workflow Gates](workflow-gates.md) when you want a skill to run a configured final command before it is considered done.
 
 ## Common Tasks
@@ -66,5 +68,6 @@ Use CLI Utilities when:
 - [CLI Bootstrap](bootstrap.md) - Foundational `oat init` guidance outside provider-sync-specific onboarding.
 - [Tool Packs](tool-packs.md) - Bundled packs and `oat tools` lifecycle commands.
 - [Configuration](configuration.md) - OAT configuration guidance.
+- [Remote Project Management](remote-project-management.md) - Safely operate explicit remote planning-record bindings.
 - [Config and Local State](config-and-local-state.md) - Utility command groups for config, local state, diagnostics, and related inspection flows.
 - [Workflow Gates](workflow-gates.md) - Per-skill final commands and cross-runtime review dispatch.

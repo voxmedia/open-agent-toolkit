@@ -37,6 +37,19 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.66` (`remote-project-management`, original implementation and
+  closeout reviews complete; Wave 6 integration awaiting a fresh final gate,
+  publication, and release) adds local-first remote PJM
+  bindings for GitHub Issues, Linear, and Jira Cloud. `oat pjm remote` now
+  supports explicit intake, publish, refresh, reconcile, discussion, closeout,
+  relink, detach, recreate, and restart-safe operation continuation through a
+  provider-neutral host-execution boundary. Every outbound create/update uses
+  an explicit normalized projection and universal digest-bound safety gate;
+  inbound ticket fields use bounded allowlists and whole-field suppression;
+  durable journals plus authoritative read-back prevent blind retry after
+  uncertain effects. OAT core, skills, and tests retain no provider MCP names,
+  native schemas, captured catalogs, or CLI dialects.
+
 - CLI `0.2.65` (`migrate-skill-versions`, quick mode, merged as
   PR #280) moves every bundled skill's version to
   `metadata.version` with no top-level alias (82 skills, one patch bump each,

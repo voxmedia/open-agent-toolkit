@@ -794,6 +794,109 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('sets, gets, lists, dumps, and describes closed PJM remote policy keys', async () => {
+    const root = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-config-home-'));
+    tempDirs.push(home);
+
+    const sharedSet = createHarness({ cwd: root, home });
+    await runCommand(sharedSet.command, [
+      'set',
+      'pjm.remote.policy.description',
+      'managed-section',
+      '--shared',
+    ]);
+    expect(process.exitCode).toBe(0);
+
+    const getHarness = createHarness({ cwd: root, home });
+    await runCommand(
+      getHarness.command,
+      ['get', 'pjm.remote.policy.description'],
+      ['--json'],
+    );
+    expect(getHarness.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      key: 'pjm.remote.policy.description',
+      value: 'managed-section',
+      source: 'shared',
+    });
+
+    const listHarness = createHarness({ cwd: root, home });
+    await runCommand(listHarness.command, ['list']);
+    expect(listHarness.capture.info[0]).toContain(
+      'pjm.remote.policy.description',
+    );
+    expect(listHarness.capture.info[0]).not.toContain('pjm.remote.transports');
+
+    const dumpHarness = createHarness({ cwd: root, home });
+    await runCommand(dumpHarness.command, ['dump'], ['--json']);
+    expect(dumpHarness.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      resolved: {
+        'pjm.remote.policy.description': {
+          value: 'managed-section',
+          source: 'shared',
+        },
+      },
+    });
+
+    const describeHarness = createHarness({ cwd: root, home });
+    await runCommand(
+      describeHarness.command,
+      ['describe', 'pjm.remote.policy.description'],
+      ['--json'],
+    );
+    expect(describeHarness.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      entries: [
+        expect.objectContaining({
+          key: 'pjm.remote.policy.description',
+          scope: 'shared repo',
+        }),
+      ],
+    });
+  });
+
+  it('rejects PJM remote writes on non-owning config surfaces', async () => {
+    const root = await createRepoRoot();
+
+    const retiredExecutionKey = createHarness({ cwd: root });
+    await runCommand(retiredExecutionKey.command, [
+      'set',
+      'pjm.remote.transports.github',
+      '["legacy"]',
+      '--local',
+    ]);
+    expect(process.exitCode).toBe(1);
+    expect(retiredExecutionKey.capture.error[0]).toMatch(/Unknown config key/i);
+
+    process.exitCode = undefined;
+    const localPolicy = createHarness({ cwd: root });
+    await runCommand(localPolicy.command, [
+      'set',
+      'pjm.remote.policy.authority.default',
+      'user-approved',
+      '--local',
+    ]);
+    expect(process.exitCode).toBe(1);
+    expect(localPolicy.capture.error[0]).toMatch(/shared/i);
+  });
+
+  it('blocks direct opt-in to shared PJM operational storage', async () => {
+    const root = await createRepoRoot();
+    const command = createHarness({ cwd: root });
+    await runCommand(command.command, [
+      'set',
+      'pjm.remote.storage.state',
+      'shared',
+      '--shared',
+    ]);
+    expect(process.exitCode).toBe(1);
+    expect(command.capture.error[0]).toMatch(
+      /remote storage shared.*preview.*approval/i,
+    );
+  });
+
   it('list includes dynamic dispatch matrix provider keys', async () => {
     const root = await createRepoRoot();
     await writeFile(
@@ -4558,6 +4661,246 @@ describe('oat config', () => {
       });
     });
 
+    it('unset removes PJM remote defaults from disk without normalization resurrecting them', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        pjm: {
+          initialized: true,
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'local' },
+            policy: {
+              description: 'none',
+              authority: {
+                default: 'read-only',
+                operations: { create: 'user-approved' },
+              },
+            },
+          },
+        },
+      });
+
+      const description = createHarness({ cwd: root });
+      await runCommand(description.command, [
+        'unset',
+        'pjm.remote.policy.description',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      process.exitCode = undefined;
+      const authority = createHarness({ cwd: root });
+      await runCommand(authority.command, [
+        'unset',
+        'pjm.remote.policy.authority.default',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      const shared = await readSharedConfig(root);
+      expect(shared).toEqual({
+        version: 1,
+        pjm: {
+          initialized: true,
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'local' },
+            policy: {
+              authority: { operations: { create: 'user-approved' } },
+            },
+          },
+        },
+      });
+    });
+
+    it('unset preserves the empty PJM policy boundary and is idempotent for its final leaf', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'shared' },
+            policy: { description: 'managed-section' },
+          },
+        },
+      });
+
+      const first = createHarness({ cwd: root });
+      await runCommand(first.command, [
+        'unset',
+        'pjm.remote.policy.description',
+      ]);
+      expect(process.exitCode).toBe(0);
+      expect(first.capture.info[0]).toContain('unset from shared config');
+      expect(await readSharedConfig(root)).toEqual({
+        version: 1,
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'shared' },
+            policy: {},
+          },
+        },
+      });
+
+      const storage = createHarness({ cwd: root });
+      process.exitCode = undefined;
+      await runCommand(
+        storage.command,
+        ['get', 'pjm.remote.storage.state'],
+        ['--json'],
+      );
+      expect(storage.capture.jsonPayloads[0]).toMatchObject({
+        value: 'shared',
+        source: 'shared',
+      });
+
+      const second = createHarness({ cwd: root });
+      process.exitCode = undefined;
+      await runCommand(second.command, [
+        'unset',
+        'pjm.remote.policy.description',
+      ]);
+      expect(process.exitCode).toBe(0);
+      expect(second.capture.info[0]).toContain('is already unset');
+      expect(await readSharedConfig(root)).toEqual({
+        version: 1,
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'shared' },
+            policy: {},
+          },
+        },
+      });
+    });
+
+    it('unset removes PJM remote operation and provider overrides while preserving siblings', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'local' },
+            policy: {
+              description: 'managed-section',
+              authority: {
+                default: 'read-only',
+                operations: {
+                  create: 'user-approved',
+                  annotate: 'user-authorized',
+                },
+              },
+              providers: {
+                github: {
+                  description: 'replace',
+                  authority: {
+                    default: 'user-approved',
+                    operations: {
+                      'update-fields': 'user-authorized',
+                      transition: 'autonomous',
+                    },
+                  },
+                },
+                linear: { description: 'managed-section' },
+              },
+            },
+          },
+        },
+      });
+
+      const repositoryOperation = createHarness({ cwd: root });
+      await runCommand(repositoryOperation.command, [
+        'unset',
+        'pjm.remote.policy.authority.operations.create',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      process.exitCode = undefined;
+      const providerOperation = createHarness({ cwd: root });
+      await runCommand(providerOperation.command, [
+        'unset',
+        'pjm.remote.policy.providers.github.authority.operations.update-fields',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      process.exitCode = undefined;
+      const providerDescription = createHarness({ cwd: root });
+      await runCommand(providerDescription.command, [
+        'unset',
+        'pjm.remote.policy.providers.github.description',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      const shared = await readSharedConfig(root);
+      expect(shared).toEqual({
+        version: 1,
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'local' },
+            policy: {
+              description: 'managed-section',
+              authority: {
+                default: 'read-only',
+                operations: { annotate: 'user-authorized' },
+              },
+              providers: {
+                github: {
+                  authority: {
+                    default: 'user-approved',
+                    operations: { transition: 'autonomous' },
+                  },
+                },
+                linear: { description: 'managed-section' },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('unset keeps PJM remote keys shared-only and refuses structural roots', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'local' },
+            policy: {
+              description: 'managed-section',
+              authority: { default: 'read-only' },
+            },
+          },
+        },
+      });
+      const before = await readSharedConfig(root);
+
+      for (const key of [
+        'pjm.remote',
+        'pjm.remote.policy',
+        'pjm.remote.schemaVersion',
+      ]) {
+        const harness = createHarness({ cwd: root });
+        process.exitCode = undefined;
+        await runCommand(harness.command, ['unset', key]);
+        expect(process.exitCode).toBe(1);
+        expect(harness.capture.error[0]).toContain('read-only');
+      }
+
+      for (const surface of ['--local', '--user']) {
+        const harness = createHarness({ cwd: root });
+        process.exitCode = undefined;
+        await runCommand(harness.command, [
+          'unset',
+          'pjm.remote.policy.description',
+          surface,
+        ]);
+        expect(process.exitCode).toBe(1);
+        expect(harness.capture.error[0]).toContain('shared scope');
+      }
+
+      expect(await readSharedConfig(root)).toEqual(before);
+    });
+
     it('unset --shared --local rejects mutually exclusive flags', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });
@@ -4937,6 +5280,9 @@ describe('oat config', () => {
       const refused = (key: string): boolean =>
         key === 'activeProject' ||
         key === 'lastPausedProject' ||
+        key === 'pjm.remote' ||
+        key === 'pjm.remote.policy' ||
+        key === 'pjm.remote.schemaVersion' ||
         key.startsWith('tools.');
 
       const unhandled: string[] = [];

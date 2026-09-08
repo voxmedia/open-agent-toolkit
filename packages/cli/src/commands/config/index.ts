@@ -36,6 +36,11 @@ import {
   isValidGateTimeoutMs,
   type OatConfig,
   type OatLocalConfig,
+  type OatPjmRemoteDescriptionMode,
+  type OatPjmRemoteMutationAuthority,
+  type OatPjmRemoteOperationClass,
+  type OatPjmRemoteProvider,
+  type OatPjmRemoteSharedConfig,
   type OatToolsConfig,
   type OatWorkflowConfig,
   type UserConfig,
@@ -63,6 +68,7 @@ import {
   type ResolvedConfigSource,
 } from '@config/resolve';
 import { resolveAssetsRoot } from '@fs/assets';
+import { atomicWriteJson } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import {
   normalizeMatrixCellAvailability,
@@ -99,6 +105,18 @@ interface DispatchCeilingProviderConfigKeyParts {
   tier?: WorkflowDispatchMatrixTier;
 }
 
+type PjmRemoteConfigKey =
+  | 'pjm.remote'
+  | 'pjm.remote.schemaVersion'
+  | 'pjm.remote.storage.state'
+  | 'pjm.remote.policy'
+  | 'pjm.remote.policy.description'
+  | 'pjm.remote.policy.authority.default'
+  | `pjm.remote.policy.authority.operations.${OatPjmRemoteOperationClass}`
+  | `pjm.remote.policy.providers.${OatPjmRemoteProvider}.description`
+  | `pjm.remote.policy.providers.${OatPjmRemoteProvider}.authority.default`
+  | `pjm.remote.policy.providers.${OatPjmRemoteProvider}.authority.operations.${OatPjmRemoteOperationClass}`;
+
 type ConfigKey =
   | 'activeIdea'
   | 'activeProject'
@@ -129,6 +147,7 @@ type ConfigKey =
   | 'git.defaultBranch'
   | 'projects.defaultScope'
   | 'projects.root'
+  | PjmRemoteConfigKey
   | 'tools.brainstorm'
   | 'tools.core'
   | 'tools.docs'
@@ -186,6 +205,38 @@ interface ConfigCatalogEntry {
   description: string;
 }
 
+const PJM_REMOTE_PROVIDERS = ['github', 'linear', 'jira'] as const;
+const PJM_REMOTE_OPERATIONS = [
+  'create',
+  'update-fields',
+  'transition',
+  'annotate',
+  'delete',
+  'relink',
+  'detach',
+  'recreate',
+] as const;
+const PJM_REMOTE_CONFIG_KEYS: PjmRemoteConfigKey[] = [
+  'pjm.remote',
+  'pjm.remote.schemaVersion',
+  'pjm.remote.storage.state',
+  'pjm.remote.policy',
+  'pjm.remote.policy.description',
+  'pjm.remote.policy.authority.default',
+  ...PJM_REMOTE_OPERATIONS.map(
+    (operation) =>
+      `pjm.remote.policy.authority.operations.${operation}` as const,
+  ),
+  ...PJM_REMOTE_PROVIDERS.flatMap((provider) => [
+    `pjm.remote.policy.providers.${provider}.description` as const,
+    `pjm.remote.policy.providers.${provider}.authority.default` as const,
+    ...PJM_REMOTE_OPERATIONS.map(
+      (operation) =>
+        `pjm.remote.policy.providers.${provider}.authority.operations.${operation}` as const,
+    ),
+  ]),
+];
+
 interface ConfigCommandDependencies {
   buildCommandContext: (
     options: Parameters<typeof buildCommandContext>[0],
@@ -218,6 +269,7 @@ interface ConfigCommandDependencies {
   ) => Promise<ResolvedConfig>;
   resolveAssetsRoot: () => Promise<string>;
   readFile: (path: string) => Promise<string>;
+  atomicWriteJson: (path: string, data: unknown) => Promise<void>;
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
   validateMatrixCell: (
     provider: string,
@@ -261,6 +313,7 @@ const KEY_ORDER: ConfigKey[] = [
   'git.defaultBranch',
   'projects.root',
   'projects.defaultScope',
+  ...PJM_REMOTE_CONFIG_KEYS,
   'tools.brainstorm',
   'tools.core',
   'tools.docs',
@@ -298,7 +351,49 @@ const KEY_ORDER: ConfigKey[] = [
   'worktrees.root',
 ];
 
+const PJM_REMOTE_CONFIG_CATALOG: ConfigCatalogEntry[] =
+  PJM_REMOTE_CONFIG_KEYS.map((key) => {
+    const aggregate = key === 'pjm.remote' || key === 'pjm.remote.policy';
+    const schemaVersion = key === 'pjm.remote.schemaVersion';
+    const storage = key === 'pjm.remote.storage.state';
+    const authority = key.includes('.authority.');
+    const description = key.endsWith('.description');
+    const type = schemaVersion
+      ? 'literal 1'
+      : storage
+        ? 'local | shared'
+        : authority
+          ? 'read-only | user-approved | user-authorized | autonomous'
+          : description
+            ? 'none | managed-section | replace'
+            : 'object';
+    return {
+      key,
+      group: 'PJM Remote Shared Policy',
+      file: '.oat/config.json',
+      scope: 'shared repo',
+      type,
+      defaultValue: schemaVersion
+        ? '1'
+        : storage
+          ? 'local'
+          : authority
+            ? 'read-only'
+            : description
+              ? 'none'
+              : 'unset',
+      mutability: aggregate || schemaVersion ? 'read-only' : 'read/write',
+      owningCommand:
+        aggregate || schemaVersion
+          ? 'individual child keys'
+          : `oat config set ${key} <value> --shared`,
+      description:
+        'Repository-owned remote storage or mutation policy; host execution is discovered live and cannot broaden it.',
+    };
+  });
+
 const CONFIG_CATALOG: ConfigCatalogEntry[] = [
+  ...PJM_REMOTE_CONFIG_CATALOG,
   {
     key: 'projects.root',
     group: 'Shared Repo (.oat/config.json)',
@@ -1171,6 +1266,7 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   resolveEffectiveConfig,
   resolveAssetsRoot,
   readFile: (path) => readFileDefault(path, 'utf8'),
+  atomicWriteJson,
   confirmAction,
   validateMatrixCell,
   createDispatchValidationPassContext,
@@ -1185,6 +1281,10 @@ function isConfigKey(value: string): value is ConfigKey {
     value === 'workflow.dispatchCeiling.providers' ||
     isDispatchCeilingProviderKey(value)
   );
+}
+
+function isPjmRemoteConfigKey(key: ConfigKey): key is PjmRemoteConfigKey {
+  return key.startsWith('pjm.remote');
 }
 
 function isDispatchCeilingProviderKey(
@@ -1460,6 +1560,15 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
     if (surface !== 'user') {
       throw new Error(
         `Cannot set 'updateNotifications' at '${surface}' scope. updateNotifications can only be set at user scope (~/.oat/config.json).`,
+      );
+    }
+    return;
+  }
+
+  if (isPjmRemoteConfigKey(key)) {
+    if (surface !== 'shared') {
+      throw new Error(
+        `Cannot set '${key}' at '${surface}' scope. PJM remote policy and storage can only be set at shared scope.`,
       );
     }
     return;
@@ -2029,6 +2138,120 @@ function formatResolvedValue(value: unknown): string | null {
   return String(value);
 }
 
+function defaultPjmRemoteSharedConfig(): OatPjmRemoteSharedConfig {
+  return {
+    schemaVersion: 1,
+    storage: { state: 'local' },
+    policy: {
+      description: 'none',
+      authority: { default: 'read-only', operations: {} },
+      providers: {},
+    },
+  };
+}
+
+function applyPjmRemoteSharedValue(
+  current: OatPjmRemoteSharedConfig | undefined,
+  key: PjmRemoteConfigKey,
+  rawValue: string,
+): OatPjmRemoteSharedConfig {
+  if (
+    key === 'pjm.remote' ||
+    key === 'pjm.remote.policy' ||
+    key === 'pjm.remote.schemaVersion'
+  ) {
+    throw new Error(
+      `Config key '${key}' is read-only; set one of its documented child keys.`,
+    );
+  }
+  const remote = structuredClone(current ?? defaultPjmRemoteSharedConfig());
+  if (key === 'pjm.remote.storage.state') {
+    const state = rawValue.trim();
+    if (state !== 'local' && state !== 'shared') {
+      throw new Error(
+        `Invalid value for ${key}: expected one of local | shared, got '${rawValue}'.`,
+      );
+    }
+    if (state === 'shared') {
+      throw new Error(
+        "Shared operational storage requires 'oat pjm remote storage shared' preview and approval; direct config set is blocked.",
+      );
+    }
+    remote.storage = { state };
+    return remote;
+  }
+  const descriptions: readonly OatPjmRemoteDescriptionMode[] = [
+    'none',
+    'managed-section',
+    'replace',
+  ];
+  const authorities: readonly OatPjmRemoteMutationAuthority[] = [
+    'read-only',
+    'user-approved',
+    'user-authorized',
+    'autonomous',
+  ];
+  const value = rawValue.trim();
+  if (key === 'pjm.remote.policy.description') {
+    if (!descriptions.includes(value as OatPjmRemoteDescriptionMode)) {
+      throw new Error(
+        `Invalid value for ${key}: expected one of ${descriptions.join(' | ')}, got '${rawValue}'.`,
+      );
+    }
+    remote.policy.description = value as OatPjmRemoteDescriptionMode;
+    return remote;
+  }
+  if (!authorities.includes(value as OatPjmRemoteMutationAuthority)) {
+    if (key.endsWith('.description')) {
+      if (!descriptions.includes(value as OatPjmRemoteDescriptionMode)) {
+        throw new Error(
+          `Invalid value for ${key}: expected one of ${descriptions.join(' | ')}, got '${rawValue}'.`,
+        );
+      }
+    } else {
+      throw new Error(
+        `Invalid value for ${key}: expected one of ${authorities.join(' | ')}, got '${rawValue}'.`,
+      );
+    }
+  }
+  if (key === 'pjm.remote.policy.authority.default') {
+    remote.policy.authority.default = value as OatPjmRemoteMutationAuthority;
+    return remote;
+  }
+  const repositoryOperationPrefix = 'pjm.remote.policy.authority.operations.';
+  if (key.startsWith(repositoryOperationPrefix)) {
+    const operation = key.slice(
+      repositoryOperationPrefix.length,
+    ) as OatPjmRemoteOperationClass;
+    remote.policy.authority.operations ??= {};
+    remote.policy.authority.operations[operation] =
+      value as OatPjmRemoteMutationAuthority;
+    return remote;
+  }
+
+  const parts = key.split('.');
+  const provider = parts[4] as OatPjmRemoteProvider;
+  remote.policy.providers ??= {};
+  const providerPolicy = structuredClone(
+    remote.policy.providers[provider] ?? {},
+  );
+  if (parts[5] === 'description') {
+    providerPolicy.description = value as OatPjmRemoteDescriptionMode;
+  } else {
+    providerPolicy.authority ??= {};
+    if (parts[6] === 'default') {
+      providerPolicy.authority.default = value as OatPjmRemoteMutationAuthority;
+    } else {
+      providerPolicy.authority.operations ??= {};
+      const operation = parts[7] as OatPjmRemoteOperationClass;
+      providerPolicy.authority.operations[operation] =
+        value as OatPjmRemoteMutationAuthority;
+    }
+  }
+  remote.policy.providers[provider] = providerPolicy;
+  return remote;
+}
+
 async function getConfigValue(
   repoRoot: string,
   userConfigDir: string,
@@ -2139,6 +2362,20 @@ async function setConfigValue(
 
   const effectiveSurface: ConfigSurface =
     surface === 'auto' ? defaultSurfaceForKey(key) : surface;
+
+  if (isPjmRemoteConfigKey(key)) {
+    const config = await dependencies.readOatConfig(repoRoot);
+    const remote = applyPjmRemoteSharedValue(config.pjm?.remote, key, rawValue);
+    await dependencies.writeOatConfig(repoRoot, {
+      ...config,
+      pjm: { ...config.pjm, remote },
+    });
+    return {
+      key,
+      value: rawValue.trim(),
+      source: 'shared',
+    };
+  }
 
   if (isWorkflowKey(key)) {
     const parsedValue = parseWorkflowValue(key, rawValue);
@@ -2615,7 +2852,8 @@ function configPathForKey(key: ConfigKey): string[] {
   if (
     key.startsWith('explainers.') ||
     key.startsWith('documentation.') ||
-    key.startsWith('archive.')
+    key.startsWith('archive.') ||
+    isPjmRemoteConfigKey(key)
   ) {
     return key.split('.');
   }
@@ -2662,6 +2900,20 @@ async function unsetConfigValue(
   warn: (message: string) => void,
 ): Promise<ConfigUnsetResult> {
   validateSurfaceForKey(key, surface);
+
+  // These are structural views (and, for schemaVersion, the discriminator
+  // that makes the remote policy readable), just as they are for `set`.
+  // Refuse them before resolving config so an unset attempt can never be
+  // mistaken for permission to remove the whole policy boundary.
+  if (
+    key === 'pjm.remote' ||
+    key === 'pjm.remote.policy' ||
+    key === 'pjm.remote.schemaVersion'
+  ) {
+    throw new Error(
+      `Config key '${key}' is read-only; unset one of its documented child keys.`,
+    );
+  }
 
   const resolved = await dependencies.resolveEffectiveConfig(
     repoRoot,
@@ -2805,6 +3057,24 @@ async function removeFromSurface(
   }
 
   const configPath = join(repoRoot, '.oat', 'config.json');
+
+  if (isPjmRemoteConfigKey(key)) {
+    // PJM remote normalization materializes fail-closed defaults such as
+    // policy.description=none and authority.default=read-only. Removing a
+    // leaf from that normalized object and sending it through writeOatConfig
+    // would therefore write the leaf straight back while reporting success.
+    // The config has already passed the strict shared-policy reader in
+    // resolveEffectiveConfig, so perform this removal against the validated raw
+    // document and atomically persist only the requested structural change.
+    const repaired = await removeConfigPathOnDisk(configPath, path);
+    if (!repaired) {
+      return false;
+    }
+    preservePjmRemotePolicyBoundary(repaired, path);
+    await dependencies.atomicWriteJson(configPath, repaired);
+    return true;
+  }
+
   const sharedConfig =
     key === 'documentation.excludes'
       ? await dependencies.readOatConfigForDocumentationExcludesRepair(repoRoot)
@@ -2832,6 +3102,35 @@ async function removeFromSurface(
     return true;
   }
   return false;
+}
+
+/**
+ * Keep the required PJM remote policy object when unsetting its final leaf.
+ *
+ * The recursive remover normally prunes empty parents. For this one schema,
+ * however, `policy` is the structural boundary that keeps sibling remote state
+ * (notably `storage.state=shared`) readable. An empty policy is valid and
+ * normalizes to the fail-closed defaults; an absent policy makes the complete
+ * remote object unreadable.
+ */
+function preservePjmRemotePolicyBoundary(
+  config: Record<string, unknown>,
+  path: string[],
+): void {
+  if (path[0] !== 'pjm' || path[1] !== 'remote' || path[2] !== 'policy') {
+    return;
+  }
+  const pjm = config.pjm;
+  if (!isRecord(pjm)) {
+    return;
+  }
+  const remote = pjm.remote;
+  if (!isRecord(remote)) {
+    return;
+  }
+  if (!Object.prototype.hasOwnProperty.call(remote, 'policy')) {
+    remote.policy = {};
+  }
 }
 
 /**

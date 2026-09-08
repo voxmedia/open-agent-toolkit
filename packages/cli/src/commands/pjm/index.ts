@@ -12,6 +12,7 @@ import { resolvePjmAdoption } from './adoption';
 import { runPjmDoctorChecks } from './doctor';
 import { initializeRepoReference, INSTRUCTIONS_SYNC_HINT } from './init';
 import { migratePjmRepo, readPjmMigrationPrompt } from './migrate';
+import { createPjmRemoteCommand } from './remote/index';
 
 interface InitOptions {
   repoRoot?: string;
@@ -37,6 +38,7 @@ interface PjmCommandDependencies {
   runPjmDoctorChecks: typeof runPjmDoctorChecks;
   migratePjmRepo: typeof migratePjmRepo;
   readPjmMigrationPrompt: typeof readPjmMigrationPrompt;
+  createPjmRemoteCommand: typeof createPjmRemoteCommand;
 }
 
 const DEFAULT_DEPENDENCIES: PjmCommandDependencies = {
@@ -48,6 +50,7 @@ const DEFAULT_DEPENDENCIES: PjmCommandDependencies = {
   runPjmDoctorChecks,
   migratePjmRepo,
   readPjmMigrationPrompt,
+  createPjmRemoteCommand,
 };
 
 async function resolveRepoRoot(
@@ -141,6 +144,7 @@ export function createPjmCommand(
   const cmd = new Command('pjm').description(
     'Manage project-management repo reference docs',
   );
+  cmd.addCommand(dependencies.createPjmRemoteCommand());
 
   cmd
     .command('init')

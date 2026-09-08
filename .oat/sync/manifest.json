@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "oatVersion": "0.2.65",
+  "oatVersion": "0.2.66",
   "entries": [
     {
       "canonicalPath": ".agents/agents/oat-codebase-mapper.md",
@@ -913,6 +913,16 @@
       "strategy": "symlink"
     },
     {
+      "canonicalPath": ".agents/skills/oat-pjm-remote",
+      "providerPath": ".claude/skills/oat-pjm-remote",
+      "provider": "claude",
+      "contentType": "skill",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-09-07T03:11:15.651Z",
+      "strategy": "symlink"
+    },
+    {
       "canonicalPath": ".agents/skills/oat-project-lite",
       "providerPath": ".claude/skills/oat-project-lite",
       "provider": "claude",
@@ -924,5 +934,5 @@
     }
   ],
   "collections": [],
-  "lastUpdated": "2026-09-06T21:02:26.796Z"
+  "lastUpdated": "2026-09-07T03:11:15.651Z"
 }

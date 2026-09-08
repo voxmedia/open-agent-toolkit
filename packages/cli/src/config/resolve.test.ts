@@ -247,6 +247,29 @@ describe('resolveEffectiveConfig', () => {
       value: true,
       source: 'default',
     });
+    expect(Object.keys(result.resolved)).not.toContain(
+      'pjm.remote.transports.github',
+    );
+  });
+
+  it('ignores retired local and user execution preferences', async () => {
+    const result = await resolveEffectiveConfig(
+      '/repo',
+      '/tmp/user',
+      {},
+      {
+        readOatConfig: async () => ({ version: 1 }) satisfies OatConfig,
+        readOatLocalConfig: async () =>
+          ({ version: 1 }) satisfies OatLocalConfig,
+        readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+      },
+    );
+
+    expect(
+      Object.keys(result.resolved).some((key) =>
+        key.startsWith('pjm.remote.transports'),
+      ),
+    ).toBe(false);
   });
 
   it('preserves an explicit false update notification preference from user config', async () => {

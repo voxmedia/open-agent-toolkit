@@ -264,6 +264,50 @@ managed default itself:
 oat tools update --pack project-management --scope user
 ```
 
+## A remote PJM command is pending, uncertain, or blocked
+
+Read the JSON envelope before retrying:
+
+```bash
+oat pjm remote doctor --json
+```
+
+Before the first provider-contacting command, discover a matching live
+connector. If no capable connector exists, inspect an already configured
+provider CLI's live help. Construct only bounded provider-neutral capability
+evidence and supply it through `--capability-evidence-stdin`.
+
+- `pending` with `externalAction` means OAT durably prepared one exact semantic
+  host action. Confirm the previously selected capability remains granted,
+  execute that exact action at most once, then submit one bounded observation
+  through `oat pjm remote operation continue`.
+- `uncertain` means an effect may have occurred. Follow the envelope's recovery
+  instructions; never repeat a create or update blindly.
+- `needs-review` requires an explicit reconciliation choice.
+- `blocked` means policy, approval, capability, lifecycle state, or outbound
+  safety prevented the action. Do not bypass the gate or broaden the field
+  projection.
+
+Only an `ok` envelope after authoritative read-back is remote success. Native
+provider output, a zero process exit, or a visible remote change is not.
+
+## A clone or worktree has unexpected remote PJM state
+
+Linked worktrees share default local operational state through the Git common
+directory. If one worktree has a pending operation, inspect or continue it
+instead of starting a competing action elsewhere.
+
+Independent clones do not share that local store. In a fresh clone, use
+portable binding metadata plus `oat pjm remote refresh` through a matching live
+host capability before treating snapshots as current. Offline, doctor and
+migration remain available, but commands requiring remote freshness stay
+pending or blocked.
+
+If the repository opted into `.oat/repo/pjm/remote/state/` or
+`<project>/remote/state/`, remember that shared operational storage may contain
+remote planning content visible to repository readers. Promotion requires an
+exact persisted preview and fresh approval; local projects cannot use it.
+
 ## `--scope all` fails outside a Git repository
 
 It should not. `oat status --scope all` and `oat doctor --scope all` complete
