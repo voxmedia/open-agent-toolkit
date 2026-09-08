@@ -8,4 +8,15 @@ export type {
   KnownStrayCandidate,
   KnownStraySources,
 } from './known-strays';
+export {
+  diagnoseSkillViews,
+  resolveExpectedSkillProjections,
+} from './skill-view-diagnostic';
+export type {
+  ExpectedProjection,
+  SkillViewClass,
+  SkillViewDiagnosis,
+  SkillViewDiagnostic,
+  SkillViewObservation,
+} from './skill-view-diagnostic';
 export { detectStrays } from './strays';

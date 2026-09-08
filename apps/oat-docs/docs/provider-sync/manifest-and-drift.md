@@ -84,6 +84,34 @@ An exact alias is `in_sync`; an absent alias is `missing`; and a broken,
 replaced, foreign, or otherwise unverifiable alias is `drifted`. Provider list
 and inspect output summarize collection ownership separately from copy mode.
 
+### Resolution-time skill view classes
+
+Drift states answer "does the tracked view still match?", which presupposes a
+manifest entry. A canonical skill that was never synced has no entry at all, so
+`oat tools info <name>` adds a second, additive classification beside the
+unchanged drift state. Provider and path identity for an untracked projection
+come from the active provider set and the adapter's scope mappings, not from
+the manifest.
+
+- `missing-additive` — active, supported, no manifest entry, nothing at the expected path: the only true projection gap
+- `removed` — a manifest entry exists but the provider file is gone
+- `modified` — a manifest entry exists and the provider file diverged
+- `in-sync` — the view matches the canonical skill, including a native-read provider whose view is the canonical file
+- `untracked` — something exists at the expected path that no manifest entry tracks; stray detection skips provider entries whose name matches a canonical entry, so `oat status` does not report it as a stray and reports the untracked projection as `missing` instead
+- `inactive`, `unsupported`, `excluded` — no projection is expected in this scope, so none of them is reported as missing
+
+Only `missing-additive`, `removed`, and `modified` carry a repair, and it is
+always one concrete `oat sync --scope project` or `oat sync --scope user` for
+the scope where the gap was observed. Versions are compared only for `copy`
+views: a symlinked, collection-aliased, or natively read view is the canonical
+file, so it has no second version.
+
+A drift state and a view class can legitimately disagree. Drift compares a copy
+against the hash recorded at its last sync, so a copy that was never re-synced
+after a canonical edit still matches its own manifest entry and reads as
+`in_sync`. When the two versions differ, the view class is `modified` and the
+drift state is reported unchanged beside it.
+
 ## Stray adoption
 
 `oat init` and `oat status` can offer adoption of unmanaged provider entries into canonical `.agents`.

@@ -1,0 +1,397 @@
+import { join } from 'node:path';
+
+import type { ManifestEntryV2 } from '@manifest/manifest.types';
+import type { PathMapping } from '@providers/shared/adapter.types';
+import type {
+  ProviderRegistration,
+  ProviderScopeContext,
+} from '@providers/shared/registry';
+import type { ConcreteScope, ContentType } from '@shared/types';
+
+import type { DriftReport, DriftState } from './drift.types';
+
+/**
+ * Resolution-time classification of one canonical skill against one provider
+ * view.
+ *
+ * This is a new field that sits *beside* the unchanged {@link DriftState}, not
+ * a replacement for it: `detectDrift` answers "does the tracked view still
+ * match?", which presupposes a manifest entry. The headline case this module
+ * exists for — a canonical skill nobody ever synced — has no manifest entry at
+ * all, so its provider and path identity come from the provider scope context
+ * and the adapter mappings instead.
+ *
+ * - `missing-additive`: active, supported, nothing tracked, nothing on disk at
+ *   the expected path. The only true projection gap.
+ * - `removed`: tracked, but the provider file is gone.
+ * - `modified`: tracked, and the provider file diverged.
+ * - `in-sync`: the view matches the canonical skill (including a native-read
+ *   provider, whose view *is* the canonical file).
+ * - `untracked`: something exists at the expected path with no manifest entry.
+ *   Reported as such rather than as missing, because nothing is absent.
+ * - `inactive`, `unsupported`, `excluded`: no projection is expected at all, so
+ *   none of these ever carries a sync suggestion.
+ */
+export type SkillViewClass =
+  | 'in-sync'
+  | 'missing-additive'
+  | 'removed'
+  | 'modified'
+  | 'untracked'
+  | 'inactive'
+  | 'unsupported'
+  | 'excluded';
+
+/**
+ * Where a provider's view of one canonical skill is expected to live.
+ *
+ * Derived from the adapter's scope mappings, so it exists whether or not a
+ * manifest entry does. Deliberately carries no `strategy`: the concrete
+ * symlink/copy choice for an *untracked* projection is resolved by the sync
+ * engine from config at sync time (`resolveStrategy` in
+ * `engine/compute-plan.ts`), and re-deriving that precedence here could
+ * contradict it. A tracked projection carries its real strategy on the
+ * manifest entry, which is what the version-comparability rule needs.
+ */
+export interface ExpectedProjection {
+  provider: string;
+  /** Scope-relative path, matching the manifest's `providerPath` convention. */
+  providerPath: string;
+  contentKind: ContentType;
+  /**
+   * The provider reads canonical content in place (`nativeRead` mapping), so
+   * the "view" is the canonical file and there is nothing to project.
+   */
+  nativeRead: boolean;
+  /** Set when a canonical-path filter keeps this skill out of the projection. */
+  excludedReason?: string;
+}
+
+/** One provider's observed reality for the expected projection. */
+export interface SkillViewObservation {
+  projection: ExpectedProjection;
+  /** The manifest entry keyed by (canonicalPath, provider), when tracked. */
+  manifestEntry: ManifestEntryV2 | null;
+  /** `detectDrift` output; only available when a manifest entry exists. */
+  drift: DriftReport | null;
+  /** Whether anything exists at the expected provider path. */
+  viewPresent: boolean;
+  /** Version read from the provider copy. Only meaningful for `copy` entries. */
+  viewVersion?: string | null;
+}
+
+export interface SkillViewDiagnostic {
+  skill: string;
+  scope: ConcreteScope;
+  provider: string;
+  viewClass: SkillViewClass;
+  /** Unchanged `DriftState`; `null` when no manifest entry allowed detection. */
+  driftState: DriftState | null;
+  /** Scope-relative expected (or actual) provider path; `null` when none. */
+  providerPath: string | null;
+  tracked: boolean;
+  strategy: ManifestEntryV2['strategy'] | null;
+  nativeRead: boolean;
+  canonicalVersion: string | null;
+  viewVersion: string | null;
+  /** Versions are comparable only for `copy` views that exist. */
+  versionComparable: boolean;
+  /** Narrowest safe repair: one concrete scope, never `--scope all`. */
+  suggestion: string | null;
+  detail: string;
+}
+
+export interface SkillViewDiagnosis {
+  skill: string;
+  scope: ConcreteScope;
+  /**
+   * `unknown-skill` is a distinct top-level result from a skill that exists
+   * canonically but reaches no provider view, so missing distribution is never
+   * confused with a name the repository does not have.
+   */
+  result: 'diagnosed' | 'unknown-skill';
+  views: SkillViewDiagnostic[];
+}
+
+const CANONICAL_SKILL_DIR = join('.agents', 'skills');
+
+function skillMappingFor(
+  registration: ProviderRegistration,
+  scope: ConcreteScope,
+): PathMapping | undefined {
+  const mappings =
+    scope === 'project'
+      ? registration.adapter.projectMappings
+      : registration.adapter.userMappings;
+  return mappings.find(({ contentType }) => contentType === 'skill');
+}
+
+/**
+ * Builds the expected provider path for one canonical skill, per registered
+ * adapter that maps skills in this scope.
+ *
+ * Mirrors the engine's own derivation (`providerDir` + entry name in
+ * `computeSyncPlan`). A canonical skill is a directory, and the engine applies
+ * `providerExtension` only to file entries, so the directory name is carried
+ * through unchanged.
+ *
+ * `allowedCanonicalPaths` mirrors `computeSyncPlan`'s filter of the same name:
+ * a targeted sync narrows the plan to specific canonical paths. No durable
+ * config excludes a canonical skill today, so the `oat tools info` wiring
+ * passes nothing; the parameter exists so that a filtered projection is
+ * reported as `excluded` rather than as a projection gap.
+ */
+export function resolveExpectedSkillProjections(input: {
+  skillName: string;
+  scope: ConcreteScope;
+  registrations: readonly ProviderRegistration[];
+  allowedCanonicalPaths?: readonly string[];
+}): ExpectedProjection[] {
+  const canonicalPath = join(CANONICAL_SKILL_DIR, input.skillName);
+  const excluded =
+    input.allowedCanonicalPaths !== undefined &&
+    !input.allowedCanonicalPaths.includes(canonicalPath);
+  const projections: ExpectedProjection[] = [];
+
+  for (const registration of input.registrations) {
+    const mapping = skillMappingFor(registration, input.scope);
+    if (!mapping) continue;
+    projections.push({
+      provider: registration.adapter.name,
+      providerPath: join(mapping.providerDir, input.skillName),
+      contentKind: 'skill',
+      nativeRead: mapping.nativeRead,
+      ...(excluded
+        ? {
+            excludedReason: `targeted sync filter does not include ${canonicalPath}`,
+          }
+        : {}),
+    });
+  }
+
+  return projections;
+}
+
+function driftReasonText(state: DriftState): string {
+  return state.status === 'drifted' ? state.reason : state.status;
+}
+
+function versionNote(strategy: ManifestEntryV2['strategy'] | null): string {
+  if (strategy === 'symlink') {
+    return ' The view is a symlink to the canonical file, so it has no separate version.';
+  }
+  if (strategy === 'collection') {
+    return ' The view is inherited from a collection alias, so it has no separate version.';
+  }
+  return '';
+}
+
+function classify(
+  observation: SkillViewObservation,
+  isActive: boolean,
+): { viewClass: SkillViewClass; detail: string } {
+  const { projection, manifestEntry, drift, viewPresent } = observation;
+
+  if (!isActive) {
+    return {
+      viewClass: 'inactive',
+      detail: 'Provider is not active in this scope, so nothing is projected.',
+    };
+  }
+
+  if (projection.excludedReason !== undefined) {
+    return {
+      viewClass: 'excluded',
+      detail: `Excluded from this scope's projection: ${projection.excludedReason}.`,
+    };
+  }
+
+  if (projection.nativeRead) {
+    return {
+      viewClass: 'in-sync',
+      detail:
+        'Provider reads the canonical skill in place; there is no separate view to sync or version to compare.',
+    };
+  }
+
+  if (!manifestEntry) {
+    if (viewPresent) {
+      return {
+        viewClass: 'untracked',
+        detail:
+          'An untracked file occupies the expected path. Stray detection skips provider entries whose name matches a canonical entry, so "oat status" does not report it as a stray; it reports the untracked projection as missing instead.',
+      };
+    }
+    return {
+      viewClass: 'missing-additive',
+      detail:
+        'Canonical skill has never been projected to this view: no manifest entry and nothing at the expected path.',
+    };
+  }
+
+  if (!drift) {
+    return {
+      viewClass: 'untracked',
+      detail:
+        'A manifest entry exists but no drift observation was made for it.',
+    };
+  }
+
+  if (drift.state.status === 'missing') {
+    return {
+      viewClass: 'removed',
+      detail:
+        'The manifest tracks this view but the provider file is gone from disk.',
+    };
+  }
+
+  if (drift.state.status === 'drifted') {
+    return {
+      viewClass: 'modified',
+      detail: `The tracked view diverged from the canonical skill (${driftReasonText(drift.state)}).`,
+    };
+  }
+
+  if (drift.state.status === 'in_sync') {
+    return {
+      viewClass: 'in-sync',
+      // A copy is only known to match the content recorded at its last sync:
+      // `detectDrift` compares it against the manifest hash, so a canonical
+      // edit that was never re-synced leaves both sides agreeing. Say exactly
+      // that rather than claiming canonical equality the check cannot support.
+      detail:
+        manifestEntry.strategy === 'copy'
+          ? 'The tracked copy still matches the content recorded at its last sync; a canonical edit that was never re-synced is not visible in the manifest hash.'
+          : 'The tracked view matches the canonical skill.',
+    };
+  }
+
+  // `detectDrift` never returns `stray` for a keyed entry; treat any such
+  // report as unmanaged rather than inventing a projection gap.
+  return {
+    viewClass: 'untracked',
+    detail: 'The provider file is reported as an unmanaged stray.',
+  };
+}
+
+const REPAIRABLE: readonly SkillViewClass[] = [
+  'missing-additive',
+  'removed',
+  'modified',
+];
+
+/**
+ * Maps one canonical skill onto one diagnostic per registered provider for a
+ * single concrete scope. Pure: every filesystem, manifest, and drift fact is
+ * supplied by the caller.
+ */
+export function diagnoseSkillViews(input: {
+  skillName: string;
+  scope: ConcreteScope;
+  /** Whether the canonical skill exists in this scope. */
+  canonicalPresent: boolean;
+  canonicalVersion: string | null;
+  providerScopeContext: ProviderScopeContext;
+  observations: readonly SkillViewObservation[];
+}): SkillViewDiagnosis {
+  if (!input.canonicalPresent) {
+    return {
+      skill: input.skillName,
+      scope: input.scope,
+      result: 'unknown-skill',
+      views: [],
+    };
+  }
+
+  const active = new Set(input.providerScopeContext.activeProviders);
+  const byProvider = new Map(
+    input.observations.map((observation) => [
+      observation.projection.provider,
+      observation,
+    ]),
+  );
+  const views: SkillViewDiagnostic[] = [];
+
+  for (const registration of input.providerScopeContext.registrations) {
+    const provider = registration.adapter.name;
+    const observation = byProvider.get(provider);
+
+    if (!observation) {
+      views.push({
+        skill: input.skillName,
+        scope: input.scope,
+        provider,
+        viewClass: 'unsupported',
+        driftState: null,
+        providerPath: null,
+        tracked: false,
+        strategy: null,
+        nativeRead: false,
+        canonicalVersion: input.canonicalVersion,
+        viewVersion: null,
+        versionComparable: false,
+        suggestion: null,
+        detail: `Provider has no ${input.scope} skill mapping, so no view is expected.`,
+      });
+      continue;
+    }
+
+    const classification = classify(observation, active.has(provider));
+    const strategy = observation.manifestEntry?.strategy ?? null;
+    const nativeRead = observation.projection.nativeRead;
+    const versionComparable =
+      strategy === 'copy' &&
+      !nativeRead &&
+      (classification.viewClass === 'modified' ||
+        classification.viewClass === 'in-sync');
+    const viewVersion = versionComparable
+      ? (observation.viewVersion ?? null)
+      : null;
+    // `detectDrift` compares a copy against the hash recorded at the last
+    // sync, so a copy that was never re-synced after a canonical edit matches
+    // its own manifest entry and reads as `in_sync`. Two different versions
+    // are proof the view is not the canonical content, whatever the manifest
+    // agrees with. `driftState` still reports exactly what the detector said.
+    const staleCopy =
+      versionComparable &&
+      classification.viewClass === 'in-sync' &&
+      input.canonicalVersion !== null &&
+      viewVersion !== null &&
+      viewVersion !== input.canonicalVersion;
+    const { viewClass, detail } = staleCopy
+      ? {
+          viewClass: 'modified' as const,
+          detail: `The tracked copy still matches the hash recorded at its last sync, but its version (${viewVersion}) differs from the canonical version (${input.canonicalVersion}), so the view is stale.`,
+        }
+      : classification;
+
+    views.push({
+      skill: input.skillName,
+      scope: input.scope,
+      provider,
+      viewClass,
+      driftState: observation.drift?.state ?? null,
+      providerPath: observation.projection.providerPath,
+      tracked: observation.manifestEntry !== null,
+      strategy,
+      nativeRead,
+      canonicalVersion: input.canonicalVersion,
+      viewVersion,
+      versionComparable,
+      // The narrowest safe repair is the single concrete scope where the gap
+      // was observed. `--scope all` would widen a one-scope repair into a
+      // two-scope write.
+      suggestion: REPAIRABLE.includes(viewClass)
+        ? `oat sync --scope ${input.scope}`
+        : null,
+      detail: versionComparable ? detail : `${detail}${versionNote(strategy)}`,
+    });
+  }
+
+  return {
+    skill: input.skillName,
+    scope: input.scope,
+    result: 'diagnosed',
+    views,
+  };
+}
