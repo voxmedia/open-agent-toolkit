@@ -2719,6 +2719,53 @@ printf 'artifact-read\\n'`,
         { cwd: repository, encoding: 'utf8', env },
       );
 
+      // The excuse is for an archive location that was never materialized, so
+      // it must not fire for a non-directory sitting at that path. Keying it
+      // on `[ ! -d ]` accepted a regular file and a dangling symlink there and
+      // re-opened the dangling row this gate exists to catch.
+      const archivedRow =
+        '| final | code | passed | 2026-07-15 | reviews/archived/never-materialized.md |';
+      const replaceArchiveWith = (command: string): void => {
+        execFileSync(
+          '/bin/bash',
+          [
+            '-c',
+            [
+              'set -eu',
+              `rm -rf ${JSON.stringify(projectPath)}/reviews/archived`,
+              command,
+            ].join('\n'),
+          ],
+          { cwd: repository, encoding: 'utf8', env },
+        );
+      };
+
+      replaceArchiveWith(
+        `printf 'not a directory\\n' > ${JSON.stringify(projectPath)}/reviews/archived`,
+      );
+      const archiveIsFile = runGuard([archivedRow]);
+      expect(archiveIsFile.status).toBe(1);
+      expect(archiveIsFile.stderr).toContain(
+        'reviews/archived exists but is not a directory',
+      );
+      expect(archiveIsFile.stdout).toBe('');
+
+      // `-e` alone is false for a dangling symlink, so absence is tested with
+      // `-L` beside it; otherwise this shape stays excused.
+      replaceArchiveWith(
+        `ln -s "$PWD/no-such-archive-target" ${JSON.stringify(projectPath)}/reviews/archived`,
+      );
+      const archiveIsDanglingSymlink = runGuard([archivedRow]);
+      expect(archiveIsDanglingSymlink.status).toBe(1);
+      expect(archiveIsDanglingSymlink.stderr).toContain(
+        'reviews/archived exists but is not a directory',
+      );
+      expect(archiveIsDanglingSymlink.stdout).toBe('');
+
+      replaceArchiveWith(
+        `mkdir -p ${JSON.stringify(projectPath)}/reviews/archived`,
+      );
+
       // An entire `reviews/` tree that was never materialized still classifies
       // row by row instead of failing to resolve.
       rmSync(join(repository, projectPath, 'reviews'), {
@@ -3019,6 +3066,119 @@ printf 'artifact-read\\n'`,
       expect(renamedHeader.status).toBe(1);
       expect(renamedHeader.stderr).toContain(
         'PRFINAL-05: unrecognized review-ledger header',
+      );
+
+      // A ledger under a drifted heading left `saw_table` at 0, so the guard
+      // exited 0 having validated no row at all — the same silent full skip as
+      // an unrecognized header, and invisible because nothing is reported.
+      for (const heading of [
+        '## Review Ledger',
+        '## Reviews (ledger)',
+        '### Reviews',
+      ]) {
+        const drifted = runGuard([
+          heading,
+          '',
+          '| Scope | Type | Status | Date | Artifact |',
+          separator,
+          dangling,
+        ]);
+        expect(drifted.status, heading).toBe(1);
+        expect(drifted.stderr, heading).toContain(
+          'PRFINAL-05: no ## Reviews section',
+        );
+        expect(drifted.stdout, heading).toBe('');
+      }
+
+      // Columns are split on `|`, so an escaped `\|` shifted
+      // `artifact_column` one cell left; on the common `-` placeholder the
+      // dangling row was skipped in silence and the guard exited 0.
+      const escapedPipeInRow = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact | Reviewed Head |',
+        '| --- | --- | --- | --- | --- | --- |',
+        '| final | code | passed \\| superseded | - | reviews/gone.md | - |',
+      ]);
+      expect(escapedPipeInRow.status).toBe(1);
+      expect(escapedPipeInRow.stderr).toContain(
+        'PRFINAL-05: unsupported review-ledger row (an escaped | cannot be assigned to a column)',
+      );
+      expect(escapedPipeInRow.stderr).toContain(
+        '| final | code | passed \\| superseded | - | reviews/gone.md | - |',
+      );
+
+      // The row stops on the escape alone, before its artifact is read, so a
+      // resolvable artifact does not excuse it either. Unescaping instead of
+      // stopping would merge the two cells and read `-`, turning a row the
+      // guard used to reject into one it accepts.
+      const escapedPipeMergesOntoPlaceholder = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Artifact |',
+        '| --- | --- | --- |',
+        '| final | code \\| reviews/gone.md | - |',
+      ]);
+      expect(escapedPipeMergesOntoPlaceholder.status).toBe(1);
+      expect(escapedPipeMergesOntoPlaceholder.stderr).toContain(
+        'an escaped | cannot be assigned to a column',
+      );
+
+      // Same shape one level up: unescaping a header would merge `Note` and
+      // `Scope` into one cell, the table would stop being recognized as a
+      // ledger, and a second table is skipped in silence once an earlier one
+      // was recognized — so the header stops before its columns are read.
+      const escapedPipeInHeader = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Artifact |',
+        '| --- | --- | --- |',
+        '| valid | code | - |',
+        '',
+        '| Note \\| Scope | Type | Artifact |',
+        '| --- | --- | --- | --- |',
+        '| note | final | code | reviews/gone.md |',
+      ]);
+      expect(escapedPipeInHeader.status).toBe(1);
+      expect(escapedPipeInHeader.stderr).toContain(
+        'PRFINAL-05: review-ledger table header contains an escaped |',
+      );
+
+      // A non-ledger table's own rows stay skipped: the stop is scoped to the
+      // ledger, not to every pipe inside `## Reviews`.
+      const escapedPipeInNonLedgerRow = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        '### Artifact Review',
+        '',
+        '| Iteration | Reviewer | Outcome |',
+        '| --- | --- | --- |',
+        '| 1 | codex \\| gpt | fixes |',
+      ]);
+      expect(escapedPipeInNonLedgerRow.stderr).toBe('');
+      expect(escapedPipeInNonLedgerRow.status).toBe(0);
+
+      // A prose line whose only pipes are escaped is still an unsupported row
+      // rather than a silent skip.
+      const escapedPipeProse = runGuard([
+        '## Reviews',
+        '',
+        '| Scope | Type | Status | Date | Artifact |',
+        separator,
+        '| p01 | code | passed | 2026-07-16 | reviews/p01-code.md |',
+        '',
+        'final \\| code \\| passed \\| reviews/gone.md',
+      ]);
+      expect(escapedPipeProse.status).toBe(1);
+      expect(escapedPipeProse.stderr).toContain(
+        'PRFINAL-05: unsupported review-ledger row (a row must start with |)',
+      );
+      expect(escapedPipeProse.stderr).toContain(
+        'final \\| code \\| passed \\| reviews/gone.md',
       );
 
       // A fence that never closes must not swallow the ledger.
