@@ -302,6 +302,7 @@
 | BL-260830-add-per-claude-md-adoption-opt | Add per-CLAUDE.md adoption opt-out for instruction sync                                                         | open   | low      | feature    | M        |
 | BL-260904-add-recap-seam-config-keys     | Add recap seam config keys                                                                                      | open   | low      | task       | S        |
 | BL-260728-additional-visual-workflows    | Additional visual workflows                                                                                     | open   | low      | feature    | L        |
+| BL-260908-align-the-provider-view-json   | Align the provider-view JSON, evidence states, and docs with the human row                                      | open   | low      | task       | XS       |
 | BL-260830-benchmark-listprojects-before  | Benchmark listProjects before approving a summary fast path                                                     | open   | low      | idea       | M        |
 | BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight                                                     | open   | low      | task       | M        |
 | BL-260903-close-claude-runtime-lineage   | Close Claude runtime lineage depth and unverified provider shapes                                               | open   | low      | task       | S        |
@@ -322,6 +323,7 @@
 | BL-260906-run-scripts-worktree-init-test | Run scripts/worktree/init.test.mjs under a repository gate                                                      | open   | low      | task       | XS       |
 | BL-260906-scope-the-restamp-only-sync    | Scope the restamp-only sync body suppression per scope under --scope all                                        | open   | low      | task       | XS       |
 | BL-260904-stabilize-the-collection       | Stabilize the collection-detach engine integration test                                                         | open   | low      | task       | S        |
+| BL-260908-tighten-the-pr-final-ledger    | Tighten the pr-final ledger guard's prose and escaped-pipe boundary                                             | open   | low      | task       | XS       |
 | BL-260903-verify-the-packs-inventory     | Verify the packs:inventory path-redaction claim in troubleshooting docs                                         | open   | low      | task       | XS       |
 | BL-260903-project-document-should-prompt | project-document should prompt a re-run when review fixes change a shipped contract                             | open   | low      | task       | S        |
 

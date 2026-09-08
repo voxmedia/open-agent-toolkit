@@ -78,3 +78,31 @@ acceptance) shows fix-round briefs should restate the weaker-anywhere rule
 explicitly, not only the findings to close.
 
 ---
+
+### 2026-09-08 · structural · oat-wave-execute · root final review and Phase 06 fix round
+
+The root final review (reconnaissance attempted: four consequential
+safety-surface lanes, two Done-criteria lanes) passed with follow-ups —
+0C/1I/5M/14m — after verifying the whole review chain by patch-id and
+ledger head. The product findings became Phase 06, five tasks in two
+parallel worktrees, merged in order and gated (thirteen gates, CLI 6287,
+0 cached); the same reviewer verified every disposition at source in round 2
+(PASS, 0C/0I/2M/7m). **Skill signal (strengthens):** a reviewer's suggested
+fix is a hypothesis, not an instruction — lane B's Codex round showed the
+sentinel substitution round 1 recommended for escaped pipes would have opened
+three new holes (a header pipe hiding a whole table, a merged cell laundering a
+rejected artifact into a `-` placeholder, a `0x01` byte aliasing a filename),
+and the fail-closed stop that replaced it is strictly stronger; the review's
+literal `! -e` was likewise insufficient (`! -L` is load-bearing for a dangling
+symlink), proven by neutralization. **Skill signal (gap):** a redaction
+rewrite needs an A/B against the function it replaces, not only new-case
+tests — lane A's new terminators forwarded a path tail that the base function
+redacted, caught only by Codex; the 17-case A/B table then became the
+control. **Skill signal (gap):** the receive mirrored the artifact's declared
+`Findings:` count (13) while the artifact listed 14 Minors, so one finding was
+dropped silently until round 2 — the receive should count the bullets, not
+trust the header. **Skill signal (strengthens):** the 82-skill `--json` sweep
+and the 94-ledger differential are cheap invariants that make "byte-identical
+except where a finding demands otherwise" checkable in seconds.
+
+---

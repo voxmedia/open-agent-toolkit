@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-09-07
+oat_last_updated: 2026-09-08
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: ['p05']
@@ -507,6 +507,7 @@ git commit -m "fix(p06-t05): pin the end-to-end proto-keyed config control throu
 | p04    | code     | passed      | 2026-09-08 | reviews/archived/p04-review-2026-09-08T042834Z.md           | 839321e746a540ce9b5b2bbbd9dbe642831f3613 | manual     | -                   |
 | p05    | code     | passed      | 2026-09-08 | reviews/archived/p05-review-2026-09-08T045824Z.md           | d2923f5ab0ed4e87142b66f58b6d28f99072c5cd | manual     | -                   |
 | final  | code     | fixes_added | 2026-09-08 | reviews/archived/final-review-2026-09-08T052928Z.md         | 7219ae837a720648da86e9e377a6bb5c5fb864bb | manual     | -                   |
+| final  | code     | passed      | 2026-09-08 | reviews/archived/final-review-2026-09-08T065445Z.md         | 985e4ad0e9bc578e880deb58b6d2ff7d12c89bba | manual     | -                   |
 
 > Reviews are recorded newest-last (append-only); superseded events keep their own rows, and `oat gate review` writes its own row per gate artifact which the receive step moves forward in place. Reviewed heads are the pre-rebase lane commits the reviewers examined; the fan-in entries in `implementation.md` map each to its integration commit.
 
@@ -516,7 +517,7 @@ git commit -m "fix(p06-t05): pin the end-to-end proto-keyed config control throu
 - [x] Every source plan's `## Done criteria` confirmed (recorded in `implementation.md`; re-verified by the root final review)
 - [x] **Serialized backlog bookkeeping** (integration branch, after all merges): `oat backlog archive` with real outcome summaries for `BL-260903-populate-provider-reachability`, `BL-260903-pr-final-archives-reviews`, `BL-260903-preserve-proto-named-config`, `BL-260904-honor-metadata-version`, `BL-260904-diagnose-canonical-skills`, one commit
 - [x] Orchestration-log end-of-run synthesis written; roll-up into `summary.md` before any archive step — `summary.md` is produced by the post-implement sequence after the exit gate (archive tail deferred to program close)
-- [ ] Full DoD gates green on the integration branch (fan-in lockstep bump above freshly fetched `origin/main`)
+- [x] Full DoD gates green on the integration branch (Phase 06 fan-in: thirteen gates exit 0; re-run by the round-2 final review with forced cache bypass) (fan-in lockstep bump above freshly fetched `origin/main`)
 
 ## References
 

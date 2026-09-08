@@ -99,7 +99,7 @@ oat_generated: false
 
 ## Phase 06: final-review fixes (p06)
 
-**Status:** complete (merged `4a2ed8e65`, `e8424949c`; round-2 verification by the final reviewer pending) · **Group:** final-review fix round (worktrees A = p06-t01/t02/t03, B = p06-t04/t05)
+**Status:** complete (merged `4a2ed8e65`, `e8424949c`; verified by the final review round 2 — PASS) · **Group:** final-review fix round (worktrees A = p06-t01/t02/t03, B = p06-t04/t05)
 **Outcome:** I1: an unreadable or invalid sync config degrades the scope to `unavailable` with a redacted reason (absent config stays silent; the shared helper's `null` contract to its other callers byte-identical); M4: a manifest entry whose path diverges from the expected projection renders its own path with an honest divergence note and never borrows the other path's verdict, and an escaping tracked path is redacted and never read; m13: a failing provider degrades alone (`unverified` with the reason in its detail); m14: no qualifier or path on `inactive`/`unsupported`/`excluded`; m11: redaction covers any absolute path token with a scope-root boundary; m10: comments fixed. M1: the archived-artifact excuse requires `! -e` and `! -L` with a stop for a non-directory at `reviews/archived`; m1: no `## Reviews` section is a `PRFINAL-05` stop; m3: an escaped pipe in a ledger header or row is a fail-closed stop; m2: prose states the level-two boundary. M2: the `__proto__` injection, the `projects` sibling contract, and `unset` are pinned through the real `oat config` entry.
 **Verification:** every finding reproduced before editing; lane A: forced CLI suite 6286 `Cached: 0`, the 82-skill `--json` sweep byte-identical after each task, two Codex rounds (1C/1m; 4C — all fixed before commit, incl. a redaction tail-forwarding regression caught by a 17-case A/B against the base function); lane B: 35-shape differential plus all 94 real `plan.md` files under three awks, two Codex rounds (3C fixed by replacing the sentinel design with a stop; round 2 204 cases, no findings), eight negative controls; fan-in: thirteen gates green (CLI 6287, 0 cached).
 **Deviations:** M1 needed `! -L` beyond the review's `! -e`; m3 implemented as a stop, not a sentinel; the review's `set`/`unset`/`list` own-key wording is true only in the `projects` subtree (top-level `__proto__` is dropped like any unrecognized key) — the test pins the true contract; lane A reused `unverified` for a per-view read failure rather than adding a state (docs contract unchanged); both docs pages updated where they documented the now-false behavior; the task text's test-file path for p06-t04 was wrong (`commands/init/tools/shared/review-skill-contracts.test.ts`).
@@ -135,7 +135,7 @@ oat_generated: false
 
 **Date:** 2026-09-08
 **Review artifact:** reviews/archived/final-review-2026-09-08T052928Z.md (reviewed head `7219ae837a720648da86e9e377a6bb5c5fb864bb`, invocation manual, request `w6-final-review-001`, reconnaissance attempted: four consequential safety-surface lanes and two Done-criteria lanes, every finding re-verified by the reviewer)
-**Findings:** 0 Critical / 1 Important / 5 Medium / 13 Minor — verdict PASS with follow-ups.
+**Findings:** 0 Critical / 1 Important / 5 Medium / 14 Minor (the artifact's `Findings:` line declared 13 while listing 14; corrected at round 2) — verdict PASS with follow-ups.
 
 **Verified clean by the review:** 15/15 rebased lane commits with identical `git patch-id --stable`; 12/12 ledger heads resolve to artifacts whose `oat_review_head_sha` matches and whose `Findings:` lines match the Phase Outcomes table; the ledger append-only (8 → 17 rows); `43e204241` the only release-file or sync-manifest commit (`oatVersion` 0.2.63 → 0.2.64 exactly; `sync --scope project --dry-run` no changes); no lane commit touched `.oat/projects/` or the external plans; all gates green under forced cache bypass (338 files / 6242 tests; smoke 160; skills 857; validate-skills 82 alias warnings exit 0); five base-rejected → head-accepted candidates cleared with source evidence (base validated raw frontmatter text; the bump gate now blocks a quoted no-bump and a quoted downgrade that base missed; the p03 case was base rejecting its own pollution symptom).
 
@@ -147,6 +147,7 @@ oat_generated: false
 - M3 (the scaffolds emit metadata-only frontmatter that `tools/release/build-explainer-rc.mjs:684` throws on and `check-core.mjs:107` reads as incompatible) → promoted to a blocking acceptance criterion on `BL-260904-migrate-bundled-skills-from` (runs next; all 82 bundled skills still carry the alias, so `release:validate` is green on this tree); the templates are not changed in this wave.
 - M4 (a row's drift verdict computed for the manifest's path while the row names the expected path) → `p06-t02`.
 - m10 (comment drift), m11 (redaction delimiters), m13 (scope-level catch granularity), m14 (qualifier on inactive rows) → `p06-t03`.
+- m12 (the conflict detail blames the copy when the canonical file carries the identical conflicting pair) — dropped from this list at round 1 because the artifact's count said 13; dispositioned at round 2 as a deferred Minor → `BL-260908-align-the-provider-view-json`.
 - M5 (closeout records stale: `state.md`, `implementation.md` frontmatter, the plan's completion checklist) + m4 (parity wording → "within one stack frame", measured base 3585 / head 3584 cold) + m5 (`BL-260908-guard-normalized-config-maps` gains a sweep criterion) + m6 (p02 key-files line) + m7 (p02 correction accuracy: the `:1486` label is the `oat-project-complete` delegation case; the autonomy contract is in the drift command but missing from In scope) + m8 (the plan-text corrections are recorded here and applied at wave close, not yet applied) + m9 (p04 refresh attribution) → fixed at source in this receive commit.
 
 **Round 2:** the same reviewer verifies the p06 dispositions on the fixed tip before the exit gate.
@@ -251,7 +252,7 @@ Wave base `fab304fe7a2b0eb04f39f45b9de17934e8019fed` (origin/main after the wave
 
 #### Outstanding Items
 
-- Round-2 verification of Phase 06 by the final reviewer, then the configured exit gate, the post-implement sequence, and the PR.
+- The configured exit gate, then the post-implement sequence and the PR.
 - Group 2 (p04 + p05) at the group-1 tip; then closeout.
 - Group-1 fan-in with the lockstep bump 0.2.63 → 0.2.64, then group 2 (p04 + p05).
 - Plan gate, then group 1.
@@ -264,6 +265,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-08
 
+- Final review round 2 received (`reviews/archived/final-review-2026-09-08T065445Z.md`, PASS 0C/0I/2M/7m): two polish follow-ups filed; the exit gate runs next.
 - Phase 06 fix lanes merged (`4a2ed8e65`, `e8424949c`); thirteen gates green (CLI 6287, 0 cached); round 2 dispatched to the final reviewer.
 - Root final review received (`reviews/archived/final-review-2026-09-08T052928Z.md`, PASS with follow-ups, 0C/1I/5M/13m): product findings → Phase 06 (p06-t01..t05, two lanes); record findings fixed in the receive commit; M3 promoted to a blocking criterion on the migration item.
 - Group 2 fan-in: p04 `88a8d75df`, p05 `386a32b11`; lockstep retained at 0.2.64; eight gates + smoke + skills + root test green (0 cached).
@@ -299,6 +301,23 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p05   | 6242 (forced CLI suite, post-rebase) + 155 focused     | all    | 0      | -        |
 | p06   | 6287 (forced CLI suite at the fan-in) + smoke + skills | all    | 0      | -        |
 
+## Review Received: final (root final review, round 2 — passed)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/final-review-2026-09-08T065445Z.md (reviewed head `985e4ad0e9bc578e880deb58b6d2ff7d12c89bba`, invocation manual, request `w6-final-review-002`, the same reviewer as round 1)
+**Findings:** 0 Critical / 0 Important / 2 Medium / 7 Minor — verdict PASS (the configured exit gate runs next).
+
+**Verified by the reviewer's own probes:** I1 closed and improved (invalid JSON / EISDIR / EACCES each degrade to `unavailable` with a redacted reason at exit 0 in human and `--json`; an absent config still resolves; the shared helper's `null` contract to the p01 pack path byte-identical); M1, m1, m3 closed (regular-file and dangling-symlink shapes exit 1; four heading-drift shapes stop; blockquotes and fences still pass; `! -L` load-bearing with no over-correction); M2 closed and proven (neutralized `defineOwnProperty` → `expected 'INJECTED' to be 'main'`; restored → 224 pass); M4, m10, m11, m13, m14, M3, M5, m4–m9 closed (m11's 17-input A/B also closed a real leak round 1 rated cosmetic). Weaker-anywhere bidirectional: zero exit-code delta across all 94 project ledgers between the round-1 and round-2 guards; no round-1 rejection loosened; no redaction input round 1 redacted leaks now. Twelve gates green with `Cached: 0` (CLI 339 files / 6287 tests).
+
+**Dispositions:**
+
+- M1' (orchestration log stamped without an entry; checklist box 4 ticked early) → the Phase 06 entry appended in this receive (signals: a reviewer's suggested fix is a hypothesis — the sentinel drew three Codex Criticals and the stop replaced it; a redaction rewrite needs an A/B against the function it replaces).
+- M2' (round-1 m12 dropped because the artifact declared 13 Minors while listing 14) → m12 dispositioned as a deferred Minor (`BL-260908-align-the-provider-view-json`); counts corrected to 14 in `state.md` and the round-1 record.
+- m1' (the escaped-pipe stop rejects two shapes round 1 accepted — fail-closed, zero corpus impact, deliberate) and m5' (the boundary prose still overstates in two safe directions) → `BL-260908-tighten-the-pr-final-ledger`.
+- m2' (m14 closed for human output only; `--json` still names a path for `inactive` rows while the new JSDoc says `null`), m3' (`versionEvidence: 'absent'` for a deliberately unread escaping copy), m4' (the redaction docs sentence overclaims its delimiter coverage) → `BL-260908-align-the-provider-view-json`.
+- m6' (the reviewer's own round-1 m3 characterization was imprecise: the plain shift exited 1 with a garbled wrong-cell message; only the `-` landing was silent) → record correction, no action.
+- m7' (`plan.md` frontmatter date; completion box 5) → fixed in this receive.
+
 ## Deferred Findings
 
 ### Deferred Findings (Medium)
@@ -314,6 +333,8 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - p04 review round 2 m1 — `tools/release/build-explainer-rc.mjs:684` and three regex test pins still read `^version:` → attached to `BL-260904-migrate-bundled-skills-from` (raised to high 2026-09-08; runs next as a standalone project).
 - p04 (plan-sanctioned) — `pnpm oat:validate-skills` and `pnpm check` print 82 `skill-version-alias` warnings per run until that migration lands; exit codes unaffected.
 - p03 lane — `oat decision new` dates record ids in UTC (the lane used `--created-at`) → `BL-260908-date-decision-record-ids`.
+- final review round 2 (m2', m3', m4', round-1 m12) — provider-view `--json`/JSDoc/evidence/docs polish → `BL-260908-align-the-provider-view-json`.
+- final review round 2 (m1', m5') — pr-final guard escaped-pipe boundary and prose → `BL-260908-tighten-the-pr-final-ledger`.
 - final review m4 — head accepts exactly one fewer nesting level than base (3584 vs 3585, cold); the parity wording softened in this record and the decision record.
 - final review m5 — `BL-260908-guard-normalized-config-maps` under-scoped the unguarded-lookup surface (candidates in `sync-config.ts:177`, `providers/set/index.ts:85`, `init/index.ts:992`, `config/index.ts:2947`) → a sweep acceptance criterion added to the item.
 - p03 lane — oxfmt rewrites a bare `__proto__` in Markdown prose into `**proto**` → `BL-260908-keep-a-bare-proto-in-markdown`.
