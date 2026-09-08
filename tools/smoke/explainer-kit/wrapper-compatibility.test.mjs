@@ -431,10 +431,36 @@ test('skill documents freeze the pre/core/post seam and migration controls', asy
   assert.match(adapterSkill, /references\/migration\.md/);
   assert.match(personalDraft, /https:\/\/dy4vzrzaexuy5\.cloudfront\.net/);
 
-  assert.match(coreSkill, /^version: 2\.1\.0$/m);
-  assert.match(adapterSkill, /^version: 1\.0\.7$/m);
+  assert.equal(readSkillVersion(coreSkill), '2.1.0');
+  assert.equal(readSkillVersion(adapterSkill), '1.0.7');
   assert.doesNotMatch(coreTree, /dy4vzrzaexuy5\.cloudfront\.net/);
 });
+
+/**
+ * Read the version a canonical skill declares: `metadata.version` first, the
+ * deprecated top-level `version` as the fallback.
+ *
+ * A `node --test` file cannot import the TypeScript resolver in
+ * `packages/cli/src/commands/shared/frontmatter.ts`, so it reads the two
+ * positions directly. The pinned value below is what this assertion is about;
+ * the shape it is written in is not.
+ */
+function readSkillVersion(content) {
+  let inMetadata = false;
+  let topLevel;
+  let metadata;
+  for (const line of content.split('\n')) {
+    if (/^\S/.test(line)) {
+      inMetadata = /^metadata:\s*$/.test(line);
+      topLevel ??= line.match(/^version:\s*([^\s#]+)/)?.[1];
+      continue;
+    }
+    if (inMetadata) {
+      metadata ??= line.match(/^\s+version:\s*([^\s#]+)/)?.[1];
+    }
+  }
+  return metadata ?? topLevel;
+}
 
 async function read(relativePath) {
   return readFile(join(REPO_ROOT, relativePath), 'utf8');

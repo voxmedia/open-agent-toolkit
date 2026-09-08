@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { readDeclaredVersion } from '@test-support/skills/skill-version';
 import { describe, expect, it } from 'vitest';
 
 const REPO_ROOT = execFileSync('git', ['rev-parse', '--show-toplevel'], {
@@ -20,9 +21,7 @@ describe('agent instructions bundle contract', () => {
       'utf8',
     );
 
-    expect(analyzeSkill.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe(
-      '1.12.0',
-    );
+    expect(readDeclaredVersion(analyzeSkill)).toBe('1.12.0');
     expect(analyzeSkill).toContain(
       "Fill in all template sections with findings from Steps 2–7, including Step\n3.5's existing-rule validation.",
     );

@@ -100,7 +100,7 @@ test('bundles self-contained visual authoring and review guidance', async () => 
     readFile(join(skillRoot, 'references/visual-review.md'), 'utf8'),
   ]);
 
-  assert.match(skill, /^version: 2\.1\.0$/m);
+  assert.equal(readSkillVersion(skill), '2.1.0');
   assert.match(skill, /references\/visual-authoring\.md/);
   assert.match(skill, /references\/visual-review\.md/);
   for (const [name, guidance] of [
@@ -223,4 +223,30 @@ async function fileHash(path) {
   return `sha256:${createHash('sha256')
     .update(await readFile(path))
     .digest('hex')}`;
+}
+
+/**
+ * Read the version a canonical skill declares: `metadata.version` first, the
+ * deprecated top-level `version` as the fallback.
+ *
+ * A `node --test` file cannot import the TypeScript resolver in
+ * `packages/cli/src/commands/shared/frontmatter.ts`, so it reads the two
+ * positions directly. The pinned value below is what this assertion is about;
+ * the shape it is written in is not.
+ */
+function readSkillVersion(content) {
+  let inMetadata = false;
+  let topLevel;
+  let metadata;
+  for (const line of content.split('\n')) {
+    if (/^\S/.test(line)) {
+      inMetadata = /^metadata:\s*$/.test(line);
+      topLevel ??= line.match(/^version:\s*([^\s#]+)/)?.[1];
+      continue;
+    }
+    if (inMetadata) {
+      metadata ??= line.match(/^\s+version:\s*([^\s#]+)/)?.[1];
+    }
+  }
+  return metadata ?? topLevel;
 }

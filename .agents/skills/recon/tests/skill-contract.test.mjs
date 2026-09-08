@@ -23,7 +23,7 @@ async function readContracts() {
 test('recon is a provider-neutral user-invocable skill', async () => {
   const { skill } = await readContracts();
   assert.match(skill, /^name:\s*recon$/m);
-  assert.match(skill, /^version:\s*1\.1\.0$/m);
+  assert.equal(readSkillVersion(skill), '1.1.0');
   assert.match(skill, /^user-invocable:\s*true$/m);
   assert.match(skill, /provider-neutral/i);
   assert.doesNotMatch(skill, /(?:must|required to) use GPT-|Claude-|Gemini-/i);
@@ -123,3 +123,29 @@ test('worker exposes only the declared non-interactive leaf modes', async () => 
   assert.match(workerContract, /uncertainty/i);
   assert.match(workerContract, /contradiction/i);
 });
+
+/**
+ * Read the version a canonical skill declares: `metadata.version` first, the
+ * deprecated top-level `version` as the fallback.
+ *
+ * A `node --test` file cannot import the TypeScript resolver in
+ * `packages/cli/src/commands/shared/frontmatter.ts`, so it reads the two
+ * positions directly. The pinned value below is what this assertion is about;
+ * the shape it is written in is not.
+ */
+function readSkillVersion(content) {
+  let inMetadata = false;
+  let topLevel;
+  let metadata;
+  for (const line of content.split('\n')) {
+    if (/^\S/.test(line)) {
+      inMetadata = /^metadata:\s*$/.test(line);
+      topLevel ??= line.match(/^version:\s*([^\s#]+)/)?.[1];
+      continue;
+    }
+    if (inMetadata) {
+      metadata ??= line.match(/^\s+version:\s*([^\s#]+)/)?.[1];
+    }
+  }
+  return metadata ?? topLevel;
+}
