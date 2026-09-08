@@ -11,7 +11,7 @@ labels:
   - wave-6-followup
 assignee: null
 created: 2026-09-08T06:58:19.023Z
-updated: 2026-09-08T16:55:27.000Z
+updated: 2026-09-08T17:36:27.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -22,5 +22,5 @@ Wave-6 final review round 2 polish on the `oat-project-pr-final` ledger-path gua
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] `oat-project-pr-final/SKILL.md`'s scan-boundary prose says the scan ends at the next level-two heading other than `## Reviews` itself and that `###` and level-one headings do not end it
+- [ ] The escaped-pipe exemption right of `artifact_column` is filed only if a real `\|` appears in a ledger; until then the fail-closed stop stands (documented in the skill)

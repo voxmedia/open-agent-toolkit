@@ -12,7 +12,7 @@ labels:
   - decisions
 assignee: null
 created: 2026-09-08T16:54:24.361Z
-updated: 2026-09-08T16:55:27.000Z
+updated: 2026-09-08T17:36:27.000Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/277
@@ -25,5 +25,7 @@ GitHub issue #277, the redesign half (proposals 2, 6, 8, 9): move the starter te
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] A decision record settles whether the two authoring skills flip `disable-model-invocation` and under what trigger wording; the skills follow it
+- [ ] The starter template, provider-compatibility details, delegation patterns, and OAT distribution recipes live in references with explicit loading conditions, and the main body no longer repeats them
+- [ ] Delegation assurance is proportional (capability probe before dependent writes; unrelated read-only work may continue; fallback must still satisfy correctness) and verification guidance is behavior-oriented (trigger/non-trigger requests, missing and ambiguous input, authorization boundary) without mandating an eval framework for every skill
+- [ ] Every routed sentence pinned by `named-skill-load-contract.test.ts` is moved with its pin; both skills bumped once

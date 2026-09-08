@@ -12,7 +12,7 @@ labels:
   - authoring
 assignee: null
 created: 2026-09-08T16:54:22.908Z
-updated: 2026-09-08T16:55:27.000Z
+updated: 2026-09-08T17:36:27.000Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/277
@@ -25,5 +25,9 @@ GitHub issue #277, the factual half (seven of nine proposals verified 2026-09-08
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] `create-agnostic-skill/SKILL.md` and `.agents/docs/skills-guide.md` state the body budget in tokens consistently (no `<5k words`)
+- [ ] No surface attributes a single-line ≤ 500-character description limit to Codex; OAT's own 500-character house rule (`packages/cli/src/validation/skills.ts:1273`) is either kept as an explicit OAT policy with its validator named as the backstop or revised, and the dead Codex docs URL is replaced by a dated reference (`DR-260906-standing-claims-in-skills-name`)
+- [ ] The blanket 'other agents ignore unknown frontmatter fields' sentence is scoped to the providers with documented or tested behavior, in one dated compatibility reference rather than three divergent matrices; the Detail Level table has one home
+- [ ] `oat sync` is a scoped, conditional step in both authoring skills and is not a success criterion; the `allowed-tools` separator is consistent across both skills, both templates, and the guide, matching the spec's space-delimited form or explicitly documenting the comma form as OAT's choice
+- [ ] The approval-before-creating-files sentence is replaced by scoped authorization guidance; the 'skill appears in AGENTS.md' check is removed or reworded so it no longer contradicts `AGENTS.md`'s no-duplicated-inventory rule
+- [ ] `create-agnostic-skill` 1.4.3 → 1.5.0 and `create-oat-skill` 1.5.3 → 1.5.4; the `named-skill-load-contract.test.ts` pins on `create-oat-skill` Step 2 stay untouched; `pnpm test:skills`, `check:skill-bumps`, and the bundled-docs contract pass
