@@ -3466,3 +3466,82 @@ The stored gate reviewed older heads; no old accepted run was retried or reused.
 A fresh configured final review, authorized publication, and new GitHub CI are
 still pending. PR #273's remote head remains the pre-integration commit until
 an explicit push occurs. The pre-existing untracked recap evidence is preserved.
+
+## Post-implementation Wave 6 and Skill Migration — 2026-09-08
+
+### Integration and bounded findings
+
+- At the operator's request, fetched main at
+  `bb93ad233befc75d0da9bd699ffc57db80dfe393`, including Wave 6 PR #278,
+  its closeout PR #279, skill-version migration PR #280, and closeout PR #281.
+  Merge `5c70a9cb1b82d056b7ef9a427258ff4fc4c90515` preserves the prior
+  reviewed implementation history and all 90 completed tasks.
+- Resolved version/bookkeeping conflicts, retained the five-skill PJM inventory,
+  regenerated the decision index, rebuilt bundle assets, and synced only project
+  scope. Public packages are lockstep 0.2.66, above main's 0.2.65.
+- Migrated the branch-added remote skill to `metadata.version: 1.0.2` and
+  reconciled the doctor's metadata version to 1.2.3, above main's 1.2.2.
+  Skill bodies and invocation policies are unchanged by this migration. The
+  source validator changed from one remote top-level-alias warning to none.
+- Independent config review found no further compatibility defect. Wave 6's
+  own-property JSON materialization composes with the closed remote schema and
+  raw atomic unset behavior; shared-only and read-only structural gates remain
+  intact. All 396 config/parser tests passed.
+- Independent surface review found that bundle/pack registration and the new
+  provider reachability and skill-view metadata consumers compose without
+  further code changes. It did find a historical evidence gap: the new
+  `PRFINAL-05` guard rejected five missing archived design/plan review files.
+
+### Verbatim review recovery
+
+Recovered the following original files into `reviews/archived/` in
+`dd86a7401b13f4e1ead3e0d9bc8cef93029102a4`. Each source is under this same
+project's original `reviews/` path at the listed commit. Git blob hashes match
+before and after recovery and commit; no substitute review was authored and no
+ledger row, verdict, reviewed head, or guard was changed.
+
+| Artifact filename                            | Original source commit                   | Verified Git blob                        |
+| -------------------------------------------- | ---------------------------------------- | ---------------------------------------- |
+| artifact-design-review-2026-08-31T010815Z.md | 4eabd734681af10e2a0111f01bc3dbf14b921640 | 8831d898f189d09083d7290b379cc614ab43afb9 |
+| artifact-design-review-2026-08-31T012755Z.md | 3ba6bdc3d9f36e210957f7a91620ec74a3fe7e5c | ae5b9f8524f87ccaa9cc441dbee2c655f2e5fb71 |
+| artifact-plan-review-2026-08-31T021338Z.md   | 7b00095c84d18ae8082f61df4a00c7792f6ef918 | d04b16224dd6e0ef7325a776367a6388ed062d54 |
+| artifact-plan-review-2026-08-31T022727Z.md   | 19265dab0d86f2d587de40688f729b17e241f47c | bb2347237b85eb034b231680fce284ecfe89b22f |
+| artifact-plan-review-2026-08-31T025155Z.md   | a378c4042b3ecbd224d0e43d5d7e5acef24ce4eb | f715ec2c5a592b861cedfa78582069411e375d84 |
+
+The read-only guard was extracted from the sole four-backtick bash block in
+`oat-project-pr-final/SKILL.md` at main `bb93ad233`, then run with this project
+as `PROJECT_PATH`. Before recovery it exited 1 naming exactly these five paths;
+after recovery it exited 0. This is a ledger-integrity probe, not a new final
+review verdict or an invocation of PR creation. The recovered files also pass
+format checking without changing their bytes.
+
+### Verification and remaining boundary
+
+- Bounded final review passed at `dd86a7401` with no outstanding findings.
+- The focused config, pack/install, provider reachability, skill-view,
+  skill-version, and review-guard union passed 742 tests across nine files.
+- Full CI-equivalent gates passed in order with explicit exit codes: `pnpm
+check`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm run
+check:skill-bumps`, fresh `git fetch origin main`, `pnpm
+release:check-versions`, `pnpm release:validate`, and `pnpm build:docs`.
+  Separate lint and format gates also exited 0.
+- The separate `pnpm exec turbo run test --force` run passed 7,225 tests
+  across 400 files with zero cached tasks (10/10 successful). Smoke passed
+  167/167; skill scripts passed 863/863; release scripts passed 42 with one
+  skipped. Logs are `/tmp/remote-pjm-wave6-*.log`.
+- Authoritative source skill validation passed all 65 OAT skills without
+  alias warnings. PJM adoption is declared; its doctor retains six existing
+  completed-log references to unarchived backlog items, not addressed here.
+- Plan validation and integration-only diff checks passed. Existing historical
+  Phase 1 hard-break whitespace remains outside this integration's changes.
+- The merge/recovery commits retained the repository's hooks. Lint-staged
+  reported ignored archive-directory staging warnings, and the first merge
+  subject was rejected by commitlint; the conventional merge subject succeeded.
+  Hook warnings are not reported as successful verification; the independent
+  local gates establish verification separately.
+
+No further product compatibility changes were identified. Original lifecycle
+reviews and the configured exit-gate receipt still predate these integrations.
+A fresh configured final gate, authorized publication, and post-push GitHub CI
+remain separate pending steps. No push, PR merge, project archive, recap retry,
+user-scope sync, or remote-provider mutation was performed.

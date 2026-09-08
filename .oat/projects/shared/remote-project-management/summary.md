@@ -39,8 +39,8 @@ previewable, verifiable, and restart-safe.
   batches, multi-binding closeout, explicit approval previews, and public CLI
   workflows.
 - User and agent documentation, synced skill assets, lockstep package version
-  `0.2.64`, and evidence-grade release verification; the post-implementation
-  Wave 5 integration is tracked separately below.
+  `0.2.66`, and evidence-grade release verification; the post-implementation
+  integrations are tracked separately below.
 
 ## Key Decisions
 
@@ -105,6 +105,15 @@ previewable, verifiable, and restart-safe.
 
 ## Integration Notes
 
+- **Post-implementation Wave 6 and skill migration:** merged main
+  `bb93ad233` (PRs #278–#281) in `5c70a9cb`. The remote and doctor skills now
+  use only `metadata.version`, preserving their bodies and the five-skill PJM
+  inventory. Public packages are 0.2.66, above main's 0.2.65. Restored five
+  missing original reviews byte-for-byte in `dd86a7401`; the new ledger-path
+  guard passes. Bounded independent integration review found no remaining
+  compatibility issue. All local CI-equivalent gates, lint, format, and 7,225
+  uncached workspace tests passed. A fresh configured final gate and publication remain
+  pending; earlier receipts below are historical.
 - **Post-implementation Wave 5:** merged main at
   `1bef28fa1fb95e1473872ff9a511a6b42fa37889` through merge `c55deca00`.
   Commits `4a27306ca` and `ba522d5d5` integrate remote config-unset behavior,

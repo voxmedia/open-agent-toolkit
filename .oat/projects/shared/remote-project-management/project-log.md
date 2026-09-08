@@ -231,6 +231,20 @@ follow-up against shipped Wave 5 work in 274b775fb. Original progress remains
 section for regression probes and current verification; the prior final gate
 remains historical, with fresh final review and publication pending.
 
+### 2026-09-08 · structural · post-implementation-integration · wave-6-skill-migration
+
+Integrated origin/main at bb93ad233befc75d0da9bd699ffc57db80dfe393 via
+5c70a9cb1, including PRs #278–281. Reconciled metadata-only skill versions
+and lockstep public packages at 0.2.66. Restored five original historical
+review blobs verbatim in dd86a7401; the new PRFINAL-05 ledger guard changed
+from rejecting those five missing paths to passing. Bounded independent
+config and surface reviews found no remaining compatibility defect. All
+CI-equivalent gates, lint, format, and 7,225 uncached workspace tests passed;
+smoke passed 167, skill scripts 863, release scripts 42 with one skipped.
+Original progress remains 90/90. The configured final gate remains historical;
+fresh final review, authorized publication, and post-push CI are pending.
+No push, merge of PR #273, project archive, or recap retry occurred.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

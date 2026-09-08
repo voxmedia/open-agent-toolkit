@@ -1,8 +1,8 @@
 ---
 oat_current_task: null
-oat_last_commit: ba522d5d51cf94798e430032c4e650f187af97f9
+oat_last_commit: dd86a7401b13f4e1ead3e0d9bc8cef93029102a4
 oat_blockers:
-  - 'Post-implementation Wave 5: fresh configured final review, publication, and post-push CI remain pending.'
+  - 'Post-implementation Wave 6 and skill migration: fresh configured final review, publication, and post-push CI remain pending.'
 oat_hill_checkpoints: ['discovery', 'spec', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'spec', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
@@ -108,7 +108,7 @@ oat_post_implement_sequence:
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_project_created: '2026-03-15T20:13:09.030Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-08T00:57:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-08T15:12:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_recap:
   decision: generate
@@ -126,9 +126,11 @@ oat_project_recap:
 
 Implementation complete at 90/90 tasks; PR remains open. The original final
 review, exit gate, and closeout sequence passed before the post-implementation
-Wave 5 integration. That integration passed local CI-equivalent checks and an
-uncached 6,965-test run; the stored gate receipt is historical and does not
-attest to the new changes.
+Wave 5 and Wave 6 integrations. Wave 6 and skill-version migration are now
+merged, with the missing original ledger artifacts recovered and bounded
+independent review passed. Full local verification passed, including 7,225
+uncached workspace tests; the stored
+gate receipt is historical and does not attest to the new changes.
 
 ## Artifacts
 
@@ -338,15 +340,15 @@ attest to the new changes.
 
 ## Blockers
 
-No original implementation-task blocker. Post-implementation Wave 5 integration
+No original implementation-task blocker. Post-implementation Wave 6 integration
 requires fresh review of the integrated candidate before claiming current final
 gate approval. The stored configured exit gate remains historical evidence,
 not a fresh result for this integration.
 
 ## Next Milestone
 
-PR #273 remains open. Local Wave 5 integration checks passed. Run a fresh
-configured final review of the integrated candidate and publish when
+PR #273 remains open. Local Wave 6 integration verification is complete. Run a
+fresh configured final review of the integrated candidate and publish when
 authorized. Do not reuse the prior accepted gate run. Verify new GitHub CI after
 publishing before claiming merge readiness.
 
