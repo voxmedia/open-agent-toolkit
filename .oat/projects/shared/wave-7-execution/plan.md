@@ -776,6 +776,7 @@ git commit -m "docs(p20-t01): keep plan writes on the caller's model"
 | plan   | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T224620Z.md | -             | gate       | codex-5-6-sol-xhigh |
 | spec   | artifact | pending     | -          | -                                                           | -             | -          | -                   |
 | design | artifact | pending     | -          | -                                                           | -             | -          | -                   |
+| plan   | artifact | received    | 2026-09-08 | reviews/artifact-plan-review-2026-09-08T231038Z.md          | -             | -          | -                   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
