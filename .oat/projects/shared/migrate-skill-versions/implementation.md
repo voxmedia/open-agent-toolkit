@@ -225,6 +225,22 @@ oat_generated: false
 
 **Dispositions:** m1 (p02-t01 Files still named provider views and the manifest) → fixed in this receive; m2 (the reader-sameness pin covers three of five copies of the frontmatter walk — `readSkillVersionSites` in `packaged-layout.test.mjs` and `withDeclaredVersion` in `skill-version.ts` are unpinned) → carried into `BL-260908-retire-the-top-level-skill` as a note (the copies collapse when the alias read is removed) rather than a code change after the reviewed head.
 
+## Review Received: final (configured exit gate, attempt 1 — passed)
+
+**Date:** 2026-09-08
+**Gate:** run `d888e4e6-a1cc-4b68-8a00-6b84497680d6`, target `codex-5-6-sol-xhigh` (diversity: unknown-producer), envelope `ok`, outcome `review_completed_gate_passed`, `receiveEligible: true`, threshold important, blocking false, attempt `mig-exit-gate-20260908T121611Z` (background launch with no other agents active; completed with a receipt).
+**Review artifact:** reviews/archived/final-review-2026-09-08T123009Z.md (reviewed head `843ec7f17ae380c8a92f4919c0d33a0ba13cb10a`, invocation gate)
+
+**Findings:** 0 Critical / 0 Important / 1 Medium / 1 Minor — judgment-sweep mode (passing gate).
+
+**Dispositions:**
+
+- M1 (`check-core.mjs` `keyIdentity` does not normalize YAML infinity key spellings, so a block with both `.inf:` and `.Inf:` is malformed to the canonical parser but readable to the bundled reader — fail-open for a shape no skill produces) → deferred, not fixed after the reviewed head: recorded on `BL-260908-retire-the-top-level-skill` beside the unpinned-copy note (the reader copies collapse when the alias read is removed); a fix means normalizing signed and case-varied `.inf` in `keyIdentity` plus parity fixtures.
+- m1 (the p02-t01 Format instruction embedded prose inside the code span, so it is not a copyable shell command) → fixed in the plan in this receive.
+- Judgment-sweep mode (passing gate): no product change after the reviewed head; the gate basis stays fresh.
+
+**Gate row `final` (attempt 1) → `passed`** (gate-written row moved forward in place with the archived path); `oat_implement_exit_gate` → `allowed / passed` in the same state checkpoint.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_

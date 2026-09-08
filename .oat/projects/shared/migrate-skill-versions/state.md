@@ -39,40 +39,40 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_workflow_mode: quick # spec-driven | quick | import | lite
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0
-  reviewed_head: null
+  attempts_completed: 1
+  reviewed_head: 843ec7f17ae380c8a92f4919c0d33a0ba13cb10a
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:c3ce92908c47529fc5adc410df5a49f319fa3d7ab86effc5443b3196f5995ff3'
-  freshness_head: null
-  freshness_fingerprint: null
-  launch_state: intent_persisted
+  freshness_head: 843ec7f17ae380c8a92f4919c0d33a0ba13cb10a
+  freshness_fingerprint: 'sha256:effective-delta-v1:c3ce92908c47529fc5adc410df5a49f319fa3d7ab86effc5443b3196f5995ff3'
+  launch_state: result_persisted
   launch_attempt_id: 'mig-exit-gate-20260908T121611Z'
   launch_started_at: '2026-09-08T12:16:11Z'
-  launch_result_receipt: null
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  launch_result_receipt: '/private/tmp/claude-501/-Users-tstang-orca-workspaces-open-agent-toolkit-repo-improve-wave/4c160d56-a1dd-44c3-bfa5-cfc55bca5521/scratchpad/mig/mig-exit-gate-20260908T121611Z.receipt.json'
+  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/d888e4e6-a1cc-4b68-8a00-6b84497680d6.json'
+  gate_run_id: d888e4e6-a1cc-4b68-8a00-6b84497680d6
+  envelope_status: ok
+  artifact: '.oat/projects/shared/migrate-skill-versions/reviews/archived/final-review-2026-09-08T123009Z.md'
+  handoff: 'Gate attempt 1 passed (run d888e4e6, 0/0/1/1) and was received; the Medium deferred to BL-260908-retire-the-top-level-skill; no product change after the reviewed head'
+  receive_state: completed
+  receive_correlation: 'run=d888e4e6-a1cc-4b68-8a00-6b84497680d6; handoff=receive; source=reviews/final-review-2026-09-08T123009Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/migrate-skill-versions/reviews/final-review-2026-09-08T123009Z.md'
+  receive_archived_artifact: '.oat/projects/shared/migrate-skill-versions/reviews/archived/final-review-2026-09-08T123009Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-08T123009Z.md'
+  receive_pre_head: 843ec7f17ae380c8a92f4919c0d33a0ba13cb10a
   receive_commit: null
-  receive_eligible: false
-  receive_completed: false
+  receive_eligible: true
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-08T12:16:11Z'
+  updated_at: '2026-09-08T12:35:26Z'
 oat_dispatch_policy: # managed/high per operator routing preference
   mode: managed
   policy: high
@@ -120,7 +120,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-08T07:48:14.811Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-08T12:16:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-08T12:35:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
