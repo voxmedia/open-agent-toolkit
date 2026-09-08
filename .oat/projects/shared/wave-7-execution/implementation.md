@@ -332,6 +332,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 
 - Wrapper authored from the program's Wave 7 section, the wave-7 index, and the root's mechanical drift run (20 PASS); no plan refresh entries were needed.
 - `w7-p01-impl-001`, `w7-p02-impl-001`, `w7-p03-impl-001` — group 1 dispatched together at `985717d5331177d7e6fd23cc070e8eed836f5e90` (the tip after the plan-gate receive); each target opus, task_class default-implementation; briefs = Phase Scope + the wave-7 common contract (zero-drift churn declaration; premise probe before edits; forced gates; version-literal sweep across `packages/cli/src`, `tools/smoke`, `.agents/skills/*/tests` + `test:smoke` + `test:skills`; project-scope sync; two-round Codex cap; PJM carve-out for p03). Records `dispatch/w7-p0{1,2,3}-impl-001.json`.
+- `w7-p02-impl-001` outcome: BLOCKED at the pre-commit review gate (no commit; gate-green work preserved uncommitted in the worktree, +170/−21 over three files). Codex reproduced and the lane confirmed that deleting the `resolveEffectiveConfig` call removed the whole-config validation barrier: a malformed untargeted surface no longer blocks an unset elsewhere, and the `pjm.remote` raw-write branch persists unvalidated — the plan's own STOP. Remedy inside the plan's file scope: a dated post-STOP refresh (targeted strict barrier over the untargeted surfaces plus the raw-write branch; cases 7–8 and two controls; two control corrections) applied to the plan by the root; the lane resumes on its staged work.
 
 <!-- orchestration-runs-end -->
 

@@ -83,3 +83,20 @@ dispatched on opus. **Skill signal (strengthens):** the program's rule that
 intersections come from steps, test plans, generated files, and pins — not
 Scope lists — is the right bar; a Scope-only sweep passed my own audit and
 Codex's composition check but not the gate.
+
+### 2026-09-08 · structural · oat-wave-execute · p02 STOP → refresh → resume
+
+p02 stopped before committing: the plan's Step 2 premise ("the strict
+effective read was used for one boolean") was true of the result and false of
+the call — the read was also the whole-config barrier in front of every unset
+write, and removing it accepted two inputs the weaker-anywhere list does not
+name (reproduced pre/post on the built CLI by the lane's Codex round and the
+lane). The STOP's remedy lies inside the plan's own file scope, so a dated
+refresh (targeted strict barrier: read the untargeted surfaces strictly, plus
+the targeted shared surface on the `pjm.remote` raw-write branch; cases 7–8;
+control corrections) was applied to the plan and the lane resumed on its
+staged work — the wave-6 p03 pattern. **Skill signal (strengthens):**
+"reproduce, report, never improvise" again produced a precise design change.
+**Skill signal (gap):** a plan that deletes a call must audit the call's side
+effects, not only its result's consumers; the same-model review pass read
+"used for exactly one thing" and did not ask what else the call did.

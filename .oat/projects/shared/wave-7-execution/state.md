@@ -139,7 +139,8 @@ Implement. Plan gate passed on attempt 2; group 1 (p01 + p02 + p03) bootstraps a
 - ✓ Wrapper artifacts written; `oat project validate-plan` passed
 - ✗ Plan gate attempt 1 blocked (1C/2I/1M: the lost p09 patch, the archive set, the program ledger, the p19 `AGENTS.md` claim) — fixed in-artifact; parked p09 bytes recovered under `parked/wave-5-p09/`
 - ✓ Plan gate attempt 2 passed (0C/0I/1M; the write-inventory Medium addressed in the receive)
-- ☐ Groups 1–6, then p19 and p20; fan-in gates after each
+- ◐ Group 1 dispatched at `985717d53`; p02 STOP (barrier removed) closed by a dated plan refresh, lane resumed
+- ☐ Groups 2–6, then p19 and p20; fan-in gates after each
 - ☐ Closeout: synthesis, archival, root final review, exit gate, post-implement sequence, PR
 
 ## Blockers
