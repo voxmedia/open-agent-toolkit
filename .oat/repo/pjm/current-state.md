@@ -38,7 +38,7 @@ copying their content here. -->
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
 - CLI `0.2.64` (wave 6 of the 2026-08-31 execution program, wrapper project
-  `wave-6-execution`, "truthfulness residue", in PR `wave-6-execution-2026-09`;
+  `wave-6-execution`, "truthfulness residue", merged as PR #278;
   all five lanes) makes pack evidence carry real per-provider reachability with
   live diagnostic codes and in-process sync evidence, has `oat-project-pr-final`
   1.6.3 archive only terminal reviews and refuse a PR whose review ledger

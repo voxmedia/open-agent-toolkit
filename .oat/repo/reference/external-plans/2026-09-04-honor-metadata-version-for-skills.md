@@ -272,8 +272,10 @@ scan-tools, copy-helpers, and doctor compare it correctly.
 ### 6. Gate
 
 **Verify (lane mode, the default under the execution program):** bump the
-two changed template skills' `version:` fields and update their pins in
-`packages/cli/src/validation/skills.test.ts` where a pin exists; run the
+two changed template skills' `version:` fields (corrected at wave-6 close: no
+pin for either template skill exists anywhere in `packages/cli/src` or
+`tools/smoke`, so the former "update their pins … where a pin exists" clause
+was vacuous — sweep by version literal to confirm before assuming); run the
 focused tests above, then `pnpm check`, `pnpm type-check`, and
 `pnpm run check:skill-bumps` with captured exit codes, plus `pnpm lint`,
 `pnpm format`, and `pnpm oat:validate-skills` because this plan changes
@@ -334,6 +336,10 @@ Stop and report instead of improvising when:
 - a host outside OAT is shown to read the top-level field (record it and
   keep the alias permanent; do not change scope here); or
 - a named verification gate fails twice after one bounded correction.
+
+## Execution record (2026-09-08, wave 6)
+
+Executed as wave-6 p04 (PR #278 `wave-6-execution`, CLI 0.2.64): `metadata.version` is the canonical skill version through one parsed-input contract (`parseSkillFrontmatter`, a strict `YAML.parseDocument` with `uniqueKeys`, and `resolveSkillVersion`: metadata first, top-level as alias, both-and-different → conflict) consumed by `getSkillVersion`/`getAgentVersion`, the structural validator, the bump validator, canonical-role resolution, and doctor; `skill-version-conflict` is an error in both validators; `skill-version-alias` is a warning emitted only by the structural validator, whose version-alias pass covers every bundled skill (82) while its other checks keep the `oat-*` filter, and never reaches the bump result (`check:skill-bumps` exits 0; pinned by a test that turns the real gate red when the routing is neutralized); `create-agnostic-skill` 1.4.1 → 1.4.2 and `create-oat-skill` 1.5.1 → 1.5.2 emit `metadata.version`; `contributing/skills.md` documents the order. Fix round (Critical, weaker-anywhere): an unusable declaration (`version: 1.10`) resolved `null` and fell through a silent `continue`, so a changed non-`oat-*` skill escaped both validators (base exit 1, head exit 0) — unusable and malformed declarations now block in both validators on both the current and base side, a conflicting base cannot hide a downgrade, and canonical-role resolution parses the raw block through the same reader so the four readers agree on tagged/anchored values. Deliberate narrowing recorded: non-string version scalars are rejected rather than stringified (an unquoted third-party `version: 1.0` resolves `null`; `1.10` is a YAML 1.1 float; no bundled skill affected). Corrections applied at wave close: Step 6's "update their pins … where a pin exists" is vacuous (no template-skill pins exist — the refresh's false premise 1); the drift command omits the write surfaces the refresh lists and `init/tools/shared/copy-helpers.test.ts`. Residue: `tools/release/build-explainer-rc.mjs:684` still reads `^version:` by regex and three test pins use regex readers — attached to `BL-260904-migrate-bundled-skills-from` (raised to high; the bulk migration drops the top-level `version:` from every bundled skill); a changed skill with no frontmatter block at all is still skipped silently (follow-up filed); `pnpm oat:validate-skills` prints 82 alias warnings per run until the migration lands (plan-sanctioned). Wave close: the root final review passed with follow-ups (one Important fixed in the wave as Phase 06) and its round 2 passed; the configured cross-family exit gate passed on attempt 1 with no findings.
 
 ## Revalidation Before Execution
 
