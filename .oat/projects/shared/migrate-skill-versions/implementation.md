@@ -34,7 +34,7 @@ oat_generated: false
 
 ## Phase 1: Metadata-aware readers and shape-agnostic tests
 
-**Status:** complete (root review round 1: 0C/2I/3M/3m — no code defect; fix round `mig-p01-fix-001` for the two code Mediums and one Minor, then round 2)
+**Status:** complete (root review round 1 0C/2I/3M/3m → fix round `ad1c33082` → round 2 PASS 0C/0I/0M/3m)
 **Started:** 2026-09-08
 
 ### Phase Summary (fill when phase is complete)
@@ -42,7 +42,7 @@ oat_generated: false
 **Outcome (what changed):**
 
 - `tools/release/build-explainer-rc.mjs` reads bundled skill versions through the CLI's built canonical resolver (`packages/cli/dist/commands/shared/frontmatter.js`), loaded lazily after the builder's own `pnpm build`; conflict, unusable, malformed, and absent declarations each throw `E_SKILL_VERSION` with a category-specific message; no regex reader of the precedence rule remains in `tools/release`.
-- `.agents/skills/oat-explainer-kit/scripts/check-core.mjs` keeps a self-contained, dependency-free reader (accepted exception: an installed skill script cannot import the repository) bound by the new parity contract `tools/smoke/explainer-kit/check-core-version-parity.test.mjs` (39 fixtures plus every bundled skill; documented fail-closed limits pinned); the packaged-layout probe reads and mutates whichever declaration is present, confined to the frontmatter.
+- `.agents/skills/oat-explainer-kit/scripts/check-core.mjs` keeps a self-contained, dependency-free reader (accepted exception: an installed skill script cannot import the repository) bound by the new parity contract `tools/smoke/explainer-kit/check-core-version-parity.test.mjs` (62 fixtures after the fix round, plus every bundled skill; documented fail-closed limits pinned; the fix round routes every key and value through one `isPlainScalar` guard — the reviewer's ~2,100-case differential shows zero fail-open divergences); the packaged-layout probe reads and mutates whichever declaration is present, confined to the frontmatter.
 - Every bundled-skill version reader in the test suites is shape-agnostic through the new test-support module `packages/cli/src/__tests__/skills/skill-version.ts` (resolver-backed read, shape-aware writer) and small local readers in the three `node --test` files; every pinned literal unchanged; the lifecycle mutation asserts the content changed; `review-skill-contracts.test.ts:359` keeps its raw agent-role read by design.
 
 **Key files touched:**
@@ -54,7 +54,7 @@ oat_generated: false
 **Verification:**
 
 - Run: Phase 1 set — `pnpm check`, `pnpm type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`, `pnpm build`, `pnpm run check:skill-bumps`, `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills`
-- Result: all exit 0 (`Cached: 0`; CLI 6287; smoke 165; skills 859; release 42 + 1 env-gated skip; 82 alias warnings expected until Phase 2); re-run by the root reviewer with the same results plus the env-gated real-RC integration test (2/2) against this checkout. Controls: t01 neutralization (additive module-top `dist` import → `ERR_MODULE_NOT_FOUND`), t02 regex revert (3 of 5 parity tests red), t03 full-corpus simulation (all 82 skills metadata-only → 43 vitest + 3 `node --test` failures on the old readers, 0 on the new).
+- Result: all exit 0 (`Cached: 0`; CLI 6287 at the task commits, 6295 after the fix round; smoke 165; skills 859; release 42 + 1 env-gated skip; 82 alias warnings expected until Phase 2); re-run by the root reviewer with the same results plus the env-gated real-RC integration test (2/2) against this checkout. Controls: t01 neutralization (additive module-top `dist` import → `ERR_MODULE_NOT_FOUND`), t02 regex revert (3 of 5 parity tests red), t03 full-corpus simulation (all 82 skills metadata-only → 43 vitest + 3 `node --test` failures on the old readers, 0 on the new).
 
 **Notes / Decisions:**
 
@@ -62,6 +62,7 @@ oat_generated: false
 - Deviation (p01-t01 Step 2): the unusable-declaration message names the skill and the condition, not the scalar (the resolver exposes only a flag; the plan forbids a second parse) — plan amended at the review.
 - Mechanical widening: `packages/cli/src/__tests__/skills/skill-version.ts` added (one shared reader instead of four copies; type-checked by the existing test-support tsconfig).
 - Found for Phase 2: the `oat-project-implement` 245-line budget in `skills.test.ts` must become 246 (plan p02-t01 amended).
+- Fix round `ad1c33082` (`fix(p01): close the Phase 1 review's reader findings`, 8 files): M1 `isPlainScalar` guard + 62-fixture parity corpus; M2 frontmatter bound ported into the three `node --test` readers and into `packaged-layout`'s own helper (Codex found it carried the same comment/indent defect); m2 `withDeclaredVersion` rewrites every declaration, pinned by the new `packages/cli/src/__tests__/skills/skill-version.test.ts`; Codex 0C/0I/5M/3m all fixed except the NBSP trailing-colon Minor (fail-closed, rejected with reason). Round 2 verified every disposition at source (weaker-anywhere both ways: zero true weakenings; 0 new rejections across the 87 real files).
 - Pre-existing, out of scope: the builder's main-module guard compares `import.meta.url` against `process.argv[1]` without `realpath`, so a symlinked checkout silently no-ops (worked around in the test).
 
 ### Task p01-t01: Read metadata.version in the explainer RC builder
@@ -187,6 +188,14 @@ oat_generated: false
 - m2 (`withDeclaredVersion` rewrites only the resolved position while `withSkillVersion` rewrites every declaration) → fix round: rewrite every declaration present.
 - m3 (p01-t03 heading drift in `implementation.md`) → re-synced here.
 
+## Review Received: p01 (round 2 — passed)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/p01-review-2026-09-08T104940Z.md (reviewed head `ad1c330821d69e87c7e6dce2bfab1debe7b3611d`, request `mig-p01-review-002`, reconnaissance not-attempted)
+**Findings:** 0 Critical / 0 Important / 0 Medium / 3 Minor — PASS; Phase 2 dispatches.
+
+**Dispositions:** m1 (`state.md` `oat_last_commit` one commit behind) → fixed here; m2 (fixture and test counts in this record: 62 fixtures, CLI 6295) → fixed here; m3 (the three `node --test` readers are byte-identical copies with nothing pinning their sameness; full sharing is impossible because two ship as skill assets) → deferred to the Phase 2 lane as a small addition to p02-t01's verification (a sameness assertion in `tools/smoke/explainer-kit/check-core-version-parity.test.mjs` or a sibling smoke test), recorded in the p02 brief.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -210,7 +219,7 @@ Chronological log of implementation progress.
 ### 2026-09-08
 
 - Project scaffolded (quick mode) on branch `migrate-skill-versions` from `origin/main` `5b3b82151` (the wave-6 close); discovery and plan authored from the 2026-09-08 recon.
-- Phase 1 done (`d054384ee`, `8948bf1ea`, `6c461e3fe`; Phase 1 gates green); root review round 1 0C/2I/3M/3m (no code defect) → records fixed here, fix round `mig-p01-fix-001` for M1/M2/m2, round 2 next.
+- Phase 1 done (`d054384ee`, `8948bf1ea`, `6c461e3fe`; Phase 1 gates green); root review round 1 0C/2I/3M/3m (no code defect) → records fixed, fix round `ad1c33082`, round 2 PASS (0/0/0/3m); Phase 2 dispatched.
 - Plan gate attempt 1 blocked (0C/2I/2M); all four findings fixed in the plan.
 - Plan gate attempt 2 blocked (0C/2I/3M/1m): reader architecture resolved (canonical resolver for the RC builder; accepted exception + parity contract for the bundled script), Phase 1 gate subset, decision via `oat-pjm-decision`, control categories, HiLL pending; attempt 3 blocked (0C/2I/1M: HiLL `[]` semantics, raw readers left to Phase 2, the exact eight-gate order) and fixed in-artifact; attempt 4 blocked (0C/2I/2M: Format step, dist import timing, resolver diagnostics, staging) and fixed in-artifact; the plan gate is capped at four attempts and the project proceeds to Phase 1 with root implementation-time reviews.
 

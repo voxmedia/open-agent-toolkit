@@ -274,6 +274,7 @@ git commit -m "chore(p02-t02): record the alias retirement schedule, archive the
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T082541Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T084454Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T090611Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
+| p01   | code     | passed      | 2026-09-08 | reviews/archived/p01-review-2026-09-08T104940Z.md           | ad1c330821d69e87c7e6dce2bfab1debe7b3611d | manual     | -                   |
 
 > Reviews are recorded newest-last. For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events. Writers must preserve every existing row and every unknown trailing cell.
 
