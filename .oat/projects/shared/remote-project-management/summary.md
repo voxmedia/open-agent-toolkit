@@ -112,15 +112,20 @@ previewable, verifiable, and restart-safe.
   missing original reviews byte-for-byte in `dd86a7401`; the new ledger-path
   guard passes. Bounded independent integration review found no remaining
   compatibility issue. All local CI-equivalent gates, lint, format, and 7,225
-  uncached workspace tests passed. A fresh configured final gate and publication remain
-  pending; earlier receipts below are historical.
+  uncached workspace tests passed. Fresh configured gate
+  `b64bfa7c-093b-46c7-84fb-dcf66dd58f60` passed at `4ea2dc5c4` with zero
+  Critical/Important/Medium findings. Its sole Minor was dispositioned by
+  preserving the failed recap as intentional historical evidence. Completion
+  awaits the recap choice, archive/publication, and post-push CI; earlier
+  receipts below are historical.
 - **Post-implementation Wave 5:** merged main at
   `1bef28fa1fb95e1473872ff9a511a6b42fa37889` through merge `c55deca00`.
   Commits `4a27306ca` and `ba522d5d5` integrate remote config-unset behavior,
   register the remote skill in the actual bundle and project-management pack,
   and align installation fixtures and doctor inventory. Public packages are
-  `0.2.64`, above main's `0.2.63`. A fresh configured final gate and post-push CI
-  remain pending; the prior review and verification receipts below are history.
+  `0.2.64`, above main's `0.2.63`. The fresh review pending at that checkpoint
+  passed after Wave 6 integration; the prior review and verification receipts
+  below are history.
 - The complete remote-PJM contract is exposed through `oat pjm remote` and the
   `oat-pjm-remote` host skill. External execution remains host-owned; OAT must
   not grow provider-specific invocation mappings.
@@ -322,3 +327,48 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0
 ### 2026-09-07 · structural · oat-project-review-receive · implementation-exit-gate
 
 Received gate run bee16cdf-2649-4445-baaf-fe7827c841c2; addressed its sole Medium lifecycle-artifact finding with canonical receipts for 54 existing task commits, and verified the public project status at 90/90 with every phase complete.
+
+### 2026-09-07 · structural · oat-project-implement · implementation-tail-recap
+
+Project recap intent generate was attempted exactly once at explainers/remote-project-management-recap and reached terminal failed during authoring; no durability or publication step ran.
+
+### 2026-09-07 · structural · oat-project-implement · completion
+
+Implementation completed at 90/90 tasks after passing final review and the configured exit gate; summary, documentation, PR, recap terminal outcome, and approval-aware closeout sequence are complete.
+
+### 2026-09-07 · structural · oat-project-retro · project-retro
+
+retro artifact=.oat/projects/shared/remote-project-management/references/project-retro.md evidence_used=current-session,issue-backlog-history,lifecycle-artifacts,project-log,recap-run-evidence evidence_unavailable=historical-session-transcript,oat-execution-learnings promotions=1 upstream=1 apply=skipped filing=performed
+
+### 2026-09-08 · structural · post-implementation-integration · wave-5
+
+Integrated origin/main at 1bef28fa1fb95e1473872ff9a511a6b42fa37889 via
+c55deca00 without rewriting reviewed history. Fixed remote config-unset
+composition and a missing bundle/pack registration in 4a27306ca, then aligned
+installer fixtures and doctor inventory in ba522d5d5. Reconciled the recap
+follow-up against shipped Wave 5 work in 274b775fb. Original progress remains
+90/90 and PR routing is now pr_open. See implementation.md's post-implementation
+section for regression probes and current verification; the prior final gate
+remains historical, with fresh final review and publication pending.
+
+### 2026-09-08 · structural · post-implementation-integration · wave-6-skill-migration
+
+Integrated origin/main at bb93ad233befc75d0da9bd699ffc57db80dfe393 via
+5c70a9cb1, including PRs #278–281. Reconciled metadata-only skill versions
+and lockstep public packages at 0.2.66. Restored five original historical
+review blobs verbatim in dd86a7401; the new PRFINAL-05 ledger guard changed
+from rejecting those five missing paths to passing. Bounded independent
+config and surface reviews found no remaining compatibility defect. All
+CI-equivalent gates, lint, format, and 7,225 uncached workspace tests passed;
+smoke passed 167, skill scripts 863, release scripts 42 with one skipped.
+Original progress remains 90/90. The configured final gate remains historical;
+fresh final review, authorized publication, and post-push CI are pending.
+No push, merge of PR #273, project archive, or recap retry occurred.
+
+### 2026-09-08 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/remote-project-management/reviews/final-review-2026-09-08T155545Z.md run=b64bfa7c-093b-46c7-84fb-dcf66dd58f60
+
+### 2026-09-08 · structural · oat-project-review-receive · completion-gate
+
+Received gate b64bfa7c-093b-46c7-84fb-dcf66dd58f60 at 4ea2dc5c465660f508f269ac057942b8acc8b45c: zero Critical/Important/Medium, one Minor rejected as required cleanup because failed recap files are intentionally retained evidence. No tasks added; final review passed. Recap choice remains pending before confirmed archive/publication.
