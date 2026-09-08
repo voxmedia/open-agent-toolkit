@@ -130,6 +130,90 @@ const FIXTURES = [
     'deeper content after a metadata scalar',
     '---\nname: core\nmetadata:\n  version: 1.2.3\n    other: x\n---\n',
   ],
+  [
+    'mapping indicator in an unrelated key',
+    '---\nname: core\nversion: 1.2.3\nnote: a: b\n---\n',
+  ],
+  [
+    'mapping indicator in an unrelated metadata child',
+    '---\nname: core\nmetadata:\n  version: 1.2.3\n  note: a: b\n---\n',
+  ],
+  [
+    'mapping indicator in the version value',
+    '---\nname: core\nversion: 1.2.3: x\n---\n',
+  ],
+  [
+    'trailing colon in the version value',
+    '---\nname: core\nversion: 1.2.3:\n---\n',
+  ],
+  [
+    'reserved at-sign in an unrelated key',
+    '---\nname: core\nversion: 1.2.3\nnote: @a\n---\n',
+  ],
+  [
+    'reserved backtick in an unrelated key',
+    '---\nname: core\nversion: 1.2.3\nnote: `a\n---\n',
+  ],
+  [
+    'reserved at-sign in an unrelated metadata child',
+    '---\nname: core\nmetadata:\n  version: 1.2.3\n  note: @a\n---\n',
+  ],
+  [
+    'reserved backtick in an unrelated metadata child',
+    '---\nname: core\nmetadata:\n  version: 1.2.3\n  note: `a\n---\n',
+  ],
+  // A colon inside a word and a comma in block context are ordinary characters:
+  // the refusals above must not over-reject the shapes real frontmatter uses.
+  [
+    'colon inside a plain word',
+    '---\nname: core\nversion: 1.2.3\nhome: https://example.com/x\n---\n',
+  ],
+  [
+    'comma in a block-context plain scalar',
+    '---\nname: core\nversion: 1.2.3\nallowed-tools: Read, Write, Bash\n---\n',
+  ],
+  [
+    'sequence indicator in an unrelated key',
+    '---\nname: core\nversion: 1.2.3\nnote: - item\n---\n',
+  ],
+  [
+    'complex-key indicator in an unrelated key',
+    '---\nname: core\nversion: 1.2.3\nnote: ? item\n---\n',
+  ],
+  ['flow close indicator', '---\nname: core\nversion: ]item\n---\n'],
+  ['flow brace indicator', '---\nname: core\nversion: }item\n---\n'],
+  ['leading comma', '---\nname: core\nversion: ,item\n---\n'],
+  ['reserved percent', '---\nname: core\nversion: %item\n---\n'],
+  [
+    'children beneath an unrelated scalar',
+    '---\nname: core\nversion: 1.2.3\nnote: text\n  child: value\n---\n',
+  ],
+  [
+    'key opening with a reserved indicator',
+    '---\nname: core\nversion: 1.2.3\n@note: x\n---\n',
+  ],
+  [
+    'two spellings of one boolean key',
+    '---\nname: core\nversion: 1.2.3\ntrue: a\nTrue: b\n---\n',
+  ],
+  [
+    'two spellings of one integer key',
+    '---\nname: core\nversion: 1.2.3\n1: a\n01: b\n---\n',
+  ],
+  // `-`, `?`, and `:` are indicators only when whitespace follows them, so a
+  // word that merely starts with one stays an ordinary plain scalar.
+  [
+    'leading hyphen that starts a word',
+    '---\nname: core\nversion: 1.2.3\nnote: -word\n---\n',
+  ],
+  [
+    'leading question mark that starts a word',
+    '---\nname: core\nversion: 1.2.3\nnote: ?word\n---\n',
+  ],
+  [
+    'key that starts with a hyphen',
+    '---\nname: core\nversion: 1.2.3\n-note: x\n---\n',
+  ],
   ['no frontmatter block', 'name: core\nversion: 1.2.3\n'],
   ['CRLF frontmatter', '---\r\nname: core\r\nversion: 1.2.3\r\n---\r\n'],
 ];

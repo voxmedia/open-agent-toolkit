@@ -34,36 +34,56 @@ export function readDeclaredVersion(content: string): string | undefined {
 }
 
 /**
- * Rewrite the version a skill declares, in whichever position it declares it.
+ * Rewrite every version declaration a skill's frontmatter carries.
  *
  * A shape-blind `^version:` replacement silently becomes a no-op once a skill
  * moves its declaration under `metadata`, which would leave a mutation-based
- * test asserting nothing at all. Returns the content unchanged when no version
- * resolves, so callers can assert that the rewrite actually happened.
+ * test asserting nothing at all. Rewriting only the position the resolver
+ * happens to pick is the other half of that trap: a file carrying both
+ * declarations would come out self-contradictory, and the consumer under test
+ * would then be rejecting a conflict rather than the version it was handed.
+ * `withSkillVersion` in `tools/smoke/explainer-kit/packaged-layout.test.mjs`
+ * follows the same rule.
+ *
+ * Comment lines carry no structure in YAML, so they neither end a block nor set
+ * its indentation: a block scalar reached past a misread indent would otherwise
+ * have its payload rewritten while the real declaration kept its old value.
+ *
+ * Returns the content unchanged when the shared resolver reads no version from
+ * it, and when a declaration is repeated, so callers can assert that the
+ * rewrite actually happened rather than silently mutating a file nothing can
+ * resolve.
  */
 export function withDeclaredVersion(content: string, version: string): string {
-  const source = resolveDeclaredVersion(content)?.source;
-  if (source === undefined) {
+  if (resolveDeclaredVersion(content) === null) {
     return content;
   }
 
   const lines = content.split('\n');
   const end = lines[0] === '---' ? lines.indexOf('---', 1) : -1;
+  const targets: { index: number; indent: number }[] = [];
   let inMetadata = false;
+  let seenMetadata = false;
   let childIndent: number | null = null;
+  let duplicated = false;
 
   for (let index = 1; index < end; index += 1) {
     const line = lines[index] ?? '';
+    if (line.trim() === '' || line.trimStart().startsWith('#')) {
+      continue;
+    }
     if (/^\S/.test(line)) {
-      inMetadata = /^metadata:\s*$/.test(line);
+      inMetadata = /^metadata:[ \t]*(?:#.*)?$/.test(line);
+      duplicated ||= inMetadata && seenMetadata;
+      seenMetadata ||= inMetadata;
       childIndent = null;
-      if (source === 'top-level' && /^version:[ \t]/.test(line)) {
-        lines[index] = `version: ${version}`;
-        return lines.join('\n');
+      if (/^version:[ \t]+/.test(line)) {
+        duplicated ||= targets.some((target) => target.indent === 0);
+        targets.push({ index, indent: 0 });
       }
       continue;
     }
-    if (!inMetadata || line.trim() === '') {
+    if (!inMetadata) {
       continue;
     }
     const indent = line.length - line.trimStart().length;
@@ -71,11 +91,18 @@ export function withDeclaredVersion(content: string, version: string): string {
     if (indent !== childIndent) {
       continue;
     }
-    if (source === 'metadata' && /^version:[ \t]/.test(line.trimStart())) {
-      lines[index] = `${' '.repeat(indent)}version: ${version}`;
-      return lines.join('\n');
+    if (/^version:[ \t]+/.test(line.trimStart())) {
+      duplicated ||= targets.some((target) => target.indent > 0);
+      targets.push({ index, indent });
     }
   }
 
-  return content;
+  if (duplicated || targets.length === 0) {
+    return content;
+  }
+  for (const target of targets) {
+    lines[target.index] = `${' '.repeat(target.indent)}version: ${version}`;
+  }
+
+  return lines.join('\n');
 }

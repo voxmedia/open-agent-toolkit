@@ -169,26 +169,38 @@ async function assertAuthoredRun(runRoot, manifest) {
  * alias. Only the frontmatter block is scanned, so a `version:` line inside the
  * skill's prose is never mistaken for a declaration, and only direct children
  * of `metadata:` count.
+ *
+ * Comment lines carry no structure in YAML, so they neither end a block nor set
+ * its indentation; a repeated declaration reads as none at all, which fails the
+ * callers loudly rather than picking one silently.
  */
 function readSkillVersionSites(content) {
   const lines = content.split('\n');
   const end = lines[0] === '---' ? lines.indexOf('---', 1) : -1;
   const sites = { topLevel: null, metadata: null };
   let inMetadata = false;
+  let seenMetadata = false;
   let childIndent = null;
+  let duplicated = false;
 
   for (let index = 1; index < end; index += 1) {
     const line = lines[index];
+    if (line.trim() === '' || line.trimStart().startsWith('#')) {
+      continue;
+    }
     if (/^\S/.test(line)) {
-      inMetadata = /^metadata:\s*$/.test(line);
+      inMetadata = /^metadata:[ \t]*(?:#.*)?$/.test(line);
+      duplicated ||= inMetadata && seenMetadata;
+      seenMetadata ||= inMetadata;
       childIndent = null;
       const value = line.match(/^version:[ \t]+([^\s#]+)/)?.[1];
-      if (value !== undefined && sites.topLevel === null) {
+      if (value !== undefined) {
+        duplicated ||= sites.topLevel !== null;
         sites.topLevel = { index, indent: 0, value };
       }
       continue;
     }
-    if (!inMetadata || line.trim() === '') {
+    if (!inMetadata) {
       continue;
     }
     const indent = line.length - line.trimStart().length;
@@ -197,12 +209,16 @@ function readSkillVersionSites(content) {
       continue;
     }
     const value = line.trimStart().match(/^version:[ \t]+([^\s#]+)/)?.[1];
-    if (value !== undefined && sites.metadata === null) {
+    if (value !== undefined) {
+      duplicated ||= sites.metadata !== null;
       sites.metadata = { index, indent, value };
     }
   }
 
-  return { lines, sites };
+  return {
+    lines,
+    sites: duplicated ? { topLevel: null, metadata: null } : sites,
+  };
 }
 
 /** `metadata.version` wins over the deprecated top-level alias. */

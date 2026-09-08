@@ -131,10 +131,14 @@ function failure({
  * scalars, quoted keys, quote escape sequences, multi-line plain scalars, and
  * document markers inside the block all return `null` even where a full YAML
  * parser would resolve them. Nothing in the authoring templates emits those
- * shapes. The reader validates the version declarations and the `metadata` map
- * it walks, not YAML it never reads: a syntax error confined to an unrelated
- * key can still leave a readable version here while the canonical resolver
- * rejects the whole document.
+ * shapes.
+ *
+ * Every key and value in the block is checked, not just `version`, and the
+ * whole block is walked to any depth, so a syntax error anywhere in it fails
+ * closed rather than leaving a readable version behind. What remains outside
+ * the reader's reach is the content of a shape it refuses outright — the body
+ * of a block scalar, or anything inside a flow collection — which it never
+ * parses because it never accepts the shape that introduces it.
  */
 export function readFrontmatterVersion(content) {
   const block = frontmatterBlock(content);
@@ -218,7 +222,10 @@ function classifyLine(line) {
     return { kind: 'comment', indent };
   }
   const key = rest.match(/^([^\s:#]+):(?=[ \t]|$)([ \t].*)?$/);
-  if (key === null || /^["']/.test(key[1])) {
+  // A key is a plain scalar too: a quoted key is a shape this reader refuses
+  // rather than compares raw against a plain one, and a key opening with an
+  // indicator is not a key at all.
+  if (key === null || /^["']/.test(key[1]) || !isPlainScalar(key[1])) {
     return { kind: 'invalid', indent };
   }
   return { kind: 'key', indent, name: key[1], value: key[2] ?? '' };
@@ -253,10 +260,11 @@ function readBlockMap(lines, parentIndent) {
     if (line.indent !== indent) {
       return null;
     }
-    if (names.includes(line.name) || !isReadableValue(line.value)) {
+    const identity = keyIdentity(line.name);
+    if (names.includes(identity) || !isReadableValue(line.value)) {
       return null;
     }
-    names.push(line.name);
+    names.push(identity);
 
     let end = index + 1;
     while (
@@ -272,7 +280,13 @@ function readBlockMap(lines, parentIndent) {
     const map = body.some((entry) => entry.kind !== 'blank')
       ? readBlockMap(body, indent)
       : { indent: null, children: [] };
-    if (map === null) {
+    // A key cannot own both a scalar and a nested map. This also refuses a
+    // multi-line plain scalar, whose continuation lines arrive here as
+    // children: folding one is beyond a parser-free reader, so it fails closed.
+    if (
+      map === null ||
+      (map.indent !== null && scalarText(line.value) !== '')
+    ) {
       return null;
     }
     children.push({ ...line, map });
@@ -292,23 +306,68 @@ function declaredScalar(child) {
 }
 
 /**
- * Whether a raw value is a shape this reader can read at all. Flow
- * collections, block scalars, anchors, aliases, tags, and unterminated quotes
- * are all refused so no key's syntax error is silently skipped; no bundled
- * skill or agent frontmatter uses any of them.
+ * Whether a raw value is a shape this reader can read at all. Every key's value
+ * is checked, not just `version`, so no syntax error is silently walked past:
+ * the canonical resolver rejects the whole document for any of them.
  */
 function isReadableValue(raw) {
   const text = raw.trim();
   if (text === '' || text.startsWith('#')) {
     return true;
   }
-  if (/^[&*!|>[{]/.test(text)) {
-    return false;
-  }
   if (/^["']/.test(text)) {
     return quotedScalar(text) !== null;
   }
-  return true;
+  return isPlainScalar(scalarText(text));
+}
+
+/**
+ * Whether a comment-stripped value is a plain scalar YAML reads as a string.
+ *
+ * Refused: every character YAML forbids at the start of a plain scalar — the
+ * flow, block-scalar, anchor, alias, and tag indicators, and the reserved `@`,
+ * `` ` ``, and `%` — plus `-`, `?`, and `:` when whitespace or the end of the
+ * value follows, which is what makes them indicators rather than the first
+ * letter of a word. A `:` anywhere in the value gets the same treatment,
+ * because `: ` opens a nested mapping instead of continuing the scalar.
+ *
+ * Still readable, because none of these is an indicator in block context: a `:`
+ * inside a word (`https://example.com`), a `,` after the first character
+ * (`allowed-tools: Read, Write`), and a leading `-` or `?` that starts a word
+ * (`-word`).
+ */
+function isPlainScalar(plain) {
+  return (
+    !/^[&*!|>[\]{},@`%]/.test(plain) &&
+    !/^[-?](?:[ \t]|$)/.test(plain) &&
+    !/:(?:[ \t]|$)/.test(plain)
+  );
+}
+
+/**
+ * The identity YAML gives a mapping key, so two spellings of one key are caught
+ * as the duplicate they are: `true` and `True` are the same boolean key, and
+ * `1` and `01` the same integer key, even though their text differs.
+ */
+function keyIdentity(name) {
+  if (/^(null|Null|NULL|~)$/.test(name)) {
+    return 'null';
+  }
+  if (/^(true|True|TRUE)$/.test(name)) {
+    return 'bool:true';
+  }
+  if (/^(false|False|FALSE)$/.test(name)) {
+    return 'bool:false';
+  }
+  if (
+    /^[-+]?[0-9]+$/.test(name) ||
+    /^0x[0-9a-fA-F]+$/.test(name) ||
+    /^0o[0-7]+$/.test(name) ||
+    /^[-+]?(\.[0-9]+|[0-9]+(\.[0-9]*)?)([eE][-+]?[0-9]+)?$/.test(name)
+  ) {
+    return `number:${Number(name)}`;
+  }
+  return `string:${name}`;
 }
 
 /**
@@ -350,9 +409,7 @@ function scalarValue(raw) {
   if (plain === '') {
     return null;
   }
-  // Anchors, aliases, tags, flow collections, and block scalars are not plain
-  // string scalars.
-  if (/^[&*!|>[{]/.test(plain)) {
+  if (!isPlainScalar(plain)) {
     return null;
   }
   // Core-schema scalars that resolve to a non-string type: `version: 1.10` is
