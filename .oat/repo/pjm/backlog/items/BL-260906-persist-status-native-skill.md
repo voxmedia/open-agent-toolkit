@@ -11,7 +11,7 @@ labels:
   - wave-4-followup
 assignee: null
 created: 2026-09-06T19:21:29.824Z
-updated: 2026-09-08T16:55:27.000Z
+updated: 2026-09-08T17:36:27.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -22,5 +22,6 @@ In packages/cli/src/commands/status/index.ts the native-skill adopt path mutates
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] The native-skill adoption loop in `status/index.ts` sets `manifestChanged` when it moves files, so the manifest save at `:1527-1534` runs and the adopted entry persists (re-read from disk in the test)
+- [ ] A control shows the pre-fix tree dropping the entry and reporting the skill as a stray on the next `oat status`
+- [ ] The restamp behavior around the save is unchanged and pinned

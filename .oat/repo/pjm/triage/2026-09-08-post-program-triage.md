@@ -1,7 +1,7 @@
 ---
 oat_triage_record: true
 schema_version: 1
-status: pr_open
+status: post_merge_complete
 scope: GitHub issues #274 (recon per-wave routing) and #277 (skill authoring guidance refresh), plus a priority/validity re-triage of the 42 open backlog items the 2026-08-31 execution program filed as follow-ups (waves 1–6 and the skill-version migration) and the recap cluster (#230)
 baseline_sha: bb93ad233
 triage_pr: 'https://github.com/voxmedia/open-agent-toolkit/pull/282'
@@ -37,7 +37,7 @@ Verification: five read-only opus workers on 2026-09-08 against `bb93ad233` (dis
 - Backlog action: create — "Route recon waves to per-wave targets under one approval envelope" — priority medium, scope feature, estimate L; acceptance criteria from the issue minus the launched-target provenance clause (deferred until a launcher emits it), plus a superseding decision for `DR-260831-approval-bound-homogeneous` and a back-compat path for single-target packets.
 - Priority and size rationale: real, recurring cost (every multi-phase run pays the strongest phase's target) but a working workaround (split runs / accept the target), nothing blocked, no correctness or safety invariant violated; size driven by the closed-object schema change fanning across the 4,000-line validator, five test files, the bundled asset mirror, docs, and a decision.
 - Approval: approved 2026-09-08 by the operator ("Approve"), with the priority raised to high after the operator classified the issue as contract drift from the skill's intent; item `BL-260908-restore-recon-s-cheap-fan-out` created.
-- Post-merge result: pending
+- Post-merge result: done 2026-09-08 — labels `enhancement`, `tracked-in-backlog` added; comment posted (marker `oat-triage: PR-282`); issue stays open.
 
 ### GH-277 — Refresh skill authoring guidance: progressive disclosure, proactive use, portability, and scoped authorization
 
@@ -51,7 +51,7 @@ Verification: five read-only opus workers on 2026-09-08 against `bb93ad233` (dis
 - Backlog action: create two — (a) "Correct the factual skill-authoring claims and consolidate the duplicated guidance" — medium, task, M: tokens wording, drop or source the Codex 500-char claim, one dated provider-compatibility reference, scoped `oat sync`, the separator, the scoped-authorization sentence, one canonical frontmatter matrix and one Detail Level home, bumps 1.4.3 → 1.5.0 and 1.5.3 → 1.5.4; (b) "Restructure the authoring skills for progressive disclosure and decide proactive invocation" — low, feature, M: proposals 2, 6, 8, 9, which are editorial redesigns and a policy flip needing a decision record.
 - Priority and size rationale: the factual half teaches every skill author a false provider claim and is exactly the failure mode DR-260906 exists to prevent (medium); the redesign half has no verified defect behind it (low), and bundling both would put pressure on the `named-skill-load-contract.test.ts` prose pins.
 - Approval: approved 2026-09-08; items `BL-260908-correct-the-factual-skill` (medium/M) and `BL-260908-restructure-the-authoring` (low/M) created.
-- Post-merge result: pending
+- Post-merge result: done 2026-09-08 — label `tracked-in-backlog` added; comment posted naming both items and the two unsubstantiated proposals; issue stays open.
 
 ### The program's follow-up backlog (42 open items) and the recap cluster
 
@@ -108,3 +108,5 @@ After merging this PR, invoke:
 ```
 
 Post-merge GitHub actions (apply in order, then set `status: post_merge_complete` and fill each ledger row's `Post-merge result`): #274 add `enhancement` + `tracked-in-backlog`, comment with `BL-260908-restore-recon-s-cheap-fan-out`, the governing decisions (`DR-260831`, `DR-260904`, `DR-260719`), and the note that launched-target provenance is scoped down pending a real producer; #277 add `tracked-in-backlog`, comment with `BL-260908-correct-the-factual-skill` and `BL-260908-restructure-the-authoring` and the two unsubstantiated proposals (5 and 8); #230 comment that `BL-260904-add-recap-seam-config-keys` was superseded by `BL-260907-replace-the-default-project`; #252 comment that the parked plan is owned by `BL-260907-make-the-completion-seal`. No issue is closed by this triage.
+
+Post-merge status (2026-09-08): PR #282 merged as `1029b7ba3`; all four issue actions applied (#274 labels + comment, #277 label + comment, #230 comment, #252 comment). Record complete.

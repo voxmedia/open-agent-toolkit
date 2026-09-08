@@ -11,7 +11,7 @@ labels:
   - release-gated
 assignee: null
 created: 2026-09-08T16:54:25.875Z
-updated: 2026-09-08T16:54:25.875Z
+updated: 2026-09-08T17:36:27.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -22,5 +22,7 @@ Step 2 of the alias retirement recorded in `DR-260908-bundled-skills-declare` (s
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- [ ] Precondition recorded: the `skill-version-alias` error (step 1) has produced no findings on the bundled tree for one full release
+- [ ] `resolveSkillVersion` no longer reads the top-level `version:`; a third-party skill carrying only the alias resolves `null` with a `skill-version-unusable`-class finding naming the migration, and the docs say so
+- [ ] The `.agents/agents` role migration is decided and, if migrated, covered by the bump gate's pathspec
+- [ ] The five test-helper copies of the frontmatter walk are collapsed or all pinned byte-identical; `check-core.mjs` `keyIdentity` normalizes signed and case-varied `.inf` spellings with parity fixtures
