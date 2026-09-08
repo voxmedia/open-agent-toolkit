@@ -17,7 +17,7 @@ oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -120,24 +120,25 @@ oat_implement_exit_gate:
 #   receive_completed: false
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
-oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/278' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-07T23:38:50.037Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-08T07:29:21.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_completed: '2026-09-08T07:31:55.000Z' # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-09-08T07:31:55.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_lifecycle: complete
 ---
 
 # Project State: wave-6-execution
 
-**Status:** Implementation in progress (final-review fix round)
+**Status:** Complete
 **Started:** 2026-09-07
 **Last Updated:** 2026-09-08
 
 ## Current Phase
 
-Implementation — both groups merged (lockstep 0.2.64); backlog archived and closeout records written; root final review passed with follow-ups; Phase 06 (five fix tasks in two lanes) merged and gated; round 2 passed; the configured exit gate passed on attempt 1 and was received; the post-implement sequence and the PR follow.
+Lifecycle complete — PR #278 open; the completion tail (archive, pointer clear) is deferred to program close per the program rules.
 
 ## Artifacts
 
@@ -162,7 +163,8 @@ Implementation — both groups merged (lockstep 0.2.64); backlog archived and cl
 - ✓ Phase 06 final-review fixes merged (`4a2ed8e65`, `e8424949c`); thirteen gates green (CLI 6287)
 - ✓ Final review round 2 passed (0C/0I/2M/7m, `final-review-2026-09-08T065445Z.md`); two polish follow-ups filed
 - ✓ Configured exit gate passed on attempt 1 (run `f458f4c1`, codex-5-6-sol-xhigh, 0/0/0/0) and received
-- ⧗ Post-implement sequence (summary, roll-up, PJM, PR artifact), then the PR
+- ✓ Post-implement sequence (summary.md, decision `DR-260908-a-stop-whose-remedy-lies`, PJM current-state/roadmap, PR artifact) `9e8e5ae98`
+- ✓ PR #278 open on `origin/wave-6-execution-2026-09`
 
 ## Blockers
 
@@ -170,4 +172,4 @@ None
 
 ## Next Milestone
 
-Post-implement sequence, then the PR on `origin/wave-6-execution-2026-09`.
+None. Project complete; the orchestrator merges PR #278 after CI, Bugbot, and the recorded gates, then runs the wave close from `origin/main`.
