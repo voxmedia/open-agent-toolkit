@@ -268,6 +268,7 @@
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                              | open   | medium   | feature    | M        |
 | BL-260907-let-oat-config-unset-remove    | Let oat config unset remove a malformed stored value                                                            | open   | medium   | task       | XS       |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                                    | open   | medium   | task       | M        |
+| BL-260908-make-copy-strategy-skill       | Make copy-strategy skill projections converge after sync instead of reading as drifted                          | open   | medium   | task       | S        |
 | BL-260830-make-documentation-aware       | Make documentation-aware discovery prerequisites configurable                                                   | open   | medium   | feature    | M        |
 | BL-260904-make-quick-the-default-oat     | Make quick the default OAT workflow mode and spec-driven the explicit larger mode                               | open   | medium   | feature    | L        |
 | BL-260906-make-the-dispatch-stamp        | Make the dispatch-stamp contract helper reject bold-step boundaries and normal-path shim permissions            | open   | medium   | task       | S        |
