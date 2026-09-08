@@ -105,6 +105,21 @@ oat_generated: false
 **Status:** pending
 **Commit:** -
 
+## Autonomy Gate Provenance
+
+### Review Received: plan (attempt 1 — blocked)
+
+**Date:** 2026-09-08
+**Gate:** run `4fac934c-78bf-4e2d-9148-93739e006cf5`, target `codex-5-6-sol-xhigh`, outcome `review_completed_blocking_findings`, 0C/2I/2M/0m.
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-08T080653Z.md
+
+**Dispositions (all fixed in-artifact before attempt 2):**
+
+- I1 (`oat_plan_hill_phases: []` means every phase, contradicting the "no phase gates" prose) → set to `['p02']` (final phase only, the workflow default) and the checklist line now distinguishes HiLL from the operator's declined phase-boundary review gates.
+- I2 (the backlog archive had no executable owner) → p02-t02's last step archives `BL-260904-migrate-bundled-skills-from` with an outcome summary after verifying its acceptance criteria; the moved item and regenerated `completed.md`/`index.md` are in the task's file boundary and commit.
+- M1 (route the decision through `oat-pjm-decision`) → that skill is not installed in this repository, so root `AGENTS.md`'s fallback (`oat decision new`) applies; the task says so explicitly and keeps the preflight.
+- M2 (the p01-t03 negative control was not runnable — the corpus tests anchor on `process.cwd()`) → replaced with a backup-and-restore mutation of one real canonical skill run against the exact named test before and after the rewrite, with the failing assertion recorded.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -127,7 +142,8 @@ Chronological log of implementation progress.
 
 ### 2026-09-08
 
-- Project scaffolded (quick mode) on branch `migrate-skill-versions` from `origin/main` `5b3b82151` (the wave-6 close); discovery and plan authored from the 2026-09-08 recon; plan gate next.
+- Project scaffolded (quick mode) on branch `migrate-skill-versions` from `origin/main` `5b3b82151` (the wave-6 close); discovery and plan authored from the 2026-09-08 recon.
+- Plan gate attempt 1 blocked (0C/2I/2M); all four findings fixed in the plan; attempt 2 next.
 
 ---
 

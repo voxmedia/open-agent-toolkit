@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-09-08
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
+oat_plan_hill_phases: ['p02'] # phases to pause AFTER completing (final phase only)
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported | lite
 oat_import_reference: null # e.g., references/imported-plan.md
@@ -28,7 +28,7 @@ oat_generated: false
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints with user (none — operator preference: plan gate + final review, no phase gates)
+- [x] Confirmed HiLL checkpoints: final phase only (`['p02']`, the workflow default); the operator's standing preference is no cross-runtime phase-boundary review gates (`oat_phase_review_gate` stays absent), which is a different setting from HiLL
 - [x] Set `oat_plan_hill_phases` in frontmatter
 - [x] Evaluated phases for parallelism opportunities (Phase 2 rewrites files Phase 1 edits; sequential)
 - [x] Set `oat_plan_parallel_groups` in frontmatter
@@ -146,7 +146,7 @@ git commit -m "fix(p01-t02): read metadata.version in the explainer-kit core che
 Rewrite the two corpus sweeps to resolve each skill's version with `resolveSkillVersion(parseSkillFrontmatter(getFrontmatterBlock(content)))` (import from `commands/shared/frontmatter.ts`) and assert a semver `version` with a non-`conflict`, non-null result for every skill; keep them source-agnostic in this phase. Rewrite every tuple loop and `.toBe` site that captures `^version:` with a raw regex to compare the RESOLVED version instead (one small local helper in the test file). Rewrite the lifecycle mutation to rewrite whichever version field is present (`metadata.version` or top-level) to `0.0.1`, and add an assertion that the rewrite actually changed the content (so a silent no-op can never pass again).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/tools/tool-pack-lifecycle.integration.test.ts`
-Expected: the new "mutation changed the content" assertion is the only red case if the mutation is written against the wrong field; otherwise green — this task is a refactor toward shape-agnosticism, so prove it with a temporary local fixture: a scratch skill in a `mktemp -d` copy of `.agents/skills` with metadata-only frontmatter passes the rewritten sweep and fails the old one (record the failure line).
+Expected: green on the current corpus (this task is a refactor toward shape-agnosticism), so prove the change with a runnable control against the real tree: back up one canonical skill (for example `.agents/skills/recon/SKILL.md`) to a `mktemp -d` directory, rewrite its frontmatter in place to the metadata-only shape (same version value under `metadata:`), run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "valid semver versions"` BEFORE the sweep rewrite (expected red: `recon: <missing>` in the `invalidVersions` assertion — record the line) and AFTER it (expected green), then restore the skill with `cp` from the backup and confirm `git status` is clean for that file. The same probe against the lifecycle mutation: with the metadata-only skill installed into a scratch pack, the old `replace(/^version:.*$/m, …)` leaves the content unchanged and the new field-agnostic rewrite changes it (assert on the changed content).
 
 **Step 2: Implement (GREEN)**
 
@@ -219,8 +219,8 @@ git commit -m "chore(p02-t01): migrate every bundled skill to metadata.version"
 
 **Files:**
 
-- Create: `.oat/repo/reference/decisions/DR-2609xx-*.md` via `oat decision new` (title: "Bundled skills declare metadata.version only; the top-level alias retires on a fixed schedule"), a follow-up backlog item via `oat backlog new` for the warning-to-error promotion and the later removal of the top-level read
-- Modify: `apps/oat-docs/docs/contributing/skills.md` (the "Every bundled skill still uses it today … tracked separately" paragraph and the gate paragraph's "until the migration lands" clause), `.oat/repo/reference/decisions/index.md` (regenerated), `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json` (restamp)
+- Create: `.oat/repo/reference/decisions/DR-2609xx-*.md` through the repository's decision workflow — root `AGENTS.md` names `oat-pjm-decision` when that skill is installed and `oat decision new` otherwise; `oat-pjm-decision` is not installed in this repository (`.agents/skills` has no such directory), so use `oat decision new` with the preflight below (title: "Bundled skills declare metadata.version only; the top-level alias retires on a fixed schedule"), a follow-up backlog item via `oat backlog new` for the warning-to-error promotion and the later removal of the top-level read
+- Modify: `apps/oat-docs/docs/contributing/skills.md` (the "Every bundled skill still uses it today … tracked separately" paragraph and the gate paragraph's "until the migration lands" clause), `.oat/repo/reference/decisions/index.md` (regenerated), `.oat/repo/pjm/backlog/items/BL-260904-migrate-bundled-skills-from.md` → `.oat/repo/pjm/backlog/archived/` (archived with an outcome summary), `.oat/repo/pjm/backlog/completed.md` and `.oat/repo/pjm/backlog/index.md` (regenerated), `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`, `packages/cli/assets/public-package-versions.json`, `.oat/sync/manifest.json` (restamp)
 
 **Step 1: Write test (RED)**
 
@@ -228,7 +228,7 @@ Not a code change; the executable checks are the gates in Step 4. Before writing
 
 **Step 2: Implement (GREEN)**
 
-Decision record (status `accepted`, pass `--created-at` in local time because `oat decision new` dates ids in UTC): context (spec places the version under `metadata`; wave-6 p04 made it canonical; this project migrated all 82 bundled skills; recon found no provider, sync, drift, manifest, or docs reader of a projected copy's top-level field; agent roles under `.agents/agents` are outside both gates and stay on the top-level field); decision (bundled skills declare `metadata.version` only from CLI 0.2.65; the `skill-version-alias` warning becomes an error in the first release after 0.2.65 that changes the validator, and the resolver's top-level read is removed one release after that error has produced no findings on the bundled tree; agent roles migrate when their own enforcement surface exists); consequences (the follow-up item owns both steps; third-party skills installed from packs keep resolving through the alias until the read is removed, with the error as advance notice). Then rewrite the docs paragraph to say every bundled skill declares `metadata.version` and the alias is retained for third-party skills on the recorded schedule, and drop the "until the migration lands" clause from the gate paragraph. Then the lockstep bump: fetch `origin/main`, bump the five public packages and `public-package-versions.json` to 0.2.65, rebuild, and run `pnpm run --silent cli -- sync --scope project` so the manifest restamp lands in the same commit.
+Decision record (status `accepted`, pass `--created-at` in local time because `oat decision new` dates ids in UTC): context (spec places the version under `metadata`; wave-6 p04 made it canonical; this project migrated all 82 bundled skills; recon found no provider, sync, drift, manifest, or docs reader of a projected copy's top-level field; agent roles under `.agents/agents` are outside both gates and stay on the top-level field); decision (bundled skills declare `metadata.version` only from CLI 0.2.65; the `skill-version-alias` warning becomes an error in the first release after 0.2.65 that changes the validator, and the resolver's top-level read is removed one release after that error has produced no findings on the bundled tree; agent roles migrate when their own enforcement surface exists); consequences (the follow-up item owns both steps; third-party skills installed from packs keep resolving through the alias until the read is removed, with the error as advance notice). Then rewrite the docs paragraph to say every bundled skill declares `metadata.version` and the alias is retained for third-party skills on the recorded schedule, and drop the "until the migration lands" clause from the gate paragraph. Then the lockstep bump: fetch `origin/main`, bump the five public packages and `public-package-versions.json` to 0.2.65, rebuild, and run `pnpm run --silent cli -- sync --scope project` so the manifest restamp lands in the same commit. Then, once every acceptance criterion of the backlog item is satisfied on the tree (verify each against the item's `## Acceptance Criteria` and say so in the summary), close it out: `pnpm run --silent cli -- backlog archive BL-260904-migrate-bundled-skills-from --summary "<outcome: 82 skills migrated and bumped, readers fixed, decision id, follow-up item id, CLI 0.2.65>"` and `pnpm run --silent cli -- backlog regenerate-index`; the moved item, `completed.md`, and `index.md` ship in this task's commit.
 
 Run: `pnpm run --silent cli -- decision regenerate-index`; `pnpm check`
 Expected: index regenerated; markdownlint green.
@@ -246,19 +246,19 @@ Expected: every gate exit 0; `release:check-versions` sees 0.2.65 strictly above
 
 ```bash
 git add .oat/repo/reference/decisions .oat/repo/pjm/backlog apps/oat-docs/docs/contributing/skills.md packages/*/package.json packages/cli/assets/public-package-versions.json .oat/sync/manifest.json
-git commit -m "chore(p02-t02): record the alias retirement schedule and bump lockstep to 0.2.65"
+git commit -m "chore(p02-t02): record the alias retirement schedule, archive the item, bump lockstep to 0.2.65"
 ```
 
 ---
 
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ----- | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01   | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02   | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final | code     | pending  | -          | -                                                  | -             | -          | -           |
-| plan  | artifact | received | 2026-09-08 | reviews/artifact-plan-review-2026-09-08T080653Z.md | -             | -          | -           |
+| Scope | Type     | Status      | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target         |
+| ----- | -------- | ----------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------- |
+| p01   | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| p02   | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| final | code     | pending     | -          | -                                                           | -             | -          | -                   |
+| plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T080653Z.md | -             | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last. For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events. Writers must preserve every existing row and every unknown trailing cell.
 
@@ -270,7 +270,7 @@ git commit -m "chore(p02-t02): record the alias retirement schedule and bump loc
 
 - [ ] Phase 1: 3 tasks — metadata-aware readers (RC builder, explainer-kit core check, packaged-layout probe) and resolver-based test sweeps
 - [ ] Phase 2: 2 tasks — 82 skills migrated and bumped with every pin repointed; decision record, docs, follow-up item, lockstep 0.2.65
-- [ ] Backlog bookkeeping: `oat backlog archive BL-260904-migrate-bundled-skills-from` with an outcome summary (after the final review)
+- [ ] Backlog bookkeeping: `BL-260904-migrate-bundled-skills-from` archived with an outcome summary (owned by p02-t02, its last step)
 - [ ] Full standalone Definition of Done green with captured exit codes
 
 **Total: 5 tasks**

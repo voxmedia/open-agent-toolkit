@@ -112,7 +112,8 @@ Plan — discovery and plan authored from the 2026-09-08 recon; the configured p
 - ✓ Operator asked for the cleanup (2026-09-08); backlog item raised to high
 - ✓ Recon: 82 skills, two release-tool readers, 69 regex pin reads in eight test files, no external reader of the alias
 - ✓ Discovery and plan authored; `oat project validate-plan` passed
-- ⧗ Plan gate
+- ✗ Plan gate attempt 1 blocked (0C/2I/2M: HiLL value vs prose, unowned backlog archive, decision routing, an unrunnable negative control) — fixed in-artifact
+- ⧗ Plan gate attempt 2
 
 ## Blockers
 
