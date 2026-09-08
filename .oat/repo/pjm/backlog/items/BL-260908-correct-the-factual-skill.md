@@ -12,11 +12,12 @@ labels:
   - authoring
 assignee: null
 created: 2026-09-08T16:54:22.908Z
-updated: 2026-09-08T17:36:27.000Z
+updated: 2026-09-08T21:16:03.000Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/277
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-08-correct-skill-authoring-facts.md
 ---
 
 ## Description

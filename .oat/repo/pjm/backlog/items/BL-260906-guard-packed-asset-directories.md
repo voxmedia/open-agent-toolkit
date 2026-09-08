@@ -11,9 +11,10 @@ labels:
   - docs
 assignee: null
 created: 2026-09-06T01:23:56.563Z
-updated: 2026-09-06T01:23:56.563Z
+updated: 2026-09-08T21:22:00.000Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-08-guard-every-packed-asset-directory.md
 ---
 
 ## Description

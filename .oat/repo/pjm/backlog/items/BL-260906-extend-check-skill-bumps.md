@@ -10,9 +10,10 @@ labels:
   - skills
 assignee: null
 created: 2026-09-06T13:43:57.770Z
-updated: 2026-09-08T16:55:27.000Z
+updated: 2026-09-08T21:35:00.000Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-08-tighten-the-skill-version-validators.md
 ---
 
 ## Description

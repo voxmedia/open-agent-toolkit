@@ -10,9 +10,10 @@ labels:
   - smoke
 assignee: null
 created: 2026-09-06T13:44:02.387Z
-updated: 2026-09-06T13:44:02.387Z
+updated: 2026-09-08T21:28:45.000Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-08-cover-skill-and-script-tests-in-repo-gates.md
 ---
 
 ## Description

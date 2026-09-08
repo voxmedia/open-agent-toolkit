@@ -11,9 +11,10 @@ labels:
   - wave-4-followup
 assignee: null
 created: 2026-09-06T19:21:29.824Z
-updated: 2026-09-08T17:36:27.000Z
+updated: 2026-09-08T21:22:00.000Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-08-persist-native-skill-adoption-in-status.md
 ---
 
 ## Description
