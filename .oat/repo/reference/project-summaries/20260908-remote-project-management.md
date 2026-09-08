@@ -115,8 +115,10 @@ previewable, verifiable, and restart-safe.
   uncached workspace tests passed. Fresh configured gate
   `b64bfa7c-093b-46c7-84fb-dcf66dd58f60` passed at `4ea2dc5c4` with zero
   Critical/Important/Medium findings. Its sole Minor was dispositioned by
-  preserving the failed recap as intentional historical evidence. Completion
-  awaits the recap choice, archive/publication, and post-push CI; earlier
+  preserving the failed recap as intentional historical evidence. The operator
+  then skipped a recap retry, archived the lifecycle locally and to the
+  configured S3 destination, and published the branch at `b5b8c6191`. PR #273
+  remains open; post-push CI and merge are separate boundaries. Earlier
   receipts below are historical.
 - **Post-implementation Wave 5:** merged main at
   `1bef28fa1fb95e1473872ff9a511a6b42fa37889` through merge `c55deca00`.
