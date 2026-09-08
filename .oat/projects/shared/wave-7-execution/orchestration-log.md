@@ -70,3 +70,16 @@ scratchpad — a session restart destroys scratch; the wave-5 close recorded
 **Skill signal (strengthens):** the plan gate's "immutable plan STOP replaced
 by a workaround" check caught a substitution that would have sent p04 into a
 STOP or, worse, a silent re-derivation.
+
+### 2026-09-08 · structural · oat-wave-execute · plan gate attempt 2 → group 1 dispatch
+
+Plan gate attempt 2 (run `c023731b`) passed 0C/0I/1M; the Medium (write
+inventory built from `### In scope` alone, missing Test-plan and step test
+files and the `oat-project-summary` bump) was addressed in the receive: the
+inventory now unions In scope, Test plan, Implementation-step test files, and
+pin implications; within-group intersections stay empty. Group 1 (p01, p02,
+p03) bootstrapped at `985717d53` (three `status=success`, view-parity ok) and
+dispatched on opus. **Skill signal (strengthens):** the program's rule that
+intersections come from steps, test plans, generated files, and pins — not
+Scope lists — is the right bar; a Scope-only sweep passed my own audit and
+Codex's composition check but not the gate.
