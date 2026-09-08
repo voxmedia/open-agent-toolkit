@@ -13,9 +13,10 @@ labels:
   - retro
 assignee: null
 created: 2026-09-06T05:27:39.903Z
-updated: 2026-09-08T16:55:27.000Z
+updated: 2026-09-08T21:35:00.000Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-08-calculate-dispatch-baselines-after-journaling.md
 ---
 
 ## Description

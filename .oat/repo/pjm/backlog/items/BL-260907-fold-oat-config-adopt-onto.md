@@ -11,9 +11,10 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T14:05:34.000Z
-updated: 2026-09-08T16:55:27.000Z
+updated: 2026-09-08T21:33:57.000Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-08-fix-oat-config-unset-and-adopt.md
 ---
 
 ## Description

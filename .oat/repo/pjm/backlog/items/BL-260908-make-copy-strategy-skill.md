@@ -13,9 +13,10 @@ labels:
   - wave-6-followup
 assignee: null
 created: 2026-09-08T03:59:59.605Z
-updated: 2026-09-08T16:55:27.000Z
+updated: 2026-09-08T21:22:00.000Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-08-converge-copy-strategy-skill-projections.md
 ---
 
 ## Description

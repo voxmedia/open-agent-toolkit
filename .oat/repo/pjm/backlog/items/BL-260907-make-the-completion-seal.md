@@ -12,9 +12,10 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T11:53:58.493Z
-updated: 2026-09-08T16:55:27.000Z
+updated: 2026-09-08T21:15:43.000Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-08-make-the-completion-seal-idempotent.md
 ---
 
 ## Description

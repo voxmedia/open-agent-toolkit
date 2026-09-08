@@ -11,9 +11,10 @@ labels:
   - wave-6-followup
 assignee: null
 created: 2026-09-08T05:08:00.374Z
-updated: 2026-09-08T05:08:00.374Z
+updated: 2026-09-08T21:35:00.000Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-08-tighten-the-skill-version-validators.md
 ---
 
 ## Description

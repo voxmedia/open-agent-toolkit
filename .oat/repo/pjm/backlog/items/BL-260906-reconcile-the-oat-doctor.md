@@ -9,9 +9,10 @@ labels:
   - skills
 assignee: null
 created: 2026-09-06T08:30:44.036Z
-updated: 2026-09-08T16:55:27.000Z
+updated: 2026-09-08T21:19:11.000Z
 associated_issues: []
-external_plans: []
+external_plans:
+  - .oat/repo/reference/external-plans/2026-09-08-reconcile-the-oat-doctor-example.md
 ---
 
 ## Description
