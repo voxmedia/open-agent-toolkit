@@ -135,6 +135,18 @@ oat_generated: false
 - M3 (HiLL recorded as confirmed without confirmation) → `oat_plan_hill_phases` left at the scaffold value and marked pending for the implementation-start resolver (`workflow.hillCheckpointDefault` = `final`).
 - m1 (line-3 claim) → reworded (two skills declare at line 4).
 
+### Review Received: plan (attempt 3 — blocked)
+
+**Date:** 2026-09-08
+**Gate:** target `codex-5-6-sol-xhigh`, outcome `review_completed_blocking_findings`, 0C/2I/1M/0m.
+**Review artifact:** reviews/archived/artifact-plan-review-2026-09-08T084454Z.md
+
+**Dispositions (all fixed in-artifact before attempt 4 — the last rerun under the plan-gate cap):**
+
+- I1 (`[]` is a valid every-phase HiLL selection, not a sentinel; autonomous implementation would pause after p01) → the field removed from the frontmatter entirely, unset pending implementation-start resolution.
+- I2 (p01-t03 left the other raw readers untouched until p02-t01 changed their keys) → every bundled-skill reader from the recon inventory moved into p01-t03 (the two `review-skill-contracts` skill sites, `agent-instructions-bundle-contract`, the four `.toMatch` sites, and the three `node --test` files with a tiny local metadata-first reader); `:356` retained as an agent-role assertion; p02-t01 changes pinned values only.
+- M1 (the Definition of Done substituted the forced Turbo run for `pnpm test`) → the eight CI gates in their exact order, with the forced run and the separate suites as supplemental evidence.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -159,7 +171,7 @@ Chronological log of implementation progress.
 
 - Project scaffolded (quick mode) on branch `migrate-skill-versions` from `origin/main` `5b3b82151` (the wave-6 close); discovery and plan authored from the 2026-09-08 recon.
 - Plan gate attempt 1 blocked (0C/2I/2M); all four findings fixed in the plan.
-- Plan gate attempt 2 blocked (0C/2I/3M/1m): reader architecture resolved (canonical resolver for the RC builder; accepted exception + parity contract for the bundled script), Phase 1 gate subset, decision via `oat-pjm-decision`, control categories, HiLL pending; attempt 3 next (the cap).
+- Plan gate attempt 2 blocked (0C/2I/3M/1m): reader architecture resolved (canonical resolver for the RC builder; accepted exception + parity contract for the bundled script), Phase 1 gate subset, decision via `oat-pjm-decision`, control categories, HiLL pending; attempt 3 blocked (0C/2I/1M: HiLL `[]` semantics, raw readers left to Phase 2, the exact eight-gate order) and fixed in-artifact; attempt 4 is the last rerun under the plan-gate cap — if it blocks again, the plan proceeds to implementation with the root implementation-time reviews as the review coverage.
 
 ---
 

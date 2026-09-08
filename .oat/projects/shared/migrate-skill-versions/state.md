@@ -114,7 +114,8 @@ Plan — discovery and plan authored from the 2026-09-08 recon; the configured p
 - ✓ Discovery and plan authored; `oat project validate-plan` passed
 - ✗ Plan gate attempt 1 blocked (0C/2I/2M: HiLL value vs prose, unowned backlog archive, decision routing, an unrunnable negative control) — fixed in-artifact
 - ✗ Plan gate attempt 2 blocked (0C/2I/3M/1m: duplicate parsers, Phase 1 release gates, decision skill present, control categories, HiLL confirmation) — fixed in-artifact
-- ⧗ Plan gate attempt 3 (last)
+- ✗ Plan gate attempt 3 blocked (0C/2I/1M) — fixed in-artifact
+- ⧗ Plan gate attempt 4 (the last rerun under the cap)
 
 ## Blockers
 

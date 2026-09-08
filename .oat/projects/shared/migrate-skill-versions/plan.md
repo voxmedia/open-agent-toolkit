@@ -5,7 +5,6 @@ oat_blockers: []
 oat_last_updated: 2026-09-08
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: [] # provisional scaffold value — NOT a confirmed choice; oat-project-implement resolves it at start from workflow.hillCheckpointDefault (currently `final`)
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported | lite
 oat_import_reference: null # e.g., references/imported-plan.md
@@ -29,7 +28,7 @@ oat_generated: false
 ## Planning Checklist
 
 - [ ] HiLL checkpoints: no explicit operator confirmation exists for this project; the choice is resolved by `oat-project-implement` at start from `workflow.hillCheckpointDefault` (`final`). The operator's standing preference about cross-runtime phase-boundary review gates is a different setting and is not cited as confirmation.
-- [ ] `oat_plan_hill_phases` left at the scaffold value pending that resolution
+- [ ] `oat_plan_hill_phases` is absent from the frontmatter (unset pending implementation-start resolution, per the plan-writing contract); it is not stored as `[]`
 - [x] Evaluated phases for parallelism opportunities (Phase 2 rewrites files Phase 1 edits; sequential)
 - [x] Set `oat_plan_parallel_groups` in frontmatter
 
@@ -43,7 +42,7 @@ oat_generated: false
 
 ## Verification mode
 
-Standalone (not a wave lane): this project owns the lockstep bump. **Phase 1 phase-wide verification** (a passing, phase-relevant subset — the release-version gates cannot pass before p02-t02 because the release gate treats any `.agents/skills` change as a public-package change): `pnpm check`, `pnpm type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`, `pnpm build`, `pnpm run check:skill-bumps`, `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills` — all expected exit 0. **Phase 2 phase-wide verification** (after p02-t02's bump): the complete root `AGENTS.md` Definition of Done in order with captured exit codes — `pnpm check`, `pnpm type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`, `pnpm build`, `pnpm run check:skill-bumps`, `git fetch origin && pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs` — plus `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills`. Per-task verification below is the focused subset.
+Standalone (not a wave lane): this project owns the lockstep bump. **Phase 1 phase-wide verification** (a passing, phase-relevant subset — the release-version gates cannot pass before p02-t02 because the release gate treats any `.agents/skills` change as a public-package change): `pnpm check`, `pnpm type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`, `pnpm build`, `pnpm run check:skill-bumps`, `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills` — all expected exit 0. **Phase 2 phase-wide verification** (after p02-t02's bump): the complete root `AGENTS.md` Definition of Done, the eight CI gates in their exact order with captured exit codes — 1 `pnpm check`, 2 `pnpm type-check`, 3 `pnpm test`, 4 `pnpm build`, 5 `pnpm run check:skill-bumps`, 6 `git fetch origin && pnpm release:check-versions`, 7 `pnpm release:validate`, 8 `pnpm build:docs` — followed by the supplemental cache-replay evidence `AGENTS.md` asks for: `HOME=$(mktemp -d) pnpm exec turbo run test --force` (record `Cached: 0`) and the separately run `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, plus `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills`. Per-task verification below is the focused subset.
 
 ## Recon facts the tasks rely on (2026-09-08, base `5b3b82151`)
 
@@ -137,24 +136,24 @@ git commit -m "fix(p01-t02): read metadata.version in the explainer-kit core che
 
 ---
 
-### Task p01-t03: Make the skill test sweeps and mutation tests read through the resolver
+### Task p01-t03: Make every bundled-skill version reader in the test suites shape-agnostic
 
 **Files:**
 
-- Modify: `packages/cli/src/validation/skills.test.ts` (the two corpus sweeps near `:1234` and `:1243`; the tuple-consuming loops that capture `/^version:\s*(.+)$/m` near the four tuple blocks and the path/version arrays), `packages/cli/src/commands/tools/tool-pack-lifecycle.integration.test.ts` (the `0.0.1` mutation near `:334`)
+- Modify: `packages/cli/src/validation/skills.test.ts` (the two corpus sweeps near `:1234` and `:1243`; the tuple-consuming loops that capture `/^version:\s*(.+)$/m` near the four tuple blocks and the path/version arrays; the four `.toMatch(/^version:\s*x\.y\.z$/m)` sites near `:5873`, `:5876`, `:6833`, `:8160`; every individual `.toBe('x.y.z')` on a `^version:` capture), `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts:1061,1398` (skill readers; `:356` stays a top-level read because it asserts the `oat-reviewer` AGENT role, which is out of scope), `packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts:23-25`, `packages/cli/src/commands/tools/tool-pack-lifecycle.integration.test.ts` (the `0.0.1` mutation near `:334`), `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs:434-435`, `.agents/skills/explainer-kit/tests/rebuildability.test.mjs:103`, `.agents/skills/recon/tests/skill-contract.test.mjs:26`
 
 **Step 1: Write test (RED)**
 
-Rewrite the two corpus sweeps to resolve each skill's version with `resolveSkillVersion(parseSkillFrontmatter(getFrontmatterBlock(content)))` (import from `commands/shared/frontmatter.ts`) and assert a semver `version` with a non-`conflict`, non-null result for every skill; keep them source-agnostic in this phase. Rewrite every tuple loop and `.toBe` site that captures `^version:` with a raw regex to compare the RESOLVED version instead (one small local helper in the test file). Rewrite the lifecycle mutation to rewrite whichever version field is present (`metadata.version` or top-level) to `0.0.1`, and add an assertion that the rewrite actually changed the content (so a silent no-op can never pass again).
+Rewrite the two corpus sweeps to resolve each skill's version with `resolveSkillVersion(parseSkillFrontmatter(getFrontmatterBlock(content)))` (import from `commands/shared/frontmatter.ts`) and assert a semver `version` with a non-`conflict`, non-null result for every skill; keep them source-agnostic in this phase. Rewrite every reader in the Files list that captures or matches a line-start `version:` for a bundled SKILL — the `skills.test.ts` tuple loops, `.toBe` sites, and four `.toMatch` regexes, the two `review-skill-contracts.test.ts` skill sites, the `agent-instructions-bundle-contract.test.ts` site, and the three `node --test` files (`wrapper-compatibility`, `rebuildability`, `recon/skill-contract`, which cannot import the TypeScript resolver: give each a tiny local `readSkillVersion(content)` that returns the `version:` scalar indented under a column-0 `metadata:` key with the column-0 `version:` as fallback) — so each compares the RESOLVED version against its unchanged pinned literal. Rewrite the lifecycle mutation to rewrite whichever version field is present (`metadata.version` or top-level) to `0.0.1`, and add an assertion that the rewrite actually changed the content (so a silent no-op can never pass again). After this task p02-t01 changes only pinned VALUES; no reader changes remain.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/tools/tool-pack-lifecycle.integration.test.ts`
-Expected: green on the current corpus (this task is a refactor toward shape-agnosticism), so prove the change with a runnable control against the real tree: back up one canonical skill (for example `.agents/skills/recon/SKILL.md`) to a `mktemp -d` directory, rewrite its frontmatter in place to the metadata-only shape (same version value under `metadata:`), run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "valid semver versions"` BEFORE the sweep rewrite (expected red: `recon: <missing>` in the `invalidVersions` assertion — record the line) and AFTER it (expected green), then restore the skill with `cp` from the backup and confirm `git status` is clean for that file. The same probe against the lifecycle mutation: with the metadata-only skill installed into a scratch pack, the old `replace(/^version:.*$/m, …)` leaves the content unchanged and the new field-agnostic rewrite changes it (assert on the changed content).
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/tools/tool-pack-lifecycle.integration.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts` and `node --test tools/smoke/explainer-kit/wrapper-compatibility.test.mjs .agents/skills/explainer-kit/tests/rebuildability.test.mjs .agents/skills/recon/tests/skill-contract.test.mjs`
+Expected: green on the current corpus (this task is a refactor toward shape-agnosticism), so prove the change with a runnable control against the real tree: back up one canonical skill (for example `.agents/skills/recon/SKILL.md`) to a `mktemp -d` directory, rewrite its frontmatter in place to the metadata-only shape (same version value under `metadata:`), run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts -t "valid semver versions"` BEFORE the sweep rewrite (expected red: `recon: <missing>` in the `invalidVersions` assertion — record the line) and AFTER it (expected green); run `node --test .agents/skills/recon/tests/skill-contract.test.mjs` the same way (red on the old `assert.match(/^version:\s*1\.1\.0$/m)`, green on the shape-agnostic reader with the same literal); repeat the mutation on `.agents/skills/explainer-kit/SKILL.md` for `wrapper-compatibility.test.mjs` and `rebuildability.test.mjs`, and on `oat-project-complete` for `review-skill-contracts.test.ts:1398`; then restore every skill with `cp` from the backup and confirm `git status` is clean. The same probe against the lifecycle mutation: with the metadata-only skill installed into a scratch pack, the old `replace(/^version:.*$/m, …)` leaves the content unchanged and the new field-agnostic rewrite changes it (assert on the changed content).
 
 **Step 2: Implement (GREEN)**
 
 Land the rewrites; keep every pinned literal unchanged in this task (the values still match).
 
-Run: same command
+Run: the same two commands
 Expected: pass (GREEN), test count unchanged or higher.
 
 **Step 3: Refactor**
@@ -169,8 +168,8 @@ Expected: exit 0, `Cached: 0`.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/validation/skills.test.ts packages/cli/src/commands/tools/tool-pack-lifecycle.integration.test.ts
-git commit -m "test(p01-t03): read skill versions through the resolver in the corpus sweeps"
+git add packages/cli/src/validation/skills.test.ts packages/cli/src/commands/tools/tool-pack-lifecycle.integration.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts tools/smoke/explainer-kit/wrapper-compatibility.test.mjs .agents/skills/explainer-kit/tests/rebuildability.test.mjs .agents/skills/recon/tests/skill-contract.test.mjs
+git commit -m "test(p01-t03): make every bundled-skill version reader shape-agnostic"
 ```
 
 ---
@@ -192,7 +191,7 @@ Expected: red 82× (every skill still carries the alias).
 
 **Step 2: Implement (GREEN)**
 
-Transformation, applied by a scratch script and reviewed as a diff: for each `.agents/skills/*/SKILL.md`, parse the frontmatter block; take the top-level `version:` value (all 82 have exactly one, unquoted, at column 0); bump the patch component; delete the top-level line; if a column-0 `metadata:` key exists (`oat-repo-improve`, `triage-oat-issues`) append `  version: <new>` as the last entry of that map, otherwise append `metadata:\n  version: <new>` as the last frontmatter key before the closing `---`. Preserve every other line byte-for-byte. Then repoint every pin by grepping each OLD version literal (plain and regex-escaped, e.g. `2\.1\.0`) across `packages/cli/src`, `tools/smoke`, and `.agents/skills/*/tests` and replacing it with the new value only where it is paired with that skill (tuples, `.toBe`, `.toMatch`, `assert.match`, path/version arrays). Run `pnpm run --silent cli -- sync --scope project` and inspect the provider-view diff (rewrites only; a deletion is a STOP). Run `pnpm oat:validate-skills` and require zero `skill-version-alias` warnings and exit 0.
+Transformation, applied by a scratch script and reviewed as a diff: for each `.agents/skills/*/SKILL.md`, parse the frontmatter block; take the top-level `version:` value (all 82 have exactly one, unquoted, at column 0); bump the patch component; delete the top-level line; if a column-0 `metadata:` key exists (`oat-repo-improve`, `triage-oat-issues`) append `  version: <new>` as the last entry of that map, otherwise append `metadata:\n  version: <new>` as the last frontmatter key before the closing `---`. Preserve every other line byte-for-byte. Then repoint every pin by grepping each OLD version literal (plain and regex-escaped, e.g. `2\.1\.0`) across `packages/cli/src`, `tools/smoke`, and `.agents/skills/*/tests` and replacing it with the new value only where it is paired with that skill (tuples, `.toBe`, `.toMatch`, `assert.match`, path/version arrays) — values only; every reader is already shape-agnostic after p01-t03, so a reader change in this task is a deviation to report. Run `pnpm run --silent cli -- sync --scope project` and inspect the provider-view diff (rewrites only; a deletion is a STOP). Run `pnpm oat:validate-skills` and require zero `skill-version-alias` warnings and exit 0.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared src/commands/tools`
 Expected: green; `pnpm oat:validate-skills` prints no warnings; `pnpm run check:skill-bumps` reports 82 changed skills validated with zero findings.
@@ -241,7 +240,7 @@ None.
 
 **Step 4: Verify**
 
-Run the full standalone sequence with captured exit codes: `pnpm check`, `pnpm type-check`, `HOME=$(mktemp -d) pnpm exec turbo run test --force`, `pnpm build`, `pnpm run check:skill-bumps`, `git fetch origin && pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs`, `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills`.
+Run the eight root `AGENTS.md` gates in their exact order with captured exit codes — `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm run check:skill-bumps`, `git fetch origin && pnpm release:check-versions`, `pnpm release:validate`, `pnpm build:docs` — then the supplemental evidence: `HOME=$(mktemp -d) pnpm exec turbo run test --force` (`Cached: 0`), `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, `pnpm lint`, `pnpm format`, `pnpm oat:validate-skills`.
 Expected: every gate exit 0; `release:check-versions` sees 0.2.65 strictly above `origin/main`; `oat:validate-skills` prints no warnings.
 
 **Step 5: Commit**
@@ -262,7 +261,7 @@ git commit -m "chore(p02-t02): record the alias retirement schedule, archive the
 | final | code     | pending     | -          | -                                                           | -             | -          | -                   |
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T080653Z.md | -             | gate       | codex-5-6-sol-xhigh |
 | plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T082541Z.md | -             | gate       | codex-5-6-sol-xhigh |
-| plan  | artifact | received    | 2026-09-08 | reviews/artifact-plan-review-2026-09-08T084454Z.md          | -             | -          | -                   |
+| plan  | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T084454Z.md | -             | gate       | codex-5-6-sol-xhigh |
 
 > Reviews are recorded newest-last. For code-review events, `Reviewed Head` is the full 40-character SHA at the head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`; `Gate Target` is populated only for gate events. Writers must preserve every existing row and every unknown trailing cell.
 
