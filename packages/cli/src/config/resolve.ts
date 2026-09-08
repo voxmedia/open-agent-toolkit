@@ -550,7 +550,17 @@ function isAtomicConfigLeaf(key: string, value: unknown): boolean {
   );
 }
 
-function resolveEnvOverride(
+/**
+ * Report the environment override for `key`, if one is live.
+ *
+ * Exported because `oat config unset` needs the answer to "is this key
+ * environment-overridden?" without performing a whole-config read, which a
+ * malformed stored value aborts -- and a malformed stored value is exactly what
+ * `unset` exists to remove. `ENV_OVERRIDE_MAP` plus the env-first branch of
+ * `resolveEffectiveConfig` is the single source of that answer, so callers that
+ * only need the boolean must not resolve the whole config to derive it.
+ */
+export function resolveEnvOverride(
   key: string,
   env: NodeJS.ProcessEnv,
 ): string | undefined {

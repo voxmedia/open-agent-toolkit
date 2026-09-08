@@ -1456,6 +1456,38 @@ describe('oat config', () => {
       expect(capture.error[0]).toContain('mutually exclusive');
     });
 
+    it('set, unset, and adopt reject the same conflicting surface flags with one message', async () => {
+      const argvs = [
+        ['set', 'git.defaultBranch', 'main', '--shared', '--local'],
+        ['unset', 'git.defaultBranch', '--shared', '--local'],
+        ['adopt', 'dispatch-matrix', '--shared', '--local'],
+      ];
+      const messages: string[] = [];
+      const exitCodes: (number | undefined)[] = [];
+
+      for (const argv of argvs) {
+        const root = await createRepoRoot();
+        const home = await createHome();
+        const { command, capture } = createHarness({ cwd: root, home });
+        process.exitCode = undefined;
+
+        await runCommand(command, argv);
+
+        messages.push(capture.error[0] ?? '');
+        exitCodes.push(process.exitCode);
+      }
+
+      // Compared to each other first, not only to the literal, so a future
+      // message change has to move all three commands together instead of
+      // letting one drift.
+      expect(messages[1]).toBe(messages[0]);
+      expect(messages[2]).toBe(messages[0]);
+      expect(messages[0]).toBe(
+        '--shared, --local, and --user flags are mutually exclusive; pass at most one.',
+      );
+      expect(exitCodes).toEqual([1, 1, 1]);
+    });
+
     it('set activeIdea --user writes to ~/.oat/config.json', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
@@ -5013,6 +5045,179 @@ describe('oat config', () => {
       );
       const shared = await readSharedConfig(root);
       expect(shared.explainers).toBeUndefined();
+    });
+
+    it('unset removes a malformed documentation.excludes and leaves siblings intact', async () => {
+      const root = await createRepoRoot();
+      // The strict normalizing reader throws on this value. `unset` used to
+      // resolve the effective config before doing anything else, so it aborted
+      // here and never reached the lenient repair reader that exists precisely
+      // to remove it.
+      await writeSharedConfig(root, {
+        documentation: { excludes: 5, root: 'apps/docs' },
+        git: { defaultBranch: 'trunk' },
+      });
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'documentation.excludes']);
+
+      expect(process.exitCode).toBe(0);
+      expect(capture.info[0]).toBe(
+        'documentation.excludes unset from shared config',
+      );
+      const shared = await readSharedConfig(root);
+      const documentation = shared.documentation as Record<string, unknown>;
+      expect(documentation.excludes).toBeUndefined();
+      expect(documentation.root).toBe('apps/docs');
+      expect((shared.git as Record<string, unknown>).defaultBranch).toBe(
+        'trunk',
+      );
+    });
+
+    it('unset removes a malformed documentation.instructionPointerExcludes', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        documentation: { instructionPointerExcludes: 7, root: 'apps/docs' },
+      });
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'unset',
+        'documentation.instructionPointerExcludes',
+      ]);
+
+      expect(process.exitCode).toBe(0);
+      expect(capture.info[0]).toBe(
+        'documentation.instructionPointerExcludes unset from shared config',
+      );
+      const shared = await readSharedConfig(root);
+      const documentation = shared.documentation as Record<string, unknown>;
+      expect(documentation.instructionPointerExcludes).toBeUndefined();
+      expect(documentation.root).toBe('apps/docs');
+    });
+
+    it('unset removes a malformed projects.defaultScope', async () => {
+      const root = await createRepoRoot();
+      // Not named by the backlog item, but it fails closed identically and has
+      // its own lenient repair reader in `removeFromSurface`.
+      await writeSharedConfig(root, {
+        projects: { defaultScope: {}, root: '.oat/projects/shared' },
+      });
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'projects.defaultScope']);
+
+      expect(process.exitCode).toBe(0);
+      expect(capture.info[0]).toBe(
+        'projects.defaultScope unset from shared config',
+      );
+      const shared = await readSharedConfig(root);
+      const projects = shared.projects as Record<string, unknown>;
+      expect(projects.defaultScope).toBeUndefined();
+      expect(projects.root).toBe('.oat/projects/shared');
+    });
+
+    it('unset removes a malformed projects.defaultScope and still warns about the live environment override', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        projects: { defaultScope: {}, root: '.oat/projects/shared' },
+      });
+      const { command, capture } = createHarness({
+        cwd: root,
+        env: { OAT_PROJECTS_DEFAULT_SCOPE: 'local' },
+      });
+
+      // The probe cannot be merely `false`: the whole-config read this replaced
+      // could not reach this branch at all, because the malformed value aborted
+      // it before the override was ever consulted.
+      await runCommand(command, ['unset', 'projects.defaultScope']);
+
+      expect(process.exitCode).toBe(0);
+      const shared = await readSharedConfig(root);
+      const projects = shared.projects as Record<string, unknown>;
+      expect(projects.defaultScope).toBeUndefined();
+      expect(capture.warn[0]).toContain(
+        'an environment variable override still supplies its effective value',
+      );
+    });
+
+    it('unset of an unrelated key still fails while another key is malformed', async () => {
+      const root = await createRepoRoot();
+      // Deliberate limitation, not an oversight: `removeFromSurface` writes
+      // through `writeOatConfig`, which normalizes on write, so rewriting this
+      // file would either throw on the untargeted malformed sibling or silently
+      // destroy it. `set` refuses identically. This pins the refusal so a later
+      // change cannot start rewriting a file over a malformed sibling silently.
+      await writeSharedConfig(root, {
+        documentation: { excludes: 5 },
+        git: { defaultBranch: 'trunk' },
+      });
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'git.defaultBranch']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('Invalid documentation.excludes');
+      const shared = await readSharedConfig(root);
+      expect((shared.git as Record<string, unknown>).defaultBranch).toBe(
+        'trunk',
+      );
+    });
+
+    it('unset of a key on one surface still fails while another surface is malformed', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      // The targeted surface here is `user`; the malformed value is on
+      // `shared`. Nothing in the user-surface write path would ever look at the
+      // shared file, so the barrier's untargeted read is the only thing that
+      // refuses this.
+      await writeSharedConfig(root, { documentation: { excludes: 5 } });
+      await mkdir(join(home, '.oat'), { recursive: true });
+      const userConfigPath = join(home, '.oat', 'config.json');
+      await writeFile(
+        userConfigPath,
+        `${JSON.stringify({ version: 1, updateNotifications: false })}\n`,
+        'utf8',
+      );
+      const before = await readFile(userConfigPath, 'utf8');
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, ['unset', 'updateNotifications', '--user']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('Invalid documentation.excludes');
+      expect(await readFile(userConfigPath, 'utf8')).toBe(before);
+    });
+
+    it('unset of a pjm.remote child still fails while a shared sibling is malformed', async () => {
+      const root = await createRepoRoot();
+      // The `pjm.remote` branch of `removeFromSurface` persists through
+      // `atomicWriteJson`, bypassing `writeOatConfig`'s normalization, so no
+      // rewrite downstream would refuse the malformed sibling. The barrier's
+      // targeted shared read is the only thing between this command and a raw
+      // write over an invalid document.
+      await writeSharedConfig(root, {
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'local' },
+            policy: {
+              description: 'managed-section',
+              authority: { default: 'read-only' },
+            },
+          },
+        },
+        documentation: { excludes: 5 },
+      });
+      const configPath = join(root, '.oat', 'config.json');
+      const before = await readFile(configPath, 'utf8');
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'pjm.remote.policy.description']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('Invalid documentation.excludes');
+      expect(await readFile(configPath, 'utf8')).toBe(before);
     });
 
     it('unset still reports already-unset when the key is absent from disk', async () => {
