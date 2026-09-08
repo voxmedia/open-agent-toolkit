@@ -1,11 +1,12 @@
 ---
 name: oat-worktree-bootstrap-auto
-version: 1.6.1
 description: Use when an orchestrator/subagent needs autonomous worktree bootstrap. Non-interactive companion to oat-worktree-bootstrap.
 argument-hint: '<branch-name> [--base <ref>] [--path <root>] [--baseline-policy <strict|allow-failing>]'
 disable-model-invocation: false
 user-invocable: false
 allowed-tools: Read, Write, Bash, Glob, Grep
+metadata:
+  version: 1.6.2
 ---
 
 # Autonomous Worktree Bootstrap

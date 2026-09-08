@@ -1,11 +1,12 @@
 ---
 name: oat-docs-bootstrap
-version: 1.2.0
 description: Use when bootstrapping a new OAT docs app in a repo. Guides the user through preflight detection, richer input gathering than the raw CLI, `oat docs init` invocation with gated post-patches for open CLI gaps, build verification, post-scaffold config inspection, and an educational walkthrough. Supports Fumadocs (full path) and MkDocs (lean path with defined minimum contract).
 argument-hint: '<optional-target-dir>'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.2.1
 ---
 
 # Docs Bootstrap

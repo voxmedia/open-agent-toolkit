@@ -1,11 +1,12 @@
 ---
 name: oat-wave-execute
-version: 1.9.0
 description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout.
 argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
+metadata:
+  version: 1.9.1
 ---
 
 # Execute a Wave of External Plans

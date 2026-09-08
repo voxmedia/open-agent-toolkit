@@ -1,10 +1,11 @@
 ---
 name: oat-project-progress
-version: 1.4.1
 description: Use when the user explicitly asks to check OAT project progress — e.g. "check progress", "what's next", "where are we", or confirms a previously offered progress check. Do NOT auto-invoke just because a workflow step completed. Reads project status and offers the next route.
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash(git:*), Bash(oat:*), AskUserQuestion
+metadata:
+  version: 1.4.2
 ---
 
 # Progress Router

@@ -1,7 +1,7 @@
 ---
 id: BL-260904-migrate-bundled-skills-from
 title: Migrate bundled skills from top-level version to metadata.version
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - migration
 assignee: null
 created: 2026-09-04T04:07:45.630Z
-updated: 2026-09-08T03:50:40.000Z
+updated: '2026-09-08T11:16:46Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/258

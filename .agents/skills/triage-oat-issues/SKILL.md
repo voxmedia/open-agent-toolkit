@@ -1,6 +1,5 @@
 ---
 name: triage-oat-issues
-version: 1.0.0
 description: Use when triaging Open Agent Toolkit GitHub issues or suspected OAT defects from issue lists, reports, or research notes. Verifies claims, aligns the file-backed backlog, opens a reviewable triage PR, and resumes post-merge issue actions.
 argument-hint: '[scope, issue references, research-note path, or resume PR reference]'
 disable-model-invocation: true
@@ -9,6 +8,7 @@ user-invocable: true
 compatibility: Repository-specific to voxmedia/open-agent-toolkit; requires gh and the OAT PJM backlog.
 metadata:
   distribution: repository-only
+  version: 1.0.1
 ---
 
 # Triage OAT Issues

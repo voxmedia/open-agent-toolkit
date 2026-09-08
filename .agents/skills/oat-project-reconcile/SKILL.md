@@ -1,10 +1,11 @@
 ---
 name: oat-project-reconcile
-version: 1.0.2
 description: Use when human-implemented commits need to be mapped back to planned tasks. Reconciles implementation.md and state.md after manual work outside the OAT workflow.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.0.3
 ---
 
 # Reconcile Manual Implementation

@@ -1,11 +1,12 @@
 ---
 name: create-agnostic-skill
-version: 1.4.2
 description: Use when adding a reusable workflow skill for AI coding agents. Scaffolds a new .agents/skills skill using the Agent Skills open standard.
 argument-hint: '[skill-name]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
+metadata:
+  version: 1.4.3
 ---
 
 # Create Skill

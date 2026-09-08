@@ -1,10 +1,11 @@
 ---
 name: deep-research
-version: 0.2.0
 description: Comprehensive research orchestrator that classifies topics, dispatches parallel research-angle workers, and produces structured artifacts using domain-specific schemas.
 argument-hint: 'topic [--depth surface|standard|exhaustive] [--focus angle] [--context path] [output-path]'
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash, WebSearch, WebFetch, AskUserQuestion, Agent, mcp__*
+metadata:
+  version: 0.2.1
 ---
 
 # /deep-research

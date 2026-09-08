@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { expectDispatchStampFieldContract } from '@test-support/skills/dispatch-stamp-contract';
+import { readDeclaredVersion } from '@test-support/skills/skill-version';
 import { describe, expect, it } from 'vitest';
 
 function repoFilePath(relativePath: string): string {
@@ -353,6 +354,8 @@ describe('review skill contracts', () => {
     const templateEnd = content.indexOf('````', templateStart + 4);
     const nextStep = content.indexOf('## Recommended Next Step');
 
+    // The `oat-reviewer` AGENT role is out of scope for the skill version
+    // migration and keeps its top-level declaration, so this read stays direct.
     expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.3');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
@@ -1058,7 +1061,7 @@ printf 'artifact-read\\n'`,
       .slice(contractStart, cleanStart)
       .replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.1');
+    expect(readDeclaredVersion(content)).toBe('1.5.2');
     expect(contractStart).toBeGreaterThanOrEqual(0);
     expect(contractStart).toBeLessThan(cleanStart);
     expect(contractStart).toBeLessThan(findingsStart);
@@ -1395,7 +1398,7 @@ printf 'artifact-read\\n'`,
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.7.8');
+    expect(readDeclaredVersion(content)).toBe('1.7.9');
     expect(content).toContain(
       'if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then',
     );

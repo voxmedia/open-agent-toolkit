@@ -1,10 +1,11 @@
 ---
 name: oat-project-discover
-version: 2.2.5
 description: Use when the user explicitly asks to continue discovery for an active spec-driven OAT project — e.g. "continue discovery", "run discovery", or confirms a previously offered discovery step. Do NOT auto-invoke for new ideas or quick/lite-mode projects. Gathers requirements and context before spec/design.
 disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Glob, Grep, AskUserQuestion
+metadata:
+  version: 2.2.6
 ---
 
 # Discovery Phase

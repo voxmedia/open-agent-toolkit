@@ -1,9 +1,10 @@
 ---
 name: codex-skill
-version: 1.3.0
 description: Use when the user asks to run Codex CLI commands (codex exec, codex resume) or references OpenAI Codex workflows. Handles Codex-specific analysis, refactoring, and automated editing tasks.
 disable-model-invocation: true
 user-invocable: true
+metadata:
+  version: 1.3.1
 ---
 
 # Codex Skill Guide

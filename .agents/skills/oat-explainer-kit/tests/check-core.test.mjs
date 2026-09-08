@@ -8,6 +8,7 @@ import {
   CORE_INSTALL_COMMAND,
   CORE_UPDATE_COMMAND,
   checkCoreCompatibility,
+  readFrontmatterVersion,
 } from '../scripts/check-core.mjs';
 import {
   MINIMUM_CORE_VERSION,
@@ -22,7 +23,7 @@ afterEach(async () => {
   );
 });
 
-async function createInstalledLayout(version) {
+async function createInstalledLayout(version, { shape = 'top-level' } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'oat-explainer-core-'));
   tempDirs.push(root);
   const skillsRoot = join(root, '.agents', 'skills');
@@ -31,9 +32,13 @@ async function createInstalledLayout(version) {
   if (version !== null) {
     const coreRoot = join(skillsRoot, 'explainer-kit');
     await mkdir(coreRoot, { recursive: true });
+    const declaration =
+      shape === 'metadata'
+        ? `metadata:\n  version: ${version}`
+        : `version: ${version}`;
     await writeFile(
       join(coreRoot, 'SKILL.md'),
-      `---\nname: explainer-kit\nversion: ${version}\n---\n`,
+      `---\nname: explainer-kit\n${declaration}\n---\n`,
       'utf8',
     );
   }
@@ -165,4 +170,57 @@ test('does not treat a source checkout core as installed', async () => {
   assert.equal(result.ok, false);
   assert.equal(result.code, 'missing');
   assert.equal(result.coreRoot, join(skillsRoot, 'explainer-kit'));
+});
+
+test('accepts a core that declares its version under metadata', async () => {
+  const { adapterRoot, skillsRoot } = await createInstalledLayout('1.4.2', {
+    shape: 'metadata',
+  });
+
+  const result = await checkCoreCompatibility({
+    adapterRoot,
+    userSkillsRoot: skillsRoot,
+    minimumVersion: '1.2.0',
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.code, 'compatible');
+  assert.equal(result.installedVersion, '1.4.2');
+});
+
+test('reads the version with metadata.version taking precedence', () => {
+  for (const [label, block, expected] of [
+    ['metadata only', 'metadata:\n  version: 1.2.3', '1.2.3'],
+    ['top-level alias only', 'version: 1.2.3', '1.2.3'],
+    ['both agreeing', 'version: 1.2.3\nmetadata:\n  version: 1.2.3', '1.2.3'],
+    [
+      'metadata wins over an unrelated key',
+      'metadata:\n  author: someone\n  version: 1.2.3',
+      '1.2.3',
+    ],
+    ['double-quoted alias', 'version: "1.2.3"', '1.2.3'],
+    ['single-quoted metadata', "metadata:\n  version: '1.2.3'", '1.2.3'],
+    ['trailing comment', 'version: 1.2.3 # pinned', '1.2.3'],
+    ['both conflicting', 'version: 1.2.3\nmetadata:\n  version: 9.9.9', null],
+    ['no declaration', 'name: explainer-kit', null],
+    ['duplicate declaration', 'version: 1.2.3\nversion: 1.2.4', null],
+    ['tagged scalar', 'version: !!str 1.2.3', null],
+    ['non-string scalar', 'version: 1.10', null],
+    ['unterminated quote', 'version: "1.2.3', null],
+  ]) {
+    assert.equal(
+      readFrontmatterVersion(`---\nname: explainer-kit\n${block}\n---\n`),
+      expected,
+      label,
+    );
+  }
+
+  assert.equal(readFrontmatterVersion('no frontmatter here\n'), null);
+  assert.equal(
+    readFrontmatterVersion(
+      '---\r\nname: explainer-kit\r\nversion: 1.2.3\r\n---\r\n',
+    ),
+    null,
+    'CRLF frontmatter',
+  );
 });

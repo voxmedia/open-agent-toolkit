@@ -1,10 +1,11 @@
 ---
 name: oat-project-capture
-version: 1.0.2
 description: Use when work happened outside the OAT project workflow and needs retroactive project tracking. Creates a full project from an existing branch and conversation context.
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.0.3
 ---
 
 # Capture Untracked Work

@@ -1,11 +1,12 @@
 ---
 name: oat-pjm-review-backlog
-version: 1.6.1
 description: Use when prioritizing the file-backed repo backlog or evaluating roadmap alignment. Produces value-effort ratings, dependency mapping, execution recommendations, and an optional external-plan handoff.
 argument-hint: '[backlog-root] [--roadmap=<path>] [--output=<path>]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep, Bash(git:*), AskUserQuestion, Task
 user-invocable: true
+metadata:
+  version: 1.6.2
 ---
 
 # Review Backlog

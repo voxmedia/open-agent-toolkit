@@ -1,10 +1,11 @@
 ---
 name: compare
-version: 0.1.1
 description: Domain-aware comparative analysis with clear recommendations. Compares options across auto-detected or user-specified dimensions and produces a qualitative assessment with a clear winner.
 argument-hint: 'item1 item2 [item3...] [--save] [--context path] [--dimensions "dim1, dim2, ..."]'
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash, WebSearch, WebFetch, AskUserQuestion, Agent, mcp__*
+metadata:
+  version: 0.1.2
 ---
 
 # /compare

@@ -1,11 +1,12 @@
 ---
 name: oat-idea-summarize
-version: 1.3.0
 description: Use when an idea is mature enough to move from brainstorming into the backlog. Generates a summary document and adds the idea to the backlog.
 argument-hint: '[--global]'
 disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
+metadata:
+  version: 1.3.1
 ---
 
 # Summarize Idea

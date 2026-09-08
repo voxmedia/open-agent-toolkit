@@ -29,6 +29,10 @@ import type { PackName } from '@commands/tools/shared/types';
 import { readOatConfig, readUserConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import type { ConcreteScope } from '@shared/types';
+import {
+  readDeclaredVersion,
+  withDeclaredVersion,
+} from '@test-support/skills/skill-version';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 const temporaryRoots: string[] = [];
@@ -329,9 +333,15 @@ describe('tool pack lifecycle acceptance matrix', () => {
         'SKILL.md',
       );
       const bundled = await readFile(bundledSkillFile, 'utf8');
+      const downgraded = withDeclaredVersion(bundled, '0.0.1');
+      // A shape-blind rewrite would no-op once the skill declares its version
+      // under `metadata`, leaving the installed copy at the bundled version and
+      // this whole case asserting nothing.
+      expect(downgraded).not.toBe(bundled);
+      expect(readDeclaredVersion(downgraded)).toBe('0.0.1');
       await writeFile(
         installedSkillFile,
-        `${bundled.replace(/^version:.*$/m, 'version: 0.0.1')}\nstale body\n`,
+        `${downgraded}\nstale body\n`,
         'utf8',
       );
 

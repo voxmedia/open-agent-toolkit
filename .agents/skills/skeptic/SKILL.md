@@ -1,10 +1,11 @@
 ---
 name: skeptic
-version: 0.2.0
 description: Use when the user questions or suspects an agent claim is wrong. Adversarially gathers evidence to verify or refute the claim using the best sources available in the current environment.
 argument-hint: '[claim to question — optional, defaults to most recent agent assertion]'
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Bash, WebSearch, WebFetch, AskUserQuestion, Agent, mcp__*
+metadata:
+  version: 0.2.1
 ---
 
 # /skeptic

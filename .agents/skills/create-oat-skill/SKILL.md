@@ -1,11 +1,12 @@
 ---
 name: create-oat-skill
-version: 1.5.2
 description: Use when adding a new oat-* workflow skill or lifecycle action. Scaffolds the skill with OAT conventions like mode assertions, progress banners, and project-root resolution.
 argument-hint: '[skill-name]'
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
+metadata:
+  version: 1.5.3
 ---
 
 # Create OAT Skill

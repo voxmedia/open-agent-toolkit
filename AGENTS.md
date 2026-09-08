@@ -65,7 +65,10 @@ the last command of the chained root script, where it lands harmlessly or
 errors. For evidence-grade verification run
 `HOME=$(mktemp -d) pnpm exec turbo run test --force` from the repository root,
 and run `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, and
-`pnpm oat:validate-skills` separately when they matter. Two independent agent
+`pnpm oat:validate-skills` separately when they matter. Run `pnpm build` first
+when you invoke them this way: the smoke and release suites load the CLI's built
+resolver from `packages/cli/dist`, which `turbo run test` supplies through its
+`build` dependency but a bare suite invocation does not. Two independent agent
 sessions reported cache replays as genuine passing runs on 2026-08-29.
 
 The isolated `HOME` above is not incidental. A maintainer who has run

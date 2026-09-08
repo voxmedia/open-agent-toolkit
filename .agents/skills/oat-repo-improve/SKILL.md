@@ -1,6 +1,5 @@
 ---
 name: oat-repo-improve
-version: 2.1.3
 description: Use when auditing a repository or turning maintainability reviews, backlog reviews, backlog directories, or backlog items into self-contained external implementation plans.
 argument-hint: '[repo-audit|maintainability-review|backlog-review|backlog-directory|backlog-item] [path-or-id] [quick|standard|deep] [focus] [--backlog-items] [--issues]'
 disable-model-invocation: false
@@ -9,6 +8,7 @@ allowed-tools: Read, Write, Glob, Grep, Bash, AskUserQuestion
 license: MIT
 metadata:
   author: shadcn
+  version: 2.1.4
 ---
 
 # OAT Repo Improve

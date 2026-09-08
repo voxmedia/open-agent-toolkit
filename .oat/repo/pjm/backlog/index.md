@@ -230,7 +230,6 @@
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                                    | open   | high     | feature    | L        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                                                    | open   | high     | task       | M        |
 | BL-260907-make-the-completion-seal       | Make the completion seal append idempotent so pre-archive interruptions can resume                              | open   | high     | task       | M        |
-| BL-260904-migrate-bundled-skills-from    | Migrate bundled skills from top-level version to metadata.version                                               | open   | high     | task       | M        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                                        | open   | high     | task       | M        |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                                                     | open   | high     | feature    | M        |
 | BL-260820-track-pr-closeout-evidence     | Track PR-closeout evidence freshness against the current head                                                   | open   | high     | feature    | L        |
@@ -284,6 +283,7 @@
 | BL-260908-repair-or-exempt-archived      | Repair or exempt archived project ledgers that fail the pr-final path guard                                     | open   | medium   | task       | S        |
 | BL-260906-repair-the-stray-fence-in-oat  | Repair the stray fence in oat-project-review-provide and tighten the fence rule repo-wide                       | open   | medium   | task       | S        |
 | BL-260908-report-a-changed-skill-with-no | Report a changed skill with no frontmatter block in the bump validator                                          | open   | medium   | task       | XS       |
+| BL-260908-retire-the-top-level-skill     | Retire the top-level skill version alias on the recorded schedule                                               | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                                   | open   | medium   | feature    | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                                      | open   | medium   | feature    | S        |
 | BL-260907-route-quick-mode-discovery     | Route quick-mode discovery rows in oat-project-next and oat-project-progress straight to quick-start            | open   | medium   | task       | XS       |

@@ -37,6 +37,16 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.65` (`migrate-skill-versions`, quick mode, in PR
+  `migrate-skill-versions`) moves every bundled skill's version to
+  `metadata.version` with no top-level alias (82 skills, one patch bump each,
+  zero `oat:validate-skills` warnings), makes the explainer RC builder read
+  through the CLI's built resolver and the bundled `check-core.mjs` reader
+  parity-tested against it, makes every test-suite version reader
+  shape-agnostic, and records the alias retirement schedule
+  (`DR-260908-bundled-skills-declare`; follow-up
+  `BL-260908-retire-the-top-level-skill`). Agent roles stay on the top-level
+  field until their own enforcement surface exists.
 - CLI `0.2.64` (wave 6 of the 2026-08-31 execution program, wrapper project
   `wave-6-execution`, "truthfulness residue", merged as PR #278;
   all five lanes) makes pack evidence carry real per-provider reachability with

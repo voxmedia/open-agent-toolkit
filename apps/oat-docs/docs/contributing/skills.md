@@ -204,9 +204,14 @@ resolution. `resolveSkillVersion` in
 runtime helper and the validators cannot disagree.
 
 The top-level `version` field remains supported as a deprecated alias. Every
-bundled skill still uses it today, so `pnpm oat:validate-skills` reports each
-one as a non-blocking warning; the value is still read, and nothing breaks.
-Migrating the bundled skills is tracked separately.
+bundled skill now declares `metadata.version` and carries no top-level
+`version`, so `pnpm oat:validate-skills` reports no alias warnings on the
+bundled tree. The alias is retained for third-party skills installed from
+packs, which may still carry it; it retires on the schedule recorded in
+`DR-260908-bundled-skills-declare` — the warning becomes an error in the first
+release after 0.2.65 that changes the validator, and the resolver's top-level
+read is removed one release after that error has produced no findings on the
+bundled tree.
 
 A skill that carries both fields with different values is a conflict. The
 resolver reports the `metadata.version` value together with the conflict, and
@@ -214,7 +219,12 @@ the callers that must not guess act on it: validation reports an error rather
 than silently picking one, and canonical role resolution treats the identity as
 invalid. The runtime version readers still return the `metadata.version` value,
 so an installed-versus-bundled comparison keeps working while the conflict is
-being fixed. Carrying both with the _same_ value is accepted.
+being fixed. Carrying both with the _same_ value resolves without a conflict and
+without an alias warning, because `metadata.version` wins. A bundled skill must
+still carry `metadata.version` alone: the corpus sweep in
+`packages/cli/src/validation/skills.test.ts` fails on any column-0 `version:`
+line under `.agents/skills`, which is the only check that catches the
+same-value case.
 
 ### The version is gated
 
@@ -227,7 +237,7 @@ resolved version, so it enforces the bump whether the skill declares
 of Done) and in CI; a changed skill whose version matches `origin/main` fails
 the gate. The deprecation warning above is deliberately not part of that gate:
 `check:skill-bumps` fails on any finding it receives, so an alias warning
-routed through it would fail every changed skill until the migration lands.
+routed through it would fail every changed skill that still carried one.
 
 ## Practical Authoring Flow
 
