@@ -444,6 +444,20 @@ _Recorded when the configured implementation exit gate runs._
 
 **p04 row → `fixes_added`**; round 2 on the original reviewer handle follows the fix commit.
 
+## Review Received: p05 (round 2 — passed)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p05-review-2026-09-09T021127Z.md (reviewed head `054de3cf3b167ee993b33c9015211934f1d83e03`, manual, opus)
+**Findings:** 0 · 0 · 1 medium · 2 minor — PASS. Verification records: I2/m1 — all seventeen anchors the decision record asserts re-derived by symbol at head; the two corrected anchors sit inside `writeHumanResolution` and `buildResolutionReport`; twelve backticked `__proto__`, zero bare; the index idempotent. Append-only (one file, +1/−1). I1 — the 21 declared paths are an exact set match with `git diff --name-only`; the collision grep hits only p05's own line. I3 — the correction's premise anchor (`{ [provider]: providerResolution }` at `:2249-2250`) re-derived. Gates: forced check, format, lint, Markdown guard 46/46, forced cli suite 387 files / 7128 `Cached: 0`.
+
+**Dispositions (round 2):**
+
+- M1 — the Phase 05 ordering paragraph still said "`:1220` only": **fixed** (root, this commit) — it now names `:1865` and the executed extra surfaces.
+- m1 — the external plan's "In scope (added)" clause still omitted `registry.ts` and the extra dispatch-ceiling functions: **fixed** (root, plan write, this commit).
+- m2 — three new DR anchors are line ranges in `commands/config/index.ts`, which p08 and p11 will shift: **accepted** — `DR-260907` added to the wave-close re-anchor list (follow-up ledger).
+
+**p05 row → `passed`** (reviewed head `054de3cf3`); p05 is clear for the group-2 fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -488,6 +502,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p05-review-001` outcome: PASS with findings, 0C/3I/1M/3m (no code defect; the global-pollution ladder reproduced base → intermediate → head; scope deviations all justified). I1/I3 fixed by the root; I2/m1 → record-only fix round `w7-p05-fix-001`; M1 closeout; m2 accepted; m3 deferred.
 - `w7-p05-fix-001` outcome: one record-only commit `054de3cf3b167ee993b33c9015211934f1d83e03` (the decision record only): the four sites added to the guarded-site list with the pollution sentence, the two anchors re-derived by symbol (`:2645`, `:2814`); `oat decision regenerate-index` idempotent; Markdown guard 46/46; `pnpm check` 0.
 - `w7-p05-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w7-p05-review-002.json`.
+- `w7-p05-review-002` outcome: PASS (fan-in may proceed), 0/0/1M/2m — all seventeen DR anchors re-derived; the wrapper surface an exact set match; the residual Medium and one Minor fixed by the root in the receive.
 - `w7-p04-review-001` outcome: PASS with findings, 0/0/1M/3m (deviation sound; weaker-anywhere clean; parked bytes verified; racing-seal probe). M1/m1/m2 → fix round `w7-p04-fix-001` on the resumed lane; m3 wave close.
 - `w7-p04-fix-001` — bounded fix round (prose qualification ×4 + one negative-direction case; retro routing sentence + bump; capable seal-count assertion). Record `dispatch/w7-p04-fix-001.json`.
 
@@ -507,6 +522,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
 - p04 review received (PASS with findings, 0/0/1M/3m): fix round `w7-p04-fix-001` dispatched; p04 row `fixes_added`.
 - p05 review received (PASS with findings, 0/3I/1M/3m — artifact alignment): wrapper surface and plan refresh corrected by the root; DR fix round `w7-p05-fix-001` dispatched; p05 row `fixes_added`.
 - p06 round 2 passed (0/0/0/0) at `0f81fd8fa`; p06 row `passed`.

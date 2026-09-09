@@ -285,7 +285,7 @@ git commit -m "fix(p04-t01): make the completion seal idempotent"
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-08-harden-normalized-config-maps.md`
 
-**Ordering:** group 2; starts after the group-1 fan-in (p02 has released `commands/config/index.ts` and `config/resolve.ts`; p03 has repaired its source item) in parallel with p04 and p06 and merges second within the group. Sole wave-7 writer of `commands/gate/index.ts` (`:1220` only) and of the decision index regeneration. Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p05-t01` prefix.
+**Ordering:** group 2; starts after the group-1 fan-in (p02 has released `commands/config/index.ts` and `config/resolve.ts`; p03 has repaired its source item) in parallel with p04 and p06 and merges second within the group. Sole wave-7 writer of `commands/gate/index.ts` (the `:1220` and, per the plan's 2026-09-09 refresh, `:1865` lookups) and of the decision-record update; as executed it also guarded `providers/ceiling/registry.ts`, `providers/identity/dispatch-report.ts`, and the dispatch-ceiling sites the refresh and its correction name. Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p05-t01` prefix.
 
 **Step 1: Drift check** — per the source plan's `## Drift check`.
 
@@ -767,6 +767,7 @@ git commit -m "docs(p20-t01): keep plan writes on the caller's model"
 | p03    | code     | passed      | 2026-09-09 | reviews/archived/p03-review-2026-09-09T004719Z.md           | b108f2dbf1ada4f97a68c616bd65f08559ec99d9 | manual     | -                   |
 | p04    | code     | fixes_added | 2026-09-09 | reviews/archived/p04-review-2026-09-09T020125Z.md           | 247f06b65cd9f517742d8924ceeacd16fdd944a0 | manual     | -                   |
 | p05    | code     | fixes_added | 2026-09-09 | reviews/archived/p05-review-2026-09-09T015920Z.md           | 412abf81d8b42515d0bbf06cadbb94d103502258 | manual     | -                   |
+| p05    | code     | passed      | 2026-09-09 | reviews/archived/p05-review-2026-09-09T021127Z.md           | 054de3cf3b167ee993b33c9015211934f1d83e03 | manual     | -                   |
 | p06    | code     | fixes_added | 2026-09-09 | reviews/archived/p06-review-2026-09-09T013145Z.md           | 8cf75b11b4693bae70b59eb3f2cce32176ad009f | manual     | -                   |
 | p06    | code     | passed      | 2026-09-09 | reviews/archived/p06-review-2026-09-09T014928Z.md           | 0f81fd8fad4b92c7dba163b802bb44519d962c37 | manual     | -                   |
 | p07    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
