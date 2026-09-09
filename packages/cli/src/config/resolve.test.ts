@@ -253,6 +253,55 @@ describe('resolveEffectiveConfig', () => {
     );
   });
 
+  it('gives the documentation list keys a null default', async () => {
+    const repoRoot = await createRepoRoot();
+    const userConfigDir = await createUserConfigDir();
+
+    const result = await resolveEffectiveConfig(repoRoot, userConfigDir, {});
+
+    // `oat config dump` enumerates the resolved map, so a key missing from the
+    // defaults has no row at all while it is unset -- unlike `oat config list`,
+    // which is catalogue-driven and always reported both keys.
+    expect(result.resolved['documentation.excludes']).toEqual({
+      value: null,
+      source: 'default',
+    });
+    expect(result.resolved['documentation.instructionPointerExcludes']).toEqual(
+      { value: null, source: 'default' },
+    );
+  });
+
+  it('lets a configured documentation.excludes win over the null default', async () => {
+    const result = await resolveEffectiveConfig(
+      '/repo',
+      '/tmp/user',
+      {},
+      {
+        readOatConfig: async () =>
+          ({
+            version: 1,
+            documentation: {
+              excludes: ['CLAUDE.md'],
+              instructionPointerExcludes: ['apps/docs'],
+            },
+          }) satisfies OatConfig,
+        readOatLocalConfig: async () =>
+          ({ version: 1 }) satisfies OatLocalConfig,
+        readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+      },
+    );
+
+    // `null` must keep meaning "not set here": the default may not shadow a
+    // real configured array.
+    expect(result.resolved['documentation.excludes']).toEqual({
+      value: ['CLAUDE.md'],
+      source: 'shared',
+    });
+    expect(result.resolved['documentation.instructionPointerExcludes']).toEqual(
+      { value: ['apps/docs'], source: 'shared' },
+    );
+  });
+
   it('ignores retired local and user execution preferences', async () => {
     const result = await resolveEffectiveConfig(
       '/repo',
