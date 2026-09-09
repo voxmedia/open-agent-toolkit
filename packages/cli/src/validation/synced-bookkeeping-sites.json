@@ -355,9 +355,15 @@
   },
   {
     "file": ".agents/skills/oat-project-complete/SKILL.md",
-    "anchor": "oat config set activeProject \"\"",
+    "anchor": "Active project pointer retained until durable archive receipt validation.",
     "kind": "write",
     "guard": "Active project pointer cleared."
+  },
+  {
+    "file": ".agents/skills/oat-project-complete/SKILL.md",
+    "anchor": "if [[ \"$SHARED_ARCHIVE_RESUME\" == \"true\" ]]; then",
+    "kind": "write",
+    "guard": "Durable archive receipt verified for"
   },
   {
     "file": ".agents/skills/oat-project-design/SKILL.md",

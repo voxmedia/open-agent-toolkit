@@ -121,6 +121,8 @@ Synthesis content.
 
     expect(capture.jsonPayloads[0]).toEqual({
       status: 'absent',
+      sealed: false,
+      seal: null,
       logPath: null,
       entryCounts: {
         structural: 0,
@@ -272,6 +274,175 @@ Valid structural.`),
       },
       grammarViolations: [],
     });
+  });
+
+  it('reports a keyed completion seal', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(`### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-07-17T10:00:00Z; project-log roll-up status: ok. oat-seal:demo`),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      sealed: true,
+      seal: {
+        heading: '### 2026-07-17 · structural · oat-project-complete · seal',
+        date: '2026-07-17',
+        keyed: true,
+        count: 1,
+      },
+      status: 'synthesis_pending',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports an unkeyed seal written before the key convention', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(`### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-07-17T10:00:00Z; project-log roll-up status: ok.`),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      sealed: true,
+      seal: { keyed: false, count: 1 },
+    });
+  });
+
+  it('reports an unsealed log as sealed: false with a null seal', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(`### 2026-07-17 · structural · oat-project-implement · p01
+
+Phase one.`),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      sealed: false,
+      seal: null,
+      entryCounts: { structural: 1 },
+    });
+  });
+
+  it('does not treat a foreign producer or a different ref as a seal', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(`### 2026-07-17 · structural · oat-project-summary · seal
+
+A different producer using the seal ref.
+
+### 2026-07-18 · structural · oat-project-complete · retirement-sweep
+
+The seal producer using a different ref.`),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command);
+
+    // Seal identity is producer AND ref. Either half alone is an ordinary
+    // structural entry, and treating it as a seal would freeze a log that was
+    // never completed.
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      sealed: false,
+      seal: null,
+      entryCounts: { structural: 2 },
+    });
+  });
+
+  it('reports the first seal and the count for a doubly-sealed legacy log', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(`### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-07-17T10:00:00Z; project-log roll-up status: ok.
+
+### 2026-07-18 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-07-18T11:00:00Z; project-log roll-up status: ok.`),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      sealed: true,
+      seal: {
+        heading: '### 2026-07-17 · structural · oat-project-complete · seal',
+        date: '2026-07-17',
+        count: 2,
+      },
+      status: 'synthesis_pending',
+      entryCounts: { structural: 2 },
+    });
+  });
+
+  it('keeps the status union and counts unchanged on a sealed log', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(
+        `### 2026-07-16 · project · bug · gate exit
+
+A bug.
+
+### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed. oat-seal:demo`,
+        '## End-of-run synthesis',
+      ),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command, ['--require-synthesis']);
+
+    // Sealing is additive: it never becomes a fourth status value, because both
+    // consuming skills route on `status: "ok"`.
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      sealed: true,
+      synthesisPending: false,
+      entryCounts: { structural: 1, judgment: { bug: 1 } },
+      scopeCounts: { project: 1, general: 0 },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('marks a sealed log in the human-readable line', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(`### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed. oat-seal:demo`),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command, [], []);
+
+    expect(capture.info.join('\n')).toContain('sealed');
   });
 
   it('ignores sibling append-only artifacts entirely', async () => {

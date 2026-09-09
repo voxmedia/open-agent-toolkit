@@ -77,8 +77,10 @@ Two optional flags let an interrupted append be replayed safely:
 
 - `--idempotency-key <key>` — skip the append when an existing entry body
   already carries `key`, reporting `already-appended` instead of writing a
-  duplicate. The key must appear in `--body`, since that is how a replay
-  recognizes the entry it already wrote.
+  duplicate. The key must appear in `--body` as its own whitespace-delimited
+  word, since that is how a replay recognizes the entry it already wrote; a key
+  glued to varying text such as a timestamp never matches its earlier self.
+  Deduplication does not require `--commit`.
 - `--commit` — stage and commit the log after appending, retrying a bounded
   three attempts when the failure is a transient `.git/index.lock`.
 
@@ -149,6 +151,18 @@ oat project log check --project .oat/projects/shared/example --json
 entry counts by class, type, and scope; the last entry date; and invalid
 hand-written headings. It reads only `project-log.md`.
 
+It also reports whether the log carries a completion seal:
+
+- `sealed`: `true` once the log holds a structural entry whose producer is
+  `oat-project-complete` and whose ref is `seal`. Both halves are required — a
+  `seal` ref from another producer is an ordinary entry.
+- `seal`: `null` when unsealed, otherwise the first seal's `heading` and
+  `date`, whether it is `keyed`, and the `count` of seal entries. A `count`
+  above one is a log sealed twice before the seal append became idempotent.
+
+`status` keeps its `ok` / `absent` / `synthesis_pending` values on a sealed log;
+sealing is reported alongside the status, not as a fourth value.
+
 Use `--require-synthesis` to exit with status 1 while synthesis is pending:
 
 ```bash
@@ -210,6 +224,21 @@ The structured result contains:
 no ledger path was explicitly configured; `status` remains `ok`. An explicitly
 configured ledger write failure returns `status: "failed"`. Completion must not
 seal or archive a project with entries until roll-up reports `status: "ok"`.
+
+## The completion seal
+
+The seal is the last entry a project log may ever receive, and `append`
+enforces that rather than leaving it to convention:
+
+- Replaying the seal reports `already-appended` and leaves exactly one seal
+  entry. This holds for a seal carrying the completion skill's
+  `oat-seal:<project>` key and for an unkeyed seal written before that
+  convention, which is recognized by its heading instead.
+- Every other append onto a sealed log is refused with `status: "sealed"` and a
+  non-zero exit, naming the seal that closed the log.
+
+A resumed completion therefore reads `sealed` from `check` and skips the
+roll-up and the seal instead of duplicating them.
 
 `rollup` requires an existing `summary.md`; summary authoring remains the
 responsibility of the project summary workflow.

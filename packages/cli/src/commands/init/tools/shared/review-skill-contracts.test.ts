@@ -1779,15 +1779,28 @@ printf 'artifact-read\\n'`,
 
     expect(
       resumeClause,
-      'the seal is detected directly, since the probe reports no seal state',
-    ).toContain('The status probe above reports no seal state');
+      'the seal is read from the probe, not grepped out of the log file',
+    ).toContain('`sealed: true` in `PROJECT_LOG_CHECK`');
     expect(
       resumeClause,
-      'detection reads a real field of the probe result',
-    ).toContain('read `logPath` from `PROJECT_LOG_CHECK`');
-    expect(resumeClause, 'names the detectable seal heading').toContain(
-      '### <date> · structural · oat-project-complete · seal',
-    );
+      'the standing claim names the code that owns it (DR-260906)',
+    ).toContain('`oat project log check`');
+    expect(
+      resumeClause,
+      'a seal written before the keyed convention is still recognized',
+    ).toContain('recognized the same way');
+    expect(
+      resumeClause,
+      'the model is not told to re-read the log to find the seal',
+    ).not.toContain('read `logPath` from `PROJECT_LOG_CHECK`');
+    expect(
+      resumeClause,
+      'the grep-for-heading workaround is gone',
+    ).not.toContain('### <date> · structural · oat-project-complete · seal');
+    expect(
+      resumeClause,
+      'the invariant is enforced by the CLI, not only by this prose',
+    ).toContain('status: "sealed"');
     expect(resumeClause, 'report-only on a sealed log').toContain(
       'runs in report-only mode',
     );
@@ -1801,6 +1814,76 @@ printf 'artifact-read\\n'`,
       resumeClause,
       'the resume clause itself restates the no-post-seal invariant',
     ).toContain('No project-log append may follow the seal');
+  });
+
+  it('keys the completion seal append so a replay cannot write a second seal', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+
+    const sealAppendIndex = content.indexOf('--ref seal \\');
+    expect(sealAppendIndex).toBeGreaterThanOrEqual(0);
+
+    const sealAppend = content.slice(
+      sealAppendIndex,
+      content.indexOf('```', sealAppendIndex),
+    );
+
+    expect(sealAppend, 'the seal append carries a stable key').toContain(
+      '--idempotency-key "oat-seal:$PROJECT_NAME"',
+    );
+
+    const bodyLine = sealAppend
+      .split('\n')
+      .find((line) => line.includes('--body'));
+    expect(bodyLine).toBeDefined();
+
+    // The body as the shell passes it, without the surrounding quotes.
+    const bodyValue = /--body "(.*)"\s*$/.exec(bodyLine!)?.[1];
+    expect(
+      bodyValue,
+      'the --body argument is a single quoted string',
+    ).toBeDefined();
+
+    // The key must be its own whitespace-delimited word: the command records
+    // the whole word carrying the key, so a key fused to the varying timestamp
+    // never matches its own earlier append and writes a second seal.
+    expect(
+      bodyValue!.split(/\s+/),
+      'the key stands alone as a word in --body',
+    ).toContain('oat-seal:$PROJECT_NAME');
+
+    expect(
+      content,
+      'a sealed log skips the seal append rather than replaying it',
+    ).toContain('did not report\n`sealed: true`');
+  });
+
+  it('routes the summary ledger graduation around a sealed project log', () => {
+    const content = readRepoFile('.agents/skills/oat-project-summary/SKILL.md');
+
+    const probeIndex = content.indexOf(
+      'PROJECT_LOG_CHECK=$(oat project log check',
+    );
+    const graduationIndex = content.indexOf(
+      'Before roll-up, inspect `project`-scoped judgments',
+    );
+    expect(probeIndex).toBeGreaterThanOrEqual(0);
+    expect(graduationIndex).toBeGreaterThan(probeIndex);
+
+    const routing = content.slice(probeIndex, graduationIndex);
+
+    expect(routing, 'the summary flow routes on the probe field').toContain(
+      '`sealed: true`',
+    );
+    expect(
+      routing,
+      'a sealed log skips ledger graduation instead of attempting it',
+    ).toContain('Skip the ledger graduation');
+    expect(
+      routing,
+      'the skip is backed by the CLI refusal, not only by convention',
+    ).toContain('status: "sealed"');
   });
 
   it('delegates project completion archive side effects to the CLI command', () => {
@@ -4603,5 +4686,425 @@ printf '%s\\n' "$EVENTS"`;
     expect(
       stepFiveTwo.indexOf('Read `oat_lifecycle` from `state.md`'),
     ).toBeLessThan(stepFiveTwo.indexOf('Grep plan.md for `p-revN` phases'));
+  });
+});
+
+/**
+ * Wave-5 p09: the active project pointer survives an interrupted durable
+ * archive completion.
+ *
+ * Every case runs the skill's own marked bash blocks rather than string
+ * matching them, because the claim under test is what the guard *does* on a
+ * resume, and a text-presence assertion is not evidence of recovery.
+ */
+describe('durable archive active-pointer deferral', () => {
+  const COMPLETE_SKILL = '.agents/skills/oat-project-complete/SKILL.md';
+  const RECEIPT_SCRIPT =
+    '.agents/skills/oat-project-complete/scripts/validate-durable-archive-receipt.mjs';
+  const SEAL_HEADING =
+    '### 2026-09-08 · structural · oat-project-complete · seal';
+
+  function extractMarkedBlock(content: string, marker: string): string {
+    const start = content.indexOf(`# ${marker}:start`);
+    const end = content.indexOf(`# ${marker}:end`, start);
+    if (start < 0 || end <= start) {
+      throw new Error(`Missing ${marker} block in ${COMPLETE_SKILL}.`);
+    }
+    return content.slice(start, end);
+  }
+
+  /**
+   * The skill's own scope-to-durability derivation, so `local` is classified by
+   * the shipped snippet instead of by a constant restated in this test.
+   */
+  function extractDurableDerivation(content: string): string {
+    const start = content.indexOf('IS_DURABLE_PROJECT="false"');
+    const end = content.indexOf('fi', start);
+    if (start < 0 || end <= start) {
+      throw new Error(
+        `Missing IS_DURABLE_PROJECT derivation in ${COMPLETE_SKILL}.`,
+      );
+    }
+    return content.slice(start, end + 2);
+  }
+
+  interface GuardRun {
+    status: number | null;
+    stdout: string;
+    stderr: string;
+    oatCalls: string;
+  }
+
+  /**
+   * Runs a guard block with `oat` replaced by a recorder, so a pointer clear is
+   * observable and no real configuration is touched.
+   */
+  function runGuard(options: {
+    block: string;
+    preamble?: string;
+    epilogue?: string;
+    directory: string;
+  }): GuardRun {
+    const oatLog = join(options.directory, 'oat-calls.log');
+    const script = [
+      'set -u',
+      `oat() { printf '%s\\n' "$*" >> ${JSON.stringify(oatLog)}; }`,
+      options.preamble ?? '',
+      options.block,
+      options.epilogue ?? '',
+    ].join('\n');
+    const result = spawnSync('/bin/bash', ['-c', script], { encoding: 'utf8' });
+    return {
+      status: result.status,
+      stdout: result.stdout ?? '',
+      stderr: result.stderr ?? '',
+      oatCalls: existsSync(oatLog) ? readFileSync(oatLog, 'utf8') : '',
+    };
+  }
+
+  function terminalArchivedState(): string {
+    return [
+      '---',
+      'oat_lifecycle: complete',
+      '---',
+      '',
+      '**Status:** Lifecycle complete; archived locally',
+      '',
+    ].join('\n');
+  }
+
+  /**
+   * A completion fixture at a chosen interruption point: the source project
+   * directory is present or already archived away, and the archived root holds
+   * the given number of candidate archives.
+   */
+  function archiveFixture(options: {
+    sourceExists: boolean;
+    archives: number;
+  }): {
+    directory: string;
+    projectPath: string;
+    archivedRoot: string;
+    projectName: string;
+    archivePaths: string[];
+  } {
+    const directory = mkdtempSync(join(tmpdir(), 'p09-durable-archive-'));
+    const projectName = 'demo-project';
+    const projectsRoot = join(directory, '.oat', 'projects');
+    const projectPath = join(projectsRoot, 'shared', projectName);
+    const archivedRoot = join(projectsRoot, 'archived');
+    mkdirSync(archivedRoot, { recursive: true });
+
+    if (options.sourceExists) {
+      mkdirSync(projectPath, { recursive: true });
+      writeFileSync(join(projectPath, 'state.md'), terminalArchivedState());
+    } else {
+      mkdirSync(join(projectsRoot, 'shared'), { recursive: true });
+    }
+
+    const archivePaths: string[] = [];
+    for (let index = 0; index < options.archives; index += 1) {
+      const archivePath = join(
+        archivedRoot,
+        `2026090${index + 1}-${projectName}`,
+      );
+      mkdirSync(archivePath, { recursive: true });
+      writeFileSync(join(archivePath, 'state.md'), terminalArchivedState());
+      writeFileSync(
+        join(archivePath, 'project-log.md'),
+        `# Project Log\n\n## Entries\n\n${SEAL_HEADING}\n\nCompletion sealed. oat-seal:${projectName}\n`,
+      );
+      archivePaths.push(archivePath);
+    }
+
+    return { directory, projectPath, archivedRoot, projectName, archivePaths };
+  }
+
+  function resumePreamble(fixture: {
+    projectPath: string;
+    projectName: string;
+  }): string {
+    return [
+      'PROJECT_SCOPE=shared',
+      `PROJECT_PATH=${JSON.stringify(fixture.projectPath)}`,
+      `PROJECT_NAME=${JSON.stringify(fixture.projectName)}`,
+      `DURABLE_ARCHIVE_RECEIPT_SCRIPT=${JSON.stringify(repoFilePath(RECEIPT_SCRIPT))}`,
+    ].join('\n');
+  }
+
+  const RESUME_EPILOGUE = [
+    'echo "RESUME=$SHARED_ARCHIVE_RESUME"',
+    'echo "PROJECT_PATH=$PROJECT_PATH"',
+  ].join('\n');
+
+  it('retains the active pointer for every archive-enabled durable scope', () => {
+    const content = readRepoFile(COMPLETE_SKILL);
+    const block = extractMarkedBlock(content, 'active-pointer-guard');
+    const derivation = extractDurableDerivation(content);
+    const directory = mkdtempSync(join(tmpdir(), 'p09-retain-'));
+
+    try {
+      for (const scope of ['shared', 'synced'] as const) {
+        const run = runGuard({
+          block,
+          preamble: [
+            `PROJECT_SCOPE=${scope}`,
+            derivation,
+            'SHOULD_ARCHIVE=true',
+          ].join('\n'),
+          directory,
+        });
+
+        expect(run.status, run.stderr).toBe(0);
+        expect(
+          run.stdout,
+          `${scope} archive completions defer the clear`,
+        ).toContain('Active project pointer retained');
+        expect(
+          run.oatCalls,
+          `${scope} must not clear the pointer before the archive receipt validates`,
+        ).toBe('');
+      }
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it('clears the active pointer for local and for every non-archive completion', () => {
+    const content = readRepoFile(COMPLETE_SKILL);
+    const block = extractMarkedBlock(content, 'active-pointer-guard');
+    const derivation = extractDurableDerivation(content);
+
+    const cases = [
+      // `local` never archives, so keying the guard on SHOULD_ARCHIVE alone
+      // would strand its pointer.
+      { scope: 'local', shouldArchive: 'true' },
+      { scope: 'shared', shouldArchive: 'false' },
+      { scope: 'synced', shouldArchive: 'false' },
+      { scope: 'local', shouldArchive: 'false' },
+    ] as const;
+
+    for (const testCase of cases) {
+      const directory = mkdtempSync(join(tmpdir(), 'p09-clear-'));
+      try {
+        const run = runGuard({
+          block,
+          preamble: [
+            `PROJECT_SCOPE=${testCase.scope}`,
+            derivation,
+            `SHOULD_ARCHIVE=${testCase.shouldArchive}`,
+          ].join('\n'),
+          directory,
+        });
+
+        const label = `${testCase.scope}/archive=${testCase.shouldArchive}`;
+        expect(run.status, run.stderr).toBe(0);
+        expect(run.stdout, `${label} clears immediately`).toContain(
+          'Active project pointer cleared.',
+        );
+        expect(run.oatCalls, `${label} clears through the CLI`).toContain(
+          'config set activeProject',
+        );
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    }
+  });
+
+  it('validates the durable archive receipt before the Step 12 pointer clear', () => {
+    const content = readRepoFile(COMPLETE_SKILL);
+
+    // Document order: the archive happens long before the deferred clear.
+    const archiveStepIndex = content.indexOf(
+      '### Step 8: Archive Project (Conditional)',
+    );
+    const clearBlockIndex = content.indexOf('# deferred-pointer-clear:start');
+    expect(archiveStepIndex).toBeGreaterThanOrEqual(0);
+    expect(clearBlockIndex).toBeGreaterThan(archiveStepIndex);
+
+    // Guard order: the non-synced branch validates the receipt, and only then
+    // clears. A clear that ran first would strand an unvalidated archive.
+    const block = extractMarkedBlock(content, 'deferred-pointer-clear');
+    const receiptIndex = block.indexOf('--mode receipt');
+    expect(receiptIndex).toBeGreaterThanOrEqual(0);
+    const clearIndex = block.indexOf(
+      'oat config set activeProject ""',
+      receiptIndex,
+    );
+    expect(
+      clearIndex,
+      'the durable branch clears the pointer only after its receipt validates',
+    ).toBeGreaterThan(receiptIndex);
+
+    // Executed: a valid shared receipt validates through the real script and
+    // the pointer clear follows it.
+    const fixture = archiveFixture({ sourceExists: true, archives: 1 });
+    try {
+      const archiveReport = JSON.stringify({
+        status: 'ok',
+        mode: 'apply',
+        archivePath: fixture.archivePaths[0],
+      });
+      const run = runGuard({
+        block,
+        preamble: [
+          'SHARED_ARCHIVE_RESUME=false',
+          'SHOULD_ARCHIVE=true',
+          'IS_DURABLE_PROJECT=true',
+          'PROJECT_SCOPE=shared',
+          `PROJECT_NAME=${JSON.stringify(fixture.projectName)}`,
+          `ARCHIVE_OUTPUT=${JSON.stringify(archiveReport)}`,
+          `DURABLE_ARCHIVE_RECEIPT_SCRIPT=${JSON.stringify(repoFilePath(RECEIPT_SCRIPT))}`,
+          'SYNCED_ARCHIVE_FINALIZE_SCRIPT=/nonexistent-synced-finalizer',
+        ].join('\n'),
+        directory: fixture.directory,
+      });
+
+      expect(run.status, run.stderr).toBe(0);
+      expect(run.stdout).toContain('Durable archive receipt verified');
+      expect(run.oatCalls).toContain('config set activeProject');
+    } finally {
+      rmSync(fixture.directory, { recursive: true, force: true });
+    }
+  });
+
+  it('does not take the resume branch after complete-state', () => {
+    const block = extractMarkedBlock(
+      readRepoFile(COMPLETE_SKILL),
+      'shared-archive-resume',
+    );
+    const fixture = archiveFixture({ sourceExists: true, archives: 0 });
+
+    try {
+      const run = runGuard({
+        block,
+        preamble: resumePreamble(fixture),
+        epilogue: RESUME_EPILOGUE,
+        directory: fixture.directory,
+      });
+
+      expect(run.status, run.stderr).toBe(0);
+      expect(run.stdout, 'the source directory still exists').toContain(
+        'RESUME=false',
+      );
+      expect(run.stdout).toContain(`PROJECT_PATH=${fixture.projectPath}`);
+      expect(run.oatCalls, 'the pointer is untouched here').toBe('');
+    } finally {
+      rmSync(fixture.directory, { recursive: true, force: true });
+    }
+  });
+
+  it('does not take the resume branch after the Step 7 PR artifact', () => {
+    const block = extractMarkedBlock(
+      readRepoFile(COMPLETE_SKILL),
+      'shared-archive-resume',
+    );
+    const fixture = archiveFixture({ sourceExists: true, archives: 0 });
+
+    try {
+      mkdirSync(join(fixture.projectPath, 'pr'), { recursive: true });
+      writeFileSync(
+        join(fixture.projectPath, 'pr', 'description.md'),
+        '# PR\n\nGenerated in Step 7.\n',
+      );
+
+      const run = runGuard({
+        block,
+        preamble: resumePreamble(fixture),
+        epilogue: RESUME_EPILOGUE,
+        directory: fixture.directory,
+      });
+
+      expect(run.status, run.stderr).toBe(0);
+      expect(
+        run.stdout,
+        'a generated PR artifact is not an archive checkpoint',
+      ).toContain('RESUME=false');
+      expect(run.stdout).toContain(`PROJECT_PATH=${fixture.projectPath}`);
+    } finally {
+      rmSync(fixture.directory, { recursive: true, force: true });
+    }
+  });
+
+  it('resumes to the clear after archive succeeded, leaving exactly one seal', () => {
+    const content = readRepoFile(COMPLETE_SKILL);
+    const resumeBlock = extractMarkedBlock(content, 'shared-archive-resume');
+    const clearBlock = extractMarkedBlock(content, 'deferred-pointer-clear');
+    const fixture = archiveFixture({ sourceExists: false, archives: 1 });
+    const archivePath = fixture.archivePaths[0]!;
+
+    try {
+      const run = runGuard({
+        block: [resumeBlock, clearBlock].join('\n'),
+        preamble: [
+          resumePreamble(fixture),
+          'SHOULD_ARCHIVE=true',
+          'IS_DURABLE_PROJECT=true',
+          'ARCHIVE_OUTPUT=',
+          'SYNCED_ARCHIVE_FINALIZE_SCRIPT=/nonexistent-synced-finalizer',
+        ].join('\n'),
+        epilogue: RESUME_EPILOGUE,
+        directory: fixture.directory,
+      });
+
+      expect(run.status, run.stderr).toBe(0);
+      expect(
+        run.stdout,
+        'the discovered archive is the resume checkpoint',
+      ).toContain('RESUME=true');
+      expect(run.stdout).toContain(`PROJECT_PATH=${archivePath}`);
+      expect(run.stdout).toContain('Verified discovered shared archive');
+      expect(run.stdout).toContain('cleared without a second archive');
+      expect(run.oatCalls, 'the retained pointer is finally cleared').toContain(
+        'config set activeProject',
+      );
+
+      // The whole point of the item: the resume never re-enters Step 3.7, so no
+      // second seal is appended and no post-seal append is attempted.
+      expect(
+        run.oatCalls,
+        'a resume appends nothing to the sealed project log',
+      ).not.toContain('project log append');
+
+      const log = readFileSync(join(archivePath, 'project-log.md'), 'utf8');
+      expect(
+        log.split(SEAL_HEADING).length - 1,
+        'the archived log still carries exactly one completion seal',
+      ).toBe(1);
+    } finally {
+      rmSync(fixture.directory, { recursive: true, force: true });
+    }
+  });
+
+  it('stops for manual recovery when the archive is not discoverable', () => {
+    const block = extractMarkedBlock(
+      readRepoFile(COMPLETE_SKILL),
+      'shared-archive-resume',
+    );
+
+    for (const archives of [0, 2]) {
+      const fixture = archiveFixture({ sourceExists: false, archives });
+      try {
+        const run = runGuard({
+          block,
+          preamble: resumePreamble(fixture),
+          epilogue: RESUME_EPILOGUE,
+          directory: fixture.directory,
+        });
+
+        const label = `${archives} candidate archives`;
+        expect(run.status, `${label} must not resume`).toBe(1);
+        expect(run.stderr, label).toContain(
+          'Shared archive completion cannot resume automatically',
+        );
+        expect(run.stderr, label).toContain('Manual recovery:');
+        expect(
+          run.oatCalls,
+          `${label} leaves the retained pointer untouched`,
+        ).toBe('');
+      } finally {
+        rmSync(fixture.directory, { recursive: true, force: true });
+      }
+    }
   });
 });

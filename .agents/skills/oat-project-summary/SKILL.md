@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat pjm:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.5.4
+  version: 1.5.5
 ---
 
 # Project Summary
@@ -157,6 +157,15 @@ PROJECT_LOG_PROMOTION_APPENDED="false"
 Route on the structured result. `status: "absent"` is inert. When the entry
 counts show one or more entries, keep the log in the summary flow even if task,
 revision, and autonomous-learning tracking fields are otherwise current.
+
+`sealed: true` means the project log already carries its completion seal and is
+closed to further entries. Skip the ledger graduation below entirely — do not
+offer it, and append nothing. Report that the log is sealed and name the seal
+heading from the probe's `seal` field, then continue with the rest of this
+skill; `summary.md` is still authored or refreshed as normal. This is a real
+refusal in the CLI, not a convention: `oat project log append` rejects any
+non-seal append onto a sealed log with `status: "sealed"` and a non-zero exit,
+so attempting the promotion would fail the step rather than skip it.
 
 Before roll-up, inspect `project`-scoped judgments for observations that are
 reusable across projects and offer ledger graduation. For every observation the

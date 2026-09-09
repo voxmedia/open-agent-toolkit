@@ -44,15 +44,18 @@ import { dirExists, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
+import { findProjectLogSeal, type ProjectLogSeal } from './check';
 import {
   composeJudgmentHeading,
   composeStructuralHeading,
   isProjectLogEntryMarker,
+  isProjectLogSealEntry,
   isProjectLogSectionMarker,
   PROJECT_LOG_AREA_MAX_LENGTH,
   PROJECT_LOG_HEADING_DELIMITER,
   PROJECT_LOG_SCOPES,
   PROJECT_LOG_TYPES,
+  STRUCTURAL_HEADING_RE,
   type ProjectLogScope,
   type ProjectLogType,
 } from './grammar';
@@ -1107,6 +1110,32 @@ export interface AppendProjectLogInput {
   idempotencyKey?: string;
 }
 
+/**
+ * Raised when an append that is not the completion seal targets a sealed log.
+ *
+ * This is a throw rather than a fourth `ProjectLogAppendResult` variant because
+ * every in-tree caller of `appendProjectLog` runs *before* the seal: the gate's
+ * partial-finalization receipt narrows the result's `status` into its own
+ * `'appended' | 'already-appended'` field, so widening the union would force a
+ * change on a caller that can never legitimately reach this state. Throwing
+ * refuses that caller too — the command layer maps this to
+ * `status: 'sealed'` with a non-zero exit, and any other caller fails loudly
+ * instead of silently appending past the seal.
+ */
+export class ProjectLogSealedError extends Error {
+  readonly logPath: string;
+  readonly seal: ProjectLogSeal;
+
+  constructor(logPath: string, seal: ProjectLogSeal) {
+    super(
+      `No project-log append may follow the completion seal (${seal.heading}) in ${logPath}.`,
+    );
+    this.name = 'ProjectLogSealedError';
+    this.logPath = logPath;
+    this.seal = seal;
+  }
+}
+
 export type ProjectLogAppendResult =
   | {
       status: 'appended';
@@ -1491,21 +1520,59 @@ async function appendLockedProjectLog(
   const idempotencyKey = validateIdempotencyKey(input.idempotencyKey, body);
   let created = false;
 
-  if (logExists && idempotencyKey !== undefined) {
-    const existing = findProjectLogEntryByIdempotencyKey(
-      await dependencies.readLog(logPath),
-      idempotencyKey,
-      body,
-    );
-    if (existing !== undefined) {
-      // Append-only order is preserved (DR-260714): a replay observes the
-      // entry it already wrote instead of writing a second one.
-      return {
-        status: 'already-appended',
-        logPath,
-        heading: existing,
-        created: false,
-      };
+  if (logExists) {
+    const content = await dependencies.readLog(logPath);
+
+    // Recognizing an entry this key already wrote comes first, and deliberately
+    // so: it appends nothing, and the entry it finds necessarily predates any
+    // later seal. Refusing it would turn the gate's idempotent recovery replay
+    // into a hard failure on every project that has since been completed.
+    if (idempotencyKey !== undefined) {
+      const existing = findProjectLogEntryByIdempotencyKey(
+        content,
+        idempotencyKey,
+        body,
+      );
+      if (existing !== undefined) {
+        // Append-only order is preserved (DR-260714): a replay observes the
+        // entry it already wrote instead of writing a second one.
+        return {
+          status: 'already-appended',
+          logPath,
+          heading: existing,
+          created: false,
+        };
+      }
+    }
+
+    const seal = findProjectLogSeal(content);
+
+    if (seal !== null) {
+      // Re-derive the requested identity from the composed heading so the
+      // comparison runs on the same normalized producer/ref the parser reads
+      // back out of the log.
+      const requested = STRUCTURAL_HEADING_RE.exec(heading);
+      const requestsSeal =
+        requested !== null &&
+        isProjectLogSealEntry({
+          producer: requested[2]!.trim(),
+          ref: requested[3]!.trim(),
+        });
+
+      if (requestsSeal) {
+        // The seal is idempotent by structure, not only by key: a log sealed
+        // before the keyed convention carries no token to match, and a resumed
+        // completion must still observe the existing seal rather than write a
+        // second one.
+        return {
+          status: 'already-appended',
+          logPath,
+          heading: seal.heading,
+          created: false,
+        };
+      }
+
+      throw new ProjectLogSealedError(logPath, seal);
     }
   }
 
@@ -1723,15 +1790,36 @@ async function runAppendCommand(
       }
     }
 
-    const result = await appendProjectLog(
-      {
-        repoRoot,
-        home: context.home,
-        ...options,
-        body,
-      },
-      dependencies,
-    );
+    let result: ProjectLogAppendResult;
+    try {
+      result = await appendProjectLog(
+        {
+          repoRoot,
+          home: context.home,
+          ...options,
+          body,
+        },
+        dependencies,
+      );
+    } catch (error) {
+      if (!(error instanceof ProjectLogSealedError)) {
+        throw error;
+      }
+      // A terminal refusal, reported in the same shape as the error path below
+      // so a caller reading JSON can tell a sealed log from a malformed append.
+      if (context.json) {
+        context.logger.json({
+          status: 'sealed',
+          logPath: error.logPath,
+          heading: error.seal.heading,
+          message: error.message,
+        });
+      } else {
+        context.logger.error(error.message);
+      }
+      process.exitCode = 1;
+      return;
+    }
 
     let commit: ProjectLogCommitResult | undefined;
     let receiptRemoved = false;
@@ -1835,7 +1923,8 @@ Entry contract:
   High-value judgments may use Observation:, Impact:, and Recommendation: fields.
   Structural bodies are one line and reference artifacts by path instead of inlining them.
   Add --version-note for tool-related observations.
-  Pass --idempotency-key with --commit to finalize a gate partial-finalization receipt; a replay reports already-appended instead of duplicating the entry.
+  Pass --idempotency-key so a replay reports already-appended instead of duplicating the entry; the key must appear in --body as its own word. Adding --commit also finalizes a gate partial-finalization receipt.
+  The completion seal (--structural --producer oat-project-complete --ref seal) dedupes on its own, and every other append onto a sealed log is refused.
   Never record secret values (tokens, keys, signed URLs, or credentials); reference secrets by name or source.
   Prior entries are never edited or struck through. Append a new judgment entry that references and explains a correction.
 
