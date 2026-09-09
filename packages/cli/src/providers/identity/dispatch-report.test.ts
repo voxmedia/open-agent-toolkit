@@ -179,6 +179,31 @@ function blockedInput(): DispatchReportInput {
 }
 
 describe('buildDispatchReport', () => {
+  it('throws for a `__proto__` provider that the resolution does not own', () => {
+    // Case 19. `resolution.provider` is a plain string, and the missing-data
+    // check is a truthiness test that `Object.prototype` passes, so without an
+    // own-key read the builder proceeds with the prototype as provider data.
+    const protoInput = input({
+      resolution: resolution({ provider: '__proto__' }),
+    });
+
+    expect(() => buildDispatchReport(protoInput)).toThrow(
+      'Dispatch report resolution is missing provider data for "__proto__".',
+    );
+
+    // A genuinely unknown provider already threw, and still does.
+    expect(() =>
+      buildDispatchReport(
+        input({ resolution: resolution({ provider: 'nope' }) }),
+      ),
+    ).toThrow(
+      'Dispatch report resolution is missing provider data for "nope".',
+    );
+
+    // The real provider is unchanged.
+    expect(buildDispatchReport(input()).schemaVersion).toBe(1);
+  });
+
   it('copies a managed exact selection without reconstructing its branch, target, or candidate index', () => {
     const report = buildDispatchReport(input());
 

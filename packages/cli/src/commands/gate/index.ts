@@ -56,6 +56,7 @@ import {
   type UserConfig,
   type WorkflowGatesConfig,
 } from '@config/oat-config';
+import { getOwnKey } from '@config/own-keys';
 import {
   resolveEffectiveConfig,
   resolveExecTargetViews,
@@ -1217,7 +1218,11 @@ function setExecTarget(
   target: ExecTargetConfig | null,
 ): GateConfigContainer {
   return updateWorkflowGates(config, (gates) => {
-    const existing = gates.execTargets?.[targetId];
+    // `targetId` comes from `oat gate target set <id>`. Without the own-key
+    // guard, an id of `__proto__` reads `Object.prototype`, which is truthy,
+    // so this takes the merge branch and silently omits the `priority: 0`
+    // default the create branch applies.
+    const existing = getOwnKey(gates.execTargets ?? {}, targetId);
     const value =
       target === null
         ? target
@@ -1857,7 +1862,10 @@ async function resolveSelectedExecTarget(
   const explicitTarget = options.target?.trim();
 
   if (explicitTarget) {
-    const target = targets[explicitTarget];
+    // `--target <id>` is a free-form user string. Without the own-key read an
+    // id of `__proto__` or `constructor` returns a truthy inherited member and
+    // slips past the unknown-target rejection below.
+    const target = getOwnKey(targets, explicitTarget);
     if (!target) {
       throw new Error(`Unknown exec target "${explicitTarget}".`);
     }

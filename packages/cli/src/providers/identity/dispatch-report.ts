@@ -1,4 +1,5 @@
 import type { WorkflowDispatchMatrixTier } from '@config/dispatch-matrix';
+import { getOwnKey } from '@config/own-keys';
 
 import type { IdentityProvenance } from './provenance';
 import type {
@@ -375,7 +376,12 @@ export function buildDispatchReport(
 ): DispatchReportV1 {
   assertActionRole(input.action, input.role);
 
-  const provider = input.resolution.providers[input.resolution.provider];
+  // `resolution.provider` is a plain string, and the check below is a
+  // truthiness test that an inherited `Object.prototype` member would pass.
+  const provider = getOwnKey(
+    input.resolution.providers,
+    input.resolution.provider,
+  );
   if (!provider) {
     throw new Error(
       `Dispatch report resolution is missing provider data for "${input.resolution.provider}".`,

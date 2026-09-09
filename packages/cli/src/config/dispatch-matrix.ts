@@ -285,11 +285,16 @@ export function normalizeDispatchMatrix(
     compatibilityMode: 'layered-config' | 'project-state';
   },
 ): NormalizedDispatchMatrix {
-  const providers: Record<string, WorkflowDispatchProviderValue> = {};
+  // Provider names come from user config, so the map is built with
+  // `Object.fromEntries` rather than `providers[provider] = ...`. Assignment
+  // reaches the legacy prototype setter for a key named `__proto__`: the
+  // record branch would install its tier map as this map's prototype, and the
+  // scalar branch would silently discard the entry. Both are data loss.
+  const providerEntries: [string, WorkflowDispatchProviderValue][] = [];
   const issues: DispatchMatrixNormalizationIssue[] = [];
   if (!isRecord(value)) {
     return {
-      providers,
+      providers: Object.fromEntries(providerEntries),
       issues: [
         {
           path: options.pathPrefix,
@@ -304,7 +309,7 @@ export function normalizeDispatchMatrix(
     const providerPath = `${options.pathPrefix}.${provider}`;
     const scalar = normalizeProviderScalar(provider, rawProviderValue);
     if (scalar !== undefined) {
-      providers[provider] = scalar;
+      providerEntries.push([provider, scalar]);
       continue;
     }
 
@@ -335,12 +340,15 @@ export function normalizeDispatchMatrix(
         options.compatibilityMode,
       );
       if (normalized !== undefined) {
+        // Plain assignment is safe here: `tier` was just validated against
+        // VALID_DISPATCH_MATRIX_TIERS above, so it can never be `__proto__`.
+        // Do not "fix" this line to match the provider map below.
         tiers[tier as WorkflowDispatchMatrixTier] = normalized;
       }
     }
 
     if (Object.keys(tiers).length > 0) {
-      providers[provider] = tiers;
+      providerEntries.push([provider, tiers]);
     } else if (Object.keys(rawProviderValue).length === 0) {
       issues.push({
         path: providerPath,
@@ -350,7 +358,7 @@ export function normalizeDispatchMatrix(
     }
   }
 
-  return { providers, issues };
+  return { providers: Object.fromEntries(providerEntries), issues };
 }
 
 export function isCodexMaterializedRouteTarget(

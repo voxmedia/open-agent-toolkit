@@ -1931,6 +1931,62 @@ describe('oat gate', () => {
     });
   });
 
+  it('creates a `__proto__` exec target through the create branch', async () => {
+    const { root, home } = await setup();
+
+    // An existing `execTargets` map is what makes the lookup reachable: on a
+    // fresh config `gates.execTargets?.[id]` short-circuits on the optional
+    // chain and never consults `Object.prototype`.
+    await runGateCommand(root, home, [
+      'target',
+      'set',
+      'real-target',
+      '--runtime',
+      'codex',
+      '--base-command-json',
+      '["codex","exec","--real"]',
+      '--layer',
+      'shared',
+    ]);
+
+    const capture = await runGateCommand(root, home, [
+      'target',
+      'set',
+      '__proto__',
+      '--runtime',
+      'codex',
+      '--base-command-json',
+      '["codex","exec"]',
+      '--layer',
+      'shared',
+    ]);
+    expect(capture.error.join('\n')).toBe('');
+    expect(process.exitCode).toBe(0);
+
+    // The lookup that decides create-versus-merge must not read
+    // `Object.prototype` as an existing target: the merge branch silently
+    // omits the `priority: 0` default that the create branch applies.
+    const raw = (await readJsonFile(join(root, '.oat', 'config.json'))) as {
+      workflow?: { gates?: { execTargets?: Record<string, unknown> } };
+    };
+    const stored = raw.workflow?.gates?.execTargets ?? {};
+    expect(Object.keys(stored).sort()).toEqual(['__proto__', 'real-target']);
+    expect(stored['__proto__']).toEqual({
+      priority: 0,
+      runtime: 'codex',
+      baseCommand: ['codex', 'exec'],
+    });
+
+    const targets = await readResolvedTargets(root, home);
+    expect(Object.getPrototypeOf(targets)).toBe(Object.prototype);
+    expect('baseCommand' in targets).toBe(false);
+    expect(targets['__proto__']).toEqual({
+      runtime: 'codex',
+      baseCommand: ['codex', 'exec'],
+      priority: 0,
+    });
+  });
+
   it('disables and unsets exec targets', async () => {
     const { root, home } = await setup();
 
@@ -4211,6 +4267,44 @@ describe('oat gate', () => {
       message: expect.stringContaining('Unknown exec target "missing-target"'),
     });
     expect(process.exitCode).toBe(1);
+  });
+
+  it('rejects a prototype-named explicit target like any unknown target', async () => {
+    // Case 17. `--target` is a free-form user string looked up on the resolved
+    // exec-target registry. `Object.prototype` is truthy, so an unguarded
+    // lookup skips the unknown-target rejection and crashes downstream.
+    const { root, home } = await setup();
+
+    for (const id of ['__proto__', 'constructor']) {
+      const runner = createProcessRunner();
+      const capture = await runCrossProviderExec({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--target', id, 'Run', 'review'],
+      });
+
+      expect(runner.calls).toHaveLength(0);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining(`Unknown exec target "${id}"`),
+      });
+      expect(process.exitCode).toBe(1);
+    }
+
+    // A real target still runs, so the guard rejects nothing that worked.
+    const runner = createProcessRunner();
+    await runCrossProviderExec({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'claude-default', 'Run', 'review'],
+    });
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'claude',
+      purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
   });
 
   it('supports --avoid none to keep same-runtime targets eligible', async () => {

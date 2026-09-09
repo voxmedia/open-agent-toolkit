@@ -11,6 +11,7 @@ import {
   type OatLocalConfig,
   type UserConfig,
 } from './oat-config';
+import { getOwnKey, setOwnKey } from './own-keys';
 
 export type ResolvedConfigSource =
   | 'shared'
@@ -336,28 +337,34 @@ export function resolveExecTargetViews(
 
     for (const [id, override] of Object.entries(layer)) {
       if (override === null) {
-        const target = targets[id] ?? views[id]?.target;
+        // Exec-target ids come from user config, which can now carry a key
+        // named `__proto__` as an own key, so every lookup here is own-key
+        // guarded. `delete` needs no guard: it removes an own key and is a
+        // no-op otherwise.
+        const target = getOwnKey(targets, id) ?? getOwnKey(views, id)?.target;
         delete targets[id];
         if (target) {
-          views[id] = {
+          setOwnKey(views, id, {
             target: cloneExecTarget(target),
             origin,
             explicitlyConfigured: true,
             enabled: false,
-          };
+          });
         }
         continue;
       }
 
+      // The one-entry layer uses a computed key in an object literal, which
+      // is define semantics and already safe.
       mergeExecTargetLayer(targets, { [id]: override });
-      const target = targets[id];
+      const target = getOwnKey(targets, id);
       if (target) {
-        views[id] = {
+        setOwnKey(views, id, {
           target: cloneExecTarget(target),
           origin,
           explicitlyConfigured: true,
           enabled: true,
-        };
+        });
       }
     }
   }
@@ -377,33 +384,39 @@ function mergeExecTargetLayer(
 
   for (const [id, override] of Object.entries(layer)) {
     if (override === null) {
+      // `delete` removes an own key and is a no-op otherwise, so it is already
+      // correct for a user-supplied id such as `__proto__`.
       delete targets[id];
       continue;
     }
 
-    const existing = targets[id];
+    const existing = getOwnKey(targets, id);
     if (existing) {
-      targets[id] = cloneExecTarget({
-        runtime: override.runtime ?? existing.runtime,
-        baseCommand: override.baseCommand ?? existing.baseCommand,
-        invocation: mergeExecTargetInvocation(
-          existing.invocation,
-          override.invocation,
-        ),
-        models: override.models ?? existing.models,
-        hostDetectionCommand:
-          override.hostDetectionCommand ?? existing.hostDetectionCommand,
-        availabilityCommand:
-          override.availabilityCommand ?? existing.availabilityCommand,
-        priority: override.priority ?? existing.priority,
-        timeoutMs: override.timeoutMs ?? existing.timeoutMs,
-      });
+      setOwnKey(
+        targets,
+        id,
+        cloneExecTarget({
+          runtime: override.runtime ?? existing.runtime,
+          baseCommand: override.baseCommand ?? existing.baseCommand,
+          invocation: mergeExecTargetInvocation(
+            existing.invocation,
+            override.invocation,
+          ),
+          models: override.models ?? existing.models,
+          hostDetectionCommand:
+            override.hostDetectionCommand ?? existing.hostDetectionCommand,
+          availabilityCommand:
+            override.availabilityCommand ?? existing.availabilityCommand,
+          priority: override.priority ?? existing.priority,
+          timeoutMs: override.timeoutMs ?? existing.timeoutMs,
+        }),
+      );
       continue;
     }
 
     const completeTarget = toCompleteExecTarget(override);
     if (completeTarget) {
-      targets[id] = completeTarget;
+      setOwnKey(targets, id, completeTarget);
     }
   }
 }

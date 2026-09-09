@@ -2062,6 +2062,72 @@ describe('oat-config', () => {
       ).not.toHaveProperty('execPolicy');
     });
 
+    it('keeps a `__proto__` gate-skill entry as data instead of a prototype', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      // Written as raw JSON: an object literal spelling of this key would set
+      // the fixture's own prototype and never reach the file.
+      await writeFile(
+        configPath,
+        '{"version":1,"workflow":{"gates":{"skills":{"__proto__":{"command":"echo pwned","onFailure":"block"},"real":{"command":"echo ok","onFailure":"warn"}}}}}',
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      const skills = config.workflow?.gates?.skills;
+      expect(skills).toBeDefined();
+      const map = skills as NonNullable<typeof skills>;
+
+      expect(Object.keys(map).sort()).toEqual(['__proto__', 'real']);
+      expect(Object.getPrototypeOf(map)).toBe(Object.prototype);
+      expect('command' in map).toBe(false);
+      const seen: string[] = [];
+      for (const key in map) {
+        seen.push(key);
+      }
+      expect(seen.sort()).toEqual(['__proto__', 'real']);
+      expect(map['__proto__']).toEqual({
+        command: 'echo pwned',
+        onFailure: 'block',
+        maxAttempts: 2,
+      });
+      expect(map.real).toEqual({
+        command: 'echo ok',
+        onFailure: 'warn',
+        maxAttempts: 2,
+      });
+      // The global prototype chain is untouched either way.
+      expect(({} as Record<string, unknown>).command).toBeUndefined();
+    });
+
+    it('keeps a null record-map tombstone distinct from a dropped entry', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            gates: {
+              skills: {
+                tombstone: null,
+                dropped: { onFailure: 'block' },
+                kept: { command: 'pnpm test', onFailure: 'block' },
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      const skills = config.workflow?.gates?.skills;
+      // A `null` normalizer result is a real entry; only `undefined` drops.
+      expect(Object.keys(skills ?? {}).sort()).toEqual(['kept', 'tombstone']);
+      expect(skills?.tombstone).toBeNull();
+      expect(skills).toHaveProperty('tombstone');
+    });
+
     it('normalizes workflow.gates.execTargets partial entries and preserves null tombstones', async () => {
       const repoRoot = await createRepoRoot();
       const configPath = join(repoRoot, '.oat', 'config.json');
