@@ -429,6 +429,21 @@ _Recorded when the configured implementation exit gate runs._
 
 **p05 row → `fixes_added`**; round 2 (disposition verification) follows the record-only fix commit.
 
+## Review Received: p04 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p04-review-2026-09-09T020125Z.md (reviewed head `247f06b65cd9f517742d8924ceeacd16fdd944a0`, manual, opus)
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 3 — PASS with findings. Verified: the `sealed` deviation is sound (identical observable under `--json` and human output; `gate/index.ts` untouched; the only external caller's `try/catch` absorbs the throw into its warn-only path); weaker-anywhere clean (the key helpers byte-unchanged; 12 base rejections still exit 1; both halves of the Codex reordering live); the parked p09 bytes match the README's SHA-256s and apply against the base, and every head-vs-parked difference is a prescribed step; four neutralization controls both ways; five adversarial probes (incl. four racing seals → exactly one seal; a doubly-sealed legacy log reports `count: 2`); gates `Cached: 0`; bumps and pins exact; the only `.oat/repo/` write is the non-narrowing refresh entry.
+
+**Dispositions:**
+
+- M1 — the Codex reordering made the refusal conditional (a keyed append whose token matches any pre-seal entry body returns `already-appended`, writes nothing, exit 0) while four prose surfaces state it unconditionally, with no negative-direction control: **fix round** (`w7-p04-fix-001`, resumed lane, append-only) — the four surfaces qualified; one `append.test.ts` case pins the boundary from the other side.
+- m1 — `oat-project-retro` is the one enumerated consumer left unrouted (a hand-run retro against a completed project now fails loudly at the append with no branch in its procedure): **fix round** (same commit) — one routing sentence in `apply-procedure.md`, `oat-project-retro` bumped once with pins by literal.
+- m2 — the p09 contract case's seal-count assertion is true by construction (the capable proof is `lifecycle.integration.test.ts:451`): **fix round** (same commit) — made capable or dropped with a pointer.
+- m3 — the `status: 'sealed'` union-variant drift in the external plan: **deferred to the wave-close correction pass** (already recorded under Deviations; a dated correction lands with the other p04 anchor notes).
+
+**p04 row → `fixes_added`**; round 2 on the original reviewer handle follows the fix commit.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -471,6 +486,8 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p04-impl-001` outcome: DONE, one commit `247f06b65cd9f517742d8924ceeacd16fdd944a0` (18 files). The recovered `parked/wave-5-p09/` bytes verified exactly (117/17, 218 lines, 165/249 lines, three SHA-256s) and applied; the seal is idempotent with a `sealed` field on `checkProjectLog` and a post-seal refusal; `oat-project-summary` 1.5.4 → 1.5.5; `oat-project-complete` kept at 1.7.10. One Codex round: Important — the sealed guard preceded key dedupe and broke the gate's idempotent keyed replay (fixed: key recognition first; new content still refused; control 10); the two untracked validators confirmed staged. Deviation: a thrown `ProjectLogSealedError` mapped to `{"status":"sealed"}` + exit 1 instead of a fourth result variant, because `gate/index.ts:3282` (p05's file) narrows `result.status`. Two uninventoried propagation surfaces (`autonomy-contract.md` prompt sites; `synced-bookkeeping-sites.json`). Ten controls red then restored; gates `Cached: 0` (cli 7130; `test:skills` 883; `test:smoke` 167).
 - `w7-p04-review-001` — reviewer, target opus, nine rulings (the `sealed` deviation across every consumer; weaker-anywhere on the three named functions incl. the reordered key recognition; the consumer enumeration and the gate replay end to end; the parked-patch application; the two uninventoried surfaces; the carve-out refresh entry; bumps/pins; scope; one adversarial seal probe). Record `dispatch/w7-p04-review-001.json`.
 - `w7-p05-review-001` outcome: PASS with findings, 0C/3I/1M/3m (no code defect; the global-pollution ladder reproduced base → intermediate → head; scope deviations all justified). I1/I3 fixed by the root; I2/m1 → record-only fix round `w7-p05-fix-001`; M1 closeout; m2 accepted; m3 deferred.
+- `w7-p04-review-001` outcome: PASS with findings, 0/0/1M/3m (deviation sound; weaker-anywhere clean; parked bytes verified; racing-seal probe). M1/m1/m2 → fix round `w7-p04-fix-001` on the resumed lane; m3 wave close.
+- `w7-p04-fix-001` — bounded fix round (prose qualification ×4 + one negative-direction case; retro routing sentence + bump; capable seal-count assertion). Record `dispatch/w7-p04-fix-001.json`.
 
 #### Group 1 fan-in (2026-09-09)
 
@@ -488,6 +505,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- p04 review received (PASS with findings, 0/0/1M/3m): fix round `w7-p04-fix-001` dispatched; p04 row `fixes_added`.
 - p05 review received (PASS with findings, 0/3I/1M/3m — artifact alignment): wrapper surface and plan refresh corrected by the root; DR fix round `w7-p05-fix-001` dispatched; p05 row `fixes_added`.
 - p06 round 2 passed (0/0/0/0) at `0f81fd8fa`; p06 row `passed`.
 - p06 review received (PASS with findings, 0/0/1M/1m): fix round `w7-p06-fix-001` dispatched; p06 row `fixes_added`.
