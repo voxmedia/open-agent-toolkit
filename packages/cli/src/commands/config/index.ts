@@ -35,6 +35,7 @@ import {
   MIN_GATE_TIMEOUT_MS,
   isValidGateTimeoutMs,
   type OatConfig,
+  type OatConfigRead,
   type OatLocalConfig,
   type OatPjmRemoteDescriptionMode,
   type OatPjmRemoteMutationAuthority,
@@ -56,6 +57,7 @@ import {
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
   readOatConfigForInstructionPointerExcludesRepair,
+  readOatConfigWithWarnings,
   readOatLocalConfig,
   readUserConfig,
   writeOatConfig,
@@ -252,6 +254,7 @@ interface ConfigCommandDependencies {
   readOatConfigForInstructionPointerExcludesRepair: (
     repoRoot: string,
   ) => Promise<OatConfig>;
+  readOatConfigWithWarnings: (repoRoot: string) => Promise<OatConfigRead>;
   writeOatConfig: (repoRoot: string, config: OatConfig) => Promise<void>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
   writeOatLocalConfig: (
@@ -1259,6 +1262,7 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
   readOatConfigForInstructionPointerExcludesRepair,
+  readOatConfigWithWarnings,
   writeOatConfig,
   readOatLocalConfig,
   writeOatLocalConfig,
@@ -3537,6 +3541,37 @@ function formatCatalogDetails(entries: ConfigCatalogEntry[]): string {
     .join('\n\n');
 }
 
+/**
+ * The `warnings` field for a JSON document, omitted when there is nothing to
+ * say.
+ *
+ * An always-present `warnings: []` would be new noise on the common path and
+ * would break every existing exact-match assertion on these documents, so the
+ * key appears only when it carries something -- the same shape
+ * `exclusionWarnings` uses in `commands/instructions/sync/sync.ts`.
+ */
+function jsonWarnings(warnings: string[]): { warnings?: string[] } {
+  return warnings.length > 0 ? { warnings } : {};
+}
+
+/**
+ * Emit shared-config read warnings on the human channel.
+ *
+ * `logger.warn` is a no-op under `--json` (`ui/logger.ts`), so the JSON
+ * document carries the same strings in its own `warnings` field instead. Each
+ * caller picks exactly one channel, which is why this is only ever reached from
+ * the non-JSON branch: routing both ways would print nothing extra today but
+ * would double-print the moment the logger learned to emit under `--json`.
+ */
+function emitConfigReadWarnings(
+  context: CommandContext,
+  warnings: string[],
+): void {
+  for (const warning of warnings) {
+    context.logger.warn(warning);
+  }
+}
+
 async function runGet(
   keyArg: string,
   context: CommandContext,
@@ -3549,6 +3584,11 @@ async function runGet(
 
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     const userConfigDir = join(context.home, '.oat');
+    // One read per invocation, not one per resolved layer, so a wrong-typed
+    // key is reported once. A fail-closed key throws here exactly as it would
+    // have thrown inside `resolveEffectiveConfig` below -- same normalizer,
+    // same message -- so error precedence is unchanged.
+    const { warnings } = await dependencies.readOatConfigWithWarnings(repoRoot);
     const value = await getConfigValue(
       repoRoot,
       userConfigDir,
@@ -3560,8 +3600,10 @@ async function runGet(
       context.logger.json({
         status: 'ok',
         ...value,
+        ...jsonWarnings(warnings),
       });
     } else {
+      emitConfigReadWarnings(context, warnings);
       context.logger.info(formatResolvedValue(value.value) ?? '');
     }
     process.exitCode = 0;
@@ -3724,6 +3766,9 @@ async function runList(
   try {
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     const userConfigDir = join(context.home, '.oat');
+    // `list` resolves every key and each resolution re-reads the shared file,
+    // so the warning has to come from this one read rather than from the loop.
+    const { warnings } = await dependencies.readOatConfigWithWarnings(repoRoot);
     const values: ConfigValue[] = [];
     for (const key of await listConfigKeys(
       repoRoot,
@@ -3739,8 +3784,10 @@ async function runList(
       context.logger.json({
         status: 'ok',
         values,
+        ...jsonWarnings(warnings),
       });
     } else {
+      emitConfigReadWarnings(context, warnings);
       context.logger.info(formatList(values));
     }
     process.exitCode = 0;
