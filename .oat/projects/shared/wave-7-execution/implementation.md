@@ -598,6 +598,20 @@ _Recorded when the configured implementation exit gate runs._
 
 **p14 row → `passed`** (reviewed head `18ea51bb3`); p14 is clear for the group-5 fan-in.
 
+## Review Received: p15 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p15-review-2026-09-09T053044Z.md (reviewed head `53a0a2fcb39ab33e65b16a8a686df7a5ef0c1a13`, manual, opus)
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 3 — PASS with findings. Verified: a 14-shape battery through four consumers at base and head (the only newly accepted input on the detector and planner is the faithful managed copy; the retirement classifier moved in exactly one place, stricter — symlinked sentinel `remove` → `detach`; the STOP shapes had `helper_base = ACCEPT`, so the STOP was real; the collect/sort/strip/hash body byte-identical to the base); the TOCTOU rejection concurred (additive checks; comments no longer overclaim); the eighth case's labelling true; convergence without re-sync proven with a BASE-built CLI's manifest (byte-identical afterwards; `tools info` `in-sync (copy)`; a tampered copy repairs and converges); the untouched files; scope; three controls; gates forced `Cached: 0` (cli 7231; smoke; skills); four probes (hardlinked sentinel accepted as content-faithful; symlinked subtree and symlinked `SKILL.md` rejected; an extra empty directory accepted — an inherited bound of `computeDirectoryHash`, recorded).
+
+**Dispositions:**
+
+- m1 — the module header misattributes the symlinked-root bypass to the pathname skip and overstates the retirement effect (a symlinked root was already `detach` via `expectedTypeMatches`): **address-now** (root, comment-only edit on the integration branch at the group-5 fan-in, gated there).
+- m2 — the plan's refresh paragraph carries the same clause: **fixed** (root, plan write) — a dated correction appended to the refresh; verification: `grep -c 'Correction applied 2026-09-09 (from the p15 root review)' <plan>` = 1, corpus contract green.
+- m3 — the handle-bound-traversal follow-up had no backlog item: **fixed** (root) — `BL-260909-use-handle-bound-traversal` filed (the three readers, the destructive retirement path, the racing-swap control); index regenerated; Markdown guard green.
+
+**p15 row → `passed`** (reviewed head `53a0a2fcb`); p15 is clear for the group-5 fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -682,6 +696,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p14-review-001` outcome: PASS with findings, 0/1I/2M/1m — all plan-artifact or deferred (a multi-scope body suffix the plan's out-of-scope rule forbids fixing here; the unsatisfiable exit-code control; the conjunct's missing pin); plan correction entry applied; p14 `passed`.
 - `w7-p15-impl-001` outcome (resumed): DONE, one commit `53a0a2fcb39ab33e65b16a8a686df7a5ef0c1a13` (ten files, +889/−175): the managed-copy hash extracted and hardened (root `lstat`ed, sentinel `Dirent` validated before the pathname skip, no symlink following), the detector and planner converge a faithful copy-strategy projection (`in_sync` / `skip`) without a re-sync, the retirement classifier turns `detach` for the two symlink shapes; seven of eight new cases red under the un-hardened helper (the eighth labelled as a composite pin — `expectedTypeMatches` uses `lstat` first). Codex R2: a TOCTOU Critical rejected as out of scope with the subset argument (comments de-overclaimed); a handle-bound traversal follow-up recommended. Gates `Cached: 0` (cli 7231).
 - `w7-p15-review-001` — reviewer, target opus, seven rulings (a per-consumer base-vs-head acceptance table over ten provider shapes; the TOCTOU rejection; the eighth case's labelling; convergence without re-sync; the untouched files; scope; a hardlink/symlinked-subdirectory probe). Record `dispatch/w7-p15-review-001.json`.
+- `w7-p15-review-001` outcome: PASS with findings, 0/0/0/3m (a four-consumer, 14-shape base-vs-head table; convergence proven against a base-built manifest). m1 → root address-now at the fan-in; m2 plan correction applied; m3 `BL-260909-use-handle-bound-traversal` filed; p15 `passed`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
 #### Group 1 fan-in (2026-09-09)
@@ -729,6 +744,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - Group 3 fan-in: merges `7c5a6aa01`, `17d271b23`, `95ad10827`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7187). Group 4 (p10 + p11 + p12) bootstraps next.
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
+- p15 review received (PASS with findings, 0/0/0/3m): plan correction applied; `BL-260909-use-handle-bound-traversal` filed; header comment address-now queued for the fan-in; p15 row `passed`.
 - p14 review received (PASS with findings, 0/1I/2M/1m — artifact alignment; plan correction entry applied); p14 row `passed`.
 - p10 review received (PASS with findings, 0/1I/0/5m): `BL-260909-repair-the-bare-fences-that` filed; p10 row `passed`; group 4 fan-in starts.
 - p11 review received (PASS with findings, 0/0/0/4m — plan correction entry applied); p11 row `passed`.
