@@ -127,6 +127,47 @@ describe('computeManagedDirectoryCopyHash', () => {
     ).resolves.toBeNull();
   });
 
+  it('returns null when the marker file is absent from a skill copy', async () => {
+    const { canonicalPath, providerPath } = await seedManagedCopy();
+    // The banner check used to be keyed on `file === markerPath`, so it simply
+    // never ran when `SKILL.md` was missing and the tree still bought a digest.
+    // A skill or agent copy without its marker file is not a verifiable
+    // managed copy, whatever the remaining bytes hash to.
+    await rm(join(providerPath, 'SKILL.md'));
+
+    await expect(
+      computeManagedDirectoryCopyHash(providerPath, canonicalPath, 'skill'),
+    ).resolves.toBeNull();
+  });
+
+  it('returns null when the marker file is absent from an agent copy', async () => {
+    const { canonicalPath, providerPath } = await seedManagedCopy();
+    // The same requirement on the `agent` content type, whose marker file is
+    // `AGENT.md`: this fixture never had one, so it must not hash.
+    await expect(
+      computeManagedDirectoryCopyHash(providerPath, canonicalPath, 'agent'),
+    ).resolves.toBeNull();
+  });
+
+  it('returns null for the forged view that fused the marker into a sibling', async () => {
+    const { canonicalPath, providerPath } = await seedManagedCopy();
+    // The wave-7 final review's Critical 4 witness, at this module's level:
+    // delete `SKILL.md` and `reference/notes.md` and fuse every byte of the
+    // unframed stream both contributed into one surviving file. Under the old
+    // unframed digest this reproduced the canonical digest exactly.
+    const skillBody = '---\nname: skill-one\n---\n\n# skill one\n';
+    await rm(join(providerPath, 'SKILL.md'));
+    await writeFile(
+      join(providerPath, 'reference', 'notes.md'),
+      `# nested notes\n\0SKILL.md\0${skillBody}`,
+      'utf8',
+    );
+
+    await expect(
+      computeManagedDirectoryCopyHash(providerPath, canonicalPath, 'skill'),
+    ).resolves.toBeNull();
+  });
+
   it('returns null when the provider tree contains a symlink or other non-regular entry', async () => {
     const { canonicalPath, providerPath } = await seedManagedCopy();
     await symlink(

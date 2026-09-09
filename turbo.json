@@ -1,11 +1,24 @@
 {
   "$schema": "https://turbo.build/schema.json",
 
-  // Files outside any package that affect builds. Paths are repo-root-relative.
+  // Files outside any package that affect builds or tests. Paths are
+  // repo-root-relative.
   // .agents/skills/** is included because bundle-assets.sh copies skill files
   // into packages/cli/assets/ during build. Without this, Turbo won't cache-miss
   // when skill content changes (since skills live outside the package directory).
-  "globalDependencies": [".agents/skills/**"],
+  // .oat/repo/** and apps/oat-docs/docs/** are included for the same reason on
+  // the test side: packages/cli's markdown-proto-literal-contract.test.ts
+  // enumerates both trees with `git ls-files` and asserts over their content,
+  // so without them a change to either leaves the test task's input hash
+  // untouched and `pnpm test` replays a cached pass over an unscanned edit.
+  // apps/oat-docs/docs/** lives inside the oat-docs package, which invalidates
+  // that package's own tasks but not packages/cli's — hence global, not an
+  // input on the docs package.
+  "globalDependencies": [
+    ".agents/skills/**",
+    ".oat/repo/**",
+    "apps/oat-docs/docs/**"
+  ],
 
   "tasks": {
     "build": {
