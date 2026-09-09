@@ -173,6 +173,7 @@ git commit -m "feat(p01-t02): {description}"
 | final  | code     | pending         | -          | -                                                             | -             | -          | -           |
 | spec   | artifact | pending         | -          | -                                                             | -             | -          | -           |
 | design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -             | -          | -           |
+| design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T232532Z.md | -             | manual     | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

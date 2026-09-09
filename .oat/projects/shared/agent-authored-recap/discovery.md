@@ -31,7 +31,7 @@ Backlog item `BL-260907-replace-the-default-project` (high priority; GitHub issu
 
 **Q:** How does the new recap's result record relate to `explainer-kit.manifest/v1`, which the archive command hashes and re-verifies?
 **A:** Keep the manifest contract exactly; only the outcome semantics change.
-**Decision:** The archive validator and its recap tests stay untouched; the terminal-outcome guard is rewritten so `generate` is satisfied only by a usable artifact, and `failed` is never a satisfied generation.
+**Decision:** The archive validator and its recap tests stay untouched (superseded 2026-09-09 by operator decision: no backward compatibility is needed, so the archive package rule is replaced and its recap tests rewritten; see `design.md` § Overview); the terminal-outcome guard is rewritten so `generate` is satisfied only by a usable artifact, and `failed` is never a satisfied generation.
 
 ### Question 3: Where the mechanical parts live
 
@@ -93,7 +93,7 @@ Backlog item `BL-260907-replace-the-default-project` (high priority; GitHub issu
 
 ## Constraints
 
-- The archive command's manifest validation and its existing recap tests must pass unchanged.
+- The archive command's manifest validation and its existing recap tests must pass unchanged. (Superseded 2026-09-09 by operator decision: the manifest-key validation stays unchanged; the package rule and its tests are replaced.)
 - The lifecycle consumers (completion gate and export path, summary outcome mapping, the two wave skills' program-close callers) hard-code today's outcome vocabulary and the generated/degraded/skipped mapping; they change together with the semantics, in one project.
 - Bundled skill changes take one `metadata.version` bump per changed skill in the final PR and the lockstep public package bump; `pnpm test:skills`, `pnpm test:smoke`, `pnpm lint`, and `pnpm format` cover the skill tree.
 - The advanced kit stays installed and its core-version parity smoke test must keep passing.
@@ -135,7 +135,7 @@ Backlog item `BL-260907-replace-the-default-project` (high priority; GitHub issu
 ## Assumptions
 
 - The kit's fact-base schema and cohesion checker can be reused as libraries by the new flow without pulling in the set planner.
-- The archive command's manifest validation is the only CLI-side coupling; no CLI code change is required when the manifest is kept.
+- The archive command's manifest validation is the only CLI-side coupling; no CLI code change is required when the manifest is kept. (Superseded 2026-09-09: the package rule in `archive-utils.ts` and `package-coverage.mjs` changes in lockstep; `spec.md` § Assumptions carries the corrected list.)
 - The host agents in use (Claude Code with a browser MCP, Cursor, Codex) can each reach at least one rung of the browser ladder.
 
 ## Risks
