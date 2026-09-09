@@ -274,6 +274,15 @@ packaged `assets/` directory next to the installed CLI. Setting a non-empty
   unset the override, never to rebuild or reinstall the CLI; a packaged-bundle
   failure keeps the rebuild/reinstall guidance. A directory that exists but
   cannot be read reports the underlying error code.
+- The published npm tarball is held to the same seven-directory shape. The
+  CLI's public-package contract names a concrete file under each of the seven
+  directories, and release validation requires each one both in the build
+  workspace and in the packed tarball — the tarball check is the load-bearing
+  one, because `npm pack` drops empty directories. A published package
+  therefore cannot ship a bundle that would make every command exit 2. The
+  regression evidence is the negative pack control in
+  `packages/cli/src/release/public-package-contract.test.ts`:
+  `fails release validation when a required bundle directory is empty in the tarball`.
 - Produce a matching bundle with `bash packages/cli/scripts/bundle-assets.sh`
   while `OAT_ASSETS_DIR` points at the target directory (the script already
   honors the variable as its destination).

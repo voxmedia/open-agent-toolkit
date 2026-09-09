@@ -1,6 +1,7 @@
 import { execFile } from 'node:child_process';
 import {
   access,
+  cp,
   mkdir,
   mkdtemp,
   readFile,
@@ -12,7 +13,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
-import { describe, expect, it } from 'vitest';
+import { REQUIRED_BUNDLE_DIRECTORIES } from '@fs/assets';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { isVersionPolicyIgnoredPath } from '../../../../tools/release/release-utils';
 import { findMissingBuildArtifacts } from '../../../../tools/release/validate-public-packages';
@@ -100,6 +102,10 @@ describe('getPublicPackageContracts', () => {
         requiredPaths: expect.arrayContaining([
           'dist/index.js',
           'assets',
+          'assets/agents/oat-reviewer.md',
+          'assets/scripts/generate-oat-state.sh',
+          'assets/docs/index.md',
+          'assets/config/dispatch-matrix-recommendation.json',
           'assets/migration/pjm-restructure.md',
           'assets/templates/decision.md',
           'assets/templates/repo-agents.md',
@@ -195,6 +201,24 @@ describe('getPublicPackageContracts', () => {
     ]);
   });
 
+  it('guards a packed path under every required bundle directory', () => {
+    const cliContract = getPublicPackageContracts()[0];
+
+    // Derived from the runtime list rather than a restatement of the seven
+    // names: an eighth directory added to `REQUIRED_BUNDLE_DIRECTORIES`
+    // without a matching contract entry has to fail here, because at runtime
+    // `validateBundleStructure` would exit 2 on a tarball that packed without
+    // it.
+    const unguardedDirectories = REQUIRED_BUNDLE_DIRECTORIES.filter(
+      (directory) =>
+        !cliContract.requiredPaths.some((requiredPath) =>
+          requiredPath.startsWith(`assets/${directory}/`),
+        ),
+    );
+
+    expect(unguardedDirectories).toEqual([]);
+  });
+
   it('uses unique workspace directories and public names', () => {
     const contracts = getPublicPackageContracts();
     const publicNames = contracts.map((contract) => contract.publicName);
@@ -230,7 +254,10 @@ describe('getPublicPackageContracts', () => {
     const packedPaths = [
       'dist/index.js',
       'assets/bundle-metadata.json',
+      'assets/agents/oat-reviewer.md',
+      'assets/scripts/generate-oat-state.sh',
       'assets/docs/index.md',
+      'assets/config/dispatch-matrix-recommendation.json',
       'assets/migration/pjm-restructure.md',
       'assets/templates/decision.md',
       'assets/templates/repo-agents.md',
@@ -609,4 +636,103 @@ describe('getPublicPackageContracts', () => {
         'pnpm run build --filter=@open-agent-toolkit/cli && cd packages/cli && pnpm link --global',
     });
   });
+});
+
+describe('packed bundle directory guards', () => {
+  // One real bundle is built for the whole block. Each control then packs its
+  // own copy, so emptying a directory for one case cannot leak into another.
+  let bundledPackageDir = '';
+
+  beforeAll(async () => {
+    const cliContract = getPublicPackageContracts()[0];
+    bundledPackageDir = await mkdtemp(join(tmpdir(), 'oat-cli-bundle-guard-'));
+
+    await mkdir(join(bundledPackageDir, 'dist'), { recursive: true });
+    await writeFile(join(bundledPackageDir, 'dist', 'index.js'), '', 'utf8');
+    await writeFile(
+      join(bundledPackageDir, 'README.md'),
+      '# CLI pack fixture\n',
+      'utf8',
+    );
+    await writeFile(
+      join(bundledPackageDir, 'package.json'),
+      `${JSON.stringify(
+        {
+          name: cliContract.publicName,
+          version: '0.0.0-bundle-guard-test',
+          files: ['dist', 'assets', 'README.md'],
+        },
+        null,
+        2,
+      )}\n`,
+      'utf8',
+    );
+    await execFileAsync('bash', [bundleAssetsScriptPath], {
+      env: {
+        ...process.env,
+        OAT_ASSETS_DIR: join(bundledPackageDir, 'assets'),
+      },
+    });
+  }, 60_000);
+
+  afterAll(async () => {
+    if (bundledPackageDir) {
+      await rm(bundledPackageDir, { recursive: true, force: true });
+    }
+  });
+
+  it('packs every required path from the unmodified control bundle', async () => {
+    const cliContract = getPublicPackageContracts()[0];
+    const packedArtifact = await packPublicPackage(
+      cliContract,
+      bundledPackageDir,
+    );
+    const packedPaths = packedArtifact.files.map((file) => file.path);
+
+    expect(findMissingPackedPaths(packedPaths, cliContract)).toEqual([]);
+  }, 20_000);
+
+  it.each([
+    ['agents', 'assets/agents/oat-reviewer.md'],
+    ['docs', 'assets/docs/index.md'],
+  ])(
+    'fails release validation when a required bundle directory is empty in the tarball (assets/%s)',
+    async (directory, missingPath) => {
+      const cliContract = getPublicPackageContracts()[0];
+      const caseRoot = await mkdtemp(join(tmpdir(), 'oat-cli-empty-dir-pack-'));
+      const packageDir = join(caseRoot, 'package');
+
+      try {
+        await cp(bundledPackageDir, packageDir, { recursive: true });
+
+        // Empty the directory but leave it on disk. `bundle-assets.sh` creates
+        // all seven directories unconditionally, so a real producer regression
+        // leaves an empty directory rather than a missing one, and `npm pack`
+        // then silently drops it from the tarball. Deleting the directory
+        // outright would not reproduce that shape. This case isolates the
+        // packed-tarball layer; the same contract entries also make
+        // `findMissingBuildArtifacts` reject this workspace before packing.
+        const emptiedDirectory = join(packageDir, 'assets', directory);
+        await rm(emptiedDirectory, { recursive: true, force: true });
+        await mkdir(emptiedDirectory);
+        await expect(access(emptiedDirectory)).resolves.toBeUndefined();
+
+        const packedArtifact = await packPublicPackage(cliContract, packageDir);
+        const packedPaths = packedArtifact.files.map((file) => file.path);
+
+        expect(
+          packedPaths.filter((path) => path.startsWith(`assets/${directory}/`)),
+        ).toEqual([]);
+        // Exactly the emptied directory's guard, and nothing else: the bare
+        // `assets` entry is still satisfied by the rest of the bundle, which is
+        // why it never caught this.
+        expect(findMissingPackedPaths(packedPaths, cliContract)).toEqual([
+          missingPath,
+        ]);
+      } finally {
+        await rm(caseRoot, { recursive: true, force: true });
+      }
+    },
+    20_000,
+  );
 });

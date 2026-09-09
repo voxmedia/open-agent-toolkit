@@ -78,7 +78,7 @@ function assetsRemedy(
  * This is deliberately a shape check and nothing more: no per-file manifest,
  * no checksums, and no walk of the bundled documents.
  */
-const REQUIRED_BUNDLE_DIRECTORIES = [
+export const REQUIRED_BUNDLE_DIRECTORIES = [
   'skills',
   'agents',
   'templates',
