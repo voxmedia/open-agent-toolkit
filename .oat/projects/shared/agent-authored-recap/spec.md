@@ -46,7 +46,7 @@ The implementation-tail project recap requires adaptive portfolio planning, five
 - **FR2 — Agent-authored single artifact.** The host agent authors one standalone HTML page from the bundle, carrying the recipe's required narrative sections: for a project, original request, key agent decisions, as-built architecture, implementation record, validation evidence, outcome; for a program, program overview, wave map, per-wave outcomes, convention evolution, aggregate numbers, follow-up ledger. No custom author, critic, or visual-critic module is required.
 - **FR3 — Browser ladder.** Visual verification uses the first available rung: the host agent's own browser capability, then the kit's bundled Playwright probe, then browser-free checks. The rung used, the artifact path, and the screenshot paths (narrow, medium, wide) are retained in a small result record.
 - **FR4 — Browser-free checks always run.** Regardless of rung: the page parses, every required section is present, and every claim in the page traces to the fact bundle by subject and value (token membership is not sufficient).
-- **FR5 — Result contract kept.** The run writes an `explainer-kit.manifest/v1` manifest the current archive validator accepts unchanged, with rewritten outcome semantics: a verified usable artifact, a usable but visually unverified artifact (`built-needs-review`, with the reason), or `failed`. The terminal-outcome guard keeps its shape and no longer treats `failed` as a satisfied generation.
+- **FR5 — Manifest kept; package rule replaced.** The run writes an `explainer-kit.manifest/v1` manifest whose keys, recipe id, and outcome enum are unchanged, and the archive command's package rule is replaced (no backward compatibility) so that exactly the new small run package is required and nothing else; the archive validator's manifest-key check is untouched and its package-coverage rule and tests change in lockstep with the flow. Outcome semantics are rewritten on the existing enum: a verified usable artifact, a usable but visually unverified artifact (`built-needs-review`, with the reason), or `failed`; the terminal-outcome guard keeps its shape, keeps `built-durable` satisfied, and never treats `failed` or `incomplete` as a satisfied generation.
 - **FR6 — Generate, retry, or skip.** A `generate` decision is satisfied only by a usable artifact. On failure the flow preserves a sanitized actionable cause and requires an explicit retry or an explicit skip; the decision is persisted so a resumed completion honors it and never re-prompts or re-authors silently. An authored artifact is never discarded.
 - **FR7 — One flow, two recipes.** Project and program recaps share one generate flow selected by recipe; the program-close callers in `oat-wave-program` and `oat-wave-execute` reference it instead of duplicating it.
 - **FR8 — Lifecycle consumers route on the new semantics.** `oat-project-complete`'s recap gate and export path, `oat-project-summary`'s outcome mapping, and the two wave skills read the result record and outcome vocabulary; no lifecycle skill references a retired seam or the capability probe.
@@ -55,20 +55,21 @@ The implementation-tail project recap requires adaptive portfolio planning, five
 ### Non-Functional Requirements
 
 - **NFR1 — Fresh-host proof.** A test exercises successful generation on a fresh host with no custom modules and no browser, and reproduction-grade negative controls for authoring failure and browser failure, proving each failure stays visible while an accepted control still produces the recap.
-- **NFR2 — Weaker-anywhere.** Nothing the archive validator or the terminal-outcome guard rejects today becomes accepted unless the design enumerates it.
+- **NFR2 — Weaker-anywhere, enumerated.** Nothing the archive validator or the terminal-outcome guard rejects today becomes accepted except the two deliberate changes the design enumerates: the archive accepts the new small run package, and it stops accepting the legacy package shape (both pinned red-then-green).
 - **NFR3 — Browser-less hosts complete.** Completion never blocks on a missing browser; the outcome is recorded as needing review.
 - **NFR4 — Bundled-asset discipline.** One `metadata.version` bump per changed skill, the lockstep public-package bump, and the skill, smoke, lint, and format tiers green; the advanced kit's core-version parity smoke test keeps passing.
-- **NFR5 — Necessity.** Every persisted artifact this project adds names its consumer (an agent acting on a named instruction, a human reading a named surface, or code at a named call site); no record is written for a deferred reader.
+- **NFR5 — Necessity.** Every persisted artifact this project adds names its consumer (an agent acting on a named instruction, a human reading a named surface, or code at a named call site); no record is written for a deferred reader, and no record duplicates one an existing consumer already reads.
 
 ## Constraints
 
-- The archive command's manifest validation (`archive-utils.ts`) and its recap tests are not modified.
+- The archive command's manifest-key validation is not modified; its package-coverage rule, the loader that reads it, and the recap fixture tests change in the same phase as the record script, with no legacy branch.
+- A missing or too-old Explainer Kit core is a hard prerequisite failure (`failed`, with the install command as the cause), never a silent skip.
 - Bundled skills stay provider-neutral; the host-browser rung is detected at run time, never configured.
 - Fact bundles contain nothing outside the project or program record.
 
 ## Dependencies
 
-- Explainer Kit core ≥ 2.1.0 (installed) for the fact-base schema, cohesion checker, and browser probe.
+- Explainer Kit core ≥ 2.1.0 (installed at user scope) for the fact-base schema, cohesion checker, HTML checks, PNG inspection, and browser probe; the tracked-run finalizer (`finalize-tracked-run.mjs`) as a read-only producer of `built-durable`.
 - `BL-260907-replace-the-default-project` (source item); `BL-260902-make-autonomous-project-recap` (shipped; superseded at the same seams) and `BL-260904-add-recap-seam-config-keys` (`wont_do`) need no further reconciliation.
 - The wave-7 close's archived wrapper records and exported summaries under `.oat/repo/reference/project-summaries/` for FR9.
 
@@ -99,7 +100,7 @@ The OAT explainer adapter skill gains a `generate` flow made of three small scri
 | NFR2 | Weaker-anywhere                            | Repository convention                 |
 | NFR3 | Browser-less hosts complete                | Operator decision 2026-09-08          |
 | NFR4 | Bundled-asset discipline                   | `AGENTS.md`                           |
-| NFR5 | Necessity                                  | Operator decision 2026-09-09          |
+| NFR5 | Necessity (no duplicate records)           | Operator decision 2026-09-09          |
 
 ## Open Questions
 
@@ -108,7 +109,7 @@ The OAT explainer adapter skill gains a `generate` flow made of three small scri
 ## Assumptions
 
 - The kit's fact-base schema and cohesion checker are usable as libraries without the set planner (verified: `checkArtifactCohesion` and the schema are standalone exports).
-- The archive validator is the only CLI-side coupling (verified: no CLI code changes needed when the manifest is kept).
+- CLI-side couplings are exactly: the archive package-coverage rule and its tests (changed by design), and the review-skill contract tests that pin the recap-gate prose of `oat-project-complete` and `oat-project-autonomous` (updated with the prose).
 
 ## Risks
 
