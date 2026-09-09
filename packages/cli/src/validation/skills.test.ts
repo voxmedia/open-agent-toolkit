@@ -1411,7 +1411,12 @@ describe('validateOatSkills', () => {
       }
       declaringSkills += 1;
 
-      const segments = declared.split(',').map((segment) => segment.trim());
+      // Split on commas outside parentheses so a scoped value such as
+      // `Bash(git:*, gh:*)` stays one token (the house form writes separate
+      // entries, but the scoped form is legitimate and must not false-positive).
+      const segments = declared
+        .split(/,(?![^(]*\))/)
+        .map((segment) => segment.trim());
       // A single-token value such as `Read` carries no separator and passes.
       if (segments.length === 1 && singleToolToken.test(segments[0]!)) {
         continue;

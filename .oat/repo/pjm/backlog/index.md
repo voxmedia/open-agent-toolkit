@@ -328,6 +328,7 @@
 | BL-260830-memory-subsystem-ownership     | Memory subsystem ownership decision for OAT                                                                     | open   | low      | idea       | XL       |
 | BL-260907-name-the-resolved-target       | Name the resolved target in the symlink inert-exclusion warning                                                 | open   | low      | task       | XS       |
 | BL-260906-project-journal-reservation    | Project journal reservation state into the smoke evidence bundle                                                | open   | low      | task       | S        |
+| BL-260909-re-source-the-surviving-codex  | Re-source the surviving Codex provider claims and repair the dead provider-reference URLs                       | open   | low      | task       | S        |
 | BL-260909-reject-malformed-nested-values | Reject malformed nested values in the strict pjm.remote shared reader                                           | open   | low      | task       | S        |
 | BL-260908-repair-or-exempt-archived      | Repair or exempt archived project ledgers that fail the pr-final path guard                                     | open   | low      | task       | S        |
 | BL-260906-report-errno-for-asset-root    | Report errno for asset root stat failures and reset the statRedirects test seam                                 | open   | low      | task       | XS       |

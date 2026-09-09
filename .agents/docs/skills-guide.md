@@ -55,7 +55,7 @@ license: MIT # License name or reference to bundled file
 compatibility:
   | # Max 500 chars — intended product, system packages, network needs
   Requires Node.js 18+
-allowed-tools: Read, Grep, Glob # Experimental; see the separator note below
+allowed-tools: Read Grep Glob # Spec example: space-delimited. OAT writes commas and never parses the separator — see the separator note below
 metadata: # Arbitrary key-value pairs
   author: my-org
   version: '1.0'
@@ -65,7 +65,8 @@ metadata: # Arbitrary key-value pairs
 ### Spec Constraints
 
 The size budget in the first bullet is **OAT's authoring guidance**, not a published
-specification limit — no spec text in this document's sources imposes either number.
+specification limit — no spec text in this document's sources imposes either number
+(checked against https://agentskills.io/specification on 2026-09-09).
 The remaining bullets restate the spec's own file-layout guidance.
 
 **Separator note:** the spec's `allowed-tools` example is space-delimited. OAT writes
@@ -403,7 +404,9 @@ For automated distribution, use **OAT sync** (for local/internal skills) or **`n
 # --scope all is correct here: this section is about user-level distribution.
 # --scope project writes only this repository's provider views; --scope user writes only
 # the invoking user's home-scope views; --scope all writes both and is the default when
-# the flag is omitted. Inside a repository, prefer --scope project.
+# the flag is omitted. Inside a repository, prefer --scope project. Owner: computePlans in
+# packages/cli/src/commands/sync/index.ts (the project/user mapping split); backstop:
+# packages/cli/src/commands/sync/index.test.ts.
 oat sync --scope all
 
 # npx skills — installs remote skills from GitHub or skills.sh
