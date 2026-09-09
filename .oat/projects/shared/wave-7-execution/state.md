@@ -111,13 +111,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-08T22:26:20.092Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-09T13:47:38Z'
+oat_project_state_updated: '2026-09-09T14:42:36Z'
 oat_generated: false
 ---
 
 # Project State: wave-7-execution
 
-**Status:** Implementing — closeout: root final review received (CHANGES REQUESTED, 4C/5I/6M/7m); Phase 21 fix round in progress
+**Status:** Implementing — closeout: root final review passed on round 4 after a three-lane fix round and two bounded follow-ups; configured exit gate next
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-09
 
@@ -152,7 +152,8 @@ Implement — closeout. Nineteen lanes merged, p16 parked; synthesis, summary, a
 - ◐ Root final review received (`final-review-2026-09-09T104425Z.md`, CHANGES REQUESTED): root record fixes applied; Phase 21 fix lanes dispatched
 - ◐ Reviewer round 2: CHANGES REQUESTED (0C/2I/5M/7m; all round-1 Criticals and Importants closed; two CRLF refusing-direction regressions from p21a) → p21a fix round dispatched
 - ◐ Reviewer round 3: CHANGES REQUESTED (0C/1I/4M/6m; the round-2 Importants closed; rollup unguarded, Step 3.7 row, corpus record) → second p21a fix round dispatched at `2b372e281`
-- ☐ Reviewer round 4 → closeout gate run → configured exit gate → post-implement sequence → PR
+- ✓ Reviewer round 4: PASS (0C/0I/2M/3m) at `c64390ad9`; closeout gates green (cli 7395); final row `passed`
+- ☐ Configured exit gate → post-implement sequence → PR
 
 ## Blockers
 
