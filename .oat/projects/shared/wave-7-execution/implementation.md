@@ -46,9 +46,9 @@ oat_generated: false
 | Phase 18 | complete           | 1     | 1/1       |
 | Phase 19 | complete           | 1     | 1/1       |
 | Phase 20 | complete           | 1     | 1/1       |
-| Phase 21 | in_progress        | 3     | 0/3       |
+| Phase 21 | complete           | 3     | 3/3       |
 
-**Total:** 19/20 tasks completed (p16 parked)
+**Total:** 22/23 tasks completed (p16 parked; Phase 21 added at closeout)
 
 ---
 
@@ -294,25 +294,25 @@ oat_generated: false
 
 ## Phase 21: final-review fix round (p21a + p21b + p21c)
 
-**Status:** in_progress · **Group:** closeout fix round (three parallel lanes) · **Tasks:** p21a-t01, p21b-t01, p21c-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** closeout fix round (three parallel lanes) · **Tasks:** p21a-t01, p21b-t01, p21c-t01
+**Outcome:** the four product Criticals and the product Importants/Mediums of the root final review are closed at source — the seal routes on structure before the keyed short-circuit and the skill re-verifies `sealed: true` after sealing; the project-log parser is LF-only and every validator refuses CR / U+2028 / U+2029 (a log two readers resolve differently fails closed in both mutators); `synthesize` consults the seal and takes the advisory lock; the directory digest is length-framed under a domain tag with the marker file required for skills and roles and a read-once pre-framing bridge for existing manifests; `turbo.json` hashes `.oat/repo/**` and the docs tree; the fence scanner follows in-repo symlinks (211 files, floor 208); the authoring skills state the alias error with its backstop; `AGENTS.md` records how control-plane's `lint` is (accidentally) gated; `oat-wave-execute` Step 6 gains the closeout gate step.
+**Verification:** per lane: forced check/type-check/test `Cached: 0`, focused suites, red-then-green controls for every guard (p21a 50 controls incl. a 13-shape ambiguity property test and a zero-drift corpus differential over 144 files; p21b the reviewer's collision pair and forged-view scenario on the built CLI plus turbo hash movement; p21c six neutralizations and the base-algorithm replay), two Codex rounds each (p21a R1 2C fixed; p21b R1 Critical cross-encoding collision and R2 Critical TOCTOU fixed; p21c R1 Important fail-loud hole and R2 Critical overclaim fixed); fan-in: the full DoD gates plus smoke, skills, scripts, and the root test after the last content commit (0 cached; cli 7336); reviewer round 2 **R2**.
+**Deviations:** Medium 1 not applied as written (control-plane's `lint` is gated through `lint-enrollment.test.mjs`'s whole-`pnpm lint` call — two probes; the text records the mechanism instead of a false third surface); p21b added a pre-framing bridge because `ensureSkipEntryManaged` never restamps a stale hash (residuals filed); two commit headers shortened to fit commitlint; the `oat-wave-program` cross-references fixed by a root address-now.
 
 ### Task p21a-t01: Close the seal-suppression and section-injection holes in the project log
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `b0394849c` (was `f86f405d8`)
 
 ### Task p21b-t01: Length-frame the managed-copy digest, require the marker, and hash the record surfaces
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `e928e9e87` (was `15dadda8c`)
 
 ### Task p21c-t01: Restore fence-scan coverage of symlinked skill docs; state the three ungated surfaces and the alias error; the closeout gate step
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `b54b5eb3a` (was `aeeae0d93`)
 
 ## Autonomy Gate Provenance
 
@@ -962,6 +962,14 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - Backlog: no lane closed or renamed an item.
 - Worktree `.worktrees/wave-7/p20` and branch `wave-7/p20` removed after the merge. All twenty lanes are now merged or parked (p16); the wrapper proceeds to closeout.
 
+#### Phase 21 fan-in (2026-09-09; final-review fix round)
+
+- `wave-7/p21a`, `wave-7/p21b`, `wave-7/p21c` rebased onto the integration tip and merged in order with `git merge --no-ff` as `9e2df03cc` (p21a), `d28ee0191` (p21b), `41bc22eba` (p21c). Lane commits re-hashed (identical `git patch-id --stable`): p21a `f86f405d8`→`b0394849c`, p21b `15dadda8c`→`e928e9e87`, p21c `aeeae0d93`→`b54b5eb3a`. Root address-now `2db66e86e` + `807856e60`: `oat-wave-program/SKILL.md:69`, `:177` now say "closeout step 9" (the closeout gate step renumbered Step 6; the skill is already bumped this PR at 1.5.2); the p21a `rollup.ts` observation appended to the polish item.
+- Lockstep retained at 0.2.67 (`origin/main` still 0.2.66 at `684bd3be3`); no skill bumped a second time (`check:skill-bumps` validates twelve).
+- Closeout gate run (Important 1) after the last content commit `807856e60`, sequential, exit codes captured: `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached; cli 389 files / 7336 tests), `pnpm build` 0, `pnpm run check:skill-bumps` 0 (twelve validated against `origin/main`), `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke` 0 (167), `pnpm test:skills` 0 (883), root `pnpm test` 0 (smoke 167 / skills 883 / release 42 / scripts 1). Config-integrity check: no tracked `.oat/config.json` key missing versus `origin/main`.
+- Follow-ups from the lanes: `BL-260909-restamp-a-stale-copy-strategy` (p21b's two out-of-boundary residuals); Notes entries on `BL-260909-give-packages-control-plane` (the accidental lint enrollment) and `BL-260909-fix-the-agents-md-unsafe` (the `capture-dirty-tree` flake).
+- Worktrees `.worktrees/wave-7/p21{a,b,c}` and branches `wave-7/p21{a,b,c}` removed after the merge.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -977,6 +985,8 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - `w7-p21a-impl-001`, `w7-p21b-impl-001`, `w7-p21c-impl-001` — three parallel fix lanes bootstrapped at `0fd589281` (`.worktrees/wave-7/p21{a,b,c}`): p21a the project-log seal (C2, C3, M6); p21b the managed-copy digest and `turbo.json` (C4, I2); p21c the fence scanner, `AGENTS.md`, the authoring skills, and the closeout gate step (I4, M1, M4, I1-skill). Records `dispatch/w7-p21{a,b,c}-impl-001.json`.
 - `w7-p21c-impl-001` outcome: DONE_WITH_CONCERNS, one commit `aeeae0d932566644c83961327aa307e8ec429285` on `0fd589281` (five files): the fence scanner follows in-repo `*.md` file symlinks (realpath containment by segment, dedup by realpath, `ENOENT`/`ELOOP`/`ENOTDIR` skipped, `EACCES`/`EIO` rethrown), inventory 205 → 211, floor 180 → 208, six neutralizations red-then-green; the alias-error clause in both authoring skills cites `validateOatSkills` and `it('reports exactly once for a non-oat-* alias-only skill')` (verified on four frontmatter shapes — the equal-value dual is NOT an error, so the wording is narrower than the contributing doc's); the closeout gate step is `oat-wave-execute` Step 6 item 4 (items 4–8 → 5–9; the inventoried anchors untouched). Medium 1 NOT applied as written: the lane's two probes show control-plane's `lint` IS gated — `tools/smoke/verification/lint-enrollment.test.mjs:41` shells out to the whole `pnpm lint` under `pnpm test:smoke` and a seeded `prefer-const` in control-plane fails it (exit 1), while the same error under `.agents/skills` passes (exit 0) — so `AGENTS.md` keeps the two named surfaces and records the mechanism (the coupling is accidental: deleting control-plane's `lint` script would silence it). Two Codex rounds (1I/2M/2m fixed; round-2 1C on an overclaim fixed). Concerns: `oat-wave-program/SKILL.md:69`, `:177` say "closeout step 8" and now point at step 9 (outside the lane's file list); the control-plane lint coupling is unpinned.
 - `w7-p21b-impl-001` outcome: DONE, one commit `15dadda8cf0902bf21bd1061f58b0fb0276f0d38` on `0fd589281` (seven files): the directory digest is length-framed (`<byteLength> NUL <bytes>` per path and content) under a domain tag `\0oat-directory-digest-v2\0`, ordered by `Buffer.compare` over UTF-8 path bytes, with `managed-copy-hash.ts` CALLING the encoder in `manifest/hash.ts` (no mirror); the marker file is required for `skill`/`agent`; a pre-framing bridge in `detector.ts` accepts a recorded legacy digest only when it equals the canonical tree's legacy digest (both digests folded from one read-once capture; acceptance still rests on the framed digests) because `ensureSkipEntryManaged` never restamps a stale `contentHash` — without it every existing copy-strategy install would read permanently drifted; `turbo.json` `globalDependencies` gains `.oat/repo/**` and `apps/oat-docs/docs/**` (task hash moves on either edit, restores on revert); the reviewer's collision pair and forged-view scenario red at base / green at head on the built CLI; two Codex rounds (R1 Critical cross-encoding collision → domain tag; R2 Critical TOCTOU across two walks → single capture; four Minors fixed; two pre-existing Mediums rejected as out of scope; one Important — obsolete legacy mappings classify `detach` not `remove` — outside the file list). Residuals filed as `BL-260909-restamp-a-stale-copy-strategy`; a `capture-dirty-tree` flake noted on `BL-260909-fix-the-agents-md-unsafe`. Commit header shortened by one word to fit commitlint.
+- `w7-p21a-impl-001` outcome: DONE, one commit `f86f405d878c5e529e2f63942458d48a491d5cf4` on `0fd589281` (eight files): the seal routes on structure before the generic keyed short-circuit (an `already-appended` seal always reports a seal heading); `oat-project-complete/SKILL.md` re-reads `oat project log check` and requires `sealed: true` after sealing; `findProjectLogSections` is LF-only and the validators enumerate the ECMAScript LineTerminator set, with a fail-closed refusal in both mutators for a log two readers resolve differently; `synthesize` consults the seal (`{"status":"sealed"}` exit 1) and holds the advisory lock; 50 controls red at base / green at head; corpus differential 144 files / 1,224 sections zero drift; repo sweep 1,232 Markdown files zero ambiguous markers; two Codex rounds (R1 2C/2I/1M/1m — a duplicate-seal widening the lane had introduced, fixed; R2 1I/2I/1M/1m fixed, one Codex prescription rejected because it would have widened). Observation: `rollup.ts:188` is the last `/gm` reader (polish item).
+- Phase 21 fan-in: merges `9e2df03cc`, `d28ee0191`, `41bc22eba`; address-now `2db66e86e` + `807856e60`; closeout gate run green after the last content commit (0 cached; cli 7336). Round 2 dispatched to the final reviewer's handle (`w7-final-review-002`).
 - p19 fan-in: merge `12f50d7c2`; address-now `2360559c8` (M1/M3/m1/m2; sync no-op; M2+m5 filed); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached; cli 7259). p20 (ungrouped, the hill) bootstraps next.
 - `w7-p20-impl-001` — p20 (ungrouped, the hill) bootstrapped alone at the post-p19 tip `ff00e3a51` (`.worktrees/wave-7/p20`, `wave-7/p20`); brief rulings verified on the tip before dispatch (no `1.9.1` literal pin exists; `oat-repo-improve` already at 2.1.5 with its pin; the `synced-bookkeeping-sites.json` anchors inside `oat-wave-execute/SKILL.md` must stay byte-identical). Record `dispatch/w7-p20-impl-001.json`.
 - `w7-p20-impl-001` outcome: DONE, one commit `44421c0ef83fd54e187d50364f04dfd0953dfdf3` on `ff00e3a51` (four files, +55/−5; `skills.test.ts` untouched because `oat-repo-improve` already reads 2.1.5 with its pin and `1.9.1` has no pin): the operator's rule lands in `oat-repo-improve` Step 2 + one Success Criteria bullet, in `oat-wave-execute` after the reconciliation contract (Drift Refresh Record entries and post-STOP amendments are plan writes), and in the `repo-improve` docs page; the `keeps external-plan writes on the caller's model class` contract case (a)–(g) with two neutralization controls; `oat-wave-execute` 1.9.1 → 1.9.2; Codex 0/0/0/1m (unwrapped bullet, rejected with reason — root adjudication requested); lane gates `Cached: 0`. Observation for the wave-close pass: `check:skill-bumps` diffs `baseRef...HEAD`, so the plan's pre-commit count assertions cannot fire.
