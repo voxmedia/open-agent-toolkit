@@ -37,6 +37,17 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
+oat_post_implement_sequence:
+  status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  source: configured # configured | autonomous-default
+  final_phase: p21
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: [summary, document]
+  approval: pending # pending | approved | not_required
+  approval_source: null # null | user | oat-autonomous
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
@@ -111,7 +122,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-08T22:26:20.092Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-09T15:09:34Z'
+oat_project_state_updated: '2026-09-09T15:11:22Z'
 oat_generated: false
 ---
 
@@ -154,7 +165,9 @@ Implement — closeout. Nineteen lanes merged, p16 parked; synthesis, summary, a
 - ◐ Reviewer round 3: CHANGES REQUESTED (0C/1I/4M/6m; the round-2 Importants closed; rollup unguarded, Step 3.7 row, corpus record) → second p21a fix round dispatched at `2b372e281`
 - ✓ Reviewer round 4: PASS (0C/0I/2M/3m) at `c64390ad9`; closeout gates green (cli 7395); final row `passed`
 - ✓ Configured exit gate passed (0C/0I/0M/2m, `review_completed_gate_passed`) at `6a79099f0`
-- ☐ Post-implement sequence (summary · document · pr) → PR to main
+- ✓ Post-implement `summary`: summary.md current through p21c-t01; project-log roll-up (3 structural entries → the rollup-owned `## Workflow Observations`), synthesis run; wave synthesis kept as its own section
+- ✓ Post-implement `document`: docs delta assessed — every capability this wave shipped carries its docs in-lane (eleven files under `apps/oat-docs/docs` and `.agents/docs`, incl. `cli-utilities/project-log.md`, `contributing/code.md`, `contributing/skills.md`, `workflows/skills/repo-improve.md`, `provider-sync/manifest-and-drift.md`); the generated docs index is unchanged by design; no residual delta
+- ☐ Post-implement `pr`: PR artifact + `gh pr create` to main
 
 ## Blockers
 

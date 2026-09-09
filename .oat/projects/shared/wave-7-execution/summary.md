@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-09
 oat_generated: true
-oat_summary_last_task: p20-t01
+oat_summary_last_task: p21c-t01
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -280,7 +280,7 @@ archive` leaves dangling `items/` links in every plan that cites the item.
 - `BL-260906-harden-dispatch-launch` — open, update-only (p16 parked; Notes entry).
 - `BL-260908-retire-the-top-level-skill` — open, update-only (p13 landed step 1; step 2 one release later).
 
-## Workflow Observations
+## Wave Synthesis (rolled up from the orchestration log)
 
 Rolled up from the orchestration log's end-of-run synthesis (2026-09-09):
 
@@ -307,4 +307,18 @@ Rolled up from the orchestration log's end-of-run synthesis (2026-09-09):
 - Gate ledger: plan gate blocked once (a dangling parked-work reference,
   recovered) then passed; every lane review passed within two rounds; eight
   fan-ins each ran the eight DoD gates plus smoke, skills, scripts, and the
-  root test with `Cached: 0`; the root final review returned CHANGES REQUESTED (4C/5I/6M/7m) — one Critical was the closeout archival itself (a bare `__proto__` in two summaries, bolded by the pre-commit formatter), three were product holes in the completion seal and the managed-copy digest — closed by a root record commit and a three-lane Phase 21 fix round, then a closeout gate run after the last content commit (0 cached; cli 7336); reviewer round 2 **R2**; exit gate **EXIT**.
+  root test with `Cached: 0`; the root final review returned CHANGES REQUESTED (4C/5I/6M/7m) — one Critical was the closeout archival itself (a bare `__proto__` in two summaries, bolded by the pre-commit formatter), three were product holes in the completion seal and the managed-copy digest — closed by a root record commit and a three-lane Phase 21 fix round, then a closeout gate runs after every later content commit (0 cached; cli 7395 at the tip); reviewer rounds 2 and 3 each found one more unguarded reader in the same family (`check`, then `rollup`) and were closed by two bounded fix rounds; round 4 passed (0C/0I/2M/3m); the configured exit gate (`codex-5-6-sol-xhigh`) passed at the important threshold with 0C/0I/0M/2m.
+
+## Workflow Observations
+
+### 2026-09-08 · structural · oat gate review · plan
+
+target=codex-5-6-sol-xhigh threshold=important findings=critical:1,important:2,medium:1,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/wave-7-execution/reviews/artifact-plan-review-2026-09-08T224620Z.md run=f905852e-4f03-417e-a51f-6fbd79b6db99
+
+### 2026-09-08 · structural · oat gate review · plan
+
+target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-7-execution/reviews/artifact-plan-review-2026-09-08T231038Z.md run=c023731b-5c88-4e5c-a384-2061370d75e6
+
+### 2026-09-09 · structural · oat gate review · final
+
+target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/wave-7-execution/reviews/final-review-2026-09-09T145954Z.md run=16ffcb7f-6a5d-4954-abd6-1b53154c9f6a
