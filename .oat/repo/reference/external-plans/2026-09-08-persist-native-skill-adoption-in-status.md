@@ -578,6 +578,8 @@ Executed inside a wave, this plan refreshes its drift check against the exact
 execution `HEAD` after predecessor lanes integrate, not only from the authored
 SHA to `origin/main`.
 
+**Correction applied 2026-09-09 (wave-7 p12 execution; wave-close pass; no requirement change):** the plan's "`lastUpdated` refresh" wording (`:327` and the matching Test plan assertion that `lastUpdated` _is set_) describes a carry-through, not a refresh: `saveManifest` restamps `oatVersion` unconditionally and carries the existing `lastUpdated` value through unchanged, so the test pins the field's presence and shape rather than a new timestamp. The reachable-write requirement (one status-owned `saveManifest` call after a native adoption, with the restamp advisory firing on that path) is unchanged and was delivered. Also from execution: the plan's `createManifest` test helper had to be corrected to a schema-valid v2 manifest before the injected reader accepted it. Executed as the lane commits merged in group 4 as `0f1711d88`.
+
 ## Review focus
 
 - **The correction is the review's first job.** Confirm independently that

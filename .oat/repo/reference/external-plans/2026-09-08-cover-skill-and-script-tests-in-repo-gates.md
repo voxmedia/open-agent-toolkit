@@ -663,6 +663,8 @@ Executed inside a wave, refresh the drift check against the exact execution
 `HEAD` after predecessor lanes integrate, not only from the authored SHA to
 `origin/main`.
 
+**Correction applied 2026-09-09 (wave-7 p18 execution; wave-close pass; no requirement change):** Step 6's sentence for the `:28-34` paragraph — "so `pnpm check` now contains everything `pnpm format` checks" — is false and was not written: `packages/control-plane` defines a `format` script but no `check` script, so `turbo run check` never formats it while `turbo run format` does (the plan sampled two packages when it derived the claim). The landed `AGENTS.md` text states the true coverage instead: `pnpm check` covers `format:root`'s three globs, while `pnpm lint`'s root `oxlint` pass and `packages/control-plane`'s `format` still run in no CI gate; the `:103-104` sentence was rewritten to the same effect, and the two Essential Commands bullets (`:21`, `:23`) were updated in-file. The root review adjudicated the refusal a justified deviation; the control-plane gap is filed as `BL-260909-give-packages-control-plane`. `format:fix` was refactored onto a shared `format:root:fix` (behavior-preserving; adjudicated licensed). Sibling plans authored before this lane (p19, p20) still describe the pre-p18 gate premise — read their gate lists against the landed `AGENTS.md`. Executed at `1ce96aa7e` + `bb277915e`, merged in group 6 as `f789c9261`.
+
 ## Review focus
 
 - That the `"format"` refactor is behavior-preserving: the glob list moved into

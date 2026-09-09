@@ -820,6 +820,8 @@ Executing inside a wave, refresh the drift check against the exact execution
 `HEAD` after predecessor lanes integrate and record that comparison rather than
 re-stamping the authored provenance.
 
+**Correction applied 2026-09-09 (wave-7 p10 execution; wave-close pass; no requirement change):** (1) Step 2's prescription to narrow the review-provide closers "to three backticks" (`:446`, `:448`) collides with the format gate: `oxfmt` re-widens a fence whose body contains a three-backtick fence back to four backticks, so one repaired fence legitimately reads four backticks on the merged tip — the invariant is _balanced, heading-free fences_, not a literal tick count. (2) The `## Done criteria` bullet that says "the four repaired agent-prompt blocks" over-counts: three bare four-backtick agent-prompt blocks qualify (the `:373`, `:424`, `:475` set named in Step 6's comment text), matching the Step 6 discriminator's own "three legitimate" wording. (3) Step 8 control 2's second half predicts that a non-recursive `collectFenceScanFiles` walk makes the suite _pass_; it does not — Step 5's fence-scan floor (the minimum inventory count) trips first and the suite fails red on the floor, which is the safe direction and still proves the walk is what hid the nested file (the first half of the control, the named-file failure, is unaffected). Executed as the lane commits merged in group 4 as `13705dcdc`; the five bare-fence instances outside `.agents/skills` were filed as `BL-260909-repair-the-bare-fences-that`.
+
 ## Wave execution
 
 This plan runs as a **lane in wave 7**, in a worktree at
