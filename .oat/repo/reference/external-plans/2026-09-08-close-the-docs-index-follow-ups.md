@@ -681,6 +681,8 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
+**Correction applied 2026-09-09 (wave-7 p11 execution; no requirement change):** three clauses of this plan were found false on execution and verified by the root review. (1) The Test plan predicts the reshaped output hop-cap case "passes pre-fix" while also requiring it to assert the operator-facing path — pre-fix the message names the intermediate link (`link-31`), so the case is red pre-fix; red is the truthful result. (2) Step 3's causal wording (the exclusions "are the reason the manifest is empty") is false in a reachable case (an empty docs tree with a pattern that matches nothing — `never-matches/**`); the shipped line is observational ("No pages were indexed, with N exclusion pattern(s) active (…)") and still satisfies the requirement of a distinct second line naming the count and the patterns; it is human-output only (`--json` returns before it). (3) Step 6's refusal wording overpromises for real symlink chains: a real 41-link chain dies on the OS `ELOOP` (exit 1) before the CLI's 32-hop cap, which this plan's own Review focus records as deliberately deferred; the docs bullet scopes the cap to the dangling links the command walks itself. Accepted deviation within the Outcome: the MkDocs bullet is relabeled `Docs source index` as well (the plan's Test plan calls it "the authored source bullet"; `Index file` is pinned nowhere else). `BL-260906-docs-index-follow-ups-from`'s "(behaviorally inert)" wording is corrected at closure.
+
 Revalidate against live state before executing when: substantial time passes
 after `2026-09-08`; `origin/main` advances materially from
 `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`; PR #190 lands or either config

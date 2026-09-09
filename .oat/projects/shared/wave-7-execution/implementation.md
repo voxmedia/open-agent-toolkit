@@ -550,6 +550,21 @@ _Recorded when the configured implementation exit gate runs._
 
 **p12 row → `passed`** (reviewed head `e503bf025`); p12 is clear for the group-4 fan-in.
 
+## Review Received: p11 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p11-review-2026-09-09T042640Z.md (reviewed head `0b5c3307edc2c239431b00fa4281cd85f41e418e`, manual, opus)
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 4 — PASS with findings. Verified: hop-cap weaker-anywhere with a recording probe over 8 role cases at base and head (acceptance identical; only messages and the sanctioned 1 → 2 moved; a real 41-link chain dies on `ELOOP` at exit 1 for both roles); the config STOP with two CLI builds and path-normalized diffs (`dump` differs by exactly the two rows; `list --json`, `get`, `unset`, `adopt` byte-identical; p08's warning path identical); the ten red-then-green cases and the `isAtOrInside` pin; four adversarial probes green at head and red at base; the MkDocs relabel adjudicated an accepted deviation within the Outcome; scope exact; gates forced `Cached: 0`. Caveat: `pnpm test:smoke` failed once on `cursor-broker.test.mjs` (ENOENT on a temp broker file) — not attributable to p11 (zero paths under `tools/`), 3/3 in isolation; watched at the fan-in.
+
+**Dispositions (all Minor; no code change; no fix round):**
+
+- m1 — `hopCapError`'s `other` role inherits the `--output` advice with no comment that it is unreachable by construction: **deferred** — polish (follow-up ledger).
+- m2 — the empty-manifest docs bullet does not say the line is human-output only: **fixed** (root, plan-side note in the correction entry; the docs bullet itself joins the polish ledger).
+- m3 — three stale plan clauses: **fixed** (root, plan write) — a dated correction entry records all three plus the accepted MkDocs deviation; verification: `grep -c 'Correction applied 2026-09-09 (wave-7 p11' <plan>` = 1, corpus contract green.
+- m4 — `BL-260906-docs-index-follow-ups-from` still says "(behaviorally inert)": **deferred to the closeout archival**, where the item's summary is written.
+
+**p11 row → `passed`** (reviewed head `0b5c3307e`); p11 is clear for the group-4 fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -625,6 +640,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p10-impl-001` outcome: DONE, one commit `88fbc8786a1147b02cfdb1bdb973e6175cd369ed` (ten files): the stray fences repaired in five skill assets with prose immutability proven mechanically, five bumps once each with six pins by literal, the fence scanner widened (a 205-file recursive inventory with its own floor, a new after-prose defect shape, fixture cases). One Codex round: Important — `collectFenceScanFiles` swallowed `readdir` failures → fixed to propagate, with a control the lane first found vacuous (routed through `assertContractCurrent`) and rewrote against the unit. Nine controls red-then-green; the Step 8 control-2 prediction did not reproduce in the safe direction (the Step 5 floor makes a non-recursive walk red). oxfmt re-widened one repaired fence to four backticks (formatter state committed). Gates `Cached: 0` (cli 7193; skills 883; smoke 167). Not filed (boundary): the five bare-fence instances outside `.agents/skills` — root files at closeout.
 - `w7-p10-review-001` — reviewer, target opus, seven rulings (an independent prose-immutability comparison; five bumps and every pin; the widened scanner and the Codex control's vacuity note; scanner weaker-anywhere plus an indented-closer probe; the Step 8 discrepancy; the oxfmt-widened fence; scope). Record `dispatch/w7-p10-review-001.json`.
 - `w7-p12-review-001` outcome: PASS with findings, 0/0/0/3m (abort-after-adopt disposition concurred; real pty adopt probe on a v1 manifest; three `continue` branches probed). All three Minors deferred; no fix round; p12 `passed`.
+- `w7-p11-review-001` outcome: PASS with findings, 0/0/0/4m (8-role hop-cap probe at base and head; two-build config STOP diff; four adversarial probes). All four Minors deferred or record-fixed; p11 `passed`. Smoke flake `cursor-broker.test.mjs` noted (not attributable).
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
 #### Group 1 fan-in (2026-09-09)
@@ -663,6 +679,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - Group 3 fan-in: merges `7c5a6aa01`, `17d271b23`, `95ad10827`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7187). Group 4 (p10 + p11 + p12) bootstraps next.
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
+- p11 review received (PASS with findings, 0/0/0/4m — plan correction entry applied); p11 row `passed`.
 - p12 review received (PASS with findings, 0/0/0/3m — all deferred); p12 row `passed`.
 - p09 round 2 passed (0/0/0/0) at `99675387b`; p09 row `passed`; group 3 fan-in starts.
 - p07 round 2 passed (0/0/0/1m) at `617356891`; p07 row `passed`.
