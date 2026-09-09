@@ -1,8 +1,9 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 
 /**
  * Repository contract: the JavaScript prototype key literal must never appear
@@ -78,8 +79,11 @@ import { describe, expect, it } from 'vitest';
  * Masking preserves line endings and replaces every other masked code unit with
  * a space, so reported line numbers stay exact.
  *
- * Every expectation encoded in `DETECTOR_CASES` below was verified against real
- * `oxfmt --write` output on a scratch file. The invariant that matters is
+ * Every `formatter` verdict in `DETECTOR_CASES` below is *derived* at run time
+ * by writing the case to a `mktemp -d` file and running the repository's own
+ * `oxfmt` over it, so a recorded verdict cannot go stale when the `oxfmt` pin at
+ * the root `package.json` moves. The recorded literal is kept as a cross-check
+ * and must agree with the derived one. The invariant that matters is
  * one-directional: whenever `oxfmt` mangles a case, the guard must flag it. The
  * converse does not hold — the guard is deliberately stricter on constructs
  * `oxfmt` leaves alone:
@@ -91,11 +95,22 @@ import { describe, expect, it } from 'vitest';
  *   literal there), and getting that wrong would make the guard weaker, so the
  *   strict direction is the safe one. Convert such an example to a fenced block.
  * - A fenced block indented four or more spaces is not recognized as a fence,
- *   and neither is an opener whose closer is missing; both are scanned as prose.
+ *   and neither is an opener whose closer is missing or whose blockquote ended
+ *   first; all are scanned as prose.
  * - Every line carrying an unescaped `|` is treated as a table row and masked
  *   cell by cell, because a GFM table may omit its outer pipes.
+ * - Raw HTML block content is scanned as prose. That includes an HTML comment,
+ *   single-line or multi-line, and the body of a `<div>`, `<details>`, or other
+ *   block-level element.
+ * - A literal inside a link destination, a link title, a reference-definition
+ *   title, image alt text, or an autolink is reported. For these the printed
+ *   "wrap it in backticks" remedy is not merely unhelpful, it is wrong —
+ *   backticks inside a destination or an autolink break the link — so
+ *   `describeOccurrences` carries a second remedy line naming percent-encoding
+ *   and reference definitions. There is still no escape hatch, by design.
  *
- * No tracked file on the scanned surface hits any of those cases today.
+ * No tracked file on the scanned surface hits any of those cases today; they
+ * are future-author traps, not live breaks.
  *
  * YAML frontmatter is scanned as prose *on purpose*. `oxfmt` does not mangle a
  * bare literal inside frontmatter, but `oat backlog regenerate-index` copies a
@@ -112,6 +127,21 @@ import { describe, expect, it } from 'vitest';
 const REPOSITORY_ROOT = resolve(process.cwd(), '..', '..');
 
 const SCANNED_SURFACES = ['.oat/repo', 'apps/oat-docs/docs'] as const;
+
+/**
+ * The repository's own formatter — the same binary `pnpm exec oxfmt` resolves
+ * to from this package, pinned as a root devDependency. Running it is not a new
+ * dependency; it is the oracle the whole guard is written against.
+ */
+const OXFMT_BINARY = join(REPOSITORY_ROOT, 'node_modules', '.bin', 'oxfmt');
+
+const temporaryDirectories: string[] = [];
+
+afterAll(() => {
+  for (const directory of temporaryDirectories.splice(0)) {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 /** The literal prototype key, unprotected by a code span. */
 const BARE_FORM = /__proto__/;
@@ -134,12 +164,82 @@ const QUOTE_PREFIX = /^ {0,3}(?:>[ \t]?)+/;
 // is mangled by oxfmt (verified).
 const LIST_ITEM = /^[ \t]*(?:[-+*]|\d{1,9}[.)])(?:[ \t]|$)/;
 
+/** The CommonMark HTML block type 6 tag-name list. */
+const HTML_BLOCK_TAGS = [
+  'address',
+  'article',
+  'aside',
+  'base',
+  'basefont',
+  'blockquote',
+  'body',
+  'caption',
+  'center',
+  'col',
+  'colgroup',
+  'dd',
+  'details',
+  'dialog',
+  'dir',
+  'div',
+  'dl',
+  'dt',
+  'fieldset',
+  'figcaption',
+  'figure',
+  'footer',
+  'form',
+  'frame',
+  'frameset',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'head',
+  'header',
+  'hr',
+  'html',
+  'iframe',
+  'legend',
+  'li',
+  'link',
+  'main',
+  'menu',
+  'menuitem',
+  'nav',
+  'noframes',
+  'ol',
+  'optgroup',
+  'option',
+  'p',
+  'param',
+  'search',
+  'section',
+  'summary',
+  'table',
+  'tbody',
+  'td',
+  'tfoot',
+  'th',
+  'thead',
+  'title',
+  'tr',
+  'track',
+  'ul',
+].join('|');
+
 /**
- * CommonMark HTML blocks whose end condition is a closing tag rather than a
- * blank line. Their content is raw text, so a fence-shaped or delimiter-shaped
- * line inside one is not a fence and not a block start.
+ * CommonMark HTML blocks. Their content is raw text, so a fence-shaped or
+ * delimiter-shaped line inside one is not a fence and not a block start.
+ *
+ * Types 1-5 end at a closing token; types 6 and 7 end at a blank line. Types 6
+ * and 7 are not optional decoration: a fence-shaped line inside a `<div>` or
+ * `<details>` block was pairing with a later top-level fence line and blanking
+ * every line between them (verified as mangled by `oxfmt`).
  */
-const RAW_HTML_BLOCKS = [
+const RAW_HTML_BLOCKS: readonly { open: RegExp; close: RegExp | null }[] = [
   {
     open: /^ {0,3}<(?:script|pre|style|textarea)(?:[ \t>]|$)/i,
     close: /<\/(?:script|pre|style|textarea)>/i,
@@ -148,7 +248,17 @@ const RAW_HTML_BLOCKS = [
   { open: /^ {0,3}<\?/, close: /\?>/ },
   { open: /^ {0,3}<![A-Za-z]/, close: />/ },
   { open: /^ {0,3}<!\[CDATA\[/, close: /\]\]>/ },
-] as const;
+  // Type 6: a known block-level tag, open or closing, ending at a blank line.
+  {
+    open: new RegExp(`^ {0,3}</?(?:${HTML_BLOCK_TAGS})(?:[ \\t]|/?>|$)`, 'i'),
+    close: null,
+  },
+  // Type 7: any other complete open or closing tag alone on a line.
+  {
+    open: /^ {0,3}<\/?[A-Za-z][A-Za-z0-9-]*(?:[ \t][^<>]*)?\/?>[ \t]*$/,
+    close: null,
+  },
+];
 
 interface Occurrence {
   file: string;
@@ -176,27 +286,49 @@ function hasTableDelimiter(line: string): boolean {
   return false;
 }
 
+/** How many blockquote markers open the line. */
+function quoteDepth(line: string): number {
+  const prefix = QUOTE_PREFIX.exec(withoutCarriageReturn(line))?.[0];
+  return prefix === undefined ? 0 : (prefix.match(/>/g) ?? []).length;
+}
+
 /**
  * Index every line that lies inside a raw-text HTML block, inclusive of the
  * opening and closing lines.
+ *
+ * A `null` close condition is a type 6 or 7 block, which ends at the first
+ * blank line.
  */
 function findRawHtmlLines(lines: readonly string[]): Set<number> {
   const inside = new Set<number>();
   let close: RegExp | null = null;
+  let untilBlank = false;
 
   for (let index = 0; index < lines.length; index += 1) {
-    const content = blockContent(lines[index] ?? '');
+    const line = lines[index] ?? '';
+    const content = blockContent(line);
+
+    if (untilBlank) {
+      if (line.trim() === '') {
+        untilBlank = false;
+        continue;
+      }
+      inside.add(index);
+      continue;
+    }
     if (close !== null) {
       inside.add(index);
       if (close.test(content)) close = null;
       continue;
     }
+
     const block = RAW_HTML_BLOCKS.find((candidate) =>
       candidate.open.test(content),
     );
     if (block === undefined) continue;
     inside.add(index);
-    if (!block.close.test(content)) close = block.close;
+    if (block.close === null) untilBlank = true;
+    else if (!block.close.test(content)) close = block.close;
   }
 
   return inside;
@@ -207,12 +339,22 @@ function findRawHtmlLines(lines: readonly string[]): Set<number> {
  * lines, with empty lines. Line count is preserved so reported line numbers
  * stay exact.
  *
- * An opener with no closer blanks nothing. Running an unclosed fence to end of
- * document is what CommonMark does, but here it is the dangerous direction: a
- * fence-shaped line inside an HTML block, or the closer of a list-prefixed
- * fence this pass never recognized as an opener, would otherwise blank every
- * later line and silently swallow real prose (both verified as mangled by
- * oxfmt). Leaving an unmatched opener as prose can only over-report.
+ * An opener with no closer blanks nothing beyond its own container. Running an
+ * unclosed fence to end of document is what CommonMark does, but here it is the
+ * dangerous direction: a fence-shaped line inside an HTML block, or the closer
+ * of a list-prefixed fence this pass never recognized as an opener, would
+ * otherwise blank every later line and silently swallow real prose (both
+ * verified as mangled by oxfmt).
+ *
+ * Pairing is container-aware. An opener records its blockquote depth, only a
+ * fence line at that same depth can close it, and the fence force-closes as
+ * soon as a non-blank line's depth drops below the opener's — a blockquote ends
+ * at a blank line, so its fence cannot reach past it. Without this, a
+ * `> ` + backtick-fence line registered as a *document-level* opener and paired
+ * with the next fence-shaped line anywhere later, blanking every top-level
+ * paragraph in between; five such shapes are pinned below as `mangles` cases.
+ *
+ * Leaving an unmatched or force-closed opener unpaired can only over-report.
  */
 function blankFencedBlocks(lines: readonly string[]): string[] {
   const blanked = lines.slice();
@@ -220,10 +362,24 @@ function blankFencedBlocks(lines: readonly string[]): string[] {
   let openIndex = -1;
   let openChar = '';
   let openLength = 0;
+  let openDepth = 0;
 
   for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index] ?? '';
+
+    // Any non-blank line that has left the opener's blockquote ends that
+    // container, and with it the fence. The opener is abandoned rather than
+    // paired, so nothing beyond its own container is ever blanked.
+    if (
+      openIndex !== -1 &&
+      line.trim() !== '' &&
+      quoteDepth(line) < openDepth
+    ) {
+      openIndex = -1;
+    }
+
     if (rawHtml.has(index)) continue;
-    const match = FENCE_LINE.exec(blockContent(lines[index] ?? ''));
+    const match = FENCE_LINE.exec(blockContent(line));
     const marker = match?.[1];
     const info = match?.[2] ?? '';
     if (marker === undefined) continue;
@@ -235,10 +391,12 @@ function blankFencedBlocks(lines: readonly string[]): string[] {
       openIndex = index;
       openChar = marker.charAt(0);
       openLength = marker.length;
+      openDepth = quoteDepth(line);
       continue;
     }
 
     if (
+      quoteDepth(line) === openDepth &&
       marker.charAt(0) === openChar &&
       marker.length >= openLength &&
       info.trim() === ''
@@ -283,6 +441,12 @@ function classifyLines(lines: readonly string[]): LineKind[] {
     }
     if (
       rawHtml.has(index) ||
+      // Any fence-shaped line bounds the region, whether or not
+      // `blankFencedBlocks` paired it. An unpaired one (an invalid info string,
+      // or an opener force-closed with its container) would otherwise stay
+      // `plain`, and an earlier unclosed backtick run would pair with the fence
+      // line's own run and mask the prose between them.
+      FENCE_LINE.test(content) ||
       ATX_HEADING.test(content) ||
       THEMATIC_BREAK.test(content) ||
       SETEXT_UNDERLINE.test(content) ||
@@ -538,6 +702,10 @@ function describeOccurrences(
     'A bare literal in YAML frontmatter is copied verbatim into generated',
     'Markdown by `oat backlog regenerate-index` and `oat backlog archive`, where',
     'it is mangled the same way.',
+    'Inside a link destination, a link or reference-definition title, image alt',
+    'text, or an autolink, backticks would break the link. Percent-encode the',
+    'segment as `%5F%5Fproto%5F%5F` instead, or move the URL into a reference',
+    'definition whose label can be backticked. There is no suppression marker.',
   ].join('\n');
 }
 
@@ -733,6 +901,85 @@ const DETECTOR_CASES: DetectorCase[] = [
     mangled: [],
   },
   {
+    name: 'a quoted fence opener does not pair with a top-level fence line',
+    markdown: `> \`\`\`\n\nA bare ${BARE} here.\n\n\`\`\`\n`,
+    formatter: 'mangles',
+    bare: [3],
+    mangled: [],
+  },
+  {
+    name: 'a quoted fence opener does not pair with a fence in another blockquote',
+    markdown: `> \`\`\`\n\nA bare ${BARE} here.\n\n> \`\`\`\n`,
+    formatter: 'mangles',
+    bare: [3],
+    mangled: [],
+  },
+  {
+    name: 'a quoted fence opener does not swallow a later top-level fenced block',
+    markdown: `> \`\`\`js\n> code\n\nA bare ${BARE} here.\n\n\`\`\`js\nother\n\`\`\`\n`,
+    formatter: 'mangles',
+    bare: [4],
+    mangled: [],
+  },
+  {
+    name: 'a fence opener at quote depth two is not closed at depth one',
+    markdown: `> > \`\`\`\n\nA bare ${BARE} here.\n\n> \`\`\`\n`,
+    formatter: 'mangles',
+    bare: [3],
+    mangled: [],
+  },
+  {
+    name: 'a quoted fence opener does not swallow three later paragraphs',
+    markdown: `> \`\`\`\n\nFirst paragraph with ${BARE} one.\n\nSecond paragraph.\n\nThird paragraph.\n\n\`\`\`\n`,
+    formatter: 'mangles',
+    bare: [3],
+    mangled: [],
+  },
+  {
+    name: 'a fence-shaped line inside a div block opens no fence',
+    markdown: `<div>\n\`\`\`\n</div>\n\nA bare ${BARE} here.\n\n\`\`\`\n`,
+    formatter: 'mangles',
+    bare: [5],
+    mangled: [],
+  },
+  {
+    name: 'a fence-shaped line inside a details block opens no fence',
+    markdown: `<details>\n\`\`\`\n</details>\n\nA bare ${BARE} here.\n\n\`\`\`\n`,
+    formatter: 'mangles',
+    bare: [5],
+    mangled: [],
+  },
+  {
+    name: 'a fence-shaped line inside a bare open-tag block opens no fence',
+    markdown: `<span class="x">\n\`\`\`\n\nA bare ${BARE} here.\n\n\`\`\`\n`,
+    formatter: 'mangles',
+    bare: [4],
+    mangled: [],
+  },
+  {
+    name: 'a fence line with an invalid info string still bounds the region',
+    markdown: `\`\`\`js \`x\`\nA bare ${BARE} here.\n\`\`\`\n`,
+    formatter: 'mangles',
+    bare: [2],
+    mangled: [],
+  },
+  {
+    name: 'a literal in a link destination is reported on purpose',
+    markdown: `See [docs](https://example.com/${BARE}) for details.\n`,
+    formatter: 'preserves',
+    bare: [1],
+    mangled: [],
+    note: 'Deliberately stricter than oxfmt. Backticks would break the link, so the failure message carries a percent-encoding remedy.',
+  },
+  {
+    name: 'a literal in an HTML comment is reported on purpose',
+    markdown: `<!-- a bare ${BARE} in a comment -->\n`,
+    formatter: 'preserves',
+    bare: [1],
+    mangled: [],
+    note: 'Deliberately stricter than oxfmt; raw HTML is scanned as prose.',
+  },
+  {
     name: 'an already-mangled prose occurrence is reported',
     markdown: `An already ${BOLD} mangled line.\n`,
     formatter: 'preserves',
@@ -832,18 +1079,68 @@ describe('the prototype-key detector', () => {
   });
 
   it('never accepts an input the formatter would mangle', () => {
-    const missed = DETECTOR_CASES.filter(
-      (testCase) =>
-        testCase.formatter === 'mangles' &&
-        testCase.bare.length === 0 &&
-        testCase.mangled.length === 0,
-    ).map((testCase) => testCase.name);
+    // The verdict is *derived* by running the repository's own formatter over
+    // every case, not read from the `formatter` literal. Filtering the table
+    // for entries whose author already wrote `formatter: 'mangles'` only
+    // asserts that the author did not contradict themselves; it has no power to
+    // discover a hole, and it cannot notice the recorded verdicts going stale
+    // when the `oxfmt` pin at the root `package.json` moves.
+    const directory = mkdtempSync(join(tmpdir(), 'proto-detector-'));
+    temporaryDirectories.push(directory);
 
-    // The converse is not asserted: the guard is allowed to be stricter than
-    // the formatter, and one case above deliberately is.
+    DETECTOR_CASES.forEach((testCase, index) => {
+      writeFileSync(
+        join(directory, `case-${index}.md`),
+        testCase.markdown,
+        'utf8',
+      );
+    });
+    execFileSync(OXFMT_BINARY, ['--write', directory], { encoding: 'utf8' });
+
+    const disagreed: string[] = [];
+    const missed: string[] = [];
+
+    DETECTOR_CASES.forEach((testCase, index) => {
+      const formatted = readFileSync(
+        join(directory, `case-${index}.md`),
+        'utf8',
+      );
+      // Mangling means the formatter *created* a bold token. A case that
+      // already carries one, or that holds one inside a code span, is not
+      // mangled just because the token is present in the output.
+      const derived =
+        countMatches(formatted, MANGLED_FORM) >
+        countMatches(testCase.markdown, MANGLED_FORM)
+          ? 'mangles'
+          : 'preserves';
+
+      if (derived !== testCase.formatter) {
+        disagreed.push(
+          `${testCase.name}: recorded ${testCase.formatter}, oxfmt says ${derived}`,
+        );
+      }
+
+      // Ask the detector, not the table. Reading `testCase.bare` here would
+      // only re-check that the author wrote a non-empty expectation; running
+      // the detector makes this a real property — oxfmt's verdict against the
+      // shipped code — that goes red the moment a classifier change reopens a
+      // hole, even for a case whose recorded expectation is still correct.
+      const reported =
+        scanSource('case.md', testCase.markdown, BARE_FORM).length +
+        scanSource('case.md', testCase.markdown, MANGLED_FORM).length;
+      if (derived === 'mangles' && reported === 0) missed.push(testCase.name);
+    });
+
+    expect(
+      disagreed,
+      `recorded formatter verdicts disagree with ${OXFMT_BINARY}:\n  ${disagreed.join('\n  ')}`,
+    ).toEqual([]);
+
+    // The converse is deliberately not asserted: the guard is allowed to be
+    // stricter than the formatter, and several cases above are.
     expect(
       missed,
-      `cases oxfmt mangles but the guard accepts: ${missed.join(', ')}`,
+      `inputs oxfmt mangles but the guard accepts:\n  ${missed.join('\n  ')}`,
     ).toEqual([]);
   });
 });
