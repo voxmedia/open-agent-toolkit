@@ -470,6 +470,20 @@ _Recorded when the configured implementation exit gate runs._
 
 **p04 row → `passed`** (reviewed head `6403c6ced`); group 2 is clear for fan-in.
 
+## Review Received: p07 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p07-review-2026-09-09T030201Z.md (reviewed head `07e6438401db5368a3a89ecb0e7ebbf263e525af`, manual, opus)
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 2 — PASS with findings. Verified: exactly the two declared files with no relaxed pre-existing case; all three controls re-run (re-added row → red with both pre-existing cases green; both heading renames → red); no `oat-doctor` pin anywhere (plain and escaped sweep), one bump; both Codex rejections stand; gates `Cached: 0` (cli 7164; skills 883; smoke 167); provider views unchanged.
+
+**Dispositions:**
+
+- M1 — `availablePacks` is regex-derived and only asserted non-empty, so a bullet that stops matching silently leaves the disjointness set (reviewer probe: a re-added `docs` row plus a `(7 skills)` suffix change stay green): **fix round** (`w7-p07-fix-001`, resumed lane, append-only, test-only) — assert extraction completeness (parsed counts equal the candidate lines/rows), proven red with the reviewer's probe.
+- m1 — `brainstorm` appears in neither example section (pre-existing, out of scope): **deferred** — candidate backlog item at closeout (follow-up ledger).
+- m2 — the `Status` column contradicts the `## Outdated Skills` table (pre-existing; no derivation rule exists): **deferred** — semantics decision noted at closeout (follow-up ledger).
+
+**p07 row → `fixes_added`**; round 2 on the original reviewer handle follows the fix commit.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -527,6 +541,8 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p08-review-001` — reviewer, target opus, seven rulings (normalizer weaker-anywhere; the `--json` channel STOP; no false alarm in existing suites; the rejected two-reads finding with a read count at base vs head; controls B and D; scope; one cross-surface probe). Record `dispatch/w7-p08-review-001.json`.
 - `w7-p09-impl-001` outcome: DONE, one commit `04a9a29ca1b4a587f9af6c1263ad7b6d5fef00bb` (three files): the exclusion-directory probe distinguishes exact / absent / resolved-elsewhere and the warning names the resolved target (the `absent` message byte-identical); two Codex rounds (R1 one Medium — non-exhaustive narrowing — fixed with a typed `Extract` annotation and a compile-failure control; R2 clean); four controls; the pre-existing case-insensitivity simulation found inert on macOS (anchored on the un-realpath'd root) and re-keyed so the injection decides. Gates `Cached: 0`; `oat docs generate-index` no diff. Pre-existing test-tier tsc errors noted in `sync.test.ts:138` and `validate.test.ts:107`.
 - `w7-p09-review-001` — reviewer, target opus, six rulings (weaker-anywhere on inert entries incl. a symlink-to-correct-directory probe; the byte-identical `absent` message; the re-keyed simulation proven load-bearing; real symlink fixtures on this host; the exhaustiveness control; scope). Record `dispatch/w7-p09-review-001.json`.
+- `w7-p07-review-001` outcome: PASS with findings, 0/0/1M/2m (controls re-run; no pin; Codex rejections stand; a completeness gap in the regex extraction found by the reviewer's own probe). M1 → fix round `w7-p07-fix-001`; m1/m2 pre-existing, wave close.
+- `w7-p07-fix-001` — bounded test-only fix round on the resumed implementer. Record `dispatch/w7-p07-fix-001.json`.
 
 #### Group 1 fan-in (2026-09-09)
 
@@ -555,6 +571,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
+- p07 review received (PASS with findings, 0/0/1M/2m): fix round `w7-p07-fix-001` dispatched; p07 row `fixes_added`.
 - p04 round 2 passed (0/0/0/1m) at `6403c6ced`; p04 row `passed`; group 2 fan-in starts.
 - p04 review received (PASS with findings, 0/0/1M/3m): fix round `w7-p04-fix-001` dispatched; p04 row `fixes_added`.
 - p05 review received (PASS with findings, 0/3I/1M/3m — artifact alignment): wrapper surface and plan refresh corrected by the root; DR fix round `w7-p05-fix-001` dispatched; p05 row `fixes_added`.
