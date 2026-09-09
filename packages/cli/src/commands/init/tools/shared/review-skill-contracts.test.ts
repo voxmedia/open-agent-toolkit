@@ -5026,7 +5026,7 @@ describe('durable archive active-pointer deferral', () => {
     }
   });
 
-  it('resumes to the clear after archive succeeded, leaving exactly one seal', () => {
+  it('resumes to the clear after archive succeeded without any project-log append', () => {
     const content = readRepoFile(COMPLETE_SKILL);
     const resumeBlock = extractMarkedBlock(content, 'shared-archive-resume');
     const clearBlock = extractMarkedBlock(content, 'deferred-pointer-clear');
@@ -5059,18 +5059,19 @@ describe('durable archive active-pointer deferral', () => {
         'config set activeProject',
       );
 
-      // The whole point of the item: the resume never re-enters Step 3.7, so no
-      // second seal is appended and no post-seal append is attempted.
+      // The whole point of the item: the resume goes straight to Step 12, so it
+      // never re-enters Step 3.7 and attempts no project-log append at all.
+      // This is the assertion that carries the invariant here — a seal count
+      // taken from this fixture would be true by construction, because the
+      // fixture writes one seal and these bash blocks never append. The
+      // capable one-seal proof is
+      // `lifecycle.integration.test.ts` > `leaves exactly one seal when a
+      // pre-archive interruption resumes`, which drives the real CLI and goes
+      // red when the seal dedupe or the refusal is neutralized.
       expect(
         run.oatCalls,
         'a resume appends nothing to the sealed project log',
       ).not.toContain('project log append');
-
-      const log = readFileSync(join(archivePath, 'project-log.md'), 'utf8');
-      expect(
-        log.split(SEAL_HEADING).length - 1,
-        'the archived log still carries exactly one completion seal',
-      ).toBe(1);
     } finally {
       rmSync(fixture.directory, { recursive: true, force: true });
     }

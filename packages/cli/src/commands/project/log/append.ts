@@ -1924,7 +1924,8 @@ Entry contract:
   Structural bodies are one line and reference artifacts by path instead of inlining them.
   Add --version-note for tool-related observations.
   Pass --idempotency-key so a replay reports already-appended instead of duplicating the entry; the key must appear in --body as its own word. Adding --commit also finalizes a gate partial-finalization receipt.
-  The completion seal (--structural --producer oat-project-complete --ref seal) dedupes on its own, and every other append onto a sealed log is refused.
+  The completion seal (--structural --producer oat-project-complete --ref seal) dedupes on its own, and every append carrying new content onto a sealed log is refused.
+  A replay recognized by its own --idempotency-key still reports already-appended on a sealed log and writes nothing.
   Never record secret values (tokens, keys, signed URLs, or credentials); reference secrets by name or source.
   Prior entries are never edited or struck through. Append a new judgment entry that references and explains a correction.
 

@@ -234,8 +234,16 @@ enforces that rather than leaving it to convention:
   entry. This holds for a seal carrying the completion skill's
   `oat-seal:<project>` key and for an unkeyed seal written before that
   convention, which is recognized by its heading instead.
-- Every other append onto a sealed log is refused with `status: "sealed"` and a
+- Every append carrying **new** content is refused with `status: "sealed"` and a
   non-zero exit, naming the seal that closed the log.
+- A replay that `--idempotency-key` recognizes as its own earlier entry is the
+  one exception: it reports `already-appended` and exits 0 even on a sealed log.
+  Nothing is appended — the entry it finds necessarily predates the seal — so
+  the seal stays the final entry. This is what keeps a gate
+  partial-finalization receipt replayable after the project is completed. The
+  key matches a whole word in an existing entry body, so an unrelated append
+  whose key happens to occur in some earlier entry is reported the same way
+  and likewise writes nothing.
 
 A resumed completion therefore reads `sealed` from `check` and skips the
 roll-up and the seal instead of duplicating them.

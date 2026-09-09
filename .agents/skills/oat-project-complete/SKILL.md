@@ -788,9 +788,13 @@ sweep runs:
   Step 12 completion summary, append nothing to the sealed log, and never
   re-enter the roll-up or the seal. No project-log append may follow the seal,
   on a resume as much as on a first run. The CLI enforces this rather than
-  trusting the routing: any non-seal append onto a sealed log is refused with
+  trusting the routing: any non-seal append carrying new content onto a sealed
+  log is refused with
   `status: "sealed"` and a non-zero exit, and a replayed seal reports
-  `already-appended` instead of writing a second one.
+  `already-appended` instead of writing a second one. An append that
+  `--idempotency-key` recognizes as its own earlier entry also reports
+  `already-appended` and exits 0, because that entry predates the seal and
+  nothing is written; that carve-out never adds content after the seal.
 
 Skip this roll-up entirely when the probe reported `sealed: true`; a sealed log
 has already been rolled up and sealed, and the seal must remain its final

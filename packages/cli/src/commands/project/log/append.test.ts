@@ -849,6 +849,66 @@ describe('oat project log append', () => {
       expect(process.exitCode).toBe(0);
     });
 
+    it('reports already-appended for a keyed replay whose token matches a pre-seal entry', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+
+      // A pre-seal entry whose body carries the token this later append will
+      // key on.
+      const collidingKey = 'target=x';
+      const gate = createHarness(root);
+      await runCommand(gate.command, [
+        '--structural',
+        '--producer',
+        'oat-gate',
+        '--ref',
+        'review',
+        '--body',
+        `Gate finalized ${collidingKey}`,
+        '--idempotency-key',
+        collidingKey,
+      ]);
+      expect(gate.capture.jsonPayloads[0]).toMatchObject({
+        status: 'appended',
+      });
+
+      const sealing = createHarness(root);
+      await runCommand(
+        sealing.command,
+        sealArgs(`Completion sealed. ${sealKey}`),
+      );
+      const afterSeal = await readFile(logPath, 'utf8');
+
+      // This is the documented boundary of the key carve-out: recognition runs
+      // before the sealed guard, so a keyed append whose token already occurs
+      // in a pre-seal entry is reported `already-appended` rather than refused
+      // — even though its body is different content. It is not a hole in the
+      // seal invariant, because recognition writes nothing; the log must come
+      // back byte-identical. Anything that makes this case *append* has broken
+      // the seal, and anything that makes it *refuse* has broken the gate's
+      // recovery replay.
+      const replay = createHarness(root);
+      await runCommand(replay.command, [
+        '--type',
+        'friction',
+        '--scope',
+        'project',
+        '--area',
+        'post seal',
+        '--body',
+        `Post-seal finding that must not be written: ${collidingKey}`,
+        '--idempotency-key',
+        collidingKey,
+      ]);
+
+      expect(replay.capture.jsonPayloads[0]).toMatchObject({
+        status: 'already-appended',
+        heading: '### 2026-07-17 · structural · oat-gate · review',
+      });
+      await expect(readFile(logPath, 'utf8')).resolves.toBe(afterSeal);
+      expect(process.exitCode).toBe(0);
+    });
+
     it('leaves an unsealed log fully appendable', async () => {
       const { root, logPath } = await createRepo();
       // Seal identity is producer AND ref: neither of these entries seals.
