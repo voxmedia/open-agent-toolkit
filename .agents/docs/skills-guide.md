@@ -2,7 +2,7 @@
 
 Agent Skills ecosystem research and notes across providers.
 
-_Last updated: July 2026_
+_Last updated: September 2026_
 
 ---
 
@@ -55,7 +55,7 @@ license: MIT # License name or reference to bundled file
 compatibility:
   | # Max 500 chars — intended product, system packages, network needs
   Requires Node.js 18+
-allowed-tools: Read Grep Glob # Space-delimited tool list (experimental)
+allowed-tools: Read, Grep, Glob # Experimental; see the separator note below
 metadata: # Arbitrary key-value pairs
   author: my-org
   version: '1.0'
@@ -64,7 +64,19 @@ metadata: # Arbitrary key-value pairs
 
 ### Spec Constraints
 
-- SKILL.md should be **under 500 lines / ~5,000 tokens**
+The size budget in the first bullet is **OAT's authoring guidance**, not a published
+specification limit — no spec text in this document's sources imposes either number.
+The remaining bullets restate the spec's own file-layout guidance.
+
+**Separator note:** the spec's `allowed-tools` example is space-delimited. OAT writes
+the value comma-separated, and OAT never parses the separator — `validateOatSkills` in
+`packages/cli/src/validation/skills.ts` only checks that the key is present, and `getToolDetail` in
+`packages/cli/src/commands/tools/info/index.ts` reads the raw scalar. The comma form is therefore an
+authoring convention, not a runtime contract. Backstop:
+`it('declares allowed-tools as a comma-separated list in every canonical skill')` in
+`packages/cli/src/validation/skills.test.ts`.
+
+- SKILL.md should be **under 500 lines / ~5,000 tokens** (OAT authoring budget)
 - Use **relative paths** from skill root: `See [guide](references/REFERENCE.md)`
 - Keep file references **one level deep** from SKILL.md
 - Scripts should be **self-contained** or clearly document dependencies
@@ -79,12 +91,13 @@ If you want a skill to work across Claude Code, Cursor, Codex CLI, and Gemini CL
 1. Follow the Agent Skills spec folder layout and constraints
 2. Keep frontmatter minimal and conservative:
    - `name`: lowercase letters + numbers + hyphens, max 64 chars, must match folder name, no leading/trailing hyphen
-   - `description`: **single line**, ≤ 500 chars (Codex enforces this), describes _when to use_ + _what_
+   - `description`: **single line**, ≤ 500 chars, describes _when to use_ + _what_. This is OAT's house rule, not a provider requirement: `validateOatSkills` in `packages/cli/src/validation/skills.ts` enforces it only for skills whose directory name starts with `oat-`; elsewhere it is an unenforced authoring convention for portability. Backstops in `packages/cli/src/validation/skills.test.ts`: `it('reports description longer than 500 characters')` and `it('does not report a description longer than 500 characters for a non-oat-* skill')`. The spec allows 1024
 3. Put detailed instructions in the Markdown body (and/or `references/`), not in `description`
 4. Treat extra frontmatter keys as **best-effort extensions**:
    - Claude Code supports many optional frontmatter keys
-   - Codex CLI explicitly **ignores unknown keys** (safe to include, won't break, won't be used)
    - Cursor + Gemini support a subset; some keys are undocumented
+   - An unread key is inert rather than guaranteed harmless. See the Frontmatter Compatibility Matrix
+     below for the per-provider picture and for which entries are verified rather than inherited
 
 ### Cross-Provider Safe Template
 
@@ -129,6 +142,10 @@ Provider-specific fields can be layered on top but should be treated as non-port
 
 ## Frontmatter Compatibility Matrix
 
+This is the **single canonical frontmatter matrix** for this repository, verified against
+provider documentation on **2026-09-08** (re-verified 2026-09-09). Where any other table —
+including the third-party `npx skills` matrix below — disagrees with it, this table governs.
+
 Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignored (documented) | ❓ not documented / unknown
 
 | Field                          | Agent Skills Spec | Cursor      | Claude Code     | Codex CLI       | Copilot             | Gemini CLI    |
@@ -151,7 +168,22 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 ² Claude Code uses first paragraph of body if `description` omitted
 ³ Copilot may require `license` in practice (see https://github.com/github/copilot-cli/issues/894)
 
-**Key takeaway:** Codex's "ignores extra keys" means you can include Claude/Cursor-only fields without breaking Codex, but you cannot depend on them affecting Codex behavior. `name` + `description` are the only truly portable interface.
+**Consolidation note (2026-09-08).** This table absorbed the shorter 5-column matrix that
+`create-agnostic-skill/SKILL.md` used to carry. Every field row from that table survives here. Two cells
+were deliberately changed rather than dropped silently: the old table asserted Cursor `❌` for
+`context` / `agent` and for `hooks`, and no current Cursor documentation substantiates a positive claim of
+non-support, so both are recorded here as `❓ not documented` instead. The old table carried no footnote or
+caveat that is missing above.
+
+**Key takeaway:** `name` + `description` are the only truly portable interface. Layer provider-specific
+fields on top of that baseline, but treat an unread key as inert rather than guaranteed harmless.
+
+**Codex and unknown keys — unverified as of 2026-09-08.** This document previously stated that Codex CLI
+explicitly ignores unknown frontmatter keys. That statement is retained here as an inherited claim, not a
+checked one: the current Codex skills documentation at https://learn.chatgpt.com/docs/build-skills carries no
+statement about unknown or extra frontmatter keys (checked 2026-09-08, re-checked 2026-09-09). The `💤 ignored`
+Codex cells above rest on that earlier, no-longer-restated documentation. Do not depend on a Claude-only or
+Cursor-only field having any effect under Codex, and do not treat its inertness there as documented.
 
 ---
 
@@ -222,7 +254,7 @@ supported home for Cursor-only skills. Cursor also reads `.claude/skills/` and
 
 ### Codex CLI (OpenAI)
 
-**Docs:** https://developers.openai.com/codex/skills
+**Docs:** https://learn.chatgpt.com/docs/build-skills
 
 **Skill locations (by precedence, high → low):**
 
@@ -238,10 +270,10 @@ supported home for Cursor-only skills. Cursor also reads `.claude/skills/` and
 **Codex-specific behaviors:**
 
 - **Uses `.agents/skills/` natively at all scopes** — Codex scans `.agents/skills/` from CWD up to repo root, plus `$HOME/.agents/skills` for user-level
-- **Ignores unknown frontmatter keys** — you can include Claude/Cursor-specific fields without breaking Codex, but they won't affect behavior
 - **Does NOT deduplicate** same-named skills — multiple can appear in selectors
 - `name`: ≤ 100 chars, **single line** (spec says 64; use 64 for max portability)
-- `description`: ≤ 500 chars, **single line** (spec says 1024; use 500 for max portability)
+- **Skill-list context budget (verified 2026-09-08 against https://learn.chatgpt.com/docs/build-skills, re-verified 2026-09-09):** the initial skills list — each skill's name, description, and file path — uses at most 2% of the model's context window, or 8,000 characters when the context window is unknown. If many skills are installed, Codex shortens skill descriptions first, and for large skill sets it may omit skills from the list and show a warning. The budget applies only to the initial list; the full `SKILL.md` is read once a skill is selected. The page states **no** single-line requirement and **no** character limit for `description`
+- `description`: OAT's own house rule — not a Codex rule — is a single-line scalar of at most 500 characters. `validateOatSkills` in `packages/cli/src/validation/skills.ts` enforces it **only for skills whose directory name starts with `oat-`**; for every other skill it is an unenforced repository authoring convention. Backstops in `packages/cli/src/validation/skills.test.ts`: `it('reports description longer than 500 characters')` and `it('does not report a description longer than 500 characters for a non-oat-* skill')`. Because implicit matching depends on `description`, front-load trigger keywords so the skill still matches when a host shortens it
 - Markdown body stays on disk and **is not injected unless explicitly invoked**
 - Built-in `$skill-creator` and `$skill-installer` skills
 - `/skills` slash command or `$` prefix for explicit invocation
@@ -368,6 +400,10 @@ For automated distribution, use **OAT sync** (for local/internal skills) or **`n
 
 ```bash
 # OAT sync — manages local canonical → provider distribution with manifest tracking
+# --scope all is correct here: this section is about user-level distribution.
+# --scope project writes only this repository's provider views; --scope user writes only
+# the invoking user's home-scope views; --scope all writes both and is the default when
+# the flag is omitted. Inside a repository, prefer --scope project.
 oat sync --scope all
 
 # npx skills — installs remote skills from GitHub or skills.sh
@@ -385,7 +421,11 @@ and `~/.copilot/skills/` as legacy Copilot adoption inputs, not mirrors.
 
 ## Cross-Tool Compatibility (npx skills Matrix)
 
-From the `npx skills` CLI compatibility matrix:
+This is a **third-party, vendor-published claim** from the `npx skills` CLI compatibility matrix,
+reproduced as published (retrieved 2026-09-08, re-checked 2026-09-09), not independently verified here.
+Where it disagrees with the canonical Frontmatter Compatibility Matrix above — notably on `allowed-tools`,
+which it marks supported everywhere while the canonical matrix records `💤 ignored` for Codex and `❓` for
+Cursor — **the canonical matrix governs**.
 
 | Feature         | Claude Code | Codex | Cursor | Copilot | Gemini CLI | Amp | Roo | OpenCode | Cline |
 | --------------- | ----------- | ----- | ------ | ------- | ---------- | --- | --- | -------- | ----- |
@@ -420,7 +460,7 @@ At startup, agents load _only_ `name` + `description` across potentially 100+ sk
 
 1. **Lead with triggering conditions**: "Use when…" / "Run this when…" / "Triggers when…"
 2. **Include keywords for disambiguation**: nouns + verbs that differentiate from similar skills
-3. **Keep it single-line**: Codex enforces single-line ≤ 500 chars
+3. **Keep it single-line**: OAT's house rule is a single-line scalar of at most 500 characters — `validateOatSkills` in `packages/cli/src/validation/skills.ts` enforces it only for skills whose directory name starts with `oat-`, backstopped by `it('reports description longer than 500 characters')` and `it('does not report a description longer than 500 characters for a non-oat-* skill')` in `packages/cli/src/validation/skills.test.ts`. No provider is documented as requiring it; the spec allows 1024
 4. **Don't summarize the workflow**: providers route on description without reading the body
 
 Examples:
@@ -481,7 +521,7 @@ Examples:
 
 Same-named skills at a more specific scope overwrite those from a less specific scope. This mirrors the AGENTS.md "nearest file wins" pattern and is well-suited for monorepos where packages need different conventions.
 
-**Source:** https://developers.openai.com/codex/skills, https://developers.openai.com/codex/config-advanced/, https://github.com/vercel-labs/skills
+**Source:** https://learn.chatgpt.com/docs/build-skills, https://developers.openai.com/codex/config-advanced/, https://github.com/vercel-labs/skills
 
 ### Q: What's the practical token cost of skills via progressive disclosure vs. same content in AGENTS.md?
 
@@ -563,7 +603,7 @@ ln -s ../../.agents/skills/my-skill .claude/skills/my-skill    # Claude Code + C
 `.agents/skills/` natively at project and user scope. No skill symlinks are
 needed for those providers.
 
-**Source:** https://cursor.com/docs/context/skills, https://code.visualstudio.com/docs/copilot/customization/agent-skills, https://developers.openai.com/codex/skills, https://github.com/vercel-labs/skills
+**Source:** https://cursor.com/docs/context/skills, https://code.visualstudio.com/docs/copilot/customization/agent-skills, https://learn.chatgpt.com/docs/build-skills, https://github.com/vercel-labs/skills
 
 ### Q: How does Claude Code's skill description character budget interact with many installed skills?
 
@@ -589,7 +629,7 @@ needed for those providers.
 
 **Answer:** Uncertain. The `npx skills` compatibility matrix marks `allowed-tools` as ✅ for Cursor, but Cursor's own documentation does not explicitly document the field. Their docs only list `name`, `description`, `license`, `compatibility`, `metadata`, and `disable-model-invocation` as supported frontmatter.
 
-The safe assumption: Cursor likely doesn't error on `allowed-tools` (similar to Codex's "ignore unknown keys" behavior), but whether it actually restricts tool access based on the field is unconfirmed. Treat `allowed-tools` as **Claude Code-specific for enforcement** and include it as a documentation signal for other tools.
+The safe assumption: Cursor likely doesn't error on `allowed-tools`, but whether it actually restricts tool access based on the field is unconfirmed. (The comparable Codex "ignores unknown keys" behavior is itself an inherited, unverified claim — see the note under the Frontmatter Compatibility Matrix.) Treat `allowed-tools` as **Claude Code-specific for enforcement** and include it as a documentation signal for other tools.
 
 **Source:** https://cursor.com/docs/context/skills, https://github.com/vercel-labs/skills#compatibility
 
@@ -597,7 +637,7 @@ The safe assumption: Cursor likely doesn't error on `allowed-tools` (similar to 
 
 **Answer:** Treat this as a two-layer pattern: frontmatter hinting for discovery, then provider-native interaction at runtime.
 
-- **Layer 1 (discovery UX):** Use `argument-hint` when a provider supports it (for slash/autocomplete discoverability), but do not treat it as input collection. Codex ignores unknown frontmatter keys, so `argument-hint` is non-functional there.
+- **Layer 1 (discovery UX):** Use `argument-hint` when a provider supports it (for slash/autocomplete discoverability), but do not treat it as input collection. `argument-hint` is not documented as functional under Codex; see the unknown-key note under the Frontmatter Compatibility Matrix for how far that claim is verified.
 - **Layer 2 (runtime clarification):** Use the provider's native user-question mechanism when available:
   - **Claude Agent SDK:** Handle `AskUserQuestion` in `canUseTool`. If you restrict tools with a `tools` array, include `AskUserQuestion` explicitly. Parse `questions[]` (`question`, `header`, `options`, `multiSelect`) and return `answers` mapped by question text.
   - **Codex:** Use `request_user_input` when the runtime exposes it. As of PR #12735 (Feb 25, 2026), Codex app-server behavior was expanded so Default mode can use `request_user_input`, with guidance to prefer assumptions first and ask only when unavoidable; rollout can still be mode/config dependent in host environments.

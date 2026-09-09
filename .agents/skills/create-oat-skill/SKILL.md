@@ -6,7 +6,7 @@ disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
 metadata:
-  version: 1.5.3
+  version: 1.5.4
 ---
 
 # Create OAT Skill
@@ -211,11 +211,14 @@ If the skill needs templates/scripts, add:
 
 ### Step 5: Register the Skill
 
-Sync the skill to provider views:
+If the repository uses OAT sync, sync the skill to this repository's provider views:
 
 ```bash
-oat sync
+oat sync --scope project
 ```
+
+A bare `oat sync` defaults to `--scope all`, which also rewrites the invoking user's home-scope provider
+directories. `withScopeOption` in `packages/cli/src/commands/shared/scope-option.ts` owns that default, and `it('sync --help matches snapshot')` in `packages/cli/src/commands/help-snapshots.test.ts` is its backstop.
 
 Run OAT validator and resolve findings:
 
@@ -331,6 +334,6 @@ We should add a new OAT skill to archive completed projects. Create the skill wi
 - ✅ New skill created at `.agents/skills/{skill-name}/SKILL.md`
 - ✅ Skill frontmatter includes valid semver `metadata.version:` (`1.0.0` for new skills)
 - ✅ Skill includes required OAT sections (mode + progress + project resolution if applicable)
-- ✅ Skill registered in `AGENTS.md`
+- ✅ Skill resolves through the provider views after a scoped sync (`oat tools info {skill-name}` or the provider's own skill list)
 - ✅ `pnpm oat:validate-skills` passes
 - ✅ If distributable: added to `bundle-assets.sh` and the appropriate category constant, tests pass
