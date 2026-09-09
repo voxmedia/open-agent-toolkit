@@ -1,7 +1,7 @@
 ---
 id: BL-260907-warn-when-documentation-root
 title: Warn when documentation.root has the wrong type instead of dropping it
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T14:05:37.111Z
-updated: 2026-09-08T21:57:08.000Z
+updated: '2026-09-09T10:16:52Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-warn-on-wrong-typed-documentation-root.md

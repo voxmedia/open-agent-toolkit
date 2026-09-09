@@ -1,7 +1,7 @@
 ---
 id: BL-260907-settle-the-oat-wave-program
 title: Settle the oat-wave-program ledger status vocabulary
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T14:05:41.826Z
-updated: 2026-09-08T21:19:11.000Z
+updated: '2026-09-09T10:17:07Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-harden-the-external-plan-readiness-contract.md

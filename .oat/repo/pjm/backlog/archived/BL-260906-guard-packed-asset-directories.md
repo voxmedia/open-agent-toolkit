@@ -1,7 +1,7 @@
 ---
 id: BL-260906-guard-packed-asset-directories
 title: Guard packed asset directories and document the OAT_ASSETS_DIR contract
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - docs
 assignee: null
 created: 2026-09-06T01:23:56.563Z
-updated: 2026-09-08T21:22:00.000Z
+updated: '2026-09-09T10:16:49Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-guard-every-packed-asset-directory.md

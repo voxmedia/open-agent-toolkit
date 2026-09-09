@@ -1,7 +1,7 @@
 ---
 id: BL-260907-let-oat-config-unset-remove
 title: Let oat config unset remove a malformed stored value
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T18:28:12.299Z
-updated: 2026-09-08T21:33:57.000Z
+updated: '2026-09-09T10:16:41Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-fix-oat-config-unset-and-adopt.md

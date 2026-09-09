@@ -1,7 +1,7 @@
 ---
 id: BL-260908-report-a-changed-skill-with-no
 title: Report a changed skill with no frontmatter block in the bump validator
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - wave-6-followup
 assignee: null
 created: 2026-09-08T05:08:00.374Z
-updated: 2026-09-08T23:45:00.000Z
+updated: '2026-09-09T10:17:01Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-tighten-the-skill-version-validators.md

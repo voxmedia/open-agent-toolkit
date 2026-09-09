@@ -1,7 +1,7 @@
 ---
 id: BL-260908-keep-external-plan-writes
 title: Keep external-plan writes on the caller's model class in oat-repo-improve
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - wave-7
 assignee: null
 created: 2026-09-08T21:32:11.754Z
-updated: 2026-09-08T21:33:45.000Z
+updated: '2026-09-09T10:17:13Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-keep-plan-writes-on-the-callers-model.md

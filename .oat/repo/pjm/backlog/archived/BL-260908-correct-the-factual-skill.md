@@ -2,7 +2,7 @@
 id: BL-260908-correct-the-factual-skill
 title: Correct the factual skill-authoring claims and consolidate the duplicated
   guidance
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: M
@@ -12,7 +12,7 @@ labels:
   - authoring
 assignee: null
 created: 2026-09-08T16:54:22.908Z
-updated: 2026-09-08T21:16:03.000Z
+updated: '2026-09-09T10:17:11Z'
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/277

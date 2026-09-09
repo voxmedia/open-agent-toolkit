@@ -1,7 +1,7 @@
 ---
 id: BL-260907-fold-oat-config-adopt-onto
 title: Fold oat config adopt onto the shared surface-flag resolver
-status: open
+status: closed
 priority: low
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T14:05:34.000Z
-updated: 2026-09-08T21:33:57.000Z
+updated: '2026-09-09T10:16:43Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-fix-oat-config-unset-and-adopt.md

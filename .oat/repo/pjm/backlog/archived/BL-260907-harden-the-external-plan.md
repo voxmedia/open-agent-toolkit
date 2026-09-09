@@ -2,7 +2,7 @@
 id: BL-260907-harden-the-external-plan
 title: 'Harden the external-plan backlink matcher: full extension consumption
   and comments before fences'
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: XS
@@ -12,7 +12,7 @@ labels:
   - wave-5-followup
 assignee: null
 created: 2026-09-07T21:49:05.406Z
-updated: 2026-09-08T21:19:11.000Z
+updated: '2026-09-09T10:17:05Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-harden-the-external-plan-readiness-contract.md

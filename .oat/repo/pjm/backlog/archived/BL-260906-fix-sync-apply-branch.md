@@ -2,7 +2,7 @@
 id: BL-260906-fix-sync-apply-branch
 title: Fix sync apply branch precedence when a rejected collection leaves zero
   planned operations
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - wave-4-followup
 assignee: null
 created: 2026-09-06T19:21:28.376Z
-updated: 2026-09-08T21:28:45.000Z
+updated: '2026-09-09T10:17:02Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-fix-sync-apply-failure-summary.md

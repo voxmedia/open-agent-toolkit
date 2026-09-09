@@ -1,7 +1,7 @@
 ---
 id: BL-260908-guard-normalized-config-maps
 title: Guard normalized config maps against a preserved `__proto__` key
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: XS
@@ -12,7 +12,7 @@ labels:
   - wave-6-followup
 assignee: null
 created: 2026-09-08T01:26:10.802Z
-updated: 2026-09-08T21:33:57.000Z
+updated: '2026-09-09T10:16:47Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-harden-normalized-config-maps.md

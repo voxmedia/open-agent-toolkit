@@ -1,7 +1,7 @@
 ---
 id: BL-260906-persist-status-native-skill
 title: Persist status native-skill adoption by setting manifestChanged
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - wave-4-followup
 assignee: null
 created: 2026-09-06T19:21:29.824Z
-updated: 2026-09-08T22:05:00.000Z
+updated: '2026-09-09T10:16:58Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-persist-native-skill-adoption-in-status.md

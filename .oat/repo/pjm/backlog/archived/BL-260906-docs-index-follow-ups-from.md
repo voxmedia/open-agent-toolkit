@@ -1,7 +1,7 @@
 ---
 id: BL-260906-docs-index-follow-ups-from
 title: Docs-index follow-ups from wave 1 reviews
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -10,7 +10,7 @@ labels:
   - docs
 assignee: null
 created: 2026-09-06T01:23:57.068Z
-updated: 2026-09-08T21:19:11.000Z
+updated: '2026-09-09T10:16:56Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-close-the-docs-index-follow-ups.md

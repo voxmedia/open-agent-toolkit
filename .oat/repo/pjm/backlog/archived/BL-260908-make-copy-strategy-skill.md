@@ -2,7 +2,7 @@
 id: BL-260908-make-copy-strategy-skill
 title: Make copy-strategy skill projections converge after sync instead of
   reading as drifted
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -13,7 +13,7 @@ labels:
   - wave-6-followup
 assignee: null
 created: 2026-09-08T03:59:59.605Z
-updated: 2026-09-08T21:22:00.000Z
+updated: '2026-09-09T10:17:04Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-converge-copy-strategy-skill-projections.md

@@ -1,7 +1,7 @@
 ---
 id: BL-260906-extend-check-skill-bumps
 title: Extend check:skill-bumps to canonical agent files
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: XS
@@ -10,7 +10,7 @@ labels:
   - skills
 assignee: null
 created: 2026-09-06T13:43:57.770Z
-updated: 2026-09-08T23:45:00.000Z
+updated: '2026-09-09T10:16:59Z'
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-tighten-the-skill-version-validators.md
