@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Glob, Grep, Bash, AskUserQuestion
 license: MIT
 metadata:
   author: shadcn
-  version: 2.1.4
+  version: 2.1.5
 ---
 
 # OAT Repo Improve

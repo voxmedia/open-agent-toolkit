@@ -2863,7 +2863,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('1.5.6');
+    expect(readDeclaredVersion(content)).toBe('1.5.7');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -3025,7 +3025,7 @@ describe('validateOatSkills', () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.5'],
       ['.agents/agents/oat-reviewer.md', '1.2.3'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.6'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.7'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.3'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.5'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.3'],
@@ -4541,7 +4541,7 @@ describe('validateOatSkills', () => {
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.24'],
-      ['oat-project-review-provide', '1.5.6'],
+      ['oat-project-review-provide', '1.5.7'],
       ['oat-project-review-receive', '1.6.3'],
       ['oat-project-review-receive-remote', '1.5.2'],
       ['oat-project-implement', '2.3.7'],
@@ -5854,7 +5854,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.4.11'],
       ['oat-project-quick-start', '2.3.11'],
       ['oat-project-import-plan', '1.4.15'],
-      ['oat-project-review-provide', '1.5.6'],
+      ['oat-project-review-provide', '1.5.7'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -5868,7 +5868,7 @@ describe('validateOatSkills', () => {
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
       ['oat-project-implement', '2.3.7'],
-      ['oat-project-review-provide', '1.5.6'],
+      ['oat-project-review-provide', '1.5.7'],
       ['oat-project-review-provide-remote', '1.1.4'],
     ] as const;
 
@@ -6104,7 +6104,7 @@ describe('validateOatSkills', () => {
   it('pins portable utility-pack callers to installed-root sibling reads', async () => {
     const callers = [
       ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.7'],
-      ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.4'],
+      ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.5'],
       ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.2'],
     ] as const;
 

@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.6
+  version: 1.5.7
 ---
 
 # Request Review
@@ -1037,6 +1037,7 @@ Gate parsing contract:
 - Include either the `Findings: {N} critical, {N} important, {N} medium, {N} minor` summary line or the standard `## Findings` section with `### Critical`, `### Important`, `### Medium`, and `### Minor` subsections populated with findings or `None`.
 - Do not omit severity headings merely because a severity has zero findings; `oat gate review` depends on counts or standard Findings sections to determine whether the review blocks.
 
+```markdown
 ## Summary
 
 {2-3 sentence summary}
@@ -1080,8 +1081,7 @@ Findings: {N} critical, {N} important, {N} medium, {N} minor
 ## Recommended Next Step
 
 Run the `oat-project-review-receive` skill to convert findings into plan tasks.
-
-````
+```
 
 ### Step 8.5: Validate Review Orchestration and Append Root Log
 
@@ -1191,7 +1191,7 @@ else
   [ -f "$PROJECT_PATH/plan.md" ] && git add "$PROJECT_PATH/plan.md"
   git diff --cached --quiet || git commit -m "chore(oat): record {scope} review artifact"
 fi
-````
+```
 
 ### Step 10: Output Summary
 

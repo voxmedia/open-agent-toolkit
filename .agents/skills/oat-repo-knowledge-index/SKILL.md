@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion, Task
 metadata:
-  version: 1.3.1
+  version: 1.3.2
 ---
 
 # Knowledge Base Generation
@@ -358,7 +358,7 @@ Constraints:
 --- stack.md ---
 ```markdown
 <content here>
-````
+```
 
 --- integrations.md ---
 
@@ -366,11 +366,11 @@ Constraints:
 <content here>
 ```
 
-```
+````
 
 **Agent 2: Architecture Focus**
 
-```
+````
 
 subagent_type: "Explore"
 model: "haiku"
@@ -417,11 +417,11 @@ Constraints:
 <content here>
 ```
 
-```
+````
 
 **Agent 3: Quality Focus**
 
-```
+````
 
 subagent_type: "Explore"
 model: "haiku"
@@ -468,11 +468,11 @@ Constraints:
 <content here>
 ```
 
-```
+````
 
 **Agent 4: Concerns Focus**
 
-```
+````
 
 subagent_type: "Explore"
 model: "haiku"
@@ -519,12 +519,14 @@ Constraints:
 ### Step 6: Wait for Agent Completion
 
 **If using Step 5a (direct write):**
+
 - Wait for all 4 mapper agents to complete
 - Each agent writes documents directly to `.oat/repo/knowledge/` and returns a brief confirmation
 - Expected confirmations should indicate which documents were written
 - Proceed to Step 7
 
 **If using Step 5b (read-only):**
+
 - Wait for all 4 mapper agents to complete
 - Each agent returns markdown content in their response
 - Proceed to Step 6b to extract and write files
@@ -535,7 +537,7 @@ If using read-only mode, extract markdown from agent outputs and write to files.
 
 Use Python to extract markdown blocks:
 
-```python
+````python
 import json
 import re
 
