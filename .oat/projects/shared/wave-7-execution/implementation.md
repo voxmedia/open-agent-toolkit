@@ -627,6 +627,24 @@ _Recorded when the configured implementation exit gate runs._
 
 **p13 row → `passed`** (reviewed head `5846efdb0`); group 5 is clear for fan-in.
 
+## Review Received: p18 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p18-review-2026-09-09T065527Z.md (reviewed head `1ce96aa7e355baca9e38d94f363d844edea069a9`, manual, opus)
+**Findings:** Critical 0 · Important 1 · Medium 1 · Minor 5 — PASS with findings. Ruling-2 adjudication: the lane's refusal to write the plan's Step 6 sentence is a JUSTIFIED deviation — `packages/control-plane` is the only workspace package with `format` and no `check`, CI never runs `pnpm format`, and a live probe showed `pnpm check` exit 0 / `pnpm format` exit 1 on a mis-formatted control-plane file; the committed `AGENTS.md` text is exactly true in both directions. No weaker-anywhere regression (script-by-script parse of both `package.json` blobs); all four controls re-run both ways incl. the hook in a scratch clone; gates forced `Cached: 0`; the parked `.mjs` proven unreached by any gate glob.
+
+**Dispositions:**
+
+- I1 — `apps/oat-docs/docs/contributing/code.md:58-61` and `:76-77` still carry the retired coverage claims (no wave-7 lane owns the file): **address-now** (root, at the group-6 fan-in, gated there).
+- M1 — `test:scripts` sits mid-chain and a failure there suppresses `test:skills` and `test:release`: **fix round** (`w7-p18-fix-001`, resumed lane) — placed last.
+- m1 — the `pnpm format` Essential Commands bullet left stale: **fix round** (same commit).
+- m2 — the root glob defined twice: **fix round** (same commit) — `format` reuses `format:root`.
+- m3 — `.oat/repo/knowledge/testing.md` omits the new suite: **address-now** (root, at the fan-in).
+- m4 — sibling wave-7 plans carry a premise that goes stale on merge: **deferred** — the p19/p20 briefs already declare the change; wave-close correction pass.
+- m5 — one mis-formatted `.mjs` under `parked/wave-5-p09/` reached by no gate glob: **accepted** — left byte-exact (its SHA-256 is pinned by the recovery README).
+
+**p18 row → `fixes_added`**; round 2 on the original reviewer handle follows the fix commit.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -719,6 +737,8 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p18-impl-001` outcome: DONE_WITH_CONCERNS (plan text), one commit `1ce96aa7e355baca9e38d94f363d844edea069a9` (three files): `pnpm check` gains `format:root` over the skills, docs, and smoke globs (byte-identical to `format`'s), `pnpm test` gains `test:scripts` after `test:smoke`, lint-staged formats `*.{mjs,cjs}`, `AGENTS.md` re-anchored after p13 with exactly-true coverage text. Four matched controls (unwired green / wired red). The plan's Step 6 sentence ("check now contains everything format checks") is false — `packages/control-plane` has `format` but no `check` — so the lane wrote true text instead (Codex concurred); a control-plane CI-gate gap is a candidate follow-up. Two Codex rounds (R1 1I fixed, 1I rejected as a patch finding; R2 1I closed by running the clean integrated `pnpm test`, 1m fixed). Gates `Cached: 0`. Friction: `git diff | grep -v '^[+-][+-]'` hides changed markdown bullets.
 - `w7-p18-review-001` — reviewer, target opus, seven rulings (gate-widening weaker-anywhere by script; adjudicate the refused plan sentence; the four controls incl. the hook in a scratch clone; `AGENTS.md` confinement; scope; the unreached parked `.mjs`; one adversarial probe). Record `dispatch/w7-p18-review-001.json`.
 - `w7-p17-impl-001` outcome: BLOCKED at the pre-commit gate (no commit; the work green and intact in the worktree, 463 insertions). A differential run of the real old and new scanner reproduced four widenings outside the plan's enumerated set — all produced by steps 4–5's own prescriptions (label percent-decoding; reserved-delimiter decoding; a raw-HTML-block-hidden fence made visible; a comment-blanking artefact manufacturing a definition) — plus three false-rejection classes and a `%252D` bypass. `codex exec` wedged three times (MCP session-expired); two in-harness reviewers substituted. Decision (root, dated refresh): fence machine first and wins; declarations only at an original column 0; the label never percent-decoded; the destination decoded once for unreserved characters only with any remaining `%` a residual; `HTML_BLOCK_OPENER` restricted to CommonMark's conditions; the prospective floor raised to 18; portability of the skill's citation. The lane resumes on its staged work.
+- `w7-p18-review-001` outcome: PASS with findings, 0/1I/1M/5m (the refused plan sentence adjudicated a justified deviation; controls incl. the hook in a scratch clone). I1/m3 → root address-now at the fan-in; M1/m1/m2 → fix round `w7-p18-fix-001`; m4 wave close; m5 accepted.
+- `w7-p18-fix-001` — bounded fix round on the resumed implementer (`test:scripts` last; the format bullet; one root glob). Record `dispatch/w7-p18-fix-001.json`.
 - `w7-p15-review-001` outcome: PASS with findings, 0/0/0/3m (a four-consumer, 14-shape base-vs-head table; convergence proven against a base-built manifest). m1 → root address-now at the fan-in; m2 plan correction applied; m3 `BL-260909-use-handle-bound-traversal` filed; p15 `passed`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
@@ -771,6 +791,8 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- p18 review received (PASS with findings, 0/1I/1M/5m): fix round `w7-p18-fix-001` dispatched; two root address-nows queued for the fan-in; p18 row `fixes_added`.
+- p17 STOP (four unenumerated scanner widenings) closed by a dated plan refresh; lane resumed.
 - p16 parked on a plan STOP (the recorder graph's no-process guard forbids the plan's git seam); partial work preserved under `parked/wave-7-p16/`; dated STOP record in the plan; the item stays open for re-planning.
 - Group 5 fan-in: merges `de8c5b391`, `5d6b0461d`, `5171bf3cf`; address-now `da248f346`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7253). Group 6 (p16 + p17 + p18) bootstraps next.
 - Group 4 fan-in: merges `13705dcdc`, `bb082e505`, `0f1711d88` (the p10 merge body folded for commitlint); lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7209). Group 5 (p13 + p14 + p15) bootstraps next.
