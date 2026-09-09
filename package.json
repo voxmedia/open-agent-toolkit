@@ -10,7 +10,7 @@
     "build": "turbo run build --filter='!oat-docs'",
     "build:docs": "turbo run build --filter=oat-docs...",
     "check": "turbo run check && pnpm oat:validate-skills && pnpm format:root",
-    "check:fix": "turbo run check:fix",
+    "check:fix": "turbo run check:fix && pnpm format:root:fix",
     "clean": "turbo run clean",
     "cli": "bash packages/cli/scripts/bundle-assets.sh && tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts",
     "cli:source": "tsx --tsconfig packages/cli/tsconfig.json packages/cli/src/index.ts",

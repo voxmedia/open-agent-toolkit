@@ -33,6 +33,7 @@ pnpm --filter @open-agent-toolkit/cli test:coverage # CLI coverage report
 pnpm test:smoke                                # Node built-in smoke suites
 pnpm test:skills                               # Node built-in skill suites
 pnpm test:release                              # Node built-in release suites
+pnpm test:scripts                              # Node built-in scripts suites (scripts/worktree)
 ```
 
 ## Test File Organization

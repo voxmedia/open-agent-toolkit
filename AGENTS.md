@@ -22,7 +22,7 @@
 - `pnpm build` - Build all packages and applications (excludes docs for speed)
 - `pnpm build:docs` - Build the docs site and its dependencies
 - `pnpm lint` - Lint code using oxlint per package, plus `oxlint tools/smoke .agents/skills` at the root
-- `pnpm format` - Each workspace package's `format` script, plus `format:root` (oxfmt --check over `.agents/skills/**/*.{md,mjs,js,cjs}`, `apps/oat-docs/docs/**/*.md`, and `tools/smoke/**/*.{mjs,md,json}`); `pnpm check` runs that same `format:root`; use `pnpm format:fix` to auto-fix
+- `pnpm format` - Each workspace package's defined `format` script, plus `format:root` (oxfmt --check over `.agents/skills/**/*.{md,mjs,js,cjs}`, `apps/oat-docs/docs/**/*.md`, and `tools/smoke/**/*.{mjs,md,json}`); `pnpm check` runs that same `format:root`; use `pnpm format:fix` to auto-fix
 - `pnpm type-check` - TypeScript type checking across all packages
 - `pnpm test` - Run tests across the workspace
 
