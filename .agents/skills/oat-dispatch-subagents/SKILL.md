@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read
 metadata:
-  version: 1.2.7
+  version: 1.2.8
 ---
 
 # Dispatching OAT Subagents
@@ -175,7 +175,9 @@ terminal outcome, not a pre-start rejection, and must be recorded through
 `child_outcome`. If you cannot prove the child never existed, you cannot set
 `provesNoChildStarted: true`, and no fallback is authorized.
 
-Project-aware callers pass the validated record and event on standard input:
+The calling workflow records each launch in its own run record (request ID,
+`Dispatch:` stamp, launch status, terminal outcome). Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A host that has opted
+in passes the validated record and event on standard input:
 
 ```bash
 oat project dispatch record \

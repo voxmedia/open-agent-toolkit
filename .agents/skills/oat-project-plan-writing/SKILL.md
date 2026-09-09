@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Write, Glob, Grep
 metadata:
-  version: 1.2.24
+  version: 1.2.25
 ---
 
 # Plan Writing Contract
@@ -261,11 +261,12 @@ unavailable in the current session. Base Codex roles are allowed only for
 explicit inherit/default behavior and the documented managed-uncapped reviewer
 fallback.
 
-Artifact-review launches preserve native dispatch lineage. Construct and
-redact the complete generic record plus OAT role event before the native call.
-Immediately after the call returns `accepted` or `blocked-before-start`, the
-calling project workflow runs `oat project dispatch record --project
-"$PROJECT_PATH" --event-file - --json`. Only a rejection attesting
+Artifact-review launches are recorded in the project's run record. Construct
+and redact the complete generic record plus OAT role event before the native
+call; when the call returns `accepted` or `blocked-before-start`, the calling
+project workflow writes the request ID, the `Dispatch:` stamp, the launch
+status, and later the terminal outcome into its run record in
+`implementation.md`. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. Only a rejection attesting
 `provesNoChildStarted: true` permits one exact-target approximation with a
 fresh request ID. Preserve exact model, effort, route, authority, and provider
 controls. Timeout, `BLOCKED`, refusal after acceptance, runtime mismatch,

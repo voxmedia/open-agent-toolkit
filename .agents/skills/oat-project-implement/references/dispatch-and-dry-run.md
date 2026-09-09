@@ -393,16 +393,17 @@ For gate-originated review, keep `dispatchReport.gateInvocation`, existing
 work-producer `diversity`, and reviewer `runtimeIdentity` as three distinct
 facts; producer stamps or self-report never overwrite configured invocation.
 
-All project-aware launch paths preserve native dispatch lineage. Construct and
-redact the complete generic record plus OAT role event before the native host
-call. Immediately after the call returns `accepted` or
-`blocked-before-start`, run `oat project dispatch record --project
-"$PROJECT_PATH" --event-file - --json`. The rejected form must attest
-`provesNoChildStarted: true`; only it permits one exact-target approximation
-with a fresh request ID. Preserve exact model, effort, reasoning, service tier,
-route, authority, and provider controls. Timeout, `BLOCKED`, refusal after
-acceptance, runtime mismatch, missing telemetry, interruption, or malformed
-output never authorizes fallback or replacement.
+All project-aware launch paths record the launch in the project's run record.
+Construct and redact the complete generic record plus OAT role event before the
+native host call; when the call returns `accepted` or `blocked-before-start`,
+write the request ID, the `Dispatch:` stamp, the launch status, and later the
+terminal outcome into the run record in `implementation.md`. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A rejected
+launch must attest `provesNoChildStarted: true`; only it permits one
+exact-target approximation with a fresh request ID. Preserve exact model,
+effort, reasoning, service tier, route, authority, and provider controls.
+Timeout, `BLOCKED`, refusal after acceptance, runtime mismatch, missing
+telemetry, interruption, or malformed output never authorizes fallback or
+replacement.
 
 Axis states:
 

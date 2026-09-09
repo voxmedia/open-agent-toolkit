@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Glob, Grep, Write, Edit, Bash(git:*), Bash(oat:*), Bash(pnpm:*), Bash(mkdir:*), Bash(date:*), Bash(realpath:*), Bash(awk:*), AskUserQuestion
 metadata:
-  version: 1.5.7
+  version: 1.5.8
 ---
 
 # Request Review
@@ -751,15 +751,15 @@ After constructing the complete provider payload, record the launcher-owned
 missing telemetry, missing reviewer self-report, or contradictory self-report
 must not populate, replace, or overwrite them and must not trigger fallback.
 
-Persist native dispatch lineage around the host-owned review launch. Construct
-and redact the complete generic record plus OAT role event before the native
-call. Immediately after the call returns `accepted` or
-`blocked-before-start`, run `oat project dispatch record --project
-"$PROJECT_PATH" --event-file - --json`. The rejected form must attest
-`provesNoChildStarted: true`; only it permits one exact-target approximation
-with a fresh request ID. Preserve the exact model, effort, route, authority,
-and provider controls. Timeout, `BLOCKED`, refusal after acceptance, runtime
-mismatch, missing telemetry, interruption, and malformed output never
+Record the launch in the project's run record. Construct and redact the
+complete generic record plus OAT role event before the native call; when the
+call returns `accepted` or `blocked-before-start`, write the request ID, the
+`Dispatch:` stamp, the launch status, and later the terminal outcome into the
+run record for this review in `implementation.md`. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A rejected launch must
+attest `provesNoChildStarted: true`; only it permits one exact-target
+approximation with a fresh request ID. Preserve the exact model, effort, route,
+authority, and provider controls. Timeout, `BLOCKED`, refusal after acceptance,
+runtime mismatch, missing telemetry, interruption, and malformed output never
 authorize fallback or replacement.
 
 Once the native host accepts a reviewer, every terminal result is an
