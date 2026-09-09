@@ -447,4 +447,88 @@ describe('project-log lifecycle integration', () => {
       ),
     ).rejects.toMatchObject({ code: 'ENOENT' });
   });
+
+  it('leaves exactly one seal when a pre-archive interruption resumes', async () => {
+    const fixture = await createFixture(tempDirs);
+    await writeSummary(fixture);
+    await appendGeneralObservation(fixture);
+
+    await expect(
+      runLogCommand(fixture.root, 'synthesize', ['--body', 'Synthesized.']),
+    ).resolves.toMatchObject({ exitCode: 0 });
+    await expect(
+      runLogCommand(fixture.root, 'rollup', []),
+    ).resolves.toMatchObject({ payload: { status: 'ok' }, exitCode: 0 });
+
+    // First completion attempt: the log is sealed, then the run dies before
+    // the archive — the interruption that parked wave-5 p09.
+    const sealKey = `oat-seal:${PROJECT_NAME}`;
+    const sealArgs = (timestamp: string): string[] => [
+      '--structural',
+      '--producer',
+      'oat-project-complete',
+      '--ref',
+      'seal',
+      '--idempotency-key',
+      sealKey,
+      '--body',
+      `Completion sealed at ${timestamp}; project-log roll-up status: ok. ${sealKey}`,
+    ];
+
+    await expect(
+      runLogCommand(fixture.root, 'append', sealArgs('2026-07-17T10:00:00Z')),
+    ).resolves.toMatchObject({
+      payload: { status: 'appended' },
+      exitCode: 0,
+    });
+
+    const afterFirstSeal = await readFile(fixture.logPath, 'utf8');
+
+    // The resume re-enters Step 3.7: the probe now reports the seal.
+    const probe = await runLogCommand(fixture.root, 'check', []);
+    expect(probe).toMatchObject({
+      payload: { sealed: true, seal: { keyed: true, count: 1 } },
+      exitCode: 0,
+    });
+
+    // Replaying the seal with a fresh timestamp is a no-op.
+    await expect(
+      runLogCommand(fixture.root, 'append', sealArgs('2026-07-17T13:45:00Z')),
+    ).resolves.toMatchObject({
+      payload: { status: 'already-appended' },
+      exitCode: 0,
+    });
+
+    // And a retirement-sweep disposition on the resumed run is refused rather
+    // than silently landing after the seal.
+    await expect(
+      runLogCommand(fixture.root, 'append', [
+        '--structural',
+        '--producer',
+        'oat-project-complete',
+        '--ref',
+        'retirement-sweep',
+        '--body',
+        'Retirement sweep: a finding raised on the resumed run.',
+      ]),
+    ).resolves.toMatchObject({
+      payload: { status: 'sealed' },
+      exitCode: 1,
+    });
+
+    const resumedLog = await readFile(fixture.logPath, 'utf8');
+    expect(resumedLog).toBe(afterFirstSeal);
+    expect(
+      resumedLog.split('· structural · oat-project-complete · seal').length - 1,
+      'a resumed completion leaves exactly one seal entry',
+    ).toBe(1);
+
+    // The seal is still the log's final entry, and the promoted observation
+    // that preceded it survived.
+    expect(
+      resumedLog.lastIndexOf('· structural · oat-project-complete · seal'),
+    ).toBeGreaterThan(
+      resumedLog.lastIndexOf('· general · friction · portable lifecycle'),
+    );
+  });
 });

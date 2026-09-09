@@ -56,3 +56,60 @@ export function composeStructuralHeading(input: {
 }): string {
   return `### ${input.date} · structural · ${input.producer} · ${input.ref}`;
 }
+
+/**
+ * The producer and ref that together identify the completion seal — the last
+ * entry a project log may ever receive.
+ *
+ * Both fields are required. A `seal` ref from another producer is an ordinary
+ * structural entry, and an `oat-project-complete` entry with another ref is an
+ * ordinary lifecycle entry; treating either as a seal would let a foreign
+ * append freeze a log that was never completed.
+ */
+export const PROJECT_LOG_SEAL_PRODUCER = 'oat-project-complete';
+export const PROJECT_LOG_SEAL_REF = 'seal';
+
+/**
+ * The prefix of the seal's idempotency token (`oat-seal:<project>`).
+ *
+ * The token is what makes a replayed seal recognize its own entry, so it is
+ * prefixed rather than bare: a project name alone could occur in ordinary prose
+ * and match an unrelated body.
+ */
+export const PROJECT_LOG_SEAL_KEY_PREFIX = 'oat-seal:';
+
+/**
+ * The single definition of "this entry is the completion seal", shared by the
+ * `check` probe and the `append` guard.
+ *
+ * Both callers route on this one predicate on purpose: two definitions of
+ * sealed is the regression that lets a log report itself unsealed to one
+ * command and sealed to the other.
+ */
+export function isProjectLogSealEntry(entry: {
+  producer: string;
+  ref: string;
+}): boolean {
+  return (
+    entry.producer === PROJECT_LOG_SEAL_PRODUCER &&
+    entry.ref === PROJECT_LOG_SEAL_REF
+  );
+}
+
+/**
+ * Whether a seal body carries the canonical stand-alone seal token.
+ *
+ * `idempotencyToken` records the whole whitespace-delimited word containing a
+ * key, so a key glued to the varying completion timestamp never matches its own
+ * earlier append. A seal written before this convention carries no token at
+ * all, which is exactly why the seal is also recognized structurally.
+ */
+export function carriesProjectLogSealKey(body: string): boolean {
+  return body
+    .split(/\s+/)
+    .some(
+      (word) =>
+        word.startsWith(PROJECT_LOG_SEAL_KEY_PREFIX) &&
+        word.length > PROJECT_LOG_SEAL_KEY_PREFIX.length,
+    );
+}

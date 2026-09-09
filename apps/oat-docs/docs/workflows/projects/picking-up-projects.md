@@ -99,6 +99,24 @@ If closeout is interrupted after terminal archive identity exists, rerun
 completion so it can resume from the completed ref and archive metadata. Do not
 use `pull` or `open` to recreate an active record or checkout.
 
+For a `shared` project, archive moves the project into
+`.oat/projects/archived/<project>/` and removes the source directory, while
+completion keeps the `activeProject` pointer until the receipt validates.
+Rerunning completion after an interruption between the archive and that clear
+recognizes exactly this state — the pointer names a source directory that no
+longer exists and the archive carries `oat_lifecycle: complete` plus the
+`Lifecycle complete; archived locally` phase marker — so it validates the
+discovered archive and clears the pointer without archiving a second time or
+sealing the project log again. An interruption before the archive leaves the
+source directory in place, so completion simply reruns from the start and skips
+the work it already finished.
+
+If the archive cannot be discovered — the source directory is gone and either
+no archived project or several match the name — completion stops and leaves the
+pointer untouched. Recover manually: locate the archive directory under
+`.oat/projects/archived/`, confirm `oat_lifecycle: complete` in its `state.md`,
+then clear the pointer with `oat config set activeProject ""`.
+
 ## Related
 
 - [Reviewing OAT PRs](reviewing-oat-prs.md)

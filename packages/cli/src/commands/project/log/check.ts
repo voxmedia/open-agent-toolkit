@@ -16,8 +16,10 @@ import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import {
+  carriesProjectLogSealKey,
   findProjectLogSections,
   isProjectLogEntryMarker,
+  isProjectLogSealEntry,
   JUDGMENT_HEADING_RE,
   PROJECT_LOG_TYPES,
   STRUCTURAL_HEADING_RE,
@@ -31,8 +33,31 @@ export const SYNTHESIS_PENDING_HEADING =
   '## End-of-run synthesis (pending — do not skip at project completion)';
 export const SYNTHESIS_COMPLETE_HEADING = '## End-of-run synthesis';
 
+/**
+ * The completion seal a project log already carries.
+ *
+ * `count` is reported rather than collapsed so a log double-sealed before the
+ * seal append became idempotent stays legible instead of looking like a normal
+ * single-sealed log; `heading` is always the **first** seal, which is the one
+ * that actually closed the log.
+ */
+export interface ProjectLogSeal {
+  heading: string;
+  date: string;
+  keyed: boolean;
+  count: number;
+}
+
 export interface ProjectLogCheckResult {
+  /**
+   * Unchanged on purpose. `oat-project-complete/SKILL.md` and
+   * `oat-project-summary/SKILL.md` both route on this union, so a sealed log
+   * reports its existing status and carries `sealed` alongside it; a fourth
+   * value would break every `status: "ok"` route in both skills.
+   */
   status: 'ok' | 'absent' | 'synthesis_pending';
+  sealed: boolean;
+  seal: ProjectLogSeal | null;
   logPath: string | null;
   entryCounts: {
     structural: number;
@@ -214,6 +239,40 @@ export function parseProjectLogEntries(content: string): ParsedProjectLog {
   return { entries, grammarViolations };
 }
 
+/**
+ * Summarizes the completion seal carried by already-parsed entries.
+ *
+ * Seal identity is `isProjectLogSealEntry` and nothing else, so `check` and
+ * `append` cannot drift apart on what "sealed" means.
+ */
+export function summarizeProjectLogSeal(
+  entries: readonly ParsedProjectLogEntry[],
+): ProjectLogSeal | null {
+  const seals = entries.filter(
+    (entry) => entry.class === 'structural' && isProjectLogSealEntry(entry),
+  );
+  const first = seals[0];
+  if (first === undefined) {
+    return null;
+  }
+  return {
+    heading: first.heading,
+    date: first.date,
+    keyed: carriesProjectLogSealKey(first.body),
+    count: seals.length,
+  };
+}
+
+/**
+ * Finds the completion seal in raw project-log content.
+ *
+ * `append` uses this so its refusal and `check`'s report are the same reading
+ * of the same file.
+ */
+export function findProjectLogSeal(content: string): ProjectLogSeal | null {
+  return summarizeProjectLogSeal(parseProjectLogEntries(content).entries);
+}
+
 async function resolveTargetProject(
   input: CheckProjectLogInput,
   dependencies: CheckProjectLogDependencies,
@@ -252,6 +311,8 @@ export async function checkProjectLog(
   if (!(await fileExists(logPath))) {
     return {
       status: 'absent',
+      sealed: false,
+      seal: null,
       logPath: null,
       ...emptyCounts(),
       lastEntryDate: null,
@@ -275,8 +336,12 @@ export async function checkProjectLog(
     ({ heading }) => heading === SYNTHESIS_PENDING_HEADING,
   );
 
+  const seal = summarizeProjectLogSeal(parsed.entries);
+
   return {
     status: synthesisPending ? 'synthesis_pending' : 'ok',
+    sealed: seal !== null,
+    seal,
     logPath,
     ...counts,
     lastEntryDate: parsed.entries.at(-1)?.date ?? null,
@@ -313,6 +378,14 @@ async function runCheckCommand(
                 (total, type) => total + result.entryCounts.judgment[type],
                 0,
               )
+            }${
+              result.seal
+                ? `; sealed${
+                    result.seal.count > 1
+                      ? ` (${result.seal.count} seal entries)`
+                      : ''
+                  }`
+                : ''
             }`,
       );
     }

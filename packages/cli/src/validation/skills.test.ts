@@ -3027,7 +3027,7 @@ describe('validateOatSkills', () => {
       ['.agents/agents/oat-reviewer.md', '1.2.3'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.6'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.3'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.4'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.5'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.3'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.4'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.11'],
@@ -7735,7 +7735,7 @@ describe('lite mode skill contracts', () => {
     expect(liteSummarySources.replace('`Assumptions`', '')).not.toContain(
       '`Assumptions`',
     );
-    expect(readDeclaredVersion(summary)).toBe('1.5.4');
+    expect(readDeclaredVersion(summary)).toBe('1.5.5');
     expect(readDeclaredVersion(document)).toBe('1.8.3');
   });
 
