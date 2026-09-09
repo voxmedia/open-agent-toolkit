@@ -676,6 +676,21 @@ _Recorded when the configured implementation exit gate runs._
 
 **p17 row → `fixes_added`**; round 2 on the original reviewer handle follows the fix commit.
 
+## Review Received: p17 (round 2 — passed)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p17-review-2026-09-09T082145Z.md (reviewed head `9eeecf9db74002158ded54844228e98219666185`, manual, opus)
+**Findings:** 0 · 0 · 0 · 3 minor — PASS. Verification records: the 50,625-document sweep re-run against the fix head classifies all 58 widening shapes as 4 × (a) and 54 × (d) with none unexplained; the decoding property check gives 0 mismatches in 580,800 combinations against a CommonMark-bounded independent renderer; four controls red under mutation (each kill attributed exactly by rebuilding the mutations as scratch modules — removing the transparency rule flips the (d) witness AND the K1 control, so it is load-bearing) and the file restored SHA-256-checked; `HIDDEN_FILL` is read nowhere (`.hidden` consumed once); an author form feed is reject → reject; the over-long references are rejected in both label and destination; append-only (one commit, one file, no lockstep file); forced test/check/type-check/lint `Cached: 0` (cli 7257); corpus `modes` byte-identical. **Codex ran on the fix diff** (one run, ~230 s, no resume): 0 Critical / 1 Important, and explicit NONE for out-of-enumeration widenings, acceptance changes from the new violation, and regex bugs — its one finding (CRLF: `<!-- c -->\r` is not counted as fully hidden, so (d) does not apply on CRLF input) reproduces and is down-rated to Minor because the base rejects the same document (fail-closed, not a widening, not a regression).
+
+**Dispositions (round 2 Minors):**
+
+- m1 — CRLF: a whole-line comment terminated by `\r` is not fully hidden, so widening (d) does not apply on CRLF input (fail-closed): **deferred** (closeout ledger; polish).
+- m2 — `hasUnresolvedDestination` was inserted between `linksToItsSource`'s JSDoc and its function, leaving that function undocumented and two doc blocks stacked on the new helper: **deferred** (closeout ledger; polish).
+- m3 — the plan's amended-mechanism preamble still read "exactly the two enumerated widenings" while the same paragraph enumerates (a)–(d): **fixed now** (root, ROOT plan copy: the clause now reads "exactly the enumerated widenings — (a)–(b) when this paragraph was written, (a)–(d) after the two additions below; wording aligned 2026-09-09 after the round-2 review").
+- Reviewer note (no finding): the (d) "comment-deleted twin" passes under both mutations — it documents rendered-text equivalence but cannot fail; the capable pin is the minimal witness. Recorded so nobody later cites the twin as a control.
+
+**p17 row → `passed`** (reviewed head `9eeecf9db`); p17 is clear for fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -778,6 +793,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p17-fix-001` — bounded fix round on the resumed implementer (out-of-band hiding; the decoder bound; the residual message; the class-(d) control; one Codex retry). Record `dispatch/w7-p17-fix-001.json`.
 - `w7-p17-fix-001` outcome: fix commit `9eeecf9db` on `4db81ebfd` (one file, +180/−25): out-of-band `RenderedLine { text, hidden }`, bounded character references (`&#\d{1,7};` / `&#[xX][0-9a-fA-F]{1,6};`), `UNRESOLVED_DESTINATION_VIOLATION`, the class-(d) control; 79-row differential flips only in (a)–(d); corpus byte-identical; gates `Cached: 0`. The lane's Codex retry stalled twice (fresh + same-session resume), so the fix diff has no cross-model coverage — the round-2 reviewer is asked to supply it.
 - `w7-p17-review-002` — disposition-verification round 2 on the original reviewer handle (sweep against the fix head; four controls under mutation; `HIDDEN_FILL` no longer read as hidden-ness; one Codex attempt on the fix diff). Record `dispatch/w7-p17-review-002.json`.
+- `w7-p17-review-002` outcome: PASS (fan-in may proceed), 0/0/0/3m; Codex covered the fix diff (1 Important reproduced and down-rated: CRLF fail-closed); the plan preamble's stale "two enumerated widenings" clause aligned by the root; two polish items deferred to the closeout ledger.
 - `w7-p18-review-002` outcome: PASS (fan-in may proceed), 0/0/0/2m; the `format:fix` refactor and the `pnpm lint` bullet adjudicated licensed; two one-line root address-nows queued for the fan-in.
 - `w7-p15-review-001` outcome: PASS with findings, 0/0/0/3m (a four-consumer, 14-shape base-vs-head table; convergence proven against a base-built manifest). m1 → root address-now at the fan-in; m2 plan correction applied; m3 `BL-260909-use-handle-bound-traversal` filed; p15 `passed`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
