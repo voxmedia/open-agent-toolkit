@@ -72,9 +72,13 @@ Failure to publish a backlog item or issue does not invalidate a successfully wr
 
 Full repository audits use bounded read-only reconnaissance while the root
 agent retains classification, vetting, prioritization, cross-lane synthesis,
-and plan writing. Before launch, the caller loads the durable task classes and
-model-selection principles from `subagent-orchestration` plus exactly one
-active-provider selection reference.
+and plan writing. Plan writes never move below the caller's model class — a
+parallelized author runs on the caller's model and every plan is
+caller-reviewed before publication or wave composition; the
+`keeps external-plan writes on the caller's model class` case in
+`skills-bundled-docs-contract.test.ts` is the backstop. Before launch, the
+caller loads the durable task classes and model-selection principles from
+`subagent-orchestration` plus exactly one active-provider selection reference.
 
 The internal `oat-dispatch-subagents` skill then owns capability checks, live
 catalog intersection, exact route selection, launch acceptance, recovery, and

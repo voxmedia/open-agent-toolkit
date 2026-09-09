@@ -93,6 +93,7 @@ function readSnapshotFixture(name: string): string {
 }
 
 const REPO_IMPROVE_SKILL = join(SKILLS_DIR, 'oat-repo-improve', 'SKILL.md');
+const WAVE_EXECUTE_SKILL = join(SKILLS_DIR, 'oat-wave-execute', 'SKILL.md');
 const PLAN_TEMPLATE = join(
   SKILLS_DIR,
   'oat-repo-improve',
@@ -2925,6 +2926,39 @@ describe('skills bundled docs contract', () => {
     // A single shared root would silently break a mixed-scope install.
     expect(content).not.toMatch(
       /\$\{SKILLS_ROOT\}\/(?:oat-dispatch-subagents|subagent-orchestration)/,
+    );
+  });
+
+  it("keeps external-plan writes on the caller's model class", () => {
+    const collapse = (text: string): string => text.replace(/\s+/g, ' ');
+    const repoImprove = collapse(readFileSync(REPO_IMPROVE_SKILL, 'utf8'));
+    const waveExecute = collapse(readFileSync(WAVE_EXECUTE_SKILL, 'utf8'));
+
+    // (a) the existing caller-retains sentence, pinned so it cannot be reworded
+    expect(repoImprove).toMatch(
+      /The caller retains decomposition, synthesis, user dialogue, source verification, candidate selection, and all plan writes\./,
+    );
+    // (b) the operative rule
+    expect(repoImprove).toMatch(
+      /Plan writes are never delegated below the caller's own model class\./,
+    );
+    // (c) parallel authoring stays same-model and caller-reviewed
+    expect(repoImprove).toMatch(
+      /If authoring is parallelized, the author subagent runs on the same model as the caller, and the caller reviews every plan before publication or wave composition\./,
+    );
+    // (d) reconnaissance may be cheaper; plan writes may not
+    expect(repoImprove).toMatch(
+      /Reconnaissance lanes may run on cheaper classes; plan writes may not\./,
+    );
+    // (e) the claim names this case as its backstop (DR-260906)
+    expect(repoImprove).toMatch(
+      /`keeps external-plan writes on the caller's model class` case in `packages\/cli\/src\/commands\/init\/tools\/shared\/skills-bundled-docs-contract\.test\.ts`/,
+    );
+    // (f) the success criterion
+    expect(repoImprove).toMatch(/Plan writes stay on the caller's model class/);
+    // (g) oat-wave-execute mirrors the rule for the amendments it authors
+    expect(waveExecute).toMatch(
+      /are plan writes and stay on the orchestrator's own model class/,
     );
   });
 

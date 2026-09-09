@@ -134,7 +134,13 @@ from
 the matching mechanics reference from
 `${DISPATCH_SKILLS_ROOT}/oat-dispatch-subagents/references/`. The caller retains
 decomposition, synthesis, user dialogue, source verification, candidate
-selection, and all plan writes.
+selection, and all plan writes. Plan writes are never delegated below the
+caller's own model class. If authoring is parallelized, the author subagent
+runs on the same model as the caller, and the caller reviews every plan before
+publication or wave composition. Reconnaissance lanes may run on cheaper
+classes; plan writes may not. The executable backstop is the
+`keeps external-plan writes on the caller's model class` case in
+`packages/cli/src/commands/init/tools/shared/skills-bundled-docs-contract.test.ts`.
 
 Probe capability before long-running work and classify it as `available`, `authorization-required`, or `unresolved-or-unsupported`. If authorization is required, ask once for all read-only reconnaissance lanes in this run and lock that decision.
 
@@ -346,3 +352,4 @@ Audit the repository for security and test improvements, then let me choose what
 - GitHub publication is previewed, visibility-checked, and explicitly confirmed once per run.
 - Project-sized candidates are split or escalated instead of emitted as mega-plans.
 - Final guidance distinguishes direct execution from optional `oat-project-import-plan` handoff.
+- Plan writes stay on the caller's model class: a parallelized author subagent runs on the caller's model and the caller reviews every plan before publication or wave composition.
