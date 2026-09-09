@@ -203,15 +203,19 @@ resolution. `resolveSkillVersion` in
 `packages/cli/src/commands/shared/frontmatter.ts` owns that order, so the
 runtime helper and the validators cannot disagree.
 
-The top-level `version` field remains supported as a deprecated alias. Every
-bundled skill now declares `metadata.version` and carries no top-level
-`version`, so `pnpm oat:validate-skills` reports no alias warnings on the
-bundled tree. The alias is retained for third-party skills installed from
-packs, which may still carry it; it retires on the schedule recorded in
-`DR-260908-bundled-skills-declare` — the warning becomes an error in the first
-release after 0.2.65 that changes the validator, and the resolver's top-level
-read is removed one release after that error has produced no findings on the
-bundled tree.
+The top-level `version` field remains supported as a deprecated alias, and a
+skill that declares it is now reported as an **error**. Every bundled skill
+declares `metadata.version` and carries no top-level `version`, so
+`pnpm oat:validate-skills` reports no alias findings on the bundled tree. The
+alias is still read for third-party skills installed from packs, which may
+carry it; it retires on the schedule recorded in
+`DR-260908-bundled-skills-declare`. Step 1 of that schedule — promoting the
+alias finding from a warning to an error — ships in the first release after
+0.2.65 that changes the validator. Step 2 removes the resolver's top-level read
+one release after that error has produced no findings on the bundled tree; it
+is tracked by `BL-260908-remove-the-top-level-skill` and must account for the
+canonical agent roles, which the bump gate now enforces while they still
+declare the top-level field.
 
 A skill that carries both fields with different values is a conflict. The
 resolver reports the `metadata.version` value together with the conflict, and
@@ -220,7 +224,7 @@ than silently picking one, and canonical role resolution treats the identity as
 invalid. The runtime version readers still return the `metadata.version` value,
 so an installed-versus-bundled comparison keeps working while the conflict is
 being fixed. Carrying both with the _same_ value resolves without a conflict and
-without an alias warning, because `metadata.version` wins. A bundled skill must
+without an alias finding, because `metadata.version` wins. A bundled skill must
 still carry `metadata.version` alone: the corpus sweep in
 `packages/cli/src/validation/skills.test.ts` fails on any column-0 `version:`
 line under `.agents/skills`, which is the only check that catches the
@@ -228,16 +232,24 @@ same-value case.
 
 ### The version is gated
 
-Changing any canonical skill's `SKILL.md` requires bumping its frontmatter
-version in the same PR — one bump per changed skill in the final PR diff,
-even if the skill was edited multiple times on the branch. The gate reads the
-resolved version, so it enforces the bump whether the skill declares
+Changing any bundled file of a canonical skill — anything under
+`.agents/skills/<name>/` except `tests/`, because `tests/` is the one subtree
+the bundle strips — requires bumping that skill's `metadata.version` in the
+same PR, one bump per changed skill in the final PR diff, even if the skill was
+edited multiple times on the branch. A change to a skill's `scripts/` or
+`references/` therefore needs the bump just as an edit to `SKILL.md` does: both
+ship to every `oat tools install` consumer. Changing a canonical agent role
+under `.agents/agents/*.md` requires bumping that file's top-level `version:`;
+agent roles deliberately keep the top-level field, so the gate accepts either
+declaration shape and never demands `metadata.version` of them. The gate reads
+the resolved version, so it enforces the bump whether the file declares
 `metadata.version` or the top-level alias. The rule is enforced by
 `pnpm run check:skill-bumps`, which runs locally (root `AGENTS.md` Definition
 of Done) and in CI; a changed skill whose version matches `origin/main` fails
-the gate. The deprecation warning above is deliberately not part of that gate:
-`check:skill-bumps` fails on any finding it receives, so an alias warning
-routed through it would fail every changed skill that still carried one.
+the gate. The alias finding above is deliberately not part of that gate:
+`check:skill-bumps` fails on any finding it receives regardless of severity, so
+an alias finding routed through it would fail every changed skill that still
+carried one.
 
 ## Practical Authoring Flow
 
