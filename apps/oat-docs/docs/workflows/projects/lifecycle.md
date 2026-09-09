@@ -195,8 +195,10 @@ carries a seal runs report-only and appends nothing.
 A resume detects that seal from `oat project log check`, which reports a
 `sealed` field, rather than by re-reading the log. The invariant is enforced in
 the CLI: replaying the seal reports `already-appended` and leaves exactly one
-seal entry, and any other append onto a sealed log is refused with
-`status: "sealed"` and a non-zero exit.
+seal entry; a replay recognized by its own idempotency key reports
+`already-appended` even on a sealed log (nothing is appended), and every
+append carrying new content is refused with `status: "sealed"` and a non-zero
+exit.
 
 Repositories that never adopted PJM skip the sweep with a one-line note. A
 missing planning surface degrades the sweep, never the closeout.
