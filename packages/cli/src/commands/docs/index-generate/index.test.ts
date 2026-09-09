@@ -9,7 +9,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
@@ -20,7 +20,7 @@ import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { GenerateIndexOptions } from './generator';
+import type { GenerateIndexOptions, IndexEntry } from './generator';
 import {
   createDocsGenerateIndexCommand,
   GENERATED_INDEX_WARNING,
@@ -67,6 +67,8 @@ interface HarnessOptions {
   files?: Record<string, string>;
   /** Replaces the default no-symlink `realpath` stub. */
   realpath?: (path: string) => Promise<string>;
+  /** Entries the mocked generator returns. Defaults to a single page. */
+  entries?: IndexEntry[];
 }
 
 function createHarness(options: HarnessOptions = {}) {
@@ -90,12 +92,16 @@ function createHarness(options: HarnessOptions = {}) {
   const indexedDirs: string[] = [];
   const requestedExcludes: string[][] = [];
 
+  const entries: IndexEntry[] = options.entries ?? [
+    { title: 'Home', path: 'index.md', description: 'Welcome' },
+  ];
+
   const readOatConfigMock = vi.fn(async () => structuredClone(config));
   const generateIndexMock = vi.fn(
     async (docsDir: string, generateOptions: GenerateIndexOptions) => {
       indexedDirs.push(docsDir);
       requestedExcludes.push(generateOptions.excludes ?? []);
-      return [{ title: 'Home', path: 'index.md', description: 'Welcome' }];
+      return structuredClone(entries);
     },
   );
   const writeOatConfigMock = vi.fn(
@@ -798,6 +804,99 @@ describe('createDocsGenerateIndexCommand', () => {
       const payload = capture.jsonPayloads[0] as { docsDirSource: string };
       expect(payload.docsDirSource).toBe('flag');
     });
+
+    it('reports the effective excludes in the JSON payload', async () => {
+      const { capture, command, requestedExcludes } = createHarness({
+        config: {
+          version: 1,
+          documentation: {
+            root: 'apps/docs',
+            tooling: 'fumadocs',
+            excludes: ['CLAUDE.md', ' drafts/** '],
+          },
+        },
+      });
+
+      await runCommand(
+        command,
+        ['--exclude', 'CLAUDE.md', '--exclude', 'private/**'],
+        ['--json'],
+      );
+
+      const payload = capture.jsonPayloads[0] as { excludes: string[] };
+      // Merged, trimmed, de-duplicated, first-seen order: exactly the list
+      // handed to the generator, so the payload can be read as the reason a
+      // page is missing.
+      expect(payload.excludes).toEqual([
+        'CLAUDE.md',
+        'drafts/**',
+        'private/**',
+      ]);
+      expect(requestedExcludes[0]).toEqual(payload.excludes);
+    });
+
+    it('names the exclusions when they leave the manifest empty', async () => {
+      const { capture, command, writtenFiles } = createHarness({
+        config: {
+          version: 1,
+          documentation: {
+            root: 'apps/docs',
+            tooling: 'fumadocs',
+            excludes: ['**/*.md'],
+          },
+        },
+        entries: [],
+      });
+
+      await runCommand(command, []);
+
+      const output = capture.info.join('\n');
+      expect(output).toContain('Generated index with 0 entries');
+      expect(output).toContain('exclusion pattern');
+      expect(output).toContain('**/*.md');
+      expect(output).not.toContain('no indexable pages');
+      // The command cannot know a pattern actually matched anything -- an empty
+      // tree with a pattern that matched nothing reaches this branch too -- so
+      // the line must point at the exclusions without blaming them.
+      expect(output).not.toContain('left the manifest empty');
+      // A report, not a failure: the file is still written, so a stale manifest
+      // is never left behind, and the run still succeeds.
+      expect(writtenFiles).toHaveLength(1);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('says the tree was empty when no exclusions are configured', async () => {
+      const { capture, command, writtenFiles } = createHarness({ entries: [] });
+
+      await runCommand(command, []);
+
+      const output = capture.info.join('\n');
+      expect(output).toContain('Generated index with 0 entries');
+      expect(output).toContain('no indexable pages');
+      expect(output).not.toContain('exclusion pattern');
+      expect(writtenFiles).toHaveLength(1);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('adds no empty-manifest line when pages were indexed', async () => {
+      const { capture, command } = createHarness({
+        config: {
+          version: 1,
+          documentation: {
+            root: 'apps/docs',
+            tooling: 'fumadocs',
+            excludes: ['CLAUDE.md'],
+          },
+        },
+      });
+
+      await runCommand(command, []);
+
+      const output = capture.info.join('\n');
+      expect(output).toContain('Generated index with 1 entries');
+      expect(output).not.toContain('exclusion pattern');
+      expect(output).not.toContain('no indexable pages');
+    });
   });
 
   describe('real filesystem end-to-end', () => {
@@ -1136,10 +1235,32 @@ describe('createDocsGenerateIndexCommand', () => {
   });
 
   describe('symlink chain and configured-root tolerance', () => {
+    /**
+     * Absolute paths the chain harness treats as ordinary, already-real
+     * directories. Anything else is unresolvable, which is what drives
+     * `canonicalize` into its parent-first link walk.
+     */
+    const CHAIN_REAL_PATHS = [
+      REPO_ROOT,
+      `${REPO_ROOT}/apps/docs`,
+      `${REPO_ROOT}/apps/docs/docs`,
+    ];
+
     function createChainHarness(
       overrides: {
         readLinkIfSymlink?: (path: string) => Promise<string | null>;
         realpath?: (path: string) => Promise<string>;
+        /**
+         * Makes exactly this path the head of an endless symlink chain: it is
+         * the only real path that stops resolving, and only it and the
+         * `link-*` hops it spawns are symlinks. Every other candidate resolves
+         * normally, so a case built this way exercises exactly one
+         * `canonicalize` caller. The older shape -- `realpath` always ENOENT
+         * and every candidate a link -- tripped the cap on whichever path was
+         * canonicalized first, which is the docs directory, whatever flag the
+         * case passed.
+         */
+        chainTarget?: string;
       } = {},
     ) {
       const capture = createLoggerCapture();
@@ -1152,6 +1273,8 @@ describe('createDocsGenerateIndexCommand', () => {
         error.code = 'ENOENT';
         throw error;
       };
+
+      let hop = 0;
 
       const command = createDocsGenerateIndexCommand({
         buildCommandContext: (
@@ -1179,9 +1302,29 @@ describe('createDocsGenerateIndexCommand', () => {
             ),
           ),
           readFileIfPresent: vi.fn(async () => null),
-          realpath: vi.fn(overrides.realpath ?? (async () => enoent())),
+          realpath: vi.fn(
+            overrides.realpath ??
+              (overrides.chainTarget === undefined
+                ? async () => enoent()
+                : async (path: string) => {
+                    if (
+                      path !== overrides.chainTarget &&
+                      CHAIN_REAL_PATHS.includes(path)
+                    ) {
+                      return path;
+                    }
+                    return enoent();
+                  }),
+          ),
           readLinkIfSymlink: vi.fn(
-            overrides.readLinkIfSymlink ?? (async () => null),
+            overrides.readLinkIfSymlink ??
+              (overrides.chainTarget === undefined
+                ? async () => null
+                : async (path: string) =>
+                    path === overrides.chainTarget ||
+                    basename(path).startsWith('link-')
+                      ? `link-${hop++}`
+                      : null),
           ),
         },
       });
@@ -1190,18 +1333,66 @@ describe('createDocsGenerateIndexCommand', () => {
     }
 
     it('fails closed when the symlink chain exceeds the hop cap', async () => {
-      // Every candidate is a link to a fresh name, so the chain never resolves.
-      let hop = 0;
+      // Reshaped so the chain is on the *output* path alone. Before the role
+      // was threaded through `canonicalize`, this case tripped the cap on the
+      // derived docs directory while appearing to exercise `--output`; it now
+      // pins the `--output` advice for the caller that actually owns it.
       const { capture, command, generateIndexMock, writeFileMock } =
         createChainHarness({
-          readLinkIfSymlink: async () => `link-${hop++}.md`,
+          chainTarget: `${REPO_ROOT}/apps/docs/manifest.md`,
         });
 
       await runCommand(command, ['--output', 'apps/docs/manifest.md']);
 
       expect(generateIndexMock).not.toHaveBeenCalled();
       expect(writeFileMock).not.toHaveBeenCalled();
-      expect(capture.error.join('\n')).toContain('symlink chain');
+      const message = capture.error.join('\n');
+      expect(message).toContain('symlink chain');
+      expect(message).toContain(`${REPO_ROOT}/apps/docs/manifest.md`);
+      expect(message).toContain('Pass --output');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('names the derived docs directory and its config repair at the hop cap', async () => {
+      const { capture, command, generateIndexMock, writeFileMock } =
+        createChainHarness({
+          chainTarget: `${REPO_ROOT}/apps/docs/docs`,
+        });
+
+      await runCommand(command, []);
+
+      expect(generateIndexMock).not.toHaveBeenCalled();
+      expect(writeFileMock).not.toHaveBeenCalled();
+      const message = capture.error.join('\n');
+      expect(message).toContain('symlink chain');
+      expect(message).toContain(`${REPO_ROOT}/apps/docs/docs`);
+      expect(message).toContain('--docs-dir');
+      expect(message).toContain('documentation.root');
+      // `--output` cannot move a chain that is on the docs directory.
+      expect(message).not.toContain('Pass --output');
+      // Unusable path *configuration*, like the other `documentation.root`
+      // failures in this command.
+      expect(process.exitCode).toBe(2);
+    });
+
+    it('names an explicit --docs-dir at the hop cap and keeps it a flag error', async () => {
+      const { capture, command, generateIndexMock, writeFileMock } =
+        createChainHarness({
+          chainTarget: `${REPO_ROOT}/apps/docs/guides`,
+        });
+
+      await runCommand(command, ['--docs-dir', 'apps/docs/guides']);
+
+      expect(generateIndexMock).not.toHaveBeenCalled();
+      expect(writeFileMock).not.toHaveBeenCalled();
+      const message = capture.error.join('\n');
+      expect(message).toContain('symlink chain');
+      expect(message).toContain(`${REPO_ROOT}/apps/docs/guides`);
+      expect(message).toContain('--docs-dir');
+      expect(message).not.toContain('Pass --output');
+      // An operator-supplied path stays an actionable flag error, so no config
+      // repair is advertised.
+      expect(message).not.toContain('oat config set');
       expect(process.exitCode).toBe(1);
     });
 

@@ -77,6 +77,11 @@ const DEFAULT_SHARED_CONFIG = {
     tooling: null,
     config: null,
     index: null,
+    // `oat config dump` enumerates the resolved map, so a catalogued key that
+    // is absent here has no row at all while it is unset. `null` keeps meaning
+    // "not set at this layer", so a configured array still wins.
+    excludes: null,
+    instructionPointerExcludes: null,
     requireForProjectCompletion: false,
   },
   tools: {

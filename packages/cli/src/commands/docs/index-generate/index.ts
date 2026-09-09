@@ -160,6 +160,65 @@ function isInside(parent: string, candidate: string): boolean {
 const MAX_SYMLINK_HOPS = 32;
 
 /**
+ * Which caller supplied a path being canonicalized, and therefore which flag
+ * owns a refusal about it. `docs-dir` is `derived` when it came from
+ * `documentation.root` rather than an explicit `--docs-dir`, because only a
+ * config repair can move it.
+ */
+type CanonicalizeRole =
+  | { kind: 'docs-dir'; derived: boolean }
+  | { kind: 'output' }
+  | { kind: 'other' };
+
+/**
+ * The caller context threaded through the recursion alongside `linkHops`.
+ *
+ * `origin` is the path the top-level caller passed. At the depth where the hop
+ * cap trips, the walker's own `target` is the intermediate link it just read --
+ * a name the operator never typed and cannot act on -- so the refusal is built
+ * from `origin` instead.
+ */
+interface CanonicalizeContext {
+  role: CanonicalizeRole;
+  origin: string;
+}
+
+/**
+ * The hop-cap refusal, addressed to whoever owns the offending path.
+ *
+ * A derived docs directory is unusable path *configuration*, so it takes
+ * `CONFIGURATION_EXIT_CODE` and the `documentation.root` repair, exactly like
+ * `missingRootError` and the "not a directory" refusal. An explicitly supplied
+ * path stays an actionable flag error.
+ */
+function hopCapError(context: CanonicalizeContext): CliError {
+  const preamble =
+    `Refusing to resolve ${context.origin}: its symlink chain exceeds ` +
+    `${MAX_SYMLINK_HOPS} hops. `;
+
+  if (context.role.kind === 'docs-dir') {
+    if (context.role.derived) {
+      return new CliError(
+        `${preamble}The docs directory is derived from \`documentation.root\` ` +
+          'in .oat/config.json. Repair it with ' +
+          '`oat config set documentation.root <path>`, or pass --docs-dir with a ' +
+          'path that is not a deep symlink chain.',
+        CONFIGURATION_EXIT_CODE,
+      );
+    }
+    return new CliError(
+      `${preamble}Pass --docs-dir with a path that is not a deep symlink chain.`,
+      REFUSAL_EXIT_CODE,
+    );
+  }
+
+  return new CliError(
+    `${preamble}Pass --output with a path that is not a deep symlink chain.`,
+    REFUSAL_EXIT_CODE,
+  );
+}
+
+/**
  * Absolute path with symlinks resolved, so a symlinked parent cannot smuggle a
  * write into a protected tree past the lexical containment checks.
  *
@@ -173,6 +232,7 @@ const MAX_SYMLINK_HOPS = 32;
 async function canonicalize(
   target: string,
   deps: Pick<IndexGenerateFileDependencies, 'realpath' | 'readLinkIfSymlink'>,
+  context: CanonicalizeContext,
   linkHops = 0,
 ): Promise<string> {
   const absolute = resolve(target);
@@ -191,7 +251,7 @@ async function canonicalize(
     return absolute;
   }
 
-  const canonicalParent = await canonicalize(parent, deps, linkHops);
+  const canonicalParent = await canonicalize(parent, deps, context, linkHops);
   const candidate = join(canonicalParent, basename(absolute));
 
   const linkTarget = await deps.readLinkIfSymlink(candidate);
@@ -201,14 +261,15 @@ async function canonicalize(
 
   if (linkHops >= MAX_SYMLINK_HOPS) {
     // Fail closed: falling through would hand the writer an unresolved link.
-    throw new CliError(
-      `Refusing to resolve ${target}: its symlink chain exceeds ${MAX_SYMLINK_HOPS} hops. ` +
-        'Pass --output with a path that is not a deep symlink chain.',
-      REFUSAL_EXIT_CODE,
-    );
+    throw hopCapError(context);
   }
 
-  return canonicalize(resolve(canonicalParent, linkTarget), deps, linkHops + 1);
+  return canonicalize(
+    resolve(canonicalParent, linkTarget),
+    deps,
+    context,
+    linkHops + 1,
+  );
 }
 
 function trimmed(value: string | undefined): string | null {
@@ -363,9 +424,10 @@ interface CanonicalIndexGeneratePaths {
 async function canonicalizeOrNull(
   target: string,
   deps: Pick<IndexGenerateFileDependencies, 'realpath' | 'readLinkIfSymlink'>,
+  role: CanonicalizeRole,
 ): Promise<string | null> {
   try {
-    return await canonicalize(target, deps);
+    return await canonicalize(target, deps, { role, origin: target });
   } catch {
     return null;
   }
@@ -383,20 +445,34 @@ async function canonicalizeIndexGeneratePaths(
     ? resolve(resolved.repoRoot, documentationConfigValue)
     : null;
 
+  // Resolution order is load-bearing: the docs directory is canonicalized
+  // first, and the safety checks below compare against its canonical form.
   return {
-    docsDir: await canonicalize(resolved.docsDir, deps),
-    outputPath: await canonicalize(resolved.outputPath, deps),
+    docsDir: await canonicalize(resolved.docsDir, deps, {
+      role: {
+        kind: 'docs-dir',
+        derived: resolved.docsDirSource !== 'flag',
+      },
+      origin: resolved.docsDir,
+    }),
+    outputPath: await canonicalize(resolved.outputPath, deps, {
+      role: { kind: 'output' },
+      origin: resolved.outputPath,
+    }),
     // An unusable configured root only makes the config write ineligible; it
     // must not fail a run whose paths were both supplied explicitly.
     configuredRoot: resolved.configuredRoot
-      ? await canonicalizeOrNull(resolved.configuredRoot, deps)
+      ? await canonicalizeOrNull(resolved.configuredRoot, deps, {
+          kind: 'other',
+        })
       : null,
     lexicalDocumentationConfig,
     // Falling back to the lexical path keeps the refusal guard intact when the
     // configured tool config cannot be canonicalized.
     documentationConfig: lexicalDocumentationConfig
-      ? ((await canonicalizeOrNull(lexicalDocumentationConfig, deps)) ??
-        lexicalDocumentationConfig)
+      ? ((await canonicalizeOrNull(lexicalDocumentationConfig, deps, {
+          kind: 'other',
+        })) ?? lexicalDocumentationConfig)
       : null,
   };
 }
@@ -557,6 +633,9 @@ async function runIndexGenerate(
       entriesGenerated: entries.length,
       docsDir,
       docsDirSource: resolved.docsDirSource,
+      // Exactly the list handed to `deps.generateIndex` above, so a missing
+      // page can be attributed without re-deriving the merge.
+      excludes: resolved.excludes,
       outputPath,
     });
     return;
@@ -565,6 +644,27 @@ async function runIndexGenerate(
   context.logger.info(
     `Generated index with ${entries.length} entries from ${docsDir} → ${outputPath}`,
   );
+
+  // A bare `0 entries` reads identically for an empty tree, a wrong
+  // `--docs-dir`, and exclusions that swallowed everything. Say which of those
+  // the operator should look at. This reports; it never changes the exit code
+  // or the written file.
+  //
+  // The wording is deliberately observational. This function sees indexed
+  // entries, never pattern matches, so it cannot know an exclusion actually
+  // matched anything: an empty tree with a pattern that matched nothing lands
+  // here too, and blaming the exclusions outright would be false in exactly
+  // that case.
+  if (entries.length === 0) {
+    context.logger.info(
+      resolved.excludes.length > 0
+        ? `No pages were indexed, with ${resolved.excludes.length} exclusion ` +
+            `pattern${resolved.excludes.length === 1 ? '' : 's'} active ` +
+            `(${resolved.excludes.join(', ')}). Check whether ` +
+            '`documentation.excludes` or --exclude is hiding the pages you expect.'
+        : `No pages were indexed: ${docsDir} contained no indexable pages.`,
+    );
+  }
 }
 
 async function runIndexGenerateCommand(
