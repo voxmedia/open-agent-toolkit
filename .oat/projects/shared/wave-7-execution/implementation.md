@@ -515,6 +515,18 @@ _Recorded when the configured implementation exit gate runs._
 
 **p09 row → `fixes_added`**; round 2 on the original reviewer handle follows the fix commit.
 
+## Review Received: p07 (round 2 — passed)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p07-review-2026-09-09T031521Z.md (reviewed head `6173568916690b2a0b5da0420cb89b6d836c794b`, manual, opus)
+**Findings:** 0 · 0 · 0 · 1 minor — PASS. Verification record for M1: probe G (formerly green) now red naming the bullet verbatim; the reviewer's probe H (a trailing annotation) red; the installed-side control red naming the `utility` row; the header/separator exclusions replicated independently (4 data rows of 6 pipe lines; filters structurally cannot match a data row); one strictly additive commit (40 insertions); focused 3, file 213, `check:skill-bumps` 0, forced cli test 7164 `Cached: 0`.
+
+**Disposition (round 2 Minor):**
+
+- m1 — candidates are recognized with `startsWith('|')` / `startsWith('- ')` while the strict patterns are `^`-anchored, so a line with one leading space is invisible to both counts: **address-now** (root, the reviewer's one-line-per-side fix — `/^\s*\|/` and `/^\s*- /` with the same prefix on the header/separator exclusions — committed on the integration branch at the group-3 fan-in and gated there).
+
+**p07 row → `passed`** (reviewed head `617356891`); p07 is clear for the group-3 fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -576,6 +588,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p07-fix-001` — bounded test-only fix round on the resumed implementer. Record `dispatch/w7-p07-fix-001.json`.
 - `w7-p07-fix-001` outcome: one append-only test-only commit `6173568916690b2a0b5da0420cb89b6d836c794b`: both example extractions now assert completeness (every candidate row/bullet parses; parsed count equals candidate count; the failure names the line); the reviewer's probe G red on the available side, a `10 of 10` rewrite red on the installed side, pre-existing cases green; gates `Cached: 0` (cli 7164).
 - `w7-p07-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w7-p07-review-002.json`.
+- `w7-p07-review-002` outcome: PASS (fan-in may proceed), 0/0/0/1m; the completeness fix verified by the reviewer's own probes; the one new Minor (a leading-space evasion) taken as a root address-now at the fan-in.
 - `w7-p09-review-001` outcome: PASS with findings, 0/1I/1M/2m (16-scenario base-vs-head differential clean; the lane's "inert on macOS" diagnosis disproved by instrumentation; unpinned root-relative clauses). I1/M1/m1 → fix round `w7-p09-fix-001`; m2 wave close.
 - `w7-p09-fix-001` — bounded fix round on the resumed implementer (comment correction with counts; a root-symlink pin; the docs clause). Record `dispatch/w7-p09-fix-001.json`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
@@ -607,6 +620,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
+- p07 round 2 passed (0/0/0/1m) at `617356891`; p07 row `passed`.
 - p09 review received (PASS with findings, 0/1I/1M/2m): fix round `w7-p09-fix-001` dispatched; p09 row `fixes_added`.
 - p08 review received (PASS with findings, 0/0/0/5m — all deferred or record-fixed; plan correction entry applied); p08 row `passed`.
 - p07 review received (PASS with findings, 0/0/1M/2m): fix round `w7-p07-fix-001` dispatched; p07 row `fixes_added`.
