@@ -775,6 +775,7 @@ git commit -m "docs(p20-t01): keep plan writes on the caller's model"
 | p07    | code     | passed      | 2026-09-09 | reviews/archived/p07-review-2026-09-09T031521Z.md           | 6173568916690b2a0b5da0420cb89b6d836c794b | manual     | -                   |
 | p08    | code     | passed      | 2026-09-09 | reviews/archived/p08-review-2026-09-09T030639Z.md           | a0fa6c654bfd3851a0688cde4bc54a976f0313bf | manual     | -                   |
 | p09    | code     | fixes_added | 2026-09-09 | reviews/archived/p09-review-2026-09-09T031251Z.md           | 04a9a29ca1b4a587f9af6c1263ad7b6d5fef00bb | manual     | -                   |
+| p09    | code     | passed      | 2026-09-09 | reviews/archived/p09-review-2026-09-09T032543Z.md           | 99675387b1d651e9e6fb71231df26864a573e7d9 | manual     | -                   |
 | p10    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
 | p11    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
 | p12    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |

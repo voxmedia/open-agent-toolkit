@@ -527,6 +527,14 @@ _Recorded when the configured implementation exit gate runs._
 
 **p07 row → `passed`** (reviewed head `617356891`); p07 is clear for the group-3 fan-in.
 
+## Review Received: p09 (round 2 — passed)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p09-review-2026-09-09T032543Z.md (reviewed head `99675387b1d651e9e6fb71231df26864a573e7d9`, manual, opus)
+**Findings:** 0 · 0 · 0 · 0 — PASS. Verification records: I1 — the rewritten comment re-instrumented at head (old key 3 firings, two on the realpath'd root; new key 3; no injection 0) plus a variant that rejects any `/Apps/Docsapp` path (a case-sensitive runner) falling to the `absent` branch, so every clause is supported; M1 — the new case red under both clauses deleted and under each alone (`self` → `""`, `up` → `".."`), proving `up` reaches the probe; `instructions.utils.ts` blob-identical between the reviewed heads, so round 1's 16-scenario differential carries over; m1 — the docs clause matches the emitted message; p06's region byte-unchanged; one append-only commit, two files; gates forced `Cached: 0` (cli 7167).
+
+**p09 row → `passed`** (reviewed head `99675387b`); group 3 is clear for fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -593,6 +601,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p09-fix-001` — bounded fix round on the resumed implementer (comment correction with counts; a root-symlink pin; the docs clause). Record `dispatch/w7-p09-fix-001.json`.
 - `w7-p09-fix-001` outcome: one append-only commit `99675387b1d651e9e6fb71231df26864a573e7d9` (test file + docs page; no production code): the lane instrumented the simulation itself (old anchor 3 firings, new anchor 3, no injection 0), retracted its "inert on macOS" diagnosis, and rewrote the comment; a root/parent-symlink case pins the two root-relative clauses (red as `resolves to ""` / `".."` when deleted); the docs sentence names the on-disk-spelling half. Focused 95; forced cli test `Cached: 0`; `generate-index` no diff. Header shortened to 99 chars for commitlint.
 - `w7-p09-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w7-p09-review-002.json`.
+- `w7-p09-review-002` outcome: PASS (fan-in may proceed), 0/0/0/0; all three dispositions verified by the reviewer's own instrumentation and clause-by-clause reds.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
 #### Group 1 fan-in (2026-09-09)
@@ -622,6 +631,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
+- p09 round 2 passed (0/0/0/0) at `99675387b`; p09 row `passed`; group 3 fan-in starts.
 - p07 round 2 passed (0/0/0/1m) at `617356891`; p07 row `passed`.
 - p09 review received (PASS with findings, 0/1I/1M/2m): fix round `w7-p09-fix-001` dispatched; p09 row `fixes_added`.
 - p08 review received (PASS with findings, 0/0/0/5m — all deferred or record-fixed; plan correction entry applied); p08 row `passed`.
