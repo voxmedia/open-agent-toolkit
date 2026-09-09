@@ -131,6 +131,106 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 // info string; a closer carries none.
 const FENCE_OPENER = /^ {0,3}(`{3,}|~{3,})/;
 const FENCE_CLOSER = /^ {0,3}(`{3,}|~{3,})\s*$/;
+// CommonMark's HTML-block openers, conditions 1 and 3-7. Condition 2 is the
+// comment opener, which the scanner's comment rule owns instead. A raw HTML
+// block is dropped to the next blank line and its content is never parsed for
+// link definitions, so the opener has to be exactly as narrow as CommonMark's:
+// a tag-shaped line is not an HTML block unless its name is on the closed
+// type-6 list or the whole line is one complete tag (type 7). `<span>x</span>`
+// and a bare `<foo` are ordinary text.
+const HTML_BLOCK_TYPE_6_TAGS = [
+  'address',
+  'article',
+  'aside',
+  'base',
+  'basefont',
+  'blockquote',
+  'body',
+  'caption',
+  'center',
+  'col',
+  'colgroup',
+  'dd',
+  'details',
+  'dialog',
+  'dir',
+  'div',
+  'dl',
+  'dt',
+  'fieldset',
+  'figcaption',
+  'figure',
+  'footer',
+  'form',
+  'frame',
+  'frameset',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'head',
+  'header',
+  'hr',
+  'html',
+  'iframe',
+  'legend',
+  'li',
+  'link',
+  'main',
+  'menu',
+  'menuitem',
+  'nav',
+  'noframes',
+  'ol',
+  'optgroup',
+  'option',
+  'p',
+  'param',
+  'search',
+  'section',
+  'summary',
+  'table',
+  'tbody',
+  'td',
+  'tfoot',
+  'th',
+  'thead',
+  'title',
+  'tr',
+  'track',
+  'ul',
+];
+// 1: script/pre/style/textarea. 3-5: processing instruction, declaration,
+// CDATA. 6: the closed tag list. 7: one complete open or closing tag alone on
+// its line.
+const HTML_BLOCK_RAW_TEXT = /^ {0,3}<(?:script|pre|style|textarea)(?:[\s>]|$)/i;
+const HTML_BLOCK_DECLARATIVE = /^ {0,3}<(?:\?|![A-Za-z]|!\[CDATA\[)/;
+const HTML_BLOCK_NAMED = new RegExp(
+  `^ {0,3}</?(?:${HTML_BLOCK_TYPE_6_TAGS.join('|')})(?:[\\s/>]|$)`,
+  'i',
+);
+const HTML_TAG_ALONE =
+  /^ {0,3}(?:<[A-Za-z][A-Za-z0-9-]*(?:[ \t]+[^\s"'=<>`/]+(?:[ \t]*=[ \t]*(?:[^\s"'=<>`]+|'[^']*'|"[^"]*"))?)*[ \t]*\/?>|<\/[A-Za-z][A-Za-z0-9-]*[ \t]*>)[ \t]*$/;
+
+/** Does this line open a CommonMark HTML block (any condition but the comment)? */
+function opensHtmlBlock(line: string): boolean {
+  return (
+    HTML_BLOCK_RAW_TEXT.test(line) ||
+    HTML_BLOCK_DECLARATIVE.test(line) ||
+    HTML_BLOCK_NAMED.test(line) ||
+    HTML_TAG_ALONE.test(line)
+  );
+}
+
+// Hidden runs are blanked with form feeds rather than spaces, purely to keep
+// columns honest: a form feed is neither a space nor a tab, so a link
+// definition or a source declaration can never be recognised at a column that
+// exists only because something was blanked away. Nothing infers hidden-ness
+// from this character — `RenderedLine.hidden` carries that out of band, so an
+// author-written form feed stays ordinary text.
+const HIDDEN_FILL = '\f';
 
 const SHORT_SHA_VIOLATION =
   'oat_external_plan_commit must be the full 40-character SHA of the inspected HEAD';
@@ -160,13 +260,20 @@ const EMPTY_WAVE_TABLE_VIOLATION =
   '## Wave Table must record at least one plan';
 const MISSING_SOURCE_BACKLINK_VIOLATION =
   '## Source and live evidence must link the plan back to its source item, or record it as none';
+// Reported alongside the backlink violation so the fail-closed edge of
+// destination decoding explains itself the first time an author meets it,
+// rather than reading as a missing link.
+const UNRESOLVED_DESTINATION_VIOLATION =
+  'a source link destination leaves a percent escape unresolved: only unreserved escapes decode, so spell the character literally';
+const MALFORMED_CREATED_VIOLATION =
+  'created must be an ISO YYYY-MM-DD date or timestamp';
 
-// `oat-wave-program` documents `composed → in-progress → merged` for a wave's
-// ledger row (SKILL.md:66) and also instructs the final row to flip to `done`
-// at program close (SKILL.md:116). Both spellings come from the producer, so
-// both are accepted here; this contract reads programs, it does not redefine
-// that skill's vocabulary.
-const WAVE_STATUSES = ['composed', 'in-progress', 'merged', 'done'];
+// `.agents/skills/oat-wave-program/SKILL.md` names one ledger vocabulary in
+// its **Status ledger** bullet: composed → in-progress → merged, at program
+// close included. `done` is that skill's wave-table *plan-row* status, which
+// this contract does not validate, so it is not a ledger status here. This
+// contract reads programs; it does not redefine the producer's vocabulary.
+const WAVE_STATUSES = ['composed', 'in-progress', 'merged'];
 const STATUS_LEDGER_COLUMNS = ['wave', 'theme', 'lanes', 'status', 'record'];
 
 type PlanReadinessMode = 'legacy' | 'prospective';
@@ -279,9 +386,13 @@ const BACKLOG_ID_START = '(?<![\\p{L}\\p{N}_-])';
 // `BL-123--evil` is a malformed identifier, not the ID `BL-123`, and reading
 // it as `BL-123` would let a link to `BL-123-other` satisfy it.
 const BACKLOG_ID_TOKEN_END = '(?![\\p{L}\\p{N}_-])';
-// Matching lets a link name the ID exactly or extend it by one further
-// complete `-segment`, and by nothing else.
-const BACKLOG_ID_MATCH_END = '(?:(?=-[A-Za-z0-9])|(?![\\p{L}\\p{N}_-]))';
+// Matching lets a link name the ID exactly or extend it by any number of
+// complete `-segment`s, and by nothing else: the whole extension is consumed
+// before the same token boundary extraction requires, rather than accepting as
+// soon as one valid character follows a hyphen. Composed from the grammar
+// above so the two cannot drift, which is what stops a link to a neighbouring
+// or malformed identifier from satisfying a declared ID.
+const BACKLOG_ID_MATCH_END = `(?:-[A-Za-z0-9]+)*${BACKLOG_ID_TOKEN_END}`;
 const BACKLOG_ID = new RegExp(
   `${BACKLOG_ID_START}${BACKLOG_ID_SOURCE}${BACKLOG_ID_TOKEN_END}`,
   'gu',
@@ -335,13 +446,15 @@ function withoutInlineCode(text: string): string {
 function linkDefinitions(section: string): Map<string, string> {
   const definitions = new Map<string, string>();
   // A definition only counts where Markdown would read one: not inside a
-  // fence, and not inside an HTML comment or code span either. Definitions go
-  // through the same helper the declaration scan uses, so a reference cannot
-  // resolve through text that renders nothing. The first definition is the one
-  // Markdown resolves against.
-  for (const match of withoutInlineCode(withoutFences(section)).matchAll(
-    LINK_DEFINITION,
-  )) {
+  // fence, an HTML comment, a raw HTML block, or a code span. Definitions go
+  // through the same block scanner the declaration scan uses, so a reference
+  // cannot resolve through text that renders nothing, and neither scan can
+  // resolve the three block constructs in a different order from the other.
+  // The first definition is the one Markdown resolves against.
+  const rendered = renderableBlockLines(section)
+    .map((line) => line.text)
+    .join('\n');
+  for (const match of withoutInlineCode(rendered).matchAll(LINK_DEFINITION)) {
     const name = normalizeReferenceLabel(match[1] as string);
     if (!definitions.has(name)) definitions.set(name, match[2] as string);
   }
@@ -414,14 +527,95 @@ function namedSources(declaration: string): NamedSource[] {
   return named;
 }
 
+// The numeric character references and the five named entities Markdown
+// resolves in link text. The digit counts are CommonMark's: a decimal
+// reference is 1-7 digits and a hexadecimal one 1-6, and anything longer is
+// literal text. Without those bounds `&#0000000045;` would be read as `-`
+// while every reader sees it spelled out.
+const CHARACTER_REFERENCE_SOURCE =
+  '&(?:#(\\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|(amp|lt|gt|quot|apos));';
+const CHARACTER_REFERENCE = new RegExp(CHARACTER_REFERENCE_SOURCE, 'g');
+const RESIDUAL_CHARACTER_REFERENCE = new RegExp(CHARACTER_REFERENCE_SOURCE);
+const NAMED_ENTITY_CHARACTER: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+};
+
+// RFC 3986 unreserved characters: the only ones whose percent escape means
+// exactly the character itself wherever it appears in a destination.
+const PERCENT_ESCAPE = /%([0-9A-Fa-f]{2})/g;
+const UNRESERVED = /^[A-Za-z0-9\-._~]$/;
+
+/**
+ * Link text with its HTML character references resolved, or `null` when one
+ * survives the single pass and the text was therefore double-encoded. Markdown
+ * resolves character references in link text and nothing else, so this is all
+ * a label ever gets: a bare `%` in a label is ordinary text a reader sees.
+ */
+function decodeCharacterReferences(value: string): string | null {
+  try {
+    const decoded = value.replace(
+      CHARACTER_REFERENCE,
+      (_match, decimal?: string, hex?: string, named?: string) =>
+        named === undefined
+          ? String.fromCodePoint(
+              decimal === undefined
+                ? Number.parseInt(hex as string, 16)
+                : Number.parseInt(decimal, 10),
+            )
+          : (NAMED_ENTITY_CHARACTER[named] as string),
+    );
+    return RESIDUAL_CHARACTER_REFERENCE.test(decoded) ? null : decoded;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A destination as it resolves, or `null` when it does not resolve to what it
+ * appears to spell. Exactly one pass, and only over unreserved escapes: `%2D`
+ * is a hyphen wherever it stands, but `%2F`, `%23` and `%26` change what a URL
+ * resolves to, and `%25` is the escape that hides another escape. Those are
+ * left in place, so any `%` surviving the pass rejects the destination — which
+ * closes the reserved-delimiter and the double-encoding holes in one rule.
+ */
+function decodeDestination(value: string): string | null {
+  const references = decodeCharacterReferences(value);
+  if (references === null) return null;
+
+  const decoded = references.replace(PERCENT_ESCAPE, (match, hex: string) => {
+    const character = String.fromCharCode(Number.parseInt(hex, 16));
+    return UNRESERVED.test(character) ? character : match;
+  });
+
+  return decoded.includes('%') ? null : decoded;
+}
+
 /**
  * Does this link identify that named source? Matching is bounded per kind, so
  * a link to `BL-1234` never satisfies a declared `BL-123`, `x.tsx` never
  * satisfies `x.ts`, and `/posts/239` never satisfies issue `#239`.
+ *
+ * Matching is done on the text as it renders, so an encoded separator cannot
+ * hide a malformed identifier behind a boundary the grammar rejects, and a
+ * destination that genuinely resolves to the declared source is read as it.
+ * The two sides are decoded differently because Markdown treats them
+ * differently: a label only ever resolves character references, while a
+ * destination also resolves its unreserved percent escapes.
  */
 function identifiesSource(link: DeclarationLink, named: NamedSource): boolean {
-  const haystack = `${link.label} ${link.destination}`.toLowerCase();
-  const destination = link.destination.toLowerCase();
+  const label = decodeCharacterReferences(link.label) ?? '';
+  const target = decodeDestination(link.destination);
+  // A destination that does not resolve to what it spells leads a reader
+  // nowhere, so it identifies nothing. Matching the raw form alongside the
+  // decoded one would be strictly weaker than matching either alone.
+  if (target === null) return false;
+
+  const haystack = `${label} ${target}`.toLowerCase();
+  const destination = target.toLowerCase();
   const value = named.value.toLowerCase();
 
   switch (named.kind) {
@@ -452,6 +646,21 @@ function identifiesSource(link: DeclarationLink, named: NamedSource): boolean {
  * link's label or destination has to identify the source the declaration
  * names. Several links pass if any one of them identifies it.
  */
+/**
+ * Did a declaration link at a destination whose escapes do not resolve? Only
+ * unreserved escapes decode, so a reserved delimiter or a `%25` left standing
+ * makes the destination unreadable rather than merely unmatched — worth saying
+ * out loud, because otherwise it surfaces only as a missing backlink.
+ */
+function hasUnresolvedDestination(
+  declaration: string,
+  section: string,
+): boolean {
+  return declarationLinks(declaration, section).some(
+    (link) => decodeDestination(link.destination) === null,
+  );
+}
+
 function linksToItsSource(declaration: string, section: string): boolean {
   if (recordsNoSource(declaration)) return true;
 
@@ -466,29 +675,125 @@ function linksToItsSource(declaration: string, section: string): boolean {
   );
 }
 
-/** Drop fenced blocks so an example bullet cannot stand in for the record. */
-function withoutFences(section: string): string {
-  const kept: string[] = [];
-  let fence: string | undefined;
+/**
+ * The lines of a section that Markdown actually renders, with HTML comments,
+ * fenced blocks, and raw HTML blocks resolved in one document-order pass.
+ *
+ * One pass rather than two chained helpers is the point. Stripping fences
+ * before comments let a fence marker that existed only inside a comment flip
+ * the fence state, take the comment's own `-->` with it, and leave an
+ * unterminated comment that swallowed every declaration and definition below.
+ * Two helpers can always be reordered again; three constructs resolved
+ * together in document order cannot.
+ */
+interface RenderedLine {
+  /**
+   * The line as it renders. Hidden runs are blanked in place so that every
+   * surviving character keeps the column it was written in.
+   */
+  text: string;
+  /**
+   * Whether the whole line was hidden. This travels beside the text rather
+   * than inside it: keying off the fill character would make an
+   * author-written form feed indistinguishable from something the scanner
+   * blanked away, and the two must never be confused.
+   */
+  hidden: boolean;
+}
 
-  for (const line of section.split('\n')) {
-    if (fence === undefined) {
-      const opener = FENCE_OPENER.exec(line)?.[1];
-      if (opener === undefined) kept.push(line);
-      else fence = opener;
+function renderableBlockLines(section: string): RenderedLine[] {
+  const kept: RenderedLine[] = [];
+  let inComment = false;
+  let fence: string | undefined;
+  let inHtmlBlock = false;
+
+  for (const raw of section.split('\n')) {
+    const startedInComment = inComment;
+    // An open comment owns its lines: that is what stops a fence marker which
+    // exists only inside a comment from ever being read as a fence, and it is
+    // the whole defect this scanner replaces. Everywhere else the fence
+    // machine reads raw text and wins, so `<!--` inside a fence is literal and
+    // a fence opener inside an HTML block still hides everything up to its
+    // closer. That is deliberately stricter than CommonMark, and strict is the
+    // safe direction: it can only hide text, never surface it.
+    if (!inComment) {
+      if (fence !== undefined) {
+        const closer = FENCE_CLOSER.exec(raw)?.[1];
+        if (
+          closer !== undefined &&
+          closer[0] === fence[0] &&
+          closer.length >= fence.length
+        ) {
+          fence = undefined;
+        }
+        // The opener, the contents, and the closer all render no declaration.
+        continue;
+      }
+      const opener = FENCE_OPENER.exec(raw)?.[1];
+      if (opener !== undefined) {
+        fence = opener;
+        inHtmlBlock = false;
+        continue;
+      }
+    }
+    // A comment may open and close mid-line; an unterminated one consumes the
+    // rest of the input, matching `HTML_COMMENT`'s own `(?:-->|$)`.
+    let index = 0;
+    let visible = '';
+    let hiddenCount = 0;
+
+    while (index < raw.length) {
+      if (inComment) {
+        const close = raw.indexOf('-->', index);
+        if (close === -1) {
+          visible += HIDDEN_FILL.repeat(raw.length - index);
+          hiddenCount += raw.length - index;
+          break;
+        }
+        visible += HIDDEN_FILL.repeat(close + 3 - index);
+        hiddenCount += close + 3 - index;
+        index = close + 3;
+        inComment = false;
+        continue;
+      }
+      const open = raw.indexOf('<!--', index);
+      if (open === -1) {
+        visible += raw.slice(index);
+        break;
+      }
+      visible += `${raw.slice(index, open)}${HIDDEN_FILL.repeat(4)}`;
+      hiddenCount += 4;
+      index = open + 4;
+      inComment = true;
+    }
+
+    // The line rendered nothing of its own: every character it had was hidden,
+    // or it was an empty line inside a comment. Only the scanner can know
+    // this, which is why it is recorded here rather than inferred later from
+    // the text.
+    const hidden =
+      hiddenCount === raw.length && (hiddenCount > 0 || startedInComment);
+
+    if (inHtmlBlock) {
+      // CommonMark ends an HTML block at the next blank line, which is not
+      // part of the block; keeping it preserves the paragraph break.
+      if (visible.trim() !== '') continue;
+      inHtmlBlock = false;
+      kept.push({ text: visible, hidden });
       continue;
     }
-    const closer = FENCE_CLOSER.exec(line)?.[1];
-    if (
-      closer !== undefined &&
-      closer[0] === fence[0] &&
-      closer.length >= fence.length
-    ) {
-      fence = undefined;
+
+    if (opensHtmlBlock(visible)) {
+      // A link definition can never legally open an HTML block, so this only
+      // drops text Markdown renders as raw HTML.
+      inHtmlBlock = true;
+      continue;
     }
+
+    kept.push({ text: visible, hidden });
   }
 
-  return kept.join('\n');
+  return kept;
 }
 
 /**
@@ -499,18 +804,23 @@ function withoutFences(section: string): string {
  * reading only the first match would reject the template's own shape.
  */
 function sourceDeclarations(section: string): string[] {
-  // A bullet inside a fence or an HTML comment renders nothing, so it declares
-  // nothing either. Code spans stay: a backticked value is the declaration's
-  // own content, not a link.
-  const lines = withoutHtmlComments(withoutFences(section)).split('\n');
+  // A bullet inside a fence, an HTML comment, or a raw HTML block renders
+  // nothing, so it declares nothing either. Code spans stay: a backticked
+  // value is the declaration's own content, not a link.
+  const lines = renderableBlockLines(section);
   const declarations: string[] = [];
 
   for (const [index, line] of lines.entries()) {
-    if (!SOURCE_DECLARATION_LABEL.test(line)) continue;
-    const declaration = [line];
+    if (!SOURCE_DECLARATION_LABEL.test(line.text)) continue;
+    const declaration = [line.text];
     for (const next of lines.slice(index + 1)) {
-      if (!/^\s+\S/.test(next)) break;
-      declaration.push(next);
+      // A line that rendered nothing but an HTML comment is transparent here:
+      // it renders no break between a declaration and its continuation, so it
+      // must not detach one. A genuinely blank line, or a line an author
+      // simply wrote as whitespace, still ends the declaration.
+      if (next.hidden) continue;
+      if (!/^\s+\S/.test(next.text)) break;
+      declaration.push(next.text);
     }
     declarations.push(declaration.join('\n'));
   }
@@ -845,14 +1155,27 @@ function evaluateExternalPlan(text: string): PlanReadiness {
   // (`oat-wave-program/assets/execution-program-template.md`) carries only
   // `created`. Without this fallback every generated program would sort into
   // legacy mode forever and never be checked at all.
-  const effectiveDate =
-    kind === 'program' ? (date ?? isoDatePart(frontmatter.created)) : date;
+  const createdDate =
+    kind === 'program' && date === undefined
+      ? isoDatePart(frontmatter.created)
+      : undefined;
+  const effectiveDate = kind === 'program' ? (date ?? createdDate) : date;
   // Dates are compared lexically, which is only sound for ISO dates. A present
   // but malformed date fails closed into prospective mode rather than sorting
   // its way into the permissive branch.
   const malformedDate = date !== undefined && !ISO_DATE.test(date);
+  // The program fallback needs the same guard, or an unreadable `created`
+  // sorts a program into the permissive branch and skips every program rule.
+  // A program with no `created` at all is deliberately untouched: legacy is
+  // what keeps both real programs importable exactly as written.
+  const malformedCreated =
+    kind === 'program' &&
+    date === undefined &&
+    frontmatter.created !== undefined &&
+    createdDate === undefined;
   const mode: PlanReadinessMode =
     !malformedDate &&
+    !malformedCreated &&
     (effectiveDate === undefined || effectiveDate < CONTRACT_LANDING_DATE)
       ? 'legacy'
       : 'prospective';
@@ -870,6 +1193,7 @@ function evaluateExternalPlan(text: string): PlanReadiness {
   if (mode === 'legacy') return { mode, kind, status, violations };
 
   if (malformedDate) violations.push(MALFORMED_DATE_VIOLATION);
+  if (malformedCreated) violations.push(MALFORMED_CREATED_VIOLATION);
 
   // An execution program maps other plans rather than being one. It inspects
   // no tree, so it carries no provenance SHAs and no `oat_execution_status` of
@@ -970,6 +1294,13 @@ function evaluateExternalPlan(text: string): PlanReadiness {
     )
   ) {
     violations.push(MISSING_SOURCE_BACKLINK_VIOLATION);
+    if (
+      declarations.some((declaration) =>
+        hasUnresolvedDestination(declaration, sourceEvidence ?? ''),
+      )
+    ) {
+      violations.push(UNRESOLVED_DESTINATION_VIOLATION);
+    }
   }
 
   const dependencies = planSection(text, 'Dependencies');
@@ -3013,6 +3344,428 @@ describe('skills bundled docs contract', () => {
     ).toEqual([]);
   });
 
+  // Group A. The extractor and the matcher are built from one grammar, so a
+  // link may name the declared ID exactly or extend it by complete `-segment`s
+  // and by nothing else. Every rejected row below is a different identifier,
+  // not the declared one wearing a suffix.
+  it('bounds a backlink identifier at its complete extension', () => {
+    const declaring = (target: string): string =>
+      `- Source backlog item: BL-123 — [x](../../pjm/backlog/items/${target}.md)`;
+
+    const cases: [string, boolean][] = [
+      ['BL-123', true],
+      ['BL-123-other', true],
+      // The multi-segment extension is the case that must keep working: a
+      // plan abbreviates a long ID and links the full file.
+      ['BL-123-other-more', true],
+      ['BL-123-other_more', false],
+      ['BL-123-otheré', false],
+      ['BL-123-other--tail', false],
+      ['BL-123-', false],
+      ['BL-1234', false],
+      ['BL-123foo', false],
+    ];
+
+    for (const [target, expected] of cases) {
+      const declaration = declaring(target);
+      expect(linksToItsSource(declaration, declaration), target).toBe(expected);
+    }
+  });
+
+  // Group B. One document-order pass resolves HTML comments, fenced blocks,
+  // and raw HTML blocks, so a fence marker that exists only inside a comment
+  // can no longer flip the fence state and erase every declaration and
+  // definition after it.
+  it('resolves comments, fences, and raw HTML blocks in document order', () => {
+    const linked =
+      '[BL-260907-example](../../pjm/backlog/items/BL-260907-example.md)';
+    const definition = '[item]: ../../pjm/backlog/items/BL-260907-example.md';
+
+    // 1. The enumerated widening. A terminated comment hides itself and
+    // nothing else, so the fence opener inside it is not a fence opener and
+    // the declaration below is still a declaration.
+    const afterClosedComment = [
+      '<!--',
+      '```markdown',
+      '-->',
+      '',
+      `- Source backlog item: ${linked}`,
+    ].join('\n');
+
+    expect(sourceDeclarations(afterClosedComment)).toEqual([
+      `- Source backlog item: ${linked}`,
+    ]);
+
+    // 2. Pin: an unterminated comment still consumes the rest of the input,
+    // exactly as `HTML_COMMENT`'s `(?:-->|$)` already specifies.
+    const afterOpenComment = [
+      '<!--',
+      '```markdown',
+      '',
+      `- Source backlog item: ${linked}`,
+    ].join('\n');
+
+    expect(sourceDeclarations(afterOpenComment)).toHaveLength(0);
+
+    // 3. Pin: a real fence still hides its example declaration. The comment
+    // above it resolves first, so this fence is read as a fence rather than
+    // as the leftover of one the comment already opened.
+    const fencedExample = [
+      '<!--',
+      '```markdown',
+      '-->',
+      '',
+      '```markdown',
+      `- Source backlog item: ${linked}`,
+      '```',
+    ].join('\n');
+
+    expect(sourceDeclarations(fencedExample)).toHaveLength(0);
+
+    // 4. The same widening on the definition side, which is the half the
+    // source item names explicitly.
+    const definitionAfterClosedComment = [
+      '<!--',
+      '```markdown',
+      '-->',
+      '',
+      '- Source backlog item: BL-260907-example — [the item][item]',
+      '',
+      definition,
+    ].join('\n');
+
+    expect([...linkDefinitions(definitionAfterClosedComment).keys()]).toEqual([
+      'item',
+    ]);
+    expect(
+      linksToItsSource(
+        '- Source backlog item: BL-260907-example — [the item][item]',
+        definitionAfterClosedComment,
+      ),
+    ).toBe(true);
+
+    // 5. The narrowing. CommonMark never reads a link definition inside a raw
+    // HTML block, so a reference relying on one resolves nothing.
+    const definitionInHtmlBlock = [
+      '- Source backlog item: BL-260907-example — [the item][item]',
+      '',
+      '<div>',
+      definition,
+      '</div>',
+    ].join('\n');
+
+    expect(linkDefinitions(definitionInHtmlBlock).size).toBe(0);
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({ sourceEvidence: definitionInHtmlBlock }),
+      ).violations,
+    ).toEqual([MISSING_SOURCE_BACKLINK_VIOLATION]);
+
+    // ... and the accepted control for that narrowing: the block ends at its
+    // blank line, so the very same definition below it still resolves.
+    const definitionOutsideHtmlBlock = [
+      '- Source backlog item: BL-260907-example — [the item][item]',
+      '',
+      '<div>rendered as raw HTML</div>',
+      '',
+      definition,
+    ].join('\n');
+
+    expect(linkDefinitions(definitionOutsideHtmlBlock).size).toBe(1);
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({ sourceEvidence: definitionOutsideHtmlBlock }),
+      ).violations,
+    ).toEqual([]);
+
+    // 6. The fence machine reads raw text and wins over an open HTML block, so
+    // a fence opener inside one still hides everything up to its closer. Were
+    // the HTML block to swallow the opener instead, this declaration would
+    // become visible — a widening outside the two this contract allows.
+    const refBullet =
+      '- Source backlog item: BL-260907-example — [the item][item]';
+    const bullet = `- Source backlog item: ${linked}`;
+    const fenceInsideHtmlBlock = [
+      '<div>',
+      '```markdown',
+      '',
+      refBullet,
+      '',
+      definition,
+    ].join('\n');
+
+    expect(sourceDeclarations(fenceInsideHtmlBlock)).toHaveLength(0);
+    expect(linkDefinitions(fenceInsideHtmlBlock).size).toBe(0);
+
+    // 7. A definition is only a definition where it really begins. Blanking a
+    // comment away must not manufacture one at a column the author never
+    // wrote: Markdown reads `abc<!--` as a paragraph, and a link reference
+    // definition cannot interrupt a paragraph.
+    const definitionAfterBlanking = [
+      refBullet,
+      '',
+      'abc<!--',
+      `-->${definition}`,
+    ].join('\n');
+
+    expect(linkDefinitions(definitionAfterBlanking).size).toBe(0);
+    expect(linksToItsSource(refBullet, definitionAfterBlanking)).toBe(false);
+
+    // 8. Inside a fence a comment opener is literal text, so a plan that shows
+    // `<!--` in a fenced example keeps every declaration below it.
+    const commentInsideFence = ['```', '<!--', '```', '', bullet].join('\n');
+
+    expect(sourceDeclarations(commentInsideFence)).toEqual([bullet]);
+
+    // 9. Inline HTML is not an HTML block: only the closed type-6 tag list, or
+    // a complete tag alone on its line, opens one. `<span>` opens neither, so
+    // the declaration under it survives.
+    const inlineHtmlAbove = ['<span>note</span>', bullet].join('\n');
+
+    expect(sourceDeclarations(inlineHtmlAbove)).toEqual([bullet]);
+
+    // 10. A comment is not a paragraph break. A line that was nothing but a
+    // comment renders no gap between a declaration and its continuation, so
+    // the continuation stays attached and the source it names still counts.
+    // Detaching it would quietly accept this document, because a declaration
+    // that names nothing is satisfied by any link at all.
+    const namedAcrossComment = [
+      '- Source backlog item: [x](https://evil.example/nope)',
+      '<!--',
+      '-->BL-123',
+    ].join('\n');
+
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({ sourceEvidence: namedAcrossComment }),
+      ).violations,
+    ).toEqual([MISSING_SOURCE_BACKLINK_VIOLATION]);
+
+    // ... and the same rule keeps an identifying link attached, so the
+    // transparency cuts both ways rather than only tightening.
+    const linkAcrossComment = [
+      '- Source backlog item: BL-123',
+      '<!--',
+      '--> [the item](../../pjm/backlog/items/BL-123.md)',
+    ].join('\n');
+
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({ sourceEvidence: linkAcrossComment }),
+      ).violations,
+    ).toEqual([]);
+
+    // ... while a genuinely blank line still ends a declaration.
+    const blankBreaksContinuation = [
+      '- Source backlog item: BL-123',
+      '',
+      '  [the item](../../pjm/backlog/items/BL-123.md)',
+    ].join('\n');
+
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({ sourceEvidence: blankBreaksContinuation }),
+      ).violations,
+    ).toEqual([MISSING_SOURCE_BACKLINK_VIOLATION]);
+
+    // 11. Enumerated widening (d), pinned on its minimal witness: a whole-line
+    // comment renders no break, so the continuation below it stays attached
+    // and its link satisfies the backlink rule. The base collapsed that
+    // comment to a whitespace-only line, which broke its continuation scan.
+    const commentBetweenDeclarationAndContinuation = [
+      '- Source backlog item: BL-123',
+      '<!-- c -->',
+      '  [x](../../pjm/backlog/items/BL-123.md)',
+    ].join('\n');
+
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({
+          sourceEvidence: commentBetweenDeclarationAndContinuation,
+        }),
+      ).violations,
+    ).toEqual([]);
+
+    // ... and the same document with the comment line simply deleted, which
+    // is what makes (d) rendered-text equivalent: it is accepted here and was
+    // accepted before this contract changed at all.
+    const withoutTheCommentLine = [
+      '- Source backlog item: BL-123',
+      '  [x](../../pjm/backlog/items/BL-123.md)',
+    ].join('\n');
+
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({ sourceEvidence: withoutTheCommentLine }),
+      ).violations,
+    ).toEqual([]);
+
+    // 12. Hidden-ness is the scanner's own record, not a character anyone can
+    // type: a form feed an author wrote is ordinary text and still detaches a
+    // continuation, exactly as any other whitespace-only line would.
+    const authorWrittenFormFeed = [
+      '- Source backlog item: BL-123',
+      '\f',
+      '  [x](../../pjm/backlog/items/BL-123.md)',
+    ].join('\n');
+
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({ sourceEvidence: authorWrittenFormFeed }),
+      ).violations,
+    ).toEqual([MISSING_SOURCE_BACKLINK_VIOLATION]);
+  });
+
+  // Group C. Link text is decoded once before matching, so an encoding can
+  // neither hide a malformed identifier behind a boundary the grammar would
+  // otherwise reject, nor stop a destination that genuinely renders as the
+  // declared source from being read as it.
+  it('decodes entity and percent escapes in link text before matching', () => {
+    const declaring = (target: string): string =>
+      `- Source backlog item: BL-123 — [x](../../pjm/backlog/items/${target}.md)`;
+
+    const cases: [string, boolean][] = [
+      // `BL-123--evil` is a malformed identifier the grammar rejects; an
+      // encoded separator must not smuggle it past the boundary.
+      ['BL-123%2D%2Devil', false],
+      ['BL-123&#45;&#45;evil', false],
+      ['BL-123&#x2D;&#x2D;evil', false],
+      // The enumerated widening: this renders as `BL-123` and so identifies it.
+      ['BL%2D123', true],
+      ['BL-123%2Dother', true],
+      // Undecodable text identifies nothing at all.
+      ['BL-123%zz', false],
+      // Double-encoded: one pass leaves an escape behind, which is undecodable
+      // text rather than a boundary.
+      ['BL-123&amp;#45;&#45;evil', false],
+    ];
+
+    for (const [target, expected] of cases) {
+      const declaration = declaring(target);
+      expect(linksToItsSource(declaration, declaration), target).toBe(expected);
+    }
+
+    // Decoding is a property of link text, not a backlog-ID special case: an
+    // unreserved escape in a path resolves the same way it does in an ID.
+    const encodedPath =
+      '- Source artifact or scope: `src/x-y.md` — [the file](../../../src/x%2Dy.md)';
+
+    expect(linksToItsSource(encodedPath, encodedPath)).toBe(true);
+
+    // Only unreserved escapes resolve. `%20` is a space, which is reserved
+    // here, so this destination does not resolve to what it spells and
+    // identifies nothing — exactly as it did before decoding existed at all.
+    const encodedSpacePath =
+      '- Source artifact or scope: `src/x y.md` — [the file](../../../src/x%20y.md)';
+
+    expect(linksToItsSource(encodedSpacePath, encodedSpacePath)).toBe(false);
+
+    // A label is not a destination. Markdown resolves character references in
+    // link text and never percent escapes, so a reader of this label sees
+    // `BL%2D123` and follows a link somewhere else entirely.
+    const encodedLabel =
+      '- Source backlog item: BL-123 — [BL%2D123](https://example.com/unrelated)';
+
+    expect(linksToItsSource(encodedLabel, encodedLabel)).toBe(false);
+
+    // ... and a bare percent sign in a label is ordinary text, so it must not
+    // cost the declaration a destination that identifies its source perfectly.
+    const percentInLabel =
+      '- Source backlog item: BL-123 — [BL-123 (100% done)](../../pjm/backlog/items/BL-123.md)';
+
+    expect(linksToItsSource(percentInLabel, percentInLabel)).toBe(true);
+
+    // A reserved delimiter changes what a URL resolves to, so decoding one
+    // would match a destination that leads somewhere else. Each of these keeps
+    // its escape, and the `%` surviving the single pass rejects the link.
+    const reserved: [string, string][] = [
+      [
+        'a slash that is not a path separator',
+        '- Source artifact or scope: `src/a/b.md` — [f](../src%2Fa%2Fb.md)',
+      ],
+      [
+        'a slash forging an issue path',
+        '- Source issue: #239 — [x](https://example.com/o/r%2Fissues%2F239)',
+      ],
+      [
+        'a fragment marker',
+        '- Source issue: #239 — [x](https://example.com/posts/x%23239)',
+      ],
+      [
+        'a query separator',
+        '- Source issue: #239 — [x](https://example.com/p%3Fissues%2F239)',
+      ],
+      [
+        'a double-encoded separator',
+        '- Source backlog item: BL-123 — [x](../../pjm/backlog/items/BL-123%252D%252Devil.md)',
+      ],
+    ];
+
+    for (const [name, declaration] of reserved) {
+      expect(linksToItsSource(declaration, declaration), name).toBe(false);
+    }
+
+    // The label half of the same rule. A character reference renders as its
+    // character, so a label that reads as the declared ID identifies it —
+    // accepted exactly where the same label spelled literally already was.
+    const referenceLabel =
+      '- Source backlog item: BL-123 — [BL&#45;123](https://example.com/unrelated)';
+    const literalLabel =
+      '- Source backlog item: BL-123 — [BL-123](https://example.com/unrelated)';
+
+    expect(linksToItsSource(referenceLabel, referenceLabel)).toBe(true);
+    expect(linksToItsSource(literalLabel, literalLabel)).toBe(true);
+
+    // A character reference is only a reference at CommonMark's lengths: up to
+    // seven decimal digits and six hexadecimal ones. A longer spelling renders
+    // literally, so reading it as a character would match text no reader sees.
+    const bounded: [string, string, boolean][] = [
+      ['decimal in range', '&#45;', true],
+      ['decimal at the bound', '&#0000045;', true],
+      ['decimal over the bound', '&#0000000045;', false],
+      ['hexadecimal in range', '&#x2D;', true],
+      ['hexadecimal at the bound', '&#x00002D;', true],
+      ['hexadecimal over the bound', '&#x0000002D;', false],
+    ];
+
+    for (const [name, reference, expected] of bounded) {
+      const inLabel = `- Source backlog item: BL-123 — [BL${reference}123](https://example.com/unrelated)`;
+      const inDestination = `- Source backlog item: BL-123 — [x](../../pjm/backlog/items/BL${reference}123.md)`;
+
+      expect(linksToItsSource(inLabel, inLabel), `${name} in a label`).toBe(
+        expected,
+      );
+      expect(
+        linksToItsSource(inDestination, inDestination),
+        `${name} in a destination`,
+      ).toBe(expected);
+    }
+
+    // The fail-closed edge of destination decoding says why it closed, rather
+    // than leaving an author to read a missing-backlink violation and guess.
+    const unresolvedDestination =
+      '- Source backlog item: BL-123 — [x](../../pjm/backlog/items/BL%2F123.md)';
+
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({ sourceEvidence: unresolvedDestination }),
+      ).violations,
+    ).toEqual([
+      MISSING_SOURCE_BACKLINK_VIOLATION,
+      UNRESOLVED_DESTINATION_VIOLATION,
+    ]);
+
+    // ... and a plain missing backlink still reports only itself.
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({
+          sourceEvidence:
+            '- Source backlog item: BL-123 — [x](https://example.com/unrelated)',
+        }),
+      ).violations,
+    ).toEqual([MISSING_SOURCE_BACKLINK_VIOLATION]);
+  });
+
   it('plan provenance pins the full inspected HEAD SHA and a separate comparison SHA', () => {
     const skill = readFileSync(REPO_IMPROVE_SKILL, 'utf8');
     const template = readFileSync(PLAN_TEMPLATE, 'utf8');
@@ -3091,9 +3844,19 @@ describe('skills bundled docs contract', () => {
     // explicitly not a prerequisite for this contract.
     expect(rejected).toEqual([]);
 
-    // The whole corpus predates the contract today. New prospective plans may
-    // join it later without disturbing this: they are accepted on their own
-    // terms by the sweep above.
+    // Derived from the evaluation rather than a hard-coded file list, so a
+    // plan a later wave adds joins the prospective set automatically. Without
+    // a floor this control could pass vacuously on a corpus that happened to
+    // contain no post-contract document, and every rule tightened here runs
+    // only in prospective mode.
+    const prospective = [...modes]
+      .filter(([, mode]) => mode === 'prospective')
+      .map(([name]) => name);
+
+    expect(prospective.length).toBeGreaterThanOrEqual(18);
+
+    // Named classifications, so a mode-selection regression is still caught by
+    // name rather than only by the aggregate above.
     expect(modes.get('2026-08-19-hermetic-cli-assets-root.md')).toBe('legacy');
     expect(modes.get('2026-09-04-honor-metadata-version-for-skills.md')).toBe(
       'legacy',
@@ -3334,6 +4097,19 @@ describe('skills bundled docs contract', () => {
         `wave status "shipped" is not ${WAVE_STATUSES.join(', ')}`,
       ],
       [
+        // `done` is the wave-table plan-row status, never a ledger status:
+        // `oat-wave-program/SKILL.md` settles that in its Status ledger bullet.
+        'a done ledger status, which belongs to the wave table instead',
+        {
+          statusLedger: [
+            '| Wave | Theme | Lanes | Status | Record |',
+            '| ---- | ----- | ----- | ------ | ------ |',
+            '| W1 | Theme | 4 | done | PR #262. |',
+          ].join('\n'),
+        },
+        `wave status "done" is not ${WAVE_STATUSES.join(', ')}`,
+      ],
+      [
         'status ledger with a header but no waves',
         {
           statusLedger: [
@@ -3359,6 +4135,10 @@ describe('skills bundled docs contract', () => {
         MISSING_PROGRAM_INDEXES_VIOLATION,
       ],
     ];
+
+    // The ledger vocabulary this contract enforces is the producer's, settled
+    // in `oat-wave-program/SKILL.md`'s Status ledger bullet.
+    expect(WAVE_STATUSES.join(', ')).toBe('composed, in-progress, merged');
 
     for (const [name, overrides, expected] of cases) {
       const readiness = evaluateExternalPlan(buildProgramDocument(overrides));
@@ -3433,6 +4213,71 @@ describe('skills bundled docs contract', () => {
       expect(prospective.mode, name).toBe('prospective');
       expect(prospective.violations, name).toEqual([]);
     }
+  });
+
+  // Group D. A program deliberately falls back to `created` when it carries no
+  // `oat_external_plan_date`. That fallback had no malformed-input guard, so an
+  // unparsable `created` sorted the document into the permissive legacy branch
+  // and every program rule was skipped. It now fails closed instead.
+  it('fails an execution program closed when its created date is unparsable', () => {
+    const withCreated = (document: string, created: string): string =>
+      document.replace(
+        '---\n\n# Execution Program',
+        `created: '${created}'\n---\n\n# Execution Program`,
+      );
+
+    const malformed = evaluateExternalPlan(
+      withCreated(buildProgramDocument({ date: null }), 'yesterday'),
+    );
+
+    expect(malformed.kind).toBe('program');
+    expect(malformed.mode).toBe('prospective');
+    expect(malformed.violations).toEqual([MALFORMED_CREATED_VIOLATION]);
+
+    // Failing closed means the document is then held to the program rules,
+    // rather than being waved through on its unreadable date alone.
+    const malformedWithoutLedger = evaluateExternalPlan(
+      withCreated(
+        buildProgramDocument({ date: null, statusLedger: null }),
+        'yesterday',
+      ),
+    );
+
+    expect(malformedWithoutLedger.mode).toBe('prospective');
+    expect(malformedWithoutLedger.violations).toEqual([
+      MALFORMED_CREATED_VIOLATION,
+      'missing ## Status Ledger',
+    ]);
+
+    // Unchanged: a parsable timestamp is the producer-shaped case the
+    // fallback exists for.
+    const producerShaped = evaluateExternalPlan(
+      withCreated(buildProgramDocument({ date: null }), '2026-09-20T05:24:43Z'),
+    );
+
+    expect(producerShaped.mode).toBe('prospective');
+    expect(producerShaped.violations).toEqual([]);
+
+    // Unchanged: a program with no `created` at all stays legacy, which is
+    // what keeps both real programs importable exactly as written.
+    const noCreated = evaluateExternalPlan(
+      buildProgramDocument({ date: null }),
+    );
+
+    expect(noCreated.mode).toBe('legacy');
+    expect(noCreated.violations).toEqual([]);
+
+    // Unchanged: the fallback is program-only, so a plan's `created` never
+    // selects its mode however unreadable it is.
+    const planWithMalformedCreated = evaluateExternalPlan(
+      buildProspectivePlan()
+        .replace(`oat_external_plan_date: '${PROSPECTIVE_DATE}'\n`, '')
+        .replace('---\n\n# Title', "created: 'yesterday'\n---\n\n# Title"),
+    );
+
+    expect(planWithMalformedCreated.kind).toBe('plan');
+    expect(planWithMalformedCreated.mode).toBe('legacy');
+    expect(planWithMalformedCreated.violations).toEqual([]);
   });
 
   it('rejects a post-contract plan whose unsatisfied hard dependency claims READY', () => {
