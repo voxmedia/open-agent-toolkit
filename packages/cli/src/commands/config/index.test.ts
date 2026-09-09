@@ -4440,6 +4440,177 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  // A `documentation.root` whose stored value is not a string used to reach
+  // the operator as nothing at all: `get` printed an empty line, `list`
+  // attributed the key to `default`, and both exited 0 -- which is exactly what
+  // "never configured" looks like. The value is still dropped; the drop is no
+  // longer silent.
+  //
+  // `logger.warn` is a no-op under `--json` (`ui/logger.ts`), so the two modes
+  // need different channels. The command picks exactly one: never both (a
+  // double print) and never neither (the silence this replaces). The capture
+  // helper records `warn` unconditionally, so a `--json` case asserting an
+  // empty `capture.warn` really is asserting that the command did not call it.
+  describe('documentation.root type warnings', () => {
+    async function writeSharedRoot(
+      root: string,
+      value: unknown,
+    ): Promise<void> {
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({ version: 1, documentation: { root: value } })}\n`,
+        'utf8',
+      );
+    }
+
+    it('warns once on get and once on list in human mode', async () => {
+      const root = await createRepoRoot();
+      await writeSharedRoot(root, 5);
+
+      const get = createHarness({ cwd: root });
+      await runCommand(get.command, ['get', 'documentation.root']);
+
+      expect(get.capture.warn).toHaveLength(1);
+      expect(get.capture.warn[0]).toContain('documentation.root');
+      expect(get.capture.warn[0]).toContain('got number');
+      expect(get.capture.warn[0]).toContain(
+        'oat config set documentation.root',
+      );
+      // stdout is unchanged: the value is still dropped, so it reads empty.
+      expect(get.capture.info[0]).toBe('');
+      expect(process.exitCode).toBe(0);
+
+      process.exitCode = undefined;
+      const list = createHarness({ cwd: root });
+      await runCommand(list.command, ['list']);
+
+      // Once per invocation, not once per config layer read: `list` resolves
+      // every key and every resolution reads the shared file again.
+      expect(list.capture.warn).toHaveLength(1);
+      expect(list.capture.warn[0]).toContain('documentation.root');
+      expect(list.capture.info[0]).toContain('documentation.root');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('carries the warning in the JSON document, not on stderr', async () => {
+      const root = await createRepoRoot();
+      await writeSharedRoot(root, { a: 1 });
+
+      const get = createHarness({ cwd: root });
+      await runCommand(get.command, ['get', 'documentation.root'], ['--json']);
+
+      expect(get.capture.warn).toEqual([]);
+      // One document, not merely a first document that carries the warning.
+      expect(get.capture.jsonPayloads).toHaveLength(1);
+      expect(get.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'documentation.root',
+        value: null,
+      });
+      const getPayload = get.capture.jsonPayloads[0] as { warnings?: string[] };
+      expect(getPayload.warnings).toHaveLength(1);
+      expect(getPayload.warnings?.[0]).toContain('documentation.root');
+      expect(getPayload.warnings?.[0]).toContain('got object');
+      expect(process.exitCode).toBe(0);
+
+      process.exitCode = undefined;
+      const list = createHarness({ cwd: root });
+      await runCommand(list.command, ['list'], ['--json']);
+
+      expect(list.capture.warn).toEqual([]);
+      expect(list.capture.jsonPayloads).toHaveLength(1);
+      const listPayload = list.capture.jsonPayloads[0] as {
+        warnings?: string[];
+      };
+      expect(listPayload.warnings).toHaveLength(1);
+      expect(listPayload.warnings?.[0]).toContain('got object');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('names the observed type for every wrong-typed shape', async () => {
+      const shapes: Array<[unknown, string]> = [
+        [5, 'number'],
+        [{ a: 1 }, 'object'],
+        [[1], 'array'],
+        [null, 'null'],
+        [true, 'boolean'],
+      ];
+
+      for (const [value, observed] of shapes) {
+        const root = await createRepoRoot();
+        await writeSharedRoot(root, value);
+        process.exitCode = undefined;
+
+        const { command, capture } = createHarness({ cwd: root });
+        await runCommand(command, ['get', 'documentation.root'], ['--json']);
+
+        const payload = capture.jsonPayloads[0] as { warnings?: string[] };
+        expect(payload.warnings).toHaveLength(1);
+        expect(payload.warnings?.[0]).toContain(`got ${observed}`);
+        expect(process.exitCode).toBe(0);
+      }
+    });
+
+    it('stays silent for a valid root and omits the JSON key entirely', async () => {
+      const root = await createRepoRoot();
+      await writeSharedRoot(root, 'apps/docs');
+
+      const human = createHarness({ cwd: root });
+      await runCommand(human.command, ['get', 'documentation.root']);
+      expect(human.capture.warn).toEqual([]);
+      expect(human.capture.info[0]).toBe('apps/docs');
+
+      const humanList = createHarness({ cwd: root });
+      await runCommand(humanList.command, ['list']);
+      expect(humanList.capture.warn).toEqual([]);
+
+      const json = createHarness({ cwd: root });
+      await runCommand(json.command, ['get', 'documentation.root'], ['--json']);
+      expect(json.capture.warn).toEqual([]);
+      // Not `warnings: []`. An empty array would be new noise on the common
+      // path, and it would break every existing `toEqual` on these documents.
+      expect(json.capture.jsonPayloads[0]).not.toHaveProperty('warnings');
+      expect(json.capture.jsonPayloads[0]).toEqual({
+        status: 'ok',
+        key: 'documentation.root',
+        value: 'apps/docs',
+        source: 'shared',
+      });
+
+      const jsonList = createHarness({ cwd: root });
+      await runCommand(jsonList.command, ['list'], ['--json']);
+      expect(jsonList.capture.warn).toEqual([]);
+      expect(jsonList.capture.jsonPayloads[0]).not.toHaveProperty('warnings');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('still lets a fail-closed sibling key win', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          documentation: { root: 5, excludes: 5 },
+        })}\n`,
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root });
+      await runCommand(command, ['get', 'documentation.root']);
+
+      // The warn-read did not change which error wins, nor the words it
+      // wins with: the whole diagnostic is pinned, because a message that only
+      // has to start with 'Invalid documentation.excludes' would stay green
+      // if the path or the repair command drifted. A command that fails
+      // reports the failure rather than a warning about it.
+      expect(capture.error[0]).toBe(
+        `Invalid documentation.excludes in ${join(root, '.oat', 'config.json')}: expected an array of non-empty strings. Repair it with oat config set documentation.excludes "<glob>,<glob>" (an empty value clears it).`,
+      );
+      expect(capture.warn).toEqual([]);
+      expect(process.exitCode).toBe(1);
+    });
+  });
+
   describe('archive.awsProfile + archive.awsRegion', () => {
     const archiveAwsPrecedenceDescription =
       'Precedence: per-invocation flag > this config value > existing shell env.';
