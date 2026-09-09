@@ -571,6 +571,8 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
+**Correction applied 2026-09-08 (wave-7 p01 execution; corrects a false neutralization claim in Step 5 and the Test plan — no requirement changes):** the claim that restoring the raw one-sided guard "makes case 5 fail on all three invocation forms" is false, reproduced by the lane and independently by the root review on the committed script: with the raw guard restored, only the plain invocation form fails (exit 0, no output — the fail-open shape); under `--preserve-symlinks-main` and under `NODE_OPTIONS=--preserve-symlinks-main` the raw comparison matches because the link is preserved in `import.meta.url`, so those two forms succeed. The two neutralizations are complementary, not overlapping: the raw guard is the control for the plain form, and a **one-sided canonicalization** (canonicalize `argv[1]` only) is the control for the two preserve-symlinks forms. The shipped control set is therefore three controls (raw guard → case 5 red; one-sided canonicalization → cases 6 and 7 red; stdin revert → cases 1, 2, 5, 6, 7 red), strictly stronger than the two the plan named. The test's `baseEnv` must delete an inherited `NODE_OPTIONS` and re-add it only for its dedicated case, or an ambient `--preserve-symlinks-main` makes the raw-guard control vacuous (found by the lane's cross-model round). Executors of the sibling sweep (`BL-260909-sweep-the-raw-main-module`) model on this corrected control set, not on the original sentence.
+
 Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;

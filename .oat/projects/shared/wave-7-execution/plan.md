@@ -758,33 +758,33 @@ git commit -m "docs(p20-t01): keep plan writes on the caller's model"
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target         |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ------------------- |
-| p01    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p02    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p03    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p04    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p05    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p06    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p07    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p08    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p09    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p10    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p11    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p12    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p13    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p14    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p15    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p16    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p17    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p18    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p19    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| p20    | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| final  | code     | pending     | -          | -                                                           | -             | -          | -                   |
-| plan   | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T224620Z.md | -             | gate       | codex-5-6-sol-xhigh |
-| spec   | artifact | pending     | -          | -                                                           | -             | -          | -                   |
-| design | artifact | pending     | -          | -                                                           | -             | -          | -                   |
-| plan   | artifact | passed      | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T231038Z.md | -             | gate       | codex-5-6-sol-xhigh |
+| Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target         |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ------------------- |
+| p01    | code     | passed      | 2026-09-08 | reviews/archived/p01-review-2026-09-08T235901Z.md           | dd6658e0b0a545645cccfd23630305301b19fd28 | manual     | -                   |
+| p02    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p03    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p04    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p05    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p06    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p07    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p08    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p09    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p10    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p11    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p12    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p13    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p14    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p15    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p16    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p17    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p18    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p19    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p20    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| final  | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| plan   | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T224620Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
+| spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
+| design | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
+| plan   | artifact | passed      | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T231038Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

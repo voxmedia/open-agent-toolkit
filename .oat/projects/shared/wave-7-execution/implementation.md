@@ -320,6 +320,22 @@ _Recorded when the configured implementation exit gate runs._
 
 **Plan row (attempt 2) → `passed`** (gate-written row moved forward in place with the archived path). Gate history: `f905852e` blocked (lost p09 patch, archive set, program ledger, p19 `AGENTS.md`), `c023731b` passed.
 
+## Review Received: p01 (round 1 — passed with findings)
+
+**Date:** 2026-09-08
+**Review artifact:** reviews/archived/p01-review-2026-09-08T235901Z.md (reviewed head `dd6658e0b0a545645cccfd23630305301b19fd28`, manual, opus)
+**Findings:** Critical 0 · Important 1 · Medium 1 · Minor 3 — PASS with findings; every ruling verified (the plan's "all three forms" claim false; 21 rejection classes base-vs-head all still rejected, `WEAKER_COUNT=0`; the rejected fails-open finding stands — guard body md5-identical to the exemplar, base = head on a thrown `realpathSync`; NODE_OPTIONS vacuity both ways; bump 1.7.9 → 1.7.10 with a clean sweep; scope exact; seven adversarial probes incl. a 5.24 MB chunked pipe).
+
+**Dispositions (root-owned, record-only; no change to the reviewed head):**
+
+- I1 — the plan-directed follow-up item for the eighteen sibling scripts was not filed: **fixed** — `BL-260909-sweep-the-raw-main-module` filed on the integration branch (names the seventeen raw-guard scripts and the unguarded `validate-nonarchive-lifecycle-receipt.mjs`, the corrected control set, and the two sweep-wide design questions from m1 and m3); backlog index regenerated. Verification: `test -f .oat/repo/pjm/backlog/items/BL-260909-sweep-the-raw-main-module.md`; `rg 'main-module guard' .oat/repo/pjm/backlog/` hits; recorded here and in the commit that carries it.
+- M1 — the false "all three invocation forms" claim still stood in the durable plan: **fixed** — a dated **Correction applied 2026-09-08** entry in the plan's `## Revalidation Before Execution` section states the reproduced behavior, the complementary three-control set, and the `NODE_OPTIONS` isolation requirement, and points the sweep at the corrected set. Verification: `grep -c 'Correction applied 2026-09-08' <plan>` = 1; corpus contract test green; recorded here.
+- m1 — residual fail-open `catch` shape (rejection stands): **deferred** to `BL-260909-sweep-the-raw-main-module` as a sweep-wide design decision (named in the item).
+- m2 — the newly reachable `clearActiveProject` failure branch has no test (probe P4 shows it fails closed): **deferred** — p04 inherits this file and its test in group 2; recorded in the p04 brief as an optional sixth case, otherwise carried by the sweep item.
+- m3 — a caller that leaves stdin open blocks where the base failed fast (the plan forbids a timeout; the production form always closes the pipe): **accepted as documented behavior**; the `isTTY` usage-hint option is named in the sweep item.
+
+**p01 row → `passed`** (reviewed head `dd6658e0b`; no fix round required — both actionable findings were root record/bookkeeping work).
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -335,6 +351,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p02-impl-001` outcome: BLOCKED at the pre-commit review gate (no commit; gate-green work preserved uncommitted in the worktree, +170/−21 over three files). Codex reproduced and the lane confirmed that deleting the `resolveEffectiveConfig` call removed the whole-config validation barrier: a malformed untargeted surface no longer blocks an unset elsewhere, and the `pjm.remote` raw-write branch persists unvalidated — the plan's own STOP. Remedy inside the plan's file scope: a dated post-STOP refresh (targeted strict barrier over the untargeted surfaces plus the raw-write branch; cases 7–8 and two controls; two control corrections) applied to the plan by the root; the lane resumes on its staged work.
 - `w7-p01-impl-001` outcome: DONE, one commit `dd6658e0b0a545645cccfd23630305301b19fd28` (five files). Two Codex rounds (R1: NODE_OPTIONS inheritance made the guard control vacuous — fixed with an isolated `baseEnv`; looped symlink test split into three; `catch { return false }` fails-open — rejected: the plan prescribes it verbatim and the canonical exemplar matches, escalated to the sibling sweep; R2: zero findings, production hunk hash-identical). Plan claim "raw guard fails all three invocation forms" found false — three complementary controls shipped (raw guard → plain form; one-sided canonicalization → both preserve-symlinks forms; stdin revert → five tests). Ten gates exit 0, `Cached: 0`. Follow-up (root files at closeout): the seventeen sibling scripts with the raw guard plus the unguarded `validate-nonarchive-lifecycle-receipt.mjs`.
 - `w7-p01-review-001` — reviewer, target opus, seven rulings (the three-control set reproduced; weaker-anywhere on the validator; the rejected fails-open finding; NODE_OPTIONS vacuity both ways; bump and pin sweep; scope; one adversarial stdin probe). Record `dispatch/w7-p01-review-001.json`.
+- `w7-p01-review-001` outcome: PASS with findings, 0C/1I/1M/3m, reconnaissance attempted. The two actionable findings were root-owned (the unfiled sweep item; the false plan claim) and were fixed in the receive commit; three Minors deferred/accepted (see the review section).
 - `w7-p02-impl-001` outcome (resumed): DONE, one commit `1913a950ff996849df02ef98b58fe02f437315ea` (three files, +275/−24). The refreshed barrier reads the untargeted surfaces through the injected readers, plus the targeted shared surface on the `pjm.remote` raw-write branch; cases 7–8 added; five controls both ways (D red at `index.test.ts:5187`, E at `:5218`). Codex R2: one Critical rejected (the refresh is on the integration branch `46d4adf36`, deliberately not rebased into the lane — a provenance artifact, no code blocker), no other findings; refusal ordering now key-refusals-first, both still exit 1. Seven gates exit 0, `Cached: 0`. Friction: stale wave-6 `/tmp/p02-codex-review2.md` nearly consumed; `pgrep -f codex` matches the session shell.
 - `w7-p02-review-001` — reviewer, target opus, eight rulings (amended plan read from the root; barrier read set per surface; mechanical base-vs-head weaker-anywhere across the key catalog; refusal-ordering; controls D and E; the rejected provenance Critical; adversarial probes; scope). Record `dispatch/w7-p02-review-001.json`.
 
@@ -346,6 +363,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-08
 
+- p01 review received (PASS with findings, 0C/1I/1M/3m): sweep item `BL-260909-sweep-the-raw-main-module` filed, plan correction entry applied; p01 row `passed`.
 - Plan gate attempt 2 passed (0C/0I/1M; the inventory Medium addressed in the receive); group 1 bootstraps next.
 - Plan gate attempt 1 blocked (1C/2I/1M: the lost p09 patch, the archive set, the program ledger, the p19 `AGENTS.md` claim) → repaired in-artifact; the parked p09 bytes recovered and committed under `parked/wave-5-p09/`.
 - Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after PR #284); wrapper scaffolded and authored; drift 20 PASS / 0 / 0 by mechanical run.
