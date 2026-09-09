@@ -427,6 +427,8 @@ lane is expected to), if PR #190 lands and moves the docs page or
 `skills.test.ts`, or if `origin/main` advances materially from
 `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`.
 
+**Correction applied 2026-09-09 (wave-7 p20 execution; wave-close pass; no requirement change):** (1) steps 2–3 ask for the `pnpm run check:skill-bumps` count to rise before the commit exists; it cannot — `listChangedVersionedFiles` (`packages/cli/src/validation/skills.ts:1134`, the diff at `:1152`) enumerates paths from `git diff --name-only … ${baseRef}...HEAD` and reads the version values from the working tree, so an uncommitted bump on a file absent from the committed changed set is invisible (the review's probe: `HEAD` at 1.9.1 with an uncommitted 1.9.2 → exit 0). The bump control is run after committing, on a throwaway branch, where it fails exactly as the plan expects (`… must bump its version relative to origin/main (still 1.9.1)`). (2) The success string quoted in `## Source and live evidence` is stale: the gate now prints `OK: validated N changed canonical skill and agent role version bump checks against origin/main` (it covers `.agents/agents/*.md` since p13). (3) The `:2584` and `:6107` citations were stale as pre-declared (p17 moved the contract case to `:2913`, the pin to `:6246`); re-anchored by content. (4) `packages/cli/src/validation/skills.test.ts` was not edited: the `oat-repo-improve` pin already read `2.1.5` (p10's PR-scoped bump) per this plan's Landing-event row, and `1.9.1` has no pin anywhere. Executed at `44421c0ef`, merged as `f6ccdab52` — the wave's last lane.
+
 ## Review focus
 
 - The added sentences say exactly what the operator asked for and no more: no new dispatch machinery, no claim that a CLI enforces the rule.
