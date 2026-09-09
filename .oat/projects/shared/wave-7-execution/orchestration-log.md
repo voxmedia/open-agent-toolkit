@@ -237,3 +237,23 @@ a scanner change and should be a standing requirement in briefs of this
 class. **Skill signal (gap):** `codex exec` wedged three times here (MCP
 session expiry) — the cross-model gate needs a documented fallback and a
 retry rule rather than an ad-hoc substitution.
+
+### 2026-09-09 · structural · oat-wave-execute · group 6 fan-in
+
+Two lanes merged in plan order (`7d2509f1b`, `f789c9261`; four lane commits
+patch-id-identical after rebase), one root address-now (`6ee5cd45c`),
+lockstep retained at 0.2.67, eleven gates exit 0 with `Cached: 0` (cli
+7257; the bump gate validated ten bumps on the integrated tip; root
+`pnpm test` now ends with `test:scripts`), config integrity clean. p16 was
+parked on a plan STOP (the recorder graph's no-process guard forbids the
+plan's git seam — a redesign, not a refresh; partial work kept under the
+wrapper). p17 needed two enumerations after its refresh: the resumed lane's
+differential surfaced class (c), and the root reviewer's 50,625-document
+combinatorial sweep surfaced class (d); the fix round then carried
+hidden-ness out of band and bounded character references. **Skill signal
+(strengthens):** a reviewer-built combinatorial sweep over the input grammar
+found a widening that a 79-row hand-built differential could not; scanner
+changes should require both. **Skill signal (gap):** the lane's Codex run
+wedged twice while the reviewer's completed in ~230 s from the root
+checkout — the cross-model gate's fallback should be "re-run from the root
+at review", which is what happened here by instruction, not by rule.

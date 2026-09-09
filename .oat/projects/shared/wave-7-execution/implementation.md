@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-09
-oat_current_task_id: p16-t01
+oat_current_task_id: p19-t01
 oat_generated: false
 ---
 
@@ -42,12 +42,12 @@ oat_generated: false
 | Phase 14 | complete           | 1     | 1/1       |
 | Phase 15 | complete           | 1     | 1/1       |
 | Phase 16 | parked (plan STOP) | 1     | 0/1       |
-| Phase 17 | pending            | 1     | 0/1       |
-| Phase 18 | pending            | 1     | 0/1       |
-| Phase 19 | pending            | 1     | 0/1       |
+| Phase 17 | complete           | 1     | 1/1       |
+| Phase 18 | complete           | 1     | 1/1       |
+| Phase 19 | in_progress        | 1     | 0/1       |
 | Phase 20 | pending            | 1     | 0/1       |
 
-**Total:** 15/20 tasks completed
+**Total:** 17/20 tasks completed (p16 parked)
 
 ---
 
@@ -245,27 +245,27 @@ oat_generated: false
 
 ## Phase 17: harden the external plan readiness contract (p17)
 
-**Status:** pending · **Group:** 6 · **Tasks:** p17-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 6 · **Tasks:** p17-t01
+**Outcome:** the external-plan readiness contract is hardened and the wave-program ledger vocabulary settled: `oat-wave-program/SKILL.md` writes `composed` / `in-progress` / `merged` (`done` is never a ledger status) and `WAVE_STATUSES` is narrowed after it; the backlog-id boundary is strict; a malformed `created` fails closed; the source-declaration scanner runs the fence machine first, recognizes declarations only at an original column 0, decodes link labels for character references only and destinations once for unreserved characters (any residual `%` rejects), and restricts HTML-block openers to CommonMark's conditions; the prospective floor is 18.
+**Verification:** forced check/type-check/build/cli test `Cached: 0` (7257); check:skill-bumps; validate-skills; `test:smoke` 167; `test:skills` 883; lint; format; a 79-row real-code base-vs-head differential (acceptance flips only the four enumerated classes (a)–(d)); the live-corpus `modes` map byte-identical; three in-harness reviewers (a continuation Critical fixed pre-commit); root review CHANGES REQUESTED (1C/2I/2M/2m: a fourth rendered-text-equivalent class found by a 50,625-document sweep and enumerated as (d); in-band form-feed sentinel; unbounded character references) → fix `9eeecf9db` → round 2 PASS (0/0/0/3m) with Codex covering the fix diff (its one Important, CRLF fail-closed, down-rated to Minor).
+**Deviations:** STOP at the pre-commit gate (four unenumerated widenings the plan's own steps prescribed) closed by the plan's dated 2026-09-09 refresh; the resumed lane surfaced a third widening class (label character references) that the root enumerated as (c) and the root review found a fourth (d); `codex exec` wedged in the lane (recorded as a gap; the round-2 reviewer supplied the coverage); rule (4) rejects any bare `%` destination by design.
 
 ### Task p17-t01: Execute external plan — Harden the external-plan readiness contract and settle the wave-program ledger vocabulary
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `5959ecc83` (was `4db81ebfd`), `b5b742c5c` (was `9eeecf9db`)
 
 ## Phase 18: cover skill and script tests in repo gates (p18)
 
-**Status:** pending · **Group:** 6 · **Tasks:** p18-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 6 · **Tasks:** p18-t01
+**Outcome:** skill-asset formatting and the worktree-init test run inside the gates CI executes: `pnpm check` runs `format:root` over `.agents/skills/**`, `apps/oat-docs/docs`, and `tools/smoke`; `pnpm test` runs `test:scripts` last; lint-staged formats `*.{mjs,cjs}`; `format:fix` shares one root glob through `format:root:fix`; `AGENTS.md` states the true coverage (naming `packages/control-plane`, whose `format` still runs in no CI gate).
+**Verification:** forced check/type-check/cli test `Cached: 0`; chained `pnpm test` across all four suites; lint; format; check:skill-bumps; validate-skills; four matched controls (unwired green / wired red, incl. the pre-commit hook in a scratch clone); two Codex rounds (R1 1I fixed, 1I rejected as a patch finding; R2 1I closed by running the clean integrated `pnpm test`, 1m fixed); root review PASS with findings (0/1I/1M/5m; the refused plan sentence adjudicated a justified deviation) → fix round → round 2 PASS (0/0/0/2m).
+**Deviations:** the plan's Step 6 sentence ("`pnpm check` now contains everything `pnpm format` checks") is false and was not written (`packages/control-plane` defines `format` but no `check`); the `:21`/`:23` Essential Commands bullets updated in-file; `format:fix` refactored onto a shared `format:root:fix` (adjudicated licensed).
 
 ### Task p18-t01: Execute external plan — Put skill-asset formatting and the worktree-init test inside the gates CI actually runs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `4cc2b0304` (was `1ce96aa7e`), `aa2f17ebc` (was `bb277915e`)
 
 ## Phase 19: correct skill authoring facts (p19)
 
@@ -839,6 +839,14 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - Backlog: `BL-260909-use-handle-bound-traversal` filed at the p15 receive; p13 updated its three items (the retire item stays open).
 - Worktrees `.worktrees/wave-7/p1{3,4,5}` and branches `wave-7/p1{3,4,5}` removed after the merge.
 
+#### Group 6 fan-in (2026-09-09)
+
+- `wave-7/p17` and `wave-7/p18` rebased onto the integration tip and merged in plan order with `git merge --no-ff` as `7d2509f1b` (p17), `f789c9261` (p18) (p16 parked on a plan STOP, no commit; its worktree removed). Lane commits re-hashed (identical `git patch-id --stable` pairs): p17 `4db81ebfd`→`5959ecc83`, `9eeecf9db`→`b5b742c5c`; p18 `1ce96aa7e`→`4cc2b0304`, `bb277915e`→`aa2f17ebc`. Root address-now `6ee5cd45c`: `apps/oat-docs/docs/contributing/code.md` names `test:scripts` (last) and the true gate coverage (p18 review I1); `.oat/repo/knowledge/testing.md` gains the suite (p18 m3); `check:fix` mirrors `check` (p18 round-2 m1); `AGENTS.md`'s `pnpm format` bullet says "defined `format` script" (p18 round-2 m2).
+- Lockstep retained at 0.2.67 (`origin/main` still 0.2.66 at `684bd3be3`).
+- Integration gates (sequential, exit codes captured, on a clean tree after the merges and the address-now): `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached; cli 388 files / 7257 tests), `pnpm build` 0, `pnpm run check:skill-bumps` 0 (validated 10 changed canonical skill and agent role bump checks against `origin/main`), `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke` 0 (167), `pnpm test:skills` 0 (883), root `pnpm test` 0 (smoke 167 / skills 883 / release 42 / scripts 1 — `test:scripts` now runs last). Config-integrity check: no tracked `.oat/config.json` key missing versus `origin/main`.
+- Backlog: p16's item `BL-260906-harden-dispatch-launch` stays open (both halves; a Notes entry at closeout); no lane closed or renamed an item.
+- Worktrees `.worktrees/wave-7/p1{7,8}` and branches `wave-7/p1{7,8}` removed after the merge.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -847,6 +855,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- Group 6 fan-in: merges `7d2509f1b` (p17), `f789c9261` (p18); address-now `6ee5cd45c`; p16 parked; lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached; cli 7257). p19 (ungrouped) bootstraps next.
 - p17 review received (CHANGES REQUESTED, 1C/2I/2M/2m): widening (d) enumerated in the plan; fix round `w7-p17-fix-001` dispatched; p17 row `fixes_added`.
 - p18 round 2 passed (0/0/0/2m) at `bb277915e`; p18 row `passed`.
 - p18 review received (PASS with findings, 0/1I/1M/5m): fix round `w7-p18-fix-001` dispatched; two root address-nows queued for the fan-in; p18 row `fixes_added`.
@@ -905,32 +914,38 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p13-t01       | plan weaker-anywhere rule      | every finding emitted today still emitted AND `tests/`-only accepted                        | a `SKILL.md` nested under `tests/` is no longer version-checked (plan boundary governs; input set empty; recorded on the item)                                                                                                        |
 | p14-t01       | plan step 4 / Done criterion 4 | exit-code clause flips under the reorder                                                    | preserved invariant proven by neutralizing `:557`; conjunct drop stays green post-fix (dated correction)                                                                                                                              |
 | p15-t01       | plan helper-extraction step    | moved verbatim, no behavior change                                                          | hardened per the dated refresh (symlinked root/sentinel rejected; retirement `detach` for a symlinked sentinel)                                                                                                                       |
+| p17-t01       | plan steps 4–5                 | percent-decode label and destination; HTML-block rule a narrowing                           | fence machine first; label character references only; unreserved-only destination decode; CommonMark HTML-block conditions; widenings (c) and (d) enumerated (dated refresh + enumerations)                                           |
+| p18-t01       | plan step 6                    | "`pnpm check` now contains everything `pnpm format` checks"                                 | not written — false for `packages/control-plane`; exactly-true text naming the gap (justified deviation)                                                                                                                              |
+| p16-t01       | plan step 3                    | a `gitExecFile` seam in the dispatch recorder                                               | parked — the recorder graph's no-process guard forbids it; partial work under `parked/wave-7-p16/`                                                                                                                                    |
 
 ## Test Results
 
-| Phase      | Tests Run                                                                                         | Passed | Failed | Coverage |
-| ---------- | ------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| (none yet) | -                                                                                                 | -      | -      | -        |
-| p01        | focused 7 + `test:skills` 870 + `test:smoke` 167 + forced CLI suite                               | all    | 0      | -        |
-| p02        | focused 288 + forced CLI suite (385 files)                                                        | all    | 0      | -        |
-| p03        | focused 46 + forced CLI suite (386 files / 7093)                                                  | all    | 0      | -        |
-| g1 fan-in  | eight DoD gates + smoke + skills + root test (0 cached; cli 7105)                                 | all    | 0      | -        |
-| p04        | focused 429 + `test:skills` 883 + `test:smoke` 167 + forced CLI suite (7131)                      | all    | 0      | -        |
-| p05        | focused 780 + forced CLI suite (387 files / 7128)                                                 | all    | 0      | -        |
-| p06        | focused 27 + forced CLI suite (7114)                                                              | all    | 0      | -        |
-| g2 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                           | all    | 0      | -        |
-| p07        | focused 3 + `skills.test.ts` 213 + `test:skills` 883 + `test:smoke` 167 + forced CLI suite (7164) | all    | 0      | -        |
-| p08        | focused 421 + forced CLI suite (387 files / 7182)                                                 | all    | 0      | -        |
-| p09        | focused 94 + forced CLI suite                                                                     | all    | 0      | -        |
-| g3 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                           | all    | 0      | -        |
-| p10        | forced CLI suite (7193) + `test:skills` 883 + `test:smoke` 167                                    | all    | 0      | -        |
-| p11        | focused 139 + forced CLI suite (387 files / 7196)                                                 | all    | 0      | -        |
-| p12        | focused 85 + forced CLI suite (387 files / 7194)                                                  | all    | 0      | -        |
-| g4 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                           | all    | 0      | -        |
-| p13        | focused 245 + forced CLI suite + `test:skills` 883                                                | all    | 0      | -        |
-| p14        | focused 74 + forced CLI suite (387 files)                                                         | all    | 0      | -        |
-| p15        | focused 334 + forced CLI suite (388 files / 7231)                                                 | all    | 0      | -        |
-| g5 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                           | all    | 0      | -        |
+| Phase      | Tests Run                                                                                                        | Passed | Failed | Coverage |
+| ---------- | ---------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| (none yet) | -                                                                                                                | -      | -      | -        |
+| p01        | focused 7 + `test:skills` 870 + `test:smoke` 167 + forced CLI suite                                              | all    | 0      | -        |
+| p02        | focused 288 + forced CLI suite (385 files)                                                                       | all    | 0      | -        |
+| p03        | focused 46 + forced CLI suite (386 files / 7093)                                                                 | all    | 0      | -        |
+| g1 fan-in  | eight DoD gates + smoke + skills + root test (0 cached; cli 7105)                                                | all    | 0      | -        |
+| p04        | focused 429 + `test:skills` 883 + `test:smoke` 167 + forced CLI suite (7131)                                     | all    | 0      | -        |
+| p05        | focused 780 + forced CLI suite (387 files / 7128)                                                                | all    | 0      | -        |
+| p06        | focused 27 + forced CLI suite (7114)                                                                             | all    | 0      | -        |
+| g2 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                                          | all    | 0      | -        |
+| p07        | focused 3 + `skills.test.ts` 213 + `test:skills` 883 + `test:smoke` 167 + forced CLI suite (7164)                | all    | 0      | -        |
+| p08        | focused 421 + forced CLI suite (387 files / 7182)                                                                | all    | 0      | -        |
+| p09        | focused 94 + forced CLI suite                                                                                    | all    | 0      | -        |
+| g3 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                                          | all    | 0      | -        |
+| p10        | forced CLI suite (7193) + `test:skills` 883 + `test:smoke` 167                                                   | all    | 0      | -        |
+| p11        | focused 139 + forced CLI suite (387 files / 7196)                                                                | all    | 0      | -        |
+| p12        | focused 85 + forced CLI suite (387 files / 7194)                                                                 | all    | 0      | -        |
+| g4 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                                          | all    | 0      | -        |
+| p13        | focused 245 + forced CLI suite + `test:skills` 883                                                               | all    | 0      | -        |
+| p14        | focused 74 + forced CLI suite (387 files)                                                                        | all    | 0      | -        |
+| p15        | focused 334 + forced CLI suite (388 files / 7231)                                                                | all    | 0      | -        |
+| g5 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                                          | all    | 0      | -        |
+| p17        | focused 105 + forced CLI suite (388 files / 7257) + `test:skills` 883 + `test:smoke` 167                         | all    | 0      | -        |
+| p18        | four matched controls + chained `pnpm test` (smoke 167 / skills 883 / release 42 / scripts 1) + forced CLI suite | all    | 0      | -        |
+| g6 fan-in  | eight DoD gates + smoke + skills + scripts + root test (0 cached)                                                | all    | 0      | -        |
 
 ## Deferred Findings
 
