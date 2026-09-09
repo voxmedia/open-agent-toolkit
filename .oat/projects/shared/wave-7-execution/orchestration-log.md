@@ -117,3 +117,18 @@ self-consistency invariant; p02: a 432-pair mechanical weaker-anywhere sweep).
 **Skill signal (gap):** three lanes hit the same `/tmp/<phase>-*` collision
 with wave-6 artifacts; the common brief now mandates `mktemp -d` scratch and an
 mtime check — the skill's brief template should carry that rule.
+
+### 2026-09-09 · structural · oat-wave-execute · p05 STOP → refresh → resume
+
+p05 stopped at its Step 5 sweep: the plan's expected classification was
+derived from the files it inspected while the command it prescribes is
+`src`-wide, so four member-access sites surfaced unclassified — one created
+downstream by the plan's own Step 2 fix (`mergeEffectiveDispatchMatrix`
+re-swallows the preserved key) and three user-supplied-id lookups where
+`--target __proto__` / `--provider __proto__` crash or print
+`unsupported (undefined)`. Decision written as a dated refresh: fix A (it is
+the Outcome), guard B–D through the same helper (strictly stricter error
+paths; controls pin that real ids are unchanged). **Skill signal (gap):** a
+plan that prescribes a repo-wide enumeration as its completeness proof must
+run that exact command at authoring time; an inspected-files classification
+passed the same-model review and failed on the first live sweep.
