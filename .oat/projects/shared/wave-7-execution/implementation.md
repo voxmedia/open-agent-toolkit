@@ -559,6 +559,8 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p09-review-001` — reviewer, target opus, six rulings (weaker-anywhere on inert entries incl. a symlink-to-correct-directory probe; the byte-identical `absent` message; the re-keyed simulation proven load-bearing; real symlink fixtures on this host; the exhaustiveness control; scope). Record `dispatch/w7-p09-review-001.json`.
 - `w7-p07-review-001` outcome: PASS with findings, 0/0/1M/2m (controls re-run; no pin; Codex rejections stand; a completeness gap in the regex extraction found by the reviewer's own probe). M1 → fix round `w7-p07-fix-001`; m1/m2 pre-existing, wave close.
 - `w7-p07-fix-001` — bounded test-only fix round on the resumed implementer. Record `dispatch/w7-p07-fix-001.json`.
+- `w7-p07-fix-001` outcome: one append-only test-only commit `6173568916690b2a0b5da0420cb89b6d836c794b`: both example extractions now assert completeness (every candidate row/bullet parses; parsed count equals candidate count; the failure names the line); the reviewer's probe G red on the available side, a `10 of 10` rewrite red on the installed side, pre-existing cases green; gates `Cached: 0` (cli 7164).
+- `w7-p07-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w7-p07-review-002.json`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
 #### Group 1 fan-in (2026-09-09)
