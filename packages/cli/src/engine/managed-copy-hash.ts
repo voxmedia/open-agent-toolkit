@@ -28,13 +28,15 @@ import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
  *    absent or has trailing content, when the marker file does not start with
  *    exactly the expected banner, or when the provider tree holds any
  *    non-regular entry.
- * 3. "Non-regular entry" includes the two shapes the pathname-based skip used
- *    to wave through: a provider root that is a symlink rather than a real
- *    directory, and a `.oat-generated` sentinel that is a symlink (or anything
- *    other than a regular file). Both return `null`. Without this the readers
- *    would newly accept a symlink-substituted provider view as `in_sync`,
- *    because the sentinel was skipped by pathname before its type was ever
- *    examined and was read through a symlink-following `readFile`.
+ * 3. "Non-regular entry" includes two shapes the pre-hardening helper waved
+ *    through, for two different reasons: a `.oat-generated` sentinel that is a
+ *    symlink (or anything other than a regular file) — it was skipped by
+ *    pathname before its type was ever examined and then read through a
+ *    symlink-following `readFile`; and a provider root that is a symlink
+ *    rather than a real directory — the root was never type-checked before
+ *    `readdir`, which traverses a symlinked directory. Both return `null`.
+ *    Without this the detector and planner would newly accept a
+ *    symlink-substituted provider view as `in_sync`.
  *
  * These claims describe a quiescent tree. Every check here is path-based, so
  * none of them survives an adversary swapping an entry between the check and
@@ -45,9 +47,10 @@ import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
  *
  * This module's rejection set is therefore a strict superset of the original
  * private helper's, on every consumer. `classifyObsoleteMappingRetirement`
- * inherits the stricter contract deliberately: for these two shapes it now
- * classifies `detach` rather than `remove`, which is the safe direction for a
- * destructive path.
+ * inherits the stricter contract deliberately: for the symlinked-sentinel
+ * shape it now classifies `detach` rather than `remove`, the safe direction
+ * for a destructive path (a symlinked root was already `detach` there, because
+ * `expectedTypeMatches` is computed from `lstat` before the helper runs).
  *
  * `null` means "this is not a verifiable managed copy", never "it matches".
  * Callers must fall back to their raw comparison on `null`, so an unverifiable

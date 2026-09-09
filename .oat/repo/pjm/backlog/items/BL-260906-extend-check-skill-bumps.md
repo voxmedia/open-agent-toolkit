@@ -35,6 +35,17 @@ p01 review m3 (wave 3). pnpm run check:skill-bumps diffs only .agents/skills/_/S
   appears under `.agents/skills` in `git diff`, so it does not trigger a bump.
   (2) A pure deletion of a sibling file is excluded by `--diff-filter=ACMR`,
   kept deliberately for parity with the pre-existing gate.
+- 2026-09-09 (wave-7 p13 root review): one deliberate narrowing relative to
+  the prior gate is recorded here rather than only in a code comment. The old
+  `.agents/skills/*/SKILL.md` pathspec matched a `SKILL.md` nested anywhere
+  under a skill (a git pathspec `*` crosses `/`), including under `tests/`;
+  the widened gate keeps a nested `SKILL.md` version-checked except under
+  `tests/`, per this item's `tests/` boundary. No such file exists at the
+  wave-7 base, head, or `origin/main`, and `bundle-assets.sh` strips `tests/`
+  before any consumer sees it, so no shipped artifact loses enforcement; the
+  lost check was a false positive. A second reject-ward exception: a changed
+  sibling whose owning `SKILL.md` is absent from the working tree exits 0
+  instead of 2 (`ENOENT`) — plan-mandated, test-pinned, not CI-reachable.
 
 ## Acceptance Criteria
 
