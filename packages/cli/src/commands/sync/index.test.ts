@@ -2382,6 +2382,134 @@ describe('createSyncCommand', () => {
     expect(capture.warn).toContain('\nSync completed with partial failures.');
   });
 
+  it('reports an all-skip extension plan as current when the apply step never runs', async () => {
+    const adapter = createCodexAdapter();
+    const { capture, command, applyCodexProjectExtensionPlan } = createHarness({
+      adapters: [adapter],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [adapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          operations: [
+            {
+              action: 'skip',
+              target: 'role',
+              path: '.codex/agents/oat-reviewer-gpt-5-6-sol-high.toml',
+              reason: 'managed Codex role file already in sync',
+              roleName: 'oat-reviewer-gpt-5-6-sol-high',
+            },
+            {
+              action: 'skip',
+              target: 'config',
+              path: '.codex/config.toml',
+              reason: 'codex config already in sync',
+            },
+          ],
+          managedRoles: ['oat-reviewer-gpt-5-6-sol-high'],
+          aggregateConfigHash: 'hash-current',
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project'],
+    });
+
+    // The apply step is deliberately not run for a plan with nothing to write;
+    // the reported status must still be the one that step would have recorded.
+    expect(applyCodexProjectExtensionPlan).not.toHaveBeenCalled();
+    expect(capture.info[0]).toContain('codex extension results');
+    expect(capture.info[0]).toContain(
+      '- codex:role:skip .codex/agents/oat-reviewer-gpt-5-6-sol-high.toml (oat-reviewer-gpt-5-6-sol-high)\n  reason: managed Codex role file already in sync\n  result: current',
+    );
+    expect(capture.info[0]).toContain(
+      '- codex:config:skip .codex/config.toml\n  reason: codex config already in sync\n  result: current',
+    );
+    expect(capture.info[0]).not.toContain('result: unknown');
+    expect(capture.info).toContain('\nNo changes required.');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('emits the same all-skip extension results and counts in JSON as the apply path', async () => {
+    const adapter = createCodexAdapter();
+    const { capture, command, applyCodexProjectExtensionPlan } = createHarness({
+      adapters: [adapter],
+      // Core work keeps the scope itself out of the whole-scope skip, so this
+      // exercises the extension loop's own all-skip branch.
+      plans: [createPlan('create_symlink')],
+      executeResults: [{ applied: 1, failed: 0, skipped: 0 }],
+      configAwareResults: [
+        {
+          activeAdapters: [adapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          operations: [
+            {
+              action: 'skip',
+              target: 'role',
+              path: '.codex/agents/oat-reviewer-gpt-5-6-sol-high.toml',
+              reason: 'managed Codex role file already in sync',
+              roleName: 'oat-reviewer-gpt-5-6-sol-high',
+            },
+            {
+              action: 'skip',
+              target: 'config',
+              path: '.codex/config.toml',
+              reason: 'codex config already in sync',
+            },
+          ],
+          managedRoles: ['oat-reviewer-gpt-5-6-sol-high'],
+          aggregateConfigHash: 'hash-current',
+        },
+      ],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    expect(applyCodexProjectExtensionPlan).not.toHaveBeenCalled();
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      summary: { plannedOperations: 1, applied: 1, failed: 0, skipped: 2 },
+      materializationExtensions: [
+        {
+          provider: 'codex',
+          applied: 0,
+          failed: 0,
+          skipped: 2,
+          operationResults: [
+            {
+              provider: 'codex',
+              target: 'role',
+              path: '.codex/agents/oat-reviewer-gpt-5-6-sol-high.toml',
+              entryName: 'oat-reviewer-gpt-5-6-sol-high',
+              action: 'skip',
+              status: 'current',
+            },
+            {
+              provider: 'codex',
+              target: 'config',
+              path: '.codex/config.toml',
+              action: 'skip',
+              status: 'current',
+            },
+          ],
+        },
+      ],
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('reports combined user extension partial failure in JSON and exits nonzero', async () => {
     const cursorCompute = vi.fn(async () => ({
       provider: 'cursor' as const,

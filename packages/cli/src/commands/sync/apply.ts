@@ -2,7 +2,10 @@ import type { CommandContext } from '@app/command-context';
 import type { SyncOperationResult } from '@engine/engine.types';
 import type { CollectionOperationResult } from '@engine/execute-plan';
 import type { SyncPlan, SyncResult } from '@engine/index';
-import type { MaterializationOperationResult } from '@providers/shared/materialization-extension';
+import {
+  hasMaterializationChanges,
+  type MaterializationOperationResult,
+} from '@providers/shared/materialization-extension';
 import {
   getProviderRegistrations,
   type ManagedContentKind,
@@ -175,6 +178,51 @@ function normalizeOperationResults(
       status: operation.operation === 'skip' ? 'current' : 'unknown',
     };
   });
+}
+
+/**
+ * Records the outcome of the extension plans the apply step will not run.
+ *
+ * A plan whose operations are all skips is never applied — there is nothing to
+ * write — and a scope with no work at all is skipped whole before the extension
+ * loop is reached, so neither path populates `operationResults`. The report and
+ * the JSON payload still describe every planned operation, so an unrecorded
+ * skip rendered as `result: unknown` while the identical skip rendered as
+ * `current` whenever some sibling operation happened to make the apply step run.
+ *
+ * Both extension implementations record a skip as `status: 'current'` without
+ * touching the filesystem, so that is what is reproduced here: same statuses,
+ * same per-extension counts, one answer for a skip regardless of which path
+ * produced it. Recording the results here rather than defaulting the renderer
+ * keeps the `--json` payload consistent too, since its consumers read
+ * `materializationExtensions[].operationResults` and the sibling counts
+ * directly.
+ */
+function recordUnappliedExtensionSkips(scopePlan: ScopeSyncPlan): void {
+  for (const plan of scopePlan.materializationExtensionPlans) {
+    if (hasMaterializationChanges(plan)) {
+      continue;
+    }
+    const summary = scopePlan.materializationExtensions.find(
+      (candidate) => candidate.provider === plan.provider,
+    );
+    if (!summary) {
+      continue;
+    }
+    const operationResults: MaterializationOperationResult[] =
+      plan.operations.map((operation) => ({
+        provider: operation.provider,
+        target: operation.target,
+        path: operation.path,
+        entryName: operation.entryName,
+        action: operation.action,
+        status: 'current',
+      }));
+    summary.applied = 0;
+    summary.failed = 0;
+    summary.skipped = operationResults.length;
+    summary.operationResults = operationResults;
+  }
 }
 
 function materializationOperationIdentity(operation: {
@@ -372,6 +420,9 @@ export async function runSyncApply(
   > = [];
 
   for (const scopePlan of scopePlans) {
+    // Runs before the two `continue`s below, both of which can leave an
+    // all-skip extension plan unapplied and therefore unreported.
+    recordUnappliedExtensionSkips(scopePlan);
     const hasSyncEntries =
       scopePlan.plan.entries.length > 0 ||
       scopePlan.plan.removals.length > 0 ||
