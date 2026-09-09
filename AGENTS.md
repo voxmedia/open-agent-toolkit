@@ -18,7 +18,7 @@
 
 ### Essential Commands
 
-- `pnpm check` - Lint and format checks per package, markdownlint over `apps/oat-docs/docs`, and `oat:validate-skills`
+- `pnpm check` - Each workspace package's defined `check` script, markdownlint over `apps/oat-docs/docs`, `oat:validate-skills`, and `format:root` (oxfmt over `.agents/skills`, `apps/oat-docs/docs`, and `tools/smoke`)
 - `pnpm build` - Build all packages and applications (excludes docs for speed)
 - `pnpm build:docs` - Build the docs site and its dependencies
 - `pnpm lint` - Lint code using oxlint, plus `tools/smoke`
@@ -26,13 +26,19 @@
 - `pnpm type-check` - TypeScript type checking across all packages
 - `pnpm test` - Run tests across the workspace
 
-`pnpm check` and the `pnpm lint`/`pnpm format` pair overlap, but neither
-contains the other, so passing one does not predict the other. Only `pnpm check`
-runs markdownlint over the docs app and validates canonical OAT skill structure
-through `oat:validate-skills`. Markdownlint catches docs violations such as a
-fenced code block with no language or a skipped heading level. Only `pnpm lint`
-and `pnpm format` apply their respective lint/format coverage to `tools/smoke`
-and `.agents/skills/**/*.md`; skill validation does not replace either check.
+`pnpm check` now runs the root-level formatting check that used to live only
+in `pnpm format`. It runs each workspace package's defined `check` script
+through `turbo run check` — a package that defines no `check` script is
+skipped — validates canonical OAT skill structure through
+`oat:validate-skills`, runs markdownlint over the docs app, and applies
+`oxfmt --check` to `.agents/skills/**/*.{md,mjs,js,cjs}`,
+`apps/oat-docs/docs/**/*.md`, and `tools/smoke/**/*.{mjs,md,json}` through the
+shared `format:root` script that `pnpm format` also calls. Markdownlint catches
+docs violations such as a fenced code block with no language or a skipped
+heading level. Two surfaces still sit outside `pnpm check`, so passing it does
+not predict them: `pnpm lint`'s root-level `oxlint tools/smoke .agents/skills`,
+and `packages/control-plane`, which defines a `format` script but no `check`
+script, so `turbo run check` skips it while `turbo run format` checks it.
 
 ### Definition of Done
 
@@ -65,7 +71,8 @@ that `pnpm test --force` does **not** force a re-run: pnpm appends the flag to
 the last command of the chained root script, where it lands harmlessly or
 errors. For evidence-grade verification run
 `HOME=$(mktemp -d) pnpm exec turbo run test --force` from the repository root,
-and run `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, and
+and run `pnpm test:smoke`, `pnpm test:scripts` (which runs
+`scripts/worktree/init.test.mjs`), `pnpm test:skills`, `pnpm test:release`, and
 `pnpm oat:validate-skills` separately when they matter. Run `pnpm build` first
 when you invoke them this way: the smoke and release suites load the CLI's built
 resolver from `packages/cli/dist`, which `turbo run test` supplies through its
@@ -101,8 +108,13 @@ alongside the fix — once per clause when the requirement has several. Two
 defects shipped behind tests that could not fail; one mocked the very reader
 that dropped the field it asserted was preserved.
 
-CI runs neither `pnpm lint` nor `pnpm format`. Run both whenever a change
-touches `tools/smoke` or `.agents/skills`, since nothing else covers them.
+CI does not run `pnpm lint` or `pnpm format`. `pnpm check` now covers the
+shared `format:root` portion of `pnpm format` (`.agents/skills`,
+`apps/oat-docs/docs`, and `tools/smoke`), but two surfaces still have no CI
+gate: `pnpm lint`'s root-level `oxlint tools/smoke .agents/skills`, and
+`packages/control-plane`'s own `oxfmt --check .`, which only `pnpm format`
+runs. Run `pnpm lint` and `pnpm format` whenever a change touches
+`tools/smoke`, `.agents/skills`, or `packages/control-plane`.
 
 ### Development Workflow
 
