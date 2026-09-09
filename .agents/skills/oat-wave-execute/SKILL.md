@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.9.1
+  version: 1.9.2
 ---
 
 # Execute a Wave of External Plans
@@ -183,6 +183,11 @@ the work happens may change; WHAT must be true may not), recorded exactly once
 in the Drift Refresh Record with pointer-only references elsewhere — a
 reconciliation that waives a source-plan requirement is a plan-gate Important
 (wave-4 evidence).
+
+Recon is delegated; the Drift Refresh Record entries and any reconciliation
+that amends a plan's mechanism — including after a tripped STOP — are plan
+writes and stay on the orchestrator's own model class, the same rule
+`oat-repo-improve` applies to external-plan writes.
 
 ### Step 3: Scaffold the wrapper project
 
