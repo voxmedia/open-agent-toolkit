@@ -1665,9 +1665,16 @@ interface SurfaceFlagOptions {
 /**
  * Resolve the `--shared` / `--local` / `--user` trio to a single surface.
  *
- * Lifted verbatim out of the `set` action so `unset` enforces the same
- * mutual-exclusion rule through the same code path. The thrown message is
- * byte-identical to the one `set` raised inline, because tests pin it.
+ * `set`, `unset`, and `adopt` all resolve the trio here -- this is the only
+ * copy of the mutual-exclusion rule and of its message. It was lifted verbatim
+ * out of the `set` action so `unset` could share it, and `adopt` was folded on
+ * afterwards.
+ *
+ * The message is pinned in two ways, so changing it means moving all three
+ * commands together: the per-command cases assert it individually, and the
+ * three-command parity case in `index.test.ts` ('set, unset, and adopt reject
+ * the same conflicting surface flags with one message') compares the three
+ * commands' output to each other as well as to the literal.
  */
 function resolveSurfaceFlags(options: SurfaceFlagOptions): ConfigSurface {
   const flagsPresent = [options.shared, options.local, options.user].filter(

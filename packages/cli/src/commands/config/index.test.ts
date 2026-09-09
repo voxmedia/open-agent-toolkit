@@ -4982,45 +4982,91 @@ describe('oat config', () => {
       expect(capture.error[0]).toContain('Unknown config key: unknown.key');
     });
 
-    it('unset reports env-sourced values as not unsettable when the surface holds nothing', async () => {
-      const root = await createRepoRoot();
-      await writeSharedConfig(root, {});
-      const { command, capture } = createHarness({
-        cwd: root,
-        env: { OAT_PROJECTS_ROOT: '.oat/projects/from-env' },
-      });
+    // Every entry of `ENV_OVERRIDE_MAP` in `config/resolve.ts`. `unset` derives
+    // `envShadowed` from `resolveEnvOverride` rather than from a whole-config
+    // read, and that equivalence is only sound if it holds for each mapped key,
+    // so both env cases below run per key instead of for `projects.root` alone.
+    const envOverrideKeys = [
+      {
+        key: 'projects.root',
+        envVar: 'OAT_PROJECTS_ROOT',
+        envValue: '.oat/projects/from-env',
+        stored: { projects: { root: '.oat/projects/from-config' } },
+        storedPath: ['projects', 'root'],
+      },
+      {
+        key: 'projects.defaultScope',
+        envVar: 'OAT_PROJECTS_DEFAULT_SCOPE',
+        envValue: 'local',
+        stored: { projects: { defaultScope: 'shared' } },
+        storedPath: ['projects', 'defaultScope'],
+      },
+      {
+        key: 'worktrees.root',
+        envVar: 'OAT_WORKTREES_ROOT',
+        envValue: '.worktrees-from-env',
+        stored: { worktrees: { root: '.worktrees-from-config' } },
+        storedPath: ['worktrees', 'root'],
+      },
+    ];
 
-      await runCommand(command, ['unset', 'projects.root', '--shared']);
-
-      expect(process.exitCode).toBe(1);
-      expect(capture.error[0]).toContain('environment variable');
-      // Reporting "already unset" here would imply the effective value is gone.
-      expect(capture.error[0]).toContain('nothing is stored there');
-      expect(capture.info).toHaveLength(0);
-    });
-
-    it('unset removes a stored value the env var only shadows, and warns', async () => {
-      const root = await createRepoRoot();
-      await writeSharedConfig(root, {
-        projects: { root: '.oat/projects/from-config' },
-      });
-      const { command, capture } = createHarness({
-        cwd: root,
-        env: { OAT_PROJECTS_ROOT: '.oat/projects/from-env' },
-      });
-
-      // `set` rewrites this stored value under the same override, so `unset`
-      // must be able to remove it. The override stays live, so the removal is
-      // never reported as making the effective value unset.
-      await runCommand(command, ['unset', 'projects.root', '--shared']);
-
-      expect(process.exitCode).toBe(0);
-      const shared = await readSharedConfig(root);
-      expect(shared.projects).toBeUndefined();
-      expect(capture.warn[0]).toContain(
-        'environment variable override still supplies its effective value',
+    function readStoredPath(
+      config: Record<string, unknown>,
+      storedPath: string[],
+    ): unknown {
+      return storedPath.reduce<unknown>(
+        (value, segment) =>
+          value !== null && typeof value === 'object'
+            ? (value as Record<string, unknown>)[segment]
+            : undefined,
+        config,
       );
-    });
+    }
+
+    it.each(envOverrideKeys)(
+      'unset $key reports env-sourced values as not unsettable when the surface holds nothing',
+      async ({ key, envVar, envValue }) => {
+        const root = await createRepoRoot();
+        await writeSharedConfig(root, {});
+        const { command, capture } = createHarness({
+          cwd: root,
+          env: { [envVar]: envValue },
+        });
+
+        await runCommand(command, ['unset', key, '--shared']);
+
+        expect(process.exitCode).toBe(1);
+        expect(capture.error[0]).toContain('environment variable');
+        // Reporting "already unset" here would imply the effective value is
+        // gone.
+        expect(capture.error[0]).toContain('nothing is stored there');
+        expect(capture.info).toHaveLength(0);
+      },
+    );
+
+    it.each(envOverrideKeys)(
+      'unset $key removes a stored value the env var only shadows, and warns',
+      async ({ key, envVar, envValue, stored, storedPath }) => {
+        const root = await createRepoRoot();
+        await writeSharedConfig(root, stored);
+        const { command, capture } = createHarness({
+          cwd: root,
+          env: { [envVar]: envValue },
+        });
+
+        // `set` rewrites this stored value under the same override, so `unset`
+        // must be able to remove it. The override stays live, so the removal is
+        // never reported as making the effective value unset.
+        await runCommand(command, ['unset', key, '--shared']);
+
+        expect(process.exitCode).toBe(0);
+        const shared = await readSharedConfig(root);
+        expect(readStoredPath(shared, storedPath)).toBeUndefined();
+        expect(capture.warn[0]).toContain(
+          'environment variable override still supplies its effective value',
+        );
+      },
+    );
 
     it('unset removes an invalid stored value the normalizing reader drops', async () => {
       const root = await createRepoRoot();
