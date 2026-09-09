@@ -692,13 +692,24 @@ describe('packed bundle directory guards', () => {
     expect(findMissingPackedPaths(packedPaths, cliContract)).toEqual([]);
   }, 20_000);
 
-  it.each([
-    ['agents', 'assets/agents/oat-reviewer.md'],
-    ['docs', 'assets/docs/index.md'],
-  ])(
+  // Derived from the runtime list, not a hand-picked pair: every guarded
+  // directory gets a control, and an eighth directory added to
+  // `REQUIRED_BUNDLE_DIRECTORIES` acquires one automatically.
+  it.each(REQUIRED_BUNDLE_DIRECTORIES)(
     'fails release validation when a required bundle directory is empty in the tarball (assets/%s)',
-    async (directory, missingPath) => {
+    async (directory) => {
       const cliContract = getPublicPackageContracts()[0];
+      // All of the directory's guarded paths, in `requiredPaths` order, which
+      // is the order `findMissingPackedPaths` reports them in. Several
+      // directories are guarded by more than one entry (`templates` by four,
+      // `skills` by two), so taking only the first would under-assert.
+      const guardedPaths = cliContract.requiredPaths.filter((requiredPath) =>
+        requiredPath.startsWith(`assets/${directory}/`),
+      );
+      // An unguarded required directory is the exact gap this block exists to
+      // prevent, so fail loudly here rather than silently asserting nothing.
+      expect(guardedPaths).not.toEqual([]);
+
       const caseRoot = await mkdtemp(join(tmpdir(), 'oat-cli-empty-dir-pack-'));
       const packageDir = join(caseRoot, 'package');
 
@@ -723,12 +734,12 @@ describe('packed bundle directory guards', () => {
         expect(
           packedPaths.filter((path) => path.startsWith(`assets/${directory}/`)),
         ).toEqual([]);
-        // Exactly the emptied directory's guard, and nothing else: the bare
+        // Exactly the emptied directory's guards, and nothing else: the bare
         // `assets` entry is still satisfied by the rest of the bundle, which is
         // why it never caught this.
-        expect(findMissingPackedPaths(packedPaths, cliContract)).toEqual([
-          missingPath,
-        ]);
+        expect(findMissingPackedPaths(packedPaths, cliContract)).toEqual(
+          guardedPaths,
+        );
       } finally {
         await rm(caseRoot, { recursive: true, force: true });
       }

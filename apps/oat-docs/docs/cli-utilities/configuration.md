@@ -276,11 +276,15 @@ packaged `assets/` directory next to the installed CLI. Setting a non-empty
   cannot be read reports the underlying error code.
 - The published npm tarball is held to the same seven-directory shape. The
   CLI's public-package contract names a concrete file under each of the seven
-  directories, and release validation requires each one both in the build
-  workspace and in the packed tarball — the tarball check is the load-bearing
-  one, because `npm pack` drops empty directories. A published package
-  therefore cannot ship a bundle that would make every command exit 2. The
-  regression evidence is the negative pack control in
+  directories, and release validation requires each one in the build workspace
+  and again in the packed tarball. The tarball check is the stronger of the two,
+  because a path can exist in the workspace and still never reach the tarball —
+  an empty directory that `npm pack` drops, or a `files`/symlink exclusion. So a
+  published package cannot ship a bundle whose top-level shape would fail
+  `validateBundleStructure`. That is a narrower promise than the exit-2 list
+  above: release validation does not check bundle metadata beyond its presence,
+  so a malformed or version-mismatched `bundle-metadata.json` is not covered.
+  The regression evidence is the negative pack control in
   `packages/cli/src/release/public-package-contract.test.ts`:
   `fails release validation when a required bundle directory is empty in the tarball`.
 - Produce a matching bundle with `bash packages/cli/scripts/bundle-assets.sh`
