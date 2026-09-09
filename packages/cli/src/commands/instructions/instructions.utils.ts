@@ -228,8 +228,23 @@ const UNEXCLUDABLE_PATHS = new Set(
 );
 
 /**
+ * How a configured exclusion path resolves on disk.
+ *
+ * The scan compares directories against `relative(repoRoot, ...)`, which always
+ * yields the true on-disk path, so an entry is only effective when it resolves
+ * to itself. That test is unchanged. What is split out here is *why* it failed:
+ * "there is nothing there" and "there is something there, but it is really
+ * somewhere else" are different operator problems, and only the second has a
+ * target worth naming.
+ */
+type ExclusionDirectoryProbe =
+  | { kind: 'exact' }
+  | { kind: 'absent' }
+  | { kind: 'resolved-elsewhere'; resolvedPath: string; caseOnly: boolean };
+
+/**
  * Whether `relativePath` names a real directory whose on-disk spelling matches
- * exactly.
+ * exactly, and when it does not, where it actually leads.
  *
  * The case check is the point. On a case-insensitive filesystem (APFS, NTFS) a
  * plain existence test accepts `Apps/Docsapp/docs` for a directory really named
@@ -237,27 +252,48 @@ const UNEXCLUDABLE_PATHS = new Set(
  * which always yields the true on-disk case. The exclusion would then be
  * reported as applied while matching nothing — issue #238 recurring silently on
  * the default developer platform. Resolving through `realpath` and comparing
- * the result to the requested spelling catches that, and returns false for a
- * path that does not exist at all.
+ * the result to the requested spelling catches that, and reports a path that
+ * does not exist at all as `absent`.
  *
  * `repoRoot` is realpath'd too, so a symlinked checkout (`/tmp` on macOS) does
  * not make every entry look like a mismatch.
+ *
+ * `caseOnly` is derived from the resolved path rather than from the platform: a
+ * case-insensitive host is not the only way to land on a differing spelling,
+ * and a platform check would attach the case-sensitivity hint to symlinks,
+ * where it is false.
  */
-async function isCaseExactDirectory(
+async function probeExclusionDirectory(
   dependencies: InstructionsScanDependencies,
   repoRoot: string,
   relativePath: string,
-): Promise<boolean> {
+): Promise<ExclusionDirectoryProbe> {
   try {
     const realRoot = await dependencies.realpath(repoRoot);
     const candidate = join(realRoot, relativePath);
     if (!(await directoryExists(dependencies, candidate))) {
-      return false;
+      return { kind: 'absent' };
     }
     const realCandidate = await dependencies.realpath(candidate);
-    return toPosixPath(relative(realRoot, realCandidate)) === relativePath;
+    const resolved = toPosixPath(relative(realRoot, realCandidate));
+    if (resolved === relativePath) {
+      return { kind: 'exact' };
+    }
+    // A target outside the repository reads as a plain absolute path; a `../`
+    // chain relative to a root the operator never typed would be worse than no
+    // target at all. An empty `resolved` means the entry landed on the
+    // repository root itself, which is equally unhelpful as a relative path.
+    const resolvedInsideRepository =
+      resolved.length > 0 && resolved !== '..' && !resolved.startsWith('../');
+    return {
+      kind: 'resolved-elsewhere',
+      resolvedPath: resolvedInsideRepository
+        ? resolved
+        : toPosixPath(realCandidate),
+      caseOnly: resolved.toLowerCase() === relativePath.toLowerCase(),
+    };
   } catch {
-    return false;
+    return { kind: 'absent' };
   }
 }
 
@@ -349,14 +385,39 @@ export async function resolveInstructionPointerExcludes(
       continue;
     }
 
-    if (!(await isCaseExactDirectory(dependencies, repoRoot, normalizedPath))) {
+    const probe = await probeExclusionDirectory(
+      dependencies,
+      repoRoot,
+      normalizedPath,
+    );
+
+    if (probe.kind === 'exact') {
+      effective.push(normalizedPath);
+      continue;
+    }
+
+    if (probe.kind === 'absent') {
       warnings.push(
         `${source} entry ${JSON.stringify(normalizedPath)} matches no directory in this repository (matching is case-sensitive), so it excludes nothing.`,
       );
       continue;
     }
 
-    effective.push(normalizedPath);
+    // Stated, not left implied by elimination, and without a catch-all
+    // `default` that would silently absorb a future variant: this annotation
+    // stops compiling the moment `ExclusionDirectoryProbe` grows a variant with
+    // no branch above — including one that happens to carry the same fields and
+    // would otherwise inherit a message written for a different situation.
+    const resolvedElsewhere: Extract<
+      ExclusionDirectoryProbe,
+      { kind: 'resolved-elsewhere' }
+    > = probe;
+
+    warnings.push(
+      resolvedElsewhere.caseOnly
+        ? `${source} entry ${JSON.stringify(normalizedPath)} matches no directory in this repository (matching is case-sensitive; the directory on disk is ${JSON.stringify(resolvedElsewhere.resolvedPath)}), so it excludes nothing.`
+        : `${source} entry ${JSON.stringify(normalizedPath)} resolves to ${JSON.stringify(resolvedElsewhere.resolvedPath)}, not to itself, so the scan never matches it and it excludes nothing. Point the entry at the resolved directory, or remove the symlink.`,
+    );
   }
 
   return { configured, effective, warnings };
