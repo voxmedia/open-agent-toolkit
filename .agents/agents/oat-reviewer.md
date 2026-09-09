@@ -1,6 +1,6 @@
 ---
 name: oat-reviewer
-version: 1.2.3
+version: 1.2.4
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode.
 tools: Read, Bash, Grep, Glob, Write, Task
 color: yellow
@@ -234,6 +234,25 @@ Treat the artifact as a product deliverable. Verify it is:
    - Task atomicity and verifiability: each task is independently committable, has bounded file scope, and has executable verification intent. Require a proportionate implementation and proof strategy only when the applicable workflow plan contract declares it; otherwise review the task's existing verification commands and evidence.
    - Coverage of design/discovery: every in-scope design component or discovery decision is mapped to at least one task or explicitly deferred/out of scope.
    - Parallelism-claim sanity: any parallel phase group or parallelism statement is consistent with declared file boundaries and dependency order.
+
+6. **Necessary**
+   - Evaluate whether the proposed approach materially serves the requested
+     outcome. For substantial added machinery — a script, schema, persisted
+     record, gate, provider seam, or new document that someone will have to
+     own — identify its consumer (an agent acting on a named instruction, a
+     human reading a named surface, or code at a named call site) and consider
+     whether a smaller approach preserves the requirements.
+   - Judge prose by the behavior it meaningfully guides. An instruction whose
+     consumer is the agent that reads it is a real consumer; missing automated
+     enforcement of that instruction is not proof of uselessness.
+   - A mechanism whose only consumer is its own tests, its own plan, or a
+     deferred future reader is grounds to investigate, not an automatic
+     severity: grade the finding by wasted effort, maintenance burden, or
+     failure to meet the requested outcome, and say which.
+   - Report justified concerns in the existing findings sections. Do not
+     produce an inventory of unproblematic mechanisms, and do not override an
+     explicitly stated user requirement with a preference for simplicity;
+     name the conflict instead.
 
 ### Step 5: Verify Design Alignment
 

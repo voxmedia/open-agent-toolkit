@@ -1605,7 +1605,7 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
 
-    expect(readDeclaredVersion(content)).toBe('1.2.3');
+    expect(readDeclaredVersion(content)).toBe('1.2.4');
     expect(tools).toContain('Task');
     for (const broadReview of [
       'final code reviews',
@@ -3178,7 +3178,7 @@ describe('validateOatSkills', () => {
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.5'],
-      ['.agents/agents/oat-reviewer.md', '1.2.3'],
+      ['.agents/agents/oat-reviewer.md', '1.2.4'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.8'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.3'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.5'],
@@ -6169,7 +6169,7 @@ describe('validateOatSkills', () => {
   it('pins portable user-default agents to installed-root sibling reads', async () => {
     const agents = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.5'],
-      ['.agents/agents/oat-reviewer.md', '1.2.3'],
+      ['.agents/agents/oat-reviewer.md', '1.2.4'],
       ['.agents/agents/oat-codebase-mapper.md', '1.0.1'],
     ] as const;
 

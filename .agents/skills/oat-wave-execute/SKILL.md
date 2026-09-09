@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.9.2
+  version: 1.9.3
 ---
 
 # Execute a Wave of External Plans
@@ -235,9 +235,18 @@ writes and stay on the orchestrator's own model class, the same rule
 
 Run the cross-runtime artifact gate with a **bounded** prompt (rule 6): review the
 wrapper artifacts for plan invariants, contract consistency, frontmatter validity,
-and whether any task restates/narrows its source plan — the external plans are
-immutable inputs, NOT review targets. Disposition findings in-artifact
-(gate-invoked artifact review) and commit. A plan gate MAY PROCEED at
+and whether any task restates/narrows its source plan. The external plans'
+content is immutable to the wave (the gate never rewrites a plan), but a plan is
+a legitimate target for one question: whether its proposed mechanism materially
+serves the requested outcome. A reviewer who finds substantial machinery with no
+identifiable consumer — an agent acting on a named instruction, a human reading
+a named surface, or code at a named call site — or a smaller approach that
+preserves the requirements, reports it as a necessity finding. The root returns
+that plan to its author (`oat-repo-improve`) for disposition and defers it from
+this wave until dispositioned; it never silently drops or narrows it, and an
+explicitly stated user requirement is honored over a preference for simplicity.
+Disposition the remaining findings in-artifact (gate-invoked artifact review)
+and commit. A plan gate MAY PROCEED at
 `fixes_completed` per the wave-0/1 precedent, but that is a proceed point, not a
 terminal state. Every gate row MUST flip to `passed` once all fix dispositions
 carry the stored verification records required by the fix-disposition contract below;
