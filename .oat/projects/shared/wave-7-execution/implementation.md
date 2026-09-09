@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-08
-oat_current_task_id: p01-t01
+oat_last_updated: 2026-09-09
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -26,10 +26,10 @@ oat_generated: false
 
 | Phase    | Status      | Tasks | Completed |
 | -------- | ----------- | ----- | --------- |
-| Phase 1  | in_progress | 1     | 0/1       |
-| Phase 2  | pending     | 1     | 0/1       |
-| Phase 3  | pending     | 1     | 0/1       |
-| Phase 4  | pending     | 1     | 0/1       |
+| Phase 1  | complete    | 1     | 1/1       |
+| Phase 2  | complete    | 1     | 1/1       |
+| Phase 3  | complete    | 1     | 1/1       |
+| Phase 4  | in_progress | 1     | 0/1       |
 | Phase 5  | pending     | 1     | 0/1       |
 | Phase 6  | pending     | 1     | 0/1       |
 | Phase 7  | pending     | 1     | 0/1       |
@@ -47,45 +47,45 @@ oat_generated: false
 | Phase 19 | pending     | 1     | 0/1       |
 | Phase 20 | pending     | 1     | 0/1       |
 
-**Total:** 0/20 tasks completed
+**Total:** 3/20 tasks completed
 
 ---
 
 ## Phase 01: read stdin in finalize synced archive (p01)
 
-**Status:** in_progress · **Group:** 1 · **Tasks:** p01-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 1 · **Tasks:** p01-t01
+**Outcome:** `finalize-synced-archive.mjs` reads its report with an fd-capable API (`readFileSync(0)`) and canonicalizes both sides of the main-module guard, so the synced deferred-clear path (PR #254) actually runs through a symlinked install; a CLI entry-point test (seven cases) under `pnpm test:skills`; `oat-project-complete` 1.7.9 → 1.7.10 with its two pins re-pointed.
+**Verification:** focused 7/7; `test:skills` 870/870; `test:smoke` 167/167; forced check/type-check/test `Cached: 0`; check:skill-bumps, lint, format, validate-skills; two Codex rounds (R1 2I/1m → 2 fixed, 1 rejected with parity proof; R2 clean); root review PASS with findings (0C/1I/1M/3m; 21 rejection classes base-vs-head all still rejected).
+**Deviations:** three complementary neutralization controls instead of the plan's two (the plan's "all three invocation forms" claim is false — corrected in the plan by a dated entry); the sibling-script sweep filed by the root as `BL-260909-sweep-the-raw-main-module`.
 
 ### Task p01-t01: Execute external plan — Read stdin with an fd-capable API in finalize-synced-archive.mjs
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `dd6658e0b` → integration `7bd744502`
 
 ## Phase 02: fix oat config unset and adopt (p02)
 
-**Status:** pending · **Group:** 1 · **Tasks:** p02-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 1 · **Tasks:** p02-t01
+**Outcome:** `oat config unset` removes a malformed stored value for the three repair keys (`documentation.excludes`, `documentation.instructionPointerExcludes`, `projects.defaultScope`) while a targeted strict barrier keeps every untargeted surface and the `pjm.remote` raw-write branch validated exactly as before; the env-override refusal and warning use the exported `resolveEnvOverride` probe; `adopt` resolves its surface flags through the shared `resolveSurfaceFlags` (one message, pinned across `set`/`unset`/`adopt`).
+**Verification:** focused 288 (232 + 56); forced check/type-check/test `Cached: 0`; check:skill-bumps (nothing changed), lint, format, validate-skills; eight amended Done criteria on the built CLI in a scratch repo; five controls both ways; Codex R1 2C (became the STOP) + R2 (one provenance Critical rejected); root review PASS with findings (0/0/0/3m; 432-pair base-vs-head battery: 3 newly accepted = the repair keys as their own malformed value, 0 newly rejected) and round 2 PASS on the fix commit.
+**Deviations:** STOP at the pre-commit gate (deleting the strict read removed the whole-config barrier) closed by the plan's dated 2026-09-08 post-STOP refresh (targeted strict barrier; cases 7–8; two control corrections); refusal ordering now key-refusals-first (all still exit 1).
 
 ### Task p02-t01: Execute external plan — Let `oat config unset` remove a malformed value, and fold `adopt` onto the shared surface-flag resolver
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `1913a950f` → integration `a6da561cc`; fix `7dfaa6bc1` → `08b2b030a`
 
 ## Phase 03: guard bare proto in markdown records (p03)
 
-**Status:** pending · **Group:** 1 · **Tasks:** p03-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 1 · **Tasks:** p03-t01
+**Outcome:** a repository contract test (`markdown-proto-literal-contract.test.ts`) rejects a bare `__proto__` literal outside a code span anywhere under `.oat/repo/**` and `apps/oat-docs/docs/**`, with a block-scoped CommonMark classifier (container-aware fence pairing, HTML block types 1–7, fence lines as region boundaries) and an invariant test that derives every case's verdict from real `oxfmt --write`; the seven pre-existing occurrences (two item titles, an archived item title, `completed.md`, the regenerated index, one decision-record line) repaired.
+**Verification:** focused 46/46; forced check/type-check/test `Cached: 0` (386 files / 7093); check:skill-bumps, lint, format, validate-skills; red control = exactly the plan's seven rows / eight occurrences on the pre-repair tree, zero on the head; Codex R1 3C/1I/1M/1m + R2 3C (all reproduced against `oxfmt --write`, fixed); root review CHANGES REQUESTED (3C/1I/1M/2m from a 54-shape `oxfmt` battery) → fix round → round 2 PASS (69-shape battery, 0 mangled-but-accepted).
+**Deviations:** block-scoped masking instead of the plan's line-level inline-span strip (unimplementable on the tree: two multi-line code spans in an unwritable plan file) — adjudicated justified and written into the plan as a dated refresh together with the three review-found rules and the `oxfmt`-derived invariant.
 
 ### Task p03-t01: Execute external plan — Guard repository Markdown against the formatter rewriting a bare prototype-key literal into bold
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `c4053df73` → integration `e92bb7b91`; fix `b108f2dbf` → `e8cbfb090`
 
 ## Phase 04: make the completion seal idempotent (p04)
 
@@ -420,11 +420,23 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p03-review-002` — disposition-verification round 2 on the original reviewer handle (six original holes plus six fresh battery shapes). Record `dispatch/w7-p03-review-002.json`.
 - `w7-p03-review-002` outcome: PASS (fan-in may proceed), 0/0/0/2m; five controls re-run by the reviewer (C1 → 6 red incl. the invariant; the old invariant proven blind), 69-shape battery clean, red control exact.
 
+#### Group 1 fan-in (2026-09-09)
+
+- `wave-7/p01`, `wave-7/p02`, `wave-7/p03` rebased onto the integration tip and merged in plan order with `git merge --no-ff` as `ea2f5a675`, `7b9793b8f`, `f175ca2da`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `dd6658e0b`→`7bd744502`, `1913a950f`→`a6da561cc`, `7dfaa6bc1`→`08b2b030a`, `c4053df73`→`e92bb7b91`, `b108f2dbf`→`e8cbfb090`.
+- Lockstep bump `f0eb1c02e` (0.2.66 → 0.2.67 above freshly fetched `origin/main` `684bd3be3`) with the project-scope sync manifest restamp in the same commit (`sync exit=0`, "Manifest version refreshed; no content changes required").
+- Integration gates (sequential, exit codes captured, run before any bookkeeping edit): `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached; cli 386 files / 7105 tests), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke` 0, `pnpm test:skills` 0, root `pnpm test` 0. Config-integrity check: no tracked `.oat/config.json` key missing versus `origin/main`.
+- Backlog index regenerated by p03's own commit (two title rows); no lane closed or renamed an item at this fan-in beyond that.
+- Worktrees `.worktrees/wave-7/p0{1,2,3}` and branches `wave-7/p0{1,2,3}` removed after the merge.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
 
 Chronological log of implementation progress (root orchestrator; lane detail lives in the dispatch transcripts and review artifacts).
+
+### 2026-09-09
+
+- Group 1 fan-in: merges `ea2f5a675`, `7b9793b8f`, `f175ca2da`; lockstep bump `f0eb1c02e` (0.2.67); eight gates + smoke + skills + root test green (0 cached; cli 7105). Group 2 (p04 + p05 + p06) bootstraps next.
 
 ### 2026-09-08
 
@@ -439,15 +451,22 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted |
-| ------------- | --------------- | -------------------- | ----------------- |
-| (none yet)    | -               | -                    | -                 |
+| Task / Review | Source Artifact         | Planned / Documented                                                      | Actual / Accepted                                                                                                                                                            |
+| ------------- | ----------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| (none yet)    | -                       | -                                                                         | -                                                                                                                                                                            |
+| p01-t01       | plan step 5 / Test plan | raw guard restored → case 5 fails on all three invocation forms           | raw guard fails only the plain form; a one-sided canonicalization is the control for the two preserve-symlinks forms (dated correction entry in the plan)                    |
+| p02-t01       | plan step 2             | delete the strict effective read; `envShadowed` from `resolveEnvOverride` | the probe kept; a targeted strict barrier reads the untargeted surfaces (and the targeted shared surface on the raw-write branch) before any write (dated post-STOP refresh) |
+| p03-t01       | plan step 2             | strip inline code spans on each remaining line                            | block-scoped CommonMark masking with container-aware fences, HTML blocks 1–7, fence lines as boundaries; `oxfmt`-derived invariant (dated refresh)                           |
 
 ## Test Results
 
-| Phase      | Tests Run | Passed | Failed | Coverage |
-| ---------- | --------- | ------ | ------ | -------- |
-| (none yet) | -         | -      | -      | -        |
+| Phase      | Tests Run                                                           | Passed | Failed | Coverage |
+| ---------- | ------------------------------------------------------------------- | ------ | ------ | -------- |
+| (none yet) | -                                                                   | -      | -      | -        |
+| p01        | focused 7 + `test:skills` 870 + `test:smoke` 167 + forced CLI suite | all    | 0      | -        |
+| p02        | focused 288 + forced CLI suite (385 files)                          | all    | 0      | -        |
+| p03        | focused 46 + forced CLI suite (386 files / 7093)                    | all    | 0      | -        |
+| g1 fan-in  | eight DoD gates + smoke + skills + root test (0 cached; cli 7105)   | all    | 0      | -        |
 
 ## Deferred Findings
 

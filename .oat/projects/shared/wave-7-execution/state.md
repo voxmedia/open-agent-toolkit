@@ -118,7 +118,7 @@ oat_generated: false
 
 **Status:** Implementing — group 1 dispatching
 **Started:** 2026-09-08
-**Last Updated:** 2026-09-08
+**Last Updated:** 2026-09-09
 
 ## Current Phase
 
@@ -139,7 +139,7 @@ Implement. Plan gate passed on attempt 2; group 1 (p01 + p02 + p03) bootstraps a
 - ✓ Wrapper artifacts written; `oat project validate-plan` passed
 - ✗ Plan gate attempt 1 blocked (1C/2I/1M: the lost p09 patch, the archive set, the program ledger, the p19 `AGENTS.md` claim) — fixed in-artifact; parked p09 bytes recovered under `parked/wave-5-p09/`
 - ✓ Plan gate attempt 2 passed (0C/0I/1M; the write-inventory Medium addressed in the receive)
-- ◐ Group 1 dispatched at `985717d53`; p02 STOP (barrier removed) closed by a dated plan refresh, lane resumed
+- ✓ Group 1 (p01 + p02 + p03) merged (`ea2f5a675`, `7b9793b8f`, `f175ca2da`); lockstep 0.2.67 (`f0eb1c02e`); eight gates + smoke + skills + root test green (0 cached). p02's STOP closed by a dated plan refresh; p03's deviation adjudicated and written into its plan; each lane reviewed to `passed`
 - ☐ Groups 2–6, then p19 and p20; fan-in gates after each
 - ☐ Closeout: synthesis, archival, root final review, exit gate, post-implement sequence, PR
 
@@ -149,4 +149,4 @@ None
 
 ## Next Milestone
 
-Group 1 (p01 + p02 + p03) reviewed and merged; lockstep 0.2.67; fan-in gates green.
+Group 2 (p04 + p05 + p06) reviewed and merged; lockstep retained at 0.2.67; fan-in gates green.

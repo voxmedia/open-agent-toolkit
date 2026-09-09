@@ -100,3 +100,20 @@ staged work — the wave-6 p03 pattern. **Skill signal (strengthens):**
 **Skill signal (gap):** a plan that deletes a call must audit the call's side
 effects, not only its result's consumers; the same-model review pass read
 "used for exactly one thing" and did not ask what else the call did.
+
+### 2026-09-09 · structural · oat-wave-execute · group 1 fan-in
+
+Three lanes merged in plan order (`ea2f5a675`, `7b9793b8f`, `f175ca2da`;
+five lane commits patch-id-identical after rebase), lockstep 0.2.66 → 0.2.67
+(`f0eb1c02e`, manifest restamped in the same commit), eleven gates exit 0 with
+`Cached: 0` (cli 7105 tests), config integrity clean. Every lane needed a
+plan-level intervention: p01 a false control claim (dated correction), p02 a
+STOP on a side effect of a deleted call (dated refresh, lane resumed), p03 a
+deviation plus six silent-acceptance holes found by the reviewer's `oxfmt`
+oracle battery (dated refresh, fix round, 69-shape round-2 battery clean).
+**Skill signal (strengthens):** reviewers with their own adversarial probes
+found what two Codex rounds each missed (p03: a 54-shape battery vs. a
+self-consistency invariant; p02: a 432-pair mechanical weaker-anywhere sweep).
+**Skill signal (gap):** three lanes hit the same `/tmp/<phase>-*` collision
+with wave-6 artifacts; the common brief now mandates `mktemp -d` scratch and an
+mtime check — the skill's brief template should carry that rule.
