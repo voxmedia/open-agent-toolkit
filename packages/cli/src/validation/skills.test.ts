@@ -1176,6 +1176,43 @@ describe('validateOatSkills', () => {
     ]);
   });
 
+  it('does not report a description longer than 500 characters for a non-oat-* skill', async () => {
+    // Scoping backstop for the standing claim the authoring skills now make:
+    // OAT's 500-character description rule is enforced by `validateOatSkills`
+    // for `oat-*` skills only. The fixture is the same over-length description
+    // the positive case above uses; only the directory name differs, so a
+    // failure here means the filter — not the length check — moved.
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const longDescription = `Use when validating description length enforcement. ${'x'.repeat(460)}`;
+    expect(longDescription.length).toBeGreaterThan(500);
+    await createSkillFile(
+      root,
+      'agnostic-description-too-long',
+      [
+        '---',
+        'name: agnostic-description-too-long',
+        `description: ${longDescription}`,
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        'metadata:',
+        '  version: 1.0.0',
+        '---',
+        '',
+        '# Demo',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(
+      result.findings.filter((finding) =>
+        finding.message.includes('exceeds 500 characters'),
+      ),
+    ).toEqual([]);
+    expect(result.validatedSkillCount).toBe(0);
+  });
+
   it('accepts valid semver version frontmatter when present', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
     tempDirs.push(root);
@@ -1338,6 +1375,61 @@ describe('validateOatSkills', () => {
 
     expect(invalidVersions).toEqual([]);
     expect(aliasDeclarations).toEqual([]);
+  });
+
+  it('declares allowed-tools as a comma-separated list in every canonical skill', async () => {
+    // OAT never parses this separator: `validateOatSkills` only checks that the
+    // key is present and `commands/tools/info` reads the raw scalar. The comma
+    // form is therefore an authoring convention, and this sweep is what keeps
+    // the documented convention and the corpus from drifting apart.
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillsRoot = join(repoRoot, '.agents', 'skills');
+    const entries = await readdir(skillsRoot, { withFileTypes: true });
+    const skillDirs = entries
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
+      .map((entry) => entry.name)
+      .sort();
+
+    expect(skillDirs.length).toBeGreaterThan(0);
+
+    // A single tool token: an identifier, optionally with a parenthesised
+    // scope such as `Bash(git:*)`, or a wildcard such as `mcp__*`. A value
+    // that space-separates two tools fails to match as one token.
+    const singleToolToken = /^[A-Za-z_][A-Za-z0-9_*-]*(\(.*\))?$/;
+    const offenders: string[] = [];
+    let declaringSkills = 0;
+
+    for (const skillName of skillDirs) {
+      const content = await readFile(
+        join(skillsRoot, skillName, 'SKILL.md'),
+        'utf8',
+      );
+      const block = getFrontmatterBlock(content);
+      const declared = block?.match(/^allowed-tools:[ \t]*(.+)$/m)?.[1]?.trim();
+      if (declared === undefined || declared.length === 0) {
+        continue;
+      }
+      declaringSkills += 1;
+
+      const segments = declared.split(',').map((segment) => segment.trim());
+      // A single-token value such as `Read` carries no separator and passes.
+      if (segments.length === 1 && singleToolToken.test(segments[0]!)) {
+        continue;
+      }
+      if (segments.length < 2) {
+        offenders.push(`${skillName}: ${declared}`);
+        continue;
+      }
+      for (const segment of segments) {
+        if (!singleToolToken.test(segment)) {
+          offenders.push(`${skillName}: ${declared}`);
+          break;
+        }
+      }
+    }
+
+    expect(offenders).toEqual([]);
+    expect(declaringSkills).toBeGreaterThan(0);
   });
 
   it('keeps every version pinned in this file equal to the file it pins', async () => {

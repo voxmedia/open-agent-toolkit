@@ -6,7 +6,7 @@ disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
 metadata:
-  version: 1.4.4
+  version: 1.5.0
 ---
 
 # Create Skill
@@ -69,7 +69,7 @@ If not provided in arguments, ask for:
 **The context window is a shared resource.** Skills share context with everything else the agent needs. Structure information in three levels:
 
 1. **Metadata** (~100 words): Name + description in frontmatter, always loaded
-2. **SKILL.md body** (<5k words): Loads when skill triggers
+2. **SKILL.md body** (~5,000 tokens): Loads when skill triggers
 3. **Bundled resources**: Files in `references/`, `scripts/`, `assets/` loaded as-needed
 
 **Writing principles:**
@@ -172,11 +172,12 @@ Natural language request that triggers this skill
 **Frontmatter notes:**
 
 - `argument-hint`, `allowed-tools`, `user-invocable`, `context`, `hooks` are Claude Code specific
-- Other agents ignore unknown frontmatter fields, so it's safe to include Claude-specific fields everywhere
+- `allowed-tools`: write the value as a **comma-separated** list. The spec's own example is space-delimited and OAT never parses the separator — `validateOatSkills` in `packages/cli/src/validation/skills.ts` only checks that the key is present, and `getToolDetail` in `packages/cli/src/commands/tools/info/index.ts` reads the raw scalar — so this is OAT's authoring convention rather than a runtime contract. Backstop: `it('declares allowed-tools as a comma-separated list in every canonical skill')` in `packages/cli/src/validation/skills.test.ts`
+- The spec defines a fixed field set, and providers differ in which extension fields they read. An unread field is inert rather than guaranteed harmless, so check the dated compatibility section of `references/docs/skills-guide.md` for the per-provider picture before depending on one
 - `name`: max 64 chars for cross-provider portability (Codex allows 100, but 64 is the spec limit)
 - `metadata.version`: include valid semver and start new skills at `1.0.0`. The Agent Skills specification puts the version under `metadata`, and OAT resolves `metadata.version` first and the top-level `version` second — `resolveSkillVersion` in `packages/cli/src/commands/shared/frontmatter.ts` owns that order, backstopped by `packages/cli/src/commands/shared/frontmatter.test.ts`
 - `version` (top-level): the deprecated alias, still read when `metadata.version` is absent. Do not set both to different values: OAT reports the conflict, skill validation fails on it, and canonical role identity rejects it
-- `description`: **single line, ≤ 500 chars** (Codex enforces single-line ≤ 500 chars; spec allows 1024)
+- `description`: **single line, ≤ 500 chars**. This is OAT's house rule, not a provider requirement: `validateOatSkills` in `packages/cli/src/validation/skills.ts` enforces it only for skills whose directory name starts with `oat-`. For every other skill it is an unenforced authoring convention this repository follows for portability. Backstops in `packages/cli/src/validation/skills.test.ts`: `it('reports description longer than 500 characters')` and `it('does not report a description longer than 500 characters for a non-oat-* skill')`. The spec allows 1024
 - Bump `metadata.version` on future edits: patch for fixes/clarifications, minor for backward-compatible behavior additions, major for breaking workflow/interface changes
 
 **Writing the `description` field:**
@@ -194,7 +195,7 @@ Examples:
 - Bad: "Reviews code by checking spec compliance, then code quality, then creates PR"
 - Good: "Use when reviewing code or checking PRs. Systematic quality and security analysis."
 
-Present the plan and wait for user approval before creating files.
+Present the plan and ask once for approval, stating the approval scope: it covers the skill directory, its `SKILL.md`, and the supporting files this plan named, for the rest of this run. Re-ask only if the file set changes. If the user declines, stop before creating any file and report the plan instead.
 
 ### Step 4: Create Skill File
 
@@ -231,18 +232,21 @@ Skills can include supporting files in subdirectories:
 
 ### Step 5: Sync and Verify
 
-After creating the skill, run OAT sync to update provider views:
+If the repository uses OAT sync, refresh the provider views for this repository only:
 
 ```bash
-oat sync
+oat sync --scope project
 ```
+
+A bare `oat sync` defaults to `--scope all`, which also rewrites the invoking user's home-scope provider
+directories. `withScopeOption` in `packages/cli/src/commands/shared/scope-option.ts` owns that default, and `it('sync --help matches snapshot')` in `packages/cli/src/commands/help-snapshots.test.ts` is its backstop.
 
 Verify:
 
 - File created at `.agents/skills/{skill-name}/SKILL.md`
 - Frontmatter syntax is valid
 - Frontmatter includes valid semver `metadata.version:` (new skills start at `1.0.0`)
-- Skill appears in `AGENTS.md`
+- Skill resolves through the provider views after a scoped sync — check with `oat tools info {skill-name}` or the provider's own skill list
 - Examples include both invocation styles
 - If the skill name starts with `oat-`, run `pnpm oat:validate-skills` and fix any findings
 
@@ -268,7 +272,7 @@ Provide:
 - **Context window is a public good**—keep skills lean, challenge every paragraph
 - Description is the trigger—include "when to use" in frontmatter, not just body
 - Bump `metadata.version` for edits: patch = fixes/clarifications, minor = backward-compatible additions, major = breaking changes
-- Keep SKILL.md **under 500 lines / ~5,000 tokens** (spec constraint)
+- Keep SKILL.md **under 500 lines / ~5,000 tokens** — OAT's authoring budget, not a specification limit; see the dated provider-compatibility section of `references/docs/skills-guide.md` for what each provider documents
 - Use clear, task-based headings
 - Include working examples for both invocation styles
 - Document all arguments with defaults
@@ -289,7 +293,7 @@ Skills that need user decisions (parameter choices, confirmations, disambiguatio
 
 Do **not** hard-code a specific Codex question tool name in skill prose unless the runtime contract is guaranteed. Prefer capability-based wording ("structured user-input tooling when available") so the skill remains portable across Codex hosts.
 
-**Claude Code enhancement:** Add `AskUserQuestion` to `allowed-tools` in frontmatter. Claude Code renders these as structured UI prompts with selectable options, headers, and multi-select support. Other providers ignore the field and handle the same instructions as conversational questions.
+**Claude Code enhancement:** Add `AskUserQuestion` to `allowed-tools` in frontmatter. Claude Code renders these as structured UI prompts with selectable options, headers, and multi-select support. Providers that do not read `allowed-tools` handle the same instructions as conversational questions; treat the field as having no effect there rather than as universally supported, and check the dated compatibility matrix in `references/docs/skills-guide.md`.
 
 **When to include interactive input:**
 
@@ -374,32 +378,11 @@ For multi-step skills, print brief progress updates so the user knows what's hap
 
 ### Frontmatter Reference
 
-Legend: ✅ supported | ⚠️ provider-specific | 💤 ignored | ❓ unknown
-
-| Field                      | Spec            | Claude Code | Cursor | Codex CLI   | Gemini CLI |
-| -------------------------- | --------------- | ----------- | ------ | ----------- | ---------- |
-| `name`                     | ✅ required     | ✅          | ✅     | ✅ required | ✅         |
-| `description`              | ✅ required     | ✅          | ✅     | ✅ required | ✅         |
-| `license`                  | ✅ optional     | ❓          | ✅     | 💤          | ❓         |
-| `compatibility`            | ✅ optional     | ❓          | ✅     | 💤          | ❓         |
-| `metadata`                 | ✅ optional     | ❓          | ✅     | 💤          | ❓         |
-| `allowed-tools`            | ⚠️ experimental | ✅          | ❓     | 💤          | ❓         |
-| `disable-model-invocation` | ❌              | ✅          | ✅     | 💤          | ❓         |
-| `user-invocable`           | ❌              | ✅          | ❓     | 💤          | ❓         |
-| `argument-hint`            | ❌              | ✅          | ❓     | 💤          | ❓         |
-| `context` / `agent`        | ❌              | ✅          | ❌     | 💤          | ❓         |
-| `hooks`                    | ❌              | ✅          | ❌     | 💤          | ❓         |
-
-**Key takeaway:** `name` + `description` are the only truly portable interface. Codex ignores unknown keys (safe to include Claude fields), so layer tool-specific fields on top of a portable baseline. For the full matrix, see `references/docs/skills-guide.md` (bundled with this skill).
+**Key takeaway:** `name` + `description` are the only truly portable interface. Layer tool-specific fields on top of that baseline, but treat an unread field as inert rather than guaranteed harmless — providers differ in which extension fields they read, and not every provider documents what it does with the rest. The single canonical, dated compatibility matrix lives in `references/docs/skills-guide.md` (bundled with this skill); consult it rather than a copy.
 
 ### Detail Level
 
-| Skill Type            | Detail Level | Examples                       |
-| --------------------- | ------------ | ------------------------------ |
-| Complex workflows     | Detailed     | docs-new, docs-review          |
-| Simple command-like   | Concise      | update-doc-refs, create-ticket |
-| Reference/standards   | Detailed     | repo-documentation             |
-| Helper (auto-invoked) | Moderate     | read-relevant-docs             |
+For the detail level each skill type warrants, see `references/skill-template.md`.
 
 ## Examples
 
@@ -428,7 +411,7 @@ I need a skill for running database migrations
 - [Agent Skills Open Standard](https://agentskills.io) — the spec
 - [Claude Code Skills](https://code.claude.com/docs/en/skills) — Claude-specific features
 - [Cursor Skills](https://cursor.com/docs/context/skills) — Cursor-specific features
-- [Codex CLI Skills](https://developers.openai.com/codex/skills) — Codex-specific features
+- [Codex CLI Skills](https://learn.chatgpt.com/docs/build-skills) — Codex-specific features
 - [Gemini CLI Skills](https://geminicli.com/docs/cli/skills/) — Gemini-specific features
 - [npx skills CLI](https://github.com/vercel-labs/skills) — installing remote/community skills
 - [Skills best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) — authoring guidance
@@ -439,7 +422,7 @@ I need a skill for running database migrations
 
 **Skill not appearing in menu:**
 
-- Run `oat sync` to regenerate provider views
+- Run `oat sync --scope project` to regenerate this repository's provider views
 - Verify YAML frontmatter syntax is valid
 - Check that skill name matches directory name
 - Ensure `user-invocable` is not set to `false` (Claude Code)
@@ -461,7 +444,6 @@ I need a skill for running database migrations
 Successful skill creation:
 
 - ✅ Skill created at `.agents/skills/{name}/SKILL.md`
-- ✅ `oat sync` run successfully
 - ✅ For `oat-*` skills, `pnpm oat:validate-skills` passes
 - ✅ Frontmatter valid
 - ✅ Workflow uses "Step" naming
