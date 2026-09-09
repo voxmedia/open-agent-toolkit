@@ -174,7 +174,7 @@ Publishing is human-gated; this caller never invokes publish.
 
 - `oat-wave-execute` **Inputs** resolves its lane list from this artifact (falling
   back to index wave hints only when no program artifact exists).
-- `oat-wave-execute` closeout step 8 invokes `wave-close` here.
+- `oat-wave-execute` closeout step 9 invokes `wave-close` here.
 - A lane parked mid-wave (source-plan STOP) surfaces in BOTH artifacts: the
   wave project's blocker record and this ledger's `deferred` row.
 
