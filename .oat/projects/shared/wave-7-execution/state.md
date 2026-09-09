@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: null
-oat_blockers: []
+oat_blockers:
+  - 'p16 parked on a plan STOP: the recorder graph no-process guard (record.test.ts:1879-1902) forbids the plan Step 3 git seam; BL-260906-harden-dispatch-launch returns to planning as a decision; partial work at parked/wave-7-p16/'
 associated_issues:
   - { type: backlog, ref: 'BL-260906-cover-skill-test-files-under' }
   - { type: backlog, ref: 'BL-260906-docs-index-follow-ups-from' }
@@ -144,7 +145,8 @@ Implement. Plan gate passed on attempt 2; group 1 (p01 + p02 + p03) bootstraps a
 - ✓ Group 3 (p07 + p08 + p09) merged (`7c5a6aa01`, `17d271b23`, `95ad10827`); lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached); each lane reviewed to `passed`
 - ✓ Group 4 (p10 + p11 + p12) merged (`13705dcdc`, `bb082e505`, `0f1711d88`); lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached); each lane reviewed to `passed`; `BL-260909-repair-the-bare-fences-that` filed
 - ✓ Group 5 (p13 + p14 + p15) merged (`de8c5b391`, `5d6b0461d`, `5171bf3cf`; address-now `da248f346`); lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached); p15's STOP closed by a dated plan refresh; p13's one narrowing adjudicated and recorded; each lane reviewed to `passed`
-- ☐ Group 6, then p19 and p20; fan-in gates after each
+- ◐ Group 6 dispatched at `335aae6a8`; p16 PARKED (plan STOP — the recorder graph's no-process guard forbids the plan's git seam; partial work under `parked/wave-7-p16/`); p17 and p18 continue
+- ☐ p19 and p20; fan-in gates after each
 - ☐ Closeout: synthesis, archival, root final review, exit gate, post-implement sequence, PR
 
 ## Blockers

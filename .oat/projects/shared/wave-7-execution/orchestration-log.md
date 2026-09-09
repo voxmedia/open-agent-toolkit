@@ -204,3 +204,20 @@ CI gate against the categorical weaker-anywhere rule. **Skill signal
 (strengthens):** giving the reviewer an explicit adjudication ruling, with
 the evidence it must produce, converted a judgment call into a documented,
 pinned decision instead of an argument.
+
+### 2026-09-09 · structural · oat-wave-execute · p16 STOP → park
+
+p16 parked without a commit: the plan prescribes a git `execFile` seam inside
+the dispatch recorder, and the recorder graph's own guard test forbids any
+process launch there. Unlike p02/p05/p15, no dated refresh could close this
+one — every alternative hits the guard, evades it, drops a required field, or
+is excluded by the plan and issue #265, and amending a documented
+no-provider-launch contract is an architecture decision, not a mechanical
+correction. The lane found the conflict cleanly, ran a three-way control, and
+preserved Steps 2–3 plus a real pre-fix journal fixture, now committed under
+the wrapper's `parked/wave-7-p16/` (the wave-5 p09 lesson applied). **Skill
+signal (gap):** plan authoring that adds a capability to a module must grep
+that module's own test file for architectural guards; the same-model review
+pass read "touches git nowhere" as incidental state, not as an enforced
+invariant. **Skill signal (strengthens):** "STOP → park, siblings continue"
+held with zero collateral — p17 and p18 are unaffected.

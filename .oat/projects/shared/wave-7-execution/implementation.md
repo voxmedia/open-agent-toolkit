@@ -24,28 +24,28 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase    | Status      | Tasks | Completed |
-| -------- | ----------- | ----- | --------- |
-| Phase 1  | complete    | 1     | 1/1       |
-| Phase 2  | complete    | 1     | 1/1       |
-| Phase 3  | complete    | 1     | 1/1       |
-| Phase 4  | complete    | 1     | 1/1       |
-| Phase 5  | complete    | 1     | 1/1       |
-| Phase 6  | complete    | 1     | 1/1       |
-| Phase 7  | complete    | 1     | 1/1       |
-| Phase 8  | complete    | 1     | 1/1       |
-| Phase 9  | complete    | 1     | 1/1       |
-| Phase 10 | complete    | 1     | 1/1       |
-| Phase 11 | complete    | 1     | 1/1       |
-| Phase 12 | complete    | 1     | 1/1       |
-| Phase 13 | complete    | 1     | 1/1       |
-| Phase 14 | complete    | 1     | 1/1       |
-| Phase 15 | complete    | 1     | 1/1       |
-| Phase 16 | in_progress | 1     | 0/1       |
-| Phase 17 | pending     | 1     | 0/1       |
-| Phase 18 | pending     | 1     | 0/1       |
-| Phase 19 | pending     | 1     | 0/1       |
-| Phase 20 | pending     | 1     | 0/1       |
+| Phase    | Status             | Tasks | Completed |
+| -------- | ------------------ | ----- | --------- |
+| Phase 1  | complete           | 1     | 1/1       |
+| Phase 2  | complete           | 1     | 1/1       |
+| Phase 3  | complete           | 1     | 1/1       |
+| Phase 4  | complete           | 1     | 1/1       |
+| Phase 5  | complete           | 1     | 1/1       |
+| Phase 6  | complete           | 1     | 1/1       |
+| Phase 7  | complete           | 1     | 1/1       |
+| Phase 8  | complete           | 1     | 1/1       |
+| Phase 9  | complete           | 1     | 1/1       |
+| Phase 10 | complete           | 1     | 1/1       |
+| Phase 11 | complete           | 1     | 1/1       |
+| Phase 12 | complete           | 1     | 1/1       |
+| Phase 13 | complete           | 1     | 1/1       |
+| Phase 14 | complete           | 1     | 1/1       |
+| Phase 15 | complete           | 1     | 1/1       |
+| Phase 16 | parked (plan STOP) | 1     | 0/1       |
+| Phase 17 | pending            | 1     | 0/1       |
+| Phase 18 | pending            | 1     | 0/1       |
+| Phase 19 | pending            | 1     | 0/1       |
+| Phase 20 | pending            | 1     | 0/1       |
 
 **Total:** 15/20 tasks completed
 
@@ -233,15 +233,15 @@ oat_generated: false
 
 ## Phase 16: calculate dispatch baselines after journaling (p16)
 
-**Status:** pending · **Group:** 6 · **Tasks:** p16-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** parked (plan STOP) · **Group:** 6 · **Tasks:** p16-t01
+**Outcome:** not delivered — the plan's Step 3 git seam is forbidden by the recorder graph's architectural no-process guard; partial Steps 2–3 preserved at `parked/wave-7-p16/`; the item returns to planning as a decision.
+**Verification:** drift clean; pins re-anchored by literal; the Step 1 premise reproduced live; the three-way guard control (base green, Step 2 green, Steps 2 + 3 red at `record.test.ts:1901`).
+**Deviations:** parked on a STOP the plan's own list does not name (a plan-vs-guard conflict); three further plan defects recorded in the plan's dated STOP entry.
 
 ### Task p16-t01: Execute external plan — Resolve the accepted execution baseline after mandatory launch journaling, and make the ordering auditable
 
-**Status:** pending
-**Commit:** -
+**Status:** parked (plan STOP)
+**Commit:** — (no commit; partial patch at `parked/wave-7-p16/p16-partial-steps2-3.patch`)
 
 ## Phase 17: harden the external plan readiness contract (p17)
 
@@ -715,6 +715,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p13-review-001` — reviewer, target opus, seven rulings (adjudicate the `tests/` narrowing against the categorical rule; a per-validator base-vs-head battery over twelve shapes; the three out-of-list fixtures; the bundled tree green at head; the retire item and `AGENTS.md` confinement; scope; the five plan inconsistencies). Record `dispatch/w7-p13-review-001.json`.
 - `w7-p13-review-001` outcome: PASS with findings, 0/0/1M/3m; the `tests/`-nested narrowing adjudicated as licensed by the plan's own boundary (input set empty; bundle strips `tests/`); a 30-shape base-vs-head battery with two documented exceptions; the literal Step-4 placement shown to violate STOP 3. M1/m2 fixed by the root; m1/m3 accepted; p13 `passed`.
 - `w7-p16-impl-001`, `w7-p17-impl-001`, `w7-p18-impl-001` — group 6 dispatched together at `335aae6a8f9ecc725e9d180a5ab72e859692d51e` (the tip after the group-5 fan-in bookkeeping); each target opus, task_class default-implementation; briefs carry the groups-1–5 cumulative churn (p16: `skills.test.ts` +2,000 lines and p13's wider bump gate now covering `references/`; p17: the live corpus it sweeps — eight plans with dated entries, the `in-progress` W7 row, the p09 plan's refresh; p18: p13's rewrite of the `AGENTS.md` bump bullets) and the rulings (p16: the one authorized item edit, issue #266 excluded; p17: producer vocabulary first, no `oat-wave-program` pin; p18: root `package.json` is not lockstep, CI workflow and `turbo.json` out of scope). Records `dispatch/w7-p1{6,7,8}-impl-001.json`.
+- `w7-p16-impl-001` outcome: BLOCKED → PARKED (plan STOP; no commit; worktree clean at base). The plan's Step 3 seam is forbidden by the recorder graph's no-process guard (`record.test.ts:1879-1902`), and every alternative either hits the same guard, evades it, drops the required `tree_clean`, or is excluded by the plan; restructuring the guard is an architecture/security decision the plan does not authorize. The partial Steps 2–3 patch and a real pre-fix journal fixture are preserved at `parked/wave-7-p16/`; a dated STOP record is in the plan; `BL-260906-harden-dispatch-launch` stays open with both halves and returns to planning as a decision. Group 6 continues with p17 and p18.
 - `w7-p15-review-001` outcome: PASS with findings, 0/0/0/3m (a four-consumer, 14-shape base-vs-head table; convergence proven against a base-built manifest). m1 → root address-now at the fan-in; m2 plan correction applied; m3 `BL-260909-use-handle-bound-traversal` filed; p15 `passed`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
@@ -767,6 +768,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- p16 parked on a plan STOP (the recorder graph's no-process guard forbids the plan's git seam); partial work preserved under `parked/wave-7-p16/`; dated STOP record in the plan; the item stays open for re-planning.
 - Group 5 fan-in: merges `de8c5b391`, `5d6b0461d`, `5171bf3cf`; address-now `da248f346`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7253). Group 6 (p16 + p17 + p18) bootstraps next.
 - Group 4 fan-in: merges `13705dcdc`, `bb082e505`, `0f1711d88` (the p10 merge body folded for commitlint); lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7209). Group 5 (p13 + p14 + p15) bootstraps next.
 - Group 3 fan-in: merges `7c5a6aa01`, `17d271b23`, `95ad10827`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7187). Group 4 (p10 + p11 + p12) bootstraps next.
