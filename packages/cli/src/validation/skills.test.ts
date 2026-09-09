@@ -2976,7 +2976,13 @@ describe('validateOatSkills', () => {
     // contract routes the required evidence to the run record instead, and
     // none of them instructs the caller to run the recorder after every launch.
     for (const [index, contract] of contracts.entries()) {
-      expect(contract, paths[index]).toMatch(/run record/i);
+      // Implement and the dispatch engines own implementation.md; the review
+      // rails cannot persist it, so they record the launch in the review artifact.
+      expect(contract, paths[index]).toMatch(
+        index < 3
+          ? /run record/i
+          : /review artifact'?s? dispatch audit\s+metadata/i,
+      );
       expect(contract, paths[index]).toMatch(
         /oat project dispatch record[^]{0,160}optional and off by default/i,
       );

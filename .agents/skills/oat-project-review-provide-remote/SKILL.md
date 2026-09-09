@@ -319,11 +319,13 @@ route. After acceptance, continue only through the existing reviewer handle;
 timeout, interruption, malformed output, or `BLOCKED` never authorizes a
 replacement launch.
 
-Record the remote-review launch in the project's run record. Construct and
-redact the complete generic record plus OAT role event before the native call;
-when the call returns `accepted` or `blocked-before-start`, write the request
-ID, the `Dispatch:` stamp, the launch status, and later the terminal outcome
-into the run record in `implementation.md`. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A rejected launch must attest
+Record the remote-review launch in the review artifact, never in
+`implementation.md` (the remote rail runs in an ephemeral worktree and forbids
+that mutation). Construct and redact the complete generic record plus OAT role
+event before the native call; when the call returns `accepted` or
+`blocked-before-start`, carry the request ID, the `Dispatch:` stamp, the launch
+status, and later the terminal outcome in the review artifact's dispatch audit
+metadata, which the ledger row and the review bookkeeping commit persist. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A rejected launch must attest
 `provesNoChildStarted: true`; only it permits one exact-target approximation
 with a fresh request ID. Preserve exact model, effort, route, authority, and
 provider controls. Timeout, `BLOCKED`, refusal after acceptance, runtime
