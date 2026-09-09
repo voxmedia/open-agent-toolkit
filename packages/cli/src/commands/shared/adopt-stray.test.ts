@@ -1,9 +1,17 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  lstat,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { computeContentHash } from '@manifest/hash';
 import { createEmptyManifest } from '@manifest/manager';
+import type { ManifestEntry } from '@manifest/manifest.types';
 import { COPILOT_PROJECT_MAPPINGS } from '@providers/copilot/paths';
 import { CURSOR_PROJECT_MAPPINGS } from '@providers/cursor/paths';
 import { parseCursorRuleToCanonical } from '@providers/cursor/rule-transform';
@@ -160,6 +168,25 @@ describe('adoptStrayToCanonical', () => {
       (entry) => entry.contentType === 'skill',
     )!;
 
+    // Executable owner of the native-read manifest-neutrality invariant that
+    // `adopt-stray.ts`'s `if (stray.mapping.nativeRead) return manifest;` early
+    // return provides: a natively read projection has nothing to track, so the
+    // adoption must return the *same* manifest object with its entries intact.
+    // The input is deliberately non-empty: an empty manifest cannot tell a
+    // preserved manifest apart from a freshly built one.
+    const unrelatedEntry: ManifestEntry = {
+      canonicalPath: '.agents/agents/unrelated.md',
+      providerPath: '.cursor/agents/unrelated.md',
+      provider: 'cursor',
+      contentType: 'agent',
+      strategy: 'symlink',
+      contentHash: null,
+      isFile: true,
+      lastSynced: '2026-01-01T00:00:00.000Z',
+    };
+    const inputManifest = createEmptyManifest();
+    inputManifest.entries.push({ ...unrelatedEntry });
+
     const manifest = await adoptStrayToCanonical(
       scopeRoot,
       {
@@ -167,7 +194,7 @@ describe('adoptStrayToCanonical', () => {
         report: { providerPath: '.cursor/skills/local-only' },
         mapping,
       },
-      createEmptyManifest(),
+      inputManifest,
     );
 
     await expect(
@@ -182,7 +209,11 @@ describe('adoptStrayToCanonical', () => {
         'utf8',
       ),
     ).rejects.toMatchObject({ code: 'ENOENT' });
-    expect(manifest.entries).toHaveLength(0);
+    await expect(
+      lstat(join(scopeRoot, '.cursor', 'skills', 'local-only')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(manifest).toBe(inputManifest);
+    expect(manifest.entries).toEqual([unrelatedEntry]);
   });
 
   it('removes an identical native-read Cursor duplicate', async () => {

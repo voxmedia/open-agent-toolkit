@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -10,6 +10,7 @@ import {
 import type { PjmAdoption } from '@commands/pjm/adoption';
 import { AdoptionSourceUnavailableError } from '@commands/shared/adopt-stray';
 import type { CodexRoleStray } from '@commands/shared/codex-strays';
+import { applyNativeSkillDisposition as applyNativeSkillDispositionOnDisk } from '@commands/shared/native-skill-disposition';
 import type {
   PackAssetInventory,
   PackInventory,
@@ -29,7 +30,11 @@ import {
   type CanonicalEntry,
 } from '@engine/index';
 import { CliError } from '@errors/index';
-import type { Manifest, ManifestEntry } from '@manifest/index';
+import {
+  saveManifest as saveManifestToDisk,
+  type Manifest,
+  type ManifestEntry,
+} from '@manifest/index';
 import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
 import {
   computeCodexProjectExtensionPlan as computeCodexExtensionPlanFromDisk,
@@ -69,6 +74,14 @@ interface TestHarnessOptions {
   home?: string;
   useDiskCodexExtension?: boolean;
   useDiskBundledCodexAgents?: boolean;
+  /**
+   * Swap the `saveManifest` and `applyNativeSkillDisposition` stubs for the
+   * production implementations so a case can assert on the manifest file the
+   * command actually wrote instead of on a spy's arguments. Requires a real
+   * `mkdtemp` `cwd`: `packages/cli/AGENTS.md` reserves the fake `/tmp/workspace`
+   * cwd for harnesses whose filesystem-writing dependencies are all mocked.
+   */
+  useDiskManifestPersistence?: boolean;
   interactive?: boolean;
   selectManyResponses?: Array<string[] | null>;
   singleSelectResponses?: Array<string | null>;
@@ -227,10 +240,13 @@ function createManifest(
   entries: ManifestEntry[],
   oatVersion: string = OAT_VERSION,
 ): Manifest {
+  // Schema-valid v2: `useDiskManifestPersistence` hands this object to the
+  // production `saveManifest`, which parses it with `ManifestV2Schema`.
   return {
-    version: 1,
+    version: 2,
     oatVersion,
     entries,
+    collections: [],
     lastUpdated: '2026-02-14T00:00:00.000Z',
   };
 }
@@ -368,8 +384,12 @@ function createHarness(options: TestHarnessOptions = {}): {
   const interactive = options.interactive ?? true;
   const selectManyResponses = [...(options.selectManyResponses ?? [])];
   const singleSelectResponses = [...(options.singleSelectResponses ?? [])];
-  const selectManyWithAbort = vi.fn(
-    async () => selectManyResponses.shift() ?? [],
+  // An explicitly queued `null` must survive as `null`: it is how a case drives
+  // the checklist-abort branch (`selectedValues === null`). Only an exhausted
+  // queue falls back to an empty selection, so `?? []` here would silently turn
+  // every abort case into a "selected nothing" case that never reaches it.
+  const selectManyWithAbort = vi.fn(async () =>
+    selectManyResponses.length > 0 ? selectManyResponses.shift()! : [],
   );
   const selectWithAbort = vi.fn(
     async () => singleSelectResponses.shift() ?? null,
@@ -378,10 +398,20 @@ function createHarness(options: TestHarnessOptions = {}): {
   const adoptStray = vi.fn(async (_scopeRoot, _stray, manifest: Manifest) => {
     return manifest;
   });
-  const applyNativeSkillDisposition = vi.fn(
-    async (_scopeRoot, _stray, manifest: Manifest) => manifest,
-  );
-  const saveManifest = vi.fn(async () => undefined);
+  if (
+    options.useDiskManifestPersistence &&
+    (options.cwd === undefined || options.cwd === '/tmp/workspace')
+  ) {
+    throw new Error(
+      'useDiskManifestPersistence requires a real mkdtemp cwd; the production saveManifest writes to disk.',
+    );
+  }
+  const applyNativeSkillDisposition = options.useDiskManifestPersistence
+    ? vi.fn(applyNativeSkillDispositionOnDisk)
+    : vi.fn(async (_scopeRoot, _stray, manifest: Manifest) => manifest);
+  const saveManifest = options.useDiskManifestPersistence
+    ? vi.fn(saveManifestToDisk)
+    : vi.fn(async () => undefined);
   const syncConfig: SyncConfig = {
     ...DEFAULT_SYNC_CONFIG,
     knownStrays: options.syncConfigKnownStrays ?? [],
@@ -915,6 +945,346 @@ describe('createStatusCommand', () => {
           message.startsWith('Manifest version restamp'),
         ),
       ).toEqual([]);
+    });
+
+    it('saves the manifest after a native-skill adoption', async () => {
+      // A scope whose only migration is a native-skill adopt still completed a
+      // migration, so it persists and restamps like the ordinary-stray loop,
+      // `oat init`, and `oat sync` do. There are deliberately no ordinary
+      // strays here: they are the only other thing that sets `manifestChanged`,
+      // so their absence is what makes the native path the cause of the save.
+      const {
+        command,
+        saveManifest,
+        applyNativeSkillDisposition,
+        selectManyWithAbort,
+      } = createHarness({
+        adapters: [createCursorAdapter()],
+        interactive: true,
+        manifestEntries: [],
+        driftReports: [],
+        manifestOatVersion: OAT_VERSION,
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'cursor',
+            providerPath: '.cursor/skills/adopt-me',
+            state: { status: 'stray' as const },
+          },
+        ],
+        singleSelectResponses: ['adopt'],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      expect(applyNativeSkillDisposition).toHaveBeenCalledTimes(1);
+      // No ordinary strays reached the checklist, so nothing but the native
+      // adopt could have opened the save gate.
+      expect(selectManyWithAbort).not.toHaveBeenCalled();
+      expect(saveManifest).toHaveBeenCalledTimes(1);
+      const adoptedManifest =
+        await applyNativeSkillDisposition.mock.results[0]!.value;
+      expect(saveManifest).toHaveBeenCalledWith(
+        join('/tmp/workspace', '.oat', 'sync', 'manifest.json'),
+        adoptedManifest,
+      );
+    });
+
+    it('performs no save when the only native-skill disposition is keep', async () => {
+      // A `keep` writes the sync config through `appendKnownStray` and returns
+      // the manifest untouched (`native-skill-disposition.ts:92-94`), so it
+      // must not open the manifest save gate.
+      const { command, saveManifest, applyNativeSkillDisposition, capture } =
+        createHarness({
+          adapters: [createCursorAdapter()],
+          interactive: true,
+          manifestEntries: [],
+          driftReports: [],
+          manifestOatVersion: '0.0.1',
+          strayReports: [
+            {
+              canonical: null,
+              provider: 'cursor',
+              providerPath: '.cursor/skills/keep-me',
+              state: { status: 'stray' as const },
+            },
+          ],
+          singleSelectResponses: ['keep'],
+        });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      expect(applyNativeSkillDisposition).toHaveBeenCalledTimes(1);
+      expect(saveManifest).not.toHaveBeenCalled();
+      expect(
+        capture.warn.filter((message) =>
+          message.startsWith('Manifest version restamp'),
+        ),
+      ).toEqual([]);
+    });
+
+    it('warns before the native-skill adoption save', async () => {
+      const { capture, command, saveManifest } = createHarness({
+        adapters: [createCursorAdapter()],
+        interactive: true,
+        manifestEntries: [],
+        driftReports: [],
+        manifestOatVersion: '0.0.1',
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'cursor',
+            providerPath: '.cursor/skills/adopt-me',
+            state: { status: 'stray' as const },
+          },
+        ],
+        singleSelectResponses: ['adopt'],
+      });
+
+      let warningsWhenSaved: string[] = [];
+      saveManifest.mockImplementationOnce(async () => {
+        warningsWhenSaved = [...capture.warn];
+      });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      const expected = restampWarning('0.0.1');
+      expect(saveManifest).toHaveBeenCalledTimes(1);
+      // Snapshotted at save time: the advisory precedes the write it warns
+      // about, rather than merely appearing somewhere in the run.
+      expect(warningsWhenSaved).toContain(expected);
+      expect(
+        capture.warn.filter((message) => message === expected),
+      ).toHaveLength(1);
+    });
+
+    it('still saves when a later prompt is aborted after a native adopt succeeded', async () => {
+      // The boundary between this case and ':869'. Aborting the *first* native
+      // prompt adopts nothing, so nothing is saved. Aborting a *later* prompt
+      // cannot undo the adopt that already happened: `adoptStrayToCanonical`
+      // renamed the directory on disk before the abort, so the migration is
+      // complete and irreversible, and the manifest must record it rather than
+      // be left unrestamped. `migrationAborted` suppresses the remaining
+      // prompts, not the persistence of work already done.
+      const {
+        capture,
+        command,
+        saveManifest,
+        selectWithAbort,
+        selectManyWithAbort,
+      } = createHarness({
+        adapters: [createCursorAdapter()],
+        interactive: true,
+        manifestEntries: [],
+        driftReports: [],
+        manifestOatVersion: '0.0.1',
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'cursor',
+            providerPath: '.cursor/skills/adopt-me',
+            state: { status: 'stray' as const },
+          },
+          {
+            canonical: null,
+            provider: 'cursor',
+            providerPath: '.cursor/skills/decide-later',
+            state: { status: 'stray' as const },
+          },
+        ],
+        singleSelectResponses: ['adopt', null],
+      });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      expect(selectWithAbort).toHaveBeenCalledTimes(2);
+      // The abort really did stop the run before the ordinary checklist.
+      expect(selectManyWithAbort).not.toHaveBeenCalled();
+      expect(saveManifest).toHaveBeenCalledTimes(1);
+      const expected = restampWarning('0.0.1');
+      expect(
+        capture.warn.filter((message) => message === expected),
+      ).toHaveLength(1);
+    });
+
+    it('still saves when the ordinary checklist is aborted after a native adopt succeeded', async () => {
+      // The other adopt-then-abort sequence. `selectManyResponses: [null]` is a
+      // real `null` here (see the `selectManyWithAbort` note in the harness),
+      // so this genuinely drives the `selectedValues === null` branch rather
+      // than an empty selection. The native adopt that preceded it still moved
+      // a directory, so the save is the record of that completed work.
+      const { command, saveManifest, selectWithAbort, selectManyWithAbort } =
+        createHarness({
+          adapters: [createCursorAdapter(), createAdapter()],
+          interactive: true,
+          manifestEntries: [],
+          driftReports: [],
+          manifestOatVersion: '0.0.1',
+          strayReports: [
+            {
+              canonical: null,
+              provider: 'cursor',
+              providerPath: '.cursor/skills/adopt-me',
+              state: { status: 'stray' as const },
+            },
+            {
+              canonical: null,
+              provider: 'claude',
+              providerPath: '.claude/skills/stray-one',
+              state: { status: 'stray' as const },
+            },
+          ],
+          singleSelectResponses: ['adopt'],
+          selectManyResponses: [null],
+        });
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      expect(selectWithAbort).toHaveBeenCalledTimes(1);
+      expect(selectManyWithAbort).toHaveBeenCalledTimes(1);
+      expect(saveManifest).toHaveBeenCalledTimes(1);
+    });
+
+    it('saves after a confirmed replaceCanonical retry of a native adoption', async () => {
+      // Regression cover for the second `manifestChanged` assignment, in the
+      // conflict-replacement retry. Without a case that reaches it, that
+      // assignment could be deleted with every other new test still green.
+      const {
+        command,
+        saveManifest,
+        confirmAction,
+        applyNativeSkillDisposition,
+      } = createHarness({
+        adapters: [createCursorAdapter()],
+        interactive: true,
+        manifestEntries: [],
+        driftReports: [],
+        manifestOatVersion: '0.0.1',
+        strayReports: [
+          {
+            canonical: null,
+            provider: 'cursor',
+            providerPath: '.cursor/skills/adopt-me',
+            state: { status: 'stray' as const },
+          },
+        ],
+        singleSelectResponses: ['adopt'],
+      });
+
+      applyNativeSkillDisposition.mockRejectedValueOnce(
+        new CliError(
+          'Cannot adopt .cursor/skills/adopt-me: canonical path .agents/skills/adopt-me already exists with different content.',
+        ),
+      );
+      confirmAction.mockResolvedValue(true);
+
+      await runStatusCommand(command, ['--scope', 'project']);
+
+      expect(confirmAction).toHaveBeenCalledTimes(1);
+      expect(applyNativeSkillDisposition).toHaveBeenCalledTimes(2);
+      expect(applyNativeSkillDisposition.mock.calls[1]?.[5]).toEqual({
+        replaceCanonical: true,
+      });
+      expect(saveManifest).toHaveBeenCalledTimes(1);
+    });
+
+    it('persists the native-skill adoption outcome to the manifest on disk', async () => {
+      const project = await mkdtemp(join(tmpdir(), 'oat-status-native-adopt-'));
+
+      try {
+        await mkdir(join(project, '.git'), { recursive: true });
+        await mkdir(join(project, '.agents', 'skills'), { recursive: true });
+        await mkdir(join(project, '.oat', 'sync'), { recursive: true });
+        await mkdir(join(project, '.cursor', 'skills', 'adopt-me'), {
+          recursive: true,
+        });
+        await writeFile(
+          join(project, '.cursor', 'skills', 'adopt-me', 'SKILL.md'),
+          '# Adopt me\n',
+          'utf8',
+        );
+
+        const unrelatedEntry = createManifestEntry({
+          canonicalPath: '.agents/agents/unrelated.md',
+          providerPath: '.claude/agents/unrelated.md',
+          contentType: 'agent',
+          isFile: true,
+        });
+
+        const { command, saveManifest } = createHarness({
+          adapters: [createCursorAdapter()],
+          interactive: true,
+          manifestEntries: [{ ...unrelatedEntry }],
+          driftReports: [],
+          canonicalEntries: [],
+          cwd: project,
+          manifestOatVersion: '0.0.1',
+          useDiskManifestPersistence: true,
+          strayReports: [
+            {
+              canonical: null,
+              provider: 'cursor',
+              providerPath: '.cursor/skills/adopt-me',
+              state: { status: 'stray' as const },
+            },
+          ],
+          singleSelectResponses: ['adopt'],
+        });
+
+        await runStatusCommand(command, ['--scope', 'project']);
+
+        expect(saveManifest).toHaveBeenCalledTimes(1);
+
+        // Read the file the command wrote. Nothing mocks the writer this case
+        // asserts about: both `saveManifest` and `applyNativeSkillDisposition`
+        // are the production implementations here.
+        const persisted = JSON.parse(
+          await readFile(
+            join(project, '.oat', 'sync', 'manifest.json'),
+            'utf8',
+          ),
+        ) as Manifest;
+
+        // The restamp actually happened on disk, not just in the advisory.
+        expect(persisted.oatVersion).toBe(OAT_VERSION);
+        expect(persisted.oatVersion).not.toBe('0.0.1');
+        // `saveManifest` restamps `oatVersion` and carries `lastUpdated`
+        // through from the in-memory manifest, so this pins presence and shape
+        // rather than a refresh the writer does not perform.
+        expect(persisted.lastUpdated).toEqual(expect.any(String));
+        expect(Number.isNaN(Date.parse(persisted.lastUpdated))).toBe(false);
+
+        // The unrelated row survived the write with identical fields.
+        expect(persisted.entries).toEqual([unrelatedEntry]);
+        // And no row was added for the adopted skill. Adopting a natively read
+        // projection is manifest-neutral by contract
+        // (`adopt-stray.ts:140-142`, owned by `adopt-stray.test.ts`'s "moves a
+        // native-read Cursor skill without recreating a provider view or
+        // manifest row"). BL-260906 assumed the opposite -- that an entry was
+        // written and then dropped -- so this assertion is the one that would
+        // go red if that ever became true.
+        expect(
+          persisted.entries.filter((entry) =>
+            entry.canonicalPath.includes('adopt-me'),
+          ),
+        ).toEqual([]);
+
+        // The adoption itself really moved the directory.
+        await expect(
+          readFile(
+            join(project, '.agents', 'skills', 'adopt-me', 'SKILL.md'),
+            'utf8',
+          ),
+        ).resolves.toBe('# Adopt me\n');
+        await expect(
+          readFile(
+            join(project, '.cursor', 'skills', 'adopt-me', 'SKILL.md'),
+            'utf8',
+          ),
+        ).rejects.toMatchObject({ code: 'ENOENT' });
+      } finally {
+        await rm(project, { recursive: true, force: true });
+      }
     });
 
     it('does not mutate or claim restamp evidence in JSON mode', async () => {
