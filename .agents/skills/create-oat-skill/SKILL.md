@@ -69,7 +69,7 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
 **Required frontmatter metadata:**
 
 - Include `metadata.version: 1.0.0` for new skills. OAT resolves `metadata.version` first and the top-level `version` second; `resolveSkillVersion` in `packages/cli/src/commands/shared/frontmatter.ts` owns that order and `packages/cli/src/commands/shared/frontmatter.test.ts` backstops it.
-- A top-level `version:` is the deprecated alias, read only when `metadata.version` is absent. Carrying both with different values is a conflict: `pnpm oat:validate-skills` reports it as an error and canonical role identity rejects it, even though the runtime readers still return the `metadata.version` value.
+- A top-level `version:` is the deprecated alias, read only when `metadata.version` is absent, and a skill whose only version is that alias no longer validates: `validateOatSkills` in `packages/cli/src/validation/skills.ts` reports `skill-version-alias` at `severity: 'error'`, so `pnpm oat:validate-skills` fails the skill rather than warning about it. Backstop: `it('reports exactly once for a non-oat-* alias-only skill')` in `packages/cli/src/validation/skills.test.ts`. Carrying both with different values is the separate `skill-version-conflict`: `pnpm oat:validate-skills` reports it as an error and canonical role identity rejects it, even though the runtime readers still return the `metadata.version` value.
 - On later edits, bump patch for fixes/clarifications, minor for backward-compatible behavior additions, major for breaking workflow/interface changes.
 
 **Progress indicators (required):**
