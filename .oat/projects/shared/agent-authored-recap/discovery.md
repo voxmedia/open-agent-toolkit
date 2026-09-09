@@ -13,130 +13,138 @@ oat_generated: false
 Discovery is for requirements and decisions, not implementation details.
 
 - Prefer outcomes and constraints over concrete deliverables (no specific scripts, file paths, or function names).
-- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable list.
+- If an implementation detail comes up, capture it as an **Open Question** for design (or a constraint), not as a deliverable.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Backlog item `BL-260907-replace-the-default-project` (high priority; GitHub issue #230; triage amendments of 2026-09-08): replace the implementation-tail project recap with one dependable, agent-authored HTML recap plus browser-based visual verification. Keep the advanced Explainer Kit recipes available through their explicit workflow, but stop requiring adaptive portfolio planning, five injected provider seams (author, fact critic, browser session, visual critic, set planner), multi-artifact expansion, and publish/durability machinery for the ordinary lifecycle recap. The program-close recap (`program-recap`, the six required program sections) adopts the same single-artifact path. The operator asked on 2026-09-09 to run this as its own spec-driven project here, and to use it to produce the recap for the 2026-08-31 execution program (seven waves, all merged and archived; the program ledger records `recap: not run — pending` this item) once it lands.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Browser surface for visual verification
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Which browser surface verifies the rendered recap at narrow, medium, and wide widths?
+**A:** The active agent's own browser capability first (for example Claude-in-Chrome or computer use) when present; otherwise the bundled Playwright/Chromium probe the kit already carries; otherwise browser-free checks with the outcome recorded as `built-needs-review`, per the 2026-09-08 decision that an authored artifact is never discarded.
+**Decision:** "Available browser surface" is a three-rung ladder resolved at run time and recorded in the result; the host-agent rung is a new integration surface (no skill wires a browser tool into recaps today), the Playwright rung is the existing probe kept as-is.
+
+### Question 2: Result record compatibility
+
+**Q:** How does the new recap's result record relate to `explainer-kit.manifest/v1`, which the archive command hashes and re-verifies?
+**A:** Keep the manifest contract exactly; only the outcome semantics change.
+**Decision:** The archive validator and its recap tests stay untouched; the terminal-outcome guard is rewritten so `generate` is satisfied only by a usable artifact, and `failed` is never a satisfied generation.
+
+### Question 3: Where the mechanical parts live
+
+**Q:** Do the deterministic parts (fact-bundle assembly from allowlisted artifacts, browser-free checks, result-record write, retry/skip decision) need a new CLI command?
+**A:** No — the operator's concern is over-engineering; a CLI is acceptable only where it is clearly valuable.
+**Decision:** No new CLI surface in this project. The archive-side validation already lives in the CLI and is unchanged, so a new command would add lockstep, docs, and test surface for logic only the skills invoke. The mechanical parts land as one small script set inside the OAT explainer adapter skill, tested by the skill's own test tier; promoting them to a command is a deferred idea if a second consumer ever appears.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+### Approach 1: Direct authoring on a kept contract _(Recommended)_
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+**Description:** The host agent that is already running the lifecycle authors the single HTML recap directly from an allowlisted fact bundle, then verifies it through the browser ladder; the kit's fact-base schema, freshness/dedup by input hashes, subject-bound claim checking, run identity, and the manifest contract are kept, while set planning, provider seams, expansion, and publish/durability leave the default path.
+**When this is the right choice:** The consumer is a normally configured host with an agent in the loop, and the archive contract must not move.
+**Tradeoffs:** Prose quality depends on the host agent, not a critic seam; visual verification quality depends on which rung of the browser ladder the host reaches.
 
-### Approach 1: {Strategy Name} _(Recommended)_
+### Approach 2: Simplify the kit in place
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**Description:** Keep the kit's run orchestrator and make every seam optional with sensible defaults, so the default path degrades gracefully instead of being replaced.
+**When this is the right choice:** If the advanced recipes and the default recap must share one code path.
+**Tradeoffs:** Retains the five-seam surface area and its probe/skip machinery; the simplification the item asks for would be configuration, not removal.
 
-### Approach 2: {Strategy Name}
+### Approach 3: Static Markdown recap only
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**Description:** Drop HTML and browser verification; the recap is the exported summary Markdown.
+**When this is the right choice:** Never for this item — the acceptance criteria require a standalone, navigable HTML artifact verified visually.
+**Tradeoffs:** Fails the item's core requirement.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** Approach 1.
+**Rationale:** It removes exactly the machinery the item names, keeps exactly the contracts the triage says to keep, and matches how the wave program's own recap was produced in practice (an agent-authored hub with a fact base).
+**User validated:** Yes — the three clarifying answers above (2026-09-09).
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
+### Option A: One skill owns both the project and the program recap
 
-### Option A: {Option Name}
+**Description:** The OAT explainer adapter skill exposes one generate flow with a recipe switch (project recap with its six narrative sections; program recap with its six program sections), and the completion, summary, wave-program, and wave-execute skills all call that one flow.
+**Pros:** One implementation of the browser ladder, the checks, and the record; the duplicated program-recap caller in the two wave skills collapses to a reference.
+**Cons:** The wave skills change in the same project.
+**Chosen:** Yes.
 
-**Description:** {What this option involves}
+### Option B: Separate project and program paths
 
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+**Description:** Project recap first; the program recap stays on the old caller until a later item.
+**Pros:** Smaller first PR.
+**Cons:** The triage amendment already put the program recap in scope, and the program's own recap is the first consumer this project must serve.
+**Chosen:** No.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+- **Direct agent authoring replaces the seam machinery on the default path** — the host agent authors one standalone HTML recap from an allowlisted fact bundle; the kit's author/critic/browser/visual-critic/set-planner seams, adaptive portfolio planning, multi-artifact expansion, and publish/durability are not required for the ordinary lifecycle recap and remain available only through the explicit advanced Explainer Kit workflow.
+- **Keep the contracts the archive depends on** — the fact-base schema (canonical JSON, derived Markdown), freshness and dedup by project/recipe identity and input hashes, subject-bound claim checking, run identity and artifact/input hashes, and the manifest contract stay as they are; the terminal-outcome guard keeps its shape with rewritten semantics.
+- **Browser ladder** — host browser tool, then the bundled Playwright probe, then browser-free checks recorded as `built-needs-review`; the authored artifact is never discarded.
+- **No new CLI command** — the deterministic parts live in the skill with the skill's tests (operator decision 2026-09-09, to avoid over-engineering); promotion to a command is deferred until a second consumer needs it.
+- **One generate flow for project and program recaps** — the program-close caller duplicated across the two wave skills collapses onto it; its run identity and outcome still land in the program ledger.
+- **Generate/retry/skip semantics** — a `generate` decision is satisfied only by a usable artifact (visually verified, or usable-but-unverified with a recorded reason); a failure preserves a sanitized actionable cause and requires an explicit retry or skip, never a silent closeout warning.
+- **Reconciliation is already done** — `BL-260902-make-autonomous-project-recap` shipped (wave 5) and its capability-probe skip contract is what this project's ladder replaces at the same lifecycle seams; `BL-260904-add-recap-seam-config-keys` is `wont_do`; no further backlog reconciliation is needed before implementation.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- The archive command's manifest validation and its existing recap tests must pass unchanged.
+- The lifecycle consumers (completion gate and export path, summary outcome mapping, the two wave skills' program-close callers) hard-code today's outcome vocabulary and the generated/degraded/skipped mapping; they change together with the semantics, in one project.
+- Bundled skill changes take one `metadata.version` bump per changed skill in the final PR and the lockstep public package bump; `pnpm test:skills`, `pnpm test:smoke`, `pnpm lint`, and `pnpm format` cover the skill tree.
+- The advanced kit stays installed and its core-version parity smoke test must keep passing.
+- Browser-less hosts must still complete the lifecycle: never block completion on a missing browser, never discard an authored artifact.
+- Fact bundles are allowlisted from approved project artifacts only (summary, implementation record, orchestration log, plan, discovery/spec/design where present, the program artifact and wave summaries for the program recap); nothing outside the project or program record enters the bundle.
+- Weaker-anywhere: nothing the archive or terminal-outcome guard rejects today becomes accepted unless enumerated in the design.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- A fresh, normally configured host produces one standalone, navigable HTML recap for a project without any custom provider module, and the archive command accepts and exports it.
+- The recap is opened through the first available rung of the browser ladder and checked at representative narrow, medium, and wide widths, with artifact and screenshot paths retained in a small result record; on a browser-less host the browser-free checks run and the outcome is `built-needs-review` with the reason recorded.
+- A `generate` decision is satisfied only when a usable visual artifact exists; generation failure surfaces a sanitized cause and an explicit retry-or-skip decision.
+- Focused tests exercise the fresh-host success path and reproduction-grade negative controls for provider and browser failures, proving the failures stay visible while a valid accepted control still produces the recap.
+- The program recap for the 2026-08-31 execution program is generated through the new path from the reconciled program artifact and the seven wave records, with the six required program sections, and its run identity and outcome are recorded in the program ledger.
+- The completion, summary, wave-program, and wave-execute skills route on the new semantics; no lifecycle skill references a retired seam.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Removing or rewriting the advanced Explainer Kit core, its recipes, publish/durability machinery, or its golden-conformance tests; they remain the explicit advanced workflow.
+- A new CLI command for recap generation (deferred idea).
+- Publishing recaps to S3 or any external surface.
+- Changing the fact-base schema or the manifest contract.
+- The recon rework (`BL-260908-restore-recon-s-cheap-fan-out`), which runs as its own project.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Promote the deterministic recap steps to an `oat project recap` command if a second consumer (for example a CI job or a non-agent host) needs them.
+- A visual-diff baseline for recap screenshots across runs.
+- Retiring the capability-probe skip vocabulary from the lifecycle contract once every consumer routes on the new ladder.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- Fact-bundle allowlist: exactly which artifacts, in which order of precedence, and how claims are bound to subject/value for the cohesion check (design).
+- The browser-ladder rung detection: how the host advertises its browser tool to a skill, and what evidence each rung records (design).
+- Outcome-vocabulary migration: whether `built-durable`/`built-not-durable` survive for the default path or collapse to `built` plus `built-needs-review` and `failed` (design; the manifest enum stays).
+- Retry/skip persistence: where the explicit retry-or-skip decision is recorded so a resumed completion honors it (design).
+- Program-recap section sourcing for aggregate numbers across seven waves (design).
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- The kit's fact-base schema and cohesion checker can be reused as libraries by the new flow without pulling in the set planner.
+- The archive command's manifest validation is the only CLI-side coupling; no CLI code change is required when the manifest is kept.
+- The host agents in use (Claude Code with a browser MCP, Cursor, Codex) can each reach at least one rung of the browser ladder.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- Prose quality without a critic seam: mitigated by subject-bound claim checking and the required-section checks.
+- Browser-ladder detection is a new integration surface with host-specific behavior; the browser-less path must be proven first so nothing depends on the top rung.
+- Outcome-semantics drift across four consumer skills: mitigated by changing them in one project with a shared contract test.
+- The program recap is the first real consumer; its fact bundle spans seven archived wrappers whose records live in the archive tree and S3 export.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+- Design: the fact-bundle allowlist, the browser ladder and its evidence, the rewritten outcome semantics, the retry/skip record, and the single generate flow with its two recipes.
