@@ -751,13 +751,12 @@ After constructing the complete provider payload, record the launcher-owned
 missing telemetry, missing reviewer self-report, or contradictory self-report
 must not populate, replace, or overwrite them and must not trigger fallback.
 
-Record the launch in the review artifact, not in `implementation.md` (this
-rail requires that file clean and never commits it). Construct and redact the
-complete generic record plus OAT role event before the native call; when the
-call returns `accepted` or `blocked-before-start`, carry the request ID, the
-`Dispatch:` stamp, the launch status, and later the terminal outcome in the
-review artifact's dispatch audit metadata, which the Step 9 ledger row and the
-Step 9.5 bookkeeping commit already persist. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A rejected launch must
+This rail writes no launch record. Its only launch evidence is the `Dispatch:`
+stamp it already copies into the review artifact's dispatch audit metadata
+(Step 6.0); it never writes `implementation.md` (this rail requires that file
+clean and never commits it) and adds no request-id, launch-status, or outcome
+field to any artifact or ledger column. Construct and redact the complete
+generic record plus OAT role event before the native call. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A rejected launch must
 attest `provesNoChildStarted: true`; only it permits one exact-target
 approximation with a fresh request ID. Preserve the exact model, effort, route,
 authority, and provider controls. Timeout, `BLOCKED`, refusal after acceptance,

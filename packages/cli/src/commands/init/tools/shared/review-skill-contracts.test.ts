@@ -818,9 +818,7 @@ printf 'artifact-read\\n'`,
       'oat-project-review-provide-remote',
     ]) {
       const content = readRepoFile(`.agents/skills/${skill}/SKILL.md`);
-      expect(content, skill).toMatch(
-        /review artifact'?s? dispatch audit\s+metadata/i,
-      );
+      expect(content, skill).toMatch(/writes no launch record/i);
       expect(content, skill).toMatch(
         /(?:not|never)(?: in)?[^]{0,40}`implementation\.md`/i,
       );
@@ -830,7 +828,6 @@ printf 'artifact-read\\n'`,
       expect(content, skill).not.toMatch(
         /immediately after[^]{0,200}run `oat project dispatch record/i,
       );
-      expect(content, skill).toMatch(/accepted[^]{0,160}blocked-before-start/i);
       expect(content, skill).toMatch(
         /timeout[^]{0,160}`BLOCKED`[^]{0,180}(?:never|not)[^]{0,100}(?:fallback|replacement)/i,
       );

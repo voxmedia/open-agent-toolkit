@@ -2979,9 +2979,7 @@ describe('validateOatSkills', () => {
       // Implement and the dispatch engines own implementation.md; the review
       // rails cannot persist it, so they record the launch in the review artifact.
       expect(contract, paths[index]).toMatch(
-        index < 3
-          ? /run record/i
-          : /review artifact'?s? dispatch audit\s+metadata/i,
+        index < 3 ? /run record/i : /writes? no launch record/i,
       );
       expect(contract, paths[index]).toMatch(
         /oat project dispatch record[^]{0,160}optional and off by default/i,
