@@ -390,6 +390,19 @@ _Recorded when the configured implementation exit gate runs._
 
 **p03 row → `passed`** (reviewed head `b108f2dbf`); group 1 is clear for fan-in.
 
+## Review Received: p06 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p06-review-2026-09-09T013145Z.md (reviewed head `8cf75b11b4693bae70b59eb3f2cce32176ad009f`, manual, opus)
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 1 — PASS with findings. Verified: the guard bites at the tarball layer on two directories that are not the lane's controls (`assets/config`, `assets/scripts`) via real `pnpm pack` + `tar -tzf`; five adversarial probes incl. a dotfile-only directory (guard fires) and a symlinked `assets/docs` (pre-pack `[]`, tarball reports it — the layers' one disagreement); three negative controls both ways incl. the reviewer's own (an eighth name in `REQUIRED_BUNDLE_DIRECTORIES` reddens the correspondence test); `assets` + `dist` trees hash-identical before/after the suite; gates `Cached: 0`; scope exact (`configuration.md:95` md5 unchanged).
+
+**Dispositions:**
+
+- M1 — the docs bullet overstates the guarantee ("cannot ship a bundle that would make every command exit 2" covers only the directory-shape cause) and mis-attributes why the tarball check is load-bearing (both layers fire on an emptied directory; the tarball layer's independent value is the symlink / `files`-exclusion class): **fix round** (`w7-p06-fix-001`, resumed lane, append-only) — bullet qualified and re-attributed.
+- m1 — the `it.each` pack-control table covers two of the four newly guarded directories: **fix round** (same commit) — table derived from the exported `REQUIRED_BUNDLE_DIRECTORIES`, proven able to fail.
+
+**p06 row → `fixes_added`**; round 2 on the original reviewer handle follows the fix commit.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -423,6 +436,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p05-impl-001` outcome: BLOCKED at Step 5 (no commit; Steps 1–4 green and preserved uncommitted: 12 modified + 2 new files, all in scope; focused 780/780). The plan's `src`-wide sweep surfaced four unclassified sites: (A) `mergeEffectiveDispatchMatrix` swallows the preserved key one layer downstream of Step 2's fix; (B) `gate/index.ts:1865` `--target __proto__` crashes instead of "Unknown exec target"; (C) two `dispatch-ceiling` provider lookups print `unsupported (undefined)`; (D) `dispatch-report.ts:378` same class. Decision (root, dated refresh): A fixed and B–D guarded through the new helpers — three files added to In scope, cases 16–19, Step 6 names the sites; the lane resumes on its staged work.
 - `w7-p06-impl-001` outcome: DONE, one commit `8cf75b11b4693bae70b59eb3f2cce32176ad009f` (four files). Free red at Step 2 (three missing packed paths), revert-the-fix control fails 4 of 22 incl. the correspondence test over the exported `REQUIRED_BUNDLE_DIRECTORIES`; one Codex round (static — vitest EPERM in its sandbox): one Medium fixed (prose overstated the failure mode; the pre-pack layer also `access`es every required path). Eight gates exit 0, `Cached: 0` (cli 7109). Friction: the worktree's `pnpm build` replayed FULL TURBO with root-checkout log paths — forced a real build before probing.
 - `w7-p06-review-001` — reviewer, target opus, six rulings (tarball-layer guard incl. a third directory; producer untouched and `REQUIRED_BUNDLE_DIRECTORIES` content/order unchanged; no dist/assets mutation; Codex's Medium re-verified; scope incl. `configuration.md:95` untouched; one adversarial probe). Record `dispatch/w7-p06-review-001.json`.
+- `w7-p06-review-001` outcome: PASS with findings, 0/0/1M/1m (tarball-layer guard proven on two non-control directories; symlinked-directory probe shows the tarball layer's independent value). M1/m1 → fix round `w7-p06-fix-001` on the resumed lane.
 
 #### Group 1 fan-in (2026-09-09)
 
@@ -440,6 +454,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- p06 review received (PASS with findings, 0/0/1M/1m): fix round `w7-p06-fix-001` dispatched; p06 row `fixes_added`.
 - Group 1 fan-in: merges `ea2f5a675`, `7b9793b8f`, `f175ca2da`; lockstep bump `f0eb1c02e` (0.2.67); eight gates + smoke + skills + root test green (0 cached; cli 7105). Group 2 (p04 + p05 + p06) bootstraps next.
 
 ### 2026-09-08
