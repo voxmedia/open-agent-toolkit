@@ -458,6 +458,18 @@ _Recorded when the configured implementation exit gate runs._
 
 **p05 row → `passed`** (reviewed head `054de3cf3`); p05 is clear for the group-2 fan-in.
 
+## Review Received: p04 (round 2 — passed)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p04-review-2026-09-09T022119Z.md (reviewed head `6403c6ced75f4322720b0d51e548186ec8f0c9df`, manual, opus)
+**Findings:** 0 · 0 · 0 · 1 minor — PASS. Verification records: M1 — four surfaces qualified and consistent with the unchanged `append.ts:1526-1548` path; every claimed behavior reproduced live on one sealed log; the new boundary case red under the reviewer's own reordering (`expected { status: 'sealed' … } to match { status: 'already-appended' … }`), restore hash-matched. m1 — the retro sentence at `apply-procedure.md:76-81` routes on both observables; exactly one bump (1.0.5 → 1.0.6; only two `version:` changes in the phase range); sweep hits are npm-release fixtures; provider views unchanged. m2 — the rename is accurate and the named capable control at `lifecycle.integration.test.ts:451` goes red under a deleted refusal. Shape: one commit on the unamended `247f06b65`, 8 files; gates forced `Cached: 0` (cli 7131; skills 883; smoke 167; `check:skill-bumps` validated three bumps).
+
+**Disposition (round 2 Minor):**
+
+- m1 — a fifth surface, `apps/oat-docs/docs/workflows/projects/lifecycle.md:198` (authored by this phase in round 1), still states the refusal unconditionally (the lane's sweep used the old exact wording): **address-now** (root, one-clause qualification identical to `oat-project-complete/SKILL.md:791`, committed on the integration branch at the group-2 fan-in and gated there).
+
+**p04 row → `passed`** (reviewed head `6403c6ced`); group 2 is clear for fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -507,6 +519,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p04-fix-001` — bounded fix round (prose qualification ×4 + one negative-direction case; retro routing sentence + bump; capable seal-count assertion). Record `dispatch/w7-p04-fix-001.json`.
 - `w7-p04-fix-001` outcome: one append-only commit `6403c6ced75f4322720b0d51e548186ec8f0c9df`: the four refusal surfaces qualified (keyed replay → `already-appended`, new content refused) with a negative-direction `append.test.ts` case (red under neutralized key recognition); `oat-project-retro` routed on the sealed outcome and bumped 1.0.5 → 1.0.6 (no pins exist; sweep clean; provider views unchanged); the vacuous seal-count assertion dropped in favor of the load-bearing one with a pointer to the capable integration control. Gates forced `Cached: 0` (cli 7131; skills 883; smoke 167; `check:skill-bumps` validated two bumps).
 - `w7-p04-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w7-p04-review-002.json`.
+- `w7-p04-review-002` outcome: PASS (fan-in may proceed), 0/0/0/1m; all three dispositions verified by the reviewer's own controls; the one new Minor (a fifth unqualified docs sentence) taken as a root address-now at the fan-in.
 
 #### Group 1 fan-in (2026-09-09)
 
@@ -525,6 +538,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 ### 2026-09-09
 
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
+- p04 round 2 passed (0/0/0/1m) at `6403c6ced`; p04 row `passed`; group 2 fan-in starts.
 - p04 review received (PASS with findings, 0/0/1M/3m): fix round `w7-p04-fix-001` dispatched; p04 row `fixes_added`.
 - p05 review received (PASS with findings, 0/3I/1M/3m — artifact alignment): wrapper surface and plan refresh corrected by the root; DR fix round `w7-p05-fix-001` dispatched; p05 row `fixes_added`.
 - p06 round 2 passed (0/0/0/0) at `0f81fd8fa`; p06 row `passed`.

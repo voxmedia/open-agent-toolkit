@@ -766,6 +766,7 @@ git commit -m "docs(p20-t01): keep plan writes on the caller's model"
 | p03    | code     | fixes_added | 2026-09-09 | reviews/archived/p03-review-2026-09-09T002419Z.md           | c4053df739bb1fa8b92f206eef3f165e955a6110 | manual     | -                   |
 | p03    | code     | passed      | 2026-09-09 | reviews/archived/p03-review-2026-09-09T004719Z.md           | b108f2dbf1ada4f97a68c616bd65f08559ec99d9 | manual     | -                   |
 | p04    | code     | fixes_added | 2026-09-09 | reviews/archived/p04-review-2026-09-09T020125Z.md           | 247f06b65cd9f517742d8924ceeacd16fdd944a0 | manual     | -                   |
+| p04    | code     | passed      | 2026-09-09 | reviews/archived/p04-review-2026-09-09T022119Z.md           | 6403c6ced75f4322720b0d51e548186ec8f0c9df | manual     | -                   |
 | p05    | code     | fixes_added | 2026-09-09 | reviews/archived/p05-review-2026-09-09T015920Z.md           | 412abf81d8b42515d0bbf06cadbb94d103502258 | manual     | -                   |
 | p05    | code     | passed      | 2026-09-09 | reviews/archived/p05-review-2026-09-09T021127Z.md           | 054de3cf3b167ee993b33c9015211934f1d83e03 | manual     | -                   |
 | p06    | code     | fixes_added | 2026-09-09 | reviews/archived/p06-review-2026-09-09T013145Z.md           | 8cf75b11b4693bae70b59eb3f2cce32176ad009f | manual     | -                   |
