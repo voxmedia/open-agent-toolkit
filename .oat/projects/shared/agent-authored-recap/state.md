@@ -11,8 +11,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -79,13 +79,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-09T22:53:03Z'
+oat_project_state_updated: '2026-09-09T22:56:14Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Discovery complete (HiLL approved 2026-09-09); design next (draft-and-review)
+**Status:** Design drafted (spec.md + design.md, draft-and-review); artifact review next, then the design HiLL checkpoint
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-09
 
@@ -96,8 +96,8 @@ Discovery - Gathering requirements and understanding the problem space
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
-- **Spec:** `spec.md` (scaffolded template — authored inline by `oat-project-design`)
-- **Design:** `design.md` (scaffolded template — not started)
+- **Spec:** `spec.md` (complete — authored inline by the design phase)
+- **Design:** `design.md` (drafted; review pending)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
