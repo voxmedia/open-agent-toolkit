@@ -140,7 +140,8 @@ Implement. Plan gate passed on attempt 2; group 1 (p01 + p02 + p03) bootstraps a
 - ✗ Plan gate attempt 1 blocked (1C/2I/1M: the lost p09 patch, the archive set, the program ledger, the p19 `AGENTS.md` claim) — fixed in-artifact; parked p09 bytes recovered under `parked/wave-5-p09/`
 - ✓ Plan gate attempt 2 passed (0C/0I/1M; the write-inventory Medium addressed in the receive)
 - ✓ Group 1 (p01 + p02 + p03) merged (`ea2f5a675`, `7b9793b8f`, `f175ca2da`); lockstep 0.2.67 (`f0eb1c02e`); eight gates + smoke + skills + root test green (0 cached). p02's STOP closed by a dated plan refresh; p03's deviation adjudicated and written into its plan; each lane reviewed to `passed`
-- ☐ Groups 2–6, then p19 and p20; fan-in gates after each
+- ✓ Group 2 (p04 + p05 + p06) merged (`a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`); lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached). p05's Step-5 STOP closed by a dated plan refresh (four sweep sites, then a global-pollution path found by its cross-model round); p04's `sealed` deviation adjudicated sound; each lane reviewed to `passed`
+- ☐ Groups 3–6, then p19 and p20; fan-in gates after each
 - ☐ Closeout: synthesis, archival, root final review, exit gate, post-implement sequence, PR
 
 ## Blockers
@@ -149,4 +150,4 @@ None
 
 ## Next Milestone
 
-Group 2 (p04 + p05 + p06) reviewed and merged; lockstep retained at 0.2.67; fan-in gates green.
+Group 3 (p07 + p08 + p09) reviewed and merged; lockstep retained at 0.2.67; fan-in gates green.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-09
-oat_current_task_id: p04-t01
+oat_current_task_id: p07-t01
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1  | complete    | 1     | 1/1       |
 | Phase 2  | complete    | 1     | 1/1       |
 | Phase 3  | complete    | 1     | 1/1       |
-| Phase 4  | in_progress | 1     | 0/1       |
-| Phase 5  | pending     | 1     | 0/1       |
-| Phase 6  | pending     | 1     | 0/1       |
-| Phase 7  | pending     | 1     | 0/1       |
+| Phase 4  | complete    | 1     | 1/1       |
+| Phase 5  | complete    | 1     | 1/1       |
+| Phase 6  | complete    | 1     | 1/1       |
+| Phase 7  | in_progress | 1     | 0/1       |
 | Phase 8  | pending     | 1     | 0/1       |
 | Phase 9  | pending     | 1     | 0/1       |
 | Phase 10 | pending     | 1     | 0/1       |
@@ -47,7 +47,7 @@ oat_generated: false
 | Phase 19 | pending     | 1     | 0/1       |
 | Phase 20 | pending     | 1     | 0/1       |
 
-**Total:** 3/20 tasks completed
+**Total:** 6/20 tasks completed
 
 ---
 
@@ -89,39 +89,39 @@ oat_generated: false
 
 ## Phase 04: make the completion seal idempotent (p04)
 
-**Status:** pending · **Group:** 2 · **Tasks:** p04-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 2 · **Tasks:** p04-t01
+**Outcome:** the completion seal is idempotent: `checkProjectLog` reports a `sealed` field, a replayed seal returns `already-appended`, a keyed replay of a pre-seal entry returns `already-appended` without appending, and every append carrying new content onto a sealed log is refused (`ProjectLogSealedError` → `{"status":"sealed"}` + exit 1); the parked wave-5 p09 work (durable archive receipt validator + resume routing, recovered byte-exact) is unparked, `oat-project-summary` and `oat-project-retro` route around the refusal; `oat-project-summary` 1.5.4 → 1.5.5, `oat-project-retro` 1.0.5 → 1.0.6, `oat-project-complete` kept at 1.7.10.
+**Verification:** focused 429; `test:skills` 883; `test:smoke` 167; forced check/type-check/cli test `Cached: 0` (7131); check:skill-bumps (three bumps validated); lint; format; validate-skills; one Codex round (1I fixed: key recognition before the sealed guard); root review PASS with findings (0/0/1M/3m; five adversarial probes incl. four racing seals) → fix round → round 2 PASS (0/0/0/1m, taken as a root address-now).
+**Deviations:** a thrown `ProjectLogSealedError` mapped at the command layer instead of the plan's fourth result variant (`gate/index.ts:3282`, p05's file, narrows `result.status`); the refusal is conditional on key recognition (documented on five surfaces); two uninventoried propagation surfaces (`autonomy-contract.md`, `synced-bookkeeping-sites.json`); the p09 plan carries a dated refresh entry.
 
 ### Task p04-t01: Execute external plan — Make the completion seal idempotent and unpark wave-5 p09
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `247f06b65` → integration `a31f5f976`; fix `6403c6ced` → `322a7bea8`; root address-now `572a4dd87`
 
 ## Phase 05: harden normalized config maps (p05)
 
-**Status:** pending · **Group:** 2 · **Tasks:** p05-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 2 · **Tasks:** p05-t01
+**Outcome:** every map OAT rebuilds from parsed config data keeps a preserved `__proto__` key as an own data property through the new `getOwnKey`/`setOwnKey` helpers (`normalizeRecordMap`, `normalizeDispatchMatrix`, the exec-target merges, the config-command lookups, the gate lookups at `:1220` and `:1865`, `mergeEffectiveDispatchMatrix`, `toProjectMatrixCompatibility`, the ceiling layer lookups, `getCeilingAdapter`, the dispatch-report lookup), and a global prototype-pollution path in `buildResolvedConfigAggregate` that Step 2 would have exposed is closed; user-supplied ids (`--target`, `--provider`) reject cleanly instead of crashing; the materialization decision record names every guarded site.
+**Verification:** focused 780+; forced check/type-check/cli test `Cached: 0` (7128); check:skill-bumps (nothing changed); lint; format; validate-skills; the plan's intermediate-red control held (cases 9, 10, 14, 15); two Codex rounds (R1 DO-NOT-SHIP: 2C/1I fixed; R2 SHIP); root review PASS with findings (0/3I/1M/3m, all artifact alignment; base → intermediate → head pollution ladder reproduced; 432-pair-style probes; shape-based sweep clean) → record-only fix round → round 2 PASS.
+**Deviations:** STOP at Step 5 (four unclassified sweep sites) closed by the plan's dated 2026-09-09 refresh; the refresh's site-C attribution corrected by the review (`registry.ts:219` is the cause); six files beyond the wrapper's declared surface, all review-justified (`registry.ts` + test; the aggregate walker; `toProjectMatrixCompatibility`; the layer lookups).
 
 ### Task p05-t01: Execute external plan — Harden normalized config maps against a preserved `__proto__` key
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `412abf81d` → integration `930466d4b`; record fix `054de3cf3` → `8d3291f6c`
 
 ## Phase 06: guard every packed asset directory (p06)
 
-**Status:** pending · **Group:** 2 · **Tasks:** p06-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 2 · **Tasks:** p06-t01
+**Outcome:** the release contract guards a packed path under every one of the seven required bundle directories (correspondence test over the exported `REQUIRED_BUNDLE_DIRECTORIES`), with real-tarball pack controls derived from that list for every directory and the docs bullet scoped to the top-level shape `validateBundleStructure` checks.
+**Verification:** focused 27; forced check/type-check/cli test `Cached: 0` (7114); check:skill-bumps; lint; format; validate-skills; one Codex round (1M fixed); root review PASS with findings (0/0/1M/1m; tarball-layer guard proven on two non-control directories; symlinked-directory probe) → fix round → round 2 PASS (0/0/0/0).
+**Deviations:** none against the plan; the pack-control table is derived from the directory list rather than hand-listed (review m1).
 
 ### Task p06-t01: Execute external plan — Guard a packed path under every required asset directory
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8cf75b11b` → integration `b89540879`; fix `0f81fd8fa` → `a9a958b90`
 
 ## Phase 07: reconcile the oat doctor example (p07)
 
@@ -529,6 +529,15 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - Backlog index regenerated by p03's own commit (two title rows); no lane closed or renamed an item at this fan-in beyond that.
 - Worktrees `.worktrees/wave-7/p0{1,2,3}` and branches `wave-7/p0{1,2,3}` removed after the merge.
 
+#### Group 2 fan-in (2026-09-09)
+
+- `wave-7/p04`, `wave-7/p05`, `wave-7/p06` rebased onto the integration tip and merged in plan order with `git merge --no-ff` as `a9bfb0a3c`, `7bbafded2`, `28618fbba`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `247f06b65`→`a31f5f976`, `6403c6ced`→`322a7bea8`, `412abf81d`→`930466d4b`, `054de3cf3`→`8d3291f6c`, `8cf75b11b`→`b89540879`, `0f81fd8fa`→`a9a958b90`.
+- Root address-now `572a4dd87`: the fifth sealed-log prose surface (`lifecycle.md:198`) qualified to match the other four (p04 round-2 Minor); Markdown guard 46/46.
+- Lockstep retained at 0.2.67 (no new bump; `origin/main` still 0.2.66 at `684bd3be3`).
+- Integration gates (sequential, exit codes captured, before any bookkeeping edit): `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached; cli 387 files / 7163 tests), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke` 0, `pnpm test:skills` 0, root `pnpm test` 0. Config-integrity check: no tracked `.oat/config.json` key missing versus `origin/main`.
+- Backlog index: no lane closed or renamed an item in this group (p05's decision-record update regenerated the decision index with no diff).
+- Worktrees `.worktrees/wave-7/p0{4,5,6}` and branches `wave-7/p0{4,5,6}` removed after the merge.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -537,6 +546,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
 - p04 round 2 passed (0/0/0/1m) at `6403c6ced`; p04 row `passed`; group 2 fan-in starts.
 - p04 review received (PASS with findings, 0/0/1M/3m): fix round `w7-p04-fix-001` dispatched; p04 row `fixes_added`.
@@ -558,22 +568,29 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact         | Planned / Documented                                                      | Actual / Accepted                                                                                                                                                            |
-| ------------- | ----------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| (none yet)    | -                       | -                                                                         | -                                                                                                                                                                            |
-| p01-t01       | plan step 5 / Test plan | raw guard restored → case 5 fails on all three invocation forms           | raw guard fails only the plain form; a one-sided canonicalization is the control for the two preserve-symlinks forms (dated correction entry in the plan)                    |
-| p02-t01       | plan step 2             | delete the strict effective read; `envShadowed` from `resolveEnvOverride` | the probe kept; a targeted strict barrier reads the untargeted surfaces (and the targeted shared surface on the raw-write branch) before any write (dated post-STOP refresh) |
-| p03-t01       | plan step 2             | strip inline code spans on each remaining line                            | block-scoped CommonMark masking with container-aware fences, HTML blocks 1–7, fence lines as boundaries; `oxfmt`-derived invariant (dated refresh)                           |
+| Task / Review | Source Artifact         | Planned / Documented                                                      | Actual / Accepted                                                                                                                                                                                                                     |
+| ------------- | ----------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| (none yet)    | -                       | -                                                                         | -                                                                                                                                                                                                                                     |
+| p01-t01       | plan step 5 / Test plan | raw guard restored → case 5 fails on all three invocation forms           | raw guard fails only the plain form; a one-sided canonicalization is the control for the two preserve-symlinks forms (dated correction entry in the plan)                                                                             |
+| p02-t01       | plan step 2             | delete the strict effective read; `envShadowed` from `resolveEnvOverride` | the probe kept; a targeted strict barrier reads the untargeted surfaces (and the targeted shared surface on the raw-write branch) before any write (dated post-STOP refresh)                                                          |
+| p03-t01       | plan step 2             | strip inline code spans on each remaining line                            | block-scoped CommonMark masking with container-aware fences, HTML blocks 1–7, fence lines as boundaries; `oxfmt`-derived invariant (dated refresh)                                                                                    |
+| p04-t01       | plan step 4             | fourth `ProjectLogAppendResult` variant `status: 'sealed'`                | thrown `ProjectLogSealedError` mapped at the command layer to `{"status":"sealed"}` + exit 1 (`gate/index.ts:3282` narrows `result.status`; out of scope); refusal conditional on key recognition (keyed replay → `already-appended`) |
+| p05-t01       | plan step 5             | expected classification from the inspected files                          | four unclassified sites on the `src`-wide sweep → dated refresh (A fixed, B–D guarded); site C's real cause `registry.ts:219`; the aggregate walker's global pollution and two more sites fixed with controls                         |
+| p06-t01       | plan test plan          | two hand-listed pack controls                                             | controls derived from `REQUIRED_BUNDLE_DIRECTORIES` (seven)                                                                                                                                                                           |
 
 ## Test Results
 
-| Phase      | Tests Run                                                           | Passed | Failed | Coverage |
-| ---------- | ------------------------------------------------------------------- | ------ | ------ | -------- |
-| (none yet) | -                                                                   | -      | -      | -        |
-| p01        | focused 7 + `test:skills` 870 + `test:smoke` 167 + forced CLI suite | all    | 0      | -        |
-| p02        | focused 288 + forced CLI suite (385 files)                          | all    | 0      | -        |
-| p03        | focused 46 + forced CLI suite (386 files / 7093)                    | all    | 0      | -        |
-| g1 fan-in  | eight DoD gates + smoke + skills + root test (0 cached; cli 7105)   | all    | 0      | -        |
+| Phase      | Tests Run                                                                    | Passed | Failed | Coverage |
+| ---------- | ---------------------------------------------------------------------------- | ------ | ------ | -------- |
+| (none yet) | -                                                                            | -      | -      | -        |
+| p01        | focused 7 + `test:skills` 870 + `test:smoke` 167 + forced CLI suite          | all    | 0      | -        |
+| p02        | focused 288 + forced CLI suite (385 files)                                   | all    | 0      | -        |
+| p03        | focused 46 + forced CLI suite (386 files / 7093)                             | all    | 0      | -        |
+| g1 fan-in  | eight DoD gates + smoke + skills + root test (0 cached; cli 7105)            | all    | 0      | -        |
+| p04        | focused 429 + `test:skills` 883 + `test:smoke` 167 + forced CLI suite (7131) | all    | 0      | -        |
+| p05        | focused 780 + forced CLI suite (387 files / 7128)                            | all    | 0      | -        |
+| p06        | focused 27 + forced CLI suite (7114)                                         | all    | 0      | -        |
+| g2 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                      | all    | 0      | -        |
 
 ## Deferred Findings
 

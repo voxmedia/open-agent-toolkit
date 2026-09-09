@@ -132,3 +132,18 @@ paths; controls pin that real ids are unchanged). **Skill signal (gap):** a
 plan that prescribes a repo-wide enumeration as its completeness proof must
 run that exact command at authoring time; an inspected-files classification
 passed the same-model review and failed on the first live sweep.
+
+### 2026-09-09 · structural · oat-wave-execute · group 2 fan-in
+
+Three lanes merged in plan order (`a9bfb0a3c`, `7bbafded2`, `28618fbba`; six
+lane commits patch-id-identical after rebase), one root address-now
+(`572a4dd87`), lockstep retained at 0.2.67, eleven gates exit 0 with
+`Cached: 0` (cli 7163), config integrity clean. p05 was the consequential lane:
+its Step-5 sweep STOP became a dated refresh, and its cross-model round then
+found a global prototype-pollution path the plan, the refresh, and the root
+had all missed — closed with a base → intermediate → head control the reviewer
+reproduced on the built CLI. **Skill signal (strengthens):** the standing
+cross-model rule for security-class diffs earned its keep. **Skill signal
+(gap):** a fix that makes a hidden key visible relocates the hazard; plans
+of that shape need a "blast radius of the fix" step, and sweeps must grep by
+shape as well as by variable name.
