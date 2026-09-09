@@ -507,7 +507,7 @@ Summarize before archive.
     );
 
     it.each([
-      ['carriage return', '\r'],
+      ['lone carriage return', '\r'],
       ['U+2028 line separator', '\u2028'],
       ['U+2029 paragraph separator', '\u2029'],
     ])(
@@ -524,12 +524,59 @@ Summarize before archive.
 
         expect(capture.jsonPayloads[0]).toMatchObject({
           status: 'error',
-          message: expect.stringContaining('line feeds only'),
+          message: expect.stringContaining('a lone carriage return'),
         });
         expect(process.exitCode).toBe(1);
         await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
       },
     );
+
+    it('accepts a CRLF body and stores it with line feeds', async () => {
+      const { root, logPath } = await createRepo();
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, [
+        '--body',
+        'Verdict: keep.\r\nImpact: fewer retries.',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'synthesized',
+        normalizedLineEndings: true,
+      });
+      expect(process.exitCode).toBe(0);
+      const content = await readFile(logPath, 'utf8');
+      expect(content).toContain('Verdict: keep.\nImpact: fewer retries.');
+      expect(content).not.toContain('\r');
+    });
+
+    it('refuses to rewrite a log whose seal it cannot reach', async () => {
+      const { root, logPath } = await createRepo();
+      // The same refusal both append paths make on this file. A seal the parser
+      // cannot reach is still a seal, and replacing a section of the log it
+      // closes is exactly the mutation it forbids.
+      const content = await readFile(logPath, 'utf8');
+      const withoutEntries = content.replace(
+        '## Entries',
+        'Entries heading removed so the seal is unreachable.',
+      );
+      await writeFile(
+        logPath,
+        `${withoutEntries}\n### 2026-07-17 · structural · oat-project-complete · seal\n\nCompletion sealed. oat-seal:demo\n`,
+        'utf8',
+      );
+      const before = await readFile(logPath, 'utf8');
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, ['--body', 'Verdict: keep.']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining('cannot reach it'),
+      });
+      expect(process.exitCode).toBe(1);
+      await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
+    });
 
     it('still accepts an ordinary multi-line synthesis body', async () => {
       const { root, logPath } = await createRepo();

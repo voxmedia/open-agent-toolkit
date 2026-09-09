@@ -23,13 +23,16 @@ import {
 import {
   findCanonicalProjectLogSynthesisSection,
   findProjectLogSeal,
+  unreachableProjectLogSealError,
   PROJECT_LOG_FILENAME,
   SYNTHESIS_COMPLETE_HEADING,
   SYNTHESIS_PENDING_HEADING,
 } from './check';
 import {
   containsAmbiguousProjectLogMarker,
-  PROJECT_LOG_NON_LINE_FEED_TERMINATOR_RE,
+  findProjectLogSealHeadingLine,
+  normalizeProjectLogLineEndings,
+  PROJECT_LOG_LONE_TERMINATOR_RE,
   splitProjectLogLines,
 } from './grammar';
 
@@ -42,6 +45,11 @@ export interface SynthesizeProjectLogInput {
 export interface ProjectLogSynthesizeResult {
   status: 'synthesized';
   logPath: string;
+  /**
+   * Present and true when the accepted `--body` carried CRLF and was stored as
+   * LF, so the bytes on disk differ from the bytes the caller passed.
+   */
+  normalizedLineEndings?: true;
 }
 
 export interface SynthesizeProjectLogDependencies {
@@ -122,17 +130,21 @@ export async function synthesizeProjectLog(
     ...DEFAULT_SYNTHESIZE_DEPENDENCIES,
     ...overrides,
   };
-  const body = input.body?.trim();
-  if (!body) {
+  const supplied = input.body?.trim();
+  if (!supplied) {
     throw new Error('--body is required and must contain non-whitespace text.');
   }
-  // Same rule the judgment bodies follow: LF is the only line break a project
-  // log may contain, because it is the only boundary its readers agree on.
-  if (PROJECT_LOG_NON_LINE_FEED_TERMINATOR_RE.test(body)) {
+  // Same rule the judgment bodies follow: parse leniently, write strictly. CRLF
+  // is accepted and stored as LF; a lone CR and the U+2028 / U+2029 separators
+  // are refused, because those are the terminators this module's readers do not
+  // all agree about.
+  if (PROJECT_LOG_LONE_TERMINATOR_RE.test(supplied)) {
     throw new Error(
-      '--body must break lines with line feeds only; carriage returns and the U+2028 and U+2029 separators are not accepted.',
+      '--body must break lines with line feeds or CRLF; a lone carriage return and the U+2028 and U+2029 separators are not accepted.',
     );
   }
+  const normalized = supplied.includes('\r\n');
+  const body = normalizeProjectLogLineEndings(supplied);
   if (
     splitProjectLogLines(body).some(
       (line) =>
@@ -158,7 +170,7 @@ export async function synthesizeProjectLog(
   // `appendProjectLog` takes, because this rewrite and a concurrent append race
   // each other exactly as two appends do, and the loser's entry is simply gone.
   return withProjectLogLock(logPath, dependencies.lock, 'required', async () =>
-    synthesizeLockedProjectLog(logPath, body, dependencies),
+    synthesizeLockedProjectLog(logPath, body, dependencies, normalized),
   );
 }
 
@@ -166,6 +178,7 @@ async function synthesizeLockedProjectLog(
   logPath: string,
   body: string,
   dependencies: SynthesizeProjectLogDependencies,
+  normalized: boolean,
 ): Promise<ProjectLogSynthesizeResult> {
   const content = await dependencies.readLog(logPath);
 
@@ -189,6 +202,14 @@ async function synthesizeLockedProjectLog(
   const seal = findProjectLogSeal(content);
   if (seal !== null) {
     throw new ProjectLogSealedError(logPath, seal, 'synthesis rewrite');
+  }
+
+  // The same refusal both append paths make, on the same file. A seal the
+  // parser cannot reach is still a seal, and rewriting a section of the log it
+  // closes is exactly the mutation it forbids.
+  const unreachableSeal = findProjectLogSealHeadingLine(content);
+  if (unreachableSeal !== undefined) {
+    throw unreachableProjectLogSealError(logPath, content, unreachableSeal);
   }
 
   const synthesis = findCanonicalProjectLogSynthesisSection(content);
@@ -221,7 +242,11 @@ async function synthesizeLockedProjectLog(
     );
   }
   await dependencies.writeLog(logPath, nextContent);
-  return { status: 'synthesized', logPath };
+  return {
+    status: 'synthesized',
+    logPath,
+    ...(normalized ? { normalizedLineEndings: true as const } : {}),
+  };
 }
 
 interface SynthesizeCommandOptions {

@@ -121,6 +121,7 @@ Synthesis content.
 
     expect(capture.jsonPayloads[0]).toEqual({
       status: 'absent',
+      ambiguity: null,
       sealed: false,
       seal: null,
       logPath: null,
@@ -476,7 +477,7 @@ Completion sealed. oat-seal:demo`),
     ];
 
     it.each(terminators)(
-      'still reports a written seal when a %s precedes an injected marker',
+      'refuses to report a verdict when a %s precedes an injected marker',
       async (_name, terminator) => {
         const { root, logPath } = await createRepo();
         await writeFile(
@@ -494,21 +495,121 @@ Completion sealed at 2026-07-17T10:00:00Z. oat-seal:demo`),
 
         await runCommand(command);
 
-        // Before the parser anchored on LF alone, the injected `## ` truncated
-        // the entries region: the seal below it was invisible, `sealed` read
-        // false, and `append` happily kept writing onto a sealed log.
+        // Both mutators refuse this file. `check` reporting a confident
+        // `sealed` and entry counts for it — as it did when only the writers
+        // were guarded — is what let the completion gate trust a reader that
+        // disagreed with every writer, so it now fails closed too.
         expect(capture.jsonPayloads[0]).toMatchObject({
-          sealed: true,
-          seal: {
-            heading:
-              '### 2026-07-17 · structural · oat-project-complete · seal',
-            count: 1,
-          },
-          entryCounts: { structural: 1 },
+          status: 'ambiguous',
+          sealed: false,
+          seal: null,
+          entryCounts: { structural: 0 },
+          ambiguity: expect.stringContaining('two readings'),
         });
-        expect(process.exitCode).toBe(0);
+        expect(process.exitCode).toBe(1);
       },
     );
+
+    it('recognizes an existing seal and its entries on a CRLF log', async () => {
+      const { root, logPath } = await createRepo();
+      // A CRLF log parsed to zero entries at every earlier version, because no
+      // heading pattern's `$` can match before a trailing `\r`. The seal was
+      // therefore invisible, which is what deadlocked completion: this reader
+      // said unsealed while the file plainly held a seal.
+      await writeFile(
+        logPath,
+        [
+          '# Project Log: demo',
+          '',
+          '## Entries',
+          '',
+          '### 2026-07-17 · project · bug · gate exit',
+          '',
+          'The gate returned the wrong exit code.',
+          '',
+          '### 2026-07-17 · structural · oat-project-complete · seal',
+          '',
+          'Completion sealed at 2026-07-17T10:00:00Z. oat-seal:demo',
+          '',
+        ].join('\r\n'),
+        'utf8',
+      );
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        ambiguity: null,
+        sealed: true,
+        seal: {
+          heading: '### 2026-07-17 · structural · oat-project-complete · seal',
+          keyed: true,
+          count: 1,
+        },
+        entryCounts: { structural: 1, judgment: { bug: 1 } },
+        grammarViolations: [],
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('reports a seal it cannot reach as ambiguous rather than as unsealed', async () => {
+      const { root, logPath } = await createRepo();
+      // The seal is plainly in the file but outside any parseable `## Entries`
+      // region. Answering `sealed: false` here is the verdict both mutators
+      // refuse to act on.
+      await writeFile(
+        logPath,
+        '# Project Log: demo\n\n### 2026-07-17 · structural · oat-project-complete · seal\n\nCompletion sealed. oat-seal:demo\n',
+        'utf8',
+      );
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ambiguous',
+        sealed: false,
+        seal: null,
+        ambiguity: expect.stringContaining('two answers'),
+      });
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('reports a lone-carriage-return log as ambiguous rather than clean', async () => {
+      const { root, logPath } = await createRepo();
+      // This file scored a *better* status than the base gave it once the
+      // parser went line-feed-only: the pending-synthesis heading stopped being
+      // found, so `check` upgraded it to `ok` while both writers refused it.
+      await writeFile(
+        logPath,
+        [
+          '# Project Log: demo',
+          '',
+          '## Entries',
+          '',
+          '### 2026-07-17 · project · bug · gate exit',
+          '',
+          'body',
+          '',
+          '## End-of-run synthesis (pending — do not skip at project completion)',
+          '',
+          'S.',
+          '',
+        ].join('\r'),
+        'utf8',
+      );
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ambiguous',
+        synthesisPending: false,
+        ambiguity: expect.stringContaining('two readings'),
+      });
+      expect(process.exitCode).toBe(1);
+    });
 
     it('still treats a marker after a real line feed as a section boundary', async () => {
       const { root, logPath } = await createRepo();
@@ -529,13 +630,19 @@ Completion sealed at 2026-07-17T10:00:00Z. oat-seal:demo`),
 
       await runCommand(command);
 
-      // Unchanged from base: an LF-preceded `## ` really does end `## Entries`,
-      // so the seal beneath it is outside the entries region and not reported.
+      // An LF-preceded `## ` really does end `## Entries`, so the seal beneath it
+      // is outside the entries region. Asserting only `sealed: false` here would
+      // pass under the old confident verdict too, so the status, the reason and
+      // the exit code are all pinned: this file is now reported as having two
+      // answers rather than as an unsealed log.
       expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ambiguous',
         sealed: false,
         seal: null,
         entryCounts: { structural: 0 },
+        ambiguity: expect.stringContaining('two answers'),
       });
+      expect(process.exitCode).toBe(1);
     });
   });
 });

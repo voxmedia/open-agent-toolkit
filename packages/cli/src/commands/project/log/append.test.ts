@@ -1054,8 +1054,10 @@ describe('oat project log append', () => {
     // Exactly the ECMAScript LineTerminator set apart from LF: every character
     // a multiline `^` anchors after, and therefore every character that could
     // turn body text into a `## ` section boundary the validator did not see.
+    // A lone carriage return: CRLF is a legitimate line break and is accepted
+    // and normalized, so only an unpaired CR belongs in this table.
     const terminators: readonly [string, string][] = [
-      ['carriage return', '\r'],
+      ['lone carriage return', '\r'],
       ['U+2028 line separator', '\u2028'],
       ['U+2029 paragraph separator', '\u2029'],
     ];
@@ -1081,7 +1083,7 @@ describe('oat project log append', () => {
 
         expect(capture.jsonPayloads[0]).toMatchObject({
           status: 'error',
-          message: expect.stringContaining('line feeds only'),
+          message: expect.stringContaining('a lone carriage return'),
         });
         await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
         expect(process.exitCode).toBe(1);
@@ -1175,6 +1177,124 @@ describe('oat project log append', () => {
         expect(process.exitCode).toBe(1);
       },
     );
+
+    it('accepts a CRLF body and stores it with line feeds', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      const { command, capture } = createHarness(root);
+
+      // CRLF was accepted before this guard existed and must stay accepted: it
+      // arrives from a file, tool output, or a pasted buffer through `--body -`.
+      // It is stored as LF, and the result says so rather than normalizing
+      // silently, because the bytes on disk then differ from the bytes passed.
+      await runCommand(command, [
+        '--type',
+        'feedback',
+        '--scope',
+        'general',
+        '--area',
+        'notes',
+        '--body',
+        'line one\r\nline two',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'appended',
+        normalizedLineEndings: true,
+      });
+      expect(process.exitCode).toBe(0);
+      const content = await readFile(logPath, 'utf8');
+      expect(content).toContain('line one\nline two');
+      expect(content).not.toContain('\r');
+    });
+
+    it.each([
+      ['a lone carriage return followed by CRLF', 'a\r\r\nb'],
+      ['CRLF followed by a lone carriage return', 'a\r\n\rb'],
+    ])(
+      'refuses %s rather than laundering it into CRLF',
+      async (_name, body) => {
+        const { root, logPath } = await createRepo();
+        await seedLog(logPath);
+        const before = await readFile(logPath, 'utf8');
+        const { command, capture } = createHarness(root);
+
+        // `\r\r\n` is the shape that decides the validate/normalize ordering:
+        // one `replaceAll('\r\n', '\n')` pass turns it into `\r\n`, which
+        // satisfies the lone-terminator rule while leaving a carriage return in
+        // the bytes. Validating the supplied text first is what closes it.
+        await runCommand(command, [
+          '--type',
+          'feedback',
+          '--scope',
+          'general',
+          '--area',
+          'notes',
+          '--body',
+          body,
+        ]);
+
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          status: 'error',
+          message: expect.stringContaining('a lone carriage return'),
+        });
+        expect(process.exitCode).toBe(1);
+        await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
+      },
+    );
+
+    it('leaves no carriage return in the log for any accepted body', async () => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+
+      for (const body of [
+        'plain',
+        'line one\nline two',
+        'line one\r\nline two',
+        'a\r\nb\r\nc',
+      ]) {
+        const { command, capture } = createHarness(root);
+        await runCommand(command, [
+          '--type',
+          'feedback',
+          '--scope',
+          'general',
+          '--area',
+          'notes',
+          '--body',
+          body,
+        ]);
+        expect(capture.jsonPayloads[0]).toMatchObject({ status: 'appended' });
+      }
+
+      // The postcondition the whole "write strictly" half rests on: whatever a
+      // caller passes, the file this command produces has one line terminator.
+      const content = await readFile(logPath, 'utf8');
+      expect(content).not.toContain('\r');
+      expect(content).not.toContain('\u2028');
+      expect(content).not.toContain('\u2029');
+    });
+
+    it('reports no normalization for an ordinary line-feed body', async () => {
+      const { root } = await createRepo();
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, [
+        '--type',
+        'feedback',
+        '--scope',
+        'general',
+        '--area',
+        'notes',
+        '--body',
+        'line one\nline two',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'appended' });
+      expect(capture.jsonPayloads[0]).not.toHaveProperty(
+        'normalizedLineEndings',
+      );
+    });
 
     it('still accepts an ordinary multi-line judgment body', async () => {
       const { root, logPath } = await createRepo();
@@ -1300,6 +1420,20 @@ describe('oat project log append', () => {
       '### 2026-07-17 · structural · oat-project-complete · seal';
     const sealKey = 'oat-seal:demo';
 
+    function sealArgs(body: string): string[] {
+      return [
+        '--structural',
+        '--producer',
+        'oat-project-complete',
+        '--ref',
+        'seal',
+        '--body',
+        body,
+        '--idempotency-key',
+        sealKey,
+      ];
+    }
+
     it('refuses rather than stack a second seal it cannot reach', async () => {
       const { root, logPath } = await createRepo();
       // No `## Entries` section, so `parseProjectLogEntries` reaches nothing and
@@ -1349,6 +1483,160 @@ describe('oat project log append', () => {
       expect(process.exitCode).toBe(1);
       await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
       expect(before.split(SEAL_HEADING).length - 1).toBe(1);
+    });
+
+    it('recognizes an existing seal on a CRLF log instead of deadlocking', async () => {
+      const { root, logPath } = await createRepo();
+      const crlf = [
+        '# Project Log: demo',
+        '',
+        '## Entries',
+        '',
+        '### 2026-07-17 · project · bug · gate exit',
+        '',
+        'The gate returned the wrong exit code.',
+        '',
+        SEAL_HEADING,
+        '',
+        'Completion sealed at 2026-07-17T10:00:00Z. oat-seal:demo',
+        '',
+      ].join('\r\n');
+      await writeFile(logPath, crlf, 'utf8');
+      const before = await readFile(logPath, 'utf8');
+
+      // The seal is physically present and correctly placed; only the line
+      // terminators hid it. Reporting it unreachable made the completion seal
+      // hard-fail with a remedy that did not apply, while ordinary content
+      // still appended past that same seal.
+      const sealing = createHarness(root);
+      await runCommand(
+        sealing.command,
+        sealArgs(`Completion sealed at 2026-07-17T11:00:00Z. ${sealKey}`),
+      );
+      expect(sealing.capture.jsonPayloads[0]).toMatchObject({
+        status: 'already-appended',
+        heading: SEAL_HEADING,
+      });
+      expect(process.exitCode).toBe(0);
+
+      const ordinary = createHarness(root);
+      await runCommand(ordinary.command, [
+        '--type',
+        'bug',
+        '--scope',
+        'general',
+        '--area',
+        'post seal',
+        '--body',
+        'Content that must not land past the seal.',
+      ]);
+      expect(ordinary.capture.jsonPayloads[0]).toMatchObject({
+        status: 'sealed',
+        heading: SEAL_HEADING,
+      });
+      expect(process.exitCode).toBe(1);
+      await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
+    });
+
+    it('names the line terminators, not the section, when a seal is correctly placed but unreachable', async () => {
+      const { root, logPath } = await createRepo();
+      // The seal sits under `## Entries`; only a lone carriage return inside its
+      // own line hides it from the parser. Deliberately not an ambiguous-marker
+      // fixture: that guard fires first and its message also mentions line
+      // feeds, so such a fixture would pass even with this branch broken.
+      await writeFile(
+        logPath,
+        `# Project Log: demo\n\n## Entries\n\n${SEAL_HEADING}\rtrailing text\n\nCompletion sealed. oat-seal:demo\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, sealArgs(`Completion sealed. ${sealKey}`));
+
+      const payload = capture.jsonPayloads[0] as { message: string };
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(payload.message).toContain(
+        'the obstruction is its line terminators',
+      );
+      expect(payload.message).not.toContain('move it under that heading');
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('blames the section when prose inside Entries merely quotes a seal heading', async () => {
+      const { root, logPath } = await createRepo();
+      // The entries region contains the seal heading's text inside prose, while
+      // the real seal sits under a later section. A substring test would call
+      // this correctly placed and send the operator to rewrite line terminators
+      // that were never the obstruction.
+      await writeFile(
+        logPath,
+        [
+          '# Project Log: demo',
+          '',
+          '## Entries',
+          '',
+          `Prose quoting ${SEAL_HEADING} inside a sentence.`,
+          '',
+          '## Notes',
+          '',
+          SEAL_HEADING,
+          '',
+          'Completion sealed. oat-seal:demo',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, sealArgs(`Completion sealed. ${sealKey}`));
+
+      const payload = capture.jsonPayloads[0] as { message: string };
+      expect(payload.message).toContain('move it under that heading');
+      expect(payload.message).not.toContain(
+        'the obstruction is its line terminators',
+      );
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('refuses ordinary content on the same file the seal path refuses', async () => {
+      const { root, logPath } = await createRepo();
+      // No `## Entries` at all, so the seal is unreachable. Refusing the seal
+      // while still accepting ordinary content is the two writers disagreeing
+      // about one file, which is what let content land past a seal.
+      await writeFile(
+        logPath,
+        `# Project Log: demo\n\n${SEAL_HEADING}\n\nCompletion sealed. oat-seal:demo\n`,
+        'utf8',
+      );
+      const before = await readFile(logPath, 'utf8');
+
+      const sealing = createHarness(root);
+      await runCommand(
+        sealing.command,
+        sealArgs(`Completion sealed. ${sealKey}`),
+      );
+      expect(sealing.capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining('cannot reach it'),
+      });
+
+      const ordinary = createHarness(root);
+      await runCommand(ordinary.command, [
+        '--type',
+        'bug',
+        '--scope',
+        'general',
+        '--area',
+        'post seal',
+        '--body',
+        'Content that must not land past the seal.',
+      ]);
+      expect(ordinary.capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining('cannot reach it'),
+      });
+      expect(process.exitCode).toBe(1);
+      await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
     });
 
     it('never creates a log it would then refuse to append to', async () => {

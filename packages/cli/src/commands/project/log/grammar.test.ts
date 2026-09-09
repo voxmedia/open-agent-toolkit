@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   containsAmbiguousProjectLogMarker,
+  findProjectLogSealHeadingLine,
   findProjectLogSections,
+  normalizeProjectLogLineEndings,
+  PROJECT_LOG_LONE_TERMINATOR_RE,
   isProjectLogSealHeading,
   splitProjectLogLines,
 } from './grammar';
@@ -180,6 +183,62 @@ describe('project log grammar', () => {
       const body = `a${vertical}b${formFeed}c${nextLine}d`;
       expect(splitProjectLogLines(body)).toEqual([body]);
       expect(new RegExp('^## ', 'm').test(`x${vertical}## y`)).toBe(false);
+    });
+  });
+
+  describe('PROJECT_LOG_LONE_TERMINATOR_RE', () => {
+    it.each([
+      ['a lone carriage return', 'a\rb', true],
+      ['a carriage return before another carriage return', 'a\r\rb', true],
+      ['a trailing carriage return', 'ab\r', true],
+      ['U+2028', 'a\u2028b', true],
+      ['U+2029', 'a\u2029b', true],
+      ['CRLF', 'a\r\nb', false],
+      ['a line feed', 'a\nb', false],
+      ['CRLF twice', 'a\r\nb\r\nc', false],
+      ['no terminator at all', 'ab', false],
+    ])('reports %s as lone: %s', (_name, value, expected) => {
+      // CRLF is the carve-out that matters: it is one boundary to every reader
+      // in this module, so refusing it made the validators stricter than the
+      // ambiguity guard two dozen lines below them claimed.
+      expect(PROJECT_LOG_LONE_TERMINATOR_RE.test(value)).toBe(expected);
+    });
+
+    it('is satisfied by every value normalization produces', () => {
+      const normalized = normalizeProjectLogLineEndings('a\r\nb\r\nc');
+      expect(normalized).toBe('a\nb\nc');
+      expect(PROJECT_LOG_LONE_TERMINATOR_RE.test(normalized)).toBe(false);
+      // Normalization is not a repair: a lone carriage return survives it and
+      // must still be refused, which is why validation runs on the input.
+      expect(normalizeProjectLogLineEndings('a\rb')).toBe('a\rb');
+    });
+  });
+
+  describe('findProjectLogSealHeadingLine', () => {
+    const seal = '### 2026-07-17 · structural · oat-project-complete · seal';
+
+    it.each([
+      ['line feeds', `x\n${seal}\ny`],
+      ['CRLF', `x\r\n${seal}\r\ny`],
+      ['a lone carriage return', `x\r${seal}\ry`],
+    ])('finds a seal heading written with %s', (_name, content) => {
+      // This answers "is a seal physically here?", independently of whether the
+      // entries parser can reach it. Every mutator asks it the same way, so one
+      // file cannot be sealed to one writer and open to another.
+      const found = findProjectLogSealHeadingLine(content);
+      expect(found?.line.trim()).toBe(seal);
+      // The offset must locate the heading, not merely report that one exists.
+      expect(
+        content.slice(found!.index, found!.index + found!.line.length),
+      ).toBe(found!.line);
+    });
+
+    it('returns undefined when no seal heading is present', () => {
+      expect(
+        findProjectLogSealHeadingLine(
+          '### 2026-07-17 · structural · oat-project-summary · seal\n',
+        ),
+      ).toBeUndefined();
     });
   });
 
