@@ -3,7 +3,11 @@ import { dirname, resolve } from 'node:path';
 
 import { proveCollectionIdentity } from '@engine/collection-sync';
 import { computeManagedDirectoryCopyHash } from '@engine/managed-copy-hash';
-import { computeContentHash, computeStringHash } from '@manifest/hash';
+import {
+  computeContentHash,
+  computeDirectoryDigests,
+  computeStringHash,
+} from '@manifest/hash';
 import type { ManifestEntryV2 } from '@manifest/manifest.types';
 
 import type { DriftReport } from './drift.types';
@@ -119,17 +123,53 @@ export async function detectDrift(
   // engine-owned rather than adapter-owned, and `commands/tools/info/index.ts`
   // passes no transform. Gating here would leave `oat tools info` disagreeing
   // with `oat status`. A `null` result — no sentinel, a sentinel naming a
-  // different canonical path, a missing banner, a non-regular entry — falls
-  // through to the raw verdict below, as does any other digest, so a tampered
-  // or unverifiable copy is still `drifted`.
+  // different canonical path, a marker file that is absent or does not carry
+  // the banner, a non-regular entry — falls through to the raw verdict below,
+  // as does any other digest, so a tampered or unverifiable copy is still
+  // `drifted`.
   if (!entry.isFile && entry.contentHash !== null) {
     const managedHash = await computeManagedDirectoryCopyHash(
       providerPath,
       canonicalPath,
       entry.contentType,
     );
-    if (managedHash !== null && managedHash === entry.contentHash) {
-      return createReport(entry, { status: 'in_sync' });
+    if (managedHash !== null) {
+      if (managedHash === entry.contentHash) {
+        return createReport(entry, { status: 'in_sync' });
+      }
+
+      // Pre-framing manifest bridge (wave-7 final review, Critical 4).
+      // Length framing changed every directory digest, and a no-op `oat sync`
+      // does not restamp an entry it already owns (`ensureSkipEntryManaged` in
+      // `engine/execute-plan.ts` returns the manifest untouched for `skip`), so
+      // a manifest written before the change keeps its legacy value
+      // indefinitely. Without this branch every pre-existing copy-strategy
+      // install would report drift that no command repairs.
+      //
+      // This cannot reopen the collision. It fires only when the recorded hash
+      // is the legacy digest of the canonical tree, and acceptance still rests
+      // entirely on the framed digests: framing is injective, so
+      // `managedHash === framed` means the copy's logical content is exactly
+      // the canonical file set, which the legacy digests therefore also agreed
+      // on. Every input accepted here was accepted before the change too, so
+      // the branch cannot widen the acceptance set. That argument needs both
+      // digests to describe one canonical state, which is why
+      // `computeDirectoryDigests` folds them from a single capture rather than
+      // from two traversals — pairing `framed` from one state with `legacy`
+      // from another would accept a view the pre-framing detector rejected.
+      //
+      // Any failure to read the canonical tree is treated as "cannot verify",
+      // which falls through to `drifted` below.
+      const canonicalDigests = await computeDirectoryDigests(
+        canonicalPath,
+      ).catch(() => null);
+      if (
+        canonicalDigests !== null &&
+        entry.contentHash === canonicalDigests.legacy &&
+        managedHash === canonicalDigests.framed
+      ) {
+        return createReport(entry, { status: 'in_sync' });
+      }
     }
   }
 

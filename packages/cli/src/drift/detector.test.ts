@@ -3,7 +3,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from '@engine/markers';
-import { computeDirectoryHash, computeFileHash } from '@manifest/hash';
+import {
+  computeDirectoryDigests,
+  computeDirectoryHash,
+  computeFileHash,
+} from '@manifest/hash';
 import type { ManifestEntry, ManifestEntryV2 } from '@manifest/manifest.types';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -57,6 +61,47 @@ async function seedManagedCopy(root: string): Promise<{
   await writeFile(
     join(providerPath, OAT_DIRECTORY_SENTINEL),
     `${marker}\n`,
+    'utf8',
+  );
+  return { canonicalHash, canonicalPath, providerPath };
+}
+
+/**
+ * Seeds the canonical skill plus the wave-7 final review's Critical 4 forgery:
+ * a decorated provider view holding no `SKILL.md` at all, whose one surviving
+ * file replays the exact byte stream the two canonical files produced under
+ * the old unframed digest.
+ */
+async function seedFusedForgery(root: string): Promise<{
+  canonicalHash: string;
+  canonicalPath: string;
+  providerPath: string;
+}> {
+  const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+  const providerPath = join(root, '.claude', 'skills', 'skill-one');
+  const skillBody = '# skill\n';
+  const notesBody = '# notes\n';
+  await mkdir(join(canonicalPath, 'references'), { recursive: true });
+  await writeFile(join(canonicalPath, 'SKILL.md'), skillBody, 'utf8');
+  await writeFile(
+    join(canonicalPath, 'references', 'notes.md'),
+    notesBody,
+    'utf8',
+  );
+  const canonicalHash = await computeDirectoryHash(canonicalPath);
+
+  // Sorted by relative path `references/notes.md` precedes `SKILL.md`, so the
+  // surviving file takes the first name and carries the remainder of the
+  // stream — path delimiter, marker filename, delimiter, marker body.
+  await mkdir(join(providerPath, 'references'), { recursive: true });
+  await writeFile(
+    join(providerPath, 'references', 'notes.md'),
+    `${notesBody}\0SKILL.md\0${skillBody}`,
+    'utf8',
+  );
+  await writeFile(
+    join(providerPath, OAT_DIRECTORY_SENTINEL),
+    `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->\n`,
     'utf8',
   );
   return { canonicalHash, canonicalPath, providerPath };
@@ -344,6 +389,202 @@ describe('detectDrift', () => {
     const copyEntry = createManifestEntry({
       strategy: 'copy',
       contentHash: canonicalHash,
+      isFile: false,
+    });
+
+    const report = await detectDrift(copyEntry, root);
+
+    expect(report.state).toEqual({
+      status: 'drifted',
+      reason: 'modified',
+    });
+  });
+
+  it('returns drifted:modified for a forged view that fused SKILL.md into a sibling', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    const { canonicalHash } = await seedFusedForgery(root);
+    const copyEntry = createManifestEntry({
+      strategy: 'copy',
+      contentHash: canonicalHash,
+      isFile: false,
+    });
+
+    // The wave-7 final review's Critical 4, end to end at the detector: the
+    // view has no `SKILL.md` at all, and under the unframed digest its one
+    // surviving file replayed the exact byte stream the two canonical files
+    // produced, so it read `in_sync` and `oat sync` planned `skip` — leaving a
+    // tampered view permanently healthy-looking and unrepairable.
+    const report = await detectDrift(copyEntry, root);
+
+    expect(report.state).toEqual({
+      status: 'drifted',
+      reason: 'modified',
+    });
+  });
+
+  it('returns drifted:modified for a managed copy whose SKILL.md was deleted', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    const { canonicalHash, providerPath } = await seedManagedCopy(root);
+    await rm(join(providerPath, 'SKILL.md'));
+    const copyEntry = createManifestEntry({
+      strategy: 'copy',
+      contentHash: canonicalHash,
+      isFile: false,
+    });
+
+    const report = await detectDrift(copyEntry, root);
+
+    expect(report.state).toEqual({
+      status: 'drifted',
+      reason: 'modified',
+    });
+  });
+
+  it('returns in_sync for a faithful copy whose manifest still records the pre-framing digest', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    const { canonicalPath } = await seedManagedCopy(root);
+    // Length framing changed every directory digest, and `oat sync` plans
+    // `skip` for a faithful tree without restamping an entry it already owns,
+    // so a manifest written before the change keeps its legacy value forever.
+    // The detector recognizes exactly that manifest and re-decides with the
+    // framed digests; without the bridge every pre-existing copy-strategy
+    // install would report permanent, unrepairable drift.
+    const { legacy } = await computeDirectoryDigests(canonicalPath);
+    const copyEntry = createManifestEntry({
+      strategy: 'copy',
+      contentHash: legacy,
+      isFile: false,
+    });
+
+    const report = await detectDrift(copyEntry, root);
+
+    expect(report.state).toEqual({ status: 'in_sync' });
+  });
+
+  it('returns drifted:modified for the forged view even against a pre-framing manifest', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    const { canonicalPath } = await seedFusedForgery(root);
+    // The legacy bridge must not reopen Critical 4: the forged view's legacy
+    // digest is exactly the recorded one, which is the whole point of the
+    // forgery, so acceptance has to rest on the framed digests alone.
+    const { legacy } = await computeDirectoryDigests(canonicalPath);
+    const copyEntry = createManifestEntry({
+      strategy: 'copy',
+      contentHash: legacy,
+      isFile: false,
+    });
+
+    const report = await detectDrift(copyEntry, root);
+
+    expect(report.state).toEqual({
+      status: 'drifted',
+      reason: 'modified',
+    });
+  });
+
+  it('returns drifted:modified for a tampered body against a pre-framing manifest', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    const { canonicalPath, providerPath } = await seedManagedCopy(root);
+    const { legacy } = await computeDirectoryDigests(canonicalPath);
+    await writeFile(
+      join(providerPath, 'SKILL.md'),
+      `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->\n# skill edited by hand\n`,
+      'utf8',
+    );
+    const copyEntry = createManifestEntry({
+      strategy: 'copy',
+      contentHash: legacy,
+      isFile: false,
+    });
+
+    const report = await detectDrift(copyEntry, root);
+
+    expect(report.state).toEqual({
+      status: 'drifted',
+      reason: 'modified',
+    });
+  });
+
+  it('returns drifted:modified when a provider framed digest equals a pre-framing recorded digest', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    // Cross-encoding forgery (found by the cross-model review of this fix).
+    // The recorded hash may be a pre-framing digest, so a provider tree whose
+    // *framed* stream reproduces some canonical tree's *legacy* stream would
+    // be accepted by the raw fast path before any marker or sentinel check
+    // ever runs. Here `legacy(canonical)` and `framed(provider)` are the same
+    // byte string, and the provider carries no sentinel and no banner at all.
+    const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+    const providerPath = join(root, '.claude', 'skills', 'skill-one');
+    await mkdir(canonicalPath, { recursive: true });
+    await writeFile(join(canonicalPath, '8'), 'SKILL.md26\0# evil\n', 'utf8');
+    await writeFile(join(canonicalPath, 'SKILL.md'), '# skill\n', 'utf8');
+    await mkdir(providerPath, { recursive: true });
+    await writeFile(
+      join(providerPath, 'SKILL.md'),
+      '# evil\n\0SKILL.md\0# skill\n\0',
+      'utf8',
+    );
+
+    const { legacy } = await computeDirectoryDigests(canonicalPath);
+    const copyEntry = createManifestEntry({
+      strategy: 'copy',
+      contentHash: legacy,
+      isFile: false,
+    });
+
+    // Domain separation is what closes this: a framed stream always opens with
+    // a NUL byte and a legacy stream never can, because it opens with a
+    // relative path and paths cannot contain NUL.
+    expect(await computeDirectoryHash(providerPath)).not.toBe(legacy);
+
+    const report = await detectDrift(copyEntry, root);
+
+    expect(report.state).toEqual({
+      status: 'drifted',
+      reason: 'modified',
+    });
+  });
+
+  it('returns drifted:modified when only the pre-framing digests agree', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    // The bridge's second conjunct, exercised on its own (found by the
+    // cross-model review of this fix: the fused-forgery control above stops at
+    // the marker-presence check and never reaches this comparison). Here the
+    // copy keeps a valid sentinel and a correctly bannered `SKILL.md`, so it
+    // does produce a managed digest — but its logical content splices the
+    // canonical `z` entry into `SKILL.md`, so the two trees share a legacy
+    // digest and differ under framing. The pre-framing manifest records that
+    // shared legacy digest, which is exactly what the old detector accepted.
+    const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+    const providerPath = join(root, '.claude', 'skills', 'skill-one');
+    await mkdir(canonicalPath, { recursive: true });
+    await writeFile(join(canonicalPath, 'SKILL.md'), 'A', 'utf8');
+    await writeFile(join(canonicalPath, 'z'), 'B', 'utf8');
+    const marker = `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->`;
+    await mkdir(providerPath, { recursive: true });
+    await writeFile(
+      join(providerPath, 'SKILL.md'),
+      `${marker}\nA\0z\0B`,
+      'utf8',
+    );
+    await writeFile(
+      join(providerPath, OAT_DIRECTORY_SENTINEL),
+      `${marker}\n`,
+      'utf8',
+    );
+
+    const { framed, legacy } = await computeDirectoryDigests(canonicalPath);
+    expect(framed).not.toBe(legacy);
+    const copyEntry = createManifestEntry({
+      strategy: 'copy',
+      contentHash: legacy,
       isFile: false,
     });
 

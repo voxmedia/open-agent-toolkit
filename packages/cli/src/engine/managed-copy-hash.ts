@@ -1,7 +1,11 @@
-import { createHash } from 'node:crypto';
 import { lstat, readdir, readFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
+import {
+  compareDirectoryRelativePaths,
+  createFramedDirectoryDigest,
+  updateFramedDirectoryDigest,
+} from '@manifest/hash';
 import type { ManifestEntry } from '@manifest/manifest.types';
 
 import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
@@ -20,14 +24,20 @@ import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
  *
  * 1. For a faithful managed directory copy the digest returned is **equal** to
  *    `computeDirectoryHash` of the canonical directory — the same value
- *    `execute-plan.ts` writes into the manifest `contentHash`. The algorithm is
- *    byte-for-byte the one in `manifest/hash.ts` (sorted relative path, `\0`,
- *    content, `\0`, sha256) applied to the copy's logical content.
+ *    `execute-plan.ts` writes into the manifest `contentHash`. The encoding is
+ *    not merely the same shape as `manifest/hash.ts`: this module calls that
+ *    module's `createFramedDirectoryDigest`, `compareDirectoryRelativePaths`
+ *    and `updateFramedDirectoryDigest`, so the domain tag, the ordering and
+ *    the per-field length framing cannot drift apart. That framing is what
+ *    makes the digest a self-delimiting encoding of the sorted file list
+ *    (wave-7 final review, Critical 4 — the header of `manifest/hash.ts`
+ *    records the collision that motivated it, the cross-encoding forgery the
+ *    domain tag closes, and the one-time manifest migration it forces).
  * 2. `null` is returned rather than a digest whenever the sentinel does not
  *    name exactly this canonical path — and likewise when the sentinel is
- *    absent or has trailing content, when the marker file does not start with
- *    exactly the expected banner, or when the provider tree holds any
- *    non-regular entry.
+ *    absent or has trailing content, when the marker file is missing or does
+ *    not start with exactly the expected banner, or when the provider tree
+ *    holds any non-regular entry.
  * 3. "Non-regular entry" includes two shapes the pre-hardening helper waved
  *    through, for two different reasons: a `.oat-generated` sentinel that is a
  *    symlink (or anything other than a regular file) — it was skipped by
@@ -37,6 +47,15 @@ import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
  *    `readdir`, which traverses a symlinked directory. Both return `null`.
  *    Without this the detector and planner would newly accept a
  *    symlink-substituted provider view as `in_sync`.
+ * 4. A `skill` or `agent` copy must actually contain its marker file. The
+ *    banner check used to be keyed on `file === markerPath` while walking the
+ *    tree, so deleting `SKILL.md` outright did not fail the check — it simply
+ *    skipped it. Combined with the unframed digest that let a view drop
+ *    `SKILL.md`, fuse its bytes into a surviving file, and read `in_sync`. The
+ *    requirement is unconditional, so a skill directory that genuinely has no
+ *    `SKILL.md` (a layout `applyCopyMarker` tolerates as best-effort) is now
+ *    permanently `drifted` / `update_copy` rather than `in_sync`: the safe
+ *    direction, and the direction the review asked for.
  *
  * These claims describe a quiescent tree. Every check here is path-based, so
  * none of them survives an adversary swapping an entry between the check and
@@ -134,7 +153,10 @@ export async function computeManagedDirectoryCopyHash(
     }
 
     files.sort((left, right) =>
-      relative(providerPath, left).localeCompare(relative(providerPath, right)),
+      compareDirectoryRelativePaths(
+        relative(providerPath, left),
+        relative(providerPath, right),
+      ),
     );
 
     const markerFileName =
@@ -146,7 +168,16 @@ export async function computeManagedDirectoryCopyHash(
     const markerPath = markerFileName
       ? join(providerPath, markerFileName)
       : null;
-    const hash = createHash('sha256');
+
+    // The marker file must be present, not merely validated when it happens to
+    // exist. Keying the banner check on `file === markerPath` inside the loop
+    // below meant a view with no `SKILL.md` at all skipped the check entirely,
+    // which is half of the forgery this module now rejects.
+    if (markerPath !== null && !files.includes(markerPath)) {
+      return null;
+    }
+
+    const hash = createFramedDirectoryDigest();
 
     for (const file of files) {
       const relativePath = relative(providerPath, file);
@@ -161,10 +192,9 @@ export async function computeManagedDirectoryCopyHash(
         }
         content = content.subarray(markerPrefix.length);
       }
-      hash.update(relativePath);
-      hash.update('\0');
-      hash.update(content);
-      hash.update('\0');
+      // Shared with `manifest/hash.ts` rather than mirrored: the canonical
+      // digest this must reproduce is produced by the very same encoder.
+      updateFramedDirectoryDigest(hash, relativePath, content);
     }
 
     return hash.digest('hex');
