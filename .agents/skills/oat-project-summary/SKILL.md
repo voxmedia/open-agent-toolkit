@@ -158,6 +158,15 @@ Route on the structured result. `status: "absent"` is inert. When the entry
 counts show one or more entries, keep the log in the summary flow even if task,
 revision, and autonomous-learning tracking fields are otherwise current.
 
+`status: "ambiguous"` (exit 1, with an `ambiguity` reason) means the log's
+section markers are readable two ways — or a seal is physically present outside
+the parseable region — so the entry counts are not trustworthy. Stop the
+project-log part of this skill there: report the `ambiguity` reason verbatim,
+do not treat the log as empty, do not graduate the ledger, and do not append;
+the operator repairs the file (the mutators refuse it for the same reason).
+`summary.md` may still be authored from the other artifacts, with the log
+named as unreadable.
+
 `sealed: true` means the project log already carries its completion seal and is
 closed to further entries. Skip the ledger graduation below entirely — do not
 offer it, and append nothing. Report that the log is sealed and name the seal

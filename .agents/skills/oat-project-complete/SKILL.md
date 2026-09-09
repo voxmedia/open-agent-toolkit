@@ -167,7 +167,8 @@ Every other interruption is not a resume checkpoint. After `complete-state`, or
 after the Step 7 PR artifact, the retained pointer still names an existing
 source directory, so this branch is not taken and the normal completion entry
 runs: Step 3.7 routes on the status probe's `sealed` field as described there,
-so a log that is already sealed is left alone, and
+so a log that is already sealed is left alone (and a probe answering
+`status: "ambiguous"` stops completion until the log is repaired), and
 Step 7 regenerates the PR artifact only when it is missing. When the source
 directory is gone and zero or several archived candidates match, the branch
 stops with the manual-recovery message above and leaves the pointer untouched.

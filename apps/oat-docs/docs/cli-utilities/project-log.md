@@ -161,7 +161,15 @@ It also reports whether the log carries a completion seal:
   above one is a log sealed twice before the seal append became idempotent.
 
 `status` keeps its `ok` / `absent` / `synthesis_pending` values on a sealed log;
-sealing is reported alongside the status, not as a fourth value.
+sealing is reported alongside the status, not as a status value. The one
+additional status is `ambiguous`: the log's section markers can be read two
+ways (a lone carriage return, U+2028, or U+2029 before a marker), or a seal is
+physically present outside the parseable `## Entries` region. `check` then
+exits 1 and reports an `ambiguity` reason instead of a clean verdict, the
+mutators (`append`, `synthesize`) refuse the same file, and the lifecycle skills
+stop rather than treat the log as empty. Bodies may use CRLF line endings; they
+are stored normalized to LF (`normalizedLineEndings: true` in the result). A
+lone carriage return, U+2028, or U+2029 in a body is refused.
 
 Use `--require-synthesis` to exit with status 1 while synthesis is pending:
 
@@ -170,7 +178,8 @@ oat project log check --require-synthesis
 ```
 
 Without that flag, normal `absent`, `ok`, and `synthesis_pending` results exit
-successfully so lifecycle skills can decide whether to warn or enforce.
+successfully so lifecycle skills can decide whether to warn or enforce;
+`ambiguous` always exits 1.
 
 ## Complete the synthesis
 
