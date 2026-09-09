@@ -48,14 +48,17 @@ import { findProjectLogSeal, type ProjectLogSeal } from './check';
 import {
   composeJudgmentHeading,
   composeStructuralHeading,
+  containsAmbiguousProjectLogMarker,
   isProjectLogEntryMarker,
-  isProjectLogSealEntry,
+  isProjectLogSealHeading,
   isProjectLogSectionMarker,
   PROJECT_LOG_AREA_MAX_LENGTH,
   PROJECT_LOG_HEADING_DELIMITER,
+  PROJECT_LOG_LINE_TERMINATOR_RE,
+  PROJECT_LOG_NON_LINE_FEED_TERMINATOR_RE,
   PROJECT_LOG_SCOPES,
   PROJECT_LOG_TYPES,
-  STRUCTURAL_HEADING_RE,
+  splitProjectLogLines,
   type ProjectLogScope,
   type ProjectLogType,
 } from './grammar';
@@ -435,8 +438,13 @@ function releaseProjectLogLock(handle: ProjectLogLockHandle): void {
  * `best-effort` is for work that cannot lose an entry — committing does not
  * rewrite the log — where holding the lock only keeps this process from racing
  * its own sibling into `.git/index.lock`.
+ *
+ * Exported so `synthesize` enters the same critical section rather than a
+ * second one of its own: its whole-file rewrite races an overlapping append
+ * exactly as two appends race each other, and two locks would serialize
+ * neither.
  */
-async function withProjectLogLock<T>(
+export async function withProjectLogLock<T>(
   logPath: string,
   overrides: Partial<ProjectLogLockDependencies>,
   policy: 'required' | 'best-effort',
@@ -1126,9 +1134,14 @@ export class ProjectLogSealedError extends Error {
   readonly logPath: string;
   readonly seal: ProjectLogSeal;
 
-  constructor(logPath: string, seal: ProjectLogSeal) {
+  /**
+   * `action` names the refused mutation so `synthesize`, which rewrites rather
+   * than appends, reports what it actually declined. It defaults to `append`,
+   * which is the wording every existing caller and its pinned control expect.
+   */
+  constructor(logPath: string, seal: ProjectLogSeal, action = 'append') {
     super(
-      `No project-log append may follow the completion seal (${seal.heading}) in ${logPath}.`,
+      `No project-log ${action} may follow the completion seal (${seal.heading}) in ${logPath}.`,
     );
     this.name = 'ProjectLogSealedError';
     this.logPath = logPath;
@@ -1234,7 +1247,7 @@ function validateSingleLine(
       `${option} is required and must be a non-empty single line.`,
     );
   }
-  if (/[\r\n]/.test(value ?? '')) {
+  if (PROJECT_LOG_LINE_TERMINATOR_RE.test(value ?? '')) {
     throw new Error(
       `${option} must be a single line without newline characters.`,
     );
@@ -1265,13 +1278,20 @@ function validateVersionNote(value: string | undefined): string | undefined {
   return validateSingleLine(value, '--version-note', Number.MAX_SAFE_INTEGER);
 }
 
+/**
+ * Whether any line of `body` is a `## ` or `### ` marker the command owns.
+ *
+ * The split is `splitProjectLogLines` rather than `/\r?\n/` so validation
+ * enumerates exactly the LineTerminators a regular expression's multiline `^`
+ * anchors after. Splitting on fewer of them was the injection: a body reading
+ * `carrier<CR>## Injected` was one unbroken line here and so passed, while the
+ * section parser saw a real `## ` boundary and truncated the entries region,
+ * voiding an already-written completion seal.
+ */
 function containsCommandOwnedMarker(body: string): boolean {
-  return body
-    .split(/\r?\n/)
-    .some(
-      (line) =>
-        isProjectLogSectionMarker(line) || isProjectLogEntryMarker(line),
-    );
+  return splitProjectLogLines(body).some(
+    (line) => isProjectLogSectionMarker(line) || isProjectLogEntryMarker(line),
+  );
 }
 
 function validateEntry(
@@ -1298,7 +1318,7 @@ function validateEntry(
         '--structural cannot be combined with judgment flags --type, --scope, or --area.',
       );
     }
-    if (/[\r\n]/.test(body)) {
+    if (PROJECT_LOG_LINE_TERMINATOR_RE.test(body)) {
       throw new Error(
         '--body for structural entries must be one line without newline characters.',
       );
@@ -1348,6 +1368,11 @@ function validateEntry(
       `Invalid --scope '${input.scope}'; accepted values: ${PROJECT_LOG_SCOPES.join(
         ' | ',
       )}.`,
+    );
+  }
+  if (PROJECT_LOG_NON_LINE_FEED_TERMINATOR_RE.test(body)) {
+    throw new Error(
+      '--body for judgment entries must break lines with line feeds only; carriage returns and the U+2028 and U+2029 separators are not accepted.',
     );
   }
   if (containsCommandOwnedMarker(body)) {
@@ -1523,43 +1548,35 @@ async function appendLockedProjectLog(
   if (logExists) {
     const content = await dependencies.readLog(logPath);
 
-    // Recognizing an entry this key already wrote comes first, and deliberately
-    // so: it appends nothing, and the entry it finds necessarily predates any
-    // later seal. Refusing it would turn the gate's idempotent recovery replay
-    // into a hard failure on every project that has since been completed.
-    if (idempotencyKey !== undefined) {
-      const existing = findProjectLogEntryByIdempotencyKey(
-        content,
-        idempotencyKey,
-        body,
+    // A log whose markers two readers resolve differently cannot answer
+    // "is this sealed?", so nothing may be written onto it until a human
+    // resolves it. This refusal is what keeps the LF-only section parser from
+    // widening such a log: without it, a pre-existing `preamble<U+2028>##
+    // Entries` stops parsing, reports unsealed, and accepts a second seal.
+    if (containsAmbiguousProjectLogMarker(content)) {
+      throw new Error(
+        `Project log ${logPath} has a '## ' or '### ' marker starting a line after a carriage return, U+2028, or U+2029 rather than a line feed. Readers disagree about whether it is a heading, so the log cannot be shown to be unsealed and nothing will be appended. Replace those line terminators with line feeds.`,
       );
-      if (existing !== undefined) {
-        // Append-only order is preserved (DR-260714): a replay observes the
-        // entry it already wrote instead of writing a second one.
-        return {
-          status: 'already-appended',
-          logPath,
-          heading: existing,
-          created: false,
-        };
-      }
     }
 
     const seal = findProjectLogSeal(content);
 
-    if (seal !== null) {
-      // Re-derive the requested identity from the composed heading so the
-      // comparison runs on the same normalized producer/ref the parser reads
-      // back out of the log.
-      const requested = STRUCTURAL_HEADING_RE.exec(heading);
-      const requestsSeal =
-        requested !== null &&
-        isProjectLogSealEntry({
-          producer: requested[2]!.trim(),
-          ref: requested[3]!.trim(),
-        });
+    // Read the requested identity back out of the composed heading, so the
+    // comparison runs on the same normalized producer/ref the parser reads out
+    // of the log.
+    const requestsSeal = isProjectLogSealHeading(heading);
 
-      if (requestsSeal) {
+    // The seal routes on structure before the generic keyed short-circuit, and
+    // is never suppressed by it. `idempotencyToken` matches any whole word
+    // equal to the key *anywhere* in the log, so with the keyed scan first a
+    // single ordinary entry whose prose happened to mention `oat-seal:<project>`
+    // answered the completion seal with `already-appended` naming that entry —
+    // no seal was written, the log stayed open to every later append, and the
+    // completing agent saw success. Structural recognition cannot collide that
+    // way, and the keyed fallback below is admitted only when it names a seal,
+    // so an `already-appended` seal always reports a seal heading.
+    if (requestsSeal) {
+      if (seal !== null) {
         // The seal is idempotent by structure, not only by key: a log sealed
         // before the keyed convention carries no token to match, and a resumed
         // completion must still observe the existing seal rather than write a
@@ -1572,7 +1589,51 @@ async function appendLockedProjectLog(
         };
       }
 
-      throw new ProjectLogSealedError(logPath, seal);
+      // The parser found no seal, but the raw text may still hold a seal
+      // heading the entries parser cannot reach — a log with no `## Entries`
+      // section, or a seal sitting below another `## ` section. Writing a second
+      // seal onto such a log is the one outcome that must never happen, and
+      // reporting it sealed would contradict `check`, so this fails closed.
+      //
+      // Refusing is never weaker than the reading it replaces: the pre-fix code
+      // answered these logs `already-appended` and wrote nothing when a key
+      // happened to match, and appended a duplicate seal when it did not.
+      if (
+        splitProjectLogLines(content).some((line) =>
+          isProjectLogSealHeading(line.trim()),
+        )
+      ) {
+        throw new Error(
+          `Project log ${logPath} already carries a completion-seal heading that the entries parser cannot reach, so a seal cannot be appended without risking a second one. Ensure the seal sits under the '## Entries' section, then retry.`,
+        );
+      }
+    } else {
+      // Recognizing an entry this key already wrote comes before the sealed
+      // guard, and deliberately so: it appends nothing, and the entry it finds
+      // necessarily predates any later seal. Refusing it would turn the gate's
+      // idempotent recovery replay into a hard failure on every project that
+      // has since been completed.
+      if (idempotencyKey !== undefined) {
+        const existing = findProjectLogEntryByIdempotencyKey(
+          content,
+          idempotencyKey,
+          body,
+        );
+        if (existing !== undefined) {
+          // Append-only order is preserved (DR-260714): a replay observes the
+          // entry it already wrote instead of writing a second one.
+          return {
+            status: 'already-appended',
+            logPath,
+            heading: existing,
+            created: false,
+          };
+        }
+      }
+
+      if (seal !== null) {
+        throw new ProjectLogSealedError(logPath, seal);
+      }
     }
   }
 
@@ -1582,10 +1643,21 @@ async function appendLockedProjectLog(
       join(assetsRoot, 'templates', PROJECT_LOG_FILENAME),
       'utf8',
     );
-    await dependencies.writeLog(
-      logPath,
-      instantiateProjectLogTemplate(template, basename(dirname(logPath)), date),
+    const instantiated = instantiateProjectLogTemplate(
+      template,
+      basename(dirname(logPath)),
+      date,
     );
+    // The project directory's basename lands in the template's title line, so a
+    // directory named `demo<U+2028>## Notes` would create a log this command
+    // then refuses on its next append. A mutator must never write content it
+    // would decline to read.
+    if (containsAmbiguousProjectLogMarker(instantiated)) {
+      throw new Error(
+        `Project name ${basename(dirname(logPath))} would put a '## ' heading after a carriage return, U+2028, or U+2029 in the new log's title, leaving a file with two readings. Rename the project directory using line feeds only.`,
+      );
+    }
+    await dependencies.writeLog(logPath, instantiated);
     created = true;
   }
 
