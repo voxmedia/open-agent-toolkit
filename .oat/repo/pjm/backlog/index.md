@@ -266,12 +266,12 @@
 | BL-260902-file-deferred-repository       | File deferred repository follow-ups from a passing receive                                                      | open   | medium   | feature    | M        |
 | BL-260906-fix-sync-apply-branch          | Fix sync apply branch precedence when a rejected collection leaves zero planned operations                      | open   | medium   | task       | S        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs                                               | open   | medium   | feature    | L        |
-| BL-260908-guard-normalized-config-maps   | Guard normalized config maps against a preserved **proto** key                                                  | open   | medium   | task       | XS       |
+| BL-260908-guard-normalized-config-maps   | Guard normalized config maps against a preserved `__proto__` key                                                | open   | medium   | task       | XS       |
 | BL-260906-guard-packed-asset-directories | Guard packed asset directories and document the OAT_ASSETS_DIR contract                                         | open   | medium   | task       | S        |
 | BL-260907-harden-the-external-plan       | Harden the external-plan backlink matcher: full extension consumption and comments before fences                | open   | medium   | task       | XS       |
 | BL-260830-integrate-recon-across         | Integrate recon across analysis and research workflows                                                          | open   | medium   | feature    | L        |
 | BL-260830-integrate-recon-with-oat       | Integrate recon with OAT discovery and quick start                                                              | open   | medium   | feature    | M        |
-| BL-260908-keep-a-bare-proto-in-markdown  | Keep a bare **proto** in Markdown prose from being formatted into bold                                          | open   | medium   | task       | XS       |
+| BL-260908-keep-a-bare-proto-in-markdown  | Keep a bare `__proto__` in Markdown prose from being formatted into bold                                        | open   | medium   | task       | XS       |
 | BL-260908-keep-external-plan-writes      | Keep external-plan writes on the caller's model class in oat-repo-improve                                       | open   | medium   | task       | S        |
 | BL-260907-let-oat-config-unset-remove    | Let oat config unset remove a malformed stored value                                                            | open   | medium   | task       | XS       |
 | BL-260830-live-dogfood-oat-brainstorm    | Live dogfood oat-brainstorm destination and fold-back safety                                                    | open   | medium   | task       | M        |

@@ -1,6 +1,6 @@
 ---
 id: BL-260908-keep-a-bare-proto-in-markdown
-title: Keep a bare __proto__ in Markdown prose from being formatted into bold
+title: Keep a bare `__proto__` in Markdown prose from being formatted into bold
 status: open
 priority: medium
 scope: task
