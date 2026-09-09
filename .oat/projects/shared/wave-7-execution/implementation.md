@@ -711,6 +711,25 @@ _Recorded when the configured implementation exit gate runs._
 
 **p19 row → `passed`** (reviewed head `d6391cf72`); p19 is clear for fan-in.
 
+## Review Received: p20 (round 1 — passed)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p20-review-2026-09-09T100421Z.md (reviewed head `44421c0ef83fd54e187d50364f04dfd0953dfdf3`, manual, opus)
+**Findings:** 0 · 0 · 0 · 3 minor — PASS. Verification records: nine gates re-run forced, exit 0, `Cached: 0` on `check` and `test`; `test:skills` 883, `test:smoke` 167, 65 skills validated, `check:skill-bumps` 12 validated; all four prose insertions whitespace-collapsed byte-verbatim against the plan and the seven contract regexes copied literally; the test diff add-only; `named-skill-load-contract` 28/28; the two `synced-bookkeeping-sites.json` anchors byte-identical (+5 line shift only); version sweeps for `2.1.4` / `1.9.1` empty; four files rather than five correct; the two neutralizations and the throwaway-branch bump control re-run with SHA-256-verified restores; probes: neutralizing only the Success Criteria bullet fails (f) alone (both surfaces independently load-bearing); renaming only the `it()` title fails nothing (m3); a contradiction sweep found no skill or docs page still licensing cheaper plan authoring.
+
+**Adjudications:**
+
+- The rejected Codex Minor (unwrapped Success Criteria bullet): **rejection upheld** — the plan's rationale is "to match the surrounding paragraphs"; all fourteen pre-existing bullets are single lines (59–166 chars, eight over 80 columns); the Step 2 paragraph, whose surroundings are wrapped, IS wrapped; no gate constrains the line and assertion (f) collapses whitespace. No address-now.
+- The pre-commit bump-gate observation: **confirmed** — `listChangedVersionedFiles` (`skills.ts:1134`, the diff at `:1152`) enumerates paths from `${baseRef}...HEAD` while reading version values from the working tree, so an uncommitted bump on a file absent from the committed changed set is invisible (probe: `HEAD` at 1.9.1 with an uncommitted 1.9.2 → exit 0). A hybrid, not "blind to uncommitted work" outright. Wave-close plan correction + skill lesson.
+
+**Dispositions (Minors):**
+
+- m1 — the unwrapped bullet: **no action** (adjudicated above).
+- m2 — the plan's quoted gate success string is stale (`… skill and agent role version bump checks`): **wave-close plan correction** (with the bump-gate timing).
+- m3 — the `DR-260906` backstop name in the prose is not pinned (renaming the `it()` title fails nothing): **deferred** (closeout ledger; appended to `BL-260909-wave-7-review-polish-leftovers` at the fan-in).
+
+**p20 row → `passed`** (reviewed head `44421c0ef`); p20 is clear for fan-in — the wave's last lane.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -891,6 +910,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - `w7-p20-impl-001` — p20 (ungrouped, the hill) bootstrapped alone at the post-p19 tip `ff00e3a51` (`.worktrees/wave-7/p20`, `wave-7/p20`); brief rulings verified on the tip before dispatch (no `1.9.1` literal pin exists; `oat-repo-improve` already at 2.1.5 with its pin; the `synced-bookkeeping-sites.json` anchors inside `oat-wave-execute/SKILL.md` must stay byte-identical). Record `dispatch/w7-p20-impl-001.json`.
 - `w7-p20-impl-001` outcome: DONE, one commit `44421c0ef83fd54e187d50364f04dfd0953dfdf3` on `ff00e3a51` (four files, +55/−5; `skills.test.ts` untouched because `oat-repo-improve` already reads 2.1.5 with its pin and `1.9.1` has no pin): the operator's rule lands in `oat-repo-improve` Step 2 + one Success Criteria bullet, in `oat-wave-execute` after the reconciliation contract (Drift Refresh Record entries and post-STOP amendments are plan writes), and in the `repo-improve` docs page; the `keeps external-plan writes on the caller's model class` contract case (a)–(g) with two neutralization controls; `oat-wave-execute` 1.9.1 → 1.9.2; Codex 0/0/0/1m (unwrapped bullet, rejected with reason — root adjudication requested); lane gates `Cached: 0`. Observation for the wave-close pass: `check:skill-bumps` diffs `baseRef...HEAD`, so the plan's pre-commit count assertions cannot fire.
 - `w7-p20-review-001` — root reviewer, target opus, nine rulings (the rule lands exactly as stated; the contract case verbatim; weaker-anywhere incl. the inventoried anchor lines; bumps/pins; the three controls; the Codex Minor adjudication; the pre-commit bump-gate observation; scope; one adversarial probe). Record `dispatch/w7-p20-review-001.json`.
+- `w7-p20-review-001` outcome: PASS, 0/0/0/3m (prose byte-verbatim against the plan; both surfaces independently load-bearing; the Codex rejection upheld; the pre-commit bump-gate observation confirmed as a paths-from-commits / values-from-tree hybrid). m2 → wave-close correction; m3 → polish item.
 - Group 6 fan-in: merges `7d2509f1b` (p17), `f789c9261` (p18); address-now `6ee5cd45c`; p16 parked; lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached; cli 7257). p19 (ungrouped) bootstraps next.
 - p17 review received (CHANGES REQUESTED, 1C/2I/2M/2m): widening (d) enumerated in the plan; fix round `w7-p17-fix-001` dispatched; p17 row `fixes_added`.
 - p18 round 2 passed (0/0/0/2m) at `bb277915e`; p18 row `passed`.

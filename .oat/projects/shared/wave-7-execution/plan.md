@@ -787,7 +787,7 @@ git commit -m "docs(p20-t01): keep plan writes on the caller's model"
 | p18    | code     | fixes_added | 2026-09-09 | reviews/archived/p18-review-2026-09-09T065527Z.md           | 1ce96aa7e355baca9e38d94f363d844edea069a9 | manual     | -                   |
 | p18    | code     | passed      | 2026-09-09 | reviews/archived/p18-review-2026-09-09T072158Z.md           | bb277915e89a3e3117234eeacb2fd020a0360990 | manual     | -                   |
 | p19    | code     | passed      | 2026-09-09 | reviews/archived/p19-review-2026-09-09T092000Z.md           | d6391cf7296c70f251ca4b586633ff913a89c6a2 | manual     | -                   |
-| p20    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p20    | code     | passed      | 2026-09-09 | reviews/archived/p20-review-2026-09-09T100421Z.md           | 44421c0ef83fd54e187d50364f04dfd0953dfdf3 | manual     | -                   |
 | final  | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
 | plan   | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T224620Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
 | spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                   |
