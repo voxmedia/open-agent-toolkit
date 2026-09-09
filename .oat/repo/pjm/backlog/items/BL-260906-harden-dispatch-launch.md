@@ -13,7 +13,7 @@ labels:
   - retro
 assignee: null
 created: 2026-09-06T05:27:39.903Z
-updated: 2026-09-09T08:36:17.000Z
+updated: 2026-09-09T19:18:43.000Z
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-calculate-dispatch-baselines-after-journaling.md
@@ -51,6 +51,6 @@ Two lanes, one per issue, planned separately: #265 (calculate execution baseline
   the guard or the seam, not a refresh, so the wave did not improvise. The STOP
   record sits in the plan's `## Revalidation Before Execution`; the lane's
   partial steps 2–3 are preserved as a patch under
-  `.oat/projects/shared/wave-7-execution/parked/wave-7-p16/` (README, patch,
+  `.oat/repo/reference/parked/wave-7-p16/` (restored 2026-09-09 from commit `f4c2dc4ef` after the wrapper was archived; the earlier wrapper path is gone) (README, patch,
   `prefix-journal.json`). Re-plan as a decision on where the git seam may live
   before dispatching again.
