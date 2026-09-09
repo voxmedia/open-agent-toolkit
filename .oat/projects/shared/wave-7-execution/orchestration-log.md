@@ -289,3 +289,73 @@ wave. **Skill signal (gap):** a plan that asserts a gate count moves before
 the commit exists is a plan written without running the gate at authoring
 time — the authoring skill should require running every quoted gate command
 once on the inspected head.
+
+### 2026-09-09 · structural · oat-wave-execute · end-of-run synthesis
+
+Twenty lanes in six triples plus two solo lanes under a concurrency ceiling
+of three: nineteen merged, one parked (p16). Convention verdicts, with
+evidence:
+
+- **"Reproduce, report, never improvise" — strengthened (5 STOPs, 4
+  refreshed, 1 parked).** p02 (a strict barrier removed by deleting a call),
+  p05 (four sweep sites the plan's own enumeration missed, plus a global
+  prototype-pollution path), p15 (a helper moved "verbatim" carried a symlink
+  hole into two callers), and p17 (four unenumerated widenings the plan's own
+  decoding rules prescribed) each closed by a dated refresh inside the plan's
+  file scope and resumed the same day; p16's remedy (the recorder graph's
+  no-process guard vs. the plan's git seam) was architectural and parked with
+  its partial patch committed under the wrapper. The rule that decides between
+  the two — "inside the plan's own file scope → refresh; otherwise → park" —
+  held every time.
+- **Plan writes on the caller's model class — strengthened and now pinned
+  (p20).** Every dated refresh, correction, and enumeration this wave was
+  authored by the orchestrator; the lanes and reviewers only reported. The
+  batch that had been drafted on a cheaper class before the wave produced the
+  premise defects the STOPs exposed.
+- **Reviewer-built adversarial sweeps beat hand-built differentials —
+  graduated to a standing brief line.** p17's 79-row differential missed a
+  widening class that the reviewer's 50,625-document combinatorial sweep
+  found (class (d)); p19's reviewer refetched the live provider page rather
+  than trusting the lane's quote. Scanner and claim-correcting lanes should
+  require both a differential and an independent sweep or refetch.
+- **Weaker-anywhere as the categorical review rule — strengthened.** p13's
+  `tests/`-nested narrowing and p18's refusal of a false plan sentence were
+  both adjudicated as licensed deviations because the reviewer had an explicit
+  ruling with the evidence it must produce; no lane's acceptance set widened
+  silently.
+- **Lane claims are verified, not trusted — strengthened (4 false claims
+  caught).** p09's "inert on macOS", p03's "external plans unwritable", p14's
+  record wording, and p17's "no Codex coverage possible" were each corrected
+  by a reviewer with counts or a completed run.
+- **Root address-now at the fan-in — strengthened (7 of 8 fan-ins).** Small
+  reviewer findings on prose, pins, and docs were closed by the root in one
+  commit per fan-in rather than a lane round trip; each is named in its fan-in
+  entry with the finding it closes.
+
+Adjustments as rules for later waves:
+
+1. Briefs state a version-pin premise with the root's own grep result on the
+   dispatch base, never a belief (p19, p20: both the lane and the reviewer had
+   to re-derive it).
+2. A wrapper plan links a source-plan rule and never paraphrases it (the p19
+   Ordering row said the opposite of source-plan step 7).
+3. `check:skill-bumps` diffs `baseRef...HEAD`, so a bump control is run
+   post-commit on a throwaway branch; plans stop asserting a pre-commit count
+   change (p20).
+4. Codex coverage is retried once from the root checkout at review when the
+   lane's run wedged (p17: the lane stalled twice, the reviewer completed in
+   ~230 s).
+5. A parked lane's patch lives as tracked files under the wrapper, SHA-256
+   pinned (wave-5 p09 was lost from scratch and rebuilt from a transcript;
+   wave-7 p16 was parked correctly the first time).
+6. Scratch paths are namespaced by wave and lanes `stat` a Codex `-o` file's
+   mtime before reading it (a wave-6 file nearly fed a wave-7 lane).
+7. A "found and fixed" diagnosis in a lane report carries instrumentation
+   counts (p09), and a neutralization is checked against the case it must
+   break, not a nonzero failure count (p08).
+
+Graduated entries: the STOP taxonomy (refresh vs. park) and the caller-model
+rule are now skill text (`DR-260908-a-stop-whose-remedy-lies`; p20's
+`oat-repo-improve` / `oat-wave-execute` paragraphs with a contract case); the
+address-now convention and the weaker-anywhere ruling pattern remain wave
+practice recorded here for the retro.

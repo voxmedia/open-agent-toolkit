@@ -964,7 +964,6 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 | Task / Review | Source Artifact                | Planned / Documented                                                                        | Actual / Accepted                                                                                                                                                                                                                     |
 | ------------- | ------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| (none yet)    | -                              | -                                                                                           | -                                                                                                                                                                                                                                     |
 | p01-t01       | plan step 5 / Test plan        | raw guard restored → case 5 fails on all three invocation forms                             | raw guard fails only the plain form; a one-sided canonicalization is the control for the two preserve-symlinks forms (dated correction entry in the plan)                                                                             |
 | p02-t01       | plan step 2                    | delete the strict effective read; `envShadowed` from `resolveEnvOverride`                   | the probe kept; a targeted strict barrier reads the untargeted surfaces (and the targeted shared surface on the raw-write branch) before any write (dated post-STOP refresh)                                                          |
 | p03-t01       | plan step 2                    | strip inline code spans on each remaining line                                              | block-scoped CommonMark masking with container-aware fences, HTML blocks 1–7, fence lines as boundaries; `oxfmt`-derived invariant (dated refresh)                                                                                    |
@@ -1019,11 +1018,29 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Deferred Findings
 
-_None yet._
+Every deferred review finding is either filed as a backlog item (this wave's `BL-260909-*` set, filed on the integration branch as they arose or at closeout) or recorded as a wave-close plan correction:
+
+- `BL-260909-sweep-the-raw-main-module` — p01 review: other raw main-module guards (the same symlink class p01 fixed).
+- `BL-260909-reject-malformed-nested-values` — p02 review: the strict `pjm.remote` shared reader accepts a malformed nested value.
+- `BL-260909-add-a-grep-by-shape-control` — p05 lesson: sweeps keyed to variable names miss shape-based lookups.
+- `BL-260909-show-the-brainstorm-pack` — p07 Codex: the doctor example omits the `brainstorm` pack; pack-status derivation rule undecided.
+- `BL-260909-surface-config-warnings` — p08 deferred follow-up + review m1–m4: remaining reader paths, one read per `config get`, the `warnings` field documented.
+- `BL-260909-repair-the-bare-fences-that` — p10: five bare fences outside `.agents/skills`.
+- `BL-260909-fix-the-agents-md-unsafe` — p12 flake: `it.each` variants race on a shared fixture.
+- `BL-260909-make-oat-sync-scope-all-report` — p14 review I1/M2: a sibling scope's failure in the `--scope all` body; the `failed === 0` conjunct pin.
+- `BL-260909-use-handle-bound-traversal` — p15 review: TOCTOU class in the remaining path-based readers (incl. the destructive retirement path).
+- `BL-260909-make-findsection-comment-aware` — p17 review M1 + round-2 Minors: the third fence pass; CRLF; helper placement.
+- `BL-260909-give-packages-control-plane` — p18: `packages/control-plane` formatting has no CI gate (lockstep change).
+- `BL-260909-re-source-the-surviving-codex` — p19 review M2 + m5: surviving Codex `name` claims; twelve dead `provider-reference.md` URLs.
+- `BL-260909-wave-7-review-polish-leftovers` — the Minors deferred across p03, p04, p05, p09, p11, p12, p13, p19, p20.
+- `BL-260906-harden-dispatch-launch` (update-only, open) — p16 parked; Notes entry points at the STOP record and `parked/wave-7-p16/`.
+- `BL-260906-extend-check-skill-bumps` — Notes entry records p13's licensed `tests/`-nested narrowing.
+- Notes only (no item): pre-existing test-tier `tsc` errors in `instructions/sync/sync.test.ts:138` and `validate/validate.test.ts:107` (p09) feed `BL-260907-type-check-cli-test-files`; the `tools/smoke` `cursor-broker.test.mjs` ENOENT flake under full-suite concurrency (p11 review) did not recur at any fan-in.
+- Wave-close plan corrections written as dated `Correction applied 2026-09-09` entries: p01, p04, p05, p08, p10, p11, p12, p13, p14, p17, p18, p19, p20; post-STOP `Refresh applied` entries: p02, p03, p05, p15, p17; `DR-260907-oat-config-reads-materialize` anchors re-derived by symbol.
 
 ## Final Summary (for PR/docs)
 
-_Filled at closeout._
+Wave 7 executed twenty post-program corrective plans as six groups of three plus two solo lanes under a concurrency ceiling of three: nineteen lanes merged into `wave-7-execution` (one lockstep bump 0.2.66 → 0.2.67 at the first fan-in; eleven gates green with `Cached: 0` after every fan-in, cli 7260 tests at the tip) and one lane (p16, dispatch baselines after journaling) parked on a plan STOP because the recorder graph's no-process guard forbids the plan's git seam. Five STOPs were closed by dated plan refreshes authored by the root (p02, p05, p15, p17) or a park (p16); every lane review passed within two rounds; thirteen follow-up items were filed and twenty-three source items are archived at closeout with outcome summaries. What shipped, in one line each: an fd-capable synced-archive reader; `oat config unset` for malformed values behind a targeted barrier; a Markdown guard for bare `__proto__` literals; an idempotent completion seal with the wave-5 p09 work unparked; own-key config maps; every bundle directory guarded; a doctor example the doctor can report; a warning for a wrong-typed docs root; a symlink warning that names the target; stray skill fences repaired and a recursive fence scanner; the docs-index follow-ups; persisted native-skill adoption in `oat status`; four version-validator gaps closed; honest sync-apply failure output; convergent copy-strategy projections; a hardened readiness contract with four enumerated widenings and a settled ledger vocabulary; skill-asset formatting and the worktree-init test inside CI's gates; corrected skill-authoring facts with named backstops; and plan writes pinned to the caller's model class.
 
 ## References
 
