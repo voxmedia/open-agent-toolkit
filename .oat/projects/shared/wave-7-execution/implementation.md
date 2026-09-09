@@ -833,28 +833,6 @@ _Recorded when the configured implementation exit gate runs._
 
 **Row:** a third `final` row at `fixes_added` (round 3's head); the second p21a fix round runs on the resumed implementer; round 4 on the same reviewer handle after the fan-in and a closeout gate run.
 
-## Review Received: final (round 3 — changes requested)
-
-**Date:** 2026-09-09
-**Review artifact:** reviews/archived/final-review-2026-09-09T134159Z.md (reviewed head `80b42d409dadcadf1b3d8643e8a4c67aa8a6e387`, manual, opus)
-**Findings:** 0 critical · 1 important · 4 medium · 6 minor — CHANGES REQUESTED. Both round-2 Importants verified closed end to end (a CRLF body appends with `normalizedLineEndings: true` and zero stored CRs; `a\r\r\nb` refused; a CRLF sealed log reports `sealed: true`, replays `already-appended`, refuses an ordinary append; `check` returns `ambiguous` exit 1 on the U+2028 and CR-only logs; all three writers refuse through one shared helper); all twelve round-2 record dispositions accurate; weaker-anywhere clean (18 fixtures × 4 surfaces × 3 revisions, 0 base-rejected inputs accepted; the reviewer built the round-2 head in a scratch tree and found CRLF the single acceptance-ward flip — the licensed restoration); 14 gates `Cached: 0` (cli 7364); live corpus 38 logs, 0 ambiguous; the M5 deferral upheld (reachability nil: 83/83 skills, 75/75 bundled assets).
-
-**Dispositions:**
-
-- I1 — `oat project log rollup` has no ambiguity guard: on a log `check`/`append`/`synthesize` refuse it returns `ok` exit 0 and rewrites `summary.md`, byte-identical to the empty-log control (not a regression; unreachable through the lifecycle skills; a public command): **fix round 2, lane p21a** (`w7-p21a-fix-002`: the shared helper in `rollup`, the same `ambiguous` shape, a `rollup.test.ts` case, the docs sentence names `rollup`).
-- M1 — `oat-project-complete` Step 3.7's router has no `ambiguous` row (the resume note at `:171` forward-references a branch that does not exist; completion fails closed only by the seal-append backstop): **fix round 2, lane p21a** (an `ambiguous` row that stops and reports the reason; the summary skill's `:220` no-changes clause reads `status: "ok"` with no entries — m3; the retro apply-procedure gains the branch — m4).
-- M2 — the corpus record cites `2ae7260cc` as the wave base (a mid-wave revision carrying p04's hardening): **fixed now** (relabelled; the true-base leg was supplied by the reviewer and returns clean) and **fix round 2** re-runs the matrix against `684bd3be3` in a scratch build and reports it.
-- M3 — the 20-fixture corpus exists only as prose and its arithmetic does not close: **fix round 2** (the fixture table and harness land as a shipped matrix test across `check`, `append`, `synthesize`, `rollup`; the record restated with the exact matrix).
-- M4 — `validateOatSkills` raises `Missing SKILL.md` for `oat-*` directories only, so the M5 deferral's premise is not gate-enforced: **recorded** (a Notes entry and an acceptance criterion on `BL-260909-restamp-a-stale-copy-strategy`; extending the finding is p13's validator surface, not widened into this wave).
-- m1 — the lone-terminator rule runs after `.trim()`, so an edge-only lone CR is silently stripped while the message says it is refused: **fix round 2** (test before trimming, or say "after trimming" — the stricter option that stays weaker-anywhere clean).
-- m2 — `normalizedLineEndings` and the body rule are documented under `## Inspect status`: **fix round 2** (move to `## Append entries`).
-- m3 — `oat-project-summary:220` no-changes clause: **fix round 2** (with M1).
-- m4 — `oat-project-retro` routes only on `sealed: true`: **fix round 2** (with M1).
-- m5 — the restated 144 figure yields 143 with its own command: **fixed now**.
-- m6 — the ambiguity message and docs say "`## ` or `### ` heading" where the code flags a `### ` line only when it is a dated entry heading: **fix round 2** (qualify both).
-
-**Row:** a third `final` row at `fixes_added` (round 3's head); the second p21a fix round runs on the resumed implementer at `2b372e281`; round 4 on the same reviewer handle after the fan-in and a closeout gate run.
-
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->

@@ -12,7 +12,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T11:56:51.284Z
-updated: 2026-09-09T12:32:55.000Z
+updated: 2026-09-09T13:47:38.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -25,5 +25,10 @@ Wave-7 Phase 21 (lane p21b, final review C4) length-framed the managed-copy dige
 
 - `oat sync` on a faithful copy-strategy tree whose recorded `contentHash` is stale (legacy or tampered) plans a restamp and writes the framed digest; a second run is a no-op.
 - An obsolete copy-strategy mapping with a legacy manifest classifies `remove` when the tree matches canonical, `detach` otherwise (controls for both).
+- `validateOatSkills` reports a missing `SKILL.md` for every canonical skill directory, not only `oat-*` ones (the deferral's reachability premise becomes gate-enforced).
 - A `skill` / `agent` provider directory with no marker file (`SKILL.md` / role file) does not loop: today `computeManagedCopyHash` returns `null` → `drifted` → `update_copy` on every `oat sync` with the manifest hash never moving (three consecutive real runs, final review round 2; unreachable from this repository's bundled tree, reachable for a hand-rolled skill directory) — either the restamp-on-skip fix or a loud, non-repeating configuration error closes it.
 - The pre-framing bridge and the legacy digest encoder are removed once every manifest on the reference installs is restamped, with the detector's fused-forgery and collision controls still green.
+
+## Notes
+
+- 2026-09-09 (final review round 3, M4): the deferral of the marker-less-directory loop rests on "unreachable from this repository", true today (83/83 skills, 75/75 bundled assets carry `SKILL.md`) but not gate-enforced — `validateOatSkills` raises `Missing SKILL.md` only for `oat-*` directories (`packages/cli/src/validation/skills.ts:1544`, `:1552`), so deleting a non-`oat-` skill's marker would make the repository reachable with no gate saying so.

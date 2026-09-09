@@ -111,7 +111,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-08T22:26:20.092Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-09T12:32:55Z'
+oat_project_state_updated: '2026-09-09T13:47:38Z'
 oat_generated: false
 ---
 
@@ -151,7 +151,8 @@ Implement — closeout. Nineteen lanes merged, p16 parked; synthesis, summary, a
 - ✓ Closeout steps 1–3: gates green at the p20 fan-in; synthesis + `summary.md` (`f56a2dc2e`); the twenty-three archivals (`a364bdd92`)
 - ◐ Root final review received (`final-review-2026-09-09T104425Z.md`, CHANGES REQUESTED): root record fixes applied; Phase 21 fix lanes dispatched
 - ◐ Reviewer round 2: CHANGES REQUESTED (0C/2I/5M/7m; all round-1 Criticals and Importants closed; two CRLF refusing-direction regressions from p21a) → p21a fix round dispatched
-- ☐ Reviewer round 3 → closeout gate run → configured exit gate → post-implement sequence → PR
+- ◐ Reviewer round 3: CHANGES REQUESTED (0C/1I/4M/6m; the round-2 Importants closed; rollup unguarded, Step 3.7 row, corpus record) → second p21a fix round dispatched at `2b372e281`
+- ☐ Reviewer round 4 → closeout gate run → configured exit gate → post-implement sequence → PR
 
 ## Blockers
 
