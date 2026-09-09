@@ -612,6 +612,21 @@ _Recorded when the configured implementation exit gate runs._
 
 **p15 row → `passed`** (reviewed head `53a0a2fcb`); p15 is clear for the group-5 fan-in.
 
+## Review Received: p13 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p13-review-2026-09-09T055549Z.md (reviewed head `5846efdb0a732f4309e8667c38e9d9c70c1edac4`, manual, opus)
+**Findings:** Critical 0 · Important 0 · Medium 1 · Minor 3 — PASS with findings. Ruling-1 adjudication: the plan's `tests/` boundary licenses the one narrowing (proven on git that the old pathspec matched a `SKILL.md` under `tests/`; the input set is empty at base, head, and `origin/main`; `bundle-assets.sh:49` strips `tests/` before any consumer; the lost enforcement was a false positive) — keep the code as shipped. Weaker-anywhere mechanically: 21 bump-validator + 7 structural shapes + 2 real-tree probes through real `git init` fixtures at base and head — every flip reject-ward except the adjudicated one and an absent-owning-`SKILL.md` sibling (exit 2 `ENOENT` → exit 0; plan-mandated, pinned, not CI-reachable); no finding code replaced. The three out-of-plan fixtures are clause B's forced propagation; the bundled tree is clean across all 83 skills; the retire item stays open; scope exact; all five plan inconsistencies confirmed (the literal Step-4 guard placement would have violated STOP 3); four neutralization probes; gates `Cached: 0`.
+
+**Dispositions:**
+
+- M1 — the narrowing is recorded only in a code comment, and the plan's weaker-anywhere section is self-contradictory for the nested-`tests/` shape: **fixed** (root) — a dated correction entry in the plan records six inconsistencies including this one; the narrowing is recorded on `BL-260906-extend-check-skill-bumps` beside the two residual gaps (root address-now on the integration branch at the group-5 fan-in).
+- m1 — the absent-owning-`SKILL.md` sibling now exits 0 instead of 2: **accepted** (plan-mandated, pinned, unreachable in CI); named in the plan correction.
+- m2 — the wrapper's p13 write-surface list omitted the three fixtures: **fixed** (root, this commit).
+- m3 — `validatedSkillCount: 65` counts `oat-*` only while the promoted pass iterates all 83: **accepted** — reporting cosmetics; carried in the polish ledger.
+
+**p13 row → `passed`** (reviewed head `5846efdb0`); group 5 is clear for fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -698,6 +713,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p15-review-001` — reviewer, target opus, seven rulings (a per-consumer base-vs-head acceptance table over ten provider shapes; the TOCTOU rejection; the eighth case's labelling; convergence without re-sync; the untouched files; scope; a hardlink/symlinked-subdirectory probe). Record `dispatch/w7-p15-review-001.json`.
 - `w7-p13-impl-001` outcome: DONE, one commit `5846efdb0a732f4309e8667c38e9d9c70c1edac4` (twelve files: the two validators and their tests, `AGENTS.md:11`, the contributing docs, three backlog items, plus three test fixtures that clause B — every skill must resolve a version — mechanically forced). Agent roles version-gated; an unresolvable version is a finding; the alias promotion is a structural error while the bump gate still accepts alias-only + valid bump; the changed-file pathspec covers whole skill directories with `-z`/NUL splitting; a nested `SKILL.md` maps to itself and its owner. Two Codex rounds (R1 1C/2I/2M/1m fixed; R2 one Critical rejected as a deliberate, pinned narrowing — a `SKILL.md` under `tests/` is no longer version-checked — plus 1M/2m fixed); sixteen controls against a pre-fix CLI snapshot; five plan-internal inconsistencies for wave close. Gates `Cached: 0`; the plan's focused command missed the three fixture consumers.
 - `w7-p13-review-001` — reviewer, target opus, seven rulings (adjudicate the `tests/` narrowing against the categorical rule; a per-validator base-vs-head battery over twelve shapes; the three out-of-list fixtures; the bundled tree green at head; the retire item and `AGENTS.md` confinement; scope; the five plan inconsistencies). Record `dispatch/w7-p13-review-001.json`.
+- `w7-p13-review-001` outcome: PASS with findings, 0/0/1M/3m; the `tests/`-nested narrowing adjudicated as licensed by the plan's own boundary (input set empty; bundle strips `tests/`); a 30-shape base-vs-head battery with two documented exceptions; the literal Step-4 placement shown to violate STOP 3. M1/m2 fixed by the root; m1/m3 accepted; p13 `passed`.
 - `w7-p15-review-001` outcome: PASS with findings, 0/0/0/3m (a four-consumer, 14-shape base-vs-head table; convergence proven against a base-built manifest). m1 → root address-now at the fan-in; m2 plan correction applied; m3 `BL-260909-use-handle-bound-traversal` filed; p15 `passed`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
@@ -746,6 +762,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - Group 3 fan-in: merges `7c5a6aa01`, `17d271b23`, `95ad10827`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7187). Group 4 (p10 + p11 + p12) bootstraps next.
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
+- p13 review received (PASS with findings, 0/0/1M/3m): plan correction entry (six inconsistencies) applied; wrapper surface corrected; p13 row `passed`; group 5 fan-in starts.
 - p15 review received (PASS with findings, 0/0/0/3m): plan correction applied; `BL-260909-use-handle-bound-traversal` filed; header comment address-now queued for the fan-in; p15 row `passed`.
 - p14 review received (PASS with findings, 0/1I/2M/1m — artifact alignment; plan correction entry applied); p14 row `passed`.
 - p10 review received (PASS with findings, 0/1I/0/5m): `BL-260909-repair-the-bare-fences-that` filed; p10 row `passed`; group 4 fan-in starts.
