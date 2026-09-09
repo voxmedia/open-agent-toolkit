@@ -108,13 +108,34 @@ alongside the fix — once per clause when the requirement has several. Two
 defects shipped behind tests that could not fail; one mocked the very reader
 that dropped the field it asserted was preserved.
 
-CI does not run `pnpm lint` or `pnpm format`. `pnpm check` now covers the
-shared `format:root` portion of `pnpm format` (`.agents/skills`,
+CI runs neither `pnpm lint` nor `pnpm format` as a gate step. `pnpm check` now
+covers the shared `format:root` portion of `pnpm format` (`.agents/skills`,
 `apps/oat-docs/docs`, and `tools/smoke`), but two surfaces still have no CI
 gate: `pnpm lint`'s root-level `oxlint tools/smoke .agents/skills`, and
 `packages/control-plane`'s own `oxfmt --check .`, which only `pnpm format`
 runs. Run `pnpm lint` and `pnpm format` whenever a change touches
 `tools/smoke`, `.agents/skills`, or `packages/control-plane`.
+
+`packages/control-plane`'s `lint` reads like a third gap and is not one, so
+check the mechanism before you "fix" it. The package defines `lint` and
+`format` but no `check`, so `turbo run check --dry-run=json` reports
+`@open-agent-toolkit/control-plane#check` as `<NONEXISTENT>` and `pnpm check`
+skips the package outright. Its oxlint still fails CI, indirectly:
+`tools/smoke/verification/lint-enrollment.test.mjs` shells out to the whole
+`pnpm lint` under CI's `pnpm test`, and because the root script is
+`turbo run lint && pnpm exec oxlint tools/smoke .agents/skills`, a
+control-plane lint error short-circuits the `&&` so the seeded violations that
+test looks for are never reported, and the test fails. Verified both ways: a
+seeded `prefer-const` error under `packages/control-plane/src` turns that test
+red, while the identical error under `.agents/skills` leaves it green — which
+is exactly why the root oxlint above is genuinely ungated and control-plane's
+oxlint is not. That coupling is only half pinned: the same test asserts the root
+`lint` script string verbatim, so splitting the `&&` into two independent
+commands fails loudly — but nothing pins that `packages/control-plane` still
+defines a `lint` script, and deleting it would take this coverage away
+silently. `BL-260909-give-packages-control-plane` owns closing the formatting
+half deliberately; a `check` script there is additive and does not remove the
+smoke path.
 
 ### Development Workflow
 
