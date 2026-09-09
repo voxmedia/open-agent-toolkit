@@ -377,6 +377,19 @@ _Recorded when the configured implementation exit gate runs._
 
 **p03 row → `fixes_added`**; round 2 (disposition verification on the original reviewer handle) follows the fix commit.
 
+## Review Received: p03 (round 2 — passed)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p03-review-2026-09-09T004719Z.md (reviewed head `b108f2dbf1ada4f97a68c616bd65f08559ec99d9`, manual, opus)
+**Findings:** 0 · 0 · 0 · 2 minor — PASS. Verification records for the round-1 dispositions, each by the reviewer's own control (revert from a `mktemp -d` backup, restore, sha256-checked): C1 reverted → 6 failed / 40 passed (the five quoted-fence cases plus the invariant); C2 → 4 failed; C3 → 2 failed; I1 — with C1 reverted and the OLD table-only invariant restored the invariant stayed green while five real holes were open, with the NEW invariant it goes red naming all five; M1 — an appended link-destination literal prints the percent-encode / reference-definition remedy verbatim. Battery: 69 shapes (all 54 round-1 shapes incl. the six former Criticals, plus 15 fresh shapes against the new code) through real `oxfmt --write` → 0 mangled-but-accepted. Red control exact (7 rows / 8 occurrences → 0 on both heads; no new false positive on the corpus). One append-only commit; forced cli test 386 files / 7093 (+11 cases) `Cached: 0`; check/type-check forced 0; every clause of the plan's 2026-09-08 refresh met.
+
+**Dispositions (round 2 Minors):**
+
+- m1 — the recorded C1 control figure understated the fix (it is 6 failed / 40 passed with the invariant naming all five shapes): **fixed** — this record corrected here (the lane's fix-report figure is superseded by the reviewer's).
+- m2 — `OXFMT_BINARY` is spawned without an existence check (a missing oracle surfaces as a bare `ENOENT`): **deferred** — polish; carried in the wave follow-up ledger.
+
+**p03 row → `passed`** (reviewed head `b108f2dbf`); group 1 is clear for fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -405,6 +418,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p03-fix-001` — bounded fix round on the resumed implementer handle (five findings, one append-only commit, pinned battery shapes, `oxfmt`-derived invariant). Record `dispatch/w7-p03-fix-001.json`.
 - `w7-p03-fix-001` outcome: one append-only commit `b108f2dbf1ada4f97a68c616bd65f08559ec99d9` (one file, +327/−30; header trimmed to 100 chars for commitlint, prescribed wording in the body). C1 container-aware fence pairing (reverted → 5 red), C2 HTML block types 6–7 (reverted → 3 red), C3 fence lines atomic (reverted → 1 red), I1 the invariant derives verdicts from real `oxfmt --write` and queries the detector (with C1 reverted it goes red on its own — it also caught the lane's first attempt, which still read the recorded table), M1 strict-direction list + link remedy line. Nine `mangles` shapes pinned; red control unchanged (7 rows / 8 occurrences → 0); focused 46/46; forced gates `Cached: 0`. Lane restated its false premise: the plan file is byte-identical under `oxfmt --write`, so the two spans are protected; the lane does not own that file.
 - `w7-p03-review-002` — disposition-verification round 2 on the original reviewer handle (six original holes plus six fresh battery shapes). Record `dispatch/w7-p03-review-002.json`.
+- `w7-p03-review-002` outcome: PASS (fan-in may proceed), 0/0/0/2m; five controls re-run by the reviewer (C1 → 6 red incl. the invariant; the old invariant proven blind), 69-shape battery clean, red control exact.
 
 <!-- orchestration-runs-end -->
 
@@ -414,6 +428,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-08
 
+- p03 round 2 passed (0/0/0/2m) at `b108f2dbf`; p03 row `passed`; group 1 fan-in starts.
 - p03 review received (CHANGES REQUESTED, 3C/1I/1M/2m): fix round `w7-p03-fix-001` dispatched; plan refresh applied; p03 row `fixes_added`.
 - p02 round 2 passed (0/0/0/0) at `7dfaa6bc1`; p02 row `passed`.
 - p02 review received (PASS with findings, 0C/0I/0M/3m): fix round `w7-p02-fix-001` dispatched for the two Minors; plan section pointers added; p02 row `fixes_added`.
