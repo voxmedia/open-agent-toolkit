@@ -44,20 +44,26 @@ import { dirExists, fileExists } from '@fs/io';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
-import { findProjectLogSeal, type ProjectLogSeal } from './check';
+import {
+  findProjectLogSeal,
+  unreachableProjectLogSealError,
+  type ProjectLogSeal,
+} from './check';
 import {
   composeJudgmentHeading,
   composeStructuralHeading,
   containsAmbiguousProjectLogMarker,
   isProjectLogEntryMarker,
+  findProjectLogSealHeadingLine,
   isProjectLogSealHeading,
   isProjectLogSectionMarker,
   PROJECT_LOG_AREA_MAX_LENGTH,
   PROJECT_LOG_HEADING_DELIMITER,
   PROJECT_LOG_LINE_TERMINATOR_RE,
-  PROJECT_LOG_NON_LINE_FEED_TERMINATOR_RE,
+  PROJECT_LOG_LONE_TERMINATOR_RE,
   PROJECT_LOG_SCOPES,
   PROJECT_LOG_TYPES,
+  normalizeProjectLogLineEndings,
   splitProjectLogLines,
   type ProjectLogScope,
   type ProjectLogType,
@@ -1155,6 +1161,12 @@ export type ProjectLogAppendResult =
       logPath: string;
       heading: string;
       created: boolean;
+      /**
+       * Present and true when the accepted `--body` carried CRLF and was stored
+       * as LF. The command reports it rather than normalizing silently, because
+       * the bytes on disk then differ from the bytes the caller passed.
+       */
+      normalizedLineEndings?: true;
     }
   | {
       status: 'already-appended';
@@ -1301,11 +1313,25 @@ function validateEntry(
   heading: string;
   body: string;
   versionNote: string | undefined;
+  /** True when an accepted CRLF body was canonicalized to LF before storage. */
+  normalized: boolean;
 } {
-  const body = input.body?.trim();
-  if (!body) {
+  const supplied = input.body?.trim();
+  if (!supplied) {
     throw new Error('--body is required and must contain non-whitespace text.');
   }
+  // Parse leniently, write strictly: CRLF is accepted from the caller and stored
+  // as LF, so no log this command writes ever carries a terminator other than
+  // LF.
+  //
+  // The lone-terminator rule below is deliberately applied to `supplied`, before
+  // normalization. Normalizing first would launder `\r\r\n` — a lone CR
+  // followed by a CRLF — into `\r\n`, which passes the rule and leaves a CR in
+  // the stored bytes, because one `replaceAll` pass cannot re-examine the CR it
+  // just exposed. Refusing at the door means every CR that reaches
+  // normalization is already part of a CRLF, and one pass is then exact.
+  const normalized = supplied.includes('\r\n');
+  const body = normalizeProjectLogLineEndings(supplied);
   const versionNote = validateVersionNote(input.versionNote);
 
   if (input.structural) {
@@ -1334,6 +1360,7 @@ function validateEntry(
       heading: composeStructuralHeading({ date, producer, ref }),
       body,
       versionNote,
+      normalized,
     };
   }
 
@@ -1370,9 +1397,13 @@ function validateEntry(
       )}.`,
     );
   }
-  if (PROJECT_LOG_NON_LINE_FEED_TERMINATOR_RE.test(body)) {
+
+  // Tested against `supplied`, before normalization. See the note above
+  // `normalized`: normalizing first launders `\r\r\n` into `\r\n`, which
+  // passes this rule and leaves a carriage return in the stored bytes.
+  if (PROJECT_LOG_LONE_TERMINATOR_RE.test(supplied)) {
     throw new Error(
-      '--body for judgment entries must break lines with line feeds only; carriage returns and the U+2028 and U+2029 separators are not accepted.',
+      '--body for judgment entries must break lines with line feeds or CRLF; a lone carriage return and the U+2028 and U+2029 separators are not accepted.',
     );
   }
   if (containsCommandOwnedMarker(body)) {
@@ -1390,6 +1421,7 @@ function validateEntry(
     }),
     body,
     versionNote,
+    normalized,
   };
 }
 
@@ -1541,7 +1573,7 @@ async function appendLockedProjectLog(
   }
 
   const date = dependencies.now().toISOString().slice(0, 10);
-  const { heading, body, versionNote } = validateEntry(input, date);
+  const { heading, body, versionNote, normalized } = validateEntry(input, date);
   const idempotencyKey = validateIdempotencyKey(input.idempotencyKey, body);
   let created = false;
 
@@ -1560,6 +1592,18 @@ async function appendLockedProjectLog(
     }
 
     const seal = findProjectLogSeal(content);
+
+    // The parser found no seal, but the raw text may still hold a seal heading
+    // it cannot reach — a log with no `## Entries` section, or a seal below
+    // another `## ` section. Writing onto such a log is the outcome that must
+    // never happen, and reporting it unsealed would contradict what is plainly
+    // in the file, so both branches below fail closed on it.
+    //
+    // Refusing is never weaker than the reading it replaces: the pre-fix code
+    // answered these logs `already-appended` and wrote nothing when a key
+    // happened to match, and appended past the seal when it did not.
+    const unreachableSeal =
+      seal === null ? findProjectLogSealHeadingLine(content) : undefined;
 
     // Read the requested identity back out of the composed heading, so the
     // comparison runs on the same normalized producer/ref the parser reads out
@@ -1589,23 +1633,8 @@ async function appendLockedProjectLog(
         };
       }
 
-      // The parser found no seal, but the raw text may still hold a seal
-      // heading the entries parser cannot reach — a log with no `## Entries`
-      // section, or a seal sitting below another `## ` section. Writing a second
-      // seal onto such a log is the one outcome that must never happen, and
-      // reporting it sealed would contradict `check`, so this fails closed.
-      //
-      // Refusing is never weaker than the reading it replaces: the pre-fix code
-      // answered these logs `already-appended` and wrote nothing when a key
-      // happened to match, and appended a duplicate seal when it did not.
-      if (
-        splitProjectLogLines(content).some((line) =>
-          isProjectLogSealHeading(line.trim()),
-        )
-      ) {
-        throw new Error(
-          `Project log ${logPath} already carries a completion-seal heading that the entries parser cannot reach, so a seal cannot be appended without risking a second one. Ensure the seal sits under the '## Entries' section, then retry.`,
-        );
+      if (unreachableSeal !== undefined) {
+        throw unreachableProjectLogSealError(logPath, content, unreachableSeal);
       }
     } else {
       // Recognizing an entry this key already wrote comes before the sealed
@@ -1633,6 +1662,14 @@ async function appendLockedProjectLog(
 
       if (seal !== null) {
         throw new ProjectLogSealedError(logPath, seal);
+      }
+
+      // The same refusal the seal path makes, on the same file. Leaving it out
+      // of this branch is what let a log whose seal the parser could not reach
+      // hard-fail the completion seal while still accepting ordinary content
+      // past that seal — the two writers disagreeing about one file.
+      if (unreachableSeal !== undefined) {
+        throw unreachableProjectLogSealError(logPath, content, unreachableSeal);
       }
     }
   }
@@ -1662,7 +1699,13 @@ async function appendLockedProjectLog(
   }
 
   await appendEntry(logPath, heading, body, versionNote, dependencies);
-  return { status: 'appended', logPath, heading, created };
+  return {
+    status: 'appended',
+    logPath,
+    heading,
+    created,
+    ...(normalized ? { normalizedLineEndings: true as const } : {}),
+  };
 }
 
 async function samePath(left: string, right: string): Promise<boolean> {

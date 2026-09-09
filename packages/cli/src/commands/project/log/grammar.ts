@@ -47,15 +47,39 @@ export function isProjectLogEntryMarker(line: string): boolean {
 export const PROJECT_LOG_LINE_TERMINATOR_RE = /[\n\r\u2028\u2029]/;
 
 /**
- * A line terminator other than LF: CR, U+2028, or U+2029.
+ * A *lone* line terminator: a carriage return not followed by a line feed, or a
+ * U+2028 / U+2029 separator.
  *
- * Bodies are legitimately multi-line, so LF is allowed; the other three are
- * not. LF is the only boundary `findProjectLogSections` and
- * `parseProjectLogEntries` recognize, so admitting a terminator they do not
- * would put a character in the file that some reader treats as a line break and
- * others do not — the disagreement that let a body forge a section heading.
+ * CRLF is deliberately excluded, and that carve-out is the whole point. Every
+ * reader in this module treats `\r\n` as exactly one boundary — `splitProjectLogLines`,
+ * the `/\r?\n/` scans, and `parseProjectLogEntries` — so a CRLF body has one
+ * reading and is accepted, as it was before this guard existed. A *lone* CR has
+ * two readings (a boundary to a multiline `^`, body text to everything here),
+ * and so do U+2028 and U+2029, so those stay refused.
+ *
+ * Written as one pattern rather than a strip-then-test so the rule is legible at
+ * the point of use: `\r(?!\n)` is "a carriage return that is not part of CRLF".
  */
-export const PROJECT_LOG_NON_LINE_FEED_TERMINATOR_RE = /[\r\u2028\u2029]/;
+export const PROJECT_LOG_LONE_TERMINATOR_RE = /\r(?!\n)|[\u2028\u2029]/;
+
+/**
+ * Canonicalizes accepted line endings to LF.
+ *
+ * The command parses leniently and writes strictly: CRLF is accepted from a
+ * caller — a `--body -` fed from a file, tool output, or a pasted buffer — and
+ * stored as LF, so a log this command writes never contains a terminator other
+ * than LF. That makes the file's single reading a property of its bytes rather
+ * than of every reader agreeing about them, which is the weaker guarantee this
+ * module kept failing to hold.
+ *
+ * It is not needed to satisfy `rollup`'s `^…$/m` ledger scan: a multiline `$`
+ * matches before a CR as readily as before an LF, so that scan reads a CRLF log
+ * correctly and always did. Storing LF is a narrowing of what future readers
+ * must cope with, not a repair of a present disagreement.
+ */
+export function normalizeProjectLogLineEndings(value: string): string {
+  return value.replaceAll('\r\n', '\n');
+}
 
 /**
  * Splits on every LineTerminator, treating CRLF as one boundary.
@@ -78,8 +102,8 @@ export function splitProjectLogLines(content: string): string[] {
  * validation and then became a real section boundary — truncating `## Entries`
  * so `check` reported an already-written seal as `sealed: false` and appends
  * kept succeeding onto a sealed log. Anchoring on LF alone keeps this parser
- * and `parseProjectLogEntries`, which splits its section on `'\n'`, reading the
- * same file the same way, and it holds for a log written by hand as well as one
+ * and `parseProjectLogEntries`, which splits its section on `/\r?\n/`, reading
+ * the same file the same way, and it holds for a log written by hand as well as one
  * the command wrote.
  */
 export function findProjectLogSections(content: string): ProjectLogSection[] {
@@ -99,6 +123,14 @@ export function findProjectLogSections(content: string): ProjectLogSection[] {
  * reader what *it* would see, rather than approximating it. `matchAll` builds a
  * fresh regex per call, so the `g` flag's `lastIndex` is never shared.
  */
+/**
+ * The single-character form of "a terminator other than LF", for testing the
+ * one character that precedes a match. A lookahead-based rule cannot be used on
+ * a lone character; it does not need to be, because the character before a
+ * heading on a CRLF line is the LF, so CRLF never reaches this test.
+ */
+const PRECEDING_NON_LINE_FEED_TERMINATOR_RE = /[\r\u2028\u2029]/;
+
 const JUDGMENT_HEADING_SCAN_RE =
   /^### (\d{4}-\d{2}-\d{2}) \u00b7 (project|general) \u00b7 (bug|friction|worked-well|feedback) \u00b7 ([^\u00b7\r\n]+)$/gm;
 
@@ -121,8 +153,14 @@ const JUDGMENT_HEADING_SCAN_RE =
  * no entries region, reports unsealed, and accepts a second seal. Refusing is
  * the only resolution that is not weaker than the reading it replaces.
  *
- * CRLF is deliberately not caught: the character immediately before a marker on
- * a `\r\n`-terminated line is the LF, so such a log has exactly one reading.
+ * CRLF is deliberately not caught, and the entries parser now earns that
+ * exemption rather than merely asserting it. The character immediately before a
+ * marker on a `\r\n`-terminated line is the LF, so a `## ` section boundary was
+ * always unambiguous; `### ` entries and the structural heading pattern were not,
+ * because their `$` cannot match before a trailing `\r`, so a CRLF log parsed to
+ * zero entries and an existing seal was invisible. `parseProjectLogEntries` now
+ * splits on `/\r?\n/`, which makes all three agree and makes "CRLF has exactly
+ * one reading" a fact about this module rather than a hope.
  */
 export function containsAmbiguousProjectLogMarker(content: string): boolean {
   if (/(?<=[\r\u2028\u2029])## [^\r\n]+/.test(content)) {
@@ -132,7 +170,7 @@ export function containsAmbiguousProjectLogMarker(content: string): boolean {
     const preceding = content[match.index - 1];
     if (
       preceding !== undefined &&
-      PROJECT_LOG_NON_LINE_FEED_TERMINATOR_RE.test(preceding)
+      PRECEDING_NON_LINE_FEED_TERMINATOR_RE.test(preceding)
     ) {
       return true;
     }
@@ -216,6 +254,35 @@ export function isProjectLogSealHeading(heading: string): boolean {
       ref: parsed[3]!.trim(),
     })
   );
+}
+
+/**
+ * The raw line of `content` that is a completion-seal heading, or undefined.
+ *
+ * Deliberately independent of `parseProjectLogEntries`: it answers "is a seal
+ * physically in this file?" where the parser answers "can this file's structure
+ * be read to contain a seal?". The gap between those two questions is the state
+ * every mutator must refuse, and all of them ask it the same way.
+ *
+ * The offset is returned alongside the text because callers must locate the
+ * seal, not merely recognize it: prose inside `## Entries` can quote a seal
+ * heading verbatim, so a substring test would place a seal that really sits
+ * under a later section inside the entries region and blame the wrong cause.
+ */
+export function findProjectLogSealHeadingLine(
+  content: string,
+): { line: string; index: number } | undefined {
+  let cursor = 0;
+  for (const line of splitProjectLogLines(content)) {
+    if (isProjectLogSealHeading(line.trim())) {
+      return { line, index: content.indexOf(line, cursor) };
+    }
+    // Advance past this line and the terminator that ended it. The terminator's
+    // width varies (CRLF is two units), so it is measured rather than assumed.
+    const next = content.indexOf(line, cursor) + line.length;
+    cursor = next + (content.startsWith('\r\n', next) ? 2 : 1);
+  }
+  return undefined;
 }
 
 /**
