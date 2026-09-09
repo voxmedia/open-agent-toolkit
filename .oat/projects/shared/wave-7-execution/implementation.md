@@ -46,6 +46,7 @@ oat_generated: false
 | Phase 18 | complete           | 1     | 1/1       |
 | Phase 19 | complete           | 1     | 1/1       |
 | Phase 20 | complete           | 1     | 1/1       |
+| Phase 21 | in_progress        | 3     | 0/3       |
 
 **Total:** 19/20 tasks completed (p16 parked)
 
@@ -290,6 +291,28 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** `47374a413` (was `44421c0ef`)
+
+## Phase 21: final-review fix round (p21a + p21b + p21c)
+
+**Status:** in_progress · **Group:** closeout fix round (three parallel lanes) · **Tasks:** p21a-t01, p21b-t01, p21c-t01
+**Outcome:** -
+**Verification:** -
+**Deviations:** -
+
+### Task p21a-t01: Close the seal-suppression and section-injection holes in the project log
+
+**Status:** in_progress
+**Commit:** -
+
+### Task p21b-t01: Length-frame the managed-copy digest, require the marker, and hash the record surfaces
+
+**Status:** in_progress
+**Commit:** -
+
+### Task p21c-t01: Restore fence-scan coverage of symlinked skill docs; state the three ungated surfaces and the alias error; the closeout gate step
+
+**Status:** in_progress
+**Commit:** -
 
 ## Autonomy Gate Provenance
 
@@ -730,6 +753,39 @@ _Recorded when the configured implementation exit gate runs._
 
 **p20 row → `passed`** (reviewed head `44421c0ef`); p20 is clear for fan-in — the wave's last lane.
 
+## Review Received: final (round 1 — changes requested)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/final-review-2026-09-09T104425Z.md (reviewed head `a364bdd923f12e5c9da7db0662ac094a9cb24055`, manual, opus; reconnaissance attempted — seven read-only lanes)
+**Findings:** 4 critical · 5 important · 6 medium · 7 minor — CHANGES REQUESTED. What held: all 28 ledger heads map to integration commits with identical `git patch-id --stable`; exactly one release commit; the external-plan boundary has exactly the one licensed p04 exception; all test writes additive; 12 bumps one-per-skill; the archival closes exactly the 23 named items with the two update-only items open; no weaker-anywhere regression on p02/p03/p05/p13/p17 and no reachable prototype pollution (60 CLI invocations under a prototype-diff preload); a 96,480-document differential attributed all 3,053 acceptance-ward flips on p17 to the four enumerated widenings with zero unexplained; 14 of 15 gates green with cache bypass.
+
+**Dispositions:**
+
+- C1 — the archival commit wrote a bare prototype-key literal into two outcome summaries and the hook's `oxfmt --write` bolded them, so p03's guard is red at the head: **fixed by the root** (`0fd589281`; both summaries backticked in `completed.md`; the guard focused-green, 152 tests).
+- C2 — the seal can be suppressed by an idempotency-token collision (a prior entry mentioning the key makes the seal return `already-appended` with no seal written): **fix round, lane p21a**.
+- C3 — a lone CR / U+2028 / U+2029 before `## ` in a judgment body passes validation but is a section boundary to the parser, voiding the seal: **fix round, lane p21a** (both directions).
+- C4 — the unframed managed-copy digest collides, so a forged view missing `SKILL.md` reads `in_sync` and is unrepairable: **fix round, lane p21b** (length framing in both hashers; the marker required for skill/agent content types).
+- I1 — no gate ran after the closeout archival and the wrapper contract does not require one: **fixed by the root** for this wave (a closeout gate run after the last content commit is now in the wrapper's Phase 21 gate and `state.md`); the skill half (a numbered step in `oat-wave-execute` Step 6) → **lane p21c**.
+- I2 — `turbo.json` omits `.oat/repo/**` and the docs tree from `globalDependencies`, so a cached `pnpm test` replayed green on the red tree: **fix round, lane p21b**.
+- I3 — the p17 `fixes_added` ledger row was overwritten in place: **fixed by the root** (`0fd589281`; the row restored above the `passed` row — an in-place replacement is licensed for `oat gate review` rows only).
+- I4 — the p10 fence scanner skips the symlinked `gate-inventory.md` → `autonomy-contract.md` the base scanned: **fix round, lane p21c** (follow in-repo file symlinks, deduplicate by realpath, raise the floor).
+- I5 — p15 newly accepts views differing by file mode or empty directories: **recorded as an accepted bound** (`0fd589281`: the p15 plan's dated entry and a Notes entry on `BL-260909-use-handle-bound-traversal`; mode bits and directory entries are not content and the projection contract never promised them).
+- M1 — `AGENTS.md:111-117` names two CI-ungated surfaces where there are three (control-plane's `lint`): **fix round, lane p21c**.
+- M2 — the p17 plan's Review focus still says "exactly those two" widenings: **fixed by the root** (`0fd589281`; dated correction).
+- M3 — 24 dangling `items/` links across the 20 plans after the archival: **fixed by the root** (`0fd589281`; repointed at `archived/`); the durable fix (archive rewrites inbound references) is filed at closeout.
+- M4 — the authoring skills omit that a declared top-level `version:` is a blocking error: **fix round, lane p21c**.
+- M5 — `state.md` stale and internally contradictory: **fixed by the root** (`0fd589281`; Status, Current Phase, count, Blockers, the duplicate checkbox, `oat_project_state_updated`).
+- M6 — `oat project log synthesize` rewrites a sealed log unguarded and unlocked: **fix round, lane p21a** (not a regression, but the seal is advertised as code-enforced).
+- m1 — the wrapper checklist described 20/20 and the p16 row carried no park note: **fixed by the root** (`0fd589281`).
+- m2 — the p16 Notes entry cited a nonexistent plan filename: **fixed by the root** (`0fd589281`).
+- m3 — p10's enumeration of intentional heading-swallowing fences missed the `oat-brainstorm` template block: **fixed by the root** (`0fd589281`; dated correction extended).
+- m4 — five residual prototype-named lookups in p05's files, each shown non-exploitable: **deferred** (appended to the polish item at the fan-in with the five sites).
+- m5 — a load-bearing comment misattributes the p02 barrier mechanism (`config/index.ts:3000-3006`): **deferred** (polish item; the repair readers' strict `normalizeOatConfig` is the barrier).
+- m6 — anchor drift in two durable records: **partly stale** — `DR-260907`'s anchors were re-derived by symbol at `dcbbbbaf5` before the review head (the record reads `:2046`, `:2303`, `:276`, `:350`, and the user-config write path by symbol; the reviewer's "actual" lines for `dispatch-matrix.ts` name the `Object.fromEntries` returns rather than the push sites the record cites); the p04 refresh's `skills.test.ts:4550` → `:4689` **fixed by the root** (`0fd589281`).
+- m7 — one e2e test flaked under full-suite concurrency: **recorded** (`0fd589281`; Notes entry on `BL-260909-fix-the-agents-md-unsafe` with the `cursor-broker` flake).
+
+**Row:** `final` → `received`; Phase 21 dispatched at `0fd589281` (three parallel lanes under the ceiling); round 2 on the same reviewer handle after the fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -917,6 +973,8 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - p20 fan-in: merge `f6ccdab52`; no address-now (polish appended `503aa3e9a`; plan correction `dd12a580a`); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached; cli 7260). All lanes merged or parked; closeout begins.
 - Closeout steps 1–3 done in order: gates green at the p20 fan-in; synthesis + `summary.md` (`f56a2dc2e`); the twenty-three archivals in one commit (`a364bdd92`), the two update-only items open.
 - `w7-final-review-001` — root final review (oat-reviewer, opus) of `684bd3be3..` the archival tip: review chain by patch-id and ledger head, the seven shared-file seams, the lockstep and plan-write boundaries, every source plan's Done criteria, the fourteen gates with `Cached: 0`, weaker-anywhere on eight surfaces with adversarial probes, record accuracy. Record `dispatch/w7-final-review-001.json`.
+- `w7-final-review-001` outcome: CHANGES REQUESTED, 4C/5I/6M/7m (review chain, boundaries, bumps, archival, weaker-anywhere sweeps all held; the red tree was the root's own archival commit). Root record fixes `0fd589281`; Phase 21 added to the plan.
+- `w7-p21a-impl-001`, `w7-p21b-impl-001`, `w7-p21c-impl-001` — three parallel fix lanes bootstrapped at `0fd589281` (`.worktrees/wave-7/p21{a,b,c}`): p21a the project-log seal (C2, C3, M6); p21b the managed-copy digest and `turbo.json` (C4, I2); p21c the fence scanner, `AGENTS.md`, the authoring skills, and the closeout gate step (I4, M1, M4, I1-skill). Records `dispatch/w7-p21{a,b,c}-impl-001.json`.
 - p19 fan-in: merge `12f50d7c2`; address-now `2360559c8` (M1/M3/m1/m2; sync no-op; M2+m5 filed); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached; cli 7259). p20 (ungrouped, the hill) bootstraps next.
 - `w7-p20-impl-001` — p20 (ungrouped, the hill) bootstrapped alone at the post-p19 tip `ff00e3a51` (`.worktrees/wave-7/p20`, `wave-7/p20`); brief rulings verified on the tip before dispatch (no `1.9.1` literal pin exists; `oat-repo-improve` already at 2.1.5 with its pin; the `synced-bookkeeping-sites.json` anchors inside `oat-wave-execute/SKILL.md` must stay byte-identical). Record `dispatch/w7-p20-impl-001.json`.
 - `w7-p20-impl-001` outcome: DONE, one commit `44421c0ef83fd54e187d50364f04dfd0953dfdf3` on `ff00e3a51` (four files, +55/−5; `skills.test.ts` untouched because `oat-repo-improve` already reads 2.1.5 with its pin and `1.9.1` has no pin): the operator's rule lands in `oat-repo-improve` Step 2 + one Success Criteria bullet, in `oat-wave-execute` after the reconciliation contract (Drift Refresh Record entries and post-STOP amendments are plan writes), and in the `repo-improve` docs page; the `keeps external-plan writes on the caller's model class` contract case (a)–(g) with two neutralization controls; `oat-wave-execute` 1.9.1 → 1.9.2; Codex 0/0/0/1m (unwrapped bullet, rejected with reason — root adjudication requested); lane gates `Cached: 0`. Observation for the wave-close pass: `check:skill-bumps` diffs `baseRef...HEAD`, so the plan's pre-commit count assertions cannot fire.

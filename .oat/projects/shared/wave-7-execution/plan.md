@@ -756,6 +756,26 @@ git commit -m "docs(p20-t01): keep plan writes on the caller's model"
 
 ---
 
+## Phase 21: final-review fix round (three parallel lanes; added 2026-09-09)
+
+**Milestone:** every Critical, Important, and Medium product finding of the root final review (`reviews/archived/final-review-2026-09-09T104425Z.md`) closed at source, verified by the same reviewer in round 2; record findings closed by the root (`0fd589281`).
+
+### Task p21a-t01: Close the seal-suppression and section-injection holes in the project log
+
+**Findings:** Critical 2 (idempotency-token collision suppresses the seal), Critical 3 (a lone CR / U+2028 / U+2029 before `## ` voids the seal), Medium 6 (`synthesize` rewrites a sealed log unguarded and unlocked). **Files:** `packages/cli/src/commands/project/log/{append,grammar,synthesize}.ts` + tests; `oat-project-complete/SKILL.md` seal-step verification prose (no bump: 1.7.10 already this PR). Base `0fd589281723fcecfe30b128fd9a7dc7391bb23c`.
+
+### Task p21b-t01: Length-frame the managed-copy digest, require the marker, and hash the record surfaces
+
+**Findings:** Critical 4 (unframed digest collides; a forged view missing `SKILL.md` reads `in_sync`), Important 2 (`turbo.json` omits `.oat/repo/**` and the docs tree from `globalDependencies`). **Files:** `engine/managed-copy-hash.ts`, `manifest/hash.ts`, `drift/detector.ts` + tests; `turbo.json`. Base `0fd589281723fcecfe30b128fd9a7dc7391bb23c`.
+
+### Task p21c-t01: Restore fence-scan coverage of symlinked skill docs; state the three ungated surfaces and the alias error; the closeout gate step
+
+**Findings:** Important 4 (the fence scanner skips symlinked docs), Medium 1 (`AGENTS.md` names two ungated surfaces where there are three), Medium 4 (the authoring skills omit the alias error), Important 1's skill half (a closeout gate step in `oat-wave-execute` Step 6). **Files:** `validation/named-skill-load-contract.test.ts`, root `AGENTS.md`, `create-agnostic-skill/SKILL.md`, `create-oat-skill/SKILL.md`, `oat-wave-execute/SKILL.md` (no bumps: all bumped this PR). Base `0fd589281723fcecfe30b128fd9a7dc7391bb23c`.
+
+**Verify (wrapper gate):** lane-mode gates per lane; after the fan-in the full DoD gates plus smoke, skills, scripts, root test, and a closeout gate run after the last content commit (Important 1). **Review:** round 2 on the final reviewer's handle (disposition verification of every finding, incl. the root's record fixes).
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status      | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target                                                      |
@@ -789,6 +809,7 @@ git commit -m "docs(p20-t01): keep plan writes on the caller's model"
 | p18    | code     | passed      | 2026-09-09 | reviews/archived/p18-review-2026-09-09T072158Z.md           | bb277915e89a3e3117234eeacb2fd020a0360990 | manual     | -                                                                |
 | p19    | code     | passed      | 2026-09-09 | reviews/archived/p19-review-2026-09-09T092000Z.md           | d6391cf7296c70f251ca4b586633ff913a89c6a2 | manual     | -                                                                |
 | p20    | code     | passed      | 2026-09-09 | reviews/archived/p20-review-2026-09-09T100421Z.md           | 44421c0ef83fd54e187d50364f04dfd0953dfdf3 | manual     | -                                                                |
+| final  | code     | received    | 2026-09-09 | reviews/archived/final-review-2026-09-09T104425Z.md         | a364bdd923f12e5c9da7db0662ac094a9cb24055 | manual     | -                                                                |
 | final  | code     | pending     | -          | -                                                           | -                                        | -          | -                                                                |
 | plan   | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T224620Z.md | -                                        | gate       | codex-5-6-sol-xhigh                                              |
 | spec   | artifact | pending     | -          | -                                                           | -                                        | -          | -                                                                |
