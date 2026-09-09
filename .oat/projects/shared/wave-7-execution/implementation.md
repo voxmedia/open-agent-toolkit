@@ -658,6 +658,24 @@ _Recorded when the configured implementation exit gate runs._
 
 **p18 row → `passed`** (reviewed head `bb277915e`); p18 is clear for fan-in. Carried forward for the fan-in address-now: `contributing/code.md` must say `test:scripts` runs last; `.oat/repo/knowledge/testing.md` gains the suite.
 
+## Review Received: p17 (round 1 — changes requested)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p17-review-2026-09-09T080054Z.md (reviewed head `4db81ebfdb93b7087873f66c163d7a52e06a1a59`, manual, opus)
+**Findings:** Critical 1 · Important 2 · Medium 2 · Minor 2 — CHANGES REQUESTED. Verified: ruling 0 (widening (c)) exactly as narrow as stated over 350,892 label × destination combinations against an independent renderer; the corpus control on both the worktree and the root corpus (65 plans, `modes` byte-identical, `rejected` empty); producer-first ordering; the single bump with no pin; scope; nine mutations of the load-bearing rules red; gates forced `Cached: 0`. Codex RAN at the gate (session `01a08528`, codex-cli 0.153.4; a deadline overrun recovered by resuming the same session) and converged on the Critical.
+
+**Dispositions:**
+
+- C1 — a fourth acceptance-ward class: a whole-line comment between a declaration and its indented continuation is transparent at head and broke the base's scan (54 of 58 sweep shapes; all rendered-text equivalent; the rule is the load-bearing K1 fix): **fixed** (root, plan write) — enumerated as widening (d) with the complete (a)–(d) list; the lane adds the minimal-witness control (fix round).
+- I1 — `HIDDEN_FILL` is an in-band form-feed sentinel: **fix round** (`w7-p17-fix-001`) — hidden-ness carried out of band.
+- I2 — numeric character references decoded without CommonMark's length bound (`&#0000000045;` accepted): **fix round** — bounded to `&#\d{1,7};` / `&#[xX][0-9a-fA-F]{1,6};` with a control both ways.
+- M1 — `findSection` is a third, comment-unaware fence pass, so the class-(a) fix does not reach document level: **deferred** — out of the plan's declared scope; filed at closeout (follow-up ledger).
+- M2 — the recorded cross-model gap is no longer accurate: **fixed** — the plan note superseded; the lane re-dispositions in the fix round with one Codex retry (resume-the-session rule).
+- m1 — a bare `%` destination rejects with a violation naming no cause: **fix round** — the message names the residual escape.
+- m2 — `linkDefinitions` re-runs the block scanner per declaration: **deferred** — polish (follow-up ledger).
+
+**p17 row → `fixes_added`**; round 2 on the original reviewer handle follows the fix commit.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -756,6 +774,8 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p18-review-002` — disposition-verification round 2 on the original reviewer handle (incl. two adjudications: the `pnpm lint` bullet extension and the `format:fix` refactor). Record `dispatch/w7-p18-review-002.json`.
 - `w7-p17-impl-001` outcome (resumed): DONE_WITH_CONCERNS, one commit `4db81ebfdb93b7087873f66c163d7a52e06a1a59` (two files): the producer vocabulary settled and `oat-wave-program` bumped; `WAVE_STATUSES` narrowed; strict backlog-id boundary; `created` fail-closed; the amended scanner (fence machine first with an open comment owning its lines; column-0 declarations via a form-feed fill; label character references only; unreserved-only destination decode with residual `%` rejecting; CommonMark HTML-block conditions; a hidden line transparent to the continuation scan; floor 18). A 66-row real-code differential shows only the two enumerated widenings plus one more class — label character references — which the root enumerated as (c) in the plan (base accepts the unencoded spelling identically). Three in-harness reviewers (a K1 continuation Critical fixed pre-commit); `codex exec` wedged a fourth time. Gates `Cached: 0` (cli 7257); corpus `modes` byte-identical.
 - `w7-p17-review-001` — reviewer, target opus, eight rulings (verify the bounds of widening (c); an independent base-vs-head differential with twelve own probes; the corpus control incl. every dated entry and the `in-progress` row; producer-first ordering; the K1 fix and mutation; bump/pins/portability; scope; one bounded Codex attempt). Record `dispatch/w7-p17-review-001.json`.
+- `w7-p17-review-001` outcome: CHANGES REQUESTED, 1C/2I/2M/2m (class (c) confirmed over 350,892 combinations; a fourth rendered-text-equivalent class found by a 50,625-document sweep and enumerated by the root as (d); Codex ran at the gate). I1/I2/m1 + the (d) control → fix round `w7-p17-fix-001`; M1/m2 deferred; M2 superseded.
+- `w7-p17-fix-001` — bounded fix round on the resumed implementer (out-of-band hiding; the decoder bound; the residual message; the class-(d) control; one Codex retry). Record `dispatch/w7-p17-fix-001.json`.
 - `w7-p18-review-002` outcome: PASS (fan-in may proceed), 0/0/0/2m; the `format:fix` refactor and the `pnpm lint` bullet adjudicated licensed; two one-line root address-nows queued for the fan-in.
 - `w7-p15-review-001` outcome: PASS with findings, 0/0/0/3m (a four-consumer, 14-shape base-vs-head table; convergence proven against a base-built manifest). m1 → root address-now at the fan-in; m2 plan correction applied; m3 `BL-260909-use-handle-bound-traversal` filed; p15 `passed`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
@@ -809,6 +829,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- p17 review received (CHANGES REQUESTED, 1C/2I/2M/2m): widening (d) enumerated in the plan; fix round `w7-p17-fix-001` dispatched; p17 row `fixes_added`.
 - p18 round 2 passed (0/0/0/2m) at `bb277915e`; p18 row `passed`.
 - p18 review received (PASS with findings, 0/1I/1M/5m): fix round `w7-p18-fix-001` dispatched; two root address-nows queued for the fan-in; p18 row `fixes_added`.
 - p17 STOP (four unenumerated scanner widenings) closed by a dated plan refresh; lane resumed.
