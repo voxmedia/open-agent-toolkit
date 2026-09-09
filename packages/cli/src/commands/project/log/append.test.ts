@@ -1243,6 +1243,63 @@ describe('oat project log append', () => {
       },
     );
 
+    it.each([
+      ['a trailing lone carriage return', 'ab\r'],
+      ['a leading lone carriage return', '\rabc'],
+      ['a trailing U+2028', 'ab\u2028'],
+    ])('refuses %s that trimming would otherwise hide', async (_name, body) => {
+      const { root, logPath } = await createRepo();
+      await seedLog(logPath);
+      const before = await readFile(logPath, 'utf8');
+      const { command, capture } = createHarness(root);
+
+      // `String.prototype.trim` strips CR, LF, U+2028 and U+2029 as whitespace,
+      // so a body terminated only at its edge never reached the rule and
+      // appended with the terminator silently removed — while the error text
+      // said such a body is refused. Testing the raw body makes the message
+      // true. This narrows what is accepted, which is the safe direction.
+      await runCommand(command, [
+        '--type',
+        'feedback',
+        '--scope',
+        'general',
+        '--area',
+        'notes',
+        '--body',
+        body,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining('a lone carriage return'),
+      });
+      expect(process.exitCode).toBe(1);
+      await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
+    });
+
+    it.each([
+      ['a trailing line feed, as stdin supplies', 'line one\nline two\n'],
+      ['a trailing CRLF', 'line one\r\nline two\r\n'],
+      ['trailing spaces', 'line one  '],
+    ])('still accepts a body with %s', async (_name, body) => {
+      const { root } = await createRepo();
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, [
+        '--type',
+        'feedback',
+        '--scope',
+        'general',
+        '--area',
+        'notes',
+        '--body',
+        body,
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'appended' });
+      expect(process.exitCode).toBe(0);
+    });
+
     it('leaves no carriage return in the log for any accepted body', async () => {
       const { root, logPath } = await createRepo();
       await seedLog(logPath);

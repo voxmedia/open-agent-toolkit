@@ -384,9 +384,83 @@ The internal target is reusable.
       artifactTarget: { filename: 'custom-log.md' },
     });
 
-    expect(result.entriesRolledUp).toBe(1);
+    expect(result).toMatchObject({ entriesRolledUp: 1 });
     expect(createProjectLogCommand().helpInformation()).not.toContain(
       '--artifact-target',
     );
+  });
+
+  describe('ambiguous log', () => {
+    it.each([
+      ['a lone carriage return', '\r'],
+      ['U+2028', '\u2028'],
+      ['U+2029', '\u2029'],
+    ])(
+      'refuses to roll up a log whose `## Entries` follows %s',
+      async (_name, terminator) => {
+        const { root, logPath, summaryPath } = await createRepo();
+        await writeFile(
+          logPath,
+          `preamble${terminator}## Entries\n\n### 2026-07-17 · project · bug · gate exit\n\nThe gate returned the wrong exit code.\n`,
+          'utf8',
+        );
+        const summaryBefore = await readFile(summaryPath, 'utf8');
+        const { command, capture } = createHarness(root);
+
+        await runCommand(command, []);
+
+        // `rollup` was the one surface without the guard: it rewrote
+        // `summary.md` and reported `status: "ok"` with `entriesRolledUp: 0`,
+        // byte-identical to the clean-empty-log result, so nothing
+        // distinguished "the log is empty" from "the log is unreadable".
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          status: 'ambiguous',
+          ambiguity: expect.stringContaining('two readings'),
+        });
+        expect(capture.jsonPayloads[0]).not.toHaveProperty('entriesRolledUp');
+        expect(process.exitCode).toBe(1);
+        await expect(readFile(summaryPath, 'utf8')).resolves.toBe(
+          summaryBefore,
+        );
+      },
+    );
+
+    it('refuses a log whose seal lies outside the parseable region', async () => {
+      const { root, logPath, summaryPath } = await createRepo();
+      await writeFile(
+        logPath,
+        '# Project Log: demo\n\n### 2026-07-17 · structural · oat-project-complete · seal\n\nCompletion sealed. oat-seal:demo\n',
+        'utf8',
+      );
+      const summaryBefore = await readFile(summaryPath, 'utf8');
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, []);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ambiguous',
+        ambiguity: expect.stringContaining('two answers'),
+      });
+      expect(process.exitCode).toBe(1);
+      await expect(readFile(summaryPath, 'utf8')).resolves.toBe(summaryBefore);
+    });
+
+    it('still rolls up a clean empty log unchanged', async () => {
+      const { root, logPath, summaryPath } = await createRepo();
+      await writeFile(logPath, '# Project Log: demo\n\n## Entries\n', 'utf8');
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, []);
+
+      // The control the ambiguous result used to be indistinguishable from.
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        entriesRolledUp: 0,
+      });
+      expect(process.exitCode).toBe(0);
+      await expect(readFile(summaryPath, 'utf8')).resolves.toContain(
+        '## Workflow Observations',
+      );
+    });
   });
 });

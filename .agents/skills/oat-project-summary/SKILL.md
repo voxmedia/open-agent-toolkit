@@ -217,7 +217,7 @@ test -f "$PROJECT_PATH/summary.md"
      identifiers (timestamp, category, and title) with the source pointers in
      the existing `## Autonomous Execution Learnings` section. Treat missing,
      added, or changed recommendations as `learnings_changed`.
-   - If `oat_summary_last_task == current_last_task` AND `oat_summary_revision_count == current_rev_count` AND learnings are absent or unchanged AND the project-log check reports no entries: **No changes detected. Skip update.** Report: "Summary is current. No updates needed."
+   - If `oat_summary_last_task == current_last_task` AND `oat_summary_revision_count == current_rev_count` AND learnings are absent or unchanged AND the project-log check reports `status: "ok"` with no entries: **No changes detected. Skip update.** Report: "Summary is current. No updates needed."
    - If `current_rev_count > oat_summary_revision_count`: New revision phases exist. Update: Revision History, What Was Implemented, Follow-up Items.
    - If `current_last_task > oat_summary_last_task`: New tasks completed. Update: What Was Implemented, Notable Challenges, Tradeoffs Made.
    - If `learnings_changed`: update Autonomous Execution Learnings even when
@@ -420,6 +420,10 @@ Route only on the structured `ProjectLogRollupResult`:
 - `status: "ok"` with `ledgerOutcome: "skipped_permitted"`: proceed and report
   that the ledger was permissibly skipped because the default reference layer
   is absent.
+- `status: "ambiguous"`: the log's structure has two readings, so nothing was
+  read and `summary.md` was not written. Surface the result's `ambiguity`
+  string to the user and stop before commit. Do not describe the summary as
+  rolled up, and do not treat the absent observations as "no entries".
 - `status: "failed"` or `ledgerOutcome: "failed"`: surface the failure to the
   user and stop before commit. Do not describe the summary as fully rolled up.
 

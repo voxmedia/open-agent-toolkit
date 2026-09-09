@@ -294,6 +294,41 @@ export function summarizeProjectLogSeal(
  * of the same file.
  */
 /**
+ * The reason this log has two readings, or undefined when it has one.
+ *
+ * The single question `check`, `rollup`, both append paths and `synthesize` all
+ * ask before trusting a parse. It is one function rather than one call each,
+ * because a surface that asked a slightly different question is exactly how
+ * `rollup` came to rewrite `summary.md` from a log the other three refused,
+ * reporting output byte-identical to an empty log.
+ *
+ * Two shapes qualify. A heading that a `^…$/m` reader starts a line at and the
+ * line-feed-only parser does not; and a completion seal that is physically in
+ * the file but outside the region the parser reads, where "is this sealed?" has
+ * one answer to a human and another to the parser.
+ */
+export function findProjectLogAmbiguity(
+  content: string,
+  logPath: string,
+): string | undefined {
+  if (containsAmbiguousProjectLogMarker(content)) {
+    return `Project log ${logPath} has a '## ' heading, or a dated '### ' entry heading, starting a line after a carriage return, U+2028, or U+2029 rather than a line feed, so its structure has two readings and no seal or count can be reported honestly. Replace those line terminators with line feeds.`;
+  }
+  if (findProjectLogSeal(content) === null) {
+    const unreachableSeal = findProjectLogSealHeadingLine(content);
+    if (unreachableSeal !== undefined) {
+      // Delegated so the precise diagnosis — which of the two obstructions this
+      // is — survives being reached through the shared predicate. Collapsing
+      // both causes into one sentence here would undo the round that made the
+      // remedy actionable.
+      return unreachableProjectLogSealError(logPath, content, unreachableSeal)
+        .message;
+    }
+  }
+  return undefined;
+}
+
+/**
  * Explains a refusal caused by a seal the entries parser cannot reach, naming
  * the actual obstruction.
  *
@@ -322,7 +357,7 @@ export function unreachableProjectLogSealError(
     seal.index < entries.start ||
     seal.index >= entries.end;
   return new Error(
-    `Project log ${logPath} already carries the completion-seal heading '${seal.line.trim()}', but the entries parser cannot reach it, so nothing may be written without risking a change past the seal. ${
+    `Project log ${logPath} already carries the completion-seal heading '${seal.line.trim()}', but the entries parser cannot reach it, so whether the log is sealed has two answers and nothing may be read from it or written to it with confidence. ${
       outsideEntries
         ? `The seal sits outside the '${ENTRIES_HEADING}' section; move it under that heading, then retry.`
         : 'The seal is under the correct heading, so the obstruction is its line terminators; rewrite the log with line feeds, then retry.'
@@ -385,14 +420,15 @@ export async function checkProjectLog(
 
   const content = await readFile(logPath, 'utf8');
 
-  // Fail closed, exactly as both mutators do on this same file. `check` used to
-  // be the one reader that always produced a confident verdict: on a
+  // Fail closed, exactly as every other surface does on this same file. `check`
+  // used to be the one reader that always produced a confident verdict: on a
   // `preamble<U+2028>## Entries` log it answered `sealed` and count fields the
   // writers refused to act on, and the completion gate keys on those fields.
-  if (containsAmbiguousProjectLogMarker(content)) {
+  const ambiguity = findProjectLogAmbiguity(content, logPath);
+  if (ambiguity !== undefined) {
     return {
       status: 'ambiguous',
-      ambiguity: `Project log ${logPath} has a '## ' or '### ' heading starting a line after a carriage return, U+2028, or U+2029 rather than a line feed, so its structure has two readings and no seal or count can be reported honestly. Replace those line terminators with line feeds.`,
+      ambiguity,
       sealed: false,
       seal: null,
       logPath,
@@ -418,28 +454,6 @@ export async function checkProjectLog(
   );
 
   const seal = summarizeProjectLogSeal(parsed.entries);
-
-  // A seal that is plainly in the file but that the parser cannot reach is the
-  // same disagreement in a different shape: a reader grepping the log sees a
-  // completion seal, this function would report `sealed: false`, and both
-  // mutators refuse to write. Reporting it as ambiguous keeps all three readers
-  // saying one thing about one file.
-  if (seal === null) {
-    const unreachableSeal = findProjectLogSealHeadingLine(content);
-    if (unreachableSeal !== undefined) {
-      return {
-        status: 'ambiguous',
-        ambiguity: `Project log ${logPath} carries the completion-seal heading '${unreachableSeal.line.trim()}', but it lies outside the parseable '## Entries' region, so whether the log is sealed has two answers. Move the seal under '## Entries' with line-feed endings, then retry.`,
-        sealed: false,
-        seal: null,
-        logPath,
-        ...emptyCounts(),
-        lastEntryDate: null,
-        synthesisPending: false,
-        grammarViolations: [],
-      };
-    }
-  }
 
   return {
     status: synthesisPending ? 'synthesis_pending' : 'ok',
