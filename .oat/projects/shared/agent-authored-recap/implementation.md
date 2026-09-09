@@ -208,3 +208,7 @@ Track test execution during implementation.
 - Plan: `plan.md`
 - Design: `design.md`
 - Spec: `spec.md`
+
+### 2026-09-09 — Design artifact review received (round 1)
+
+- `artifact-design-review-2026-09-09T225646Z.md`: 1 critical, 6 important, 7 medium, 3 minor — CHANGES REQUESTED. All 17 applied to `spec.md` / `design.md` (`resolve_in_artifact`): the archive package rule is replaced rather than branched (operator decision 2026-09-09, no backward compatibility); claims use the real fact-base schema and a derived `source/ledger.json`; a page→ledger extraction pass closes FR4; the intent record keeps three keys with `failed_attempt` added and `capability_probe` read-only; every vocabulary carrier incl. the CLI prose-pin test is listed; a missing core is a hard prerequisite failure; `built-durable` stays satisfied; `recap-result.json` and `inputs.json` dropped (consumers read `manifest.json` + `qa/result.json`); the host rung binds screenshots to the artifact hash; NFR4/NFR5 rows; `project-log.md` and the newest-export rule; recipe fields read are enumerated; the FR5 test names `verifySelectedProjectRecapForArchive`; the three Minors. Row → `fixes_completed`; re-review next.

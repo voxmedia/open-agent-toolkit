@@ -166,13 +166,13 @@ git commit -m "feat(p01-t02): {description}"
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                             | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | ---------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                    | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                    | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                    | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                    | -             | -          | -           |
-| design | artifact | received | 2026-09-09 | reviews/artifact-design-review-2026-09-09T225646Z.md | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                                             | -             | -          | -           |
+| p02    | code     | pending         | -          | -                                                             | -             | -          | -           |
+| final  | code     | pending         | -          | -                                                             | -             | -          | -           |
+| spec   | artifact | pending         | -          | -                                                             | -             | -          | -           |
+| design | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-design-review-2026-09-09T225646Z.md | -             | -          | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

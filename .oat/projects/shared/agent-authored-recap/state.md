@@ -83,13 +83,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-09T22:57:20Z'
+oat_project_state_updated: '2026-09-09T23:24:56Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Design drafted (spec.md + design.md, draft-and-review); artifact review next, then the design HiLL checkpoint
+**Status:** Design revised after round-1 review (17 findings applied; archive package rule replaced by operator decision); re-review next, then the design HiLL checkpoint
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-09
 
