@@ -604,3 +604,7 @@ SHA to `origin/main`.
   be tracked in the manifest at all is left open; so is the init/status
   divergence in _unconditional_ versus gated saving, which this plan narrows but
   does not remove.
+
+## Execution record (2026-09-09, wave 7)
+
+Executed as wave-7 p12 (PR #286 `wave-7-execution`, CLI 0.2.67; lane commit(s) `e503bf025` → integration `c32adbb90`): `oat status` persists and restamps the sync manifest after a native-skill adoption (both the first adopt and a confirmed `replaceCanonical` retry set `manifestChanged`; a native adopt adds no row; `keep` never writes), the checklist-abort harness now really aborts, and the `adopt-stray` neutrality case is pinned on a non-empty manifest. Verification: forced check/type-check/cli test `Cached: 0` (387 files / 7194); check:skill-bumps; lint; format; validate-skills; three controls both ways; two Codex rounds (R1 2I/1M/1m — one Important partially accepted with the rename-is-irreversible argument, the rest fixed; R2 confirmed); root review PASS with findings (0/0/0/3m; a real pty adopt on a v1 manifest; three `continue` branches probed). Deviations: none against the plan; the plan's `lastUpdated is set` wording is a carry-through, not a refresh (wave-close note); the `createManifest` helper corrected to schema-valid v2.

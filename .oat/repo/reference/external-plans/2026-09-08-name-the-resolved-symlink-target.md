@@ -615,3 +615,7 @@ authored provenance.
 - **Deliberately deferred:** resolved-elsewhere entries stay inert rather than
   being followed to their target; and `scanInstructionDirectories`' own symlink
   handling is untouched.
+
+## Execution record (2026-09-09, wave 7)
+
+Executed as wave-7 p09 (PR #286 `wave-7-execution`, CLI 0.2.67; lane commit(s) `04a9a29ca` → integration `f3822e7bb`; fix `99675387b` → `e88ba925f`): the instruction-pointer exclusion warning names the resolved target (or the on-disk spelling for a case-only mismatch) instead of blaming filesystem case-sensitivity for every inert entry; the `absent` message is byte-identical; no inert entry became effective (a 16-scenario base-vs-head differential); the docs sentence updated. Verification: focused 94+; check; type-check; forced test `Cached: 0`; check:skill-bumps (nothing); lint; format; validate-skills; `oat docs generate-index` no diff; two Codex rounds (R1 1M fixed — exhaustive narrowing via a typed `Extract`; R2 clean); root review PASS with findings (0/1I/1M/2m) → fix round → round 2 PASS (0/0/0/0). Deviations: the lane's "case-insensitivity simulation inert on macOS" diagnosis was false (the old anchor fired by substring match) — the re-key kept as a clarity change with a corrected comment; the root-relative clauses now pinned.

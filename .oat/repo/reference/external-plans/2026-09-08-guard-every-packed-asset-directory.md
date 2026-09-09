@@ -559,3 +559,7 @@ SHA to `origin/main`.
   `fs/assets.test.ts:53` with the new export, and extending guards to per-file
   manifests or checksums are all out of scope; this plan guards the shape,
   which is what `fs/assets.ts` itself checks.
+
+## Execution record (2026-09-09, wave 7)
+
+Executed as wave-7 p06 (PR #286 `wave-7-execution`, CLI 0.2.67; lane commit(s) `8cf75b11b` → integration `b89540879`; fix `0f81fd8fa` → `a9a958b90`): the release contract guards a packed path under every one of the seven required bundle directories (correspondence test over the exported `REQUIRED_BUNDLE_DIRECTORIES`), with real-tarball pack controls derived from that list for every directory and the docs bullet scoped to the top-level shape `validateBundleStructure` checks. Verification: focused 27; forced check/type-check/cli test `Cached: 0` (7114); check:skill-bumps; lint; format; validate-skills; one Codex round (1M fixed); root review PASS with findings (0/0/1M/1m; tarball-layer guard proven on two non-control directories; symlinked-directory probe) → fix round → round 2 PASS (0/0/0/0). Deviations: none against the plan; the pack-control table is derived from the directory list rather than hand-listed (review m1).

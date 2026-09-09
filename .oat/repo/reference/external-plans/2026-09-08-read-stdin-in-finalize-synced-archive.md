@@ -614,3 +614,7 @@ Executed inside a wave, refresh the drift check against the exact execution
   under `explainer-kit/scripts/`, two under `oat-explainer-kit/scripts/`, four
   under `recon/scripts/`). They are a separate sweep with bumps across five
   skills; file it as a follow-up backlog item rather than widening this lane.
+
+## Execution record (2026-09-09, wave 7)
+
+Executed as wave-7 p01 (PR #286 `wave-7-execution`, CLI 0.2.67; lane commit(s) `dd6658e0b` → integration `7bd744502`): `finalize-synced-archive.mjs` reads its report with an fd-capable API (`readFileSync(0)`) and canonicalizes both sides of the main-module guard, so the synced deferred-clear path (PR #254) actually runs through a symlinked install; a CLI entry-point test (seven cases) under `pnpm test:skills`; `oat-project-complete` 1.7.9 → 1.7.10 with its two pins re-pointed. Verification: focused 7/7; `test:skills` 870/870; `test:smoke` 167/167; forced check/type-check/test `Cached: 0`; check:skill-bumps, lint, format, validate-skills; two Codex rounds (R1 2I/1m → 2 fixed, 1 rejected with parity proof; R2 clean); root review PASS with findings (0C/1I/1M/3m; 21 rejection classes base-vs-head all still rejected). Deviations: three complementary neutralization controls instead of the plan's two (the plan's "all three invocation forms" claim is false — corrected in the plan by a dated entry); the sibling-script sweep filed by the root as `BL-260909-sweep-the-raw-main-module`.
