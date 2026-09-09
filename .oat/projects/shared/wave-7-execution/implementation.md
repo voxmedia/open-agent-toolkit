@@ -888,6 +888,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 ### 2026-09-09
 
 - p19 fan-in: merge `12f50d7c2`; address-now `2360559c8` (M1/M3/m1/m2; sync no-op; M2+m5 filed); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached; cli 7259). p20 (ungrouped, the hill) bootstraps next.
+- `w7-p20-impl-001` — p20 (ungrouped, the hill) bootstrapped alone at the post-p19 tip `ff00e3a51` (`.worktrees/wave-7/p20`, `wave-7/p20`); brief rulings verified on the tip before dispatch (no `1.9.1` literal pin exists; `oat-repo-improve` already at 2.1.5 with its pin; the `synced-bookkeeping-sites.json` anchors inside `oat-wave-execute/SKILL.md` must stay byte-identical). Record `dispatch/w7-p20-impl-001.json`.
 - Group 6 fan-in: merges `7d2509f1b` (p17), `f789c9261` (p18); address-now `6ee5cd45c`; p16 parked; lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached; cli 7257). p19 (ungrouped) bootstraps next.
 - p17 review received (CHANGES REQUESTED, 1C/2I/2M/2m): widening (d) enumerated in the plan; fix round `w7-p17-fix-001` dispatched; p17 row `fixes_added`.
 - p18 round 2 passed (0/0/0/2m) at `bb277915e`; p18 row `passed`.
