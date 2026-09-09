@@ -359,6 +359,24 @@ _Recorded when the configured implementation exit gate runs._
 
 **p02 row → `passed`** (reviewed head `7dfaa6bc1`); p02 is clear for the group-1 fan-in.
 
+## Review Received: p03 (round 1 — changes requested)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p03-review-2026-09-09T002419Z.md (reviewed head `c4053df739bb1fa8b92f206eef3f165e955a6110`, manual, opus)
+**Findings:** Critical 3 · Important 1 · Medium 1 · Minor 2 — CHANGES REQUESTED, reconnaissance not-attempted. Verified: the deviation is justified (the plan's own algorithm reports nine rows / ten occurrences, two of them wrapped code spans `oxfmt` protects); the red control reproduces exactly (seven rows / eight occurrences on the base, zero on the head); the rejected Medium stands; the PJM carve-out is byte-exact; scope clean; seven gates `Cached: 0`. A 54-shape `oxfmt` oracle battery found six mangled-but-accepted shapes in three root causes.
+
+**Dispositions:**
+
+- C1 — a fence opener inside a blockquote is registered document-level and pairs with a later fence anywhere, blanking real prose (five probes; deviation-introduced — the plan's algorithm flags all five): **fix round** (`w7-p03-fix-001`, resumed lane) — container-aware fence pairing (quote depth recorded, same-depth closer, force-close on depth drop); the five shapes pinned.
+- C2 — `RAW_HTML_BLOCKS` covers CommonMark HTML block types 1–5 only, so a fence line inside `<div>`/`<details>` opens a fence (three probes; shared with the plan's algorithm): **fix round** — type-6 (block-level tag list) and type-7 entries with blank-line termination; `<div>`/`<details>` cases pinned; the `<script>`-only header wording corrected.
+- C3 — a fence line is not a region boundary, so an unclosed backtick run pairs across it (probe A8): **fix round** — every fence-pattern line classified atomic; the "can only over-report" sentence corrected; A8 pinned.
+- I1 — the invariant test filters the hand-written table (self-consistency, not a property): **fix round** — each case's `formatter` verdict derived by running `pnpm exec oxfmt --write` on a `mktemp -d` copy; fails when a derived-`mangles` case has no reported occurrence.
+- M1 — undocumented strict false positives (link destination/title, reference title, image alt, autolink, HTML comment, `<div>` content) with an impossible printed remedy: **fix round** — header list extended; a second remedy line for link constructs (percent-encode or move to a reference definition); no escape hatch.
+- m1 — the lane's "`external-plans/` is unwritable" premise is false (the conclusion survives): **accepted as a report inaccuracy**; the root, not the lane, writes plans.
+- m2 — the plan's step 2 should carry a dated correction: **fixed** (root, plan write) — a **Refresh applied 2026-09-08** entry in `## Revalidation Before Execution` supersedes the step-2 algorithm with the block-scoped detector, makes the three container/HTML/boundary rules and the `oxfmt`-derived invariant part of the contract, and documents the strict false positives; verification: `grep -c 'Refresh applied 2026-09-08 (wave-7 p03' <plan>` = 1, corpus contract green.
+
+**p03 row → `fixes_added`**; round 2 (disposition verification on the original reviewer handle) follows the fix commit.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -383,6 +401,8 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p02-fix-001` outcome: one append-only commit `7dfaa6bc159748190f6c17337919391359f8fe7e` (two files, +90/−37; `index.ts` comment-only): the doc comment names all three callers and the parity case; the two env-override `unset` cases parameterized over the three `ENV_OVERRIDE_MAP` keys (228 → 232), all six red under `envShadowed = false` (refusals at `:5038`, warns at `:5065`); seven gates exit 0, `Cached: 0`.
 - `w7-p02-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w7-p02-review-002.json`.
 - `w7-p02-review-002` outcome: PASS (fan-in may proceed), 0/0/0/0; all five verification checks independent (mechanical comment-only proof; six cases red under the reviewer's own neutralization; append-only shape; forced gates `Cached: 0`; four plan pointers).
+- `w7-p03-review-001` outcome: CHANGES REQUESTED, 3C/1I/1M/2m, reconnaissance not-attempted (54-shape `oxfmt` battery: six mangled-but-accepted shapes in three root causes; the deviation itself justified; red control exact). C1–C3, I1, M1 → fix round `w7-p03-fix-001` on the resumed lane; m2 fixed by the root (dated plan refresh); m1 accepted.
+- `w7-p03-fix-001` — bounded fix round on the resumed implementer handle (five findings, one append-only commit, pinned battery shapes, `oxfmt`-derived invariant). Record `dispatch/w7-p03-fix-001.json`.
 
 <!-- orchestration-runs-end -->
 
@@ -392,6 +412,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-08
 
+- p03 review received (CHANGES REQUESTED, 3C/1I/1M/2m): fix round `w7-p03-fix-001` dispatched; plan refresh applied; p03 row `fixes_added`.
 - p02 round 2 passed (0/0/0/0) at `7dfaa6bc1`; p02 row `passed`.
 - p02 review received (PASS with findings, 0C/0I/0M/3m): fix round `w7-p02-fix-001` dispatched for the two Minors; plan section pointers added; p02 row `fixes_added`.
 - p01 review received (PASS with findings, 0C/1I/1M/3m): sweep item `BL-260909-sweep-the-raw-main-module` filed, plan correction entry applied; p01 row `passed`.
