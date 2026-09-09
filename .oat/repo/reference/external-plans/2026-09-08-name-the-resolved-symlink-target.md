@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260907-name-the-resolved-target.md
+  - .oat/repo/pjm/backlog/archived/BL-260907-name-the-resolved-target.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -51,7 +51,7 @@ directory.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260907-name-the-resolved-target — Name the resolved target in the symlink inert-exclusion warning](../../pjm/backlog/items/BL-260907-name-the-resolved-target.md)
+  [BL-260907-name-the-resolved-target — Name the resolved target in the symlink inert-exclusion warning](../../pjm/backlog/archived/BL-260907-name-the-resolved-target.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree
   whose content this plan read (branch `wave-7-plans`, rebased onto the merged
   PR #273).

@@ -3,8 +3,8 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260907-harden-the-external-plan.md
-  - .oat/repo/pjm/backlog/items/BL-260907-settle-the-oat-wave-program.md
+  - .oat/repo/pjm/backlog/archived/BL-260907-harden-the-external-plan.md
+  - .oat/repo/pjm/backlog/archived/BL-260907-settle-the-oat-wave-program.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -62,9 +62,9 @@ rejects nothing.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260907-harden-the-external-plan — Harden the external-plan backlink matcher](../../pjm/backlog/items/BL-260907-harden-the-external-plan.md)
+  [BL-260907-harden-the-external-plan — Harden the external-plan backlink matcher](../../pjm/backlog/archived/BL-260907-harden-the-external-plan.md)
 - Source backlog item:
-  [BL-260907-settle-the-oat-wave-program — Settle the oat-wave-program ledger status vocabulary](../../pjm/backlog/items/BL-260907-settle-the-oat-wave-program.md)
+  [BL-260907-settle-the-oat-wave-program — Settle the oat-wave-program ledger status vocabulary](../../pjm/backlog/archived/BL-260907-settle-the-oat-wave-program.md)
 - Absorbed items: at the 2026-09-08 triage the first item above absorbed the
   two follow-ups on decoding and on the unparsable readiness date, and its
   "Merged at the 2026-09-08 triage" section is the authority for that
@@ -838,6 +838,8 @@ ledger changes; or a load-bearing evidence claim above cannot be reproduced. A
 plan executed inside a wave refreshes its drift check against the exact
 execution `HEAD` after predecessor lanes integrate, not only from the authored
 SHA to `origin/main`.
+
+**Correction applied 2026-09-09 (wave-7 final review, Medium; no requirement change):** the `## Review focus` bullet that says "Two widenings are deliberate … Confirm the review note enumerates exactly those two … Any further widening is Critical" predates the two dated enumerations above and must be read as: the acceptance set of the head is the base's plus exactly the four enumerated widenings (a)–(d); any widening outside (a)–(d) is Critical. The head matches (a)–(d) exactly (final review: a 96,480-document differential attributed all 3,053 acceptance-ward flips to the four classes with zero unexplained).
 
 ## Review focus
 

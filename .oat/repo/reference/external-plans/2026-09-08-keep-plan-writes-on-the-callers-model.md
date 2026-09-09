@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260908-keep-external-plan-writes.md
+  - .oat/repo/pjm/backlog/archived/BL-260908-keep-external-plan-writes.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -49,7 +49,7 @@ cannot drift out of the skills silently
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260908-keep-external-plan-writes — Keep external-plan writes on the caller's model class in oat-repo-improve](../../pjm/backlog/items/BL-260908-keep-external-plan-writes.md)
+  [BL-260908-keep-external-plan-writes — Keep external-plan writes on the caller's model class in oat-repo-improve](../../pjm/backlog/archived/BL-260908-keep-external-plan-writes.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — branch
   `wave-7-plans`, the tree whose content this plan read; every anchor below was
   re-verified there on 2026-09-08 after the branch was rebased onto the merged

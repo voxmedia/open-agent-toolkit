@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260907-finalize-synced-archive-mjs.md
+  - .oat/repo/pjm/backlog/archived/BL-260907-finalize-synced-archive-mjs.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -47,7 +47,7 @@ actually cleared end to end.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260907-finalize-synced-archive-mjs — finalize-synced-archive.mjs reads stdin with fs/promises readFile(0), so the synced deferred clear always fails](../../pjm/backlog/items/BL-260907-finalize-synced-archive-mjs.md)
+  [BL-260907-finalize-synced-archive-mjs — finalize-synced-archive.mjs reads stdin with fs/promises readFile(0), so the synced deferred clear always fails](../../pjm/backlog/archived/BL-260907-finalize-synced-archive-mjs.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
   content this plan actually read (branch `wave-7-plans`; it is `origin/main`
   plus the wave-7 program-ledger and plan commits, none of which touch this

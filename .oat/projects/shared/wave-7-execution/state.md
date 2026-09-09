@@ -111,19 +111,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-08T22:26:20.092Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-08T22:31:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-09-09T10:50:01Z'
 oat_generated: false
 ---
 
 # Project State: wave-7-execution
 
-**Status:** Implementing — group 1 dispatching
+**Status:** Implementing — closeout: root final review received (CHANGES REQUESTED, 4C/5I/6M/7m); Phase 21 fix round in progress
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-09
 
 ## Current Phase
 
-Implement. Plan gate passed on attempt 2; group 1 (p01 + p02 + p03) bootstraps at the post-gate tip.
+Implement — closeout. Nineteen lanes merged, p16 parked; synthesis, summary, and the twenty-three archivals committed; the root final review returned CHANGES REQUESTED (4C/5I/6M/7m) and its product findings run as Phase 21 (three fix lanes: the log seal, the managed-copy digest, the fence scanner and docs), followed by the reviewer's round 2, a closeout gate run after the last content commit, the configured exit gate, and the PR.
 
 ## Artifacts
 
@@ -148,13 +148,14 @@ Implement. Plan gate passed on attempt 2; group 1 (p01 + p02 + p03) bootstraps a
 - ✓ Group 6: p17 + p18 merged (`7d2509f1b` (p17), `f789c9261` (p18); address-now `6ee5cd45c`), p16 PARKED (plan STOP — the recorder graph's no-process guard forbids the plan's git seam; partial work under `parked/wave-7-p16/`); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached); p17's STOP closed by a dated plan refresh with a third and a fourth widening class enumerated; each merged lane reviewed to `passed`
 - ✓ p19 merged (`12f50d7c2`); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached); reviewed to `passed`
 - ✓ p20 merged (`f6ccdab52`); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached); reviewed to `passed`
-- ☐ Closeout: synthesis + `summary.md`, serialized backlog archival (23 items), root final review, configured exit gate, post-implement sequence, PR
-- ☐ Closeout: synthesis, archival, root final review, exit gate, post-implement sequence, PR
+- ✓ Closeout steps 1–3: gates green at the p20 fan-in; synthesis + `summary.md` (`f56a2dc2e`); the twenty-three archivals (`a364bdd92`)
+- ◐ Root final review received (`final-review-2026-09-09T104425Z.md`, CHANGES REQUESTED): root record fixes applied; Phase 21 fix lanes dispatched
+- ☐ Reviewer round 2 → closeout gate run → configured exit gate → post-implement sequence → PR
 
 ## Blockers
 
-None
+- p16 parked on a plan STOP (see `oat_blockers`); the item returns to planning as a decision — not a blocker for the wave's merge.
 
 ## Next Milestone
 
-Closeout: orchestration-log synthesis and summary.md, the serialized archival, the root final review, the configured exit gate, then the PR to main.
+Phase 21 (final-review fix round) merged and verified by the reviewer's round 2; a closeout gate run after the last content commit; the configured exit gate; the PR to main.

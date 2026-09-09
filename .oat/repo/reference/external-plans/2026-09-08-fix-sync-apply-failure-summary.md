@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260906-fix-sync-apply-branch.md
+  - .oat/repo/pjm/backlog/archived/BL-260906-fix-sync-apply-branch.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -45,7 +45,7 @@ branch, and its three existing tests stay green.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260906-fix-sync-apply-branch — Fix sync apply branch precedence when a rejected collection leaves zero planned operations](../../pjm/backlog/items/BL-260906-fix-sync-apply-branch.md)
+  [BL-260906-fix-sync-apply-branch — Fix sync apply branch precedence when a rejected collection leaves zero planned operations](../../pjm/backlog/archived/BL-260906-fix-sync-apply-branch.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
   content this plan read (branch `wave-7-plans`).
 - Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched

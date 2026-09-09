@@ -11,7 +11,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T08:35:42.059Z
-updated: 2026-09-09T08:35:42.059Z
+updated: 2026-09-09T10:50:01.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -25,3 +25,7 @@ Wave-7 p12 hit a pre-existing flake: the `it.each` unsafe-directory variants in 
 - Each `it.each` variant writes only under its own temporary directory.
 - A repeated run (`vitest --repeat 20` or equivalent) is green.
 - No other test in the file references the shared `outside.md` path.
+
+## Notes
+
+- 2026-09-09 (wave-7 final review): the same class — `packages/cli/src/e2e/workflow.test.ts:476` (`keeps 'aggregate' 'direct' guidance manual-only in json=false mode across reruns`) flaked once under full-suite concurrency (`secondPatch` held a real patch where `firstPatch` was `missing-*`), passes in isolation, did not recur; and `tools/smoke/cursor-broker.test.mjs` ENOENT under full-suite concurrency (p11 review). Treat all three as one shared-fixture race sweep.

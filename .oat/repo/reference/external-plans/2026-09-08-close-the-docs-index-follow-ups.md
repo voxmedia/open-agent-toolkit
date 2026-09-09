@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260906-docs-index-follow-ups-from.md
+  - .oat/repo/pjm/backlog/archived/BL-260906-docs-index-follow-ups-from.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -54,7 +54,7 @@ confirms that pin and records its neutralization instead of adding a duplicate.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260906-docs-index-follow-ups-from — Docs-index follow-ups from wave 1 reviews](../../pjm/backlog/items/BL-260906-docs-index-follow-ups-from.md)
+  [BL-260906-docs-index-follow-ups-from — Docs-index follow-ups from wave 1 reviews](../../pjm/backlog/archived/BL-260906-docs-index-follow-ups-from.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — branch
   `wave-7-plans`, which is `origin/main` plus three commits that only add or
   edit files under `.oat/repo/reference/external-plans/`; every code surface

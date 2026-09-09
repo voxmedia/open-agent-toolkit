@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260907-make-the-completion-seal.md
+  - .oat/repo/pjm/backlog/archived/BL-260907-make-the-completion-seal.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -55,7 +55,7 @@ Completing this closes GitHub issue
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260907-make-the-completion-seal — Make the completion seal append idempotent so pre-archive interruptions can resume](../../pjm/backlog/items/BL-260907-make-the-completion-seal.md),
+  [BL-260907-make-the-completion-seal — Make the completion seal append idempotent so pre-archive interruptions can resume](../../pjm/backlog/archived/BL-260907-make-the-completion-seal.md),
   including its `## Triage narrowing (2026-09-08)` section, which is the scope
   this plan implements.
 - Source issue: [#252](https://github.com/voxmedia/open-agent-toolkit/issues/252)

@@ -12,7 +12,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T05:35:29.546Z
-updated: 2026-09-09T05:35:29.546Z
+updated: 2026-09-09T10:50:01.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -25,3 +25,7 @@ Wave-7 p15 (`2026-09-08-converge-copy-strategy-skill-projections.md`) hardened `
 
 - {Outcome 1}
 - {Outcome 2}
+
+## Notes
+
+- 2026-09-09 (wave-7 final review): two accepted bounds of the path-based digest belong with this item — a view that differs from canonical only by file mode (for example `SKILL.md` at 0777) or by extra empty directories reads `in_sync`; neither is content, and the projection contract never promised them. Include mode bits and directory entries in the handle-bound digest if that contract is ever tightened.

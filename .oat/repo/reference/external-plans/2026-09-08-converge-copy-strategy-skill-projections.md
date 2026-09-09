@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260908-make-copy-strategy-skill.md
+  - .oat/repo/pjm/backlog/archived/BL-260908-make-copy-strategy-skill.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -50,7 +50,7 @@ section because the limitation is gone.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260908-make-copy-strategy-skill — Make copy-strategy skill projections converge after sync instead of reading as drifted](../../pjm/backlog/items/BL-260908-make-copy-strategy-skill.md)
+  [BL-260908-make-copy-strategy-skill — Make copy-strategy skill projections converge after sync instead of reading as drifted](../../pjm/backlog/archived/BL-260908-make-copy-strategy-skill.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
   content this plan read (branch `wave-7-plans`, rebased onto `origin/main`).
 - Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched
@@ -682,6 +682,8 @@ Apply the `## Landing-event impact` table when one of its events has occurred.
 Executed inside a wave, this plan refreshes its drift check against the exact
 execution `HEAD` after predecessor lanes integrate, not only from the authored
 SHA to `origin/main`.
+
+**Correction applied 2026-09-09 (wave-7 final review; recorded bound, no requirement change):** the managed-copy digest covers regular files' relative paths and contents only, so a view whose `SKILL.md` carries a different file mode (for example 0777) or that carries extra empty directories reads `in_sync` at head where the base read `drifted/modified` — the empty-directory case was recorded by the p15 review as an inherited bound of `computeDirectoryHash`; the file-mode case is recorded here as the same accepted bound (mode bits are not content and the projection contract never promised them; `BL-260909-use-handle-bound-traversal` carries both). The digest's lack of length framing, by contrast, was a defect (distinct file sets could collide) and is fixed in the wave's final-review fix round (Phase 21) together with requiring the marker file for skill and agent content types.
 
 ## Review focus
 

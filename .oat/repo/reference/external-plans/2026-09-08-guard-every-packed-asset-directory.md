@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260906-guard-packed-asset-directories.md
+  - .oat/repo/pjm/backlog/archived/BL-260906-guard-packed-asset-directories.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -50,7 +50,7 @@ guarantee alongside the runtime `OAT_ASSETS_DIR` contract it already documents.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260906-guard-packed-asset-directories — Guard packed asset directories and document the OAT_ASSETS_DIR contract](../../pjm/backlog/items/BL-260906-guard-packed-asset-directories.md)
+  [BL-260906-guard-packed-asset-directories — Guard packed asset directories and document the OAT_ASSETS_DIR contract](../../pjm/backlog/archived/BL-260906-guard-packed-asset-directories.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
   content this plan read (branch `wave-7-plans`, rebased onto `origin/main`).
 - Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched

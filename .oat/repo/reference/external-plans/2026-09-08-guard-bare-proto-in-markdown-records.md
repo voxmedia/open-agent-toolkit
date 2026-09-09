@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md
+  - .oat/repo/pjm/backlog/archived/BL-260908-keep-a-bare-proto-in-markdown.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -51,7 +51,7 @@ meaning-destroying rewrite loud.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260908-keep-a-bare-proto-in-markdown — Keep a bare prototype-key literal in Markdown prose from being formatted into bold](../../pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md)
+  [BL-260908-keep-a-bare-proto-in-markdown — Keep a bare prototype-key literal in Markdown prose from being formatted into bold](../../pjm/backlog/archived/BL-260908-keep-a-bare-proto-in-markdown.md)
 - Read that item's `## Triage widening (2026-09-08)` section before executing;
   it is what widens the guard beyond decision records and docs.
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
@@ -86,15 +86,15 @@ meaning-destroying rewrite loud.
     blocks and inline code spans and then matches both forms, run over
     `git ls-files` for `.oat/repo` and `apps/oat-docs/docs`:
 
-    | File                                                                      | Line | Form                       |
-    | ------------------------------------------------------------------------- | ---- | -------------------------- |
-    | `.oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md`     | 14   | mangled (1)                |
-    | `.oat/repo/pjm/backlog/completed.md`                                      | 19   | mangled (2 on the line)    |
-    | `.oat/repo/pjm/backlog/index.md`                                          | 269  | mangled (1, generated row) |
-    | `.oat/repo/pjm/backlog/index.md`                                          | 274  | mangled (1, generated row) |
-    | `.oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md`   | 3    | bare, in the YAML `title`  |
-    | `.oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md`  | 3    | bare, in the YAML `title`  |
-    | `.oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md` | 3    | bare, in the YAML `title`  |
+    | File                                                                        | Line | Form                       |
+    | --------------------------------------------------------------------------- | ---- | -------------------------- |
+    | `.oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md`       | 14   | mangled (1)                |
+    | `.oat/repo/pjm/backlog/completed.md`                                        | 19   | mangled (2 on the line)    |
+    | `.oat/repo/pjm/backlog/index.md`                                            | 269  | mangled (1, generated row) |
+    | `.oat/repo/pjm/backlog/index.md`                                            | 274  | mangled (1, generated row) |
+    | `.oat/repo/pjm/backlog/archived/BL-260908-guard-normalized-config-maps.md`  | 3    | bare, in the YAML `title`  |
+    | `.oat/repo/pjm/backlog/archived/BL-260908-keep-a-bare-proto-in-markdown.md` | 3    | bare, in the YAML `title`  |
+    | `.oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md`   | 3    | bare, in the YAML `title`  |
 
     That is six files and eight occurrences. At this `HEAD` the scan covers
     712 tracked Markdown files across `.oat/repo` (641) and
@@ -204,7 +204,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..origin/main -- packages/cli/src/validation .oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md .oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md .oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md .oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md .oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md packages/cli/src/commands/backlog/regenerate-index.ts packages/cli/src/commands/backlog/archive.ts .lintstagedrc.mjs .oxfmtrc.jsonc
+git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..origin/main -- packages/cli/src/validation .oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md .oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md .oat/repo/pjm/backlog/archived/BL-260908-guard-normalized-config-maps.md .oat/repo/pjm/backlog/archived/BL-260908-keep-a-bare-proto-in-markdown.md .oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md packages/cli/src/commands/backlog/regenerate-index.ts packages/cli/src/commands/backlog/archive.ts .lintstagedrc.mjs .oxfmtrc.jsonc
 ```
 
 Expected at the authored baseline: no output. Then re-run the enumeration in
@@ -280,9 +280,9 @@ predecessor lanes integrate.
   line:
   - `.oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md:14`
   - `.oat/repo/pjm/backlog/completed.md:19` (both occurrences)
-  - `.oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md:3`
+  - `.oat/repo/pjm/backlog/archived/BL-260908-keep-a-bare-proto-in-markdown.md:3`
     (YAML `title`)
-  - `.oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md:3`
+  - `.oat/repo/pjm/backlog/archived/BL-260908-guard-normalized-config-maps.md:3`
     (YAML `title`)
   - `.oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md:3`
     (YAML `title`)
@@ -439,8 +439,8 @@ step 2's enumeration no longer reports either file.
 ### 5. Repair the three item titles and regenerate the index
 
 Backtick the literal inside the `title:` value of
-`.oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md`,
-`.oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md`, and
+`.oat/repo/pjm/backlog/archived/BL-260908-keep-a-bare-proto-in-markdown.md`,
+`.oat/repo/pjm/backlog/archived/BL-260908-guard-normalized-config-maps.md`, and
 `.oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md`.
 Leave the values unquoted; backticks are legal in a YAML plain scalar that does
 not begin with one, and the repository's `yaml` package round-trips them

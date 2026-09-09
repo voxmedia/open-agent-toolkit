@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md
+  - .oat/repo/pjm/backlog/archived/BL-260908-guard-normalized-config-maps.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -59,7 +59,7 @@ because the scope it described is closed.
 
 - Source artifact or scope: `.oat/repo/pjm/backlog/items/`
 - Source backlog item:
-  [BL-260908-guard-normalized-config-maps — Guard normalized config maps against a preserved proto key](../../pjm/backlog/items/BL-260908-guard-normalized-config-maps.md)
+  [BL-260908-guard-normalized-config-maps — Guard normalized config maps against a preserved proto key](../../pjm/backlog/archived/BL-260908-guard-normalized-config-maps.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree
   whose content this plan read (branch `wave-7-plans`, rebased onto the merged
   PR #273).
@@ -260,7 +260,7 @@ No unsatisfied hard dependency remains, so `oat_execution_status` is `READY`.
 | PR #125 (`oat-brainstorm` visual companion) lands                         | None     | None (verified on its paginated file list: no `packages/cli/src/config/**` or `packages/cli/src/commands/**` path in this plan's scope).                              | No action.                                                                                                                                                                                                         |
 | Sibling wave-7 lane `fix-oat-config-unset-and-adopt` merges               | Minor    | `packages/cli/src/commands/config/index.ts`, its test, `packages/cli/src/config/resolve.ts`                                                                           | Expected: it merges first. Refresh the drift check against the integrated `HEAD` and re-anchor; the changes are in different functions (it exports `resolveEnvOverride`; this plan edits the exec-target helpers). |
 | Sibling wave-7 lane `close-the-docs-index-follow-ups` merges first        | Minor    | `packages/cli/src/config/resolve.ts`, `resolve.test.ts`                                                                                                               | It edits `DEFAULT_SHARED_CONFIG` near `:74-80`; the exec-target helpers this plan edits are below `:312`. Re-anchor before Step 3.                                                                                 |
-| Sibling wave-7 lane `guard-bare-proto-in-markdown-records` merges         | Minor    | `.oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md`, `.oat/repo/pjm/backlog/index.md`                                                             | Expected: it merges first. Its contract test then guards every Markdown file this plan writes; keep every occurrence of the key name inside backticks and regenerate the backlog index at close-out.               |
+| Sibling wave-7 lane `guard-bare-proto-in-markdown-records` merges         | Minor    | `.oat/repo/pjm/backlog/archived/BL-260908-guard-normalized-config-maps.md`, `.oat/repo/pjm/backlog/index.md`                                                          | Expected: it merges first. Its contract test then guards every Markdown file this plan writes; keep every occurrence of the key name inside backticks and regenerate the backlog index at close-out.               |
 | Sibling wave-7 lane `warn-on-wrong-typed-documentation-root` merges first | Minor    | `packages/cli/src/config/oat-config.ts`, `packages/cli/src/commands/config/index.ts`, their tests                                                                     | Not expected, but harmless: it changes `normalizeOatConfig`'s signature and `runGet`/`runList`, none of which this plan edits. Refresh and re-anchor.                                                              |
 
 ## Drift check
@@ -289,7 +289,7 @@ git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..origin/main -- \
   packages/cli/src/commands/sync/index.ts \
   .oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md \
   .oat/repo/reference/decisions/index.md \
-  .oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md \
+  .oat/repo/pjm/backlog/archived/BL-260908-guard-normalized-config-maps.md \
   packages/cli/package.json \
   packages/control-plane/package.json \
   packages/docs-config/package.json \

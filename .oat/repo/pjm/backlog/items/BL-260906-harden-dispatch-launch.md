@@ -44,7 +44,7 @@ Two lanes, one per issue, planned separately: #265 (calculate execution baseline
 
 ## Notes
 
-- 2026-09-09: wave-7 p16 (`2026-09-08-harden-dispatch-launch-provenance.md`) hit
+- 2026-09-09: wave-7 p16 (`2026-09-08-calculate-dispatch-baselines-after-journaling.md`) hit
   a plan STOP and was parked, so both halves stay open. The plan's Step 3 wires a
   `gitExecFile` seam into the dispatch recorder, but the recorder graph carries a
   no-process guard that forbids any child process on that path — a redesign of
