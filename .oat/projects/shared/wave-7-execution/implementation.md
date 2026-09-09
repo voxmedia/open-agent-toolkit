@@ -645,6 +645,19 @@ _Recorded when the configured implementation exit gate runs._
 
 **p18 row → `fixes_added`**; round 2 on the original reviewer handle follows the fix commit.
 
+## Review Received: p18 (round 2 — passed)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p18-review-2026-09-09T072158Z.md (reviewed head `bb277915e89a3e3117234eeacb2fd020a0360990`, manual, opus)
+**Findings:** 0 · 0 · 0 · 2 minor — PASS. Verification records: M1 — the reviewer's own injected failure shows smoke 167 / skills 883 / release 42 reported before the scripts failure (the chain is now a pure append against the base); m1 — both bullets exactly true, and the `pnpm lint` edit was within round 1's own finding text; m2 — `format:root:fix` string-equal to `format:root` with `--write`, two inline literals remain (the minimum), `format:fix` idempotent — the plan's "keep `format:fix` as it is" adjudicated a behavior-preservation guard whose purpose is honored, so the refactor is licensed; one append-only commit; gates forced `Cached: 0`.
+
+**Dispositions (round 2 Minors):**
+
+- m1 — `check:fix` no longer mirrors `check` (only `format:root:fix` repairs a root-glob file): **address-now** (root, at the group-6 fan-in: `check:fix` gains `&& pnpm format:root:fix`).
+- m2 — `AGENTS.md:24` says "each workspace package's `format` script" where `:20` says "defined `check` script": **address-now** (root, same commit, one word).
+
+**p18 row → `passed`** (reviewed head `bb277915e`); p18 is clear for fan-in. Carried forward for the fan-in address-now: `contributing/code.md` must say `test:scripts` runs last; `.oat/repo/knowledge/testing.md` gains the suite.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -741,6 +754,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p18-fix-001` — bounded fix round on the resumed implementer (`test:scripts` last; the format bullet; one root glob). Record `dispatch/w7-p18-fix-001.json`.
 - `w7-p18-fix-001` outcome: one append-only commit `bb277915e89a3e3117234eeacb2fd020a0360990` (`package.json`, `AGENTS.md`): `test:scripts` moved last (the failing-test control now reports smoke 167 / skills 883 / release 42 before the failure); both the `pnpm format` and the adjacent `pnpm lint` Essential Commands bullets made exactly true; the root's m2 instruction was a no-op as written (`format` already reused `format:root`), so the lane factored `format:fix`'s inline `--write` copy into `format:root:fix` — a single glob definition, contradicting the plan's "keep `format:fix` as it is" (flagged for the reviewer's adjudication). Gates forced `Cached: 0`; all four suites green.
 - `w7-p18-review-002` — disposition-verification round 2 on the original reviewer handle (incl. two adjudications: the `pnpm lint` bullet extension and the `format:fix` refactor). Record `dispatch/w7-p18-review-002.json`.
+- `w7-p18-review-002` outcome: PASS (fan-in may proceed), 0/0/0/2m; the `format:fix` refactor and the `pnpm lint` bullet adjudicated licensed; two one-line root address-nows queued for the fan-in.
 - `w7-p15-review-001` outcome: PASS with findings, 0/0/0/3m (a four-consumer, 14-shape base-vs-head table; convergence proven against a base-built manifest). m1 → root address-now at the fan-in; m2 plan correction applied; m3 `BL-260909-use-handle-bound-traversal` filed; p15 `passed`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
@@ -793,6 +807,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- p18 round 2 passed (0/0/0/2m) at `bb277915e`; p18 row `passed`.
 - p18 review received (PASS with findings, 0/1I/1M/5m): fix round `w7-p18-fix-001` dispatched; two root address-nows queued for the fan-in; p18 row `fixes_added`.
 - p17 STOP (four unenumerated scanner widenings) closed by a dated plan refresh; lane resumed.
 - p16 parked on a plan STOP (the recorder graph's no-process guard forbids the plan's git seam); partial work preserved under `parked/wave-7-p16/`; dated STOP record in the plan; the item stays open for re-planning.
