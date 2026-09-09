@@ -64,6 +64,7 @@ import {
 } from '@config/oat-config';
 import {
   resolveEffectiveConfig,
+  resolveEnvOverride,
   type ResolvedConfig,
   type ResolvedConfigSource,
 } from '@config/resolve';
@@ -1664,9 +1665,16 @@ interface SurfaceFlagOptions {
 /**
  * Resolve the `--shared` / `--local` / `--user` trio to a single surface.
  *
- * Lifted verbatim out of the `set` action so `unset` enforces the same
- * mutual-exclusion rule through the same code path. The thrown message is
- * byte-identical to the one `set` raised inline, because tests pin it.
+ * `set`, `unset`, and `adopt` all resolve the trio here -- this is the only
+ * copy of the mutual-exclusion rule and of its message. It was lifted verbatim
+ * out of the `set` action so `unset` could share it, and `adopt` was folded on
+ * afterwards.
+ *
+ * The message is pinned in two ways, so changing it means moving all three
+ * commands together: the per-command cases assert it individually, and the
+ * three-command parity case in `index.test.ts` ('set, unset, and adopt reject
+ * the same conflicting surface flags with one message') compares the three
+ * commands' output to each other as well as to the literal.
  */
 function resolveSurfaceFlags(options: SurfaceFlagOptions): ConfigSurface {
   const flagsPresent = [options.shared, options.local, options.user].filter(
@@ -2915,12 +2923,17 @@ async function unsetConfigValue(
     );
   }
 
-  const resolved = await dependencies.resolveEffectiveConfig(
-    repoRoot,
-    userConfigDir,
-    dependencies.processEnv,
-  );
-  const envShadowed = resolved.resolved[key]?.source === 'env';
+  // Deliberately not `resolveEffectiveConfig`: its result was used for this one
+  // boolean, and its strict normalization throws on exactly the malformed
+  // stored value `unset` exists to remove. `ENV_OVERRIDE_MAP` covers three
+  // keys, all of which are in `DEFAULT_SHARED_CONFIG` and therefore always
+  // present in the resolved view, and the env branch is checked first there --
+  // so this probe answers identically for every config key. The whole-config
+  // read this replaces was also a validation barrier; that role is reinstated
+  // separately by the targeted barrier below, which reads every surface except
+  // the targeted one (the targeted one is re-normalized on write instead).
+  const envShadowed =
+    resolveEnvOverride(key, dependencies.processEnv) !== undefined;
 
   if (key === 'activeProject' || key === 'lastPausedProject') {
     throw new Error(
@@ -2954,6 +2967,46 @@ async function unsetConfigValue(
       ? (defaultSurfaceForKey(key) as Exclude<ConfigSurface, 'auto'>)
       : surface;
   const path = configPathForKey(key);
+
+  // Targeted strict barrier.
+  //
+  // `resolveEffectiveConfig` used to run at the top of this function, and as a
+  // side effect of resolving it strictly read all three surfaces. That read --
+  // not its return value -- is what made a malformed value anywhere abort
+  // `unset` before it wrote anything. The `envShadowed` probe above no longer
+  // performs it, so the barrier is reinstated here explicitly and narrowly:
+  // every surface OTHER than the targeted one is read strictly, through the
+  // same injected readers `resolveEffectiveConfig` composes, so a malformed
+  // value on an untargeted surface still aborts with the identical
+  // `Invalid <key>` message it produced before.
+  //
+  // The targeted surface is deliberately excluded, and that exclusion is the
+  // whole point of the change: `removeFromSurface` reads it through the
+  // key-specific repair reader -- lenient only for the key being removed -- and
+  // writes it back through `writeOatConfig` / `writeOatLocalConfig` /
+  // `writeUserConfig`, every one of which re-normalizes. A malformed value on
+  // the targeted surface that is NOT the key being removed is therefore still
+  // refused, on the rewrite rather than on a pre-read.
+  if (effectiveSurface !== 'shared') {
+    await dependencies.readOatConfig(repoRoot);
+  }
+  if (effectiveSurface !== 'local') {
+    await dependencies.readOatLocalConfig(repoRoot);
+  }
+  if (effectiveSurface !== 'user') {
+    await dependencies.readUserConfig(userConfigDir);
+  }
+
+  // The one branch that gets no re-normalization on the way out: the
+  // `pjm.remote` raw-write path in `removeFromSurface` persists through
+  // `atomicWriteJson`, bypassing `writeOatConfig`. So the targeted shared
+  // surface must be read strictly here too. `pjm.remote` children are not among
+  // the malformed-value repair keys this change targets, which is why adding
+  // this read keeps that branch's acceptance set byte-identical to its previous
+  // one rather than narrowing it.
+  if (isPjmRemoteConfigKey(key)) {
+    await dependencies.readOatConfig(repoRoot);
+  }
 
   const removed = await removeFromSurface(
     repoRoot,
@@ -3063,9 +3116,12 @@ async function removeFromSurface(
     // policy.description=none and authority.default=read-only. Removing a
     // leaf from that normalized object and sending it through writeOatConfig
     // would therefore write the leaf straight back while reporting success.
-    // The config has already passed the strict shared-policy reader in
-    // resolveEffectiveConfig, so perform this removal against the validated raw
-    // document and atomically persist only the requested structural change.
+    // The strict shared read happens in `unsetConfigValue`'s targeted barrier
+    // immediately before this call -- this branch depends on it, because
+    // `atomicWriteJson` below bypasses `writeOatConfig`'s normalization, so
+    // nothing downstream would catch a malformed document. Given that read,
+    // perform this removal against the validated raw document and atomically
+    // persist only the requested structural change.
     const repaired = await removeConfigPathOnDisk(configPath, path);
     if (!repaired) {
       return false;
@@ -3852,20 +3908,7 @@ export function createConfigCommand(
               readGlobalOptions(command),
             );
             try {
-              const flagsPresent = [
-                options.shared,
-                options.local,
-                options.user,
-              ].filter(Boolean).length;
-              if (flagsPresent > 1) {
-                throw new Error(
-                  '--shared, --local, and --user flags are mutually exclusive; pass at most one.',
-                );
-              }
-              let surface: ConfigSurface = 'auto';
-              if (options.shared) surface = 'shared';
-              else if (options.local) surface = 'local';
-              else if (options.user) surface = 'user';
+              const surface = resolveSurfaceFlags(options);
               await runAdopt(template, { surface }, context, dependencies);
             } catch (error) {
               const message =
