@@ -1403,6 +1403,12 @@ describe('createSyncCommand', () => {
     const output = capture.info.join('\n');
     expect(output).not.toContain('Manifest version refreshed');
     expect(capture.warn).toContain(versionSkewWarning('0.0.1'));
+    // The run exits 1, so it must not also claim nothing was required.
+    // Joined rather than element-wise: the plan body logs a single multi-line
+    // string, so array membership is blind to a sentence embedded inside it.
+    expect(output).not.toContain('No changes required.');
+    expect(capture.warn).toContain('\nSync completed with partial failures.');
+    expect(process.exitCode).toBe(1);
   });
 
   it('apply true no-op: keeps the plan body sentence when nothing was restamped', async () => {

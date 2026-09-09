@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260906-reconcile-the-oat-doctor.md
+  - .oat/repo/pjm/backlog/archived/BL-260906-reconcile-the-oat-doctor.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -45,7 +45,7 @@ any pack name reappears in both — so the contradiction cannot come back.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260906-reconcile-the-oat-doctor — Reconcile the oat-doctor example table with its inventory sentence](../../pjm/backlog/items/BL-260906-reconcile-the-oat-doctor.md)
+  [BL-260906-reconcile-the-oat-doctor — Reconcile the oat-doctor example table with its inventory sentence](../../pjm/backlog/archived/BL-260906-reconcile-the-oat-doctor.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — branch
   `wave-7-plans`, which is `origin/main` plus three commits that only add or
   edit files under `.oat/repo/reference/external-plans/`; every code and skill

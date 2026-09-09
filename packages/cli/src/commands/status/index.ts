@@ -1359,6 +1359,19 @@ async function runStatusCommand(
               );
             if (disposition === 'adopt') {
               adoptedCount += 1;
+              // A completed adopt persists, exactly as the ordinary-stray loop
+              // below and as `oat init` (`init/index.ts:1271`) and `oat sync`
+              // (`engine/execute-plan.ts:970-976`) already do after a completed
+              // run. Only `adopt` sets this: a `keep` writes the sync config
+              // through `appendKnownStray` and returns the manifest untouched
+              // (`native-skill-disposition.ts:92-94`), so it has nothing to
+              // save. Today this write adds no row and only restamps
+              // `oatVersion`, because adopting a natively read
+              // projection is manifest-neutral by contract
+              // (`adopt-stray.ts:140-142`); its executable owner is
+              // `adopt-stray.test.ts`'s "moves a native-read Cursor skill
+              // without recreating a provider view or manifest row".
+              manifestChanged = true;
             } else {
               context.logger.success(
                 `Kept ${provider.displayName}-only [${scopeCollection.scope}]: ${formatPathForScope(
@@ -1411,6 +1424,9 @@ async function runStatusCommand(
                 { replaceCanonical: true },
               );
             adoptedCount += 1;
+            // Same rule on the confirmed `replaceCanonical` retry: this branch
+            // is only reachable for `disposition === 'adopt'`, and it completed.
+            manifestChanged = true;
           }
         }
 
@@ -1526,8 +1542,14 @@ async function runStatusCommand(
 
         if (manifestChanged) {
           // Placed after the collection-migration block and immediately before
-          // the only status-owned save. An aborted migration never reaches
-          // here, so it never claims a restamp it did not perform.
+          // the only status-owned save. A migration that adopted nothing never
+          // reaches here, so it never claims a restamp it did not perform.
+          // Aborting *after* an adoption succeeded does reach here, and should:
+          // the adopt already moved the directory, so a migration did complete
+          // and the manifest is persisted and restamped for it. For a native
+          // adopt that write adds no row -- it is the `oatVersion` restamp
+          // alone (`adopt-stray.ts:140-142`). `migrationAborted` suppresses the
+          // remaining prompts, not the persistence of work already done.
           if (scopeCollection.versionRestamp && !context.json) {
             context.logger.warn(
               formatManifestVersionRestampWarning(

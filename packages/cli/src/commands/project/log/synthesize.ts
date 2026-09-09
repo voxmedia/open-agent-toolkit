@@ -16,11 +16,26 @@ import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import {
+  ProjectLogSealedError,
+  type ProjectLogLockDependencies,
+  withProjectLogLock,
+} from './append';
+import {
   findCanonicalProjectLogSynthesisSection,
+  findProjectLogAmbiguity,
+  findProjectLogSeal,
+  unreachableProjectLogSealError,
   PROJECT_LOG_FILENAME,
   SYNTHESIS_COMPLETE_HEADING,
   SYNTHESIS_PENDING_HEADING,
 } from './check';
+import {
+  containsAmbiguousProjectLogMarker,
+  findProjectLogSealHeadingLine,
+  normalizeProjectLogLineEndings,
+  PROJECT_LOG_LONE_TERMINATOR_RE,
+  splitProjectLogLines,
+} from './grammar';
 
 export interface SynthesizeProjectLogInput {
   repoRoot: string;
@@ -31,10 +46,25 @@ export interface SynthesizeProjectLogInput {
 export interface ProjectLogSynthesizeResult {
   status: 'synthesized';
   logPath: string;
+  /**
+   * Present and true when the accepted `--body` carried CRLF and was stored as
+   * LF, so the bytes on disk differ from the bytes the caller passed.
+   */
+  normalizedLineEndings?: true;
 }
 
 export interface SynthesizeProjectLogDependencies {
   resolveActiveProject: (repoRoot: string) => Promise<ActiveProjectResolution>;
+  /**
+   * The log's own read/write primitives, mirroring `appendProjectLog`.
+   * Injectable so a test can hold this writer inside its rewrite window while
+   * another enters, which is the only way to prove the serialization rather
+   * than assert it.
+   */
+  readLog: (path: string) => Promise<string>;
+  writeLog: (path: string, content: string) => Promise<void>;
+  /** Advisory-lock overrides for the synthesis window. */
+  lock: Partial<ProjectLogLockDependencies>;
 }
 
 export interface ProjectLogSynthesizeCommandDependencies extends SynthesizeProjectLogDependencies {
@@ -45,6 +75,11 @@ export interface ProjectLogSynthesizeCommandDependencies extends SynthesizeProje
 
 const DEFAULT_SYNTHESIZE_DEPENDENCIES: SynthesizeProjectLogDependencies = {
   resolveActiveProject,
+  readLog: async (path: string): Promise<string> => readFile(path, 'utf8'),
+  writeLog: async (path: string, content: string): Promise<void> => {
+    await writeFile(path, content, 'utf8');
+  },
+  lock: {},
 };
 
 const DEFAULT_COMMAND_DEPENDENCIES: ProjectLogSynthesizeCommandDependencies = {
@@ -96,18 +131,30 @@ export async function synthesizeProjectLog(
     ...DEFAULT_SYNTHESIZE_DEPENDENCIES,
     ...overrides,
   };
-  const body = input.body?.trim();
-  if (!body) {
+  const raw = input.body ?? '';
+  const supplied = raw.trim();
+  if (!supplied) {
     throw new Error('--body is required and must contain non-whitespace text.');
   }
+  // Same rule the judgment bodies follow: parse leniently, write strictly. CRLF
+  // is accepted and stored as LF; a lone CR and the U+2028 / U+2029 separators
+  // are refused, because those are the terminators this module's readers do not
+  // all agree about. Tested against `raw`, before trimming: trim treats all four
+  // as whitespace, so an edge-terminated body would otherwise slip past a rule
+  // whose message says it does not.
+  if (PROJECT_LOG_LONE_TERMINATOR_RE.test(raw)) {
+    throw new Error(
+      '--body must break lines with line feeds or CRLF; a lone carriage return and the U+2028 and U+2029 separators are not accepted.',
+    );
+  }
+  const normalized = supplied.includes('\r\n');
+  const body = normalizeProjectLogLineEndings(supplied);
   if (
-    body
-      .split(/\r?\n/)
-      .some(
-        (line) =>
-          line === SYNTHESIS_PENDING_HEADING ||
-          line === SYNTHESIS_COMPLETE_HEADING,
-      )
+    splitProjectLogLines(body).some(
+      (line) =>
+        line === SYNTHESIS_PENDING_HEADING ||
+        line === SYNTHESIS_COMPLETE_HEADING,
+    )
   ) {
     throw new Error(
       '--body must not recreate command-owned project-log synthesis markers.',
@@ -122,7 +169,52 @@ export async function synthesizeProjectLog(
     );
   }
 
-  const content = await readFile(logPath, 'utf8');
+  // The read, the seal consultation, and the whole-file rewrite are one
+  // critical section under the log's own advisory lock — the same lock
+  // `appendProjectLog` takes, because this rewrite and a concurrent append race
+  // each other exactly as two appends do, and the loser's entry is simply gone.
+  return withProjectLogLock(logPath, dependencies.lock, 'required', async () =>
+    synthesizeLockedProjectLog(logPath, body, dependencies, normalized),
+  );
+}
+
+async function synthesizeLockedProjectLog(
+  logPath: string,
+  body: string,
+  dependencies: SynthesizeProjectLogDependencies,
+  normalized: boolean,
+): Promise<ProjectLogSynthesizeResult> {
+  const content = await dependencies.readLog(logPath);
+
+  // Refuse a log whose markers two readers resolve differently, before any
+  // routing decision reads them. `synthesize` replaces a whole section chosen by
+  // that reading, so a hidden second pending marker — `carrier<CR>## End-of-run
+  // synthesis (pending …)` — used to make the log ambiguous and be refused, and
+  // under an LF-only reading it becomes invisible and its content is consumed by
+  // the rewrite.
+  const ambiguity = findProjectLogAmbiguity(content, logPath);
+  if (ambiguity !== undefined) {
+    throw new Error(ambiguity);
+  }
+
+  // A sealed log is closed to this rewrite as much as to an append. The seal is
+  // the log's last entry by contract, so replacing the synthesis section after
+  // it would mutate a record the completion flow has already declared final.
+  // The refusal is the same typed error `append` raises, so both commands
+  // report `status: "sealed"` with a non-zero exit from one shape.
+  const seal = findProjectLogSeal(content);
+  if (seal !== null) {
+    throw new ProjectLogSealedError(logPath, seal, 'synthesis rewrite');
+  }
+
+  // The same refusal both append paths make, on the same file. A seal the
+  // parser cannot reach is still a seal, and rewriting a section of the log it
+  // closes is exactly the mutation it forbids.
+  const unreachableSeal = findProjectLogSealHeadingLine(content);
+  if (unreachableSeal !== undefined) {
+    throw unreachableProjectLogSealError(logPath, content, unreachableSeal);
+  }
+
   const synthesis = findCanonicalProjectLogSynthesisSection(content);
   if (synthesis.status === 'complete') {
     throw new Error(
@@ -145,8 +237,19 @@ export async function synthesizeProjectLog(
     0,
     synthesis.section.start,
   )}${SYNTHESIS_COMPLETE_HEADING}\n\n${body}\n${suffix ? '\n' : ''}${suffix}`;
-  await writeFile(logPath, nextContent, 'utf8');
-  return { status: 'synthesized', logPath };
+  // Never write a log this command would refuse to read. The body reaches the
+  // file verbatim, so this is the backstop behind the body validation above.
+  if (containsAmbiguousProjectLogMarker(nextContent)) {
+    throw new Error(
+      '--body would leave a heading after a carriage return, U+2028, or U+2029, producing a log with two readings that no later command could safely mutate.',
+    );
+  }
+  await dependencies.writeLog(logPath, nextContent);
+  return {
+    status: 'synthesized',
+    logPath,
+    ...(normalized ? { normalizedLineEndings: true as const } : {}),
+  };
 }
 
 interface SynthesizeCommandOptions {
@@ -174,6 +277,22 @@ async function runSynthesizeCommand(
     }
     process.exitCode = 0;
   } catch (error) {
+    // A sealed log is a terminal refusal, reported in the same shape `append`
+    // uses so a caller reading JSON can tell it from a malformed request.
+    if (error instanceof ProjectLogSealedError) {
+      if (context.json) {
+        context.logger.json({
+          status: 'sealed',
+          logPath: error.logPath,
+          heading: error.seal.heading,
+          message: error.message,
+        });
+      } else {
+        context.logger.error(error.message);
+      }
+      process.exitCode = 1;
+      return;
+    }
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {
       context.logger.json({ status: 'error', message });

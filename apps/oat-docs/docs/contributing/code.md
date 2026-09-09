@@ -56,8 +56,8 @@ pnpm build:docs               # builds docs site and its dependencies
 ```
 
 `pnpm test` is composite: it runs the workspace vitest suites, then
-`test:smoke` (`tools/smoke`), `test:skills` (`.agents/skills/*/tests`), and
-the named-file `test:release` set. Steps 5 and 6 are the version-lockstep
+`test:smoke` (`tools/smoke`), `test:skills` (`.agents/skills/*/tests`), the
+named-file `test:release` set, and last `test:scripts` (`scripts/worktree`). Steps 5 and 6 are the version-lockstep
 gates; they are in the local list because they previously ran only in CI and
 version-bump drift twice reached review with no local gate to surface it.
 
@@ -73,8 +73,12 @@ checkout with neither `origin/main` nor `main` skips the whole gate (CI uses
 `fetch-depth: 0`). Test files under `packages/cli/src/` count as publishable
 changes for this gate.
 
-CI runs neither `pnpm lint` nor `pnpm format` — run both whenever a change
-touches `tools/smoke` or `.agents/skills`, since nothing else covers them.
+CI runs neither `pnpm lint` nor `pnpm format`. `pnpm check` now covers the
+formatting of `.agents/skills/**`, `apps/oat-docs/docs`, and `tools/smoke`
+through `format:root`, but `pnpm lint`'s root `oxlint` pass over `tools/smoke`
+and `.agents/skills`, and `packages/control-plane`'s `format` (it defines no
+`check` script), still run in no CI gate — run both whenever a change touches
+those paths.
 For narrower changes, use package-specific checks when possible, but do not
 merge without passing the relevant workspace gates.
 

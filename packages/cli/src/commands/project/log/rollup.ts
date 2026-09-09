@@ -18,6 +18,7 @@ import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import {
+  findProjectLogAmbiguity,
   parseProjectLogEntries,
   PROJECT_LOG_FILENAME,
   type ParsedProjectLogEntry,
@@ -44,12 +45,26 @@ export interface RollupProjectLogInput {
   artifactTarget?: ProjectLogArtifactTarget;
 }
 
-export interface ProjectLogRollupResult {
+/** The outcome of a roll-up that actually read the log. */
+export interface ProjectLogRollupSuccess {
   status: 'ok' | 'failed';
   summarySection: 'written' | 'updated';
   ledgerOutcome: 'appended' | 'deduplicated' | 'skipped_permitted' | 'failed';
   entriesRolledUp: number;
 }
+
+export type ProjectLogRollupResult =
+  | ProjectLogRollupSuccess
+  /**
+   * The log has two readings, so its entries cannot be rolled up honestly.
+   *
+   * A separate member rather than an extra field, because the success member's
+   * counts would otherwise have to be filled in with zeros — and reporting
+   * `entriesRolledUp: 0` for an unreadable log is exactly the conflation this
+   * refusal exists to remove: it was byte-identical to the output for an empty
+   * one.
+   */
+  | { status: 'ambiguous'; ambiguity: string };
 
 export interface RollupProjectLogDependencies {
   resolveActiveProject: (repoRoot: string) => Promise<ActiveProjectResolution>;
@@ -118,7 +133,7 @@ function writeSummarySection(
   body: string,
 ): {
   content: string;
-  outcome: ProjectLogRollupResult['summarySection'];
+  outcome: ProjectLogRollupSuccess['summarySection'];
 } {
   const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const marker = new RegExp(`^${escapedHeading}\\s*$`, 'm').exec(content);
@@ -196,7 +211,7 @@ async function rollupLedger(
   input: RollupProjectLogInput,
   entries: ParsedProjectLogEntry[],
   dependencies: RollupProjectLogDependencies,
-): Promise<ProjectLogRollupResult['ledgerOutcome']> {
+): Promise<ProjectLogRollupSuccess['ledgerOutcome']> {
   const target = await resolveProjectLogLedgerTarget(
     input.repoRoot,
     input.home ?? homedir(),
@@ -271,7 +286,19 @@ export async function rollupProjectLog(
     );
   }
 
-  const parsed = parseProjectLogEntries(await readFile(logPath, 'utf8'));
+  const content = await readFile(logPath, 'utf8');
+
+  // The same question `check`, both append paths and `synthesize` ask, asked
+  // before anything is written. `rollup` was the one surface without it: on a
+  // log the other four refused it rewrote `summary.md` and reported
+  // `status: "ok"` with `entriesRolledUp: 0`, indistinguishable from a clean
+  // empty log. It is a public command an operator can run directly.
+  const ambiguity = findProjectLogAmbiguity(content, logPath);
+  if (ambiguity !== undefined) {
+    return { status: 'ambiguous', ambiguity };
+  }
+
+  const parsed = parseProjectLogEntries(content);
   const summaryUpdate = writeSummarySection(
     await readFile(summaryPath, 'utf8'),
     artifactTarget.summaryHeading ?? WORKFLOW_OBSERVATIONS_HEADING,
@@ -309,6 +336,15 @@ async function runRollupCommand(
       },
       dependencies,
     );
+    if (result.status === 'ambiguous') {
+      if (context.json) {
+        context.logger.json(result);
+      } else {
+        context.logger.error(result.ambiguity);
+      }
+      process.exitCode = 1;
+      return;
+    }
     if (context.json) {
       context.logger.json(result);
     } else if (result.status === 'ok') {

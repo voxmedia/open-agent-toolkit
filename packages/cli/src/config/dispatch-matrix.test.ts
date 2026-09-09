@@ -24,6 +24,74 @@ describe('normalizeDispatchMatrix', () => {
     });
   });
 
+  it('keeps a `__proto__` provider with a tier map as an own key', () => {
+    // The input map is built with `Object.fromEntries` because an object
+    // literal spelling of this key sets the literal's prototype instead.
+    const normalized = normalizeDispatchMatrix(
+      Object.fromEntries([
+        ['__proto__', { high: 'max' }],
+        ['codex', { high: 'high' }],
+      ]),
+      {
+        pathPrefix: 'matrix',
+        compatibilityMode: 'layered-config',
+      },
+    );
+
+    const { providers } = normalized;
+    expect(Object.keys(providers).sort()).toEqual(['__proto__', 'codex']);
+    expect(Object.getPrototypeOf(providers)).toBe(Object.prototype);
+    expect('high' in providers).toBe(false);
+    expect(providers['__proto__']).toEqual({
+      high: { candidates: ['max'] },
+    });
+    expect(providers.codex).toEqual({ high: { candidates: ['high'] } });
+    expect(normalized.issues).toEqual([]);
+  });
+
+  it('keeps a scalar `__proto__` provider instead of silently dropping it', () => {
+    const normalized = normalizeDispatchMatrix(
+      Object.fromEntries([
+        ['__proto__', 'high'],
+        ['codex', 'medium'],
+      ]),
+      {
+        pathPrefix: 'matrix',
+        compatibilityMode: 'layered-config',
+      },
+    );
+
+    const { providers } = normalized;
+    expect(Object.keys(providers).sort()).toEqual(['__proto__', 'codex']);
+    expect(Object.getPrototypeOf(providers)).toBe(Object.prototype);
+    expect(providers['__proto__']).toBe('high');
+    expect(providers.codex).toBe('medium');
+    expect(normalized.issues).toEqual([]);
+  });
+
+  it('still reports a malformed tier under a `__proto__` provider', () => {
+    const normalized = normalizeDispatchMatrix(
+      Object.fromEntries([['__proto__', { madeUp: 'high', economy: 'high' }]]),
+      {
+        pathPrefix: 'matrix',
+        compatibilityMode: 'layered-config',
+      },
+    );
+
+    // The tier loop validates against VALID_DISPATCH_MATRIX_TIERS and must not
+    // have been loosened by the provider-map rewrite.
+    expect(normalized.issues).toEqual([
+      {
+        path: 'matrix.__proto__.madeUp',
+        kind: 'malformed-tier',
+        value: 'high',
+      },
+    ]);
+    expect(normalized.providers['__proto__']).toEqual({
+      economy: { candidates: ['high'] },
+    });
+  });
+
   it('canonicalizes direct targets, legacy routes, fallback routes, and ladders', () => {
     const normalized = normalizeDispatchMatrix(
       {

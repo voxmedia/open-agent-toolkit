@@ -46,6 +46,7 @@ import {
   type WorkflowDispatchPolicyMode,
   type WorkflowManagedDispatchPolicy,
 } from '@config/oat-config';
+import { getOwnKey, setOwnKey } from '@config/own-keys';
 import {
   resolveEffectiveConfig,
   type ResolvedConfig,
@@ -419,14 +420,22 @@ function toProjectMatrixCompatibility(
   matrix: ProjectDispatchMatrix,
 ): ProjectDispatchMatrix {
   const compatibility: ProjectDispatchMatrix = {};
+  // The normalized matrix now keeps a provider named `__proto__` as an own
+  // key, so `Object.entries` yields it here: assignment would drop a scalar
+  // entry and install a tier map as this output's prototype.
   for (const [provider, providerValue] of Object.entries(matrix)) {
     if (typeof providerValue === 'string') {
-      compatibility[provider] = providerValue;
+      setOwnKey<WorkflowDispatchProviderValue>(
+        compatibility,
+        provider,
+        providerValue,
+      );
       continue;
     }
 
-    const rawProvider = isProjectMatrixRecord(rawMatrix[provider])
-      ? rawMatrix[provider]
+    const rawProviderValue = getOwnKey(rawMatrix, provider);
+    const rawProvider = isProjectMatrixRecord(rawProviderValue)
+      ? rawProviderValue
       : {};
     const tiers: Partial<
       Record<WorkflowDispatchMatrixTier, WorkflowDispatchMatrixCell>
@@ -452,7 +461,7 @@ function toProjectMatrixCompatibility(
 
       tiers[matrixTier] = cell;
     }
-    compatibility[provider] = tiers;
+    setOwnKey<WorkflowDispatchProviderValue>(compatibility, provider, tiers);
   }
 
   return compatibility;
@@ -724,7 +733,7 @@ function resolveProviderMatrixCell(
   for (const layer of layers) {
     const resolved = resolveProviderCellFromValue(
       provider,
-      layer.providers?.[provider],
+      layer.providers ? getOwnKey(layer.providers, provider) : undefined,
       tier,
       layer.source,
       escalationLevel,
@@ -775,7 +784,9 @@ function resolveProviderMatrixCellDefinition(
   ];
 
   for (const layer of layers) {
-    const providerValue = layer.providers?.[provider];
+    const providerValue = layer.providers
+      ? getOwnKey(layer.providers, provider)
+      : undefined;
     if (typeof providerValue === 'string') {
       selected = null;
       continue;
@@ -2106,9 +2117,12 @@ function mergeEffectiveDispatchMatrix(
   ];
 
   for (const providers of layers) {
+    // Provider names come from user config, which now preserves a key named
+    // `__proto__` as an own key, so `Object.entries` yields it here. Plain
+    // member access would reinstall it as this map's prototype and lose it.
     for (const [provider, value] of Object.entries(providers ?? {})) {
-      const previous = merged[provider];
-      merged[provider] =
+      const previous = getOwnKey(merged, provider);
+      const mergedValue =
         typeof value === 'object' &&
         value !== null &&
         !Array.isArray(value) &&
@@ -2117,6 +2131,7 @@ function mergeEffectiveDispatchMatrix(
         !Array.isArray(previous)
           ? { ...previous, ...value }
           : value;
+      setOwnKey(merged, provider, mergedValue);
     }
   }
   return merged;
@@ -2625,7 +2640,12 @@ function writeHumanResolution(
   context.logger.info(`Resolved cap: ${resolution.value ?? 'none'}`);
   context.logger.info(`Source: ${sourceLabel(resolution.source)}`);
 
-  const providerResolution = resolution.providers[resolution.provider];
+  // `resolution.provider` is an open string union carrying a user-supplied
+  // `--provider` value, so an unowned prototype name must read as absent.
+  const providerResolution = getOwnKey(
+    resolution.providers,
+    resolution.provider,
+  );
   if (providerResolution) {
     context.logger.info(
       `Mode: ${providerResolution.mode} (${providerResolution.mechanism})`,
@@ -2789,7 +2809,12 @@ function buildResolutionReport(
 
   const action = options.reportAction!;
   const role = reportRole(action);
-  const providerResolution = resolution.providers[resolution.provider];
+  // `resolution.provider` is an open string union carrying a user-supplied
+  // `--provider` value, so an unowned prototype name must read as absent.
+  const providerResolution = getOwnKey(
+    resolution.providers,
+    resolution.provider,
+  );
   if (!providerResolution) {
     throw new Error(
       `Dispatch report resolution is missing provider data for "${resolution.provider}".`,

@@ -11,8 +11,10 @@ import {
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { appendProjectLog, ProjectLogSealedError } from './append';
 import { checkProjectLog } from './check';
 import { createProjectLogCommand } from './index';
+import { synthesizeProjectLog } from './synthesize';
 
 function createHarness(
   cwd: string,
@@ -284,6 +286,312 @@ Summarize before archive.
     execFileSync('pnpm', ['exec', 'oxfmt', '--check', logPath], {
       cwd: resolve(import.meta.dirname, '../../../../../..'),
       stdio: 'pipe',
+    });
+  });
+
+  describe('sealed log', () => {
+    const SEAL_HEADING =
+      '### 2026-07-17 · structural · oat-project-complete · seal';
+
+    async function seal(logPath: string): Promise<string> {
+      const content = await readFile(logPath, 'utf8');
+      const sealed = content.replace(
+        'The gate returned the wrong exit code.',
+        `The gate returned the wrong exit code.\n\n${SEAL_HEADING}\n\nCompletion sealed at 2026-07-17T10:00:00Z. oat-seal:demo`,
+      );
+      await writeFile(logPath, sealed, 'utf8');
+      return sealed;
+    }
+
+    it('refuses to rewrite a sealed log', async () => {
+      const { root, logPath } = await createRepo();
+      const before = await seal(logPath);
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, [
+        '--body',
+        'Synthesis written after the seal.',
+      ]);
+
+      // At base this returned `{"status":"synthesized"}` exit 0 and mutated the
+      // log after its final entry. The seal closes the whole file, not just the
+      // append path.
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'sealed',
+        logPath,
+        heading: SEAL_HEADING,
+      });
+      expect(
+        (capture.jsonPayloads[0] as { message: string }).message,
+      ).toContain('may follow the completion seal');
+      expect(process.exitCode).toBe(1);
+      await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
+    });
+
+    it('throws the same typed refusal from the library entry point', async () => {
+      const { root, projectPath, logPath } = await createRepo();
+      await seal(logPath);
+
+      await expect(
+        synthesizeProjectLog({
+          repoRoot: root,
+          project: projectPath,
+          body: 'Refused.',
+        }),
+      ).rejects.toBeInstanceOf(ProjectLogSealedError);
+    });
+
+    it('still synthesizes an unsealed log', async () => {
+      const { root, logPath } = await createRepo();
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, ['--body', 'Verdict: keep.']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'synthesized' });
+      await expect(readFile(logPath, 'utf8')).resolves.toContain(
+        '## End-of-run synthesis\n\nVerdict: keep.',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+  });
+
+  describe('advisory lock', () => {
+    it('refuses to rewrite while an append holds the log lock', async () => {
+      const { root, projectPath, logPath } = await createRepo();
+
+      // Deterministic, not a sleep race: the appending writer is parked inside
+      // its own read/modify/write window and only leaves once the synthesize
+      // attempt has already been refused.
+      let signalHolderInWindow = (): void => {};
+      const holderInWindow = new Promise<void>((settle) => {
+        signalHolderInWindow = settle;
+      });
+      let releaseHolder = (): void => {};
+      const holderReleased = new Promise<void>((settle) => {
+        releaseHolder = settle;
+      });
+
+      const holder = appendProjectLog(
+        {
+          repoRoot: root,
+          project: projectPath,
+          type: 'feedback',
+          scope: 'project',
+          area: 'lock',
+          body: 'Written by the lock holder.',
+        },
+        {
+          readLog: async (path: string): Promise<string> => {
+            signalHolderInWindow();
+            return readFile(path, 'utf8');
+          },
+          writeLog: async (path: string, content: string): Promise<void> => {
+            await holderReleased;
+            await writeFile(path, content, 'utf8');
+          },
+        },
+      );
+
+      await holderInWindow;
+      await expect(
+        synthesizeProjectLog(
+          { repoRoot: root, project: projectPath, body: 'Verdict: keep.' },
+          { lock: { waitMs: 0 } },
+        ),
+      ).rejects.toThrow(/Timed out waiting for the project log lock/);
+
+      releaseHolder();
+      await expect(holder).resolves.toMatchObject({ status: 'appended' });
+
+      // The refusal rewrote nothing: the holder's entry survived and the
+      // synthesis section is still pending.
+      const content = await readFile(logPath, 'utf8');
+      expect(content).toContain('Written by the lock holder.');
+      expect(content).toContain('pending — do not skip');
+    });
+
+    it('holds the lock across its own read, decide, and write', async () => {
+      const { root, projectPath, logPath } = await createRepo();
+
+      // The reverse direction: synthesize is parked inside its rewrite window,
+      // and an append must be unable to enter. Only this direction can catch a
+      // lock released before the mutation finishes.
+      let signalInWindow = (): void => {};
+      const inWindow = new Promise<void>((settle) => {
+        signalInWindow = settle;
+      });
+      let release = (): void => {};
+      const released = new Promise<void>((settle) => {
+        release = settle;
+      });
+
+      const original = await readFile(logPath, 'utf8');
+      const holder = synthesizeProjectLog(
+        {
+          repoRoot: root,
+          project: projectPath,
+          body: 'Verdict: keep.',
+        },
+        {
+          writeLog: async (path: string, content: string): Promise<void> => {
+            // Signal from inside the write, not the read. A mutant that
+            // released the lock after reading would still make a
+            // read-signalled contender time out, so only parking here proves
+            // the lock is held all the way through the mutation.
+            signalInWindow();
+            await released;
+            await writeFile(path, content, 'utf8');
+          },
+        },
+      );
+
+      // The rewriter is demonstrably inside its write, so the append's bounded
+      // wait really does expire against a lock synthesize is still holding.
+      await inWindow;
+      await expect(
+        appendProjectLog(
+          {
+            repoRoot: root,
+            project: projectPath,
+            type: 'feedback',
+            scope: 'project',
+            area: 'contending',
+            body: 'Must not enter.',
+          },
+          { lock: { waitMs: 0 } },
+        ),
+      ).rejects.toThrow(/Timed out waiting for the project log lock/);
+
+      release();
+      await expect(holder).resolves.toMatchObject({ status: 'synthesized' });
+
+      const content = await readFile(logPath, 'utf8');
+      expect(content).not.toBe(original);
+      expect(content).toContain('## End-of-run synthesis\n\nVerdict: keep.');
+      expect(content).not.toContain('Must not enter.');
+    });
+  });
+
+  describe('ambiguous markers', () => {
+    it.each([
+      ['carriage return', '\r'],
+      ['U+2028 line separator', '\u2028'],
+      ['U+2029 paragraph separator', '\u2029'],
+    ])(
+      'refuses a log with a second pending marker hidden behind a %s',
+      async (_name, terminator) => {
+        const { root, logPath } = await createRepo();
+        const pending =
+          '## End-of-run synthesis (pending — do not skip at project completion)';
+        const content = await readFile(logPath, 'utf8');
+        // Base saw two canonical synthesis sections here and refused as
+        // ambiguous. An LF-only reading sees one, and would rewrite it —
+        // consuming the hidden duplicate and its content.
+        await writeFile(
+          logPath,
+          `${content}\ncarrier${terminator}${pending}\n\nhidden second pending\n`,
+          'utf8',
+        );
+        const before = await readFile(logPath, 'utf8');
+        const { command, capture } = createHarness(root);
+
+        await runCommand(command, ['--body', 'Verdict: keep.']);
+
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          status: 'error',
+          message: expect.stringContaining('rather than a line feed'),
+        });
+        expect(process.exitCode).toBe(1);
+        await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
+      },
+    );
+
+    it.each([
+      ['lone carriage return', '\r'],
+      ['U+2028 line separator', '\u2028'],
+      ['U+2029 paragraph separator', '\u2029'],
+    ])(
+      'never writes a log it would refuse, given a %s in the body',
+      async (_name, terminator) => {
+        const { root, logPath } = await createRepo();
+        const before = await readFile(logPath, 'utf8');
+        const { command, capture } = createHarness(root);
+
+        // The body reaches the file verbatim, so without this rule synthesize
+        // would happily write `carrier<CR>## Entries` and the very next seal
+        // append would refuse the log it had just produced.
+        await runCommand(command, ['--body', `carrier${terminator}## Entries`]);
+
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          status: 'error',
+          message: expect.stringContaining('a lone carriage return'),
+        });
+        expect(process.exitCode).toBe(1);
+        await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
+      },
+    );
+
+    it('accepts a CRLF body and stores it with line feeds', async () => {
+      const { root, logPath } = await createRepo();
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, [
+        '--body',
+        'Verdict: keep.\r\nImpact: fewer retries.',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'synthesized',
+        normalizedLineEndings: true,
+      });
+      expect(process.exitCode).toBe(0);
+      const content = await readFile(logPath, 'utf8');
+      expect(content).toContain('Verdict: keep.\nImpact: fewer retries.');
+      expect(content).not.toContain('\r');
+    });
+
+    it('refuses to rewrite a log whose seal it cannot reach', async () => {
+      const { root, logPath } = await createRepo();
+      // The same refusal both append paths make on this file. A seal the parser
+      // cannot reach is still a seal, and replacing a section of the log it
+      // closes is exactly the mutation it forbids.
+      const content = await readFile(logPath, 'utf8');
+      const withoutEntries = content.replace(
+        '## Entries',
+        'Entries heading removed so the seal is unreachable.',
+      );
+      await writeFile(
+        logPath,
+        `${withoutEntries}\n### 2026-07-17 · structural · oat-project-complete · seal\n\nCompletion sealed. oat-seal:demo\n`,
+        'utf8',
+      );
+      const before = await readFile(logPath, 'utf8');
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, ['--body', 'Verdict: keep.']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining('cannot reach it'),
+      });
+      expect(process.exitCode).toBe(1);
+      await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
+    });
+
+    it('still accepts an ordinary multi-line synthesis body', async () => {
+      const { root, logPath } = await createRepo();
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, [
+        '--body',
+        'Verdict: keep.\nImpact: fewer retries.',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'synthesized' });
+      await expect(readFile(logPath, 'utf8')).resolves.toContain(
+        'Verdict: keep.\nImpact: fewer retries.',
+      );
+      expect(process.exitCode).toBe(0);
     });
   });
 });

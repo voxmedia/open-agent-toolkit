@@ -43,7 +43,7 @@ metadata:
   # only when `metadata.version` is absent.
   # author: my-org
 
-# === Claude Code / Cursor extension fields (ignored by Codex, safe to include) ===
+# === Claude Code / Cursor extension fields (not read by every provider) ===
 argument-hint: '[required-arg] [--optional-flag]'
 # Claude Code only: Shows in autocomplete after /skill-name
 
@@ -52,6 +52,10 @@ disable-model-invocation: true
 
 allowed-tools: Read, Write, Glob, Grep
 # Claude Code only: Tools agent can use without permission prompts
+# Write the list comma-separated: the spec's example is space-delimited, but OAT
+# writes commas and never parses the separator. Backstop:
+# it('declares allowed-tools as a comma-separated list in every canonical skill')
+# in packages/cli/src/validation/skills.test.ts
 
 user-invocable: true
 # Claude Code only: Set false for helper skills that shouldn't appear in / menu
@@ -116,7 +120,6 @@ Include code blocks for commands:
 ```bash
 example command
 ```
-````
 
 ### Step 2: Second Step Title
 
@@ -174,17 +177,16 @@ Successful completion means:
 - ✅ Second condition is met
 - ✅ Artifacts created or modified as expected
 - ✅ Skill can be invoked with /skill-name
-
-```
+````
 
 ## Detail Level Guidelines
 
-| Skill Type | Detail Level | Examples |
-|------------|--------------|----------|
-| Complex workflows | Detailed | docs-new, docs-review |
-| Simple command-like | Concise | update-doc-refs, create-ticket |
-| Reference/standards | Detailed | repo-documentation |
-| Helper (auto-invoked) | Moderate | read-relevant-docs |
+| Skill Type            | Detail Level | Examples                       |
+| --------------------- | ------------ | ------------------------------ |
+| Complex workflows     | Detailed     | docs-new, docs-review          |
+| Simple command-like   | Concise      | update-doc-refs, create-ticket |
+| Reference/standards   | Detailed     | repo-documentation             |
+| Helper (auto-invoked) | Moderate     | read-relevant-docs             |
 
 ## Versioning Guidance
 
@@ -197,15 +199,16 @@ Successful completion means:
 
 **Portable baseline:** `name` + `description` are the only fields that work identically across all providers. Everything else is either spec-optional or provider-specific.
 
-**Safe layering strategy:** Start with the portable fields, then layer provider-specific fields on top. Codex explicitly ignores unknown keys, so including Claude-specific fields (like `allowed-tools`, `user-invocable`) won't break Codex — they just won't have effect there.
+**Safe layering strategy:** Start with the portable fields, then layer provider-specific fields on top. Providers differ in which extension fields they read, and an unread field is inert rather than guaranteed harmless, so treat a Claude-specific field as having no effect elsewhere rather than as universally safe. The dated per-provider picture lives in one place: see `references/docs/skills-guide.md`.
 
-**Description constraints for max portability:**
-- Single line (Codex enforces this)
-- ≤ 500 chars (Codex limit; spec allows 1024)
+**Description constraints:**
+
+- Single line, ≤ 500 chars — OAT's house rule, not a provider requirement. `validateOatSkills` in `packages/cli/src/validation/skills.ts` enforces it only for skills whose directory name starts with `oat-`; for every other skill it is an unenforced convention this repository follows for portability. Backstops in `packages/cli/src/validation/skills.test.ts`: `it('reports description longer than 500 characters')` and `it('does not report a description longer than 500 characters for a non-oat-* skill')`. The spec allows 1024
 - Lead with "Use when..." or "Run this when..."
 - Front-load trigger keywords in first 50 chars (may be truncated at scale)
 
 **Skill budget awareness (Claude Code):**
+
 - Claude Code has a ~16,000 character budget for skill descriptions at startup
 - At 60+ skills, descriptions may be silently truncated
 - Keep descriptions concise; the body handles detail
@@ -213,4 +216,3 @@ Successful completion means:
 **Shared references:** Keep a shared doc's canonical copy in `.agents/docs/` (edit it in one place). If a distributed skill needs it at invocation time, vendor it into `references/docs/` as a symlink to the canonical file (`ln -s ../../../../docs/my-guide.md references/docs/my-guide.md`); the build materializes the symlink so the doc travels with the skill. Reference the bundled `references/docs/...` path — a bare `.agents/docs/...` reference dangles once the skill is installed in another repo.
 
 For the full compatibility matrix and resolved research questions, see `references/docs/skills-guide.md`.
-```

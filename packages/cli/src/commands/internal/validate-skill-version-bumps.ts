@@ -39,7 +39,9 @@ function reportFindings(
     return;
   }
 
-  context.logger.error('Canonical skill version validation failed:\n');
+  context.logger.error(
+    'Canonical skill and agent role version validation failed:\n',
+  );
   for (const finding of result.findings) {
     context.logger.error(`- ${finding.file}: ${finding.message}`);
   }
@@ -75,11 +77,11 @@ async function runValidateSkillVersionBumps(
     } else {
       if (result.validatedSkillCount === 0) {
         context.logger.info(
-          `OK: 0 canonical skills changed relative to ${options.baseRef} - nothing to validate`,
+          `OK: 0 canonical skills or agent roles changed relative to ${options.baseRef} - nothing to validate`,
         );
       } else {
         context.logger.info(
-          `OK: validated ${result.validatedSkillCount} changed canonical skill version bump checks against ${options.baseRef}`,
+          `OK: validated ${result.validatedSkillCount} changed canonical skill and agent role version bump checks against ${options.baseRef}`,
         );
       }
     }
@@ -105,11 +107,11 @@ export function createValidateSkillVersionBumpsCommand(
 
   return new Command('validate-skill-version-bumps')
     .description(
-      'Validate that changed canonical skills bump version relative to a git base ref',
+      'Validate that changed canonical skills and agent roles bump version relative to a git base ref',
     )
     .requiredOption(
       '--base-ref <ref>',
-      'Git ref used as the comparison base for changed canonical skills',
+      'Git ref used as the comparison base for changed canonical skills and agent roles',
     )
     .action(
       async (

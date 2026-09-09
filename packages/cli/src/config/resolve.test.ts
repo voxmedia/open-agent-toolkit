@@ -17,6 +17,7 @@ import {
   resolveExecTargetViews,
   resolveExecTargets,
   resolveGate,
+  resolveGateWithSource,
   type ResolvedConfig,
 } from './resolve';
 
@@ -249,6 +250,55 @@ describe('resolveEffectiveConfig', () => {
     });
     expect(Object.keys(result.resolved)).not.toContain(
       'pjm.remote.transports.github',
+    );
+  });
+
+  it('gives the documentation list keys a null default', async () => {
+    const repoRoot = await createRepoRoot();
+    const userConfigDir = await createUserConfigDir();
+
+    const result = await resolveEffectiveConfig(repoRoot, userConfigDir, {});
+
+    // `oat config dump` enumerates the resolved map, so a key missing from the
+    // defaults has no row at all while it is unset -- unlike `oat config list`,
+    // which is catalogue-driven and always reported both keys.
+    expect(result.resolved['documentation.excludes']).toEqual({
+      value: null,
+      source: 'default',
+    });
+    expect(result.resolved['documentation.instructionPointerExcludes']).toEqual(
+      { value: null, source: 'default' },
+    );
+  });
+
+  it('lets a configured documentation.excludes win over the null default', async () => {
+    const result = await resolveEffectiveConfig(
+      '/repo',
+      '/tmp/user',
+      {},
+      {
+        readOatConfig: async () =>
+          ({
+            version: 1,
+            documentation: {
+              excludes: ['CLAUDE.md'],
+              instructionPointerExcludes: ['apps/docs'],
+            },
+          }) satisfies OatConfig,
+        readOatLocalConfig: async () =>
+          ({ version: 1 }) satisfies OatLocalConfig,
+        readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+      },
+    );
+
+    // `null` must keep meaning "not set here": the default may not shadow a
+    // real configured array.
+    expect(result.resolved['documentation.excludes']).toEqual({
+      value: ['CLAUDE.md'],
+      source: 'shared',
+    });
+    expect(result.resolved['documentation.instructionPointerExcludes']).toEqual(
+      { value: ['apps/docs'], source: 'shared' },
     );
   });
 
@@ -1610,6 +1660,30 @@ describe('resolveGate', () => {
     onFailure: 'warn',
   };
 
+  it('does not resolve a gate for an unowned `__proto__` skill name', () => {
+    // Pins the existing `hasOwn` guard at the gate lookup so a later refactor
+    // cannot drop it: `Object.prototype` is truthy and would otherwise read as
+    // a configured gate.
+    const effective = createResolvedConfig({
+      shared: {
+        version: 1,
+        workflow: { gates: { skills: { 'oat-project-plan': sharedGate } } },
+      },
+    });
+
+    expect(resolveGateWithSource(effective, '__proto__')).toEqual({
+      gate: null,
+      source: null,
+    });
+    expect(resolveGateWithSource(effective, 'constructor')).toEqual({
+      gate: null,
+      source: null,
+    });
+    expect(resolveGateWithSource(effective, 'oat-project-plan').gate).toEqual(
+      sharedGate,
+    );
+  });
+
   it('uses local over shared over user with a wholesale gate winner', () => {
     const effective = createResolvedConfig({
       shared: {
@@ -1744,6 +1818,70 @@ describe('resolveExecTargets', () => {
   it('includes built-in exec targets by default', () => {
     expect(resolveExecTargets(createResolvedConfig())).toEqual(
       BUILTIN_EXEC_TARGETS,
+    );
+  });
+
+  it('does not let a `__proto__` exec-target id become the registry prototype', () => {
+    // The layer is built with `Object.fromEntries` because that is exactly
+    // what the fixed `normalizeRecordMap` now hands the resolver: the key is
+    // an own key, so `Object.entries` yields it for the first time.
+    const injected: ExecTarget = {
+      runtime: 'shell',
+      baseCommand: ['echo', 'pwned'],
+      priority: 1,
+    };
+    const real: ExecTarget = {
+      runtime: 'shell',
+      baseCommand: ['echo', 'ok'],
+      priority: 2,
+    };
+    const effective = createResolvedConfig({
+      shared: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: Object.fromEntries([
+              ['__proto__', injected],
+              ['real-target', real],
+            ]),
+          },
+        },
+      },
+    });
+
+    const registry = resolveExecTargets(effective);
+    expect(Object.getPrototypeOf(registry)).toBe(Object.prototype);
+    expect('baseCommand' in registry).toBe(false);
+    expect(registry['real-target']).toEqual(real);
+    // The built-in targets are untouched.
+    for (const [id, target] of Object.entries(BUILTIN_EXEC_TARGETS)) {
+      expect(registry[id]).toEqual(target);
+    }
+  });
+
+  it('does not let a `__proto__` exec-target id become the views prototype', () => {
+    const injected: ExecTarget = {
+      runtime: 'shell',
+      baseCommand: ['echo', 'pwned'],
+      priority: 1,
+    };
+    const effective = createResolvedConfig({
+      shared: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: Object.fromEntries([['__proto__', injected]]),
+          },
+        },
+      },
+    });
+
+    const views = resolveExecTargetViews(effective);
+    expect(Object.getPrototypeOf(views)).toBe(Object.prototype);
+    expect('target' in views).toBe(false);
+    expect('origin' in views).toBe(false);
+    expect(Object.keys(views).sort()).toEqual(
+      ['__proto__', ...Object.keys(BUILTIN_EXEC_TARGETS)].sort(),
     );
   });
 

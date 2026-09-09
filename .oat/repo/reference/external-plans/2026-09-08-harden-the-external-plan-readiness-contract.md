@@ -3,8 +3,8 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260907-harden-the-external-plan.md
-  - .oat/repo/pjm/backlog/items/BL-260907-settle-the-oat-wave-program.md
+  - .oat/repo/pjm/backlog/archived/BL-260907-harden-the-external-plan.md
+  - .oat/repo/pjm/backlog/archived/BL-260907-settle-the-oat-wave-program.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -62,9 +62,9 @@ rejects nothing.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260907-harden-the-external-plan — Harden the external-plan backlink matcher](../../pjm/backlog/items/BL-260907-harden-the-external-plan.md)
+  [BL-260907-harden-the-external-plan — Harden the external-plan backlink matcher](../../pjm/backlog/archived/BL-260907-harden-the-external-plan.md)
 - Source backlog item:
-  [BL-260907-settle-the-oat-wave-program — Settle the oat-wave-program ledger status vocabulary](../../pjm/backlog/items/BL-260907-settle-the-oat-wave-program.md)
+  [BL-260907-settle-the-oat-wave-program — Settle the oat-wave-program ledger status vocabulary](../../pjm/backlog/archived/BL-260907-settle-the-oat-wave-program.md)
 - Absorbed items: at the 2026-09-08 triage the first item above absorbed the
   two follow-ups on decoding and on the unparsable readiness date, and its
   "Merged at the 2026-09-08 triage" section is the authority for that
@@ -192,8 +192,8 @@ rejects nothing.
   - Live artifacts agree too: every Status cell in
     `.oat/repo/reference/external-plans/2026-08-19-execution-program.md:28-31`
     (W1–W4) and `2026-08-31-execution-program.md:36-41` (W1–W6) is `merged`.
-    Neither ledger contains `done`. `oat-wave-execute/SKILL.md:427-431`
-    (closeout step 8) flips _plan rows_ to `done`, which is the wave-table
+    Neither ledger contains `done`. `oat-wave-execute/SKILL.md:443-445`
+    (closeout step 9 since Phase 21 added the closeout gate step; was `:427-431` / step 8 when written) flips _plan rows_ to `done`, which is the wave-table
     vocabulary and stays correct.
   - `apps/oat-docs/docs/workflows/wave-workflows.md:67` already documents
     "each wave advances from composed to in-progress to merged", so no docs
@@ -377,7 +377,7 @@ mode` (`:3061-3100`).
 - `apps/oat-docs/docs/workflows/wave-workflows.md` — `:67` already documents
   composed → in-progress → merged. Its stale `oat-wave-program 1.1.0` mention
   at `:16` is a separate standing-claim defect and is **not** fixed here.
-- `oat-wave-execute/SKILL.md` — its closeout step 8 (`:427-431`) flips _plan
+- `oat-wave-execute/SKILL.md` — its closeout step 9 (`:443-445`; step 8 at `:427-431` when written) flips _plan
   rows_ to `done`, which is correct under the settled vocabulary.
 - The `## Wave Table` and `## Status Ledger` structural rules themselves, and
   every non-external-plan assertion in this large contract file.
@@ -823,6 +823,8 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
+**Refresh applied 2026-09-09 (wave-7 p17, post-STOP amendment; amends steps 4, 5, and 7 and the Test plan — the Outcome, Scope, the enumerated-widening rule, and every other STOP stand):** the lane implemented all steps and a differential run of the real old and new code (identical injected probes under vitest) reproduced four widenings outside the enumerated set and three false-rejection classes, all produced by this plan's own step 4/5 prescriptions: (C1) a fence opener hidden by a raw HTML block (`<div>` … ` ```markdown ` … blank … declaration) becomes visible, so a declaration the old scanner hid is now accepted — step 4's claim that the raw-HTML-block rule is only a narrowing is false; (C2) line-preserving comment blanking re-indents a `-->[item]: …` remainder to three columns and manufactures a definition CommonMark would not read (a definition cannot interrupt a paragraph); (C3) the label is percent-decoded, so `[BL%2D123](unrelated)` matches — Markdown never percent-decodes link text; (C4) `decodeURIComponent` decodes reserved delimiters (`%2F`, `%23`, `%3F`, `%26`), so a destination that resolves elsewhere is matched. Also: `<!--` inside a fenced example is treated as a comment; `HTML_BLOCK_OPENER` (verbatim from step 4) accepts any tag-shaped name; a bare `%` in a label voids the link; the residual double-encoding check runs before decoding, so `%252D` bypasses it. **Amended mechanism (non-narrowing of the requirement — the acceptance set of the head must be the base's plus exactly the enumerated widenings — (a)–(b) when this paragraph was written, (a)–(d) after the two additions below; wording aligned 2026-09-09 after the round-2 review):** (1) the fence machine runs first over raw text and wins: a fence-shaped line always opens or closes a fence (mirroring the wave-7 p03 Markdown guard's rule), `<!--` inside a fence is literal, and a fence opener inside an HTML block still hides what follows it — C1 is therefore not accepted (deliberately non-CommonMark, strictly narrowing relative to the base); (2) a declaration or definition is recognized only when it begins at column 0 of the ORIGINAL line — never at a position created by blanking — which closes C2; (3) the label is never percent-decoded; only HTML character references are decoded in the label (the plan's existing rule), so a bare `%` in a label is ordinary text and C3 and I3 close together; (4) the destination is decoded in exactly one pass and only for unreserved characters (`%41`–`%7A` letters and digits, `%2D` `-`, `%5F` `_`, `%2E` `.`, `%7E` `~`); any other `%XX` (reserved delimiters and `%25` itself) is left in place, and any `%` remaining after that single pass is a residual that rejects the link — closing C4 and the `%252D` bypass in one rule; (5) `HTML_BLOCK_OPENER` is restricted to CommonMark's HTML-block conditions 1–7 (the closed type-6 tag list; a complete open or closing tag alone on a line for type 7) — closing I1; (6) step 5's verify example `BL-123&amp;#45;&amp;#45;evil` is rejected by a residual-character-reference check after one decode pass (the plan's stated rationale was inverted: a residual `&` satisfies the boundary class rather than defeating it) — the lane's construction is adopted; (7) the prospective floor in step 7 is raised from `>= 3` to `>= 18` (21 prospective plans are live; headroom three). **Test plan additions:** one case per closed class (C1 hidden-fence-in-HTML-block still hidden; C2 blanking-created definition not recognized; C3 label `%2D` not matched; C4 `%2F`/`%23`/`%26` destinations rejected as residual; `%252D` rejected; a fenced `<!--` literal; a `<span>`-prefixed declaration accepted; a `(100% done)` label with a valid destination accepted), each red against the pre-refresh working tree and green after; the before/after `modes` maps over the live corpus stay byte-identical; the corpus control stays clean. **Portability:** the bundled `oat-wave-program/SKILL.md` names the readiness contract by name, not by a monorepo test path. **Enumerated widening (c), added 2026-09-09 after the resumed lane's differential run:** the acceptance set of the head is the base's plus (a) comment-hidden fence shapes, (b) encoded destinations that genuinely identify the declared source, and (c) a link label whose HTML character references decode to a spelling the base already accepts unencoded (the plan's Outcome says link text is decoded; the Review-focus wording named only the destination — the wording is widened to "rendered link text", and (c) opens no input the base rejects on rendered text). A label reference decoding to anything the base would not accept literally stays rejected. Deliberate consequence of rule (4): any bare `%` left in a destination rejects that link — the live corpus has none; a future plan linking a query string or fragment must spell it unencoded or lose its backlink (noted for authors). **Enumerated widening (d), added 2026-09-09 after the root review's 50,625-document combinatorial sweep:** a fully hidden line (a whole-line HTML comment) between a source declaration and its indented continuation is transparent to the continuation scan at the head, while the base collapsed it to a whitespace-only line that broke the scan — so a declaration whose continuation follows such a line is rejected at base and accepted at head. Every witness is rendered-text equivalent (the base accepts the same document once the comment line is deleted), and the rule is load-bearing (it is the fix for the continuation-scan regression a fully hidden line otherwise caused). Licensed and pinned by one control with the minimal witness. The complete enumeration is therefore: (a) comment-hidden fence shapes, (b) encoded destinations that genuinely identify the declared source, (c) label character references decoding to a spelling the base accepts unencoded, (d) a whole-line comment between a declaration and its continuation. Also from that review: numeric character references are bounded to CommonMark's forms (`&#\d{1,7};`, `&#[xX][0-9a-fA-F]{1,6};`); hidden-ness is carried out of band rather than as an in-band form-feed sentinel; the residual-`%` violation names its cause; `findSection`'s own comment-unaware fence pass is out of this plan's scope and filed as a follow-up. The Codex lane DID run at the review gate (codex-cli 0.153.4; a deadline overrun was recovered by resuming the same session), so the earlier "unusable" note is superseded. **Cross-model review:** `codex exec` wedged three times in this lane's environment (an MCP session-expired error); the lane substituted two independent in-harness reviewers — record that as a gap, and the root review re-attempts Codex once at the review gate.
+
 Revalidate against live state before executing when: substantial time passes
 after `2026-09-08`; `origin/main` advances materially from
 `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`; PR #190 or #125 lands, or
@@ -836,6 +838,8 @@ ledger changes; or a load-bearing evidence claim above cannot be reproduced. A
 plan executed inside a wave refreshes its drift check against the exact
 execution `HEAD` after predecessor lanes integrate, not only from the authored
 SHA to `origin/main`.
+
+**Correction applied 2026-09-09 (wave-7 final review, Medium; no requirement change):** the `## Review focus` bullet that says "Two widenings are deliberate … Confirm the review note enumerates exactly those two … Any further widening is Critical" predates the two dated enumerations above and must be read as: the acceptance set of the head is the base's plus exactly the four enumerated widenings (a)–(d); any widening outside (a)–(d) is Critical. The head matches (a)–(d) exactly (final review: a 96,480-document differential attributed all 3,053 acceptance-ward flips to the four classes with zero unexplained).
 
 ## Review focus
 

@@ -3,8 +3,8 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260906-cover-skill-test-files-under.md
-  - .oat/repo/pjm/backlog/items/BL-260906-run-scripts-worktree-init-test.md
+  - .oat/repo/pjm/backlog/archived/BL-260906-cover-skill-test-files-under.md
+  - .oat/repo/pjm/backlog/archived/BL-260906-run-scripts-worktree-init-test.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -52,8 +52,8 @@ proved by a deliberate failing control that the gate catches.
 ## Source and live evidence
 
 - Related backlog items:
-  - [BL-260906-cover-skill-test-files-under](../../pjm/backlog/items/BL-260906-cover-skill-test-files-under.md)
-  - [BL-260906-run-scripts-worktree-init-test](../../pjm/backlog/items/BL-260906-run-scripts-worktree-init-test.md)
+  - [BL-260906-cover-skill-test-files-under](../../pjm/backlog/archived/BL-260906-cover-skill-test-files-under.md)
+  - [BL-260906-run-scripts-worktree-init-test](../../pjm/backlog/archived/BL-260906-run-scripts-worktree-init-test.md)
 - Why one plan covers both: they are wired into the same two root scripts and
   share one `AGENTS.md` paragraph, so they cannot be verified or reviewed
   independently. The first is "Cover skill test files under `.agents/skills` in
@@ -662,6 +662,8 @@ Revalidate this plan against live state before executing when:
 Executed inside a wave, refresh the drift check against the exact execution
 `HEAD` after predecessor lanes integrate, not only from the authored SHA to
 `origin/main`.
+
+**Correction applied 2026-09-09 (wave-7 p18 execution; wave-close pass; no requirement change):** Step 6's sentence for the `:28-34` paragraph — "so `pnpm check` now contains everything `pnpm format` checks" — is false and was not written: `packages/control-plane` defines a `format` script but no `check` script, so `turbo run check` never formats it while `turbo run format` does (the plan sampled two packages when it derived the claim). The landed `AGENTS.md` text states the true coverage instead: `pnpm check` covers `format:root`'s three globs, while `pnpm lint`'s root `oxlint` pass and `packages/control-plane`'s `format` still run in no CI gate; the `:103-104` sentence was rewritten to the same effect, and the two Essential Commands bullets (`:21`, `:23`) were updated in-file. The root review adjudicated the refusal a justified deviation; the control-plane gap is filed as `BL-260909-give-packages-control-plane`. `format:fix` was refactored onto a shared `format:root:fix` (behavior-preserving; adjudicated licensed). Sibling plans authored before this lane (p19, p20) still describe the pre-p18 gate premise — read their gate lists against the landed `AGENTS.md`. Executed at `1ce96aa7e` + `bb277915e`, merged in group 6 as `f789c9261`.
 
 ## Review focus
 

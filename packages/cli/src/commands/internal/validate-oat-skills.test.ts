@@ -226,6 +226,10 @@ describe('createValidateOatSkillsCommand', () => {
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
+        // The gateability warning is the finding under test; a fixture with no
+        // resolvable version would add a blocking `skill-version-missing`.
+        'metadata:',
+        '  version: 1.0.0',
         '---',
         '',
         '# Demo',

@@ -2,6 +2,7 @@ import {
   VALID_CLAUDE_DISPATCH_CEILINGS,
   VALID_CODEX_DISPATCH_CEILINGS,
 } from '@config/oat-config';
+import { getOwnKey } from '@config/own-keys';
 import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
 import { findCursorModelPinMapping } from '@providers/cursor/codec/catalog';
 import { buildCursorMaterializedRoleName } from '@providers/cursor/codec/shared';
@@ -211,5 +212,9 @@ const REGISTERED_ADAPTERS: Record<string, ProviderCeilingAdapter> = {
  * `compileToDispatchArgs → null`).
  */
 export function getCeilingAdapter(provider: string): ProviderCeilingAdapter {
-  return REGISTERED_ADAPTERS[provider] ?? advisoryAdapter(provider);
+  // Own-key read: `provider` is user-supplied (`--provider <name>`), and a
+  // bare lookup for `__proto__` returns `Object.prototype`, which is neither
+  // nullish nor an adapter, so the `??` fallback above would be skipped and
+  // callers would read `undefined` for `mechanism` and `supportsCeiling`.
+  return getOwnKey(REGISTERED_ADAPTERS, provider) ?? advisoryAdapter(provider);
 }

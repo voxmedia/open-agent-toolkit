@@ -6,7 +6,7 @@ disable-model-invocation: true
 allowed-tools: Read, Write, Bash, Glob, Grep, AskUserQuestion
 user-invocable: true
 metadata:
-  version: 1.5.3
+  version: 1.5.4
 ---
 
 # Create OAT Skill
@@ -69,7 +69,7 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
 **Required frontmatter metadata:**
 
 - Include `metadata.version: 1.0.0` for new skills. OAT resolves `metadata.version` first and the top-level `version` second; `resolveSkillVersion` in `packages/cli/src/commands/shared/frontmatter.ts` owns that order and `packages/cli/src/commands/shared/frontmatter.test.ts` backstops it.
-- A top-level `version:` is the deprecated alias, read only when `metadata.version` is absent. Carrying both with different values is a conflict: `pnpm oat:validate-skills` reports it as an error and canonical role identity rejects it, even though the runtime readers still return the `metadata.version` value.
+- A top-level `version:` is the deprecated alias, read only when `metadata.version` is absent, and a skill whose only version is that alias no longer validates: `validateOatSkills` in `packages/cli/src/validation/skills.ts` reports `skill-version-alias` at `severity: 'error'`, so `pnpm oat:validate-skills` fails the skill rather than warning about it. Backstop: `it('reports exactly once for a non-oat-* alias-only skill')` in `packages/cli/src/validation/skills.test.ts`. Carrying both with different values is the separate `skill-version-conflict`: `pnpm oat:validate-skills` reports it as an error and canonical role identity rejects it, even though the runtime readers still return the `metadata.version` value.
 - On later edits, bump patch for fixes/clarifications, minor for backward-compatible behavior additions, major for breaking workflow/interface changes.
 
 **Progress indicators (required):**
@@ -211,11 +211,14 @@ If the skill needs templates/scripts, add:
 
 ### Step 5: Register the Skill
 
-Sync the skill to provider views:
+If the repository uses OAT sync, sync the skill to this repository's provider views:
 
 ```bash
-oat sync
+oat sync --scope project
 ```
+
+A bare `oat sync` defaults to `--scope all`, which also rewrites the invoking user's home-scope provider
+directories. `withScopeOption` in `packages/cli/src/commands/shared/scope-option.ts` owns that default, and `it('sync --help matches snapshot')` in `packages/cli/src/commands/help-snapshots.test.ts` is its backstop.
 
 Run OAT validator and resolve findings:
 
@@ -331,6 +334,6 @@ We should add a new OAT skill to archive completed projects. Create the skill wi
 - ✅ New skill created at `.agents/skills/{skill-name}/SKILL.md`
 - ✅ Skill frontmatter includes valid semver `metadata.version:` (`1.0.0` for new skills)
 - ✅ Skill includes required OAT sections (mode + progress + project resolution if applicable)
-- ✅ Skill registered in `AGENTS.md`
+- ✅ Skill resolves through the provider views after a scoped sync (`oat tools info {skill-name}` or the provider's own skill list)
 - ✅ `pnpm oat:validate-skills` passes
 - ✅ If distributable: added to `bundle-assets.sh` and the appropriate category constant, tests pass

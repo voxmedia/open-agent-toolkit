@@ -113,6 +113,15 @@ and retro is not added to the lite closeout sequence.
 On completion, OAT treats archive handling as an explicit closeout choice:
 
 - When archiving is selected, the local archive is written to `.oat/projects/archived/<project>/`.
+- Every completion that will actually archive — any durable (`shared` or
+  `synced`) project with archive selected — keeps the `activeProject` pointer
+  until the archive returns a validated receipt, and only then clears it.
+  `local` projects are never durable and never archive, so they clear the
+  pointer immediately, as does any completion that declines archive. An archive
+  failure therefore leaves the pointer intact and the completion directly
+  resumable. See
+  [Picking Up a Project](picking-up-projects.md#archive-contents) for the
+  post-archive resume and its manual recovery path.
 - When archiving is disabled or declined, durable projects remain at their
   active path. Synced completion still finalizes and pushes the project ref,
   commits the discovery record as `complete`, retains the checkout and ref, and
@@ -182,6 +191,14 @@ change where and how the dispositions are recorded: an autonomous run records
 each finding as a `deferred advisory` warning and continues, a project with no log reports them in the
 final completion summary, and a resumed completion whose log already
 carries a seal runs report-only and appends nothing.
+
+A resume detects that seal from `oat project log check`, which reports a
+`sealed` field, rather than by re-reading the log. The invariant is enforced in
+the CLI: replaying the seal reports `already-appended` and leaves exactly one
+seal entry; a replay recognized by its own idempotency key reports
+`already-appended` even on a sealed log (nothing is appended), and every
+append carrying new content is refused with `status: "sealed"` and a non-zero
+exit.
 
 Repositories that never adopted PJM skip the sweep with a one-line note. A
 missing planning surface degrades the sweep, never the closeout.

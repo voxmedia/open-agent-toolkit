@@ -260,6 +260,10 @@ async function seedValidOatSkill(
       'disable-model-invocation: true',
       'user-invocable: true',
       'allowed-tools: Read, Write',
+      // A valid skill declares a resolvable version: the structural validator
+      // reports `skill-version-missing` for one that does not.
+      'metadata:',
+      '  version: 1.0.0',
       '---',
       '',
       '# Skill',

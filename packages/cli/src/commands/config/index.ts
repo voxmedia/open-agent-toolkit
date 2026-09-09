@@ -35,6 +35,7 @@ import {
   MIN_GATE_TIMEOUT_MS,
   isValidGateTimeoutMs,
   type OatConfig,
+  type OatConfigRead,
   type OatLocalConfig,
   type OatPjmRemoteDescriptionMode,
   type OatPjmRemoteMutationAuthority,
@@ -56,14 +57,17 @@ import {
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
   readOatConfigForInstructionPointerExcludesRepair,
+  readOatConfigWithWarnings,
   readOatLocalConfig,
   readUserConfig,
   writeOatConfig,
   writeOatLocalConfig,
   writeUserConfig,
 } from '@config/oat-config';
+import { getOwnKey, setOwnKey } from '@config/own-keys';
 import {
   resolveEffectiveConfig,
+  resolveEnvOverride,
   type ResolvedConfig,
   type ResolvedConfigSource,
 } from '@config/resolve';
@@ -250,6 +254,7 @@ interface ConfigCommandDependencies {
   readOatConfigForInstructionPointerExcludesRepair: (
     repoRoot: string,
   ) => Promise<OatConfig>;
+  readOatConfigWithWarnings: (repoRoot: string) => Promise<OatConfigRead>;
   writeOatConfig: (repoRoot: string, config: OatConfig) => Promise<void>;
   readOatLocalConfig: (repoRoot: string) => Promise<OatLocalConfig>;
   writeOatLocalConfig: (
@@ -1257,6 +1262,7 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
   readOatConfigForDefaultScopeRepair,
   readOatConfigForDocumentationExcludesRepair,
   readOatConfigForInstructionPointerExcludesRepair,
+  readOatConfigWithWarnings,
   writeOatConfig,
   readOatLocalConfig,
   writeOatLocalConfig,
@@ -1664,9 +1670,16 @@ interface SurfaceFlagOptions {
 /**
  * Resolve the `--shared` / `--local` / `--user` trio to a single surface.
  *
- * Lifted verbatim out of the `set` action so `unset` enforces the same
- * mutual-exclusion rule through the same code path. The thrown message is
- * byte-identical to the one `set` raised inline, because tests pin it.
+ * `set`, `unset`, and `adopt` all resolve the trio here -- this is the only
+ * copy of the mutual-exclusion rule and of its message. It was lifted verbatim
+ * out of the `set` action so `unset` could share it, and `adopt` was folded on
+ * afterwards.
+ *
+ * The message is pinned in two ways, so changing it means moving all three
+ * commands together: the per-command cases assert it individually, and the
+ * three-command parity case in `index.test.ts` ('set, unset, and adopt reject
+ * the same conflicting surface flags with one message') compares the three
+ * commands' output to each other as well as to the literal.
  */
 function resolveSurfaceFlags(options: SurfaceFlagOptions): ConfigSurface {
   const flagsPresent = [options.shared, options.local, options.user].filter(
@@ -2027,7 +2040,10 @@ function applyWorkflowValue(
     const { provider, tier } = parseDispatchCeilingProviderConfigKey(key);
     const providers = workflow.dispatchCeiling?.providers ?? {};
     if (tier) {
-      const existingProviderValue = providers[provider];
+      // `provider` is a user-supplied config-key segment, so the lookup is
+      // own-key guarded. The computed-key writes below use object-literal
+      // define semantics and are already safe.
+      const existingProviderValue = getOwnKey(providers, provider);
       const existingTierMap =
         existingProviderValue &&
         typeof existingProviderValue === 'object' &&
@@ -2309,21 +2325,25 @@ function buildResolvedConfigAggregate(
     if (sourceRank[entry.source] > sourceRank[source]) {
       source = entry.source;
     }
+    // Key segments come from resolved config keys, so a provider literally
+    // named `__proto__` reaches this walk. A bare `cursor[part]` descends into
+    // `Object.prototype` and the leaf write then lands on the global
+    // prototype, polluting every object in the process -- not just this map.
     const parts = entryKey.slice(prefix.length).split('.');
     let cursor = value;
     for (const [index, part] of parts.entries()) {
       if (index === parts.length - 1) {
-        cursor[part] = entry.value;
+        setOwnKey(cursor, part, entry.value);
       } else {
-        const nested = cursor[part];
+        const nested = getOwnKey(cursor, part);
         if (
           typeof nested !== 'object' ||
           nested === null ||
           Array.isArray(nested)
         ) {
-          cursor[part] = {};
+          setOwnKey(cursor, part, {});
         }
-        cursor = cursor[part] as Record<string, unknown>;
+        cursor = getOwnKey(cursor, part) as Record<string, unknown>;
       }
     }
   }
@@ -2915,12 +2935,17 @@ async function unsetConfigValue(
     );
   }
 
-  const resolved = await dependencies.resolveEffectiveConfig(
-    repoRoot,
-    userConfigDir,
-    dependencies.processEnv,
-  );
-  const envShadowed = resolved.resolved[key]?.source === 'env';
+  // Deliberately not `resolveEffectiveConfig`: its result was used for this one
+  // boolean, and its strict normalization throws on exactly the malformed
+  // stored value `unset` exists to remove. `ENV_OVERRIDE_MAP` covers three
+  // keys, all of which are in `DEFAULT_SHARED_CONFIG` and therefore always
+  // present in the resolved view, and the env branch is checked first there --
+  // so this probe answers identically for every config key. The whole-config
+  // read this replaces was also a validation barrier; that role is reinstated
+  // separately by the targeted barrier below, which reads every surface except
+  // the targeted one (the targeted one is re-normalized on write instead).
+  const envShadowed =
+    resolveEnvOverride(key, dependencies.processEnv) !== undefined;
 
   if (key === 'activeProject' || key === 'lastPausedProject') {
     throw new Error(
@@ -2954,6 +2979,46 @@ async function unsetConfigValue(
       ? (defaultSurfaceForKey(key) as Exclude<ConfigSurface, 'auto'>)
       : surface;
   const path = configPathForKey(key);
+
+  // Targeted strict barrier.
+  //
+  // `resolveEffectiveConfig` used to run at the top of this function, and as a
+  // side effect of resolving it strictly read all three surfaces. That read --
+  // not its return value -- is what made a malformed value anywhere abort
+  // `unset` before it wrote anything. The `envShadowed` probe above no longer
+  // performs it, so the barrier is reinstated here explicitly and narrowly:
+  // every surface OTHER than the targeted one is read strictly, through the
+  // same injected readers `resolveEffectiveConfig` composes, so a malformed
+  // value on an untargeted surface still aborts with the identical
+  // `Invalid <key>` message it produced before.
+  //
+  // The targeted surface is deliberately excluded, and that exclusion is the
+  // whole point of the change: `removeFromSurface` reads it through the
+  // key-specific repair reader -- lenient only for the key being removed -- and
+  // writes it back through `writeOatConfig` / `writeOatLocalConfig` /
+  // `writeUserConfig`, every one of which re-normalizes. A malformed value on
+  // the targeted surface that is NOT the key being removed is therefore still
+  // refused, on the rewrite rather than on a pre-read.
+  if (effectiveSurface !== 'shared') {
+    await dependencies.readOatConfig(repoRoot);
+  }
+  if (effectiveSurface !== 'local') {
+    await dependencies.readOatLocalConfig(repoRoot);
+  }
+  if (effectiveSurface !== 'user') {
+    await dependencies.readUserConfig(userConfigDir);
+  }
+
+  // The one branch that gets no re-normalization on the way out: the
+  // `pjm.remote` raw-write path in `removeFromSurface` persists through
+  // `atomicWriteJson`, bypassing `writeOatConfig`. So the targeted shared
+  // surface must be read strictly here too. `pjm.remote` children are not among
+  // the malformed-value repair keys this change targets, which is why adding
+  // this read keeps that branch's acceptance set byte-identical to its previous
+  // one rather than narrowing it.
+  if (isPjmRemoteConfigKey(key)) {
+    await dependencies.readOatConfig(repoRoot);
+  }
 
   const removed = await removeFromSurface(
     repoRoot,
@@ -3063,9 +3128,12 @@ async function removeFromSurface(
     // policy.description=none and authority.default=read-only. Removing a
     // leaf from that normalized object and sending it through writeOatConfig
     // would therefore write the leaf straight back while reporting success.
-    // The config has already passed the strict shared-policy reader in
-    // resolveEffectiveConfig, so perform this removal against the validated raw
-    // document and atomically persist only the requested structural change.
+    // The strict shared read happens in `unsetConfigValue`'s targeted barrier
+    // immediately before this call -- this branch depends on it, because
+    // `atomicWriteJson` below bypasses `writeOatConfig`'s normalization, so
+    // nothing downstream would catch a malformed document. Given that read,
+    // perform this removal against the validated raw document and atomically
+    // persist only the requested structural change.
     const repaired = await removeConfigPathOnDisk(configPath, path);
     if (!repaired) {
       return false;
@@ -3242,16 +3310,23 @@ function applyDispatchMatrixRecommendation(
     ...recommendation.providers,
   };
 
+  // `existingProviders` is a `normalizeDispatchMatrix` product, which now
+  // keeps a provider literally named `__proto__` as an own key, so
+  // `Object.entries` yields it here and every access is own-key guarded. The
+  // `{ ...recommendation.providers }` spread above is already safe.
   for (const [provider, existingValue] of Object.entries(existingProviders)) {
-    const recommendedValue = recommendation.providers[provider];
+    const recommendedValue = getOwnKey(recommendation.providers, provider);
     if (
       recommendedValue &&
       typeof recommendedValue !== 'string' &&
       typeof existingValue !== 'string'
     ) {
-      providers[provider] = { ...recommendedValue, ...existingValue };
+      setOwnKey(providers, provider, {
+        ...recommendedValue,
+        ...existingValue,
+      });
     } else {
-      providers[provider] = existingValue;
+      setOwnKey(providers, provider, existingValue);
     }
   }
 
@@ -3280,11 +3355,14 @@ async function effectiveTerminalReviewerNotices(
     for (const [provider, value] of Object.entries(
       config.workflow?.dispatchCeiling?.providers ?? {},
     )) {
-      const existing = effectiveProviders[provider];
-      effectiveProviders[provider] =
+      const existing = getOwnKey(effectiveProviders, provider);
+      setOwnKey(
+        effectiveProviders,
+        provider,
         isRecord(existing) && isRecord(value)
           ? { ...existing, ...value }
-          : value;
+          : value,
+      );
     }
   }
   return terminalReviewerNoticesForMatrix(effectiveProviders);
@@ -3463,6 +3541,37 @@ function formatCatalogDetails(entries: ConfigCatalogEntry[]): string {
     .join('\n\n');
 }
 
+/**
+ * The `warnings` field for a JSON document, omitted when there is nothing to
+ * say.
+ *
+ * An always-present `warnings: []` would be new noise on the common path and
+ * would break every existing exact-match assertion on these documents, so the
+ * key appears only when it carries something -- the same shape
+ * `exclusionWarnings` uses in `commands/instructions/sync/sync.ts`.
+ */
+function jsonWarnings(warnings: string[]): { warnings?: string[] } {
+  return warnings.length > 0 ? { warnings } : {};
+}
+
+/**
+ * Emit shared-config read warnings on the human channel.
+ *
+ * `logger.warn` is a no-op under `--json` (`ui/logger.ts`), so the JSON
+ * document carries the same strings in its own `warnings` field instead. Each
+ * caller picks exactly one channel, which is why this is only ever reached from
+ * the non-JSON branch: routing both ways would print nothing extra today but
+ * would double-print the moment the logger learned to emit under `--json`.
+ */
+function emitConfigReadWarnings(
+  context: CommandContext,
+  warnings: string[],
+): void {
+  for (const warning of warnings) {
+    context.logger.warn(warning);
+  }
+}
+
 async function runGet(
   keyArg: string,
   context: CommandContext,
@@ -3475,6 +3584,11 @@ async function runGet(
 
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     const userConfigDir = join(context.home, '.oat');
+    // One read per invocation, not one per resolved layer, so a wrong-typed
+    // key is reported once. A fail-closed key throws here exactly as it would
+    // have thrown inside `resolveEffectiveConfig` below -- same normalizer,
+    // same message -- so error precedence is unchanged.
+    const { warnings } = await dependencies.readOatConfigWithWarnings(repoRoot);
     const value = await getConfigValue(
       repoRoot,
       userConfigDir,
@@ -3486,8 +3600,10 @@ async function runGet(
       context.logger.json({
         status: 'ok',
         ...value,
+        ...jsonWarnings(warnings),
       });
     } else {
+      emitConfigReadWarnings(context, warnings);
       context.logger.info(formatResolvedValue(value.value) ?? '');
     }
     process.exitCode = 0;
@@ -3650,6 +3766,9 @@ async function runList(
   try {
     const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
     const userConfigDir = join(context.home, '.oat');
+    // `list` resolves every key and each resolution re-reads the shared file,
+    // so the warning has to come from this one read rather than from the loop.
+    const { warnings } = await dependencies.readOatConfigWithWarnings(repoRoot);
     const values: ConfigValue[] = [];
     for (const key of await listConfigKeys(
       repoRoot,
@@ -3665,8 +3784,10 @@ async function runList(
       context.logger.json({
         status: 'ok',
         values,
+        ...jsonWarnings(warnings),
       });
     } else {
+      emitConfigReadWarnings(context, warnings);
       context.logger.info(formatList(values));
     }
     process.exitCode = 0;
@@ -3852,20 +3973,7 @@ export function createConfigCommand(
               readGlobalOptions(command),
             );
             try {
-              const flagsPresent = [
-                options.shared,
-                options.local,
-                options.user,
-              ].filter(Boolean).length;
-              if (flagsPresent > 1) {
-                throw new Error(
-                  '--shared, --local, and --user flags are mutually exclusive; pass at most one.',
-                );
-              }
-              let surface: ConfigSurface = 'auto';
-              if (options.shared) surface = 'shared';
-              else if (options.local) surface = 'local';
-              else if (options.user) surface = 'user';
+              const surface = resolveSurfaceFlags(options);
               await runAdopt(template, { surface }, context, dependencies);
             } catch (error) {
               const message =

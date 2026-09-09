@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260908-correct-the-factual-skill.md
+  - .oat/repo/pjm/backlog/archived/BL-260908-correct-the-factual-skill.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -59,13 +59,13 @@ such false claim already lived.
 
 ## Source and live evidence
 
-- Source artifact or scope: `.oat/repo/pjm/backlog/items/BL-260908-correct-the-factual-skill.md`
+- Source artifact or scope: `.oat/repo/pjm/backlog/archived/BL-260908-correct-the-factual-skill.md`
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — branch `wave-7-plans`, the tree whose content this plan actually read (re-verified in full on 2026-09-08 after the branch was rebased onto the merged PR #273)
 - Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched `origin/main` tip, which is also the merge-base with `wave-7-plans`; the branch differs from it only by the wave-7 plan files and program ledger
 - Planning date: `2026-09-08`
 - Working tree while planning: `git status --porcelain` was empty; `git diff --stat c9f2e147ac0674e73a60735e0c1727ccc6048756..7d70ac307717b95917b8f92aa3fb9f236d1f75ba` over every in-scope path below is empty except `packages/cli/src/commands/help-snapshots.test.ts`, which PR #273 touched — the `sync --help` snapshot cited below was re-read at `a594614024725979ebf24bd9a34b3565c30fbffb` and still carries `default: "all"`
 - Related backlog items:
-  [BL-260908-correct-the-factual-skill — Correct the factual skill-authoring claims and consolidate the duplicated guidance](../../pjm/backlog/items/BL-260908-correct-the-factual-skill.md)
+  [BL-260908-correct-the-factual-skill — Correct the factual skill-authoring claims and consolidate the duplicated guidance](../../pjm/backlog/archived/BL-260908-correct-the-factual-skill.md)
 - Related history: GitHub issue #277 (both halves); the redesign half is tracked separately as `BL-260908-restructure-the-authoring` and is **out of scope** for this plan.
 - Verified evidence:
   - `.agents/skills/create-agnostic-skill/SKILL.md:9` — `version: 1.4.3` under `metadata:`; the frontmatter carries no column-0 `version:` key.
@@ -719,6 +719,8 @@ Revalidate this plan against live state before executing when:
 A plan executed inside a wave refreshes its drift check against the exact
 execution `HEAD` after predecessor lanes integrate, not only from the authored
 SHA to `origin/main`.
+
+**Correction applied 2026-09-09 (wave-7 p19 execution; wave-close pass; no requirement change):** (1) Step 4's verify grep `'^\s*oat sync\s*$\|`oat sync`'` expects `exit=1`, but the same step prescribes prose stating that a bare `oat sync` defaults to `--scope all`, which necessarily contains the backticked literal — the executable form of the check is `grep '^\s*oat sync\s*$'` (no hits) plus "every executable `oat sync` line carries `--scope project`"; the two surviving backticked matches are the warning prose this step asks for. (2) Step 6's verify command filters with `-t "500 characters"`, but the suggested test title (`does not report a long description for a non-oat-* skill`) contains no such phrase, so the filter would select only the positive case; the landed title is `does not report a description longer than 500 characters for a non-oat-* skill` so the step's own command selects both cases as its expected result requires. (3) Step 5 named only the spec-level block's annotation and specified its content, but its opening sentence ("update the three documentation surfaces so they agree with the rule") let the lane rewrite the block's value to OAT's comma form; the root restored the spec's space-delimited example and put the three prescribed facts in the annotation at the fan-in (review M1). (4) The plan's own "this plan verified there are none" for version pins held on the merged tip too (no `1.4.3` / `1.4.4` / `1.5.3` literal anywhere), and `create-agnostic-skill` landed at `1.5.0` per step 7's soft-ordering rule (one PR-scoped bump from `1.4.3`, superseding p10's `1.4.4`). Executed at `d6391cf72`, merged as `12f50d7c2` with a root address-now `2360559c8`; the deferred `provider-reference.md` URLs and the surviving Codex `name` claims are `BL-260909-re-source-the-surviving-codex`.
 
 ## Review focus
 

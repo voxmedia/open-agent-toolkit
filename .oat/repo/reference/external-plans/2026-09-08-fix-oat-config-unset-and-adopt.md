@@ -3,8 +3,8 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260907-let-oat-config-unset-remove.md
-  - .oat/repo/pjm/backlog/items/BL-260907-fold-oat-config-adopt-onto.md
+  - .oat/repo/pjm/backlog/archived/BL-260907-let-oat-config-unset-remove.md
+  - .oat/repo/pjm/backlog/archived/BL-260907-fold-oat-config-adopt-onto.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -52,9 +52,9 @@ flags with a byte-identical message.
 
 - Source artifact or scope: `.oat/repo/pjm/backlog/items/`
 - Related backlog items:
-  [BL-260907-let-oat-config-unset-remove — Let oat config unset remove a malformed stored value](../../pjm/backlog/items/BL-260907-let-oat-config-unset-remove.md)
+  [BL-260907-let-oat-config-unset-remove — Let oat config unset remove a malformed stored value](../../pjm/backlog/archived/BL-260907-let-oat-config-unset-remove.md)
   and
-  [BL-260907-fold-oat-config-adopt-onto — Fold oat config adopt onto the shared surface-flag resolver](../../pjm/backlog/items/BL-260907-fold-oat-config-adopt-onto.md)
+  [BL-260907-fold-oat-config-adopt-onto — Fold oat config adopt onto the shared surface-flag resolver](../../pjm/backlog/archived/BL-260907-fold-oat-config-adopt-onto.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
   content this plan read (branch `wave-7-plans`, rebased onto the merged
   PR #273).
@@ -453,6 +453,8 @@ AGENTS.md gates in order.
 
 ## Test plan
 
+> **Amended by the 2026-09-08 post-STOP refresh** in [Revalidation Before Execution](#revalidation-before-execution): cases 7 and 8 (a malformed untargeted surface, and a malformed shared sibling on a `pjm.remote` child unset) join cases 1–6. The refresh paragraph is the binding text where the two differ.
+
 All cases live in `packages/cli/src/commands/config/index.test.ts`. The
 structural pattern for the unset cases is the existing
 `'unset removes an invalid stored value the normalizing reader drops'` at
@@ -512,6 +514,8 @@ pass at most one.'` and all three exit `1`. Compare the strings to each
 
 ### Red-then-green negative controls
 
+> **Amended by the 2026-09-08 post-STOP refresh** in [Revalidation Before Execution](#revalidation-before-execution): controls D and E (delete the barrier → red) join A–C, control C uses the raw fall-through via `atomicWriteJson`, and control B's half 1 fails only the literal pin. The refresh paragraph is the binding text where the two differ.
+
 Record each control's command and categorical outcome in the lane report.
 
 - **Cases 1–4 (the unset fix).** Before Step 2, run the four new cases against
@@ -544,6 +548,8 @@ rejected before, with the same message; Case 6 is its control. If the reviewer
 finds any other newly-accepted input, that is a STOP condition.
 
 ## Done criteria
+
+> **Amended by the 2026-09-08 post-STOP refresh** in [Revalidation Before Execution](#revalidation-before-execution): cases 1–8, five controls, the built-CLI `config unset updateNotifications --user` probe against a malformed shared sibling (exit 1, user file byte-unchanged), and the barrier comment on the raw-write branch. The refresh paragraph is the binding text where the two differ.
 
 - [ ] `oat config unset documentation.excludes`,
       `oat config unset documentation.instructionPointerExcludes`, and
@@ -594,6 +600,8 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
+**Refresh applied 2026-09-08 (wave-7 p02, post-STOP amendment; amends Step 2, the Test plan, the negative controls, and the Done criteria — the Outcome, Scope, weaker-anywhere list, and STOP conditions stand):** The wave-7 lane executed Steps 1–4 as written and its cross-model review reproduced, on the built CLI with a pre/post delta, an input the weaker-anywhere list does not name: the deleted `resolveEffectiveConfig` call was load-bearing for more than the `envShadowed` boolean — it strictly read all three surfaces and so stood as a whole-config barrier in front of every write `unset` performs. After Step 2 as written, (a) a malformed key on an untargeted surface no longer blocks an unset on a different surface (shared `documentation.excludes: 5`, `config unset updateNotifications --user`: exit 1 before, exit 0 and the user file rewritten after), and (b) the `pjm.remote` raw-write branch persists through `atomicWriteJson` without any strict read having happened, so its comment ("The config has already passed the strict shared-policy reader in `resolveEffectiveConfig`") becomes false. Both are the STOP "any input previously rejected by `unsetConfigValue` becomes accepted beyond the single case named". **Amended Step 2 (non-narrowing: WHAT must be true is unchanged — the only newly accepted input remains a config whose strict normalization throws where the key being unset is the malformed one; WHERE the barrier lives changes):** keep the `resolveEnvOverride` probe for `envShadowed` exactly as Step 2 specifies, and replace the deleted whole-config read with a **targeted strict barrier** in `unsetConfigValue`, placed after the existing key refusals and before `removeFromSurface`: derive `effectiveSurface` first (move that derivation above the barrier; it is pure), then strictly read every surface **other than** `effectiveSurface` through the same dependency readers `resolveEffectiveConfig` composes (`dependencies.readOatConfig(repoRoot)`, `dependencies.readOatLocalConfig(repoRoot)`, `dependencies.readUserConfig(userConfigDir)`; discard the results), so a malformed value on an untargeted surface aborts with the identical `Invalid <key>` message it produced before. The targeted surface needs no extra read: `removeFromSurface` reads it through the key-specific repair reader (lenient only for the targeted key) or the strict reader, and every write to it goes through `writeOatConfig` / `writeOatLocalConfig` / `writeUserConfig`, which re-normalize — which is exactly why test-plan case 5 stays red-on-rewrite. For the `pjm.remote` raw-write branch (`isPjmRemoteConfigKey(key)`, shared surface, `atomicWriteJson`), the barrier reads the **targeted** shared surface strictly as well (`await dependencies.readOatConfig(repoRoot)` before `removeConfigPathOnDisk`), because that branch bypasses `writeOatConfig`'s normalization; the `pjm.remote` children are not among the malformed-value repair keys this item targets, so this keeps that branch's acceptance set byte-identical to the base. Rewrite the comment at the raw-write branch (`index.ts:3059` at the inspected head) to say the strict shared read happens in `unsetConfigValue`'s barrier immediately before this branch. Keep Step 2's own comment above the probe, and add one sentence naming the barrier and why the targeted surface is excluded from it. **Test plan additions (both in `commands/config/index.test.ts`, beside case 5):** 7. **`unset of a key on one surface still fails while another surface is malformed`** — seed shared `{ documentation: { excludes: 5 } }` and user `{ updateNotifications: false }`; run `['unset', 'updateNotifications', '--user']`; assert exit `1`, the `Invalid documentation.excludes` message, and the user file byte-unchanged (read it back and compare). Green before Step 2 as originally written, red after it, green again with the barrier. 8. **`unset of a pjm.remote child still fails while a shared sibling is malformed`** — seed shared config with a valid `pjm.remote` policy (copy the shape the existing `pjm.remote` refusal cases near `:5167-5250` seed) plus `documentation: { excludes: 5 }`; run `['unset', 'pjm.remote.policy.description']`; assert exit `1`, the `Invalid documentation.excludes` message, and the shared file byte-unchanged. Same red/green profile as case 7. **Negative controls (additions):** for cases 7 and 8, temporarily delete the barrier (the untargeted reads for case 7; the targeted strict read in the raw-write branch for case 8), confirm each goes red at `expect(process.exitCode).toBe(1)`, restore, confirm green; report both halves. **Corrections to this plan's own controls, from the lane's execution:** control C as specified (fall through to `removeConfigPathOnDisk` unconditionally) cannot turn case 5 red, because `writeOatConfig` throws the same `Invalid documentation.excludes` on the rewrite — the load-bearing mutation is a raw fall-through that persists via `atomicWriteJson` (bypassing normalization), under which case 5 goes red at `expect(process.exitCode).toBe(1)`; and control B half 1 (mutating the message inside `resolveSurfaceFlags`) necessarily fails case 6's literal pin while the two cross-command parity assertions hold — report that shape, it is the intended one. **Done criteria (amended):** cases 1–8 pass; the five controls (A: cases 1–4; B: case 6 both halves; C: case 5 with the raw fall-through mutation; D: case 7; E: case 8) are reported both ways; `config unset updateNotifications --user` against a shared config with `documentation.excludes: 5` exits `1` on the built CLI and leaves the user file byte-unchanged; the comment at the raw-write branch names the barrier. **Review focus (addition):** confirm the barrier reads exactly the two untargeted surfaces (plus the targeted shared surface on the raw-write branch), through the injected dependency readers (so the test harness's readers are exercised), and that no surface is read leniently except the targeted one through its existing repair reader.
+
 Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;
@@ -614,6 +622,8 @@ Executed inside a wave, refresh the drift check against the exact execution
 authored provenance.
 
 ## Review focus
+
+> **Amended by the 2026-09-08 post-STOP refresh** in [Revalidation Before Execution](#revalidation-before-execution): confirm the barrier reads exactly the two untargeted surfaces (plus the targeted shared surface on the raw-write branch) through the injected dependency readers. The refresh paragraph is the binding text where the two differ.
 
 - **The equivalence in Step 2.** The reviewer should independently confirm that
   `ENV_OVERRIDE_MAP` covers exactly three keys, that all three are in

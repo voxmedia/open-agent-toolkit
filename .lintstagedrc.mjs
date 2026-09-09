@@ -5,6 +5,13 @@ export default {
     'oxfmt --write --no-error-on-unmatched-pattern',
   ],
 
+  // .mjs/.cjs sources (skill tests, smoke helpers, release tools) are not
+  // matched by the *.{ts,tsx,js,jsx} task above, so they had no commit-time
+  // formatting at all. Format only: oxlint currently covers tools/smoke and
+  // .agents/skills through `pnpm lint` and nothing else, so linting every
+  // .mjs at commit would add an unaudited failure surface.
+  '*.{mjs,cjs}': ['oxfmt --write --no-error-on-unmatched-pattern'],
+
   // JSON files: format with oxfmt
   '*.json': ['oxfmt --write --no-error-on-unmatched-pattern'],
 

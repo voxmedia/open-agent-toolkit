@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260908-keep-external-plan-writes.md
+  - .oat/repo/pjm/backlog/archived/BL-260908-keep-external-plan-writes.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -49,7 +49,7 @@ cannot drift out of the skills silently
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260908-keep-external-plan-writes — Keep external-plan writes on the caller's model class in oat-repo-improve](../../pjm/backlog/items/BL-260908-keep-external-plan-writes.md)
+  [BL-260908-keep-external-plan-writes — Keep external-plan writes on the caller's model class in oat-repo-improve](../../pjm/backlog/archived/BL-260908-keep-external-plan-writes.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — branch
   `wave-7-plans`, the tree whose content this plan read; every anchor below was
   re-verified there on 2026-09-08 after the branch was rebased onto the merged
@@ -426,6 +426,8 @@ and `:6107` by content, not by number. Revalidate if `oat-repo-improve` or
 lane is expected to), if PR #190 lands and moves the docs page or
 `skills.test.ts`, or if `origin/main` advances materially from
 `7d70ac307717b95917b8f92aa3fb9f236d1f75ba`.
+
+**Correction applied 2026-09-09 (wave-7 p20 execution; wave-close pass; no requirement change):** (1) steps 2–3 ask for the `pnpm run check:skill-bumps` count to rise before the commit exists; it cannot — `listChangedVersionedFiles` (`packages/cli/src/validation/skills.ts:1134`, the diff at `:1152`) enumerates paths from `git diff --name-only … ${baseRef}...HEAD` and reads the version values from the working tree, so an uncommitted bump on a file absent from the committed changed set is invisible (the review's probe: `HEAD` at 1.9.1 with an uncommitted 1.9.2 → exit 0). The bump control is run after committing, on a throwaway branch, where it fails exactly as the plan expects (`… must bump its version relative to origin/main (still 1.9.1)`). (2) The success string quoted in `## Source and live evidence` is stale: the gate now prints `OK: validated N changed canonical skill and agent role version bump checks against origin/main` (it covers `.agents/agents/*.md` since p13). (3) The `:2584` and `:6107` citations were stale as pre-declared (p17 moved the contract case to `:2913`, the pin to `:6246`); re-anchored by content. (4) `packages/cli/src/validation/skills.test.ts` was not edited: the `oat-repo-improve` pin already read `2.1.5` (p10's PR-scoped bump) per this plan's Landing-event row, and `1.9.1` has no pin anywhere. Executed at `44421c0ef`, merged as `f6ccdab52` — the wave's last lane.
 
 ## Review focus
 

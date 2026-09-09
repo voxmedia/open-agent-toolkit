@@ -11,6 +11,7 @@ import {
   type OatLocalConfig,
   type UserConfig,
 } from './oat-config';
+import { getOwnKey, setOwnKey } from './own-keys';
 
 export type ResolvedConfigSource =
   | 'shared'
@@ -76,6 +77,11 @@ const DEFAULT_SHARED_CONFIG = {
     tooling: null,
     config: null,
     index: null,
+    // `oat config dump` enumerates the resolved map, so a catalogued key that
+    // is absent here has no row at all while it is unset. `null` keeps meaning
+    // "not set at this layer", so a configured array still wins.
+    excludes: null,
+    instructionPointerExcludes: null,
     requireForProjectCompletion: false,
   },
   tools: {
@@ -336,28 +342,34 @@ export function resolveExecTargetViews(
 
     for (const [id, override] of Object.entries(layer)) {
       if (override === null) {
-        const target = targets[id] ?? views[id]?.target;
+        // Exec-target ids come from user config, which can now carry a key
+        // named `__proto__` as an own key, so every lookup here is own-key
+        // guarded. `delete` needs no guard: it removes an own key and is a
+        // no-op otherwise.
+        const target = getOwnKey(targets, id) ?? getOwnKey(views, id)?.target;
         delete targets[id];
         if (target) {
-          views[id] = {
+          setOwnKey(views, id, {
             target: cloneExecTarget(target),
             origin,
             explicitlyConfigured: true,
             enabled: false,
-          };
+          });
         }
         continue;
       }
 
+      // The one-entry layer uses a computed key in an object literal, which
+      // is define semantics and already safe.
       mergeExecTargetLayer(targets, { [id]: override });
-      const target = targets[id];
+      const target = getOwnKey(targets, id);
       if (target) {
-        views[id] = {
+        setOwnKey(views, id, {
           target: cloneExecTarget(target),
           origin,
           explicitlyConfigured: true,
           enabled: true,
-        };
+        });
       }
     }
   }
@@ -377,33 +389,39 @@ function mergeExecTargetLayer(
 
   for (const [id, override] of Object.entries(layer)) {
     if (override === null) {
+      // `delete` removes an own key and is a no-op otherwise, so it is already
+      // correct for a user-supplied id such as `__proto__`.
       delete targets[id];
       continue;
     }
 
-    const existing = targets[id];
+    const existing = getOwnKey(targets, id);
     if (existing) {
-      targets[id] = cloneExecTarget({
-        runtime: override.runtime ?? existing.runtime,
-        baseCommand: override.baseCommand ?? existing.baseCommand,
-        invocation: mergeExecTargetInvocation(
-          existing.invocation,
-          override.invocation,
-        ),
-        models: override.models ?? existing.models,
-        hostDetectionCommand:
-          override.hostDetectionCommand ?? existing.hostDetectionCommand,
-        availabilityCommand:
-          override.availabilityCommand ?? existing.availabilityCommand,
-        priority: override.priority ?? existing.priority,
-        timeoutMs: override.timeoutMs ?? existing.timeoutMs,
-      });
+      setOwnKey(
+        targets,
+        id,
+        cloneExecTarget({
+          runtime: override.runtime ?? existing.runtime,
+          baseCommand: override.baseCommand ?? existing.baseCommand,
+          invocation: mergeExecTargetInvocation(
+            existing.invocation,
+            override.invocation,
+          ),
+          models: override.models ?? existing.models,
+          hostDetectionCommand:
+            override.hostDetectionCommand ?? existing.hostDetectionCommand,
+          availabilityCommand:
+            override.availabilityCommand ?? existing.availabilityCommand,
+          priority: override.priority ?? existing.priority,
+          timeoutMs: override.timeoutMs ?? existing.timeoutMs,
+        }),
+      );
       continue;
     }
 
     const completeTarget = toCompleteExecTarget(override);
     if (completeTarget) {
-      targets[id] = completeTarget;
+      setOwnKey(targets, id, completeTarget);
     }
   }
 }
@@ -550,7 +568,17 @@ function isAtomicConfigLeaf(key: string, value: unknown): boolean {
   );
 }
 
-function resolveEnvOverride(
+/**
+ * Report the environment override for `key`, if one is live.
+ *
+ * Exported because `oat config unset` needs the answer to "is this key
+ * environment-overridden?" without performing a whole-config read, which a
+ * malformed stored value aborts -- and a malformed stored value is exactly what
+ * `unset` exists to remove. `ENV_OVERRIDE_MAP` plus the env-first branch of
+ * `resolveEffectiveConfig` is the single source of that answer, so callers that
+ * only need the boolean must not resolve the whole config to derive it.
+ */
+export function resolveEnvOverride(
   key: string,
   env: NodeJS.ProcessEnv,
 ): string | undefined {

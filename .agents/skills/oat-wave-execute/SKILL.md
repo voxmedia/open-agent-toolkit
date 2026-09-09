@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.9.1
+  version: 1.9.2
 ---
 
 # Execute a Wave of External Plans
@@ -183,6 +183,11 @@ the work happens may change; WHAT must be true may not), recorded exactly once
 in the Drift Refresh Record with pointer-only references elsewhere — a
 reconciliation that waives a source-plan requirement is a plan-gate Important
 (wave-4 evidence).
+
+Recon is delegated; the Drift Refresh Record entries and any reconciliation
+that amends a plan's mechanism — including after a tripped STOP — are plan
+writes and stay on the orchestrator's own model class, the same rule
+`oat-repo-improve` applies to external-plan writes.
 
 ### Step 3: Scaffold the wrapper project
 
@@ -380,8 +385,17 @@ archive anything first.
    ledger, rolled into `summary.md` `## Workflow Observations`.
 3. **Serialized backlog archival** — `oat backlog archive` with real summaries,
    one commit.
-4. **Root final review.**
-5. **Cross-runtime final gate** — judgment-sweep dispositions; after every fix
+4. **Closeout gate run** — after the archival commit, and after ANY later commit
+   that touches a gated surface (`.oat/repo/**`, `.agents/**`, `packages/**`,
+   `apps/**`), re-run the integration DoD gates with cache bypass. The last
+   content commit on the branch is ALWAYS gated. Step 1 certifies the tree it
+   ran on, not a commit that lands after it: in W7 the archival commit was the
+   only post-fan-in commit touching a gated surface, it left the suite red under
+   a shipped test that scans `.oat/repo`, and the root final review in step 5
+   then ran against a red tree. Bypass the cache and record `Cached: 0`; a
+   replayed result is evidence about an earlier tree, not this one.
+5. **Root final review.**
+6. **Cross-runtime final gate** — judgment-sweep dispositions; after every fix
    disposition has its required stored verification record, flip the row to
    `passed`. A final
    gate MUST NOT remain at `fixes_completed`: `passed` is the only terminal
@@ -390,10 +404,10 @@ archive anything first.
    the upstream stomp class was fixed in oat 0.1.65 and stoa's W6 supplied the
    final clean observation (three gate rounds, zero stomps, watch never fired,
    2026-07-20).
-6. **Pre-approval sequence** per `workflow.postImplementSequence`, then a single
+7. **Pre-approval sequence** per `workflow.postImplementSequence`, then a single
    HiLL. File follow-up-ledger backlog items at closeout (on main post-merge, or
    pre-gate if the operator prefers them in the PR).
-7. **The full `oat-project-complete` PROCESS, with an explicit autonomous
+8. **The full `oat-project-complete` PROCESS, with an explicit autonomous
    deferral branch.** Interactive runs retain the standing per-wave order
    review → complete → merge (an open PR is expected, not a blocker — the
    archive-aware PR body sync handles it). The requirement remains the whole
@@ -424,7 +438,7 @@ archive anything first.
    that execution occurs after the one human-gated program-end checkpoint in
    `oat-wave-program`, across every deferred wave wrapper.
 
-8. **After the operator merges:** reconcile (squash-merge means content-diff the
+9. **After the operator merges:** reconcile (squash-merge means content-diff the
    branch vs main; cherry-pick stragglers), reset the working branch, clean stale
    phase branches, and run `oat-wave-program` `wave-close <wave-id>` so the
    program ledger records the merge (PR, SHA, completion-record link) and flips

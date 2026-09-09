@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260907-finalize-synced-archive-mjs.md
+  - .oat/repo/pjm/backlog/archived/BL-260907-finalize-synced-archive-mjs.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -47,7 +47,7 @@ actually cleared end to end.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260907-finalize-synced-archive-mjs — finalize-synced-archive.mjs reads stdin with fs/promises readFile(0), so the synced deferred clear always fails](../../pjm/backlog/items/BL-260907-finalize-synced-archive-mjs.md)
+  [BL-260907-finalize-synced-archive-mjs — finalize-synced-archive.mjs reads stdin with fs/promises readFile(0), so the synced deferred clear always fails](../../pjm/backlog/archived/BL-260907-finalize-synced-archive-mjs.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
   content this plan actually read (branch `wave-7-plans`; it is `origin/main`
   plus the wave-7 program-ledger and plan commits, none of which touch this
@@ -570,6 +570,8 @@ Stop and report instead of improvising when:
   whatever `oat_execution_status` claims.
 
 ## Revalidation Before Execution
+
+**Correction applied 2026-09-08 (wave-7 p01 execution; corrects a false neutralization claim in Step 5 and the Test plan — no requirement changes):** the claim that restoring the raw one-sided guard "makes case 5 fail on all three invocation forms" is false, reproduced by the lane and independently by the root review on the committed script: with the raw guard restored, only the plain invocation form fails (exit 0, no output — the fail-open shape); under `--preserve-symlinks-main` and under `NODE_OPTIONS=--preserve-symlinks-main` the raw comparison matches because the link is preserved in `import.meta.url`, so those two forms succeed. The two neutralizations are complementary, not overlapping: the raw guard is the control for the plain form, and a **one-sided canonicalization** (canonicalize `argv[1]` only) is the control for the two preserve-symlinks forms. The shipped control set is therefore three controls (raw guard → case 5 red; one-sided canonicalization → cases 6 and 7 red; stdin revert → cases 1, 2, 5, 6, 7 red), strictly stronger than the two the plan named. The test's `baseEnv` must delete an inherited `NODE_OPTIONS` and re-add it only for its dedicated case, or an ambient `--preserve-symlinks-main` makes the raw-guard control vacuous (found by the lane's cross-model round). Executors of the sibling sweep (`BL-260909-sweep-the-raw-main-module`) model on this corrected control set, not on the original sentence.
 
 Revalidate this plan against live state before executing when:
 

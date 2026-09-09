@@ -3,8 +3,8 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260906-extend-check-skill-bumps.md
-  - .oat/repo/pjm/backlog/items/BL-260908-report-a-changed-skill-with-no.md
+  - .oat/repo/pjm/backlog/archived/BL-260906-extend-check-skill-bumps.md
+  - .oat/repo/pjm/backlog/archived/BL-260908-report-a-changed-skill-with-no.md
   - .oat/repo/pjm/backlog/items/BL-260908-retire-the-top-level-skill.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
@@ -74,9 +74,9 @@ in either validator.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260906-extend-check-skill-bumps — Extend check:skill-bumps to canonical agent files](../../pjm/backlog/items/BL-260906-extend-check-skill-bumps.md)
+  [BL-260906-extend-check-skill-bumps — Extend check:skill-bumps to canonical agent files](../../pjm/backlog/archived/BL-260906-extend-check-skill-bumps.md)
 - Source backlog item:
-  [BL-260908-report-a-changed-skill-with-no — Report a changed skill with no frontmatter block in the bump validator](../../pjm/backlog/items/BL-260908-report-a-changed-skill-with-no.md)
+  [BL-260908-report-a-changed-skill-with-no — Report a changed skill with no frontmatter block in the bump validator](../../pjm/backlog/archived/BL-260908-report-a-changed-skill-with-no.md)
 - Source backlog item:
   [BL-260908-retire-the-top-level-skill — Retire the top-level skill version alias on the recorded schedule](../../pjm/backlog/items/BL-260908-retire-the-top-level-skill.md)
   — step 1 only; see its "Split (2026-09-08 triage)" section.
@@ -300,8 +300,8 @@ git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..HEAD -- \
   AGENTS.md \
   apps/oat-docs/docs/contributing/skills.md \
   .agents/agents \
-  .oat/repo/pjm/backlog/items/BL-260906-extend-check-skill-bumps.md \
-  .oat/repo/pjm/backlog/items/BL-260908-report-a-changed-skill-with-no.md \
+  .oat/repo/pjm/backlog/archived/BL-260906-extend-check-skill-bumps.md \
+  .oat/repo/pjm/backlog/archived/BL-260908-report-a-changed-skill-with-no.md \
   .oat/repo/pjm/backlog/items/BL-260908-retire-the-top-level-skill.md
 ```
 
@@ -897,6 +897,8 @@ Stop and report instead of improvising when:
 10. a named verification gate fails twice after one bounded correction.
 
 ## Revalidation Before Execution
+
+**Correction applied 2026-09-09 (wave-7 p13 execution; no requirement change — six plan-internal inconsistencies verified by the root review):** (1) `validateSkillVersionBumps` has two call sites, not "the single call site at `:1106`" — the second is inside `validateOatSkills` when `baseRef` is set; both are updated. (2) Control B4's literal variant (a brand-new versionless skill) cannot exit 1, because `baseContent === null` is the deliberate new-file skip Step 2 keeps; the modification variant is the load-bearing control. (3) Step 5's dedupe assumes the version-source pass runs before the `oat-*` loop; the real order is the reverse, so the dedupe is implemented in the working direction. (4) Step 4's literal guard placement (right after `currentBlock`) would have changed `skill-frontmatter-unreadable` into `skill-frontmatter-missing` on a malformed-current fixture — a STOP 3 violation; the guard sits at the two `continue`s as Step 4 item 4 and the Review focus say. (5) A git pathspec `*` crosses `/`, so the old `.agents/skills/*/SKILL.md` already matched a nested `SKILL.md`; the widened pathspec keeps a nested `SKILL.md` version-checked (it maps to itself and its owner) except under `tests/`. (6) The `## Weaker-anywhere rule` requires both "every finding emitted today must still be emitted" and "a `tests/`-only change must remain accepted"; those cannot both hold for a `SKILL.md` nested under `<skill>/tests/`, which the old pathspec matched. The plan's `tests/` boundary (Step 1.2, control D2, STOP 4) governs: such a file is no longer version-checked. The review proved the input set is empty at base, head, and `origin/main`, that `bundle-assets.sh:49` removes `tests/` before any consumer sees it, and that the lost enforcement was a false positive; the narrowing is recorded on `BL-260906-extend-check-skill-bumps` beside the two residual gaps. A second reject-ward exception the review found: a changed sibling whose owning `SKILL.md` is absent from the working tree went from exit 2 (`ENOENT`) to exit 0 — plan-mandated, test-pinned, not CI-reachable. Also: the plan's prescribed focused test command misses three consumer fixtures that clause B forces (`commands.integration.test.ts`, `validate-oat-skills.test.ts`, `help-snapshots.test.ts`); only the full forced run finds them.
 
 Revalidate against live state before executing when:
 

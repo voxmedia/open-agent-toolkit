@@ -8,7 +8,8 @@
 - Provider-linked views are managed by sync tooling; do not duplicate full skill inventories in this file.
 - Refresh provider views with `oat sync --scope all`.
 - Update installed skills to latest bundled versions with `oat tools update`.
-- When a PR changes a canonical skill at `.agents/skills/*/SKILL.md`, increase that skill's frontmatter `version:` in the same PR.
+- When a PR changes any bundled file of a canonical skill — anything under `.agents/skills/<name>/` except `tests/` — increase that skill's `metadata.version` in the same PR.
+- When a PR changes a canonical agent role at `.agents/agents/*.md`, increase that file's top-level `version:` in the same PR; agent roles keep the top-level field per `DR-260908-bundled-skills-declare`.
 - The version bump is PR-scoped, not edit-scoped: one bump per changed skill in the final PR diff is required, even if the skill was edited multiple times on the branch.
 
 </skills_system>
@@ -17,21 +18,27 @@
 
 ### Essential Commands
 
-- `pnpm check` - Lint and format checks per package, markdownlint over `apps/oat-docs/docs`, and `oat:validate-skills`
+- `pnpm check` - Each workspace package's defined `check` script, markdownlint over `apps/oat-docs/docs`, `oat:validate-skills`, and `format:root` (oxfmt over `.agents/skills`, `apps/oat-docs/docs`, and `tools/smoke`)
 - `pnpm build` - Build all packages and applications (excludes docs for speed)
 - `pnpm build:docs` - Build the docs site and its dependencies
-- `pnpm lint` - Lint code using oxlint, plus `tools/smoke`
-- `pnpm format` - Check formatting (oxfmt --check), plus `.agents/skills/**/*.md` and `tools/smoke`; use `pnpm format:fix` to auto-fix
+- `pnpm lint` - Lint code using oxlint per package, plus `oxlint tools/smoke .agents/skills` at the root
+- `pnpm format` - Each workspace package's defined `format` script, plus `format:root` (oxfmt --check over `.agents/skills/**/*.{md,mjs,js,cjs}`, `apps/oat-docs/docs/**/*.md`, and `tools/smoke/**/*.{mjs,md,json}`); `pnpm check` runs that same `format:root`; use `pnpm format:fix` to auto-fix
 - `pnpm type-check` - TypeScript type checking across all packages
 - `pnpm test` - Run tests across the workspace
 
-`pnpm check` and the `pnpm lint`/`pnpm format` pair overlap, but neither
-contains the other, so passing one does not predict the other. Only `pnpm check`
-runs markdownlint over the docs app and validates canonical OAT skill structure
-through `oat:validate-skills`. Markdownlint catches docs violations such as a
-fenced code block with no language or a skipped heading level. Only `pnpm lint`
-and `pnpm format` apply their respective lint/format coverage to `tools/smoke`
-and `.agents/skills/**/*.md`; skill validation does not replace either check.
+`pnpm check` now runs the root-level formatting check that used to live only
+in `pnpm format`. It runs each workspace package's defined `check` script
+through `turbo run check` — a package that defines no `check` script is
+skipped — validates canonical OAT skill structure through
+`oat:validate-skills`, runs markdownlint over the docs app, and applies
+`oxfmt --check` to `.agents/skills/**/*.{md,mjs,js,cjs}`,
+`apps/oat-docs/docs/**/*.md`, and `tools/smoke/**/*.{mjs,md,json}` through the
+shared `format:root` script that `pnpm format` also calls. Markdownlint catches
+docs violations such as a fenced code block with no language or a skipped
+heading level. Two surfaces still sit outside `pnpm check`, so passing it does
+not predict them: `pnpm lint`'s root-level `oxlint tools/smoke .agents/skills`,
+and `packages/control-plane`, which defines a `format` script but no `check`
+script, so `turbo run check` skips it while `turbo run format` checks it.
 
 ### Definition of Done
 
@@ -64,7 +71,8 @@ that `pnpm test --force` does **not** force a re-run: pnpm appends the flag to
 the last command of the chained root script, where it lands harmlessly or
 errors. For evidence-grade verification run
 `HOME=$(mktemp -d) pnpm exec turbo run test --force` from the repository root,
-and run `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`, and
+and run `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`,
+`pnpm test:scripts` (which runs `scripts/worktree/init.test.mjs`), and
 `pnpm oat:validate-skills` separately when they matter. Run `pnpm build` first
 when you invoke them this way: the smoke and release suites load the CLI's built
 resolver from `packages/cli/dist`, which `turbo run test` supplies through its
@@ -100,8 +108,34 @@ alongside the fix — once per clause when the requirement has several. Two
 defects shipped behind tests that could not fail; one mocked the very reader
 that dropped the field it asserted was preserved.
 
-CI runs neither `pnpm lint` nor `pnpm format`. Run both whenever a change
-touches `tools/smoke` or `.agents/skills`, since nothing else covers them.
+CI runs neither `pnpm lint` nor `pnpm format` as a gate step. `pnpm check` now
+covers the shared `format:root` portion of `pnpm format` (`.agents/skills`,
+`apps/oat-docs/docs`, and `tools/smoke`), but two surfaces still have no CI
+gate: `pnpm lint`'s root-level `oxlint tools/smoke .agents/skills`, and
+`packages/control-plane`'s own `oxfmt --check .`, which only `pnpm format`
+runs. Run `pnpm lint` and `pnpm format` whenever a change touches
+`tools/smoke`, `.agents/skills`, or `packages/control-plane`.
+
+`packages/control-plane`'s `lint` reads like a third gap and is not one, so
+check the mechanism before you "fix" it. The package defines `lint` and
+`format` but no `check`, so `turbo run check --dry-run=json` reports
+`@open-agent-toolkit/control-plane#check` as `<NONEXISTENT>` and `pnpm check`
+skips the package outright. Its oxlint still fails CI, indirectly:
+`tools/smoke/verification/lint-enrollment.test.mjs` shells out to the whole
+`pnpm lint` under CI's `pnpm test`, and because the root script is
+`turbo run lint && pnpm exec oxlint tools/smoke .agents/skills`, a
+control-plane lint error short-circuits the `&&` so the seeded violations that
+test looks for are never reported, and the test fails. Verified both ways: a
+seeded `prefer-const` error under `packages/control-plane/src` turns that test
+red, while the identical error under `.agents/skills` leaves it green — which
+is exactly why the root oxlint above is genuinely ungated and control-plane's
+oxlint is not. That coupling is only half pinned: the same test asserts the root
+`lint` script string verbatim, so splitting the `&&` into two independent
+commands fails loudly — but nothing pins that `packages/control-plane` still
+defines a `lint` script, and deleting it would take this coverage away
+silently. `BL-260909-give-packages-control-plane` owns closing the formatting
+half deliberately; a `check` script there is additive and does not remove the
+smoke path.
 
 ### Development Workflow
 

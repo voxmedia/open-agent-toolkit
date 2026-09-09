@@ -16,8 +16,12 @@ import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import {
+  carriesProjectLogSealKey,
+  containsAmbiguousProjectLogMarker,
+  findProjectLogSealHeadingLine,
   findProjectLogSections,
   isProjectLogEntryMarker,
+  isProjectLogSealEntry,
   JUDGMENT_HEADING_RE,
   PROJECT_LOG_TYPES,
   STRUCTURAL_HEADING_RE,
@@ -31,8 +35,40 @@ export const SYNTHESIS_PENDING_HEADING =
   '## End-of-run synthesis (pending — do not skip at project completion)';
 export const SYNTHESIS_COMPLETE_HEADING = '## End-of-run synthesis';
 
+/**
+ * The completion seal a project log already carries.
+ *
+ * `count` is reported rather than collapsed so a log double-sealed before the
+ * seal append became idempotent stays legible instead of looking like a normal
+ * single-sealed log; `heading` is always the **first** seal, which is the one
+ * that actually closed the log.
+ */
+export interface ProjectLogSeal {
+  heading: string;
+  date: string;
+  keyed: boolean;
+  count: number;
+}
+
 export interface ProjectLogCheckResult {
-  status: 'ok' | 'absent' | 'synthesis_pending';
+  /**
+   * A *sealed* log deliberately keeps its ordinary status and carries `sealed`
+   * alongside it, because it is a healthy log that must keep routing normally —
+   * a distinct value there would break every `status: "ok"` route in
+   * `oat-project-complete/SKILL.md` and `oat-project-summary/SKILL.md`.
+   *
+   * `ambiguous` is the opposite case and is the one value that may join them.
+   * The log's markers have two readings, so no verdict below can be computed
+   * honestly: every other field is zeroed and must be treated as unknown, not as
+   * a finding. Breaking the routing is the point — both mutators already refuse
+   * this file, and `check` answering `ok` while they refuse is what let the
+   * completion gate trust a reader that disagreed with every writer.
+   */
+  status: 'ok' | 'absent' | 'synthesis_pending' | 'ambiguous';
+  /** Why the log has two readings, or null when it has one. */
+  ambiguity: string | null;
+  sealed: boolean;
+  seal: ProjectLogSeal | null;
   logPath: string | null;
   entryCounts: {
     structural: number;
@@ -126,9 +162,12 @@ function emptyCounts(): Pick<
   };
 }
 
+/** The heading that opens the region entries are parsed from. */
+const ENTRIES_HEADING = '## Entries';
+
 function entriesSection(content: string): string {
   const section = findProjectLogSections(content).find(
-    ({ heading }) => heading === '## Entries',
+    ({ heading }) => heading === ENTRIES_HEADING,
   );
   if (!section) {
     return '';
@@ -158,8 +197,18 @@ export function findCanonicalProjectLogSynthesisSection(
   };
 }
 
+/**
+ * Parses the entries region into typed entries.
+ *
+ * The split is `/\r?\n/`, not `'\n'`. With a bare LF split every line of a
+ * CRLF log keeps a trailing `\r`, which no heading pattern can match — their
+ * `$` sits after a `[^·\r\n]+` run — so a CRLF log parsed to zero entries and
+ * an existing completion seal was invisible to `check` and to the append guard.
+ * A *lone* CR is still not a boundary, which is what keeps a body from forging
+ * a heading; only the CRLF pair is folded in.
+ */
 export function parseProjectLogEntries(content: string): ParsedProjectLog {
-  const lines = entriesSection(content).split('\n');
+  const lines = entriesSection(content).split(/\r?\n/);
   const entries: ParsedProjectLogEntry[] = [];
   const grammarViolations: string[] = [];
 
@@ -214,6 +263,112 @@ export function parseProjectLogEntries(content: string): ParsedProjectLog {
   return { entries, grammarViolations };
 }
 
+/**
+ * Summarizes the completion seal carried by already-parsed entries.
+ *
+ * Seal identity is `isProjectLogSealEntry` and nothing else, so `check` and
+ * `append` cannot drift apart on what "sealed" means.
+ */
+export function summarizeProjectLogSeal(
+  entries: readonly ParsedProjectLogEntry[],
+): ProjectLogSeal | null {
+  const seals = entries.filter(
+    (entry) => entry.class === 'structural' && isProjectLogSealEntry(entry),
+  );
+  const first = seals[0];
+  if (first === undefined) {
+    return null;
+  }
+  return {
+    heading: first.heading,
+    date: first.date,
+    keyed: carriesProjectLogSealKey(first.body),
+    count: seals.length,
+  };
+}
+
+/**
+ * Finds the completion seal in raw project-log content.
+ *
+ * `append` uses this so its refusal and `check`'s report are the same reading
+ * of the same file.
+ */
+/**
+ * The reason this log has two readings, or undefined when it has one.
+ *
+ * The single question `check`, `rollup`, both append paths and `synthesize` all
+ * ask before trusting a parse. It is one function rather than one call each,
+ * because a surface that asked a slightly different question is exactly how
+ * `rollup` came to rewrite `summary.md` from a log the other three refused,
+ * reporting output byte-identical to an empty log.
+ *
+ * Two shapes qualify. A heading that a `^…$/m` reader starts a line at and the
+ * line-feed-only parser does not; and a completion seal that is physically in
+ * the file but outside the region the parser reads, where "is this sealed?" has
+ * one answer to a human and another to the parser.
+ */
+export function findProjectLogAmbiguity(
+  content: string,
+  logPath: string,
+): string | undefined {
+  if (containsAmbiguousProjectLogMarker(content)) {
+    return `Project log ${logPath} has a '## ' heading, or a dated '### ' entry heading, starting a line after a carriage return, U+2028, or U+2029 rather than a line feed, so its structure has two readings and no seal or count can be reported honestly. Replace those line terminators with line feeds.`;
+  }
+  if (findProjectLogSeal(content) === null) {
+    const unreachableSeal = findProjectLogSealHeadingLine(content);
+    if (unreachableSeal !== undefined) {
+      // Delegated so the precise diagnosis — which of the two obstructions this
+      // is — survives being reached through the shared predicate. Collapsing
+      // both causes into one sentence here would undo the round that made the
+      // remedy actionable.
+      return unreachableProjectLogSealError(logPath, content, unreachableSeal)
+        .message;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Explains a refusal caused by a seal the entries parser cannot reach, naming
+ * the actual obstruction.
+ *
+ * The first version of this message assumed the only way to hide a seal was to
+ * place it outside `## Entries`, and offered that remedy for a CRLF log whose
+ * seal sat exactly where it belonged — a remedy that did not apply and could
+ * not be followed, on the one path a completion run cannot get past.
+ *
+ * Shared by both mutators so one file cannot produce two different accounts of
+ * why it was refused.
+ */
+export function unreachableProjectLogSealError(
+  logPath: string,
+  content: string,
+  seal: { line: string; index: number },
+): Error {
+  // Compared by offset, not by substring membership: prose inside `## Entries`
+  // can quote a seal heading verbatim, and a membership test would then report a
+  // seal that really sits under a later section as correctly placed, sending the
+  // operator to rewrite line terminators that were never the obstruction.
+  const entries = findProjectLogSections(content).find(
+    ({ heading }) => heading === ENTRIES_HEADING,
+  );
+  const outsideEntries =
+    entries === undefined ||
+    seal.index < entries.start ||
+    seal.index >= entries.end;
+  return new Error(
+    `Project log ${logPath} already carries the completion-seal heading '${seal.line.trim()}', but the entries parser cannot reach it, so whether the log is sealed has two answers and nothing may be read from it or written to it with confidence. ${
+      outsideEntries
+        ? `The seal sits outside the '${ENTRIES_HEADING}' section; move it under that heading, then retry.`
+        : 'The seal is under the correct heading, so the obstruction is its line terminators; rewrite the log with line feeds, then retry.'
+    }`,
+  );
+}
+
+export function findProjectLogSeal(content: string): ProjectLogSeal | null {
+  return summarizeProjectLogSeal(parseProjectLogEntries(content).entries);
+}
+
 async function resolveTargetProject(
   input: CheckProjectLogInput,
   dependencies: CheckProjectLogDependencies,
@@ -252,6 +407,9 @@ export async function checkProjectLog(
   if (!(await fileExists(logPath))) {
     return {
       status: 'absent',
+      ambiguity: null,
+      sealed: false,
+      seal: null,
       logPath: null,
       ...emptyCounts(),
       lastEntryDate: null,
@@ -261,6 +419,26 @@ export async function checkProjectLog(
   }
 
   const content = await readFile(logPath, 'utf8');
+
+  // Fail closed, exactly as every other surface does on this same file. `check`
+  // used to be the one reader that always produced a confident verdict: on a
+  // `preamble<U+2028>## Entries` log it answered `sealed` and count fields the
+  // writers refused to act on, and the completion gate keys on those fields.
+  const ambiguity = findProjectLogAmbiguity(content, logPath);
+  if (ambiguity !== undefined) {
+    return {
+      status: 'ambiguous',
+      ambiguity,
+      sealed: false,
+      seal: null,
+      logPath,
+      ...emptyCounts(),
+      lastEntryDate: null,
+      synthesisPending: false,
+      grammarViolations: [],
+    };
+  }
+
   const parsed = parseProjectLogEntries(content);
   const counts = emptyCounts();
   for (const entry of parsed.entries) {
@@ -275,8 +453,13 @@ export async function checkProjectLog(
     ({ heading }) => heading === SYNTHESIS_PENDING_HEADING,
   );
 
+  const seal = summarizeProjectLogSeal(parsed.entries);
+
   return {
     status: synthesisPending ? 'synthesis_pending' : 'ok',
+    ambiguity: null,
+    sealed: seal !== null,
+    seal,
     logPath,
     ...counts,
     lastEntryDate: parsed.entries.at(-1)?.date ?? null,
@@ -303,6 +486,8 @@ async function runCheckCommand(
     );
     if (context.json) {
       context.logger.json(result);
+    } else if (result.status === 'ambiguous') {
+      context.logger.error(result.ambiguity ?? 'Project log has two readings.');
     } else {
       context.logger.info(
         result.status === 'absent'
@@ -313,11 +498,25 @@ async function runCheckCommand(
                 (total, type) => total + result.entryCounts.judgment[type],
                 0,
               )
+            }${
+              result.seal
+                ? `; sealed${
+                    result.seal.count > 1
+                      ? ` (${result.seal.count} seal entries)`
+                      : ''
+                  }`
+                : ''
             }`,
       );
     }
+    // An ambiguous log exits non-zero whether or not synthesis was required: a
+    // caller that only checks the exit status must not read this as a clean log,
+    // and both mutators refuse the same file.
     process.exitCode =
-      options.requireSynthesis && result.synthesisPending ? 1 : 0;
+      result.status === 'ambiguous' ||
+      (options.requireSynthesis === true && result.synthesisPending)
+        ? 1
+        : 0;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (context.json) {

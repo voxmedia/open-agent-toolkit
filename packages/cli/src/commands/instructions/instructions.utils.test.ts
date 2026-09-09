@@ -968,6 +968,88 @@ describe('instructions utils', () => {
       expect(exclusions.warnings).toHaveLength(1);
       expect(exclusions.warnings[0]).toContain('nonexistent-dir');
       expect(exclusions.warnings[0]).toContain('excludes nothing');
+      // Pinned byte for byte, not by substring: an entry that names nothing is
+      // the one branch whose message is promised unchanged, so an operator or
+      // script that recognizes it today keeps working.
+      expect(exclusions.warnings[0]).toBe(
+        'documentation.instructionPointerExcludes entry "nonexistent-dir" matches no directory in this repository (matching is case-sensitive), so it excludes nothing.',
+      );
+    });
+
+    it('warns with the resolved target for an entry that is a symlink to another directory', async () => {
+      const repoRoot = await createRepoRoot();
+      await mkdir(join(repoRoot, 'real-docs'), { recursive: true });
+      await symlink(join(repoRoot, 'real-docs'), join(repoRoot, 'alias'));
+      await writeConfig(repoRoot, { instructionPointerExcludes: ['alias'] });
+
+      const exclusions = await resolveInstructionPointerExcludes(repoRoot);
+
+      expect(exclusions.configured).toEqual(['alias']);
+      expect(exclusions.effective).toEqual([]);
+      expect(exclusions.warnings).toHaveLength(1);
+      expect(exclusions.warnings[0]).toContain('alias');
+      expect(exclusions.warnings[0]).toContain('real-docs');
+      expect(exclusions.warnings[0]).toContain('excludes nothing');
+      // The directory is there and spelled exactly as configured; blaming
+      // case-sensitivity here sends the operator looking for a typo that does
+      // not exist.
+      expect(exclusions.warnings[0]).not.toContain('case-sensitive');
+    });
+
+    it('warns with the resolved target for a symlink pointing outside the repository', async () => {
+      const repoRoot = await createRepoRoot();
+      const outsideRoot = await createRepoRoot();
+      const target = join(outsideRoot, 'target');
+      await mkdir(target, { recursive: true });
+      await symlink(target, join(repoRoot, 'link-out'));
+      await writeConfig(repoRoot, { instructionPointerExcludes: ['link-out'] });
+
+      const exclusions = await resolveInstructionPointerExcludes(repoRoot);
+
+      // Realpath'd rather than hardcoded: the macOS temp root is itself a
+      // symlink (`/var` → `/private/var`).
+      const resolvedTarget = (await fsRealpath(target)).replaceAll('\\', '/');
+
+      expect(exclusions.configured).toEqual(['link-out']);
+      expect(exclusions.effective).toEqual([]);
+      expect(exclusions.warnings).toHaveLength(1);
+      expect(exclusions.warnings[0]).toContain('link-out');
+      expect(exclusions.warnings[0]).toContain(resolvedTarget);
+      // A target outside the repository is named plainly, not as a `../` chain
+      // relative to a root the operator never typed.
+      expect(exclusions.warnings[0]).not.toContain('../');
+      expect(exclusions.warnings[0]).not.toContain('case-sensitive');
+    });
+
+    it('names an absolute path for an entry resolving to the repository root or its parent', async () => {
+      const enclosingRoot = await createRepoRoot();
+      const repoRoot = join(enclosingRoot, 'repo');
+      await mkdir(repoRoot, { recursive: true });
+      await symlink(repoRoot, join(repoRoot, 'self'));
+      await symlink(enclosingRoot, join(repoRoot, 'up'));
+      await writeConfig(repoRoot, {
+        instructionPointerExcludes: ['self', 'up'],
+      });
+
+      const exclusions = await resolveInstructionPointerExcludes(repoRoot);
+
+      const resolvedRoot = (await fsRealpath(repoRoot)).replaceAll('\\', '/');
+      const resolvedParent = (await fsRealpath(enclosingRoot)).replaceAll(
+        '\\',
+        '/',
+      );
+
+      expect(exclusions.configured).toEqual(['self', 'up']);
+      expect(exclusions.effective).toEqual([]);
+      // `relative()` renders these two targets as `''` and `'..'`, and neither
+      // is a usable target in an operator-facing message — `resolves to ""` is
+      // worse than no target at all. Pinned as exact strings because the guard
+      // that redirects both to the absolute path is otherwise invisible: the
+      // rest of the suite stays green without it.
+      expect(exclusions.warnings).toEqual([
+        `documentation.instructionPointerExcludes entry "self" resolves to ${JSON.stringify(resolvedRoot)}, not to itself, so the scan never matches it and it excludes nothing. Point the entry at the resolved directory, or remove the symlink.`,
+        `documentation.instructionPointerExcludes entry "up" resolves to ${JSON.stringify(resolvedParent)}, not to itself, so the scan never matches it and it excludes nothing. Point the entry at the resolved directory, or remove the symlink.`,
+      ]);
     });
 
     it('warns and withholds effect for an entry dropped during normalization', async () => {
@@ -1012,26 +1094,55 @@ describe('instructions utils', () => {
       // wrong reason, leaving the realpath comparison unproven. Here `stat`
       // accepts the mis-cased path (as APFS/NTFS would) while realpath reports
       // the true on-disk casing the scan actually compares against.
+      //
+      // The substitution is keyed on the mis-cased segment for clarity, not to
+      // repair a defect: the previous `` `${repoRoot}/Apps/Docsapp` `` key also
+      // fired on every candidate the probe built from the *realpath'd* root,
+      // because `String.prototype.replace` searches for a substring rather than
+      // anchoring a prefix, and `/var/folders/…/Apps/Docsapp` occurs verbatim
+      // inside `/private/var/folders/…/Apps/Docsapp`. Instrumenting both keys
+      // counted three firing substitutions each, and the same warning. The
+      // segment key simply does not depend on that coincidence.
+      //
+      // On a case-insensitive host the injection is redundant — the filesystem
+      // produces the same answer with no injection at all. What the injection
+      // buys is determinism on a *case-sensitive* runner, where the mis-cased
+      // path would otherwise not resolve and this case would pass through the
+      // `absent` branch instead of the case-mismatch branch it is written for.
+      const simulateCaseInsensitiveLookup = (path: string): string =>
+        path.replace('/Apps/Docsapp', '/apps/docsapp');
       const exclusions = await resolveInstructionPointerExcludes(repoRoot, {
         stat: async (path: string) =>
-          fsStat(
-            path.replace(
-              `${repoRoot}/Apps/Docsapp`,
-              `${repoRoot}/apps/docsapp`,
-            ),
-          ),
+          fsStat(simulateCaseInsensitiveLookup(path)),
         realpath: async (path: string) =>
-          fsRealpath(
-            path.replace(
-              `${repoRoot}/Apps/Docsapp`,
-              `${repoRoot}/apps/docsapp`,
-            ),
-          ),
+          fsRealpath(simulateCaseInsensitiveLookup(path)),
       });
 
       expect(exclusions.configured).toEqual(['Apps/Docsapp/docs']);
       expect(exclusions.effective).toEqual([]);
+      // The hint is true on this branch, so it stays; what was missing is the
+      // spelling that would let the operator fix the entry.
       expect(exclusions.warnings[0]).toContain('case-sensitive');
+      expect(exclusions.warnings[0]).toContain('apps/docsapp/docs');
+    });
+
+    it('applies the same distinction to a symlinked documentation.root', async () => {
+      const repoRoot = await createRepoRoot();
+      await mkdir(join(repoRoot, 'real-app', 'docs'), { recursive: true });
+      await symlink(join(repoRoot, 'real-app'), join(repoRoot, 'alias-app'));
+      await writeConfig(repoRoot, { root: 'alias-app' });
+
+      const exclusions = await resolveInstructionPointerExcludes(repoRoot);
+
+      // The `source` label is interpolated into the message, so the derived
+      // content root has to reach the new branches too, not just explicit
+      // opt-outs.
+      expect(exclusions.configured).toEqual(['alias-app/docs']);
+      expect(exclusions.effective).toEqual([]);
+      expect(exclusions.warnings).toHaveLength(1);
+      expect(exclusions.warnings[0]).toContain('documentation.root entry');
+      expect(exclusions.warnings[0]).toContain('real-app/docs');
+      expect(exclusions.warnings[0]).not.toContain('case-sensitive');
     });
 
     it('keeps a carve-in descendant excludable while the carve-in root is not', async () => {

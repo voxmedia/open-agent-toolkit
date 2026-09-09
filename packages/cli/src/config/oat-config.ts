@@ -552,18 +552,24 @@ function normalizeRecordMap<T>(
     return undefined;
   }
 
-  const next: Record<string, T | null> = {};
+  // Built with `Object.fromEntries` rather than `next[key] = ...`: since
+  // `config/json.ts` materializes a key named `__proto__` as an own data
+  // property, assignment would reach the legacy prototype setter, drop the
+  // entry as data and install its value as this map's prototype. Same hazard
+  // and same remedy as the `projects` subtree at the `preserved` build below.
+  const entries: [string, T | null][] = [];
   for (const [key, rawEntry] of Object.entries(value)) {
     if (!key.trim()) {
       continue;
     }
     const normalized = normalizeValue(rawEntry);
+    // `null` is a real entry (a tombstone); only `undefined` drops.
     if (normalized !== undefined) {
-      next[key] = normalized;
+      entries.push([key, normalized]);
     }
   }
 
-  return Object.keys(next).length > 0 ? next : undefined;
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
 function normalizeExplainersConfig(
@@ -1562,9 +1568,42 @@ function normalizeInstructionPointerExcludes(
   return normalized;
 }
 
+/**
+ * Report a stored value whose type the normalizer cannot use.
+ *
+ * The scalar `documentation.*` branches accept only a non-empty string and have
+ * no else branch, so a wrong-typed value is dropped with no signal anywhere.
+ * That is defensible for a value nobody reads, but `documentation.root` decides
+ * which tree OAT treats as documentation, and its silent absence looks exactly
+ * like "never configured".
+ *
+ * The sink is optional on purpose: the lenient repair readers pass none and
+ * stay silent, so a caller reading the file only to rewrite a broken key does
+ * not get diagnosed about it.
+ */
+function warnWrongType(
+  key: string,
+  value: unknown,
+  configPath: string,
+  onWarning: ((message: string) => void) | undefined,
+): void {
+  if (!onWarning || value === undefined) return;
+  const observed = Array.isArray(value)
+    ? 'array'
+    : value === null
+      ? 'null'
+      : typeof value;
+  onWarning(
+    `Invalid ${key} in ${configPath}: expected a string, got ${observed}; ` +
+      `the value is ignored and ${key} reads as unset. ` +
+      `Repair it with oat config set ${key} <path>.`,
+  );
+}
+
 function normalizeOatConfig(
   parsed: unknown,
   configPath = '.oat/config.json',
+  onWarning?: (message: string) => void,
 ): OatConfig {
   const next: OatConfig = { ...DEFAULT_OAT_CONFIG };
   if (!isRecord(parsed)) {
@@ -1696,6 +1735,16 @@ function normalizeOatConfig(
       parsed.documentation.root.trim()
     ) {
       doc.root = parsed.documentation.root.trim();
+    } else if (typeof parsed.documentation.root !== 'string') {
+      // Only a type error is reported. A whitespace-only string is still a
+      // string, so it is dropped exactly as before and just as silently; an
+      // absent key never reaches the sink at all.
+      warnWrongType(
+        'documentation.root',
+        parsed.documentation.root,
+        configPath,
+        onWarning,
+      );
     }
     if (
       typeof parsed.documentation.tooling === 'string' &&
@@ -1810,19 +1859,48 @@ export function resolveLocalPaths(config: OatConfig): string[] {
   return config.localPaths ?? [];
 }
 
-export async function readOatConfig(repoRoot: string): Promise<OatConfig> {
+export interface OatConfigRead {
+  config: OatConfig;
+  warnings: string[];
+}
+
+/**
+ * Read the shared config and collect the diagnostics the normalizer would
+ * otherwise drop on the floor.
+ *
+ * Behavior is identical to `readOatConfig` in every respect that a caller can
+ * observe apart from the extra `warnings`: same path, same parse, same
+ * missing-file default, same rethrow for anything else. `readOatConfig` is a
+ * wrapper over this function rather than a second copy of the same eight lines,
+ * so the two cannot drift.
+ */
+export async function readOatConfigWithWarnings(
+  repoRoot: string,
+): Promise<OatConfigRead> {
   const configPath = getConfigPath(repoRoot);
+  const warnings: string[] = [];
 
   try {
     const raw = await readFile(configPath, 'utf8');
-    return normalizeOatConfig(parseJsonConfig(raw, configPath), configPath);
+    const config = normalizeOatConfig(
+      parseJsonConfig(raw, configPath),
+      configPath,
+      (message) => {
+        warnings.push(message);
+      },
+    );
+    return { config, warnings };
   } catch (error) {
     if (isMissingFileError(error)) {
-      return { ...DEFAULT_OAT_CONFIG };
+      return { config: { ...DEFAULT_OAT_CONFIG }, warnings: [] };
     }
 
     throw error;
   }
+}
+
+export async function readOatConfig(repoRoot: string): Promise<OatConfig> {
+  return (await readOatConfigWithWarnings(repoRoot)).config;
 }
 
 export async function readOatConfigForDefaultScopeRepair(

@@ -1,6 +1,7 @@
 import { execFile as execFileCallback } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
-import { pathToFileURL } from 'node:url';
+import { readFileSync, realpathSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFile = promisify(execFileCallback);
@@ -91,7 +92,7 @@ async function main(argv) {
     projectName,
     getArchiveReport: async () => {
       try {
-        return JSON.parse(await readFile(0, 'utf8'));
+        return JSON.parse(readFileSync(0, 'utf8'));
       } catch (error) {
         throw finalizationError(
           `Unable to parse synced archive terminal report: ${error.message}`,
@@ -110,10 +111,28 @@ async function main(argv) {
   });
 }
 
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
+/**
+ * Direct invocation, compared as canonical paths on both sides. Comparing a raw
+ * `process.argv[1]` against `import.meta.url` makes this script a silent no-op
+ * that exits 0 whenever the skill is reached through a symlinked install root,
+ * and canonicalizing only one side has the same effect under
+ * `--preserve-symlinks-main`, which keeps the link in `import.meta.url`. Either
+ * way the caller reads "exited 0" as "verified" — the fail-open shape this
+ * finalizer exists to prevent.
+ */
+function isDirectInvocation(invokedPath) {
+  if (!invokedPath) return false;
+  try {
+    return (
+      realpathSync(fileURLToPath(import.meta.url)) ===
+      realpathSync(resolve(invokedPath))
+    );
+  } catch {
+    return false;
+  }
+}
+
+if (isDirectInvocation(process.argv[1])) {
   main(process.argv.slice(2))
     .then((result) => process.stdout.write(`${JSON.stringify(result)}\n`))
     .catch((error) => {

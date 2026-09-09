@@ -110,7 +110,7 @@ describe('createValidateSkillVersionBumpsCommand', () => {
     await runCommand(command, [], ['--base-ref', 'origin/main']);
 
     expect(capture.info[0]).toContain(
-      'OK: validated 3 changed canonical skill version bump checks against origin/main',
+      'OK: validated 3 changed canonical skill and agent role version bump checks against origin/main',
     );
     expect(process.exitCode).toBe(0);
   });
@@ -124,7 +124,7 @@ describe('createValidateSkillVersionBumpsCommand', () => {
     await runCommand(command, [], ['--base-ref', 'origin/main']);
 
     expect(capture.info[0]).toContain(
-      'OK: 0 canonical skills changed relative to origin/main - nothing to validate',
+      'OK: 0 canonical skills or agent roles changed relative to origin/main - nothing to validate',
     );
     expect(process.exitCode).toBe(0);
   });
@@ -143,7 +143,7 @@ describe('createValidateSkillVersionBumpsCommand', () => {
     await runCommand(command, [], ['--base-ref', 'origin/main']);
 
     expect(capture.error.join('\n')).toContain(
-      'Canonical skill version validation failed:',
+      'Canonical skill and agent role version validation failed:',
     );
     expect(capture.error.join('\n')).toContain(
       'Changed canonical skill must bump frontmatter version',
@@ -300,7 +300,7 @@ describe('validate-skill-version-bumps gate outcomes', () => {
     expect(process.exitCode).toBe(0);
     expect(capture.error).toEqual([]);
     expect(capture.info.join('\n')).toContain(
-      'OK: validated 1 changed canonical skill version bump checks against base',
+      'OK: validated 1 changed canonical skill and agent role version bump checks against base',
     );
   });
 
@@ -312,7 +312,8 @@ describe('validate-skill-version-bumps gate outcomes', () => {
 
     expect(process.exitCode).toBe(1);
     expect(capture.error.join('\n')).toContain(
-      'Changed canonical skill must bump frontmatter version relative to base (still 1.2.3)',
+      'Changed canonical skill or agent role must bump its version relative to base (still 1.2.3); ' +
+        'declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
     );
   });
 
@@ -343,11 +344,14 @@ describe('validate-skill-version-bumps gate outcomes', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('fails the gate when an alias warning is routed into the bump result', async () => {
+  it('fails the gate when an alias finding is routed into the bump result', async () => {
     // Negative control for the routing boundary: the wrapper sets exit 1 on
-    // any finding regardless of severity, so an alias deprecation warning
+    // any finding regardless of severity, so an alias deprecation finding
     // emitted here would fail the bump gate for every unmigrated skill. This
     // is why `skill-version-alias` is emitted only by structural validation.
+    // The severity below is `error` since step 1 of the retirement schedule in
+    // `DR-260908-bundled-skills-declare`, which makes the separation matter
+    // more, not less: the promotion must not leak into this gate.
     const repoRoot = await createRepo(['version: 1.2.3'], ['version: 1.2.4']);
     const { command, capture } = createGateHarness(
       repoRoot,
@@ -366,7 +370,7 @@ describe('validate-skill-version-bumps gate outcomes', () => {
                 'SKILL.md',
               ),
               code: 'skill-version-alias',
-              severity: 'warning' as const,
+              severity: 'error' as const,
               message:
                 'Frontmatter version 1.2.4 uses the deprecated top-level alias; move it to metadata.version (metadata.version wins when both are present)',
             },

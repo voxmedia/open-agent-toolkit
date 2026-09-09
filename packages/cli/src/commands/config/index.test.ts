@@ -182,6 +182,41 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('never writes an aggregate get onto the global Object prototype', async () => {
+    // The aggregate walk descends key segments. A provider literally named
+    // `__proto__` sends the cursor into `Object.prototype`, and the leaf write
+    // then lands on the global prototype -- process-wide pollution, not a
+    // per-map defect. Cleanup is unconditional so a regression cannot leak
+    // into other tests in this worker.
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      '{"version":1,"workflow":{"dispatchCeiling":{"providers":{"__proto__":{"high":"max"},"codex":{"high":"high"}}}}}\n',
+      'utf8',
+    );
+    const { command, capture } = createHarness({ cwd: root });
+
+    try {
+      await runCommand(command, ['get', 'workflow.dispatchCeiling.providers']);
+
+      expect(
+        Object.prototype.hasOwnProperty.call(Object.prototype, 'high'),
+      ).toBe(false);
+      expect(({} as Record<string, unknown>).high).toBeUndefined();
+
+      const printed = JSON.parse(capture.info[0] ?? '{}') as Record<
+        string,
+        unknown
+      >;
+      // The real provider is unchanged, and the prototype-named one is data.
+      expect(printed.codex).toMatchObject({ high: { candidates: ['high'] } });
+      expect(Object.getPrototypeOf(printed)).toBe(Object.prototype);
+      expect(process.exitCode).toBe(0);
+    } finally {
+      Reflect.deleteProperty(Object.prototype, 'high');
+    }
+  });
+
   it('returns exit code 1 for unknown get keys', async () => {
     const root = await createRepoRoot();
     const { command, capture } = createHarness({ cwd: root });
@@ -1456,6 +1491,38 @@ describe('oat config', () => {
       expect(capture.error[0]).toContain('mutually exclusive');
     });
 
+    it('set, unset, and adopt reject the same conflicting surface flags with one message', async () => {
+      const argvs = [
+        ['set', 'git.defaultBranch', 'main', '--shared', '--local'],
+        ['unset', 'git.defaultBranch', '--shared', '--local'],
+        ['adopt', 'dispatch-matrix', '--shared', '--local'],
+      ];
+      const messages: string[] = [];
+      const exitCodes: (number | undefined)[] = [];
+
+      for (const argv of argvs) {
+        const root = await createRepoRoot();
+        const home = await createHome();
+        const { command, capture } = createHarness({ cwd: root, home });
+        process.exitCode = undefined;
+
+        await runCommand(command, argv);
+
+        messages.push(capture.error[0] ?? '');
+        exitCodes.push(process.exitCode);
+      }
+
+      // Compared to each other first, not only to the literal, so a future
+      // message change has to move all three commands together instead of
+      // letting one drift.
+      expect(messages[1]).toBe(messages[0]);
+      expect(messages[2]).toBe(messages[0]);
+      expect(messages[0]).toBe(
+        '--shared, --local, and --user flags are mutually exclusive; pass at most one.',
+      );
+      expect(exitCodes).toEqual([1, 1, 1]);
+    });
+
     it('set activeIdea --user writes to ~/.oat/config.json', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
@@ -2659,6 +2726,107 @@ describe('oat config', () => {
         expect(process.exitCode).toBe(0);
       },
     );
+
+    it('keeps a `__proto__` provider as data when setting a ceiling tier', async () => {
+      const root = await createRepoRoot();
+      const { command } = createHarness({
+        cwd: root,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+      });
+
+      // The key grammar admits any non-empty provider segment, so this name
+      // reaches the providers map from user input.
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.__proto__.high',
+        'max',
+        '--shared',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.codex.high',
+        'high',
+        '--shared',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      const raw = JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      ) as {
+        workflow?: {
+          dispatchCeiling?: { providers?: Record<string, unknown> };
+        };
+      };
+      const providers = raw.workflow?.dispatchCeiling?.providers ?? {};
+      expect(Object.keys(providers).sort()).toEqual(['__proto__', 'codex']);
+      // `set` normalizes each cell into a candidate ladder before persisting.
+      expect(providers['__proto__']).toEqual({ high: { candidates: ['max'] } });
+      expect(providers.codex).toEqual({ high: { candidates: ['high'] } });
+      expect(Object.getPrototypeOf(providers)).toBe(Object.prototype);
+      expect('high' in providers).toBe(false);
+    });
+
+    it('adopts a recommendation over an existing `__proto__` provider without replacing the map prototype', async () => {
+      const root = await createRepoRoot();
+      // Built with `Object.fromEntries` so the key survives as an own key
+      // through `JSON.stringify`; an object literal would set the prototype.
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              recommendationVersion: 'old',
+              providers: Object.fromEntries([
+                ['__proto__', { high: { candidates: ['max'] } }],
+                ['codex', { high: { candidates: ['medium'] } }],
+              ]),
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const { command } = createHarness({
+        cwd: root,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: {
+                codex: { high: { candidates: ['high'] } },
+                claude: { frontier: { candidates: ['fable'] } },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+      expect(process.exitCode).toBe(0);
+
+      const raw = JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      ) as {
+        workflow?: {
+          dispatchCeiling?: { providers?: Record<string, unknown> };
+        };
+      };
+      const providers = raw.workflow?.dispatchCeiling?.providers ?? {};
+      expect(Object.getPrototypeOf(providers)).toBe(Object.prototype);
+      expect('high' in providers).toBe(false);
+      // The recommendation's real providers survive, and the existing entry
+      // stays data rather than becoming this map's prototype.
+      expect(Object.keys(providers).sort()).toEqual([
+        '__proto__',
+        'claude',
+        'codex',
+      ]);
+      expect(providers.claude).toEqual({ frontier: { candidates: ['fable'] } });
+      expect(providers.codex).toEqual({ high: { candidates: ['medium'] } });
+      expect(providers['__proto__']).toEqual({ high: { candidates: ['max'] } });
+    });
 
     it('does not infer Fable from recommendation version when an explicit Frontier cell is preserved', async () => {
       const root = await createRepoRoot();
@@ -4272,6 +4440,177 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  // A `documentation.root` whose stored value is not a string used to reach
+  // the operator as nothing at all: `get` printed an empty line, `list`
+  // attributed the key to `default`, and both exited 0 -- which is exactly what
+  // "never configured" looks like. The value is still dropped; the drop is no
+  // longer silent.
+  //
+  // `logger.warn` is a no-op under `--json` (`ui/logger.ts`), so the two modes
+  // need different channels. The command picks exactly one: never both (a
+  // double print) and never neither (the silence this replaces). The capture
+  // helper records `warn` unconditionally, so a `--json` case asserting an
+  // empty `capture.warn` really is asserting that the command did not call it.
+  describe('documentation.root type warnings', () => {
+    async function writeSharedRoot(
+      root: string,
+      value: unknown,
+    ): Promise<void> {
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({ version: 1, documentation: { root: value } })}\n`,
+        'utf8',
+      );
+    }
+
+    it('warns once on get and once on list in human mode', async () => {
+      const root = await createRepoRoot();
+      await writeSharedRoot(root, 5);
+
+      const get = createHarness({ cwd: root });
+      await runCommand(get.command, ['get', 'documentation.root']);
+
+      expect(get.capture.warn).toHaveLength(1);
+      expect(get.capture.warn[0]).toContain('documentation.root');
+      expect(get.capture.warn[0]).toContain('got number');
+      expect(get.capture.warn[0]).toContain(
+        'oat config set documentation.root',
+      );
+      // stdout is unchanged: the value is still dropped, so it reads empty.
+      expect(get.capture.info[0]).toBe('');
+      expect(process.exitCode).toBe(0);
+
+      process.exitCode = undefined;
+      const list = createHarness({ cwd: root });
+      await runCommand(list.command, ['list']);
+
+      // Once per invocation, not once per config layer read: `list` resolves
+      // every key and every resolution reads the shared file again.
+      expect(list.capture.warn).toHaveLength(1);
+      expect(list.capture.warn[0]).toContain('documentation.root');
+      expect(list.capture.info[0]).toContain('documentation.root');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('carries the warning in the JSON document, not on stderr', async () => {
+      const root = await createRepoRoot();
+      await writeSharedRoot(root, { a: 1 });
+
+      const get = createHarness({ cwd: root });
+      await runCommand(get.command, ['get', 'documentation.root'], ['--json']);
+
+      expect(get.capture.warn).toEqual([]);
+      // One document, not merely a first document that carries the warning.
+      expect(get.capture.jsonPayloads).toHaveLength(1);
+      expect(get.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'documentation.root',
+        value: null,
+      });
+      const getPayload = get.capture.jsonPayloads[0] as { warnings?: string[] };
+      expect(getPayload.warnings).toHaveLength(1);
+      expect(getPayload.warnings?.[0]).toContain('documentation.root');
+      expect(getPayload.warnings?.[0]).toContain('got object');
+      expect(process.exitCode).toBe(0);
+
+      process.exitCode = undefined;
+      const list = createHarness({ cwd: root });
+      await runCommand(list.command, ['list'], ['--json']);
+
+      expect(list.capture.warn).toEqual([]);
+      expect(list.capture.jsonPayloads).toHaveLength(1);
+      const listPayload = list.capture.jsonPayloads[0] as {
+        warnings?: string[];
+      };
+      expect(listPayload.warnings).toHaveLength(1);
+      expect(listPayload.warnings?.[0]).toContain('got object');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('names the observed type for every wrong-typed shape', async () => {
+      const shapes: Array<[unknown, string]> = [
+        [5, 'number'],
+        [{ a: 1 }, 'object'],
+        [[1], 'array'],
+        [null, 'null'],
+        [true, 'boolean'],
+      ];
+
+      for (const [value, observed] of shapes) {
+        const root = await createRepoRoot();
+        await writeSharedRoot(root, value);
+        process.exitCode = undefined;
+
+        const { command, capture } = createHarness({ cwd: root });
+        await runCommand(command, ['get', 'documentation.root'], ['--json']);
+
+        const payload = capture.jsonPayloads[0] as { warnings?: string[] };
+        expect(payload.warnings).toHaveLength(1);
+        expect(payload.warnings?.[0]).toContain(`got ${observed}`);
+        expect(process.exitCode).toBe(0);
+      }
+    });
+
+    it('stays silent for a valid root and omits the JSON key entirely', async () => {
+      const root = await createRepoRoot();
+      await writeSharedRoot(root, 'apps/docs');
+
+      const human = createHarness({ cwd: root });
+      await runCommand(human.command, ['get', 'documentation.root']);
+      expect(human.capture.warn).toEqual([]);
+      expect(human.capture.info[0]).toBe('apps/docs');
+
+      const humanList = createHarness({ cwd: root });
+      await runCommand(humanList.command, ['list']);
+      expect(humanList.capture.warn).toEqual([]);
+
+      const json = createHarness({ cwd: root });
+      await runCommand(json.command, ['get', 'documentation.root'], ['--json']);
+      expect(json.capture.warn).toEqual([]);
+      // Not `warnings: []`. An empty array would be new noise on the common
+      // path, and it would break every existing `toEqual` on these documents.
+      expect(json.capture.jsonPayloads[0]).not.toHaveProperty('warnings');
+      expect(json.capture.jsonPayloads[0]).toEqual({
+        status: 'ok',
+        key: 'documentation.root',
+        value: 'apps/docs',
+        source: 'shared',
+      });
+
+      const jsonList = createHarness({ cwd: root });
+      await runCommand(jsonList.command, ['list'], ['--json']);
+      expect(jsonList.capture.warn).toEqual([]);
+      expect(jsonList.capture.jsonPayloads[0]).not.toHaveProperty('warnings');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('still lets a fail-closed sibling key win', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          documentation: { root: 5, excludes: 5 },
+        })}\n`,
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root });
+      await runCommand(command, ['get', 'documentation.root']);
+
+      // The warn-read did not change which error wins, nor the words it
+      // wins with: the whole diagnostic is pinned, because a message that only
+      // has to start with 'Invalid documentation.excludes' would stay green
+      // if the path or the repair command drifted. A command that fails
+      // reports the failure rather than a warning about it.
+      expect(capture.error[0]).toBe(
+        `Invalid documentation.excludes in ${join(root, '.oat', 'config.json')}: expected an array of non-empty strings. Repair it with oat config set documentation.excludes "<glob>,<glob>" (an empty value clears it).`,
+      );
+      expect(capture.warn).toEqual([]);
+      expect(process.exitCode).toBe(1);
+    });
+  });
+
   describe('archive.awsProfile + archive.awsRegion', () => {
     const archiveAwsPrecedenceDescription =
       'Precedence: per-invocation flag > this config value > existing shell env.';
@@ -4950,45 +5289,91 @@ describe('oat config', () => {
       expect(capture.error[0]).toContain('Unknown config key: unknown.key');
     });
 
-    it('unset reports env-sourced values as not unsettable when the surface holds nothing', async () => {
-      const root = await createRepoRoot();
-      await writeSharedConfig(root, {});
-      const { command, capture } = createHarness({
-        cwd: root,
-        env: { OAT_PROJECTS_ROOT: '.oat/projects/from-env' },
-      });
+    // Every entry of `ENV_OVERRIDE_MAP` in `config/resolve.ts`. `unset` derives
+    // `envShadowed` from `resolveEnvOverride` rather than from a whole-config
+    // read, and that equivalence is only sound if it holds for each mapped key,
+    // so both env cases below run per key instead of for `projects.root` alone.
+    const envOverrideKeys = [
+      {
+        key: 'projects.root',
+        envVar: 'OAT_PROJECTS_ROOT',
+        envValue: '.oat/projects/from-env',
+        stored: { projects: { root: '.oat/projects/from-config' } },
+        storedPath: ['projects', 'root'],
+      },
+      {
+        key: 'projects.defaultScope',
+        envVar: 'OAT_PROJECTS_DEFAULT_SCOPE',
+        envValue: 'local',
+        stored: { projects: { defaultScope: 'shared' } },
+        storedPath: ['projects', 'defaultScope'],
+      },
+      {
+        key: 'worktrees.root',
+        envVar: 'OAT_WORKTREES_ROOT',
+        envValue: '.worktrees-from-env',
+        stored: { worktrees: { root: '.worktrees-from-config' } },
+        storedPath: ['worktrees', 'root'],
+      },
+    ];
 
-      await runCommand(command, ['unset', 'projects.root', '--shared']);
-
-      expect(process.exitCode).toBe(1);
-      expect(capture.error[0]).toContain('environment variable');
-      // Reporting "already unset" here would imply the effective value is gone.
-      expect(capture.error[0]).toContain('nothing is stored there');
-      expect(capture.info).toHaveLength(0);
-    });
-
-    it('unset removes a stored value the env var only shadows, and warns', async () => {
-      const root = await createRepoRoot();
-      await writeSharedConfig(root, {
-        projects: { root: '.oat/projects/from-config' },
-      });
-      const { command, capture } = createHarness({
-        cwd: root,
-        env: { OAT_PROJECTS_ROOT: '.oat/projects/from-env' },
-      });
-
-      // `set` rewrites this stored value under the same override, so `unset`
-      // must be able to remove it. The override stays live, so the removal is
-      // never reported as making the effective value unset.
-      await runCommand(command, ['unset', 'projects.root', '--shared']);
-
-      expect(process.exitCode).toBe(0);
-      const shared = await readSharedConfig(root);
-      expect(shared.projects).toBeUndefined();
-      expect(capture.warn[0]).toContain(
-        'environment variable override still supplies its effective value',
+    function readStoredPath(
+      config: Record<string, unknown>,
+      storedPath: string[],
+    ): unknown {
+      return storedPath.reduce<unknown>(
+        (value, segment) =>
+          value !== null && typeof value === 'object'
+            ? (value as Record<string, unknown>)[segment]
+            : undefined,
+        config,
       );
-    });
+    }
+
+    it.each(envOverrideKeys)(
+      'unset $key reports env-sourced values as not unsettable when the surface holds nothing',
+      async ({ key, envVar, envValue }) => {
+        const root = await createRepoRoot();
+        await writeSharedConfig(root, {});
+        const { command, capture } = createHarness({
+          cwd: root,
+          env: { [envVar]: envValue },
+        });
+
+        await runCommand(command, ['unset', key, '--shared']);
+
+        expect(process.exitCode).toBe(1);
+        expect(capture.error[0]).toContain('environment variable');
+        // Reporting "already unset" here would imply the effective value is
+        // gone.
+        expect(capture.error[0]).toContain('nothing is stored there');
+        expect(capture.info).toHaveLength(0);
+      },
+    );
+
+    it.each(envOverrideKeys)(
+      'unset $key removes a stored value the env var only shadows, and warns',
+      async ({ key, envVar, envValue, stored, storedPath }) => {
+        const root = await createRepoRoot();
+        await writeSharedConfig(root, stored);
+        const { command, capture } = createHarness({
+          cwd: root,
+          env: { [envVar]: envValue },
+        });
+
+        // `set` rewrites this stored value under the same override, so `unset`
+        // must be able to remove it. The override stays live, so the removal is
+        // never reported as making the effective value unset.
+        await runCommand(command, ['unset', key, '--shared']);
+
+        expect(process.exitCode).toBe(0);
+        const shared = await readSharedConfig(root);
+        expect(readStoredPath(shared, storedPath)).toBeUndefined();
+        expect(capture.warn[0]).toContain(
+          'environment variable override still supplies its effective value',
+        );
+      },
+    );
 
     it('unset removes an invalid stored value the normalizing reader drops', async () => {
       const root = await createRepoRoot();
@@ -5013,6 +5398,179 @@ describe('oat config', () => {
       );
       const shared = await readSharedConfig(root);
       expect(shared.explainers).toBeUndefined();
+    });
+
+    it('unset removes a malformed documentation.excludes and leaves siblings intact', async () => {
+      const root = await createRepoRoot();
+      // The strict normalizing reader throws on this value. `unset` used to
+      // resolve the effective config before doing anything else, so it aborted
+      // here and never reached the lenient repair reader that exists precisely
+      // to remove it.
+      await writeSharedConfig(root, {
+        documentation: { excludes: 5, root: 'apps/docs' },
+        git: { defaultBranch: 'trunk' },
+      });
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'documentation.excludes']);
+
+      expect(process.exitCode).toBe(0);
+      expect(capture.info[0]).toBe(
+        'documentation.excludes unset from shared config',
+      );
+      const shared = await readSharedConfig(root);
+      const documentation = shared.documentation as Record<string, unknown>;
+      expect(documentation.excludes).toBeUndefined();
+      expect(documentation.root).toBe('apps/docs');
+      expect((shared.git as Record<string, unknown>).defaultBranch).toBe(
+        'trunk',
+      );
+    });
+
+    it('unset removes a malformed documentation.instructionPointerExcludes', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        documentation: { instructionPointerExcludes: 7, root: 'apps/docs' },
+      });
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'unset',
+        'documentation.instructionPointerExcludes',
+      ]);
+
+      expect(process.exitCode).toBe(0);
+      expect(capture.info[0]).toBe(
+        'documentation.instructionPointerExcludes unset from shared config',
+      );
+      const shared = await readSharedConfig(root);
+      const documentation = shared.documentation as Record<string, unknown>;
+      expect(documentation.instructionPointerExcludes).toBeUndefined();
+      expect(documentation.root).toBe('apps/docs');
+    });
+
+    it('unset removes a malformed projects.defaultScope', async () => {
+      const root = await createRepoRoot();
+      // Not named by the backlog item, but it fails closed identically and has
+      // its own lenient repair reader in `removeFromSurface`.
+      await writeSharedConfig(root, {
+        projects: { defaultScope: {}, root: '.oat/projects/shared' },
+      });
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'projects.defaultScope']);
+
+      expect(process.exitCode).toBe(0);
+      expect(capture.info[0]).toBe(
+        'projects.defaultScope unset from shared config',
+      );
+      const shared = await readSharedConfig(root);
+      const projects = shared.projects as Record<string, unknown>;
+      expect(projects.defaultScope).toBeUndefined();
+      expect(projects.root).toBe('.oat/projects/shared');
+    });
+
+    it('unset removes a malformed projects.defaultScope and still warns about the live environment override', async () => {
+      const root = await createRepoRoot();
+      await writeSharedConfig(root, {
+        projects: { defaultScope: {}, root: '.oat/projects/shared' },
+      });
+      const { command, capture } = createHarness({
+        cwd: root,
+        env: { OAT_PROJECTS_DEFAULT_SCOPE: 'local' },
+      });
+
+      // The probe cannot be merely `false`: the whole-config read this replaced
+      // could not reach this branch at all, because the malformed value aborted
+      // it before the override was ever consulted.
+      await runCommand(command, ['unset', 'projects.defaultScope']);
+
+      expect(process.exitCode).toBe(0);
+      const shared = await readSharedConfig(root);
+      const projects = shared.projects as Record<string, unknown>;
+      expect(projects.defaultScope).toBeUndefined();
+      expect(capture.warn[0]).toContain(
+        'an environment variable override still supplies its effective value',
+      );
+    });
+
+    it('unset of an unrelated key still fails while another key is malformed', async () => {
+      const root = await createRepoRoot();
+      // Deliberate limitation, not an oversight: `removeFromSurface` writes
+      // through `writeOatConfig`, which normalizes on write, so rewriting this
+      // file would either throw on the untargeted malformed sibling or silently
+      // destroy it. `set` refuses identically. This pins the refusal so a later
+      // change cannot start rewriting a file over a malformed sibling silently.
+      await writeSharedConfig(root, {
+        documentation: { excludes: 5 },
+        git: { defaultBranch: 'trunk' },
+      });
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'git.defaultBranch']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('Invalid documentation.excludes');
+      const shared = await readSharedConfig(root);
+      expect((shared.git as Record<string, unknown>).defaultBranch).toBe(
+        'trunk',
+      );
+    });
+
+    it('unset of a key on one surface still fails while another surface is malformed', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      // The targeted surface here is `user`; the malformed value is on
+      // `shared`. Nothing in the user-surface write path would ever look at the
+      // shared file, so the barrier's untargeted read is the only thing that
+      // refuses this.
+      await writeSharedConfig(root, { documentation: { excludes: 5 } });
+      await mkdir(join(home, '.oat'), { recursive: true });
+      const userConfigPath = join(home, '.oat', 'config.json');
+      await writeFile(
+        userConfigPath,
+        `${JSON.stringify({ version: 1, updateNotifications: false })}\n`,
+        'utf8',
+      );
+      const before = await readFile(userConfigPath, 'utf8');
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, ['unset', 'updateNotifications', '--user']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('Invalid documentation.excludes');
+      expect(await readFile(userConfigPath, 'utf8')).toBe(before);
+    });
+
+    it('unset of a pjm.remote child still fails while a shared sibling is malformed', async () => {
+      const root = await createRepoRoot();
+      // The `pjm.remote` branch of `removeFromSurface` persists through
+      // `atomicWriteJson`, bypassing `writeOatConfig`'s normalization, so no
+      // rewrite downstream would refuse the malformed sibling. The barrier's
+      // targeted shared read is the only thing between this command and a raw
+      // write over an invalid document.
+      await writeSharedConfig(root, {
+        pjm: {
+          remote: {
+            schemaVersion: 1,
+            storage: { state: 'local' },
+            policy: {
+              description: 'managed-section',
+              authority: { default: 'read-only' },
+            },
+          },
+        },
+        documentation: { excludes: 5 },
+      });
+      const configPath = join(root, '.oat', 'config.json');
+      const before = await readFile(configPath, 'utf8');
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['unset', 'pjm.remote.policy.description']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('Invalid documentation.excludes');
+      expect(await readFile(configPath, 'utf8')).toBe(before);
     });
 
     it('unset still reports already-unset when the key is absent from disk', async () => {

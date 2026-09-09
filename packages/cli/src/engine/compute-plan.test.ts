@@ -54,6 +54,34 @@ function createCanonicalEntry(
   };
 }
 
+/**
+ * Seeds a canonical skill and the managed provider copy the writer produces
+ * for it: the canonical bytes, plus `applyCopyMarker`'s `.oat-generated`
+ * sentinel and the banner prepended to `SKILL.md`, both naming the same
+ * absolute canonical path the scanner passes.
+ */
+async function seedManagedSkillCopy(
+  root: string,
+): Promise<{ canonicalPath: string; providerPath: string }> {
+  const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+  const providerPath = join(root, '.claude', 'skills', 'skill-one');
+  await mkdir(canonicalPath, { recursive: true });
+  await writeFile(join(canonicalPath, 'SKILL.md'), '# skill\n', 'utf8');
+  await mkdir(providerPath, { recursive: true });
+  const marker = `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->`;
+  await writeFile(
+    join(providerPath, 'SKILL.md'),
+    `${marker}\n# skill\n`,
+    'utf8',
+  );
+  await writeFile(
+    join(providerPath, OAT_DIRECTORY_SENTINEL),
+    `${marker}\n`,
+    'utf8',
+  );
+  return { canonicalPath, providerPath };
+}
+
 function manifestWithEntry(entry: ManifestEntry): Manifest {
   const manifest = createEmptyManifest();
   return {
@@ -413,6 +441,89 @@ describe('computeSyncPlan', () => {
     ]);
   });
 
+  it('detaches rather than removes an obsolete mapping whose sentinel is a symlink', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+    const providerPath = join(root, '.cursor', 'skills', 'skill-one');
+    await mkdir(canonicalPath, { recursive: true });
+    await writeFile(join(canonicalPath, 'SKILL.md'), '# skill\n', 'utf8');
+    const contentHash = await computeDirectoryHash(canonicalPath);
+    await mkdir(providerPath, { recursive: true });
+    const marker = `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->`;
+    await writeFile(
+      join(providerPath, 'SKILL.md'),
+      `${marker}\n# skill\n`,
+      'utf8',
+    );
+    const side = join(root, 'side-sentinel');
+    await writeFile(side, `${marker}\n`, 'utf8');
+    await symlink(side, join(providerPath, OAT_DIRECTORY_SENTINEL));
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createCursorNativeSkillAdapter()],
+      manifest: manifestWithEntry(
+        createCursorSkillManifestEntry({ strategy: 'copy', contentHash }),
+      ),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    // The stricter helper refuses to verify this tree, so the destructive
+    // `remove` is downgraded to a non-destructive `detach`.
+    expect(plan.removals).toEqual([
+      expect.objectContaining({
+        operation: 'detach',
+        reason:
+          'obsolete mapping provider path is changed or unverified; preserve and detach manifest ownership',
+      }),
+    ]);
+  });
+
+  it('detaches rather than removes an obsolete mapping whose provider root is a symlink', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+    const providerPath = join(root, '.cursor', 'skills', 'skill-one');
+    await mkdir(canonicalPath, { recursive: true });
+    await writeFile(join(canonicalPath, 'SKILL.md'), '# skill\n', 'utf8');
+    const contentHash = await computeDirectoryHash(canonicalPath);
+    const real = join(root, 'real-copy');
+    await mkdir(real, { recursive: true });
+    const marker = `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->`;
+    await writeFile(join(real, 'SKILL.md'), `${marker}\n# skill\n`, 'utf8');
+    await writeFile(join(real, OAT_DIRECTORY_SENTINEL), `${marker}\n`, 'utf8');
+    await mkdir(join(root, '.cursor', 'skills'), { recursive: true });
+    await symlink(real, providerPath);
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createCursorNativeSkillAdapter()],
+      manifest: manifestWithEntry(
+        createCursorSkillManifestEntry({ strategy: 'copy', contentHash }),
+      ),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    // Unlike the other three consumers, the retirement classifier was never
+    // weak to this shape: `expectedTypeMatches` is computed from `lstat`, so a
+    // symlinked root fails `isDirectory()` and never reaches the managed-copy
+    // hash at all. This case therefore stays green with the helper un-hardened
+    // — it pins the composite guarantee (both guards together), not the
+    // hardening alone.
+    expect(plan.removals).toEqual([
+      expect.objectContaining({
+        operation: 'detach',
+        reason:
+          'obsolete mapping provider path is changed or unverified; preserve and detach manifest ownership',
+      }),
+    ]);
+  });
+
   it('preserves a modified generated copy while detaching obsolete ownership', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
     tempDirs.push(root);
@@ -741,6 +852,133 @@ describe('computeSyncPlan', () => {
     expect(plan.entries[0]).toMatchObject({
       operation: 'create_copy',
       strategy: 'copy',
+    });
+  });
+
+  it('plans skip for a faithful managed directory copy', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    const { canonicalPath } = await seedManagedSkillCopy(root);
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    // Before the managed-copy comparison the writer's own banner and sentinel
+    // made this re-plan `update_copy` forever.
+    expect(canonicalPath).toContain('skill-one');
+    expect(plan.entries).toHaveLength(1);
+    expect(plan.entries[0]).toMatchObject({
+      operation: 'skip',
+      reason: 'already in sync',
+      strategy: 'copy',
+    });
+  });
+
+  it('still plans update_copy for a managed directory copy whose body was edited', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    const { providerPath } = await seedManagedSkillCopy(root);
+    await writeFile(
+      join(providerPath, 'SKILL.md'),
+      `${OAT_MARKER_PREFIX} Source: ${join(root, '.agents', 'skills', 'skill-one')} -->\n# skill edited by hand\n`,
+      'utf8',
+    );
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.entries[0]).toMatchObject({
+      operation: 'update_copy',
+      reason: 'copied content differs from canonical content',
+    });
+  });
+
+  it('still plans update_copy for a directory copy with no sentinel', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    const { providerPath } = await seedManagedSkillCopy(root);
+    // The pre-`applyCopyMarker` legacy shape: banner present, sentinel absent.
+    await rm(join(providerPath, OAT_DIRECTORY_SENTINEL));
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.entries[0]).toMatchObject({
+      operation: 'update_copy',
+      reason: 'copied content differs from canonical content',
+    });
+  });
+
+  it('still plans update_copy when the sentinel is a symlink to a file holding the exact marker', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    const { canonicalPath, providerPath } = await seedManagedSkillCopy(root);
+    const side = join(root, 'side-sentinel');
+    await writeFile(
+      side,
+      `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->\n`,
+      'utf8',
+    );
+    await rm(join(providerPath, OAT_DIRECTORY_SENTINEL));
+    await symlink(side, join(providerPath, OAT_DIRECTORY_SENTINEL));
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.entries[0]).toMatchObject({
+      operation: 'update_copy',
+      reason: 'copied content differs from canonical content',
+    });
+  });
+
+  it('still plans update_copy when the provider root is a symlink to a faithful decorated tree', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    const { canonicalPath, providerPath } = await seedManagedSkillCopy(root);
+    const real = join(root, 'real-copy');
+    await mkdir(real, { recursive: true });
+    const marker = `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->`;
+    await writeFile(join(real, 'SKILL.md'), `${marker}\n# skill\n`, 'utf8');
+    await writeFile(join(real, OAT_DIRECTORY_SENTINEL), `${marker}\n`, 'utf8');
+    await rm(providerPath, { recursive: true, force: true });
+    await symlink(real, providerPath);
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createTestAdapter({ defaultStrategy: 'copy' })],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: AUTO_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.entries[0]).toMatchObject({
+      operation: 'update_copy',
+      reason: 'copied content differs from canonical content',
     });
   });
 

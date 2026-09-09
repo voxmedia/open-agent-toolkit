@@ -52,6 +52,11 @@ function validSkillContent(skillName: string): string {
     'disable-model-invocation: true',
     'user-invocable: true',
     'allowed-tools: Read, Write',
+    // Every skill must declare a resolvable version: the structural validator
+    // reports `skill-version-missing` for one that does not, so a fixture
+    // without a version would add that finding to every unrelated assertion.
+    'metadata:',
+    '  version: 1.0.0',
     '---',
     '',
     '# Demo',
@@ -73,6 +78,8 @@ function validGateableSkillContent(skillName: string): string {
     'user-invocable: true',
     'allowed-tools: Read, Write',
     'oat_gateable: true',
+    'metadata:',
+    '  version: 1.0.0',
     '---',
     '',
     '# Demo',
@@ -138,11 +145,13 @@ function currentSkillContent(
   ].join('\n');
 }
 
-function aliasWarning(file: string, version: string) {
+// The alias finding is an error since step 1 of the retirement schedule in
+// `DR-260908-bundled-skills-declare`; it is no longer a non-blocking warning.
+function aliasFinding(file: string, version: string) {
   return {
     file,
     code: 'skill-version-alias',
-    severity: 'warning',
+    severity: 'error',
     message: `Frontmatter version ${version} uses the deprecated top-level alias; move it to metadata.version (metadata.version wins when both are present)`,
   };
 }
@@ -306,6 +315,8 @@ describe('validateOatSkills', () => {
         'name: oat-missing-keys',
         'description: Use when validating missing frontmatter keys. Provides fixture content for required-key checks.',
         'disable-model-invocation: true',
+        'metadata:',
+        '  version: 1.0.0',
         '---',
         '',
         '# Demo',
@@ -344,6 +355,8 @@ describe('validateOatSkills', () => {
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
+        'metadata:',
+        '  version: 1.0.0',
         '---',
         '',
         '# Demo',
@@ -373,6 +386,8 @@ describe('validateOatSkills', () => {
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
+        'metadata:',
+        '  version: 1.0.0',
         '---',
         '',
         '# Demo',
@@ -393,7 +408,7 @@ describe('validateOatSkills', () => {
     ]);
   });
 
-  it('passes for valid oat-* skills and ignores non-oat directories', async () => {
+  it('applies the oat-* structural checks only to oat-* directories', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
     tempDirs.push(root);
     await createSkillFile(
@@ -406,11 +421,24 @@ describe('validateOatSkills', () => {
       'oat-valid-two',
       validSkillContent('oat-valid-two'),
     );
-    await createSkillFile(root, 'non-oat-dir', '# ignored');
+    const nonOatPath = await createSkillFile(root, 'non-oat-dir', '# ignored');
 
     const result = await validateOatSkills(root);
     expect(result.validatedSkillCount).toBe(2);
-    expect(result.findings).toEqual([]);
+    // None of the `oat-*` structural findings (missing keys, progress
+    // indicators, name mismatch) fire for the non-`oat-*` directory. The one
+    // finding it does draw comes from the version-source pass, which walks
+    // every skill directory: a `SKILL.md` with no frontmatter block declares
+    // no version, and used to be reported by neither validator.
+    expect(result.findings).toEqual([
+      {
+        file: nonOatPath,
+        code: 'skill-frontmatter-missing',
+        severity: 'error',
+        message:
+          'Missing frontmatter block (--- ... ---); a changed canonical skill or agent role must declare a version',
+      },
+    ]);
   });
 
   it('rejects staging a path under the synced project tree', async () => {
@@ -918,6 +946,8 @@ describe('validateOatSkills', () => {
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
+        'metadata:',
+        '  version: 1.0.0',
         '---',
         '',
         '# Demo',
@@ -953,6 +983,8 @@ describe('validateOatSkills', () => {
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
+        'metadata:',
+        '  version: 1.0.0',
         '---',
         '',
         '# Demo',
@@ -988,6 +1020,8 @@ describe('validateOatSkills', () => {
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
+        'metadata:',
+        '  version: 1.0.0',
         '---',
         '',
         '# Demo',
@@ -1017,6 +1051,8 @@ describe('validateOatSkills', () => {
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
+        'metadata:',
+        '  version: 1.0.0',
         '---',
         '',
         '# Demo',
@@ -1046,6 +1082,8 @@ describe('validateOatSkills', () => {
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
+        'metadata:',
+        '  version: 1.0.0',
         '---',
         '',
         '# Demo',
@@ -1075,6 +1113,8 @@ describe('validateOatSkills', () => {
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
+        'metadata:',
+        '  version: 1.0.0',
         '---',
         '',
         '# Demo',
@@ -1111,6 +1151,8 @@ describe('validateOatSkills', () => {
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
+        'metadata:',
+        '  version: 1.0.0',
         '---',
         '',
         '# Demo',
@@ -1132,6 +1174,43 @@ describe('validateOatSkills', () => {
         ),
       }),
     ]);
+  });
+
+  it('does not report a description longer than 500 characters for a non-oat-* skill', async () => {
+    // Scoping backstop for the standing claim the authoring skills now make:
+    // OAT's 500-character description rule is enforced by `validateOatSkills`
+    // for `oat-*` skills only. The fixture is the same over-length description
+    // the positive case above uses; only the directory name differs, so a
+    // failure here means the filter — not the length check — moved.
+    const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
+    tempDirs.push(root);
+    const longDescription = `Use when validating description length enforcement. ${'x'.repeat(460)}`;
+    expect(longDescription.length).toBeGreaterThan(500);
+    await createSkillFile(
+      root,
+      'agnostic-description-too-long',
+      [
+        '---',
+        'name: agnostic-description-too-long',
+        `description: ${longDescription}`,
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        'metadata:',
+        '  version: 1.0.0',
+        '---',
+        '',
+        '# Demo',
+      ].join('\n'),
+    );
+
+    const result = await validateOatSkills(root);
+    expect(
+      result.findings.filter((finding) =>
+        finding.message.includes('exceeds 500 characters'),
+      ),
+    ).toEqual([]);
+    expect(result.validatedSkillCount).toBe(0);
   });
 
   it('accepts valid semver version frontmatter when present', async () => {
@@ -1161,13 +1240,13 @@ describe('validateOatSkills', () => {
     );
 
     const result = await validateOatSkills(root);
-    // A top-level `version` is still accepted, but it is the deprecated alias:
-    // the only finding is that non-blocking warning.
+    // A top-level `version` still resolves, but it is the deprecated alias and
+    // is now reported as a blocking error rather than a warning.
     expect(result.findings).toEqual([
       {
         file: join(root, '.agents', 'skills', 'oat-semver-valid', 'SKILL.md'),
         code: 'skill-version-alias',
-        severity: 'warning',
+        severity: 'error',
         message:
           'Frontmatter version 1.2.3 uses the deprecated top-level alias; move it to metadata.version (metadata.version wins when both are present)',
       },
@@ -1208,8 +1287,8 @@ describe('validateOatSkills', () => {
         file: skillPath,
         message: 'Frontmatter version must be valid semver (e.g., 1.0.0)',
       }),
-      // The value is usable, just not semver, so the alias warning fires too.
-      aliasWarning(skillPath, '1.2'),
+      // The value is usable, just not semver, so the alias error fires too.
+      aliasFinding(skillPath, '1.2'),
     ]);
   });
 
@@ -1296,6 +1375,66 @@ describe('validateOatSkills', () => {
 
     expect(invalidVersions).toEqual([]);
     expect(aliasDeclarations).toEqual([]);
+  });
+
+  it('declares allowed-tools as a comma-separated list in every canonical skill', async () => {
+    // OAT never parses this separator: `validateOatSkills` only checks that the
+    // key is present and `commands/tools/info` reads the raw scalar. The comma
+    // form is therefore an authoring convention, and this sweep is what keeps
+    // the documented convention and the corpus from drifting apart.
+    const repoRoot = join(process.cwd(), '..', '..');
+    const skillsRoot = join(repoRoot, '.agents', 'skills');
+    const entries = await readdir(skillsRoot, { withFileTypes: true });
+    const skillDirs = entries
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.'))
+      .map((entry) => entry.name)
+      .sort();
+
+    expect(skillDirs.length).toBeGreaterThan(0);
+
+    // A single tool token: an identifier, optionally with a parenthesised
+    // scope such as `Bash(git:*)`, or a wildcard such as `mcp__*`. A value
+    // that space-separates two tools fails to match as one token.
+    const singleToolToken = /^[A-Za-z_][A-Za-z0-9_*-]*(\(.*\))?$/;
+    const offenders: string[] = [];
+    let declaringSkills = 0;
+
+    for (const skillName of skillDirs) {
+      const content = await readFile(
+        join(skillsRoot, skillName, 'SKILL.md'),
+        'utf8',
+      );
+      const block = getFrontmatterBlock(content);
+      const declared = block?.match(/^allowed-tools:[ \t]*(.+)$/m)?.[1]?.trim();
+      if (declared === undefined || declared.length === 0) {
+        continue;
+      }
+      declaringSkills += 1;
+
+      // Split on commas outside parentheses so a scoped value such as
+      // `Bash(git:*, gh:*)` stays one token (the house form writes separate
+      // entries, but the scoped form is legitimate and must not false-positive).
+      const segments = declared
+        .split(/,(?![^(]*\))/)
+        .map((segment) => segment.trim());
+      // A single-token value such as `Read` carries no separator and passes.
+      if (segments.length === 1 && singleToolToken.test(segments[0]!)) {
+        continue;
+      }
+      if (segments.length < 2) {
+        offenders.push(`${skillName}: ${declared}`);
+        continue;
+      }
+      for (const segment of segments) {
+        if (!singleToolToken.test(segment)) {
+          offenders.push(`${skillName}: ${declared}`);
+          break;
+        }
+      }
+    }
+
+    expect(offenders).toEqual([]);
+    expect(declaringSkills).toBeGreaterThan(0);
   });
 
   it('keeps every version pinned in this file equal to the file it pins', async () => {
@@ -2863,7 +3002,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(readDeclaredVersion(content)).toBe('1.5.6');
+    expect(readDeclaredVersion(content)).toBe('1.5.7');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -3025,9 +3164,9 @@ describe('validateOatSkills', () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.1.5'],
       ['.agents/agents/oat-reviewer.md', '1.2.3'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.6'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.7'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.3'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.4'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.5.5'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.3'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.4'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.11'],
@@ -4541,13 +4680,13 @@ describe('validateOatSkills', () => {
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.24'],
-      ['oat-project-review-provide', '1.5.6'],
+      ['oat-project-review-provide', '1.5.7'],
       ['oat-project-review-receive', '1.6.3'],
       ['oat-project-review-receive-remote', '1.5.2'],
       ['oat-project-implement', '2.3.7'],
       ['oat-project-pr-final', '1.6.4'],
       ['oat-project-pr-progress', '1.3.2'],
-      ['oat-project-complete', '1.7.9'],
+      ['oat-project-complete', '1.7.10'],
       ['oat-project-next', '1.1.2'],
     ] as const;
 
@@ -5854,7 +5993,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.4.11'],
       ['oat-project-quick-start', '2.3.11'],
       ['oat-project-import-plan', '1.4.15'],
-      ['oat-project-review-provide', '1.5.6'],
+      ['oat-project-review-provide', '1.5.7'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -5868,7 +6007,7 @@ describe('validateOatSkills', () => {
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
       ['oat-project-implement', '2.3.7'],
-      ['oat-project-review-provide', '1.5.6'],
+      ['oat-project-review-provide', '1.5.7'],
       ['oat-project-review-provide-remote', '1.1.4'],
     ] as const;
 
@@ -6104,7 +6243,7 @@ describe('validateOatSkills', () => {
   it('pins portable utility-pack callers to installed-root sibling reads', async () => {
     const callers = [
       ['.agents/skills/oat-dispatch-subagents/SKILL.md', '1.2.7'],
-      ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.4'],
+      ['.agents/skills/oat-repo-improve/SKILL.md', '2.1.5'],
       ['.agents/skills/oat-review-provide-remote/SKILL.md', '1.1.2'],
     ] as const;
 
@@ -6954,6 +7093,8 @@ describe('validateOatSkills', () => {
         'disable-model-invocation: true',
         'user-invocable: true',
         'allowed-tools: Read, Write',
+        'metadata:',
+        '  version: 1.0.0',
         '---',
         '',
         '# Quick Start',
@@ -7028,9 +7169,9 @@ describe('validateOatSkills', () => {
 
     const result = await validateOatSkills(root);
     // The fixture keeps the deprecated top-level version alias, so that
-    // non-blocking warning is the only finding expected.
+    // blocking alias error is the only finding expected.
     expect(result.findings).toEqual([
-      aliasWarning(
+      aliasFinding(
         join(root, '.agents', 'skills', 'oat-project-quick-start', 'SKILL.md'),
         '1.0.0',
       ),
@@ -7058,7 +7199,7 @@ describe('validateOatSkills', () => {
         gitExecFile: async (_file, args) => {
           if (args[0] === 'diff') {
             return {
-              stdout: '.agents/skills/oat-version-check/SKILL.md\n',
+              stdout: '.agents/skills/oat-version-check/SKILL.md\0',
               stderr: '',
             };
           }
@@ -7085,7 +7226,8 @@ describe('validateOatSkills', () => {
     expect(result.findings).toContainEqual({
       file: skillPath,
       message:
-        'Changed canonical skill must bump frontmatter version relative to origin/main (still 1.2.3)',
+        'Changed canonical skill or agent role must bump its version relative to origin/main (still 1.2.3); ' +
+        'declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
     });
   });
 
@@ -7110,7 +7252,7 @@ describe('validateOatSkills', () => {
         gitExecFile: async (_file, args) => {
           if (args[0] === 'diff') {
             return {
-              stdout: '.agents/skills/oat-version-regression/SKILL.md\n',
+              stdout: '.agents/skills/oat-version-regression/SKILL.md\0',
               stderr: '',
             };
           }
@@ -7138,7 +7280,8 @@ describe('validateOatSkills', () => {
     expect(result.findings).toContainEqual({
       file: skillPath,
       message:
-        'Changed canonical skill version must increase relative to origin/main (base 1.2.3, current 1.2.2)',
+        'Changed canonical skill or agent role version must increase relative to origin/main (base 1.2.3, current 1.2.2); ' +
+        'declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
     });
   });
 
@@ -7163,7 +7306,7 @@ describe('validateOatSkills', () => {
         gitExecFile: async (_file, args) => {
           if (args[0] === 'diff') {
             return {
-              stdout: '.agents/skills/oat-version-bumped/SKILL.md\n',
+              stdout: '.agents/skills/oat-version-bumped/SKILL.md\0',
               stderr: '',
             };
           }
@@ -7188,9 +7331,9 @@ describe('validateOatSkills', () => {
     );
 
     // The bumped fixture still uses the deprecated top-level alias, so that
-    // warning is the only finding expected.
+    // alias error is the only finding expected.
     expect(result.findings).toEqual([
-      aliasWarning(
+      aliasFinding(
         join(root, '.agents', 'skills', 'oat-version-bumped', 'SKILL.md'),
         '1.2.4',
       ),
@@ -7218,7 +7361,7 @@ describe('validateOatSkills', () => {
         gitExecFile: async (_file, args) => {
           if (args[0] === 'diff') {
             return {
-              stdout: '.agents/skills/oat-brand-new-skill/SKILL.md\n',
+              stdout: '.agents/skills/oat-brand-new-skill/SKILL.md\0',
               stderr: '',
             };
           }
@@ -7242,14 +7385,35 @@ describe('validateOatSkills', () => {
     });
   });
 
-  it('skips version-bump enforcement when a changed skill lacks a version key', async () => {
+  it('reports a changed skill that declares no version key at all', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validate-'));
     tempDirs.push(root);
 
-    await createSkillFile(
+    // This used to be the "skips version-bump enforcement" case: a changed
+    // skill with no version key fell through a silent `continue`, so dropping
+    // the version was the one edit that could defeat the bump gate outright.
+    const skillPath = await createSkillFile(
       root,
       'oat-no-version-enforcement',
-      validSkillContent('oat-no-version-enforcement'),
+      [
+        '---',
+        'name: oat-no-version-enforcement',
+        'description: Use when validating oat skill structure. Provides a valid fixture for validator tests.',
+        'disable-model-invocation: true',
+        'user-invocable: true',
+        'allowed-tools: Read, Write',
+        '---',
+        '',
+        '# Demo',
+        '',
+        '## Progress Indicators (User-Facing)',
+        '',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        ' OAT ▸ DEMO',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '',
+        'Current content without any version key.',
+      ].join('\n'),
     );
 
     const result = await validateChangedSkillVersionBumps(
@@ -7259,7 +7423,7 @@ describe('validateOatSkills', () => {
         gitExecFile: async (_file, args) => {
           if (args[0] === 'diff') {
             return {
-              stdout: '.agents/skills/oat-no-version-enforcement/SKILL.md\n',
+              stdout: '.agents/skills/oat-no-version-enforcement/SKILL.md\0',
               stderr: '',
             };
           }
@@ -7286,7 +7450,15 @@ describe('validateOatSkills', () => {
 
     expect(result).toEqual({
       validatedSkillCount: 1,
-      findings: [],
+      findings: [
+        {
+          file: skillPath,
+          code: 'skill-version-missing',
+          severity: 'error',
+          message:
+            'Frontmatter declares no resolvable version; declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
+        },
+      ],
     });
   });
 
@@ -7735,7 +7907,7 @@ describe('lite mode skill contracts', () => {
     expect(liteSummarySources.replace('`Assumptions`', '')).not.toContain(
       '`Assumptions`',
     );
-    expect(readDeclaredVersion(summary)).toBe('1.5.4');
+    expect(readDeclaredVersion(summary)).toBe('1.5.5');
     expect(readDeclaredVersion(document)).toBe('1.8.3');
   });
 
@@ -8342,6 +8514,105 @@ describe('bundled skill contract truthfulness — doctor inventory', () => {
         packSkills.get(pack ?? ''),
       );
       expect(Number(count), `${pack} example count`).toBe(listed.length);
+    }
+  });
+
+  it('keeps a pack out of both the installed and available example sections', async () => {
+    const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
+    const manifestPacks = new Set<string>(
+      PACK_MANIFEST.map((pack) => pack.name),
+    );
+
+    // Step 5 of the same skill defines the pack states as mutually exclusive
+    // ("Installed: all pack skills found" / "Not installed: no pack skills
+    // found"), so a name in both example sections describes a run the doctor
+    // can never report. The two neighbouring cases validate each section
+    // against PACK_MANIFEST in isolation and cannot see that relationship.
+    const installedTable = doctor.slice(
+      doctor.indexOf('## Installed Packs'),
+      doctor.indexOf('## Outdated Skills'),
+    );
+    const installedPacks = [
+      ...installedTable.matchAll(
+        /^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/gm,
+      ),
+    ].map(([, pack]) => pack ?? '');
+
+    const availableSection = doctor.slice(
+      doctor.indexOf('## Available But Not Installed'),
+      doctor.indexOf('## Configuration'),
+    );
+    const availablePacks = [
+      ...availableSection.matchAll(
+        /^- \*\*([a-z-]+)\*\* pack: (.+?) \((\d+) skills available\)$/gm,
+      ),
+    ].map(([, pack]) => pack ?? '');
+
+    // Without these two guards a renamed heading would empty a slice and the
+    // disjointness assertion below would pass vacuously.
+    expect(
+      installedPacks.length,
+      'installed pack example rows',
+    ).toBeGreaterThan(0);
+    expect(
+      availablePacks.length,
+      'available pack example rows',
+    ).toBeGreaterThan(0);
+
+    // Non-emptiness alone lets a single pack drop out of the comparison: a row
+    // or bullet whose wording drifts stops matching the regex above and is
+    // silently excluded from the overlap check, which is enough to bring the
+    // contradiction back while every case here stays green. So require the
+    // extraction to be complete — every candidate line in each slice must have
+    // parsed — and name the lines that did not.
+    const installedRowLines = installedTable
+      .split('\n')
+      // `^\s*` on every filter: a row indented by one space must still count as
+      // a candidate, or it would be invisible to both the parse and the count.
+      .filter((line) => /^\s*\|/.test(line))
+      .filter((line) => !/^\s*\|\s*Pack\s*\|/.test(line))
+      .filter((line) => !/^\s*\|[\s-]+\|[\s|-]*$/.test(line));
+    const unparsedInstalledRows = installedRowLines.filter(
+      (line) =>
+        !/^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/.test(line),
+    );
+    expect(
+      unparsedInstalledRows,
+      'installed example rows the pack-row pattern could not parse',
+    ).toEqual([]);
+    expect(installedPacks.length, 'parsed installed example rows').toBe(
+      installedRowLines.length,
+    );
+
+    const availableBulletLines = availableSection
+      .split('\n')
+      .filter((line) => /^\s*- /.test(line));
+    const unparsedAvailableBullets = availableBulletLines.filter(
+      (line) =>
+        !/^- \*\*([a-z-]+)\*\* pack: (.+?) \((\d+) skills available\)$/.test(
+          line,
+        ),
+    );
+    expect(
+      unparsedAvailableBullets,
+      'available example bullets the pack-bullet pattern could not parse',
+    ).toEqual([]);
+    expect(availablePacks.length, 'parsed available example bullets').toBe(
+      availableBulletLines.length,
+    );
+
+    const availableSet = new Set(availablePacks);
+    const overlap = [...new Set(installedPacks)]
+      .filter((pack) => availableSet.has(pack))
+      .sort();
+    expect(
+      overlap,
+      'packs listed as installed and as available to install',
+    ).toEqual([]);
+
+    // A pack can never be moved out of the contradiction by inventing a name.
+    for (const pack of [...installedPacks, ...availablePacks]) {
+      expect(manifestPacks.has(pack), `${pack} is a manifest pack`).toBe(true);
     }
   });
 });
@@ -9051,15 +9322,90 @@ describe('skill version resolution across both validators', () => {
     ].join('\n');
   }
 
+  /**
+   * Assert the arguments production actually passes to `git diff`.
+   *
+   * Without this the fakes would answer any `diff` call, so every fixture
+   * below would still pass if production narrowed the pathspec or dropped
+   * `-z` — the exact defect class controls A3 and D1 exist to catch.
+   */
+  function expectVersionedDiffArgs(args: readonly string[]): void {
+    expect(args).toContain('--name-only');
+    expect(args).toContain('-z');
+    expect(args).toContain('--diff-filter=ACMR');
+    expect(args).toContain('.agents/skills');
+    expect(args).toContain('.agents/agents/*.md');
+  }
+
   function changedSkillGit(skillName: string, baseContent: string) {
     const relativePath = `.agents/skills/${skillName}/SKILL.md`;
     return {
       gitExecFile: async (_file: string, args: string[]) => {
         if (args[0] === 'diff') {
-          return { stdout: `${relativePath}\n`, stderr: '' };
+          expectVersionedDiffArgs(args);
+          return { stdout: `${relativePath}\0`, stderr: '' };
         }
         if (args[0] === 'show' && args[1] === `origin/main:${relativePath}`) {
           return { stdout: baseContent, stderr: '' };
+        }
+        throw new Error(`Unexpected command: git ${args.join(' ')}`);
+      },
+    };
+  }
+
+  function agentContent(
+    agentName: string,
+    versionLines: readonly string[],
+    body = 'Current role instructions.',
+  ): string {
+    return [
+      '---',
+      `name: ${agentName}`,
+      ...versionLines,
+      'description: Use when validating agent role version resolution. Provides a fixture for gate tests.',
+      'tools: Read, Bash',
+      'color: cyan',
+      '---',
+      '',
+      body,
+    ].join('\n');
+  }
+
+  async function createAgentFile(
+    root: string,
+    agentName: string,
+    content: string,
+  ): Promise<string> {
+    const agentsDir = join(root, '.agents', 'agents');
+    await mkdir(agentsDir, { recursive: true });
+    const agentPath = join(agentsDir, `${agentName}.md`);
+    await writeFile(agentPath, content, 'utf8');
+    return agentPath;
+  }
+
+  /**
+   * A `git` fake that reports an arbitrary set of changed paths and serves an
+   * arbitrary base body per path, so a fixture can express "a sibling changed
+   * but the owning file did not" — the state clause D exists to catch — which
+   * `changedSkillGit` cannot.
+   */
+  function changedPathsGit(
+    changedPaths: readonly string[],
+    baseContents: Readonly<Record<string, string>>,
+  ) {
+    return {
+      gitExecFile: async (_file: string, args: string[]) => {
+        if (args[0] === 'diff') {
+          expectVersionedDiffArgs(args);
+          return { stdout: `${changedPaths.join('\0')}\0`, stderr: '' };
+        }
+        if (args[0] === 'show') {
+          const target = (args[1] ?? '').replace('origin/main:', '');
+          const body = baseContents[target];
+          if (body === undefined) {
+            throw new Error(`No base content for ${target}`);
+          }
+          return { stdout: body, stderr: '' };
         }
         throw new Error(`Unexpected command: git ${args.join(' ')}`);
       },
@@ -9096,7 +9442,7 @@ describe('skill version resolution across both validators', () => {
     expect(result.findings).toEqual([]);
   });
 
-  it('warns exactly once for a non-oat-* alias-only skill', async () => {
+  it('reports exactly once for a non-oat-* alias-only skill', async () => {
     const root = await createRoot();
     // The structural checks are `oat-*` only, so before the version-alias pass
     // iterated every skill this skill could never be reported at all.
@@ -9117,7 +9463,7 @@ describe('skill version resolution across both validators', () => {
       {
         file: aliasSkillPath,
         code: 'skill-version-alias',
-        severity: 'warning',
+        severity: 'error',
         message:
           'Frontmatter version 1.5.2 uses the deprecated top-level alias; move it to metadata.version (metadata.version wins when both are present)',
       },
@@ -9125,7 +9471,7 @@ describe('skill version resolution across both validators', () => {
     expect(result.validatedSkillCount).toBe(1);
   });
 
-  it('keeps the alias warning out of the bump result for a non-oat-* skill', async () => {
+  it('keeps the alias finding out of the bump result for a non-oat-* skill', async () => {
     const root = await createRoot();
     await createSkillFile(
       root,
@@ -9143,8 +9489,9 @@ describe('skill version resolution across both validators', () => {
     );
 
     // `validate-skill-version-bumps.ts` sets exit 1 on any finding regardless
-    // of severity, so an alias warning here would fail the bump gate for every
-    // changed skill in the repository.
+    // of severity, so an alias finding here would fail the bump gate for every
+    // changed skill in the repository. The alias is an error since step 1 of
+    // the retirement schedule, which makes the separation matter more.
     expect(result.findings).toEqual([]);
   });
 
@@ -9230,7 +9577,8 @@ describe('skill version resolution across both validators', () => {
       {
         file: skillPath,
         message:
-          'Changed canonical skill must bump frontmatter version relative to origin/main (still 1.2.3)',
+          'Changed canonical skill or agent role must bump its version relative to origin/main (still 1.2.3); ' +
+          'declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
       },
     ]);
   });
@@ -9280,7 +9628,8 @@ describe('skill version resolution across both validators', () => {
       {
         file: skillPath,
         message:
-          'Changed canonical skill version must increase relative to origin/main (base 1.2.3, current 1.2.2)',
+          'Changed canonical skill or agent role version must increase relative to origin/main (base 1.2.3, current 1.2.2); ' +
+          'declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
       },
     ]);
   });
@@ -9639,5 +9988,697 @@ describe('skill version resolution across both validators', () => {
       message:
         'Frontmatter declares a version that cannot be read; use a quoted semver string (unquoted, version: 1.10 is the number 1.1)',
     });
+  });
+
+  // ---------------------------------------------------------------------
+  // Clause A: canonical agent roles are inside the bump gate's pathspec.
+  // ---------------------------------------------------------------------
+
+  it('reports a changed agent role whose version did not move', async () => {
+    const root = await createRoot();
+    const agentPath = await createAgentFile(
+      root,
+      'oat-fixture',
+      agentContent('oat-fixture', ['version: 1.1.5']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedPathsGit(['.agents/agents/oat-fixture.md'], {
+        '.agents/agents/oat-fixture.md': agentContent(
+          'oat-fixture',
+          ['version: 1.1.5'],
+          'Base role instructions.',
+        ),
+      }),
+    );
+
+    expect(result.validatedSkillCount).toBe(1);
+    expect(result.findings).toEqual([
+      {
+        file: agentPath,
+        message:
+          'Changed canonical skill or agent role must bump its version relative to origin/main (still 1.1.5); ' +
+          'declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
+      },
+    ]);
+  });
+
+  it('accepts a changed agent role that declares a bumped top-level version', async () => {
+    const root = await createRoot();
+    await createAgentFile(
+      root,
+      'oat-fixture',
+      agentContent('oat-fixture', ['version: 1.1.6']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedPathsGit(['.agents/agents/oat-fixture.md'], {
+        '.agents/agents/oat-fixture.md': agentContent(
+          'oat-fixture',
+          ['version: 1.1.5'],
+          'Base role instructions.',
+        ),
+      }),
+    );
+
+    // `DR-260908-bundled-skills-declare` deliberately leaves agent roles on the
+    // top-level field and reserves their migration for a separate decision, so
+    // this gate must accept a top-level bump. A change that made it demand
+    // `metadata.version` here would contradict an accepted decision, and this
+    // case is what fails first.
+    expect(result.validatedSkillCount).toBe(1);
+    expect(result.findings).toEqual([]);
+  });
+
+  it('still reports a changed skill after the pathspec widened', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-pathspec-guard',
+      skillContent('oat-pathspec-guard', ['metadata:', '  version: 1.2.3']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-pathspec-guard',
+        skillContent(
+          'oat-pathspec-guard',
+          ['metadata:', '  version: 1.2.3'],
+          'Base.',
+        ),
+      ),
+    );
+
+    // Widening the pathspec from `.agents/skills/*/SKILL.md` to the whole
+    // directory must not drop the original half. A typo that narrowed it would
+    // reproduce the exact defect class this gate exists to prevent, and this
+    // case plus live control A3 are what catch it.
+    expect(result.validatedSkillCount).toBe(1);
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        message:
+          'Changed canonical skill or agent role must bump its version relative to origin/main (still 1.2.3); ' +
+          'declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
+      },
+    ]);
+  });
+
+  // ---------------------------------------------------------------------
+  // Clause B: no frontmatter, and no resolvable version, both block.
+  // ---------------------------------------------------------------------
+
+  it('reports a changed skill with no frontmatter block', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-no-frontmatter',
+      '# Demo\n\nNo frontmatter at all.\n',
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-no-frontmatter',
+        skillContent('oat-no-frontmatter', ['metadata:', '  version: 1.2.3']),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-missing',
+        severity: 'error',
+        message:
+          'Missing frontmatter block (--- ... ---); a changed canonical skill or agent role must declare a version',
+      },
+    ]);
+  });
+
+  it('reports a changed skill whose metadata map declares no version', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-metadata-no-version',
+      skillContent('oat-metadata-no-version', ['metadata:', '  author: oat']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-metadata-no-version',
+        skillContent(
+          'oat-metadata-no-version',
+          ['metadata:', '  version: 1.2.3'],
+          'Base.',
+        ),
+      ),
+    );
+
+    // A `metadata:` map with no `version` child is the shape bundled skills
+    // use, so this is the state that would most easily have shipped unnoticed.
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-missing',
+        severity: 'error',
+        message:
+          'Frontmatter declares no resolvable version; declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
+      },
+    ]);
+  });
+
+  it('reports a non-oat skill with no frontmatter block in structural validation', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'create-agnostic-fixture',
+      '# Demo\n\nNo frontmatter at all.\n',
+    );
+
+    const result = await validateOatSkills(root);
+
+    // The `oat-*` structural loop reports a missing block with its own
+    // message, but it never sees a `create-*` directory; before the
+    // version-source pass reported this state, neither validator did.
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-missing',
+        severity: 'error',
+        message:
+          'Missing frontmatter block (--- ... ---); a changed canonical skill or agent role must declare a version',
+      },
+    ]);
+  });
+
+  it('reports a non-oat skill whose metadata map declares no version in structural validation', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'create-agnostic-fixture',
+      skillContent('create-agnostic-fixture', ['metadata:', '  author: oat']),
+    );
+
+    const result = await validateOatSkills(root);
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-missing',
+        severity: 'error',
+        message:
+          'Frontmatter declares no resolvable version; declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
+      },
+    ]);
+  });
+
+  it('reports a missing frontmatter block exactly once for an oat-* skill', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-no-frontmatter-structural',
+      '# Demo\n\nNo frontmatter at all.\n',
+    );
+
+    // `baseRef` is supplied so all three passes that can see this file run in
+    // one call: the `oat-*` structural loop, the version-source pass, and the
+    // bump collector. Without it the combined path is never exercised and the
+    // deduplication this asserts would be untested.
+    const result = await validateOatSkills(
+      root,
+      { baseRef: 'origin/main' },
+      changedPathsGit(
+        ['.agents/skills/oat-no-frontmatter-structural/SKILL.md'],
+        {
+          '.agents/skills/oat-no-frontmatter-structural/SKILL.md':
+            '# Demo\n\nBase without frontmatter either.\n',
+        },
+      ),
+    );
+
+    // Exactly one finding per file: the pre-existing structural message wins,
+    // so no input that already reported changes what it reports, and the
+    // coded finding does not pile a second report on top of it.
+    const missingBlockFindings = result.findings.filter(
+      (finding) =>
+        finding.file === skillPath &&
+        finding.message.startsWith('Missing frontmatter block'),
+    );
+    expect(missingBlockFindings).toEqual([
+      { file: skillPath, message: 'Missing frontmatter block (--- ... ---)' },
+    ]);
+  });
+
+  it('prefers the malformed diagnosis over the missing-version diagnosis', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-malformed-masking',
+      [
+        '---',
+        'name: oat-malformed-masking',
+        'name: duplicate',
+        '---',
+        '',
+        '# Demo',
+      ].join('\n'),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-malformed-masking',
+        skillContent('oat-malformed-masking', [
+          'metadata:',
+          '  version: 1.2.3',
+        ]),
+      ),
+    );
+
+    // Masking control. The frontmatter is present but unreadable, so the
+    // specific `skill-frontmatter-unreadable` diagnosis must fire rather than
+    // the generic missing-block or missing-version one added at the tail of
+    // the guard chain.
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-unreadable',
+        severity: 'error',
+        message:
+          'Frontmatter must be a valid YAML mapping with unique keys (version could not be read)',
+      },
+    ]);
+  });
+
+  it('reports an uncomparable base separately from a current-state defect', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-uncomparable-base',
+      skillContent('oat-uncomparable-base', ['metadata:', '  version: 1.2.4']),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit('oat-uncomparable-base', '# Base with no frontmatter.\n'),
+    );
+
+    // The current file is well-formed and bumped; only the base is unreadable.
+    // The message must say the base cannot be compared rather than accusing
+    // the file the author just changed.
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-missing',
+        severity: 'error',
+        message:
+          'Changed canonical skill cannot be version-checked against origin/main: the base file has no frontmatter block (--- ... ---)',
+      },
+    ]);
+  });
+
+  it('reports a base whose frontmatter declares no version as uncomparable', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-uncomparable-base-version',
+      skillContent('oat-uncomparable-base-version', [
+        'metadata:',
+        '  version: 1.2.4',
+      ]),
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-uncomparable-base-version',
+        skillContent('oat-uncomparable-base-version', [
+          'metadata:',
+          '  author: oat',
+        ]),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-version-missing',
+        severity: 'error',
+        message:
+          'Changed canonical skill cannot be version-checked against origin/main: the base frontmatter declares no resolvable version',
+      },
+    ]);
+  });
+
+  // ---------------------------------------------------------------------
+  // Clause C: the alias finding is an error, and stays out of the bump gate.
+  // ---------------------------------------------------------------------
+
+  it('keeps the bundled tree free of alias findings', async () => {
+    const repoRoot = join(process.cwd(), '..', '..');
+
+    const result = await validateOatSkills(repoRoot);
+
+    // The schedule precondition for promoting the alias to an error: the
+    // bundled tree carries none. A regression that reintroduced a top-level
+    // `version:` under `.agents/skills` now fails here rather than in CI's
+    // `oat:validate-skills` step.
+    expect(
+      result.findings.filter(
+        (finding) => finding.code === 'skill-version-alias',
+      ),
+    ).toEqual([]);
+    expect(result.findings).toEqual([]);
+  });
+
+  // ---------------------------------------------------------------------
+  // Clause D: a change to any bundled file of a skill is a change to it.
+  // ---------------------------------------------------------------------
+
+  it('reports a skill whose scripts changed while SKILL.md did not', async () => {
+    const root = await createRoot();
+    const unchanged = skillContent('oat-fixture', [
+      'metadata:',
+      '  version: 1.2.3',
+    ]);
+    const skillPath = await createSkillFile(root, 'oat-fixture', unchanged);
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedPathsGit(['.agents/skills/oat-fixture/scripts/run.mjs'], {
+        '.agents/skills/oat-fixture/SKILL.md': unchanged,
+      }),
+    );
+
+    // `scripts/` ships to every `oat tools install` consumer, so identical
+    // `SKILL.md` bytes are the failure here, not a reason to skip. The message
+    // names the changed sibling so the failure says what actually moved.
+    expect(result.validatedSkillCount).toBe(1);
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        message:
+          'Changed canonical skill or agent role must bump its version relative to origin/main (still 1.2.3) ' +
+          '[changed: scripts/run.mjs]; ' +
+          'declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
+      },
+    ]);
+    expect(result.findings[0]?.message).toContain('scripts/run.mjs');
+  });
+
+  it('ignores a tests-only change', async () => {
+    const root = await createRoot();
+    const unchanged = skillContent('oat-fixture', [
+      'metadata:',
+      '  version: 1.2.3',
+    ]);
+    await createSkillFile(root, 'oat-fixture', unchanged);
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedPathsGit(['.agents/skills/oat-fixture/tests/contract.test.mjs'], {
+        '.agents/skills/oat-fixture/SKILL.md': unchanged,
+      }),
+    );
+
+    // `bundle-assets.sh` strips `tests/`, so it never reaches a consumer.
+    // Demanding a bump for it would train maintainers to bump reflexively.
+    expect(result.validatedSkillCount).toBe(0);
+    expect(result.findings).toEqual([]);
+  });
+
+  it('keeps the identical-content skip for the owning file alone', async () => {
+    const root = await createRoot();
+    const unchanged = skillContent('oat-fixture', [
+      'metadata:',
+      '  version: 1.2.3',
+    ]);
+    await createSkillFile(root, 'oat-fixture', unchanged);
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedPathsGit(['.agents/skills/oat-fixture/SKILL.md'], {
+        '.agents/skills/oat-fixture/SKILL.md': unchanged,
+      }),
+    );
+
+    // The original skip exists for a rename or mode change: the owning file is
+    // listed with unchanged bytes and nothing else moved. Removing the
+    // `changedPaths` guard that narrows it would fail this case.
+    expect(result.validatedSkillCount).toBe(1);
+    expect(result.findings).toEqual([]);
+  });
+
+  it('groups every changed sibling under one owning file', async () => {
+    const root = await createRoot();
+    const unchanged = skillContent('oat-fixture', [
+      'metadata:',
+      '  version: 1.2.3',
+    ]);
+    const skillPath = await createSkillFile(root, 'oat-fixture', unchanged);
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedPathsGit(
+        [
+          '.agents/skills/oat-fixture/references/guide.md',
+          '.agents/skills/oat-fixture/scripts/run.mjs',
+          '.agents/skills/oat-fixture/tests/contract.test.mjs',
+        ],
+        { '.agents/skills/oat-fixture/SKILL.md': unchanged },
+      ),
+    );
+
+    // One skill that must bump once, not three findings; `tests/` drops out.
+    expect(result.validatedSkillCount).toBe(1);
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        message:
+          'Changed canonical skill or agent role must bump its version relative to origin/main (still 1.2.3) ' +
+          '[changed: references/guide.md, scripts/run.mjs]; ' +
+          'declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
+      },
+    ]);
+  });
+
+  it('still validates a nested SKILL.md as its own versioned file', async () => {
+    const root = await createRoot();
+    const owner = skillContent('oat-fixture', [
+      'metadata:',
+      '  version: 1.2.3',
+    ]);
+    const ownerPath = await createSkillFile(root, 'oat-fixture', owner);
+
+    const nestedDir = join(
+      root,
+      '.agents',
+      'skills',
+      'oat-fixture',
+      'references',
+      'example',
+    );
+    await mkdir(nestedDir, { recursive: true });
+    const nestedPath = join(nestedDir, 'SKILL.md');
+    const nested = skillContent('oat-nested', [
+      'metadata:',
+      '  version: 2.0.0',
+    ]);
+    await writeFile(nestedPath, nested, 'utf8');
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedPathsGit(
+        ['.agents/skills/oat-fixture/references/example/SKILL.md'],
+        {
+          '.agents/skills/oat-fixture/SKILL.md': owner,
+          '.agents/skills/oat-fixture/references/example/SKILL.md':
+            skillContent(
+              'oat-nested',
+              ['metadata:', '  version: 2.0.0'],
+              'Base.',
+            ),
+        },
+      ),
+    );
+
+    // A Git pathspec `*` crosses `/`, so the pre-existing
+    // `.agents/skills/<star>/SKILL.md` pathspec already matched this nested
+    // file and checked its own version. Mapping it only to the outer skill
+    // would drop a finding the gate already emitted. It maps to both: the
+    // nested file must bump, and so must the skill that ships it.
+    expect(result.validatedSkillCount).toBe(2);
+    expect(result.findings).toEqual([
+      {
+        file: ownerPath,
+        message:
+          'Changed canonical skill or agent role must bump its version relative to origin/main (still 1.2.3) ' +
+          '[changed: references/example/SKILL.md]; ' +
+          'declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
+      },
+      {
+        file: nestedPath,
+        message:
+          'Changed canonical skill or agent role must bump its version relative to origin/main (still 2.0.0); ' +
+          'declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
+      },
+    ]);
+  });
+
+  it('maps a changed sibling whose name is not ASCII', async () => {
+    const root = await createRoot();
+    const unchanged = skillContent('oat-fixture', [
+      'metadata:',
+      '  version: 1.2.3',
+    ]);
+    const skillPath = await createSkillFile(root, 'oat-fixture', unchanged);
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedPathsGit(['.agents/skills/oat-fixture/scripts/café.mjs'], {
+        '.agents/skills/oat-fixture/SKILL.md': unchanged,
+      }),
+    );
+
+    // Reachable only because the diff is read with `-z`. Without it Git
+    // C-quotes this path to `".agents/skills/oat-fixture/scripts/caf\303\251.mjs"`,
+    // which fails the `.agents/skills/` prefix test and would let shipped
+    // content change under an unchanged version.
+    expect(result.validatedSkillCount).toBe(1);
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        message:
+          'Changed canonical skill or agent role must bump its version relative to origin/main (still 1.2.3) ' +
+          '[changed: scripts/café.mjs]; ' +
+          'declare metadata.version (a canonical agent role under .agents/agents may declare a top-level version: instead)',
+      },
+    ]);
+  });
+
+  it('reports an empty frontmatter block exactly once', async () => {
+    const root = await createRoot();
+    // `getFrontmatterBlock` returns "" here, not null: the `---` pair exists
+    // but declares nothing. The `oat-*` structural loop has always treated
+    // that as a missing block, so the version-source pass and the bump
+    // collector must agree rather than adding a second, different diagnosis.
+    const empty = '---\n\n---\n\n# Demo\n';
+    const skillPath = await createSkillFile(root, 'oat-empty-block', empty);
+
+    const result = await validateOatSkills(
+      root,
+      { baseRef: 'origin/main' },
+      changedPathsGit(['.agents/skills/oat-empty-block/SKILL.md'], {
+        '.agents/skills/oat-empty-block/SKILL.md': '---\n\n---\n\n# Base\n',
+      }),
+    );
+
+    expect(
+      result.findings.filter((finding) => finding.file === skillPath),
+    ).toEqual([
+      { file: skillPath, message: 'Missing frontmatter block (--- ... ---)' },
+    ]);
+  });
+
+  it('reports a changed skill whose frontmatter block is empty', async () => {
+    const root = await createRoot();
+    const skillPath = await createSkillFile(
+      root,
+      'oat-empty-block-bump',
+      '---\n\n---\n\n# Demo\n',
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedSkillGit(
+        'oat-empty-block-bump',
+        skillContent('oat-empty-block-bump', ['metadata:', '  version: 1.2.3']),
+      ),
+    );
+
+    expect(result.findings).toEqual([
+      {
+        file: skillPath,
+        code: 'skill-frontmatter-missing',
+        severity: 'error',
+        message:
+          'Missing frontmatter block (--- ... ---); a changed canonical skill or agent role must declare a version',
+      },
+    ]);
+  });
+
+  it('excludes a nested SKILL.md under tests from the gate', async () => {
+    const root = await createRoot();
+    const unchanged = skillContent('oat-fixture', [
+      'metadata:',
+      '  version: 1.2.3',
+    ]);
+    await createSkillFile(root, 'oat-fixture', unchanged);
+
+    const nestedDir = join(
+      root,
+      '.agents',
+      'skills',
+      'oat-fixture',
+      'tests',
+      'fixture',
+    );
+    await mkdir(nestedDir, { recursive: true });
+    await writeFile(
+      join(nestedDir, 'SKILL.md'),
+      skillContent('oat-tests-fixture', ['metadata:', '  version: 1.0.0']),
+      'utf8',
+    );
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedPathsGit(['.agents/skills/oat-fixture/tests/fixture/SKILL.md'], {
+        '.agents/skills/oat-fixture/SKILL.md': unchanged,
+      }),
+    );
+
+    // The old wildcard pathspec matched this path too, so excluding it narrows
+    // that pathspec by one shape. That is the deliberate trade recorded in
+    // `resolveOwningVersionedFiles`: a `SKILL.md` under `tests/` is test data,
+    // it never reaches a consumer, and demanding a bump for it is exactly the
+    // reflexive bumping the `tests/` boundary exists to prevent. Neither the
+    // fixture nor the skill that contains it is asked to bump.
+    expect(result.validatedSkillCount).toBe(0);
+    expect(result.findings).toEqual([]);
+  });
+
+  it('drops a changed sibling whose skill no longer has a SKILL.md', async () => {
+    const root = await createRoot();
+
+    const result = await validateChangedSkillVersionBumps(
+      root,
+      { baseRef: 'origin/main' },
+      changedPathsGit(['.agents/skills/oat-removed/scripts/run.mjs'], {}),
+    );
+
+    // The skill was removed or renamed away, so there is nothing left to bump
+    // and nothing to read from disk.
+    expect(result.validatedSkillCount).toBe(0);
+    expect(result.findings).toEqual([]);
   });
 });

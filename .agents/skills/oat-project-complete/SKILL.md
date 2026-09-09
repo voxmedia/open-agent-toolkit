@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, AskUserQuestion
 metadata:
-  version: 1.7.9
+  version: 1.7.10
 ---
 
 # Complete Project
@@ -54,6 +54,7 @@ SYNCED_ARCHIVE_ENTRY_SCRIPT="$SKILL_DIR/scripts/resolve-synced-archive-entry.mjs
 SYNCED_ARCHIVE_EXECUTE_SCRIPT="$SKILL_DIR/scripts/execute-synced-archive-entry.mjs"
 SYNCED_ARCHIVE_RESUME_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-synced-archive-resume-fields.mjs"
 SYNCED_ARCHIVE_FINALIZE_SCRIPT="$SKILL_DIR/scripts/finalize-synced-archive.mjs"
+DURABLE_ARCHIVE_RECEIPT_SCRIPT="$SKILL_DIR/scripts/validate-durable-archive-receipt.mjs"
 test -f "$COMPLETION_RECEIPT_SCRIPT" || {
   echo "oat: completion receipt recovery script is missing" >&2
   exit 1
@@ -84,6 +85,10 @@ test -f "$SYNCED_ARCHIVE_RESUME_FIELDS_SCRIPT" || {
 }
 test -f "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" || {
   echo "Missing synced archive finalizer: $SYNCED_ARCHIVE_FINALIZE_SCRIPT" >&2
+  exit 1
+}
+test -f "$DURABLE_ARCHIVE_RECEIPT_SCRIPT" || {
+  echo "Missing durable archive receipt validator: $DURABLE_ARCHIVE_RECEIPT_SCRIPT" >&2
   exit 1
 }
 
@@ -129,7 +134,44 @@ IS_DURABLE_PROJECT="false"
 if [[ "$PROJECT_SCOPE" == "shared" || "$PROJECT_SCOPE" == "synced" ]]; then
   IS_DURABLE_PROJECT="true"
 fi
+# shared-archive-resume:start
+SHARED_ARCHIVE_RESUME="false"
+if [[ "$PROJECT_SCOPE" == "shared" && ! -d "$PROJECT_PATH" ]]; then
+  ARCHIVED_PROJECTS_ROOT="$(dirname "$(dirname "$PROJECT_PATH")")/archived"
+  if ! DISCOVERED_ARCHIVE_PATH=$(node "$DURABLE_ARCHIVE_RECEIPT_SCRIPT" \
+    --mode directory \
+    --archived-root "$ARCHIVED_PROJECTS_ROOT" \
+    --project-name "$PROJECT_NAME"); then
+    echo "Shared archive completion cannot resume automatically: the retained active pointer names a source directory that no longer exists and no single validated archive matches $PROJECT_NAME." >&2
+    echo "Manual recovery: locate the archive directory under $ARCHIVED_PROJECTS_ROOT, confirm 'oat_lifecycle: complete' in its state.md, then run: oat config set activeProject \"\"" >&2
+    exit 1
+  fi
+  SHARED_ARCHIVE_RESUME="true"
+  PROJECT_PATH="$DISCOVERED_ARCHIVE_PATH"
+  ARCHIVE_PATH="$DISCOVERED_ARCHIVE_PATH"
+  echo "Verified discovered shared archive at $DISCOVERED_ARCHIVE_PATH; clearing the retained active pointer without a second archive."
+fi
+# shared-archive-resume:end
 ```
+
+When `SHARED_ARCHIVE_RESUME="true"`, continue directly at **Step 12**. This is
+the single recognized shared-scope checkpoint: the archive already succeeded
+and the run died before the Step 12 clear. Do not execute Steps 2 through 11.5,
+ask the upfront questions again, invoke `oat project archive` a second time,
+regenerate any artifact, or replay the Step 3.7 seal append. The discovered
+archive's `state.md` is the terminal evidence, re-derived through the same
+`oat_lifecycle: complete` and archived-phase-marker checks Step 12 derives from
+`ARCHIVE_OUTPUT`, so no second completion seal is written.
+
+Every other interruption is not a resume checkpoint. After `complete-state`, or
+after the Step 7 PR artifact, the retained pointer still names an existing
+source directory, so this branch is not taken and the normal completion entry
+runs: Step 3.7 routes on the status probe's `sealed` field as described there,
+so a log that is already sealed is left alone (and a probe answering
+`status: "ambiguous"` stops completion until the log is repaired), and
+Step 7 regenerates the PR artifact only when it is missing. When the source
+directory is gone and zero or several archived candidates match, the branch
+stops with the manual-recovery message above and leaves the pointer untouched.
 
 When `SYNCED_ARCHIVE_RESUME="true"`, continue directly at **Step 8.5**. Do not
 execute Steps 2 through 8, ask the upfront questions again, read or mutate the
@@ -637,15 +679,28 @@ Run the project-log status probe before any lifecycle mutation or archive work:
 PROJECT_LOG_CHECK=$(oat project log check --project "$PROJECT_PATH" --json)
 ```
 
-Route on the structured result:
+Route on the structured result. Check `status: "ambiguous"` first: its counts
+are all zero and `sealed` is `false`, so every other row below would otherwise
+read it as an empty, unsealed log and fall through to the roll-up and the seal.
 
+- `status: "ambiguous"`: the log's structure has two readings, so none of its
+  counts mean anything. Stop completion, report the result's `ambiguity` string
+  verbatim as the reason, and repair the log before re-running. Do not run the
+  summary hard gate, the roll-up, the seal append, or the retirement sweep. The
+  zeroed counts are not evidence that there is nothing to roll up.
 - `status: "absent"`: the feature is inert; proceed without a roll-up or seal
   append.
 - `status: "synthesis_pending"` or `synthesisPending: true`: emit
   `Warning: Project-log end-of-run synthesis is pending. Complete it with oat project log synthesize.`
   Offer to invoke `oat project log synthesize`, but do not block completion if
   the synthesis remains pending. Synthesis is warn-only.
-- When entry counts are nonzero, require a current `summary.md`. This hard gate
+- `sealed: true`: this completion already sealed the log on an earlier run.
+  Skip the summary hard gate below, the roll-up, and the seal append, and run
+  the retirement sweep in report-only mode as described below. A sealed log is
+  closed; re-entering any of those steps would either duplicate the seal or
+  attempt an append the CLI now refuses.
+- When entry counts are nonzero **and the log is not sealed**, require a
+  current `summary.md`. This hard gate
   overrides Step 3.5's tolerance for declined, skipped, missing, or failed
   summary generation: load the current `oat-project-summary/SKILL.md` and follow
   it; only when skill loading is unavailable in the current host/runtime, author
@@ -731,17 +786,30 @@ sweep runs:
 - **No project log** (`status: "absent"` from the probe above). Record the
   findings and their dispositions in the Step 12 completion summary
   instead, and never create a project log for them.
-- **Resumed completion whose log already carries a seal.** The status probe
-  above reports no seal state, so detect the seal directly before appending
-  anything: read `logPath` from `PROJECT_LOG_CHECK` and treat the log as sealed
-  when it already contains a structural seal heading of the form
-  `### <date> · structural · oat-project-complete · seal`. On a sealed log the
+- **Resumed completion whose log already carries a seal.** Route on the status
+  probe: `sealed: true` in `PROJECT_LOG_CHECK` means the log is already sealed,
+  and `seal` carries that entry's heading and date. `oat project log check`
+  owns this claim — it reports the seal from the log's own structural entries,
+  so a seal written before the seal append was keyed is recognized the same way
+  as a keyed one. On a sealed log the
   sweep runs in report-only mode: surface the findings and dispositions in the
   Step 12 completion summary, append nothing to the sealed log, and never
   re-enter the roll-up or the seal. No project-log append may follow the seal,
-  on a resume as much as on a first run.
+  on a resume as much as on a first run. The CLI enforces this rather than
+  trusting the routing: any non-seal append carrying new content onto a sealed
+  log is refused with
+  `status: "sealed"` and a non-zero exit, and a replayed seal reports
+  `already-appended` instead of writing a second one. An append that
+  `--idempotency-key` recognizes as its own earlier entry also reports
+  `already-appended` and exits 0, because that entry predates the seal and
+  nothing is written; that carve-out never adds content after the seal.
 
-For a log with entries, reuse the summary flow's structured roll-up result only
+Skip this roll-up entirely when the probe reported `sealed: true`; a sealed log
+has already been rolled up and sealed, and the seal must remain its final
+entry.
+
+For an unsealed log with entries, reuse the summary flow's structured roll-up
+result only
 when this completion run has that exact result in memory and it reports
 `status: "ok"`. Otherwise run the idempotent enforcement surface:
 
@@ -756,11 +824,15 @@ Do not set lifecycle complete, seal, or archive unless the structured
   proceed.
 - `ledgerOutcome: "skipped_permitted"` with `status: "ok"`: proceed and report
   the permitted skip; the absent default reference layer is not a block.
+- `status: "ambiguous"`: the log's structure has two readings, so nothing was
+  read and `summary.md` was not written. Stop, report the result's `ambiguity`
+  string verbatim, and repair the log. Never continue to seal or archive.
 - `status: "failed"`, `ledgerOutcome: "failed"`, malformed JSON, or a command
   error: stop and surface the roll-up failure. Never continue to seal or
   archive.
 
-When the status probe found an existing project log, append the completion seal
+When the status probe found an existing project log and did not report
+`sealed: true`, append the completion seal
 as the final project-log entry before any lifecycle-complete mutation:
 
 ```bash
@@ -769,8 +841,31 @@ oat project log append \
   --structural \
   --producer oat-project-complete \
   --ref seal \
-  --body "Completion sealed at $(date -u +%Y-%m-%dT%H:%M:%SZ); project-log roll-up status: ok."
+  --idempotency-key "oat-seal:$PROJECT_NAME" \
+  --body "Completion sealed at $(date -u +%Y-%m-%dT%H:%M:%SZ); project-log roll-up status: ok. oat-seal:$PROJECT_NAME"
 ```
+
+The key makes a replayed seal a no-op: `oat project log append` reports
+`already-appended` and leaves exactly one seal entry. It must stand alone as
+its own whitespace-delimited word in `--body` — the command records the whole
+word carrying the key, so a key glued to the varying timestamp would never
+match its own earlier append, and the command rejects a key the body omits.
+
+Then verify the seal landed, rather than trusting the append's exit status:
+
+```bash
+SEAL_CHECK=$(oat project log check --project "$PROJECT_PATH" --json)
+```
+
+Require `sealed: true` in `SEAL_CHECK`, and require the `heading` the append
+returned to be a seal heading — a `### <date> · structural · oat-project-complete · seal`
+line. A zero exit with either condition unmet means the log is still open: stop
+and report it; do not set lifecycle complete or archive. Re-reading the file is
+the stronger of the two checks and the reason both are required: it reports what
+the log now contains rather than what the append said about it, so it also
+catches a seal that was written but is unreachable to the parser. This
+verification exists because a seal that is silently not written reads exactly
+like a successful one from the completion flow's side.
 
 Only append this seal after Step 3.7 has either confirmed there are no entries
 to roll up or obtained `status: "ok"`. If the append fails for an existing log,
@@ -831,17 +926,26 @@ It must set `oat_lifecycle: complete`, completion timestamps, `**Status:** Compl
 ### Step 6: Clear or Defer the Active Project Pointer
 
 Clearing the active project pointer is implicit and requires no confirmation.
-For a synced archive, defer the clear until Step 8 has validated the full
-terminal report. Every archive or configured-S3 failure therefore exits with
-the original pointer intact and the completion remains directly resumable.
+For every completion that will actually archive — that is, every durable
+(`shared` or `synced`) project with archive selected — defer the clear until
+the archive receipt has been validated in Step 12. Every archive or
+configured-S3 failure therefore exits with the original pointer intact and the
+completion remains directly resumable.
+
+The guard mirrors the `complete-state` and Step 8 gate exactly. Keying it on
+`SHOULD_ARCHIVE` alone would strand the pointer for `local` projects, which are
+never durable and therefore never archive; they keep the immediate clear, as do
+all non-archive completions.
 
 ```bash
-if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
-  echo "Active project pointer retained until synced archive terminal receipt validation."
+# active-pointer-guard:start
+if [[ "$SHOULD_ARCHIVE" == "true" && "$IS_DURABLE_PROJECT" == "true" ]]; then
+  echo "Active project pointer retained until durable archive receipt validation."
 else
   oat config set activeProject ""
   echo "Active project pointer cleared."
 fi
+# active-pointer-guard:end
 ```
 
 ### Step 7: Generate PR Description
@@ -1140,8 +1244,12 @@ Use `ARCHIVE_S3_CONTEXT` in Step 12 if the command reports profile/region detail
 
 Only after every applicable synced terminal and recap-export field above has
 passed validation may the workflow continue. Keep the pointer through the
-required link, dashboard, bookkeeping, push, and PR-closeout work below so a
-failure after record retirement can retry through the recordless archive path.
+required link, dashboard, bookkeeping, push, and PR-closeout work below for
+every durable scope. For `synced`, a failure after record retirement retries
+through the recordless archive path. For `shared`, the archive has already
+removed the source directory, so a failure here retries through the
+shared-scope post-archive checkpoint in Step 1, which validates the discovered
+archive and clears the pointer without archiving again.
 
 #### Step 8.5: Finalize Archive-Aware Recap Links
 
@@ -1602,24 +1710,44 @@ Failure handling:
   before Step 12, retain the active pointer, and let the next invocation resume
   recordlessly. Other completion shapes retain their existing warning-only
   behavior and Step 12 summary guidance.
+- A shared archive completion also reaches this step with the pointer still
+  retained, but its sync failure stays warning-only. Its shared-scope resume
+  goes straight to the Step 12 clear and would not retry this PR update, so
+  Step 12 clears the pointer after the receipt validates and the user updates
+  the tracked PR by hand from the printed artifact path.
 - Never re-archive or re-commit on failure here — the lifecycle bookkeeping
   and any recap evidence update in Step 10.6 already shipped.
 
 ### Step 12: Confirm to User
 
-Immediately before confirmation, clear the deferred synced archive pointer.
-The finalizer validates the terminal receipt again before changing
-configuration. This ordering keeps every failure before final confirmation
-directly retryable, including a retry after record retirement:
+Immediately before confirmation, clear the deferred durable archive pointer.
+The clear always runs after a validated archive receipt, never before: the
+synced finalizer re-validates the full terminal report, and every other durable
+scope re-validates `ARCHIVE_OUTPUT` through the separate durable receipt
+validator. Do not widen the synced finalizer to accept non-synced input. This
+ordering keeps every failure before final confirmation directly retryable,
+including a retry after record retirement:
 
 ```bash
-if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
-  SYNCED_ARCHIVE_FINALIZATION=$(printf '%s\n' "$ARCHIVE_OUTPUT" | \
-    node "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" \
-      --project-name "$PROJECT_NAME") || exit 1
-  printf '%s\n' "$SYNCED_ARCHIVE_FINALIZATION"
-  echo "Synced archive terminal receipt verified; active project pointer cleared."
+# deferred-pointer-clear:start
+if [[ "$SHARED_ARCHIVE_RESUME" == "true" ]]; then
+  oat config set activeProject ""
+  echo "Discovered shared archive already validated; active project pointer cleared without a second archive."
+elif [[ "$SHOULD_ARCHIVE" == "true" && "$IS_DURABLE_PROJECT" == "true" ]]; then
+  if [[ "$PROJECT_SCOPE" == "synced" ]]; then
+    SYNCED_ARCHIVE_FINALIZATION=$(printf '%s\n' "$ARCHIVE_OUTPUT" | \
+      node "$SYNCED_ARCHIVE_FINALIZE_SCRIPT" \
+        --project-name "$PROJECT_NAME") || exit 1
+    printf '%s\n' "$SYNCED_ARCHIVE_FINALIZATION"
+    echo "Synced archive terminal receipt verified; active project pointer cleared."
+  else
+    VALIDATED_ARCHIVE_PATH=$(printf '%s\n' "$ARCHIVE_OUTPUT" | \
+      node "$DURABLE_ARCHIVE_RECEIPT_SCRIPT" --mode receipt) || exit 1
+    oat config set activeProject ""
+    echo "Durable archive receipt verified for $VALIDATED_ARCHIVE_PATH; active project pointer cleared."
+  fi
 fi
+# deferred-pointer-clear:end
 ```
 
 Show user:

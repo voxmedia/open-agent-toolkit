@@ -77,8 +77,10 @@ Two optional flags let an interrupted append be replayed safely:
 
 - `--idempotency-key <key>` — skip the append when an existing entry body
   already carries `key`, reporting `already-appended` instead of writing a
-  duplicate. The key must appear in `--body`, since that is how a replay
-  recognizes the entry it already wrote.
+  duplicate. The key must appear in `--body` as its own whitespace-delimited
+  word, since that is how a replay recognizes the entry it already wrote; a key
+  glued to varying text such as a timestamp never matches its earlier self.
+  Deduplication does not require `--commit`.
 - `--commit` — stage and commit the log after appending, retrying a bounded
   three attempts when the failure is a transient `.git/index.lock`.
 
@@ -100,6 +102,14 @@ as tokens, credentials, keys, or signed URLs; reference their name or source
 instead.
 
 Run `oat project log append --help` for the complete entry contract.
+
+Bodies may use line feeds or CRLF line endings. A CRLF body is accepted and
+stored normalized to line feeds, and the result then carries
+`normalizedLineEndings: true`, so the bytes on disk are known to differ from the
+bytes passed. A lone carriage return, U+2028, or U+2029 anywhere in a body — including
+at its very start or end — is refused, because those are the terminators the
+log's readers do not all agree about. Structural entries take one line and
+accept no line terminator at all.
 
 ## Automatic workflow integration
 
@@ -149,6 +159,25 @@ oat project log check --project .oat/projects/shared/example --json
 entry counts by class, type, and scope; the last entry date; and invalid
 hand-written headings. It reads only `project-log.md`.
 
+It also reports whether the log carries a completion seal:
+
+- `sealed`: `true` once the log holds a structural entry whose producer is
+  `oat-project-complete` and whose ref is `seal`. Both halves are required — a
+  `seal` ref from another producer is an ordinary entry.
+- `seal`: `null` when unsealed, otherwise the first seal's `heading` and
+  `date`, whether it is `keyed`, and the `count` of seal entries. A `count`
+  above one is a log sealed twice before the seal append became idempotent.
+
+`status` keeps its `ok` / `absent` / `synthesis_pending` values on a sealed log;
+sealing is reported alongside the status, not as a status value. The one
+additional status is `ambiguous`: a `##` heading, or a dated `###` entry
+heading, starts a line after a lone carriage return, U+2028, or U+2029 rather
+than a line feed, so the log's structure can be read two ways; or a seal is
+physically present outside the parseable `## Entries` region. `check` then
+exits 1 and reports an `ambiguity` reason instead of a clean verdict, every
+writing command (`append`, `synthesize`, `rollup`) refuses the same file, and
+the lifecycle skills stop rather than treat the log as empty.
+
 Use `--require-synthesis` to exit with status 1 while synthesis is pending:
 
 ```bash
@@ -156,7 +185,8 @@ oat project log check --require-synthesis
 ```
 
 Without that flag, normal `absent`, `ok`, and `synthesis_pending` results exit
-successfully so lifecycle skills can decide whether to warn or enforce.
+successfully so lifecycle skills can decide whether to warn or enforce;
+`ambiguous` always exits 1.
 
 ## Complete the synthesis
 
@@ -201,15 +231,44 @@ deduplicate by date and area. The command is idempotent.
 
 The structured result contains:
 
-- `status`: `ok` or `failed`
+- `status`: `ok`, `failed`, or `ambiguous`
 - `summarySection`: `written` or `updated`
 - `ledgerOutcome`: `appended`, `deduplicated`, `skipped_permitted`, or `failed`
 - `entriesRolledUp`: number of log entries written to the summary section
+
+An `ambiguous` result carries only `status` and an `ambiguity` reason, and exits
+1: the log's structure has two readings, so no count would mean anything and
+neither `summary.md` nor the ledger is written. The other fields are absent
+rather than zeroed, because `entriesRolledUp: 0` for an unreadable log is
+indistinguishable from the same result for an empty one.
 
 `skipped_permitted` means the default repository reference layer is absent and
 no ledger path was explicitly configured; `status` remains `ok`. An explicitly
 configured ledger write failure returns `status: "failed"`. Completion must not
 seal or archive a project with entries until roll-up reports `status: "ok"`.
+
+## The completion seal
+
+The seal is the last entry a project log may ever receive, and `append`
+enforces that rather than leaving it to convention:
+
+- Replaying the seal reports `already-appended` and leaves exactly one seal
+  entry. This holds for a seal carrying the completion skill's
+  `oat-seal:<project>` key and for an unkeyed seal written before that
+  convention, which is recognized by its heading instead.
+- Every append carrying **new** content is refused with `status: "sealed"` and a
+  non-zero exit, naming the seal that closed the log.
+- A replay that `--idempotency-key` recognizes as its own earlier entry is the
+  one exception: it reports `already-appended` and exits 0 even on a sealed log.
+  Nothing is appended — the entry it finds necessarily predates the seal — so
+  the seal stays the final entry. This is what keeps a gate
+  partial-finalization receipt replayable after the project is completed. The
+  key matches a whole word in an existing entry body, so an unrelated append
+  whose key happens to occur in some earlier entry is reported the same way
+  and likewise writes nothing.
+
+A resumed completion therefore reads `sealed` from `check` and skips the
+roll-up and the seal instead of duplicating them.
 
 `rollup` requires an existing `summary.md`; summary authoring remains the
 responsibility of the project summary workflow.

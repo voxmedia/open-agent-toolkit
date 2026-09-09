@@ -7,6 +7,24 @@ import {
   type ProviderCeilingAdapter,
 } from './registry';
 
+describe('getCeilingAdapter prototype-named providers', () => {
+  it('falls back to the advisory adapter for a prototype-named provider', () => {
+    // The documented contract is that any unknown provider falls back to the
+    // advisory no-op adapter. A bare lookup returns `Object.prototype` for
+    // this name, which is non-nullish, so the `??` fallback would be skipped.
+    const unknown = getCeilingAdapter('definitely-not-a-provider');
+    for (const name of ['__proto__', 'constructor', 'toString']) {
+      const adapter = getCeilingAdapter(name);
+      expect(adapter.supportsCeiling).toBe(unknown.supportsCeiling);
+      expect(adapter.mechanism).toBe(unknown.mechanism);
+      expect(adapter.mechanism).toBe('none');
+    }
+
+    // Registered providers are unchanged.
+    expect(getCeilingAdapter('codex').mechanism).not.toBe('none');
+  });
+});
+
 describe('provider ceiling adapters', () => {
   describe('codex adapter', () => {
     const codex = getCeilingAdapter('codex');

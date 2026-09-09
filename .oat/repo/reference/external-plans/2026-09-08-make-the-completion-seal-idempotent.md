@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260907-make-the-completion-seal.md
+  - .oat/repo/pjm/backlog/archived/BL-260907-make-the-completion-seal.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -55,7 +55,7 @@ Completing this closes GitHub issue
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260907-make-the-completion-seal — Make the completion seal append idempotent so pre-archive interruptions can resume](../../pjm/backlog/items/BL-260907-make-the-completion-seal.md),
+  [BL-260907-make-the-completion-seal — Make the completion seal append idempotent so pre-archive interruptions can resume](../../pjm/backlog/archived/BL-260907-make-the-completion-seal.md),
   including its `## Triage narrowing (2026-09-08)` section, which is the scope
   this plan implements.
 - Source issue: [#252](https://github.com/voxmedia/open-agent-toolkit/issues/252)
@@ -844,6 +844,8 @@ Revalidate this plan against live state before executing when:
 Executed inside a wave, refresh the drift check against the exact execution
 `HEAD` after predecessor lanes integrate, not only from the authored SHA to
 `origin/main`.
+
+**Correction applied 2026-09-09 (wave-7 p04 execution; wave-close pass; no requirement change):** (1) the plan's fourth result variant (`status: 'sealed'` on `ProjectLogCheckResult` / the append result, steps 3–4, Test plan, and the Done criterion at `:745-746`) was not implementable as written — `gate/index.ts:3282` (the p05 lane's file) narrows `result.status` to the three existing values, so a fourth variant would have broken the gate's exhaustiveness; the lane raised a thrown `ProjectLogSealedError` from the append path and mapped it at the command layer, which the root review adjudicated a sound deviation (the refusal is at least as strong, `status` on the check result is unchanged as `## Review focus` demands, and `sealed` / `seal` are additive fields). Read every `status: 'sealed'` in this plan as "the thrown `ProjectLogSealedError` mapped to the command's refusal output". (2) The post-seal refusal is conditional on key recognition: a keyed replay of the seal itself reports `already-appended` rather than refusing, exactly so the idempotent seal stays idempotent — the plan's "any non-seal append" wording is correct, but a reader must not expect an unkeyed seal replay to be refused. (3) Two propagation surfaces were missing from `### In scope` and the `## Drift check` pathspec — `.agents/docs/autonomy-contract.md` and `packages/cli/src/validation/synced-bookkeeping-sites.json` both restate the completion-seal prose and had to move with it; plans that edit lifecycle-skill bookkeeping prose should list both. Executed at `247f06b65` (+ the `w7-p04-fix-001` fix commit), merged in group 2 as `a9bfb0a3c`.
 
 ## Review focus
 

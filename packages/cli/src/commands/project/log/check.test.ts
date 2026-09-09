@@ -121,6 +121,9 @@ Synthesis content.
 
     expect(capture.jsonPayloads[0]).toEqual({
       status: 'absent',
+      ambiguity: null,
+      sealed: false,
+      seal: null,
       logPath: null,
       entryCounts: {
         structural: 0,
@@ -274,6 +277,175 @@ Valid structural.`),
     });
   });
 
+  it('reports a keyed completion seal', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(`### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-07-17T10:00:00Z; project-log roll-up status: ok. oat-seal:demo`),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      sealed: true,
+      seal: {
+        heading: '### 2026-07-17 · structural · oat-project-complete · seal',
+        date: '2026-07-17',
+        keyed: true,
+        count: 1,
+      },
+      status: 'synthesis_pending',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports an unkeyed seal written before the key convention', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(`### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-07-17T10:00:00Z; project-log roll-up status: ok.`),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      sealed: true,
+      seal: { keyed: false, count: 1 },
+    });
+  });
+
+  it('reports an unsealed log as sealed: false with a null seal', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(`### 2026-07-17 · structural · oat-project-implement · p01
+
+Phase one.`),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      sealed: false,
+      seal: null,
+      entryCounts: { structural: 1 },
+    });
+  });
+
+  it('does not treat a foreign producer or a different ref as a seal', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(`### 2026-07-17 · structural · oat-project-summary · seal
+
+A different producer using the seal ref.
+
+### 2026-07-18 · structural · oat-project-complete · retirement-sweep
+
+The seal producer using a different ref.`),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command);
+
+    // Seal identity is producer AND ref. Either half alone is an ordinary
+    // structural entry, and treating it as a seal would freeze a log that was
+    // never completed.
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      sealed: false,
+      seal: null,
+      entryCounts: { structural: 2 },
+    });
+  });
+
+  it('reports the first seal and the count for a doubly-sealed legacy log', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(`### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-07-17T10:00:00Z; project-log roll-up status: ok.
+
+### 2026-07-18 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-07-18T11:00:00Z; project-log roll-up status: ok.`),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      sealed: true,
+      seal: {
+        heading: '### 2026-07-17 · structural · oat-project-complete · seal',
+        date: '2026-07-17',
+        count: 2,
+      },
+      status: 'synthesis_pending',
+      entryCounts: { structural: 2 },
+    });
+  });
+
+  it('keeps the status union and counts unchanged on a sealed log', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(
+        `### 2026-07-16 · project · bug · gate exit
+
+A bug.
+
+### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed. oat-seal:demo`,
+        '## End-of-run synthesis',
+      ),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command, ['--require-synthesis']);
+
+    // Sealing is additive: it never becomes a fourth status value, because both
+    // consuming skills route on `status: "ok"`.
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      sealed: true,
+      synthesisPending: false,
+      entryCounts: { structural: 1, judgment: { bug: 1 } },
+      scopeCounts: { project: 1, general: 0 },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('marks a sealed log in the human-readable line', async () => {
+    const { root, logPath } = await createRepo();
+    await writeFile(
+      logPath,
+      logContent(`### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed. oat-seal:demo`),
+      'utf8',
+    );
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command, [], []);
+
+    expect(capture.info.join('\n')).toContain('sealed');
+  });
+
   it('ignores sibling append-only artifacts entirely', async () => {
     const { root, projectPath } = await createRepo();
     await writeFile(
@@ -291,5 +463,186 @@ Valid structural.`),
     });
     expect(capture.warn).toEqual([]);
     expect(process.exitCode).toBe(0);
+  });
+
+  describe('non-line-feed terminators are not section boundaries', () => {
+    // A hand-written or externally edited log can carry these bytes even though
+    // `append` now refuses to write them, so the parser has to hold on its own.
+    // LF is the only boundary; a `## ` after a CR, U+2028, or U+2029 is body
+    // text, exactly as it is to `parseProjectLogEntries`, which splits on '\n'.
+    const terminators: readonly [string, string][] = [
+      ['carriage return', '\r'],
+      ['U+2028 line separator', '\u2028'],
+      ['U+2029 paragraph separator', '\u2029'],
+    ];
+
+    it.each(terminators)(
+      'refuses to report a verdict when a %s precedes an injected marker',
+      async (_name, terminator) => {
+        const { root, logPath } = await createRepo();
+        await writeFile(
+          logPath,
+          logContent(`### 2026-07-17 · general · feedback · notes
+
+carrier${terminator}## Injected
+
+### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-07-17T10:00:00Z. oat-seal:demo`),
+          'utf8',
+        );
+        const { command, capture } = createHarness(root);
+
+        await runCommand(command);
+
+        // Both mutators refuse this file. `check` reporting a confident
+        // `sealed` and entry counts for it — as it did when only the writers
+        // were guarded — is what let the completion gate trust a reader that
+        // disagreed with every writer, so it now fails closed too.
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          status: 'ambiguous',
+          sealed: false,
+          seal: null,
+          entryCounts: { structural: 0 },
+          ambiguity: expect.stringContaining('two readings'),
+        });
+        expect(process.exitCode).toBe(1);
+      },
+    );
+
+    it('recognizes an existing seal and its entries on a CRLF log', async () => {
+      const { root, logPath } = await createRepo();
+      // A CRLF log parsed to zero entries at every earlier version, because no
+      // heading pattern's `$` can match before a trailing `\r`. The seal was
+      // therefore invisible, which is what deadlocked completion: this reader
+      // said unsealed while the file plainly held a seal.
+      await writeFile(
+        logPath,
+        [
+          '# Project Log: demo',
+          '',
+          '## Entries',
+          '',
+          '### 2026-07-17 · project · bug · gate exit',
+          '',
+          'The gate returned the wrong exit code.',
+          '',
+          '### 2026-07-17 · structural · oat-project-complete · seal',
+          '',
+          'Completion sealed at 2026-07-17T10:00:00Z. oat-seal:demo',
+          '',
+        ].join('\r\n'),
+        'utf8',
+      );
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        ambiguity: null,
+        sealed: true,
+        seal: {
+          heading: '### 2026-07-17 · structural · oat-project-complete · seal',
+          keyed: true,
+          count: 1,
+        },
+        entryCounts: { structural: 1, judgment: { bug: 1 } },
+        grammarViolations: [],
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('reports a seal it cannot reach as ambiguous rather than as unsealed', async () => {
+      const { root, logPath } = await createRepo();
+      // The seal is plainly in the file but outside any parseable `## Entries`
+      // region. Answering `sealed: false` here is the verdict both mutators
+      // refuse to act on.
+      await writeFile(
+        logPath,
+        '# Project Log: demo\n\n### 2026-07-17 · structural · oat-project-complete · seal\n\nCompletion sealed. oat-seal:demo\n',
+        'utf8',
+      );
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ambiguous',
+        sealed: false,
+        seal: null,
+        ambiguity: expect.stringContaining('two answers'),
+      });
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('reports a lone-carriage-return log as ambiguous rather than clean', async () => {
+      const { root, logPath } = await createRepo();
+      // This file scored a *better* status than the base gave it once the
+      // parser went line-feed-only: the pending-synthesis heading stopped being
+      // found, so `check` upgraded it to `ok` while both writers refused it.
+      await writeFile(
+        logPath,
+        [
+          '# Project Log: demo',
+          '',
+          '## Entries',
+          '',
+          '### 2026-07-17 · project · bug · gate exit',
+          '',
+          'body',
+          '',
+          '## End-of-run synthesis (pending — do not skip at project completion)',
+          '',
+          'S.',
+          '',
+        ].join('\r'),
+        'utf8',
+      );
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ambiguous',
+        synthesisPending: false,
+        ambiguity: expect.stringContaining('two readings'),
+      });
+      expect(process.exitCode).toBe(1);
+    });
+
+    it('still treats a marker after a real line feed as a section boundary', async () => {
+      const { root, logPath } = await createRepo();
+      await writeFile(
+        logPath,
+        logContent(`### 2026-07-17 · general · feedback · notes
+
+carrier
+
+## Injected
+
+### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-07-17T10:00:00Z. oat-seal:demo`),
+        'utf8',
+      );
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command);
+
+      // An LF-preceded `## ` really does end `## Entries`, so the seal beneath it
+      // is outside the entries region. Asserting only `sealed: false` here would
+      // pass under the old confident verdict too, so the status, the reason and
+      // the exit code are all pinned: this file is now reported as having two
+      // answers rather than as an unsealed log.
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ambiguous',
+        sealed: false,
+        seal: null,
+        entryCounts: { structural: 0 },
+        ambiguity: expect.stringContaining('two answers'),
+      });
+      expect(process.exitCode).toBe(1);
+    });
   });
 });

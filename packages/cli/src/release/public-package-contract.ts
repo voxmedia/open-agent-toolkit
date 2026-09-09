@@ -68,6 +68,27 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
       'dist/index.js',
       'assets',
       'assets/bundle-metadata.json',
+      // Every name in `REQUIRED_BUNDLE_DIRECTORIES` (src/fs/assets.ts) keeps at
+      // least one concrete packed path in this list. `npm pack` drops empty
+      // directories, so without these entries a producer regression that
+      // emptied one of them published a tarball whose every command exits 2
+      // from `validateBundleStructure` while every release check stayed green:
+      // the bare `assets` entry above is satisfied by any single file anywhere
+      // under `assets/`, and the directory itself still existed in the build
+      // workspace. Naming a file under each directory closes that at both
+      // layers — `findMissingBuildArtifacts` for the build workspace and
+      // `findMissingPackedPaths` for the packed tarball.
+      //
+      // Two checks in `public-package-contract.test.ts` hold this list to the
+      // runtime one: `guards a packed path under every required bundle
+      // directory` derives its expectation from `REQUIRED_BUNDLE_DIRECTORIES`
+      // rather than restating it, and `fails release validation when a
+      // required bundle directory is empty in the tarball` is the negative
+      // pack control.
+      'assets/agents/oat-reviewer.md',
+      'assets/scripts/generate-oat-state.sh',
+      'assets/docs/index.md',
+      'assets/config/dispatch-matrix-recommendation.json',
       'assets/migration/pjm-restructure.md',
       'assets/templates/decision.md',
       'assets/templates/repo-agents.md',

@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260906-persist-status-native-skill.md
+  - .oat/repo/pjm/backlog/archived/BL-260906-persist-status-native-skill.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -114,7 +114,7 @@ planning note recording this correction.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260906-persist-status-native-skill — Persist status native-skill adoption by setting manifestChanged](../../pjm/backlog/items/BL-260906-persist-status-native-skill.md)
+  [BL-260906-persist-status-native-skill — Persist status native-skill adoption by setting manifestChanged](../../pjm/backlog/archived/BL-260906-persist-status-native-skill.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
   content this plan read (branch `wave-7-plans`, rebased onto `origin/main`).
 - Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched
@@ -577,6 +577,8 @@ Apply the `## Landing-event impact` table when one of its events has occurred.
 Executed inside a wave, this plan refreshes its drift check against the exact
 execution `HEAD` after predecessor lanes integrate, not only from the authored
 SHA to `origin/main`.
+
+**Correction applied 2026-09-09 (wave-7 p12 execution; wave-close pass; no requirement change):** the plan's "`lastUpdated` refresh" wording (`:327` and the matching Test plan assertion that `lastUpdated` _is set_) describes a carry-through, not a refresh: `saveManifest` restamps `oatVersion` unconditionally and carries the existing `lastUpdated` value through unchanged, so the test pins the field's presence and shape rather than a new timestamp. The reachable-write requirement (one status-owned `saveManifest` call after a native adoption, with the restamp advisory firing on that path) is unchanged and was delivered. Also from execution: the plan's `createManifest` test helper had to be corrected to a schema-valid v2 manifest before the injected reader accepted it. Executed as the lane commits merged in group 4 as `0f1711d88`.
 
 ## Review focus
 

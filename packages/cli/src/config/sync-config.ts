@@ -34,6 +34,22 @@ export const DEFAULT_SYNC_CONFIG: SyncConfig = {
   providers: {},
 };
 
+/**
+ * Provider names reaching this family are guarded twice, so no own-key access
+ * is needed here even though `config/json.ts` preserves a key literally named
+ * `__proto__` as an own data property.
+ *
+ * 1. `SyncConfigSchema.providers` is a `z.record`, which drops that key during
+ *    parsing, so it never reaches `merged[name]` below.
+ * 2. `commands/providers/set/index.ts` rejects any provider name outside
+ *    `knownProviders`, and the init and sync commands iterate adapter names
+ *    and detection results rather than raw user strings.
+ *
+ * Guard 1 is pinned by the `drops a \`__proto__\` provider during zod record
+ * parsing` case in `sync-config.test.ts`. If a future zod upgrade stops
+ * stripping the key that test fails, and this classification must be re-opened
+ * rather than assumed.
+ */
 function mergeProviderConfigs(
   base: Record<string, ProviderSyncConfig>,
   override: Record<string, ProviderSyncConfig>,

@@ -104,7 +104,6 @@ Run before editing:
 ```bash
 git diff --stat <inspected HEAD SHA>..HEAD -- <in-scope paths>
 ```
-````
 
 If an in-scope file changed, compare the plan's current-state evidence with the live code. A material mismatch is a STOP condition unless the plan explicitly explains how to reconcile it.
 
@@ -201,7 +200,6 @@ Apply the `## Landing-event impact` table when one of its events has occurred. A
 - What a reviewer should inspect most closely.
 - Compatibility or regression risks.
 - Follow-ups intentionally deferred and why.
-
 ````
 
 ## Multi-Plan Index
@@ -234,14 +232,14 @@ not an `oat-project-import-plan` target.
 
 ## Recommended order
 
-| Order | Plan | Source item/finding | Depends on | Tracking | Rationale |
-| --- | --- | --- | --- | --- | --- |
-| 1 | [Title](./YYYY-MM-DD-slug.md) | <ID/title or finding> | — | <backlog ID and/or issue URL, or none> | <reason> |
+| Order | Plan                          | Source item/finding   | Depends on | Tracking                               | Rationale |
+| ----- | ----------------------------- | --------------------- | ---------- | -------------------------------------- | --------- |
+| 1     | [Title](./YYYY-MM-DD-slug.md) | <ID/title or finding> | —          | <backlog ID and/or issue URL, or none> | <reason>  |
 
 ## Dependency notes
 
 - <Dependency or parallel-lane explanation.>
-````
+```
 
 Do not use a repository-wide `README.md` as the index. Do not ask executors to mutate the index; execution tracking belongs to the chosen execution workflow.
 

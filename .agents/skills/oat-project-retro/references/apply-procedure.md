@@ -73,6 +73,17 @@ continues immediately, this can be written back together with the final
      original-entry anchor and full correction body are semantically exact; do
      not append again. Multiple, partial, or divergent matches stop for
      direction without appending.
+   - A sealed project log means the project is already closed: when the append
+     below reports `status: "sealed"` and exits non-zero, or
+     `oat project log check --json` reports `sealed: true`, append nothing and
+     report the correction in the retro artifact instead. The completion seal
+     is the log's final entry, so there is no commit or heading to capture for
+     that correction.
+   - `oat project log check --json` reporting `status: "ambiguous"` means the
+     log's structure has two readings and `sealed` is `false` for that reason,
+     not because the log is open. Append nothing, and report the correction in
+     the retro artifact together with the result's `ambiguity` string, so the
+     log is repaired rather than written to.
    - Only when recovery finds zero matches, run the complete judgment append
      invocation exactly once:
 

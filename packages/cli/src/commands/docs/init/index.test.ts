@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildDocsSectionBody, createDocsInitCommand } from './index';
 import type { DocsInitResolvedOptions } from './resolve-options';
+import { buildDocumentationConfig } from './scaffold';
 
 function createHarness(options: { interactive?: boolean } = {}) {
   const capture = createLoggerCapture();
@@ -496,7 +497,13 @@ describe('buildDocsSectionBody', () => {
 
     expect(body).toContain('`apps/my-docs`');
     expect(body).toContain('Fumadocs (Next.js + MDX)');
-    expect(body).toContain('`apps/my-docs/docs/index.md`');
+    // The authored Fumadocs source page and the generated app-root manifest are
+    // two different files; the section must name both with the role each owns.
+    expect(body).toContain(
+      '**Docs source index:** `apps/my-docs/docs/index.md`',
+    );
+    expect(body).toContain('**Generated index:** `apps/my-docs/index.md`');
+    expect(body).toContain('oat docs generate-index');
     expect(body).not.toContain('**Config:**');
   });
 
@@ -518,7 +525,36 @@ describe('buildDocsSectionBody', () => {
 
     expect(body).toContain('`docs`');
     expect(body).toContain('MkDocs (Python)');
-    expect(body).toContain('**Index file:** `docs/docs/index.md`');
+    expect(body).toContain('**Docs source index:** `docs/docs/index.md`');
     expect(body).toContain('**Config:** `docs/mkdocs.yml`');
+    // MkDocs has no generated manifest: `buildDocumentationConfig` seeds
+    // `documentation.index` with the nav YAML, already named by the Config
+    // bullet above.
+    expect(body).not.toContain('**Generated index:**');
+  });
+
+  it('names the generated manifest the fumadocs scaffold actually seeds', () => {
+    const targetDir = 'apps/my-docs';
+    const options: DocsInitResolvedOptions = {
+      repoRoot: '/tmp/repo',
+      repoShape: 'monorepo',
+      framework: 'fumadocs',
+      appName: 'my-docs',
+      siteName: 'My Docs',
+      targetDir,
+      siteDescription: 'My docs',
+      lint: 'none',
+      format: 'oxfmt',
+      rootPatch: true,
+    };
+
+    // Asserting the printed path *equals* the seeded `documentation.index` is
+    // what stops the label and the seed from drifting apart again.
+    const seededIndex = buildDocumentationConfig('fumadocs', targetDir).index;
+
+    expect(seededIndex).toBe('apps/my-docs/index.md');
+    expect(buildDocsSectionBody(options)).toContain(
+      `**Generated index:** \`${seededIndex}\``,
+    );
   });
 });

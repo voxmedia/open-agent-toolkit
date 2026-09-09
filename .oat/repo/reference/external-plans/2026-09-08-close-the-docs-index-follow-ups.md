@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260906-docs-index-follow-ups-from.md
+  - .oat/repo/pjm/backlog/archived/BL-260906-docs-index-follow-ups-from.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -54,7 +54,7 @@ confirms that pin and records its neutralization instead of adding a duplicate.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260906-docs-index-follow-ups-from — Docs-index follow-ups from wave 1 reviews](../../pjm/backlog/items/BL-260906-docs-index-follow-ups-from.md)
+  [BL-260906-docs-index-follow-ups-from — Docs-index follow-ups from wave 1 reviews](../../pjm/backlog/archived/BL-260906-docs-index-follow-ups-from.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — branch
   `wave-7-plans`, which is `origin/main` plus three commits that only add or
   edit files under `.oat/repo/reference/external-plans/`; every code surface
@@ -680,6 +680,8 @@ Stop and report instead of improvising when:
 - live state materially contradicts the drift-check evidence.
 
 ## Revalidation Before Execution
+
+**Correction applied 2026-09-09 (wave-7 p11 execution; no requirement change):** three clauses of this plan were found false on execution and verified by the root review. (1) The Test plan predicts the reshaped output hop-cap case "passes pre-fix" while also requiring it to assert the operator-facing path — pre-fix the message names the intermediate link (`link-31`), so the case is red pre-fix; red is the truthful result. (2) Step 3's causal wording (the exclusions "are the reason the manifest is empty") is false in a reachable case (an empty docs tree with a pattern that matches nothing — `never-matches/**`); the shipped line is observational ("No pages were indexed, with N exclusion pattern(s) active (…)") and still satisfies the requirement of a distinct second line naming the count and the patterns; it is human-output only (`--json` returns before it). (3) Step 6's refusal wording overpromises for real symlink chains: a real 41-link chain dies on the OS `ELOOP` (exit 1) before the CLI's 32-hop cap, which this plan's own Review focus records as deliberately deferred; the docs bullet scopes the cap to the dangling links the command walks itself. Accepted deviation within the Outcome: the MkDocs bullet is relabeled `Docs source index` as well (the plan's Test plan calls it "the authored source bullet"; `Index file` is pinned nowhere else). `BL-260906-docs-index-follow-ups-from`'s "(behaviorally inert)" wording is corrected at closure.
 
 Revalidate against live state before executing when: substantial time passes
 after `2026-09-08`; `origin/main` advances materially from

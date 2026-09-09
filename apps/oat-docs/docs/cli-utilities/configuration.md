@@ -93,7 +93,7 @@ Common keys in `.oat/config.json`:
 - `git.defaultBranch` — base branch fallback for PR workflows
 - `documentation.root`, `documentation.tooling`, `documentation.config` — docs-surface ownership
 - `documentation.excludes` — a JSON array of globs, relative to the docs directory, that `oat docs generate-index` leaves out of the generated index. `oat config set` takes the list as one comma-separated value (`"a/**,b.md"`) and stores it as an array; repeated `--exclude` flags extend it, and an empty value clears the key
-- `documentation.instructionPointerExcludes` — a JSON array of repository-relative directories that `oat instructions sync` and `oat instructions validate` must not treat as pointer sites, additive to the documentation content root they already skip by default (see [Instruction Sync](../provider-sync/instruction-sync.md#documentation-trees)). `oat config set` takes the list as one comma-separated value (`"vendor/generated,apps/oat-docs/docs"`) and stores it as an array of repository-relative POSIX paths, trimmed and de-duplicated; an empty value clears the key, and `oat config unset documentation.instructionPointerExcludes` removes it. An entry that could never exclude anything — an absolute path, or one escaping the repository with `..` — is rejected with exit code `1` rather than stored. A structurally malformed value already on disk (a non-array, or an empty or non-string entry) is rejected with exit code `2` and a repair message, and `oat config set` can still replace it. Entries that are well formed but cannot exclude anything — among them absolute paths, paths escaping the repository, paths that match no directory (matching is case-sensitive), and the unexcludable `.oat/repo` carve-in root — never abort the command; they are reported as warnings and are not counted as protection. Warnings go to stderr in human mode and to the `exclusionWarnings` field under `--json`
+- `documentation.instructionPointerExcludes` — a JSON array of repository-relative directories that `oat instructions sync` and `oat instructions validate` must not treat as pointer sites, additive to the documentation content root they already skip by default (see [Instruction Sync](../provider-sync/instruction-sync.md#documentation-trees)). `oat config set` takes the list as one comma-separated value (`"vendor/generated,apps/oat-docs/docs"`) and stores it as an array of repository-relative POSIX paths, trimmed and de-duplicated; an empty value clears the key, and `oat config unset documentation.instructionPointerExcludes` removes it. An entry that could never exclude anything — an absolute path, or one escaping the repository with `..` — is rejected with exit code `1` rather than stored. A structurally malformed value already on disk (a non-array, or an empty or non-string entry) is rejected with exit code `2` and a repair message, and `oat config set` can still replace it. Entries that are well formed but cannot exclude anything — among them absolute paths, paths escaping the repository, paths that match no directory (matching is case-sensitive, and the warning names the on-disk spelling when the path differs only in case), paths that resolve elsewhere through a symlink (the warning names the resolved target instead of blaming case-sensitivity), and the unexcludable `.oat/repo` carve-in root — never abort the command; they are reported as warnings and are not counted as protection. Warnings go to stderr in human mode and to the `exclusionWarnings` field under `--json`
 - `documentation.requireForProjectCompletion` — whether docs sync is a completion gate
 - `archive.s3Uri` — base S3 archive prefix
 - `archive.s3SyncOnComplete` — upload archived projects to S3 during completion
@@ -274,6 +274,19 @@ packaged `assets/` directory next to the installed CLI. Setting a non-empty
   unset the override, never to rebuild or reinstall the CLI; a packaged-bundle
   failure keeps the rebuild/reinstall guidance. A directory that exists but
   cannot be read reports the underlying error code.
+- The published npm tarball is held to the same seven-directory shape. The
+  CLI's public-package contract names a concrete file under each of the seven
+  directories, and release validation requires each one in the build workspace
+  and again in the packed tarball. The tarball check is the stronger of the two,
+  because a path can exist in the workspace and still never reach the tarball —
+  an empty directory that `npm pack` drops, or a `files`/symlink exclusion. So a
+  published package cannot ship a bundle whose top-level shape would fail
+  `validateBundleStructure`. That is a narrower promise than the exit-2 list
+  above: release validation does not check bundle metadata beyond its presence,
+  so a malformed or version-mismatched `bundle-metadata.json` is not covered.
+  The regression evidence is the negative pack control in
+  `packages/cli/src/release/public-package-contract.test.ts`:
+  `fails release validation when a required bundle directory is empty in the tarball`.
 - Produce a matching bundle with `bash packages/cli/scripts/bundle-assets.sh`
   while `OAT_ASSETS_DIR` points at the target directory (the script already
   honors the variable as its destination).

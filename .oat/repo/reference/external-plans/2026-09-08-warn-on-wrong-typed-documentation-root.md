@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260907-warn-when-documentation-root.md
+  - .oat/repo/pjm/backlog/archived/BL-260907-warn-when-documentation-root.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -52,7 +52,7 @@ unchanged: the value is still dropped.
 
 - Source artifact or scope: `.oat/repo/pjm/backlog/items/`
 - Source backlog item:
-  [BL-260907-warn-when-documentation-root — Warn when documentation.root has the wrong type instead of dropping it](../../pjm/backlog/items/BL-260907-warn-when-documentation-root.md)
+  [BL-260907-warn-when-documentation-root — Warn when documentation.root has the wrong type instead of dropping it](../../pjm/backlog/archived/BL-260907-warn-when-documentation-root.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree
   whose content this plan read (branch `wave-7-plans`, rebased onto the merged
   PR #273).
@@ -542,6 +542,8 @@ Stop and report instead of improvising when:
 - a named verification gate fails twice after one bounded correction.
 
 ## Revalidation Before Execution
+
+**Correction applied 2026-09-09 (wave-7 p08 execution; no requirement change):** the Test plan's case 4 cites "the existing case at `:117`" in `config/oat-config.test.ts` as a malformed-JSON test asserting a thrown `SyntaxError`; no such case exists at the inspected head or on the executed tip (line 117 is `rejects an invalid projects.defaultScope`, and the file contained no `SyntaxError` assertion). The lane wrote the malformed-JSON assertion itself (control C: folding `SyntaxError` into the missing-file default turns it red). Deferred follow-ups the lane named, per this plan's own instruction: wire `readOatConfigWithWarnings` into `commands/instructions/instructions.utils.ts:303`; a docs sentence in `configuration.md`; one shared-config read for `runGet`/`runList` and `resolveEffectiveConfig` (needs `config/resolve.ts`). The root review also noted, as residue outside this plan's Outcome: a wrong-typed `documentation` container, `config dump`, and `instructions validate` stay silent; the warning rides on every `config get <key>` `--json` document (documented behavior of the once-per-command read, unpinned by a test).
 
 Revalidate this plan against live state before executing when:
 

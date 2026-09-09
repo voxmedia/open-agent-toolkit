@@ -20,6 +20,10 @@ import {
   clearActiveProject,
   normalizeWorkflowPostImplementSequence,
   readOatConfig,
+  readOatConfigForDefaultScopeRepair,
+  readOatConfigForDocumentationExcludesRepair,
+  readOatConfigForInstructionPointerExcludesRepair,
+  readOatConfigWithWarnings,
   readOatLocalConfig,
   readUserConfig,
   resolveDocumentationContentRoot,
@@ -295,6 +299,146 @@ describe('oat-config', () => {
           'oat config set documentation.instructionPointerExcludes',
         ),
       });
+    });
+  });
+
+  // A `documentation.root` whose stored value is not a string was dropped with
+  // no signal anywhere: the scalar branch accepts only a non-empty string and
+  // had no else branch, so a wrong-typed value looked exactly like "never
+  // configured" on every surface. The accept/reject decision is unchanged --
+  // the value is still dropped -- but the drop now reaches the caller.
+  describe('documentation.root type warnings', () => {
+    async function writeSharedRoot(
+      repoRoot: string,
+      root: unknown,
+    ): Promise<void> {
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({ version: 1, documentation: { root } }),
+        'utf8',
+      );
+    }
+
+    const wrongTypes: Array<{
+      name: string;
+      value: unknown;
+      observed: string;
+    }> = [
+      { name: 'a number', value: 5, observed: 'number' },
+      { name: 'an object', value: { a: 1 }, observed: 'object' },
+      { name: 'an array', value: [1], observed: 'array' },
+      { name: 'null', value: null, observed: 'null' },
+      { name: 'a boolean', value: true, observed: 'boolean' },
+    ];
+
+    for (const testCase of wrongTypes) {
+      it(`warns once for ${testCase.name} and still drops the value`, async () => {
+        const repoRoot = await createRepoRoot();
+        await writeSharedRoot(repoRoot, testCase.value);
+
+        const { config, warnings } = await readOatConfigWithWarnings(repoRoot);
+
+        expect(config.documentation?.root).toBeUndefined();
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0]).toContain('documentation.root');
+        expect(warnings[0]).toContain(`got ${testCase.observed}`);
+        expect(warnings[0]).toContain(join(repoRoot, '.oat', 'config.json'));
+        expect(warnings[0]).toContain('oat config set documentation.root');
+      });
+
+      // The item's "does not silently fall back" criterion has two halves: the
+      // documentation tree really does fall back, and the operator really is
+      // told. Asserting both against one read is what closes it here, without
+      // reaching into `commands/instructions/**`.
+      it(`reports the content-root fallback alongside the warning for ${testCase.name}`, async () => {
+        const repoRoot = await createRepoRoot();
+        await writeSharedRoot(repoRoot, testCase.value);
+
+        const { config, warnings } = await readOatConfigWithWarnings(repoRoot);
+
+        await expect(
+          resolveDocumentationContentRoot(repoRoot, config),
+        ).resolves.toBeNull();
+        expect(warnings).toHaveLength(1);
+      });
+    }
+
+    it('stays silent for a valid root and for a whitespace-only root', async () => {
+      const repoRoot = await createRepoRoot();
+      await mkdir(join(repoRoot, 'content'), { recursive: true });
+      await writeSharedRoot(repoRoot, 'content');
+
+      const valid = await readOatConfigWithWarnings(repoRoot);
+      expect(valid.warnings).toEqual([]);
+      expect(valid.config.documentation?.root).toBe('content');
+      await expect(
+        resolveDocumentationContentRoot(repoRoot, valid.config),
+      ).resolves.toBe('content');
+
+      // Deliberately unchanged: `"   "` is a string, so it is not a type
+      // error. It is dropped today and still is, silently.
+      await writeSharedRoot(repoRoot, '   ');
+      const blank = await readOatConfigWithWarnings(repoRoot);
+      expect(blank.warnings).toEqual([]);
+      expect(blank.config.documentation?.root).toBeUndefined();
+    });
+
+    it('stays silent when documentation.root is absent', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({ version: 1, documentation: { tooling: 'tools' } }),
+        'utf8',
+      );
+
+      await expect(readOatConfigWithWarnings(repoRoot)).resolves.toEqual({
+        config: { version: 1, documentation: { tooling: 'tools' } },
+        warnings: [],
+      });
+    });
+
+    it('leaves readOatConfig behavior unchanged', async () => {
+      const missing = await createRepoRoot();
+      await expect(readOatConfig(missing)).resolves.toEqual({ version: 1 });
+
+      const valid = await createRepoRoot();
+      await writeSharedRoot(valid, 'content');
+      await expect(readOatConfig(valid)).resolves.toEqual({
+        version: 1,
+        documentation: { root: 'content' },
+      });
+
+      // The wrapper must not fold a parse failure into the missing-file
+      // default: only a missing file returns defaults, everything else throws.
+      const malformed = await createRepoRoot();
+      const malformedPath = join(malformed, '.oat', 'config.json');
+      await writeFile(malformedPath, '{"version":1,', 'utf8');
+      await expect(readOatConfig(malformed)).rejects.toThrow(SyntaxError);
+      await expect(readOatConfig(malformed)).rejects.toThrow(
+        `Config at ${malformedPath} is not valid JSON`,
+      );
+      await expect(readOatConfigWithWarnings(malformed)).rejects.toThrow(
+        SyntaxError,
+      );
+    });
+
+    // The three lenient repair readers pass no sink, so they stay silent.
+    // What this can detect is the regression that would actually happen: one
+    // of them switching to `readOatConfigWithWarnings` and handing its caller
+    // an `OatConfigRead`. It cannot detect a diagnostic emitted through some
+    // channel that does not exist yet, because a reader passing no sink has
+    // nowhere to emit one -- `pnpm type-check` is what holds that half.
+    it('leaves the lenient repair readers silent', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeSharedRoot(repoRoot, 5);
+
+      for (const read of [
+        readOatConfigForDefaultScopeRepair,
+        readOatConfigForDocumentationExcludesRepair,
+        readOatConfigForInstructionPointerExcludesRepair,
+      ]) {
+        await expect(read(repoRoot)).resolves.toEqual({ version: 1 });
+      }
     });
   });
 
@@ -2060,6 +2204,72 @@ describe('oat-config', () => {
       expect(
         config.workflow?.gates?.skills?.['oat-project-implement'],
       ).not.toHaveProperty('execPolicy');
+    });
+
+    it('keeps a `__proto__` gate-skill entry as data instead of a prototype', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      // Written as raw JSON: an object literal spelling of this key would set
+      // the fixture's own prototype and never reach the file.
+      await writeFile(
+        configPath,
+        '{"version":1,"workflow":{"gates":{"skills":{"__proto__":{"command":"echo pwned","onFailure":"block"},"real":{"command":"echo ok","onFailure":"warn"}}}}}',
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      const skills = config.workflow?.gates?.skills;
+      expect(skills).toBeDefined();
+      const map = skills as NonNullable<typeof skills>;
+
+      expect(Object.keys(map).sort()).toEqual(['__proto__', 'real']);
+      expect(Object.getPrototypeOf(map)).toBe(Object.prototype);
+      expect('command' in map).toBe(false);
+      const seen: string[] = [];
+      for (const key in map) {
+        seen.push(key);
+      }
+      expect(seen.sort()).toEqual(['__proto__', 'real']);
+      expect(map['__proto__']).toEqual({
+        command: 'echo pwned',
+        onFailure: 'block',
+        maxAttempts: 2,
+      });
+      expect(map.real).toEqual({
+        command: 'echo ok',
+        onFailure: 'warn',
+        maxAttempts: 2,
+      });
+      // The global prototype chain is untouched either way.
+      expect(({} as Record<string, unknown>).command).toBeUndefined();
+    });
+
+    it('keeps a null record-map tombstone distinct from a dropped entry', async () => {
+      const repoRoot = await createRepoRoot();
+      const configPath = join(repoRoot, '.oat', 'config.json');
+      await writeFile(
+        configPath,
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            gates: {
+              skills: {
+                tombstone: null,
+                dropped: { onFailure: 'block' },
+                kept: { command: 'pnpm test', onFailure: 'block' },
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      const skills = config.workflow?.gates?.skills;
+      // A `null` normalizer result is a real entry; only `undefined` drops.
+      expect(Object.keys(skills ?? {}).sort()).toEqual(['kept', 'tombstone']);
+      expect(skills?.tombstone).toBeNull();
+      expect(skills).toHaveProperty('tombstone');
     });
 
     it('normalizes workflow.gates.execTargets partial entries and preserves null tombstones', async () => {

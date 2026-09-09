@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260908-make-copy-strategy-skill.md
+  - .oat/repo/pjm/backlog/archived/BL-260908-make-copy-strategy-skill.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -50,7 +50,7 @@ section because the limitation is gone.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260908-make-copy-strategy-skill — Make copy-strategy skill projections converge after sync instead of reading as drifted](../../pjm/backlog/items/BL-260908-make-copy-strategy-skill.md)
+  [BL-260908-make-copy-strategy-skill — Make copy-strategy skill projections converge after sync instead of reading as drifted](../../pjm/backlog/archived/BL-260908-make-copy-strategy-skill.md)
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
   content this plan read (branch `wave-7-plans`, rebased onto `origin/main`).
 - Comparison baseline: `7d70ac307717b95917b8f92aa3fb9f236d1f75ba` — the fetched
@@ -661,6 +661,8 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
+**Refresh applied 2026-09-09 (wave-7 p15, post-STOP amendment; amends the helper-extraction step, the Test plan, and the Done criteria — the Outcome, Scope, weaker-anywhere rule, and every other STOP stand):** the lane implemented all nine steps and its cross-model round reproduced, on the built CLI and at the `detectDrift` unit, the STOP "any input the detector or the planner previously rejected becomes accepted": `computeManagedDirectoryCopyHash`, moved verbatim as the plan prescribed, skips the sentinel by pathname before the `isFile()` check and reads it with a symlink-following `readFile`, and never `lstat`s the provider root — so a provider view whose `.oat-generated` sentinel is a symlink to a file holding the marker, or whose root is a symlink to a faithful decorated tree, was `drifted:modified` before this plan and becomes `in_sync` / `skip` after it. This is a pre-existing weakness of the inherited helper that the plan's own reuse promotes into the detector and the planner. **Decision (non-narrowing — WHAT must be true is the weaker-anywhere rule the plan already states; the "verbatim, no behavior change" clause was a mechanism instruction that cannot hold together with it):** harden the shared helper rather than gate the two call sites — `lstat` the provider root and require a real directory (a symlinked root returns `null`); validate the sentinel `Dirent` as a regular file before the pathname skip and read it without following symlinks (a symlinked or otherwise non-regular sentinel returns `null`). `classifyObsoleteMappingRetirement` inherits the stricter helper and therefore classifies those two shapes as `detach` instead of `remove` — the safe direction for a destructive path, accepted deliberately and pinned. **Correction applied 2026-09-09 (from the p15 root review):** measured at base and head, the retirement classifier already returned `detach` for a symlinked root (`compute-plan.ts:340-343` computes `expectedTypeMatches` from `lstat` before the helper runs), so the stricter verdict is new only for the symlinked-sentinel shape; and the two shapes were accepted for two different reasons — the sentinel because it was skipped by pathname and read through a symlink-following `readFile`, the root because it was never type-checked before `readdir`. The retirement + symlinked-root case therefore pins a composite guarantee rather than going red under the un-hardened helper (seven of the eight new cases do). **Test plan additions:** for each shape (symlinked sentinel; symlinked provider root) a helper case asserting `null`, a detector case asserting `drifted`, a planner case asserting `update_copy`, and a retirement-classifier case asserting `detach` (with the pre-existing faithful-copy `remove` case unchanged); each new case red under the un-hardened helper. **Done criteria (amended):** the four shapes above plus the plan's tampered-body, forged-sentinel, missing-banner, and non-regular-entry controls all stay rejected; the retirement classifier's faithful-copy verdict is unchanged. **Review focus (addition):** confirm the helper's rejection set is a strict superset of the base's on every consumer (detector, planner, retirement) — no new acceptance anywhere.
+
 Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;
@@ -680,6 +682,8 @@ Apply the `## Landing-event impact` table when one of its events has occurred.
 Executed inside a wave, this plan refreshes its drift check against the exact
 execution `HEAD` after predecessor lanes integrate, not only from the authored
 SHA to `origin/main`.
+
+**Correction applied 2026-09-09 (wave-7 final review; recorded bound, no requirement change):** the managed-copy digest covers regular files' relative paths and contents only, so a view whose `SKILL.md` carries a different file mode (for example 0777) or that carries extra empty directories reads `in_sync` at head where the base read `drifted/modified` — the empty-directory case was recorded by the p15 review as an inherited bound of `computeDirectoryHash`; the file-mode case is recorded here as the same accepted bound (mode bits are not content and the projection contract never promised them; `BL-260909-use-handle-bound-traversal` carries both). The digest's lack of length framing, by contrast, was a defect (distinct file sets could collide) and is fixed in the wave's final-review fix round (Phase 21) together with requiring the marker file for skill and agent content types.
 
 ## Review focus
 

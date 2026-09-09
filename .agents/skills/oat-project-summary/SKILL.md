@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(jq:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat pjm:*), Bash(oat project log:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.5.4
+  version: 1.5.5
 ---
 
 # Project Summary
@@ -158,6 +158,24 @@ Route on the structured result. `status: "absent"` is inert. When the entry
 counts show one or more entries, keep the log in the summary flow even if task,
 revision, and autonomous-learning tracking fields are otherwise current.
 
+`status: "ambiguous"` (exit 1, with an `ambiguity` reason) means the log's
+section markers are readable two ways — or a seal is physically present outside
+the parseable region — so the entry counts are not trustworthy. Stop the
+project-log part of this skill there: report the `ambiguity` reason verbatim,
+do not treat the log as empty, do not graduate the ledger, and do not append;
+the operator repairs the file (the mutators refuse it for the same reason).
+`summary.md` may still be authored from the other artifacts, with the log
+named as unreadable.
+
+`sealed: true` means the project log already carries its completion seal and is
+closed to further entries. Skip the ledger graduation below entirely — do not
+offer it, and append nothing. Report that the log is sealed and name the seal
+heading from the probe's `seal` field, then continue with the rest of this
+skill; `summary.md` is still authored or refreshed as normal. This is a real
+refusal in the CLI, not a convention: `oat project log append` rejects any
+non-seal append onto a sealed log with `status: "sealed"` and a non-zero exit,
+so attempting the promotion would fail the step rather than skip it.
+
 Before roll-up, inspect `project`-scoped judgments for observations that are
 reusable across projects and offer ledger graduation. For every observation the
 user selects, invoke `oat project log append` with the original judgment type
@@ -199,7 +217,7 @@ test -f "$PROJECT_PATH/summary.md"
      identifiers (timestamp, category, and title) with the source pointers in
      the existing `## Autonomous Execution Learnings` section. Treat missing,
      added, or changed recommendations as `learnings_changed`.
-   - If `oat_summary_last_task == current_last_task` AND `oat_summary_revision_count == current_rev_count` AND learnings are absent or unchanged AND the project-log check reports no entries: **No changes detected. Skip update.** Report: "Summary is current. No updates needed."
+   - If `oat_summary_last_task == current_last_task` AND `oat_summary_revision_count == current_rev_count` AND learnings are absent or unchanged AND the project-log check reports `status: "ok"` with no entries: **No changes detected. Skip update.** Report: "Summary is current. No updates needed."
    - If `current_rev_count > oat_summary_revision_count`: New revision phases exist. Update: Revision History, What Was Implemented, Follow-up Items.
    - If `current_last_task > oat_summary_last_task`: New tasks completed. Update: What Was Implemented, Notable Challenges, Tradeoffs Made.
    - If `learnings_changed`: update Autonomous Execution Learnings even when
@@ -402,6 +420,10 @@ Route only on the structured `ProjectLogRollupResult`:
 - `status: "ok"` with `ledgerOutcome: "skipped_permitted"`: proceed and report
   that the ledger was permissibly skipped because the default reference layer
   is absent.
+- `status: "ambiguous"`: the log's structure has two readings, so nothing was
+  read and `summary.md` was not written. Surface the result's `ambiguity`
+  string to the user and stop before commit. Do not describe the summary as
+  rolled up, and do not treat the absent observations as "no entries".
 - `status: "failed"` or `ledgerOutcome: "failed"`: surface the failure to the
   user and stop before commit. Do not describe the summary as fully rolled up.
 

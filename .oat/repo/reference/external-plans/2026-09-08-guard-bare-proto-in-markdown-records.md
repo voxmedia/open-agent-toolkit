@@ -3,7 +3,7 @@ oat_generated: true
 oat_external_plan: true
 oat_external_plan_source: backlog-item
 oat_external_plan_sources:
-  - .oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md
+  - .oat/repo/pjm/backlog/archived/BL-260908-keep-a-bare-proto-in-markdown.md
 oat_external_plan_commit: a594614024725979ebf24bd9a34b3565c30fbffb
 oat_external_plan_main_commit: 7d70ac307717b95917b8f92aa3fb9f236d1f75ba
 oat_external_plan_date: '2026-09-08'
@@ -51,7 +51,7 @@ meaning-destroying rewrite loud.
 ## Source and live evidence
 
 - Source backlog item:
-  [BL-260908-keep-a-bare-proto-in-markdown — Keep a bare prototype-key literal in Markdown prose from being formatted into bold](../../pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md)
+  [BL-260908-keep-a-bare-proto-in-markdown — Keep a bare prototype-key literal in Markdown prose from being formatted into bold](../../pjm/backlog/archived/BL-260908-keep-a-bare-proto-in-markdown.md)
 - Read that item's `## Triage widening (2026-09-08)` section before executing;
   it is what widens the guard beyond decision records and docs.
 - Inspected `HEAD`: `a594614024725979ebf24bd9a34b3565c30fbffb` — the tree whose
@@ -86,15 +86,15 @@ meaning-destroying rewrite loud.
     blocks and inline code spans and then matches both forms, run over
     `git ls-files` for `.oat/repo` and `apps/oat-docs/docs`:
 
-    | File                                                                      | Line | Form                       |
-    | ------------------------------------------------------------------------- | ---- | -------------------------- |
-    | `.oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md`     | 14   | mangled (1)                |
-    | `.oat/repo/pjm/backlog/completed.md`                                      | 19   | mangled (2 on the line)    |
-    | `.oat/repo/pjm/backlog/index.md`                                          | 269  | mangled (1, generated row) |
-    | `.oat/repo/pjm/backlog/index.md`                                          | 274  | mangled (1, generated row) |
-    | `.oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md`   | 3    | bare, in the YAML `title`  |
-    | `.oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md`  | 3    | bare, in the YAML `title`  |
-    | `.oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md` | 3    | bare, in the YAML `title`  |
+    | File                                                                        | Line | Form                       |
+    | --------------------------------------------------------------------------- | ---- | -------------------------- |
+    | `.oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md`       | 14   | mangled (1)                |
+    | `.oat/repo/pjm/backlog/completed.md`                                        | 19   | mangled (2 on the line)    |
+    | `.oat/repo/pjm/backlog/index.md`                                            | 269  | mangled (1, generated row) |
+    | `.oat/repo/pjm/backlog/index.md`                                            | 274  | mangled (1, generated row) |
+    | `.oat/repo/pjm/backlog/archived/BL-260908-guard-normalized-config-maps.md`  | 3    | bare, in the YAML `title`  |
+    | `.oat/repo/pjm/backlog/archived/BL-260908-keep-a-bare-proto-in-markdown.md` | 3    | bare, in the YAML `title`  |
+    | `.oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md`   | 3    | bare, in the YAML `title`  |
 
     That is six files and eight occurrences. At this `HEAD` the scan covers
     712 tracked Markdown files across `.oat/repo` (641) and
@@ -204,7 +204,7 @@ Run before editing:
 
 ```bash
 git fetch origin main
-git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..origin/main -- packages/cli/src/validation .oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md .oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md .oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md .oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md .oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md packages/cli/src/commands/backlog/regenerate-index.ts packages/cli/src/commands/backlog/archive.ts .lintstagedrc.mjs .oxfmtrc.jsonc
+git diff --stat a594614024725979ebf24bd9a34b3565c30fbffb..origin/main -- packages/cli/src/validation .oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md .oat/repo/reference/decisions/DR-260907-oat-config-reads-materialize.md .oat/repo/pjm/backlog/completed.md .oat/repo/pjm/backlog/index.md .oat/repo/pjm/backlog/archived/BL-260908-guard-normalized-config-maps.md .oat/repo/pjm/backlog/archived/BL-260908-keep-a-bare-proto-in-markdown.md .oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md packages/cli/src/commands/backlog/regenerate-index.ts packages/cli/src/commands/backlog/archive.ts .lintstagedrc.mjs .oxfmtrc.jsonc
 ```
 
 Expected at the authored baseline: no output. Then re-run the enumeration in
@@ -280,9 +280,9 @@ predecessor lanes integrate.
   line:
   - `.oat/repo/reference/decisions/DR-260908-a-stop-whose-remedy-lies.md:14`
   - `.oat/repo/pjm/backlog/completed.md:19` (both occurrences)
-  - `.oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md:3`
+  - `.oat/repo/pjm/backlog/archived/BL-260908-keep-a-bare-proto-in-markdown.md:3`
     (YAML `title`)
-  - `.oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md:3`
+  - `.oat/repo/pjm/backlog/archived/BL-260908-guard-normalized-config-maps.md:3`
     (YAML `title`)
   - `.oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md:3`
     (YAML `title`)
@@ -439,8 +439,8 @@ step 2's enumeration no longer reports either file.
 ### 5. Repair the three item titles and regenerate the index
 
 Backtick the literal inside the `title:` value of
-`.oat/repo/pjm/backlog/items/BL-260908-keep-a-bare-proto-in-markdown.md`,
-`.oat/repo/pjm/backlog/items/BL-260908-guard-normalized-config-maps.md`, and
+`.oat/repo/pjm/backlog/archived/BL-260908-keep-a-bare-proto-in-markdown.md`,
+`.oat/repo/pjm/backlog/archived/BL-260908-guard-normalized-config-maps.md`, and
 `.oat/repo/pjm/backlog/archived/BL-260903-preserve-proto-named-config.md`.
 Leave the values unquoted; backticks are legal in a YAML plain scalar that does
 not begin with one, and the repository's `yaml` package round-trips them
@@ -592,6 +592,8 @@ Stop and report instead of improvising when:
   authority.
 
 ## Revalidation Before Execution
+
+**Refresh applied 2026-09-08 (wave-7 p03 execution; supersedes the step-2 detection algorithm and strengthens the invariant test — the Outcome, Scope, weaker-anywhere rule, and STOP conditions stand):** Step 2's prescribed algorithm ("remove inline code spans on each remaining line") is not implementable on the current tree: it reports two false positives on multi-line code spans (`2026-09-08-harden-normalized-config-maps.md:128` and `:783`), which `oxfmt --write` provably protects (the file is byte-identical after formatting while an appended bare literal is rewritten). The shipped detector is **block-scoped**: classify lines into CommonMark blocks (fenced code, indented code, raw HTML blocks, headings, tables, lists, blockquotes, paragraphs), blank matched fenced-code pairs, mask inline code spans within a block only, and report a bare `__proto__` literal in any remaining prose line. The root review's `oxfmt` oracle battery (54 shapes) then found three silent-acceptance holes in that classifier, which this refresh makes part of the contract: (1) **fence pairing is container-aware** — a fence opener inside a blockquote records its quote-prefix depth, only a fence line at the same depth closes it, and the fence force-closes (blanking nothing beyond its own container) when a non-blank line's quote depth drops below the opener's; a `> ```` ` line never becomes a document-level opener; (2) **raw HTML blocks cover CommonMark types 1–7**, adding type 6 (the block-level tag-name list — `div`, `details`, `table`, `section`, and the rest of the CommonMark list — ending at a blank line) and type 7 (a complete open or closing tag alone on a line, blank-line terminated), so a fence-shaped line inside `<div>`/`<details>` opens nothing; (3) **every line matching the fence pattern is an atomic region boundary** in the line classifier, so an unclosed backtick run can never pair across a fence line, whether or not the fence was paired. **Invariant test (supersedes the table-only check):** the "never accepts an input the formatter would mangle" test derives each case's `formatter` verdict by writing the case to a `mktemp -d` file and running `pnpm exec oxfmt --write` (the repository's own formatter, not a new dependency), asserting `**proto**` presence, and fails when a derived-`mangles` case has no reported occurrence — so the recorded verdicts cannot go stale when the `oxfmt` pin moves. **Documented strict false positives (no escape hatch, per the STOP):** besides indented code, unrecognized fences, and table rows, the guard also rejects a literal inside a link destination, link or reference-definition title, image alt text, autolink, HTML comment, and `<div>`-block content although `oxfmt` preserves them; the failure message carries a second remedy for link constructs (percent-encode the segment as `%5F%5Fproto%5F%5F`, or move the URL into a reference definition whose label can be backticked) because backticks inside a destination or autolink break the link. Test-plan additions: the eleven battery shapes the review names (five blockquote-fence probes, three `<div>`/`<details>` probes, the invalid-info-string fence probe, plus a link-destination and an HTML-comment false-positive case) pinned in `DETECTOR_CASES` with `oxfmt`-derived verdicts; the red control (pre-repair tree → exactly seven rows / eight occurrences) unchanged.
 
 Revalidate this plan against live state before executing when:
 

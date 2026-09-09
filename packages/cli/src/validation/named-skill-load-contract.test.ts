@@ -1,13 +1,17 @@
 import {
+  chmod,
   mkdir,
   mkdtemp,
   readdir,
   readFile,
+  realpath,
   rm,
+  stat,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -226,41 +230,49 @@ interface FenceDefect {
 }
 
 /**
- * Fence hygiene over the bounded surface.
+ * Fence hygiene over the fence-scan inventory.
  *
  * A stray fence silently removes an arbitrary span of directives from this
  * scanner, so the defect class this contract was written to catch could hide
- * itself. Two shapes fail here:
+ * itself. Three shapes fail here:
  *
- * 1. an unclosed fence at end of file; and
+ * 1. an unclosed fence at end of file;
  * 2. an "orphan" fence — a bare fence marker (no info string) opening
  *    immediately after a closing fence with only blank lines between them, and
- *    swallowing at least one `##`-or-deeper heading. That is exactly the
- *    duplicated-closer shape found three times in this corpus
- *    (`oat-project-plan`, `oat-project-review-receive`, `oat-project-revise`).
+ *    swallowing at least one `##`-or-deeper heading. That is the
+ *    duplicated-closer shape found in `oat-project-plan`,
+ *    `oat-project-review-receive`, and `oat-project-revise`; and
+ * 3. an "after-prose" fence — a bare fence marker whose *first non-blank body
+ *    line* is a `##`-or-deeper heading. Shape 2 structurally cannot see this
+ *    one: its `gap` test requires the bare fence to open immediately after a
+ *    *closing* fence with only blank lines between them, so a bare fence that
+ *    opens after ordinary prose never reaches the heading condition.
  *
- * Rule 2's blind spot, stated precisely: the `gap` test requires the bare fence
- * to open immediately after a *closing* fence with only blank lines between
- * them. A bare fence that opens after ordinary prose never reaches the heading
- * condition, so it is not reported.
+ * Shape 3 is `||`-joined to shape 2 rather than folded into it. Shape 2's
+ * blank-gap term is preserved verbatim so nothing it rejects today becomes
+ * acceptable, and shape 3 deliberately carries no gap term at all, because
+ * opening after prose is exactly shape 2's blind spot.
  *
- * Known uncovered live instance: `.agents/skills/oat-project-review-provide/SKILL.md:1057`
- * — a bare four-backtick fence spanning 1057-1167 (110 lines) that swallows
- * `### Step 8.5`, `### Step 9`, and `### Step 9.5`. It escapes rule 2 because
- * lines 993-1056 are prose, not blank, so the `gap` test fails before the
- * heading condition is reached. It is left uncovered here on purpose:
- * `oat-project-review-provide` is not one of this change's skills, and
- * repairing it forces a version bump plus its pin. Widening rule 2 to "bare
- * fence of length >= 4 swallowing a heading" would catch it while sparing the
- * legitimate three-backtick console template at
- * `.agents/skills/oat-project-document/SKILL.md:423`.
+ * Why the first-body-line test and not a fence-length test: the source item
+ * proposed "a bare fence of length >= 4 that swallows a heading". Measured over
+ * every regular markdown file under `.agents/skills`, that discriminator is
+ * wrong in both directions. It misses the two three-backtick defects
+ * (`create-agnostic-skill/references/skill-template.md` and
+ * `oat-agent-instructions-apply/references/instruction-file-templates/glob-scoped-rule.md`),
+ * and it falsely reports the three legitimate bare four-backtick agent-prompt
+ * blocks in `.agents/skills/oat-repo-knowledge-index/SKILL.md` at `:373`,
+ * `:424`, and `:475`, whose bodies open on `subagent_type: "Explore"` and
+ * legitimately contain `## Include frontmatter:`. The first-body-line rule
+ * separates the corpus exactly, and it also spares the two legitimate printed
+ * console templates whose bodies open on a `━━━` rule:
+ * `.agents/skills/oat-doctor/SKILL.md:231` and
+ * `.agents/skills/oat-project-document/SKILL.md:434`. Fixture cases below pin
+ * all three of those sparings, so a future maintainer cannot re-adopt the
+ * length discriminator without going red.
  *
- * That repair is indivisible and must land as one change: the missing opener
- * before `SKILL.md:1013` currently promotes a review-artifact template into
- * live prose, and matrix row `oat-project-review-provide/SKILL.md`
- * [`Recommended Next Step`] below binds to exactly that promoted text. Insert
- * the opener, narrow `:1167` to three backticks, delete that row, and tighten
- * this rule in the same commit; a partial repair reads as a red gate.
+ * The inventory this runs over is `collectFenceScanFiles`, not
+ * `collectBoundedFiles`: four of the five live defects sat in files the
+ * bounded candidate corpus never reads.
  */
 function findFenceDefects(file: string, content: string): FenceDefect[] {
   const lines = content.split(/\r?\n/);
@@ -297,13 +309,17 @@ function findFenceDefects(file: string, content: string): FenceDefect[] {
           gap !== null &&
           gap.every((line) => line.trim() === '') &&
           body.some((line) => /^#{2,6}\s/.test(line));
-        if (orphan) {
+        const afterProse =
+          info === '' &&
+          /^#{2,6}\s/.test(body.find((line) => line.trim() !== '') ?? '');
+        if (orphan || afterProse) {
           defects.push({
             file,
             line: openLine,
             span: index + 1 - openLine,
-            detail:
-              'bare fence opens immediately after a closing fence and swallows a heading; likely a duplicated closing fence',
+            detail: orphan
+              ? 'bare fence opens immediately after a closing fence and swallows a heading; likely a duplicated closing fence'
+              : 'bare fence opens directly onto a heading; likely a closing fence read as an opener',
           });
         }
         closed.push({ open: openLine, close: index + 1 });
@@ -387,8 +403,142 @@ async function collectBoundedFiles(repoRoot: string): Promise<string[]> {
   return present;
 }
 
+/**
+ * Fence-scan inventory: every regular markdown file under `.agents/skills`.
+ *
+ * Deliberately wider than `collectBoundedFiles`, and separate from it. A stray
+ * fence deletes an arbitrary span from whatever file it lands in, so confining
+ * the fence scan to the candidate corpus let this defect class hide in an
+ * unscanned directory — four of the five live instances sat outside the
+ * bounded corpus. The candidate sweep stays exactly as bounded as it is today;
+ * widening it is a separate, larger outcome (measured at 33 new unclassified
+ * candidates needing 33 classified rows).
+ *
+ * Recursion is required: `glob-scoped-rule.md` sits at
+ * `oat-agent-instructions-apply/references/instruction-file-templates/`, two
+ * levels below `references/`.
+ *
+ * File symlinks are followed; directory symlinks are not. `Dirent.isFile()` is
+ * false for a link, and filtering on it alone dropped all eleven symlinked
+ * markdown files under `.agents/skills` out of the inventory. One of those
+ * eleven was a regression rather than a gap: `collectBoundedFiles`, which the
+ * base scanned fence defects over, enumerates `oat-project-*\/references/*.md`
+ * by name and then `readFile`s it, and `gate-inventory.md` is the only one of
+ * the eleven that is a direct child of an `oat-project-*` `references/` (the
+ * other ten sit a level deeper, under `references/docs/`, or belong to a
+ * non-`oat-project-*` skill). So a stray fence planted in
+ * `.agents/docs/autonomy-contract.md`, the target of
+ * `oat-project-autonomous/references/gate-inventory.md`, was caught at the base
+ * and accepted here — an acceptance-ward flip. Following the other ten is new
+ * coverage on top of closing it.
+ *
+ * A `*.md` link whose target resolves to a regular file inside the repository
+ * is therefore scanned, reported under the target's repository-relative path,
+ * and deduplicated by realpath — the eleven links resolve onto six distinct
+ * targets under `.agents/docs/`, and a target also reached directly is scanned
+ * once under one stable path.
+ *
+ * Three link shapes are deliberately not followed, each for its own reason.
+ * A target that resolves outside the repository root is out of the surface this
+ * suite governs and could otherwise pull an arbitrary file on the host into a
+ * repository guard. A dangling link resolves to nothing, and a link's target
+ * vanishing is a separate defect from a stray fence. And the one symlinked
+ * directory (`oat-agent-instructions-apply/references/docs`) points at a
+ * sibling skill's real directory inside `.agents/skills`, whose files are
+ * already scanned where they live; following it would only duplicate them
+ * under a second path. The floor below does not police those three skips one
+ * target at a time — losing a single symlinked target still leaves 210 files,
+ * above the floor. What it polices is the collapse: dropping symlink following
+ * altogether leaves 205, under the floor of 208, so the regression this suite
+ * already shipped once cannot recur quietly.
+ */
+async function collectFenceScanFiles(repoRoot: string): Promise<string[]> {
+  // Resolved once, and every containment test is made against it: a `mkdtemp`
+  // root sits under `/var` on macOS, itself a link to `/private/var`, so an
+  // unresolved root would judge every resolved target to be outside itself.
+  const root = await realpath(repoRoot);
+  // Keyed by realpath, valued by the path the inventory reports. One target
+  // reachable two ways keeps the lexicographically first of its paths rather
+  // than whichever `readdir` happened to yield first, so the reported path is a
+  // function of the tree and not of directory order.
+  const byRealPath = new Map<string, string>();
+  const record = (realPath: string, reported: string): void => {
+    const existing = byRealPath.get(realPath);
+    if (existing === undefined || reported < existing) {
+      byRealPath.set(realPath, reported);
+    }
+  };
+
+  const walk = async (relativeDir: string): Promise<void> => {
+    // Deliberately unguarded. Swallowing a `readdir` failure would let an
+    // unreadable or vanished directory shrink the inventory silently, and the
+    // floor only catches a shrinkage larger than its headroom — at 211 live
+    // files against a floor of 208, two could disappear while this stayed green
+    // (the live-inventory case asserts `> floor`, which is what makes it two
+    // rather than three). A scan that cannot read part of
+    // its surface must fail loudly, not scan less. The only `readdir` here that
+    // can fail on a missing path is the `.agents/skills` root, because every
+    // deeper call is made against an entry `readdir` already reported as a
+    // directory. `collectBoundedFiles` treats its skills root the same way.
+    const entries = await readdir(join(repoRoot, relativeDir), {
+      withFileTypes: true,
+    });
+    for (const entry of entries) {
+      const child = `${relativeDir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        await walk(child);
+        continue;
+      }
+      if (!entry.name.endsWith('.md')) continue;
+      if (entry.isFile()) {
+        // The walk never descends through a directory link, so every ancestor
+        // of `child` is a real directory and `root` + `child` is its realpath.
+        record(join(root, child), child);
+        continue;
+      }
+      if (!entry.isSymbolicLink()) continue;
+      let target: string;
+      try {
+        target = await realpath(join(repoRoot, child));
+        // A link to a directory (or to anything else) is not a markdown file to
+        // scan; only a regular file is.
+        if (!(await stat(target)).isFile()) continue;
+      } catch (error) {
+        // Only a genuinely broken link is skipped: a vanished target
+        // (`ENOENT`), a link cycle (`ELOOP`), or a path whose parent is not a
+        // directory (`ENOTDIR`). Everything else — `EACCES`, `EIO` — means this
+        // scan cannot read part of its own surface, and it must fail loudly for
+        // the same reason the `readdir` above is unguarded: a suppressed I/O
+        // error silently removes a file from an acceptance ward.
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code !== 'ENOENT' && code !== 'ELOOP' && code !== 'ENOTDIR') {
+          throw error;
+        }
+        continue;
+      }
+      // `relativeTarget === '..'` and a `..` path *segment* are the escapes;
+      // a bare `startsWith('..')` would also reject a file legitimately named
+      // `..notes.md` sitting inside the root.
+      const relativeTarget = relative(root, target);
+      if (
+        relativeTarget === '' ||
+        relativeTarget === '..' ||
+        relativeTarget.startsWith(`..${sep}`) ||
+        isAbsolute(relativeTarget)
+      ) {
+        continue;
+      }
+      record(target, relativeTarget.split(sep).join('/'));
+    }
+  };
+
+  await walk('.agents/skills');
+  return [...byRealPath.values()].sort();
+}
+
 interface ScanResult {
   files: string[];
+  fenceScanFiles: string[];
   candidates: Candidate[];
   sections: Map<string, Map<string, string>>;
   fenceDefects: FenceDefect[];
@@ -398,18 +548,23 @@ async function scanBoundedSurface(repoRoot: string): Promise<ScanResult> {
   const files = await collectBoundedFiles(repoRoot);
   const candidates: Candidate[] = [];
   const sections = new Map<string, Map<string, string>>();
-  const fenceDefects: FenceDefect[] = [];
 
   for (const file of files) {
     const content = await readFile(join(repoRoot, file), 'utf8');
     sections.set(file, collectSections(content));
-    fenceDefects.push(...findFenceDefects(file, content));
     for (const block of collectProseBlocks(content)) {
       candidates.push(...candidatesInBlock(block, file));
     }
   }
 
-  return { files, candidates, sections, fenceDefects };
+  const fenceScanFiles = await collectFenceScanFiles(repoRoot);
+  const fenceDefects: FenceDefect[] = [];
+  for (const file of fenceScanFiles) {
+    const content = await readFile(join(repoRoot, file), 'utf8');
+    fenceDefects.push(...findFenceDefects(file, content));
+  }
+
+  return { files, fenceScanFiles, candidates, sections, fenceDefects };
 }
 
 function rowMatches(row: CallSiteRow, candidate: Candidate): boolean {
@@ -455,6 +610,7 @@ function validateRowShape(row: CallSiteRow): string[] {
 
 interface CorpusMinimums {
   files: number;
+  fenceScanFiles: number;
   candidates: number;
 }
 
@@ -464,6 +620,7 @@ interface CorpusMinimums {
  */
 function corpusShortfalls(
   files: readonly string[],
+  fenceScanFiles: readonly string[],
   candidates: readonly Candidate[],
   minimums: CorpusMinimums,
 ): string[] {
@@ -471,6 +628,11 @@ function corpusShortfalls(
   if (files.length < minimums.files) {
     shortfalls.push(
       `bounded surface shrank to ${files.length} files (floor ${minimums.files})`,
+    );
+  }
+  if (fenceScanFiles.length < minimums.fenceScanFiles) {
+    shortfalls.push(
+      `fence-scan inventory shrank to ${fenceScanFiles.length} files (floor ${minimums.fenceScanFiles})`,
     );
   }
   if (candidates.length < minimums.candidates) {
@@ -484,9 +646,9 @@ function corpusShortfalls(
 async function inspectContract(
   repoRoot: string,
   matrix: readonly CallSiteRow[],
-  minimums: CorpusMinimums = { files: 0, candidates: 0 },
+  minimums: CorpusMinimums = { files: 0, fenceScanFiles: 0, candidates: 0 },
 ): Promise<ContractReport> {
-  const { files, candidates, sections, fenceDefects } =
+  const { files, fenceScanFiles, candidates, sections, fenceDefects } =
     await scanBoundedSurface(repoRoot);
 
   const unclassified = candidates.filter((candidate) => {
@@ -552,7 +714,12 @@ async function inspectContract(
     missingClauses,
     malformedRows,
     fenceDefects,
-    corpusShortfalls: corpusShortfalls(files, candidates, minimums),
+    corpusShortfalls: corpusShortfalls(
+      files,
+      fenceScanFiles,
+      candidates,
+      minimums,
+    ),
   };
 }
 
@@ -578,7 +745,7 @@ function formatReport(report: ContractReport): string {
   }
   if (report.fenceDefects.length > 0) {
     lines.push(
-      'Fenced-code defects in the bounded surface (a stray fence hides directives from this scanner):',
+      'Fenced-code defects in the fence-scan inventory (.agents/skills, plus the in-repository files its markdown symlinks resolve to; a stray fence hides directives from this scanner):',
     );
     for (const defect of report.fenceDefects) {
       lines.push(
@@ -587,7 +754,7 @@ function formatReport(report: ContractReport): string {
     }
   }
   if (report.corpusShortfalls.length > 0) {
-    lines.push('Bounded-surface corpus shrank below its floor:');
+    lines.push('A scanned corpus shrank below its floor:');
     for (const shortfall of report.corpusShortfalls)
       lines.push(`  ${shortfall}`);
   }
@@ -2215,15 +2382,6 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
     reason: 'Usage documentation addressed to the user.',
   },
   {
-    file: '.agents/skills/oat-project-review-provide/SKILL.md',
-    anchor: 'Recommended Next Step',
-    match:
-      'Run the `oat-project-review-receive` skill to convert findings into plan tasks',
-    classification: 'non-executing',
-    skills: ['oat-project-review-receive'],
-    reason: 'Recommended next step printed to the user after the review ends.',
-  },
-  {
     file: '.agents/skills/oat-project-review-provide-remote/SKILL.md',
     anchor: 'Step 7: Build the Review Body + Verdict',
     match: "machine A's `oat-project-review-receive-remote` routes findings",
@@ -2452,12 +2610,33 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
 /**
  * Floors, not exact counts: the corpus grows, but a glob or path regression that
  * shrinks it must fail loudly rather than quietly widening every exemption.
- * Recorded at 42 bounded files / 179 candidate sentences, so losing a single
- * scanned file or one reference file's worth of candidates breaches the floor.
+ * Recorded at 42 bounded files / 211 fence-scan files / 179 candidate
+ * sentences. The floors are not tripwires on a single file: 2 bounded files, 2
+ * fence-scan files (3 before the floor itself fires; the live-inventory case
+ * asserts `> floor`), and 29 candidate sentences can be lost before one fires.
+ * They catch the structural regressions — a glob that stopped matching, a walk
+ * that stopped recursing, a filter that started skipping a whole entry kind.
+ * The fence-scan floor is the same guarantee for
+ * the wider inventory: a walk that stopped recursing or started skipping
+ * directories must fail on the shrinkage itself, not silently scan less.
+ *
+ * The fence-scan floor is deliberately tight rather than roomy. The 211 files
+ * are 205 reached directly plus 6 distinct targets reached only through the
+ * eleven markdown symlinks, so a floor anywhere in 206..210 makes losing
+ * symlink following a floor breach — which is the one regression a content
+ * differential structurally cannot see, and the one this suite already shipped
+ * once. 208 keeps that guarantee with three files of ordinary headroom on each
+ * side. Raise it when the corpus grows; never lower it to 205 or below, which
+ * would re-disarm the symlink guarantee.
+ *
  * The negative control below reads these values rather than restating them, so
  * lowering them cannot silently disarm the guard.
  */
-const CORPUS_MINIMUMS: CorpusMinimums = { files: 40, candidates: 150 };
+const CORPUS_MINIMUMS: CorpusMinimums = {
+  files: 40,
+  fenceScanFiles: 208,
+  candidates: 150,
+};
 
 const tempDirs: string[] = [];
 
@@ -2477,6 +2656,34 @@ async function writeFixtureSkill(root: string, body: string): Promise<void> {
   await mkdir(authoringRoot, { recursive: true });
   await writeFile(join(authoringRoot, 'SKILL.md'), '# Authoring\n', 'utf8');
 }
+
+async function writeFixtureFile(
+  root: string,
+  relativePath: string,
+  body: string,
+): Promise<void> {
+  const target = join(root, relativePath);
+  await mkdir(dirname(target), { recursive: true });
+  await writeFile(target, body, 'utf8');
+}
+
+/**
+ * A bare fence opening directly onto a heading: the `afterProse` defect shape,
+ * reported wherever the scan reaches it. Shared by the symlink cases so each
+ * one differs only in how the scan does or does not reach this content.
+ */
+const STRAY_FENCE_FIXTURE = [
+  '# Linked Target',
+  '',
+  'Prose before the stray fence.',
+  '',
+  '````',
+  '',
+  '## Swallowed Guidance',
+  '',
+  '````',
+  '',
+].join('\n');
 
 const COMPLIANT_FIXTURE = [
   '# Fixture',
@@ -2542,7 +2749,7 @@ describe('named-skill execution contract', () => {
     expect(report.overMatchedRows).toEqual([]);
   });
 
-  it('rejects the duplicated-closer stray-fence shape across the bounded surface', async () => {
+  it('rejects all three stray-fence shapes across every markdown file under .agents/skills', async () => {
     const repoRoot = resolve(process.cwd(), '..', '..');
     const report = await inspectContract(
       repoRoot,
@@ -2942,6 +3149,7 @@ describe('named-skill execution contract', () => {
     ).rejects.toThrowError(
       new RegExp(
         `bounded surface shrank to 2 files \\(floor ${CORPUS_MINIMUMS.files}\\)` +
+          `[\\s\\S]*fence-scan inventory shrank to 2 files \\(floor ${CORPUS_MINIMUMS.fenceScanFiles}\\)` +
           `[\\s\\S]*candidate sweep shrank to 1 sentences \\(floor ${CORPUS_MINIMUMS.candidates}\\)`,
       ),
     );
@@ -2965,5 +3173,429 @@ describe('named-skill execution contract', () => {
     await expect(
       assertContractCurrent(root, FIXTURE_MATRIX),
     ).rejects.toThrowError(/no longer bind to a live call site/);
+  });
+
+  it('fails on a bare fence that opens onto a heading after prose', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(
+      root,
+      [
+        COMPLIANT_FIXTURE,
+        '````markdown',
+        '## Printed Sample',
+        '````',
+        '',
+        'Ordinary prose sits between the closing fence and the stray one, so the',
+        'blank-gap rule cannot reach its heading test.',
+        '',
+        '````',
+        '',
+        '### Step 2: Hidden By The Stray Fence',
+        '',
+        'Run `oat-project-document` now.',
+        '````',
+        '',
+      ].join('\n'),
+    );
+
+    // The shape rule 2 structurally cannot see. Its `gap` term requires only
+    // blank lines between the previous closing fence and this opener; here the
+    // gap is prose, so only the first-non-blank-body-line rule can fire.
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).rejects.toThrowError(
+      /Fenced-code defects[\s\S]*bare fence opens directly onto a heading/,
+    );
+  });
+
+  it('spares a printed console template that legitimately contains headings', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(
+      root,
+      [
+        COMPLIANT_FIXTURE,
+        'The skill prints this dashboard verbatim:',
+        '',
+        '```',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        'OAT Doctor',
+        '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+        '',
+        '## Installed Packs',
+        '',
+        'workflows  ok',
+        '```',
+        '',
+      ].join('\n'),
+    );
+
+    // Pins the discriminator. A "bare fence that swallows a heading" rule — the
+    // shape the source item asked for — would report this legitimate console
+    // template. The first-body-line test spares it because the body opens on a
+    // rule, not a heading. Live instances: `oat-doctor/SKILL.md:231` and
+    // `oat-project-document/SKILL.md:434`.
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).resolves.toBeUndefined();
+  });
+
+  it('spares a bare four-backtick prompt template whose body opens on content', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(
+      root,
+      [
+        COMPLIANT_FIXTURE,
+        'Dispatch each mapper with this prompt:',
+        '',
+        '````',
+        '',
+        'subagent_type: "Explore"',
+        'description: "Map codebase architecture"',
+        '',
+        'Prompt:',
+        'Focus: arch',
+        '',
+        'Format as:',
+        '',
+        '```markdown',
+        '<content here>',
+        '```',
+        '',
+        '## Include frontmatter:',
+        '',
+        '- oat_source_head_sha',
+        '````',
+        '',
+      ].join('\n'),
+    );
+
+    // The executable disproof of the source item's acceptance criterion 2. A
+    // `ticks >= 4` discriminator reports this block, which is exactly the shape
+    // of the three repaired agent-prompt templates in
+    // `oat-repo-knowledge-index/SKILL.md` at `:373`, `:424`, and `:475`.
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).resolves.toBeUndefined();
+  });
+
+  it('scans skill markdown nested below references/', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(root, COMPLIANT_FIXTURE);
+    await writeFixtureFile(
+      root,
+      '.agents/skills/oat-fixture/references/templates/x.md',
+      [
+        '# Template',
+        '',
+        'Prose before the stray fence.',
+        '',
+        '````',
+        '',
+        '## Swallowed Guidance',
+        '',
+        '````',
+        '',
+      ].join('\n'),
+    );
+
+    // Two levels below `references/`, in a directory the bounded candidate
+    // corpus never reads — the position that hid `glob-scoped-rule.md`. A
+    // non-recursive walk passes this fixture.
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).rejects.toThrowError(
+      /Fenced-code defects[\s\S]*oat-fixture\/references\/templates\/x\.md/,
+    );
+  });
+
+  it('surfaces a directory it cannot read instead of scanning less', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+
+    // Called directly, not through `assertContractCurrent`: `collectBoundedFiles`
+    // reads the same root first and would throw on its own, so routing this
+    // through the suite entry point would pass whether or not the fence scan
+    // swallows its errors. Asserting on the unit is the only way to pin it.
+    await expect(collectFenceScanFiles(root)).rejects.toThrowError(
+      /ENOENT|no such file or directory/,
+    );
+
+    // And the same call is genuinely productive at repository HEAD, so the
+    // rejection above is about unreadability, not about the walk being inert.
+    const live = await collectFenceScanFiles(
+      resolve(process.cwd(), '..', '..'),
+    );
+    expect(live.length).toBeGreaterThan(CORPUS_MINIMUMS.fenceScanFiles);
+    expect(live).toContain(
+      '.agents/skills/oat-agent-instructions-apply/references/instruction-file-templates/glob-scoped-rule.md',
+    );
+
+    // The symlinked half of the live inventory, named rather than counted. Each
+    // of these is reached only through a `*.md` link under `.agents/skills`;
+    // without symlink following the live walk reaches 205 files and none of
+    // these six, which is below `CORPUS_MINIMUMS.fenceScanFiles`.
+    expect(live).toEqual(
+      expect.arrayContaining([
+        '.agents/docs/agent-instruction.md',
+        '.agents/docs/autonomy-contract.md',
+        '.agents/docs/cursor-rules-files.md',
+        '.agents/docs/provider-reference.md',
+        '.agents/docs/rules-files.md',
+        '.agents/docs/skills-guide.md',
+      ]),
+    );
+
+    // Six entries, not eleven: six of the eleven links resolve onto
+    // `autonomy-contract.md`, and the realpath key collapses them.
+    expect(
+      live.filter((file) => file.startsWith('.agents/docs/')),
+    ).toHaveLength(6);
+
+    // Deduplication is a property of the whole inventory, not just the links.
+    expect(new Set(live).size).toBe(live.length);
+  });
+
+  it('follows a markdown symlink onto its target inside the repository', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(root, COMPLIANT_FIXTURE);
+
+    // The exact live shape: the target sits in `.agents/docs/`, outside the
+    // walked tree, so the scan reaches it only through the link. Filtering on
+    // `Dirent.isFile()` skipped it, and this fixture passed — while the base,
+    // which scanned `collectBoundedFiles` and reached the same file by name
+    // plus `readFile`, reported it.
+    await writeFixtureFile(
+      root,
+      '.agents/docs/autonomy-contract.md',
+      STRAY_FENCE_FIXTURE,
+    );
+    await mkdir(
+      join(root, '.agents/skills/oat-project-autonomous/references'),
+      {
+        recursive: true,
+      },
+    );
+    await symlink(
+      '../../../docs/autonomy-contract.md',
+      join(
+        root,
+        '.agents/skills/oat-project-autonomous/references/gate-inventory.md',
+      ),
+    );
+
+    // The link must be live, or this case would pass for the wrong reason: a
+    // broken link reports nothing either.
+    await expect(
+      readFile(
+        join(
+          root,
+          '.agents/skills/oat-project-autonomous/references/gate-inventory.md',
+        ),
+        'utf8',
+      ),
+    ).resolves.toContain('## Swallowed Guidance');
+
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).rejects.toThrowError(
+      /Fenced-code defects[\s\S]*\.agents\/docs\/autonomy-contract\.md/,
+    );
+
+    // Reported under the target's own repository-relative path — the file an
+    // author has to edit — and not a second time under the link's path.
+    const inventory = await collectFenceScanFiles(root);
+    expect(inventory).toContain('.agents/docs/autonomy-contract.md');
+    expect(inventory).not.toContain(
+      '.agents/skills/oat-project-autonomous/references/gate-inventory.md',
+    );
+  });
+
+  it('scans a target reached through several symlinks exactly once', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(root, COMPLIANT_FIXTURE);
+
+    // Six of the eleven live links resolve onto `autonomy-contract.md`. Without
+    // the realpath key the inventory would carry it six times, inflating the
+    // floor's headroom and reporting the same defect six times.
+    await writeFixtureFile(root, '.agents/docs/shared.md', '# Shared\n');
+    for (const skill of ['oat-project-one', 'oat-project-two']) {
+      await mkdir(join(root, `.agents/skills/${skill}/references`), {
+        recursive: true,
+      });
+      await symlink(
+        '../../../docs/shared.md',
+        join(root, `.agents/skills/${skill}/references/shared.md`),
+      );
+    }
+
+    const inventory = await collectFenceScanFiles(root);
+    expect(
+      inventory.filter((file) => file === '.agents/docs/shared.md'),
+    ).toHaveLength(1);
+    expect(new Set(inventory).size).toBe(inventory.length);
+  });
+
+  it('does not follow a markdown symlink whose target is outside the repository root', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(root, COMPLIANT_FIXTURE);
+
+    // A second root, so the target is outside the repository by construction
+    // rather than merely outside `.agents/skills`. Following it would let a
+    // link pull an arbitrary file on the host into a repository guard.
+    const outside = await mkdtemp(join(tmpdir(), 'oat-named-skill-outside-'));
+    tempDirs.push(outside);
+    await writeFile(join(outside, 'outside.md'), STRAY_FENCE_FIXTURE, 'utf8');
+
+    // Paired with it, a target inside the root whose *name* begins with `..`.
+    // The containment test compares path segments, so this one is followed: a
+    // bare `startsWith('..')` on the relative path would reject it and quietly
+    // narrow the inventory again.
+    await writeFixtureFile(root, '..notes.md', '# Notes\n');
+
+    await mkdir(join(root, '.agents/skills/oat-fixture/references'), {
+      recursive: true,
+    });
+    await symlink(
+      join(outside, 'outside.md'),
+      join(root, '.agents/skills/oat-fixture/references/outside.md'),
+    );
+    await symlink(
+      '../../../../..notes.md',
+      join(root, '.agents/skills/oat-fixture/references/notes.md'),
+    );
+
+    // Live link carrying a real defect, so the acceptance below is about the
+    // containment test and not about an unreadable or clean target.
+    await expect(
+      readFile(
+        join(root, '.agents/skills/oat-fixture/references/outside.md'),
+        'utf8',
+      ),
+    ).resolves.toContain('## Swallowed Guidance');
+
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).resolves.toBeUndefined();
+
+    // Not followed *and* not counted: an out-of-root link must not pad the
+    // inventory that the floor measures. `..notes.md` is present, so the
+    // exclusion is the containment test and not a blanket refusal.
+    expect(await collectFenceScanFiles(root)).toEqual([
+      '..notes.md',
+      '.agents/skills/create-oat-skill/SKILL.md',
+      '.agents/skills/oat-project-fixture/SKILL.md',
+    ]);
+  });
+
+  // Under uid 0 the permission bits below do not deny anything, so the case
+  // cannot be constructed rather than merely being untested. CI runs as a
+  // non-root user; a root container skips it explicitly instead of passing
+  // vacuously.
+  it.skipIf(process.getuid?.() === 0)(
+    'surfaces an unreadable symlink target instead of skipping it',
+    async () => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+      tempDirs.push(root);
+      await writeFixtureSkill(root, COMPLIANT_FIXTURE);
+
+      await writeFixtureFile(
+        root,
+        '.agents/docs/locked.md',
+        STRAY_FENCE_FIXTURE,
+      );
+      await mkdir(join(root, '.agents/skills/oat-fixture/references'), {
+        recursive: true,
+      });
+      await symlink(
+        '../../../docs/locked.md',
+        join(root, '.agents/skills/oat-fixture/references/locked.md'),
+      );
+
+      const lockedDirectory = join(root, '.agents', 'docs');
+      await chmod(lockedDirectory, 0o000);
+      try {
+        // `EACCES` is not a broken link: the target is there, carrying a real
+        // defect, and this scan cannot read it. Skipping it would drop a file
+        // from an acceptance ward — the failure mode the unguarded `readdir`
+        // above refuses, applied to the one place a link resolution is caught.
+        await expect(collectFenceScanFiles(root)).rejects.toThrowError(
+          /EACCES|permission denied/,
+        );
+      } finally {
+        // Restored before `afterEach`, which cannot remove an unreadable tree.
+        await chmod(lockedDirectory, 0o755);
+      }
+    },
+  );
+
+  it('skips a dangling markdown symlink without throwing', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(root, COMPLIANT_FIXTURE);
+
+    // A link whose target vanished is a different defect from a stray fence,
+    // and it must not take the whole scan down with it. The `readdir` above it
+    // stays unguarded: only this one resolution is caught.
+    await mkdir(join(root, '.agents/skills/oat-fixture/references'), {
+      recursive: true,
+    });
+    await symlink(
+      '../../../docs/gone.md',
+      join(root, '.agents/skills/oat-fixture/references/gone.md'),
+    );
+    await expect(
+      readFile(join(root, '.agents/skills/oat-fixture/references/gone.md')),
+    ).rejects.toThrowError(/ENOENT/);
+
+    expect(await collectFenceScanFiles(root)).toEqual([
+      '.agents/skills/create-oat-skill/SKILL.md',
+      '.agents/skills/oat-project-fixture/SKILL.md',
+    ]);
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).resolves.toBeUndefined();
+  });
+
+  it('does not follow directory symlinks in the fence-scan inventory', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-named-skill-load-'));
+    tempDirs.push(root);
+    await writeFixtureSkill(root, COMPLIANT_FIXTURE);
+
+    await writeFixtureFile(root, 'outside-dir/nested.md', STRAY_FENCE_FIXTURE);
+    await mkdir(join(root, '.agents/skills/oat-fixture/references'), {
+      recursive: true,
+    });
+    await symlink(
+      '../../../../outside-dir',
+      join(root, '.agents/skills/oat-fixture/references/linked'),
+    );
+
+    // The link must be live, or this case would pass for the wrong reason.
+    await expect(
+      readFile(
+        join(root, '.agents/skills/oat-fixture/references/linked/nested.md'),
+        'utf8',
+      ),
+    ).resolves.toContain('## Swallowed Guidance');
+
+    // `isDirectory()` is false for a link, and the file branch only follows a
+    // link whose own name ends in `.md`. The live directory link points at a
+    // sibling skill's real directory inside `.agents/skills`, whose files are
+    // already scanned where they live; following it would duplicate them under
+    // a second path.
+    expect(await collectFenceScanFiles(root)).toEqual([
+      '.agents/skills/create-oat-skill/SKILL.md',
+      '.agents/skills/oat-project-fixture/SKILL.md',
+    ]);
+    await expect(
+      assertContractCurrent(root, FIXTURE_MATRIX),
+    ).resolves.toBeUndefined();
   });
 });

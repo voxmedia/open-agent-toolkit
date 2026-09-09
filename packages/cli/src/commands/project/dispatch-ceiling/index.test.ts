@@ -231,6 +231,134 @@ describe('oat project dispatch-ceiling resolve', () => {
     });
   }
 
+  describe('prototype-named providers', () => {
+    // Cases 16 and 18 of the plan's test plan. Provider names reach these maps
+    // from user config and from `--provider`, and `config/json.ts` preserves a
+    // key literally named `__proto__` as an own data property.
+
+    it('keeps a `__proto__` provider as an own key of the effective matrix', async () => {
+      const { root, home } = await setup();
+      // Built with `Object.fromEntries`: an object literal spelling of this
+      // key would set the literal's prototype and never reach the file.
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchCeiling: {
+            providers: Object.fromEntries([
+              ['__proto__', { high: { candidates: ['max'] } }],
+              ['codex', { high: { candidates: ['high'] } }],
+            ]),
+          },
+        },
+      });
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--json',
+      ]);
+
+      const payload = capture.jsonPayloads[0] as { matrix?: unknown };
+      const matrix = (payload.matrix ?? {}) as Record<string, unknown>;
+      // Without the own-key guard in `mergeEffectiveDispatchMatrix` the entry
+      // becomes the merged map's prototype and vanishes from the report.
+      expect(Object.prototype.hasOwnProperty.call(matrix, '__proto__')).toBe(
+        true,
+      );
+      expect(Object.getPrototypeOf(matrix)).toBe(Object.prototype);
+      expect('high' in matrix).toBe(false);
+      // The real provider is unchanged.
+      expect(matrix.codex).toMatchObject({ high: { candidates: ['high'] } });
+    });
+
+    it('keeps a `__proto__` project-state matrix provider as data', async () => {
+      // The project-state matrix is YAML, normalized by the same
+      // `normalizeDispatchMatrix`, then rebuilt by
+      // `toProjectMatrixCompatibility`. Assignment there would drop the scalar
+      // entry or install its tier map as the reported matrix's prototype.
+      const { root, home } = await setup();
+      await writeFile(
+        join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
+        [
+          '---',
+          'oat_phase: implement',
+          'oat_dispatch_policy:',
+          '  mode: managed',
+          '  policy: high',
+          '  matrix:',
+          '    __proto__:',
+          '      high: max',
+          '    codex:',
+          '      high: xhigh',
+          '  source: project-state',
+          '---',
+          '',
+          '# State',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, ['--provider', 'codex', '--json']);
+
+      const payload = capture.jsonPayloads[0] as { matrix?: unknown };
+      const matrix = (payload.matrix ?? {}) as Record<string, unknown>;
+      expect(Object.prototype.hasOwnProperty.call(matrix, '__proto__')).toBe(
+        true,
+      );
+      expect(Object.getPrototypeOf(matrix)).toBe(Object.prototype);
+      expect('high' in matrix).toBe(false);
+      // The real provider is unchanged.
+      expect(matrix.codex).toEqual({ high: 'xhigh' });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('resolves a `__proto__` provider exactly like an unknown provider', async () => {
+      const { root, home } = await setup();
+
+      const unknown = createHarness({ cwd: root, home });
+      await runCommand(unknown.command, [
+        '--provider',
+        'definitely-not-a-provider',
+        '--role',
+        'implementer',
+      ]);
+      const unknownOutput = unknown.capture.info.join('\n');
+
+      const proto = createHarness({ cwd: root, home });
+      await runCommand(proto.command, [
+        '--provider',
+        '__proto__',
+        '--role',
+        'implementer',
+      ]);
+      const protoOutput = proto.capture.info.join('\n');
+
+      // `Object.prototype` is truthy, so an unguarded lookup takes the
+      // provider-found branch and prints `unsupported (undefined)`.
+      expect(unknownOutput).toContain('Mode: unsupported (none)');
+      expect(protoOutput).toContain('Mode: unsupported (none)');
+      expect(protoOutput).not.toContain('undefined');
+
+      // A real provider is unaffected by the guard.
+      const real = createHarness({ cwd: root, home });
+      await runCommand(real.command, [
+        '--provider',
+        'codex',
+        '--role',
+        'implementer',
+        '--json',
+      ]);
+      expect(real.capture.jsonPayloads[0]).toMatchObject({
+        provider: 'codex',
+      });
+    });
+  });
+
   describe('resolution gap envelopes', () => {
     it('distinguishes a missing policy while preserving a complete ladder', async () => {
       const { root, home } = await setup();

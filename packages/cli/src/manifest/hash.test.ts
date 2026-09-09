@@ -3,10 +3,26 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { CliError } from '@errors/index';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+// Counts reads so the capture invariant below can be asserted directly rather
+// than inferred from the shape of the implementation. Everything else passes
+// straight through to the real module.
+const fsProbe = vi.hoisted(() => ({ readFileCalls: [] as string[] }));
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>();
+  return {
+    ...actual,
+    readFile: (...args: Parameters<typeof actual.readFile>) => {
+      fsProbe.readFileCalls.push(String(args[0]));
+      return actual.readFile(...args);
+    },
+  };
+});
 
 import {
   computeContentHash,
+  computeDirectoryDigests,
   computeDirectoryHash,
   computeFileHash,
   computeStringHash,
@@ -82,6 +98,110 @@ describe('computeDirectoryHash', () => {
     const hashB = await computeDirectoryHash(dirB);
 
     expect(hashA).toBe(hashB);
+  });
+
+  it('distinguishes file sets that the unframed digest collided', async () => {
+    // The wave-7 final review's collision witness. Before length framing the
+    // digest was an unframed `relPath \0 content \0 …` stream; relative paths
+    // cannot contain NUL but file *content* can, so a two-file set and a
+    // one-file set whose content replays the delimiters produced the identical
+    // stream and therefore the identical digest
+    // (`2bb17da7d373d82dd09024613a5bc31764837c2590441dfbc0eda55d3bcd283c`).
+    // That is what let a forged provider view drop `SKILL.md` and still match.
+    const twoFiles = await mkdtemp(join(tmpdir(), 'oat-hash-two-'));
+    const oneFile = await mkdtemp(join(tmpdir(), 'oat-hash-one-'));
+    tempDirs.push(twoFiles, oneFile);
+
+    await mkdir(join(twoFiles, 'references'), { recursive: true });
+    await writeFile(join(twoFiles, 'references', 'p.md'), 'P', 'utf8');
+    await writeFile(join(twoFiles, 'references', 'q.md'), 'Q', 'utf8');
+
+    await mkdir(join(oneFile, 'references'), { recursive: true });
+    await writeFile(
+      join(oneFile, 'references', 'p.md'),
+      'P\0references/q.md\0Q',
+      'utf8',
+    );
+
+    expect(await computeDirectoryHash(twoFiles)).not.toBe(
+      await computeDirectoryHash(oneFile),
+    );
+  });
+
+  it('distinguishes an empty-file set that the unframed digest collided', async () => {
+    // A second shape of the same ambiguity: an empty file contributes only its
+    // two delimiters, so `{a.md: "", b.md: "X"}` and the single file
+    // `{a.md: "\0b.md\0X"}` also produced the identical unframed stream. Length
+    // framing separates them because the byte counts differ.
+    const left = await mkdtemp(join(tmpdir(), 'oat-hash-left-'));
+    const right = await mkdtemp(join(tmpdir(), 'oat-hash-right-'));
+    tempDirs.push(left, right);
+
+    await writeFile(join(left, 'a.md'), '', 'utf8');
+    await writeFile(join(left, 'b.md'), 'X', 'utf8');
+    await writeFile(join(right, 'a.md'), '\0b.md\0X', 'utf8');
+
+    expect(await computeDirectoryHash(left)).not.toBe(
+      await computeDirectoryHash(right),
+    );
+  });
+
+  it('agrees with the framed digest computed by computeDirectoryDigests', async () => {
+    // `computeDirectoryHash` streams and `computeDirectoryDigests` captures, so
+    // the two implementations must be pinned against each other.
+    const dir = await mkdtemp(join(tmpdir(), 'oat-hash-agree-'));
+    tempDirs.push(dir);
+    await mkdir(join(dir, 'references'), { recursive: true });
+    await writeFile(join(dir, 'SKILL.md'), '# skill\n', 'utf8');
+    await writeFile(join(dir, 'references', 'notes.md'), '# notes\n', 'utf8');
+    await writeFile(join(dir, 'z'), '', 'utf8');
+
+    const { framed } = await computeDirectoryDigests(dir);
+
+    expect(await computeDirectoryHash(dir)).toBe(framed);
+  });
+
+  it('never produces a framed digest equal to a legacy digest', async () => {
+    // Domain separation: the framed stream opens with a NUL byte and a legacy
+    // stream opens with a relative path, which cannot contain NUL. Without it
+    // the two encodings share a value space, and a recorded `contentHash`
+    // carries no version to tell them apart.
+    const dir = await mkdtemp(join(tmpdir(), 'oat-hash-domain-'));
+    tempDirs.push(dir);
+    await writeFile(join(dir, '8'), 'SKILL.md26\0# evil\n', 'utf8');
+    await writeFile(join(dir, 'SKILL.md'), '# skill\n', 'utf8');
+
+    const forged = await mkdtemp(join(tmpdir(), 'oat-hash-domain-forged-'));
+    tempDirs.push(forged);
+    await writeFile(
+      join(forged, 'SKILL.md'),
+      '# evil\n\0SKILL.md\0# skill\n\0',
+      'utf8',
+    );
+
+    const { legacy } = await computeDirectoryDigests(dir);
+
+    expect(await computeDirectoryHash(forged)).not.toBe(legacy);
+  });
+
+  it('reads each file exactly once so both digests describe one captured tree', async () => {
+    // Two separate traversals would let the tree change between them, and the
+    // pre-framing bridge in `drift/detector.ts` would then be able to pair a
+    // `framed` digest taken from one canonical state with a `legacy` digest
+    // taken from another — accepting a provider view the pre-framing detector
+    // rejected. Both digests must be folded from one captured file set.
+    const dir = await mkdtemp(join(tmpdir(), 'oat-hash-capture-'));
+    tempDirs.push(dir);
+    await mkdir(join(dir, 'references'), { recursive: true });
+    await writeFile(join(dir, 'SKILL.md'), '# skill\n', 'utf8');
+    await writeFile(join(dir, 'references', 'notes.md'), '# notes\n', 'utf8');
+
+    fsProbe.readFileCalls.length = 0;
+    await computeDirectoryDigests(dir);
+    const reads = fsProbe.readFileCalls.filter((path) => path.startsWith(dir));
+
+    expect(reads).toHaveLength(2);
+    expect(new Set(reads).size).toBe(2);
   });
 
   it('throws CliError when directory does not exist', async () => {
