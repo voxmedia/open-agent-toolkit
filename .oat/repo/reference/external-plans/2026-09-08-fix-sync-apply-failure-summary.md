@@ -547,6 +547,8 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
+**Correction applied 2026-09-09 (wave-7 p14 execution; no requirement change):** (1) Step 4 / Done criterion 4's exit-code negative control is unsatisfiable as written — `process.exitCode = summary.failed > 0 ? 1 : 0` sits at `apply.ts:557`, outside the reordered chain, and already exits 1 pre-fix (this plan's own `## Current state` says so); the exit-code assertion is a preserved invariant, proven able to fail by neutralizing `:557` (`expected +0 to be 1`), not a clause the reorder flips. (2) Step 4's second neutralization (dropping the `failed === 0` conjunct) leaves the suite green post-fix, because the failure arm now wins before the `restampOnly` ternary is evaluated — the conjunct is retained defense-in-depth; a `--scope all` assertion (see 3) is the control that would catch its removal. (3) The `## Current state` claim that `EMPTY_PLAN_SUFFIX` is never emitted into the plan body on a failing path is single-scope reasoning and false for `oat sync --scope all`: `formatCoreResults` runs per scope while `restampOnly` is a whole-run value, so a sibling empty scope still prints `No changes required.` in its plan body (base: two occurrences and no warning; head: one occurrence plus the partial-failures warning — strictly better, not a regression). Fixing that body suffix means editing symbols this plan declares out of scope (a STOP), so it is a follow-up filed at closeout together with the `--scope all` pin. (4) The lane extended the existing `:1387` case rather than adding a new one.
+
 Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;

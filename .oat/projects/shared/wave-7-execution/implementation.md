@@ -582,6 +582,22 @@ _Recorded when the configured implementation exit gate runs._
 
 **p10 row → `passed`** (reviewed head `88fbc8786`); group 4 is clear for fan-in.
 
+## Review Received: p14 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p14-review-2026-09-09T045928Z.md (reviewed head `18ea51bb339a05136353a9855efb628dd11bfb01`, manual, opus)
+**Findings:** Critical 0 · Important 1 · Medium 2 · Minor 1 — PASS with findings (every finding is plan-artifact alignment or a deferred follow-up; no defect in the diff). Verified: the five summary equivalence classes (exactly one changes, `info` → `warn`, strictly stronger; the exit expression byte-identical); both plan-contradicting controls reproduced and the substitute control load-bearing; the three protected cases byte-identical and green; the built-CLI base-vs-head probe (`No changes required.` → `Sync completed with partial failures.`, exit 1 both); scope exact; gates forced `Cached: 0`.
+
+**Dispositions:**
+
+- I1 — a failing `sync --scope all` still prints `No changes required.` in a sibling empty scope's plan body (the plan's reachability claim is single-scope and false; head is strictly better than base): **fixed** (root, plan write) — a dated correction entry records the false claim, and the body-suffix fix plus a `--scope all` pin are **deferred** to a follow-up item filed at closeout (editing those symbols is this plan's STOP).
+- M1 — Step 4 / Done criterion 4's exit-code control is unsatisfiable as written: **fixed** (root, same correction entry).
+- M2 — the preserved `failed === 0` conjunct has no test that can fail if deleted: **deferred** — the `--scope all` assertion joins the follow-up item; no code change in this lane (the conjunct is defense-in-depth by construction).
+- m1 — the lane's report said "new case" where it extended the existing `:1387` case: **fixed** — recorded here (the reviewer's description stands).
+- Verification of the plan writes: `grep -c 'Correction applied 2026-09-09 (wave-7 p14' <plan>` = 1; corpus contract green.
+
+**p14 row → `passed`** (reviewed head `18ea51bb3`); p14 is clear for the group-5 fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -663,6 +679,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p14-impl-001` outcome: DONE_WITH_CONCERNS (plan text only), one commit `18ea51bb339a05136353a9855efb628dd11bfb01` (two files): the failure arm wins before the `restampOnly` ternary, so a rejected apply prints `Sync completed with partial failures.` instead of `No changes required.` (exit 1 unchanged); a pure reorder plus one comment. Codex: no findings; equivalence-class analysis confirmed (exactly one class changes its sentence). Two plan controls do not reproduce for reasons the plan itself states (the exit code lives outside the chain; the conjunct is unreachable post-fix) — a substitute control neutralizing `:557` goes red. Gates `Cached: 0`. Friction: `seq` shadowed in this shell.
 - `w7-p14-review-001` — reviewer, target opus, six rulings (state-class weaker-anywhere; the two plan-contradicting controls and the substitute; the three protected cases; a built-CLI base-vs-head probe; scope; a `--json` / post-apply-failure probe). Record `dispatch/w7-p14-review-001.json`.
 - `w7-p15-impl-001` outcome: BLOCKED at the pre-commit review gate (no commit; all nine steps implemented and green, preserved uncommitted). Codex reproduced, and the lane confirmed at the unit and on the built CLI, that the verbatim-moved `computeManagedDirectoryCopyHash` accepts a symlinked sentinel and a symlinked provider root, so the detector and planner newly accept what they rejected — the plan's own weaker-anywhere STOP. Decision (root, dated refresh): harden the shared helper (`lstat` root; validate the sentinel `Dirent` before the pathname skip; no symlink following), accept that `classifyObsoleteMappingRetirement` turns `detach` for those shapes, pin all four shapes on every consumer; the lane resumes on its staged work.
+- `w7-p14-review-001` outcome: PASS with findings, 0/1I/2M/1m — all plan-artifact or deferred (a multi-scope body suffix the plan's out-of-scope rule forbids fixing here; the unsatisfiable exit-code control; the conjunct's missing pin); plan correction entry applied; p14 `passed`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
 #### Group 1 fan-in (2026-09-09)
@@ -710,6 +727,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - Group 3 fan-in: merges `7c5a6aa01`, `17d271b23`, `95ad10827`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7187). Group 4 (p10 + p11 + p12) bootstraps next.
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
+- p14 review received (PASS with findings, 0/1I/2M/1m — artifact alignment; plan correction entry applied); p14 row `passed`.
 - p10 review received (PASS with findings, 0/1I/0/5m): `BL-260909-repair-the-bare-fences-that` filed; p10 row `passed`; group 4 fan-in starts.
 - p11 review received (PASS with findings, 0/0/0/4m — plan correction entry applied); p11 row `passed`.
 - p12 review received (PASS with findings, 0/0/0/3m — all deferred); p12 row `passed`.
