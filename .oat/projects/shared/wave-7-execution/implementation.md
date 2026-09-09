@@ -591,6 +591,8 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p07-review-002` outcome: PASS (fan-in may proceed), 0/0/0/1m; the completeness fix verified by the reviewer's own probes; the one new Minor (a leading-space evasion) taken as a root address-now at the fan-in.
 - `w7-p09-review-001` outcome: PASS with findings, 0/1I/1M/2m (16-scenario base-vs-head differential clean; the lane's "inert on macOS" diagnosis disproved by instrumentation; unpinned root-relative clauses). I1/M1/m1 → fix round `w7-p09-fix-001`; m2 wave close.
 - `w7-p09-fix-001` — bounded fix round on the resumed implementer (comment correction with counts; a root-symlink pin; the docs clause). Record `dispatch/w7-p09-fix-001.json`.
+- `w7-p09-fix-001` outcome: one append-only commit `99675387b1d651e9e6fb71231df26864a573e7d9` (test file + docs page; no production code): the lane instrumented the simulation itself (old anchor 3 firings, new anchor 3, no injection 0), retracted its "inert on macOS" diagnosis, and rewrote the comment; a root/parent-symlink case pins the two root-relative clauses (red as `resolves to ""` / `".."` when deleted); the docs sentence names the on-disk-spelling half. Focused 95; forced cli test `Cached: 0`; `generate-index` no diff. Header shortened to 99 chars for commitlint.
+- `w7-p09-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w7-p09-review-002.json`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
 #### Group 1 fan-in (2026-09-09)
