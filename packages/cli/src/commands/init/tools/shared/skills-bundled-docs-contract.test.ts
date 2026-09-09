@@ -224,11 +224,12 @@ function opensHtmlBlock(line: string): boolean {
   );
 }
 
-// Hidden runs are blanked with form feeds rather than spaces. A form feed is
-// whitespace, so an indented continuation line still reads as one, but it is
-// neither a space nor a tab, so a link definition or a source declaration can
-// never be recognised at a column that exists only because something was
-// blanked away.
+// Hidden runs are blanked with form feeds rather than spaces, purely to keep
+// columns honest: a form feed is neither a space nor a tab, so a link
+// definition or a source declaration can never be recognised at a column that
+// exists only because something was blanked away. Nothing infers hidden-ness
+// from this character — `RenderedLine.hidden` carries that out of band, so an
+// author-written form feed stays ordinary text.
 const HIDDEN_FILL = '\f';
 
 const SHORT_SHA_VIOLATION =
@@ -259,6 +260,11 @@ const EMPTY_WAVE_TABLE_VIOLATION =
   '## Wave Table must record at least one plan';
 const MISSING_SOURCE_BACKLINK_VIOLATION =
   '## Source and live evidence must link the plan back to its source item, or record it as none';
+// Reported alongside the backlink violation so the fail-closed edge of
+// destination decoding explains itself the first time an author meets it,
+// rather than reading as a missing link.
+const UNRESOLVED_DESTINATION_VIOLATION =
+  'a source link destination leaves a percent escape unresolved: only unreserved escapes decode, so spell the character literally';
 const MALFORMED_CREATED_VIOLATION =
   'created must be an ISO YYYY-MM-DD date or timestamp';
 
@@ -445,9 +451,10 @@ function linkDefinitions(section: string): Map<string, string> {
   // cannot resolve through text that renders nothing, and neither scan can
   // resolve the three block constructs in a different order from the other.
   // The first definition is the one Markdown resolves against.
-  for (const match of withoutInlineCode(renderableBlockLines(section)).matchAll(
-    LINK_DEFINITION,
-  )) {
+  const rendered = renderableBlockLines(section)
+    .map((line) => line.text)
+    .join('\n');
+  for (const match of withoutInlineCode(rendered).matchAll(LINK_DEFINITION)) {
     const name = normalizeReferenceLabel(match[1] as string);
     if (!definitions.has(name)) definitions.set(name, match[2] as string);
   }
@@ -521,9 +528,12 @@ function namedSources(declaration: string): NamedSource[] {
 }
 
 // The numeric character references and the five named entities Markdown
-// resolves in link text.
+// resolves in link text. The digit counts are CommonMark's: a decimal
+// reference is 1-7 digits and a hexadecimal one 1-6, and anything longer is
+// literal text. Without those bounds `&#0000000045;` would be read as `-`
+// while every reader sees it spelled out.
 const CHARACTER_REFERENCE_SOURCE =
-  '&(?:#(\\d+)|#[xX]([0-9a-fA-F]+)|(amp|lt|gt|quot|apos));';
+  '&(?:#(\\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|(amp|lt|gt|quot|apos));';
 const CHARACTER_REFERENCE = new RegExp(CHARACTER_REFERENCE_SOURCE, 'g');
 const RESIDUAL_CHARACTER_REFERENCE = new RegExp(CHARACTER_REFERENCE_SOURCE);
 const NAMED_ENTITY_CHARACTER: Record<string, string> = {
@@ -636,6 +646,21 @@ function identifiesSource(link: DeclarationLink, named: NamedSource): boolean {
  * link's label or destination has to identify the source the declaration
  * names. Several links pass if any one of them identifies it.
  */
+/**
+ * Did a declaration link at a destination whose escapes do not resolve? Only
+ * unreserved escapes decode, so a reserved delimiter or a `%25` left standing
+ * makes the destination unreadable rather than merely unmatched — worth saying
+ * out loud, because otherwise it surfaces only as a missing backlink.
+ */
+function hasUnresolvedDestination(
+  declaration: string,
+  section: string,
+): boolean {
+  return declarationLinks(declaration, section).some(
+    (link) => decodeDestination(link.destination) === null,
+  );
+}
+
 function linksToItsSource(declaration: string, section: string): boolean {
   if (recordsNoSource(declaration)) return true;
 
@@ -661,13 +686,29 @@ function linksToItsSource(declaration: string, section: string): boolean {
  * Two helpers can always be reordered again; three constructs resolved
  * together in document order cannot.
  */
-function renderableBlockLines(section: string): string {
-  const kept: string[] = [];
+interface RenderedLine {
+  /**
+   * The line as it renders. Hidden runs are blanked in place so that every
+   * surviving character keeps the column it was written in.
+   */
+  text: string;
+  /**
+   * Whether the whole line was hidden. This travels beside the text rather
+   * than inside it: keying off the fill character would make an
+   * author-written form feed indistinguishable from something the scanner
+   * blanked away, and the two must never be confused.
+   */
+  hidden: boolean;
+}
+
+function renderableBlockLines(section: string): RenderedLine[] {
+  const kept: RenderedLine[] = [];
   let inComment = false;
   let fence: string | undefined;
   let inHtmlBlock = false;
 
   for (const raw of section.split('\n')) {
+    const startedInComment = inComment;
     // An open comment owns its lines: that is what stops a fence marker which
     // exists only inside a comment from ever being read as a fence, and it is
     // the whole defect this scanner replaces. Everywhere else the fence
@@ -699,15 +740,18 @@ function renderableBlockLines(section: string): string {
     // rest of the input, matching `HTML_COMMENT`'s own `(?:-->|$)`.
     let index = 0;
     let visible = '';
+    let hiddenCount = 0;
 
     while (index < raw.length) {
       if (inComment) {
         const close = raw.indexOf('-->', index);
         if (close === -1) {
           visible += HIDDEN_FILL.repeat(raw.length - index);
+          hiddenCount += raw.length - index;
           break;
         }
         visible += HIDDEN_FILL.repeat(close + 3 - index);
+        hiddenCount += close + 3 - index;
         index = close + 3;
         inComment = false;
         continue;
@@ -718,16 +762,24 @@ function renderableBlockLines(section: string): string {
         break;
       }
       visible += `${raw.slice(index, open)}${HIDDEN_FILL.repeat(4)}`;
+      hiddenCount += 4;
       index = open + 4;
       inComment = true;
     }
+
+    // The line rendered nothing of its own: every character it had was hidden,
+    // or it was an empty line inside a comment. Only the scanner can know
+    // this, which is why it is recorded here rather than inferred later from
+    // the text.
+    const hidden =
+      hiddenCount === raw.length && (hiddenCount > 0 || startedInComment);
 
     if (inHtmlBlock) {
       // CommonMark ends an HTML block at the next blank line, which is not
       // part of the block; keeping it preserves the paragraph break.
       if (visible.trim() !== '') continue;
       inHtmlBlock = false;
-      kept.push(visible);
+      kept.push({ text: visible, hidden });
       continue;
     }
 
@@ -738,10 +790,10 @@ function renderableBlockLines(section: string): string {
       continue;
     }
 
-    kept.push(visible);
+    kept.push({ text: visible, hidden });
   }
 
-  return kept.join('\n');
+  return kept;
 }
 
 /**
@@ -755,20 +807,20 @@ function sourceDeclarations(section: string): string[] {
   // A bullet inside a fence, an HTML comment, or a raw HTML block renders
   // nothing, so it declares nothing either. Code spans stay: a backticked
   // value is the declaration's own content, not a link.
-  const lines = renderableBlockLines(section).split('\n');
+  const lines = renderableBlockLines(section);
   const declarations: string[] = [];
 
   for (const [index, line] of lines.entries()) {
-    if (!SOURCE_DECLARATION_LABEL.test(line)) continue;
-    const declaration = [line];
+    if (!SOURCE_DECLARATION_LABEL.test(line.text)) continue;
+    const declaration = [line.text];
     for (const next of lines.slice(index + 1)) {
-      // A line that was nothing but an HTML comment is transparent here: it
-      // renders no break between a declaration and its continuation, so it
-      // must not detach one. A genuinely blank line still ends the
-      // declaration, exactly as an unhidden document's would.
-      if (next !== '' && [...next].every((c) => c === HIDDEN_FILL)) continue;
-      if (!/^\s+\S/.test(next)) break;
-      declaration.push(next);
+      // A line that rendered nothing but an HTML comment is transparent here:
+      // it renders no break between a declaration and its continuation, so it
+      // must not detach one. A genuinely blank line, or a line an author
+      // simply wrote as whitespace, still ends the declaration.
+      if (next.hidden) continue;
+      if (!/^\s+\S/.test(next.text)) break;
+      declaration.push(next.text);
     }
     declarations.push(declaration.join('\n'));
   }
@@ -1242,6 +1294,13 @@ function evaluateExternalPlan(text: string): PlanReadiness {
     )
   ) {
     violations.push(MISSING_SOURCE_BACKLINK_VIOLATION);
+    if (
+      declarations.some((declaration) =>
+        hasUnresolvedDestination(declaration, sourceEvidence ?? ''),
+      )
+    ) {
+      violations.push(UNRESOLVED_DESTINATION_VIOLATION);
+    }
   }
 
   const dependencies = planSection(text, 'Dependencies');
@@ -3508,6 +3567,53 @@ describe('skills bundled docs contract', () => {
         buildProspectivePlan({ sourceEvidence: blankBreaksContinuation }),
       ).violations,
     ).toEqual([MISSING_SOURCE_BACKLINK_VIOLATION]);
+
+    // 11. Enumerated widening (d), pinned on its minimal witness: a whole-line
+    // comment renders no break, so the continuation below it stays attached
+    // and its link satisfies the backlink rule. The base collapsed that
+    // comment to a whitespace-only line, which broke its continuation scan.
+    const commentBetweenDeclarationAndContinuation = [
+      '- Source backlog item: BL-123',
+      '<!-- c -->',
+      '  [x](../../pjm/backlog/items/BL-123.md)',
+    ].join('\n');
+
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({
+          sourceEvidence: commentBetweenDeclarationAndContinuation,
+        }),
+      ).violations,
+    ).toEqual([]);
+
+    // ... and the same document with the comment line simply deleted, which
+    // is what makes (d) rendered-text equivalent: it is accepted here and was
+    // accepted before this contract changed at all.
+    const withoutTheCommentLine = [
+      '- Source backlog item: BL-123',
+      '  [x](../../pjm/backlog/items/BL-123.md)',
+    ].join('\n');
+
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({ sourceEvidence: withoutTheCommentLine }),
+      ).violations,
+    ).toEqual([]);
+
+    // 12. Hidden-ness is the scanner's own record, not a character anyone can
+    // type: a form feed an author wrote is ordinary text and still detaches a
+    // continuation, exactly as any other whitespace-only line would.
+    const authorWrittenFormFeed = [
+      '- Source backlog item: BL-123',
+      '\f',
+      '  [x](../../pjm/backlog/items/BL-123.md)',
+    ].join('\n');
+
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({ sourceEvidence: authorWrittenFormFeed }),
+      ).violations,
+    ).toEqual([MISSING_SOURCE_BACKLINK_VIOLATION]);
   });
 
   // Group C. Link text is decoded once before matching, so an encoding can
@@ -3609,6 +3715,55 @@ describe('skills bundled docs contract', () => {
 
     expect(linksToItsSource(referenceLabel, referenceLabel)).toBe(true);
     expect(linksToItsSource(literalLabel, literalLabel)).toBe(true);
+
+    // A character reference is only a reference at CommonMark's lengths: up to
+    // seven decimal digits and six hexadecimal ones. A longer spelling renders
+    // literally, so reading it as a character would match text no reader sees.
+    const bounded: [string, string, boolean][] = [
+      ['decimal in range', '&#45;', true],
+      ['decimal at the bound', '&#0000045;', true],
+      ['decimal over the bound', '&#0000000045;', false],
+      ['hexadecimal in range', '&#x2D;', true],
+      ['hexadecimal at the bound', '&#x00002D;', true],
+      ['hexadecimal over the bound', '&#x0000002D;', false],
+    ];
+
+    for (const [name, reference, expected] of bounded) {
+      const inLabel = `- Source backlog item: BL-123 — [BL${reference}123](https://example.com/unrelated)`;
+      const inDestination = `- Source backlog item: BL-123 — [x](../../pjm/backlog/items/BL${reference}123.md)`;
+
+      expect(linksToItsSource(inLabel, inLabel), `${name} in a label`).toBe(
+        expected,
+      );
+      expect(
+        linksToItsSource(inDestination, inDestination),
+        `${name} in a destination`,
+      ).toBe(expected);
+    }
+
+    // The fail-closed edge of destination decoding says why it closed, rather
+    // than leaving an author to read a missing-backlink violation and guess.
+    const unresolvedDestination =
+      '- Source backlog item: BL-123 — [x](../../pjm/backlog/items/BL%2F123.md)';
+
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({ sourceEvidence: unresolvedDestination }),
+      ).violations,
+    ).toEqual([
+      MISSING_SOURCE_BACKLINK_VIOLATION,
+      UNRESOLVED_DESTINATION_VIOLATION,
+    ]);
+
+    // ... and a plain missing backlink still reports only itself.
+    expect(
+      evaluateExternalPlan(
+        buildProspectivePlan({
+          sourceEvidence:
+            '- Source backlog item: BL-123 — [x](https://example.com/unrelated)',
+        }),
+      ).violations,
+    ).toEqual([MISSING_SOURCE_BACKLINK_VIOLATION]);
   });
 
   it('plan provenance pins the full inspected HEAD SHA and a separate comparison SHA', () => {
