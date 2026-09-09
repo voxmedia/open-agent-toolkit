@@ -160,3 +160,20 @@ about), and two Minors small enough for root address-nows. **Skill signal
 (strengthens):** requiring "found and fixed" claims to come with counts is
 paying off — p09's false diagnosis would otherwise have entered the retro as
 a lesson.
+
+### 2026-09-09 · structural · oat-wave-execute · group 4 fan-in
+
+Three lanes merged in plan order (`13705dcdc`, `bb082e505`, `0f1711d88`;
+three lane commits patch-id-identical after rebase), lockstep retained at
+0.2.67, eleven gates exit 0 with `Cached: 0` (cli 7209), config integrity
+clean. Two frictions: (1) commitlint rejected the p10 merge commit because the
+fan-in script put the plan's 105-char title on one body line — the merge was
+completed with a folded body and the script now folds titles; (2) the gate
+run had been launched in the same shell line as the merge and started on the
+staged-but-uncommitted tree — killed before any gate completed, re-run on the
+committed tip. **Skill signal (gap):** the merge choreography rule ("compound
+the guard and the merge in one invocation") should also say "never chain the
+integration gates behind the merge in the same invocation; start them only
+after `git status` is clean and `MERGE_HEAD` is gone." One root-filed
+follow-up (`BL-260909-repair-the-bare-fences-that`) and three dated plan
+corrections this group.

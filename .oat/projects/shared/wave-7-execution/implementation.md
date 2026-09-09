@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-09
-oat_current_task_id: p10-t01
+oat_current_task_id: p13-t01
 oat_generated: false
 ---
 
@@ -35,10 +35,10 @@ oat_generated: false
 | Phase 7  | complete    | 1     | 1/1       |
 | Phase 8  | complete    | 1     | 1/1       |
 | Phase 9  | complete    | 1     | 1/1       |
-| Phase 10 | in_progress | 1     | 0/1       |
-| Phase 11 | pending     | 1     | 0/1       |
-| Phase 12 | pending     | 1     | 0/1       |
-| Phase 13 | pending     | 1     | 0/1       |
+| Phase 10 | complete    | 1     | 1/1       |
+| Phase 11 | complete    | 1     | 1/1       |
+| Phase 12 | complete    | 1     | 1/1       |
+| Phase 13 | in_progress | 1     | 0/1       |
 | Phase 14 | pending     | 1     | 0/1       |
 | Phase 15 | pending     | 1     | 0/1       |
 | Phase 16 | pending     | 1     | 0/1       |
@@ -47,7 +47,7 @@ oat_generated: false
 | Phase 19 | pending     | 1     | 0/1       |
 | Phase 20 | pending     | 1     | 0/1       |
 
-**Total:** 9/20 tasks completed
+**Total:** 12/20 tasks completed
 
 ---
 
@@ -161,39 +161,39 @@ oat_generated: false
 
 ## Phase 10: repair stray fences in lifecycle skills (p10)
 
-**Status:** pending · **Group:** 4 · **Tasks:** p10-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 4 · **Tasks:** p10-t01
+**Outcome:** the stray fences that hid normative prose in five skill assets (`oat-project-review-provide`, `oat-repo-knowledge-index`, `oat-repo-improve`'s plan template, `create-agnostic-skill`'s skill template, `oat-agent-instructions-apply`'s glob-scoped rule) are repaired with prose byte-identical apart from fence markers, five `metadata.version` bumps once each with six pins by literal, and the fence scanner in `named-skill-load-contract.test.ts` now walks 205 files recursively with an inventory floor, a new after-prose defect shape, and a `readdir` failure that propagates instead of scanning less.
+**Verification:** forced check/type-check/test `Cached: 0` (cli 7193); check:skill-bumps; lint; format; validate-skills; build; `test:smoke` 167; `test:skills` 883; nine controls red-then-green; one Codex round (1I fixed); root review PASS with findings (0/1I/0/5m; a 60,225-case differential fuzz on the scanner clean; prose immutability re-proven; the Important was the unfiled follow-up, filed by the root).
+**Deviations:** the Step 8 control-2 prediction (green under a non-recursive walk) does not reproduce — the Step 5 floor makes it red; oxfmt re-widened one repaired fence to four backticks (required by the format gate); the five bare-fence instances outside `.agents/skills` filed as `BL-260909-repair-the-bare-fences-that`.
 
 ### Task p10-t01: Execute external plan — Repair the stray fences that hide normative skill prose and widen the fence scanner across `.agents/skills`
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `88fbc8786` → integration `18d9187fb`
 
 ## Phase 11: close the docs index follow ups (p11)
 
-**Status:** pending · **Group:** 4 · **Tasks:** p11-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 4 · **Tasks:** p11-t01
+**Outcome:** the wave-1 docs-index follow-ups are closed: `oat docs init` prints a `Docs source index` bullet for both frameworks, the index-generate hop-cap refusal is role-aware (a derived docs-dir chain exits 2 naming the operator-facing path), an empty manifest prints a distinct observational line naming the active exclusion count and patterns, and `DEFAULT_SHARED_CONFIG.documentation` carries `excludes` and `instructionPointerExcludes` defaults so `config dump` reports them (nothing else changes).
+**Verification:** focused 139; forced check/type-check/cli test `Cached: 0` (387 files / 7196); check:skill-bumps; lint; format; validate-skills; build; ten cases red-then-green; the config STOP bounded with pre/post builds; two Codex rounds (R1 2I fixed — the docs overpromised the hop cap for real chains, the empty-manifest line blamed the exclusions; R2 SHIP); root review PASS with findings (0/0/0/4m; an 8-role hop-cap probe at base and head; a two-build config diff; four adversarial probes).
+**Deviations:** the MkDocs bullet relabeled too (accepted within the Outcome); three stale plan clauses corrected by a dated entry (the pre-fix prediction, the causal wording, the refusal text for real chains).
 
 ### Task p11-t01: Execute external plan — Close the docs-index follow-ups from the wave-1 reviews
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `0b5c3307e` → integration `6e3345bbb`
 
 ## Phase 12: persist native skill adoption in status (p12)
 
-**Status:** pending · **Group:** 4 · **Tasks:** p12-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 4 · **Tasks:** p12-t01
+**Outcome:** `oat status` persists and restamps the sync manifest after a native-skill adoption (both the first adopt and a confirmed `replaceCanonical` retry set `manifestChanged`; a native adopt adds no row; `keep` never writes), the checklist-abort harness now really aborts, and the `adopt-stray` neutrality case is pinned on a non-empty manifest.
+**Verification:** forced check/type-check/cli test `Cached: 0` (387 files / 7194); check:skill-bumps; lint; format; validate-skills; three controls both ways; two Codex rounds (R1 2I/1M/1m — one Important partially accepted with the rename-is-irreversible argument, the rest fixed; R2 confirmed); root review PASS with findings (0/0/0/3m; a real pty adopt on a v1 manifest; three `continue` branches probed).
+**Deviations:** none against the plan; the plan's `lastUpdated is set` wording is a carry-through, not a refresh (wave-close note); the `createManifest` helper corrected to schema-valid v2.
 
 ### Task p12-t01: Execute external plan — Make `oat status` persist and pin its native-skill adoption outcome
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `e503bf025` → integration `c32adbb90`
 
 ## Phase 13: tighten the skill version validators (p13)
 
@@ -686,6 +686,14 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - No lane closed or renamed a backlog item in this group.
 - Worktrees `.worktrees/wave-7/p0{7,8,9}` and branches `wave-7/p0{7,8,9}` removed after the merge.
 
+#### Group 4 fan-in (2026-09-09)
+
+- `wave-7/p10`, `wave-7/p11`, `wave-7/p12` rebased onto the integration tip and merged in plan order with `git merge --no-ff` as `13705dcdc`, `bb082e505`, `0f1711d88`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `88fbc8786`→`18d9187fb`, `0b5c3307e`→`6e3345bbb`, `e503bf025`→`c32adbb90`. The p10 merge commit's first attempt was rejected by commitlint (the plan title exceeded the 100-char body-line limit); the merge was completed with a folded body and the fan-in script now folds titles. A gate run that had started on the staged-but-uncommitted tree was killed before any gate completed and re-run on the committed tip.
+- Lockstep retained at 0.2.67 (`origin/main` still 0.2.66 at `684bd3be3`).
+- Integration gates (sequential, exit codes captured, before any bookkeeping edit): `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached; cli 387 files / 7209 tests), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke` 0 (the `cursor-broker` flake did not recur), `pnpm test:skills` 0, root `pnpm test` 0. Config-integrity check: no tracked `.oat/config.json` key missing versus `origin/main`.
+- Backlog: `BL-260909-repair-the-bare-fences-that` filed at the p10 receive (index regenerated there); no lane closed or renamed an item.
+- Worktrees `.worktrees/wave-7/p1{0,1,2}` and branches `wave-7/p1{0,1,2}` removed after the merge.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -694,6 +702,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- Group 4 fan-in: merges `13705dcdc`, `bb082e505`, `0f1711d88` (the p10 merge body folded for commitlint); lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7209). Group 5 (p13 + p14 + p15) bootstraps next.
 - Group 3 fan-in: merges `7c5a6aa01`, `17d271b23`, `95ad10827`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7187). Group 4 (p10 + p11 + p12) bootstraps next.
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
@@ -725,17 +734,20 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact         | Planned / Documented                                                      | Actual / Accepted                                                                                                                                                                                                                     |
-| ------------- | ----------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| (none yet)    | -                       | -                                                                         | -                                                                                                                                                                                                                                     |
-| p01-t01       | plan step 5 / Test plan | raw guard restored → case 5 fails on all three invocation forms           | raw guard fails only the plain form; a one-sided canonicalization is the control for the two preserve-symlinks forms (dated correction entry in the plan)                                                                             |
-| p02-t01       | plan step 2             | delete the strict effective read; `envShadowed` from `resolveEnvOverride` | the probe kept; a targeted strict barrier reads the untargeted surfaces (and the targeted shared surface on the raw-write branch) before any write (dated post-STOP refresh)                                                          |
-| p03-t01       | plan step 2             | strip inline code spans on each remaining line                            | block-scoped CommonMark masking with container-aware fences, HTML blocks 1–7, fence lines as boundaries; `oxfmt`-derived invariant (dated refresh)                                                                                    |
-| p04-t01       | plan step 4             | fourth `ProjectLogAppendResult` variant `status: 'sealed'`                | thrown `ProjectLogSealedError` mapped at the command layer to `{"status":"sealed"}` + exit 1 (`gate/index.ts:3282` narrows `result.status`; out of scope); refusal conditional on key recognition (keyed replay → `already-appended`) |
-| p05-t01       | plan step 5             | expected classification from the inspected files                          | four unclassified sites on the `src`-wide sweep → dated refresh (A fixed, B–D guarded); site C's real cause `registry.ts:219`; the aggregate walker's global pollution and two more sites fixed with controls                         |
-| p06-t01       | plan test plan          | two hand-listed pack controls                                             | controls derived from `REQUIRED_BUNDLE_DIRECTORIES` (seven)                                                                                                                                                                           |
-| p08-t01       | plan test plan case 4   | extend the malformed-JSON case at `:117`                                  | no such case existed; the lane wrote the assertion (dated correction entry)                                                                                                                                                           |
-| p09-t01       | lane report             | simulation "inert on macOS"                                               | disproved by the review's instrumentation; comment corrected in the fix round                                                                                                                                                         |
+| Task / Review | Source Artifact               | Planned / Documented                                                                        | Actual / Accepted                                                                                                                                                                                                                     |
+| ------------- | ----------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| (none yet)    | -                             | -                                                                                           | -                                                                                                                                                                                                                                     |
+| p01-t01       | plan step 5 / Test plan       | raw guard restored → case 5 fails on all three invocation forms                             | raw guard fails only the plain form; a one-sided canonicalization is the control for the two preserve-symlinks forms (dated correction entry in the plan)                                                                             |
+| p02-t01       | plan step 2                   | delete the strict effective read; `envShadowed` from `resolveEnvOverride`                   | the probe kept; a targeted strict barrier reads the untargeted surfaces (and the targeted shared surface on the raw-write branch) before any write (dated post-STOP refresh)                                                          |
+| p03-t01       | plan step 2                   | strip inline code spans on each remaining line                                              | block-scoped CommonMark masking with container-aware fences, HTML blocks 1–7, fence lines as boundaries; `oxfmt`-derived invariant (dated refresh)                                                                                    |
+| p04-t01       | plan step 4                   | fourth `ProjectLogAppendResult` variant `status: 'sealed'`                                  | thrown `ProjectLogSealedError` mapped at the command layer to `{"status":"sealed"}` + exit 1 (`gate/index.ts:3282` narrows `result.status`; out of scope); refusal conditional on key recognition (keyed replay → `already-appended`) |
+| p05-t01       | plan step 5                   | expected classification from the inspected files                                            | four unclassified sites on the `src`-wide sweep → dated refresh (A fixed, B–D guarded); site C's real cause `registry.ts:219`; the aggregate walker's global pollution and two more sites fixed with controls                         |
+| p06-t01       | plan test plan                | two hand-listed pack controls                                                               | controls derived from `REQUIRED_BUNDLE_DIRECTORIES` (seven)                                                                                                                                                                           |
+| p08-t01       | plan test plan case 4         | extend the malformed-JSON case at `:117`                                                    | no such case existed; the lane wrote the assertion (dated correction entry)                                                                                                                                                           |
+| p09-t01       | lane report                   | simulation "inert on macOS"                                                                 | disproved by the review's instrumentation; comment corrected in the fix round                                                                                                                                                         |
+| p10-t01       | plan step 8 control 2         | a non-recursive walk leaves the suite green                                                 | red — the Step 5 inventory floor catches it (safe direction; plan correction)                                                                                                                                                         |
+| p11-t01       | plan steps 3 and 6, Test plan | causal empty-manifest wording; unqualified hop-cap refusal text; a pre-fix-green prediction | observational wording; the OS `ELOOP` path named; red pre-fix (dated correction entry)                                                                                                                                                |
+| p12-t01       | plan test plan                | `lastUpdated` is set                                                                        | `saveManifest` carries `lastUpdated` through and restamps `oatVersion`; presence/shape pinned                                                                                                                                         |
 
 ## Test Results
 
@@ -754,6 +766,10 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p08        | focused 421 + forced CLI suite (387 files / 7182)                                                 | all    | 0      | -        |
 | p09        | focused 94 + forced CLI suite                                                                     | all    | 0      | -        |
 | g3 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                           | all    | 0      | -        |
+| p10        | forced CLI suite (7193) + `test:skills` 883 + `test:smoke` 167                                    | all    | 0      | -        |
+| p11        | focused 139 + forced CLI suite (387 files / 7196)                                                 | all    | 0      | -        |
+| p12        | focused 85 + forced CLI suite (387 files / 7194)                                                  | all    | 0      | -        |
+| g4 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                           | all    | 0      | -        |
 
 ## Deferred Findings
 
