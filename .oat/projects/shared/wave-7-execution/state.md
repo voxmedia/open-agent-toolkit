@@ -38,18 +38,18 @@ oat_hill_checkpoints: ['implement'] # Configured: which phases require human-in-
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
 oat_post_implement_sequence:
-  status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  status: awaiting_approval # pre_approval | awaiting_approval | post_approval | failed | complete
   source: configured # configured | autonomous-default
   final_phase: p21
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending # pending | approved | not_required
   approval_source: null # null | user | oat-autonomous
   post_approval: []
   post_approval_completed: []
   failure: null
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
 #   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
@@ -118,17 +118,17 @@ oat_workflow_origin: native # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/286' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-08T22:26:20.092Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-09T15:11:22Z'
+oat_project_state_updated: '2026-09-09T15:12:26Z'
 oat_generated: false
 ---
 
 # Project State: wave-7-execution
 
-**Status:** Implementing — closeout: root final review passed on round 4 after a three-lane fix round and two bounded follow-ups; exit gate passed; post-implement sequence and the PR next
+**Status:** Implementing — closeout: root final review passed on round 4 after a three-lane fix round and two bounded follow-ups; PR #286 open; awaiting CI, Bugbot, and the merge
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-09
 
@@ -167,7 +167,8 @@ Implement — closeout. Nineteen lanes merged, p16 parked; synthesis, summary, a
 - ✓ Configured exit gate passed (0C/0I/0M/2m, `review_completed_gate_passed`) at `6a79099f0`
 - ✓ Post-implement `summary`: summary.md current through p21c-t01; project-log roll-up (3 structural entries → the rollup-owned `## Workflow Observations`), synthesis run; wave synthesis kept as its own section
 - ✓ Post-implement `document`: docs delta assessed — every capability this wave shipped carries its docs in-lane (eleven files under `apps/oat-docs/docs` and `.agents/docs`, incl. `cli-utilities/project-log.md`, `contributing/code.md`, `contributing/skills.md`, `workflows/skills/repo-improve.md`, `provider-sync/manifest-and-drift.md`); the generated docs index is unchanged by design; no residual delta
-- ☐ Post-implement `pr`: PR artifact + `gh pr create` to main
+- ✓ Post-implement `pr`: `pr/project-pr-2026-09-09.md` written; PR #286 open (https://github.com/voxmedia/open-agent-toolkit/pull/286); awaiting CI, Bugbot, and the merge
+- ☐ After merge: wave-close (program W7 → merged; p16 row deferred), completion tail (deferred to program close per the standing deferral, owner wave-7 close: run it for all seven wrappers)
 
 ## Blockers
 
