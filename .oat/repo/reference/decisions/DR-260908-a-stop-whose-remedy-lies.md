@@ -11,7 +11,7 @@ legacy_id: null
 
 ## Context
 
-The execution program's STOP semantics (DR-260713-bundle-stop-semantics-park, carried by oat-wave-execute) park a lane when a plan's STOP condition fires, and DR-260907-pre-dispatch-refreshes-live makes dated Refresh applied entries in the source plan the only sanctioned way to amend a plan's contract. Wave 6 p03 (preserve **proto**-named config keys) hit its plan's own STOP mid-lane: the prescribed parseTree + getNodeValue mechanism recursed where the old parser did not and a null-prototype value broke a String() coercion in oat-config.ts. The STOP's own text prescribed the remedy (a normalization layer), the remedy touched only files already in the plan's In scope, and parking would have carried a nearly finished lane to a later wave for a change the plan itself asked for.
+The execution program's STOP semantics (DR-260713-bundle-stop-semantics-park, carried by oat-wave-execute) park a lane when a plan's STOP condition fires, and DR-260907-pre-dispatch-refreshes-live makes dated Refresh applied entries in the source plan the only sanctioned way to amend a plan's contract. Wave 6 p03 (preserve `__proto__`-named config keys) hit its plan's own STOP mid-lane: the prescribed parseTree + getNodeValue mechanism recursed where the old parser did not and a null-prototype value broke a String() coercion in oat-config.ts. The STOP's own text prescribed the remedy (a normalization layer), the remedy touched only files already in the plan's In scope, and parking would have carried a nearly finished lane to a later wave for a change the plan itself asked for.
 
 ## Decision
 

@@ -1,6 +1,6 @@
 ---
 id: BL-260903-preserve-proto-named-config
-title: Preserve __proto__-named config keys through jsonc parsing
+title: Preserve `__proto__`-named config keys through jsonc parsing
 status: closed
 priority: low
 scope: task

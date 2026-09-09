@@ -1,6 +1,6 @@
 ---
 id: BL-260908-guard-normalized-config-maps
-title: Guard normalized config maps against a preserved __proto__ key
+title: Guard normalized config maps against a preserved `__proto__` key
 status: open
 priority: medium
 scope: task
