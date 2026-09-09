@@ -109,8 +109,9 @@ child accepted by the native route that later returns `BLOCKED` are not
 role-selection rejection and do not permit fallback.
 
 Project workflows construct and redact the complete dispatch payload before
-the native call, then persist its accepted or `blocked-before-start` result
-immediately under the active project's `dispatch/` directory. The generic
+the native call, then record its accepted or `blocked-before-start` result in
+the project's run record; persisting it under the project's `dispatch/`
+directory is optional and off by default. The generic
 record remains provider-neutral. OAT-specific canonical role, rejection,
 fallback, and runtime facts live only under its `oat` namespace. A qualifying
 fallback is a fresh request that preserves exact target and controls and is

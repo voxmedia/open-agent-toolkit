@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Bash, Glob, Grep, Task, AskUserQuestion
 metadata:
-  version: 1.1.4
+  version: 1.1.5
 ---
 
 # Remote Review Provide (Project-Scoped GitHub PR)
@@ -319,11 +319,12 @@ route. After acceptance, continue only through the existing reviewer handle;
 timeout, interruption, malformed output, or `BLOCKED` never authorizes a
 replacement launch.
 
-Persist native dispatch lineage around the host-owned remote-review launch.
-Construct and redact the complete generic record plus OAT role event before the
-native call. Immediately after the call returns `accepted` or
-`blocked-before-start`, run `oat project dispatch record --project
-"$PROJECT_PATH" --event-file - --json`. The rejected form must attest
+This rail writes no launch record. Its only launch evidence is the `Dispatch:`
+stamp it already copies into the posted review's dispatch audit metadata; it
+never writes `implementation.md` (the remote rail runs in an ephemeral worktree
+and forbids that mutation) and adds no request-id, launch-status, or outcome
+field anywhere. Construct and redact the complete generic record plus OAT role
+event before the native call. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A rejected launch must attest
 `provesNoChildStarted: true`; only it permits one exact-target approximation
 with a fresh request ID. Preserve exact model, effort, route, authority, and
 provider controls. Timeout, `BLOCKED`, refusal after acceptance, runtime

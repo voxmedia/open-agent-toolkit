@@ -812,16 +812,21 @@ printf 'artifact-read\\n'`,
     }
   });
 
-  it('requires local and remote review rails to persist native dispatch lineage', () => {
+  it('requires local and remote review rails to record the launch without a mandatory per-dispatch file', () => {
     for (const skill of [
       'oat-project-review-provide',
       'oat-project-review-provide-remote',
     ]) {
       const content = readRepoFile(`.agents/skills/${skill}/SKILL.md`);
-      expect(content, skill).toContain('native dispatch lineage');
-      expect(content, skill).toContain('oat project dispatch record');
+      expect(content, skill).toMatch(/writes no launch record/i);
       expect(content, skill).toMatch(
-        /immediately[^]{0,180}accepted[^]{0,160}blocked-before-start/i,
+        /(?:not|never)(?: in)?[^]{0,40}`implementation\.md`/i,
+      );
+      expect(content, skill).toMatch(
+        /oat project dispatch record[^]{0,160}optional and off by default/i,
+      );
+      expect(content, skill).not.toMatch(
+        /immediately after[^]{0,200}run `oat project dispatch record/i,
       );
       expect(content, skill).toMatch(
         /timeout[^]{0,160}`BLOCKED`[^]{0,180}(?:never|not)[^]{0,100}(?:fallback|replacement)/i,

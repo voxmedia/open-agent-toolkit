@@ -123,10 +123,12 @@ launch.
 ## Native Dispatch Lineage
 
 The launcher constructs and redacts the complete generic record plus the
-namespaced OAT role event before it calls the native host. Immediately after
-the host returns, the project adapter validates and persists the accepted or
-`blocked-before-start` state with `oat project dispatch record`. The command is
-a recorder only; it never launches a provider or changes selection authority.
+namespaced OAT role event before it calls the native host. When the host
+returns, the calling workflow writes the accepted or `blocked-before-start`
+state into its run record in `implementation.md`. Persisting a per-dispatch
+file with `oat project dispatch record` is optional and off by default; the
+command is a recorder only and never launches a provider or changes selection
+authority.
 
 An accepted handle owns the scope and closes replacement. One fresh fallback
 record is legal only when the native wrapper proves no child started, links the

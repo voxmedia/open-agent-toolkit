@@ -75,9 +75,12 @@ This layer maps to Dispatch Report V1 and its provenance record; see the
 [Dispatch Report V1 / producer provenance](dispatch-ceiling.md#dispatch-report-v1-and-producer-provenance)
 section.
 
-For project-aware work, OAT persists this native dispatch lineage as one
-generic record per request under the project's `dispatch/` directory. The
-generic snake-case fields remain authoritative. A namespaced `oat` block adds
+For project-aware work, the calling workflow records each launch in its run
+record in `implementation.md` (request ID, `Dispatch:` stamp, launch status,
+terminal outcome). Persisting one generic record per request under the
+project's `dispatch/` directory with `oat project dispatch record` is optional
+and off by default; no lifecycle skill or command consumes those files. When a
+host opts in, the generic snake-case fields remain authoritative. A namespaced `oat` block adds
 only canonical-role identity, proven pre-start rejection, fallback linkage,
 and optional runtime observation. `DispatchReportV1` and the parseable
 `Dispatch:` compatibility stamp keep their existing byte shape.

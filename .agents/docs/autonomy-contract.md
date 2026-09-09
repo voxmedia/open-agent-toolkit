@@ -82,7 +82,8 @@ artifact already owned by the calling workflow:
 
 - planning and artifact decisions: the relevant artifact plus its review row;
 - implementation and boundary decisions: `implementation.md`;
-- review and dispatch decisions: the dispatch record schema and the referenced
+- review and dispatch decisions: the run record in `implementation.md` (request
+  ID, `Dispatch:` stamp, launch status, terminal outcome) and the referenced
   review artifact;
 - gate execution: structured gate result, attempt count, and disposition;
 - documentation and completion decisions: `state.md` and the normal summary or

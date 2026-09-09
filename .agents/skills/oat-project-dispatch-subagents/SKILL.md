@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: false
 allowed-tools: Read, Bash
 metadata:
-  version: 1.1.5
+  version: 1.1.6
 ---
 
 # Dispatching OAT Project Subagents
@@ -152,12 +152,14 @@ For every lifecycle dispatch:
 9. Add lifecycle outcome metadata and let the calling workflow perform state,
    plan, implementation-log, commit, or review-table writes.
 
-### Persist native dispatch lineage
+### Record the launch
 
-For project-aware launches, apply the generic engine's native dispatch lineage
-contract. Construct and redact the complete generic record plus OAT event
-before the native host call. Immediately after the call returns accepted or
-`blocked-before-start`, persist the result with:
+For project-aware launches, construct and redact the complete generic record
+plus OAT event before the native host call. When the call returns accepted or
+`blocked-before-start`, the calling workflow writes the request ID, the
+`Dispatch:` stamp, the launch status, and later the terminal outcome into its
+run record in `implementation.md`. Writing a per-dispatch file with `oat project dispatch record` is optional and off by default: no lifecycle skill or command consumes those files, so do not write them unless the host has explicitly opted in. A host that has opted in persists the
+validated record with:
 
 ```bash
 oat project dispatch record \
@@ -166,7 +168,7 @@ oat project dispatch record \
   --json
 ```
 
-The accepted record closes replacement. A rejected record must include
+An accepted launch closes replacement. A rejected record must include
 `provesNoChildStarted: true` before one target-preserving canonical-instruction
 fallback may receive its own fresh request ID. Preserve exact provider, model,
 effort, reasoning mode, service tier, route, authority, payload controls,

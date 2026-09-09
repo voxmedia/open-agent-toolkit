@@ -73,9 +73,10 @@ The root does not implement phase tasks while an accepted phase launch owns
 that scope.
 
 Before a native launch, the root constructs and redacts the complete generic
-dispatch record and OAT role event. Immediately after the host returns, it runs
-`oat project dispatch record --project <project-path> --event-file - --json`
-with the accepted or `blocked-before-start` result. An accepted launch closes
+dispatch record and OAT role event. When the host returns, it writes the
+request ID, the `Dispatch:` stamp, and the accepted or `blocked-before-start`
+result into the run record in `implementation.md`; persisting a per-dispatch
+file with `oat project dispatch record` is optional and off by default. An accepted launch closes
 replacement. Only an explicit rejection proving no child started permits one
 fresh request that preserves the exact target and controls and is labeled as
 an approximation. Timeout, `BLOCKED`, refusal after acceptance, runtime
