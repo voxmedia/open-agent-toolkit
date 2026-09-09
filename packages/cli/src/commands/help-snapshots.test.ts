@@ -1594,11 +1594,12 @@ describe('help output snapshots', () => {
     expect(help).toMatchInlineSnapshot(`
       "Usage: oat internal validate-skill-version-bumps [options]
 
-      Validate that changed canonical skills bump version relative to a git base ref
+      Validate that changed canonical skills and agent roles bump version relative to
+      a git base ref
 
       Options:
         --base-ref <ref>  Git ref used as the comparison base for changed canonical
-                          skills
+                          skills and agent roles
         -h, --help        display help for command
 
       Global Options:

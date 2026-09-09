@@ -12,7 +12,7 @@ labels:
   - migration
 assignee: null
 created: 2026-09-08T11:15:21.665Z
-updated: 2026-09-08T21:35:00.000Z
+updated: 2026-09-08T23:45:00.000Z
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-tighten-the-skill-version-validators.md
@@ -58,18 +58,43 @@ first or scope the removal to skills. Confirm which before doing the removal.
 
 This item now covers step 1 only: the `skill-version-alias` warning becomes an error in the first validator-changing release after 0.2.65. Step 2 (removing the top-level read, the agent-role migration, the frontmatter-walk collapse, and the `.inf` key normalization) moved to `BL-260908-remove-the-top-level-skill`.
 
+## Step 1 implemented (2026-09-08)
+
+Step 1 is implemented and rides the wave-7 release; it is not released until
+that PR merges and the release ships, so step 2's one-release wait starts from
+the release, not from this note. Wave 7 is the first release after 0.2.65 that
+changes the validator: PR #273 took the lockstep from 0.2.65 to 0.2.66 without
+touching `packages/cli/src/validation/skills.ts`, so the schedule slot was
+still open. The bundled tree was verified clean immediately before the
+promotion — `oat internal validate-oat-skills` returned 65 skills and zero
+findings — so the promotion produces no finding on `.agents/skills`.
+
+This item stays `status: open`: step 2 is owned by
+`BL-260908-remove-the-top-level-skill` and lands one release later.
+
+Step 2 gained a dependency here. The same change gave canonical agent roles
+under `.agents/agents/*.md` their first enforcement surface: `check:skill-bumps`
+now diffs them and requires their version to move. Per
+`DR-260908-bundled-skills-declare` they deliberately still declare the
+**top-level** `version:`, and the gate accepts that shape rather than demanding
+`metadata.version`. Removing the resolver's top-level read would therefore
+break the gate this change created, so `BL-260908-remove-the-top-level-skill`
+must migrate the agent roles first or scope the removal to skills.
+
 ## Acceptance Criteria
 
-- Step 1 has landed: `skill-version-alias` is reported at `error` severity, in
-  the first release after 0.2.65 that changes the validator, with a test
-  covering the promoted severity.
-- Step 1 produced no findings on the bundled tree: `pnpm oat:validate-skills`
-  still exits 0 on `.agents/skills`.
-- Step 2 has landed one release after step 1 was quiet: the top-level branch is
-  gone from `resolveSkillVersion` and the alias finding is retired.
-- Before step 2, the agent roles under `.agents/agents` are either migrated to
-  `metadata.version` or the removal is explicitly scoped to skills, with the
-  choice recorded.
-- `tools/smoke/explainer-kit/check-core-version-parity.test.mjs` fixtures are
-  updated in the same change as any resolver precedence change, per
-  `DR-260908-bundled-skills-declare`.
+- [x] Step 1 has landed: `skill-version-alias` is reported at `error` severity, in
+      the first release after 0.2.65 that changes the validator, with a test
+      covering the promoted severity. Implemented in the wave-7 lane; the
+      release itself is the wave fan-in's to ship.
+- [x] Step 1 produced no findings on the bundled tree: `pnpm oat:validate-skills`
+      still exits 0 on `.agents/skills`.
+- [ ] Step 2 has landed one release after step 1 was quiet: the top-level branch is
+      gone from `resolveSkillVersion` and the alias finding is retired.
+- [ ] Before step 2, the agent roles under `.agents/agents` are either migrated to
+      `metadata.version` or the removal is explicitly scoped to skills, with the
+      choice recorded.
+- [ ] `tools/smoke/explainer-kit/check-core-version-parity.test.mjs` fixtures are
+      updated in the same change as any resolver precedence change, per
+      `DR-260908-bundled-skills-declare`. Step 1 changed a finding's severity,
+      not `resolveSkillVersion`'s precedence, so the fixtures stayed untouched.

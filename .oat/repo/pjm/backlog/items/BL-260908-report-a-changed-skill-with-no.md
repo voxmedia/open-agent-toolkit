@@ -11,7 +11,7 @@ labels:
   - wave-6-followup
 assignee: null
 created: 2026-09-08T05:08:00.374Z
-updated: 2026-09-08T21:35:00.000Z
+updated: 2026-09-08T23:45:00.000Z
 associated_issues: []
 external_plans:
   - .oat/repo/reference/external-plans/2026-09-08-tighten-the-skill-version-validators.md
@@ -23,6 +23,17 @@ After wave-6 p04, unusable and malformed version declarations block in both vali
 
 ## Acceptance Criteria
 
-- [ ] A changed skill with no frontmatter block yields a blocking `skill-frontmatter-unreadable` (or equivalent) finding from the bump validator and the structural validator
-- [ ] A skill whose frontmatter block is present but declares no resolvable version (for example a `metadata:` map with no `version` child, now that bundled skills are metadata-only) yields a blocking finding from both validators — the migrate-skill-versions Phase 2 review (2026-09-08) showed such an `oat-*` skill passes `oat:validate-skills` and `check:skill-bumps` today and is caught only by the corpus sweeps in `skills.test.ts`
-- [ ] A control proves the case was previously skipped and now fails `pnpm run check:skill-bumps`
+- [x] A changed skill with no frontmatter block yields a blocking `skill-frontmatter-unreadable` (or equivalent) finding from the bump validator and the structural validator — shipped as `skill-frontmatter-missing`
+- [x] A skill whose frontmatter block is present but declares no resolvable version (for example a `metadata:` map with no `version` child, now that bundled skills are metadata-only) yields a blocking finding from both validators — shipped as `skill-version-missing`
+- [x] A control proves the case was previously skipped and now fails `pnpm run check:skill-bumps`
+
+## Notes
+
+- 2026-09-08: the base side stays deliberately asymmetric. A _base_ with no
+  frontmatter block, or with none that declares a version, is reported through
+  the existing uncomparable-base shape, so the message says the base cannot be
+  compared rather than accusing the file the author just changed.
+- 2026-09-08: a brand-new file is still not reported. `baseContent === null`
+  means there is nothing to compare, which is pre-existing and deliberate; the
+  live control therefore removes the version from an already-tracked skill
+  rather than adding a versionless one.
