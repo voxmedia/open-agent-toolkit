@@ -1021,6 +1021,37 @@ describe('instructions utils', () => {
       expect(exclusions.warnings[0]).not.toContain('case-sensitive');
     });
 
+    it('names an absolute path for an entry resolving to the repository root or its parent', async () => {
+      const enclosingRoot = await createRepoRoot();
+      const repoRoot = join(enclosingRoot, 'repo');
+      await mkdir(repoRoot, { recursive: true });
+      await symlink(repoRoot, join(repoRoot, 'self'));
+      await symlink(enclosingRoot, join(repoRoot, 'up'));
+      await writeConfig(repoRoot, {
+        instructionPointerExcludes: ['self', 'up'],
+      });
+
+      const exclusions = await resolveInstructionPointerExcludes(repoRoot);
+
+      const resolvedRoot = (await fsRealpath(repoRoot)).replaceAll('\\', '/');
+      const resolvedParent = (await fsRealpath(enclosingRoot)).replaceAll(
+        '\\',
+        '/',
+      );
+
+      expect(exclusions.configured).toEqual(['self', 'up']);
+      expect(exclusions.effective).toEqual([]);
+      // `relative()` renders these two targets as `''` and `'..'`, and neither
+      // is a usable target in an operator-facing message — `resolves to ""` is
+      // worse than no target at all. Pinned as exact strings because the guard
+      // that redirects both to the absolute path is otherwise invisible: the
+      // rest of the suite stays green without it.
+      expect(exclusions.warnings).toEqual([
+        `documentation.instructionPointerExcludes entry "self" resolves to ${JSON.stringify(resolvedRoot)}, not to itself, so the scan never matches it and it excludes nothing. Point the entry at the resolved directory, or remove the symlink.`,
+        `documentation.instructionPointerExcludes entry "up" resolves to ${JSON.stringify(resolvedParent)}, not to itself, so the scan never matches it and it excludes nothing. Point the entry at the resolved directory, or remove the symlink.`,
+      ]);
+    });
+
     it('warns and withholds effect for an entry dropped during normalization', async () => {
       const repoRoot = await createRepoRoot();
       await writeConfig(repoRoot, {
@@ -1064,13 +1095,20 @@ describe('instructions utils', () => {
       // accepts the mis-cased path (as APFS/NTFS would) while realpath reports
       // the true on-disk casing the scan actually compares against.
       //
-      // The substitution is keyed on the mis-cased segment rather than on a
-      // `repoRoot`-anchored prefix, because the probe builds its candidate from
-      // the *realpath'd* root: on macOS `repoRoot` starts `/var` while the
-      // candidate starts `/private/var`, so a prefix-anchored replacement never
-      // fired and the simulation only appeared to work — APFS was supplying the
-      // case-insensitivity. Keyed this way it is the injection, not the host,
-      // that decides, on either kind of runner.
+      // The substitution is keyed on the mis-cased segment for clarity, not to
+      // repair a defect: the previous `` `${repoRoot}/Apps/Docsapp` `` key also
+      // fired on every candidate the probe built from the *realpath'd* root,
+      // because `String.prototype.replace` searches for a substring rather than
+      // anchoring a prefix, and `/var/folders/…/Apps/Docsapp` occurs verbatim
+      // inside `/private/var/folders/…/Apps/Docsapp`. Instrumenting both keys
+      // counted three firing substitutions each, and the same warning. The
+      // segment key simply does not depend on that coincidence.
+      //
+      // On a case-insensitive host the injection is redundant — the filesystem
+      // produces the same answer with no injection at all. What the injection
+      // buys is determinism on a *case-sensitive* runner, where the mis-cased
+      // path would otherwise not resolve and this case would pass through the
+      // `absent` branch instead of the case-mismatch branch it is written for.
       const simulateCaseInsensitiveLookup = (path: string): string =>
         path.replace('/Apps/Docsapp', '/apps/docsapp');
       const exclusions = await resolveInstructionPointerExcludes(repoRoot, {
