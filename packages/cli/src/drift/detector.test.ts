@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from '@engine/markers';
 import { computeDirectoryHash, computeFileHash } from '@manifest/hash';
 import type { ManifestEntry, ManifestEntryV2 } from '@manifest/manifest.types';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -28,6 +29,37 @@ async function seedSkill(root: string, relativePath: string): Promise<void> {
   const skillDir = join(root, relativePath);
   await mkdir(skillDir, { recursive: true });
   await writeFile(join(skillDir, 'SKILL.md'), '# skill\n', 'utf8');
+}
+
+/**
+ * Seeds the canonical skill plus the managed provider copy the sync writer
+ * produces: canonical bytes, the `.oat-generated` sentinel, and the banner
+ * prepended to `SKILL.md`, both naming the same absolute canonical path.
+ * `canonicalHash` is the undecorated canonical directory hash — exactly what
+ * `execute-plan.ts` records as the manifest `contentHash`.
+ */
+async function seedManagedCopy(root: string): Promise<{
+  canonicalHash: string;
+  canonicalPath: string;
+  providerPath: string;
+}> {
+  const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+  const providerPath = join(root, '.claude', 'skills', 'skill-one');
+  await seedSkill(root, '.agents/skills/skill-one');
+  const canonicalHash = await computeDirectoryHash(canonicalPath);
+  await mkdir(providerPath, { recursive: true });
+  const marker = `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->`;
+  await writeFile(
+    join(providerPath, 'SKILL.md'),
+    `${marker}\n# skill\n`,
+    'utf8',
+  );
+  await writeFile(
+    join(providerPath, OAT_DIRECTORY_SENTINEL),
+    `${marker}\n`,
+    'utf8',
+  );
+  return { canonicalHash, canonicalPath, providerPath };
 }
 
 describe('detectDrift', () => {
@@ -191,6 +223,128 @@ describe('detectDrift', () => {
     const copyEntry = createManifestEntry({
       strategy: 'copy',
       contentHash: 'deadbeef',
+    });
+
+    const report = await detectDrift(copyEntry, root);
+
+    expect(report.state).toEqual({
+      status: 'drifted',
+      reason: 'modified',
+    });
+  });
+
+  it('returns in_sync for a managed directory copy whose manifest hash is the canonical hash', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    const { canonicalHash } = await seedManagedCopy(root);
+    const copyEntry = createManifestEntry({
+      strategy: 'copy',
+      contentHash: canonicalHash,
+      isFile: false,
+    });
+
+    // No `copyTransform` argument on purpose: `commands/tools/info/index.ts`
+    // passes none, so this also covers the `oat tools info` call site.
+    const report = await detectDrift(copyEntry, root);
+
+    expect(report.state).toEqual({ status: 'in_sync' });
+  });
+
+  it('returns drifted:modified when a managed directory copy body was edited', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    const { canonicalHash, canonicalPath, providerPath } =
+      await seedManagedCopy(root);
+    await writeFile(
+      join(providerPath, 'SKILL.md'),
+      `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->\n# skill edited by hand\n`,
+      'utf8',
+    );
+    const copyEntry = createManifestEntry({
+      strategy: 'copy',
+      contentHash: canonicalHash,
+      isFile: false,
+    });
+
+    const report = await detectDrift(copyEntry, root);
+
+    expect(report.state).toEqual({
+      status: 'drifted',
+      reason: 'modified',
+    });
+  });
+
+  it('returns drifted:modified when the sentinel names a different canonical path', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    const { canonicalHash, providerPath } = await seedManagedCopy(root);
+    // A hand-forged sentinel must not buy an in_sync verdict, even over
+    // otherwise faithful content.
+    await writeFile(
+      join(providerPath, OAT_DIRECTORY_SENTINEL),
+      `${OAT_MARKER_PREFIX} Source: ${join(root, '.agents', 'skills', 'other-skill')} -->\n`,
+      'utf8',
+    );
+    const copyEntry = createManifestEntry({
+      strategy: 'copy',
+      contentHash: canonicalHash,
+      isFile: false,
+    });
+
+    const report = await detectDrift(copyEntry, root);
+
+    expect(report.state).toEqual({
+      status: 'drifted',
+      reason: 'modified',
+    });
+  });
+
+  it('returns drifted:modified when the sentinel is a symlink to a file holding the exact marker', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    const { canonicalHash, canonicalPath, providerPath } =
+      await seedManagedCopy(root);
+    const side = join(root, 'side-sentinel');
+    await writeFile(
+      side,
+      `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->\n`,
+      'utf8',
+    );
+    await rm(join(providerPath, OAT_DIRECTORY_SENTINEL));
+    await symlink(side, join(providerPath, OAT_DIRECTORY_SENTINEL));
+    const copyEntry = createManifestEntry({
+      strategy: 'copy',
+      contentHash: canonicalHash,
+      isFile: false,
+    });
+
+    const report = await detectDrift(copyEntry, root);
+
+    expect(report.state).toEqual({
+      status: 'drifted',
+      reason: 'modified',
+    });
+  });
+
+  it('returns drifted:modified when the provider root is a symlink to a faithful decorated tree', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-drift-detector-'));
+    tempDirs.push(root);
+    const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+    await seedSkill(root, '.agents/skills/skill-one');
+    const canonicalHash = await computeDirectoryHash(canonicalPath);
+    // A faithful decorated tree parked outside the provider dir, reachable
+    // only through a symlink at the tracked provider path.
+    const real = join(root, 'real-copy');
+    await mkdir(real, { recursive: true });
+    const marker = `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->`;
+    await writeFile(join(real, 'SKILL.md'), `${marker}\n# skill\n`, 'utf8');
+    await writeFile(join(real, OAT_DIRECTORY_SENTINEL), `${marker}\n`, 'utf8');
+    await mkdir(join(root, '.claude', 'skills'), { recursive: true });
+    await symlink(real, join(root, '.claude', 'skills', 'skill-one'));
+    const copyEntry = createManifestEntry({
+      strategy: 'copy',
+      contentHash: canonicalHash,
+      isFile: false,
     });
 
     const report = await detectDrift(copyEntry, root);

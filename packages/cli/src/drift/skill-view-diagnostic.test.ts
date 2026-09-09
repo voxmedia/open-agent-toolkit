@@ -617,7 +617,7 @@ describe('diagnoseSkillViews', () => {
     });
   });
 
-  it('offers no repair for a drifted copy whose version still matches canonical', () => {
+  it('offers the scope repair for a copy the detector reports as modified', () => {
     const diagnosis = diagnose({
       activeProviders: ['claude'],
       registrations: [claude],
@@ -627,7 +627,7 @@ describe('diagnoseSkillViews', () => {
           manifestEntry: manifestEntry({
             strategy: 'copy',
             contentHash: 'sha256:written-at-sync',
-            isFile: true,
+            isFile: false,
           }),
           drift: drift({ status: 'drifted', reason: 'modified' }),
           viewPresent: true,
@@ -636,29 +636,23 @@ describe('diagnoseSkillViews', () => {
       ],
     });
 
-    // The engine's banner and `.oat-generated` sentinel are not accounted for
-    // in the manifest hash, so a copy reads as drifted straight after a
-    // successful sync. Suggesting a sync there is a repair that repairs
-    // nothing.
+    // Now that both readers exclude the banner and the `.oat-generated`
+    // sentinel, a copy the detector still calls modified is genuinely
+    // divergent — precisely the case a sync repairs. Equal versions no longer
+    // suppress the suggestion, because they never proved the bodies matched.
     expect(diagnosis.views[0]).toMatchObject({
       viewClass: 'modified',
       driftState: { status: 'drifted', reason: 'modified' },
       canonicalVersion: '1.4.2',
       viewVersion: '1.4.2',
-      suggestion: null,
+      suggestion: 'oat sync --scope project',
     });
+    // The plain divergence detail, with no backlog-item apology of any kind.
+    // Matched by pattern so the retired item's ID stays absent from the tree.
     expect(diagnosis.views[0]?.detail).toContain(
-      'BL-260908-make-copy-strategy-skill',
+      'The tracked view diverged from the canonical skill',
     );
-    // Suppressing the repair is a heuristic: equal versions do not establish
-    // equal bodies, and a same-version edit on either side reaches this same
-    // branch where a sync WOULD help. The detail must not claim the content
-    // is current, and must name the concrete scope command for that case.
-    expect(diagnosis.views[0]?.detail).toContain(
-      'Equal versions do not prove the bodies match',
-    );
-    expect(diagnosis.views[0]?.detail).toContain('oat sync --scope project');
-    expect(diagnosis.views[0]?.detail).not.toContain('content is current');
+    expect(diagnosis.views[0]?.detail).not.toMatch(/BL-\d{6}-/);
   });
 
   it('never reports a copy as stale on a version declaration the resolver could not take at face value', () => {

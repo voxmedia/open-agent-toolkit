@@ -519,34 +519,12 @@ export function diagnoseSkillViews(input: {
       input.canonicalVersion !== null &&
       viewVersion !== null &&
       viewVersion !== input.canonicalVersion;
-    // The mirror case: the detector reports a copy as drifted while its
-    // version matches canonical. That is the expected state after a
-    // copy-strategy sync, because the OAT-managed banner and `.oat-generated`
-    // sentinel are not accounted for in the manifest hash
-    // (BL-260908-make-copy-strategy-skill), and no sync clears it.
-    //
-    // Suppressing the repair here is a conservative heuristic, not a proof:
-    // equal versions do not establish equal bodies, so an edit to either side
-    // that kept the version reaches this branch too, and a sync would fix
-    // that one. The detail therefore says which case it cannot distinguish
-    // and names the concrete scope command, rather than claiming the content
-    // is current.
-    const unrepairableCopy =
-      versionComparable &&
-      classification.viewClass === 'modified' &&
-      input.canonicalVersion !== null &&
-      viewVersion === input.canonicalVersion;
     const { viewClass, detail } = staleCopy
       ? {
           viewClass: 'modified' as const,
           detail: `The tracked copy still matches the hash recorded at its last sync, but its version (${viewVersion}) differs from the canonical version (${input.canonicalVersion}), so the view is stale.`,
         }
-      : unrepairableCopy
-        ? {
-            viewClass: 'modified' as const,
-            detail: `The detector reports this copy as drifted while its version still matches canonical (${input.canonicalVersion}). That is expected after a copy-strategy sync until BL-260908-make-copy-strategy-skill lands: the OAT-managed banner and ".oat-generated" sentinel are not accounted for in the manifest hash, and no sync clears it. Equal versions do not prove the bodies match, so if either side was edited without a version change, compare them and run "oat sync --scope ${input.scope}" yourself.`,
-          }
-        : classification;
+      : classification;
 
     views.push({
       skill: input.skillName,
@@ -570,10 +548,9 @@ export function diagnoseSkillViews(input: {
       // The narrowest safe repair is the single concrete scope where the gap
       // was observed. `--scope all` would widen a one-scope repair into a
       // two-scope write.
-      suggestion:
-        REPAIRABLE.includes(viewClass) && !unrepairableCopy
-          ? `oat sync --scope ${input.scope}`
-          : null,
+      suggestion: REPAIRABLE.includes(viewClass)
+        ? `oat sync --scope ${input.scope}`
+        : null,
       detail: `${versionComparable ? detail : `${detail}${versionNote(strategy)}`}${
         copyViewReadable
           ? projectedVersionNote(projected, untrustworthyVersion)

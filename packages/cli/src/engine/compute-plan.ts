@@ -1,12 +1,4 @@
-import { createHash } from 'node:crypto';
-import {
-  access,
-  lstat,
-  readdir,
-  readFile,
-  readlink,
-  stat,
-} from 'node:fs/promises';
+import { access, lstat, readFile, readlink, stat } from 'node:fs/promises';
 import {
   basename,
   dirname,
@@ -40,7 +32,7 @@ import type {
   SyncPlan,
   SyncPlanEntry,
 } from './engine.types';
-import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
+import { computeManagedDirectoryCopyHash } from './managed-copy-hash';
 import { assertSafeProviderMutationPath } from './provider-path-safety';
 import type { CanonicalEntry } from './scanner';
 
@@ -285,90 +277,6 @@ function manifestEntryInsideMapping(
   );
 }
 
-async function computeManagedDirectoryCopyHash(
-  providerPath: string,
-  canonicalPath: string,
-  contentType: ManifestEntry['contentType'],
-): Promise<string | null> {
-  const expectedMarker = `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->`;
-  const sentinelPath = join(providerPath, OAT_DIRECTORY_SENTINEL);
-
-  try {
-    const sentinel = await readFile(sentinelPath, 'utf8');
-    if (sentinel !== `${expectedMarker}\n`) {
-      return null;
-    }
-  } catch {
-    return null;
-  }
-
-  const files: string[] = [];
-  async function collectFiles(current: string): Promise<boolean> {
-    const entries = await readdir(current, { withFileTypes: true });
-    for (const entry of entries) {
-      const fullPath = join(current, entry.name);
-      if (fullPath === sentinelPath) {
-        continue;
-      }
-      if (entry.isDirectory()) {
-        if (!(await collectFiles(fullPath))) {
-          return false;
-        }
-        continue;
-      }
-      if (!entry.isFile()) {
-        return false;
-      }
-      files.push(fullPath);
-    }
-    return true;
-  }
-
-  try {
-    if (!(await collectFiles(providerPath))) {
-      return null;
-    }
-
-    files.sort((left, right) =>
-      relative(providerPath, left).localeCompare(relative(providerPath, right)),
-    );
-
-    const markerFileName =
-      contentType === 'skill'
-        ? 'SKILL.md'
-        : contentType === 'agent'
-          ? 'AGENT.md'
-          : null;
-    const markerPath = markerFileName
-      ? join(providerPath, markerFileName)
-      : null;
-    const hash = createHash('sha256');
-
-    for (const file of files) {
-      const relativePath = relative(providerPath, file);
-      let content = await readFile(file);
-      if (file === markerPath) {
-        const markerPrefix = Buffer.from(`${expectedMarker}\n`);
-        if (
-          content.length < markerPrefix.length ||
-          !content.subarray(0, markerPrefix.length).equals(markerPrefix)
-        ) {
-          return null;
-        }
-        content = content.subarray(markerPrefix.length);
-      }
-      hash.update(relativePath);
-      hash.update('\0');
-      hash.update(content);
-      hash.update('\0');
-    }
-
-    return hash.digest('hex');
-  } catch {
-    return null;
-  }
-}
-
 export async function classifyObsoleteMappingRetirement(
   manifestEntry: ManifestEntry,
   scopeRoot: string,
@@ -557,6 +465,30 @@ async function classifyOperation(
       operation: 'skip',
       reason: 'already in sync',
     };
+  }
+
+  // A directory copy is decorated by the writer: `applyCopyMarker` adds the
+  // `.oat-generated` sentinel and prepends the banner to SKILL.md/AGENT.md, so
+  // the raw hashes above can never agree and every re-plan produced another
+  // `update_copy`. Re-ask the question with those two artifacts excluded. This
+  // runs only after the raw comparison already failed, so a genuinely in-sync
+  // tree is never hashed twice. `null` means "not a verifiable managed copy"
+  // (no sentinel, a sentinel naming a different canonical path, a missing
+  // banner, a non-regular entry) and keeps the `update_copy` below, as does any
+  // other digest — a tampered body still re-syncs.
+  if (strategy === 'copy' && !canonicalEntry.isFile) {
+    const managedHash = await computeManagedDirectoryCopyHash(
+      providerPath,
+      // Exactly the string `applyCopyMarker` wrote into the sentinel.
+      canonicalEntry.canonicalPath,
+      canonicalEntry.type,
+    );
+    if (managedHash !== null && managedHash === canonicalHash) {
+      return {
+        operation: 'skip',
+        reason: 'already in sync',
+      };
+    }
   }
 
   return {
