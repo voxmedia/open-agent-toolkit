@@ -582,3 +582,7 @@ Executed inside a wave, refresh the drift check against the exact execution
 - Deferred on purpose: rewording `Sync completed with partial failures.` for a
   run in which nothing succeeded, and the question of whether
   `reject-collection` should exit 1 at all.
+
+## Execution record (2026-09-09, wave 7)
+
+Executed as wave-7 p14 (PR #286 `wave-7-execution`, CLI 0.2.67; lane commit(s) `18ea51bb3` → integration `c4dbac3f3`): a rejected `oat sync` apply no longer ends with "No changes required.": the failure arm wins before the restamp-only ternary, so the run prints `Sync completed with partial failures.` (exit 1 unchanged). Verification: forced check/type-check/cli test `Cached: 0`; check:skill-bumps; lint; format; validate-skills; premise reproduced byte-for-byte; controls incl. a substitute exit-code control; Codex: no findings; root review PASS with findings (0/1I/2M/1m — all plan-artifact or deferred: a multi-scope body suffix the plan forbids fixing here; the unsatisfiable exit-code control; the conjunct's missing pin). Deviations: none in code; three plan corrections recorded by a dated entry; the `--scope all` body suffix and its pin deferred to a closeout follow-up.

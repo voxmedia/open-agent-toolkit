@@ -485,3 +485,7 @@ only from the authored SHA to `origin/main`.
 - Exactly one `metadata.version` bump for `oat-doctor` in the final PR diff,
   and the old-version-literal sweep result recorded rather than assumed.
 - Scope discipline: `PACK_MANIFEST` is untouched; only the example changed.
+
+## Execution record (2026-09-09, wave 7)
+
+Executed as wave-7 p07 (PR #286 `wave-7-execution`, CLI 0.2.67; lane commit(s) `07e643840` → integration `5183dce44`; fix `617356891` → `51cee6b3c`; root address-now `001ecfa7e`): the oat-doctor dashboard example describes a state the doctor can report: every pack appears in exactly one of the installed / available sections, backed by a disjointness case whose extractions must be complete (every table row and bullet parses; parsed counts equal candidate counts); `oat-doctor` 1.2.3 → 1.2.4 (no pin exists). Verification: focused 3; `skills.test.ts` 213; forced check/type-check/cli test `Cached: 0` (7164); check:skill-bumps; lint; format; validate-skills; `test:skills` 883; `test:smoke` 167; one Codex round (two Importants rejected as pre-existing and out of scope); root review PASS with findings (0/0/1M/2m; three controls re-run; extraction-completeness gap found by the reviewer's probe) → test-only fix round → round 2 PASS (0/0/0/1m, taken as a root address-now). Deviations: none; two pre-existing example defects (`brainstorm` in neither section; pack-level status semantics) carried to closeout.

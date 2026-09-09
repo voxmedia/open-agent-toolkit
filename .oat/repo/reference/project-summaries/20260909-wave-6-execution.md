@@ -190,16 +190,17 @@ parked and carried as `BL-260907-make-the-completion-seal`).
 
 ## Workflow Observations
 
-### 2026-09-07 · <project|general> · <bug|friction|worked-well|feedback> · <area>
+### 2026-09-07 · structural · oat gate review · plan
 
-````
+target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:2,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/wave-6-execution/reviews/artifact-plan-review-2026-09-07T235418Z.md run=e5ddc829-41d7-410f-8e6e-d1b96ea442b6
 
-Structural entries:
+### 2026-09-08 · structural · oat gate review · plan
 
-```text
+target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-6-execution/reviews/artifact-plan-review-2026-09-08T001147Z.md run=8d154521-b9de-4949-a78f-a393bcef2991
 
-### 2026-09-07 · structural · <producer> · <ref>
-````
+### 2026-09-08 · structural · oat gate review · final
+
+target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/wave-6-execution/reviews/final-review-2026-09-08T072250Z.md run=f458f4c1-dbf0-4fa2-b0d0-1b99593c4fd1
 
 ## Entries
 

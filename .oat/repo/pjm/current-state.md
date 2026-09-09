@@ -60,6 +60,17 @@ copying their content here. -->
   (`DR-260908-bundled-skills-declare`; follow-up
   `BL-260908-retire-the-top-level-skill`). Agent roles stay on the top-level
   field until their own enforcement surface exists.
+- CLI `0.2.67` (wave 7 of the 2026-08-31 execution program, wrapper project
+  `wave-7-execution`, "post-program corrective lanes", merged as PR #286;
+  nineteen of twenty lanes, p16 parked) closes the twenty-three corrective
+  items the program's own reviews had filed: an idempotent completion seal
+  with every project-log reader and writer failing closed on an ambiguous log,
+  own-key config maps, `oat config unset` for malformed values, a Markdown
+  guard for bare `__proto__` literals, a length-framed managed-copy digest so
+  copy-strategy views converge, four version-validator gaps closed, skill-asset
+  formatting and the worktree-init test inside CI's gates, a hardened
+  external-plan readiness contract with a settled ledger vocabulary, corrected
+  skill-authoring facts, and plan writes pinned to the caller's model class.
 - CLI `0.2.64` (wave 6 of the 2026-08-31 execution program, wrapper project
   `wave-6-execution`, "truthfulness residue", merged as PR #278;
   all five lanes) makes pack evidence carry real per-provider reachability with

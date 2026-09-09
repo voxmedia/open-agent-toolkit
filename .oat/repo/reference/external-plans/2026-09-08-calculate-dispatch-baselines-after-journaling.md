@@ -782,3 +782,7 @@ no `.agents/agents/*.md` file, so the agent-role gate introduced by the
   parses, and that publishing outside a git repository still succeeds.
 - **Scope discipline.** Confirm nothing in the diff addresses issue #266, and
   that the backlog item is updated but left open.
+
+## Execution record (2026-09-09, wave 7)
+
+Parked as wave-7 p16 (PR #286 `wave-7-execution`, CLI 0.2.67): not executed. not delivered — the plan's Step 3 git seam is forbidden by the recorder graph's architectural no-process guard; partial Steps 2–3 preserved at `parked/wave-7-p16/`; the item returns to planning as a decision. The STOP is recorded above in `## Revalidation Before Execution`; `BL-260906-harden-dispatch-launch` stays open with both halves and a Notes entry; this plan re-enters a later wave only after a decision on where the recorder's git seam may live.
