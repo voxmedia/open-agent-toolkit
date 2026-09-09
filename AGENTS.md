@@ -21,8 +21,8 @@
 - `pnpm check` - Each workspace package's defined `check` script, markdownlint over `apps/oat-docs/docs`, `oat:validate-skills`, and `format:root` (oxfmt over `.agents/skills`, `apps/oat-docs/docs`, and `tools/smoke`)
 - `pnpm build` - Build all packages and applications (excludes docs for speed)
 - `pnpm build:docs` - Build the docs site and its dependencies
-- `pnpm lint` - Lint code using oxlint, plus `tools/smoke`
-- `pnpm format` - Check formatting (oxfmt --check), plus `.agents/skills/**/*.md` and `tools/smoke`; use `pnpm format:fix` to auto-fix
+- `pnpm lint` - Lint code using oxlint per package, plus `oxlint tools/smoke .agents/skills` at the root
+- `pnpm format` - Each workspace package's `format` script, plus `format:root` (oxfmt --check over `.agents/skills/**/*.{md,mjs,js,cjs}`, `apps/oat-docs/docs/**/*.md`, and `tools/smoke/**/*.{mjs,md,json}`); `pnpm check` runs that same `format:root`; use `pnpm format:fix` to auto-fix
 - `pnpm type-check` - TypeScript type checking across all packages
 - `pnpm test` - Run tests across the workspace
 
@@ -71,8 +71,8 @@ that `pnpm test --force` does **not** force a re-run: pnpm appends the flag to
 the last command of the chained root script, where it lands harmlessly or
 errors. For evidence-grade verification run
 `HOME=$(mktemp -d) pnpm exec turbo run test --force` from the repository root,
-and run `pnpm test:smoke`, `pnpm test:scripts` (which runs
-`scripts/worktree/init.test.mjs`), `pnpm test:skills`, `pnpm test:release`, and
+and run `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:release`,
+`pnpm test:scripts` (which runs `scripts/worktree/init.test.mjs`), and
 `pnpm oat:validate-skills` separately when they matter. Run `pnpm build` first
 when you invoke them this way: the smoke and release suites load the CLI's built
 resolver from `packages/cli/dist`, which `turbo run test` supplies through its
