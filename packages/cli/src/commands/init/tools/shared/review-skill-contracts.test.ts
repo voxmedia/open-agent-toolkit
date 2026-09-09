@@ -822,7 +822,7 @@ printf 'artifact-read\\n'`,
         /review artifact'?s? dispatch audit\s+metadata/i,
       );
       expect(content, skill).toMatch(
-        /not(?: in)?[^]{0,40}`implementation\.md`/i,
+        /(?:not|never)(?: in)?[^]{0,40}`implementation\.md`/i,
       );
       expect(content, skill).toMatch(
         /oat project dispatch record[^]{0,160}optional and off by default/i,
