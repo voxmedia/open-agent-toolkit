@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-09
-oat_current_task_id: p19-t01
+oat_current_task_id: p20-t01
 oat_generated: false
 ---
 
@@ -44,10 +44,10 @@ oat_generated: false
 | Phase 16 | parked (plan STOP) | 1     | 0/1       |
 | Phase 17 | complete           | 1     | 1/1       |
 | Phase 18 | complete           | 1     | 1/1       |
-| Phase 19 | in_progress        | 1     | 0/1       |
-| Phase 20 | pending            | 1     | 0/1       |
+| Phase 19 | complete           | 1     | 1/1       |
+| Phase 20 | in_progress        | 1     | 0/1       |
 
-**Total:** 17/20 tasks completed (p16 parked)
+**Total:** 18/20 tasks completed (p16 parked)
 
 ---
 
@@ -269,15 +269,15 @@ oat_generated: false
 
 ## Phase 19: correct skill authoring facts (p19)
 
-**Status:** pending · **Group:** none (sequential after group 6) · **Tasks:** p19-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** ungrouped (after group 6) · **Tasks:** p19-t01
+**Outcome:** the two authoring skills and `.agents/docs/skills-guide.md` state only facts an owning symbol and a named test back: the 500-character description rule is `oat-*`-only (`validateOatSkills`), `allowed-tools` is comma-separated (`getToolDetail`), a bare `oat sync` defaults to `--scope all`, the Codex description guidance quotes the live page (2% / 8,000 characters; no single-line rule, no character limit, no unknown-key statement) with both verification dates, the emitted `skill-template.md` carries no unsourced provider claim, and the duplicated 5-column frontmatter matrix is consolidated into the canonical 7-column table with a dated note on the two divergent cells; three new `skills.test.ts` backstops (bundle-contract pointer, `allowed-tools` corpus, `oat-*` scoping); `create-agnostic-skill` 1.5.0, `create-oat-skill` 1.5.4.
+**Verification:** forced check/type-check/cli test `Cached: 0`; check:skill-bumps; validate-skills; `test:skills`; `test:smoke`; lint; format; three red-then-green controls; premises reproduced live (incl. the Codex page fetched 2026-09-09); two Codex rounds (3I/1M fixed pre-commit; round 2 clean); root review PASS with findings (0/0/3M/5m; every corrected fact re-verified against code and the refetched Codex page; two rulings corrected by the reviewer).
+**Deviations:** two plan-internal inconsistencies resolved toward the plan's evident intent and reported for the wave-close pass (Step 4's verify grep matches the warning prose the same step prescribes; Step 6's `-t "500 characters"` filter needs the new test's title to contain the phrase); the Step 2/3 tension in `skill-template.md` resolved by keeping a corrected description-constraint bullet; `create-agnostic-skill` set to 1.5.0 over p10's 1.4.4 per the plan's soft-ordering row.
 
 ### Task p19-t01: Execute external plan — Correct the factual skill-authoring claims and give each one a named backstop
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `07bdb5b69` (was `d6391cf72`)
 
 ## Phase 20: keep plan writes on the callers model (p20)
 
@@ -871,6 +871,14 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - Backlog: p16's item `BL-260906-harden-dispatch-launch` stays open (both halves; a Notes entry at closeout); no lane closed or renamed an item.
 - Worktrees `.worktrees/wave-7/p1{7,8}` and branches `wave-7/p1{7,8}` removed after the merge.
 
+#### p19 fan-in (2026-09-09)
+
+- `wave-7/p19` (ungrouped, ran alone) merged with `git merge --no-ff` as `12f50d7c2` onto the integration tip (no rebase needed: the tip advanced only by root bookkeeping, backlog filings, and plan corrections — no shared write surface). Lane commit re-hashed (identical `git patch-id --stable`): `d6391cf72` → `07bdb5b69`. Root address-now: `2360559c8` — `skills-guide.md`'s spec-level example restored to the spec's space-delimited form with OAT's comma convention in the annotation (M1); the `oat sync` scope comment names `computePlans` and `sync/index.test.ts` (M3); the `allowed-tools` corpus rule splits on commas outside parentheses so `Bash(git:*, gh:*)` stays one token (m1; scoped form green, space-separated form still red); the spec-text claim carries the spec URL and date (m2); `sync --scope project` reported no changes (the owed restamp was a no-op); `BL-260909-re-source-the-surviving-codex` filed (M2 + m5).
+- Lockstep retained at 0.2.67 (`origin/main` still 0.2.66 at `684bd3be3`); `create-agnostic-skill` now reads `1.5.0` — one PR-diff bump from `1.4.3`, superseding p10's `1.4.4` per the plan's soft-ordering row.
+- Integration gates (sequential, exit codes captured, on a clean tree after the merge): `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached; cli 388 files / 7259 tests), `pnpm build` 0, `pnpm run check:skill-bumps` 0 (validated 11 changed canonical skill and agent role bump checks against `origin/main`), `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke` 0 (167), `pnpm test:skills` 0 (883), root `pnpm test` 0 (smoke 167 / skills 883 / release 42 / scripts 1). Config-integrity check: no tracked `.oat/config.json` key missing versus `origin/main`. The p19 plan's wave-close correction landed during the run, so the two record-reading contracts (`skills-bundled-docs-contract`, `markdown-proto-literal-contract`) were re-run focused on the final tip: 151 tests, exit 0.
+- Backlog: no lane closed or renamed an item.
+- Worktree `.worktrees/wave-7/p19` and branch `wave-7/p19` removed after the merge.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -879,6 +887,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- p19 fan-in: merge `12f50d7c2`; address-now `2360559c8` (M1/M3/m1/m2; sync no-op; M2+m5 filed); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached; cli 7259). p20 (ungrouped, the hill) bootstraps next.
 - Group 6 fan-in: merges `7d2509f1b` (p17), `f789c9261` (p18); address-now `6ee5cd45c`; p16 parked; lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached; cli 7257). p19 (ungrouped) bootstraps next.
 - p17 review received (CHANGES REQUESTED, 1C/2I/2M/2m): widening (d) enumerated in the plan; fix round `w7-p17-fix-001` dispatched; p17 row `fixes_added`.
 - p18 round 2 passed (0/0/0/2m) at `bb277915e`; p18 row `passed`.
@@ -941,6 +950,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p17-t01       | plan steps 4–5                 | percent-decode label and destination; HTML-block rule a narrowing                           | fence machine first; label character references only; unreserved-only destination decode; CommonMark HTML-block conditions; widenings (c) and (d) enumerated (dated refresh + enumerations)                                           |
 | p18-t01       | plan step 6                    | "`pnpm check` now contains everything `pnpm format` checks"                                 | not written — false for `packages/control-plane`; exactly-true text naming the gap (justified deviation)                                                                                                                              |
 | p16-t01       | plan step 3                    | a `gitExecFile` seam in the dispatch recorder                                               | parked — the recorder graph's no-process guard forbids it; partial work under `parked/wave-7-p16/`                                                                                                                                    |
+| p19-t01       | plan steps 4, 6                | verify grep excludes every `oat sync` literal; `-t "500 characters"` selects the new case   | prose the plan prescribes contains the literal (executable forms all `--scope project`); test titled to contain the phrase (evident intent)                                                                                           |
 
 ## Test Results
 
@@ -970,6 +980,8 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p17        | focused 105 + forced CLI suite (388 files / 7257) + `test:skills` 883 + `test:smoke` 167                         | all    | 0      | -        |
 | p18        | four matched controls + chained `pnpm test` (smoke 167 / skills 883 / release 42 / scripts 1) + forced CLI suite | all    | 0      | -        |
 | g6 fan-in  | eight DoD gates + smoke + skills + scripts + root test (0 cached)                                                | all    | 0      | -        |
+| p19        | three red-then-green controls + forced CLI suite + `test:skills` + `test:smoke`                                  | all    | 0      | -        |
+| p19 fan-in | eight DoD gates + smoke + skills + scripts + root test (0 cached)                                                | all    | 0      | -        |
 
 ## Deferred Findings
 

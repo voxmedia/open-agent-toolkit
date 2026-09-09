@@ -257,3 +257,17 @@ changes should require both. **Skill signal (gap):** the lane's Codex run
 wedged twice while the reviewer's completed in ~230 s from the root
 checkout — the cross-model gate's fallback should be "re-run from the root
 at review", which is what happened here by instruction, not by rule.
+
+### 2026-09-09 · structural · oat-wave-execute · p19 fan-in (ungrouped)
+
+One lane merged alone (`12f50d7c2`; patch-id identical), one root address-now
+(`2360559c8`), lockstep retained at 0.2.67, eleven gates exit 0 with
+`Cached: 0` (cli 7259; the bump gate validated eleven bumps), config integrity
+clean. The review re-verified every corrected fact against the code and the
+refetched provider page, and corrected two root rulings (a pin that never
+existed; a wrapper Ordering row that contradicted the source plan's own
+soft-ordering rule). **Skill signal (strengthens):** briefs that state a
+version-pin premise should carry the root's own grep result rather than a
+belief — the lane and the reviewer both had to re-derive it. **Skill signal
+(gap):** the wrapper plan restated a source-plan rule and got it backwards;
+the wrapper should link the rule, never paraphrase it.
