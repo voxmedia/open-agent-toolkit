@@ -500,6 +500,21 @@ _Recorded when the configured implementation exit gate runs._
 
 **p08 row → `passed`** (reviewed head `a0fa6c654`); p08 is clear for the group-3 fan-in.
 
+## Review Received: p09 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p09-review-2026-09-09T031251Z.md (reviewed head `04a9a29ca1b4a587f9af6c1263ad7b6d5fef00bb`, manual, opus)
+**Findings:** Critical 0 · Important 1 · Medium 1 · Minor 2 — PASS with findings. Verified: weaker-anywhere by code identity (the sole `effective.push` is guarded by `probe.kind === 'exact'`, textually the base condition) and by a base-build-vs-head-build differential over 16 filesystem scenarios (0 differences in `effective`/`configured`; warning text differs only on the six intended scenarios); the `absent` message `cmp`-identical; real symlinks work on this host; all three lane controls plus three of the reviewer's own re-run; seven gates forced `Cached: 0`; scope exact (`configuration.md` byte-identical except `:96`).
+
+**Dispositions:**
+
+- I1 — the re-keyed case-insensitivity simulation's comment records a false diagnosis (the old anchor fired three times — `String.prototype.replace` substring-matches `/var/folders/…` inside `/private/var/…` — so the re-key is behaviorally neutral): **fix round** (`w7-p09-fix-001`, resumed lane) — the lane reproduces the counts and rewrites the comment; this record's p09 outcome line is corrected accordingly.
+- M1 — the `resolved.length > 0 && resolved !== '..'` clauses are unpinned (deleting them leaves all 94 tests green while a repo-root symlink would emit `resolves to ""`): **fix round** (same commit) — a root-symlink case pinning the exact warning, proven red.
+- m1 — the docs sentence omits that the case-sensitivity warning now also names the on-disk spelling: **fix round** (same commit).
+- m2 — dangling/file/circular symlinks still get the deliberately frozen case-sensitivity hint: **deferred** — backlog note at closeout (follow-up ledger).
+
+**p09 row → `fixes_added`**; round 2 on the original reviewer handle follows the fix commit.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -555,12 +570,14 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p07-review-001` — reviewer, target opus, five rulings (both Codex rejections; both controls; the no-pin claim; scope incl. the exact removed rows; one adversarial example-vs-manifest probe). Record `dispatch/w7-p07-review-001.json`.
 - `w7-p08-impl-001` outcome: DONE, one commit `a0fa6c654bfd3851a0688cde4bc54a976f0313bf` (four files): `readOatConfigWithWarnings` / `OatConfigRead`, a wrong-typed `documentation.root` (number, object, array, null, boolean) warns through a sink and still falls back; `runGet`/`runList` read once, stderr in human mode, a `warnings` array under `--json` omitted when empty; four controls incl. the finding that no pre-existing `documentation` test breaks when the warning goes noisy (the new exact-match assertions carry it). One Codex round: an Important rejected with evidence (two reads — the plan prescribes one reader call and `runList` already read ~120 times at base; follow-up named), one Medium and three Minors fixed. Gates `Cached: 0` (cli 7182). Plan inaccuracy for wave close: test-plan case 4 cites a malformed-JSON case at `:117` that does not exist. Deferred follow-ups named per the plan: wire the reader into `instructions.utils.ts:303` (p09's file); a docs sentence; sharing one read with `resolveEffectiveConfig`.
 - `w7-p08-review-001` — reviewer, target opus, seven rulings (normalizer weaker-anywhere; the `--json` channel STOP; no false alarm in existing suites; the rejected two-reads finding with a read count at base vs head; controls B and D; scope; one cross-surface probe). Record `dispatch/w7-p08-review-001.json`.
-- `w7-p09-impl-001` outcome: DONE, one commit `04a9a29ca1b4a587f9af6c1263ad7b6d5fef00bb` (three files): the exclusion-directory probe distinguishes exact / absent / resolved-elsewhere and the warning names the resolved target (the `absent` message byte-identical); two Codex rounds (R1 one Medium — non-exhaustive narrowing — fixed with a typed `Extract` annotation and a compile-failure control; R2 clean); four controls; the pre-existing case-insensitivity simulation found inert on macOS (anchored on the un-realpath'd root) and re-keyed so the injection decides. Gates `Cached: 0`; `oat docs generate-index` no diff. Pre-existing test-tier tsc errors noted in `sync.test.ts:138` and `validate.test.ts:107`.
+- `w7-p09-impl-001` outcome: DONE, one commit `04a9a29ca1b4a587f9af6c1263ad7b6d5fef00bb` (three files): the exclusion-directory probe distinguishes exact / absent / resolved-elsewhere and the warning names the resolved target (the `absent` message byte-identical); two Codex rounds (R1 one Medium — non-exhaustive narrowing — fixed with a typed `Extract` annotation and a compile-failure control; R2 clean); four controls; the pre-existing case-insensitivity simulation re-keyed on the mis-cased segment (the lane reported it inert on macOS; the root review disproved that — the old anchor fired by substring match, so the re-key is a clarity change, corrected in the fix round). Gates `Cached: 0`; `oat docs generate-index` no diff. Pre-existing test-tier tsc errors noted in `sync.test.ts:138` and `validate.test.ts:107`.
 - `w7-p09-review-001` — reviewer, target opus, six rulings (weaker-anywhere on inert entries incl. a symlink-to-correct-directory probe; the byte-identical `absent` message; the re-keyed simulation proven load-bearing; real symlink fixtures on this host; the exhaustiveness control; scope). Record `dispatch/w7-p09-review-001.json`.
 - `w7-p07-review-001` outcome: PASS with findings, 0/0/1M/2m (controls re-run; no pin; Codex rejections stand; a completeness gap in the regex extraction found by the reviewer's own probe). M1 → fix round `w7-p07-fix-001`; m1/m2 pre-existing, wave close.
 - `w7-p07-fix-001` — bounded test-only fix round on the resumed implementer. Record `dispatch/w7-p07-fix-001.json`.
 - `w7-p07-fix-001` outcome: one append-only test-only commit `6173568916690b2a0b5da0420cb89b6d836c794b`: both example extractions now assert completeness (every candidate row/bullet parses; parsed count equals candidate count; the failure names the line); the reviewer's probe G red on the available side, a `10 of 10` rewrite red on the installed side, pre-existing cases green; gates `Cached: 0` (cli 7164).
 - `w7-p07-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w7-p07-review-002.json`.
+- `w7-p09-review-001` outcome: PASS with findings, 0/1I/1M/2m (16-scenario base-vs-head differential clean; the lane's "inert on macOS" diagnosis disproved by instrumentation; unpinned root-relative clauses). I1/M1/m1 → fix round `w7-p09-fix-001`; m2 wave close.
+- `w7-p09-fix-001` — bounded fix round on the resumed implementer (comment correction with counts; a root-symlink pin; the docs clause). Record `dispatch/w7-p09-fix-001.json`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
 #### Group 1 fan-in (2026-09-09)
@@ -590,6 +607,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
+- p09 review received (PASS with findings, 0/1I/1M/2m): fix round `w7-p09-fix-001` dispatched; p09 row `fixes_added`.
 - p08 review received (PASS with findings, 0/0/0/5m — all deferred or record-fixed; plan correction entry applied); p08 row `passed`.
 - p07 review received (PASS with findings, 0/0/1M/2m): fix round `w7-p07-fix-001` dispatched; p07 row `fixes_added`.
 - p04 round 2 passed (0/0/0/1m) at `6403c6ced`; p04 row `passed`; group 2 fan-in starts.
