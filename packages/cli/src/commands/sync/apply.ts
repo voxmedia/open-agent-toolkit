@@ -524,6 +524,8 @@ export async function runSyncApply(
     // (`countPlannedOperations` admits only the mutating collection actions),
     // so a run can fail with `plannedOperations === 0`. That run is not
     // restamp-only and must never be described as needing no content changes.
+    // The trailing message below tests the failure arm first, so the branch
+    // order now enforces that outcome rather than leaving it to this conjunct.
     const restampOnly =
       summary.plannedOperations === 0 &&
       summary.failed === 0 &&
@@ -536,14 +538,14 @@ export async function runSyncApply(
         restampOnly,
       ),
     );
-    if (summary.plannedOperations === 0) {
+    if (summary.failed > 0) {
+      context.logger.warn('\nSync completed with partial failures.');
+    } else if (summary.plannedOperations === 0) {
       context.logger.info(
         restampOnly
           ? '\nManifest version refreshed; no content changes required.'
           : '\nNo changes required.',
       );
-    } else if (summary.failed > 0) {
-      context.logger.warn('\nSync completed with partial failures.');
     } else {
       context.logger.success('\nSync applied successfully.');
     }
