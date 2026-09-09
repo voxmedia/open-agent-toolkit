@@ -11,7 +11,7 @@ labels:
   - workflow-integrity
 assignee: null
 created: 2026-07-20T14:31:24.681Z
-updated: 2026-07-20T14:31:24.681Z
+updated: 2026-09-09T12:32:55.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -25,10 +25,14 @@ Structural gap found by the Orc wave program (first-run handoff signal 10, root-
 - Three-layer firing guard (operator requirement, 2026-07-20 — "I don't want it just firing any time"):
   1. Standing config opt-in: hard-fail unless `workflow.autonomousComplete: true` (config-as-authorization, per archiveOnComplete precedent); no opt-in → output "interactive completion required".
   2. Objective preconditions, hard-fail preflight: all tasks complete, final review row passed, PR merged (or recorded exception), post-implement sequence complete, no unresolved blockers, project-log gate satisfied; anything needing a human answer fails, never assumes.
-  3. Activation contract: invokable only by workflows naming it as a step (e.g. wave-execute closeout step 7) or OAT_AUTONOMOUS lifecycle runs; self-initiated cleanup invocations forbidden; run record carries requesting-workflow provenance.
+  3. Activation contract: invokable only by workflows naming it as a step (e.g. wave-execute closeout step 8) or OAT_AUTONOMOUS lifecycle runs; self-initiated cleanup invocations forbidden; run record carries requesting-workflow provenance.
 - Interactive oat-project-complete unchanged (flag stays; human gate preserved).
-- wave-execute step 7 repointed to the companion for autonomous runs (removes the interim as-document guidance shipped in 1.7.0).
+- wave-execute step 8 repointed to the companion for autonomous runs (removes the interim as-document guidance shipped in 1.7.0).
 - BATCH MODE (operator design 2026-07-20): supports completing N wave-wrapper projects in one invocation at program close, gated by the program-end operator checkpoint (the ask itself is the human gate for the batch); per-project preconditions still hard-fail individually.
 
 - {Outcome 1}
 - {Outcome 2}
+
+## Notes
+
+- 2026-09-09: `oat-wave-execute` Step 6 gained a closeout gate step (wave 7, Phase 21), so the `oat-project-complete` PROCESS step is now closeout step 8 (was 7); the three references above were repointed.

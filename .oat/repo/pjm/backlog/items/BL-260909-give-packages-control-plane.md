@@ -12,7 +12,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T08:35:44.852Z
-updated: 2026-09-09T11:54:23.000Z
+updated: 2026-09-09T12:32:55.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -26,6 +26,7 @@ Wave-7 p18 (`2026-09-08-run-skill-asset-checks-in-the-gates-ci.md`) found that `
 - `pnpm check` fails on a formatting violation inside `packages/control-plane` (red-then-green control).
 - `AGENTS.md` no longer names `packages/control-plane` as ungated.
 - Lockstep versions bumped together.
+- A one-line assertion pins that `packages/control-plane` still defines a `lint` script reached by `turbo run lint` (the accidental enrollment `AGENTS.md` describes stops being silent to delete).
 
 ## Notes
 

@@ -192,8 +192,8 @@ rejects nothing.
   - Live artifacts agree too: every Status cell in
     `.oat/repo/reference/external-plans/2026-08-19-execution-program.md:28-31`
     (W1–W4) and `2026-08-31-execution-program.md:36-41` (W1–W6) is `merged`.
-    Neither ledger contains `done`. `oat-wave-execute/SKILL.md:427-431`
-    (closeout step 8) flips _plan rows_ to `done`, which is the wave-table
+    Neither ledger contains `done`. `oat-wave-execute/SKILL.md:443-445`
+    (closeout step 9 since Phase 21 added the closeout gate step; was `:427-431` / step 8 when written) flips _plan rows_ to `done`, which is the wave-table
     vocabulary and stays correct.
   - `apps/oat-docs/docs/workflows/wave-workflows.md:67` already documents
     "each wave advances from composed to in-progress to merged", so no docs
@@ -377,7 +377,7 @@ mode` (`:3061-3100`).
 - `apps/oat-docs/docs/workflows/wave-workflows.md` — `:67` already documents
   composed → in-progress → merged. Its stale `oat-wave-program 1.1.0` mention
   at `:16` is a separate standing-claim defect and is **not** fixed here.
-- `oat-wave-execute/SKILL.md` — its closeout step 8 (`:427-431`) flips _plan
+- `oat-wave-execute/SKILL.md` — its closeout step 9 (`:443-445`; step 8 at `:427-431` when written) flips _plan
   rows_ to `done`, which is correct under the settled vocabulary.
 - The `## Wave Table` and `## Status Ledger` structural rules themselves, and
   every non-external-plan assertion in this large contract file.
