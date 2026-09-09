@@ -66,7 +66,7 @@ target (same disclaimer as the plan indexes).
   token-cost requires W3 permission-policy").
 - **Status ledger:** per wave — composed → in-progress (project link) → merged
   (PR + merge SHA + completion record link). Updated by this skill's
-  `wave-close` mode, invoked from `oat-wave-execute` closeout step 8. Those
+  `wave-close` mode, invoked from `oat-wave-execute` closeout step 9. Those
   three are the complete ledger vocabulary, including at program close. `done`
   is a wave-table plan-row status from the Wave table bullet above and is never
   a ledger status. The executable owner of the ledger vocabulary is the
