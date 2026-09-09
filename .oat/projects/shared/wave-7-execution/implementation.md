@@ -411,6 +411,24 @@ _Recorded when the configured implementation exit gate runs._
 
 **p06 row → `passed`** (reviewed head `0f81fd8fa`); p06 is clear for the group-2 fan-in.
 
+## Review Received: p05 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p05-review-2026-09-09T015920Z.md (reviewed head `412abf81d8b42515d0bbf06cadbb94d103502258`, manual, opus)
+**Findings:** Critical 0 · Important 3 · Medium 1 · Minor 3 — PASS with findings (no code defect; every Important is artifact alignment). Reproduced by the reviewer: the global-pollution ladder on the built CLI (base drops the key; the Step-2-only intermediate pollutes a fresh object's `high` property process-wide; the head preserves the key as data with no pollution); the plan's intermediate-red control (exactly six reds); seven control families both ways; ruling 5 (the dispatch-ceiling maps own their computed-literal key; reverting only `getCeilingAdapter` restores `unsupported (undefined)`); adversarial probes (`constructor`/`toString` providers through set/get/list/unset, `oat doctor`, the `gate target` lifecycle with a `__proto__` id, an independent shape-based sweep — no residual unguarded lookup); gates `Cached: 0` (cli 7128); the decision index proven regenerated. Scope-deviation table: all six deviations vs the wrapper surface justified against the external plan (`registry.ts` + test outside the scope union: reproduced defect and the real cause of site C).
+
+**Dispositions:**
+
+- I1 — the wrapper's p05 write surface was stale: **fixed** (root) — the Parallelism writes line now lists the 21 files as executed and item 6 names `gate/index.ts:1865`; verification: this commit, `oat project validate-plan` exit 0.
+- I2 — `DR-260907-oat-config-reads-materialize.md` omits `buildResolvedConfigAggregate` (the only global-pollution site) and three other guarded sites: **fix round** (`w7-p05-fix-001`, resumed lane, record-only commit) together with m1.
+- I3 — the external plan's refresh item (C) states a disproved root cause: **fixed** (root, plan write) — a dated correction sentence names `registry.ts:219` as the cause, the four additional sites, and the grep-by-shape lesson; verification: `grep -c 'Correction applied 2026-09-09 (from the p05 root review)' <plan>` = 1, corpus contract green.
+- M1 — `BL-260908-guard-normalized-config-maps` close-out is owed: **deferred to the serialized archival at closeout** (contract item 7), as for every wave item.
+- m1 — two stale DR anchors (`:2635`/`:2801` → `:2645`/`:2814`): **fix round** (same record-only commit as I2).
+- m2 — four defensive guards without a possible or present control: **accepted** (the `:2042` guard is provably unobservable; the reviewer answered ruling 7: neither Codex Medium must be pinned before fan-in).
+- m3 — a redundant set-then-get in the aggregate walk: **deferred** — polish, carried in the wave follow-up ledger (no code change in a record-only fix round).
+
+**p05 row → `fixes_added`**; round 2 (disposition verification) follows the record-only fix commit.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -452,6 +470,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p05-review-001` — reviewer, target opus, security-class brief (nine rulings: base-vs-head pollution repro incl. the intermediate state; scope-deviation table; weaker-anywhere across every guarded site; the intermediate-red control; the site-C correction; PJM carve-out; the two accepted Mediums; gates). Record `dispatch/w7-p05-review-001.json`.
 - `w7-p04-impl-001` outcome: DONE, one commit `247f06b65cd9f517742d8924ceeacd16fdd944a0` (18 files). The recovered `parked/wave-5-p09/` bytes verified exactly (117/17, 218 lines, 165/249 lines, three SHA-256s) and applied; the seal is idempotent with a `sealed` field on `checkProjectLog` and a post-seal refusal; `oat-project-summary` 1.5.4 → 1.5.5; `oat-project-complete` kept at 1.7.10. One Codex round: Important — the sealed guard preceded key dedupe and broke the gate's idempotent keyed replay (fixed: key recognition first; new content still refused; control 10); the two untracked validators confirmed staged. Deviation: a thrown `ProjectLogSealedError` mapped to `{"status":"sealed"}` + exit 1 instead of a fourth result variant, because `gate/index.ts:3282` (p05's file) narrows `result.status`. Two uninventoried propagation surfaces (`autonomy-contract.md` prompt sites; `synced-bookkeeping-sites.json`). Ten controls red then restored; gates `Cached: 0` (cli 7130; `test:skills` 883; `test:smoke` 167).
 - `w7-p04-review-001` — reviewer, target opus, nine rulings (the `sealed` deviation across every consumer; weaker-anywhere on the three named functions incl. the reordered key recognition; the consumer enumeration and the gate replay end to end; the parked-patch application; the two uninventoried surfaces; the carve-out refresh entry; bumps/pins; scope; one adversarial seal probe). Record `dispatch/w7-p04-review-001.json`.
+- `w7-p05-review-001` outcome: PASS with findings, 0C/3I/1M/3m (no code defect; the global-pollution ladder reproduced base → intermediate → head; scope deviations all justified). I1/I3 fixed by the root; I2/m1 → record-only fix round `w7-p05-fix-001`; M1 closeout; m2 accepted; m3 deferred.
 
 #### Group 1 fan-in (2026-09-09)
 
@@ -469,6 +488,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- p05 review received (PASS with findings, 0/3I/1M/3m — artifact alignment): wrapper surface and plan refresh corrected by the root; DR fix round `w7-p05-fix-001` dispatched; p05 row `fixes_added`.
 - p06 round 2 passed (0/0/0/0) at `0f81fd8fa`; p06 row `passed`.
 - p06 review received (PASS with findings, 0/0/1M/1m): fix round `w7-p06-fix-001` dispatched; p06 row `fixes_added`.
 - Group 1 fan-in: merges `ea2f5a675`, `7b9793b8f`, `f175ca2da`; lockstep bump `f0eb1c02e` (0.2.67); eight gates + smoke + skills + root test green (0 cached; cli 7105). Group 2 (p04 + p05 + p06) bootstraps next.
