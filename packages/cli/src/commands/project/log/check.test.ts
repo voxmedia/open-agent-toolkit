@@ -463,4 +463,79 @@ Completion sealed. oat-seal:demo`),
     expect(capture.warn).toEqual([]);
     expect(process.exitCode).toBe(0);
   });
+
+  describe('non-line-feed terminators are not section boundaries', () => {
+    // A hand-written or externally edited log can carry these bytes even though
+    // `append` now refuses to write them, so the parser has to hold on its own.
+    // LF is the only boundary; a `## ` after a CR, U+2028, or U+2029 is body
+    // text, exactly as it is to `parseProjectLogEntries`, which splits on '\n'.
+    const terminators: readonly [string, string][] = [
+      ['carriage return', '\r'],
+      ['U+2028 line separator', '\u2028'],
+      ['U+2029 paragraph separator', '\u2029'],
+    ];
+
+    it.each(terminators)(
+      'still reports a written seal when a %s precedes an injected marker',
+      async (_name, terminator) => {
+        const { root, logPath } = await createRepo();
+        await writeFile(
+          logPath,
+          logContent(`### 2026-07-17 · general · feedback · notes
+
+carrier${terminator}## Injected
+
+### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-07-17T10:00:00Z. oat-seal:demo`),
+          'utf8',
+        );
+        const { command, capture } = createHarness(root);
+
+        await runCommand(command);
+
+        // Before the parser anchored on LF alone, the injected `## ` truncated
+        // the entries region: the seal below it was invisible, `sealed` read
+        // false, and `append` happily kept writing onto a sealed log.
+        expect(capture.jsonPayloads[0]).toMatchObject({
+          sealed: true,
+          seal: {
+            heading:
+              '### 2026-07-17 · structural · oat-project-complete · seal',
+            count: 1,
+          },
+          entryCounts: { structural: 1 },
+        });
+        expect(process.exitCode).toBe(0);
+      },
+    );
+
+    it('still treats a marker after a real line feed as a section boundary', async () => {
+      const { root, logPath } = await createRepo();
+      await writeFile(
+        logPath,
+        logContent(`### 2026-07-17 · general · feedback · notes
+
+carrier
+
+## Injected
+
+### 2026-07-17 · structural · oat-project-complete · seal
+
+Completion sealed at 2026-07-17T10:00:00Z. oat-seal:demo`),
+        'utf8',
+      );
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command);
+
+      // Unchanged from base: an LF-preceded `## ` really does end `## Entries`,
+      // so the seal beneath it is outside the entries region and not reported.
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        sealed: false,
+        seal: null,
+        entryCounts: { structural: 0 },
+      });
+    });
+  });
 });

@@ -840,6 +840,22 @@ its own whitespace-delimited word in `--body` — the command records the whole
 word carrying the key, so a key glued to the varying timestamp would never
 match its own earlier append, and the command rejects a key the body omits.
 
+Then verify the seal landed, rather than trusting the append's exit status:
+
+```bash
+SEAL_CHECK=$(oat project log check --project "$PROJECT_PATH" --json)
+```
+
+Require `sealed: true` in `SEAL_CHECK`, and require the `heading` the append
+returned to be a seal heading — a `### <date> · structural · oat-project-complete · seal`
+line. A zero exit with either condition unmet means the log is still open: stop
+and report it; do not set lifecycle complete or archive. Re-reading the file is
+the stronger of the two checks and the reason both are required: it reports what
+the log now contains rather than what the append said about it, so it also
+catches a seal that was written but is unreachable to the parser. This
+verification exists because a seal that is silently not written reads exactly
+like a successful one from the completion flow's side.
+
 Only append this seal after Step 3.7 has either confirmed there are no entries
 to roll up or obtained `status: "ok"`. If the append fails for an existing log,
 stop before setting lifecycle complete or archiving. No project-log append may follow the seal.
