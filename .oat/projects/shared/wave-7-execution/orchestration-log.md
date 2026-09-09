@@ -221,3 +221,19 @@ that module's own test file for architectural guards; the same-model review
 pass read "touches git nowhere" as incidental state, not as an enforced
 invariant. **Skill signal (strengthens):** "STOP → park, siblings continue"
 held with zero collateral — p17 and p18 are unaffected.
+
+### 2026-09-09 · structural · oat-wave-execute · p17 STOP → refresh → resume
+
+p17 stopped before committing: the plan's own decoding and blanking
+prescriptions produced four widenings outside its enumerated set, found by
+the lane's differential run of the real old and new code. The requirement
+(base acceptance plus exactly two widenings) is unchanged; the mechanism was
+wrong. Dated refresh: fence machine first, declarations only at an original
+column 0, no label decoding, a single unreserved-only destination decode
+with residual `%` rejecting, a closed HTML-block opener list, the floor
+raised. **Skill signal (strengthens):** the lane's "differential run of the
+real code with identical injected probes" is the right shape of evidence for
+a scanner change and should be a standing requirement in briefs of this
+class. **Skill signal (gap):** `codex exec` wedged three times here (MCP
+session expiry) — the cross-model gate needs a documented fallback and a
+retry rule rather than an ad-hoc substitution.
