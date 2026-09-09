@@ -6,7 +6,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.2.3
+  version: 1.2.4
 ---
 
 # OAT Doctor
@@ -238,11 +238,8 @@ OAT ▸ DOCTOR SUMMARY
 | Pack      | Scope   | Skills | Status   |
 | --------- | ------- | ------ | -------- |
 | core      | user    | 2/2    | current  |
-| docs      | project | 7/7    | current  |
 | workflows | project | 40/40  | current  |
 | ideas     | user    | 4/4    | current  |
-| project-management | project | 5/5 | current |
-| research  | project | 6/6    | current  |
 | utility   | project | 10/10  | outdated |
 
 ## Outdated Skills
