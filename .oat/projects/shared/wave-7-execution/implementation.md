@@ -691,6 +691,26 @@ _Recorded when the configured implementation exit gate runs._
 
 **p17 row → `passed`** (reviewed head `9eeecf9db`); p17 is clear for fan-in.
 
+## Review Received: p19 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p19-review-2026-09-09T092000Z.md (reviewed head `d6391cf7296c70f251ca4b586633ff913a89c6a2`, manual, opus)
+**Findings:** 0 · 0 · 3 medium · 5 minor — PASS. Verification records: nine lane gates exit 0 on a verified-clean tree, `Cached: 0`; every corrected fact re-verified (the Codex page refetched 2026-09-09 — every clause of the new bullet verbatim-supported, zero hits for `single line` / `500 char` / `unknown key`; the `oat-*` filter at `skills.ts:1544`, the `'all'` default at `scope-option.ts:24`, `getToolDetail`, the presence-only `allowed-tools` check); all four cited `it('…')` titles exist and assert what the prose claims; weaker-anywhere clean (zero lines removed from `skills.test.ts`; `skills.ts` not in the diff); matrix consolidation checked cell-by-cell (11 rows survive; exactly the two disclosed cells changed); `create-oat-skill` Steps 2–3 byte-identical to base; three controls red-then-green with exact lines; two adversarial probes (partial space-separation correctly red; a scoped-tool value false-positives — m1). Rulings corrected by the reviewer: no `create-oat-skill` version pin exists (the repo-wide sweep for `1.4.3|1.4.4|1.5.3` is empty — nothing needed moving), and the wrapper plan's p19 Ordering row contradicted source-plan step 7 (the lane followed the source plan: one PR-scoped bump `1.4.3` → `1.5.0`).
+
+**Dispositions:**
+
+- M1 — the `**Optional fields (spec-level):**` block now shows OAT's comma form with a gutted annotation: **address-now** (root, at the p19 fan-in — restore `Read Grep Glob` in the spec-level block; the annotation states the three facts step 5 named).
+- M2 — surviving unsourced provider limits outside the plan's claim set (`name` ≤ 100 / single line for Codex; the undated Claude Code 16k budget): **filed** at the fan-in together with m5 as one "re-source the surviving Codex provider claims" item (the lane was right not to expand; scope-discipline STOP).
+- M3 — the new `oat sync` scope-semantics comment names no owner or backstop: **address-now** (root, same commit — `computePlans` in `sync/index.ts` owns the project/user mapping split; `sync/index.test.ts` backstops it).
+- m1 — the corpus rule false-positives on `Bash(git:*, gh:*)` (comma inside parentheses): **address-now** (root, same commit — split on commas outside parentheses, with the reviewer's probe as the control both ways).
+- m2 — the undated negative claim about spec text: **address-now** (root, same commit — cite the spec URL and the verification date).
+- m3 — the emitted template carries a repo-internal test path (prescribed by plan step 5): **deferred** (closeout ledger; polish).
+- m4 — wrapper plan Ordering row vs source-plan step 7: **fixed now** (this commit; artifact alignment only).
+- m5 — the plan's `provider-reference.md` dead-URL follow-up was never captured: **filed** at the fan-in with M2.
+- Fan-in obligation recorded by the reviewer: the lane did not run `oat sync` (a source-plan STOP), so the project-scope provider views and manifest restamp are owed at the p19 fan-in (`sync --scope project`, diff inspected).
+
+**p19 row → `passed`** (reviewed head `d6391cf72`); p19 is clear for fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -797,6 +817,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p19-impl-001` — p19 (ungrouped) bootstrapped alone at the post-group-6 tip `50769e0fa` (`.worktrees/wave-7/p19`, `wave-7/p19`); brief ruling corrected before dispatch: the plan's soft-ordering row sets `create-agnostic-skill` to `1.5.0` after p10's `1.4.4` (one bump `1.4.3` → `1.5.0` in the final PR diff), not "adopt the landed value". Record `dispatch/w7-p19-impl-001.json`.
 - `w7-p19-impl-001` outcome: DONE, one commit `d6391cf7296c70f251ca4b586633ff913a89c6a2` on `50769e0fa` (five files, +180/−60): the corrected facts each cite an owning symbol and an exact test title; `create-agnostic-skill` 1.4.4 → 1.5.0 (one PR-diff bump from 1.4.3), `create-oat-skill` 1.5.3 → 1.5.4; three new `skills.test.ts` cases (bundle-contract pointer, `allowed-tools` corpus, `oat-*` scoping) with red-then-green controls; two Codex rounds (3I/1M fixed pre-commit, incl. an unsourced Codex claim inside the emitted `skill-template.md`); two plan-internal inconsistencies reported for the wave-close pass; eight lane gates `Cached: 0`.
 - `w7-p19-review-001` — root reviewer, target opus, eight rulings (every corrected fact exactly true on the tip; weaker-anywhere on `skills.test.ts` and the old-literal pins; the `1.5.0` supersession; the three controls; fence balance/format; scope incl. `skills-guide.md`'s In-scope status; the two plan inconsistencies; one adversarial probe). Record `dispatch/w7-p19-review-001.json`.
+- `w7-p19-review-001` outcome: PASS with findings, 0/0/3M/5m (every corrected fact re-verified against code and the refetched Codex page; weaker-anywhere clean; the wrapper's Ordering row corrected). M1/M3/m1/m2 → root address-now at the fan-in; M2+m5 → one follow-up item; m3 polish; m4 fixed; `sync --scope project` owed at the fan-in.
 - `w7-p18-review-002` outcome: PASS (fan-in may proceed), 0/0/0/2m; the `format:fix` refactor and the `pnpm lint` bullet adjudicated licensed; two one-line root address-nows queued for the fan-in.
 - `w7-p15-review-001` outcome: PASS with findings, 0/0/0/3m (a four-consumer, 14-shape base-vs-head table; convergence proven against a base-built manifest). m1 → root address-now at the fan-in; m2 plan correction applied; m3 `BL-260909-use-handle-bound-traversal` filed; p15 `passed`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.

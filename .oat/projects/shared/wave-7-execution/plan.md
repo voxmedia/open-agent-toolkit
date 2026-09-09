@@ -705,7 +705,7 @@ git commit -m "chore(p18-t01): cover skill and script tests in the repo gates"
 **Source plan (the contract):**
 `.oat/repo/reference/external-plans/2026-09-08-correct-skill-authoring-facts.md`
 
-**Ordering:** ungrouped; runs alone after the group-6 fan-in (p10 has released `create-agnostic-skill/SKILL.md` and `skill-template.md`). Seventh writer of the `validation/skills.test.ts` chain; adopts p10's `create-agnostic-skill` bump (no second bump) and bumps `create-oat-skill` itself. Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p19-t01` prefix.
+**Ordering:** ungrouped; runs alone after the group-6 fan-in (p10 has released `create-agnostic-skill/SKILL.md` and `skill-template.md`). Seventh writer of the `validation/skills.test.ts` chain; carries the `create-agnostic-skill` bump value `1.5.0` per source-plan step 7 (one PR-scoped bump from `1.4.3`, superseding p10's `1.4.4`; wording aligned 2026-09-09 after the p19 review) and bumps `create-oat-skill` itself. Execution, commit, and review boundaries are the source plan's own; the wrapper adds only the `p19-t01` prefix.
 
 **Step 1: Drift check** — per the source plan's `## Drift check`.
 
@@ -786,7 +786,7 @@ git commit -m "docs(p20-t01): keep plan writes on the caller's model"
 | p17    | code     | passed      | 2026-09-09 | reviews/archived/p17-review-2026-09-09T082145Z.md           | 9eeecf9db74002158ded54844228e98219666185 | manual     | -                   |
 | p18    | code     | fixes_added | 2026-09-09 | reviews/archived/p18-review-2026-09-09T065527Z.md           | 1ce96aa7e355baca9e38d94f363d844edea069a9 | manual     | -                   |
 | p18    | code     | passed      | 2026-09-09 | reviews/archived/p18-review-2026-09-09T072158Z.md           | bb277915e89a3e3117234eeacb2fd020a0360990 | manual     | -                   |
-| p19    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
+| p19    | code     | passed      | 2026-09-09 | reviews/archived/p19-review-2026-09-09T092000Z.md           | d6391cf7296c70f251ca4b586633ff913a89c6a2 | manual     | -                   |
 | p20    | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
 | final  | code     | pending     | -          | -                                                           | -                                        | -          | -                   |
 | plan   | artifact | fixes_added | 2026-09-08 | reviews/archived/artifact-plan-review-2026-09-08T224620Z.md | -                                        | gate       | codex-5-6-sol-xhigh |
