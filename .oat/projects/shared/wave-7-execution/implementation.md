@@ -336,6 +336,21 @@ _Recorded when the configured implementation exit gate runs._
 
 **p01 row → `passed`** (reviewed head `dd6658e0b`; no fix round required — both actionable findings were root record/bookkeeping work).
 
+## Review Received: p02 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p02-review-2026-09-09T001158Z.md (reviewed head `1913a950ff996849df02ef98b58fe02f437315ea`, manual, opus)
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 3 — PASS with findings, reconnaissance not-attempted. Verified independently: the barrier read set per surface (all through the injected readers; exactly one shared read); a mechanical base-vs-head battery of 72 keys × 6 malformed scenarios = 432 built-CLI pairs → 3 newly accepted (exactly the three shared repair keys, each only when it is itself the malformed value), 0 newly rejected; refusal ordering (60 message-only diffs, all exit 1 both sides); all five controls incl. D and E orthogonal; the head implements the refresh, so the rejected Codex provenance Critical stands; twelve adversarial probes; seven gates with forced `check`/`type-check` (`Cached: 0`); scope exact.
+
+**Dispositions:**
+
+- m1 — `resolveSurfaceFlags` doc comment names only `set`/`unset` after `adopt` joined: **fix round** (`w7-p02-fix-001`, resumed lane, append-only commit) — one comment edit naming the three callers and the parity test.
+- m2 — env-override equivalence pinned for one of three `ENV_OVERRIDE_MAP` keys: **fix round** (same commit) — the two env-override `unset` cases parameterized over `projects.root`, `projects.defaultScope`, `worktrees.root`, each proven red under a neutralized probe.
+- m3 — the plan's Test plan, controls, Done criteria, and Review focus still read pre-amendment while the binding text is the refresh paragraph: **fixed** (root, plan write) — an "amended by the 2026-09-08 post-STOP refresh" pointer at the head of each of the four sections naming what changed; verification: `grep -c 'Amended by the 2026-09-08 post-STOP refresh' <plan>` = 4, corpus contract green; the lane worktree copy re-syncs at fan-in.
+- Surfaced, out of scope (pre-existing at base and head): `unset pjm.remote.policy.description` raw-writes when the malformed value is inside `pjm.remote` itself (`authority.default: 5`) because the strict shared reader accepts it — filed at closeout as a follow-up for the PJM remote schema owner.
+
+**p02 row → `fixes_added`**; round 2 (disposition verification on the original reviewer handle) follows the fix commit.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -356,6 +371,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p02-review-001` — reviewer, target opus, eight rulings (amended plan read from the root; barrier read set per surface; mechanical base-vs-head weaker-anywhere across the key catalog; refusal-ordering; controls D and E; the rejected provenance Critical; adversarial probes; scope). Record `dispatch/w7-p02-review-001.json`.
 - `w7-p03-impl-001` outcome: DONE_WITH_CONCERNS, one commit `c4053df739bb1fa8b92f206eef3f165e955a6110` (the new contract test plus the six `.oat/repo/` record repairs and the regenerated backlog index). Two Codex rounds found six Critical classes in the hand-rolled block classifier (escaped backticks, CommonMark block segmentation, CRLF twice, container boundaries, fence masking) — all reproduced against real `oxfmt --write` and fixed with 31 regression cases plus a one-directional invariant; one Medium rejected with reason (strict direction on indented code). Deliberate deviation: block-scoped masking instead of the plan's line-level inline-span strip, which is red on two multi-line code spans in an unwritable plan file. Red control: the pre-repair tree yields exactly the plan's seven rows / eight occurrences. Concern: completeness of a parser-less classifier cannot be proved (a dependency is a plan STOP).
 - `w7-p03-review-001` — reviewer, target opus, six rulings (adjudicate the deviation against the Outcome and weaker-anywhere; a twelve-shape `oxfmt` oracle battery; the rejected Medium's list-continuation claim; the PJM carve-out scope; the seven-row red control; scope). Record `dispatch/w7-p03-review-001.json`.
+- `w7-p02-review-001` outcome: PASS with findings, 0C/0I/0M/3m, reconnaissance not-attempted (432-pair mechanical weaker-anywhere battery: 3 newly accepted = the three repair keys as their own malformed value, 0 newly rejected). m1/m2 → fix round `w7-p02-fix-001` on the resumed lane; m3 fixed by the root (section pointers in the plan).
 
 <!-- orchestration-runs-end -->
 
@@ -365,6 +381,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-08
 
+- p02 review received (PASS with findings, 0C/0I/0M/3m): fix round `w7-p02-fix-001` dispatched for the two Minors; plan section pointers added; p02 row `fixes_added`.
 - p01 review received (PASS with findings, 0C/1I/1M/3m): sweep item `BL-260909-sweep-the-raw-main-module` filed, plan correction entry applied; p01 row `passed`.
 - Plan gate attempt 2 passed (0C/0I/1M; the inventory Medium addressed in the receive); group 1 bootstraps next.
 - Plan gate attempt 1 blocked (1C/2I/1M: the lost p09 patch, the archive set, the program ledger, the p19 `AGENTS.md` claim) → repaired in-artifact; the parked p09 bytes recovered and committed under `parked/wave-5-p09/`.

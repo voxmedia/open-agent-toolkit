@@ -453,6 +453,8 @@ AGENTS.md gates in order.
 
 ## Test plan
 
+> **Amended by the 2026-09-08 post-STOP refresh** in [Revalidation Before Execution](#revalidation-before-execution): cases 7 and 8 (a malformed untargeted surface, and a malformed shared sibling on a `pjm.remote` child unset) join cases 1–6. The refresh paragraph is the binding text where the two differ.
+
 All cases live in `packages/cli/src/commands/config/index.test.ts`. The
 structural pattern for the unset cases is the existing
 `'unset removes an invalid stored value the normalizing reader drops'` at
@@ -512,6 +514,8 @@ pass at most one.'` and all three exit `1`. Compare the strings to each
 
 ### Red-then-green negative controls
 
+> **Amended by the 2026-09-08 post-STOP refresh** in [Revalidation Before Execution](#revalidation-before-execution): controls D and E (delete the barrier → red) join A–C, control C uses the raw fall-through via `atomicWriteJson`, and control B's half 1 fails only the literal pin. The refresh paragraph is the binding text where the two differ.
+
 Record each control's command and categorical outcome in the lane report.
 
 - **Cases 1–4 (the unset fix).** Before Step 2, run the four new cases against
@@ -544,6 +548,8 @@ rejected before, with the same message; Case 6 is its control. If the reviewer
 finds any other newly-accepted input, that is a STOP condition.
 
 ## Done criteria
+
+> **Amended by the 2026-09-08 post-STOP refresh** in [Revalidation Before Execution](#revalidation-before-execution): cases 1–8, five controls, the built-CLI `config unset updateNotifications --user` probe against a malformed shared sibling (exit 1, user file byte-unchanged), and the barrier comment on the raw-write branch. The refresh paragraph is the binding text where the two differ.
 
 - [ ] `oat config unset documentation.excludes`,
       `oat config unset documentation.instructionPointerExcludes`, and
@@ -616,6 +622,8 @@ Executed inside a wave, refresh the drift check against the exact execution
 authored provenance.
 
 ## Review focus
+
+> **Amended by the 2026-09-08 post-STOP refresh** in [Revalidation Before Execution](#revalidation-before-execution): confirm the barrier reads exactly the two untargeted surfaces (plus the targeted shared surface on the raw-write branch) through the injected dependency readers. The refresh paragraph is the binding text where the two differ.
 
 - **The equivalence in Step 2.** The reviewer should independently confirm that
   `ENV_OVERRIDE_MAP` covers exactly three keys, that all three are in
