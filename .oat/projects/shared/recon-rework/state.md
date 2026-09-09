@@ -14,13 +14,17 @@ oat_parallel_execution: false
 oat_phase: plan
 oat_phase_status: in_progress
 oat_workflow_mode: quick
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 oat_workflow_origin: native
 oat_docs_updated: null
 oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-08T17:39:16.958Z'
+oat_project_state_updated: '2026-09-09T16:37:10.000Z'
 oat_generated: false
 ---
 
