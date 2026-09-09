@@ -2,7 +2,7 @@
 
 This is a planning evidence map, not a new audit or a passed plan review.
 Paths in the tables are relative to this repository. Anchors were inspected at
-`bb93ad233befc75d0da9bd699ffc57db80dfe393` on 2026-09-08 and must be re-anchored
+`5d2bddf48a31bae92a8c18e28806731b2651efb8` on 2026-09-09 and must be re-anchored
 if the implementation base changes.
 
 ## Input precedence
@@ -58,7 +58,7 @@ with nonexistent later semantic review.
 | Caller judgment                               | `.agents/skills/subagent-orchestration/SKILL.md:29-44`                       | Preserve root accountability                                           |
 | Broad classification wording                  | `.agents/skills/subagent-orchestration/SKILL.md:46-72`                       | Clarify task interpretation without weakening consequential floors     |
 | Generic wave homogeneity                      | `.agents/skills/oat-dispatch-subagents/SKILL.md:413-432`                     | Existing dependency already separates unlike wave targets              |
-| CLI prose pins                                | `packages/cli/src/validation/skills.test.ts:6187-6319`, `:8218-8234`         | Preserve active-provider loading; replace obsolete single-target pins  |
+| CLI prose pins                                | `packages/cli/src/validation/skills.test.ts:6341-6496`, `:8405-8422`         | Preserve active-provider loading; replace obsolete single-target pins  |
 | Bundle consistency                            | `packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts:458` | Include new runtime helper/library                                     |
 | Public docs                                   | `apps/oat-docs/docs/workflows/skills/recon.md:46-76`                         | Synchronize approval and output explanation                            |
 

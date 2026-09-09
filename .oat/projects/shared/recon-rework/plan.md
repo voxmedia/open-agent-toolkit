@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-08
+oat_last_updated: 2026-09-09
 oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_parallel_groups: []
@@ -16,9 +16,10 @@ oat_template: true
 
 # Implementation Plan: Recon rework
 
-> **Draft for handoff, not implementation-ready.** The user requested authoring
-> only and explicitly deferred self-review, plan review, and gates to the next
-> agent. Resume quick-start in place; retain all task IDs and review rows.
+> **Reviewed draft, not implementation-ready.** The manual plan artifact review
+> completed on 2026-09-09 and its findings were applied. Resume quick-start in
+> place for re-review, remaining design review, gate choices, and readiness;
+> retain all task IDs and review rows.
 
 **Goal:** Restore inexpensive evidence fan-out across harnesses with caller-owned
 judgment, independently approved per-wave targets, and bounded conditional
@@ -36,29 +37,47 @@ dependencies or native launcher.
 **Commit Convention:** `type(pNN-tNN): description`; every task is an atomic
 commit with its exact write set staged.
 
+## Planning Checklist
+
+- [ ] Confirmed HiLL checkpoints with user
+- [ ] Set `oat_plan_hill_phases` in frontmatter
+- [x] Evaluated phases for parallelism opportunities
+- [x] Set `oat_plan_parallel_groups` in frontmatter
+
 ## Planning Status
 
 - Discovery: captured and completed through the CLI validation boundary.
-- Lightweight design: drafted; technical choices await review.
+- Lightweight design: drafted; technical choices still await design review.
 - This plan: 4 sequential phases, 9 tasks; no tasks started.
-- Design/plan self-review and artifact review: deferred by explicit user request.
+- Manual plan artifact review: findings applied; re-review is pending.
+- Design self-review remains pending from the original handoff.
 - Project dispatch policy, optional phase gates, lifecycle gate posture, and
   implementation HiLL: not selected in this drafting run.
-- Do not write a fake review skip, a passed row, or implementation readiness.
+- Do not write a fake review skip, passed row, or implementation readiness; the
+  current plan-review event is `fixes_completed` until re-review passes.
 - The low-cost policy describes recon workers **as product behavior**; it does
   not require implementing or reviewing this contract with an inadequate model.
 
 ## Before Implementation
 
 The receiving agent must follow `handoff.md`: verify the worktree, resume
-`oat-project-quick-start`, review the draft bundle, resolve dispatch/gate choices
-through the current shared contracts, run and receive any configured gate,
-and only then establish implementation readiness. No repeated discovery interview
-is required unless review reveals a substantive product ambiguity.
+`oat-project-quick-start`, re-review the corrected plan and remaining design
+choices, resolve dispatch/gate choices through the current shared contracts, run
+and receive any configured gate, and only then establish implementation readiness.
+No repeated discovery interview is required unless review reveals a substantive
+product ambiguity.
 
 Do not automatically merge the backlog-triage branch. Issue #274 is the scope
 source; discover any canonical backlog record created by the separate triage
 and link it without duplicating or claiming other wave-7 work.
+
+For issue #274's "below-floor routing" criterion, use the reviewed interpretation
+in `design.md`: deterministic validation covers the `classFloor` enum,
+`taskClass`/`classFloor` consistency, and exact approved-versus-constructed target
+identity. It deliberately does not infer model capability from selector names;
+qualification remains owned by active provider guidance, the live catalog, and
+the calling root. Reconcile the backlog against this recorded interpretation at
+shipping closeout instead of claiming literal model-ranking validation.
 
 ## Parallelism
 
@@ -91,6 +110,13 @@ Record test commands, exit codes, fixture/probe provenance, and outcome categori
 in implementation.md. Do not mistake a filtered pipeline exit or replayed Turbo
 log for an executed passing test. Scope file tests with `exec vitest run`, not
 an ambiguous package script forwarding shortcut.
+
+Keep the manifest's ten wave modes distinct from the worker role's closed seven-mode
+assignment vocabulary. Map `redundant-gather` to `gather`;
+`semantic-verification` and `redundant-verification` to `verify`; `adversarial`
+to `adversary`; and `reconciliation` plus `contradiction-resolution` to
+`reconcile`. The remaining modes keep their same-named worker assignments. This
+project must not widen the worker vocabulary.
 
 For approval, evidence, and conditional guards preserve positive and negative
 controls. For new v2-only fields, old-schema rejection is not the semantic negative
@@ -128,9 +154,20 @@ the guard neutralized or claim fake fixtures are live-provider evidence.
 
 **Format:** `pnpm exec oxfmt --write .oat/repo/reference/decisions/DR-260831-approval-bound-homogeneous.md .oat/repo/reference/decisions/DR-260904-remove-dispatch-receipt-chain.md .oat/repo/reference/decisions/index.md`, plus the exact new decision path returned by the CLI and changed project artifacts.
 
-**Verify:** Run the decision index regeneration command and PJM doctor. Confirm
-the new record/index link resolves and the supersession preserves the receipt
-boundary. Capture any inherited PJM warnings separately.
+**Verify:** Run the governing commands explicitly:
+
+```bash
+pnpm run --silent cli:source -- pjm doctor --json
+pnpm run --silent cli:source -- decision new "Restore economical recon routing and caller-owned judgment" --status accepted --context "Issue #274 requires economical per-wave recon without weakening approval or evidence boundaries." --decision "Use independently selected and approved per-wave targets, keep final judgment in the caller, and permit only predeclared bounded escalation." --consequences "Supersede homogeneous run-wide selection while preserving the prohibition on unsupported launch receipts." --json
+pnpm run --silent cli:source -- decision regenerate-index
+```
+
+The `decision new` command is the task's creation action and runs exactly once;
+capture its returned path for formatting and verification. The accepted PJM doctor
+baseline is the inherited completed-ledger warning set with exit 1. The task passes
+when that set is unchanged apart from the new accepted record appearing in the
+generated index, its supersession links resolve, and the receipt boundary remains
+intact. Record inherited warnings separately rather than relabeling them green.
 
 **Commit:** `docs(p01-t01): restore economical recon and caller-owned judgment`.
 
@@ -335,26 +372,45 @@ limits, obtain approval, and record observations separately from fixture results
 - Modify: `.agents/skills/recon/tests/skill-contract.test.mjs`,
   `packages/cli/src/validation/skills.test.ts`.
 
+This remains one intentionally coupled task and commit: controller behavior,
+shared classification guidance, the canonical worker contract, prose pins, and
+the PR-scoped skill/role version bumps must move together to preserve the shared
+contract at every commit boundary.
+
 **Implement:**
 
-1. Put confirmed intent near the opening. Replace all run-wide maximum and
-   same-target-per-run rules with the production helper-backed per-wave workflow.
+1. Put confirmed intent near the opening. Name the responsibility split explicitly:
+   the recon controller owns profile/routing/evidence flow; `subagent-orchestration`
+   owns task-class and qualification guidance; `oat-dispatch-subagents` owns live
+   target resolution and launch mechanics; and the calling agent owns scope,
+   approval dialogue, sufficiency judgment, and conclusions. Replace all run-wide
+   maximum and same-target-per-run rules with the production helper-backed per-wave
+   workflow, and pin this ownership contract in `skill-contract.test.mjs`.
 2. Link the complete mode policy; describe narrowing/escalation by actual task
    difficulty and preserve stronger capability for judgment-bearing work.
 3. Load same-scope dependencies and exactly one active-harness selection/mechanics
    pair. Do not add a second named provider ladder or cross-harness effort mapping.
 4. Make the complete proposal explicit before approval; show supported effort,
    model, reasoning mode, service tier, lane counts, rationale, and finite limits.
+   Update the controller's manifest-preparation step to emit `schemaVersion: 2`
+   with per-wave `target`, `taskClass`, `classFloor`, `selectionReason`, and
+   `conditions`, and pin that writer contract in `skill-contract.test.mjs`.
 5. Consume conditional outcomes, preserve accepted-failure rules, and require
    root assessment of contradictions and downstream sufficiency.
 6. Preserve quick supported assurance and standard/thorough independent typed
-   review requirements. Model mix is not review independence.
+   review requirements. In `references/profiles.md`, document quick explicitly as
+   an evidence packet for an intelligent consumer with no independent semantic
+   pass by design, and pin that boundary in `skill-contract.test.mjs`. Model mix
+   is not review independence.
 7. Clarify shared classification without weakening final consequential reviewers.
    Do not rewrite the dispatch engine; if a concrete dependency change is proven
    necessary, return to the root with the exact scope before editing it.
 8. Increment each modified canonical skill's metadata.version once for the PR,
    following the current SemVer convention. Update the role under its current
-   version policy. Sweep existing version pins, including tools/smoke.
+   version policy. Update the exact existing recon pins in
+   `.agents/skills/recon/tests/skill-contract.test.mjs` and
+   `packages/cli/src/validation/skills.test.ts`; do not invent a numeric pin in
+   `tools/smoke`.
 
 **Format:**
 
@@ -366,6 +422,7 @@ pnpm exec oxfmt --write .agents/skills/recon/SKILL.md .agents/skills/recon/refer
 
 ```bash
 node --test .agents/skills/recon/tests/skill-contract.test.mjs .agents/skills/recon/tests/routing-contracts.test.mjs .agents/skills/recon/tests/workflow.integration.test.mjs
+node --test tools/smoke/skill-version/reader-sameness.test.mjs
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
 pnpm oat:validate-skills
 ```
@@ -384,6 +441,9 @@ behavior. Preserve provider-neutral consumers and package layout.
 - Modify: `apps/oat-docs/docs/workflows/skills/recon.md`.
 - Modify: `apps/oat-docs/docs/workflows/skills/index.md` only if its recon summary
   describes the superseded behavior; no unrelated navigation rebuild.
+- Generated if the page title/description or skills `## Contents` entry changes:
+  `apps/oat-docs/index.md`; regenerate it with the documented command and stage it
+  in this task's commit, never hand-edit it.
 
 **Implement:**
 
@@ -395,7 +455,9 @@ behavior. Preserve provider-neutral consumers and package layout.
 3. Label approved intent versus real runtime observations. Do not fabricate
    actual-launch targets, receipts, cost totals, or universal correctness.
 4. Document v1/v2 support, preview/check commands, inexpensive defaults, escalation
-   examples, unsupported controls, and renewed approval boundaries.
+   examples, unsupported controls, and renewed approval boundaries. State explicitly
+   that quick is an evidence packet for an intelligent consumer and has no
+   independent semantic pass by design.
 5. Read docs-app AGENTS.md before editing. Avoid fixed currently-live model claims;
    direct readers to the active provider guidance instead.
 6. Do not re-bump recon if already bumped in p03-t01.
@@ -406,7 +468,14 @@ behavior. Preserve provider-neutral consumers and package layout.
 pnpm exec oxfmt --write .agents/skills/recon/scripts/render-packet.mjs .agents/skills/recon/tests/render-packet.test.mjs .agents/skills/recon/references/packet-contract.md apps/oat-docs/docs/workflows/skills/recon.md
 ```
 
-Include the exact index path only if modified.
+If the generated index is owned by this task, regenerate it after the authored docs
+edits and stage the result in the same commit:
+
+```bash
+pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md
+```
+
+Do not hand-edit or independently format the generated index.
 
 **Verify:**
 
@@ -499,10 +568,9 @@ status. A failure stops the gate sequence for diagnosis; rerun after its repair.
 
 Also run `pnpm lint` and `pnpm format` because skills are changed. Record
 cache replay as such; do not present cached tests as executed evidence. For fresh
-Turbo execution, use `pnpm exec turbo run test --force` with isolated test-home
-behavior supplied by fixtures/test harness, never repurpose the shell HOME
-variable. If a test resolves maintainer templates, inject a temporary home through
-that test's supported API and record it. Do not silently change global installs.
+Turbo execution, use `HOME=$(mktemp -d) pnpm exec turbo run test --force` as the
+repository documents. This is a per-command environment override, not a mutation
+of the session's home or any global install.
 
 Run focused `node --test .agents/skills/recon/tests/*.test.mjs` and
 `pnpm test:skills`, `pnpm test:smoke`, `pnpm test:release` as fresh non-Turbo
@@ -528,26 +596,28 @@ categorical expected outcomes sufficient for independent repetition.
 After this task, continue the normal authorized implementation review/final gate
 workflow. This plan does not authorize push, PR publication, merge, backlog
 closure, or live-provider spending. At approved shipping closeout, reconcile #274
-and any canonical backlog record through their owning workflows; do not close
-recap or wave-7 items.
+and any canonical backlog record through their owning workflows against the
+explicit below-floor interpretation in `design.md` and `## Before Implementation`;
+do not claim model-name capability ranking, and do not close recap or wave-7 items.
 
 ## Reviews
 
-Review work is **deferred to the receiving agent**, not passed or disabled.
-Keep the unbound template rows below. The spec row is N/A for quick mode; its
-placeholder is retained solely to preserve scaffold review rows and is not a new
-spec requirement. No explicit auto-review-disabled configuration was written.
+The first manual plan artifact review has been received and its corrections are
+complete; re-review remains pending, so it is not passed. Keep the unbound template
+rows below. The spec row is N/A for quick mode; its placeholder is retained solely
+to preserve scaffold review rows and is not a new spec requirement. No explicit
+auto-review-disabled configuration was written.
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -          | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -          | -           |
-| plan   | artifact | received | 2026-09-09 | reviews/artifact-plan-review-2026-09-09T163711Z.md | -             | -          | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -          | -           |
-| p04    | code     | pending  | -          | -                                                  | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| p02    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| final  | code     | pending         | -          | -                                                           | -             | -          | -           |
+| spec   | artifact | pending         | -          | -                                                           | -             | -          | -           |
+| design | artifact | pending         | -          | -                                                           | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T163711Z.md | -             | -          | -           |
+| p03    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| p04    | code     | pending         | -          | -                                                           | -             | -          | -           |
 
 ## Implementation Complete
 

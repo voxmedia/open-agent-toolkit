@@ -2,16 +2,18 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-08
+oat_last_updated: 2026-09-09
 oat_generated: false
 oat_template: false
 ---
 
 # Lightweight Design: Recon rework
 
-> Draft authored at the user's request. No design self-review, plan review, or
-> configured gate has run. Product intent is confirmed in discovery; the concrete
-> interfaces below are engineering proposals for the receiving agent to review.
+> Draft authored at the user's request. The manual plan artifact review completed
+> on 2026-09-09 and its artifact-alignment corrections were applied here; design
+> self-review and configured gates remain pending. Product intent is confirmed in
+> discovery, while the concrete interfaces remain engineering proposals for the
+> receiving agent to review.
 
 ## Overview
 
@@ -301,8 +303,13 @@ does not add remote multi-harness execution.
 
 `classFloor` records required capability, not a new global model rank.
 Deterministic checks validate its enum and consistency with the task class.
-Model qualification still comes from the active provider guidance/catalog and
-root selection. Do not add a misleading `BELOW_CLASS_FLOOR` model-name heuristic.
+They also validate exact approved-versus-constructed target identity before
+dispatch. Together, those checks are this project's concrete interpretation of
+"below-floor routing" validation: the manifest must carry a valid, internally
+consistent floor and the constructed target must match the independently
+qualified target that the user approved. Model qualification still comes from
+the active provider guidance/catalog and root selection. Do not add a misleading
+`BELOW_CLASS_FLOOR` model-name heuristic or infer capability from a model string.
 
 ## API Design
 

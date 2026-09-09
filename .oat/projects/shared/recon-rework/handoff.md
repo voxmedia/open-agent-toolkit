@@ -1,4 +1,4 @@
-# Handoff: Recon rework planning draft
+# Handoff: Recon rework planning continuation
 
 ## Start here
 
@@ -10,18 +10,21 @@ Branch: recon-rework
 Project: .oat/projects/shared/recon-rework
 Workflow: quick, native
 Design mode: lightweight draft
-Next step: finish planning review and readiness, not immediate implementation
+Next step: re-review corrected planning artifacts and finish readiness
 ```
 
-Thomas explicitly authorized this agent to capture discovery and draft design and
-plan, then stop before self-review and plan/gate review. The next agent owns
-those reviews. The project is intentionally left at `oat_phase: plan`,
+Thomas originally authorized discovery capture and design/plan drafting, then a
+stop before self-review and plan/gate review. A manual plan artifact review was
+later received on 2026-09-09 and all 12 findings were applied directly to the
+planning artifacts. The project remains at `oat_phase: plan`,
 `oat_phase_status: in_progress`; plan `oat_ready_for: null` and
-`oat_template: true` are deliberate guards, not unfinished placeholder content.
+`oat_template: true` now guard the pending re-review and readiness work, not
+unfinished placeholder content.
 
 **Do not scaffold again, restart discovery, mark review passed, or jump directly
 to implementation.** Load the current quick-start skill and resume this project
-in place. The plan is fully authored but unreviewed.
+in place. The plan is fully authored and corrected, but its review event remains
+`fixes_completed` until re-review passes.
 
 ## Reading order
 
@@ -78,12 +81,16 @@ native launcher rewrite is in scope.
 - Added this handoff and a portable source map.
 - Performed artifact formatting and mechanical metadata/shape checks only;
   consult implementation.md for the actual checks recorded.
+- Received the manual plan artifact review generated at 2026-09-09T16:37:11Z,
+  applied all 12 findings to the planning artifacts, and retained the event for
+  re-review as `fixes_completed`.
 - Committed the drafting work. Discover the final draft commit using
   `git log -3 --oneline`; no push or PR was created.
 
 No implementation code, canonical skill, provider reference, governing decision,
-backlog record, or public version was changed. No design/plan self-review, managed
-artifact review, configured gate, or live-provider worker test ran.
+backlog record, or public version was changed. No design self-review, configured
+gate, or live-provider worker test ran. The manual plan artifact review was
+received, but its corrected artifact has not yet passed re-review.
 
 ## Resume procedure
 
@@ -101,10 +108,11 @@ artifact review, configured gate, or live-provider worker test ran.
    ask only about a substantive ambiguity introduced by current evidence or
    review. Engineering proposals are identified in design rather than falsely
    recorded as user-approved schema choices.
-5. Perform the deferred design self-review and plan artifact review according to
-   the current workflow. Resolve the implementation project's dispatch ceiling
-   and complete ladder before managed review/readiness. Do not infer that cheap
-   recon workers imply cheap implementation/final review for this contract.
+5. Perform the deferred design self-review and re-review the corrected plan
+   according to the current workflow. Resolve the implementation project's
+   dispatch ceiling and complete ladder before managed review/readiness. Do not
+   infer that cheap recon workers imply cheap implementation/final review for
+   this contract.
 6. Resolve optional phase gate review and lifecycle gate posture through the
    current shared contracts. No choice was made here. Preserve existing explicit
    values if another agent has since added them. Do not overwrite user config
@@ -192,8 +200,9 @@ origin/main during implementation, not from the old proposal's numbers.
 > Take over the quick project at .oat/projects/shared/recon-rework in this
 > worktree. Read handoff.md, discovery.md, design.md, plan.md, and the source map.
 > Discovery is already covered. The artifacts are committed drafts, deliberately
-> not implementation-ready. Resume quick-start in place and perform the deferred
-> design/plan review, dispatch/gate setup, and configured planning gate before
+> not implementation-ready. The first manual plan review's fixes are applied and
+> await re-review. Resume quick-start in place and perform the remaining design
+> review, plan re-review, dispatch/gate setup, and configured planning gate before
 > implementation. Preserve cheap evidence workers with caller-owned judgment,
 > per-wave exact approval, v1 compatibility, and the prohibition on invented launch
 > provenance. Do not re-scaffold or change the other worktree.

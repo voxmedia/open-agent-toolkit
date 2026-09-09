@@ -24,28 +24,31 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-09T16:37:10.000Z'
+oat_project_state_updated: '2026-09-09T22:48:49.000Z'
 oat_generated: false
 ---
 
 # Project State: Recon rework
 
-**Status:** Planning draft — handoff before review.
+**Status:** Planning review corrections applied — re-review and readiness pending.
 **Started:** 2026-09-08
-**Last Updated:** 2026-09-08
+**Last Updated:** 2026-09-09
 
 ## Current Phase
 
 Plan in progress. Discovery is complete; lightweight design and plan are drafted.
-The user explicitly asked the receiving agent to handle self-review, artifact
-review, configured gates, and implementation. None ran in this drafting session.
+The first manual plan artifact review was received on 2026-09-09 and all findings
+were applied directly to planning artifacts. Design self-review, plan re-review,
+configured gates, readiness, and implementation remain pending.
 
 ## Artifacts
 
 - Discovery: `discovery.md` — captured from the conversation, CLI-completed.
 - Spec: N/A — native quick workflow.
-- Design: `design.md` — lightweight draft, unreviewed.
-- Plan: `plan.md` — 4 sequential phases, 9 tasks, pre-review metadata retained.
+- Design: `design.md` — lightweight draft; plan-review alignment applied, design
+  self-review pending.
+- Plan: `plan.md` — 4 sequential phases, 9 tasks; review fixes complete and
+  re-review pending.
 - Implementation: `implementation.md` — initialized; 0/9 tasks started.
 - Handoff: `handoff.md` — exact continuation instructions.
 - Source context: `references/source-context.md` — baseline map and input precedence.
@@ -59,21 +62,24 @@ No existing project was absorbed or retired.
 
 ## Blockers
 
-No missing product-discovery input. Review and readiness are intentionally pending:
-dispatch policy, optional phase review, lifecycle gate posture, plan review, and
+No missing product-discovery input. Review and readiness remain pending: plan
+re-review, design review, optional phase review, lifecycle gate posture, and the
 configured quick-start gate must be resolved by the receiving agent.
 
 ## Next Milestone
 
-Resume `oat-project-quick-start` in place for review/readiness after reading
+Resume `oat-project-quick-start` in place for re-review/readiness after reading
 `handoff.md`. Do not re-scaffold. Do not mark the plan ready based on substantive
-task content. First implementation task after readiness is `p01-t01`.
+task content or the applied fixes alone. First implementation task after readiness
+is `p01-t01`.
 
 ## Authorization and Scope
 
 Thomas authorized planning and local commits in this existing worktree only.
-No implementation, self-review, configured review gate, live-provider launch,
-triage change, push, PR publication, or merge has been performed.
+No implementation, design self-review, configured review gate, live-provider
+launch, triage change, push, PR publication, or merge has been performed. The
+manual plan artifact review and approved artifact corrections are the only new
+review work recorded here.
 
 Source issue: https://github.com/voxmedia/open-agent-toolkit/issues/274.
 A canonical backlog ID is intentionally not invented; reconcile any triage-owned
