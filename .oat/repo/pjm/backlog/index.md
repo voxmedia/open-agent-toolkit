@@ -273,6 +273,7 @@
 | BL-260827-refresh-provider-codex-md      | Refresh provider-codex.md for the ultra effort tier, the GPT-5.4 retirement, and per-subcommand flags | open   | medium   | task       | S        |
 | BL-260908-remove-the-top-level-skill     | Remove the top-level skill version read after the alias error has been quiet                          | open   | medium   | task       | S        |
 | BL-260909-repair-the-bare-fences-that    | Repair the bare fences that swallow headings outside .agents/skills                                   | open   | medium   | task       | S        |
+| BL-260909-restamp-a-stale-copy-strategy  | Restamp a stale copy-strategy contentHash on skip and retire the pre-framing digest bridge            | open   | medium   | task       | M        |
 | BL-260908-retire-the-top-level-skill     | Retire the top-level skill version alias on the recorded schedule                                     | open   | medium   | task       | S        |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                                         | open   | medium   | feature    | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                                            | open   | medium   | feature    | S        |

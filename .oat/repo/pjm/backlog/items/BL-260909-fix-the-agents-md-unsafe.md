@@ -11,7 +11,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T08:35:42.059Z
-updated: 2026-09-09T10:50:01.000Z
+updated: 2026-09-09T11:56:51.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -29,3 +29,4 @@ Wave-7 p12 hit a pre-existing flake: the `it.each` unsafe-directory variants in 
 ## Notes
 
 - 2026-09-09 (wave-7 final review): the same class — `packages/cli/src/e2e/workflow.test.ts:476` (`keeps 'aggregate' 'direct' guidance manual-only in json=false mode across reruns`) flaked once under full-suite concurrency (`secondPatch` held a real patch where `firstPatch` was `missing-*`), passes in isolation, did not recur; and `tools/smoke/cursor-broker.test.mjs` ENOENT under full-suite concurrency (p11 review). Treat all three as one shared-fixture race sweep.
+- 2026-09-09 (Phase 21, lane p21b): `.agents/skills/oat-project-implement/tests/capture-dirty-tree.test.mjs:694` (`refuses to capture while a writer is still touching the worktree`) failed once with `Missing expected rejection` under `pnpm test:skills`, passed on two other runs — timing-dependent; same sweep.
