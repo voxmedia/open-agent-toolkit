@@ -8395,9 +8395,11 @@ describe('bundled skill contract truthfulness — doctor inventory', () => {
     // parsed — and name the lines that did not.
     const installedRowLines = installedTable
       .split('\n')
-      .filter((line) => line.startsWith('|'))
-      .filter((line) => !/^\|\s*Pack\s*\|/.test(line))
-      .filter((line) => !/^\|[\s-]+\|[\s|-]*$/.test(line));
+      // `^\s*` on every filter: a row indented by one space must still count as
+      // a candidate, or it would be invisible to both the parse and the count.
+      .filter((line) => /^\s*\|/.test(line))
+      .filter((line) => !/^\s*\|\s*Pack\s*\|/.test(line))
+      .filter((line) => !/^\s*\|[\s-]+\|[\s|-]*$/.test(line));
     const unparsedInstalledRows = installedRowLines.filter(
       (line) =>
         !/^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/.test(line),
@@ -8412,7 +8414,7 @@ describe('bundled skill contract truthfulness — doctor inventory', () => {
 
     const availableBulletLines = availableSection
       .split('\n')
-      .filter((line) => line.startsWith('- '));
+      .filter((line) => /^\s*- /.test(line));
     const unparsedAvailableBullets = availableBulletLines.filter(
       (line) =>
         !/^- \*\*([a-z-]+)\*\* pack: (.+?) \((\d+) skills available\)$/.test(
