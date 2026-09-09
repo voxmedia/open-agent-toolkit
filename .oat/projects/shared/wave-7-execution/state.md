@@ -147,7 +147,8 @@ Implement. Plan gate passed on attempt 2; group 1 (p01 + p02 + p03) bootstraps a
 - ✓ Group 5 (p13 + p14 + p15) merged (`de8c5b391`, `5d6b0461d`, `5171bf3cf`; address-now `da248f346`); lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached); p15's STOP closed by a dated plan refresh; p13's one narrowing adjudicated and recorded; each lane reviewed to `passed`
 - ✓ Group 6: p17 + p18 merged (`7d2509f1b` (p17), `f789c9261` (p18); address-now `6ee5cd45c`), p16 PARKED (plan STOP — the recorder graph's no-process guard forbids the plan's git seam; partial work under `parked/wave-7-p16/`); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached); p17's STOP closed by a dated plan refresh with a third and a fourth widening class enumerated; each merged lane reviewed to `passed`
 - ✓ p19 merged (`12f50d7c2`); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached); reviewed to `passed`
-- ◐ p20 (ungrouped, the hill) dispatched alone at the post-p19 tip (`w7-p20-impl-001`); fan-in gates after it
+- ✓ p20 merged (`f6ccdab52`); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached); reviewed to `passed`
+- ☐ Closeout: synthesis + `summary.md`, serialized backlog archival (23 items), root final review, configured exit gate, post-implement sequence, PR
 - ☐ Closeout: synthesis, archival, root final review, exit gate, post-implement sequence, PR
 
 ## Blockers
@@ -156,4 +157,4 @@ None
 
 ## Next Milestone
 
-p20 (keep plan writes on the caller's model class) reviewed and merged; then closeout.
+Closeout: orchestration-log synthesis and summary.md, the serialized archival, the root final review, the configured exit gate, then the PR to main.

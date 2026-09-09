@@ -271,3 +271,21 @@ version-pin premise should carry the root's own grep result rather than a
 belief — the lane and the reviewer both had to re-derive it. **Skill signal
 (gap):** the wrapper plan restated a source-plan rule and got it backwards;
 the wrapper should link the rule, never paraphrase it.
+
+### 2026-09-09 · structural · oat-wave-execute · p20 fan-in (the hill; last lane)
+
+The hill phase merged alone (`f6ccdab52`; patch-id identical), no address-now,
+lockstep retained at 0.2.67, eleven gates exit 0 with `Cached: 0` (cli 7260;
+the bump gate validated twelve bumps), config integrity clean. The review
+upheld the lane's rejection of a cross-model Minor on its stated rationale
+and confirmed the lane's observation that the bump gate enumerates paths from
+committed diffs while reading values from the tree. All twenty lanes are now
+merged or parked; the wrapper proceeds to closeout in the skill's order —
+synthesis and summary, archival, root final review, exit gate, PR.
+**Skill signal (strengthens):** asking the reviewer to adjudicate a rejected
+cross-model finding explicitly (rather than letting the lane's rejection
+stand by default) produced a measured, cited ruling in both directions this
+wave. **Skill signal (gap):** a plan that asserts a gate count moves before
+the commit exists is a plan written without running the gate at authoring
+time — the authoring skill should require running every quoted gate command
+once on the inspected head.

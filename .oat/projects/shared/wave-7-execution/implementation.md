@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-09
-oat_current_task_id: p20-t01
+oat_current_task_id: closeout
 oat_generated: false
 ---
 
@@ -45,9 +45,9 @@ oat_generated: false
 | Phase 17 | complete           | 1     | 1/1       |
 | Phase 18 | complete           | 1     | 1/1       |
 | Phase 19 | complete           | 1     | 1/1       |
-| Phase 20 | in_progress        | 1     | 0/1       |
+| Phase 20 | complete           | 1     | 1/1       |
 
-**Total:** 18/20 tasks completed (p16 parked)
+**Total:** 19/20 tasks completed (p16 parked)
 
 ---
 
@@ -281,15 +281,15 @@ oat_generated: false
 
 ## Phase 20: keep plan writes on the callers model (p20)
 
-**Status:** pending · **Group:** none (sequential after group 6) · **Tasks:** p20-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** ungrouped (the hill, after p19) · **Tasks:** p20-t01
+**Outcome:** the operator's delegation rule is written where plan writes happen: `oat-repo-improve` Step 2 (plan writes are never delegated below the caller's own model class; a parallel author subagent runs on the caller's model and the caller reviews every plan before publication or wave composition; recon may run cheaper) plus one Success Criteria bullet, `oat-wave-execute` after the reconciliation contract (Drift Refresh Record entries and post-STOP mechanism amendments are plan writes on the orchestrator's own model class), and the `repo-improve` docs page; pinned by the `keeps external-plan writes on the caller's model class` contract case (assertions (a)–(g)) in `skills-bundled-docs-contract.test.ts`; `oat-wave-execute` 1.9.1 → 1.9.2 (`oat-repo-improve` stays at p10's 2.1.5 — one PR-scoped bump)
+**Verification:** forced check/type-check/cli test `Cached: 0`; check:skill-bumps (12 validated); validate-skills; `test:skills` 883; `test:smoke` 167; lint; format; focused contract 106/106 and `validation/skills.test.ts` 237/237 (the inventoried `synced-bookkeeping-sites.json` anchor lines byte-identical); red-then-green with two single-assertion neutralizations ((b) and (g) each fail alone) and a post-commit bump-gate control on a throwaway branch; one Codex round (0/0/0/1m, the unwrapped bullet — rejected with reason); root review PASS (0/0/0/3m; prose byte-verbatim against the plan; the Codex rejection upheld; the pre-commit bump-gate observation confirmed).
+**Deviations:** four files, not the plan's five (`skills.test.ts` untouched: the `oat-repo-improve` pin already read 2.1.5 from p10 and `1.9.1` has no pin, per the plan's Landing-event row); the plan's pre-commit `check:skill-bumps` count assertions (steps 2–3) cannot fire because the validator diffs `baseRef...HEAD` — reported for the wave-close pass; the plan's quoted gate success string is stale (`… skill and agent role version bump checks`)
 
 ### Task p20-t01: Execute external plan — Keep external-plan writes on the caller's model class in oat-repo-improve
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `47374a413` (was `44421c0ef`)
 
 ## Autonomy Gate Provenance
 
@@ -898,6 +898,14 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - Backlog: no lane closed or renamed an item.
 - Worktree `.worktrees/wave-7/p19` and branch `wave-7/p19` removed after the merge.
 
+#### p20 fan-in (2026-09-09; the hill)
+
+- `wave-7/p20` (ungrouped, ran alone, the wave's HiLL phase) merged with `git merge --no-ff` as `f6ccdab52` onto the integration tip. Lane commit re-hashed (identical `git patch-id --stable`): `44421c0ef` → `47374a413`. Root address-now: none required (the review passed clean; the p19/p20 polish Minors were appended to `BL-260909-wave-7-review-polish-leftovers` in `503aa3e9a`, and the p20 plan correction landed as `dd12a580a` before the gates).
+- Lockstep retained at 0.2.67 (`origin/main` still 0.2.66 at `684bd3be3`).
+- Integration gates (sequential, exit codes captured, on a clean tree after the merge): `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached; cli 388 files / 7260 tests), `pnpm build` 0, `pnpm run check:skill-bumps` 0 (validated 12 changed canonical skill and agent role bump checks against `origin/main`), `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke` 0 (167), `pnpm test:skills` 0 (883), root `pnpm test` 0 (smoke 167 / skills 883 / release 42 / scripts 1). Config-integrity check: no tracked `.oat/config.json` key missing versus `origin/main`.
+- Backlog: no lane closed or renamed an item.
+- Worktree `.worktrees/wave-7/p20` and branch `wave-7/p20` removed after the merge. All twenty lanes are now merged or parked (p16); the wrapper proceeds to closeout.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -906,6 +914,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- p20 fan-in: merge `f6ccdab52`; no address-now (polish appended `503aa3e9a`; plan correction `dd12a580a`); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached; cli 7260). All lanes merged or parked; closeout begins.
 - p19 fan-in: merge `12f50d7c2`; address-now `2360559c8` (M1/M3/m1/m2; sync no-op; M2+m5 filed); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached; cli 7259). p20 (ungrouped, the hill) bootstraps next.
 - `w7-p20-impl-001` — p20 (ungrouped, the hill) bootstrapped alone at the post-p19 tip `ff00e3a51` (`.worktrees/wave-7/p20`, `wave-7/p20`); brief rulings verified on the tip before dispatch (no `1.9.1` literal pin exists; `oat-repo-improve` already at 2.1.5 with its pin; the `synced-bookkeeping-sites.json` anchors inside `oat-wave-execute/SKILL.md` must stay byte-identical). Record `dispatch/w7-p20-impl-001.json`.
 - `w7-p20-impl-001` outcome: DONE, one commit `44421c0ef83fd54e187d50364f04dfd0953dfdf3` on `ff00e3a51` (four files, +55/−5; `skills.test.ts` untouched because `oat-repo-improve` already reads 2.1.5 with its pin and `1.9.1` has no pin): the operator's rule lands in `oat-repo-improve` Step 2 + one Success Criteria bullet, in `oat-wave-execute` after the reconciliation contract (Drift Refresh Record entries and post-STOP amendments are plan writes), and in the `repo-improve` docs page; the `keeps external-plan writes on the caller's model class` contract case (a)–(g) with two neutralization controls; `oat-wave-execute` 1.9.1 → 1.9.2; Codex 0/0/0/1m (unwrapped bullet, rejected with reason — root adjudication requested); lane gates `Cached: 0`. Observation for the wave-close pass: `check:skill-bumps` diffs `baseRef...HEAD`, so the plan's pre-commit count assertions cannot fire.
@@ -977,34 +986,36 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Test Results
 
-| Phase      | Tests Run                                                                                                        | Passed | Failed | Coverage |
-| ---------- | ---------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
-| (none yet) | -                                                                                                                | -      | -      | -        |
-| p01        | focused 7 + `test:skills` 870 + `test:smoke` 167 + forced CLI suite                                              | all    | 0      | -        |
-| p02        | focused 288 + forced CLI suite (385 files)                                                                       | all    | 0      | -        |
-| p03        | focused 46 + forced CLI suite (386 files / 7093)                                                                 | all    | 0      | -        |
-| g1 fan-in  | eight DoD gates + smoke + skills + root test (0 cached; cli 7105)                                                | all    | 0      | -        |
-| p04        | focused 429 + `test:skills` 883 + `test:smoke` 167 + forced CLI suite (7131)                                     | all    | 0      | -        |
-| p05        | focused 780 + forced CLI suite (387 files / 7128)                                                                | all    | 0      | -        |
-| p06        | focused 27 + forced CLI suite (7114)                                                                             | all    | 0      | -        |
-| g2 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                                          | all    | 0      | -        |
-| p07        | focused 3 + `skills.test.ts` 213 + `test:skills` 883 + `test:smoke` 167 + forced CLI suite (7164)                | all    | 0      | -        |
-| p08        | focused 421 + forced CLI suite (387 files / 7182)                                                                | all    | 0      | -        |
-| p09        | focused 94 + forced CLI suite                                                                                    | all    | 0      | -        |
-| g3 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                                          | all    | 0      | -        |
-| p10        | forced CLI suite (7193) + `test:skills` 883 + `test:smoke` 167                                                   | all    | 0      | -        |
-| p11        | focused 139 + forced CLI suite (387 files / 7196)                                                                | all    | 0      | -        |
-| p12        | focused 85 + forced CLI suite (387 files / 7194)                                                                 | all    | 0      | -        |
-| g4 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                                          | all    | 0      | -        |
-| p13        | focused 245 + forced CLI suite + `test:skills` 883                                                               | all    | 0      | -        |
-| p14        | focused 74 + forced CLI suite (387 files)                                                                        | all    | 0      | -        |
-| p15        | focused 334 + forced CLI suite (388 files / 7231)                                                                | all    | 0      | -        |
-| g5 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                                          | all    | 0      | -        |
-| p17        | focused 105 + forced CLI suite (388 files / 7257) + `test:skills` 883 + `test:smoke` 167                         | all    | 0      | -        |
-| p18        | four matched controls + chained `pnpm test` (smoke 167 / skills 883 / release 42 / scripts 1) + forced CLI suite | all    | 0      | -        |
-| g6 fan-in  | eight DoD gates + smoke + skills + scripts + root test (0 cached)                                                | all    | 0      | -        |
-| p19        | three red-then-green controls + forced CLI suite + `test:skills` + `test:smoke`                                  | all    | 0      | -        |
-| p19 fan-in | eight DoD gates + smoke + skills + scripts + root test (0 cached)                                                | all    | 0      | -        |
+| Phase      | Tests Run                                                                                                                            | Passed | Failed | Coverage |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------ | -------- |
+| (none yet) | -                                                                                                                                    | -      | -      | -        |
+| p01        | focused 7 + `test:skills` 870 + `test:smoke` 167 + forced CLI suite                                                                  | all    | 0      | -        |
+| p02        | focused 288 + forced CLI suite (385 files)                                                                                           | all    | 0      | -        |
+| p03        | focused 46 + forced CLI suite (386 files / 7093)                                                                                     | all    | 0      | -        |
+| g1 fan-in  | eight DoD gates + smoke + skills + root test (0 cached; cli 7105)                                                                    | all    | 0      | -        |
+| p04        | focused 429 + `test:skills` 883 + `test:smoke` 167 + forced CLI suite (7131)                                                         | all    | 0      | -        |
+| p05        | focused 780 + forced CLI suite (387 files / 7128)                                                                                    | all    | 0      | -        |
+| p06        | focused 27 + forced CLI suite (7114)                                                                                                 | all    | 0      | -        |
+| g2 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                                                              | all    | 0      | -        |
+| p07        | focused 3 + `skills.test.ts` 213 + `test:skills` 883 + `test:smoke` 167 + forced CLI suite (7164)                                    | all    | 0      | -        |
+| p08        | focused 421 + forced CLI suite (387 files / 7182)                                                                                    | all    | 0      | -        |
+| p09        | focused 94 + forced CLI suite                                                                                                        | all    | 0      | -        |
+| g3 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                                                              | all    | 0      | -        |
+| p10        | forced CLI suite (7193) + `test:skills` 883 + `test:smoke` 167                                                                       | all    | 0      | -        |
+| p11        | focused 139 + forced CLI suite (387 files / 7196)                                                                                    | all    | 0      | -        |
+| p12        | focused 85 + forced CLI suite (387 files / 7194)                                                                                     | all    | 0      | -        |
+| g4 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                                                              | all    | 0      | -        |
+| p13        | focused 245 + forced CLI suite + `test:skills` 883                                                                                   | all    | 0      | -        |
+| p14        | focused 74 + forced CLI suite (387 files)                                                                                            | all    | 0      | -        |
+| p15        | focused 334 + forced CLI suite (388 files / 7231)                                                                                    | all    | 0      | -        |
+| g5 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                                                              | all    | 0      | -        |
+| p17        | focused 105 + forced CLI suite (388 files / 7257) + `test:skills` 883 + `test:smoke` 167                                             | all    | 0      | -        |
+| p18        | four matched controls + chained `pnpm test` (smoke 167 / skills 883 / release 42 / scripts 1) + forced CLI suite                     | all    | 0      | -        |
+| g6 fan-in  | eight DoD gates + smoke + skills + scripts + root test (0 cached)                                                                    | all    | 0      | -        |
+| p19        | three red-then-green controls + forced CLI suite + `test:skills` + `test:smoke`                                                      | all    | 0      | -        |
+| p19 fan-in | eight DoD gates + smoke + skills + scripts + root test (0 cached)                                                                    | all    | 0      | -        |
+| p20        | contract case (a)–(g) with two neutralization controls + bump-gate control + forced CLI suite + `test:skills` 883 + `test:smoke` 167 | all    | 0      | -        |
+| p20 fan-in | eight DoD gates + smoke + skills + scripts + root test (0 cached)                                                                    | all    | 0      | -        |
 
 ## Deferred Findings
 
