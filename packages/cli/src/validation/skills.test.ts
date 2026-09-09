@@ -8344,6 +8344,103 @@ describe('bundled skill contract truthfulness — doctor inventory', () => {
       expect(Number(count), `${pack} example count`).toBe(listed.length);
     }
   });
+
+  it('keeps a pack out of both the installed and available example sections', async () => {
+    const doctor = await readRepoFile('.agents/skills/oat-doctor/SKILL.md');
+    const manifestPacks = new Set<string>(
+      PACK_MANIFEST.map((pack) => pack.name),
+    );
+
+    // Step 5 of the same skill defines the pack states as mutually exclusive
+    // ("Installed: all pack skills found" / "Not installed: no pack skills
+    // found"), so a name in both example sections describes a run the doctor
+    // can never report. The two neighbouring cases validate each section
+    // against PACK_MANIFEST in isolation and cannot see that relationship.
+    const installedTable = doctor.slice(
+      doctor.indexOf('## Installed Packs'),
+      doctor.indexOf('## Outdated Skills'),
+    );
+    const installedPacks = [
+      ...installedTable.matchAll(
+        /^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/gm,
+      ),
+    ].map(([, pack]) => pack ?? '');
+
+    const availableSection = doctor.slice(
+      doctor.indexOf('## Available But Not Installed'),
+      doctor.indexOf('## Configuration'),
+    );
+    const availablePacks = [
+      ...availableSection.matchAll(
+        /^- \*\*([a-z-]+)\*\* pack: (.+?) \((\d+) skills available\)$/gm,
+      ),
+    ].map(([, pack]) => pack ?? '');
+
+    // Without these two guards a renamed heading would empty a slice and the
+    // disjointness assertion below would pass vacuously.
+    expect(
+      installedPacks.length,
+      'installed pack example rows',
+    ).toBeGreaterThan(0);
+    expect(
+      availablePacks.length,
+      'available pack example rows',
+    ).toBeGreaterThan(0);
+
+    // Non-emptiness alone lets a single pack drop out of the comparison: a row
+    // or bullet whose wording drifts stops matching the regex above and is
+    // silently excluded from the overlap check, which is enough to bring the
+    // contradiction back while every case here stays green. So require the
+    // extraction to be complete — every candidate line in each slice must have
+    // parsed — and name the lines that did not.
+    const installedRowLines = installedTable
+      .split('\n')
+      .filter((line) => line.startsWith('|'))
+      .filter((line) => !/^\|\s*Pack\s*\|/.test(line))
+      .filter((line) => !/^\|[\s-]+\|[\s|-]*$/.test(line));
+    const unparsedInstalledRows = installedRowLines.filter(
+      (line) =>
+        !/^\|\s*([a-z-]+)\s*\|\s*[a-z]+\s*\|\s*\d+\/(\d+)\s*\|/.test(line),
+    );
+    expect(
+      unparsedInstalledRows,
+      'installed example rows the pack-row pattern could not parse',
+    ).toEqual([]);
+    expect(installedPacks.length, 'parsed installed example rows').toBe(
+      installedRowLines.length,
+    );
+
+    const availableBulletLines = availableSection
+      .split('\n')
+      .filter((line) => line.startsWith('- '));
+    const unparsedAvailableBullets = availableBulletLines.filter(
+      (line) =>
+        !/^- \*\*([a-z-]+)\*\* pack: (.+?) \((\d+) skills available\)$/.test(
+          line,
+        ),
+    );
+    expect(
+      unparsedAvailableBullets,
+      'available example bullets the pack-bullet pattern could not parse',
+    ).toEqual([]);
+    expect(availablePacks.length, 'parsed available example bullets').toBe(
+      availableBulletLines.length,
+    );
+
+    const availableSet = new Set(availablePacks);
+    const overlap = [...new Set(installedPacks)]
+      .filter((pack) => availableSet.has(pack))
+      .sort();
+    expect(
+      overlap,
+      'packs listed as installed and as available to install',
+    ).toEqual([]);
+
+    // A pack can never be moved out of the contradiction by inventing a name.
+    for (const pack of [...installedPacks, ...availablePacks]) {
+      expect(manifestPacks.has(pack), `${pack} is a manifest pack`).toBe(true);
+    }
+  });
 });
 
 describe('bundled skill contract truthfulness — brainstorm diagnostics', () => {
