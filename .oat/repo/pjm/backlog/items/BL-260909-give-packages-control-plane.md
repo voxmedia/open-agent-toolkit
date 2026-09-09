@@ -12,7 +12,7 @@ labels:
   - wave-7-followup
 assignee: null
 created: 2026-09-09T08:35:44.852Z
-updated: 2026-09-09T08:35:44.852Z
+updated: 2026-09-09T11:54:23.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -26,3 +26,7 @@ Wave-7 p18 (`2026-09-08-run-skill-asset-checks-in-the-gates-ci.md`) found that `
 - `pnpm check` fails on a formatting violation inside `packages/control-plane` (red-then-green control).
 - `AGENTS.md` no longer names `packages/control-plane` as ungated.
 - Lockstep versions bumped together.
+
+## Notes
+
+- 2026-09-09 (wave-7 Phase 21, lane p21c): control-plane's `lint` script IS exercised in CI today, but only by accident — `tools/smoke/verification/lint-enrollment.test.mjs:41` shells out to the whole `pnpm lint` under `pnpm test:smoke`, and a seeded `prefer-const` under `packages/control-plane/src` fails that test (exit 1) through the `turbo run lint` short-circuit. Nothing pins that the package keeps a `lint` script: deleting it would silence the coverage without a red test. When this item adds the `check` script, also pin the enrollment (a test that asserts every package under `packages/` with a `lint` script is reached by `turbo run lint`).
