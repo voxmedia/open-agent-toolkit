@@ -190,3 +190,17 @@ rule wins. Dated refresh: harden the shared helper, accept the stricter
 **Skill signal (strengthens):** the third lane this wave whose cross-model
 round found a defect in code the plan told it to reuse unchanged — "moved
 verbatim" is not a safety property when the moved code gains callers.
+
+### 2026-09-09 · structural · oat-wave-execute · group 5 fan-in
+
+Three lanes merged in plan order (`de8c5b391`, `5d6b0461d`, `5171bf3cf`;
+three lane commits patch-id-identical after rebase), one root address-now
+(`da248f346`), lockstep retained at 0.2.67, eleven gates exit 0 with
+`Cached: 0` (cli 7253; the widened bump gate validated nine bumps on the
+integrated tip), config integrity clean. p15 was this group's STOP → refresh
+→ resume (a helper moved "verbatim" carried a symlink hole into two new
+callers); p13 needed the review to adjudicate a plan-licensed narrowing of a
+CI gate against the categorical weaker-anywhere rule. **Skill signal
+(strengthens):** giving the reviewer an explicit adjudication ruling, with
+the evidence it must produce, converted a judgment call into a documented,
+pinned decision instead of an argument.

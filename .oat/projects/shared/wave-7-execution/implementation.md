@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-09
-oat_current_task_id: p13-t01
+oat_current_task_id: p16-t01
 oat_generated: false
 ---
 
@@ -38,16 +38,16 @@ oat_generated: false
 | Phase 10 | complete    | 1     | 1/1       |
 | Phase 11 | complete    | 1     | 1/1       |
 | Phase 12 | complete    | 1     | 1/1       |
-| Phase 13 | in_progress | 1     | 0/1       |
-| Phase 14 | pending     | 1     | 0/1       |
-| Phase 15 | pending     | 1     | 0/1       |
-| Phase 16 | pending     | 1     | 0/1       |
+| Phase 13 | complete    | 1     | 1/1       |
+| Phase 14 | complete    | 1     | 1/1       |
+| Phase 15 | complete    | 1     | 1/1       |
+| Phase 16 | in_progress | 1     | 0/1       |
 | Phase 17 | pending     | 1     | 0/1       |
 | Phase 18 | pending     | 1     | 0/1       |
 | Phase 19 | pending     | 1     | 0/1       |
 | Phase 20 | pending     | 1     | 0/1       |
 
-**Total:** 12/20 tasks completed
+**Total:** 15/20 tasks completed
 
 ---
 
@@ -197,39 +197,39 @@ oat_generated: false
 
 ## Phase 13: tighten the skill version validators (p13)
 
-**Status:** pending · **Group:** 5 · **Tasks:** p13-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 5 · **Tasks:** p13-t01
+**Outcome:** the skill version validators close their gaps: agent roles under `.agents/agents/*.md` are version-gated, an unresolvable version is a finding instead of a silent pass, the top-level `version:` alias promotion is a structural error while the bump gate still accepts an alias-only skill with a valid bump, and `check:skill-bumps` covers whole skill directories (`scripts/`, `references/`, everything but `tests/`) with `-z`/NUL-safe path handling; `AGENTS.md`'s bump rule and the contributing docs say so.
+**Verification:** forced check/type-check/test `Cached: 0`; check:skill-bumps (9 owning files, 0 findings); lint; format; validate-skills (83 directories clean); sixteen controls against a pre-fix CLI snapshot; two Codex rounds (R1 1C/2I/2M/1m fixed; R2 one Critical rejected as a plan-licensed narrowing, 1M/2m fixed); root review PASS with findings (0/0/1M/3m; a 30-shape base-vs-head battery through real `git init` fixtures; the narrowing adjudicated licensed; the literal Step-4 guard placement shown to violate STOP 3).
+**Deviations:** a `SKILL.md` nested under `<skill>/tests/` is no longer version-checked (plan boundary; input set empty; recorded on the item); an absent-owning-`SKILL.md` sibling exits 0 instead of 2 (plan-mandated, pinned); three test fixtures outside the plan's list (clause B's forced propagation); six plan-internal inconsistencies recorded by a dated correction.
 
 ### Task p13-t01: Execute external plan — Close the version-validator gaps: agent roles, unresolvable versions, the alias promotion, and scripts-only skill changes
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `5846efdb0` → integration `9e6683b20`
 
 ## Phase 14: fix sync apply failure summary (p14)
 
-**Status:** pending · **Group:** 5 · **Tasks:** p14-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 5 · **Tasks:** p14-t01
+**Outcome:** a rejected `oat sync` apply no longer ends with "No changes required.": the failure arm wins before the restamp-only ternary, so the run prints `Sync completed with partial failures.` (exit 1 unchanged).
+**Verification:** forced check/type-check/cli test `Cached: 0`; check:skill-bumps; lint; format; validate-skills; premise reproduced byte-for-byte; controls incl. a substitute exit-code control; Codex: no findings; root review PASS with findings (0/1I/2M/1m — all plan-artifact or deferred: a multi-scope body suffix the plan forbids fixing here; the unsatisfiable exit-code control; the conjunct's missing pin).
+**Deviations:** none in code; three plan corrections recorded by a dated entry; the `--scope all` body suffix and its pin deferred to a closeout follow-up.
 
 ### Task p14-t01: Execute external plan — Make `oat sync` report a failure summary instead of "No changes required." when a rejected collection leaves zero planned operations
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `18ea51bb3` → integration `c4dbac3f3`
 
 ## Phase 15: converge copy strategy skill projections (p15)
 
-**Status:** pending · **Group:** 5 · **Tasks:** p15-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 5 · **Tasks:** p15-t01
+**Outcome:** a copy-strategy skill projection reads `in_sync` immediately after sync: the banner-and-sentinel-aware directory hash is extracted into `engine/managed-copy-hash.ts`, hardened (a symlinked provider root or sentinel is rejected), and used by the drift detector, the planner, and the retirement classifier, so a faithful copy converges without a re-sync while tampered, forged, or substituted views still repair.
+**Verification:** forced check/type-check/cli test `Cached: 0` (cli 7231); check:skill-bumps; lint; format; validate-skills; focused 334; two Codex rounds (R1 1C — the STOP — + 1m; R2 one TOCTOU Critical rejected with the subset argument); root review PASS with findings (0/0/0/3m; a 14-shape, four-consumer base-vs-head table; convergence proven against a base-built manifest).
+**Deviations:** STOP at the pre-commit gate (the verbatim-moved helper accepted symlinked views) closed by the plan's dated 2026-09-09 refresh (harden the helper; retirement turns `detach` for a symlinked sentinel); the refresh's own attribution corrected after review; one of eight new cases labelled as a composite pin.
 
 ### Task p15-t01: Execute external plan — Converge copy-strategy skill projections so a synced copy reads in sync
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `53a0a2fcb` → integration `68c4da2e1`; root address-now `da248f346`
 
 ## Phase 16: calculate dispatch baselines after journaling (p16)
 
@@ -750,6 +750,14 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - Backlog: `BL-260909-repair-the-bare-fences-that` filed at the p10 receive (index regenerated there); no lane closed or renamed an item.
 - Worktrees `.worktrees/wave-7/p1{0,1,2}` and branches `wave-7/p1{0,1,2}` removed after the merge.
 
+#### Group 5 fan-in (2026-09-09)
+
+- `wave-7/p13`, `wave-7/p14`, `wave-7/p15` rebased onto the integration tip and merged in plan order with `git merge --no-ff` as `de8c5b391`, `5d6b0461d`, `5171bf3cf`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `5846efdb0`→`9e6683b20`, `18ea51bb3`→`c4dbac3f3`, `53a0a2fcb`→`68c4da2e1`. Root address-now `da248f346`: the managed-copy header states the two symlink causes and the true retirement effect (p15 review m1); the p13 gate narrowing recorded on `BL-260906-extend-check-skill-bumps` (p13 review M1); backlog index regenerated.
+- Lockstep retained at 0.2.67 (`origin/main` still 0.2.66 at `684bd3be3`). `pnpm run check:skill-bumps` re-run on the integrated tip with p13's wider surface.
+- Integration gates (sequential, exit codes captured, on a clean tree after the merges and the address-now): `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached; cli 388 files / 7253 tests), `pnpm build` 0, `pnpm run check:skill-bumps` 0 (validated 9 changed canonical skill and agent role bump checks against `origin/main`), `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke` 0, `pnpm test:skills` 0, root `pnpm test` 0. Config-integrity check: no tracked `.oat/config.json` key missing versus `origin/main`.
+- Backlog: `BL-260909-use-handle-bound-traversal` filed at the p15 receive; p13 updated its three items (the retire item stays open).
+- Worktrees `.worktrees/wave-7/p1{3,4,5}` and branches `wave-7/p1{3,4,5}` removed after the merge.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -758,6 +766,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- Group 5 fan-in: merges `de8c5b391`, `5d6b0461d`, `5171bf3cf`; address-now `da248f346`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7253). Group 6 (p16 + p17 + p18) bootstraps next.
 - Group 4 fan-in: merges `13705dcdc`, `bb082e505`, `0f1711d88` (the p10 merge body folded for commitlint); lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7209). Group 5 (p13 + p14 + p15) bootstraps next.
 - Group 3 fan-in: merges `7c5a6aa01`, `17d271b23`, `95ad10827`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7187). Group 4 (p10 + p11 + p12) bootstraps next.
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
@@ -793,20 +802,23 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact               | Planned / Documented                                                                        | Actual / Accepted                                                                                                                                                                                                                     |
-| ------------- | ----------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| (none yet)    | -                             | -                                                                                           | -                                                                                                                                                                                                                                     |
-| p01-t01       | plan step 5 / Test plan       | raw guard restored → case 5 fails on all three invocation forms                             | raw guard fails only the plain form; a one-sided canonicalization is the control for the two preserve-symlinks forms (dated correction entry in the plan)                                                                             |
-| p02-t01       | plan step 2                   | delete the strict effective read; `envShadowed` from `resolveEnvOverride`                   | the probe kept; a targeted strict barrier reads the untargeted surfaces (and the targeted shared surface on the raw-write branch) before any write (dated post-STOP refresh)                                                          |
-| p03-t01       | plan step 2                   | strip inline code spans on each remaining line                                              | block-scoped CommonMark masking with container-aware fences, HTML blocks 1–7, fence lines as boundaries; `oxfmt`-derived invariant (dated refresh)                                                                                    |
-| p04-t01       | plan step 4                   | fourth `ProjectLogAppendResult` variant `status: 'sealed'`                                  | thrown `ProjectLogSealedError` mapped at the command layer to `{"status":"sealed"}` + exit 1 (`gate/index.ts:3282` narrows `result.status`; out of scope); refusal conditional on key recognition (keyed replay → `already-appended`) |
-| p05-t01       | plan step 5                   | expected classification from the inspected files                                            | four unclassified sites on the `src`-wide sweep → dated refresh (A fixed, B–D guarded); site C's real cause `registry.ts:219`; the aggregate walker's global pollution and two more sites fixed with controls                         |
-| p06-t01       | plan test plan                | two hand-listed pack controls                                                               | controls derived from `REQUIRED_BUNDLE_DIRECTORIES` (seven)                                                                                                                                                                           |
-| p08-t01       | plan test plan case 4         | extend the malformed-JSON case at `:117`                                                    | no such case existed; the lane wrote the assertion (dated correction entry)                                                                                                                                                           |
-| p09-t01       | lane report                   | simulation "inert on macOS"                                                                 | disproved by the review's instrumentation; comment corrected in the fix round                                                                                                                                                         |
-| p10-t01       | plan step 8 control 2         | a non-recursive walk leaves the suite green                                                 | red — the Step 5 inventory floor catches it (safe direction; plan correction)                                                                                                                                                         |
-| p11-t01       | plan steps 3 and 6, Test plan | causal empty-manifest wording; unqualified hop-cap refusal text; a pre-fix-green prediction | observational wording; the OS `ELOOP` path named; red pre-fix (dated correction entry)                                                                                                                                                |
-| p12-t01       | plan test plan                | `lastUpdated` is set                                                                        | `saveManifest` carries `lastUpdated` through and restamps `oatVersion`; presence/shape pinned                                                                                                                                         |
+| Task / Review | Source Artifact                | Planned / Documented                                                                        | Actual / Accepted                                                                                                                                                                                                                     |
+| ------------- | ------------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| (none yet)    | -                              | -                                                                                           | -                                                                                                                                                                                                                                     |
+| p01-t01       | plan step 5 / Test plan        | raw guard restored → case 5 fails on all three invocation forms                             | raw guard fails only the plain form; a one-sided canonicalization is the control for the two preserve-symlinks forms (dated correction entry in the plan)                                                                             |
+| p02-t01       | plan step 2                    | delete the strict effective read; `envShadowed` from `resolveEnvOverride`                   | the probe kept; a targeted strict barrier reads the untargeted surfaces (and the targeted shared surface on the raw-write branch) before any write (dated post-STOP refresh)                                                          |
+| p03-t01       | plan step 2                    | strip inline code spans on each remaining line                                              | block-scoped CommonMark masking with container-aware fences, HTML blocks 1–7, fence lines as boundaries; `oxfmt`-derived invariant (dated refresh)                                                                                    |
+| p04-t01       | plan step 4                    | fourth `ProjectLogAppendResult` variant `status: 'sealed'`                                  | thrown `ProjectLogSealedError` mapped at the command layer to `{"status":"sealed"}` + exit 1 (`gate/index.ts:3282` narrows `result.status`; out of scope); refusal conditional on key recognition (keyed replay → `already-appended`) |
+| p05-t01       | plan step 5                    | expected classification from the inspected files                                            | four unclassified sites on the `src`-wide sweep → dated refresh (A fixed, B–D guarded); site C's real cause `registry.ts:219`; the aggregate walker's global pollution and two more sites fixed with controls                         |
+| p06-t01       | plan test plan                 | two hand-listed pack controls                                                               | controls derived from `REQUIRED_BUNDLE_DIRECTORIES` (seven)                                                                                                                                                                           |
+| p08-t01       | plan test plan case 4          | extend the malformed-JSON case at `:117`                                                    | no such case existed; the lane wrote the assertion (dated correction entry)                                                                                                                                                           |
+| p09-t01       | lane report                    | simulation "inert on macOS"                                                                 | disproved by the review's instrumentation; comment corrected in the fix round                                                                                                                                                         |
+| p10-t01       | plan step 8 control 2          | a non-recursive walk leaves the suite green                                                 | red — the Step 5 inventory floor catches it (safe direction; plan correction)                                                                                                                                                         |
+| p11-t01       | plan steps 3 and 6, Test plan  | causal empty-manifest wording; unqualified hop-cap refusal text; a pre-fix-green prediction | observational wording; the OS `ELOOP` path named; red pre-fix (dated correction entry)                                                                                                                                                |
+| p12-t01       | plan test plan                 | `lastUpdated` is set                                                                        | `saveManifest` carries `lastUpdated` through and restamps `oatVersion`; presence/shape pinned                                                                                                                                         |
+| p13-t01       | plan weaker-anywhere rule      | every finding emitted today still emitted AND `tests/`-only accepted                        | a `SKILL.md` nested under `tests/` is no longer version-checked (plan boundary governs; input set empty; recorded on the item)                                                                                                        |
+| p14-t01       | plan step 4 / Done criterion 4 | exit-code clause flips under the reorder                                                    | preserved invariant proven by neutralizing `:557`; conjunct drop stays green post-fix (dated correction)                                                                                                                              |
+| p15-t01       | plan helper-extraction step    | moved verbatim, no behavior change                                                          | hardened per the dated refresh (symlinked root/sentinel rejected; retirement `detach` for a symlinked sentinel)                                                                                                                       |
 
 ## Test Results
 
@@ -829,6 +841,10 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p11        | focused 139 + forced CLI suite (387 files / 7196)                                                 | all    | 0      | -        |
 | p12        | focused 85 + forced CLI suite (387 files / 7194)                                                  | all    | 0      | -        |
 | g4 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                           | all    | 0      | -        |
+| p13        | focused 245 + forced CLI suite + `test:skills` 883                                                | all    | 0      | -        |
+| p14        | focused 74 + forced CLI suite (387 files)                                                         | all    | 0      | -        |
+| p15        | focused 334 + forced CLI suite (388 files / 7231)                                                 | all    | 0      | -        |
+| g5 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                           | all    | 0      | -        |
 
 ## Deferred Findings
 
