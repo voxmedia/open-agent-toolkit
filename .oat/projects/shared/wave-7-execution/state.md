@@ -146,7 +146,8 @@ Implement. Plan gate passed on attempt 2; group 1 (p01 + p02 + p03) bootstraps a
 - ✓ Group 4 (p10 + p11 + p12) merged (`13705dcdc`, `bb082e505`, `0f1711d88`); lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached); each lane reviewed to `passed`; `BL-260909-repair-the-bare-fences-that` filed
 - ✓ Group 5 (p13 + p14 + p15) merged (`de8c5b391`, `5d6b0461d`, `5171bf3cf`; address-now `da248f346`); lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached); p15's STOP closed by a dated plan refresh; p13's one narrowing adjudicated and recorded; each lane reviewed to `passed`
 - ✓ Group 6: p17 + p18 merged (`7d2509f1b` (p17), `f789c9261` (p18); address-now `6ee5cd45c`), p16 PARKED (plan STOP — the recorder graph's no-process guard forbids the plan's git seam; partial work under `parked/wave-7-p16/`); lockstep retained at 0.2.67; eight gates + smoke + skills + scripts + root test green (0 cached); p17's STOP closed by a dated plan refresh with a third and a fourth widening class enumerated; each merged lane reviewed to `passed`
-- ☐ p19, then p20 (ungrouped, sequential); fan-in gates after each
+- ◐ p19 dispatched alone at `50769e0fa` (`w7-p19-impl-001`)
+- ☐ p20 after the p19 fan-in; fan-in gates after each
 - ☐ Closeout: synthesis, archival, root final review, exit gate, post-implement sequence, PR
 
 ## Blockers
