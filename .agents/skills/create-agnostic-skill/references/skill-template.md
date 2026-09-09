@@ -116,7 +116,6 @@ Include code blocks for commands:
 ```bash
 example command
 ```
-````
 
 ### Step 2: Second Step Title
 
@@ -174,17 +173,16 @@ Successful completion means:
 - ✅ Second condition is met
 - ✅ Artifacts created or modified as expected
 - ✅ Skill can be invoked with /skill-name
-
-```
+````
 
 ## Detail Level Guidelines
 
-| Skill Type | Detail Level | Examples |
-|------------|--------------|----------|
-| Complex workflows | Detailed | docs-new, docs-review |
-| Simple command-like | Concise | update-doc-refs, create-ticket |
-| Reference/standards | Detailed | repo-documentation |
-| Helper (auto-invoked) | Moderate | read-relevant-docs |
+| Skill Type            | Detail Level | Examples                       |
+| --------------------- | ------------ | ------------------------------ |
+| Complex workflows     | Detailed     | docs-new, docs-review          |
+| Simple command-like   | Concise      | update-doc-refs, create-ticket |
+| Reference/standards   | Detailed     | repo-documentation             |
+| Helper (auto-invoked) | Moderate     | read-relevant-docs             |
 
 ## Versioning Guidance
 
@@ -200,12 +198,14 @@ Successful completion means:
 **Safe layering strategy:** Start with the portable fields, then layer provider-specific fields on top. Codex explicitly ignores unknown keys, so including Claude-specific fields (like `allowed-tools`, `user-invocable`) won't break Codex — they just won't have effect there.
 
 **Description constraints for max portability:**
+
 - Single line (Codex enforces this)
 - ≤ 500 chars (Codex limit; spec allows 1024)
 - Lead with "Use when..." or "Run this when..."
 - Front-load trigger keywords in first 50 chars (may be truncated at scale)
 
 **Skill budget awareness (Claude Code):**
+
 - Claude Code has a ~16,000 character budget for skill descriptions at startup
 - At 60+ skills, descriptions may be silently truncated
 - Keep descriptions concise; the body handles detail
@@ -213,4 +213,3 @@ Successful completion means:
 **Shared references:** Keep a shared doc's canonical copy in `.agents/docs/` (edit it in one place). If a distributed skill needs it at invocation time, vendor it into `references/docs/` as a symlink to the canonical file (`ln -s ../../../../docs/my-guide.md references/docs/my-guide.md`); the build materializes the symlink so the doc travels with the skill. Reference the bundled `references/docs/...` path — a bare `.agents/docs/...` reference dangles once the skill is installed in another repo.
 
 For the full compatibility matrix and resolved research questions, see `references/docs/skills-guide.md`.
-```

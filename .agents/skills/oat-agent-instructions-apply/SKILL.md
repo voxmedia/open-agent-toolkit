@@ -5,7 +5,7 @@ disable-model-invocation: true
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(gh:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.7.1
+  version: 1.7.2
 ---
 
 # Agent Instructions Apply
