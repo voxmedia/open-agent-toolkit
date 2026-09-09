@@ -52,6 +52,6 @@ target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,m
 
 target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/wave-7-execution/reviews/final-review-2026-09-09T145954Z.md run=16ffcb7f-6a5d-4954-abd6-1b53154c9f6a
 
-## End-of-run synthesis (pending — do not skip at project completion)
+## End-of-run synthesis
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Wave 7 wrapper: three structural gate entries and no judgment entries. The plan gate blocked once on a dangling parked-work reference (recovered byte-exact from a transcript) and passed on attempt 2; the configured final gate passed at the important threshold (0C/0I/0M/2m) after a four-round root final review whose product findings ran as a three-lane fix round plus two bounded follow-ups. Lessons are carried in the orchestration log's end-of-run synthesis and in summary.md's Wave Synthesis section: gate the last content commit at closeout, hash the record surfaces in turbo, enumerate a reader family before guarding one member, and keep plan writes on the caller's model class.
