@@ -95,8 +95,8 @@ the manifest.
 
 - `missing-additive` — active, supported, no manifest entry, nothing at the expected path: the only true projection gap
 - `removed` — a manifest entry exists but the provider file is gone
-- `modified` — a manifest entry exists and the view no longer agrees with what the last sync recorded, or its version has fallen behind canonical. A `copy` view also reaches this class through the known limitation below, where the difference may be nothing but the generated banner
-- `in-sync` — a symlinked, collection-aliased, or natively read view _is_ the canonical file; a `copy` view matches the content recorded at its last sync
+- `modified` — a manifest entry exists and the view no longer agrees with what the last sync recorded, or its version has fallen behind canonical
+- `in-sync` — a symlinked, collection-aliased, or natively read view _is_ the canonical file; a `copy` view matches the content recorded at its last sync. A managed directory copy is compared with its OAT-managed banner and its `.oat-generated` sentinel excluded, so a freshly synced copy reads `in_sync` rather than drifted (owned by `skill-view-convergence.integration.test.ts`, "converges a copy-strategy skill directory")
 - `untracked` — something exists at the expected path that no manifest entry tracks; stray detection skips provider entries whose name matches a canonical entry, so `oat status` does not report it as a stray and reports the untracked projection as `missing` instead
 - `unverified` — the view's state is unknown: either a manifest entry arrived with no drift observation, or reading that one view failed and the row carries the redacted reason
 - `inactive`, `unsupported`, `excluded` — no projection is expected in this scope, so none of them is reported as missing
@@ -172,22 +172,6 @@ stale and would not be reported as such. The view's detail names the two
 declared values and says the comparison was skipped, so the ambiguity is
 visible rather than silently resolved. When the resolver's answer happens to
 agree with canonical, nothing is withheld and the detail says so instead.
-
-### Known limitation: copy-strategy skill views
-
-A `copy` skill view is reported `modified` immediately after a successful sync,
-and stays that way. The engine writes an OAT-managed banner into the copied
-`SKILL.md` and an `.oat-generated` sentinel beside it, and neither is accounted
-for in the manifest hash, so `oat status` reports `drifted:modified` and every
-later `oat sync --dry-run` plans another `update_copy`. Because no sync clears
-that state, `oat tools info` prints no repair line when a `modified` copy's
-version still matches canonical.
-
-That suppression is a conservative heuristic rather than a proof: equal versions
-do not establish equal bodies, so an edit to the canonical source or to the copy
-that kept the version reaches the same branch, and a sync _would_ repair that
-one. The class detail says so and names the concrete scope command to run if you
-know either side was edited. Tracked as `BL-260908-make-copy-strategy-skill`.
 
 ## Stray adoption
 

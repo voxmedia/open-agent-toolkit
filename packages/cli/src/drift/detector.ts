@@ -2,6 +2,7 @@ import { lstat, readFile, readlink, stat } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
 import { proveCollectionIdentity } from '@engine/collection-sync';
+import { computeManagedDirectoryCopyHash } from '@engine/managed-copy-hash';
 import { computeContentHash, computeStringHash } from '@manifest/hash';
 import type { ManifestEntryV2 } from '@manifest/manifest.types';
 
@@ -106,6 +107,30 @@ export async function detectDrift(
   const currentHash = await computeContentHash(providerPath, entry.isFile);
   if (entry.contentHash === currentHash) {
     return createReport(entry, { status: 'in_sync' });
+  }
+
+  // A directory copy is decorated by the writer: `applyCopyMarker` adds the
+  // `.oat-generated` sentinel and prepends the banner to SKILL.md/AGENT.md,
+  // while the manifest records the undecorated canonical hash. Re-ask the
+  // question with those two artifacts excluded, so a faithful copy reads
+  // `in_sync` instead of permanently `modified`.
+  //
+  // Deliberately *not* gated on `copyTransform`: the banner and sentinel are
+  // engine-owned rather than adapter-owned, and `commands/tools/info/index.ts`
+  // passes no transform. Gating here would leave `oat tools info` disagreeing
+  // with `oat status`. A `null` result — no sentinel, a sentinel naming a
+  // different canonical path, a missing banner, a non-regular entry — falls
+  // through to the raw verdict below, as does any other digest, so a tampered
+  // or unverifiable copy is still `drifted`.
+  if (!entry.isFile && entry.contentHash !== null) {
+    const managedHash = await computeManagedDirectoryCopyHash(
+      providerPath,
+      canonicalPath,
+      entry.contentType,
+    );
+    if (managedHash !== null && managedHash === entry.contentHash) {
+      return createReport(entry, { status: 'in_sync' });
+    }
   }
 
   // When the manifest hash is stale (e.g. frontmatter-only edits to the

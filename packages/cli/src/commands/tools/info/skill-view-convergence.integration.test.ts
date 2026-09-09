@@ -36,11 +36,11 @@ const SKILL = 'convergence-probe';
  * describe before this diagnostic existed.
  *
  * The strategy is pinned to `symlink` (the adapter default) rather than left to
- * config resolution. A copy-strategy skill *directory* is reported as drifted
- * by `oat status` immediately after a successful sync on this base, because the
- * engine's directory copy adds an OAT-managed banner and an `.oat-generated`
- * marker that the manifest hash does not account for; that pre-existing
- * behavior belongs to the sync engine, not to this read-only diagnostic.
+ * config resolution. A copy-strategy skill *directory* is still decorated by
+ * the engine with an OAT-managed banner and an `.oat-generated` sentinel, but
+ * both the drift detector and the sync planner now compare a managed directory
+ * copy with those two artifacts excluded, so a freshly synced copy converges on
+ * `in_sync` instead of reading as permanently drifted.
  */
 async function createProjectRoot(
   strategy: 'symlink' | 'copy' = 'symlink',
@@ -251,21 +251,15 @@ describe('oat tools info provider-view convergence', () => {
       canonicalVersion: '1.4.2',
       viewVersion: '1.4.2',
     });
-    // Pre-existing engine behavior, faithfully reported rather than hidden:
-    // the banner and `.oat-generated` sentinel are not accounted for in the
-    // manifest hash, so `oat status` and the detector already call a freshly
-    // synced copy directory drifted. The versions above are what tell the
-    // user the content itself is current.
-    expect(claude?.viewClass).toBe('modified');
-    expect(claude?.driftState).toEqual({
-      status: 'drifted',
-      reason: 'modified',
-    });
-    // No repair is offered for that state, because running one changes
-    // nothing: the class is the engine's banner/sentinel condition, tracked as
-    // BL-260908-make-copy-strategy-skill.
+    // The banner and `.oat-generated` sentinel are excluded from the managed
+    // directory-copy comparison, so a faithful copy converges instead of
+    // reading as drifted.
+    expect(claude?.viewClass).toBe('in-sync');
+    expect(claude?.driftState).toEqual({ status: 'in_sync' });
+    // No repair line — but for a different reason than before this converged:
+    // an `in-sync` view is simply not in REPAIRABLE. This is not the old
+    // suppression of a repair for a view the detector called modified.
     expect(claude?.suggestion).toBeNull();
-    expect(claude?.detail).toContain('BL-260908-make-copy-strategy-skill');
     const { stdout } = await runCli(root, home, [
       'tools',
       'info',
@@ -274,6 +268,59 @@ describe('oat tools info provider-view convergence', () => {
       'project',
     ]);
     expect(stdout).not.toContain('Repair:');
+  });
+
+  it('converges a copy-strategy skill directory: synced, then in_sync, then nothing left to plan', async () => {
+    const root = await createProjectRoot('copy');
+    const home = await mkdtemp(join(tmpdir(), 'oat-skill-view-home-'));
+    temporaryRoots.push(home);
+
+    expect(
+      (await runCli(root, home, ['sync', '--scope', 'project'])).exitCode,
+    ).toBe(0);
+
+    // The writer is unchanged: the banner and the sentinel are still written.
+    expect(
+      await readFile(
+        join(root, '.claude', 'skills', SKILL, 'SKILL.md'),
+        'utf8',
+      ),
+    ).toMatch(/^<!-- OAT-managed/);
+    await expect(
+      stat(join(root, '.claude', 'skills', SKILL, '.oat-generated')),
+    ).resolves.toBeDefined();
+
+    // `oat status` reports the freshly synced copy as in sync and exits 0.
+    const status = await runCli(root, home, [
+      'status',
+      '--scope',
+      'project',
+      '--json',
+    ]);
+    expect(status.exitCode).toBe(0);
+    const statusPayload = JSON.parse(status.stdout) as {
+      reports: { canonical: string; state: { status: string } }[];
+      summary: { drifted: number; inSync: number };
+    };
+    expect(
+      statusPayload.reports.find(({ canonical }) => canonical.includes(SKILL))
+        ?.state,
+    ).toEqual({ status: 'in_sync' });
+    expect(statusPayload.summary.drifted).toBe(0);
+
+    // And the next dry run has nothing left to plan for it: no update_copy
+    // loop.
+    const dryRun = await runCli(root, home, [
+      'sync',
+      '--scope',
+      'project',
+      '--dry-run',
+    ]);
+    // Assert the run succeeded too: a failed dry run with empty stdout would
+    // satisfy a bare `not.toContain` on its own.
+    expect(dryRun.exitCode).toBe(0);
+    expect(dryRun.stdout).toContain('skip');
+    expect(dryRun.stdout).not.toContain('update_copy');
   });
 
   it.each([
