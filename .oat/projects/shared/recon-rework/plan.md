@@ -603,7 +603,8 @@ do not claim model-name capability ranking, and do not close recap or wave-7 ite
 ## Reviews
 
 The first manual plan artifact review has been received and its corrections are
-complete; re-review remains pending, so it is not passed. Keep the unbound template
+recorded. The direct re-review is received with two Important findings awaiting
+disposition, so the plan is not passed. Keep the unbound template
 rows below. The spec row is N/A for quick mode; its placeholder is retained solely
 to preserve scaffold review rows and is not a new spec requirement. No explicit
 auto-review-disabled configuration was written.
@@ -616,8 +617,10 @@ auto-review-disabled configuration was written.
 | spec   | artifact | pending         | -          | -                                                           | -             | -          | -           |
 | design | artifact | pending         | -          | -                                                           | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T163711Z.md | -             | -          | -           |
+| plan   | artifact | received        | 2026-09-09 | reviews/artifact-plan-review-2026-09-09T232155Z.md          | -             | -          | -           |
 | p03    | code     | pending         | -          | -                                                           | -             | -          | -           |
 | p04    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| plan   | artifact | received        | 2026-09-09 | reviews/artifact-plan-review-2026-09-09T231851Z.md          | -             | -          | -           |
 
 ## Implementation Complete
 
