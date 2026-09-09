@@ -403,6 +403,14 @@ _Recorded when the configured implementation exit gate runs._
 
 **p06 row → `fixes_added`**; round 2 on the original reviewer handle follows the fix commit.
 
+## Review Received: p06 (round 2 — passed)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p06-review-2026-09-09T014928Z.md (reviewed head `0f81fd8fad4b92c7dba163b802bb44519d962c37`, manual, opus)
+**Findings:** 0 · 0 · 0 · 0 — PASS. Verification records for the round-1 dispositions: M1 — the bullet's claims checked against `fs/assets.ts:186-219` (four exit-2 causes), the release contract (one `bundle-metadata` presence entry), and six re-run probes (both layers fire on an emptied directory; only the tarball layer catches the symlinked `assets/docs`); lines outside the bullet byte-identical to the phase base, `:95` md5 unchanged. m1 — seven derived controls, 27 passing; the lane's two removal controls re-run (3 of 27 red; retire-on-removal green); the reviewer's eighth-name control now reddens two tests; the reviewer's own round-1 "first path" suggestion proven wrong by a probe (false-fails `skills` and `templates`). Append-only (parent is the unamended `8cf75b11b`); forced build/check/test `Cached: 0` (cli 7114); asset and dist trees hash-identical.
+
+**p06 row → `passed`** (reviewed head `0f81fd8fa`); p06 is clear for the group-2 fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -439,6 +447,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p06-review-001` outcome: PASS with findings, 0/0/1M/1m (tarball-layer guard proven on two non-control directories; symlinked-directory probe shows the tarball layer's independent value). M1/m1 → fix round `w7-p06-fix-001` on the resumed lane.
 - `w7-p06-fix-001` outcome: one append-only commit `0f81fd8fad4b92c7dba163b802bb44519d962c37` (two files, +29/−14): the docs bullet scoped to the top-level shape `validateBundleStructure` checks with the `bundle-metadata.json` carve-out and the tarball layer re-attributed to paths that never reach the tarball; the pack-control table derived from `REQUIRED_BUNDLE_DIRECTORIES` (27 tests, each deriving the full filtered `requiredPaths` set — a first-path derivation would false-fail `templates`/`skills`); removal control 3 of 27 red; gates forced `Cached: 0` (cli 7114).
 - `w7-p06-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w7-p06-review-002.json`.
+- `w7-p06-review-002` outcome: PASS (fan-in may proceed), 0/0/0/0; both dispositions verified by the reviewer's own controls; the reviewer retracted its round-1 implementation suggestion after probing it.
 - `w7-p05-impl-001` outcome (resumed): DONE, one commit `412abf81d8b42515d0bbf06cadbb94d103502258` (21 files). Beyond the refresh's four sites the lane fixed, with reproductions: the real cause of site C (`providers/ceiling/registry.ts:219` `getCeilingAdapter` returning `Object.prototype` past its `??` fallback — the two cited dispatch-ceiling maps own their computed-literal key), a Codex-found GLOBAL prototype pollution in `buildResolvedConfigAggregate` (the aggregate walker descends into `Object.prototype` for a `__proto__` provider — `({}).high` polluted process-wide; exposed by Step 2), `toProjectMatrixCompatibility` (project-state path), and the two ceiling layer lookups. Codex R1 DO-NOT-SHIP (3 fixed; run wedged after emitting — findings recovered from the run log), R2 SHIP. Intermediate-red control held (cases 9, 10, 14, 15). Seven gates exit 0, `Cached: 0` (cli 7128). `registry.ts` and its test are outside the plan's scope union — flagged for the review's scope-deviation table.
 - `w7-p05-review-001` — reviewer, target opus, security-class brief (nine rulings: base-vs-head pollution repro incl. the intermediate state; scope-deviation table; weaker-anywhere across every guarded site; the intermediate-red control; the site-C correction; PJM carve-out; the two accepted Mediums; gates). Record `dispatch/w7-p05-review-001.json`.
 - `w7-p04-impl-001` outcome: DONE, one commit `247f06b65cd9f517742d8924ceeacd16fdd944a0` (18 files). The recovered `parked/wave-5-p09/` bytes verified exactly (117/17, 218 lines, 165/249 lines, three SHA-256s) and applied; the seal is idempotent with a `sealed` field on `checkProjectLog` and a post-seal refusal; `oat-project-summary` 1.5.4 → 1.5.5; `oat-project-complete` kept at 1.7.10. One Codex round: Important — the sealed guard preceded key dedupe and broke the gate's idempotent keyed replay (fixed: key recognition first; new content still refused; control 10); the two untracked validators confirmed staged. Deviation: a thrown `ProjectLogSealedError` mapped to `{"status":"sealed"}` + exit 1 instead of a fourth result variant, because `gate/index.ts:3282` (p05's file) narrows `result.status`. Two uninventoried propagation surfaces (`autonomy-contract.md` prompt sites; `synced-bookkeeping-sites.json`). Ten controls red then restored; gates `Cached: 0` (cli 7130; `test:skills` 883; `test:smoke` 167).
@@ -460,6 +469,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- p06 round 2 passed (0/0/0/0) at `0f81fd8fa`; p06 row `passed`.
 - p06 review received (PASS with findings, 0/0/1M/1m): fix round `w7-p06-fix-001` dispatched; p06 row `fixes_added`.
 - Group 1 fan-in: merges `ea2f5a675`, `7b9793b8f`, `f175ca2da`; lockstep bump `f0eb1c02e` (0.2.67); eight gates + smoke + skills + root test green (0 cached; cli 7105). Group 2 (p04 + p05 + p06) bootstraps next.
 
