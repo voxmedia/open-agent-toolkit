@@ -505,6 +505,8 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p05-review-002` outcome: PASS (fan-in may proceed), 0/0/1M/2m — all seventeen DR anchors re-derived; the wrapper surface an exact set match; the residual Medium and one Minor fixed by the root in the receive.
 - `w7-p04-review-001` outcome: PASS with findings, 0/0/1M/3m (deviation sound; weaker-anywhere clean; parked bytes verified; racing-seal probe). M1/m1/m2 → fix round `w7-p04-fix-001` on the resumed lane; m3 wave close.
 - `w7-p04-fix-001` — bounded fix round (prose qualification ×4 + one negative-direction case; retro routing sentence + bump; capable seal-count assertion). Record `dispatch/w7-p04-fix-001.json`.
+- `w7-p04-fix-001` outcome: one append-only commit `6403c6ced75f4322720b0d51e548186ec8f0c9df`: the four refusal surfaces qualified (keyed replay → `already-appended`, new content refused) with a negative-direction `append.test.ts` case (red under neutralized key recognition); `oat-project-retro` routed on the sealed outcome and bumped 1.0.5 → 1.0.6 (no pins exist; sweep clean; provider views unchanged); the vacuous seal-count assertion dropped in favor of the load-bearing one with a pointer to the capable integration control. Gates forced `Cached: 0` (cli 7131; skills 883; smoke 167; `check:skill-bumps` validated two bumps).
+- `w7-p04-review-002` — disposition-verification round 2 on the original reviewer handle. Record `dispatch/w7-p04-review-002.json`.
 
 #### Group 1 fan-in (2026-09-09)
 
