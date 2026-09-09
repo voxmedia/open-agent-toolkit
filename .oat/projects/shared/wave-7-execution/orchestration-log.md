@@ -147,3 +147,16 @@ cross-model rule for security-class diffs earned its keep. **Skill signal
 (gap):** a fix that makes a hidden key visible relocates the hazard; plans
 of that shape need a "blast radius of the fix" step, and sweeps must grep by
 shape as well as by variable name.
+
+### 2026-09-09 · structural · oat-wave-execute · group 3 fan-in
+
+Three lanes merged in plan order (`7c5a6aa01`, `17d271b23`, `95ad10827`; five
+lane commits patch-id-identical after rebase), one root address-now
+(`001ecfa7e`), lockstep retained at 0.2.67, eleven gates exit 0 with
+`Cached: 0` (cli 7187), config integrity clean. The quietest group so far:
+one plan correction (a cited test case that never existed), one retracted
+lane diagnosis (the reviewer instrumented what the lane had only reasoned
+about), and two Minors small enough for root address-nows. **Skill signal
+(strengthens):** requiring "found and fixed" claims to come with counts is
+paying off — p09's false diagnosis would otherwise have entered the retro as
+a lesson.

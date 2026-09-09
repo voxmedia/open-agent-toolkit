@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-09
-oat_current_task_id: p07-t01
+oat_current_task_id: p10-t01
 oat_generated: false
 ---
 
@@ -32,10 +32,10 @@ oat_generated: false
 | Phase 4  | complete    | 1     | 1/1       |
 | Phase 5  | complete    | 1     | 1/1       |
 | Phase 6  | complete    | 1     | 1/1       |
-| Phase 7  | in_progress | 1     | 0/1       |
-| Phase 8  | pending     | 1     | 0/1       |
-| Phase 9  | pending     | 1     | 0/1       |
-| Phase 10 | pending     | 1     | 0/1       |
+| Phase 7  | complete    | 1     | 1/1       |
+| Phase 8  | complete    | 1     | 1/1       |
+| Phase 9  | complete    | 1     | 1/1       |
+| Phase 10 | in_progress | 1     | 0/1       |
 | Phase 11 | pending     | 1     | 0/1       |
 | Phase 12 | pending     | 1     | 0/1       |
 | Phase 13 | pending     | 1     | 0/1       |
@@ -47,7 +47,7 @@ oat_generated: false
 | Phase 19 | pending     | 1     | 0/1       |
 | Phase 20 | pending     | 1     | 0/1       |
 
-**Total:** 6/20 tasks completed
+**Total:** 9/20 tasks completed
 
 ---
 
@@ -125,39 +125,39 @@ oat_generated: false
 
 ## Phase 07: reconcile the oat doctor example (p07)
 
-**Status:** pending · **Group:** 3 · **Tasks:** p07-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 3 · **Tasks:** p07-t01
+**Outcome:** the oat-doctor dashboard example describes a state the doctor can report: every pack appears in exactly one of the installed / available sections, backed by a disjointness case whose extractions must be complete (every table row and bullet parses; parsed counts equal candidate counts); `oat-doctor` 1.2.3 → 1.2.4 (no pin exists).
+**Verification:** focused 3; `skills.test.ts` 213; forced check/type-check/cli test `Cached: 0` (7164); check:skill-bumps; lint; format; validate-skills; `test:skills` 883; `test:smoke` 167; one Codex round (two Importants rejected as pre-existing and out of scope); root review PASS with findings (0/0/1M/2m; three controls re-run; extraction-completeness gap found by the reviewer's probe) → test-only fix round → round 2 PASS (0/0/0/1m, taken as a root address-now).
+**Deviations:** none; two pre-existing example defects (`brainstorm` in neither section; pack-level status semantics) carried to closeout.
 
 ### Task p07-t01: Execute external plan — Make the oat-doctor dashboard example describe a state the doctor can report
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `07e643840` → integration `5183dce44`; fix `617356891` → `51cee6b3c`; root address-now `001ecfa7e`
 
 ## Phase 08: warn on wrong typed documentation root (p08)
 
-**Status:** pending · **Group:** 3 · **Tasks:** p08-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 3 · **Tasks:** p08-t01
+**Outcome:** a wrong-typed `documentation.root` (number, object, array, null, boolean) now warns instead of dropping in silence: `readOatConfigWithWarnings` / `OatConfigRead` carry the warning through a sink, `oat config get` and `list` read once and print it once (stderr in human mode; a `warnings` array under `--json`, omitted when empty); the value still falls back to the default and every other key's handling is unchanged.
+**Verification:** focused 421; forced check/type-check/cli test `Cached: 0` (387 files / 7182); check:skill-bumps (nothing); lint; format; validate-skills; four controls both ways; built-CLI Done criteria in a scratch repo; one Codex round (1I rejected with a read count — `list` read 109 times at base; 1M + 3m fixed); root review PASS with findings (0/0/0/5m; 26-fixture base-vs-head normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1) — all deferred or record-fixed, no fix round.
+**Deviations:** none against the plan; the plan's cited malformed-JSON case at `oat-config.test.ts:117` did not exist (dated correction entry); no pre-existing `documentation` test breaks when the warning goes noisy — the new exact-match assertions carry that guard.
 
 ### Task p08-t01: Execute external plan — Warn on a wrong-typed `documentation.root` instead of dropping it in silence
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `a0fa6c654` → integration `078eeb443`
 
 ## Phase 09: name the resolved symlink target (p09)
 
-**Status:** pending · **Group:** 3 · **Tasks:** p09-t01
-**Outcome:** -
-**Verification:** -
-**Deviations:** -
+**Status:** complete · **Group:** 3 · **Tasks:** p09-t01
+**Outcome:** the instruction-pointer exclusion warning names the resolved target (or the on-disk spelling for a case-only mismatch) instead of blaming filesystem case-sensitivity for every inert entry; the `absent` message is byte-identical; no inert entry became effective (a 16-scenario base-vs-head differential); the docs sentence updated.
+**Verification:** focused 94+; check; type-check; forced test `Cached: 0`; check:skill-bumps (nothing); lint; format; validate-skills; `oat docs generate-index` no diff; two Codex rounds (R1 1M fixed — exhaustive narrowing via a typed `Extract`; R2 clean); root review PASS with findings (0/1I/1M/2m) → fix round → round 2 PASS (0/0/0/0).
+**Deviations:** the lane's "case-insensitivity simulation inert on macOS" diagnosis was false (the old anchor fired by substring match) — the re-key kept as a clarity change with a corrected comment; the root-relative clauses now pinned.
 
 ### Task p09-t01: Execute external plan — Name the resolved target in the symlink inert-exclusion warning
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `04a9a29ca` → integration `f3822e7bb`; fix `99675387b` → `e88ba925f`
 
 ## Phase 10: repair stray fences in lifecycle skills (p10)
 
@@ -621,6 +621,14 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - Backlog index: no lane closed or renamed an item in this group (p05's decision-record update regenerated the decision index with no diff).
 - Worktrees `.worktrees/wave-7/p0{4,5,6}` and branches `wave-7/p0{4,5,6}` removed after the merge.
 
+#### Group 3 fan-in (2026-09-09)
+
+- `wave-7/p07`, `wave-7/p08`, `wave-7/p09` rebased onto the integration tip and merged in plan order with `git merge --no-ff` as `7c5a6aa01`, `17d271b23`, `95ad10827`. Lane commits re-hashed (identical `git patch-id --stable` pairs): `07e643840`→`5183dce44`, `617356891`→`51cee6b3c`, `a0fa6c654`→`078eeb443`, `04a9a29ca`→`f3822e7bb`, `99675387b`→`e88ba925f`. Root address-now `001ecfa7e`: the doctor-example candidate filters tolerate leading whitespace (p07 round-2 Minor; an indented duplicate row probed red).
+- Lockstep retained at 0.2.67 (`origin/main` still 0.2.66 at `684bd3be3`).
+- Integration gates (sequential, exit codes captured, before any bookkeeping edit): `pnpm check` 0, `pnpm type-check` 0, `HOME=$(mktemp -d) pnpm exec turbo run test --force` 0 (0 cached; cli 387 files / 7187 tests), `pnpm build` 0, `pnpm run check:skill-bumps` 0, `pnpm release:check-versions` 0, `pnpm release:validate` 0, `pnpm build:docs` 0; `pnpm test:smoke` 0, `pnpm test:skills` 0, root `pnpm test` 0. Config-integrity check: no tracked `.oat/config.json` key missing versus `origin/main`.
+- No lane closed or renamed a backlog item in this group.
+- Worktrees `.worktrees/wave-7/p0{7,8,9}` and branches `wave-7/p0{7,8,9}` removed after the merge.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -629,6 +637,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 ### 2026-09-09
 
+- Group 3 fan-in: merges `7c5a6aa01`, `17d271b23`, `95ad10827`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7187). Group 4 (p10 + p11 + p12) bootstraps next.
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
 - p09 round 2 passed (0/0/0/0) at `99675387b`; p09 row `passed`; group 3 fan-in starts.
@@ -665,20 +674,26 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 | p04-t01       | plan step 4             | fourth `ProjectLogAppendResult` variant `status: 'sealed'`                | thrown `ProjectLogSealedError` mapped at the command layer to `{"status":"sealed"}` + exit 1 (`gate/index.ts:3282` narrows `result.status`; out of scope); refusal conditional on key recognition (keyed replay → `already-appended`) |
 | p05-t01       | plan step 5             | expected classification from the inspected files                          | four unclassified sites on the `src`-wide sweep → dated refresh (A fixed, B–D guarded); site C's real cause `registry.ts:219`; the aggregate walker's global pollution and two more sites fixed with controls                         |
 | p06-t01       | plan test plan          | two hand-listed pack controls                                             | controls derived from `REQUIRED_BUNDLE_DIRECTORIES` (seven)                                                                                                                                                                           |
+| p08-t01       | plan test plan case 4   | extend the malformed-JSON case at `:117`                                  | no such case existed; the lane wrote the assertion (dated correction entry)                                                                                                                                                           |
+| p09-t01       | lane report             | simulation "inert on macOS"                                               | disproved by the review's instrumentation; comment corrected in the fix round                                                                                                                                                         |
 
 ## Test Results
 
-| Phase      | Tests Run                                                                    | Passed | Failed | Coverage |
-| ---------- | ---------------------------------------------------------------------------- | ------ | ------ | -------- |
-| (none yet) | -                                                                            | -      | -      | -        |
-| p01        | focused 7 + `test:skills` 870 + `test:smoke` 167 + forced CLI suite          | all    | 0      | -        |
-| p02        | focused 288 + forced CLI suite (385 files)                                   | all    | 0      | -        |
-| p03        | focused 46 + forced CLI suite (386 files / 7093)                             | all    | 0      | -        |
-| g1 fan-in  | eight DoD gates + smoke + skills + root test (0 cached; cli 7105)            | all    | 0      | -        |
-| p04        | focused 429 + `test:skills` 883 + `test:smoke` 167 + forced CLI suite (7131) | all    | 0      | -        |
-| p05        | focused 780 + forced CLI suite (387 files / 7128)                            | all    | 0      | -        |
-| p06        | focused 27 + forced CLI suite (7114)                                         | all    | 0      | -        |
-| g2 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                      | all    | 0      | -        |
+| Phase      | Tests Run                                                                                         | Passed | Failed | Coverage |
+| ---------- | ------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| (none yet) | -                                                                                                 | -      | -      | -        |
+| p01        | focused 7 + `test:skills` 870 + `test:smoke` 167 + forced CLI suite                               | all    | 0      | -        |
+| p02        | focused 288 + forced CLI suite (385 files)                                                        | all    | 0      | -        |
+| p03        | focused 46 + forced CLI suite (386 files / 7093)                                                  | all    | 0      | -        |
+| g1 fan-in  | eight DoD gates + smoke + skills + root test (0 cached; cli 7105)                                 | all    | 0      | -        |
+| p04        | focused 429 + `test:skills` 883 + `test:smoke` 167 + forced CLI suite (7131)                      | all    | 0      | -        |
+| p05        | focused 780 + forced CLI suite (387 files / 7128)                                                 | all    | 0      | -        |
+| p06        | focused 27 + forced CLI suite (7114)                                                              | all    | 0      | -        |
+| g2 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                           | all    | 0      | -        |
+| p07        | focused 3 + `skills.test.ts` 213 + `test:skills` 883 + `test:smoke` 167 + forced CLI suite (7164) | all    | 0      | -        |
+| p08        | focused 421 + forced CLI suite (387 files / 7182)                                                 | all    | 0      | -        |
+| p09        | focused 94 + forced CLI suite                                                                     | all    | 0      | -        |
+| g3 fan-in  | eight DoD gates + smoke + skills + root test (0 cached)                                           | all    | 0      | -        |
 
 ## Deferred Findings
 
