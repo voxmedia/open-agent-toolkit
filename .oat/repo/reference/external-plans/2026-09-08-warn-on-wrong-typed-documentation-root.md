@@ -543,6 +543,8 @@ Stop and report instead of improvising when:
 
 ## Revalidation Before Execution
 
+**Correction applied 2026-09-09 (wave-7 p08 execution; no requirement change):** the Test plan's case 4 cites "the existing case at `:117`" in `config/oat-config.test.ts` as a malformed-JSON test asserting a thrown `SyntaxError`; no such case exists at the inspected head or on the executed tip (line 117 is `rejects an invalid projects.defaultScope`, and the file contained no `SyntaxError` assertion). The lane wrote the malformed-JSON assertion itself (control C: folding `SyntaxError` into the missing-file default turns it red). Deferred follow-ups the lane named, per this plan's own instruction: wire `readOatConfigWithWarnings` into `commands/instructions/instructions.utils.ts:303`; a docs sentence in `configuration.md`; one shared-config read for `runGet`/`runList` and `resolveEffectiveConfig` (needs `config/resolve.ts`). The root review also noted, as residue outside this plan's Outcome: a wrong-typed `documentation` container, `config dump`, and `instructions validate` stay silent; the warning rides on every `config get <key>` `--json` document (documented behavior of the once-per-command read, unpinned by a test).
+
 Revalidate this plan against live state before executing when:
 
 - substantial time passes after `2026-09-08`;

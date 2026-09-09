@@ -484,6 +484,22 @@ _Recorded when the configured implementation exit gate runs._
 
 **p07 row → `fixes_added`**; round 2 on the original reviewer handle follows the fix commit.
 
+## Review Received: p08 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p08-review-2026-09-09T030639Z.md (reviewed head `a0fa6c654bfd3851a0688cde4bc54a976f0313bf`, manual, opus)
+**Findings:** Critical 0 · Important 0 · Medium 0 · Minor 5 — PASS with findings. Verified: a 26-fixture base-vs-head normalizer battery (accept/reject and normalized value identical; the probe proven able to fail); the `--json` channel on a rebuilt CLI (one stderr line in human mode; zero stderr bytes and exactly one document with one `warnings` entry under `--json`; no `warnings` key on a valid root); reader calls counted with a module mock (`list` 109 + 1, `get` 1 + 1 — the head adds exactly one read, so the rejected Codex finding stands); controls A (13 red), B (exactly the two no-noise cases red — the new exact-match assertions judged sufficient), D re-run; gates re-forced `Cached: 0` (cli 7182); scope exact.
+
+**Dispositions (all Minor; no code change; no fix round):**
+
+- m1 — `get` was atomic at base and now performs two reads: **deferred** — the shared-read follow-up the lane named (needs `config/resolve.ts`), carried in the follow-up ledger.
+- m2 — the warning rides on every `config get <key>` `--json` document, unpinned: **deferred** — documented as behavior of the once-per-command read in the plan correction; a pinning case joins the follow-up ledger.
+- m3 — a wrong-typed `documentation` container, `config dump`, and `instructions validate` remain silent: **deferred** — outside the plan's Outcome; the `instructions.utils.ts:303` wiring is the lane-named follow-up.
+- m4 — the new `--json` field is undocumented: **deferred** — the plan-deferred docs sentence (follow-up ledger).
+- m5 — two record inaccuracies: the lane's control-A count (11 vs the reviewer's 13) is corrected here (the reviewer's figure stands); the external plan's nonexistent `:117` case: **fixed** (root, plan write) — a dated correction entry records the missing case, the lane's own assertion, and the named follow-ups; verification: `grep -c 'Correction applied 2026-09-09 (wave-7 p08' <plan>` = 1, corpus contract green.
+
+**p08 row → `passed`** (reviewed head `a0fa6c654`); p08 is clear for the group-3 fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -543,6 +559,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p09-review-001` — reviewer, target opus, six rulings (weaker-anywhere on inert entries incl. a symlink-to-correct-directory probe; the byte-identical `absent` message; the re-keyed simulation proven load-bearing; real symlink fixtures on this host; the exhaustiveness control; scope). Record `dispatch/w7-p09-review-001.json`.
 - `w7-p07-review-001` outcome: PASS with findings, 0/0/1M/2m (controls re-run; no pin; Codex rejections stand; a completeness gap in the regex extraction found by the reviewer's own probe). M1 → fix round `w7-p07-fix-001`; m1/m2 pre-existing, wave close.
 - `w7-p07-fix-001` — bounded test-only fix round on the resumed implementer. Record `dispatch/w7-p07-fix-001.json`.
+- `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
 #### Group 1 fan-in (2026-09-09)
 
@@ -571,6 +588,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
+- p08 review received (PASS with findings, 0/0/0/5m — all deferred or record-fixed; plan correction entry applied); p08 row `passed`.
 - p07 review received (PASS with findings, 0/0/1M/2m): fix round `w7-p07-fix-001` dispatched; p07 row `fixes_added`.
 - p04 round 2 passed (0/0/0/1m) at `6403c6ced`; p04 row `passed`; group 2 fan-in starts.
 - p04 review received (PASS with findings, 0/0/1M/3m): fix round `w7-p04-fix-001` dispatched; p04 row `fixes_added`.
