@@ -179,6 +179,29 @@ describe('loadSyncConfig', () => {
     expect(config.providers.codex).toEqual({ enabled: true });
   });
 
+  it('drops a `__proto__` provider during zod record parsing', async () => {
+    // Pins guard 1 for the whole sync-config provider family. If a future zod
+    // upgrade stops stripping this key, this test fails and the
+    // swept-and-inert classification recorded above `mergeProviderConfigs`
+    // must be re-opened rather than silently relied upon.
+    const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
+    tempDirs.push(root);
+    const configPath = join(root, '.oat', 'sync', 'config.json');
+    await mkdir(join(root, '.oat', 'sync'), { recursive: true });
+    await writeFile(
+      configPath,
+      '{"version":1,"defaultStrategy":"auto","providers":{"__proto__":{"enabled":true},"claude":{"enabled":true}}}',
+      'utf8',
+    );
+
+    const config = await loadSyncConfig(configPath);
+
+    expect(Object.keys(config.providers)).toEqual(['claude']);
+    expect(config.providers.claude).toEqual({ enabled: true });
+    expect('enabled' in config.providers).toBe(false);
+    expect(Object.getPrototypeOf(config.providers)).toBe(Object.prototype);
+  });
+
   it('rejects invalid config with CliError', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
     tempDirs.push(root);

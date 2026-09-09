@@ -182,6 +182,41 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('never writes an aggregate get onto the global Object prototype', async () => {
+    // The aggregate walk descends key segments. A provider literally named
+    // `__proto__` sends the cursor into `Object.prototype`, and the leaf write
+    // then lands on the global prototype -- process-wide pollution, not a
+    // per-map defect. Cleanup is unconditional so a regression cannot leak
+    // into other tests in this worker.
+    const root = await createRepoRoot();
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      '{"version":1,"workflow":{"dispatchCeiling":{"providers":{"__proto__":{"high":"max"},"codex":{"high":"high"}}}}}\n',
+      'utf8',
+    );
+    const { command, capture } = createHarness({ cwd: root });
+
+    try {
+      await runCommand(command, ['get', 'workflow.dispatchCeiling.providers']);
+
+      expect(
+        Object.prototype.hasOwnProperty.call(Object.prototype, 'high'),
+      ).toBe(false);
+      expect(({} as Record<string, unknown>).high).toBeUndefined();
+
+      const printed = JSON.parse(capture.info[0] ?? '{}') as Record<
+        string,
+        unknown
+      >;
+      // The real provider is unchanged, and the prototype-named one is data.
+      expect(printed.codex).toMatchObject({ high: { candidates: ['high'] } });
+      expect(Object.getPrototypeOf(printed)).toBe(Object.prototype);
+      expect(process.exitCode).toBe(0);
+    } finally {
+      Reflect.deleteProperty(Object.prototype, 'high');
+    }
+  });
+
   it('returns exit code 1 for unknown get keys', async () => {
     const root = await createRepoRoot();
     const { command, capture } = createHarness({ cwd: root });
@@ -2691,6 +2726,107 @@ describe('oat config', () => {
         expect(process.exitCode).toBe(0);
       },
     );
+
+    it('keeps a `__proto__` provider as data when setting a ceiling tier', async () => {
+      const root = await createRepoRoot();
+      const { command } = createHarness({
+        cwd: root,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+      });
+
+      // The key grammar admits any non-empty provider segment, so this name
+      // reaches the providers map from user input.
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.__proto__.high',
+        'max',
+        '--shared',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      await runCommand(command, [
+        'set',
+        'workflow.dispatchCeiling.providers.codex.high',
+        'high',
+        '--shared',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      const raw = JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      ) as {
+        workflow?: {
+          dispatchCeiling?: { providers?: Record<string, unknown> };
+        };
+      };
+      const providers = raw.workflow?.dispatchCeiling?.providers ?? {};
+      expect(Object.keys(providers).sort()).toEqual(['__proto__', 'codex']);
+      // `set` normalizes each cell into a candidate ladder before persisting.
+      expect(providers['__proto__']).toEqual({ high: { candidates: ['max'] } });
+      expect(providers.codex).toEqual({ high: { candidates: ['high'] } });
+      expect(Object.getPrototypeOf(providers)).toBe(Object.prototype);
+      expect('high' in providers).toBe(false);
+    });
+
+    it('adopts a recommendation over an existing `__proto__` provider without replacing the map prototype', async () => {
+      const root = await createRepoRoot();
+      // Built with `Object.fromEntries` so the key survives as an own key
+      // through `JSON.stringify`; an object literal would set the prototype.
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              recommendationVersion: 'old',
+              providers: Object.fromEntries([
+                ['__proto__', { high: { candidates: ['max'] } }],
+                ['codex', { high: { candidates: ['medium'] } }],
+              ]),
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const { command } = createHarness({
+        cwd: root,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: {
+                codex: { high: { candidates: ['high'] } },
+                claude: { frontier: { candidates: ['fable'] } },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+      expect(process.exitCode).toBe(0);
+
+      const raw = JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      ) as {
+        workflow?: {
+          dispatchCeiling?: { providers?: Record<string, unknown> };
+        };
+      };
+      const providers = raw.workflow?.dispatchCeiling?.providers ?? {};
+      expect(Object.getPrototypeOf(providers)).toBe(Object.prototype);
+      expect('high' in providers).toBe(false);
+      // The recommendation's real providers survive, and the existing entry
+      // stays data rather than becoming this map's prototype.
+      expect(Object.keys(providers).sort()).toEqual([
+        '__proto__',
+        'claude',
+        'codex',
+      ]);
+      expect(providers.claude).toEqual({ frontier: { candidates: ['fable'] } });
+      expect(providers.codex).toEqual({ high: { candidates: ['medium'] } });
+      expect(providers['__proto__']).toEqual({ high: { candidates: ['max'] } });
+    });
 
     it('does not infer Fable from recommendation version when an explicit Frontier cell is preserved', async () => {
       const root = await createRepoRoot();

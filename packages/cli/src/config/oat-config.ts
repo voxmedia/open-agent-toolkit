@@ -552,18 +552,24 @@ function normalizeRecordMap<T>(
     return undefined;
   }
 
-  const next: Record<string, T | null> = {};
+  // Built with `Object.fromEntries` rather than `next[key] = ...`: since
+  // `config/json.ts` materializes a key named `__proto__` as an own data
+  // property, assignment would reach the legacy prototype setter, drop the
+  // entry as data and install its value as this map's prototype. Same hazard
+  // and same remedy as the `projects` subtree at the `preserved` build below.
+  const entries: [string, T | null][] = [];
   for (const [key, rawEntry] of Object.entries(value)) {
     if (!key.trim()) {
       continue;
     }
     const normalized = normalizeValue(rawEntry);
+    // `null` is a real entry (a tombstone); only `undefined` drops.
     if (normalized !== undefined) {
-      next[key] = normalized;
+      entries.push([key, normalized]);
     }
   }
 
-  return Object.keys(next).length > 0 ? next : undefined;
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
 }
 
 function normalizeExplainersConfig(

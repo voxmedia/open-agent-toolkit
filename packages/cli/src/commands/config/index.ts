@@ -62,6 +62,7 @@ import {
   writeOatLocalConfig,
   writeUserConfig,
 } from '@config/oat-config';
+import { getOwnKey, setOwnKey } from '@config/own-keys';
 import {
   resolveEffectiveConfig,
   resolveEnvOverride,
@@ -2035,7 +2036,10 @@ function applyWorkflowValue(
     const { provider, tier } = parseDispatchCeilingProviderConfigKey(key);
     const providers = workflow.dispatchCeiling?.providers ?? {};
     if (tier) {
-      const existingProviderValue = providers[provider];
+      // `provider` is a user-supplied config-key segment, so the lookup is
+      // own-key guarded. The computed-key writes below use object-literal
+      // define semantics and are already safe.
+      const existingProviderValue = getOwnKey(providers, provider);
       const existingTierMap =
         existingProviderValue &&
         typeof existingProviderValue === 'object' &&
@@ -2317,21 +2321,25 @@ function buildResolvedConfigAggregate(
     if (sourceRank[entry.source] > sourceRank[source]) {
       source = entry.source;
     }
+    // Key segments come from resolved config keys, so a provider literally
+    // named `__proto__` reaches this walk. A bare `cursor[part]` descends into
+    // `Object.prototype` and the leaf write then lands on the global
+    // prototype, polluting every object in the process -- not just this map.
     const parts = entryKey.slice(prefix.length).split('.');
     let cursor = value;
     for (const [index, part] of parts.entries()) {
       if (index === parts.length - 1) {
-        cursor[part] = entry.value;
+        setOwnKey(cursor, part, entry.value);
       } else {
-        const nested = cursor[part];
+        const nested = getOwnKey(cursor, part);
         if (
           typeof nested !== 'object' ||
           nested === null ||
           Array.isArray(nested)
         ) {
-          cursor[part] = {};
+          setOwnKey(cursor, part, {});
         }
-        cursor = cursor[part] as Record<string, unknown>;
+        cursor = getOwnKey(cursor, part) as Record<string, unknown>;
       }
     }
   }
@@ -3298,16 +3306,23 @@ function applyDispatchMatrixRecommendation(
     ...recommendation.providers,
   };
 
+  // `existingProviders` is a `normalizeDispatchMatrix` product, which now
+  // keeps a provider literally named `__proto__` as an own key, so
+  // `Object.entries` yields it here and every access is own-key guarded. The
+  // `{ ...recommendation.providers }` spread above is already safe.
   for (const [provider, existingValue] of Object.entries(existingProviders)) {
-    const recommendedValue = recommendation.providers[provider];
+    const recommendedValue = getOwnKey(recommendation.providers, provider);
     if (
       recommendedValue &&
       typeof recommendedValue !== 'string' &&
       typeof existingValue !== 'string'
     ) {
-      providers[provider] = { ...recommendedValue, ...existingValue };
+      setOwnKey(providers, provider, {
+        ...recommendedValue,
+        ...existingValue,
+      });
     } else {
-      providers[provider] = existingValue;
+      setOwnKey(providers, provider, existingValue);
     }
   }
 
@@ -3336,11 +3351,14 @@ async function effectiveTerminalReviewerNotices(
     for (const [provider, value] of Object.entries(
       config.workflow?.dispatchCeiling?.providers ?? {},
     )) {
-      const existing = effectiveProviders[provider];
-      effectiveProviders[provider] =
+      const existing = getOwnKey(effectiveProviders, provider);
+      setOwnKey(
+        effectiveProviders,
+        provider,
         isRecord(existing) && isRecord(value)
           ? { ...existing, ...value }
-          : value;
+          : value,
+      );
     }
   }
   return terminalReviewerNoticesForMatrix(effectiveProviders);
