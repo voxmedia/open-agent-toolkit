@@ -124,6 +124,16 @@ returns to planning as a decision.
   quotes the live page with verification dates, the emitted template carries
   no unsourced provider claim, and the duplicated frontmatter matrix is
   consolidated; `create-agnostic-skill` 1.5.0, `create-oat-skill` 1.5.4.
+- **Final-review fix round (Phase 21).** The completion seal routes on
+  structure before the idempotency short-circuit and the skill re-verifies
+  `sealed: true`; the project-log parser is LF-only and every validator refuses
+  CR / U+2028 / U+2029 (a log two readers resolve differently fails closed);
+  `synthesize` honors the seal and the lock; the directory digest is
+  length-framed under a domain tag with the marker file required, plus a
+  read-once compatibility bridge for existing manifests; `turbo.json` hashes
+  the record surfaces; the fence scanner follows in-repo symlinks; the
+  authoring skills state the alias error; `oat-wave-execute` gains a closeout
+  gate step.
 - **Plan writes stay on the caller's model class (p20).** The rule is written
   in `oat-repo-improve` Step 2, `oat-wave-execute`'s reconciliation contract,
   and the `repo-improve` docs page, pinned by a bundled-docs contract case;
@@ -229,6 +239,11 @@ format` checks" sentence (false for `packages/control-plane`); `format:fix`
   claims and the twelve dead provider-reference URLs.
 - `BL-260909-wave-7-review-polish-leftovers` — the Minors deferred across the
   wave.
+- `BL-260909-rewrite-inbound-references` (final review M3) — `oat backlog
+archive` leaves dangling `items/` links in every plan that cites the item.
+- `BL-260909-restamp-a-stale-copy-strategy` (Phase 21) — sync never restamps
+  a stale `contentHash` on skip; retire the pre-framing digest bridge once it
+  does; obsolete legacy mappings classify `detach`.
 - Update-only, still open: `BL-260906-harden-dispatch-launch` (p16 parked;
   Notes entry points at the STOP record and the parked patch) and
   `BL-260908-retire-the-top-level-skill` (p13 landed step 1; step 2 one release
@@ -292,4 +307,4 @@ Rolled up from the orchestration log's end-of-run synthesis (2026-09-09):
 - Gate ledger: plan gate blocked once (a dangling parked-work reference,
   recovered) then passed; every lane review passed within two rounds; eight
   fan-ins each ran the eight DoD gates plus smoke, skills, scripts, and the
-  root test with `Cached: 0`; final review and exit gate: pending at this roll-up; recorded under `## Review Received: final` in `implementation.md` and the gate ledger below when received.
+  root test with `Cached: 0`; the root final review returned CHANGES REQUESTED (4C/5I/6M/7m) — one Critical was the closeout archival itself (a bare `__proto__` in two summaries, bolded by the pre-commit formatter), three were product holes in the completion seal and the managed-copy digest — closed by a root record commit and a three-lane Phase 21 fix round, then a closeout gate run after the last content commit (0 cached; cli 7336); reviewer round 2 **R2**; exit gate **EXIT**.

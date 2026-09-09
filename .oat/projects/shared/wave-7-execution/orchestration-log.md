@@ -359,3 +359,34 @@ rule are now skill text (`DR-260908-a-stop-whose-remedy-lies`; p20's
 `oat-repo-improve` / `oat-wave-execute` paragraphs with a contract case); the
 address-now convention and the weaker-anywhere ruling pattern remain wave
 practice recorded here for the retro.
+
+### 2026-09-09 · structural · oat-wave-execute · root final review → Phase 21 fix round
+
+The root final review (reconnaissance attempted: seven read-only lanes) came
+back CHANGES REQUESTED, 4C/5I/6M/7m, after confirming the review chain by
+patch-id and ledger head across all twenty-eight reviewed heads. Critical 1
+was the orchestrator's own closeout archival: two outcome summaries carried a
+bare prototype-key literal, the pre-commit `oxfmt --write` bolded it, and
+p03's guard went red — unnoticed because no gate ran after the archival and
+because `turbo.json` did not hash `.oat/repo/**`, so a cached `pnpm test`
+replayed green on a red tree. The three product Criticals were holes the
+lane reviews had not reached: an idempotency-token collision that suppressed
+the completion seal, a CR / U+2028 section-marker injection that voided it,
+and an unframed directory digest that let a forged provider view read
+`in_sync`. Record findings were closed by one root commit; product findings
+ran as Phase 21 — three parallel fix lanes on disjoint files, each with two
+Codex rounds (which found two more Criticals inside the fixes themselves: a
+cross-encoding digest collision and a TOCTOU across two walks) — merged and
+gated after the last content commit. **Skill signal (gap → fixed in this
+wave):** the closeout order lacked a gate run after the archival; it is now a
+numbered step in Step 6, and the wrapper's Phase 21 gate ran it. **Skill
+signal (strengthens):** a final review with reconnaissance lanes and
+end-to-end CLI witnesses found what nineteen passing lane reviews did not —
+the final review is not a formality and its budget should stay high. **Skill
+signal (gap):** a lane's Medium was disproven by probes (control-plane's lint
+is gated by accident through a smoke test) — reviewers' fix prescriptions are
+hypotheses, and the lane was right to test the premise before writing it.
+**Skill signal (strengthens):** the pre-framing bridge shows a digest-format
+change needs a migration story before it ships; the brief's proof obligation
+("sync restamps a faithful tree") was false and the lane's refusal to assume
+it produced the bridge and a filed residual instead of a broken upgrade.
