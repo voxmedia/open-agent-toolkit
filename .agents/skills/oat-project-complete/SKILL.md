@@ -679,8 +679,15 @@ Run the project-log status probe before any lifecycle mutation or archive work:
 PROJECT_LOG_CHECK=$(oat project log check --project "$PROJECT_PATH" --json)
 ```
 
-Route on the structured result:
+Route on the structured result. Check `status: "ambiguous"` first: its counts
+are all zero and `sealed` is `false`, so every other row below would otherwise
+read it as an empty, unsealed log and fall through to the roll-up and the seal.
 
+- `status: "ambiguous"`: the log's structure has two readings, so none of its
+  counts mean anything. Stop completion, report the result's `ambiguity` string
+  verbatim as the reason, and repair the log before re-running. Do not run the
+  summary hard gate, the roll-up, the seal append, or the retirement sweep. The
+  zeroed counts are not evidence that there is nothing to roll up.
 - `status: "absent"`: the feature is inert; proceed without a roll-up or seal
   append.
 - `status: "synthesis_pending"` or `synthesisPending: true`: emit
@@ -817,6 +824,9 @@ Do not set lifecycle complete, seal, or archive unless the structured
   proceed.
 - `ledgerOutcome: "skipped_permitted"` with `status: "ok"`: proceed and report
   the permitted skip; the absent default reference layer is not a block.
+- `status: "ambiguous"`: the log's structure has two readings, so nothing was
+  read and `summary.md` was not written. Stop, report the result's `ambiguity`
+  string verbatim, and repair the log. Never continue to seal or archive.
 - `status: "failed"`, `ledgerOutcome: "failed"`, malformed JSON, or a command
   error: stop and surface the roll-up failure. Never continue to seal or
   archive.

@@ -45,6 +45,7 @@ import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import {
+  findProjectLogAmbiguity,
   findProjectLogSeal,
   unreachableProjectLogSealError,
   type ProjectLogSeal,
@@ -1316,7 +1317,14 @@ function validateEntry(
   /** True when an accepted CRLF body was canonicalized to LF before storage. */
   normalized: boolean;
 } {
-  const supplied = input.body?.trim();
+  // The lone-terminator rule is tested against the *raw* body, before trimming.
+  // `String.prototype.trim` strips CR, LF, U+2028 and U+2029 as whitespace, so a
+  // body edge-terminated by one of them — `'ab\r'`, `'\rabc'` — never reached
+  // the test and appended with the terminator silently removed, while the error
+  // text said such a body is not accepted. Refusing it narrows what is accepted,
+  // which is the safe direction, and makes the message true.
+  const raw = input.body ?? '';
+  const supplied = raw.trim();
   if (!supplied) {
     throw new Error('--body is required and must contain non-whitespace text.');
   }
@@ -1324,8 +1332,8 @@ function validateEntry(
   // as LF, so no log this command writes ever carries a terminator other than
   // LF.
   //
-  // The lone-terminator rule below is deliberately applied to `supplied`, before
-  // normalization. Normalizing first would launder `\r\r\n` — a lone CR
+  // The lone-terminator rule below is deliberately applied to `raw`: before
+  // trimming, and before normalization. Normalizing first would launder `\r\r\n` — a lone CR
   // followed by a CRLF — into `\r\n`, which passes the rule and leaves a CR in
   // the stored bytes, because one `replaceAll` pass cannot re-examine the CR it
   // just exposed. Refusing at the door means every CR that reaches
@@ -1398,10 +1406,10 @@ function validateEntry(
     );
   }
 
-  // Tested against `supplied`, before normalization. See the note above
-  // `normalized`: normalizing first launders `\r\r\n` into `\r\n`, which
-  // passes this rule and leaves a carriage return in the stored bytes.
-  if (PROJECT_LOG_LONE_TERMINATOR_RE.test(supplied)) {
+  // Tested against `raw`: before trimming, and before normalization. Trimming
+  // hides an edge terminator; normalizing first launders `\r\r\n` into
+  // `\r\n`, which passes this rule and leaves a carriage return in the bytes.
+  if (PROJECT_LOG_LONE_TERMINATOR_RE.test(raw)) {
     throw new Error(
       '--body for judgment entries must break lines with line feeds or CRLF; a lone carriage return and the U+2028 and U+2029 separators are not accepted.',
     );
@@ -1585,10 +1593,9 @@ async function appendLockedProjectLog(
     // resolves it. This refusal is what keeps the LF-only section parser from
     // widening such a log: without it, a pre-existing `preamble<U+2028>##
     // Entries` stops parsing, reports unsealed, and accepts a second seal.
-    if (containsAmbiguousProjectLogMarker(content)) {
-      throw new Error(
-        `Project log ${logPath} has a '## ' or '### ' marker starting a line after a carriage return, U+2028, or U+2029 rather than a line feed. Readers disagree about whether it is a heading, so the log cannot be shown to be unsealed and nothing will be appended. Replace those line terminators with line feeds.`,
-      );
+    const ambiguity = findProjectLogAmbiguity(content, logPath);
+    if (ambiguity !== undefined) {
+      throw new Error(ambiguity);
     }
 
     const seal = findProjectLogSeal(content);

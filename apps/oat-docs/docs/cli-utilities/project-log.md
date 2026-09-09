@@ -103,6 +103,14 @@ instead.
 
 Run `oat project log append --help` for the complete entry contract.
 
+Bodies may use line feeds or CRLF line endings. A CRLF body is accepted and
+stored normalized to line feeds, and the result then carries
+`normalizedLineEndings: true`, so the bytes on disk are known to differ from the
+bytes passed. A lone carriage return, U+2028, or U+2029 anywhere in a body — including
+at its very start or end — is refused, because those are the terminators the
+log's readers do not all agree about. Structural entries take one line and
+accept no line terminator at all.
+
 ## Automatic workflow integration
 
 When project logging is enabled, OAT lifecycle surfaces append structural
@@ -162,14 +170,13 @@ It also reports whether the log carries a completion seal:
 
 `status` keeps its `ok` / `absent` / `synthesis_pending` values on a sealed log;
 sealing is reported alongside the status, not as a status value. The one
-additional status is `ambiguous`: the log's section markers can be read two
-ways (a lone carriage return, U+2028, or U+2029 before a marker), or a seal is
+additional status is `ambiguous`: a `##` heading, or a dated `###` entry
+heading, starts a line after a lone carriage return, U+2028, or U+2029 rather
+than a line feed, so the log's structure can be read two ways; or a seal is
 physically present outside the parseable `## Entries` region. `check` then
-exits 1 and reports an `ambiguity` reason instead of a clean verdict, the
-mutators (`append`, `synthesize`) refuse the same file, and the lifecycle skills
-stop rather than treat the log as empty. Bodies may use CRLF line endings; they
-are stored normalized to LF (`normalizedLineEndings: true` in the result). A
-lone carriage return, U+2028, or U+2029 in a body is refused.
+exits 1 and reports an `ambiguity` reason instead of a clean verdict, every
+writing command (`append`, `synthesize`, `rollup`) refuses the same file, and
+the lifecycle skills stop rather than treat the log as empty.
 
 Use `--require-synthesis` to exit with status 1 while synthesis is pending:
 
@@ -224,10 +231,16 @@ deduplicate by date and area. The command is idempotent.
 
 The structured result contains:
 
-- `status`: `ok` or `failed`
+- `status`: `ok`, `failed`, or `ambiguous`
 - `summarySection`: `written` or `updated`
 - `ledgerOutcome`: `appended`, `deduplicated`, `skipped_permitted`, or `failed`
 - `entriesRolledUp`: number of log entries written to the summary section
+
+An `ambiguous` result carries only `status` and an `ambiguity` reason, and exits
+1: the log's structure has two readings, so no count would mean anything and
+neither `summary.md` nor the ledger is written. The other fields are absent
+rather than zeroed, because `entriesRolledUp: 0` for an unreadable log is
+indistinguishable from the same result for an empty one.
 
 `skipped_permitted` means the default repository reference layer is absent and
 no ledger path was explicitly configured; `status` remains `ok`. An explicitly

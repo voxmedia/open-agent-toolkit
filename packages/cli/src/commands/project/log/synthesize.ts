@@ -22,6 +22,7 @@ import {
 } from './append';
 import {
   findCanonicalProjectLogSynthesisSection,
+  findProjectLogAmbiguity,
   findProjectLogSeal,
   unreachableProjectLogSealError,
   PROJECT_LOG_FILENAME,
@@ -130,15 +131,18 @@ export async function synthesizeProjectLog(
     ...DEFAULT_SYNTHESIZE_DEPENDENCIES,
     ...overrides,
   };
-  const supplied = input.body?.trim();
+  const raw = input.body ?? '';
+  const supplied = raw.trim();
   if (!supplied) {
     throw new Error('--body is required and must contain non-whitespace text.');
   }
   // Same rule the judgment bodies follow: parse leniently, write strictly. CRLF
   // is accepted and stored as LF; a lone CR and the U+2028 / U+2029 separators
   // are refused, because those are the terminators this module's readers do not
-  // all agree about.
-  if (PROJECT_LOG_LONE_TERMINATOR_RE.test(supplied)) {
+  // all agree about. Tested against `raw`, before trimming: trim treats all four
+  // as whitespace, so an edge-terminated body would otherwise slip past a rule
+  // whose message says it does not.
+  if (PROJECT_LOG_LONE_TERMINATOR_RE.test(raw)) {
     throw new Error(
       '--body must break lines with line feeds or CRLF; a lone carriage return and the U+2028 and U+2029 separators are not accepted.',
     );
@@ -188,10 +192,9 @@ async function synthesizeLockedProjectLog(
   // synthesis (pending …)` — used to make the log ambiguous and be refused, and
   // under an LF-only reading it becomes invisible and its content is consumed by
   // the rewrite.
-  if (containsAmbiguousProjectLogMarker(content)) {
-    throw new Error(
-      `Project log ${logPath} has a '## ' or '### ' marker starting a line after a carriage return, U+2028, or U+2029 rather than a line feed. Readers disagree about where its sections begin, so it cannot be synthesized safely. Replace those line terminators with line feeds.`,
-    );
+  const ambiguity = findProjectLogAmbiguity(content, logPath);
+  if (ambiguity !== undefined) {
+    throw new Error(ambiguity);
   }
 
   // A sealed log is closed to this rewrite as much as to an append. The seal is
