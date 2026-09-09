@@ -390,3 +390,7 @@ hypotheses, and the lane was right to test the premise before writing it.
 change needs a migration story before it ships; the brief's proof obligation
 ("sync restamps a faithful tree") was false and the lane's refusal to assume
 it produced the bridge and a filed residual instead of a broken upgrade.
+
+### 2026-09-09 · structural · oat gate review · final
+
+target=codex-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok outcome=review_completed_gate_passed run=16ffcb7f-6a5d-4954-abd6-1b53154c9f6a artifact=.oat/projects/shared/wave-7-execution/reviews/archived/final-review-2026-09-09T145954Z.md head=6a79099f0 (after the four-round root final review: rounds 1–3 CHANGES REQUESTED, round 4 PASS).
