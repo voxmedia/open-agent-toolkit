@@ -565,6 +565,23 @@ _Recorded when the configured implementation exit gate runs._
 
 **p11 row → `passed`** (reviewed head `0b5c3307e`); p11 is clear for the group-4 fan-in.
 
+## Review Received: p10 (round 1 — passed with findings)
+
+**Date:** 2026-09-09
+**Review artifact:** reviews/archived/p10-review-2026-09-09T042652Z.md (reviewed head `88fbc8786a1147b02cfdb1bdb973e6175cd369ed`, manual, opus)
+**Findings:** Critical 0 · Important 1 · Medium 0 · Minor 5 — PASS with findings (no lane code change). Verified: prose immutability by the reviewer's own normalizer (0 residual lines; equal line counts); five bumps and every pin; the widened scanner's numbers reproduced by an instrumented probe (`boundedFiles=42 fenceScanFiles=205 candidates=179`, 180 with review-provide reverted); the Codex control's vacuity claim confirmed (a control routed through `assertContractCurrent` passes with the bug present; the shipped unit-targeted control goes red); weaker-anywhere by a 60,225-case differential fuzz (head ⊇ base, 0 violations); the oxfmt-widened fence proven required by the `pnpm format` gate; scope exact; nine gates green.
+
+**Dispositions:**
+
+- I1 — the plan-directed follow-up item for the five bare-fence instances outside `.agents/skills` was not filed (the lane correctly could not): **fixed** (root) — `BL-260909-repair-the-bare-fences-that` filed on the integration branch (the five sites incl. `oat-reviewer.md:507`, the inventory-floor extension, the latent indent/heading laxity, the 25-file headroom); backlog index regenerated; verification: `test -f .oat/repo/pjm/backlog/items/BL-260909-repair-the-bare-fences-that.md`, Markdown guard green.
+- m1 — ruling 3 conflated the 180 floor with the 205 live inventory (25-file headroom): **accepted** — the headroom is plan-prescribed with a loud-failure control; named in the follow-up item.
+- m2 — the plan's Step 3 fence prescription (three backticks) conflicts with the format gate: **deferred** — wave-close plan correction (follow-up ledger).
+- m3 — a Done criterion says "four" agent-prompt blocks where three qualify: **deferred** — wave-close plan correction.
+- m4 — control 2's "205 → 177" figure is variant-dependent (a fully flat walk yields 0 files and 8 failures); direction confirmed: **accepted** — recorded here; the plan's green prediction is a wave-close correction.
+- m5 — the scanner's `^\s*` indent laxity and column-0 heading anchor are latent (a CommonMark-indent variant over all 205 files diverges on none): **deferred** — named in the follow-up item.
+
+**p10 row → `passed`** (reviewed head `88fbc8786`); group 4 is clear for fan-in.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -641,6 +658,7 @@ Wave base `684bd3be32e65fc8db0646f336ab4335c317ba2c` (origin/main after the wave
 - `w7-p10-review-001` — reviewer, target opus, seven rulings (an independent prose-immutability comparison; five bumps and every pin; the widened scanner and the Codex control's vacuity note; scanner weaker-anywhere plus an indented-closer probe; the Step 8 discrepancy; the oxfmt-widened fence; scope). Record `dispatch/w7-p10-review-001.json`.
 - `w7-p12-review-001` outcome: PASS with findings, 0/0/0/3m (abort-after-adopt disposition concurred; real pty adopt probe on a v1 manifest; three `continue` branches probed). All three Minors deferred; no fix round; p12 `passed`.
 - `w7-p11-review-001` outcome: PASS with findings, 0/0/0/4m (8-role hop-cap probe at base and head; two-build config STOP diff; four adversarial probes). All four Minors deferred or record-fixed; p11 `passed`. Smoke flake `cursor-broker.test.mjs` noted (not attributable).
+- `w7-p10-review-001` outcome: PASS with findings, 0/1I/0/5m (60,225-case differential fuzz clean; the vacuous-control claim confirmed; corpus numbers reproduced). I1 (the unfiled follow-up item) fixed by the root as `BL-260909-repair-the-bare-fences-that`; Minors deferred to the wave-close correction pass or the item; p10 `passed`.
 - `w7-p08-review-001` outcome: PASS with findings, 0/0/0/5m (26-fixture normalizer battery identical; `--json` channel exact; reader count `list` 109 + 1 / `get` 1 + 1). All five Minors deferred or record-fixed; no fix round; p08 `passed`.
 
 #### Group 1 fan-in (2026-09-09)
@@ -679,6 +697,7 @@ Chronological log of implementation progress (root orchestrator; lane detail liv
 - Group 3 fan-in: merges `7c5a6aa01`, `17d271b23`, `95ad10827`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7187). Group 4 (p10 + p11 + p12) bootstraps next.
 - Group 2 fan-in: merges `a9bfb0a3c`, `7bbafded2`, `28618fbba`; address-now `572a4dd87`; lockstep retained at 0.2.67; eight gates + smoke + skills + root test green (0 cached; cli 7163). Group 3 (p07 + p08 + p09) bootstraps next.
 - p05 round 2 passed (0/0/1M/2m; both record residues fixed in the receive) at `054de3cf3`; p05 row `passed`.
+- p10 review received (PASS with findings, 0/1I/0/5m): `BL-260909-repair-the-bare-fences-that` filed; p10 row `passed`; group 4 fan-in starts.
 - p11 review received (PASS with findings, 0/0/0/4m — plan correction entry applied); p11 row `passed`.
 - p12 review received (PASS with findings, 0/0/0/3m — all deferred); p12 row `passed`.
 - p09 round 2 passed (0/0/0/0) at `99675387b`; p09 row `passed`; group 3 fan-in starts.
