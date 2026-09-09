@@ -177,3 +177,16 @@ integration gates behind the merge in the same invocation; start them only
 after `git status` is clean and `MERGE_HEAD` is gone." One root-filed
 follow-up (`BL-260909-repair-the-bare-fences-that`) and three dated plan
 corrections this group.
+
+### 2026-09-09 · structural · oat-wave-execute · p15 STOP → refresh → resume
+
+p15 stopped before committing: the helper it extracted "verbatim" carries a
+pre-existing symlink hole (sentinel skipped by pathname, root never
+`lstat`ed) that the plan's reuse promoted into the detector and the planner —
+a substituted provider view reads `in_sync`. The plan's mechanism clause
+("no behavior change") and its weaker-anywhere rule could not both hold; the
+rule wins. Dated refresh: harden the shared helper, accept the stricter
+`detach` verdict on the retirement path, pin every shape on every consumer.
+**Skill signal (strengthens):** the third lane this wave whose cross-model
+round found a defect in code the plan told it to reuse unchanged — "moved
+verbatim" is not a safety property when the moved code gains callers.
