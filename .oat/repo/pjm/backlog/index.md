@@ -230,6 +230,7 @@
 | BL-260820-bind-each-gate-review          | Bind each gate review disposition to its exact received ledger event                                  | open   | high     | task       | M        |
 | BL-260820-emit-source-qualified          | Emit source-qualified provenance envelopes for review and gate receipts                               | open   | high     | feature    | M        |
 | BL-260806-fail-closed-when-configured    | Fail closed when configured closeout snapshot is absent                                               | open   | high     | task       | M        |
+| BL-260909-give-the-dispatch-record       | Give the dispatch record a consumer or remove it                                                      | open   | high     | task       | S        |
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                          | open   | high     | feature    | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                                | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature    | L        |
