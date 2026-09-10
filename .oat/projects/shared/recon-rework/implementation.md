@@ -1,9 +1,12 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
-oat_last_updated: 2026-09-09
-oat_current_task_id: p02-t01
+oat_blockers:
+  - task_id: p02-t03
+    reason: 'Phase 2 terminal review found one Important requested-profile topology defect after both configured review-fix rounds were consumed.'
+    since: 2026-09-10
+oat_last_updated: 2026-09-10
+oat_current_task_id: p02-t03
 oat_generated: false
 oat_template: false
 ---
@@ -11,23 +14,25 @@ oat_template: false
 # Implementation: Recon rework
 
 **Started:** 2026-09-09
-**Last Updated:** 2026-09-09
+**Last Updated:** 2026-09-10
 
-Implementation Run 1 is active at `p02-t01`. The managed `high` dispatch policy
-resolved to the native Codex Sol/high phase implementer and reviewer roles. The
-configured final-phase HiLL checkpoint is `p04`, with automatic lifecycle review.
+Implementation Run 1 is blocked at the Phase 2 review-cycle cap. The managed
+`high` dispatch policy resolved to native Codex Sol/high phase implementer and
+reviewer roles. Phase 3 has not started; the configured final-phase HiLL checkpoint
+remains `p04`, with automatic lifecycle review.
 
 ## Progress Overview
 
-| Phase                                      | Status      | Tasks | Completed |
-| ------------------------------------------ | ----------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | in_progress | 3     | 0/3       |
-| Phase 3: Guidance and consumer output      | pending     | 2     | 0/2       |
-| Phase 4: Distribution and verification     | pending     | 2     | 0/2       |
+| Phase                                      | Status    | Tasks | Completed |
+| ------------------------------------------ | --------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | blocked   | 3     | 2/3       |
+| Phase 3: Guidance and consumer output      | pending   | 2     | 0/2       |
+| Phase 4: Distribution and verification     | pending   | 2     | 0/2       |
 
-**Total:** 2/9 tasks completed. Phase 1 review passed with one nonblocking Medium
-carried into `p02-t02`.
+**Total:** 4/9 tasks completed. Phase 2 implementation and two bounded fix rounds
+are committed, but `p02-t03` remains blocked by one Important terminal-review
+finding after the configured retry limit was exhausted.
 
 ## Task Status
 
@@ -35,9 +40,9 @@ carried into `p02-t02`.
 | ------- | ----------------------------------------------- | ------------------------------------------ |
 | p01-t01 | Completed: superseding decision                 | `663dab68996b41dbc5e92bf2e85847924ea2a944` |
 | p01-t02 | Completed: versioned manifest and normalization | `f5317ee5fd4d5df78a341819023d7cc49f97da3e` |
-| p02-t01 | Pending: economical routing preview             | -                                          |
-| p02-t02 | Pending: conditional escalation/outcomes        | -                                          |
-| p02-t03 | Pending: complete profile/harness controls      | -                                          |
+| p02-t01 | Completed: economical routing preview           | `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c` |
+| p02-t02 | Completed: conditional escalation/outcomes      | `1bad7202d740ef2daf6d22a254875e8ba2774c0b` |
+| p02-t03 | Blocked at phase review after implementation    | `58b165063f7f1f154920b9793d353a2f8777ed81` |
 | p03-t01 | Pending: controller/worker/shared guidance      | -                                          |
 | p03-t02 | Pending: renderer and public docs               | -                                          |
 | p04-t01 | Pending: bundle and release versions            | -                                          |
@@ -80,6 +85,49 @@ carried into `p02-t02`.
   categorical validation errors rather than throwing and validate every
   `afterWaveIds` entry as a non-empty string.
 
+## Phase 2: Proposal, conditions, and integration
+
+**Status:** blocked
+**Started:** 2026-09-10
+**Blocked:** 2026-09-10
+
+### Task p02-t01: Implement economical routing preview and exact target checking
+
+**Status:** completed
+**Commit:** `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c`
+**Verification:** passed
+
+### Task p02-t02: Enforce finite conditional escalation and outcome accounting
+
+**Status:** completed
+**Commit:** `1bad7202d740ef2daf6d22a254875e8ba2774c0b`
+**Verification:** passed
+
+### Task p02-t03: Exercise complete profiles across provider-shaped dispatch controls
+
+**Status:** blocked
+**Commit:** `58b165063f7f1f154920b9793d353a2f8777ed81`
+**Blocker:** The terminal Phase 2 review found one Important profile-topology
+validation defect after both configured review-fix rounds were consumed.
+
+### Phase Summary
+
+- Original implementation commits: `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c`,
+  `1bad7202d740ef2daf6d22a254875e8ba2774c0b`, and
+  `58b165063f7f1f154920b9793d353a2f8777ed81`.
+- Fix round 1 commit `89594e147c9f1427823dca2d316524e26719f9a3`
+  closed approval-field visibility, pre-approval capability ordering, and exact
+  per-lane conditional outcome accounting findings.
+- Fix round 2 commit `b4424664101c86b3a044f23396290a1b83cd6d12`
+  added missing-mode checks and safe Markdown encoding.
+- Terminal review `reviews/p02-review-2026-09-10T041234Z.md` records 0 Critical,
+  1 Important, 0 Medium, and 0 Minor. Duplicate singleton waves, out-of-order
+  stages, and unconditional contradiction-resolution remain accepted by the
+  pre-approval topology validator.
+- Root verification after the final fix passed 155/155 focused tests; the
+  implementer reported 243/243 full recon tests and all repository check,
+  type-check, test, build, lint, and format commands passing.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -108,6 +156,20 @@ carried into `p02-t02`.
   native materialized variants for implementation and review).
 - Phase p01 verdict: passed; fix-loop count 0. Current scope: Phase 2, beginning
   with `p02-t01`.
+- Phase p02 implementation dispatch: request
+  `2e38ae71-0612-4ebe-808a-d0ace036ad19`, accepted and completed on
+  `oat-phase-implementer-gpt-5-6-sol-high`; three task commits and no recovery
+  attempts.
+- Phase p02 review rounds used `oat-reviewer-gpt-5-6-sol-high`. Round 1 artifact
+  `reviews/p02-review-2026-09-10T030647Z.md` found 2 Important and 1 Medium;
+  round 2 artifact `reviews/p02-review-2026-09-10T033820Z.md` found 2 Important;
+  terminal round artifact `reviews/p02-review-2026-09-10T041234Z.md` found
+  1 Important after two bounded fix rounds.
+- Phase p02 implementation stamp: `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`.
+- Phase p02 review stamp: `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
+- Continuations `cont-recon-rework-p02-fix-1` and
+  `cont-recon-rework-p02-fix-2` consumed the configured two review-fix rounds.
+  Phase p02 outcome: blocked; Phase 3 was not dispatched.
 
 <!-- orchestration-runs-end -->
 
@@ -206,6 +268,17 @@ carried into `p02-t02`.
 - The Medium malformed-condition diagnostic finding is nonblocking and is folded
   into the already-planned conditional-validation task `p02-t02`.
 
+### 2026-09-10 — Phase 2 implementation blocked at review cap
+
+- Three planned task commits and two bounded review-fix commits are present.
+- Review rounds found 2 Important + 1 Medium, then 2 Important, then 1 Important.
+  The first four blocking findings and the Medium were fixed; the terminal profile
+  topology finding remains open.
+- The terminal reviewer attempted one intelligent-recon lane and reconciled it in
+  `reviews/p02-review-2026-09-10T041234Z.md`.
+- The two-round orchestration retry limit is exhausted. No Phase 3 worker was
+  dispatched and unresolved findings were not converted into a pass.
+
 ## Planning Verification
 
 | Check                                                                 | Result                          | Scope                                                                                                                                  |
@@ -241,13 +314,17 @@ that no fourth planning review should run; implementation/final reviews remain.
 
 ## Test Results
 
-No implementation suite results. Bootstrap build output is environment setup,
-not evidence that the proposed recon behavior works.
+- Phase 1: 81/81 focused and 203/203 full recon tests passed.
+- Phase 2 after final fix: 155/155 focused and 243/243 full recon tests passed.
+- Phase implementers reported `pnpm check`, `pnpm type-check`, `pnpm test`,
+  `pnpm build`, `pnpm lint`, and `pnpm format` passing. These results do not
+  override the terminal semantic review finding.
 
 ## Final Summary (for PR/docs)
 
-Nothing shipped. This branch currently contains planning artifacts only.
-Fill this section with actual behavior and verification after implementation.
+Partial implementation only; nothing is approved for shipping. Phase 1 and the
+Phase 2 code/fix commits are present, but Phase 2 has not passed semantic review
+and later phases have not started.
 
 ## References
 
