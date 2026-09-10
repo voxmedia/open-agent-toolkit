@@ -53,17 +53,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-10T091637Z.md'
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=3, minor=1). Run oat-project-review-receive for .oat/projects/shared/recon-rework/reviews/final-review-2026-09-10T091637Z.md to disposition them before marking the final review row passed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=4b362f5c-6edd-463b-b63f-4b4f46596830; handoff=receive; source=reviews/final-review-2026-09-10T091637Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-10T091637Z.md'
+  receive_archived_artifact: '.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-10T091637Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-10T091637Z.md'
+  receive_pre_head: ba347f25723319ab25b9b554b7e04e34fa752f9d
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-10T09:16:37Z'
+  updated_at: '2026-09-10T09:21:50Z'
 oat_workflow_origin: native
 oat_docs_updated: null
 oat_pr_status: null
