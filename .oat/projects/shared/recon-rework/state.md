@@ -64,7 +64,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-10T23:46:11Z'
+  updated_at: '2026-09-10T23:47:42Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-10T23:46:11.000Z'
+oat_project_state_updated: '2026-09-10T23:47:42.000Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -98,7 +98,7 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** Implementation complete; PR open.
+**Status:** Implementation complete; draft PR open with base conflicts.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-10
 
@@ -129,7 +129,8 @@ No existing project was absorbed or retired.
 - ✓ Implementation complete
 - ✓ Final review and configured exit gate passed
 - ✓ Final HiLL and configured closeout sequence completed
-- ✓ PR #285 updated and open
+- ✓ PR #285 updated and open as a draft
+- ⧗ Reconcile current `main` conflicts before marking the PR ready
 
 ## Blockers
 
@@ -137,8 +138,11 @@ No active blocker. All received final-review findings have completed fix tasks.
 
 ## Next Milestone
 
-PR #285 is ready for review and merge. Project tracking remains active; after the
-chosen merge/closeout boundary, run `oat-project-complete`.
+PR #285 is pushed as a draft. GitHub currently reports seven content conflicts
+against `main` across the generated sync manifest, public-version asset, and five
+lockstep package manifests. Reconcile the base before marking the PR ready or
+merging it. Project tracking remains active; after the chosen merge/closeout
+boundary, run `oat-project-complete`.
 
 ## Authorization and Scope
 

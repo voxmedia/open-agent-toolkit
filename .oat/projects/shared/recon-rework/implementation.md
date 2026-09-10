@@ -702,8 +702,9 @@ the final HiLL checkpoint.
 - Project recap was skipped by interactive lifecycle decision because this host had
   no configured author, fact critic, browser session, visual critic, or set planner
   seam. Outcome: `skipped`; reason: `interactive`; run path: none.
-- PR #285 remains open. No merge, live-provider acceptance run, issue closure, or
-  canonical backlog closure was performed.
+- PR #285 remains open as a draft. GitHub reports it as conflicting with the
+  current `main`; no rebase, merge, live-provider acceptance run, issue closure,
+  or canonical backlog closure was performed.
 
 ## References
 
