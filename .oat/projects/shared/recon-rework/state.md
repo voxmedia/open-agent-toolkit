@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: c1f175409c29d1afc04c7d69c84f61b80b4c850f
+oat_current_task: null
+oat_last_commit: 9721d7c680a0778967addaf9ef8b391839949d9c
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -33,16 +33,16 @@ oat_generated: false
 
 # Project State: Recon rework
 
-**Status:** Implementation in progress; Phases 1-3 passed.
+**Status:** All implementation tasks are implemented; Phase 4 review pending.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-10
 
 ## Current Phase
 
-Phases 1-3 passed their independent reviews. Phase 3 closed its worker-schema,
-v1-compatibility, and documentation findings in two bounded fix rounds. The final
-implementation phase is active at `p04-t01`; final-phase HiLL remains configured
-at `p04` with automatic lifecycle review.
+Phases 1-3 passed their independent reviews. Both Phase 4 implementation tasks are
+implemented and their task verification passed. Phase 4's independent review,
+final review, implementation exit gate, and final-phase HiLL checkpoint remain
+pending; `oat_phase_status` therefore remains `in_progress`.
 
 ## Artifacts
 
@@ -50,8 +50,10 @@ at `p04` with automatic lifecycle review.
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight design aligned with received review findings.
 - Plan: `plan.md` — complete and ready; 4 sequential phases, 9 tasks.
-- Implementation: `implementation.md` — active; 7/9 tasks completed and Phase 4
-  beginning at `p04-t01`.
+- Implementation: `implementation.md` — 9/9 tasks implemented; Phase 4 review and
+  later lifecycle gates pending.
+- Verification: `references/verification/phase-4-validation.md` — exact CI gate,
+  cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
 - Source context: `references/source-context.md` — baseline map and input precedence.
 
@@ -64,13 +66,14 @@ No existing project was absorbed or retired.
 
 ## Blockers
 
-No active blocker. Phase 3 review passed after two bounded fix rounds.
+No active blocker. Phase 4 implementation verification passed; independent review
+has not yet run.
 
 ## Next Milestone
 
-Complete Phase 4 from `p04-t01`, run its independent phase and final lifecycle
-reviews, execute the implementation exit gate, and stop at the configured final
-HiLL approval boundary. The project dispatch ceiling remains managed `high`.
+Run Phase 4's independent phase review and final lifecycle review, execute the
+implementation exit gate, and stop at the configured final HiLL approval boundary.
+The project dispatch ceiling remains managed `high`.
 
 ## Authorization and Scope
 

@@ -648,6 +648,17 @@ categorical expected outcomes sufficient for independent repetition.
 
 **Commit:** `test(p04-t02): record recon compatibility and approval controls`.
 
+### Phase 4 implementation evidence
+
+Both Phase 4 task implementations are complete. Task `p04-t01` is commit
+`9721d7c680a0778967addaf9ef8b391839949d9c`; task `p04-t02` is the task commit that
+records this tracking update. The exact gate ledger, cache distinction, v1/v2 and
+conditional controls, guard-neutralization proof, and synthetic-test limitations are
+recorded in `references/verification/phase-4-validation.md`.
+
+This task evidence does not mark the Phase 4 review, final review, implementation
+exit gate, configured HiLL checkpoint, or implementation lifecycle complete.
+
 After this task, continue the normal authorized implementation review/final gate
 workflow. This plan does not authorize push, PR publication, merge, backlog
 closure, or live-provider spending. At approved shipping closeout, reconcile #274
@@ -684,7 +695,8 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 
 ## Implementation Complete
 
-**Not complete; 7 of 9 tasks completed. Phase 4 begins at `p04-t01`.**
+**Implementation tasks complete: 9 of 9 implemented. Phase 4 review and later
+lifecycle gates remain pending.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.

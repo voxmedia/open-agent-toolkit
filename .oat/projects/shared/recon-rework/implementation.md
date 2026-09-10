@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -13,11 +13,10 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-10
 
-Implementation Run 1 is active at `p04-t01`. Phases 1-3 passed their independent
-reviews; Phase 3 required two bounded fix rounds. The managed `high` dispatch
-policy continues to resolve to native Codex Sol/high implementer and reviewer
-roles. The final-phase HiLL checkpoint remains `p04`, with automatic lifecycle
-review.
+Implementation Run 1 has implemented all nine planned tasks. Phases 1-3 passed
+their independent reviews; Phase 4 implementation awaits its root-owned independent
+review, final gate, and configured HiLL checkpoint. No final-review or lifecycle
+completion claim is made here.
 
 ## Progress Overview
 
@@ -26,10 +25,10 @@ review.
 | Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
 | Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
 | Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
-| Phase 4: Distribution and verification     | in_progress | 2     | 0/2       |
+| Phase 4: Distribution and verification     | implemented | 2     | 2/2       |
 
-**Total:** 7/9 tasks completed. Phase 3 passed after two bounded fix rounds and
-three root-owned reviews; Phase 4 is active at `p04-t01`.
+**Total:** 9/9 tasks implemented. Phase 4 review and the later lifecycle boundaries
+remain pending.
 
 ## Task Status
 
@@ -42,8 +41,8 @@ three root-owned reviews; Phase 4 is active at `p04-t01`.
 | p02-t03 | Completed: profile and harness integration      | `58b165063f7f1f154920b9793d353a2f8777ed81` |
 | p03-t01 | Completed: controller/worker/shared guidance    | `e38994e2809c57542aa3146c6a64ffedca22cd34` |
 | p03-t02 | Completed: renderer and public docs             | `33a5cfff83a11219429d3944cec8de8a1eb475a4` |
-| p04-t01 | Pending: bundle and release versions            | -                                          |
-| p04-t02 | Pending: full verification/evidence             | -                                          |
+| p04-t01 | Completed: bundle and release versions          | `9721d7c680a0778967addaf9ef8b391839949d9c` |
+| p04-t02 | Completed: full verification/evidence           | this task commit                           |
 
 ## Phase 1: Decision and versioned contract
 
@@ -166,6 +165,37 @@ three root-owned reviews; Phase 4 is active at `p04-t01`.
   and reviewer reported 253/253 full recon tests, 237/237 CLI tests, docs checks,
   skill/bump validation, and repository gates passing. Release validation remained
   intentionally deferred to Phase 4's lockstep package bump.
+
+## Phase 4: Distribution and composed verification
+
+**Status:** implemented; independent review pending
+**Started:** 2026-09-10
+
+### Task p04-t01: Bundle the runtime and apply one lockstep release bump
+
+**Status:** completed
+**Commit:** `9721d7c680a0778967addaf9ef8b391839949d9c`
+**Verification:** passed
+
+### Task p04-t02: Record full validation and repeatable negative controls
+
+**Status:** completed in this task commit
+**Verification:** passed
+
+### Implementation Summary
+
+- Refreshed `origin/main`, selected lockstep public-package version `0.2.72` over
+  main's `0.2.71`, bundled canonical assets, and performed project-only provider
+  synchronization.
+- Confirmed the shipped research pack includes `prepare-routing.mjs` and
+  `lib/routing.mjs` while excluding canonical skill tests.
+- All eight CI gates returned zero in declared order. Fresh isolated Turbo tests
+  force-executed 10/10 tasks with zero cache reuse; the focused recon suite passed
+  253/253.
+- Repeatable compatibility, condition-control, and guard-neutralization evidence is
+  recorded in `references/verification/phase-4-validation.md`.
+- Independent Phase 4 review, final review, the implementation exit gate, the HiLL
+  checkpoint, and implementation lifecycle completion remain root-owned and pending.
 
 ## Orchestration Runs
 
