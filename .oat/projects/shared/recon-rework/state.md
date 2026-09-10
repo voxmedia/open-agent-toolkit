@@ -75,6 +75,7 @@ oat_post_implement_sequence:
   pre_approval_completed:
     - summary
     - document
+    - pr
   approval: pending
   approval_source: null
   post_approval: []
@@ -86,7 +87,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-10T11:37:08.000Z'
+oat_project_state_updated: '2026-09-10T11:38:01.000Z'
 oat_generated: false
 ---
 
