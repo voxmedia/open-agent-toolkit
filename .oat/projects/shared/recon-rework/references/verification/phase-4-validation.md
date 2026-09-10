@@ -1,7 +1,9 @@
 # Phase 4 validation evidence
 
-**Date:** 2026-09-10  
-**Verification baseline:** `9721d7c680a0778967addaf9ef8b391839949d9c`  
+**Date:** 2026-09-10
+
+**Verification baseline:** `9721d7c680a0778967addaf9ef8b391839949d9c`
+
 **origin/main after refresh:** `44616e8fa4b79d9444fc639f8611c645f4bf03fe`
 
 This note records repeatable Phase 4 verification. Raw command logs were retained
