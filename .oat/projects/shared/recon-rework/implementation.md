@@ -80,7 +80,7 @@ implementation exit gate and later lifecycle boundaries remain pending.
 - Verification: 81/81 focused contract tests and 203/203 full recon tests passed;
   `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm lint`, and
   `pnpm format` passed. Root independently reran the focused 81-test suite.
-- Review: `reviews/p01-review-2026-09-10T020657Z.md`, 0 Critical, 0 Important,
+- Review: `reviews/archived/p01-review-2026-09-10T020657Z.md`, 0 Critical, 0 Important,
   1 Medium, 0 Minor; pass with zero fix loops.
 - Carry-in: `p02-t02` must make repeated malformed condition entries return
   categorical validation errors rather than throwing and validate every
@@ -120,13 +120,13 @@ implementation exit gate and later lifecycle boundaries remain pending.
   per-lane conditional outcome accounting findings.
 - Fix round 2 commit `b4424664101c86b3a044f23396290a1b83cd6d12`
   added missing-mode checks and safe Markdown encoding.
-- Terminal review `reviews/p02-review-2026-09-10T041234Z.md` records 0 Critical,
+- Terminal review `reviews/archived/p02-review-2026-09-10T041234Z.md` records 0 Critical,
   1 Important, 0 Medium, and 0 Minor. Duplicate singleton waves, out-of-order
   stages, and unconditional contradiction-resolution were accepted at that
   reviewed head by the pre-approval topology validator.
 - User-authorized fix commit `420e1d4492b0734463aeac4d8bf91137f812dff0`
   closed ordered singleton cardinality and condition-binding gaps.
-- Passing review `reviews/p02-review-2026-09-10T050659Z.md` records 0 Critical,
+- Passing review `reviews/archived/p02-review-2026-09-10T050659Z.md` records 0 Critical,
   0 Important, 0 Medium, and 0 Minor. Its optional recon lane was rejected before
   checks because of an incomplete assignment envelope; the primary reviewer
   independently reproduced the full direct/CLI evidence and retained judgment.
@@ -163,7 +163,7 @@ implementation exit gate and later lifecycle boundaries remain pending.
 - Fix `c1f175409c29d1afc04c7d69c84f61b80b4c850f` aligned worker output
   instructions with the closed artifact schemas, corrected canonical thorough
   semantics, and qualified Intended Routing as manifest-v2-only.
-- Passing review `reviews/p03-review-2026-09-10T065216Z.md` records 0 Critical,
+- Passing review `reviews/archived/p03-review-2026-09-10T065216Z.md` records 0 Critical,
   0 Important, 0 Medium, and 0 Minor. Its intelligent-recon lane completed and
   the primary reviewer independently verified the findings and full post-image.
 - Root independently reran 175 focused tests after the final fix. The implementer
@@ -235,7 +235,7 @@ passed
   removed only that whitespace, reran focused and phase checks, and left the
   original task commit immutable. Root validated the completed marker and cleared
   `pending_attempt` while preserving `used_attempts: 1`.
-- Independent review `reviews/p04-review-2026-09-10T073941Z.md` passed the blocking
+- Independent review `reviews/archived/p04-review-2026-09-10T073941Z.md` passed the blocking
   threshold with 0 Critical, 0 Important, 1 Medium, and 2 Minor findings. The
   Medium notes that retained raw gate logs lack explicit `exit=` markers even though
   ordered successful output and the ledger support zero exits. The Minor findings
@@ -408,7 +408,7 @@ implementation exit gate is allowed; final HiLL sequencing may proceed.
 - Phase p01 implementation stamp: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`.
 - Phase p01 review dispatch: request `7029624c-c477-4b0d-afc5-c79cf49df627`,
   accepted and completed on `oat-reviewer-gpt-5-6-sol-high`; reconnaissance
-  not attempted; artifact `reviews/p01-review-2026-09-10T020657Z.md`.
+  not attempted; artifact `reviews/archived/p01-review-2026-09-10T020657Z.md`.
 - Phase p01 review stamp: `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
 - Dispatch policy enforcement: high; selected=high; cap=high (Codex, enforced —
   native materialized variants for implementation and review).
@@ -419,9 +419,9 @@ implementation exit gate is allowed; final HiLL sequencing may proceed.
   `oat-phase-implementer-gpt-5-6-sol-high`; three task commits and no recovery
   attempts.
 - Phase p02 review rounds used `oat-reviewer-gpt-5-6-sol-high`. Round 1 artifact
-  `reviews/p02-review-2026-09-10T030647Z.md` found 2 Important and 1 Medium;
-  round 2 artifact `reviews/p02-review-2026-09-10T033820Z.md` found 2 Important;
-  terminal round artifact `reviews/p02-review-2026-09-10T041234Z.md` found
+  `reviews/archived/p02-review-2026-09-10T030647Z.md` found 2 Important and 1 Medium;
+  round 2 artifact `reviews/archived/p02-review-2026-09-10T033820Z.md` found 2 Important;
+  terminal round artifact `reviews/archived/p02-review-2026-09-10T041234Z.md` found
   1 Important after two bounded fix rounds.
 - Phase p02 implementation stamp: `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`.
 - Phase p02 review stamp: `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
@@ -439,10 +439,10 @@ implementation exit gate is allowed; final HiLL sequencing may proceed.
 - Phase p03 implementation request `7d08dd33-34fd-4bfb-8db8-a036b54cd4a3`
   completed two task commits on `oat-phase-implementer-gpt-5-6-sol-high` with no
   recovery attempts or optional nested dispatches.
-- Phase p03 review artifacts `reviews/p03-review-2026-09-10T054626Z.md` and
-  `reviews/p03-review-2026-09-10T062438Z.md` produced bounded fixes
+- Phase p03 review artifacts `reviews/archived/p03-review-2026-09-10T054626Z.md` and
+  `reviews/archived/p03-review-2026-09-10T062438Z.md` produced bounded fixes
   `cont-recon-rework-p03-fix-1` and `cont-recon-rework-p03-fix-2`.
-- The terminal normal review `reviews/p03-review-2026-09-10T065216Z.md` passed
+- The terminal normal review `reviews/archived/p03-review-2026-09-10T065216Z.md` passed
   on `oat-reviewer-gpt-5-6-sol-high` with 0 Critical, 0 Important, 0 Medium,
   and 0 Minor findings. Phase p03 outcome: passed; current scope advances to p04.
 - Phase p03 implementation stamp: `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`.
@@ -453,7 +453,7 @@ implementation exit gate is allowed; final HiLL sequencing may proceed.
   `3e200321b705e5a3204cbe72434dff547ab2bc28`, plus validated recovery commit
   `b828fb10d8c4d02ac86df281ebb2ef61e394599d`, on
   `oat-phase-implementer-gpt-5-6-sol-high`.
-- Phase p04 review artifact `reviews/p04-review-2026-09-10T073941Z.md` passed on
+- Phase p04 review artifact `reviews/archived/p04-review-2026-09-10T073941Z.md` passed on
   `oat-reviewer-gpt-5-6-sol-high` with 0 Critical, 0 Important, 1 Medium, and
   2 Minor findings; review fix-loop count 0.
 - Phase p04 implementation stamp: `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`.
@@ -569,7 +569,7 @@ implementation exit gate is allowed; final HiLL sequencing may proceed.
   The first four blocking findings and the Medium were fixed; the terminal profile
   topology finding remains open.
 - The terminal reviewer attempted one intelligent-recon lane and reconciled it in
-  `reviews/p02-review-2026-09-10T041234Z.md`.
+  `reviews/archived/p02-review-2026-09-10T041234Z.md`.
 - The two-round orchestration retry limit is exhausted. No Phase 3 worker was
   dispatched and unresolved findings were not converted into a pass.
 
@@ -586,7 +586,7 @@ implementation exit gate is allowed; final HiLL sequencing may proceed.
 - Fix `420e1d4492b0734463aeac4d8bf91137f812dff0` enforces ordered singleton
   profile stages, condition-bound contradiction-resolution, and one terminal
   reconciliation.
-- Fourth review `reviews/p02-review-2026-09-10T050659Z.md` passed with no
+- Fourth review `reviews/archived/p02-review-2026-09-10T050659Z.md` passed with no
   findings after independent direct/CLI probes and complete primary reconciliation.
 - Phase 3 is authorized to begin at `p03-t01`.
 

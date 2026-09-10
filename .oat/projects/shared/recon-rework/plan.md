@@ -801,21 +801,21 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target           |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | --------------------- |
-| p01    | code     | passed          | 2026-09-10 | reviews/p01-review-2026-09-10T020657Z.md                    | f5317ee5fd4d5df78a341819023d7cc49f97da3e | manual     | -                     |
-| p02    | code     | fixes_completed | 2026-09-10 | reviews/p02-review-2026-09-10T030647Z.md                    | 58b165063f7f1f154920b9793d353a2f8777ed81 | manual     | -                     |
+| p01    | code     | passed          | 2026-09-10 | reviews/archived/p01-review-2026-09-10T020657Z.md           | f5317ee5fd4d5df78a341819023d7cc49f97da3e | manual     | -                     |
+| p02    | code     | fixes_completed | 2026-09-10 | reviews/archived/p02-review-2026-09-10T030647Z.md           | 58b165063f7f1f154920b9793d353a2f8777ed81 | manual     | -                     |
 | final  | code     | fixes_completed | 2026-09-10 | reviews/archived/final-review-2026-09-10T075058Z.md         | 769ea8aa937dd3e071600d8d5f119b184493e4ae | auto       | -                     |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -                     |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -                     |
 | plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T163711Z.md | -                                        | -          | -                     |
 | plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T232155Z.md | -                                        | -          | -                     |
-| p03    | code     | fixes_completed | 2026-09-10 | reviews/p03-review-2026-09-10T054626Z.md                    | 33a5cfff83a11219429d3944cec8de8a1eb475a4 | manual     | -                     |
-| p04    | code     | passed          | 2026-09-10 | reviews/p04-review-2026-09-10T073941Z.md                    | b62fb86aa6f31df166545c8aa4d6286510cd7d70 | manual     | -                     |
+| p03    | code     | fixes_completed | 2026-09-10 | reviews/archived/p03-review-2026-09-10T054626Z.md           | 33a5cfff83a11219429d3944cec8de8a1eb475a4 | manual     | -                     |
+| p04    | code     | passed          | 2026-09-10 | reviews/archived/p04-review-2026-09-10T073941Z.md           | b62fb86aa6f31df166545c8aa4d6286510cd7d70 | manual     | -                     |
 | plan   | artifact | passed          | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T231851Z.md | -                                        | manual     | -                     |
-| p02    | code     | fixes_completed | 2026-09-10 | reviews/p02-review-2026-09-10T033820Z.md                    | 89594e147c9f1427823dca2d316524e26719f9a3 | manual     | -                     |
-| p02    | code     | fixes_completed | 2026-09-10 | reviews/p02-review-2026-09-10T041234Z.md                    | b4424664101c86b3a044f23396290a1b83cd6d12 | manual     | -                     |
-| p02    | code     | passed          | 2026-09-10 | reviews/p02-review-2026-09-10T050659Z.md                    | 420e1d4492b0734463aeac4d8bf91137f812dff0 | manual     | -                     |
-| p03    | code     | fixes_completed | 2026-09-10 | reviews/p03-review-2026-09-10T062438Z.md                    | c6018f6c4f5633f005ed1938f3913db2e9bbd941 | manual     | -                     |
-| p03    | code     | passed          | 2026-09-10 | reviews/p03-review-2026-09-10T065216Z.md                    | c1f175409c29d1afc04c7d69c84f61b80b4c850f | manual     | -                     |
+| p02    | code     | fixes_completed | 2026-09-10 | reviews/archived/p02-review-2026-09-10T033820Z.md           | 89594e147c9f1427823dca2d316524e26719f9a3 | manual     | -                     |
+| p02    | code     | fixes_completed | 2026-09-10 | reviews/archived/p02-review-2026-09-10T041234Z.md           | b4424664101c86b3a044f23396290a1b83cd6d12 | manual     | -                     |
+| p02    | code     | passed          | 2026-09-10 | reviews/archived/p02-review-2026-09-10T050659Z.md           | 420e1d4492b0734463aeac4d8bf91137f812dff0 | manual     | -                     |
+| p03    | code     | fixes_completed | 2026-09-10 | reviews/archived/p03-review-2026-09-10T062438Z.md           | c6018f6c4f5633f005ed1938f3913db2e9bbd941 | manual     | -                     |
+| p03    | code     | passed          | 2026-09-10 | reviews/archived/p03-review-2026-09-10T065216Z.md           | c1f175409c29d1afc04c7d69c84f61b80b4c850f | manual     | -                     |
 | final  | code     | fixes_completed | 2026-09-10 | reviews/archived/final-review-2026-09-10T083842Z.md         | fe30e986219bbf27b04fb08957166229acc955fe | auto       | -                     |
 | final  | code     | passed          | 2026-09-10 | reviews/archived/final-review-2026-09-10T085115Z.md         | b1c7e84716f65ccf414448f1d2ac7d96d9cac434 | auto       | -                     |
 | final  | code     | passed          | 2026-09-10 | reviews/archived/final-review-2026-09-10T091637Z.md         | ad1d8ae99e43d125e7dd791225c3dc1984e7812f | gate       | cursor-fable-5-1-high |
