@@ -61,15 +61,23 @@ No other mode is valid.
 
 ## Output Contract
 
-Write exactly one JSON artifact at `writePath`. The artifact must include:
+Write exactly one JSON artifact at `writePath` using only the supplied closed
+schema's fields:
 
-- `kind`, `schemaVersion`, run/wave/lane identity, the approved manifest wave
-  mode, the worker assignment mode, and outcome;
-- the exact allowed and excluded inputs actually honored;
-- findings or dispositions with evidence IDs and typed locators;
-- uncertainty, contradictions, and gaps as explicit arrays;
-- safe categorical diagnostics for unavailable or invalid inputs; and
-- direct input artifact references and digests when applicable.
+- a `recon.raw-dossier` records the approved manifest wave through `waveId` and
+  records the closed worker assignment mode in `mode`; it also carries `laneId`
+  and `outcome`;
+- a `recon.review-result` records its approved lane in `reviewerLane` and its
+  approved review discriminator in `reviewKind`; and
+- every artifact includes its required `kind`, `schemaVersion`, run identity,
+  honored inputs and exclusions, findings or dispositions, explicit
+  uncertainty, contradictions and gaps, safe categorical diagnostics, and
+  direct input references where its supplied schema permits them.
+
+Do not add a second mode field or any other field absent from the supplied
+schema. The controller validates the artifact's `waveId` and `mode`, or its
+`reviewerLane` and `reviewKind`, against the approved manifest wave before the
+artifact can be promoted.
 
 Persist minimal excerpts only. Detect and redact secret spans before writing;
 never persist the secret or its sensitive-span digest. Finish by returning the

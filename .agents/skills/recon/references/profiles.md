@@ -40,18 +40,19 @@ Use for load-bearing evidence that needs independent semantic challenge.
 ## thorough
 
 Use when expensive failure or correlated blind spots justify redundant source
-reopening and explicit contradiction resolution.
+reopening and verification.
 
 - Required: standard topology plus redundant independent gathering and
-  verification for load-bearing claims and explicit contradiction resolution.
+  redundant verification for load-bearing claims.
 - Adaptive lane range: 2–10 gather lanes and 2–6 verification or adversarial
   lanes; hard cap 20 total worker lanes.
 - Maximum concurrency: 8.
 - Assurance ceiling: `verified` only for claims affirmed by the required
   independent passes and left without unresolved material challenge.
-- Conditional work: up to two predeclared contradiction-resolution evidence
-  waves within the manifest's hard cap, followed by exactly one mandatory
-  terminal reconciliation.
+- Conditional work: optionally predeclare up to two condition-bound
+  `contradiction-resolution` evidence waves within the manifest's hard cap.
+  Each runs only when its approved predicate triggers; both branches feed
+  exactly one mandatory terminal reconciliation.
 
 ## Planning Rules
 

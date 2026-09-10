@@ -394,13 +394,14 @@ declared, including honest same-profile partials.
 
 Use `scripts/render-packet.mjs <packet-dir>` to generate the deterministic
 consumer view. Its public path entry point first obtains `ValidatedRun`; the
-render core accepts only that graph. The document includes a compact intended
-routing summary from the normalized view: source manifest version, approved
+render core accepts only that graph. For a manifest-v2 packet, the document
+includes a compact Intended Routing summary from the normalized view: approved
 authority and limits, each wave's effective exact target/class/floor/rationale,
 and every root-recorded conditional disposition. It labels those values as
 approved intent rather than launch receipts or observations of runtime identity,
-usage, cost, or correctness. Evidence, claims, contradictions, and gaps remain
-the primary consumer context.
+usage, cost, or correctness. A valid manifest-v1 packet retains the pre-v2
+rendered document without an Intended Routing section. Evidence, claims,
+contradictions, and gaps remain the primary consumer context in both versions.
 
 The renderer writes an exclusive unpredictable temporary sibling, retains that
 file's identity through hashing and atomic promotion, and verifies the promoted

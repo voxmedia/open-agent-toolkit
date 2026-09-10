@@ -108,11 +108,18 @@ the existing ledger in place.
 
 ## Output
 
-Write one JSON artifact matching the supplied schema. Include kind, schema
-version, identities, the approved manifest wave mode, the worker assignment
-mode, outcome, honored inputs and exclusions, findings or dispositions,
-uncertainty, contradictions, gaps, safe diagnostics, and direct input
-references where applicable.
+Write one JSON artifact using only the supplied closed schema's fields. A
+`recon.raw-dossier` identifies its approved manifest wave with `waveId` and its
+closed worker assignment with `mode`; it also includes `laneId` and `outcome`.
+A `recon.review-result` identifies its approved lane with `reviewerLane` and its
+approved review discriminator with `reviewKind`. Include the remaining
+required identity, input, exclusion, finding or disposition, uncertainty,
+contradiction, gap, diagnostic, and direct-reference fields only as the
+supplied schema permits.
+
+Do not add a second mode field or any other unknown field. The controller
+validates `waveId` and `mode`, or `reviewerLane` and `reviewKind`, against the
+approved manifest wave before promoting the artifact.
 
 Return only the artifact path and compact outcome. Do not return source bodies,
 worker reasoning, or dossier contents to the controller.

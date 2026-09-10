@@ -746,6 +746,42 @@ test('dispatches schema versions by artifact kind and keeps v1 closed', async ()
   await expectInvalid(v2ExecutionKeyInV1, 'UNKNOWN_FIELD');
 });
 
+test('worker artifacts use existing closed identity fields and reject invented mode fields', async () => {
+  const packet = await makePacket({ profile: 'standard' });
+  const dossier = JSON.parse(
+    await readFile(
+      join(packet.packetRoot, 'raw', 'dossiers', 'dossier-1.json'),
+      'utf8',
+    ),
+  );
+  const reviewResult = packet.reviewPaths.get('review-semantic').value;
+
+  assert.equal(validateArtifactShape(dossier).valid, true);
+  assert.equal(validateArtifactShape(reviewResult).valid, true);
+  const approvedPacket = await validatePacket(packet.packetRoot);
+  assert.equal(
+    approvedPacket.valid,
+    true,
+    JSON.stringify(approvedPacket, null, 2),
+  );
+
+  for (const artifact of [dossier, reviewResult]) {
+    const rejected = validateArtifactShape({
+      ...artifact,
+      manifestWaveMode: 'semantic-verification',
+      workerAssignmentMode: 'verify',
+    });
+    assert.equal(rejected.valid, false);
+    assert.deepEqual(
+      rejected.errors
+        .filter((error) => error.code === 'UNKNOWN_FIELD')
+        .map((error) => error.path)
+        .sort(),
+      ['$.manifestWaveMode', '$.workerAssignmentMode'],
+    );
+  }
+});
+
 test('v2 exact targets preserve explicit nullable controls and bind approval', async () => {
   const packet = await createPacketFixture({ manifestVersion: 2 });
   tempRoots.push(packet.tempRoot);

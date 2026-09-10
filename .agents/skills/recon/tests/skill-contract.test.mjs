@@ -120,6 +120,27 @@ test('profiles define adaptive bounded quick, standard, and thorough runs', asyn
   );
 });
 
+test('thorough keeps redundant work required and contradiction resolution conditional', async () => {
+  const { profiles } = await readContracts();
+  const thorough = profiles.slice(
+    profiles.indexOf('## thorough'),
+    profiles.indexOf('## Planning Rules'),
+  );
+  const required = thorough.slice(
+    thorough.indexOf('- Required:'),
+    thorough.indexOf('- Adaptive lane range:'),
+  );
+  const conditional = thorough.slice(thorough.indexOf('- Conditional work:'));
+
+  assert.match(required, /redundant independent gathering/i);
+  assert.match(required, /redundant verification/i);
+  assert.doesNotMatch(required, /contradiction-resolution/i);
+  assert.match(conditional, /optionally predeclare/i);
+  assert.match(conditional, /condition-bound/i);
+  assert.match(conditional, /`contradiction-resolution`/i);
+  assert.match(conditional, /approved predicate triggers/i);
+});
+
 test('controller maps ten wave modes onto the closed worker vocabulary', async () => {
   const { skill, workerContract, worker } = await readContracts();
   const expected = [
@@ -148,7 +169,7 @@ test('controller maps ten wave modes onto the closed worker vocabulary', async (
   );
 });
 
-test('worker documents distinguish both mode fields at input and output', async () => {
+test('worker documents distinguish assignment concepts and use closed output fields', async () => {
   const { workerContract, worker } = await readContracts();
   const contractEnvelope = workerContract.slice(
     workerContract.indexOf('## Required Assignment Envelope'),
@@ -167,14 +188,21 @@ test('worker documents distinguish both mode fields at input and output', async 
     worker.indexOf('## Critical Rules'),
   );
 
-  for (const section of [
-    contractEnvelope,
-    contractOutput,
-    workerGate,
-    workerOutput,
-  ]) {
+  for (const section of [contractEnvelope, workerGate]) {
     assert.match(section, /approved manifest wave\s+mode/i);
     assert.match(section, /worker assignment\s+mode/i);
+  }
+
+  for (const section of [contractOutput, workerOutput]) {
+    assert.match(section, /recon\.raw-dossier[\s\S]{0,240}`waveId`/i);
+    assert.match(section, /recon\.raw-dossier[\s\S]{0,240}`mode`/i);
+    assert.match(section, /recon\.review-result[\s\S]{0,240}`reviewerLane`/i);
+    assert.match(section, /recon\.review-result[\s\S]{0,240}`reviewKind`/i);
+    assert.match(section, /controller[\s\S]{0,200}approved manifest wave/i);
+    assert.match(
+      section,
+      /do not add[\s\S]{0,80}(?:second mode|unknown) field/i,
+    );
   }
 });
 

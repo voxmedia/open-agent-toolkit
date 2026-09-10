@@ -178,11 +178,13 @@ approval meaning. New writers use version 2, whose normalized routing view
 contains inherited or complete per-wave targets and conditional outcomes while
 continuing to reference version 1 evidence artifacts.
 
-`packet.md` renders a compact Intended Routing section from the already
-validated normalized view. It labels exact targets and condition dispositions
-as approved intent, not proof of the native process that ran, launcher receipts,
-token or billing totals, or universal correctness. Evidence, claims,
-contradictions, and gaps remain the packet's main consumer context.
+For manifest v2, `packet.md` renders a compact Intended Routing section from the
+already validated normalized view. It labels exact targets and condition
+dispositions as approved intent, not proof of the native process that ran,
+launcher receipts, token or billing totals, or universal correctness. A valid
+manifest-v1 packet retains the pre-v2 rendered output without an Intended
+Routing section. Evidence, claims, contradictions, and gaps remain the packet's
+main consumer context in both versions.
 
 The ledger compiler and packet validator enforce categorical referential
 integrity on `synthesis.keyClaimIds` and `synthesis.unresolvedQuestionIds`. Any
