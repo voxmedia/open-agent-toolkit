@@ -64,6 +64,10 @@ run-1-p03-outcome-20260910 Phase p03 passed after two bounded fix rounds; review
 
 run-1-p04-outcome-20260910 Phase p04 passed blocking review after 0 fix rounds and 1 mechanical recovery; reviews/p04-review-2026-09-10T073941Z.md records 0 Critical, 0 Important, 1 Medium, 2 Minor with attempted reconnaissance and complete orchestration evidence.
 
+### 2026-09-10 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:3,minor:1 exit=0 status=ok artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-10T091637Z.md run=4b362f5c-6edd-463b-b63f-4b4f46596830
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
