@@ -10,21 +10,23 @@ Branch: recon-rework
 Project: .oat/projects/shared/recon-rework
 Workflow: quick, native
 Design mode: lightweight draft
-Next step: re-review corrected planning artifacts and finish readiness
+Next step: resolve the received topology review and finish readiness
 ```
 
 Thomas originally authorized discovery capture and design/plan drafting, then a
-stop before self-review and plan/gate review. A manual plan artifact review was
-later received on 2026-09-09 and all 12 findings were applied directly to the
-planning artifacts. The project remains at `oat_phase: plan`,
+stop before self-review and plan/gate review. A manual plan artifact review and a
+newer re-review were later received on 2026-09-09, and their findings were applied
+directly to the planning artifacts. A separately received review still has two
+topology findings to reconcile. The project remains at `oat_phase: plan`,
 `oat_phase_status: in_progress`; plan `oat_ready_for: null` and
 `oat_template: true` now guard the pending re-review and readiness work, not
 unfinished placeholder content.
 
 **Do not scaffold again, restart discovery, mark review passed, or jump directly
 to implementation.** Load the current quick-start skill and resume this project
-in place. The plan is fully authored and corrected, but its review event remains
-`fixes_completed` until re-review passes.
+in place. The plan is fully authored, but the active topology review remains
+`received`; the corrected review events remain `fixes_completed` until a later
+review passes.
 
 ## Reading order
 

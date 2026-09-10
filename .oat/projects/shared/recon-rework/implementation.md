@@ -84,6 +84,21 @@ No implementation orchestration runs.
 - Next: resume quick-start for plan re-review, remaining design review, gate choices,
   and implementation-readiness checks.
 
+### 2026-09-09 — Newer plan re-review received
+
+- Received `artifact-plan-review-2026-09-09T232155Z.md`: 0 critical,
+  1 important, 2 medium, and 3 minor findings.
+- Resolved all six directly in `plan.md`; no implementation tasks or product-code
+  changes were added.
+- Dispositions: I1, M1-M2, and m1-m3 all `resolve_in_artifact`. M1 was narrowed:
+  sharing production logic is required, while either a direct import or subprocess
+  CLI invocation is a valid fixture boundary. m3 adds only the requested evidence
+  distinction and no additional machinery.
+- Archived the consumed event under `reviews/archived/`; its Reviews ledger row is
+  `fixes_completed`, not passed.
+- The separately received topology review remains active and must compose with
+  these fixes before readiness.
+
 ## Planning Verification
 
 | Check                                                                 | Result                          | Scope                                                                |

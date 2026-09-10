@@ -16,10 +16,11 @@ oat_template: true
 
 # Implementation Plan: Recon rework
 
-> **Reviewed draft, not implementation-ready.** The manual plan artifact review
-> completed on 2026-09-09 and its findings were applied. Resume quick-start in
-> place for re-review, remaining design review, gate choices, and readiness;
-> retain all task IDs and review rows.
+> **Reviewed draft, not implementation-ready.** Two manual plan re-reviews were
+> received on 2026-09-09. The newer review's findings are applied; the older
+> review's two topology findings remain to be reconciled. Resume quick-start in
+> place for remaining review, design review, gate choices, and readiness; retain
+> all task IDs and review rows.
 
 **Goal:** Restore inexpensive evidence fan-out across harnesses with caller-owned
 judgment, independently approved per-wave targets, and bounded conditional
@@ -53,8 +54,11 @@ commit with its exact write set staged.
 - Design self-review remains pending from the original handoff.
 - Project dispatch policy, optional phase gates, lifecycle gate posture, and
   implementation HiLL: not selected in this drafting run.
+- `oat_plan_hill_phases` remains absent until `oat-project-implement` confirms
+  the user's HiLL choice and writes the selected phases; an empty list would mean
+  pause after every phase, not "undecided."
 - Do not write a fake review skip, passed row, or implementation readiness; the
-  current plan-review event is `fixes_completed` until re-review passes.
+  corrected review events remain `fixes_completed` until a later review passes.
 - The low-cost policy describes recon workers **as product behavior**; it does
   not require implementing or reviewing this contract with an inadequate model.
 
@@ -139,8 +143,9 @@ the guard neutralized or claim fake fixtures are live-provider evidence.
 **Implement:**
 
 1. Read decision guidance/index and load `oat-pjm-decision`. Run
-   `pnpm run --silent cli:source -- pjm doctor --json`; inspect adoption before
-   any decision write. Unrelated backlog-ledger warnings are not project approval.
+   `pnpm run --silent cli:source -- pjm doctor --json`; capture its complete JSON
+   and exit code in a `mktemp -d` file before any decision write, and inspect
+   adoption. Unrelated backlog-ledger warnings are not project approval.
 2. Record cheap evidence acquisition, caller judgment, economical per-wave
    selection, explicit approval, predeclared bounded escalation, and the distinction
    between intended targets and actual-launch proof.
@@ -157,15 +162,21 @@ the guard neutralized or claim fake fixtures are live-provider evidence.
 **Verify:** Run the governing commands explicitly:
 
 ```bash
-pnpm run --silent cli:source -- pjm doctor --json
+doctor_evidence_dir=$(mktemp -d)
+pnpm run --silent cli:source -- pjm doctor --json > "$doctor_evidence_dir/before.json"
+doctor_before_exit=$?
 pnpm run --silent cli:source -- decision new "Restore economical recon routing and caller-owned judgment" --status accepted --context "Issue #274 requires economical per-wave recon without weakening approval or evidence boundaries." --decision "Use independently selected and approved per-wave targets, keep final judgment in the caller, and permit only predeclared bounded escalation." --consequences "Supersede homogeneous run-wide selection while preserving the prohibition on unsupported launch receipts." --json
 pnpm run --silent cli:source -- decision regenerate-index
+pnpm run --silent cli:source -- pjm doctor --json > "$doctor_evidence_dir/after.json"
+doctor_after_exit=$?
 ```
 
 The `decision new` command is the task's creation action and runs exactly once;
-capture its returned path for formatting and verification. The accepted PJM doctor
-baseline is the inherited completed-ledger warning set with exit 1. The task passes
-when that set is unchanged apart from the new accepted record appearing in the
+capture its returned path for formatting and verification. Preserve the complete
+pre-write doctor result and compare its stable warning identities/categories and
+adoption state with the complete post-write result. The accepted baseline is the
+inherited completed-ledger warning set with exit 1. The task passes when those
+warnings are unchanged apart from the new accepted record appearing in the
 generated index, its supersession links resolve, and the receipt boundary remains
 intact. Record inherited warnings separately rather than relabeling them green.
 
@@ -185,7 +196,11 @@ intact. Record inherited warnings separately rather than relabeling them green.
 **Implement:**
 
 1. Retain a v1 fixture path with its original flat execution fields and fingerprint
-   algorithm. Do not convert every fixture to v2 and lose compatibility evidence.
+   algorithm. Compute its approval fingerprint once against the pre-change
+   production contract and store that byte-exact literal string in the fixture;
+   compatibility assertions must never recompute the expected literal through the
+   production helper under test. Do not convert every fixture to v2 and lose
+   compatibility evidence.
 2. Replace the global version gate with a closed kind/version dispatch:
    manifest 1/2; unchanged evidence kinds 1. Reject other combinations.
 3. Implement the reviewed v2 execution shape from design: inherited full target,
@@ -211,10 +226,12 @@ pnpm exec oxfmt --write .agents/skills/recon/scripts/lib/contracts.mjs .agents/s
 node --test .agents/skills/recon/tests/routing-contracts.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs .agents/skills/recon/tests/integrity-contracts.test.mjs
 ```
 
-Controls: v1 accepted unchanged; v2 manifest/v1 evidence accepted; unknown versions
-and v2 keys in v1 rejected; full-target inheritance exact; axis/fingerprint
-mutation rejected. Temporary unsupported-condition publication may remain refused
-until phase 2; do not ship or label an incomplete intermediate state ready.
+Controls: the unchanged v1 fixture matches and validates with its pinned literal
+fingerprint; changing one v1 execution field while retaining that literal is
+rejected; v2 manifest/v1 evidence accepted; unknown versions and v2 keys in v1
+rejected; full-target inheritance exact; axis/fingerprint mutation rejected.
+Temporary unsupported-condition publication may remain refused until phase 2; do
+not ship or label an incomplete intermediate state ready.
 
 **Commit:** `feat(p01-t02): version recon per-wave execution contracts`.
 
@@ -236,6 +253,8 @@ until phase 2; do not ship or label an incomplete intermediate state ready.
 2. Implement the draft proposal CLI described in design. Print per-wave
    assignments, counts, effective target axes, class/floor, rationale, conditions,
    and worst-case limits in Markdown/JSON.
+   Keep preview and exact target-check functions in `routing.mjs`; make
+   `prepare-routing.mjs` a thin CLI adapter over the same production logic.
 3. Preview may accept missing approval but may not publish, write approval, or
    launch. Keep that structural path separate from packet validation.
 4. Add approved-wave target checking: require valid approval, known wave, exact
@@ -307,7 +326,10 @@ node --test .agents/skills/recon/tests/conditional-routing.test.mjs .agents/skil
 Negative controls cover a valid old conditional omission fixture where applicable,
 new guard neutralization, unknown/cyclic rules, unapproved stronger targets,
 activated missing outputs, skipped artifacts, and cap overflow. A complete valid
-conditional follow-up passes; a failed accepted predecessor remains failed.
+conditional follow-up passes; a failed accepted predecessor remains failed. The
+pinned v1 fingerprint literal remains byte-identical after v2 fingerprint inputs
+gain conditions, while otherwise-identical v2 manifests with and without conditions
+produce different fingerprints.
 
 **Commit:** `feat(p02-t02): validate bounded recon escalation outcomes`.
 
@@ -322,8 +344,10 @@ conditional follow-up passes; a failed accepted predecessor remains failed.
 
 **Implement:**
 
-1. Make the fake workflow call production routing/preview/check helpers. It must
-   not contain a separate fake implementation of selection enforcement.
+1. Make the fake workflow reuse the production routing/preview/check logic, either
+   by importing the functions from `routing.mjs` or invoking the thin CLI through a
+   subprocess. It must not contain a separate fake implementation of selection
+   enforcement.
 2. Exercise quick, standard, and thorough profiles with v1 and v2 manifests.
    Cover redundant/conditional modes, not only map plus gather.
 3. Model Claude controls with no separately requested effort, Codex effort as an
@@ -427,8 +451,10 @@ pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test
 pnpm oat:validate-skills
 ```
 
-Check the actual prose against executable owners; text pins alone do not prove
-behavior. Preserve provider-neutral consumers and package layout.
+Check the actual prose against executable owners; text pins prove only that the
+published contract sentences exist, not that the behavior works. The p02-t03
+production-logic workflow test is the behavioral backstop for the v2 writer
+contract. Preserve provider-neutral consumers and package layout.
 
 **Commit:** `feat(p03-t01): restore cheap recon fan-out across harnesses`.
 
@@ -508,7 +534,8 @@ labels absent.
 **Implement:**
 
 1. Fetch origin/main and choose one lockstep version strictly greater than the
-   current base. Do not assume 0.2.66 remains available or change main's branch.
+   current base. Do not assume a previously observed version remains available or
+   change main's branch.
 2. Ensure new runtime scripts ship in the research pack while tests remain
    excluded according to existing packaging policy.
 3. Extend bundle consistency to include the proposal helper and shared routing
@@ -602,11 +629,11 @@ do not claim model-name capability ranking, and do not close recap or wave-7 ite
 
 ## Reviews
 
-The first manual plan artifact review has been received and its corrections are
-recorded. The direct re-review is received with two Important findings awaiting
-disposition, so the plan is not passed. Keep the unbound template
-rows below. The spec row is N/A for quick mode; its placeholder is retained solely
-to preserve scaffold review rows and is not a new spec requirement. No explicit
+The first manual review and the newer re-review have their corrections recorded.
+The other direct re-review remains received with two Important topology findings
+awaiting disposition, so the plan is not passed. Keep the unbound template rows
+below. The spec row is N/A for quick mode; its placeholder is retained solely to
+preserve scaffold review rows and is not a new spec requirement. No explicit
 auto-review-disabled configuration was written.
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
@@ -617,7 +644,7 @@ auto-review-disabled configuration was written.
 | spec   | artifact | pending         | -          | -                                                           | -             | -          | -           |
 | design | artifact | pending         | -          | -                                                           | -             | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T163711Z.md | -             | -          | -           |
-| plan   | artifact | received        | 2026-09-09 | reviews/artifact-plan-review-2026-09-09T232155Z.md          | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T232155Z.md | -             | -          | -           |
 | p03    | code     | pending         | -          | -                                                           | -             | -          | -           |
 | p04    | code     | pending         | -          | -                                                           | -             | -          | -           |
 | plan   | artifact | received        | 2026-09-09 | reviews/artifact-plan-review-2026-09-09T231851Z.md          | -             | -          | -           |

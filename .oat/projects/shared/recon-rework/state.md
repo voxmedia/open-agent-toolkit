@@ -30,16 +30,17 @@ oat_generated: false
 
 # Project State: Recon rework
 
-**Status:** Planning review corrections applied — re-review and readiness pending.
+**Status:** Newer re-review corrections applied — topology review and readiness pending.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-09
 
 ## Current Phase
 
 Plan in progress. Discovery is complete; lightweight design and plan are drafted.
-The first manual plan artifact review was received on 2026-09-09 and all findings
-were applied directly to planning artifacts. Design self-review, plan re-review,
-configured gates, readiness, and implementation remain pending.
+The first manual plan review and the newer re-review were received on 2026-09-09,
+and their findings were applied directly to planning artifacts. A separately
+received review still has two topology findings to reconcile. Design self-review,
+review acceptance, configured gates, readiness, and implementation remain pending.
 
 ## Artifacts
 
@@ -47,8 +48,8 @@ configured gates, readiness, and implementation remain pending.
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight draft; plan-review alignment applied, design
   self-review pending.
-- Plan: `plan.md` — 4 sequential phases, 9 tasks; review fixes complete and
-  re-review pending.
+- Plan: `plan.md` — 4 sequential phases, 9 tasks; newer re-review fixes complete
+  and topology review pending.
 - Implementation: `implementation.md` — initialized; 0/9 tasks started.
 - Handoff: `handoff.md` — exact continuation instructions.
 - Source context: `references/source-context.md` — baseline map and input precedence.
@@ -62,9 +63,10 @@ No existing project was absorbed or retired.
 
 ## Blockers
 
-No missing product-discovery input. Review and readiness remain pending: plan
-re-review, design review, optional phase review, lifecycle gate posture, and the
-configured quick-start gate must be resolved by the receiving agent.
+No missing product-discovery input. Review and readiness remain pending: the
+received topology findings, design review, optional phase review, lifecycle gate
+posture, and the configured quick-start gate must be resolved by the receiving
+agent.
 
 ## Next Milestone
 
