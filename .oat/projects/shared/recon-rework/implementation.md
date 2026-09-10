@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: null
+oat_current_task_id: p04-t03
 oat_generated: false
 oat_template: false
 ---
@@ -13,10 +13,10 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-10
 
-Implementation Run 1 has implemented all nine planned tasks. Phases 1-3 passed
-their independent reviews; Phase 4 implementation awaits its root-owned independent
-review, final gate, and configured HiLL checkpoint. No final-review or lifecycle
-completion claim is made here.
+Implementation Run 1 completed all nine original tasks and all four phase reviews.
+The automatic final lifecycle review found three bounded gaps, now queued as
+`p04-t03` through `p04-t05`. No final-review pass or lifecycle completion claim is
+made here.
 
 ## Progress Overview
 
@@ -25,10 +25,10 @@ completion claim is made here.
 | Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
 | Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
 | Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
-| Phase 4: Distribution and verification     | implemented | 2     | 2/2       |
+| Phase 4: Distribution and verification     | in progress | 5     | 2/5       |
 
-**Total:** 9/9 tasks implemented. Phase 4 review and the later lifecycle boundaries
-remain pending.
+**Total:** 9/12 tasks implemented. All phase reviews passed; final-review fixes and
+the later lifecycle boundaries remain pending.
 
 ## Task Status
 
@@ -43,6 +43,9 @@ remain pending.
 | p03-t02 | Completed: renderer and public docs             | `33a5cfff83a11219429d3944cec8de8a1eb475a4` |
 | p04-t01 | Completed: bundle and release versions          | `9721d7c680a0778967addaf9ef8b391839949d9c` |
 | p04-t02 | Completed: full verification/evidence           | `3e200321b705e5a3204cbe72434dff547ab2bc28` |
+| p04-t03 | Pending: validate production topology           | -                                          |
+| p04-t04 | Pending: structure malformed-wave errors        | -                                          |
+| p04-t05 | Pending: align lifecycle summaries              | -                                          |
 
 ## Phase 1: Decision and versioned contract
 
@@ -168,7 +171,7 @@ remain pending.
 
 ## Phase 4: Distribution and composed verification
 
-**Status:** completed; independent review passed
+**Status:** final-review fixes in progress; independent phase review passed
 **Started:** 2026-09-10
 **Completed:** 2026-09-10
 
@@ -210,6 +213,36 @@ remain pending.
   marker, and this final summary reflects all nine implemented tasks.
 - Final review, the implementation exit gate, the HiLL checkpoint, and lifecycle
   completion remain root-owned and pending.
+
+### Review Received: final
+
+**Date:** 2026-09-10
+**Review artifact:** `reviews/archived/final-review-2026-09-10T075058Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 1
+
+**New tasks added:** `p04-t03`, `p04-t04`, `p04-t05`
+
+**Disposition map:**
+
+- I1 -> converted to `p04-t03`: finalized packet validation must enforce the
+  same ordered singleton and terminal-reconciliation topology as preview.
+- M1 -> converted to `p04-t04`: malformed v1/v2 wave containers must return
+  structured categorical validation errors instead of throwing.
+- m1 -> converted to `p04-t05`: lifecycle summaries must reflect the passed
+  Phase 4 review and the active final-review fix loop without prematurely
+  completing final review, the exit gate, or HiLL.
+
+**Deferred findings:** none. The final review confirmed that the formal
+carry-forward ledger contained no unresolved Medium or Minor findings.
+
+**Next:** Execute the three fix tasks via `oat-project-implement`, then run a
+narrowed final re-review over their commits.
 
 ## Orchestration Runs
 
@@ -283,6 +316,12 @@ remain pending.
   2 Minor findings; review fix-loop count 0.
 - Phase p04 implementation stamp: `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`.
 - Phase p04 review stamp: `Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
+- Final lifecycle review used `oat-reviewer-gpt-5-6-sol-high` at reviewed head
+  `769ea8aa937dd3e071600d8d5f119b184493e4ae`. Artifact
+  `reviews/archived/final-review-2026-09-10T075058Z.md` found 0 Critical,
+  1 Important, 1 Medium, and 1 Minor; all three findings were converted into
+  tasks `p04-t03` through `p04-t05`.
+- Final review stamp: `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
 
 <!-- orchestration-runs-end -->
 
@@ -429,6 +468,17 @@ remain pending.
 - All nine tasks are implemented. Final verification, final review, exit gate, and
   HiLL approval remain distinct pending boundaries.
 
+### 2026-09-10 — Final lifecycle review received
+
+- Automatic final review at head
+  `769ea8aa937dd3e071600d8d5f119b184493e4ae` found 0 Critical, 1 Important,
+  1 Medium, and 1 Minor.
+- The Important production-validation topology gap became `p04-t03`; the Medium
+  malformed-wave exception path became `p04-t04`; lifecycle-summary drift became
+  `p04-t05`.
+- No finding was deferred or dismissed. Final review remains unpassed until these
+  fixes complete and a narrowed re-review passes.
+
 ## Planning Verification
 
 | Check                                                                 | Result                          | Scope                                                                                                                                  |
@@ -477,8 +527,8 @@ that no fourth planning review should run; implementation/final reviews remain.
 
 ## Final Summary (for PR/docs)
 
-All nine implementation tasks are implemented and all four phase reviews passed.
-The branch now provides versioned v1/v2 recon contracts, economical approved
+All nine original implementation tasks are implemented and all four phase reviews
+passed. Three final-review fixes are queued. The branch now provides versioned v1/v2 recon contracts, economical approved
 per-wave routing, bounded conditional escalation, exact outcome accounting,
 caller-owned judgment, normalized intended-routing output, aligned worker and
 controller guidance, bundled runtime assets, project provider projections, and
@@ -494,9 +544,10 @@ release validation, docs build, and negative controls for exact-target drift and
 shadow reconciliation. The retained raw gate logs lack explicit `exit=` markers;
 that nonblocking evidence-quality limitation remains disclosed.
 
-No design divergence remains. Implementation is not yet approved for shipping:
-final verification, final lifecycle review, the configured implementation exit
-gate, and final HiLL approval are still pending.
+The final review found one production topology-validation defect, one structured
+malformed-input gap, and lifecycle prose drift. Implementation is not yet approved
+for shipping: those fixes, a passing narrowed final review, the configured
+implementation exit gate, and final HiLL approval remain pending.
 
 ## References
 

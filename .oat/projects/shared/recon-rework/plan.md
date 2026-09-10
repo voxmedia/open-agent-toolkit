@@ -659,8 +659,96 @@ marker in project state. The exact gate ledger, cache distinction, v1/v2 and
 conditional controls, guard-neutralization proof, and synthetic-test limitations
 are recorded in `references/verification/phase-4-validation.md`.
 
-This task evidence does not mark the Phase 4 review, final review, implementation
-exit gate, configured HiLL checkpoint, or implementation lifecycle complete.
+### Task p04-t03: (review) Enforce approved topology at packet validation
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/scripts/lib/routing.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: `.agents/skills/recon/tests/routing-contracts.test.mjs`
+
+**Implement:**
+
+1. Extract one shared v2 profile-topology validator and use it from both routing
+   preview and finalized packet validation.
+2. Enforce the complete profile-specific singleton set and order, exactly one
+   non-conditional final reconciliation for standard/thorough, and only
+   condition-bound contradiction resolution before reconciliation.
+3. Preserve valid triggered and non-triggered conditional executions and the
+   unchanged v1 compatibility boundary.
+
+**Verify:**
+
+```bash
+node --test .agents/skills/recon/tests/routing-contracts.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs
+```
+
+Negative controls must reject out-of-order stages, non-terminal reconciliation,
+missing or duplicate required modes, and unconditional contradiction resolution
+through `validatePacket()` after recomputing the production approval fingerprint.
+
+**Commit:** `fix(p04-t03): enforce topology at packet validation`.
+
+### Task p04-t04: (review) Return structured errors for malformed wave arrays
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+
+**Implement:**
+
+1. After recording the array-shape error, iterate only over a verified array in
+   both supported manifest-version validators.
+2. Preserve the existing stable categorical error contract and public CLI JSON
+   result instead of throwing for object-valued `execution.waves`.
+
+**Verify:**
+
+```bash
+node --test .agents/skills/recon/tests/integrity-contracts.test.mjs .agents/skills/recon/tests/packet-validation.test.mjs
+```
+
+Direct `validateArtifactShape()` and public `validate-packet.mjs` controls must
+return stable invalid results without a `TypeError` for malformed v1 and v2 wave
+containers.
+
+**Commit:** `fix(p04-t04): structure malformed wave errors`.
+
+### Task p04-t05: (review) Align lifecycle summaries after final review
+
+**Files:**
+
+- Modify: `.oat/projects/shared/recon-rework/implementation.md`
+- Modify: `.oat/projects/shared/recon-rework/plan.md`
+- Modify: `.oat/projects/shared/recon-rework/design.md`
+- Modify: `.oat/projects/shared/recon-rework/state.md`
+
+**Implement:**
+
+1. Align the implementation introduction, progress rollups, plan completion
+   summary, and design preamble with the authoritative state: all phase reviews
+   passed and final-review fixes are in progress.
+2. Keep the final lifecycle review, implementation exit gate, and HiLL approval
+   distinct; do not mark any pending closeout boundary complete.
+3. Record the final-review fix commits and verification without erasing the
+   original 9-task implementation history.
+
+**Verify:**
+
+```bash
+pnpm exec oxfmt --check .oat/projects/shared/recon-rework/implementation.md .oat/projects/shared/recon-rework/plan.md .oat/projects/shared/recon-rework/design.md .oat/projects/shared/recon-rework/state.md
+oat project validate-plan --project-path .oat/projects/shared/recon-rework --json
+```
+
+**Commit:** `docs(p04-t05): align final review lifecycle state`.
+
+The original Phase 4 task evidence does not mark the final review,
+implementation exit gate, configured HiLL checkpoint, or implementation lifecycle
+complete. Final-review tasks `p04-t03` through `p04-t05` must complete and pass a
+fresh narrowed final review first.
 
 After this task, continue the normal authorized implementation review/final gate
 workflow. This plan does not authorize push, PR publication, merge, backlog
@@ -682,7 +770,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01    | code     | passed          | 2026-09-10 | reviews/p01-review-2026-09-10T020657Z.md                    | f5317ee5fd4d5df78a341819023d7cc49f97da3e | manual     | -           |
 | p02    | code     | fixes_completed | 2026-09-10 | reviews/p02-review-2026-09-10T030647Z.md                    | 58b165063f7f1f154920b9793d353a2f8777ed81 | manual     | -           |
-| final  | code     | received        | 2026-09-10 | reviews/final-review-2026-09-10T075058Z.md                  | 769ea8aa937dd3e071600d8d5f119b184493e4ae | auto       | -           |
+| final  | code     | fixes_added     | 2026-09-10 | reviews/archived/final-review-2026-09-10T075058Z.md         | 769ea8aa937dd3e071600d8d5f119b184493e4ae | auto       | -           |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T163711Z.md | -                                        | -          | -           |
@@ -698,15 +786,15 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 
 ## Implementation Complete
 
-**Implementation tasks complete: 9 of 9 implemented. Phase 4 review and later
-lifecycle gates remain pending.**
+**Implementation tasks complete: 9 of 12 implemented. All phase reviews passed;
+three final-review fixes are queued before the lifecycle gates.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
 - Phase 3: 2 tasks — guidance and consumer output.
-- Phase 4: 2 tasks — distribution and complete verification.
+- Phase 4: 5 tasks — distribution, complete verification, and final-review fixes.
 
-**Total: 4 phases, 9 tasks.** First task after readiness: `p01-t01`.
+**Total: 4 phases, 12 tasks.** First incomplete task: `p04-t03`.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References
