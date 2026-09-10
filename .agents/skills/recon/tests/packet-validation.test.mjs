@@ -23,6 +23,7 @@ import {
 } from '../scripts/validate-packet.mjs';
 import {
   approveExecution,
+  configureConditionalContradiction,
   createExecutionApproval,
   createPacketFixture,
 } from './fixtures/packet-fixture.mjs';
@@ -710,6 +711,100 @@ test('accepts a v2 manifest with v1 evidence artifacts', async () => {
     result.validatedRun.artifacts.every(
       ({ value }) => value.schemaVersion === 1,
     ),
+  );
+});
+
+test('production validation enforces approved v2 profile topology after fingerprint recomputation', async () => {
+  const cases = [
+    {
+      code: 'OUT_OF_ORDER_PROFILE_TOPOLOGY',
+      mutate(execution) {
+        [execution.waves[3], execution.waves[4]] = [
+          execution.waves[4],
+          execution.waves[3],
+        ];
+      },
+    },
+    {
+      code: 'INVALID_TERMINAL_TOPOLOGY',
+      mutate(execution) {
+        const terminal = execution.waves.pop();
+        execution.waves.splice(3, 0, terminal);
+      },
+    },
+    {
+      code: 'INCOMPLETE_PROFILE_TOPOLOGY',
+      mutate(execution) {
+        execution.waves = execution.waves.filter(
+          (wave) => wave.mode !== 'coverage',
+        );
+      },
+    },
+    {
+      code: 'DUPLICATE_PROFILE_WAVE_MODE',
+      mutate(execution) {
+        const duplicate = structuredClone(
+          execution.waves.find((wave) => wave.mode === 'coverage'),
+        );
+        duplicate.waveId = 'wave-coverage-duplicate';
+        duplicate.lanes[0].laneId = 'lane-coverage-duplicate';
+        duplicate.lanes[0].writeRoot = 'reviews/coverage-duplicate.json';
+        execution.waves.splice(execution.waves.length - 1, 0, duplicate);
+      },
+    },
+  ];
+
+  for (const { code, mutate } of cases) {
+    const packet = await createPacketFixture({
+      manifestVersion: 2,
+      profile: 'standard',
+    });
+    tempRoots.push(packet.tempRoot);
+    mutate(packet.manifest.execution);
+    packet.manifest.execution = approveExecution(packet.manifest.execution);
+    await packet.persist();
+    const result = await validatePacket(packet.packetRoot);
+    assert.equal(result.valid, false, `${code}: ${JSON.stringify(result)}`);
+    assert.ok(
+      result.errors.some((error) => error.code === code),
+      `${code}: ${JSON.stringify(result)}`,
+    );
+  }
+});
+
+test('production validation rejects unconditional contradiction resolution and accepts both dispositions', async () => {
+  for (const [disposition, profile] of [
+    ['triggered', 'thorough'],
+    ['not-triggered', 'standard'],
+  ]) {
+    const valid = await createPacketFixture({
+      manifestVersion: 2,
+      profile,
+    });
+    tempRoots.push(valid.tempRoot);
+    await configureConditionalContradiction(valid, { disposition });
+    const result = await validatePacket(valid.packetRoot);
+    assert.equal(result.valid, true, JSON.stringify(result, null, 2));
+  }
+
+  const invalid = await createPacketFixture({
+    manifestVersion: 2,
+    profile: 'standard',
+  });
+  tempRoots.push(invalid.tempRoot);
+  await configureConditionalContradiction(invalid);
+  invalid.manifest.execution.waves.find(
+    (wave) => wave.mode === 'contradiction-resolution',
+  ).conditional = false;
+  invalid.manifest.execution = approveExecution(invalid.manifest.execution);
+  await invalid.persist();
+  const result = await validatePacket(invalid.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.ok(
+    result.errors.some(
+      (error) => error.code === 'UNCONDITIONAL_CONTRADICTION_RESOLUTION',
+    ),
+    JSON.stringify(result, null, 2),
   );
 });
 

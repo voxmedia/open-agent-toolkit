@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
+import { validateV2ProfileTopology } from '../scripts/lib/contracts.mjs';
 import {
   economicalRoutingDefaults,
   normalizeManifestRouting,
@@ -122,6 +123,25 @@ test('v2 resolution inherits or replaces a whole exact target without axis mergi
   assert.deepEqual(routing.waves[1].target, override);
   assert.equal(routing.waves[1].target.effort, null);
   assert.equal('serviceTier' in routing.waves[1].target, true);
+});
+
+test('the shared v2 topology validator enforces singleton order at the production boundary', () => {
+  const execution = createV2ExecutionApproval({
+    modes: standardModes,
+    laneIdForMode,
+  });
+  [execution.waves[3], execution.waves[4]] = [
+    execution.waves[4],
+    execution.waves[3],
+  ];
+  const errors = validateV2ProfileTopology({
+    schemaVersion: 2,
+    run: { requestedProfile: 'standard' },
+    execution,
+  });
+  assert.ok(
+    errors.some((error) => error.code === 'OUT_OF_ORDER_PROFILE_TOPOLOGY'),
+  );
 });
 
 test('normalization refuses unknown manifest versions', () => {

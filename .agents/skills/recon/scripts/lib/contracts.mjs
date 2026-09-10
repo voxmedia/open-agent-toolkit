@@ -67,6 +67,47 @@ export const conditionPredicates = [
   'unresolved-material-challenge',
 ];
 
+function profilePolicy(orderedSingletonWaveModes, caps) {
+  return Object.freeze({
+    orderedSingletonWaveModes: Object.freeze(orderedSingletonWaveModes),
+    ...caps,
+  });
+}
+
+export const profileRoutingPolicy = Object.freeze({
+  quick: profilePolicy(['map', 'gather', 'compile'], {
+    lanes: 4,
+    concurrency: 4,
+    conditions: 0,
+  }),
+  standard: profilePolicy(
+    [
+      'map',
+      'gather',
+      'compile',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'reconciliation',
+    ],
+    { lanes: 10, concurrency: 6, conditions: 1 },
+  ),
+  thorough: profilePolicy(
+    [
+      'map',
+      'gather',
+      'compile',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'redundant-gather',
+      'redundant-verification',
+      'reconciliation',
+    ],
+    { lanes: 20, concurrency: 8, conditions: 2 },
+  ),
+});
+
 const supportedSchemaVersions = new Map([
   ['recon.packet-manifest', new Set([1, MANIFEST_SCHEMA_VERSION])],
   ['recon.claim-ledger', new Set([SCHEMA_VERSION])],
@@ -832,72 +873,337 @@ function validateExecutionV2(value, errors, path) {
   }
 }
 
-const profileRoutingCaps = Object.freeze({
-  quick: Object.freeze({ lanes: 4, concurrency: 4, conditions: 0 }),
-  standard: Object.freeze({ lanes: 10, concurrency: 6, conditions: 1 }),
-  thorough: Object.freeze({ lanes: 20, concurrency: 8, conditions: 2 }),
-});
-
-function validateProfileRoutingCaps(manifest, errors) {
-  if (manifest.schemaVersion !== MANIFEST_SCHEMA_VERSION) return;
-  const execution = manifest.execution;
-  const cap = profileRoutingCaps[manifest.run?.requestedProfile];
-  if (!isObject(execution) || !cap) return;
+export function validateV2ProfileTopology(
+  manifest,
+  execution = manifest?.execution,
+  path = '$.execution',
+) {
+  const errors = [];
+  if (manifest?.schemaVersion !== MANIFEST_SCHEMA_VERSION) return errors;
+  const requestedProfile = manifest.run?.requestedProfile;
+  const policy = profileRoutingPolicy[requestedProfile];
+  if (!policy) {
+    return [
+      issue(
+        'INVALID_ROUTING_PROFILE',
+        'A v2 routing proposal requires a supported requested profile',
+        '$.run.requestedProfile',
+      ),
+    ];
+  }
+  if (!isObject(execution)) return errors;
+  if (!Array.isArray(execution.waves)) {
+    return [
+      issue(
+        'MISSING_ROUTING_WAVES',
+        'execution.waves must be an array',
+        `${path}.waves`,
+      ),
+    ];
+  }
+  if (!Array.isArray(execution.conditions)) {
+    return [
+      issue(
+        'MISSING_ROUTING_CONDITIONS',
+        'execution.conditions must be an array',
+        `${path}.conditions`,
+      ),
+    ];
+  }
   const waves = Array.isArray(execution.waves) ? execution.waves : [];
+  const conditions = Array.isArray(execution.conditions)
+    ? execution.conditions
+    : [];
   const laneCount = waves.reduce(
     (count, wave) =>
       count + (Array.isArray(wave?.lanes) ? wave.lanes.length : 0),
     0,
   );
-  if (laneCount > cap.lanes) {
+  if (laneCount > policy.lanes) {
     errors.push(
       issue(
         'PROFILE_LANE_CAP_EXCEEDED',
-        `${manifest.run.requestedProfile} routing permits at most ${cap.lanes} total worker lanes`,
-        '$.execution.waves',
+        `${requestedProfile} routing permits at most ${policy.lanes} total worker lanes`,
+        `${path}.waves`,
       ),
     );
   }
-  if (execution.maxConcurrency > cap.concurrency) {
+  if (execution.maxConcurrency > policy.concurrency) {
     errors.push(
       issue(
         'PROFILE_CONCURRENCY_CAP_EXCEEDED',
-        `${manifest.run.requestedProfile} routing permits concurrency at most ${cap.concurrency}`,
-        '$.execution.maxConcurrency',
+        `${requestedProfile} routing permits concurrency at most ${policy.concurrency}`,
+        `${path}.maxConcurrency`,
       ),
     );
   }
-  const conditionCount = Array.isArray(execution.conditions)
-    ? execution.conditions.length
-    : 0;
-  if (conditionCount > cap.conditions) {
+  if (conditions.length > policy.conditions) {
     errors.push(
       issue(
         'PROFILE_CONDITION_CAP_EXCEEDED',
-        `${manifest.run.requestedProfile} routing permits at most ${cap.conditions} conditional waves`,
-        '$.execution.conditions',
+        `${requestedProfile} routing permits at most ${policy.conditions} conditional waves`,
+        `${path}.conditions`,
       ),
     );
   }
-  const reconciliationWaves = waves.filter(
-    (wave) => wave?.mode === 'reconciliation',
-  );
+  const reconciliationIndexes = waves
+    .map((wave, index) => (wave?.mode === 'reconciliation' ? index : -1))
+    .filter((index) => index !== -1);
   const requiresReconciliation = ['standard', 'thorough'].includes(
-    manifest.run?.requestedProfile,
+    requestedProfile,
   );
   if (
-    reconciliationWaves.length > 1 ||
-    (requiresReconciliation && reconciliationWaves.length !== 1) ||
-    reconciliationWaves.some((wave) => wave.conditional === true)
+    reconciliationIndexes.length > 1 ||
+    (requiresReconciliation && reconciliationIndexes.length !== 1) ||
+    reconciliationIndexes.some((index) => index !== waves.length - 1) ||
+    reconciliationIndexes.some((index) => waves[index]?.conditional === true)
   ) {
     errors.push(
       issue(
         'INVALID_TERMINAL_TOPOLOGY',
         'Standard and thorough routing require exactly one non-conditional terminal reconciliation wave',
-        '$.execution.waves',
+        `${path}.waves`,
       ),
     );
   }
+
+  const waveIndexes = new Map(
+    waves
+      .map((wave, index) => (isObject(wave) ? [wave.waveId, index] : null))
+      .filter(Boolean),
+  );
+  const conditionIds = new Set();
+  const conditionDestinations = new Set();
+  const conditionFields = new Set([
+    'conditionId',
+    'destinationWaveId',
+    'afterWaveIds',
+    'predicate',
+    'maxActivations',
+  ]);
+  const terminalIndex = reconciliationIndexes[0] ?? -1;
+  for (const [index, condition] of conditions.entries()) {
+    const conditionPath = `${path}.conditions[${index}]`;
+    if (
+      !isObject(condition) ||
+      Object.keys(condition).some((key) => !conditionFields.has(key))
+    ) {
+      errors.push(
+        issue(
+          'INVALID_ROUTING_CONDITION',
+          'Routing condition must be a closed object',
+          conditionPath,
+        ),
+      );
+      continue;
+    }
+    if (
+      typeof condition.conditionId !== 'string' ||
+      condition.conditionId.length === 0 ||
+      typeof condition.destinationWaveId !== 'string' ||
+      condition.destinationWaveId.length === 0
+    ) {
+      errors.push(
+        issue(
+          'INVALID_ROUTING_CONDITION',
+          'Condition and destination IDs must be non-empty strings',
+          conditionPath,
+        ),
+      );
+      continue;
+    }
+    if (
+      !Array.isArray(condition.afterWaveIds) ||
+      condition.afterWaveIds.length === 0
+    ) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_DEPENDENCY',
+          'Condition dependencies must contain at least one predecessor wave',
+          `${conditionPath}.afterWaveIds`,
+        ),
+      );
+    }
+    if (!conditionPredicates.includes(condition.predicate)) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_PREDICATE',
+          'Unknown routing condition predicate',
+          `${conditionPath}.predicate`,
+        ),
+      );
+    }
+    if (condition.maxActivations !== 1) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_LIMIT',
+          'Routing conditions must allow exactly one activation',
+          `${conditionPath}.maxActivations`,
+        ),
+      );
+    }
+    if (conditionIds.has(condition.conditionId)) {
+      errors.push(
+        issue(
+          'DUPLICATE_ROUTING_ID',
+          `Duplicate condition ${condition.conditionId}`,
+          `${conditionPath}.conditionId`,
+        ),
+      );
+    }
+    conditionIds.add(condition.conditionId);
+    if (conditionDestinations.has(condition.destinationWaveId)) {
+      errors.push(
+        issue(
+          'DUPLICATE_CONDITION_DESTINATION',
+          `Conditional wave ${condition.destinationWaveId} has more than one activating condition`,
+          `${conditionPath}.destinationWaveId`,
+        ),
+      );
+    }
+    conditionDestinations.add(condition.destinationWaveId);
+
+    const destinationIndex = waveIndexes.get(condition.destinationWaveId);
+    const destination =
+      destinationIndex === undefined ? null : waves[destinationIndex];
+    if (
+      !destination ||
+      destination.conditional !== true ||
+      destination.mode !== 'contradiction-resolution'
+    ) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_DESTINATION',
+          'Condition destination must name a conditional contradiction-resolution wave',
+          `${conditionPath}.destinationWaveId`,
+        ),
+      );
+    }
+    const afterIds = new Set();
+    for (const afterWaveId of Array.isArray(condition.afterWaveIds)
+      ? condition.afterWaveIds
+      : []) {
+      if (typeof afterWaveId !== 'string' || afterWaveId.length === 0) continue;
+      if (afterIds.has(afterWaveId)) {
+        errors.push(
+          issue(
+            'DUPLICATE_CONDITION_DEPENDENCY',
+            `Condition repeats predecessor ${afterWaveId}`,
+            `${conditionPath}.afterWaveIds`,
+          ),
+        );
+      }
+      afterIds.add(afterWaveId);
+      const predecessorIndex = waveIndexes.get(afterWaveId);
+      if (predecessorIndex === undefined) {
+        errors.push(
+          issue(
+            'UNKNOWN_CONDITION_WAVE',
+            `Unknown predecessor wave ${afterWaveId}`,
+            `${conditionPath}.afterWaveIds`,
+          ),
+        );
+      } else if (
+        destinationIndex !== undefined &&
+        predecessorIndex >= destinationIndex
+      ) {
+        errors.push(
+          issue(
+            'NON_FORWARD_CONDITION',
+            `Condition predecessor ${afterWaveId} must appear before ${condition.destinationWaveId}`,
+            `${conditionPath}.afterWaveIds`,
+          ),
+        );
+      }
+    }
+    if (
+      terminalIndex !== -1 &&
+      destinationIndex !== undefined &&
+      destinationIndex >= terminalIndex
+    ) {
+      errors.push(
+        issue(
+          'INVALID_TERMINAL_TOPOLOGY',
+          'Conditional evidence waves must complete before the one terminal reconciliation',
+          `${conditionPath}.destinationWaveId`,
+        ),
+      );
+    }
+  }
+  const unconditionalContradiction = waves.find(
+    (wave) =>
+      wave?.mode === 'contradiction-resolution' &&
+      (wave.conditional !== true || !conditionDestinations.has(wave.waveId)),
+  );
+  if (unconditionalContradiction) {
+    errors.push(
+      issue(
+        'UNCONDITIONAL_CONTRADICTION_RESOLUTION',
+        `Contradiction-resolution wave ${unconditionalContradiction.waveId} must be conditional and condition-bound`,
+        `${path}.waves`,
+      ),
+    );
+  }
+
+  const stageIndexes = policy.orderedSingletonWaveModes.map((mode) => ({
+    mode,
+    indexes: waves
+      .map((wave, index) => (wave?.mode === mode ? index : -1))
+      .filter((index) => index !== -1),
+  }));
+  const duplicateModes = stageIndexes
+    .filter(({ indexes }) => indexes.length > 1)
+    .map(({ mode }) => mode);
+  if (duplicateModes.length > 0) {
+    errors.push(
+      issue(
+        'DUPLICATE_PROFILE_WAVE_MODE',
+        `${requestedProfile} routing requires one wave for singleton modes: ${duplicateModes.join(', ')}`,
+        `${path}.waves`,
+      ),
+    );
+  }
+  const missingModes = stageIndexes
+    .filter(({ indexes }) => indexes.length === 0)
+    .map(({ mode }) => mode);
+  if (missingModes.length > 0) {
+    errors.push(
+      issue(
+        'INCOMPLETE_PROFILE_TOPOLOGY',
+        `${requestedProfile} routing is missing required non-conditional wave modes: ${missingModes.join(', ')}`,
+        `${path}.waves`,
+      ),
+    );
+  }
+  const conditionalRequired = stageIndexes.find(
+    ({ indexes }) => indexes.length === 1 && waves[indexes[0]]?.conditional,
+  );
+  if (conditionalRequired) {
+    errors.push(
+      issue(
+        'INCOMPLETE_PROFILE_TOPOLOGY',
+        `${requestedProfile} required wave mode ${conditionalRequired.mode} must be non-conditional`,
+        `${path}.waves`,
+      ),
+    );
+  }
+  const orderedIndexes = stageIndexes.map(({ indexes }) => indexes[0]);
+  if (
+    orderedIndexes.every((index) => index !== undefined) &&
+    orderedIndexes.some(
+      (index, position) =>
+        position > 0 && index <= orderedIndexes[position - 1],
+    )
+  ) {
+    errors.push(
+      issue(
+        'OUT_OF_ORDER_PROFILE_TOPOLOGY',
+        `${requestedProfile} routing must order singleton modes as: ${policy.orderedSingletonWaveModes.join(', ')}`,
+        `${path}.waves`,
+      ),
+    );
+  }
+  return errors;
 }
 
 export function validateExecution(
@@ -1023,7 +1329,7 @@ function validateManifest(value, errors) {
     '$.execution',
     value.schemaVersion,
   );
-  validateProfileRoutingCaps(value, errors);
+  errors.push(...validateV2ProfileTopology(value));
   if (isV2) {
     requiredArray(value, 'conditionOutcomes', errors);
     const outcomeIds = new Set();
