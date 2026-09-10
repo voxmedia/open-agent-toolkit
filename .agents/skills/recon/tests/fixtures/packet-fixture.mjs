@@ -218,6 +218,7 @@ export async function createPacketFixture({
   sourceKind = 'file',
   failedPassMode,
   manifestVersion = 1,
+  includeContradictionResolution = achievedProfile === 'thorough',
   roots,
 } = {}) {
   const tempRoot = roots
@@ -414,7 +415,7 @@ export async function createPacketFixture({
         qualifications: ['Needs another source.'],
         reviewIds: [
           'review-adversarial',
-          ...(achievedProfile === 'thorough'
+          ...(includeContradictionResolution
             ? ['review-contradiction-resolution']
             : []),
         ],
@@ -442,7 +443,7 @@ export async function createPacketFixture({
     priorLedger.revision = 1;
     priorLedger.claims[0].status = 'supported';
     priorLedger.claims[0].reviewIds = [];
-    if (achievedProfile === 'thorough') {
+    if (includeContradictionResolution) {
       priorLedger.claims[1].reviewIds = ['review-adversarial'];
     }
     priorLedger.transitions[0] = {
@@ -493,6 +494,8 @@ export async function createPacketFixture({
         ledger: priorLedger,
         claimIds: ['claim-1'],
       });
+    }
+    if (includeContradictionResolution) {
       briefs['contradiction-resolution'] = createReviewBrief({
         id: 'brief-contradiction-resolution',
         mode: 'adversary',
@@ -524,6 +527,10 @@ export async function createPacketFixture({
               'redundant-verify',
               'affirmed',
             ],
+          ]
+        : []),
+      ...(includeContradictionResolution
+        ? [
             [
               'review-contradiction-resolution',
               'contradiction-resolution',
@@ -586,7 +593,10 @@ export async function createPacketFixture({
         'review-adversarial',
         'review-coverage',
         ...(achievedProfile === 'thorough'
-          ? ['review-redundant-verification', 'review-contradiction-resolution']
+          ? ['review-redundant-verification']
+          : []),
+        ...(includeContradictionResolution
+          ? ['review-contradiction-resolution']
           : []),
       ],
       transitions: structuredClone(ledger.transitions),
@@ -625,15 +635,25 @@ export async function createPacketFixture({
     ...standardPasses,
     'redundant-gather',
     'redundant-verification',
-    'contradiction-resolution',
+    ...(includeContradictionResolution ? ['contradiction-resolution'] : []),
   ];
   const passesByProfile = {
     quick: quickPasses,
     standard: standardPasses,
     thorough: thoroughPasses,
   };
-  const passModes = passesByProfile[requestedProfile];
-  const completedModes = new Set(passesByProfile[achievedProfile] ?? []);
+  const passModes = [
+    ...passesByProfile[requestedProfile],
+    ...(requestedProfile !== 'thorough' && includeContradictionResolution
+      ? ['contradiction-resolution']
+      : []),
+  ];
+  const completedModes = new Set([
+    ...(passesByProfile[achievedProfile] ?? []),
+    ...(achievedProfile !== 'quick' && includeContradictionResolution
+      ? ['contradiction-resolution']
+      : []),
+  ]);
   const passLaneId = (mode) =>
     mode === 'semantic-verification' ? 'lane-semantic' : `lane-${mode}`;
   const executionFactory =
