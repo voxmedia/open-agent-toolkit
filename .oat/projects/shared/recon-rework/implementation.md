@@ -173,8 +173,9 @@ four root-owned reviews; Phase 3 is active at `p03-t01`.
   `cont-recon-rework-p02-fix-2` consumed the configured two review-fix rounds.
   Phase p02 outcome: blocked; Phase 3 was not dispatched.
 - User authorization reopened Phase p02 for exactly one additional bounded fix
-  continuation, `cont-recon-rework-p02-fix-3`. The persisted orchestration retry
-  limit is now 3; the prior blocked review remains binding until fresh review.
+  continuation, `cont-recon-rework-p02-fix-3`. The Phase-2-only retry limit was
+  raised to 3 for that continuation and returned to the default 2 before Phase 3
+  review fixes; the prior blocked review remained binding until fresh review.
 - Continuation `cont-recon-rework-p02-fix-3` completed with commit
   `420e1d4492b0734463aeac4d8bf91137f812dff0`. Fourth review request
   `p02-rereview-20260910-04` passed on `oat-reviewer-gpt-5-6-sol-high`; Phase 2
@@ -292,8 +293,9 @@ four root-owned reviews; Phase 3 is active at `p03-t01`.
 
 - Thomas authorized exactly one additional bounded fix round for the terminal
   requested-profile topology finding.
-- The orchestration retry limit advances from 2 to 3 for this active project.
-  Phase 3 remains undispatched until a fresh Phase 2 review passes.
+- The orchestration retry limit advanced from 2 to 3 for Phase 2 only. It returned
+  to the default 2 before Phase 3 review fixes. Phase 3 remained undispatched until
+  a fresh Phase 2 review passed.
 
 ### 2026-09-10 — Phase 2 passed after authorized extension
 

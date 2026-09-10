@@ -14,7 +14,6 @@ oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
 oat_phase_status: in_progress
-oat_orchestration_retry_limit: 3
 oat_workflow_mode: quick
 oat_dispatch_policy:
   mode: managed
