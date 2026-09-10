@@ -1,10 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: p02-t03
-    reason: 'Phase 2 terminal review found one Important requested-profile topology defect after both configured review-fix rounds were consumed.'
-    since: 2026-09-10
+oat_blockers: []
 oat_last_updated: 2026-09-10
 oat_current_task_id: p02-t03
 oat_generated: false
@@ -16,23 +13,24 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-10
 
-Implementation Run 1 is blocked at the Phase 2 review-cycle cap. The managed
-`high` dispatch policy resolved to native Codex Sol/high phase implementer and
-reviewer roles. Phase 3 has not started; the configured final-phase HiLL checkpoint
-remains `p04`, with automatic lifecycle review.
+Implementation Run 1 resumed after Thomas authorized exactly one additional
+bounded Phase 2 fix round. The managed `high` dispatch policy continues to resolve
+to native Codex Sol/high phase implementer and reviewer roles. Phase 3 has not
+started; the configured final-phase HiLL checkpoint remains `p04`, with automatic
+lifecycle review.
 
 ## Progress Overview
 
-| Phase                                      | Status    | Tasks | Completed |
-| ------------------------------------------ | --------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | blocked   | 3     | 2/3       |
-| Phase 3: Guidance and consumer output      | pending   | 2     | 0/2       |
-| Phase 4: Distribution and verification     | pending   | 2     | 0/2       |
+| Phase                                      | Status      | Tasks | Completed |
+| ------------------------------------------ | ----------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | in_progress | 3     | 2/3       |
+| Phase 3: Guidance and consumer output      | pending     | 2     | 0/2       |
+| Phase 4: Distribution and verification     | pending     | 2     | 0/2       |
 
 **Total:** 4/9 tasks completed. Phase 2 implementation and two bounded fix rounds
-are committed, but `p02-t03` remains blocked by one Important terminal-review
-finding after the configured retry limit was exhausted.
+are committed. `p02-t03` is active for the single user-authorized third fix round;
+the remaining Important finding is not passed or deferred.
 
 ## Task Status
 
@@ -42,7 +40,7 @@ finding after the configured retry limit was exhausted.
 | p01-t02 | Completed: versioned manifest and normalization | `f5317ee5fd4d5df78a341819023d7cc49f97da3e` |
 | p02-t01 | Completed: economical routing preview           | `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c` |
 | p02-t02 | Completed: conditional escalation/outcomes      | `1bad7202d740ef2daf6d22a254875e8ba2774c0b` |
-| p02-t03 | Blocked at phase review after implementation    | `58b165063f7f1f154920b9793d353a2f8777ed81` |
+| p02-t03 | In progress: user-authorized review fix         | `58b165063f7f1f154920b9793d353a2f8777ed81` |
 | p03-t01 | Pending: controller/worker/shared guidance      | -                                          |
 | p03-t02 | Pending: renderer and public docs               | -                                          |
 | p04-t01 | Pending: bundle and release versions            | -                                          |
@@ -87,9 +85,9 @@ finding after the configured retry limit was exhausted.
 
 ## Phase 2: Proposal, conditions, and integration
 
-**Status:** blocked
+**Status:** in_progress
 **Started:** 2026-09-10
-**Blocked:** 2026-09-10
+**Resumed:** 2026-09-10
 
 ### Task p02-t01: Implement economical routing preview and exact target checking
 
@@ -105,10 +103,10 @@ finding after the configured retry limit was exhausted.
 
 ### Task p02-t03: Exercise complete profiles across provider-shaped dispatch controls
 
-**Status:** blocked
+**Status:** in_progress
 **Commit:** `58b165063f7f1f154920b9793d353a2f8777ed81`
-**Blocker:** The terminal Phase 2 review found one Important profile-topology
-validation defect after both configured review-fix rounds were consumed.
+**Current fix:** The terminal Phase 2 review found one Important profile-topology
+validation defect. Thomas authorized exactly one additional bounded fix round.
 
 ### Phase Summary
 
@@ -170,6 +168,9 @@ validation defect after both configured review-fix rounds were consumed.
 - Continuations `cont-recon-rework-p02-fix-1` and
   `cont-recon-rework-p02-fix-2` consumed the configured two review-fix rounds.
   Phase p02 outcome: blocked; Phase 3 was not dispatched.
+- User authorization reopened Phase p02 for exactly one additional bounded fix
+  continuation, `cont-recon-rework-p02-fix-3`. The persisted orchestration retry
+  limit is now 3; the prior blocked review remains binding until fresh review.
 
 <!-- orchestration-runs-end -->
 
@@ -278,6 +279,13 @@ validation defect after both configured review-fix rounds were consumed.
   `reviews/p02-review-2026-09-10T041234Z.md`.
 - The two-round orchestration retry limit is exhausted. No Phase 3 worker was
   dispatched and unresolved findings were not converted into a pass.
+
+### 2026-09-10 — Phase 2 bounded extension authorized
+
+- Thomas authorized exactly one additional bounded fix round for the terminal
+  requested-profile topology finding.
+- The orchestration retry limit advances from 2 to 3 for this active project.
+  Phase 3 remains undispatched until a fresh Phase 2 review passes.
 
 ## Planning Verification
 

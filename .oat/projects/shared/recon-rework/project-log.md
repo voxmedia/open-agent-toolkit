@@ -48,6 +48,10 @@ run-1-p01-outcome-20260910 Phase p01 passed with two task commits, zero fix loop
 
 run-1-p02-outcome-20260910 Phase p02 stopped at the review-cycle cap after two bounded fix rounds; terminal artifact reviews/p02-review-2026-09-10T041234Z.md records 0 Critical, 1 Important, 0 Medium, 0 Minor and attempted reconnaissance with complete orchestration evidence.
 
+### 2026-09-10 · structural · oat-project-implement · p02
+
+run-1-p02-authorized-extension-20260910 User authorized exactly one additional bounded Phase 2 fix round after the terminal review cap; orchestration retry limit advances from 2 to 3 and unresolved finding remains binding until fresh review passes.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
