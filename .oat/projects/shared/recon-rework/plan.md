@@ -677,11 +677,12 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | plan   | artifact | passed          | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T231851Z.md | -                                        | manual     | -           |
 | p02    | code     | fixes_completed | 2026-09-10 | reviews/p02-review-2026-09-10T033820Z.md                    | 89594e147c9f1427823dca2d316524e26719f9a3 | manual     | -           |
-| p02    | code     | fixes_added     | 2026-09-10 | reviews/p02-review-2026-09-10T041234Z.md                    | b4424664101c86b3a044f23396290a1b83cd6d12 | manual     | -           |
+| p02    | code     | fixes_completed | 2026-09-10 | reviews/p02-review-2026-09-10T041234Z.md                    | b4424664101c86b3a044f23396290a1b83cd6d12 | manual     | -           |
+| p02    | code     | passed          | 2026-09-10 | reviews/p02-review-2026-09-10T050659Z.md                    | 420e1d4492b0734463aeac4d8bf91137f812dff0 | manual     | -           |
 
 ## Implementation Complete
 
-**Not complete; 4 of 9 tasks completed and `p02-t03` is active in one user-authorized bounded fix round.**
+**Not complete; 5 of 9 tasks completed. Phase 3 begins at `p03-t01`.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p02-t03
+oat_current_task_id: p03-t01
 oat_generated: false
 oat_template: false
 ---
@@ -13,24 +13,23 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-10
 
-Implementation Run 1 resumed after Thomas authorized exactly one additional
-bounded Phase 2 fix round. The managed `high` dispatch policy continues to resolve
-to native Codex Sol/high phase implementer and reviewer roles. Phase 3 has not
-started; the configured final-phase HiLL checkpoint remains `p04`, with automatic
-lifecycle review.
+Implementation Run 1 is active at `p03-t01`. Thomas's single authorized Phase 2
+extension closed the remaining topology finding and the fourth review passed with
+no findings. The managed `high` dispatch policy continues to resolve to native
+Codex Sol/high implementer and reviewer roles. The final-phase HiLL checkpoint
+remains `p04`, with automatic lifecycle review.
 
 ## Progress Overview
 
 | Phase                                      | Status      | Tasks | Completed |
 | ------------------------------------------ | ----------- | ----- | --------- |
 | Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | in_progress | 3     | 2/3       |
-| Phase 3: Guidance and consumer output      | pending     | 2     | 0/2       |
+| Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
+| Phase 3: Guidance and consumer output      | in_progress | 2     | 0/2       |
 | Phase 4: Distribution and verification     | pending     | 2     | 0/2       |
 
-**Total:** 4/9 tasks completed. Phase 2 implementation and two bounded fix rounds
-are committed. `p02-t03` is active for the single user-authorized third fix round;
-the remaining Important finding is not passed or deferred.
+**Total:** 5/9 tasks completed. Phase 2 passed after three bounded fix rounds and
+four root-owned reviews; Phase 3 is active at `p03-t01`.
 
 ## Task Status
 
@@ -40,7 +39,7 @@ the remaining Important finding is not passed or deferred.
 | p01-t02 | Completed: versioned manifest and normalization | `f5317ee5fd4d5df78a341819023d7cc49f97da3e` |
 | p02-t01 | Completed: economical routing preview           | `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c` |
 | p02-t02 | Completed: conditional escalation/outcomes      | `1bad7202d740ef2daf6d22a254875e8ba2774c0b` |
-| p02-t03 | In progress: user-authorized review fix         | `58b165063f7f1f154920b9793d353a2f8777ed81` |
+| p02-t03 | Completed: profile and harness integration      | `58b165063f7f1f154920b9793d353a2f8777ed81` |
 | p03-t01 | Pending: controller/worker/shared guidance      | -                                          |
 | p03-t02 | Pending: renderer and public docs               | -                                          |
 | p04-t01 | Pending: bundle and release versions            | -                                          |
@@ -85,9 +84,9 @@ the remaining Important finding is not passed or deferred.
 
 ## Phase 2: Proposal, conditions, and integration
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-09-10
-**Resumed:** 2026-09-10
+**Completed:** 2026-09-10
 
 ### Task p02-t01: Implement economical routing preview and exact target checking
 
@@ -103,10 +102,9 @@ the remaining Important finding is not passed or deferred.
 
 ### Task p02-t03: Exercise complete profiles across provider-shaped dispatch controls
 
-**Status:** in_progress
+**Status:** completed
 **Commit:** `58b165063f7f1f154920b9793d353a2f8777ed81`
-**Current fix:** The terminal Phase 2 review found one Important profile-topology
-validation defect. Thomas authorized exactly one additional bounded fix round.
+**Verification:** passed after bounded review fixes
 
 ### Phase Summary
 
@@ -120,8 +118,14 @@ validation defect. Thomas authorized exactly one additional bounded fix round.
   added missing-mode checks and safe Markdown encoding.
 - Terminal review `reviews/p02-review-2026-09-10T041234Z.md` records 0 Critical,
   1 Important, 0 Medium, and 0 Minor. Duplicate singleton waves, out-of-order
-  stages, and unconditional contradiction-resolution remain accepted by the
-  pre-approval topology validator.
+  stages, and unconditional contradiction-resolution were accepted at that
+  reviewed head by the pre-approval topology validator.
+- User-authorized fix commit `420e1d4492b0734463aeac4d8bf91137f812dff0`
+  closed ordered singleton cardinality and condition-binding gaps.
+- Passing review `reviews/p02-review-2026-09-10T050659Z.md` records 0 Critical,
+  0 Important, 0 Medium, and 0 Minor. Its optional recon lane was rejected before
+  checks because of an incomplete assignment envelope; the primary reviewer
+  independently reproduced the full direct/CLI evidence and retained judgment.
 - Root verification after the final fix passed 155/155 focused tests; the
   implementer reported 243/243 full recon tests and all repository check,
   type-check, test, build, lint, and format commands passing.
@@ -171,6 +175,10 @@ validation defect. Thomas authorized exactly one additional bounded fix round.
 - User authorization reopened Phase p02 for exactly one additional bounded fix
   continuation, `cont-recon-rework-p02-fix-3`. The persisted orchestration retry
   limit is now 3; the prior blocked review remains binding until fresh review.
+- Continuation `cont-recon-rework-p02-fix-3` completed with commit
+  `420e1d4492b0734463aeac4d8bf91137f812dff0`. Fourth review request
+  `p02-rereview-20260910-04` passed on `oat-reviewer-gpt-5-6-sol-high`; Phase 2
+  verdict is passed and current scope advances to Phase 3 at `p03-t01`.
 
 <!-- orchestration-runs-end -->
 
@@ -287,6 +295,15 @@ validation defect. Thomas authorized exactly one additional bounded fix round.
 - The orchestration retry limit advances from 2 to 3 for this active project.
   Phase 3 remains undispatched until a fresh Phase 2 review passes.
 
+### 2026-09-10 — Phase 2 passed after authorized extension
+
+- Fix `420e1d4492b0734463aeac4d8bf91137f812dff0` enforces ordered singleton
+  profile stages, condition-bound contradiction-resolution, and one terminal
+  reconciliation.
+- Fourth review `reviews/p02-review-2026-09-10T050659Z.md` passed with no
+  findings after independent direct/CLI probes and complete primary reconciliation.
+- Phase 3 is authorized to begin at `p03-t01`.
+
 ## Planning Verification
 
 | Check                                                                 | Result                          | Scope                                                                                                                                  |
@@ -323,16 +340,17 @@ that no fourth planning review should run; implementation/final reviews remain.
 ## Test Results
 
 - Phase 1: 81/81 focused and 203/203 full recon tests passed.
-- Phase 2 after final fix: 155/155 focused and 243/243 full recon tests passed.
+- Phase 2 after the authorized final fix: 156/156 focused and 244/244 full recon
+  tests passed.
 - Phase implementers reported `pnpm check`, `pnpm type-check`, `pnpm test`,
   `pnpm build`, `pnpm lint`, and `pnpm format` passing. These results do not
   override the terminal semantic review finding.
 
 ## Final Summary (for PR/docs)
 
-Partial implementation only; nothing is approved for shipping. Phase 1 and the
-Phase 2 code/fix commits are present, but Phase 2 has not passed semantic review
-and later phases have not started.
+Partial implementation only; nothing is approved for shipping. Phases 1 and 2
+have passed their phase reviews. Phases 3 and 4 remain, followed by final
+verification, final review, exit gate, and final HiLL approval.
 
 ## References
 
