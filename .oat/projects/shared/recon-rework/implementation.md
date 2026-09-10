@@ -322,7 +322,7 @@ reconfirmed.
 **Next:** Execute the configured implementation exit gate, then stop at final HiLL
 approval.
 
-### Implementation Exit Gate: generation 1 pending
+### Implementation Exit Gate: generation 1 received envelope
 
 **Resolved:** 2026-09-10T09:04:41Z
 **Gate:** `IMPLEMENT-11` via configured `oat --json gate review`
@@ -335,7 +335,13 @@ approval.
 **Freshness checkpoint:** closeout-only review receipt advanced to
 `66846c44ebdcca2d3035b28548ca7ae06f32eef6` with fingerprint
 `sha256:effective-delta-v1:7e70ad867fb49c024286c52ff88096d4f99b65bdcf5db570cc4eb7b7717b444f`.
-**Status:** immutable configuration and fingerprints persisted; launch not started.
+**Launch:** accepted run `4b362f5c-6edd-463b-b63f-4b4f46596830` on
+`cursor-fable-5-1-high`; different-family diversity achieved.
+**Envelope:** `ok`, `review_completed_gate_passed`, threshold Important, findings
+0 Critical / 0 Important / 3 Medium / 1 Minor, `receiveEligible: true`.
+**Artifact:** `reviews/final-review-2026-09-10T091637Z.md`
+**Status:** structured receipt persisted; review receive is required before the
+gate disposition can become allowed.
 
 ## Orchestration Runs
 
