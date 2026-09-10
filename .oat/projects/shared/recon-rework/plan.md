@@ -745,10 +745,13 @@ oat project validate-plan --project-path .oat/projects/shared/recon-rework --jso
 
 **Commit:** `docs(p04-t05): align final review lifecycle state`.
 
-The original Phase 4 task evidence does not mark the final review,
-implementation exit gate, configured HiLL checkpoint, or implementation lifecycle
-complete. Final-review tasks `p04-t03` through `p04-t05` must complete and pass a
-fresh narrowed final review first.
+Final-review tasks `p04-t03` and `p04-t04` are commits
+`4f6884a99844cf5e86168ad422db7f2f49a23c08` and
+`31619d967b0c0d7b42323ee77ff4ee86d6cef7a3`; `p04-t05` is the lifecycle-alignment
+commit containing this record. Focused task suites passed 49/49 and 84/84, and the
+composed recon suite passed 258/258. The original Phase 4 evidence remains intact.
+None of this marks the narrowed final re-review, implementation exit gate,
+configured HiLL checkpoint, or implementation lifecycle complete.
 
 After this task, continue the normal authorized implementation review/final gate
 workflow. This plan does not authorize push, PR publication, merge, backlog
@@ -770,7 +773,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
 | p01    | code     | passed          | 2026-09-10 | reviews/p01-review-2026-09-10T020657Z.md                    | f5317ee5fd4d5df78a341819023d7cc49f97da3e | manual     | -           |
 | p02    | code     | fixes_completed | 2026-09-10 | reviews/p02-review-2026-09-10T030647Z.md                    | 58b165063f7f1f154920b9793d353a2f8777ed81 | manual     | -           |
-| final  | code     | fixes_added     | 2026-09-10 | reviews/archived/final-review-2026-09-10T075058Z.md         | 769ea8aa937dd3e071600d8d5f119b184493e4ae | auto       | -           |
+| final  | code     | fixes_completed | 2026-09-10 | reviews/archived/final-review-2026-09-10T075058Z.md         | 769ea8aa937dd3e071600d8d5f119b184493e4ae | auto       | -           |
 | spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T163711Z.md | -                                        | -          | -           |
@@ -786,15 +789,15 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 
 ## Implementation Complete
 
-**Implementation tasks complete: 9 of 12 implemented. All phase reviews passed;
-three final-review fixes are queued before the lifecycle gates.**
+**Implementation tasks complete: 12 of 12 implemented. All four phase reviews
+passed; narrowed final re-review and lifecycle gates remain pending.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
 - Phase 3: 2 tasks — guidance and consumer output.
 - Phase 4: 5 tasks — distribution, complete verification, and final-review fixes.
 
-**Total: 4 phases, 12 tasks.** First incomplete task: `p04-t03`.
+**Total: 4 phases, 12 tasks.** No incomplete implementation task remains.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

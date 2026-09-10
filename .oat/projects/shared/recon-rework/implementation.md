@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p04-t03
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -14,21 +14,22 @@ oat_template: false
 **Last Updated:** 2026-09-10
 
 Implementation Run 1 completed all nine original tasks and all four phase reviews.
-The automatic final lifecycle review found three bounded gaps, now queued as
-`p04-t03` through `p04-t05`. No final-review pass or lifecycle completion claim is
-made here.
+The three bounded gaps from the automatic final lifecycle review are now fixed as
+`p04-t03` through `p04-t05`. The narrowed final re-review, implementation exit gate,
+and final HiLL approval remain pending; no lifecycle completion claim is made here.
 
 ## Progress Overview
 
-| Phase                                      | Status      | Tasks | Completed |
-| ------------------------------------------ | ----------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
-| Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
-| Phase 4: Distribution and verification     | in progress | 5     | 2/5       |
+| Phase                                      | Status    | Tasks | Completed |
+| ------------------------------------------ | --------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
+| Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
+| Phase 4: Distribution and verification     | completed | 5     | 5/5       |
 
-**Total:** 9/12 tasks implemented. All phase reviews passed; final-review fixes and
-the later lifecycle boundaries remain pending.
+**Total:** 12/12 tasks implemented. All four phase reviews passed and all received
+final-review fixes are complete; narrowed re-review and later lifecycle boundaries
+remain pending.
 
 ## Task Status
 
@@ -43,9 +44,9 @@ the later lifecycle boundaries remain pending.
 | p03-t02 | Completed: renderer and public docs             | `33a5cfff83a11219429d3944cec8de8a1eb475a4` |
 | p04-t01 | Completed: bundle and release versions          | `9721d7c680a0778967addaf9ef8b391839949d9c` |
 | p04-t02 | Completed: full verification/evidence           | `3e200321b705e5a3204cbe72434dff547ab2bc28` |
-| p04-t03 | Pending: validate production topology           | -                                          |
-| p04-t04 | Pending: structure malformed-wave errors        | -                                          |
-| p04-t05 | Pending: align lifecycle summaries              | -                                          |
+| p04-t03 | Completed: validate production topology         | `4f6884a99844cf5e86168ad422db7f2f49a23c08` |
+| p04-t04 | Completed: structure malformed-wave errors      | `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3` |
+| p04-t05 | Completed: align lifecycle summaries            | this commit                                |
 
 ## Phase 1: Decision and versioned contract
 
@@ -187,6 +188,27 @@ the later lifecycle boundaries remain pending.
 **Commit:** `3e200321b705e5a3204cbe72434dff547ab2bc28`
 **Verification:** passed
 
+### Task p04-t03: Enforce approved topology at packet validation
+
+**Status:** completed
+**Commit:** `4f6884a99844cf5e86168ad422db7f2f49a23c08`
+**Verification:** 49/49 focused tests passed; routing preview and conditional
+composition controls also passed
+
+### Task p04-t04: Return structured errors for malformed wave arrays
+
+**Status:** completed
+**Commit:** `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3`
+**Verification:** 84/84 focused tests passed with direct and public CLI v1/v2
+malformed-wave controls
+
+### Task p04-t05: Align lifecycle summaries after final review
+
+**Status:** completed
+**Commit:** this commit; exact SHA is reported in the phase handoff
+**Verification:** project artifact formatting and plan validation passed; full recon
+suite passed 258/258
+
 ### Implementation Summary
 
 - Refreshed `origin/main`, selected lockstep public-package version `0.2.72` over
@@ -211,8 +233,12 @@ the later lifecycle boundaries remain pending.
   ordered successful output and the ledger support zero exits. The Minor findings
   were corrected in bookkeeping: recovery provenance now names the completed state
   marker, and this final summary reflects all nine implemented tasks.
-- Final review, the implementation exit gate, the HiLL checkpoint, and lifecycle
-  completion remain root-owned and pending.
+- Final-review fixes `p04-t03` and `p04-t04` now share the production topology
+  validator and return stable invalid JSON for malformed v1/v2 wave containers.
+  Their focused suites passed 49/49 and 84/84; the composed recon suite passed
+  258/258.
+- Narrowed final re-review, the implementation exit gate, the HiLL checkpoint, and
+  lifecycle completion remain root-owned and pending.
 
 ### Review Received: final
 
@@ -241,8 +267,7 @@ the later lifecycle boundaries remain pending.
 **Deferred findings:** none. The final review confirmed that the formal
 carry-forward ledger contained no unresolved Medium or Minor findings.
 
-**Next:** Execute the three fix tasks via `oat-project-implement`, then run a
-narrowed final re-review over their commits.
+**Next:** Run a narrowed final re-review over the three completed fix-task commits.
 
 ## Orchestration Runs
 
@@ -465,8 +490,8 @@ narrowed final re-review over their commits.
   10/10 tasks uncached, and the recon suite passed 253/253.
 - Phase review passed with no blocking findings. One Medium retained-log provenance
   gap remains disclosed: the logs do not embed explicit per-command exit markers.
-- All nine tasks are implemented. Final verification, final review, exit gate, and
-  HiLL approval remain distinct pending boundaries.
+- All nine original tasks and three final-review fix tasks are implemented. Narrowed
+  final re-review, exit gate, and HiLL approval remain distinct pending boundaries.
 
 ### 2026-09-10 — Final lifecycle review received
 
@@ -477,7 +502,7 @@ narrowed final re-review over their commits.
   malformed-wave exception path became `p04-t04`; lifecycle-summary drift became
   `p04-t05`.
 - No finding was deferred or dismissed. Final review remains unpassed until these
-  fixes complete and a narrowed re-review passes.
+  completed fixes receive a passing narrowed re-review.
 
 ## Planning Verification
 
@@ -521,33 +546,36 @@ that no fourth planning review should run; implementation/final reviews remain.
   passed; CLI, docs, skill, and version-bump checks passed.
 - Phase 4: all eight CI-equivalent gates returned zero in order; isolated Turbo
   tests executed 10/10 tasks uncached; recon 253/253 and bundle 29/29 passed.
+- Final-review fixes: topology-focused tests passed 49/49, malformed-wave-focused
+  tests passed 84/84, and the composed recon suite passed 258/258.
 - Phase implementers reported `pnpm check`, `pnpm type-check`, `pnpm test`,
   `pnpm build`, `pnpm lint`, and `pnpm format` passing. These results do not
   override the terminal semantic review finding.
 
 ## Final Summary (for PR/docs)
 
-All nine original implementation tasks are implemented and all four phase reviews
-passed. Three final-review fixes are queued. The branch now provides versioned v1/v2 recon contracts, economical approved
-per-wave routing, bounded conditional escalation, exact outcome accounting,
-caller-owned judgment, normalized intended-routing output, aligned worker and
-controller guidance, bundled runtime assets, project provider projections, and
-lockstep public package version `0.2.72`.
+All nine original implementation tasks and three final-review fix tasks are
+implemented, and all four phase reviews passed. The branch now provides versioned
+v1/v2 recon contracts, economical approved per-wave routing, bounded conditional
+escalation, exact outcome accounting, caller-owned judgment, normalized
+intended-routing output, aligned worker and controller guidance, bundled runtime
+assets, project provider projections, and lockstep public package version `0.2.72`.
 
 Key surfaces include `.agents/skills/recon`, the canonical recon-worker role,
 shared model-selection guidance, CLI bundle consistency, public recon docs, five
 public package manifests, and the repeatable Phase 4 verification note.
 
 Verification includes the eight CI-equivalent gates in order, fresh isolated Turbo
-tests, 253/253 recon tests, 29/29 bundle tests, provider-view synchronization,
-release validation, docs build, and negative controls for exact-target drift and
-shadow reconciliation. The retained raw gate logs lack explicit `exit=` markers;
-that nonblocking evidence-quality limitation remains disclosed.
+tests, the final 258/258 recon suite, 29/29 bundle tests, provider-view
+synchronization, release validation, docs build, and negative controls for
+exact-target drift, shadow reconciliation, profile topology, and malformed wave
+containers. The retained raw gate logs lack explicit `exit=` markers; that
+nonblocking evidence-quality limitation remains disclosed.
 
-The final review found one production topology-validation defect, one structured
-malformed-input gap, and lifecycle prose drift. Implementation is not yet approved
-for shipping: those fixes, a passing narrowed final review, the configured
-implementation exit gate, and final HiLL approval remain pending.
+The final review's production topology defect, structured malformed-input gap, and
+lifecycle prose drift are fixed. Implementation is not yet approved for shipping: a
+passing narrowed final review, the configured implementation exit gate, and final
+HiLL approval remain pending.
 
 ## References
 
