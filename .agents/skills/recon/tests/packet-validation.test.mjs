@@ -16,8 +16,16 @@ import { afterEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { hashCanonicalJson, hashFile } from '../scripts/lib/canonical-json.mjs';
-import { validatePacket } from '../scripts/validate-packet.mjs';
-import { createExecutionApproval } from './fixtures/packet-fixture.mjs';
+import { validateArtifactShape } from '../scripts/lib/contracts.mjs';
+import {
+  compileValidatedRun,
+  validatePacket,
+} from '../scripts/validate-packet.mjs';
+import {
+  approveExecution,
+  createExecutionApproval,
+  createPacketFixture,
+} from './fixtures/packet-fixture.mjs';
 
 const fixtureRoot = new URL('./fixtures/', import.meta.url);
 const tempRoots = [];
@@ -575,7 +583,7 @@ async function persistReview(packet, id, { updateManifest = true } = {}) {
 }
 
 async function expectInvalid(packet, code) {
-  const result = await validatePacket(packet.packetRoot);
+  const result = await compileValidatedRun(packet.packetRoot);
   assert.equal(result.valid, false, JSON.stringify(result, null, 2));
   assert.ok(
     result.errors.some((error) => error.code === code),
@@ -689,6 +697,70 @@ test('rejects invalid schema versions and duplicate identifiers', async () => {
   duplicate.ledger.claims.push(structuredClone(duplicate.ledger.claims[0]));
   await persist(duplicate);
   await expectInvalid(duplicate, 'DUPLICATE_ID');
+});
+
+test('accepts a v2 manifest with v1 evidence artifacts', async () => {
+  const packet = await createPacketFixture({ manifestVersion: 2 });
+  tempRoots.push(packet.tempRoot);
+  const result = await compileValidatedRun(packet.packetRoot);
+  assert.equal(result.valid, true, JSON.stringify(result, null, 2));
+  assert.equal(result.validatedRun.routing.sourceSchemaVersion, 2);
+  assert.equal(result.validatedRun.ledger.schemaVersion, 1);
+  assert.ok(
+    result.validatedRun.artifacts.every(
+      ({ value }) => value.schemaVersion === 1,
+    ),
+  );
+});
+
+test('dispatches schema versions by artifact kind and keeps v1 closed', async () => {
+  const unknownVersion = await makePacket();
+  unknownVersion.manifest.schemaVersion = 99;
+  await writeJson(unknownVersion.manifestPath, unknownVersion.manifest);
+  await expectInvalid(unknownVersion, 'UNSUPPORTED_SCHEMA_VERSION');
+
+  const unknownKind = validateArtifactShape({
+    kind: 'recon.unknown',
+    schemaVersion: 1,
+  });
+  assert.ok(
+    unknownKind.errors.some((error) => error.code === 'UNKNOWN_ARTIFACT_KIND'),
+  );
+
+  const v2KeyInV1 = await makePacket();
+  v2KeyInV1.manifest.conditionOutcomes = [];
+  await writeJson(v2KeyInV1.manifestPath, v2KeyInV1.manifest);
+  await expectInvalid(v2KeyInV1, 'UNKNOWN_FIELD');
+
+  const v2ExecutionKeyInV1 = await makePacket();
+  v2ExecutionKeyInV1.manifest.execution.target = {
+    provider: 'fixture-provider',
+    route: 'fake',
+    role: 'recon-worker',
+    model: 'fixture-model',
+    effort: null,
+    reasoningMode: null,
+    serviceTier: null,
+  };
+  await writeJson(v2ExecutionKeyInV1.manifestPath, v2ExecutionKeyInV1.manifest);
+  await expectInvalid(v2ExecutionKeyInV1, 'UNKNOWN_FIELD');
+});
+
+test('v2 exact targets preserve explicit nullable controls and bind approval', async () => {
+  const packet = await createPacketFixture({ manifestVersion: 2 });
+  tempRoots.push(packet.tempRoot);
+  packet.manifest.execution.target.effort = null;
+  packet.manifest.execution.target.reasoningMode = null;
+  packet.manifest.execution.target.serviceTier = null;
+  packet.manifest.execution = approveExecution(packet.manifest.execution);
+  await packet.persist();
+  const accepted = await compileValidatedRun(packet.packetRoot);
+  assert.equal(accepted.valid, true, JSON.stringify(accepted, null, 2));
+  assert.equal(accepted.validatedRun.routing.target.effort, null);
+
+  packet.manifest.execution.target.model = 'mutated-after-approval';
+  await packet.persist();
+  await expectInvalid(packet, 'APPROVAL_FINGERPRINT_MISMATCH');
 });
 
 test('rejects illegal claim state transitions and quick verification', async () => {

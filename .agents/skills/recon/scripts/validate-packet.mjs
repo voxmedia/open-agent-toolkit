@@ -13,6 +13,7 @@ import {
   profiles,
   validateArtifactShape,
 } from './lib/contracts.mjs';
+import { normalizeManifestRouting } from './lib/routing.mjs';
 import {
   assertCanonicalRoot,
   assertSafeExistingPath,
@@ -723,9 +724,9 @@ function laneWaveMatches(wave, value) {
   return reviewWaveMode[value.reviewKind] === wave.mode;
 }
 
-function validateApprovedLanes(manifest, artifactsById, errors) {
+function validateApprovedLanes(manifest, routing, artifactsById, errors) {
   const lanes = new Map();
-  for (const wave of manifest.execution?.waves ?? []) {
+  for (const wave of routing?.waves ?? []) {
     for (const lane of wave.lanes ?? []) {
       lanes.set(lane.laneId, { wave, lane });
     }
@@ -1902,8 +1903,10 @@ export async function compileValidatedRun(packetDirectory) {
     'claims.json',
   );
 
-  if (manifest) errors.push(...validateArtifactShape(manifest).errors);
+  const manifestShape = manifest ? validateArtifactShape(manifest) : null;
+  if (manifestShape) errors.push(...manifestShape.errors);
   if (ledger) errors.push(...validateArtifactShape(ledger).errors);
+  let routing = null;
 
   if (manifest && manifest.request?.outputPath !== packetRoot) {
     errors.push(
@@ -1931,6 +1934,8 @@ export async function compileValidatedRun(packetDirectory) {
           '$.execution.approval.fingerprint',
         ),
       );
+    } else if (manifestShape?.valid) {
+      routing = normalizeManifestRouting(manifest);
     }
   } else if (manifest) {
     errors.push(
@@ -2047,7 +2052,7 @@ export async function compileValidatedRun(packetDirectory) {
         exactEvidence.add(evidence.id);
       }
     }
-    validateApprovedLanes(manifest, artifactsById, errors);
+    validateApprovedLanes(manifest, routing, artifactsById, errors);
     const passes = collectCompletePasses(artifactsById, manifest.run.id);
     const achievedProfile = deriveAchievedProfile(passes);
     validatePassOutcomes(manifest, passes, errors);
@@ -2099,6 +2104,7 @@ export async function compileValidatedRun(packetDirectory) {
     let validatedRun = null;
     if (
       packetRootIdentity &&
+      routing &&
       isObject(manifest.run) &&
       Array.isArray(ledger.claims) &&
       Array.isArray(ledger.evidence)
@@ -2108,6 +2114,7 @@ export async function compileValidatedRun(packetDirectory) {
         filesystemIdentities,
         canonicalByteDigests,
         manifest,
+        routing,
         ledger,
         artifactsById,
         exactEvidence,

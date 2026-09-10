@@ -552,6 +552,7 @@ test('renderValidatedPacket throws categorical error on non-publishable run stat
       ]),
     ),
     manifest: runningManifest,
+    routing: validation.validatedRun.routing,
     ledger: validation.validatedRun.ledger,
     artifactsById: new Map(
       validation.validatedRun.artifacts.map((a) => [a.id, a]),

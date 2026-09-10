@@ -1,4 +1,5 @@
 export const SCHEMA_VERSION = 1;
+export const MANIFEST_SCHEMA_VERSION = 2;
 
 export const artifactKinds = new Set([
   'recon.packet-manifest',
@@ -60,6 +61,19 @@ export const taskClasses = [
   'hard-reasoning',
   'consequential',
 ];
+
+export const conditionPredicates = [
+  'insufficient-evidence',
+  'unresolved-material-challenge',
+];
+
+const supportedSchemaVersions = new Map([
+  ['recon.packet-manifest', new Set([1, MANIFEST_SCHEMA_VERSION])],
+  ['recon.claim-ledger', new Set([SCHEMA_VERSION])],
+  ['recon.raw-dossier', new Set([SCHEMA_VERSION])],
+  ['recon.review-brief', new Set([SCHEMA_VERSION])],
+  ['recon.review-result', new Set([SCHEMA_VERSION])],
+]);
 
 const legalTransitions = new Set([
   'provisional:supported',
@@ -192,6 +206,22 @@ function requiredObject(value, key, errors, path = '$') {
   }
 }
 
+function requiredNullableString(value, key, errors, path = '$') {
+  if (
+    !Object.hasOwn(value ?? {}, key) ||
+    (value[key] !== null &&
+      (typeof value[key] !== 'string' || value[key].length === 0))
+  ) {
+    errors.push(
+      issue(
+        'MISSING_REQUIRED_FIELD',
+        `${key} must be a non-empty string or null`,
+        `${path}.${key}`,
+      ),
+    );
+  }
+}
+
 function closedObject(value, allowed, errors, path = '$') {
   if (!isObject(value)) return;
   for (const key of Object.keys(value)) {
@@ -220,7 +250,7 @@ function duplicateIds(values, path, errors) {
   }
 }
 
-const executionKeys = new Set([
+const executionV1Keys = new Set([
   'provider',
   'route',
   'role',
@@ -233,6 +263,27 @@ const executionKeys = new Set([
   'deadlineSeconds',
   'retryLimit',
   'waves',
+  'approval',
+]);
+
+const exactTargetKeys = new Set([
+  'provider',
+  'route',
+  'role',
+  'model',
+  'effort',
+  'reasoningMode',
+  'serviceTier',
+]);
+
+const executionV2Keys = new Set([
+  'target',
+  'authority',
+  'maxConcurrency',
+  'deadlineSeconds',
+  'retryLimit',
+  'waves',
+  'conditions',
   'approval',
 ]);
 
@@ -270,9 +321,20 @@ function validateApprovalEvidence(value, errors, path) {
   }
 }
 
-export function validateExecution(value, errors, path = '$.execution') {
+function validateExactTarget(value, errors, path) {
   if (!isObject(value)) return;
-  closedObject(value, executionKeys, errors, path);
+  closedObject(value, exactTargetKeys, errors, path);
+  for (const key of ['provider', 'route', 'role', 'model']) {
+    requiredString(value, key, errors, path);
+  }
+  for (const key of ['effort', 'reasoningMode', 'serviceTier']) {
+    requiredNullableString(value, key, errors, path);
+  }
+}
+
+function validateExecutionV1(value, errors, path) {
+  if (!isObject(value)) return;
+  closedObject(value, executionV1Keys, errors, path);
   for (const key of ['provider', 'route', 'role', 'model', 'effort']) {
     requiredString(value, key, errors, path);
   }
@@ -397,7 +459,231 @@ export function validateExecution(value, errors, path = '$.execution') {
   }
 }
 
+function validateExecutionV2(value, errors, path) {
+  if (!isObject(value)) return;
+  closedObject(value, executionV2Keys, errors, path);
+  requiredObject(value, 'target', errors, path);
+  validateExactTarget(value.target, errors, `${path}.target`);
+  if (!authorityLevels.includes(value.authority)) {
+    errors.push(
+      issue(
+        'INVALID_AUTHORITY_LEVEL',
+        'Approved authority must be provider-enforced or contract-enforced',
+        `${path}.authority`,
+      ),
+    );
+  }
+  requiredInteger(value, 'maxConcurrency', errors, path, 1);
+  requiredInteger(value, 'deadlineSeconds', errors, path, 1);
+  requiredInteger(value, 'retryLimit', errors, path, 0);
+  requiredArray(value, 'waves', errors, path);
+  requiredArray(value, 'conditions', errors, path);
+  requiredObject(value, 'approval', errors, path);
+  validateApprovalEvidence(value.approval, errors, `${path}.approval`);
+
+  const waveIds = new Set();
+  const laneIds = new Set();
+  for (const [waveIndex, wave] of (value.waves ?? []).entries()) {
+    const wavePath = `${path}.waves[${waveIndex}]`;
+    closedObject(
+      wave,
+      new Set([
+        'waveId',
+        'mode',
+        'taskClass',
+        'classFloor',
+        'selectionReason',
+        'target',
+        'lanes',
+        'conditional',
+      ]),
+      errors,
+      wavePath,
+    );
+    requiredString(wave, 'waveId', errors, wavePath);
+    requiredString(wave, 'selectionReason', errors, wavePath);
+    requiredArray(wave, 'lanes', errors, wavePath);
+    if (Object.hasOwn(wave ?? {}, 'target')) {
+      if (!isObject(wave.target)) {
+        errors.push(
+          issue(
+            'MISSING_REQUIRED_FIELD',
+            'target must be a complete exact target object',
+            `${wavePath}.target`,
+          ),
+        );
+      } else {
+        validateExactTarget(wave.target, errors, `${wavePath}.target`);
+      }
+    }
+    if (Array.isArray(wave?.lanes) && wave.lanes.length === 0) {
+      errors.push(
+        issue(
+          'MISSING_REQUIRED_FIELD',
+          'Every approved wave needs at least one lane',
+          `${wavePath}.lanes`,
+        ),
+      );
+    }
+    if (!waveModes.includes(wave?.mode)) {
+      errors.push(
+        issue('INVALID_WAVE_MODE', 'Unknown wave mode', `${wavePath}.mode`),
+      );
+    }
+    const taskClassIndex = taskClasses.indexOf(wave?.taskClass);
+    const classFloorIndex = taskClasses.indexOf(wave?.classFloor);
+    if (taskClassIndex === -1) {
+      errors.push(
+        issue(
+          'INVALID_TASK_CLASS',
+          'Unknown wave task class',
+          `${wavePath}.taskClass`,
+        ),
+      );
+    }
+    if (classFloorIndex === -1) {
+      errors.push(
+        issue(
+          'INVALID_TASK_CLASS',
+          'Unknown wave class floor',
+          `${wavePath}.classFloor`,
+        ),
+      );
+    } else if (taskClassIndex !== -1 && taskClassIndex < classFloorIndex) {
+      errors.push(
+        issue(
+          'TASK_CLASS_BELOW_FLOOR',
+          'Wave task class must meet or exceed its declared class floor',
+          `${wavePath}.taskClass`,
+        ),
+      );
+    }
+    if (typeof wave?.conditional !== 'boolean') {
+      errors.push(
+        issue(
+          'MISSING_REQUIRED_FIELD',
+          'conditional must be a boolean',
+          `${wavePath}.conditional`,
+        ),
+      );
+    }
+    if (waveIds.has(wave?.waveId)) {
+      errors.push(
+        issue(
+          'DUPLICATE_ID',
+          `Duplicate wave ${wave.waveId}`,
+          `${wavePath}.waveId`,
+        ),
+      );
+    }
+    waveIds.add(wave?.waveId);
+    for (const [laneIndex, lane] of (Array.isArray(wave?.lanes)
+      ? wave.lanes
+      : []
+    ).entries()) {
+      const lanePath = `${wavePath}.lanes[${laneIndex}]`;
+      closedObject(
+        lane,
+        new Set(['laneId', 'scope', 'writeRoot']),
+        errors,
+        lanePath,
+      );
+      for (const key of ['laneId', 'scope', 'writeRoot']) {
+        requiredString(lane, key, errors, lanePath);
+      }
+      if (
+        typeof lane?.writeRoot === 'string' &&
+        (lane.writeRoot.startsWith('/') ||
+          lane.writeRoot.split('/').some((segment) => segment === '..'))
+      ) {
+        errors.push(
+          issue(
+            'INVALID_WRITE_ROOT',
+            'Lane write root must be a packet-relative path',
+            `${lanePath}.writeRoot`,
+          ),
+        );
+      }
+      if (laneIds.has(lane?.laneId)) {
+        errors.push(
+          issue(
+            'DUPLICATE_ID',
+            `Duplicate lane ${lane.laneId}`,
+            `${lanePath}.laneId`,
+          ),
+        );
+      }
+      laneIds.add(lane?.laneId);
+    }
+  }
+
+  const conditionIds = new Set();
+  for (const [conditionIndex, condition] of (Array.isArray(value.conditions)
+    ? value.conditions
+    : []
+  ).entries()) {
+    const conditionPath = `${path}.conditions[${conditionIndex}]`;
+    closedObject(
+      condition,
+      new Set([
+        'conditionId',
+        'destinationWaveId',
+        'afterWaveIds',
+        'predicate',
+        'maxActivations',
+      ]),
+      errors,
+      conditionPath,
+    );
+    requiredString(condition, 'conditionId', errors, conditionPath);
+    requiredString(condition, 'destinationWaveId', errors, conditionPath);
+    requiredArray(condition, 'afterWaveIds', errors, conditionPath);
+    if (!conditionPredicates.includes(condition?.predicate)) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_PREDICATE',
+          'Unknown routing condition predicate',
+          `${conditionPath}.predicate`,
+        ),
+      );
+    }
+    if (condition?.maxActivations !== 1) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_LIMIT',
+          'Routing conditions must allow exactly one activation',
+          `${conditionPath}.maxActivations`,
+        ),
+      );
+    }
+    if (conditionIds.has(condition?.conditionId)) {
+      errors.push(
+        issue(
+          'DUPLICATE_ID',
+          `Duplicate condition ${condition.conditionId}`,
+          `${conditionPath}.conditionId`,
+        ),
+      );
+    }
+    conditionIds.add(condition?.conditionId);
+  }
+}
+
+export function validateExecution(
+  value,
+  errors,
+  path = '$.execution',
+  schemaVersion = SCHEMA_VERSION,
+) {
+  if (schemaVersion === SCHEMA_VERSION) {
+    validateExecutionV1(value, errors, path);
+  } else if (schemaVersion === MANIFEST_SCHEMA_VERSION) {
+    validateExecutionV2(value, errors, path);
+  }
+}
+
 function validateManifest(value, errors) {
+  const isV2 = value.schemaVersion === MANIFEST_SCHEMA_VERSION;
   closedObject(
     value,
     new Set([
@@ -409,6 +695,7 @@ function validateManifest(value, errors) {
       'execution',
       'artifacts',
       'gaps',
+      ...(isV2 ? ['conditionOutcomes'] : []),
     ]),
     errors,
   );
@@ -499,7 +786,29 @@ function validateManifest(value, errors) {
       requiredArray(value.request, key, errors, '$.request');
     }
   }
-  validateExecution(value.execution, errors, '$.execution');
+  validateExecution(
+    value.execution,
+    errors,
+    '$.execution',
+    value.schemaVersion,
+  );
+  if (isV2) {
+    requiredArray(value, 'conditionOutcomes', errors);
+    if (
+      (Array.isArray(value.execution?.conditions) &&
+        value.execution.conditions.length > 0) ||
+      (Array.isArray(value.conditionOutcomes) &&
+        value.conditionOutcomes.length > 0)
+    ) {
+      errors.push(
+        issue(
+          'UNSUPPORTED_CONDITIONAL_ROUTING',
+          'Conditional routing publication is not supported yet',
+          '$.execution.conditions',
+        ),
+      );
+    }
+  }
   if (Array.isArray(value.sources))
     duplicateIds(value.sources, '$.sources', errors);
   if (Array.isArray(value.gaps)) duplicateIds(value.gaps, '$.gaps', errors);
@@ -1950,11 +2259,12 @@ export function validateArtifactShape(value) {
       ),
     );
   }
-  if (value.schemaVersion !== SCHEMA_VERSION) {
+  const versions = supportedSchemaVersions.get(value.kind);
+  if (versions && !versions.has(value.schemaVersion)) {
     errors.push(
       issue(
         'UNSUPPORTED_SCHEMA_VERSION',
-        `Expected schemaVersion ${SCHEMA_VERSION}`,
+        `Unsupported schemaVersion ${value.schemaVersion} for ${value.kind}`,
         '$.schemaVersion',
       ),
     );

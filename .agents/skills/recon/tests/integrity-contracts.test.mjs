@@ -15,6 +15,7 @@ import {
 import {
   approveExecution,
   createPacketFixture,
+  V1_STANDARD_APPROVAL_FINGERPRINT,
 } from './fixtures/packet-fixture.mjs';
 
 const roots = [];
@@ -107,6 +108,27 @@ test('ValidatedRun retains exact digests for canonical and referenced packet byt
       await hashFile(join(packet.packetRoot, path)),
     );
   }
+});
+
+test('the pinned v1 approval fingerprint stays byte-exact and rejects retained-literal drift', async () => {
+  const packet = await fixture();
+  assert.equal(
+    packet.manifest.execution.approval.fingerprint,
+    V1_STANDARD_APPROVAL_FINGERPRINT,
+  );
+  const accepted = await compileValidatedRun(packet.packetRoot);
+  assert.equal(accepted.valid, true, JSON.stringify(accepted, null, 2));
+  assert.equal(accepted.validatedRun.routing.sourceSchemaVersion, 1);
+
+  packet.manifest.execution.model = 'changed-with-retained-v1-literal';
+  await packet.persist();
+  const rejected = await validatePacket(packet.packetRoot);
+  assert.ok(
+    rejected.errors.some(
+      (error) => error.code === 'APPROVAL_FINGERPRINT_MISMATCH',
+    ),
+    JSON.stringify(rejected, null, 2),
+  );
 });
 
 test('approval fingerprint binds every approved execution axis', async () => {

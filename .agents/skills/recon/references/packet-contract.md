@@ -1,8 +1,10 @@
-# Recon Packet Contract v1
+# Recon Packet Contract v1 and v2
 
 Every JSON artifact carries a `kind` discriminator and integer
-`schemaVersion`. Version 1 rejects unknown versions; extend the contract through
-a new version rather than accepting untyped fields.
+`schemaVersion`. Versions are dispatched by artifact kind: packet manifests
+accept versions 1 and 2, while claim ledgers, raw dossiers, review briefs, and
+review results remain version 1. Unknown kind/version combinations fail closed;
+extend a kind through a new version rather than accepting untyped fields.
 
 ## Directory
 
@@ -40,12 +42,19 @@ array order preserved, no insignificant whitespace, and SHA-256 with the
 
 ## One Validation Boundary
 
-Version 1 compiles persisted packet inputs exactly once into one non-persisted,
+Validation compiles persisted packet inputs exactly once into one non-persisted,
 deeply immutable `ValidatedRun`. This value is an internal normalized graph,
 not an artifact kind, schema version, file, cache, or caller-selectable profile.
 Assurance derivation and rendering accept only `ValidatedRun`; they never
 reopen or independently reinterpret raw manifest, ledger, review, or
 reconciliation artifacts.
+
+The validator checks the original wire shape and approval fingerprint before it
+creates the normalized routing view. A v1 execution is normalized losslessly by
+inheriting its one exact target into every wave; a v2 wave inherits the complete
+execution target unless it supplies a complete replacement target. The
+`ValidatedRun` retains both the original manifest and its exact byte digest plus
+the immutable effective routing view. Consumers do not reparse raw routing data.
 
 Construction is all-or-nothing. A valid graph contains:
 
@@ -76,7 +85,7 @@ failed invariant.
 
 ## Manifest
 
-`recon.packet-manifest` version 1 contains:
+Both `recon.packet-manifest` versions contain:
 
 - `run`: stable ID, topic, status, requested and achieved profile, timestamps;
 - `request`: objective, questions, included/excluded scope, stable context
@@ -88,7 +97,11 @@ failed invariant.
   explicit boolean `material` classification and affected source, claim, and
   coverage-finding IDs when applicable.
 
-### Execution Envelope
+Version 2 additionally carries `conditionOutcomes`. Conditional publication is
+reserved until its outcome-accounting rules are implemented; a non-empty
+`conditions` or `conditionOutcomes` array is currently rejected.
+
+### Version 1 Execution Envelope
 
 `execution` is a closed object binding exactly what the user approved:
 
@@ -114,6 +127,40 @@ artifacts.
 Wave modes are `map`, `gather`, `compile`, `semantic-verification`,
 `adversarial`, `coverage`, `reconciliation`, `redundant-gather`,
 `redundant-verification`, and `contradiction-resolution`.
+
+Valid v1 manifests retain this exact flat shape, including non-empty string
+`effort`, previously legal expensive homogeneous selections, and their original
+fingerprint projection. V2-only keys inside a v1 manifest or execution object
+are rejected; validation never rewrites or reapproves a v1 packet.
+
+### Version 2 Execution Envelope
+
+Version 2 replaces the flat target axes with a required closed `target` object:
+`provider`, `route`, `role`, and `model` are non-empty strings; `effort`,
+`reasoningMode`, and `serviceTier` are each explicitly a non-empty string or
+`null`. A null axis means the adapter exposes no independently requested control;
+it is not an unknown-value fallback.
+
+The other execution fields retain the version 1 authority and numeric-limit
+contracts. Each closed wave adds:
+
+- `classFloor`, from the same durable task-class order and not above
+  `taskClass`;
+- a non-empty `selectionReason`; and
+- optional `target`, which must be a complete exact-target replacement. If it
+  is absent, the complete execution target is inherited without partial-axis
+  merging.
+
+The execution object also requires a closed `conditions` array. Each structural
+condition contains `conditionId`, `destinationWaveId`, `afterWaveIds`, one of
+`insufficient-evidence` or `unresolved-material-challenge`, and
+`maxActivations: 1`. Cross-wave topology and condition outcome accounting are
+introduced separately; until then only an empty array is publishable.
+
+The approval fingerprint remains the canonical SHA-256 of the original
+version-specific execution object with `approval` removed. A v2 manifest may
+reference version 1 evidence artifacts; changing the manifest version does not
+force evidence producers to emit a new schema.
 
 ### Passes and Achieved Profile
 
@@ -328,11 +375,12 @@ withdraws `packet.md` while leaving canonical diagnostics available. Its result
 is the directory path plus a compact status summary and digest, never raw
 dossier content.
 
-## Version 1 Non-Goals
+## Compatibility and Non-Goals
 
-This boundary does not add another schema version, review pass, persisted
-intermediate, generalized plugin artifact kind, saved validation profile,
-provider behavior, or integration surface. It does not require launcher-emitted
+Version 2 does not reinterpret or migrate version 1 approvals. This boundary
+does not add another review pass, persisted intermediate, generalized plugin
+artifact kind, saved validation profile, provider behavior, or integration
+surface. It does not require launcher-emitted
 dispatch receipts; reintroduce those only when a launcher exists that produces
 them itself. It does not change research-pack distribution, documentation,
 backlog integrations, `quick`/`standard`/`thorough`, selective blindness,
