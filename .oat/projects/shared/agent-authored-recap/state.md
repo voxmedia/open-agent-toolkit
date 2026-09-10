@@ -9,9 +9,9 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: ['discovery'] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
@@ -83,33 +83,34 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-10T01:48:00Z'
+oat_project_state_updated: '2026-09-10T02:33:46Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Rescoped design received four review rounds (round 4: 21/23 prior findings verified closed; 14 new applied inline); at the design HiLL checkpoint
+**Status:** Design approved at the HiLL checkpoint 2026-09-10 (operator); planning in progress
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-09
 
 ## Current Phase
 
-Discovery - Gathering requirements and understanding the problem space
+Planning - Breaking the approved design into phases and tasks
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete — authored inline by the design phase)
-- **Design:** `design.md` (drafted; review pending)
+- **Design:** `design.md` (complete — HiLL approved 2026-09-10 after four review rounds)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
 
-- ✓ Discovery started
-- ✓ Downstream lifecycle files scaffolded
-- ⧗ Awaiting user input
+- ✓ Discovery complete (HiLL 2026-09-09)
+- ✓ Specification complete
+- ✓ Design complete (HiLL 2026-09-10)
+- ⧗ Planning
 
 ## Blockers
 
@@ -117,4 +118,4 @@ None
 
 ## Next Milestone
 
-Complete discovery and move to design phase
+Complete the plan, pass the plan gate, and PR the artifacts for execution in a separate worktree
