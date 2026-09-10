@@ -7,7 +7,8 @@ the complete assignment; a worker does not infer broader authority.
 
 The assignment must declare:
 
-- `runId`, `waveId`, `laneId`, and exactly one mode;
+- `runId`, `waveId`, `laneId`, the approved manifest wave mode, and exactly one
+  worker assignment mode;
 - bounded objective, included scope, and excluded scope;
 - allowed inputs and excluded inputs;
 - source-read authority in `readSources`, including allowed read-only tools;
@@ -19,6 +20,20 @@ The assignment must declare:
 Reject an incomplete or contradictory assignment before reading sources. Never
 request credentials, mutate an investigated source, broaden scope, or choose an
 alternate write path.
+
+The manifest's ten wave modes map to the worker's closed seven-mode vocabulary:
+
+| Manifest wave mode                                       | Worker assignment mode |
+| -------------------------------------------------------- | ---------------------- |
+| `map`, `gather`, `compile`, `coverage`, `reconciliation` | same-named mode        |
+| `redundant-gather`                                       | `gather`               |
+| `semantic-verification`, `redundant-verification`        | `verify`               |
+| `adversarial`, `contradiction-resolution`                | `adversary`            |
+
+Only `reconciliation` maps to `reconcile`. A
+`contradiction-resolution` assignment seeks discriminating evidence and never
+produces a ledger candidate. The assignment inherits its exact approved wave
+target; the worker neither selects nor upgrades it.
 
 ## Modes
 
@@ -69,3 +84,5 @@ or launch a replacement.
   the selected mode is required to remain blind to.
 - Report uncertainty and contradiction instead of converting them to
   confidence scores.
+- Return evidence and explicit gaps to the controller; never decide downstream
+  sufficiency, product implications, or final conclusions.

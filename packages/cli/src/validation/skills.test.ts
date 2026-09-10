@@ -8410,11 +8410,17 @@ describe('recon canonical contracts', () => {
     ]);
 
     expect(skill).toMatch(/^name:\s*recon$/m);
-    expect(readDeclaredVersion(skill)).toBe('1.1.1');
+    expect(readDeclaredVersion(skill)).toBe('1.1.2');
     expect(skill).toMatch(/provider-neutral/i);
-    expect(skill).toMatch(/exact (?:provider, )?model and effort/i);
+    expect(skill).toMatch(/select each wave independently/i);
+    expect(skill).toMatch(/schemaVersion: 2/i);
+    expect(skill).toMatch(
+      /taskClass[\s\S]{0,120}classFloor[\s\S]{0,160}selectionReason/i,
+    );
     expect(skill).toMatch(/before\s+(?:any\s+)?(?:worker\s+)?launch/i);
-    expect(skill).toMatch(/same\s+approved model and effort/i);
+    expect(skill).not.toMatch(/same\s+approved model and effort/i);
+    expect(skill).toMatch(/exactly one terminal `reconciliation` wave/i);
+    expect(skill).toMatch(/quick[\s\S]{0,1000}no independent semantic pass/i);
     expect(skill).toMatch(/packet directory/i);
     expect(worker).toMatch(/never interact with the user/i);
     expect(worker).toMatch(/never dispatch/i);

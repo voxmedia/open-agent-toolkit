@@ -102,6 +102,11 @@ control dispositions, not launcher receipts. Every declared condition has one
 closed `triggered`, `not-triggered`, or `unresolved` outcome with a non-empty
 reason and exact digest-bound predecessor artifact references.
 
+Version 2 records approved routing intent. Effective targets, selection
+rationales, and condition outcomes do not attest which native process ran, its
+runtime identity, token usage, cost, or the correctness of its conclusions.
+Those claims require evidence from an actual producer outside this contract.
+
 ### Version 1 Execution Envelope
 
 `execution` is a closed object binding exactly what the user approved:
@@ -175,6 +180,12 @@ condition predicate. Foreseeable judgment changes the one terminal target before
 approval. A need discovered later preserves completed work and records an
 unresolved out-of-envelope gap until renewed approval or a new run; it never
 mutates the approved target or launches a second reconciliation.
+
+The controller maps the ten manifest wave modes onto the worker contract's
+seven assignment modes: redundant gathering uses `gather`; semantic and
+redundant verification use `verify`; adversarial and contradiction-resolution
+use `adversary`; and only terminal reconciliation uses `reconcile`. This mapping
+does not change the approved manifest mode used for artifact and pass checks.
 
 The approval fingerprint remains the canonical SHA-256 of the original
 version-specific execution object with `approval` removed. A v2 manifest may

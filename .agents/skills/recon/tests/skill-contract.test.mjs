@@ -23,22 +23,52 @@ async function readContracts() {
 test('recon is a provider-neutral user-invocable skill', async () => {
   const { skill } = await readContracts();
   assert.match(skill, /^name:\s*recon$/m);
-  assert.equal(readSkillVersion(skill), '1.1.1');
+  assert.equal(readSkillVersion(skill), '1.1.2');
   assert.match(skill, /^user-invocable:\s*true$/m);
   assert.match(skill, /provider-neutral/i);
   assert.doesNotMatch(skill, /(?:must|required to) use GPT-|Claude-|Gemini-/i);
   assert.match(skill, /named\s+model examples[\s\S]{0,120}non-normative/i);
 });
 
-test('controller binds one approved exact target to every wave', async () => {
+test('controller proposes and checks independently approved per-wave targets', async () => {
   const { skill } = await readContracts();
-  assert.match(skill, /exact provider, model and effort/i);
+  assert.match(skill, /select each wave independently/i);
+  assert.match(skill, /schemaVersion: 2/i);
+  assert.match(
+    skill,
+    /taskClass[\s\S]{0,120}classFloor[\s\S]{0,160}selectionReason/i,
+  );
+  assert.match(skill, /scripts\/prepare-routing\.mjs --manifest/i);
   assert.match(skill, /explicit approval/i);
   assert.match(skill, /before\s+(?:any\s+)?(?:worker\s+)?launch/i);
-  assert.match(skill, /run-wide maximum (?:model-class )?floor/i);
-  assert.match(skill, /all waves use the same\s+approved model and effort/i);
+  assert.doesNotMatch(skill, /run-wide maximum (?:model-class )?floor/i);
+  assert.doesNotMatch(
+    skill,
+    /all waves use the same\s+approved model and effort/i,
+  );
   assert.match(skill, /homogeneous wave/i);
   assert.match(skill, /generic role[\s\S]{0,220}before approval/i);
+  assert.match(skill, /check-target[\s\S]{0,200}approved invocation intent/i);
+});
+
+test('controller keeps selection, launch, and caller judgment ownership separate', async () => {
+  const { skill } = await readContracts();
+  assert.match(
+    skill,
+    /recon[^\n]*controller[\s\S]{0,220}routing proposals[\s\S]{0,220}evidence flow/i,
+  );
+  assert.match(
+    skill,
+    /subagent-orchestration[^\n]*owns task-class and qualification guidance/i,
+  );
+  assert.match(
+    skill,
+    /oat-dispatch-subagents[^\n]*owns live target resolution and launch mechanics/i,
+  );
+  assert.match(
+    skill,
+    /calling agent owns scope[\s\S]{0,180}approval dialogue[\s\S]{0,180}sufficiency judgment[\s\S]{0,180}conclusions/i,
+  );
 });
 
 test('controller binds dispatch dependencies once to one portable installed scope', async () => {
@@ -71,9 +101,50 @@ test('profiles define adaptive bounded quick, standard, and thorough runs', asyn
   assert.match(profiles, /quick[\s\S]{0,900}never `verified`/i);
   assert.match(
     profiles,
+    /quick[\s\S]{0,1200}evidence packet for an intelligent consumer[\s\S]{0,180}no independent semantic pass by design/i,
+  );
+  assert.match(
+    profiles,
     /standard[\s\S]{0,900}semantic verification[\s\S]{0,900}adversarial[\s\S]{0,900}coverage/i,
   );
   assert.match(profiles, /thorough[\s\S]{0,1100}redundant/i);
+  assert.match(
+    profiles,
+    /exactly one mandatory[\s\S]{0,120}terminal reconciliation/i,
+  );
+});
+
+test('controller maps ten wave modes onto the closed worker vocabulary', async () => {
+  const { skill, workerContract, worker } = await readContracts();
+  const contract = `${skill}\n${workerContract}\n${worker}`;
+  assert.match(contract, /redundant-gather[^\n]*`gather`/i);
+  assert.match(
+    contract,
+    /semantic-verification[^\n]*redundant-verification[^\n]*`verify`/i,
+  );
+  assert.match(
+    contract,
+    /adversarial[^\n]*contradiction-resolution[^\n]*`adversary`/i,
+  );
+  assert.match(contract, /only `reconciliation`[^\n]*`reconcile`/i);
+  assert.match(
+    contract,
+    /contradiction-resolution[\s\S]{0,220}discriminating evidence/i,
+  );
+});
+
+test('controller preserves single-terminal and renewed-approval boundaries', async () => {
+  const { skill } = await readContracts();
+  assert.match(skill, /exactly one terminal `reconciliation` wave/i);
+  assert.match(skill, /reconciliation-needs-judgment/i);
+  assert.match(
+    skill,
+    /unresolved, out-of-envelope gap[\s\S]{0,180}renewed approval or a new run/i,
+  );
+  assert.match(
+    skill,
+    /never mutate the target[\s\S]{0,120}second reconciliation/i,
+  );
 });
 
 test('controller preserves selective blindness and the context firewall', async () => {
