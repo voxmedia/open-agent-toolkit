@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 9b7e7bde582384c2148c030279c74afff8bb78e5
+oat_last_commit: 4fed36615efb82f689c0b4ead76e7c4719888f7a
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -13,7 +13,7 @@ oat_hill_checkpoints:
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
@@ -82,31 +82,23 @@ oat_post_implement_sequence:
   failure: null
 oat_workflow_origin: native
 oat_docs_updated: complete
-oat_pr_status: null
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-10T09:41:31.000Z'
+oat_project_state_updated: '2026-09-10T11:37:08.000Z'
 oat_generated: false
 ---
 
 # Project State: Recon rework
 
-**Status:** All tasks, reviews, and the exit gate passed; final HiLL pending.
+**Status:** PR open; project recap and final HiLL pending.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-10
 
 ## Current Phase
 
-All four phases passed their independent reviews. The automatic final lifecycle
-review found one Important production-topology gap, one Medium structured malformed
-wave gap, and one Minor lifecycle-summary drift. Tasks `p04-t03` through `p04-t05`
-fixed those findings. The narrowed re-review confirmed the product fixes, and
-`p04-t06` corrected its remaining wording finding. All final-review fix tasks are
-complete, and the terminal narrowed final review passed with no findings.
-The implementation exit gate also passed and its sub-threshold findings were
-received with durable dispositions. `oat_phase_status` remains `in_progress` until
-final HiLL approval completes.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -128,22 +120,30 @@ Planning baseline is `bb93ad233befc75d0da9bd699ffc57db80dfe393`.
 Project scope is shared; active pointer is checkout-local.
 No existing project was absorbed or retired.
 
+- ✓ PR created
+- ⧗ Awaiting human review
+
 ## Blockers
 
 No active blocker. All received final-review findings have completed fix tasks.
 
 ## Next Milestone
 
-Run the configured pre-approval closeout sequence, then stop at the final HiLL
-approval boundary. The project dispatch ceiling remains managed `high`.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
 
 ## Authorization and Scope
 
 Thomas authorized the corrected plan, changed the dispatch ceiling from managed
 `frontier` to managed `high`, authorized the readiness transition, and authorized
 pushing this branch for cloud execution. Implementation is complete locally; no
-live-provider launch, triage change, PR publication, or merge has been performed.
+live-provider launch, triage change, merge, or issue closure has been performed.
+Thomas subsequently authorized publishing the implementation and updating the
+existing planning PR; PR #285 now carries the final title and body.
 
 Source issue: https://github.com/voxmedia/open-agent-toolkit/issues/274.
-A canonical backlog ID is intentionally not invented; reconcile any triage-owned
-record at the appropriate shipping boundary.
+Canonical backlog item `BL-260908-restore-recon-s-cheap-fan-out` remains open and
+must be reconciled through its owning workflow at the authorized shipping boundary.
