@@ -9,20 +9,24 @@ oat_template: false
 
 # Lightweight Design: Recon rework
 
-> Draft authored at the user's request. The manual plan artifact review completed
-> on 2026-09-09 and its artifact-alignment corrections were applied here; design
-> self-review and configured gates remain pending. Product intent is confirmed in
-> discovery, while the concrete interfaces remain engineering proposals for the
-> receiving agent to review.
+> Draft authored at the user's request. Three plan-review cycles completed on
+> 2026-09-09, and their artifact-alignment corrections—including the approved
+> single-terminal topology—were applied here. Design self-review and configured
+> gates remain pending. Product intent is confirmed in discovery, while the
+> concrete interfaces remain engineering proposals for the receiving agent to
+> review.
 
 ## Overview
 
 Recon is an inexpensive evidence-acquisition workflow for an intelligent caller.
 Workers inventory, extract, cite, reopen evidence, seek counterexamples, and
 assemble compact dossiers. Mechanical compilation groups/deduplicates findings
-and retains contradictory claims with their sources. The caller evaluates
-sufficiency and implications; a worker only receives deeper reconciliation when
-that bounded assignment actually requires judgment.
+and retains contradictory claims with their sources. An optional
+`contradiction-resolution` pass seeks discriminating evidence for a named
+contradiction; it does not perform judgment-bearing synthesis. The one mandatory
+terminal reconciliation assembles the completed review evidence under its own
+approved target. The caller evaluates sufficiency, implications, and final
+conclusions.
 
 Replace the run-wide maximum with independent per-wave exact selection under
 one approval envelope. Existing provider guidance supplies qualification and
@@ -60,12 +64,16 @@ safeguards. This is not a new launcher, price service, or receipt framework.
    Revisions before approval are cheap; declining launches nothing.
 7. Before each launch, compare the constructed target to that wave's approved
    effective target. Dispatch through the existing dependency.
-8. Root evaluates predeclared conditions against prior outcomes; conditional
-   waves can run once inside approved scope/caps. Record condition disposition.
-9. Compile evidence through the existing immutable `ValidatedRun` boundary,
-   derive achieved profile/assurance, and render atomically.
-10. Return compact evidence, disagreement, gaps, and intended routing to the caller.
-    The caller judges whether the packet supports its downstream decision.
+8. Root evaluates predeclared evidence conditions against prior outcomes. An
+   optional `contradiction-resolution` wave may run once inside approved scope/caps
+   to seek evidence for a named contradiction. Record its condition disposition.
+9. Standard and thorough runs execute exactly one terminal `reconciliation` after
+   required review evidence and any triggered contradiction investigation. That
+   wave has its own approved target and is the only `reconcile` worker assignment.
+10. Compile evidence through the existing immutable `ValidatedRun` boundary,
+    derive achieved profile/assurance, and render atomically.
+11. Return compact evidence, disagreement, gaps, and intended routing to the
+    caller. The caller judges whether the packet supports its downstream decision.
 
 ## Component Design
 
@@ -153,27 +161,38 @@ This is a draft compatibility choice requiring review, not a completed migration
 
 ### 4. Conditional escalation with fixed identities
 
-Prefer **predeclared conditional waves with exact targets** over mutating the
-target of a wave after approval. A cheap completed gather can expose insufficient
-evidence that triggers a separately approved, stronger reconciliation wave.
-Every such wave already has unique lane IDs, scopes, output paths, and limits.
+Prefer **predeclared conditional evidence waves with exact targets** over mutating
+the target of a wave after approval. A cheap completed gather or challenge can
+expose a named contradiction that triggers a separately approved
+`contradiction-resolution` wave. That wave uses the `adversary` worker/brief
+contract to seek discriminating evidence; it is not a reconciliation result and
+does not produce a ledger candidate. It has unique lane IDs, scope, output path,
+and limits.
 
 A condition references earlier waves and one approved destination wave.
 Conditions form a forward-only acyclic graph. Each destination activates at most
 once; multiple allowed escalation steps must be separate predeclared waves.
 Profile hard caps include every possible conditional lane, not just likely work.
 
-Three initial predicates are proposed:
+Two executable evidence predicates are proposed:
 
 - `insufficient-evidence`: completed source evidence exposes a specific gap;
 - `unresolved-material-challenge`: a completed challenge result identifies a
   material unresolved claim;
-- `reconciliation-needs-judgment`: the root cites completed evidence that cannot
-  be assembled adequately without interpretation.
 
 Predicate qualification includes caller judgment. The validator can check
 approved identities, existing evidence/digests, typed dispositions, and caps;
 it cannot prove that an LLM really needed a stronger model.
+
+`reconciliation-needs-judgment` remains a named controller escalation outcome,
+but it is not interchangeable with an evidence-search predicate. If the need is
+foreseeable during proposal/decomposition, independently select and approve an
+adequate higher-class target for the one terminal reconciliation. If it emerges
+only after approval and the approved terminal target is inadequate, do not mutate
+that target, launch a second reconciliation, or substitute another evidence
+search. Preserve completed evidence, record the unresolved/out-of-envelope gap,
+and return to the caller for renewed user approval or a new envelope/run. Final
+interpretation and sufficiency judgment always remain with the caller.
 
 An accepted failed/cancelled/timed-out lane stays failed and material. It cannot
 trigger a disguised replacement through these predicates. Preconditions for a
@@ -193,8 +212,11 @@ be used to suppress a material missing pass.
 Root-authored dispositions describe control decisions, not launch receipts.
 References reuse normal artifact digests and approved identities. Validate those
 references inside packet/source trust roots. Required profile passes remain
-required regardless of any conditional annotation. Preserve typed review
-independence, prior-ledger identity, transition rules, and reconciliation.
+required regardless of any conditional annotation. Standard and thorough retain
+exactly one terminal reconciliation, which consumes the required
+semantic/adversarial/coverage results plus a triggered contradiction-resolution
+result when present. Preserve typed review independence, prior-ledger identity,
+transition rules, and the shadow-reconciliation guard.
 
 Quick's supported ceiling remains unchanged. Standard/thorough may reach existing
 derived verified assurance only when their actual evidence satisfies existing
@@ -258,10 +280,7 @@ interface ConditionV2 {
   conditionId: string;
   destinationWaveId: string;
   afterWaveIds: string[];
-  predicate:
-    | 'insufficient-evidence'
-    | 'unresolved-material-challenge'
-    | 'reconciliation-needs-judgment';
+  predicate: 'insufficient-evidence' | 'unresolved-material-challenge';
   maxActivations: 1;
 }
 
@@ -293,6 +312,10 @@ to other observed outcomes outside approval. Each conditional wave requires
 exactly one condition; nonconditional destinations are invalid. Field/key sets
 remain closed. Full target replacement avoids partial-axis merging errors.
 Version 1 flat target fields are legacy-only and normalized internally.
+
+The controller still handles the named `reconciliation-needs-judgment` outcome as
+described above, but it is deliberately not a `ConditionV2.predicate`: it changes
+the adequacy of the synthesis assignment, not what additional evidence to seek.
 
 Nullable effort means the adapter genuinely exposes no independent requested
 effort control. It must not mean unknown or silently dropped effort. Existing
@@ -356,8 +379,10 @@ Key scenarios:
 
 - All ten modes receive bounded economical defaults; higher-class selection
   requires a substantive reason and never modifies another wave.
-- A v2 standard run uses cheap map/gather/check/challenge targets plus one
-  stronger conditional reconciliation. Test the condition both firing and not.
+- A v2 standard run uses cheap map/gather/check/challenge targets, an optional
+  adversary-mode contradiction-resolution evidence pass, and exactly one terminal
+  reconciliation with its own approved target. Test the evidence condition both
+  firing and not, and reject a second/shadow reconciliation.
 - Change model, effort, reasoning mode, service tier, class, scope, condition,
   concurrency, deadline, retry limit, or lane membership after approval; reject.
 - Preserve valid v1 approval bytes/fingerprint/rendering; reject v2 keys under v1

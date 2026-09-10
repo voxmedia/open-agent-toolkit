@@ -10,23 +10,23 @@ Branch: recon-rework
 Project: .oat/projects/shared/recon-rework
 Workflow: quick, native
 Design mode: lightweight draft
-Next step: resolve the received topology review and finish readiness
+Next step: manually accept corrected artifacts and finish readiness
 ```
 
 Thomas originally authorized discovery capture and design/plan drafting, then a
-stop before self-review and plan/gate review. A manual plan artifact review and a
-newer re-review were later received on 2026-09-09, and their findings were applied
-directly to the planning artifacts. A separately received review still has two
-topology findings to reconcile. The project remains at `oat_phase: plan`,
+stop before self-review and plan/gate review. Three manual plan-review cycles were
+later received on 2026-09-09, and all findings were applied directly to the
+planning artifacts. The three-cycle automated-review cap is reached without
+marking the corrected plan passed. The project remains at `oat_phase: plan`,
 `oat_phase_status: in_progress`; plan `oat_ready_for: null` and
 `oat_template: true` now guard the pending re-review and readiness work, not
 unfinished placeholder content.
 
 **Do not scaffold again, restart discovery, mark review passed, or jump directly
 to implementation.** Load the current quick-start skill and resume this project
-in place. The plan is fully authored, but the active topology review remains
-`received`; the corrected review events remain `fixes_completed` until a later
-review passes.
+in place. The plan is fully authored and all received review events are
+`fixes_completed`; manual acceptance, not a fourth automated plan review, is the
+remaining review step.
 
 ## Reading order
 
@@ -51,8 +51,13 @@ evidence, resolves material ambiguity, and owns final conclusions.
 
 "Adversarial," "verification," and "synthesis" are assignments, not automatic
 model classes. Cheap workers can look for disagreeing evidence. Mechanical
-compilation deduplicates/groups findings and preserves both sides. Escalate when
-actual reconciliation needs judgment, or return an explicit gap to the root.
+compilation deduplicates/groups findings and preserves both sides. An optional
+adversary-mode contradiction-resolution pass may seek discriminating evidence,
+but exactly one terminal reconcile pass performs synthesis. If judgment needs are
+foreseeable, approve an adequate terminal target up front; if they emerge after
+approval, return an explicit unresolved/out-of-envelope gap rather than replacing
+synthesis with another evidence search. The root retains final interpretation and
+sufficiency judgment.
 
 The user specifically wants an economical per-wave model/effort proposal so they
 can push back before money is spent. A harder wave must not raise every worker.
@@ -86,13 +91,17 @@ native launcher rewrite is in scope.
 - Received the manual plan artifact review generated at 2026-09-09T16:37:11Z,
   applied all 12 findings to the planning artifacts, and retained the event for
   re-review as `fixes_completed`.
+- Received two further plan reviews, applied their six verification findings and
+  two topology findings, and archived both events as `fixes_completed`. The final
+  topology is optional adversary-mode contradiction evidence followed by exactly
+  one terminal reconciliation with an independently approved target.
 - Committed the drafting work. Discover the final draft commit using
   `git log -3 --oneline`; no push or PR was created.
 
 No implementation code, canonical skill, provider reference, governing decision,
 backlog record, or public version was changed. No design self-review, configured
-gate, or live-provider worker test ran. The manual plan artifact review was
-received, but its corrected artifact has not yet passed re-review.
+gate, or live-provider worker test ran. The three review cycles are complete, but
+their corrected artifacts have not been marked passed.
 
 ## Resume procedure
 
@@ -110,11 +119,12 @@ received, but its corrected artifact has not yet passed re-review.
    ask only about a substantive ambiguity introduced by current evidence or
    review. Engineering proposals are identified in design rather than falsely
    recorded as user-approved schema choices.
-5. Perform the deferred design self-review and re-review the corrected plan
-   according to the current workflow. Resolve the implementation project's
-   dispatch ceiling and complete ladder before managed review/readiness. Do not
-   infer that cheap recon workers imply cheap implementation/final review for
-   this contract.
+5. Perform the deferred design self-review and obtain manual acceptance of the
+   corrected plan according to the current workflow. Do not launch a fourth
+   automated plan review: the cycle cap stops repetition, not unresolved findings.
+   Resolve the implementation project's dispatch ceiling and complete ladder
+   before managed review/readiness. Do not infer that cheap recon workers imply
+   cheap implementation/final review for this contract.
 6. Resolve optional phase gate review and lifecycle gate posture through the
    current shared contracts. No choice was made here. Preserve existing explicit
    values if another agent has since added them. Do not overwrite user config
@@ -148,8 +158,11 @@ These are the main engineering choices to assess, not findings from a self-revie
   target; do not merge partial provider/effort axes.
 - **Nullable unsupported effort:** explicit absence of an independent effort
   request must remain distinguishable from silently dropping a requested control.
-- **Finite escalation waves:** predeclare a condition and a different wave with
-  its own IDs/outputs/target. Conditions are not accepted-failure retries.
+- **Single-terminal escalation topology:** predeclare an optional adversary-mode
+  contradiction-resolution evidence pass with its own IDs/outputs/target, followed
+  by exactly one terminal reconciliation under its own approved target. Evidence
+  search is not judgment-bearing synthesis; conditions are not accepted-failure
+  retries.
 - **Condition dispositions:** record triggered/not-triggered/unresolved outside
   immutable approval, validate references and gaps, and never pretend those
   root-authored records prove native launches.
@@ -202,9 +215,11 @@ origin/main during implementation, not from the old proposal's numbers.
 > Take over the quick project at .oat/projects/shared/recon-rework in this
 > worktree. Read handoff.md, discovery.md, design.md, plan.md, and the source map.
 > Discovery is already covered. The artifacts are committed drafts, deliberately
-> not implementation-ready. The first manual plan review's fixes are applied and
-> await re-review. Resume quick-start in place and perform the remaining design
-> review, plan re-review, dispatch/gate setup, and configured planning gate before
-> implementation. Preserve cheap evidence workers with caller-owned judgment,
-> per-wave exact approval, v1 compatibility, and the prohibition on invented launch
-> provenance. Do not re-scaffold or change the other worktree.
+> not implementation-ready. All three manual plan-review cycles' fixes are applied;
+> the automated-review cap is reached without marking the plan passed. Resume
+> quick-start in place and perform the remaining design review, manual plan
+> acceptance, dispatch/gate setup, and configured planning gate before
+> implementation. Preserve cheap evidence workers with caller-owned judgment, the
+> single terminal reconciliation, per-wave exact approval, v1 compatibility, and
+> the prohibition on invented launch provenance. Do not re-scaffold or change the
+> other worktree.

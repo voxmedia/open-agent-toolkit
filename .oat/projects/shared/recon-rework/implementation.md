@@ -99,29 +99,53 @@ No implementation orchestration runs.
 - The separately received topology review remains active and must compose with
   these fixes before readiness.
 
+### 2026-09-09 — Topology plan review received
+
+- Received `artifact-plan-review-2026-09-09T231851Z.md`: 0 critical,
+  2 important, 0 medium, and 0 minor findings.
+- Resolved both directly in `design.md` and `plan.md`; no implementation tasks or
+  product-code changes were added.
+- Dispositions: I1-I2 both `resolve_in_artifact`. The approved topology has an
+  optional adversary-mode contradiction-resolution evidence pass followed by
+  exactly one terminal reconcile pass with its own approved target. The caller
+  retains interpretation and sufficiency judgment.
+- `reconciliation-needs-judgment` is now explicit: select an adequate terminal
+  target before approval when foreseeable; otherwise preserve evidence and return
+  an unresolved/out-of-envelope gap for renewed approval instead of substituting
+  evidence search or launching a second reconciliation.
+- Archived the consumed event under `reviews/archived/`; its ledger row is
+  `fixes_completed`, not passed.
+- The three-cycle automated plan-review cap is reached. It stops another automated
+  cycle and does not turn unresolved or corrected findings into a pass.
+
 ## Planning Verification
 
-| Check                                                                 | Result                          | Scope                                                                |
-| --------------------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------- |
-| Initial target git status                                             | Clean                           | Branch recon-rework at baseline bb93ad233                            |
-| worktree:init with SKIP_S3_ARCHIVE_SYNC=1                             | Exit 0                          | Bootstrap/build/sync; no tracked change                              |
-| PJM doctor                                                            | Exit 1, warn; adoption declared | Existing unrelated ledger warnings retained                          |
-| project new --mode quick --scope shared --json                        | Exit 0, committed               | Exact project path validated                                         |
-| project scope --format value                                          | Exit 0, shared                  | Scope resolution                                                     |
-| project complete-discovery --ready-for oat-project-quick-start --json | Exit 0                          | Discovery structure/completion                                       |
-| Artifact formatting (oxfmt --write)                                   | Exit 0                          | Seven project Markdown files only                                    |
-| project validate-plan --project-path ... --json                       | Exit 0, valid true              | Parallelism metadata only; not review                                |
-| Draft metadata/task inventory check                                   | Exit 0                          | 4 phases, 9 unique tasks, 7 artifacts; pre-review readiness retained |
-| Active pointer and git diff --check                                   | Exit 0                          | Exact project pointer and whitespace check                           |
-| state refresh                                                         | Exit 0                          | Generated local dashboard; not staged                                |
+| Check                                                                 | Result                          | Scope                                                                                                                                  |
+| --------------------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Initial target git status                                             | Clean                           | Branch recon-rework at baseline bb93ad233                                                                                              |
+| worktree:init with SKIP_S3_ARCHIVE_SYNC=1                             | Exit 0                          | Bootstrap/build/sync; no tracked change                                                                                                |
+| PJM doctor                                                            | Exit 1, warn; adoption declared | Existing unrelated ledger warnings retained                                                                                            |
+| project new --mode quick --scope shared --json                        | Exit 0, committed               | Exact project path validated                                                                                                           |
+| project scope --format value                                          | Exit 0, shared                  | Scope resolution                                                                                                                       |
+| project complete-discovery --ready-for oat-project-quick-start --json | Exit 0                          | Discovery structure/completion                                                                                                         |
+| Artifact formatting (oxfmt --write)                                   | Exit 0                          | Seven project Markdown files only                                                                                                      |
+| project validate-plan --project-path ... --json                       | Exit 0, valid true              | Parallelism metadata only; not review                                                                                                  |
+| Draft metadata/task inventory check                                   | Exit 0                          | 4 phases, 9 unique tasks, 7 artifacts; pre-review readiness retained                                                                   |
+| Active pointer and git diff --check                                   | Exit 0                          | Exact project pointer and whitespace check                                                                                             |
+| state refresh                                                         | Exit 0                          | Generated local dashboard; not staged                                                                                                  |
+| Received-review artifact formatting                                   | Exit 0                          | Five modified project Markdown files                                                                                                   |
+| project validate-plan after both received reviews                     | Exit 0, valid true              | Corrected plan structure; not a semantic pass                                                                                          |
+| Review topology production probe                                      | Exit 0                          | Standard baseline valid; adversary brief accepted; reconcile brief rejected; second reconciliation rejected as `SHADOW_RECONCILIATION` |
+| Focused review-control inventory                                      | Exit 0                          | Pinned v1 literal/mutation and both conditional branches named in design/plan                                                          |
 
 ## Deviations from Standard Quick-Start Completion
 
-The user requested a deliberate pre-review handoff. A subsequent manual plan
-artifact review has now been received and its findings applied, but design
-self-review, plan re-review, policy/gate prompts, gate execution, and the
-implementation-ready state transition have not run. Configuration is unchanged;
-no fake disabled-review skip or passed disposition was written.
+The user requested a deliberate pre-review handoff. Three manual plan-review
+cycles have now been received and their findings applied. The automated-review
+cap is reached, but design self-review, manual plan acceptance, policy/gate
+prompts, gate execution, and the implementation-ready state transition have not
+run. Configuration is unchanged; no fake disabled-review skip or passed
+disposition was written.
 
 ## Test Results
 

@@ -16,11 +16,11 @@ oat_template: true
 
 # Implementation Plan: Recon rework
 
-> **Reviewed draft, not implementation-ready.** Two manual plan re-reviews were
-> received on 2026-09-09. The newer review's findings are applied; the older
-> review's two topology findings remain to be reconciled. Resume quick-start in
-> place for remaining review, design review, gate choices, and readiness; retain
-> all task IDs and review rows.
+> **Reviewed draft, not implementation-ready.** Three manual plan-review cycles
+> completed on 2026-09-09, and all received findings are applied. The automated
+> review cap is reached; that cap does not convert corrected findings into a pass.
+> Resume quick-start in place for manual acceptance, design review, gate choices,
+> and readiness; retain all task IDs and review rows.
 
 **Goal:** Restore inexpensive evidence fan-out across harnesses with caller-owned
 judgment, independently approved per-wave targets, and bounded conditional
@@ -50,7 +50,8 @@ commit with its exact write set staged.
 - Discovery: captured and completed through the CLI validation boundary.
 - Lightweight design: drafted; technical choices still await design review.
 - This plan: 4 sequential phases, 9 tasks; no tasks started.
-- Manual plan artifact review: findings applied; re-review is pending.
+- Manual plan artifact review: all three cycles' findings are applied; further
+  automated plan review is capped, and manual acceptance remains pending.
 - Design self-review remains pending from the original handoff.
 - Project dispatch policy, optional phase gates, lifecycle gate posture, and
   implementation HiLL: not selected in this drafting run.
@@ -65,11 +66,12 @@ commit with its exact write set staged.
 ## Before Implementation
 
 The receiving agent must follow `handoff.md`: verify the worktree, resume
-`oat-project-quick-start`, re-review the corrected plan and remaining design
-choices, resolve dispatch/gate choices through the current shared contracts, run
-and receive any configured gate, and only then establish implementation readiness.
-No repeated discovery interview is required unless review reveals a substantive
-product ambiguity.
+`oat-project-quick-start`, obtain manual acceptance of the corrected plan and
+review the remaining design choices without launching another automated plan
+review cycle, resolve dispatch/gate choices through the current shared contracts,
+run and receive any configured gate, and only then establish implementation
+readiness. No repeated discovery interview is required unless review reveals a
+substantive product ambiguity.
 
 Do not automatically merge the backlog-triage branch. Issue #274 is the scope
 source; discover any canonical backlog record created by the separate triage
@@ -118,9 +120,11 @@ an ambiguous package script forwarding shortcut.
 Keep the manifest's ten wave modes distinct from the worker role's closed seven-mode
 assignment vocabulary. Map `redundant-gather` to `gather`;
 `semantic-verification` and `redundant-verification` to `verify`; `adversarial`
-to `adversary`; and `reconciliation` plus `contradiction-resolution` to
+and `contradiction-resolution` to `adversary`; and only `reconciliation` to
 `reconcile`. The remaining modes keep their same-named worker assignments. This
-project must not widen the worker vocabulary.
+project must not widen the worker vocabulary. A contradiction-resolution worker
+seeks discriminating evidence; only the terminal reconciliation performs
+ledger-producing synthesis.
 
 For approval, evidence, and conditional guards preserve positive and negative
 controls. For new v2-only fields, old-schema rejection is not the semantic negative
@@ -276,10 +280,11 @@ pnpm exec oxfmt --write .agents/skills/recon/scripts/lib/routing.mjs .agents/ski
 node --test .agents/skills/recon/tests/routing-preview.test.mjs .agents/skills/recon/tests/routing-contracts.test.mjs
 ```
 
-Controls: cheap defaults across modes; stronger reconciliation does not alter
-gather targets; absent effort is explicit; post-approval target change is rejected;
-declining or editing a preview produces zero launches. Use synthetic opaque
-selectors and label them as preservation fixtures, not qualified live models.
+Controls: cheap defaults across modes; the terminal reconciliation's independently
+selected stronger target does not alter gather targets; absent effort is explicit;
+post-approval target change is rejected; declining or editing a preview produces
+zero launches. Use synthetic opaque selectors and label them as preservation
+fixtures, not qualified live models.
 
 **Commit:** `feat(p02-t01): preview economical recon wave selections`.
 
@@ -298,6 +303,8 @@ selectors and label them as preservation fixtures, not qualified live models.
 
 1. Implement predeclared condition-to-wave binding, forward-only dependencies,
    unique identities/outputs, single activation, and profile hard-cap accounting.
+   Conditions can activate an evidence-producing `contradiction-resolution` wave,
+   never a second terminal reconciliation.
 2. Validate finalized v2 conditional dispositions and artifact references through
    the existing digest/trust-root machinery.
 3. Triggered conditional lanes need complete outcomes or material PASS\_\* gaps;
@@ -310,6 +317,12 @@ selectors and label them as preservation fixtures, not qualified live models.
    outside immutable approval and are labeled root-recorded dispositions.
 7. Add executable checks of concrete typed predicate evidence where possible;
    explicitly retain root judgment where semantic necessity is not machine-proven.
+8. Treat `reconciliation-needs-judgment` as a controller escalation outcome, not
+   an evidence-search predicate. If foreseeable, select an adequate target for the
+   one terminal reconciliation before approval. If discovered after approval,
+   preserve prior work, record an unresolved/out-of-envelope gap, and require
+   renewed user approval or a new envelope/run; do not mutate the target, launch a
+   second reconciliation, or substitute contradiction search for synthesis.
 
 **Format:**
 
@@ -349,18 +362,26 @@ produce different fingerprints.
    subprocess. It must not contain a separate fake implementation of selection
    enforcement.
 2. Exercise quick, standard, and thorough profiles with v1 and v2 manifests.
-   Cover redundant/conditional modes, not only map plus gather.
+   Cover redundant/conditional modes, not only map plus gather. For standard and
+   thorough, the optional contradiction-resolution result feeds the same mandatory
+   terminal reconciliation when triggered; the non-triggered branch still has
+   exactly that one terminal reconciliation.
 3. Model Claude controls with no separately requested effort, Codex effort as an
    independent axis, and Cursor opaque selectors. Unsupported requested controls
    stop before acceptance. No provider SDK or live credential is required.
 4. Retain existing authority, pre-start fallback, accepted failure/cancellation,
    and no-dispatch-directory tests.
 5. Assert cheap map/gather/check/challenge remains unchanged when a stronger
-   conditional reconciliation is approved and when it activates.
+   terminal reconciliation and optional contradiction-resolution evidence pass are
+   approved, both when the evidence pass activates and when it does not.
 6. Show the single envelope before any launch; user refusal yields no calls.
    Fingerprint mutation or constructed-target mismatch refuses affected work.
 7. Describe the fixture honestly: it proves production helper and control-flow
    behavior, not actual native runtime launch identity.
+8. Verify `contradiction-resolution` composes with the production adversary brief,
+   worker input restrictions, and packet validator; keep `reconciliation` mapped
+   only to `reconcile`. Run both complete v2 branches through production packet
+   validation and require a second/shadow reconciliation result to be rejected.
 
 **Format:**
 
@@ -420,7 +441,10 @@ contract at every commit boundary.
    with per-wave `target`, `taskClass`, `classFloor`, `selectionReason`, and
    `conditions`, and pin that writer contract in `skill-contract.test.mjs`.
 5. Consume conditional outcomes, preserve accepted-failure rules, and require
-   root assessment of contradictions and downstream sufficiency.
+   root assessment of contradictions and downstream sufficiency. Document the
+   single-terminal topology and the separate handling of
+   `reconciliation-needs-judgment`: pre-approval target selection when foreseeable,
+   otherwise an explicit unresolved/out-of-envelope return for renewed approval.
 6. Preserve quick supported assurance and standard/thorough independent typed
    review requirements. In `references/profiles.md`, document quick explicitly as
    an evidence packet for an intelligent consumer with no independent semantic
@@ -629,12 +653,14 @@ do not claim model-name capability ranking, and do not close recap or wave-7 ite
 
 ## Reviews
 
-The first manual review and the newer re-review have their corrections recorded.
-The other direct re-review remains received with two Important topology findings
-awaiting disposition, so the plan is not passed. Keep the unbound template rows
-below. The spec row is N/A for quick mode; its placeholder is retained solely to
-preserve scaffold review rows and is not a new spec requirement. No explicit
-auto-review-disabled configuration was written.
+All three manual plan-review cycles have their corrections recorded. The two most
+recent artifacts are `fixes_completed`, not passed: one tightened verification
+evidence and the other established the approved single-terminal topology. The
+three-cycle automated-review cap is reached; it stops repeated automated review
+and does not turn unresolved or corrected findings into a pass. Keep the unbound
+template rows below. The spec row is N/A for quick mode; its placeholder is
+retained solely to preserve scaffold review rows and is not a new spec requirement.
+No explicit auto-review-disabled configuration was written.
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
@@ -647,7 +673,7 @@ auto-review-disabled configuration was written.
 | plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T232155Z.md | -             | -          | -           |
 | p03    | code     | pending         | -          | -                                                           | -             | -          | -           |
 | p04    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| plan   | artifact | received        | 2026-09-09 | reviews/artifact-plan-review-2026-09-09T231851Z.md          | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T231851Z.md | -             | -          | -           |
 
 ## Implementation Complete
 
