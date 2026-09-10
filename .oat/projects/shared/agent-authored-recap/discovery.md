@@ -30,7 +30,7 @@ Backlog item `BL-260907-replace-the-default-project` (high priority; GitHub issu
 ### Question 2: Result record compatibility
 
 **Q:** How does the new recap's result record relate to `explainer-kit.manifest/v1`, which the archive command hashes and re-verifies?
-**A:** Keep the manifest contract exactly; only the outcome semantics change.
+**A:** Keep the manifest contract exactly; only the outcome semantics change. (Superseded 2026-09-09 by the amendment below: the manifest moves to v2 because the durability fields lose their producer; see `spec.md` FR5.)
 **Decision:** The archive validator and its recap tests stay untouched (superseded 2026-09-09 by operator decision: no backward compatibility is needed, so the archive package rule is replaced and its recap tests rewritten; see `design.md` § Overview); the terminal-outcome guard is rewritten so `generate` is satisfied only by a usable artifact, and `failed` is never a satisfied generation.
 
 ### Question 3: Where the mechanical parts live

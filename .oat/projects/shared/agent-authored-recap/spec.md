@@ -36,7 +36,7 @@ The implementation-tail project recap requires adaptive portfolio planning, five
 - Rewriting the publish/durability machinery (retained read-only) or the retained libraries; provider-module seams of any kind on any path (amended 2026-09-09: the core's callback orchestration is retired, not kept).
 - A new CLI command for recap generation (deferred idea; skill scripts only).
 - Publishing recaps to S3 or any external surface.
-- Changing the fact-base schema or the manifest contract.
+- Changing the fact-base schema. (The manifest moves to `explainer-kit.manifest/v2` under the 2026-09-09 amendment; the keys the retired durability path needed are dropped, nothing else changes.)
 - The recon rework, which runs as its own project.
 
 ## Requirements
@@ -47,7 +47,7 @@ The implementation-tail project recap requires adaptive portfolio planning, five
 - **FR2 — Agent-authored single artifact.** The host agent authors one standalone HTML page from the bundle, carrying the recipe's required narrative sections: for a project, original request, key agent decisions, as-built architecture, implementation record, validation evidence, outcome; for a program, program overview, wave map, per-wave outcomes, convention evolution, aggregate numbers, follow-up ledger. No custom author, critic, or visual-critic module is required.
 - **FR3 — Browser ladder.** Visual verification uses the first available rung: the host agent's own browser capability, then the kit's bundled Playwright probe, then browser-free checks. The rung used, the artifact path, and the screenshot paths (narrow, medium, wide) are retained in a small result record.
 - **FR4 — Browser-free checks always run.** Regardless of rung: the page parses, every required section is present, and every claim in the page traces to the fact bundle by subject and value (token membership is not sufficient).
-- **FR5 — Manifest kept; package rule replaced.** The run writes an `explainer-kit.manifest/v1` manifest whose keys, recipe id, and outcome enum are unchanged, and the archive command's package rule is replaced (no backward compatibility) so that exactly the new small run package is required and nothing else; the archive validator's manifest-key check is untouched and its package-coverage rule and tests change in lockstep with the flow. Outcome semantics are rewritten on the existing enum: a verified usable artifact, a usable but visually unverified artifact (`built-needs-review`, with the reason), or `failed`; the terminal-outcome guard keeps its shape, keeps `built-durable` satisfied, and never treats `failed` or `incomplete` as a satisfied generation.
+- **FR5 — Manifest v2; package rule replaced.** The run writes an `explainer-kit.manifest/v2` manifest (the v1 keys minus the retired durability fields, plus `mode`; recipe id and the outcome enum `built`, `built-needs-review`, `failed`, `incomplete`), and the archive command's package rule is replaced (no backward compatibility) so that exactly the new small run package is required and nothing else; the archive validator pins v2 and rejects every other `schemaVersion`; the terminal-outcome guard is rewritten so `generate` is satisfied only by `built` or `built-needs-review`.
 - **FR6 — Generate, retry, or skip.** A `generate` decision is satisfied only by a usable artifact. On failure the flow preserves a sanitized actionable cause and requires an explicit retry or an explicit skip; the decision is persisted so a resumed completion honors it and never re-prompts or re-authors silently. An authored artifact is never discarded.
 - **FR7 — One flow, two recipes.** Project and program recaps share one generate flow selected by recipe; the program-close callers in `oat-wave-program` and `oat-wave-execute` reference it instead of duplicating it.
 - **FR8 — Lifecycle consumers route on the new semantics.** `oat-project-complete`'s recap gate and export path, `oat-project-summary`'s outcome mapping, and the two wave skills read the result record and outcome vocabulary; no lifecycle skill references a retired seam or the capability probe.
@@ -91,25 +91,25 @@ The OAT explainer adapter skill gains a `generate` flow made of three small scri
 
 ## Requirement Index
 
-| ID   | Summary                                    | Source                                |
-| ---- | ------------------------------------------ | ------------------------------------- |
-| FR1  | Allowlisted fact bundle, hashed            | Discovery decisions 1–2; item AC 2    |
-| FR2  | Agent-authored single artifact             | Item AC 2; recipe required narratives |
-| FR3  | Browser ladder with retained evidence      | Discovery Q1; item AC 3               |
-| FR4  | Browser-free checks always run             | Triage amendment (browser-less hosts) |
-| FR5  | Manifest kept; outcome semantics rewritten | Discovery Q2; triage amendment        |
-| FR6  | Generate / retry / skip                    | Item AC 4                             |
-| FR7  | One flow, two recipes                      | Discovery Option A; triage amendment  |
-| FR8  | Lifecycle consumers updated                | Triage amendment (migration scope)    |
-| FR9  | Program recap ships                        | Operator decision 2026-09-09          |
-| FR10 | Any-input invocation                       | Discovery amendment 2026-09-09        |
-| FR11 | Project explainer at plan approval         | Discovery amendment 2026-09-09        |
-| FR12 | Seam retirement                            | Discovery amendment 2026-09-09        |
-| NFR1 | Fresh-host proof with negative controls    | Item AC 5                             |
-| NFR2 | Weaker-anywhere                            | Repository convention                 |
-| NFR3 | Browser-less hosts complete                | Operator decision 2026-09-08          |
-| NFR4 | Bundled-asset discipline                   | `AGENTS.md`                           |
-| NFR5 | Necessity (no duplicate records)           | Operator decision 2026-09-09          |
+| ID   | Summary                                  | Source                                |
+| ---- | ---------------------------------------- | ------------------------------------- |
+| FR1  | Allowlisted fact bundle, hashed          | Discovery decisions 1–2; item AC 2    |
+| FR2  | Agent-authored single artifact           | Item AC 2; recipe required narratives |
+| FR3  | Browser ladder with retained evidence    | Discovery Q1; item AC 3               |
+| FR4  | Browser-free checks always run           | Triage amendment (browser-less hosts) |
+| FR5  | Manifest v2; outcome semantics rewritten | Discovery Q2; triage amendment        |
+| FR6  | Generate / retry / skip                  | Item AC 4                             |
+| FR7  | One flow, two recipes                    | Discovery Option A; triage amendment  |
+| FR8  | Lifecycle consumers updated              | Triage amendment (migration scope)    |
+| FR9  | Program recap ships                      | Operator decision 2026-09-09          |
+| FR10 | Any-input invocation                     | Discovery amendment 2026-09-09        |
+| FR11 | Project explainer at plan approval       | Discovery amendment 2026-09-09        |
+| FR12 | Seam retirement                          | Discovery amendment 2026-09-09        |
+| NFR1 | Fresh-host proof with negative controls  | Item AC 5                             |
+| NFR2 | Weaker-anywhere                          | Repository convention                 |
+| NFR3 | Browser-less hosts complete              | Operator decision 2026-09-08          |
+| NFR4 | Bundled-asset discipline                 | `AGENTS.md`                           |
+| NFR5 | Necessity (no duplicate records)         | Operator decision 2026-09-09          |
 
 ## Open Questions
 
