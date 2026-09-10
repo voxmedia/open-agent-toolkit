@@ -42,7 +42,7 @@ remain pending.
 | p03-t01 | Completed: controller/worker/shared guidance    | `e38994e2809c57542aa3146c6a64ffedca22cd34` |
 | p03-t02 | Completed: renderer and public docs             | `33a5cfff83a11219429d3944cec8de8a1eb475a4` |
 | p04-t01 | Completed: bundle and release versions          | `9721d7c680a0778967addaf9ef8b391839949d9c` |
-| p04-t02 | Completed: full verification/evidence           | this task commit                           |
+| p04-t02 | Completed: full verification/evidence           | `3e200321b705e5a3204cbe72434dff547ab2bc28` |
 
 ## Phase 1: Decision and versioned contract
 
@@ -179,7 +179,8 @@ remain pending.
 
 ### Task p04-t02: Record full validation and repeatable negative controls
 
-**Status:** completed in this task commit
+**Status:** completed
+**Commit:** `3e200321b705e5a3204cbe72434dff547ab2bc28`
 **Verification:** passed
 
 ### Implementation Summary
@@ -194,6 +195,12 @@ remain pending.
   253/253.
 - Repeatable compatibility, condition-control, and guard-neutralization evidence is
   recorded in `references/verification/phase-4-validation.md`.
+- Recovery event `recovery-p04-t02-01-20260910T072118Z` consumed attempt 1/10
+  after `git diff --check` found two trailing spaces in the evidence note.
+  Recovery commit `b828fb10d8c4d02ac86df281ebb2ef61e394599d`
+  removed only that whitespace, reran focused and phase checks, and left the
+  original task commit immutable. Root validated the completed marker and cleared
+  `pending_attempt` while preserving `used_attempts: 1`.
 - Independent Phase 4 review, final review, the implementation exit gate, the HiLL
   checkpoint, and implementation lifecycle completion remain root-owned and pending.
 

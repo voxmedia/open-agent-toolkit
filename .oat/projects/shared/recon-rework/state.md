@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 9721d7c680a0778967addaf9ef8b391839949d9c
+oat_last_commit: b828fb10d8c4d02ac86df281ebb2ef61e394599d
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -20,16 +20,7 @@ oat_phase_recovery_policy:
   phase_attempt_usage:
     p04:
       used_attempts: 1
-      pending_attempt:
-        attempt: 1
-        event_id: recovery-p04-t02-01-20260910T072118Z
-        original_request_id: 1c1288b1-f8cc-44b3-a233-8dd59ca71f04
-        original_task_id: p04-t02
-        original_commit: 3e200321b705e5a3204cbe72434dff547ab2bc28
-        discovered_by: git diff --check ce7942f1a0eac7d49f1783338389aea1a1950ab3..HEAD
-        dispatch_target: oat-phase-implementer-gpt-5-6-sol-high
-        reservation_head: 3e200321b705e5a3204cbe72434dff547ab2bc28
-        status: completed
+      pending_attempt: null
 oat_workflow_mode: quick
 oat_dispatch_policy:
   mode: managed
@@ -43,7 +34,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-10T06:54:52.000Z'
+oat_project_state_updated: '2026-09-10T07:31:00.000Z'
 oat_generated: false
 ---
 

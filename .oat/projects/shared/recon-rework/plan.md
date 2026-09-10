@@ -651,10 +651,12 @@ categorical expected outcomes sufficient for independent repetition.
 ### Phase 4 implementation evidence
 
 Both Phase 4 task implementations are complete. Task `p04-t01` is commit
-`9721d7c680a0778967addaf9ef8b391839949d9c`; task `p04-t02` is the task commit that
-records this tracking update. The exact gate ledger, cache distinction, v1/v2 and
-conditional controls, guard-neutralization proof, and synthetic-test limitations are
-recorded in `references/verification/phase-4-validation.md`.
+`9721d7c680a0778967addaf9ef8b391839949d9c`; task `p04-t02` is commit
+`3e200321b705e5a3204cbe72434dff547ab2bc28`. Mechanical recovery commit
+`b828fb10d8c4d02ac86df281ebb2ef61e394599d` removes only verification-note
+trailing whitespace. The exact gate ledger, cache distinction, v1/v2 and conditional
+controls, guard-neutralization proof, and synthetic-test limitations are recorded in
+`references/verification/phase-4-validation.md`.
 
 This task evidence does not mark the Phase 4 review, final review, implementation
 exit gate, configured HiLL checkpoint, or implementation lifecycle complete.
