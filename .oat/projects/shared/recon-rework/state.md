@@ -80,12 +80,12 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_workflow_origin: native
-oat_docs_updated: null
+oat_docs_updated: complete
 oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-10T09:35:08.000Z'
+oat_project_state_updated: '2026-09-10T09:40:23.000Z'
 oat_generated: false
 ---
 
