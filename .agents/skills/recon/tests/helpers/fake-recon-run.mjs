@@ -153,6 +153,11 @@ export async function runFakeRecon(options = {}) {
     (conditionalDisposition === 'triggered' ||
       (conditionalDisposition === undefined &&
         requestedProfile === 'thorough'));
+  const effectiveConditionalDisposition =
+    conditionalDisposition ??
+    (manifestVersion === 2 && includeContradictionResolution
+      ? 'triggered'
+      : undefined);
   const fixture = await createPacketFixture({
     profile: requestedProfile,
     requestedProfile,
@@ -165,9 +170,9 @@ export async function runFakeRecon(options = {}) {
   });
   fixture.manifest.sources[0].authority = authorityLevel;
 
-  if (conditionalDisposition !== undefined) {
+  if (effectiveConditionalDisposition !== undefined) {
     await configureConditionalContradiction(fixture, {
-      disposition: conditionalDisposition,
+      disposition: effectiveConditionalDisposition,
     });
   }
 
@@ -198,7 +203,7 @@ export async function runFakeRecon(options = {}) {
   const invocation = {
     profile: requestedProfile,
     manifestVersion,
-    conditionalDisposition: conditionalDisposition ?? null,
+    conditionalDisposition: effectiveConditionalDisposition ?? null,
     authorityLevel,
     strict: options.strict === true,
     target:

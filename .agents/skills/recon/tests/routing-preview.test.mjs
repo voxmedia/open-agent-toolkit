@@ -70,15 +70,67 @@ function draftManifest({ profile = 'thorough', modes = modeList } = {}) {
     laneIdForMode,
   });
   delete execution.approval;
-  return {
+  const manifest = {
     schemaVersion: 2,
     run: { requestedProfile: profile },
     execution,
   };
+  const contradiction = execution.waves.find(
+    (wave) => wave.mode === 'contradiction-resolution',
+  );
+  if (contradiction) {
+    contradiction.conditional = true;
+    execution.conditions = [
+      {
+        conditionId: 'condition-contradiction-resolution',
+        destinationWaveId: contradiction.waveId,
+        afterWaveIds: ['wave-map'],
+        predicate: 'insufficient-evidence',
+        maxActivations: 1,
+      },
+    ];
+  }
+  return manifest;
 }
 
 function completeDraft(profile) {
   return draftManifest({ profile, modes: requiredModesByProfile[profile] });
+}
+
+function duplicateSingletonDraft() {
+  const manifest = completeDraft('quick');
+  const duplicate = structuredClone(manifest.execution.waves[0]);
+  duplicate.waveId = 'wave-map-second';
+  duplicate.lanes[0].laneId = 'lane-map-second';
+  duplicate.lanes[0].scope = 'packet/map-second';
+  duplicate.lanes[0].writeRoot = 'raw/dossiers/pass-map-second.json';
+  manifest.execution.waves.splice(1, 0, duplicate);
+  return manifest;
+}
+
+function outOfOrderDraft() {
+  return draftManifest({
+    profile: 'standard',
+    modes: [
+      'compile',
+      'map',
+      'gather',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'reconciliation',
+    ],
+  });
+}
+
+function unconditionalContradictionDraft() {
+  const manifest = draftManifest();
+  const contradiction = manifest.execution.waves.find(
+    (wave) => wave.mode === 'contradiction-resolution',
+  );
+  contradiction.conditional = false;
+  manifest.execution.conditions = [];
+  return manifest;
 }
 
 function conditionalDraft() {
@@ -264,6 +316,24 @@ test('preview rejects incomplete quick, standard, and thorough profile topologie
   assert.throws(() => createRoutingPreview(conditionalOnly), {
     code: 'INCOMPLETE_PROFILE_TOPOLOGY',
   });
+});
+
+test('preview enforces singleton order and condition-bound contradiction topology', () => {
+  for (const [manifest, code] of [
+    [duplicateSingletonDraft(), 'DUPLICATE_PROFILE_WAVE_MODE'],
+    [outOfOrderDraft(), 'OUT_OF_ORDER_PROFILE_TOPOLOGY'],
+    [
+      unconditionalContradictionDraft(),
+      'UNCONDITIONAL_CONTRADICTION_RESOLUTION',
+    ],
+  ]) {
+    assert.throws(() => createRoutingPreview(manifest), { code });
+  }
+
+  for (const profile of ['quick', 'standard', 'thorough']) {
+    assert.doesNotThrow(() => createRoutingPreview(completeDraft(profile)));
+  }
+  assert.doesNotThrow(() => createRoutingPreview(draftManifest()));
 });
 
 test('Markdown preview encodes every manifest value without injected structure', () => {
@@ -502,6 +572,24 @@ test('thin CLI previews and checks targets with categorical nonzero failures', a
     );
     assert.notEqual(rejectedProfile.status, 0);
     assert.match(rejectedProfile.stderr, /^INCOMPLETE_PROFILE_TOPOLOGY:/);
+  }
+
+  for (const [candidate, expectedCode] of [
+    [duplicateSingletonDraft(), 'DUPLICATE_PROFILE_WAVE_MODE'],
+    [outOfOrderDraft(), 'OUT_OF_ORDER_PROFILE_TOPOLOGY'],
+    [
+      unconditionalContradictionDraft(),
+      'UNCONDITIONAL_CONTRADICTION_RESOLUTION',
+    ],
+  ]) {
+    await writeFile(manifestPath, JSON.stringify(candidate), 'utf8');
+    const rejectedTopology = spawnSync(
+      process.execPath,
+      [cli, '--manifest', manifestPath, '--format', 'json'],
+      { encoding: 'utf8' },
+    );
+    assert.notEqual(rejectedTopology.status, 0);
+    assert.match(rejectedTopology.stderr, new RegExp(`^${expectedCode}:`));
   }
 
   const hostile = markdownHostileDraft();

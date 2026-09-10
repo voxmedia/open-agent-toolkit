@@ -20,15 +20,21 @@ const exactTargetFields = [
 
 const exactTargetFieldSet = new Set(exactTargetFields);
 
+function profilePolicy(orderedSingletonWaveModes, caps) {
+  return Object.freeze({
+    orderedSingletonWaveModes: Object.freeze(orderedSingletonWaveModes),
+    ...caps,
+  });
+}
+
 const profileRoutingPolicy = Object.freeze({
-  quick: Object.freeze({
-    requiredWaveModes: Object.freeze(['map', 'gather', 'compile']),
+  quick: profilePolicy(['map', 'gather', 'compile'], {
     lanes: 4,
     concurrency: 4,
     conditions: 0,
   }),
-  standard: Object.freeze({
-    requiredWaveModes: Object.freeze([
+  standard: profilePolicy(
+    [
       'map',
       'gather',
       'compile',
@@ -36,13 +42,11 @@ const profileRoutingPolicy = Object.freeze({
       'adversarial',
       'coverage',
       'reconciliation',
-    ]),
-    lanes: 10,
-    concurrency: 6,
-    conditions: 1,
-  }),
-  thorough: Object.freeze({
-    requiredWaveModes: Object.freeze([
+    ],
+    { lanes: 10, concurrency: 6, conditions: 1 },
+  ),
+  thorough: profilePolicy(
+    [
       'map',
       'gather',
       'compile',
@@ -52,11 +56,9 @@ const profileRoutingPolicy = Object.freeze({
       'redundant-gather',
       'redundant-verification',
       'reconciliation',
-    ]),
-    lanes: 20,
-    concurrency: 8,
-    conditions: 2,
-  }),
+    ],
+    { lanes: 20, concurrency: 8, conditions: 2 },
+  ),
 });
 
 const economicalDefaults = Object.freeze({
@@ -440,6 +442,16 @@ function assertV2ProposalTopology(manifest, execution) {
     );
   }
   const terminalIndex = reconciliationIndexes[0] ?? -1;
+  const unconditionalContradiction = execution.waves.find(
+    (wave) =>
+      wave.mode === 'contradiction-resolution' && wave.conditional !== true,
+  );
+  if (unconditionalContradiction) {
+    routingError(
+      'UNCONDITIONAL_CONTRADICTION_RESOLUTION',
+      `Contradiction-resolution wave ${unconditionalContradiction.waveId} must be conditional and condition-bound`,
+    );
+  }
   const conditionIds = new Set();
   const destinations = new Set();
   const conditionFields = new Set([
@@ -560,18 +572,50 @@ function assertV2ProposalTopology(manifest, execution) {
     }
   }
 
-  const unconditionalModes = new Set(
-    execution.waves
-      .filter((wave) => wave.conditional === false)
-      .map((wave) => wave.mode),
-  );
-  const missingModes = policy.requiredWaveModes.filter(
-    (mode) => !unconditionalModes.has(mode),
-  );
+  const stageIndexes = policy.orderedSingletonWaveModes.map((mode) => ({
+    mode,
+    indexes: execution.waves
+      .map((wave, index) => (wave.mode === mode ? index : -1))
+      .filter((index) => index !== -1),
+  }));
+  const duplicateModes = stageIndexes
+    .filter(({ indexes }) => indexes.length > 1)
+    .map(({ mode }) => mode);
+  if (duplicateModes.length > 0) {
+    routingError(
+      'DUPLICATE_PROFILE_WAVE_MODE',
+      `${requestedProfile} routing requires one wave for singleton modes: ${duplicateModes.join(', ')}`,
+    );
+  }
+  const missingModes = stageIndexes
+    .filter(({ indexes }) => indexes.length === 0)
+    .map(({ mode }) => mode);
   if (missingModes.length > 0) {
     routingError(
       'INCOMPLETE_PROFILE_TOPOLOGY',
       `${requestedProfile} routing is missing required non-conditional wave modes: ${missingModes.join(', ')}`,
+    );
+  }
+  const conditionalRequired = stageIndexes.find(
+    ({ indexes }) =>
+      indexes.length === 1 && execution.waves[indexes[0]].conditional === true,
+  );
+  if (conditionalRequired) {
+    routingError(
+      'INCOMPLETE_PROFILE_TOPOLOGY',
+      `${requestedProfile} required wave mode ${conditionalRequired.mode} must be non-conditional`,
+    );
+  }
+  const orderedIndexes = stageIndexes.map(({ indexes }) => indexes[0]);
+  if (
+    orderedIndexes.some(
+      (index, position) =>
+        position > 0 && index <= orderedIndexes[position - 1],
+    )
+  ) {
+    routingError(
+      'OUT_OF_ORDER_PROFILE_TOPOLOGY',
+      `${requestedProfile} routing must order singleton modes as: ${policy.orderedSingletonWaveModes.join(', ')}`,
     );
   }
 }
