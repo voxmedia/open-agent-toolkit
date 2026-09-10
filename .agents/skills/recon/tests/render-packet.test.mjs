@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import {
   copyFile,
   mkdir,
@@ -28,6 +29,12 @@ import {
 } from './fixtures/packet-fixture.mjs';
 
 const tempRoots = [];
+const V1_RENDERED_PACKET_DIGEST =
+  'sha256:b2ecb280b079ad8947742e4c33bf70c6679a55e5071fa55cfbf09e9f64308c9b';
+
+function textDigest(value) {
+  return `sha256:${createHash('sha256').update(value).digest('hex')}`;
+}
 
 afterEach(async () => {
   await Promise.all(
@@ -116,7 +123,7 @@ async function declareDualUrlCapture(fixture) {
 }
 
 test('packet rendering is deterministic and contains the complete consumer view', async () => {
-  const fixture = await createPacketFixture();
+  const fixture = await createPacketFixture({ manifestVersion: 2 });
   tempRoots.push(fixture.tempRoot);
   const validation = await compileValidatedRun(fixture.packetRoot);
   assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
@@ -182,8 +189,11 @@ test('v2 rendering shows normalized intended targets and conditional outcomes wi
   );
 });
 
-test('v1 rendering preserves canonical source bytes and labels legacy routing intent', async () => {
-  const fixture = await createPacketFixture({ manifestVersion: 1 });
+test('v1 rendering preserves canonical source bytes and the pre-v2 consumer output', async () => {
+  const fixture = await createPacketFixture({
+    manifestVersion: 1,
+    sourceKind: 'repository',
+  });
   tempRoots.push(fixture.tempRoot);
   const before = await Promise.all([
     readFile(fixture.manifestPath, 'utf8'),
@@ -203,9 +213,12 @@ test('v1 rendering preserves canonical source bytes and labels legacy routing in
     join(fixture.packetRoot, 'packet.md'),
     'utf8',
   );
-  assert.match(document, /Manifest routing version:\*\* 1/i);
-  assert.match(document, /legacy v1 homogeneous approval preserved/i);
-  assert.match(document, /Conditional Outcomes[\s\S]{0,80}None declared/i);
+  assert.equal(textDigest(document), V1_RENDERED_PACKET_DIGEST);
+  assert.doesNotMatch(document, /## Intended Routing/);
+  assert.notEqual(
+    textDigest(`${document}\n## Intended Routing\n`),
+    V1_RENDERED_PACKET_DIGEST,
+  );
 });
 
 test('approval drift cannot publish intended routing', async () => {

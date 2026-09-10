@@ -20,6 +20,12 @@ async function readContracts() {
   return { skill, profiles, workerContract, worker };
 }
 
+function readModeMappings(content) {
+  return [...content.matchAll(/^\| `([^`]+)`\s+\| `([^`]+)`\s+\|$/gm)].map(
+    ([, manifestMode, workerMode]) => [manifestMode, workerMode],
+  );
+}
+
 test('recon is a provider-neutral user-invocable skill', async () => {
   const { skill } = await readContracts();
   assert.match(skill, /^name:\s*recon$/m);
@@ -116,21 +122,60 @@ test('profiles define adaptive bounded quick, standard, and thorough runs', asyn
 
 test('controller maps ten wave modes onto the closed worker vocabulary', async () => {
   const { skill, workerContract, worker } = await readContracts();
-  const contract = `${skill}\n${workerContract}\n${worker}`;
-  assert.match(contract, /redundant-gather[^\n]*`gather`/i);
+  const expected = [
+    ['map', 'map'],
+    ['gather', 'gather'],
+    ['compile', 'compile'],
+    ['semantic-verification', 'verify'],
+    ['adversarial', 'adversary'],
+    ['coverage', 'coverage'],
+    ['reconciliation', 'reconcile'],
+    ['redundant-gather', 'gather'],
+    ['redundant-verification', 'verify'],
+    ['contradiction-resolution', 'adversary'],
+  ];
+
+  assert.deepEqual(readModeMappings(workerContract), expected);
+  assert.deepEqual(readModeMappings(worker), expected);
+  assert.match(skill, /only `reconciliation`[\s\S]{0,40}`reconcile`/i);
   assert.match(
-    contract,
-    /semantic-verification[^\n]*redundant-verification[^\n]*`verify`/i,
-  );
-  assert.match(
-    contract,
-    /adversarial[^\n]*contradiction-resolution[^\n]*`adversary`/i,
-  );
-  assert.match(contract, /only `reconciliation`[^\n]*`reconcile`/i);
-  assert.match(
-    contract,
+    workerContract,
     /contradiction-resolution[\s\S]{0,220}discriminating evidence/i,
   );
+  assert.match(
+    worker,
+    /contradiction-resolution[\s\S]{0,1800}discriminating evidence/i,
+  );
+});
+
+test('worker documents distinguish both mode fields at input and output', async () => {
+  const { workerContract, worker } = await readContracts();
+  const contractEnvelope = workerContract.slice(
+    workerContract.indexOf('## Required Assignment Envelope'),
+    workerContract.indexOf('## Modes'),
+  );
+  const contractOutput = workerContract.slice(
+    workerContract.indexOf('## Output Contract'),
+    workerContract.indexOf('## Invariants'),
+  );
+  const workerGate = worker.slice(
+    worker.indexOf('## Assignment Gate'),
+    worker.indexOf('## Universal Invariants'),
+  );
+  const workerOutput = worker.slice(
+    worker.indexOf('## Output'),
+    worker.indexOf('## Critical Rules'),
+  );
+
+  for (const section of [
+    contractEnvelope,
+    contractOutput,
+    workerGate,
+    workerOutput,
+  ]) {
+    assert.match(section, /approved manifest wave\s+mode/i);
+    assert.match(section, /worker assignment\s+mode/i);
+  }
 });
 
 test('controller preserves single-terminal and renewed-approval boundaries', async () => {

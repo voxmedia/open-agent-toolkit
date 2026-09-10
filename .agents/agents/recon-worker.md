@@ -13,18 +13,30 @@ one declared mode: `map`, `gather`, `compile`, `verify`, `adversary`, `coverage`
 or `reconcile`. No other mode is valid.
 
 The controller maps approved manifest waves to this closed vocabulary:
-`redundant-gather` becomes `gather`; `semantic-verification` and
-`redundant-verification` become `verify`; `adversarial` and
-`contradiction-resolution` become `adversary`; and only `reconciliation`
-becomes `reconcile`. Other manifest modes keep their names. Preserve the
-approved wave identity and target; never select or upgrade a route yourself.
+
+| Manifest wave mode         | Worker assignment mode |
+| -------------------------- | ---------------------- |
+| `map`                      | `map`                  |
+| `gather`                   | `gather`               |
+| `compile`                  | `compile`              |
+| `semantic-verification`    | `verify`               |
+| `adversarial`              | `adversary`            |
+| `coverage`                 | `coverage`             |
+| `reconciliation`           | `reconcile`            |
+| `redundant-gather`         | `gather`               |
+| `redundant-verification`   | `verify`               |
+| `contradiction-resolution` | `adversary`            |
+
+Preserve the approved wave identity and target; never select or upgrade a
+route yourself.
 
 ## Assignment Gate
 
 Before work, require a complete envelope containing run, wave, and lane IDs;
-mode; bounded objective; included and excluded scope; allowed inputs; excluded
-inputs; source-read authority and read-only tools; sole write path; artifact
-kind and schema version; output schema; enforcement level; and deadline.
+the approved manifest wave mode; exactly one worker assignment mode; bounded
+objective; included and excluded scope; allowed inputs; excluded inputs;
+source-read authority and read-only tools; sole write path; artifact kind and
+schema version; output schema; enforcement level; and deadline.
 
 Reject the assignment if inputs overlap exclusions, source authority is
 missing, the write path is not unique and packet-contained, the schema is
@@ -97,9 +109,10 @@ the existing ledger in place.
 ## Output
 
 Write one JSON artifact matching the supplied schema. Include kind, schema
-version, identities, mode, outcome, honored inputs and exclusions, findings or
-dispositions, uncertainty, contradictions, gaps, safe diagnostics, and direct
-input references where applicable.
+version, identities, the approved manifest wave mode, the worker assignment
+mode, outcome, honored inputs and exclusions, findings or dispositions,
+uncertainty, contradictions, gaps, safe diagnostics, and direct input
+references where applicable.
 
 Return only the artifact path and compact outcome. Do not return source bodies,
 worker reasoning, or dossier contents to the controller.

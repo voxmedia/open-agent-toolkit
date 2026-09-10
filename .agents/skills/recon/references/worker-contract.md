@@ -23,17 +23,22 @@ alternate write path.
 
 The manifest's ten wave modes map to the worker's closed seven-mode vocabulary:
 
-| Manifest wave mode                                       | Worker assignment mode |
-| -------------------------------------------------------- | ---------------------- |
-| `map`, `gather`, `compile`, `coverage`, `reconciliation` | same-named mode        |
-| `redundant-gather`                                       | `gather`               |
-| `semantic-verification`, `redundant-verification`        | `verify`               |
-| `adversarial`, `contradiction-resolution`                | `adversary`            |
+| Manifest wave mode         | Worker assignment mode |
+| -------------------------- | ---------------------- |
+| `map`                      | `map`                  |
+| `gather`                   | `gather`               |
+| `compile`                  | `compile`              |
+| `semantic-verification`    | `verify`               |
+| `adversarial`              | `adversary`            |
+| `coverage`                 | `coverage`             |
+| `reconciliation`           | `reconcile`            |
+| `redundant-gather`         | `gather`               |
+| `redundant-verification`   | `verify`               |
+| `contradiction-resolution` | `adversary`            |
 
-Only `reconciliation` maps to `reconcile`. A
-`contradiction-resolution` assignment seeks discriminating evidence and never
-produces a ledger candidate. The assignment inherits its exact approved wave
-target; the worker neither selects nor upgrades it.
+A `contradiction-resolution` assignment seeks discriminating evidence and
+never produces a ledger candidate. The assignment inherits its exact approved
+wave target; the worker neither selects nor upgrades it.
 
 ## Modes
 
@@ -58,7 +63,8 @@ No other mode is valid.
 
 Write exactly one JSON artifact at `writePath`. The artifact must include:
 
-- `kind`, `schemaVersion`, run/wave/lane identity, mode, and outcome;
+- `kind`, `schemaVersion`, run/wave/lane identity, the approved manifest wave
+  mode, the worker assignment mode, and outcome;
 - the exact allowed and excluded inputs actually honored;
 - findings or dispositions with evidence IDs and typed locators;
 - uncertainty, contradictions, and gaps as explicit arrays;

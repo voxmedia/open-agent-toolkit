@@ -77,7 +77,11 @@ cost of unrelated evidence waves.
 | ---------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------- |
 | `quick`    | Bounded orientation                         | Mapping, gathering, compilation, schema validation, and locator validation; no independent semantic pass by design | `supported`   |
 | `standard` | Load-bearing evidence                       | Quick work plus blind semantic verification, adversarial review, coverage, and reconcile                           | `verified`    |
-| `thorough` | Expensive failure or correlated blind spots | Standard work plus redundant gathering and verification and contradiction resolution                               | `verified`    |
+| `thorough` | Expensive failure or correlated blind spots | Standard work plus required redundant gathering and redundant verification                                         | `verified`    |
+
+A thorough run may additionally predeclare an optional, condition-bound
+`contradiction-resolution` evidence wave. It runs only when its approved
+predicate triggers and is not required when that branch is not triggered.
 
 The approval manifest shows each wave's exact target, task class, class floor,
 selection rationale, adaptive lane count, conditional rule, concurrency,
