@@ -13,7 +13,7 @@ oat_hill_checkpoints:
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: awaiting_approval
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
@@ -63,9 +63,9 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-10T11:46:09Z'
+  updated_at: '2026-09-10T11:46:41Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   source: configured
   final_phase: p04
   pre_approval:
@@ -87,7 +87,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-10T11:46:09.000Z'
+oat_project_state_updated: '2026-09-10T11:46:41.000Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -97,13 +97,13 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** PR open; project recap and final HiLL pending.
+**Status:** PR open; final HiLL approval pending.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-10
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — awaiting final HiLL approval.
 
 ## Artifacts
 
@@ -134,7 +134,7 @@ No active blocker. All received final-review findings have completed fix tasks.
 
 ## Next Milestone
 
-PR is open for review.
+Approve the final HiLL checkpoint to complete implementation bookkeeping.
 
 - To incorporate feedback: run `oat-project-revise`
 - Complete before merge: run `oat-project-complete` now, then merge the PR.
