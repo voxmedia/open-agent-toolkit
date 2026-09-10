@@ -83,13 +83,13 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-10T01:30:17Z'
+oat_project_state_updated: '2026-09-10T01:48:00Z'
 oat_generated: false
 ---
 
 # Project State: agent-authored-recap
 
-**Status:** Rescoped design (agent-authored explainers for every caller) received round-3 review inline (23 findings applied); round-4 disposition verification next, then the design HiLL checkpoint
+**Status:** Rescoped design received four review rounds (round 4: 21/23 prior findings verified closed; 14 new applied inline); at the design HiLL checkpoint
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-09
 
