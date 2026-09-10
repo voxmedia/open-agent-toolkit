@@ -96,7 +96,7 @@ Backlog item `BL-260907-replace-the-default-project` (high priority; GitHub issu
 - The archive command's manifest validation and its existing recap tests must pass unchanged. (Superseded 2026-09-09 by operator decision: the manifest-key validation stays unchanged; the package rule and its tests are replaced.)
 - The lifecycle consumers (completion gate and export path, summary outcome mapping, the two wave skills' program-close callers) hard-code today's outcome vocabulary and the generated/degraded/skipped mapping; they change together with the semantics, in one project.
 - Bundled skill changes take one `metadata.version` bump per changed skill in the final PR and the lockstep public package bump; `pnpm test:skills`, `pnpm test:smoke`, `pnpm lint`, and `pnpm format` cover the skill tree.
-- The advanced kit stays installed and its core-version parity smoke test must keep passing.
+- The advanced kit stays installed and its core-version parity smoke test must keep passing. (Amended 2026-09-09: the core stays installed and the parity smoke keeps passing; its callback orchestration is retired, see the amendment below.)
 - Browser-less hosts must still complete the lifecycle: never block completion on a missing browser, never discard an authored artifact.
 - Fact bundles are allowlisted from approved project artifacts only (summary, implementation record, orchestration log, plan, discovery/spec/design where present, the program artifact and wave summaries for the program recap); nothing outside the project or program record enters the bundle.
 - Weaker-anywhere: nothing the archive or terminal-outcome guard rejects today becomes accepted unless enumerated in the design.
@@ -112,7 +112,7 @@ Backlog item `BL-260907-replace-the-default-project` (high priority; GitHub issu
 
 ## Out of Scope
 
-- Removing or rewriting the advanced Explainer Kit core, its recipes, publish/durability machinery, or its golden-conformance tests; they remain the explicit advanced workflow.
+- Removing or rewriting the advanced Explainer Kit core, its recipes, publish/durability machinery, or its golden-conformance tests; they remain the explicit advanced workflow. (Superseded 2026-09-09 by the amendment below: the core's callback orchestration, provider seams, and the tests that exercise them are retired in this project; publish/durability and the retained libraries stay.)
 - A new CLI command for recap generation (deferred idea).
 - Publishing recaps to S3 or any external surface.
 - Changing the fact-base schema or the manifest contract.
@@ -122,7 +122,7 @@ Backlog item `BL-260907-replace-the-default-project` (high priority; GitHub issu
 
 - Promote the deterministic recap steps to an `oat project recap` command if a second consumer (for example a CI job or a non-agent host) needs them.
 - A visual-diff baseline for recap screenshots across runs.
-- Retiring the capability-probe skip vocabulary from the lifecycle contract once every consumer routes on the new ladder.
+- Retiring the capability-probe skip vocabulary from the lifecycle contract once every consumer routes on the new ladder. (Pulled into scope 2026-09-09 by the amendment below.)
 
 ## Open Questions
 
@@ -148,3 +148,17 @@ Backlog item `BL-260907-replace-the-default-project` (high priority; GitHub issu
 ## Next Steps
 
 - Design: the fact-bundle allowlist, the browser ladder and its evidence, the rewritten outcome semantics, the retry/skip record, and the single generate flow with its two recipes.
+
+## Amendment (2026-09-09): one project, agent-authored explainers for every caller
+
+**Trigger.** While dispositioning the adapter's advanced path during design round 2, the operator and the author established that the path nobody can run is not a use case: both the core (`explainer-kit`) and the adapter (`oat-explainer-kit`) require the caller to supply JavaScript provider callbacks or module paths (author, critic, set planner, browser session, visual critic), an agent following prose cannot supply one, no configuration on any host names a module, and the only things that have ever satisfied those seams are test fixtures. The five real runs on this repository (2026-07-21 to 2026-08-27) all predate the seams. The project explainer at plan time has three recorded decisions, all `skip`, and no run. The kit was intended as a port of the operator's `personal-explainer-kit`, in which the agent is the author.
+
+**Operator decision.** One project rather than a recap project plus a follow-up: "we should just verify this all as one project"; the recap and the plan explainer are "only half of this".
+
+**Amended goal.** The Explainer Kit works again for every caller because the host agent authors the artifact: the project recap at completion, the program recap at program close, the project explainer at plan approval, and a person invoking the core skill on any inputs (an OAT project, a directory or list of documents, or a supplied fact base). One flow, selected by recipe, with the browser ladder and browser-free checks of the original scope.
+
+**Amended non-goals.** The "advanced kit stays untouched" constraint is dropped. The core's callback orchestration (its run orchestrator, the set planner, content approval, visual review, terminal evidence, the provider-seam contracts and the tests that exercise them) and the adapter's callback path (its run orchestrator, callback references, and seam probe) are retired. Retained: the fact-base schema and the manifest contract, the QA and browser libraries, theme resolution, the recipes' floors and briefs, and the publish/durability path (read-only, still the only `built-durable` producer). Still out of scope: a new CLI command, publishing recaps anywhere new, schema changes, the recon rework.
+
+**Amended success criteria.** In addition to the original list: a person runs the core skill on a directory of documents on a fresh host and gets one verified page; the plan skill's project explainer produces a run through the flow; zero references to the retired seams remain anywhere in the repository, and the retained libraries keep their tests.
+
+**Sequencing.** The program recap for the 2026-08-31 execution program stays the last phase.

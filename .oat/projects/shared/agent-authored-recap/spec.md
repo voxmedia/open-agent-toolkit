@@ -24,15 +24,16 @@ The implementation-tail project recap requires adaptive portfolio planning, five
 - A normally configured host produces one standalone, navigable HTML recap for a project without custom provider modules, and the archive command accepts it unchanged.
 - The same flow produces the program recap for the 2026-08-31 execution program, and its run identity and outcome land in the program ledger.
 - A `generate` decision is satisfied only by a usable artifact; failure is visible and decided, never a silent closeout warning.
+- A person invokes the core skill on any inputs (an OAT project, a directory or list of documents, or a supplied fact base) on a fresh host and gets one verified page, and the plan skill's project explainer produces a run through the same flow.
 
 ### Secondary Goals
 
 - The duplicated program-close caller in the two wave skills collapses onto the one flow.
-- The retired seam machinery leaves the default path without touching the advanced kit.
+- The callback-driven orchestration is retired from both the core and the adapter, and nothing in the repository references it afterwards.
 
 ## Non-Goals
 
-- Rewriting the advanced Explainer Kit core, its recipes, publish/durability machinery, or its golden-conformance tests.
+- Rewriting the publish/durability machinery (retained read-only) or the retained libraries; provider-module seams of any kind on any path (amended 2026-09-09: the core's callback orchestration is retired, not kept).
 - A new CLI command for recap generation (deferred idea; skill scripts only).
 - Publishing recaps to S3 or any external surface.
 - Changing the fact-base schema or the manifest contract.
@@ -51,6 +52,9 @@ The implementation-tail project recap requires adaptive portfolio planning, five
 - **FR7 — One flow, two recipes.** Project and program recaps share one generate flow selected by recipe; the program-close callers in `oat-wave-program` and `oat-wave-execute` reference it instead of duplicating it.
 - **FR8 — Lifecycle consumers route on the new semantics.** `oat-project-complete`'s recap gate and export path, `oat-project-summary`'s outcome mapping, and the two wave skills read the result record and outcome vocabulary; no lifecycle skill references a retired seam or the capability probe.
 - **FR9 — The program recap ships.** The last phase generates the recap for the 2026-08-31 execution program from the reconciled program artifact and the seven wave records, and records the run identity and outcome in the program ledger.
+- **FR10 — Any-input invocation.** A person invoking the core `explainer-kit` skill supplies an OAT project directory, a directory or list of documents, or a fact base, chooses the recipe and the output root, and gets the same flow: fact bundle, agent authoring against the recipe's brief, browser-free checks, the browser ladder, and the run package. Interactive invocation confirms scope and shows the fact base before authoring; unattended lifecycle invocation never prompts.
+- **FR11 — Project explainer at plan approval.** `oat-project-plan`'s project-explainer step runs the flow with the `project-explainer` recipe over the approved plan artifacts when the persisted `oat_project_explainer` decision is `generate`; the intent record and its resolver are unchanged, the outcome and run path are reported, and an explainer failure never rolls back the committed plan.
+- **FR12 — Seam retirement.** The core's callback orchestration and provider seams, the adapter's callback path and seam probe, their contracts, references, docs, and the tests that exercise only them are removed; the retained libraries, the durability/publish path, and their tests stay green; no file in the repository references a retired module, symbol, or contract.
 
 ### Non-Functional Requirements
 
@@ -82,6 +86,8 @@ The OAT explainer adapter skill gains a `generate` flow made of three small scri
 - The program recap for the execution program exists, passes the browser-free checks, and its manifest is accepted by the archive validator's parser.
 - Zero references to the seam probe or the five seams remain in lifecycle skills.
 - The fresh-host test and its negative controls pass with `Cached: 0`.
+- A person runs the core skill on a directory of documents on a fresh host and gets one verified page; the project explainer produces a run through the flow.
+- Zero references to the retired seams, contracts, or modules remain in the repository (code, tests, skills, docs).
 
 ## Requirement Index
 
@@ -96,6 +102,9 @@ The OAT explainer adapter skill gains a `generate` flow made of three small scri
 | FR7  | One flow, two recipes                      | Discovery Option A; triage amendment  |
 | FR8  | Lifecycle consumers updated                | Triage amendment (migration scope)    |
 | FR9  | Program recap ships                        | Operator decision 2026-09-09          |
+| FR10 | Any-input invocation                       | Discovery amendment 2026-09-09        |
+| FR11 | Project explainer at plan approval         | Discovery amendment 2026-09-09        |
+| FR12 | Seam retirement                            | Discovery amendment 2026-09-09        |
 | NFR1 | Fresh-host proof with negative controls    | Item AC 5                             |
 | NFR2 | Weaker-anywhere                            | Repository convention                 |
 | NFR3 | Browser-less hosts complete                | Operator decision 2026-09-08          |
@@ -109,7 +118,7 @@ The OAT explainer adapter skill gains a `generate` flow made of three small scri
 ## Assumptions
 
 - The kit's fact-base schema and cohesion checker are usable as libraries without the set planner (verified: `checkArtifactCohesion` and the schema are standalone exports).
-- CLI-side couplings are exactly: the archive package-coverage rule and its tests (changed by design), and the review-skill contract tests that pin the recap-gate prose of `oat-project-complete` and `oat-project-autonomous` (updated with the prose).
+- CLI-side couplings are exactly: the archive package-coverage rule, its loaders of core modules, and its tests (changed by design), the review-skill contract tests that pin the recap-gate prose of `oat-project-complete` and `oat-project-autonomous` (updated with the prose), and the autonomy gate-inventory prompt-site table (recomputed with the prose).
 
 ## Risks
 
