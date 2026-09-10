@@ -89,6 +89,10 @@ oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
 oat_project_state_updated: '2026-09-10T11:38:35.000Z'
 oat_generated: false
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-09-10T11:44:48.267Z'
 ---
 
 # Project State: Recon rework

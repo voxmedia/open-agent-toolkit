@@ -120,6 +120,12 @@ interpretation, evidence sufficiency, and final conclusions.
   owning workflows at the authorized shipping boundary. No live-provider
   acceptance run, PR publication, merge, or issue closure is included here.
 
+## Explainer Outcome
+
+- Skipped by interactive lifecycle decision. No unattended provider was
+  configured for the author, fact critic, browser session, visual critic, or
+  set planner seams, so no project-recap run or run path was created.
+
 ## Workflow Observations
 
 ### 2026-09-10 · structural · oat-project-implement · p01
