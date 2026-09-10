@@ -786,6 +786,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | p02    | code     | passed          | 2026-09-10 | reviews/p02-review-2026-09-10T050659Z.md                    | 420e1d4492b0734463aeac4d8bf91137f812dff0 | manual     | -           |
 | p03    | code     | fixes_completed | 2026-09-10 | reviews/p03-review-2026-09-10T062438Z.md                    | c6018f6c4f5633f005ed1938f3913db2e9bbd941 | manual     | -           |
 | p03    | code     | passed          | 2026-09-10 | reviews/p03-review-2026-09-10T065216Z.md                    | c1f175409c29d1afc04c7d69c84f61b80b4c850f | manual     | -           |
+| final  | code     | received        | 2026-09-10 | reviews/final-review-2026-09-10T083842Z.md                  | fe30e986219bbf27b04fb08957166229acc955fe | auto       | -           |
 
 ## Implementation Complete
 
