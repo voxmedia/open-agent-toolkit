@@ -394,12 +394,20 @@ declared, including honest same-profile partials.
 
 Use `scripts/render-packet.mjs <packet-dir>` to generate the deterministic
 consumer view. Its public path entry point first obtains `ValidatedRun`; the
-render core accepts only that graph. It writes an exclusive unpredictable
-temporary sibling, retains that file's identity through hashing and atomic
-promotion, and verifies the promoted digest. Immediately before and after
-promotion it also verifies that the canonical manifest, ledger, and validated
-referenced artifacts still match the byte digests retained by `ValidatedRun`.
-A mismatch is a categorical integrity failure and withdraws `packet.md`.
+render core accepts only that graph. The document includes a compact intended
+routing summary from the normalized view: source manifest version, approved
+authority and limits, each wave's effective exact target/class/floor/rationale,
+and every root-recorded conditional disposition. It labels those values as
+approved intent rather than launch receipts or observations of runtime identity,
+usage, cost, or correctness. Evidence, claims, contradictions, and gaps remain
+the primary consumer context.
+
+The renderer writes an exclusive unpredictable temporary sibling, retains that
+file's identity through hashing and atomic promotion, and verifies the promoted
+digest. Immediately before and after promotion it also verifies that the
+canonical manifest, ledger, and validated referenced artifacts still match the
+byte digests retained by `ValidatedRun`. A mismatch is a categorical integrity
+failure and withdraws `packet.md`.
 Withdrawal first proves the retained packet-root identity; if the root changed,
 the renderer preserves that identity failure and does not follow or unlink the
 replacement path. Rendering or promotion failure on an unchanged root likewise
