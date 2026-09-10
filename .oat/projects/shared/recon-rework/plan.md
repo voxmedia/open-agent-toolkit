@@ -673,16 +673,18 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T163711Z.md | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T232155Z.md | -                                        | -          | -           |
-| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p03    | code     | fixes_completed | 2026-09-10 | reviews/p03-review-2026-09-10T054626Z.md                    | 33a5cfff83a11219429d3944cec8de8a1eb475a4 | manual     | -           |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | plan   | artifact | passed          | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T231851Z.md | -                                        | manual     | -           |
 | p02    | code     | fixes_completed | 2026-09-10 | reviews/p02-review-2026-09-10T033820Z.md                    | 89594e147c9f1427823dca2d316524e26719f9a3 | manual     | -           |
 | p02    | code     | fixes_completed | 2026-09-10 | reviews/p02-review-2026-09-10T041234Z.md                    | b4424664101c86b3a044f23396290a1b83cd6d12 | manual     | -           |
 | p02    | code     | passed          | 2026-09-10 | reviews/p02-review-2026-09-10T050659Z.md                    | 420e1d4492b0734463aeac4d8bf91137f812dff0 | manual     | -           |
+| p03    | code     | fixes_completed | 2026-09-10 | reviews/p03-review-2026-09-10T062438Z.md                    | c6018f6c4f5633f005ed1938f3913db2e9bbd941 | manual     | -           |
+| p03    | code     | passed          | 2026-09-10 | reviews/p03-review-2026-09-10T065216Z.md                    | c1f175409c29d1afc04c7d69c84f61b80b4c850f | manual     | -           |
 
 ## Implementation Complete
 
-**Not complete; 5 of 9 tasks completed. Phase 3 begins at `p03-t01`.**
+**Not complete; 7 of 9 tasks completed. Phase 4 begins at `p04-t01`.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.

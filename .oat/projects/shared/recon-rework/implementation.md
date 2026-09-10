@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 oat_template: false
 ---
@@ -13,11 +13,11 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-10
 
-Implementation Run 1 is active at `p03-t01`. Thomas's single authorized Phase 2
-extension closed the remaining topology finding and the fourth review passed with
-no findings. The managed `high` dispatch policy continues to resolve to native
-Codex Sol/high implementer and reviewer roles. The final-phase HiLL checkpoint
-remains `p04`, with automatic lifecycle review.
+Implementation Run 1 is active at `p04-t01`. Phases 1-3 passed their independent
+reviews; Phase 3 required two bounded fix rounds. The managed `high` dispatch
+policy continues to resolve to native Codex Sol/high implementer and reviewer
+roles. The final-phase HiLL checkpoint remains `p04`, with automatic lifecycle
+review.
 
 ## Progress Overview
 
@@ -25,11 +25,11 @@ remains `p04`, with automatic lifecycle review.
 | ------------------------------------------ | ----------- | ----- | --------- |
 | Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
 | Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
-| Phase 3: Guidance and consumer output      | in_progress | 2     | 0/2       |
-| Phase 4: Distribution and verification     | pending     | 2     | 0/2       |
+| Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
+| Phase 4: Distribution and verification     | in_progress | 2     | 0/2       |
 
-**Total:** 5/9 tasks completed. Phase 2 passed after three bounded fix rounds and
-four root-owned reviews; Phase 3 is active at `p03-t01`.
+**Total:** 7/9 tasks completed. Phase 3 passed after two bounded fix rounds and
+three root-owned reviews; Phase 4 is active at `p04-t01`.
 
 ## Task Status
 
@@ -40,8 +40,8 @@ four root-owned reviews; Phase 3 is active at `p03-t01`.
 | p02-t01 | Completed: economical routing preview           | `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c` |
 | p02-t02 | Completed: conditional escalation/outcomes      | `1bad7202d740ef2daf6d22a254875e8ba2774c0b` |
 | p02-t03 | Completed: profile and harness integration      | `58b165063f7f1f154920b9793d353a2f8777ed81` |
-| p03-t01 | Pending: controller/worker/shared guidance      | -                                          |
-| p03-t02 | Pending: renderer and public docs               | -                                          |
+| p03-t01 | Completed: controller/worker/shared guidance    | `e38994e2809c57542aa3146c6a64ffedca22cd34` |
+| p03-t02 | Completed: renderer and public docs             | `33a5cfff83a11219429d3944cec8de8a1eb475a4` |
 | p04-t01 | Pending: bundle and release versions            | -                                          |
 | p04-t02 | Pending: full verification/evidence             | -                                          |
 
@@ -130,6 +130,43 @@ four root-owned reviews; Phase 3 is active at `p03-t01`.
   implementer reported 243/243 full recon tests and all repository check,
   type-check, test, build, lint, and format commands passing.
 
+## Phase 3: Controller, shared guidance, and consumer output
+
+**Status:** completed
+**Started:** 2026-09-10
+**Completed:** 2026-09-10
+
+### Task p03-t01: Align controller and worker guidance with economical evidence work
+
+**Status:** completed
+**Commit:** `e38994e2809c57542aa3146c6a64ffedca22cd34`
+**Verification:** passed after bounded review fixes
+
+### Task p03-t02: Render intended selections and document the consumer boundary
+
+**Status:** completed
+**Commit:** `33a5cfff83a11219429d3944cec8de8a1eb475a4`
+**Verification:** passed after bounded review fixes
+
+### Phase Summary
+
+- Original task commits `e38994e2809c57542aa3146c6a64ffedca22cd34` and
+  `33a5cfff83a11219429d3944cec8de8a1eb475a4` aligned controller/worker
+  guidance and added normalized intended-routing output with public docs.
+- Fix `c6018f6c4f5633f005ed1938f3913db2e9bbd941` corrected the exact
+  ten-to-seven worker mapping, preserved byte-compatible v1 rendering, and fixed
+  the public thorough-profile table.
+- Fix `c1f175409c29d1afc04c7d69c84f61b80b4c850f` aligned worker output
+  instructions with the closed artifact schemas, corrected canonical thorough
+  semantics, and qualified Intended Routing as manifest-v2-only.
+- Passing review `reviews/p03-review-2026-09-10T065216Z.md` records 0 Critical,
+  0 Important, 0 Medium, and 0 Minor. Its intelligent-recon lane completed and
+  the primary reviewer independently verified the findings and full post-image.
+- Root independently reran 175 focused tests after the final fix. The implementer
+  and reviewer reported 253/253 full recon tests, 237/237 CLI tests, docs checks,
+  skill/bump validation, and repository gates passing. Release validation remained
+  intentionally deferred to Phase 4's lockstep package bump.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -180,6 +217,17 @@ four root-owned reviews; Phase 3 is active at `p03-t01`.
   `420e1d4492b0734463aeac4d8bf91137f812dff0`. Fourth review request
   `p02-rereview-20260910-04` passed on `oat-reviewer-gpt-5-6-sol-high`; Phase 2
   verdict is passed and current scope advances to Phase 3 at `p03-t01`.
+- Phase p03 implementation request `7d08dd33-34fd-4bfb-8db8-a036b54cd4a3`
+  completed two task commits on `oat-phase-implementer-gpt-5-6-sol-high` with no
+  recovery attempts or optional nested dispatches.
+- Phase p03 review artifacts `reviews/p03-review-2026-09-10T054626Z.md` and
+  `reviews/p03-review-2026-09-10T062438Z.md` produced bounded fixes
+  `cont-recon-rework-p03-fix-1` and `cont-recon-rework-p03-fix-2`.
+- The terminal normal review `reviews/p03-review-2026-09-10T065216Z.md` passed
+  on `oat-reviewer-gpt-5-6-sol-high` with 0 Critical, 0 Important, 0 Medium,
+  and 0 Minor findings. Phase p03 outcome: passed; current scope advances to p04.
+- Phase p03 implementation stamp: `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`.
+- Phase p03 review stamp: `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
 
 <!-- orchestration-runs-end -->
 
@@ -305,6 +353,15 @@ four root-owned reviews; Phase 3 is active at `p03-t01`.
 - Fourth review `reviews/p02-review-2026-09-10T050659Z.md` passed with no
   findings after independent direct/CLI probes and complete primary reconciliation.
 - Phase 3 is authorized to begin at `p03-t01`.
+
+### 2026-09-10 — Phase 3 implemented and reviewed
+
+- Two planned task commits and two bounded review-fix commits are present.
+- The terminal Phase 3 review passed with no findings after independent
+  verification of closed worker artifact schemas, v1 rendering compatibility,
+  v2-only routing output, provider neutrality, and docs semantics.
+- Phase 4 begins at `p04-t01`; its lockstep package bump owns the expected
+  pre-Phase-4 release-version failure.
 
 ## Planning Verification
 
