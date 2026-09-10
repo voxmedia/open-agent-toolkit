@@ -20,10 +20,43 @@ const exactTargetFields = [
 
 const exactTargetFieldSet = new Set(exactTargetFields);
 
-const profileRoutingCaps = Object.freeze({
-  quick: Object.freeze({ lanes: 4, concurrency: 4, conditions: 0 }),
-  standard: Object.freeze({ lanes: 10, concurrency: 6, conditions: 1 }),
-  thorough: Object.freeze({ lanes: 20, concurrency: 8, conditions: 2 }),
+const profileRoutingPolicy = Object.freeze({
+  quick: Object.freeze({
+    requiredWaveModes: Object.freeze(['map', 'gather', 'compile']),
+    lanes: 4,
+    concurrency: 4,
+    conditions: 0,
+  }),
+  standard: Object.freeze({
+    requiredWaveModes: Object.freeze([
+      'map',
+      'gather',
+      'compile',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'reconciliation',
+    ]),
+    lanes: 10,
+    concurrency: 6,
+    conditions: 1,
+  }),
+  thorough: Object.freeze({
+    requiredWaveModes: Object.freeze([
+      'map',
+      'gather',
+      'compile',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'redundant-gather',
+      'redundant-verification',
+      'reconciliation',
+    ]),
+    lanes: 20,
+    concurrency: 8,
+    conditions: 2,
+  }),
 });
 
 const economicalDefaults = Object.freeze({
@@ -360,27 +393,27 @@ function assertV2ProposalTopology(manifest, execution) {
     );
   }
 
-  const caps = profileRoutingCaps[requestedProfile];
+  const policy = profileRoutingPolicy[requestedProfile];
   const laneCount = execution.waves.reduce(
     (count, wave) => count + wave.lanes.length,
     0,
   );
-  if (laneCount > caps.lanes) {
+  if (laneCount > policy.lanes) {
     routingError(
       'PROFILE_LANE_CAP_EXCEEDED',
-      `${requestedProfile} routing permits at most ${caps.lanes} total worker lanes`,
+      `${requestedProfile} routing permits at most ${policy.lanes} total worker lanes`,
     );
   }
-  if (execution.maxConcurrency > caps.concurrency) {
+  if (execution.maxConcurrency > policy.concurrency) {
     routingError(
       'PROFILE_CONCURRENCY_CAP_EXCEEDED',
-      `${requestedProfile} routing permits concurrency at most ${caps.concurrency}`,
+      `${requestedProfile} routing permits concurrency at most ${policy.concurrency}`,
     );
   }
-  if (execution.conditions.length > caps.conditions) {
+  if (execution.conditions.length > policy.conditions) {
     routingError(
       'PROFILE_CONDITION_CAP_EXCEEDED',
-      `${requestedProfile} routing permits at most ${caps.conditions} conditional waves`,
+      `${requestedProfile} routing permits at most ${policy.conditions} conditional waves`,
     );
   }
 
@@ -394,6 +427,9 @@ function assertV2ProposalTopology(manifest, execution) {
     reconciliationIndexes.length > 1 ||
     (['standard', 'thorough'].includes(requestedProfile) &&
       reconciliationIndexes.length !== 1) ||
+    reconciliationIndexes.some(
+      (index) => index !== execution.waves.length - 1,
+    ) ||
     reconciliationIndexes.some(
       (index) => execution.waves[index].conditional === true,
     )
@@ -523,6 +559,21 @@ function assertV2ProposalTopology(manifest, execution) {
       );
     }
   }
+
+  const unconditionalModes = new Set(
+    execution.waves
+      .filter((wave) => wave.conditional === false)
+      .map((wave) => wave.mode),
+  );
+  const missingModes = policy.requiredWaveModes.filter(
+    (mode) => !unconditionalModes.has(mode),
+  );
+  if (missingModes.length > 0) {
+    routingError(
+      'INCOMPLETE_PROFILE_TOPOLOGY',
+      `${requestedProfile} routing is missing required non-conditional wave modes: ${missingModes.join(', ')}`,
+    );
+  }
 }
 
 function validateApproval(execution) {
@@ -647,9 +698,9 @@ export function createRoutingPreview(manifest) {
   const profileCaps =
     manifest.schemaVersion === 2
       ? {
-          maxLanes: profileRoutingCaps[requestedProfile].lanes,
-          maxConcurrency: profileRoutingCaps[requestedProfile].concurrency,
-          maxConditions: profileRoutingCaps[requestedProfile].conditions,
+          maxLanes: profileRoutingPolicy[requestedProfile].lanes,
+          maxConcurrency: profileRoutingPolicy[requestedProfile].concurrency,
+          maxConditions: profileRoutingPolicy[requestedProfile].conditions,
         }
       : null;
   return deepFreeze({
@@ -676,6 +727,16 @@ export function createRoutingPreview(manifest) {
   });
 }
 
+function encodeMarkdownValue(value) {
+  return [...String(value)]
+    .map((character) =>
+      /^[\p{L}\p{N} .:/@%+-]$/u.test(character)
+        ? character
+        : `&#${character.codePointAt(0)};`,
+    )
+    .join('');
+}
+
 export function renderRoutingPreview(preview, format = 'markdown') {
   if (format === 'json') return `${JSON.stringify(preview, null, 2)}\n`;
   if (format !== 'markdown') {
@@ -687,20 +748,23 @@ export function renderRoutingPreview(preview, format = 'markdown') {
   const lines = [
     '# Recon routing proposal',
     '',
-    `Approval: ${preview.approvalState}`,
-    `Approval fingerprint: \`${preview.approvalFingerprint}\``,
-    `Authority: ${preview.authority}`,
-    `Requested profile: ${preview.requestedProfile ?? 'legacy v1'}`,
+    `Approval: ${encodeMarkdownValue(preview.approvalState)}`,
+    `Approval fingerprint: ${encodeMarkdownValue(preview.approvalFingerprint)}`,
+    `Authority: ${encodeMarkdownValue(preview.authority)}`,
+    `Requested profile: ${encodeMarkdownValue(preview.requestedProfile ?? 'legacy v1')}`,
     '',
     '| Wave | Mode | Assignment | Class / floor | Lanes | Exact target | Reason | Conditional |',
     '| --- | --- | --- | --- | ---: | --- | --- | --- |',
   ];
   for (const wave of preview.waves) {
     const target = exactTargetFields
-      .map((field) => `${field}=${wave.target[field] ?? 'null'}`)
+      .map(
+        (field) =>
+          `${field}=${encodeMarkdownValue(wave.target[field] ?? 'null')}`,
+      )
       .join(', ');
     lines.push(
-      `| ${wave.waveId} | ${wave.mode} | ${wave.assignment} | ${wave.taskClass} / ${wave.classFloor} | ${wave.laneCount} | ${target} | ${wave.selectionReason ?? 'legacy v1 approval'} | ${wave.conditional ? 'yes' : 'no'} |`,
+      `| ${encodeMarkdownValue(wave.waveId)} | ${encodeMarkdownValue(wave.mode)} | ${encodeMarkdownValue(wave.assignment)} | ${encodeMarkdownValue(wave.taskClass)} / ${encodeMarkdownValue(wave.classFloor)} | ${encodeMarkdownValue(wave.laneCount)} | ${target} | ${encodeMarkdownValue(wave.selectionReason ?? 'legacy v1 approval')} | ${encodeMarkdownValue(wave.conditional ? 'yes' : 'no')} |`,
     );
   }
   lines.push(
@@ -713,7 +777,7 @@ export function renderRoutingPreview(preview, format = 'markdown') {
   for (const wave of preview.waves) {
     for (const lane of wave.lanes) {
       lines.push(
-        `| ${wave.waveId} | ${lane.laneId} | ${lane.scope} | ${lane.writeRoot} |`,
+        `| ${encodeMarkdownValue(wave.waveId)} | ${encodeMarkdownValue(lane.laneId)} | ${encodeMarkdownValue(lane.scope)} | ${encodeMarkdownValue(lane.writeRoot)} |`,
       );
     }
   }
@@ -726,8 +790,11 @@ export function renderRoutingPreview(preview, format = 'markdown') {
       '| --- | --- | --- | --- | ---: |',
     );
     for (const condition of preview.conditions) {
+      const afterWaves = condition.afterWaveIds
+        .map((waveId) => encodeMarkdownValue(waveId))
+        .join(', ');
       lines.push(
-        `| ${condition.conditionId} | ${condition.destinationWaveId} | ${condition.afterWaveIds.join(', ')} | ${condition.predicate} | ${condition.maxActivations} |`,
+        `| ${encodeMarkdownValue(condition.conditionId)} | ${encodeMarkdownValue(condition.destinationWaveId)} | ${afterWaves} | ${encodeMarkdownValue(condition.predicate)} | ${encodeMarkdownValue(condition.maxActivations)} |`,
       );
     }
   }
@@ -735,19 +802,19 @@ export function renderRoutingPreview(preview, format = 'markdown') {
     '',
     '## Worst-case limits',
     '',
-    `- Waves: ${preview.limits.waveCount}`,
-    `- Lanes: ${preview.limits.laneCount}`,
-    `- Conditions: ${preview.limits.conditionCount}`,
-    `- Concurrency: ${preview.limits.maxConcurrency}`,
-    `- Deadline seconds: ${preview.limits.deadlineSeconds}`,
-    `- Retry limit: ${preview.limits.retryLimit}`,
-    `- Lane attempts: ${preview.limits.worstCaseLaneAttempts}`,
+    `- Waves: ${encodeMarkdownValue(preview.limits.waveCount)}`,
+    `- Lanes: ${encodeMarkdownValue(preview.limits.laneCount)}`,
+    `- Conditions: ${encodeMarkdownValue(preview.limits.conditionCount)}`,
+    `- Concurrency: ${encodeMarkdownValue(preview.limits.maxConcurrency)}`,
+    `- Deadline seconds: ${encodeMarkdownValue(preview.limits.deadlineSeconds)}`,
+    `- Retry limit: ${encodeMarkdownValue(preview.limits.retryLimit)}`,
+    `- Lane attempts: ${encodeMarkdownValue(preview.limits.worstCaseLaneAttempts)}`,
   );
   if (preview.profileCaps) {
     lines.push(
-      `- Profile lane cap: ${preview.profileCaps.maxLanes}`,
-      `- Profile concurrency cap: ${preview.profileCaps.maxConcurrency}`,
-      `- Profile condition cap: ${preview.profileCaps.maxConditions}`,
+      `- Profile lane cap: ${encodeMarkdownValue(preview.profileCaps.maxLanes)}`,
+      `- Profile concurrency cap: ${encodeMarkdownValue(preview.profileCaps.maxConcurrency)}`,
+      `- Profile condition cap: ${encodeMarkdownValue(preview.profileCaps.maxConditions)}`,
     );
   }
   lines.push('');

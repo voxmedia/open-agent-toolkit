@@ -624,18 +624,19 @@ export async function createPacketFixture({
   const claimsRef = { path: 'claims.json', digest: await hashFile(claimsPath) };
 
   const quickPasses = ['map', 'gather', 'compile'];
-  const standardPasses = [
+  const standardEvidencePasses = [
     ...quickPasses,
     'semantic-verification',
     'adversarial',
     'coverage',
-    'reconciliation',
   ];
+  const standardPasses = [...standardEvidencePasses, 'reconciliation'];
   const thoroughPasses = [
-    ...standardPasses,
+    ...standardEvidencePasses,
     'redundant-gather',
     'redundant-verification',
     ...(includeContradictionResolution ? ['contradiction-resolution'] : []),
+    'reconciliation',
   ];
   const passesByProfile = {
     quick: quickPasses,

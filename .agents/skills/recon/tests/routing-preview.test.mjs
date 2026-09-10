@@ -29,6 +29,29 @@ const modeList = [
   'contradiction-resolution',
   'reconciliation',
 ];
+const requiredModesByProfile = Object.freeze({
+  quick: Object.freeze(['map', 'gather', 'compile']),
+  standard: Object.freeze([
+    'map',
+    'gather',
+    'compile',
+    'semantic-verification',
+    'adversarial',
+    'coverage',
+    'reconciliation',
+  ]),
+  thorough: Object.freeze([
+    'map',
+    'gather',
+    'compile',
+    'semantic-verification',
+    'adversarial',
+    'coverage',
+    'redundant-gather',
+    'redundant-verification',
+    'reconciliation',
+  ]),
+});
 const tempRoots = [];
 
 afterEach(async () => {
@@ -54,11 +77,12 @@ function draftManifest({ profile = 'thorough', modes = modeList } = {}) {
   };
 }
 
+function completeDraft(profile) {
+  return draftManifest({ profile, modes: requiredModesByProfile[profile] });
+}
+
 function conditionalDraft() {
-  const manifest = draftManifest({
-    profile: 'standard',
-    modes: ['map', 'reconciliation'],
-  });
+  const manifest = completeDraft('standard');
   const destination = {
     waveId: 'wave-conditional-resolution',
     mode: 'contradiction-resolution',
@@ -84,6 +108,31 @@ function conditionalDraft() {
       maxActivations: 1,
     },
   ];
+  return manifest;
+}
+
+function markdownHostileDraft() {
+  const manifest = conditionalDraft();
+  const map = manifest.execution.waves.find((wave) => wave.mode === 'map');
+  const destination = manifest.execution.waves.find(
+    (wave) => wave.mode === 'contradiction-resolution',
+  );
+  const condition = manifest.execution.conditions[0];
+  manifest.execution.target.route =
+    'opaque|route, model=false\r\n## False target\n`target`_[unsafe]';
+  map.waveId = 'wave|map\r\n## False dependency\n`map`';
+  map.selectionReason =
+    'Bounded | reason\r\n## False reason\n`reason`_[unsafe]';
+  map.lanes[0].laneId = 'lane|map\r\n## False lane\n`lane`';
+  map.lanes[0].scope =
+    'visible | hidden\r\n## False limits\n- Lanes: 1\n`scope`';
+  map.lanes[0].writeRoot = 'raw/map|output\r\n`root`_[unsafe].json';
+  destination.waveId =
+    'wave|conditional\r\n## False destination\n`destination`';
+  condition.conditionId =
+    'condition|id\r\n## False condition\n`condition`_[unsafe]';
+  condition.destinationWaveId = destination.waveId;
+  condition.afterWaveIds = [map.waveId];
   return manifest;
 }
 
@@ -178,6 +227,93 @@ test('preview validates and displays the complete approval-bound topology', () =
   assert.equal(json.waves[1].lanes[0].scope, 'packet/conditional-resolution');
 });
 
+test('preview rejects incomplete quick, standard, and thorough profile topologies', () => {
+  for (const profile of ['quick', 'standard', 'thorough']) {
+    const accepted = completeDraft(profile);
+    assert.doesNotThrow(() => createRoutingPreview(accepted));
+
+    for (const requiredMode of requiredModesByProfile[profile]) {
+      const incomplete = completeDraft(profile);
+      incomplete.execution.waves = incomplete.execution.waves.filter(
+        (wave) => wave.mode !== requiredMode,
+      );
+      assert.throws(() => createRoutingPreview(incomplete), {
+        code:
+          requiredMode === 'reconciliation'
+            ? 'INVALID_TERMINAL_TOPOLOGY'
+            : 'INCOMPLETE_PROFILE_TOPOLOGY',
+      });
+    }
+  }
+
+  const conditionalOnly = completeDraft('standard');
+  const required = conditionalOnly.execution.waves.find(
+    (wave) => wave.mode === 'adversarial',
+  );
+  required.mode = 'contradiction-resolution';
+  required.conditional = true;
+  conditionalOnly.execution.conditions = [
+    {
+      conditionId: 'condition-adversarial-substitute',
+      destinationWaveId: required.waveId,
+      afterWaveIds: ['wave-map'],
+      predicate: 'insufficient-evidence',
+      maxActivations: 1,
+    },
+  ];
+  assert.throws(() => createRoutingPreview(conditionalOnly), {
+    code: 'INCOMPLETE_PROFILE_TOPOLOGY',
+  });
+});
+
+test('Markdown preview encodes every manifest value without injected structure', () => {
+  const manifest = markdownHostileDraft();
+  const preview = createRoutingPreview(manifest);
+  const markdown = renderRoutingPreview(preview);
+  const lines = markdown.split('\n');
+
+  assert.equal(lines.filter((line) => line.startsWith('#')).length, 4);
+  assert.equal(lines.filter((line) => line.startsWith('- ')).length, 10);
+  assert.equal(
+    lines.filter((line) => line.startsWith('|')).length,
+    6 +
+      preview.waves.length +
+      preview.limits.laneCount +
+      preview.conditions.length,
+  );
+  for (const raw of [
+    '\n## False target',
+    '\n## False reason',
+    '\n## False lane',
+    '\n## False limits',
+    '\n## False condition',
+    '\n- Lanes: 1',
+    '`target`',
+    '`reason`',
+    '`scope`',
+  ]) {
+    assert.equal(markdown.includes(raw), false, `rendered raw ${raw}`);
+  }
+  for (const encoded of [
+    '&#124;',
+    '&#44;',
+    '&#61;',
+    '&#13;',
+    '&#10;',
+    '&#96;',
+    '&#35;',
+  ]) {
+    assert.ok(markdown.includes(encoded), `missing encoding ${encoded}`);
+  }
+
+  const json = JSON.parse(renderRoutingPreview(preview, 'json'));
+  assert.equal(json.waves[0].target.route, manifest.execution.target.route);
+  assert.equal(
+    json.conditions[0].conditionId,
+    'condition|id\r\n## False condition\n`condition`_[unsafe]',
+  );
+});
+
 test('preview rejects missing, malformed, mismatched, and over-cap v2 routing', () => {
   const missing = conditionalDraft();
   delete missing.execution.conditions;
@@ -215,8 +351,32 @@ test('preview rejects missing, malformed, mismatched, and over-cap v2 routing', 
     code: 'PROFILE_LANE_CAP_EXCEEDED',
   });
 
-  const conditionCap = conditionalDraft();
-  conditionCap.run.requestedProfile = 'quick';
+  const conditionCap = completeDraft('quick');
+  const conditional = {
+    waveId: 'wave-conditional-resolution',
+    mode: 'contradiction-resolution',
+    taskClass: 'mechanical-recon',
+    classFloor: 'mechanical-recon',
+    selectionReason: 'Bounded conditional evidence fixture.',
+    lanes: [
+      {
+        laneId: 'lane-conditional-resolution',
+        scope: 'packet/conditional-resolution',
+        writeRoot: 'reviews/conditional-resolution.json',
+      },
+    ],
+    conditional: true,
+  };
+  conditionCap.execution.waves.splice(1, 0, conditional);
+  conditionCap.execution.conditions = [
+    {
+      conditionId: 'condition-resolution',
+      destinationWaveId: conditional.waveId,
+      afterWaveIds: ['wave-map'],
+      predicate: 'insufficient-evidence',
+      maxActivations: 1,
+    },
+  ];
   assert.throws(() => createRoutingPreview(conditionCap), {
     code: 'PROFILE_CONDITION_CAP_EXCEEDED',
   });
@@ -238,7 +398,7 @@ test('preview requires rationale and rejects unsupported target controls', () =>
 
 test('exact target check preserves opaque identity, nullable effort, and approval', () => {
   const execution = createV2ExecutionApproval({
-    modes: ['gather'],
+    modes: requiredModesByProfile.quick,
     laneIdForMode,
     target: {
       ...fixtureTarget,
@@ -318,6 +478,48 @@ test('thin CLI previews and checks targets with categorical nonzero failures', a
   );
   assert.equal(conditionalPreview.status, 0, conditionalPreview.stderr);
   assert.equal(JSON.parse(conditionalPreview.stdout).conditions.length, 1);
+
+  for (const profile of ['quick', 'standard', 'thorough']) {
+    const acceptedProfile = completeDraft(profile);
+    await writeFile(manifestPath, JSON.stringify(acceptedProfile), 'utf8');
+    const acceptedPreview = spawnSync(
+      process.execPath,
+      [cli, '--manifest', manifestPath, '--format', 'json'],
+      { encoding: 'utf8' },
+    );
+    assert.equal(acceptedPreview.status, 0, acceptedPreview.stderr);
+
+    const incompleteProfile = completeDraft(profile);
+    incompleteProfile.execution.waves =
+      incompleteProfile.execution.waves.filter(
+        (wave) => wave.mode !== 'gather',
+      );
+    await writeFile(manifestPath, JSON.stringify(incompleteProfile), 'utf8');
+    const rejectedProfile = spawnSync(
+      process.execPath,
+      [cli, '--manifest', manifestPath, '--format', 'json'],
+      { encoding: 'utf8' },
+    );
+    assert.notEqual(rejectedProfile.status, 0);
+    assert.match(rejectedProfile.stderr, /^INCOMPLETE_PROFILE_TOPOLOGY:/);
+  }
+
+  const hostile = markdownHostileDraft();
+  await writeFile(manifestPath, JSON.stringify(hostile), 'utf8');
+  const hostilePreview = spawnSync(
+    process.execPath,
+    [cli, '--manifest', manifestPath, '--format', 'markdown'],
+    { encoding: 'utf8' },
+  );
+  assert.equal(hostilePreview.status, 0, hostilePreview.stderr);
+  assert.equal(
+    hostilePreview.stdout,
+    renderRoutingPreview(createRoutingPreview(hostile)),
+  );
+  assert.equal(hostilePreview.stdout.includes('## False limits'), false);
+  assert.equal(hostilePreview.stdout.split('\n').includes('- Lanes: 1'), false);
+  assert.ok(hostilePreview.stdout.includes('&#124;'));
+  assert.ok(hostilePreview.stdout.includes('&#10;'));
 
   for (const [mutate, expectedCode] of [
     [
