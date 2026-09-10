@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
+  economicalRoutingDefaults,
   normalizeManifestRouting,
   resolveEffectiveWaveTarget,
 } from '../scripts/lib/routing.mjs';
@@ -25,6 +26,29 @@ const standardModes = [
 
 const laneIdForMode = (mode) =>
   mode === 'semantic-verification' ? 'lane-semantic' : `lane-${mode}`;
+
+test('economical routing defaults exhaust the supported wave-mode union', () => {
+  const defaults = economicalRoutingDefaults();
+  assert.deepEqual(Object.keys(defaults).sort(), [
+    'adversarial',
+    'compile',
+    'contradiction-resolution',
+    'coverage',
+    'gather',
+    'map',
+    'reconciliation',
+    'redundant-gather',
+    'redundant-verification',
+    'semantic-verification',
+  ]);
+  assert.ok(
+    Object.values(defaults).every(
+      (policy) =>
+        policy.taskClass === 'mechanical-recon' && policy.assignment.length > 0,
+    ),
+  );
+  assert.equal(Object.isFrozen(defaults), true);
+});
 
 test('v1 normalization preserves the pinned approval bytes and homogeneous target', () => {
   const execution = createExecutionApproval({
