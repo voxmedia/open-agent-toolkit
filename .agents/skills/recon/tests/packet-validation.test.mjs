@@ -841,6 +841,34 @@ test('dispatches schema versions by artifact kind and keeps v1 closed', async ()
   await expectInvalid(v2ExecutionKeyInV1, 'UNKNOWN_FIELD');
 });
 
+test('public validation returns categorical JSON for object-valued v1 and v2 waves', async () => {
+  const cliPath = fileURLToPath(
+    new URL('../scripts/validate-packet.mjs', import.meta.url),
+  );
+  for (const manifestVersion of [1, 2]) {
+    const packet = await createPacketFixture({ manifestVersion });
+    tempRoots.push(packet.tempRoot);
+    packet.manifest.execution.waves = {};
+    await packet.persist();
+
+    const cli = spawnSync(process.execPath, [cliPath, packet.packetRoot], {
+      encoding: 'utf8',
+    });
+    assert.equal(cli.status, 1, cli.stderr || cli.stdout);
+    assert.doesNotMatch(cli.stderr, /TypeError/);
+    const result = JSON.parse(cli.stdout);
+    assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+    assert.ok(
+      result.errors.some(
+        (error) =>
+          error.code === 'MISSING_REQUIRED_FIELD' &&
+          error.path === '$.execution.waves',
+      ),
+      JSON.stringify(result, null, 2),
+    );
+  }
+});
+
 test('worker artifacts use existing closed identity fields and reject invented mode fields', async () => {
   const packet = await makePacket({ profile: 'standard' });
   const dossier = JSON.parse(

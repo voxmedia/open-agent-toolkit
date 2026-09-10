@@ -81,6 +81,24 @@ test('later ledger revisions reject final transitions that mismatch claim status
   );
 });
 
+test('manifest shape validation returns stable errors for object-valued v1 and v2 waves', async () => {
+  for (const manifestVersion of [1, 2]) {
+    const packet = await createPacketFixture({ manifestVersion });
+    roots.push(packet.tempRoot);
+    packet.manifest.execution.waves = {};
+    const validation = validateArtifactShape(packet.manifest);
+    assert.equal(validation.valid, false, JSON.stringify(validation, null, 2));
+    assert.ok(
+      validation.errors.some(
+        (error) =>
+          error.code === 'MISSING_REQUIRED_FIELD' &&
+          error.path === '$.execution.waves',
+      ),
+      JSON.stringify(validation, null, 2),
+    );
+  }
+});
+
 test('ValidatedRun retains exact digests for canonical and referenced packet bytes', async () => {
   const packet = await fixture();
   const validation = await compileValidatedRun(packet.packetRoot);

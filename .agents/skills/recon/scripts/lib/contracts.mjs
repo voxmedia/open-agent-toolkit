@@ -405,9 +405,10 @@ function validateExecutionV1(value, errors, path) {
   requiredArray(value, 'waves', errors, path);
   requiredObject(value, 'approval', errors, path);
   validateApprovalEvidence(value.approval, errors, `${path}.approval`);
+  const waves = Array.isArray(value.waves) ? value.waves : [];
   const waveIds = new Set();
   const laneIds = new Set();
-  for (const [waveIndex, wave] of (value.waves ?? []).entries()) {
+  for (const [waveIndex, wave] of waves.entries()) {
     const wavePath = `${path}.waves[${waveIndex}]`;
     closedObject(
       wave,
@@ -522,10 +523,11 @@ function validateExecutionV2(value, errors, path) {
   requiredObject(value, 'approval', errors, path);
   validateApprovalEvidence(value.approval, errors, `${path}.approval`);
 
+  const waves = Array.isArray(value.waves) ? value.waves : [];
   const waveIds = new Set();
   const laneIds = new Set();
   const writeRoots = new Set();
-  for (const [waveIndex, wave] of (value.waves ?? []).entries()) {
+  for (const [waveIndex, wave] of waves.entries()) {
     const wavePath = `${path}.waves[${waveIndex}]`;
     closedObject(
       wave,
@@ -675,9 +677,7 @@ function validateExecutionV2(value, errors, path) {
   const conditionIds = new Set();
   const conditionalDestinations = new Set();
   const waveIndexes = new Map(
-    (Array.isArray(value.waves) ? value.waves : [])
-      .filter(isObject)
-      .map((wave, index) => [wave.waveId, index]),
+    waves.filter(isObject).map((wave, index) => [wave.waveId, index]),
   );
   for (const [conditionIndex, condition] of (Array.isArray(value.conditions)
     ? value.conditions
@@ -789,7 +789,7 @@ function validateExecutionV2(value, errors, path) {
     conditionIds.add(condition?.conditionId);
     const destinationIndex = waveIndexes.get(condition.destinationWaveId);
     const destinationWave =
-      destinationIndex === undefined ? null : value.waves[destinationIndex];
+      destinationIndex === undefined ? null : waves[destinationIndex];
     if (!destinationWave) {
       errors.push(
         issue(
@@ -826,7 +826,7 @@ function validateExecutionV2(value, errors, path) {
           );
         }
       }
-      const reconciliationIndex = value.waves.findIndex(
+      const reconciliationIndex = waves.findIndex(
         (wave) => wave?.mode === 'reconciliation',
       );
       if (
@@ -853,10 +853,7 @@ function validateExecutionV2(value, errors, path) {
     }
     conditionalDestinations.add(condition.destinationWaveId);
   }
-  for (const [waveIndex, wave] of (Array.isArray(value.waves)
-    ? value.waves
-    : []
-  ).entries()) {
+  for (const [waveIndex, wave] of waves.entries()) {
     if (
       isObject(wave) &&
       wave.conditional === true &&
