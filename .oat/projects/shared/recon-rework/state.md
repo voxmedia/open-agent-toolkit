@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 08b00048856dad851b1bafb9e73b230bdf104481
+oat_last_commit: 9b7e7bde582384c2148c030279c74afff8bb78e5
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -74,6 +74,7 @@ oat_post_implement_sequence:
     - pr
   pre_approval_completed:
     - summary
+    - document
   approval: pending
   approval_source: null
   post_approval: []
@@ -85,7 +86,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-10T09:40:23.000Z'
+oat_project_state_updated: '2026-09-10T09:40:55.000Z'
 oat_generated: false
 ---
 
