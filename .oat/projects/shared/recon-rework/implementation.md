@@ -168,8 +168,9 @@ remain pending.
 
 ## Phase 4: Distribution and composed verification
 
-**Status:** implemented; independent review pending
+**Status:** completed; independent review passed
 **Started:** 2026-09-10
+**Completed:** 2026-09-10
 
 ### Task p04-t01: Bundle the runtime and apply one lockstep release bump
 
@@ -201,8 +202,14 @@ remain pending.
   removed only that whitespace, reran focused and phase checks, and left the
   original task commit immutable. Root validated the completed marker and cleared
   `pending_attempt` while preserving `used_attempts: 1`.
-- Independent Phase 4 review, final review, the implementation exit gate, the HiLL
-  checkpoint, and implementation lifecycle completion remain root-owned and pending.
+- Independent review `reviews/p04-review-2026-09-10T073941Z.md` passed the blocking
+  threshold with 0 Critical, 0 Important, 1 Medium, and 2 Minor findings. The
+  Medium notes that retained raw gate logs lack explicit `exit=` markers even though
+  ordered successful output and the ledger support zero exits. The Minor findings
+  were corrected in bookkeeping: recovery provenance now names the completed state
+  marker, and this final summary reflects all nine implemented tasks.
+- Final review, the implementation exit gate, the HiLL checkpoint, and lifecycle
+  completion remain root-owned and pending.
 
 ## Orchestration Runs
 
@@ -265,6 +272,17 @@ remain pending.
   and 0 Minor findings. Phase p03 outcome: passed; current scope advances to p04.
 - Phase p03 implementation stamp: `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`.
 - Phase p03 review stamp: `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
+- Phase p04 implementation request `1c1288b1-f8cc-44b3-a233-8dd59ca71f04`
+  completed task commits
+  `9721d7c680a0778967addaf9ef8b391839949d9c` and
+  `3e200321b705e5a3204cbe72434dff547ab2bc28`, plus validated recovery commit
+  `b828fb10d8c4d02ac86df281ebb2ef61e394599d`, on
+  `oat-phase-implementer-gpt-5-6-sol-high`.
+- Phase p04 review artifact `reviews/p04-review-2026-09-10T073941Z.md` passed on
+  `oat-reviewer-gpt-5-6-sol-high` with 0 Critical, 0 Important, 1 Medium, and
+  2 Minor findings; review fix-loop count 0.
+- Phase p04 implementation stamp: `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`.
+- Phase p04 review stamp: `Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
 
 <!-- orchestration-runs-end -->
 
@@ -400,6 +418,17 @@ remain pending.
 - Phase 4 begins at `p04-t01`; its lockstep package bump owns the expected
   pre-Phase-4 release-version failure.
 
+### 2026-09-10 — Phase 4 implemented and reviewed
+
+- Public packages advanced from origin/main `0.2.71` to lockstep `0.2.72`; the
+  recon routing runtime is bundled and project provider views are synchronized.
+- All eight CI-equivalent gates passed in order; fresh isolated Turbo execution ran
+  10/10 tasks uncached, and the recon suite passed 253/253.
+- Phase review passed with no blocking findings. One Medium retained-log provenance
+  gap remains disclosed: the logs do not embed explicit per-command exit markers.
+- All nine tasks are implemented. Final verification, final review, exit gate, and
+  HiLL approval remain distinct pending boundaries.
+
 ## Planning Verification
 
 | Check                                                                 | Result                          | Scope                                                                                                                                  |
@@ -438,15 +467,36 @@ that no fourth planning review should run; implementation/final reviews remain.
 - Phase 1: 81/81 focused and 203/203 full recon tests passed.
 - Phase 2 after the authorized final fix: 156/156 focused and 244/244 full recon
   tests passed.
+- Phase 3 after final fixes: 175 focused root tests and 253/253 full recon tests
+  passed; CLI, docs, skill, and version-bump checks passed.
+- Phase 4: all eight CI-equivalent gates returned zero in order; isolated Turbo
+  tests executed 10/10 tasks uncached; recon 253/253 and bundle 29/29 passed.
 - Phase implementers reported `pnpm check`, `pnpm type-check`, `pnpm test`,
   `pnpm build`, `pnpm lint`, and `pnpm format` passing. These results do not
   override the terminal semantic review finding.
 
 ## Final Summary (for PR/docs)
 
-Partial implementation only; nothing is approved for shipping. Phases 1 and 2
-have passed their phase reviews. Phases 3 and 4 remain, followed by final
-verification, final review, exit gate, and final HiLL approval.
+All nine implementation tasks are implemented and all four phase reviews passed.
+The branch now provides versioned v1/v2 recon contracts, economical approved
+per-wave routing, bounded conditional escalation, exact outcome accounting,
+caller-owned judgment, normalized intended-routing output, aligned worker and
+controller guidance, bundled runtime assets, project provider projections, and
+lockstep public package version `0.2.72`.
+
+Key surfaces include `.agents/skills/recon`, the canonical recon-worker role,
+shared model-selection guidance, CLI bundle consistency, public recon docs, five
+public package manifests, and the repeatable Phase 4 verification note.
+
+Verification includes the eight CI-equivalent gates in order, fresh isolated Turbo
+tests, 253/253 recon tests, 29/29 bundle tests, provider-view synchronization,
+release validation, docs build, and negative controls for exact-target drift and
+shadow reconciliation. The retained raw gate logs lack explicit `exit=` markers;
+that nonblocking evidence-quality limitation remains disclosed.
+
+No design divergence remains. Implementation is not yet approved for shipping:
+final verification, final lifecycle review, the configured implementation exit
+gate, and final HiLL approval are still pending.
 
 ## References
 

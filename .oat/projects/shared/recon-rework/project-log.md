@@ -60,6 +60,10 @@ run-1-p02-pass-20260910 Phase p02 passed after the user-authorized third fix rou
 
 run-1-p03-outcome-20260910 Phase p03 passed after two bounded fix rounds; reviews/p03-review-2026-09-10T065216Z.md records 0 Critical, 0 Important, 0 Medium, 0 Minor and attempted reconnaissance with complete orchestration evidence.
 
+### 2026-09-10 · structural · oat-project-implement · p04
+
+run-1-p04-outcome-20260910 Phase p04 passed blocking review after 0 fix rounds and 1 mechanical recovery; reviews/p04-review-2026-09-10T073941Z.md records 0 Critical, 0 Important, 1 Medium, 2 Minor with attempted reconnaissance and complete orchestration evidence.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

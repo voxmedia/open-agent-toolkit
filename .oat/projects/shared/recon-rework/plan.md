@@ -653,10 +653,11 @@ categorical expected outcomes sufficient for independent repetition.
 Both Phase 4 task implementations are complete. Task `p04-t01` is commit
 `9721d7c680a0778967addaf9ef8b391839949d9c`; task `p04-t02` is commit
 `3e200321b705e5a3204cbe72434dff547ab2bc28`. Mechanical recovery commit
-`b828fb10d8c4d02ac86df281ebb2ef61e394599d` removes only verification-note
-trailing whitespace. The exact gate ledger, cache distinction, v1/v2 and conditional
-controls, guard-neutralization proof, and synthetic-test limitations are recorded in
-`references/verification/phase-4-validation.md`.
+`b828fb10d8c4d02ac86df281ebb2ef61e394599d` changes only verification-note
+whitespace in implementation/evidence content and records the completed recovery
+marker in project state. The exact gate ledger, cache distinction, v1/v2 and
+conditional controls, guard-neutralization proof, and synthetic-test limitations
+are recorded in `references/verification/phase-4-validation.md`.
 
 This task evidence does not mark the Phase 4 review, final review, implementation
 exit gate, configured HiLL checkpoint, or implementation lifecycle complete.
@@ -687,7 +688,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T163711Z.md | -                                        | -          | -           |
 | plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T232155Z.md | -                                        | -          | -           |
 | p03    | code     | fixes_completed | 2026-09-10 | reviews/p03-review-2026-09-10T054626Z.md                    | 33a5cfff83a11219429d3944cec8de8a1eb475a4 | manual     | -           |
-| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p04    | code     | passed          | 2026-09-10 | reviews/p04-review-2026-09-10T073941Z.md                    | b62fb86aa6f31df166545c8aa4d6286510cd7d70 | manual     | -           |
 | plan   | artifact | passed          | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T231851Z.md | -                                        | manual     | -           |
 | p02    | code     | fixes_completed | 2026-09-10 | reviews/p02-review-2026-09-10T033820Z.md                    | 89594e147c9f1427823dca2d316524e26719f9a3 | manual     | -           |
 | p02    | code     | fixes_completed | 2026-09-10 | reviews/p02-review-2026-09-10T041234Z.md                    | b4424664101c86b3a044f23396290a1b83cd6d12 | manual     | -           |
