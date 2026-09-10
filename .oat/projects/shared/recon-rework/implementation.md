@@ -322,7 +322,7 @@ reconfirmed.
 **Next:** Execute the configured implementation exit gate, then stop at final HiLL
 approval.
 
-### Implementation Exit Gate: generation 1 received envelope
+### Implementation Exit Gate: generation 1 passed
 
 **Resolved:** 2026-09-10T09:04:41Z
 **Gate:** `IMPLEMENT-11` via configured `oat --json gate review`
@@ -340,8 +340,10 @@ approval.
 **Envelope:** `ok`, `review_completed_gate_passed`, threshold Important, findings
 0 Critical / 0 Important / 3 Medium / 1 Minor, `receiveEligible: true`.
 **Artifact:** `reviews/final-review-2026-09-10T091637Z.md`
-**Status:** structured receipt persisted; review receive is required before the
-gate disposition can become allowed.
+**Receive:** commit `42f613244d41d041a4a1cd6432728e0afdfa7e0c`
+corroborates the archived run-bound artifact, exact passed Reviews event, and
+durable judgment-sweep dispositions.
+**Status:** `allowed/passed`; no product change followed the reviewed head.
 
 ### Review Received: final configured exit gate
 
@@ -381,8 +383,8 @@ gate disposition can become allowed.
 **Product changes after reviewed head:** none. Deferral preserves the gate-reviewed
 basis and records every sub-threshold finding durably.
 
-**Disposition:** passing gate sweep received; awaiting durable receive
-reconciliation in `oat_implement_exit_gate`.
+**Disposition:** passing gate sweep received and durably reconciled. The configured
+implementation exit gate is allowed; final HiLL sequencing may proceed.
 
 ## Orchestration Runs
 

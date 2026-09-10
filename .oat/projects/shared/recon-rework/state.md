@@ -29,9 +29,9 @@ oat_dispatch_policy:
 oat_skill_gate_overrides:
   oat-project-quick-start: disabled
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -42,8 +42,8 @@ oat_implement_exit_gate:
   reviewed_head: b1c7e84716f65ccf414448f1d2ac7d96d9cac434
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:37b72ed44b95abd240aaa1a71d14903c2ce84bc6789011d712c0bc19f910e6ea'
-  freshness_head: b5183ae99672f554b2107fadd756a2ca3d0ffaec
-  freshness_fingerprint: 'sha256:effective-delta-v1:a742cc7013d7f5c383a164548d04ff1d53bdb44cc7fd1f405b9f5462e095312a'
+  freshness_head: 42f613244d41d041a4a1cd6432728e0afdfa7e0c
+  freshness_fingerprint: 'sha256:effective-delta-v1:6efb44b8acb0bec32134386762fa956b36c535024f84f2a2fe3893ca11b7791d'
   launch_state: result_persisted
   launch_attempt_id: 'recon-exit-gate-20260910T090601Z'
   launch_started_at: '2026-09-10T09:06:01Z'
@@ -51,19 +51,19 @@ oat_implement_exit_gate:
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/4b362f5c-6edd-463b-b63f-4b4f46596830.json'
   gate_run_id: 4b362f5c-6edd-463b-b63f-4b4f46596830
   envelope_status: ok
-  artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-10T091637Z.md'
+  artifact: '.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-10T091637Z.md'
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=3, minor=1). Run oat-project-review-receive for .oat/projects/shared/recon-rework/reviews/final-review-2026-09-10T091637Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=4b362f5c-6edd-463b-b63f-4b4f46596830; handoff=receive; source=reviews/final-review-2026-09-10T091637Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-10T091637Z.md'
   receive_archived_artifact: '.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-10T091637Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-10T091637Z.md'
   receive_pre_head: ba347f25723319ab25b9b554b7e04e34fa752f9d
-  receive_commit: null
+  receive_commit: 42f613244d41d041a4a1cd6432728e0afdfa7e0c
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-10T09:21:50Z'
+  updated_at: '2026-09-10T09:23:53Z'
 oat_workflow_origin: native
 oat_docs_updated: null
 oat_pr_status: null
@@ -76,7 +76,7 @@ oat_generated: false
 
 # Project State: Recon rework
 
-**Status:** All implementation tasks and reviews passed; exit gate pending.
+**Status:** All tasks, reviews, and the exit gate passed; final HiLL pending.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-10
 
@@ -88,8 +88,9 @@ wave gap, and one Minor lifecycle-summary drift. Tasks `p04-t03` through `p04-t0
 fixed those findings. The narrowed re-review confirmed the product fixes, and
 `p04-t06` corrected its remaining wording finding. All final-review fix tasks are
 complete, and the terminal narrowed final review passed with no findings.
-`oat_phase_status` remains `in_progress` until the implementation exit gate and
-final HiLL approval complete.
+The implementation exit gate also passed and its sub-threshold findings were
+received with durable dispositions. `oat_phase_status` remains `in_progress` until
+final HiLL approval completes.
 
 ## Artifacts
 
@@ -97,8 +98,8 @@ final HiLL approval complete.
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight design aligned with received review findings.
 - Plan: `plan.md` — complete and ready; 4 sequential phases, 13 tasks.
-- Implementation: `implementation.md` — 13/13 tasks implemented and all phase and
-  final reviews passed; the exit gate and HiLL boundary are pending.
+- Implementation: `implementation.md` — 13/13 tasks implemented; all reviews and
+  the exit gate passed; the HiLL boundary is pending.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
@@ -117,8 +118,8 @@ No active blocker. All received final-review findings have completed fix tasks.
 
 ## Next Milestone
 
-Execute the implementation exit gate before the configured final HiLL approval
-boundary. The project dispatch ceiling remains managed `high`.
+Run the configured pre-approval closeout sequence, then stop at the final HiLL
+approval boundary. The project dispatch ceiling remains managed `high`.
 
 ## Authorization and Scope
 
