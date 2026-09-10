@@ -44,12 +44,12 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:37b72ed44b95abd240aaa1a71d14903c2ce84bc6789011d712c0bc19f910e6ea'
   freshness_head: b5183ae99672f554b2107fadd756a2ca3d0ffaec
   freshness_fingerprint: 'sha256:effective-delta-v1:a742cc7013d7f5c383a164548d04ff1d53bdb44cc7fd1f405b9f5462e095312a'
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: 'recon-exit-gate-20260910T090601Z'
   launch_started_at: '2026-09-10T09:06:01Z'
   launch_result_receipt: '/private/tmp/recon-exit-gate-20260910T090601Z.receipt.json'
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/4b362f5c-6edd-463b-b63f-4b4f46596830.json'
+  gate_run_id: 4b362f5c-6edd-463b-b63f-4b4f46596830
   envelope_status: null
   artifact: null
   handoff: null
@@ -63,7 +63,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-09-10T09:06:01Z'
+  updated_at: '2026-09-10T09:06:46Z'
 oat_workflow_origin: native
 oat_docs_updated: null
 oat_pr_status: null
