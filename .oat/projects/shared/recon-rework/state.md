@@ -12,44 +12,44 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_workflow_mode: quick
 oat_dispatch_policy:
   mode: managed
-  policy: high
+  policy: frontier
   source: project-state
+oat_skill_gate_overrides:
+  oat-project-quick-start: disabled
 oat_workflow_origin: native
 oat_docs_updated: null
 oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-10T00:17:27.000Z'
+oat_project_state_updated: '2026-09-10T01:05:05.000Z'
 oat_generated: false
 ---
 
 # Project State: Recon rework
 
-**Status:** All plan-review fixes applied — manual acceptance and readiness pending.
+**Status:** Plan accepted and ready for implementation under frontier dispatch.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-09
 
 ## Current Phase
 
-Plan in progress. Discovery is complete; lightweight design and plan are drafted.
-Three manual plan-review cycles were received on 2026-09-09, and all findings were
-applied directly to planning artifacts. The three-cycle automated-review cap is
-reached without marking the plan passed. Design self-review, manual acceptance,
-configured gates, readiness, and implementation remain pending.
+Plan complete. Discovery is complete; the lightweight design is integrated into
+the quick plan. Three plan-review cycles were received on 2026-09-09, all findings
+were applied, and Thomas manually accepted the corrected aggregate plan at the
+cycle cap. The configured quick-start gate is disabled for this project to avoid a
+fourth planning review. Implementation has not started.
 
 ## Artifacts
 
 - Discovery: `discovery.md` — captured from the conversation, CLI-completed.
 - Spec: N/A — native quick workflow.
-- Design: `design.md` — lightweight draft; plan-review alignment applied, design
-  self-review pending.
-- Plan: `plan.md` — 4 sequential phases, 9 tasks; all received review fixes
-  complete, manual acceptance pending.
+- Design: `design.md` — lightweight design aligned with received review findings.
+- Plan: `plan.md` — complete and ready; 4 sequential phases, 9 tasks.
 - Implementation: `implementation.md` — initialized; 0/9 tasks started.
 - Handoff: `handoff.md` — exact continuation instructions.
 - Source context: `references/source-context.md` — baseline map and input precedence.
@@ -63,24 +63,20 @@ No existing project was absorbed or retired.
 
 ## Blockers
 
-No missing product-discovery input. Review and readiness remain pending: manual
-plan acceptance, design review, optional phase review, lifecycle gate posture, and
-the configured quick-start gate must be resolved by the receiving agent.
+No planning blocker. Implementation start must confirm HiLL checkpoints through
+`oat-project-implement`; no optional cross-runtime phase gate was selected.
 
 ## Next Milestone
 
-Resume `oat-project-quick-start` in place for manual acceptance/readiness after
-reading `handoff.md`. Do not re-scaffold or launch a fourth automated plan review.
-Do not mark the plan ready based on substantive task content or the applied fixes
-alone. First implementation task after readiness is `p01-t01`.
+Run `oat-project-implement`, confirm HiLL checkpoints, and begin with `p01-t01`.
+Do not re-scaffold or launch another planning review. The project dispatch ceiling
+is managed `frontier`.
 
 ## Authorization and Scope
 
-Thomas authorized planning and local commits in this existing worktree only.
-No implementation, design self-review, configured review gate, live-provider
-launch, triage change, push, PR publication, or merge has been performed. The
-three manual plan reviews and approved artifact corrections are the only new review
-work recorded here.
+Thomas authorized the corrected plan, managed `frontier` dispatch, the readiness
+transition, and pushing this branch for cloud execution. No implementation,
+live-provider launch, triage change, PR publication, or merge has been performed.
 
 Source issue: https://github.com/voxmedia/open-agent-toolkit/issues/274.
 A canonical backlog ID is intentionally not invented; reconcile any triage-owned

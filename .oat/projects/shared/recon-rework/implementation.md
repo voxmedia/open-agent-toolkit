@@ -13,9 +13,9 @@ oat_template: false
 **Started:** Not started — tracker initialized during planning on 2026-09-08.
 **Last Updated:** 2026-09-09
 
-The next task pointer identifies the first future implementation task, not
-authorization to run it. Resume the corrected, still-not-ready quick plan through
-handoff.md.
+The next task pointer identifies the first implementation task. The corrected
+quick plan is accepted and ready; the cloud runner should load
+`oat-project-implement`, confirm HiLL checkpoints, and start at `p01-t01`.
 
 ## Progress Overview
 
@@ -118,6 +118,22 @@ No implementation orchestration runs.
 - The three-cycle automated plan-review cap is reached. It stops another automated
   cycle and does not turn unresolved or corrected findings into a pass.
 
+### 2026-09-09 — Corrected plan manually accepted
+
+- Thomas accepted the corrected aggregate plan, directed that it be marked
+  `passed`, selected managed `frontier` dispatch, and authorized pushing the branch
+  for cloud execution.
+- Advanced only the final appended plan review event to `passed`; earlier events
+  retain their historical `fixes_completed` status.
+- Marked the quick plan complete and ready for `oat-project-implement`. The
+  configured quick-start gate is disabled for this project so manual acceptance at
+  the three-cycle cap does not trigger a fourth planning review.
+- No optional cross-runtime phase gate was selected. Implementation and final
+  review behavior remain unchanged. HiLL selection remains deferred to
+  `oat-project-implement` start.
+- Dispatch ladder preflight was complete; the project ceiling changed from managed
+  `high` to managed `frontier` without persisting a concrete provider target.
+
 ## Planning Verification
 
 | Check                                                                 | Result                          | Scope                                                                                                                                  |
@@ -137,15 +153,17 @@ No implementation orchestration runs.
 | project validate-plan after both received reviews                     | Exit 0, valid true              | Corrected plan structure; not a semantic pass                                                                                          |
 | Review topology production probe                                      | Exit 0                          | Standard baseline valid; adversary brief accepted; reconcile brief rejected; second reconciliation rejected as `SHADOW_RECONCILIATION` |
 | Focused review-control inventory                                      | Exit 0                          | Pinned v1 literal/mutation and both conditional branches named in design/plan                                                          |
+| Frontier reviewer and implementer preflight                           | Exit 0, resolved                | Complete ladder; managed `frontier` selected from project state                                                                        |
+| Quick-start gate resolution after manual acceptance                   | Exit 0                          | `configured_disabled_by_project`; implementation/final gates unchanged                                                                 |
+| Final plan validation and dashboard refresh                           | Exit 0, valid true              | Dashboard recommends `oat-project-implement`                                                                                           |
 
 ## Deviations from Standard Quick-Start Completion
 
-The user requested a deliberate pre-review handoff. Three manual plan-review
-cycles have now been received and their findings applied. The automated-review
-cap is reached, but design self-review, manual plan acceptance, policy/gate
-prompts, gate execution, and the implementation-ready state transition have not
-run. Configuration is unchanged; no fake disabled-review skip or passed
-disposition was written.
+The user requested a deliberate pre-review handoff. Three plan-review cycles were
+received and their findings applied. At the automated-review cap, Thomas manually
+accepted the corrected aggregate plan, selected managed `frontier`, and directed
+the readiness transition. The project-specific quick-start gate override records
+that no fourth planning review should run; implementation/final reviews remain.
 
 ## Test Results
 

@@ -10,23 +10,22 @@ Branch: recon-rework
 Project: .oat/projects/shared/recon-rework
 Workflow: quick, native
 Design mode: lightweight draft
-Next step: manually accept corrected artifacts and finish readiness
+Next step: run oat-project-implement from p01-t01
 ```
 
 Thomas originally authorized discovery capture and design/plan drafting, then a
-stop before self-review and plan/gate review. Three manual plan-review cycles were
-later received on 2026-09-09, and all findings were applied directly to the
-planning artifacts. The three-cycle automated-review cap is reached without
-marking the corrected plan passed. The project remains at `oat_phase: plan`,
-`oat_phase_status: in_progress`; plan `oat_ready_for: null` and
-`oat_template: true` now guard the pending re-review and readiness work, not
-unfinished placeholder content.
+stop before self-review and plan/gate review. Three plan-review cycles were later
+received on 2026-09-09, and all findings were applied directly to the planning
+artifacts. At the three-cycle cap Thomas manually accepted the corrected aggregate
+plan, selected managed `frontier`, and authorized pushing it for cloud execution.
+The project remains at `oat_phase: plan` with `oat_phase_status: complete`; plan
+`oat_ready_for: oat-project-implement` and `oat_template: false` expose the ready
+handoff.
 
-**Do not scaffold again, restart discovery, mark review passed, or jump directly
-to implementation.** Load the current quick-start skill and resume this project
-in place. The plan is fully authored and all received review events are
-`fixes_completed`; manual acceptance, not a fourth automated plan review, is the
-remaining review step.
+**Do not scaffold again, restart discovery, or launch another planning review.**
+Load `oat-project-implement`, confirm implementation HiLL checkpoints, and begin
+with `p01-t01`. The final appended plan-review event records manual acceptance as
+`passed`; earlier events retain their historical `fixes_completed` status.
 
 ## Reading order
 
@@ -95,13 +94,12 @@ native launcher rewrite is in scope.
   two topology findings, and archived both events as `fixes_completed`. The final
   topology is optional adversary-mode contradiction evidence followed by exactly
   one terminal reconciliation with an independently approved target.
-- Committed the drafting work. Discover the final draft commit using
-  `git log -3 --oneline`; no push or PR was created.
+- Committed the drafting and review work. Discover the current handoff commit with
+  `git log -3 --oneline`; no PR was created.
 
 No implementation code, canonical skill, provider reference, governing decision,
-backlog record, or public version was changed. No design self-review, configured
-gate, or live-provider worker test ran. The three review cycles are complete, but
-their corrected artifacts have not been marked passed.
+backlog record, or public version was changed. No live-provider worker test ran.
+The corrected aggregate plan is manually accepted and ready for implementation.
 
 ## Resume procedure
 
@@ -112,31 +110,21 @@ their corrected artifacts have not been marked passed.
 2. Verify the active project resolves to this exact path. The original scaffold
    reported shared scope. Re-resolve rather than trusting a stale environment
    variable. If missing locally, use the normal project-open workflow.
-3. Load `oat-project-quick-start/SKILL.md` and
-   `oat-project-plan-writing/SKILL.md`. Resume the existing draft; retain stable
-   task IDs and all review rows. Do not copy templates over it.
+3. Load `oat-project-implement/SKILL.md`. Retain stable task IDs and all review
+   rows; do not copy templates over the accepted plan.
 4. Read discovery/design/plan as one bundle. Discovery is sufficiently covered;
    ask only about a substantive ambiguity introduced by current evidence or
    review. Engineering proposals are identified in design rather than falsely
    recorded as user-approved schema choices.
-5. Perform the deferred design self-review and obtain manual acceptance of the
-   corrected plan according to the current workflow. Do not launch a fourth
-   automated plan review: the cycle cap stops repetition, not unresolved findings.
-   Resolve the implementation project's dispatch ceiling and complete ladder
-   before managed review/readiness. Do not infer that cheap recon workers imply
-   cheap implementation/final review for this contract.
-6. Resolve optional phase gate review and lifecycle gate posture through the
-   current shared contracts. No choice was made here. Preserve existing explicit
-   values if another agent has since added them. Do not overwrite user config
-   or invent disabled gates to bypass the handoff.
-7. Resolve and run the configured quick-start gate with project context. Scope is
-   discovery + lightweight design + plan when supported; retain any configured
-   legacy-plan-only scope without silently changing its command. Receive only
-   corroborated eligible artifacts and preserve review history.
-8. After review/disposition and readiness prerequisites really pass, write the
-   standard quick readiness fields. Then start `oat-project-implement` under
-   the user's next instruction/authorized workflow and confirm implementation
-   HiLL checkpoints.
+5. Preserve the complete dispatch ladder and managed `frontier` project ceiling.
+   Do not infer that cheap recon workers imply cheap implementation/final review
+   for this contract.
+6. Preserve the absent optional phase-gate setting and the explicit project
+   lifecycle override that disables only `oat-project-quick-start`. Built-in phase
+   reviews and implementation/final gates remain unchanged.
+7. Do not run the configured quick-start gate: Thomas's manual acceptance closed
+   the capped plan-review loop, and the project override records that decision.
+8. Start `oat-project-implement` and confirm implementation HiLL checkpoints.
 9. Implement sequentially from `p01-t01`. Each task has file ownership,
    formatting, verification, and an atomic commit. Record actual outcomes.
 10. Run normal root phase reviews, final review, and configured implementation
@@ -214,12 +202,10 @@ origin/main during implementation, not from the old proposal's numbers.
 
 > Take over the quick project at .oat/projects/shared/recon-rework in this
 > worktree. Read handoff.md, discovery.md, design.md, plan.md, and the source map.
-> Discovery is already covered. The artifacts are committed drafts, deliberately
-> not implementation-ready. All three manual plan-review cycles' fixes are applied;
-> the automated-review cap is reached without marking the plan passed. Resume
-> quick-start in place and perform the remaining design review, manual plan
-> acceptance, dispatch/gate setup, and configured planning gate before
-> implementation. Preserve cheap evidence workers with caller-owned judgment, the
-> single terminal reconciliation, per-wave exact approval, v1 compatibility, and
-> the prohibition on invented launch provenance. Do not re-scaffold or change the
-> other worktree.
+> Discovery is already covered. All three plan-review cycles' fixes are applied,
+> and Thomas manually accepted the corrected aggregate plan at the cycle cap. The
+> plan is ready for `oat-project-implement` under managed `frontier` dispatch.
+> Confirm HiLL checkpoints, then begin at p01-t01. Preserve cheap evidence workers
+> with caller-owned judgment, the single terminal reconciliation, per-wave exact
+> approval, v1 compatibility, and the prohibition on invented launch provenance.
+> Do not re-scaffold, launch another planning review, or change the other worktree.

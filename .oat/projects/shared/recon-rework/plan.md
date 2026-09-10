@@ -1,26 +1,25 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-09-09
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: Recon rework
 
-> **Reviewed draft, not implementation-ready.** Three manual plan-review cycles
-> completed on 2026-09-09, and all received findings are applied. The automated
-> review cap is reached; that cap does not convert corrected findings into a pass.
-> Resume quick-start in place for manual acceptance, design review, gate choices,
-> and readiness; retain all task IDs and review rows.
+> **Manually accepted and implementation-ready.** Three plan-review cycles
+> completed on 2026-09-09, all received findings were applied, and Thomas accepted
+> the corrected aggregate plan at the cycle cap. No fourth automated planning
+> review is authorized.
 
 **Goal:** Restore inexpensive evidence fan-out across harnesses with caller-owned
 judgment, independently approved per-wave targets, and bounded conditional
@@ -48,30 +47,29 @@ commit with its exact write set staged.
 ## Planning Status
 
 - Discovery: captured and completed through the CLI validation boundary.
-- Lightweight design: drafted; technical choices still await design review.
+- Lightweight design: integrated into the accepted quick plan; its separate
+  placeholder review row remains non-blocking in quick mode.
 - This plan: 4 sequential phases, 9 tasks; no tasks started.
-- Manual plan artifact review: all three cycles' findings are applied; further
-  automated plan review is capped, and manual acceptance remains pending.
-- Design self-review remains pending from the original handoff.
-- Project dispatch policy, optional phase gates, lifecycle gate posture, and
-  implementation HiLL: not selected in this drafting run.
+- Manual plan artifact review: all three cycles' findings are applied; Thomas
+  manually accepted the corrected aggregate plan and the latest event is `passed`.
+- Project dispatch policy: managed `frontier`, selected in project state.
+- The configured quick-start gate is disabled for this project because the user
+  explicitly closed the capped planning-review loop. No optional cross-runtime
+  phase gate was selected. Built-in implementation reviews remain unchanged.
+- Implementation HiLL remains intentionally deferred to implementation start.
 - `oat_plan_hill_phases` remains absent until `oat-project-implement` confirms
   the user's HiLL choice and writes the selected phases; an empty list would mean
   pause after every phase, not "undecided."
-- Do not write a fake review skip, passed row, or implementation readiness; the
-  corrected review events remain `fixes_completed` until a later review passes.
 - The low-cost policy describes recon workers **as product behavior**; it does
   not require implementing or reviewing this contract with an inadequate model.
 
 ## Before Implementation
 
-The receiving agent must follow `handoff.md`: verify the worktree, resume
-`oat-project-quick-start`, obtain manual acceptance of the corrected plan and
-review the remaining design choices without launching another automated plan
-review cycle, resolve dispatch/gate choices through the current shared contracts,
-run and receive any configured gate, and only then establish implementation
-readiness. No repeated discovery interview is required unless review reveals a
-substantive product ambiguity.
+The receiving agent must follow `handoff.md`: verify the worktree, load
+`oat-project-implement`, confirm and write implementation HiLL checkpoints, and
+begin at `p01-t01` under the managed `frontier` ceiling. Do not launch another
+planning review or repeat discovery unless implementation reveals a substantive
+product ambiguity.
 
 Do not automatically merge the backlog-triage branch. Issue #274 is the scope
 source; discover any canonical backlog record created by the separate triage
@@ -653,14 +651,12 @@ do not claim model-name capability ranking, and do not close recap or wave-7 ite
 
 ## Reviews
 
-All three manual plan-review cycles have their corrections recorded. The two most
-recent artifacts are `fixes_completed`, not passed: one tightened verification
-evidence and the other established the approved single-terminal topology. The
-three-cycle automated-review cap is reached; it stops repeated automated review
-and does not turn unresolved or corrected findings into a pass. Keep the unbound
-template rows below. The spec row is N/A for quick mode; its placeholder is
-retained solely to preserve scaffold review rows and is not a new spec requirement.
-No explicit auto-review-disabled configuration was written.
+All three plan-review cycles have their corrections recorded. One tightened
+verification evidence and the other established the approved single-terminal
+topology. At the three-cycle cap, Thomas manually accepted the corrected aggregate
+plan and directed that it be marked passed. The final event records that manual
+acceptance; earlier event statuses remain as history. Keep the unbound template
+rows below. The spec and design placeholders are non-blocking in quick mode.
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
@@ -673,7 +669,7 @@ No explicit auto-review-disabled configuration was written.
 | plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T232155Z.md | -             | -          | -           |
 | p03    | code     | pending         | -          | -                                                           | -             | -          | -           |
 | p04    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T231851Z.md | -             | -          | -           |
+| plan   | artifact | passed          | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T231851Z.md | -             | manual     | -           |
 
 ## Implementation Complete
 
