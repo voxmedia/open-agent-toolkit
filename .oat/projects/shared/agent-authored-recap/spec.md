@@ -33,7 +33,7 @@ The implementation-tail project recap requires adaptive portfolio planning, five
 
 ## Non-Goals
 
-- Rewriting the publish/durability machinery (retained read-only) or the retained libraries; provider-module seams of any kind on any path (amended 2026-09-09: the core's callback orchestration is retired, not kept).
+- Provider-module seams of any kind on any path, and any replacement for the retired durability/S3-publish path (amended 2026-09-09: the callback orchestration and the durability/publish path are retired, not kept; the archive export is the durable copy).
 - A new CLI command for recap generation (deferred idea; skill scripts only).
 - Publishing recaps to S3 or any external surface.
 - Changing the fact-base schema. (The manifest moves to `explainer-kit.manifest/v2` under the 2026-09-09 amendment; the keys the retired durability path needed are dropped, nothing else changes.)
@@ -43,7 +43,7 @@ The implementation-tail project recap requires adaptive portfolio planning, five
 
 ### Functional Requirements
 
-- **FR1 — Allowlisted fact bundle.** The flow assembles a fact base only from approved artifacts of the project (summary, implementation record, orchestration log, plan, discovery, spec, design where present) or, for a program recap, the reconciled execution-program artifact plus every wave's summary and completion record. The bundle conforms to `explainer-kit.fact-base/v1` (canonical JSON, derived Markdown) and records input hashes so an unchanged input set is detected as fresh and never re-authored.
+- **FR1 — Allowlisted fact bundle.** The flow assembles a fact base only from approved artifacts of the project (summary, implementation record, project log, orchestration log, plan, discovery, spec, design where present) or, for a program recap, the reconciled execution-program artifact plus every wave's summary and completion record. The bundle conforms to `explainer-kit.fact-base/v1` (canonical JSON, derived Markdown) and records input hashes so an unchanged input set is detected as fresh and never re-authored.
 - **FR2 — Agent-authored single artifact.** The host agent authors one standalone HTML page from the bundle, carrying the recipe's required narrative sections: for a project, original request, key agent decisions, as-built architecture, implementation record, validation evidence, outcome; for a program, program overview, wave map, per-wave outcomes, convention evolution, aggregate numbers, follow-up ledger. No custom author, critic, or visual-critic module is required.
 - **FR3 — Browser ladder.** Visual verification uses the first available rung: the host agent's own browser capability, then the kit's bundled Playwright probe, then browser-free checks. The rung used, the artifact path, and the screenshot paths (narrow, medium, wide) are retained in a small result record.
 - **FR4 — Browser-free checks always run.** Regardless of rung: the page parses, every required section is present, and every claim in the page traces to the fact bundle by subject and value (token membership is not sufficient).
@@ -59,7 +59,7 @@ The implementation-tail project recap requires adaptive portfolio planning, five
 ### Non-Functional Requirements
 
 - **NFR1 — Fresh-host proof.** A test exercises successful generation on a fresh host with no custom modules and no browser, and reproduction-grade negative controls for authoring failure and browser failure, proving each failure stays visible while an accepted control still produces the recap.
-- **NFR2 — Weaker-anywhere, enumerated.** Nothing the archive validator or the terminal-outcome guard rejects today becomes accepted except the acceptance changes `design.md` § Migration Plan enumerates (the new package accepted, the legacy shape rejected, `skip/failed_attempt` accepted, `terminal-evidence.json` no longer required, the `qa/browser/` chain no longer required for unattended `built-not-durable`), each pinned by its own red-then-green negative control.
+- **NFR2 — Weaker-anywhere, enumerated.** Nothing the archive validator or the terminal-outcome guard rejects today becomes accepted except the acceptance changes `design.md` § Migration Plan enumerates, which is the one authoritative list (today: the v2 package accepted; the v1 shape and every other `schemaVersion` rejected; `skip/failed_attempt` accepted only with a failed or incomplete manifest; the retired package files and evidence chains no longer required; `built` replacing the two durability outcomes), each pinned by its own red-then-green negative control.
 - **NFR3 — Browser-less hosts complete.** Completion never blocks on a missing browser; the outcome is recorded as needing review.
 - **NFR4 — Bundled-asset discipline.** One `metadata.version` bump per changed skill, the lockstep public-package bump, and the skill, smoke, lint, and format tiers green; the advanced kit's core-version parity smoke test keeps passing.
 - **NFR5 — Necessity.** Every persisted artifact this project adds names its consumer (an agent acting on a named instruction, a human reading a named surface, or code at a named call site); no record is written for a deferred reader, and no record duplicates one an existing consumer already reads.
@@ -73,7 +73,7 @@ The implementation-tail project recap requires adaptive portfolio planning, five
 
 ## Dependencies
 
-- Explainer Kit core ≥ 2.1.0 (installed at user scope) for the fact-base schema, cohesion checker, HTML checks, PNG inspection, and browser probe; the tracked-run finalizer (`finalize-tracked-run.mjs`) as a read-only producer of `built-durable`.
+- The archive command's export under `.oat/repo/reference/` (the durable copy of a recap; `finalize-tracked-run.mjs` and `built-durable` are retired).
 - `BL-260907-replace-the-default-project` (source item); `BL-260902-make-autonomous-project-recap` (shipped; superseded at the same seams) and `BL-260904-add-recap-seam-config-keys` (`wont_do`) need no further reconciliation.
 - The wave-7 close's archived wrapper records and exported summaries under `.oat/repo/reference/project-summaries/` for FR9.
 
