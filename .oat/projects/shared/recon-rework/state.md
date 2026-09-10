@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 31619d967b0c0d7b42323ee77ff4ee86d6cef7a3
+oat_current_task: p04-t06
+oat_last_commit: 0d98b5d52ccaf33bc043392617eb248f4bf95903
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -34,13 +34,13 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-10T08:30:15.000Z'
+oat_project_state_updated: '2026-09-10T08:48:11.000Z'
 oat_generated: false
 ---
 
 # Project State: Recon rework
 
-**Status:** Final-review fixes completed; narrowed re-review pending.
+**Status:** One final-review wording cleanup queued after product fixes passed.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-10
 
@@ -49,17 +49,18 @@ oat_generated: false
 All four phases passed their independent reviews. The automatic final lifecycle
 review found one Important production-topology gap, one Medium structured malformed
 wave gap, and one Minor lifecycle-summary drift. Tasks `p04-t03` through `p04-t05`
-fixed all three. `oat_phase_status` remains `in_progress` until narrowed final
-re-review, the implementation exit gate, and final HiLL approval complete.
+fixed those findings. The narrowed re-review confirmed the product fixes and queued
+one remaining wording cleanup as `p04-t06`; `oat_phase_status` remains
+`in_progress`.
 
 ## Artifacts
 
 - Discovery: `discovery.md` — captured from the conversation, CLI-completed.
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight design aligned with received review findings.
-- Plan: `plan.md` — complete and ready; 4 sequential phases, 12 tasks.
-- Implementation: `implementation.md` — 12/12 tasks implemented and all four phase
-  reviews passed; narrowed final re-review and lifecycle gates are pending.
+- Plan: `plan.md` — complete and ready; 4 sequential phases, 13 tasks.
+- Implementation: `implementation.md` — 12/13 tasks implemented and all four phase
+  reviews passed; one cleanup and lifecycle gates are pending.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
@@ -74,11 +75,12 @@ No existing project was absorbed or retired.
 
 ## Blockers
 
-No active blocker. All received final-review findings have completed fix tasks.
+No active blocker. The remaining final-review finding is the runnable task
+`p04-t06`.
 
 ## Next Milestone
 
-Obtain a narrowed passing final review over `p04-t03` through `p04-t05` before the
+Execute `p04-t06`, then obtain a narrowed passing final review before the
 implementation exit gate and configured final HiLL approval boundary. The project
 dispatch ceiling remains managed `high`.
 

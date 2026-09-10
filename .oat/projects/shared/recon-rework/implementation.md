@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: null
+oat_current_task_id: p04-t06
 oat_generated: false
 oat_template: false
 ---
@@ -20,16 +20,15 @@ and final HiLL approval remain pending; no lifecycle completion claim is made he
 
 ## Progress Overview
 
-| Phase                                      | Status    | Tasks | Completed |
-| ------------------------------------------ | --------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
-| Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
-| Phase 4: Distribution and verification     | completed | 5     | 5/5       |
+| Phase                                      | Status      | Tasks | Completed |
+| ------------------------------------------ | ----------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
+| Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
+| Phase 4: Distribution and verification     | in progress | 6     | 5/6       |
 
-**Total:** 12/12 tasks implemented. All four phase reviews passed and all received
-final-review fixes are complete; narrowed re-review and later lifecycle boundaries
-remain pending.
+**Total:** 12/13 tasks implemented. All four phase reviews passed; one final-review
+wording cleanup and the later lifecycle boundaries remain pending.
 
 ## Task Status
 
@@ -47,6 +46,7 @@ remain pending.
 | p04-t03 | Completed: validate production topology         | `4f6884a99844cf5e86168ad422db7f2f49a23c08` |
 | p04-t04 | Completed: structure malformed-wave errors      | `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3` |
 | p04-t05 | Completed: align lifecycle summaries            | this commit                                |
+| p04-t06 | Pending: correct Phase 4 completion wording     | -                                          |
 
 ## Phase 1: Decision and versioned contract
 
@@ -268,6 +268,29 @@ suite passed 258/258
 carry-forward ledger contained no unresolved Medium or Minor findings.
 
 **Next:** Run a narrowed final re-review over the three completed fix-task commits.
+
+### Review Received: final re-review 1
+
+**Date:** 2026-09-10
+**Review artifact:** `reviews/archived/final-review-2026-09-10T083842Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 1
+
+**New task added:** `p04-t06`
+
+**Disposition map:**
+
+- m1 -> converted to `p04-t06`: the Phase 4 subsection must say its final-review
+  fixes are complete while the next narrowed review remains pending.
+
+**Deferred findings:** none.
+
+**Next:** Execute `p04-t06`, then run the final permitted narrowed review cycle.
 
 ## Orchestration Runs
 
