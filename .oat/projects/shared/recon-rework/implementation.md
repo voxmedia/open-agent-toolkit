@@ -343,6 +343,47 @@ approval.
 **Status:** structured receipt persisted; review receive is required before the
 gate disposition can become allowed.
 
+### Review Received: final configured exit gate
+
+**Date:** 2026-09-10
+**Gate:** run `4b362f5c-6edd-463b-b63f-4b4f46596830`, target
+`cursor-fable-5-1-high`, different-family diversity achieved
+**Review artifact:** `reviews/archived/final-review-2026-09-10T091637Z.md`
+**Envelope:** `ok`, threshold Important, blocking false, receive eligible
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 3
+- Minor: 1
+
+**Judgment-sweep dispositions:**
+
+- M1, approval-drift diagnostic cascade -> deferred post-release. The packet
+  remains fail-closed and unpublishable; only redundant lane/condition diagnostics
+  are noisy. Revisit with the next validator diagnostic-contract change, adding a
+  single-axis drift control that excludes `UNAPPROVED_LANE` and
+  `UNKNOWN_CONDITION_OUTCOME`.
+- M2, duplicated v2 condition validators -> deferred post-release. The duplicate
+  errors are a maintainability and diagnostic-quality issue, while accepted and
+  rejected behavior remains correct. Consolidate semantic condition validation and
+  normalize codes in the next condition-schema refactor, with one-error-per-defect
+  controls.
+- M3, undocumented activated-lane gap message syntax -> deferred post-release. The
+  runtime remains safe, but controller authors must currently inspect source for the
+  exact backticked identities. Address with the next packet-contract revision,
+  preferably by moving identity to structured fields and pinning the public rule.
+- m1, foreign-run inactive-conditional diagnostic ownership -> deferred with M1.
+  Foreign-run artifacts are already rejected by run-identity validation; add the
+  same-run filter when the validator diagnostic cleanup is performed.
+
+**Product changes after reviewed head:** none. Deferral preserves the gate-reviewed
+basis and records every sub-threshold finding durably.
+
+**Disposition:** passing gate sweep received; awaiting durable receive
+reconciliation in `oat_implement_exit_gate`.
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
