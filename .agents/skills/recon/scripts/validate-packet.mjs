@@ -698,6 +698,16 @@ function gapNamesMode(gap, mode) {
   );
 }
 
+function gapNamesConditionalLane(gap, waveId, laneId) {
+  return (
+    (gap.code === 'PASS_FAILED' || gap.code === 'PASS_OMITTED') &&
+    gap.material === true &&
+    typeof gap.message === 'string' &&
+    gap.message.includes(`wave \`${waveId}\``) &&
+    gap.message.includes(`lane \`${laneId}\``)
+  );
+}
+
 function artifactIsComplete(artifact) {
   return (
     (!('status' in artifact) || artifact.status === 'complete') &&
@@ -910,6 +920,7 @@ function validateApprovedLanes(
     }
   }
   const written = new Set();
+  const consumedConditionalGaps = new Set();
   for (const [id, { reference, value }] of artifactsById) {
     if (value.runId !== manifest.run.id) continue;
     const laneId = artifactLaneId(value);
@@ -953,14 +964,23 @@ function validateApprovedLanes(
     ) {
       continue;
     }
-    const hasOutcomeEvidence = (manifest.gaps ?? []).some((gap) =>
-      gapNamesMode(gap, wave.mode),
-    );
-    if (!hasOutcomeEvidence) {
+    const outcomeGap = wave.conditional
+      ? (manifest.gaps ?? []).find(
+          (gap) =>
+            !consumedConditionalGaps.has(gap.id) &&
+            gapNamesConditionalLane(gap, wave.waveId, laneId),
+        )
+      : (manifest.gaps ?? []).find((gap) => gapNamesMode(gap, wave.mode));
+    if (wave.conditional && outcomeGap) {
+      consumedConditionalGaps.add(outcomeGap.id);
+    }
+    if (!outcomeGap) {
       errors.push(
         issue(
           'MISSING_LANE_OUTCOME',
-          `Approved lane ${laneId} has neither a result nor a material ${wave.mode} outcome gap`,
+          wave.conditional
+            ? `Activated conditional wave ${wave.waveId} lane ${laneId} has neither a result nor a distinct material outcome gap naming both exact identities`
+            : `Approved lane ${laneId} has neither a result nor a material ${wave.mode} outcome gap`,
           `lane:${laneId}`,
         ),
       );

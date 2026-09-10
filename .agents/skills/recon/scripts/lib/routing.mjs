@@ -1,6 +1,9 @@
 import { hashCanonicalJson } from './canonical-json.mjs';
 import {
   approvalFingerprintInput,
+  authorityLevels,
+  conditionPredicates,
+  profiles,
   taskClasses,
   waveModes,
 } from './contracts.mjs';
@@ -16,6 +19,12 @@ const exactTargetFields = [
 ];
 
 const exactTargetFieldSet = new Set(exactTargetFields);
+
+const profileRoutingCaps = Object.freeze({
+  quick: Object.freeze({ lanes: 4, concurrency: 4, conditions: 0 }),
+  standard: Object.freeze({ lanes: 10, concurrency: 6, conditions: 1 }),
+  thorough: Object.freeze({ lanes: 20, concurrency: 8, conditions: 2 }),
+});
 
 const economicalDefaults = Object.freeze({
   map: Object.freeze({
@@ -137,6 +146,21 @@ function assertPositiveInteger(value, label, minimum = 1) {
   }
 }
 
+function assertNonEmptyString(value, code, label) {
+  if (typeof value !== 'string' || value.length === 0) {
+    routingError(code, `${label} must be a non-empty string`);
+  }
+}
+
+function assertClosedObject(value, allowedFields, code, label) {
+  assertObject(value, code, label);
+  for (const key of Object.keys(value)) {
+    if (!allowedFields.has(key)) {
+      routingError(code, `${label} contains unsupported field ${key}`);
+    }
+  }
+}
+
 function assertProposalExecution(manifest) {
   assertObject(manifest, 'INVALID_ROUTING_PROPOSAL', 'manifest');
   if (![1, 2].includes(manifest.schemaVersion)) {
@@ -146,10 +170,40 @@ function assertProposalExecution(manifest) {
     );
   }
   const execution = manifest.execution;
-  assertObject(execution, 'INVALID_ROUTING_PROPOSAL', 'execution');
+  assertClosedObject(
+    execution,
+    manifest.schemaVersion === 1
+      ? new Set([
+          ...exactTargetFields,
+          'authority',
+          'maxConcurrency',
+          'deadlineSeconds',
+          'retryLimit',
+          'waves',
+          'approval',
+        ])
+      : new Set([
+          'target',
+          'authority',
+          'maxConcurrency',
+          'deadlineSeconds',
+          'retryLimit',
+          'waves',
+          'conditions',
+          'approval',
+        ]),
+    'INVALID_ROUTING_PROPOSAL',
+    'execution',
+  );
   const target =
     manifest.schemaVersion === 1 ? v1Target(execution) : execution.target;
   assertExactTarget(target, 'execution target');
+  if (!authorityLevels.includes(execution.authority)) {
+    routingError(
+      'INVALID_ROUTING_AUTHORITY',
+      'execution.authority must be provider-enforced or contract-enforced',
+    );
+  }
   assertPositiveInteger(execution.maxConcurrency, 'maxConcurrency');
   assertPositiveInteger(execution.deadlineSeconds, 'deadlineSeconds');
   assertPositiveInteger(execution.retryLimit, 'retryLimit', 0);
@@ -161,8 +215,25 @@ function assertProposalExecution(manifest) {
   }
   const waveIds = new Set();
   const laneIds = new Set();
+  const writeRoots = new Set();
   for (const [index, wave] of execution.waves.entries()) {
-    assertObject(wave, 'INVALID_ROUTING_WAVE', `waves[${index}]`);
+    assertClosedObject(
+      wave,
+      manifest.schemaVersion === 1
+        ? new Set(['waveId', 'mode', 'taskClass', 'lanes', 'conditional'])
+        : new Set([
+            'waveId',
+            'mode',
+            'taskClass',
+            'classFloor',
+            'selectionReason',
+            'target',
+            'lanes',
+            'conditional',
+          ]),
+      'INVALID_ROUTING_WAVE',
+      `waves[${index}]`,
+    );
     if (typeof wave.waveId !== 'string' || wave.waveId.length === 0) {
       routingError(
         'INVALID_ROUTING_WAVE',
@@ -217,25 +288,241 @@ function assertProposalExecution(manifest) {
         `Wave ${wave.waveId} must contain at least one lane`,
       );
     }
+    if (typeof wave.conditional !== 'boolean') {
+      routingError(
+        'INVALID_ROUTING_WAVE',
+        `Wave ${wave.waveId}.conditional must be a boolean`,
+      );
+    }
     for (const lane of wave.lanes) {
-      if (
-        !lane ||
-        typeof lane !== 'object' ||
-        typeof lane.laneId !== 'string' ||
-        lane.laneId.length === 0
-      ) {
-        routingError(
-          'INVALID_ROUTING_LANE',
-          `Wave ${wave.waveId} contains an invalid lane`,
-        );
-      }
+      assertClosedObject(
+        lane,
+        new Set(['laneId', 'scope', 'writeRoot']),
+        'INVALID_ROUTING_LANE',
+        `Wave ${wave.waveId} lane`,
+      );
+      assertNonEmptyString(
+        lane.laneId,
+        'INVALID_ROUTING_LANE',
+        `Wave ${wave.waveId} laneId`,
+      );
       if (laneIds.has(lane.laneId)) {
         routingError('DUPLICATE_ROUTING_ID', `Duplicate lane ${lane.laneId}`);
       }
       laneIds.add(lane.laneId);
+      assertNonEmptyString(
+        lane.scope,
+        'INVALID_ROUTING_LANE',
+        `Lane ${lane.laneId}.scope`,
+      );
+      assertNonEmptyString(
+        lane.writeRoot,
+        'INVALID_ROUTING_LANE',
+        `Lane ${lane.laneId}.writeRoot`,
+      );
+      if (
+        lane.writeRoot.startsWith('/') ||
+        lane.writeRoot.split('/').some((segment) => segment === '..')
+      ) {
+        routingError(
+          'INVALID_WRITE_ROOT',
+          `Lane ${lane.laneId}.writeRoot must be packet-relative`,
+        );
+      }
+      if (manifest.schemaVersion === 2 && writeRoots.has(lane.writeRoot)) {
+        routingError(
+          'DUPLICATE_WAVE_OUTPUT',
+          `Wave output ${lane.writeRoot} is assigned more than once`,
+        );
+      }
+      writeRoots.add(lane.writeRoot);
     }
   }
+
+  if (manifest.schemaVersion === 2) {
+    assertV2ProposalTopology(manifest, execution);
+  }
   return { execution, target };
+}
+
+function assertV2ProposalTopology(manifest, execution) {
+  const requestedProfile = manifest.run?.requestedProfile;
+  if (!profiles.includes(requestedProfile)) {
+    routingError(
+      'INVALID_ROUTING_PROFILE',
+      'A v2 routing proposal requires a supported requested profile',
+    );
+  }
+  if (!Array.isArray(execution.conditions)) {
+    routingError(
+      'MISSING_ROUTING_CONDITIONS',
+      'execution.conditions must be an array',
+    );
+  }
+
+  const caps = profileRoutingCaps[requestedProfile];
+  const laneCount = execution.waves.reduce(
+    (count, wave) => count + wave.lanes.length,
+    0,
+  );
+  if (laneCount > caps.lanes) {
+    routingError(
+      'PROFILE_LANE_CAP_EXCEEDED',
+      `${requestedProfile} routing permits at most ${caps.lanes} total worker lanes`,
+    );
+  }
+  if (execution.maxConcurrency > caps.concurrency) {
+    routingError(
+      'PROFILE_CONCURRENCY_CAP_EXCEEDED',
+      `${requestedProfile} routing permits concurrency at most ${caps.concurrency}`,
+    );
+  }
+  if (execution.conditions.length > caps.conditions) {
+    routingError(
+      'PROFILE_CONDITION_CAP_EXCEEDED',
+      `${requestedProfile} routing permits at most ${caps.conditions} conditional waves`,
+    );
+  }
+
+  const waveIndexes = new Map(
+    execution.waves.map((wave, index) => [wave.waveId, index]),
+  );
+  const reconciliationIndexes = execution.waves
+    .map((wave, index) => (wave.mode === 'reconciliation' ? index : -1))
+    .filter((index) => index !== -1);
+  if (
+    reconciliationIndexes.length > 1 ||
+    (['standard', 'thorough'].includes(requestedProfile) &&
+      reconciliationIndexes.length !== 1) ||
+    reconciliationIndexes.some(
+      (index) => execution.waves[index].conditional === true,
+    )
+  ) {
+    routingError(
+      'INVALID_TERMINAL_TOPOLOGY',
+      'Standard and thorough routing require exactly one non-conditional terminal reconciliation wave',
+    );
+  }
+  const terminalIndex = reconciliationIndexes[0] ?? -1;
+  const conditionIds = new Set();
+  const destinations = new Set();
+  const conditionFields = new Set([
+    'conditionId',
+    'destinationWaveId',
+    'afterWaveIds',
+    'predicate',
+    'maxActivations',
+  ]);
+  for (const [index, condition] of execution.conditions.entries()) {
+    const label = `conditions[${index}]`;
+    assertClosedObject(
+      condition,
+      conditionFields,
+      'INVALID_ROUTING_CONDITION',
+      label,
+    );
+    assertNonEmptyString(
+      condition.conditionId,
+      'INVALID_ROUTING_CONDITION',
+      `${label}.conditionId`,
+    );
+    assertNonEmptyString(
+      condition.destinationWaveId,
+      'INVALID_ROUTING_CONDITION',
+      `${label}.destinationWaveId`,
+    );
+    if (
+      !Array.isArray(condition.afterWaveIds) ||
+      condition.afterWaveIds.length === 0
+    ) {
+      routingError(
+        'INVALID_CONDITION_DEPENDENCY',
+        `${label}.afterWaveIds must contain at least one predecessor wave`,
+      );
+    }
+    if (!conditionPredicates.includes(condition.predicate)) {
+      routingError(
+        'INVALID_CONDITION_PREDICATE',
+        `${label}.predicate is not supported`,
+      );
+    }
+    if (condition.maxActivations !== 1) {
+      routingError(
+        'INVALID_CONDITION_LIMIT',
+        `${label}.maxActivations must equal 1`,
+      );
+    }
+    if (conditionIds.has(condition.conditionId)) {
+      routingError(
+        'DUPLICATE_ROUTING_ID',
+        `Duplicate condition ${condition.conditionId}`,
+      );
+    }
+    conditionIds.add(condition.conditionId);
+    if (destinations.has(condition.destinationWaveId)) {
+      routingError(
+        'DUPLICATE_CONDITION_DESTINATION',
+        `Conditional wave ${condition.destinationWaveId} has more than one activating condition`,
+      );
+    }
+    destinations.add(condition.destinationWaveId);
+
+    const destinationIndex = waveIndexes.get(condition.destinationWaveId);
+    const destination =
+      destinationIndex === undefined ? null : execution.waves[destinationIndex];
+    if (
+      !destination ||
+      destination.conditional !== true ||
+      destination.mode !== 'contradiction-resolution'
+    ) {
+      routingError(
+        'INVALID_CONDITION_DESTINATION',
+        `${label}.destinationWaveId must name a conditional contradiction-resolution wave`,
+      );
+    }
+    const afterIds = new Set();
+    for (const [afterIndex, afterWaveId] of condition.afterWaveIds.entries()) {
+      assertNonEmptyString(
+        afterWaveId,
+        'INVALID_CONDITION_DEPENDENCY',
+        `${label}.afterWaveIds[${afterIndex}]`,
+      );
+      if (afterIds.has(afterWaveId)) {
+        routingError(
+          'DUPLICATE_CONDITION_DEPENDENCY',
+          `${label} repeats predecessor ${afterWaveId}`,
+        );
+      }
+      afterIds.add(afterWaveId);
+      const predecessorIndex = waveIndexes.get(afterWaveId);
+      if (predecessorIndex === undefined) {
+        routingError(
+          'UNKNOWN_CONDITION_WAVE',
+          `${label} names unknown predecessor ${afterWaveId}`,
+        );
+      }
+      if (predecessorIndex >= destinationIndex) {
+        routingError(
+          'NON_FORWARD_CONDITION',
+          `${label} predecessor ${afterWaveId} must appear before its destination`,
+        );
+      }
+    }
+    if (terminalIndex !== -1 && destinationIndex >= terminalIndex) {
+      routingError(
+        'INVALID_TERMINAL_TOPOLOGY',
+        `${label} destination must appear before terminal reconciliation`,
+      );
+    }
+  }
+  for (const wave of execution.waves) {
+    if (wave.conditional === true && !destinations.has(wave.waveId)) {
+      routingError(
+        'MISSING_WAVE_CONDITION',
+        `Conditional wave ${wave.waveId} requires exactly one condition`,
+      );
+    }
+  }
 }
 
 function validateApproval(execution) {
@@ -332,6 +619,7 @@ export function normalizeManifestRouting(manifest) {
 
 export function createRoutingPreview(manifest) {
   const { execution, target } = assertProposalExecution(manifest);
+  if (execution.approval) validateApproval(execution);
   const waves = execution.waves.map((wave) => {
     const defaultPolicy = economicalDefaultForMode(wave.mode);
     const effectiveTarget =
@@ -349,19 +637,35 @@ export function createRoutingPreview(manifest) {
       target: clone(effectiveTarget),
       selectionReason:
         manifest.schemaVersion === 1 ? null : wave.selectionReason,
+      lanes: clone(wave.lanes),
       conditional: wave.conditional === true,
     };
   });
   const approvalInput = approvalFingerprintInput(execution);
   const approvalFingerprint = hashCanonicalJson(approvalInput);
+  const requestedProfile = manifest.run?.requestedProfile ?? null;
+  const profileCaps =
+    manifest.schemaVersion === 2
+      ? {
+          maxLanes: profileRoutingCaps[requestedProfile].lanes,
+          maxConcurrency: profileRoutingCaps[requestedProfile].concurrency,
+          maxConditions: profileRoutingCaps[requestedProfile].conditions,
+        }
+      : null;
   return deepFreeze({
     schemaVersion: manifest.schemaVersion,
+    requestedProfile,
+    profileCaps,
     approvalState: execution.approval ? 'recorded' : 'draft',
     approvalFingerprint,
+    authority: execution.authority,
     waves,
+    conditions: manifest.schemaVersion === 1 ? [] : clone(execution.conditions),
     limits: {
       waveCount: waves.length,
       laneCount: waves.reduce((count, wave) => count + wave.laneCount, 0),
+      conditionCount:
+        manifest.schemaVersion === 1 ? 0 : execution.conditions.length,
       maxConcurrency: execution.maxConcurrency,
       deadlineSeconds: execution.deadlineSeconds,
       retryLimit: execution.retryLimit,
@@ -385,6 +689,8 @@ export function renderRoutingPreview(preview, format = 'markdown') {
     '',
     `Approval: ${preview.approvalState}`,
     `Approval fingerprint: \`${preview.approvalFingerprint}\``,
+    `Authority: ${preview.authority}`,
+    `Requested profile: ${preview.requestedProfile ?? 'legacy v1'}`,
     '',
     '| Wave | Mode | Assignment | Class / floor | Lanes | Exact target | Reason | Conditional |',
     '| --- | --- | --- | --- | ---: | --- | --- | --- |',
@@ -399,16 +705,52 @@ export function renderRoutingPreview(preview, format = 'markdown') {
   }
   lines.push(
     '',
+    '## Lane topology',
+    '',
+    '| Wave | Lane | Scope | Write root |',
+    '| --- | --- | --- | --- |',
+  );
+  for (const wave of preview.waves) {
+    for (const lane of wave.lanes) {
+      lines.push(
+        `| ${wave.waveId} | ${lane.laneId} | ${lane.scope} | ${lane.writeRoot} |`,
+      );
+    }
+  }
+  lines.push('', '## Conditional topology', '');
+  if (preview.conditions.length === 0) {
+    lines.push('None.');
+  } else {
+    lines.push(
+      '| Condition | Destination | After waves | Predicate | Max activations |',
+      '| --- | --- | --- | --- | ---: |',
+    );
+    for (const condition of preview.conditions) {
+      lines.push(
+        `| ${condition.conditionId} | ${condition.destinationWaveId} | ${condition.afterWaveIds.join(', ')} | ${condition.predicate} | ${condition.maxActivations} |`,
+      );
+    }
+  }
+  lines.push(
+    '',
     '## Worst-case limits',
     '',
     `- Waves: ${preview.limits.waveCount}`,
     `- Lanes: ${preview.limits.laneCount}`,
+    `- Conditions: ${preview.limits.conditionCount}`,
     `- Concurrency: ${preview.limits.maxConcurrency}`,
     `- Deadline seconds: ${preview.limits.deadlineSeconds}`,
     `- Retry limit: ${preview.limits.retryLimit}`,
     `- Lane attempts: ${preview.limits.worstCaseLaneAttempts}`,
-    '',
   );
+  if (preview.profileCaps) {
+    lines.push(
+      `- Profile lane cap: ${preview.profileCaps.maxLanes}`,
+      `- Profile concurrency cap: ${preview.profileCaps.maxConcurrency}`,
+      `- Profile condition cap: ${preview.profileCaps.maxConditions}`,
+    );
+  }
+  lines.push('');
   return `${lines.join('\n')}\n`;
 }
 

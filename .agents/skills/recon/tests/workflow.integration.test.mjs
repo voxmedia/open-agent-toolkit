@@ -264,7 +264,22 @@ test('unsupported target controls stop before approval acceptance or launch', as
   assert.equal(result.status, 'awaiting-approval');
   assert.equal(result.launched, false);
   assert.equal(result.reason, 'UNSUPPORTED_TARGET_CONTROL');
+  const manifest = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+  );
+  assert.equal(Object.hasOwn(manifest.execution, 'approval'), false);
+  const log = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'raw', 'fixture-run-log.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(log.preview, null);
+  assert.equal(log.output.launched, false);
   await assert.rejects(readFile(join(injectedRoots.packetRoot, 'packet.md')));
+  await assert.rejects(
+    readFile(join(injectedRoots.packetRoot, 'raw', 'dispatch')),
+  );
 });
 
 test('user refusal after one envelope preview produces zero launches', async () => {
@@ -489,6 +504,18 @@ test('an unsupported launch surface stops before any worker launch', async () =>
     await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
   );
   assert.equal(manifest.run.status, 'awaiting-approval');
+  assert.equal(Object.hasOwn(manifest.execution, 'approval'), false);
+  const log = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'raw', 'fixture-run-log.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(log.preview.approvalState, 'draft');
+  assert.equal(log.output.launched, false);
+  await assert.rejects(
+    readFile(join(injectedRoots.packetRoot, 'raw', 'dispatch')),
+  );
 });
 
 test('generic worker-role fallback is fixed before approval', async () => {

@@ -250,19 +250,8 @@ export async function runFakeRecon(options = {}) {
     return output;
   }
 
-  const execution = approveExecution(draftExecution);
-  fixture.manifest.execution = execution;
-  if (options.approvalMutation) {
-    if (manifestVersion === 2 && options.approvalMutation.target) {
-      Object.assign(execution.target, options.approvalMutation.target);
-    } else {
-      Object.assign(execution, options.approvalMutation);
-    }
-  }
-
-  // Launch-capability preflight. Before any worker launches, the controller
-  // confirms the live launch surface can satisfy the approved envelope. When
-  // it cannot, the run stays at awaiting-approval with nothing launched.
+  // Launch-capability preflight happens against the draft envelope before
+  // approveExecution can record accepted approval evidence.
   if (options.launcherCapabilities) {
     const requiredAxes = new Set([
       'provider',
@@ -286,7 +275,7 @@ export async function runFakeRecon(options = {}) {
       await writeFailure(
         roots.packetRoot,
         'LAUNCHER_CAPABILITY_UNAVAILABLE',
-        `The launch surface cannot satisfy the approved ${missing.join(', ')}; no worker was launched.`,
+        `The launch surface cannot satisfy the proposed ${missing.join(', ')}; no approval was accepted and no worker was launched.`,
       );
       const output = stopped(
         roots.packetRoot,
@@ -303,6 +292,16 @@ export async function runFakeRecon(options = {}) {
     }
   }
 
+  const execution = approveExecution(draftExecution);
+  fixture.manifest.execution = execution;
+  if (options.approvalMutation) {
+    if (manifestVersion === 2 && options.approvalMutation.target) {
+      Object.assign(execution.target, options.approvalMutation.target);
+    } else {
+      Object.assign(execution, options.approvalMutation);
+    }
+  }
+
   // The fixture uses the same production exact-target check the controller
   // invokes immediately before each launch. These synthetic calls prove helper
   // and control-flow behavior, not native runtime identity.
@@ -314,7 +313,11 @@ export async function runFakeRecon(options = {}) {
     };
     try {
       checkApprovedWaveTarget(
-        { schemaVersion: manifestVersion, execution },
+        {
+          schemaVersion: manifestVersion,
+          run: fixture.manifest.run,
+          execution,
+        },
         wave.waveId,
         candidate,
       );

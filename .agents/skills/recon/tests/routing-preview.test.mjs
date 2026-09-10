@@ -24,10 +24,10 @@ const modeList = [
   'semantic-verification',
   'adversarial',
   'coverage',
-  'reconciliation',
   'redundant-gather',
   'redundant-verification',
   'contradiction-resolution',
+  'reconciliation',
 ];
 const tempRoots = [];
 
@@ -41,13 +41,50 @@ afterEach(async () => {
 
 const laneIdForMode = (mode) => `lane-${mode}`;
 
-function draftManifest() {
+function draftManifest({ profile = 'thorough', modes = modeList } = {}) {
   const execution = createV2ExecutionApproval({
-    modes: modeList,
+    modes,
     laneIdForMode,
   });
   delete execution.approval;
-  return { schemaVersion: 2, execution };
+  return {
+    schemaVersion: 2,
+    run: { requestedProfile: profile },
+    execution,
+  };
+}
+
+function conditionalDraft() {
+  const manifest = draftManifest({
+    profile: 'standard',
+    modes: ['map', 'reconciliation'],
+  });
+  const destination = {
+    waveId: 'wave-conditional-resolution',
+    mode: 'contradiction-resolution',
+    taskClass: 'mechanical-recon',
+    classFloor: 'mechanical-recon',
+    selectionReason: 'Resolve a bounded contradiction only when activated.',
+    lanes: [
+      {
+        laneId: 'lane-conditional-resolution',
+        scope: 'packet/conditional-resolution',
+        writeRoot: 'reviews/conditional-resolution.json',
+      },
+    ],
+    conditional: true,
+  };
+  manifest.execution.waves.splice(1, 0, destination);
+  manifest.execution.conditions = [
+    {
+      conditionId: 'condition-resolution',
+      destinationWaveId: destination.waveId,
+      afterWaveIds: ['wave-map'],
+      predicate: 'insufficient-evidence',
+      maxActivations: 1,
+    },
+  ];
+  return manifest;
 }
 
 test('preview covers all ten economical defaults and preserves independent targets', () => {
@@ -88,6 +125,13 @@ test('preview covers all ten economical defaults and preserves independent targe
       .every((wave) => wave.target.model === fixtureTarget.model),
   );
   assert.equal(preview.approvalState, 'draft');
+  assert.equal(preview.authority, 'contract-enforced');
+  assert.equal(preview.requestedProfile, 'thorough');
+  assert.deepEqual(preview.profileCaps, {
+    maxLanes: 20,
+    maxConcurrency: 8,
+    maxConditions: 2,
+  });
   assert.equal(preview.limits.waveCount, 10);
   assert.equal(preview.limits.laneCount, 10);
   assert.match(renderRoutingPreview(preview), /Worst-case limits/);
@@ -95,6 +139,87 @@ test('preview covers all ten economical defaults and preserves independent targe
     JSON.parse(renderRoutingPreview(preview, 'json')).waves.length,
     10,
   );
+});
+
+test('preview validates and displays the complete approval-bound topology', () => {
+  const manifest = conditionalDraft();
+  const preview = createRoutingPreview(manifest);
+  assert.deepEqual(preview.conditions, manifest.execution.conditions);
+  assert.deepEqual(
+    preview.waves.find((wave) => wave.waveId === 'wave-conditional-resolution')
+      .lanes,
+    manifest.execution.waves.find(
+      (wave) => wave.waveId === 'wave-conditional-resolution',
+    ).lanes,
+  );
+  const markdown = renderRoutingPreview(preview);
+  for (const expected of [
+    'Authority: contract-enforced',
+    'Requested profile: standard',
+    'lane-conditional-resolution',
+    'packet/conditional-resolution',
+    'reviews/conditional-resolution.json',
+    'condition-resolution',
+    'wave-conditional-resolution',
+    'wave-map',
+    'insufficient-evidence',
+    '| 1 |',
+    '- Profile lane cap: 10',
+    '- Profile concurrency cap: 6',
+    '- Profile condition cap: 1',
+  ]) {
+    assert.ok(
+      markdown.includes(expected),
+      `missing preview field: ${expected}`,
+    );
+  }
+  const json = JSON.parse(renderRoutingPreview(preview, 'json'));
+  assert.equal(json.conditions[0].maxActivations, 1);
+  assert.equal(json.waves[1].lanes[0].scope, 'packet/conditional-resolution');
+});
+
+test('preview rejects missing, malformed, mismatched, and over-cap v2 routing', () => {
+  const missing = conditionalDraft();
+  delete missing.execution.conditions;
+  assert.throws(() => createRoutingPreview(missing), {
+    code: 'MISSING_ROUTING_CONDITIONS',
+  });
+
+  const malformed = conditionalDraft();
+  malformed.execution.conditions = [null];
+  assert.throws(() => createRoutingPreview(malformed), {
+    code: 'INVALID_ROUTING_CONDITION',
+  });
+
+  const mismatched = conditionalDraft();
+  mismatched.execution.conditions[0].destinationWaveId = 'wave-map';
+  assert.throws(() => createRoutingPreview(mismatched), {
+    code: 'INVALID_CONDITION_DESTINATION',
+  });
+
+  const overCap = conditionalDraft();
+  overCap.execution.maxConcurrency = 7;
+  assert.throws(() => createRoutingPreview(overCap), {
+    code: 'PROFILE_CONCURRENCY_CAP_EXCEEDED',
+  });
+
+  const laneCap = draftManifest({ profile: 'quick', modes: ['map'] });
+  for (let index = 0; index < 4; index += 1) {
+    laneCap.execution.waves[0].lanes.push({
+      laneId: `lane-map-extra-${index}`,
+      scope: `packet/map-extra-${index}`,
+      writeRoot: `raw/dossiers/map-extra-${index}.json`,
+    });
+  }
+  assert.throws(() => createRoutingPreview(laneCap), {
+    code: 'PROFILE_LANE_CAP_EXCEEDED',
+  });
+
+  const conditionCap = conditionalDraft();
+  conditionCap.run.requestedProfile = 'quick';
+  assert.throws(() => createRoutingPreview(conditionCap), {
+    code: 'PROFILE_CONDITION_CAP_EXCEEDED',
+  });
 });
 
 test('preview requires rationale and rejects unsupported target controls', () => {
@@ -122,7 +247,11 @@ test('exact target check preserves opaque identity, nullable effort, and approva
       effort: null,
     },
   });
-  const manifest = { schemaVersion: 2, execution };
+  const manifest = {
+    schemaVersion: 2,
+    run: { requestedProfile: 'quick' },
+    execution,
+  };
   assert.equal(
     checkApprovedWaveTarget(manifest, 'wave-gather', execution.target).valid,
     true,
@@ -179,6 +308,48 @@ test('thin CLI previews and checks targets with categorical nonzero failures', a
   );
   assert.equal(preview.status, 0, preview.stderr);
   assert.equal(JSON.parse(preview.stdout).approvalState, 'draft');
+
+  const validConditional = conditionalDraft();
+  await writeFile(manifestPath, JSON.stringify(validConditional), 'utf8');
+  const conditionalPreview = spawnSync(
+    process.execPath,
+    [cli, '--manifest', manifestPath, '--format', 'json'],
+    { encoding: 'utf8' },
+  );
+  assert.equal(conditionalPreview.status, 0, conditionalPreview.stderr);
+  assert.equal(JSON.parse(conditionalPreview.stdout).conditions.length, 1);
+
+  for (const [mutate, expectedCode] of [
+    [
+      (candidate) => {
+        delete candidate.execution.conditions;
+      },
+      'MISSING_ROUTING_CONDITIONS',
+    ],
+    [
+      (candidate) => {
+        candidate.execution.conditions = [null];
+      },
+      'INVALID_ROUTING_CONDITION',
+    ],
+    [
+      (candidate) => {
+        candidate.execution.conditions[0].destinationWaveId = 'wave-map';
+      },
+      'INVALID_CONDITION_DESTINATION',
+    ],
+  ]) {
+    const candidate = conditionalDraft();
+    mutate(candidate);
+    await writeFile(manifestPath, JSON.stringify(candidate), 'utf8');
+    const invalidPreview = spawnSync(
+      process.execPath,
+      [cli, '--manifest', manifestPath, '--format', 'json'],
+      { encoding: 'utf8' },
+    );
+    assert.notEqual(invalidPreview.status, 0);
+    assert.match(invalidPreview.stderr, new RegExp(`^${expectedCode}:`));
+  }
 
   draft.execution = approveExecution(draft.execution);
   await writeFile(manifestPath, JSON.stringify(draft), 'utf8');
