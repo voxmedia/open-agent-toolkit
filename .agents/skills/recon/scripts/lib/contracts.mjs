@@ -483,6 +483,7 @@ function validateExecutionV2(value, errors, path) {
 
   const waveIds = new Set();
   const laneIds = new Set();
+  const writeRoots = new Set();
   for (const [waveIndex, wave] of (value.waves ?? []).entries()) {
     const wavePath = `${path}.waves[${waveIndex}]`;
     closedObject(
@@ -614,15 +615,44 @@ function validateExecutionV2(value, errors, path) {
         );
       }
       laneIds.add(lane?.laneId);
+      if (
+        typeof lane?.writeRoot === 'string' &&
+        writeRoots.has(lane.writeRoot)
+      ) {
+        errors.push(
+          issue(
+            'DUPLICATE_WAVE_OUTPUT',
+            `Wave output ${lane.writeRoot} is assigned more than once`,
+            `${lanePath}.writeRoot`,
+          ),
+        );
+      }
+      if (typeof lane?.writeRoot === 'string') writeRoots.add(lane.writeRoot);
     }
   }
 
   const conditionIds = new Set();
+  const conditionalDestinations = new Set();
+  const waveIndexes = new Map(
+    (Array.isArray(value.waves) ? value.waves : [])
+      .filter(isObject)
+      .map((wave, index) => [wave.waveId, index]),
+  );
   for (const [conditionIndex, condition] of (Array.isArray(value.conditions)
     ? value.conditions
     : []
   ).entries()) {
     const conditionPath = `${path}.conditions[${conditionIndex}]`;
+    if (!isObject(condition)) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION',
+          'Routing condition must be an object',
+          conditionPath,
+        ),
+      );
+      continue;
+    }
     closedObject(
       condition,
       new Set([
@@ -638,6 +668,56 @@ function validateExecutionV2(value, errors, path) {
     requiredString(condition, 'conditionId', errors, conditionPath);
     requiredString(condition, 'destinationWaveId', errors, conditionPath);
     requiredArray(condition, 'afterWaveIds', errors, conditionPath);
+    const afterIds = new Set();
+    for (const [afterIndex, afterWaveId] of (Array.isArray(
+      condition.afterWaveIds,
+    )
+      ? condition.afterWaveIds
+      : []
+    ).entries()) {
+      const afterPath = `${conditionPath}.afterWaveIds[${afterIndex}]`;
+      if (typeof afterWaveId !== 'string' || afterWaveId.length === 0) {
+        errors.push(
+          issue(
+            'INVALID_CONDITION_DEPENDENCY',
+            'Condition dependencies must be non-empty wave ID strings',
+            afterPath,
+          ),
+        );
+        continue;
+      }
+      if (afterIds.has(afterWaveId)) {
+        errors.push(
+          issue(
+            'DUPLICATE_CONDITION_DEPENDENCY',
+            `Condition repeats predecessor ${afterWaveId}`,
+            afterPath,
+          ),
+        );
+      }
+      afterIds.add(afterWaveId);
+      if (!waveIndexes.has(afterWaveId)) {
+        errors.push(
+          issue(
+            'UNKNOWN_CONDITION_WAVE',
+            `Unknown predecessor wave ${afterWaveId}`,
+            afterPath,
+          ),
+        );
+      }
+    }
+    if (
+      Array.isArray(condition.afterWaveIds) &&
+      condition.afterWaveIds.length === 0
+    ) {
+      errors.push(
+        issue(
+          'INVALID_CONDITION_DEPENDENCY',
+          'A condition must depend on at least one completed predecessor wave',
+          `${conditionPath}.afterWaveIds`,
+        ),
+      );
+    }
     if (!conditionPredicates.includes(condition?.predicate)) {
       errors.push(
         issue(
@@ -666,6 +746,157 @@ function validateExecutionV2(value, errors, path) {
       );
     }
     conditionIds.add(condition?.conditionId);
+    const destinationIndex = waveIndexes.get(condition.destinationWaveId);
+    const destinationWave =
+      destinationIndex === undefined ? null : value.waves[destinationIndex];
+    if (!destinationWave) {
+      errors.push(
+        issue(
+          'UNKNOWN_CONDITION_WAVE',
+          `Unknown destination wave ${condition.destinationWaveId}`,
+          `${conditionPath}.destinationWaveId`,
+        ),
+      );
+    } else {
+      if (
+        destinationWave.conditional !== true ||
+        destinationWave.mode !== 'contradiction-resolution'
+      ) {
+        errors.push(
+          issue(
+            'INVALID_CONDITION_DESTINATION',
+            'Conditions may activate only a declared conditional contradiction-resolution wave',
+            `${conditionPath}.destinationWaveId`,
+          ),
+        );
+      }
+      for (const afterWaveId of afterIds) {
+        const predecessorIndex = waveIndexes.get(afterWaveId);
+        if (
+          predecessorIndex !== undefined &&
+          predecessorIndex >= destinationIndex
+        ) {
+          errors.push(
+            issue(
+              'NON_FORWARD_CONDITION',
+              `Condition predecessor ${afterWaveId} must appear before ${condition.destinationWaveId}`,
+              `${conditionPath}.afterWaveIds`,
+            ),
+          );
+        }
+      }
+      const reconciliationIndex = value.waves.findIndex(
+        (wave) => wave?.mode === 'reconciliation',
+      );
+      if (
+        reconciliationIndex !== -1 &&
+        destinationIndex >= reconciliationIndex
+      ) {
+        errors.push(
+          issue(
+            'INVALID_TERMINAL_TOPOLOGY',
+            'Conditional evidence waves must complete before the one terminal reconciliation',
+            `${conditionPath}.destinationWaveId`,
+          ),
+        );
+      }
+    }
+    if (conditionalDestinations.has(condition.destinationWaveId)) {
+      errors.push(
+        issue(
+          'DUPLICATE_CONDITION_DESTINATION',
+          `Conditional wave ${condition.destinationWaveId} has more than one activating condition`,
+          `${conditionPath}.destinationWaveId`,
+        ),
+      );
+    }
+    conditionalDestinations.add(condition.destinationWaveId);
+  }
+  for (const [waveIndex, wave] of (Array.isArray(value.waves)
+    ? value.waves
+    : []
+  ).entries()) {
+    if (
+      isObject(wave) &&
+      wave.conditional === true &&
+      !conditionalDestinations.has(wave.waveId)
+    ) {
+      errors.push(
+        issue(
+          'MISSING_WAVE_CONDITION',
+          `Conditional wave ${wave.waveId} requires exactly one condition`,
+          `${path}.waves[${waveIndex}].conditional`,
+        ),
+      );
+    }
+  }
+}
+
+const profileRoutingCaps = Object.freeze({
+  quick: Object.freeze({ lanes: 4, concurrency: 4, conditions: 0 }),
+  standard: Object.freeze({ lanes: 10, concurrency: 6, conditions: 1 }),
+  thorough: Object.freeze({ lanes: 20, concurrency: 8, conditions: 2 }),
+});
+
+function validateProfileRoutingCaps(manifest, errors) {
+  if (manifest.schemaVersion !== MANIFEST_SCHEMA_VERSION) return;
+  const execution = manifest.execution;
+  const cap = profileRoutingCaps[manifest.run?.requestedProfile];
+  if (!isObject(execution) || !cap) return;
+  const waves = Array.isArray(execution.waves) ? execution.waves : [];
+  const laneCount = waves.reduce(
+    (count, wave) =>
+      count + (Array.isArray(wave?.lanes) ? wave.lanes.length : 0),
+    0,
+  );
+  if (laneCount > cap.lanes) {
+    errors.push(
+      issue(
+        'PROFILE_LANE_CAP_EXCEEDED',
+        `${manifest.run.requestedProfile} routing permits at most ${cap.lanes} total worker lanes`,
+        '$.execution.waves',
+      ),
+    );
+  }
+  if (execution.maxConcurrency > cap.concurrency) {
+    errors.push(
+      issue(
+        'PROFILE_CONCURRENCY_CAP_EXCEEDED',
+        `${manifest.run.requestedProfile} routing permits concurrency at most ${cap.concurrency}`,
+        '$.execution.maxConcurrency',
+      ),
+    );
+  }
+  const conditionCount = Array.isArray(execution.conditions)
+    ? execution.conditions.length
+    : 0;
+  if (conditionCount > cap.conditions) {
+    errors.push(
+      issue(
+        'PROFILE_CONDITION_CAP_EXCEEDED',
+        `${manifest.run.requestedProfile} routing permits at most ${cap.conditions} conditional waves`,
+        '$.execution.conditions',
+      ),
+    );
+  }
+  const reconciliationWaves = waves.filter(
+    (wave) => wave?.mode === 'reconciliation',
+  );
+  const requiresReconciliation = ['standard', 'thorough'].includes(
+    manifest.run?.requestedProfile,
+  );
+  if (
+    reconciliationWaves.length > 1 ||
+    (requiresReconciliation && reconciliationWaves.length !== 1) ||
+    reconciliationWaves.some((wave) => wave.conditional === true)
+  ) {
+    errors.push(
+      issue(
+        'INVALID_TERMINAL_TOPOLOGY',
+        'Standard and thorough routing require exactly one non-conditional terminal reconciliation wave',
+        '$.execution.waves',
+      ),
+    );
   }
 }
 
@@ -792,21 +1023,67 @@ function validateManifest(value, errors) {
     '$.execution',
     value.schemaVersion,
   );
+  validateProfileRoutingCaps(value, errors);
   if (isV2) {
     requiredArray(value, 'conditionOutcomes', errors);
-    if (
-      (Array.isArray(value.execution?.conditions) &&
-        value.execution.conditions.length > 0) ||
-      (Array.isArray(value.conditionOutcomes) &&
-        value.conditionOutcomes.length > 0)
-    ) {
-      errors.push(
-        issue(
-          'UNSUPPORTED_CONDITIONAL_ROUTING',
-          'Conditional routing publication is not supported yet',
-          '$.execution.conditions',
-        ),
+    const outcomeIds = new Set();
+    for (const [index, outcome] of (Array.isArray(value.conditionOutcomes)
+      ? value.conditionOutcomes
+      : []
+    ).entries()) {
+      const outcomePath = `$.conditionOutcomes[${index}]`;
+      if (!isObject(outcome)) {
+        errors.push(
+          issue(
+            'INVALID_CONDITION_OUTCOME',
+            'Condition outcome must be an object',
+            outcomePath,
+          ),
+        );
+        continue;
+      }
+      closedObject(
+        outcome,
+        new Set(['conditionId', 'disposition', 'reason', 'evidence']),
+        errors,
+        outcomePath,
       );
+      requiredString(outcome, 'conditionId', errors, outcomePath);
+      requiredString(outcome, 'reason', errors, outcomePath);
+      requiredArray(outcome, 'evidence', errors, outcomePath);
+      if (
+        !['triggered', 'not-triggered', 'unresolved'].includes(
+          outcome.disposition,
+        )
+      ) {
+        errors.push(
+          issue(
+            'INVALID_CONDITION_DISPOSITION',
+            'Condition disposition must be triggered, not-triggered, or unresolved',
+            `${outcomePath}.disposition`,
+          ),
+        );
+      }
+      for (const [evidenceIndex, reference] of (Array.isArray(outcome.evidence)
+        ? outcome.evidence
+        : []
+      ).entries()) {
+        validateExactReference(
+          reference,
+          `${outcomePath}.evidence[${evidenceIndex}]`,
+          errors,
+        );
+      }
+      if (outcomeIds.has(outcome.conditionId)) {
+        errors.push(
+          issue(
+            'DUPLICATE_CONDITION_OUTCOME',
+            `Condition ${outcome.conditionId} has more than one disposition`,
+            `${outcomePath}.conditionId`,
+          ),
+        );
+      }
+      outcomeIds.add(outcome.conditionId);
     }
   }
   if (Array.isArray(value.sources))

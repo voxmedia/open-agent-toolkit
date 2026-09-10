@@ -439,3 +439,36 @@ export function checkApprovedWaveTarget(manifest, waveId, candidateTarget) {
     target: clone(approvedTarget),
   });
 }
+
+export function controllerEscalationDisposition({
+  outcome,
+  foreseeable,
+  approvedTargetAdequate,
+}) {
+  if (outcome !== 'reconciliation-needs-judgment') {
+    routingError(
+      'INVALID_CONTROLLER_ESCALATION',
+      `Unknown controller escalation outcome ${outcome}`,
+    );
+  }
+  if (foreseeable === true) {
+    return deepFreeze({
+      action: 'select-before-approval',
+      preserveCompletedWork: true,
+      launchAllowed: false,
+    });
+  }
+  if (approvedTargetAdequate === true) {
+    return deepFreeze({
+      action: 'use-approved-terminal',
+      preserveCompletedWork: true,
+      launchAllowed: true,
+    });
+  }
+  return deepFreeze({
+    action: 'renew-approval-or-new-run',
+    preserveCompletedWork: true,
+    launchAllowed: false,
+    gap: 'unresolved-out-of-envelope',
+  });
+}

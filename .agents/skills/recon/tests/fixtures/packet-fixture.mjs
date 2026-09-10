@@ -1,4 +1,11 @@
-import { cp, mkdir, mkdtemp, realpath, writeFile } from 'node:fs/promises';
+import {
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
@@ -115,6 +122,88 @@ export function createV2ExecutionApproval({
     })),
     conditions: [],
   });
+}
+
+export async function configureConditionalContradiction(
+  packet,
+  { disposition = 'not-triggered', predicate = 'insufficient-evidence' } = {},
+) {
+  if (packet.manifest.schemaVersion !== 2) {
+    throw new TypeError('Conditional routing fixtures require manifest v2');
+  }
+  const execution = packet.manifest.execution;
+  let destination = execution.waves.find(
+    (wave) => wave.mode === 'contradiction-resolution',
+  );
+  if (!destination) {
+    destination = {
+      waveId: 'wave-contradiction-resolution',
+      mode: 'contradiction-resolution',
+      taskClass: 'mechanical-recon',
+      classFloor: 'mechanical-recon',
+      selectionReason:
+        'Synthetic preservation fixture for bounded contradiction evidence.',
+      lanes: [
+        {
+          laneId: 'lane-contradiction-resolution',
+          scope: 'packet/contradiction-resolution',
+          writeRoot: 'reviews/contradiction-resolution.json',
+        },
+      ],
+      conditional: true,
+    };
+    const terminalIndex = execution.waves.findIndex(
+      (wave) => wave.mode === 'reconciliation',
+    );
+    execution.waves.splice(terminalIndex, 0, destination);
+  } else {
+    destination.conditional = true;
+    execution.waves = execution.waves.filter((wave) => wave !== destination);
+    const terminalIndex = execution.waves.findIndex(
+      (wave) => wave.mode === 'reconciliation',
+    );
+    execution.waves.splice(terminalIndex, 0, destination);
+  }
+  execution.conditions = [
+    {
+      conditionId: 'condition-contradiction-resolution',
+      destinationWaveId: destination.waveId,
+      afterWaveIds: ['wave-map'],
+      predicate,
+      maxActivations: 1,
+    },
+  ];
+  const mapPath = join(packet.packetRoot, 'raw/dossiers/pass-map.json');
+  const mapArtifact = JSON.parse(await readFile(mapPath, 'utf8'));
+  if (disposition === 'triggered') {
+    mapArtifact.gaps = [
+      {
+        code: 'INSUFFICIENT_EVIDENCE',
+        message: 'Synthetic predicate evidence for conditional routing tests.',
+      },
+    ];
+    await writeJson(mapPath, mapArtifact);
+    packet.manifest.artifacts.find(
+      (reference) => reference.path === 'raw/dossiers/pass-map.json',
+    ).digest = await hashFile(mapPath);
+  }
+  const evidence = packet.manifest.artifacts.find(
+    (reference) => reference.path === 'raw/dossiers/pass-map.json',
+  );
+  packet.manifest.conditionOutcomes = [
+    {
+      conditionId: 'condition-contradiction-resolution',
+      disposition,
+      reason:
+        disposition === 'triggered'
+          ? 'Completed mapping exposed a concrete evidence gap.'
+          : 'Completed mapping exposed no evidence gap.',
+      evidence: [{ ...evidence }],
+    },
+  ];
+  packet.manifest.execution = approveExecution(execution);
+  await writeJson(packet.manifestPath, packet.manifest);
+  return packet;
 }
 
 async function writeJson(path, value) {

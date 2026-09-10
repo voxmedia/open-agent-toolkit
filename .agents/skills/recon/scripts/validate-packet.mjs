@@ -41,7 +41,6 @@ const requiredPasses = {
     'reconciliation',
     'redundant-gather',
     'redundant-verification',
-    'contradiction-resolution',
   ],
 };
 
@@ -724,7 +723,186 @@ function laneWaveMatches(wave, value) {
   return reviewWaveMode[value.reviewKind] === wave.mode;
 }
 
-function validateApprovedLanes(manifest, routing, artifactsById, errors) {
+function artifactLaneId(value) {
+  return value.kind === 'recon.raw-dossier'
+    ? value.laneId
+    : value.kind === 'recon.review-result'
+      ? value.reviewerLane
+      : null;
+}
+
+function conditionPredicateSatisfied(condition, evidenceArtifacts) {
+  if (condition.predicate === 'insufficient-evidence') {
+    return evidenceArtifacts.some(
+      (artifact) =>
+        (artifact.gaps ?? []).length > 0 ||
+        (artifact.unresolvedIssues ?? []).length > 0 ||
+        (artifact.coverageFindings ?? []).some(
+          (finding) => finding.material === true,
+        ),
+    );
+  }
+  if (condition.predicate === 'unresolved-material-challenge') {
+    return evidenceArtifacts.some(
+      (artifact) =>
+        artifact.reviewKind === 'adversarial' &&
+        (artifact.dispositions ?? []).some(
+          (disposition) => disposition.disposition === 'challenged',
+        ) &&
+        (artifact.unresolvedIssues ?? []).length > 0,
+    );
+  }
+  return false;
+}
+
+function validateConditionalRouting(
+  manifest,
+  routing,
+  artifactsById,
+  artifactsByPath,
+  errors,
+) {
+  const activeWaveIds = new Set();
+  const inactiveWaveIds = new Set();
+  if (manifest.schemaVersion !== 2) {
+    return { activeWaveIds, inactiveWaveIds };
+  }
+  const wavesById = new Map(
+    (routing?.waves ?? []).map((wave) => [wave.waveId, wave]),
+  );
+  const lanesById = new Map();
+  for (const wave of routing?.waves ?? []) {
+    for (const lane of wave.lanes ?? []) lanesById.set(lane.laneId, wave);
+  }
+  const outcomes = new Map(
+    (manifest.conditionOutcomes ?? [])
+      .filter(isObject)
+      .map((outcome) => [outcome.conditionId, outcome]),
+  );
+  const knownConditionIds = new Set(
+    (routing?.conditions ?? []).map((condition) => condition.conditionId),
+  );
+  for (const outcome of manifest.conditionOutcomes ?? []) {
+    if (isObject(outcome) && !knownConditionIds.has(outcome.conditionId)) {
+      errors.push(
+        issue(
+          'UNKNOWN_CONDITION_OUTCOME',
+          `Outcome references unknown condition ${outcome.conditionId}`,
+          '$.conditionOutcomes',
+        ),
+      );
+    }
+  }
+  for (const condition of routing?.conditions ?? []) {
+    const outcome = outcomes.get(condition.conditionId);
+    const destination = wavesById.get(condition.destinationWaveId);
+    if (!outcome) {
+      errors.push(
+        issue(
+          'MISSING_CONDITION_OUTCOME',
+          `Condition ${condition.conditionId} lacks a finalized disposition`,
+          `condition:${condition.conditionId}`,
+        ),
+      );
+      if (destination) inactiveWaveIds.add(destination.waveId);
+      continue;
+    }
+    const evidenceArtifacts = [];
+    const evidencedPredecessors = new Set();
+    for (const reference of outcome.evidence ?? []) {
+      const entry = artifactsByPath.get(reference.path);
+      const declared = (manifest.artifacts ?? []).some((artifactReference) =>
+        sameReference(artifactReference, reference),
+      );
+      if (!declared || !entry || !sameReference(entry.reference, reference)) {
+        errors.push(
+          issue(
+            'INVALID_CONDITION_EVIDENCE',
+            `Condition ${condition.conditionId} evidence is not an exact validated artifact`,
+            reference.path,
+          ),
+        );
+        continue;
+      }
+      const artifact = entry.value;
+      const wave = lanesById.get(artifactLaneId(artifact));
+      if (!wave || !condition.afterWaveIds.includes(wave.waveId)) {
+        errors.push(
+          issue(
+            'INVALID_CONDITION_EVIDENCE',
+            `Condition ${condition.conditionId} evidence is not from an approved predecessor`,
+            reference.path,
+          ),
+        );
+        continue;
+      }
+      if (!artifactIsComplete(artifact)) {
+        errors.push(
+          issue(
+            'INCOMPLETE_CONDITION_PREDECESSOR',
+            `Condition ${condition.conditionId} requires completed predecessor evidence`,
+            reference.path,
+          ),
+        );
+        continue;
+      }
+      evidenceArtifacts.push(artifact);
+      evidencedPredecessors.add(wave.waveId);
+    }
+    if (
+      outcome.disposition === 'triggered' &&
+      condition.afterWaveIds.some(
+        (waveId) => !evidencedPredecessors.has(waveId),
+      )
+    ) {
+      errors.push(
+        issue(
+          'INCOMPLETE_CONDITION_PREDECESSOR',
+          `Condition ${condition.conditionId} does not bind complete evidence from every predecessor`,
+          `condition:${condition.conditionId}`,
+        ),
+      );
+    }
+    if (
+      outcome.disposition === 'triggered' &&
+      !conditionPredicateSatisfied(condition, evidenceArtifacts)
+    ) {
+      errors.push(
+        issue(
+          'CONDITION_PREDICATE_UNSATISFIED',
+          `Condition ${condition.conditionId} lacks concrete typed predicate evidence`,
+          `condition:${condition.conditionId}`,
+        ),
+      );
+    }
+    if (outcome.disposition === 'triggered') {
+      activeWaveIds.add(condition.destinationWaveId);
+    } else {
+      inactiveWaveIds.add(condition.destinationWaveId);
+    }
+  }
+  for (const { value } of artifactsById.values()) {
+    const wave = lanesById.get(artifactLaneId(value));
+    if (wave?.conditional && !activeWaveIds.has(wave.waveId)) {
+      errors.push(
+        issue(
+          'INACTIVE_CONDITIONAL_ARTIFACT',
+          `Inactive conditional wave ${wave.waveId} cannot contribute artifacts`,
+          value.id,
+        ),
+      );
+    }
+  }
+  return { activeWaveIds, inactiveWaveIds };
+}
+
+function validateApprovedLanes(
+  manifest,
+  routing,
+  artifactsById,
+  conditionalState,
+  errors,
+) {
   const lanes = new Map();
   for (const wave of routing?.waves ?? []) {
     for (const lane of wave.lanes ?? []) {
@@ -734,12 +912,7 @@ function validateApprovedLanes(manifest, routing, artifactsById, errors) {
   const written = new Set();
   for (const [id, { reference, value }] of artifactsById) {
     if (value.runId !== manifest.run.id) continue;
-    const laneId =
-      value.kind === 'recon.raw-dossier'
-        ? value.laneId
-        : value.kind === 'recon.review-result'
-          ? value.reviewerLane
-          : null;
+    const laneId = artifactLaneId(value);
     if (laneId === null) continue;
     const approved = lanes.get(laneId);
     if (
@@ -773,7 +946,11 @@ function validateApprovedLanes(manifest, routing, artifactsById, errors) {
   }
   for (const [laneId, { wave }] of lanes) {
     // The canonical ledger is the compile outcome; it carries no lane identity.
-    if (wave.conditional || wave.mode === 'compile' || written.has(laneId)) {
+    if (
+      (wave.conditional && !conditionalState.activeWaveIds.has(wave.waveId)) ||
+      wave.mode === 'compile' ||
+      written.has(laneId)
+    ) {
       continue;
     }
     const hasOutcomeEvidence = (manifest.gaps ?? []).some((gap) =>
@@ -791,10 +968,28 @@ function validateApprovedLanes(manifest, routing, artifactsById, errors) {
   }
 }
 
-function collectCompletePasses(artifactsById, runId) {
+function collectCompletePasses(
+  artifactsById,
+  runId,
+  routing,
+  conditionalState,
+) {
+  const conditionalLanes = new Map();
+  for (const wave of routing?.waves ?? []) {
+    if (!wave.conditional) continue;
+    for (const lane of wave.lanes ?? [])
+      conditionalLanes.set(lane.laneId, wave);
+  }
   const passes = new Map();
   for (const [id, { value }] of artifactsById) {
     if (value.runId !== runId || !artifactIsComplete(value)) continue;
+    const conditionalWave = conditionalLanes.get(artifactLaneId(value));
+    if (
+      conditionalWave &&
+      !conditionalState.activeWaveIds.has(conditionalWave.waveId)
+    ) {
+      continue;
+    }
     for (const [mode, contract] of Object.entries(passContracts)) {
       if (
         value.kind === contract.kind &&
@@ -2052,8 +2247,26 @@ export async function compileValidatedRun(packetDirectory) {
         exactEvidence.add(evidence.id);
       }
     }
-    validateApprovedLanes(manifest, routing, artifactsById, errors);
-    const passes = collectCompletePasses(artifactsById, manifest.run.id);
+    const conditionalState = validateConditionalRouting(
+      manifest,
+      routing,
+      artifactsById,
+      artifactsByPath,
+      errors,
+    );
+    validateApprovedLanes(
+      manifest,
+      routing,
+      artifactsById,
+      conditionalState,
+      errors,
+    );
+    const passes = collectCompletePasses(
+      artifactsById,
+      manifest.run.id,
+      routing,
+      conditionalState,
+    );
     const achievedProfile = deriveAchievedProfile(passes);
     validatePassOutcomes(manifest, passes, errors);
     const assuranceReviewIds = collectAssuranceReviewIds(

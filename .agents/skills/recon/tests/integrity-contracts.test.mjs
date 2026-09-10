@@ -131,6 +131,76 @@ test('the pinned v1 approval fingerprint stays byte-exact and rejects retained-l
   );
 });
 
+test('hostile repeated condition entries return structured errors instead of throwing', async () => {
+  const packet = await createPacketFixture({
+    profile: 'standard',
+    manifestVersion: 2,
+  });
+  roots.push(packet.tempRoot);
+  for (const conditions of [
+    [null, null],
+    [false, false],
+    ['condition', 1],
+  ]) {
+    const candidate = structuredClone(packet.manifest);
+    candidate.execution.conditions = conditions;
+    candidate.execution = approveExecution(candidate.execution);
+    const result = validateArtifactShape(candidate);
+    assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+    assert.ok(
+      result.errors.every((error) => typeof error.code === 'string'),
+      JSON.stringify(result, null, 2),
+    );
+    assert.ok(
+      result.errors.some((error) => error.code === 'INVALID_CONDITION'),
+      JSON.stringify(result, null, 2),
+    );
+  }
+});
+
+test('condition predecessor IDs must all be non-empty strings', async () => {
+  const packet = await createPacketFixture({
+    profile: 'standard',
+    manifestVersion: 2,
+  });
+  roots.push(packet.tempRoot);
+  const destination = {
+    waveId: 'wave-conditional',
+    mode: 'contradiction-resolution',
+    taskClass: 'mechanical-recon',
+    classFloor: 'mechanical-recon',
+    selectionReason: 'Synthetic hostile-input regression fixture.',
+    lanes: [
+      {
+        laneId: 'lane-conditional',
+        scope: 'packet/conditional',
+        writeRoot: 'reviews/conditional.json',
+      },
+    ],
+    conditional: true,
+  };
+  packet.manifest.execution.waves.splice(-1, 0, destination);
+  packet.manifest.execution.conditions = [
+    {
+      conditionId: 'condition-invalid-after',
+      destinationWaveId: destination.waveId,
+      afterWaveIds: ['', null, 1],
+      predicate: 'insufficient-evidence',
+      maxActivations: 1,
+    },
+  ];
+  packet.manifest.execution = approveExecution(packet.manifest.execution);
+  const result = validateArtifactShape(packet.manifest);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.equal(
+    result.errors.filter(
+      (error) => error.code === 'INVALID_CONDITION_DEPENDENCY',
+    ).length,
+    3,
+    JSON.stringify(result, null, 2),
+  );
+});
+
 test('approval fingerprint binds every approved execution axis', async () => {
   for (const [axis, value] of [
     ['model', 'other-model'],

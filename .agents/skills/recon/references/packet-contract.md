@@ -97,9 +97,10 @@ Both `recon.packet-manifest` versions contain:
   explicit boolean `material` classification and affected source, claim, and
   coverage-finding IDs when applicable.
 
-Version 2 additionally carries `conditionOutcomes`. Conditional publication is
-reserved until its outcome-accounting rules are implemented; a non-empty
-`conditions` or `conditionOutcomes` array is currently rejected.
+Version 2 additionally carries root-recorded `conditionOutcomes`. They are
+control dispositions, not launcher receipts. Every declared condition has one
+closed `triggered`, `not-triggered`, or `unresolved` outcome with a non-empty
+reason and exact digest-bound predecessor artifact references.
 
 ### Version 1 Execution Envelope
 
@@ -154,8 +155,26 @@ contracts. Each closed wave adds:
 The execution object also requires a closed `conditions` array. Each structural
 condition contains `conditionId`, `destinationWaveId`, `afterWaveIds`, one of
 `insufficient-evidence` or `unresolved-material-challenge`, and
-`maxActivations: 1`. Cross-wave topology and condition outcome accounting are
-introduced separately; until then only an empty array is publishable.
+`maxActivations: 1`. Each conditional destination is a uniquely identified
+`contradiction-resolution` evidence wave, has exactly one condition, appears
+after every named predecessor and before the one terminal reconciliation, and
+owns unique lane IDs and write roots. Quick permits no conditional wave;
+standard permits one and thorough two. All possible lanes count against the
+profile's 4/10/20 worker-lane cap, and concurrency remains capped at 4/6/8.
+
+Triggered dispositions require exact complete artifacts from every approved
+predecessor and concrete typed predicate evidence. A triggered destination must
+produce its approved output or a material `PASS_FAILED`/`PASS_OMITTED` gap.
+Not-triggered and unresolved destinations publish no artifacts and contribute
+no achieved pass. Accepted failed, cancelled, timed-out, or missing predecessor
+work cannot activate replacement work. Required profile passes remain required
+regardless of conditional annotations.
+
+`reconciliation-needs-judgment` is a controller escalation outcome, never a
+condition predicate. Foreseeable judgment changes the one terminal target before
+approval. A need discovered later preserves completed work and records an
+unresolved out-of-envelope gap until renewed approval or a new run; it never
+mutates the approved target or launches a second reconciliation.
 
 The approval fingerprint remains the canonical SHA-256 of the original
 version-specific execution object with `approval` removed. A v2 manifest may
@@ -184,8 +203,10 @@ complete typed artifacts of the same run:
 compile result, so an approved `compile` lane needs no separate artifact, and
 locator validation is performed by the validator.
 `standard` adds `semantic-verification`, `adversarial`, `coverage`, and
-`reconciliation`. `thorough` adds `redundant-gather`,
-`redundant-verification`, and `contradiction-resolution`.
+`reconciliation`. `thorough` adds `redundant-gather` and
+`redundant-verification`. A predeclared conditional
+`contradiction-resolution` evidence pass may feed the same mandatory terminal
+reconciliation when its predicate triggers; it is not a second terminal pass.
 
 Every dossier records the approved `waveId` and `laneId` that wrote it; every
 review result records its approved `reviewerLane`. The lane must belong to a
