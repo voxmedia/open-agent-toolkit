@@ -769,11 +769,17 @@ oat project validate-plan --project-path .oat/projects/shared/recon-rework --jso
 
 **Commit:** `docs(p04-t06): correct phase completion wording`.
 
+Completion evidence: `p04-t06` is the lifecycle-wording commit containing this
+record. Project artifact formatting, plan validation, and `git diff --check` pass.
+The next narrowed final review remains pending.
+
 Final-review tasks `p04-t03` and `p04-t04` are commits
 `4f6884a99844cf5e86168ad422db7f2f49a23c08` and
-`31619d967b0c0d7b42323ee77ff4ee86d6cef7a3`; `p04-t05` is the lifecycle-alignment
-commit containing this record. Focused task suites passed 49/49 and 84/84, and the
-composed recon suite passed 258/258. The original Phase 4 evidence remains intact.
+`31619d967b0c0d7b42323ee77ff4ee86d6cef7a3`; `p04-t05` is commit
+`fe30e986219bbf27b04fb08957166229acc955fe`; and `p04-t06` is the
+lifecycle-wording commit containing this record. Focused task suites passed 49/49
+and 84/84, and the composed recon suite passed 258/258. The original Phase 4
+evidence remains intact.
 None of this marks the narrowed final re-review, implementation exit gate,
 configured HiLL checkpoint, or implementation lifecycle complete.
 
@@ -810,19 +816,20 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | p02    | code     | passed          | 2026-09-10 | reviews/p02-review-2026-09-10T050659Z.md                    | 420e1d4492b0734463aeac4d8bf91137f812dff0 | manual     | -           |
 | p03    | code     | fixes_completed | 2026-09-10 | reviews/p03-review-2026-09-10T062438Z.md                    | c6018f6c4f5633f005ed1938f3913db2e9bbd941 | manual     | -           |
 | p03    | code     | passed          | 2026-09-10 | reviews/p03-review-2026-09-10T065216Z.md                    | c1f175409c29d1afc04c7d69c84f61b80b4c850f | manual     | -           |
-| final  | code     | fixes_added     | 2026-09-10 | reviews/archived/final-review-2026-09-10T083842Z.md         | fe30e986219bbf27b04fb08957166229acc955fe | auto       | -           |
+| final  | code     | fixes_completed | 2026-09-10 | reviews/archived/final-review-2026-09-10T083842Z.md         | fe30e986219bbf27b04fb08957166229acc955fe | auto       | -           |
 
 ## Implementation Complete
 
-**Implementation tasks complete: 12 of 13 implemented. All four phase reviews
-passed; one final-review cleanup remains before the lifecycle gates.**
+**Implementation tasks complete: 13 of 13 implemented. All four phase reviews
+passed and all received final-review fixes are complete; the next narrowed final
+review remains before the lifecycle gates.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
 - Phase 3: 2 tasks — guidance and consumer output.
 - Phase 4: 6 tasks — distribution, complete verification, and final-review fixes.
 
-**Total: 4 phases, 13 tasks.** First incomplete task: `p04-t06`.
+**Total: 4 phases, 13 tasks.** No incomplete implementation task remains.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p04-t06
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -14,21 +14,23 @@ oat_template: false
 **Last Updated:** 2026-09-10
 
 Implementation Run 1 completed all nine original tasks and all four phase reviews.
-The three bounded gaps from the automatic final lifecycle review are now fixed as
-`p04-t03` through `p04-t05`. The narrowed final re-review, implementation exit gate,
-and final HiLL approval remain pending; no lifecycle completion claim is made here.
+The bounded findings from the automatic final lifecycle review and its first
+narrowed re-review are fixed as `p04-t03` through `p04-t06`. The next narrowed final
+review, implementation exit gate, and final HiLL approval remain pending; no
+lifecycle completion claim is made here.
 
 ## Progress Overview
 
-| Phase                                      | Status      | Tasks | Completed |
-| ------------------------------------------ | ----------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
-| Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
-| Phase 4: Distribution and verification     | in progress | 6     | 5/6       |
+| Phase                                      | Status    | Tasks | Completed |
+| ------------------------------------------ | --------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
+| Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
+| Phase 4: Distribution and verification     | completed | 6     | 6/6       |
 
-**Total:** 12/13 tasks implemented. All four phase reviews passed; one final-review
-wording cleanup and the later lifecycle boundaries remain pending.
+**Total:** 13/13 tasks implemented. All four phase reviews passed and final-review
+fix tasks are complete; the next narrowed final review and later lifecycle boundaries
+remain pending.
 
 ## Task Status
 
@@ -45,8 +47,8 @@ wording cleanup and the later lifecycle boundaries remain pending.
 | p04-t02 | Completed: full verification/evidence           | `3e200321b705e5a3204cbe72434dff547ab2bc28` |
 | p04-t03 | Completed: validate production topology         | `4f6884a99844cf5e86168ad422db7f2f49a23c08` |
 | p04-t04 | Completed: structure malformed-wave errors      | `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3` |
-| p04-t05 | Completed: align lifecycle summaries            | this commit                                |
-| p04-t06 | Pending: correct Phase 4 completion wording     | -                                          |
+| p04-t05 | Completed: align lifecycle summaries            | `fe30e986219bbf27b04fb08957166229acc955fe` |
+| p04-t06 | Completed: correct Phase 4 completion wording   | this commit                                |
 
 ## Phase 1: Decision and versioned contract
 
@@ -172,7 +174,7 @@ wording cleanup and the later lifecycle boundaries remain pending.
 
 ## Phase 4: Distribution and composed verification
 
-**Status:** final-review fixes in progress; independent phase review passed
+**Status:** final-review fix tasks completed; next narrowed final review pending
 **Started:** 2026-09-10
 **Completed:** 2026-09-10
 
@@ -205,9 +207,16 @@ malformed-wave controls
 ### Task p04-t05: Align lifecycle summaries after final review
 
 **Status:** completed
-**Commit:** this commit; exact SHA is reported in the phase handoff
+**Commit:** `fe30e986219bbf27b04fb08957166229acc955fe`
 **Verification:** project artifact formatting and plan validation passed; full recon
 suite passed 258/258
+
+### Task p04-t06: Correct the Phase 4 completion wording
+
+**Status:** completed
+**Commit:** this commit; exact SHA is reported in the phase handoff
+**Verification:** project artifact formatting, plan validation, and whitespace check
+passed
 
 ### Implementation Summary
 
@@ -290,7 +299,7 @@ carry-forward ledger contained no unresolved Medium or Minor findings.
 
 **Deferred findings:** none.
 
-**Next:** Execute `p04-t06`, then run the final permitted narrowed review cycle.
+**Next:** Run the final permitted narrowed review cycle over completed `p04-t06`.
 
 ## Orchestration Runs
 
@@ -513,8 +522,9 @@ carry-forward ledger contained no unresolved Medium or Minor findings.
   10/10 tasks uncached, and the recon suite passed 253/253.
 - Phase review passed with no blocking findings. One Medium retained-log provenance
   gap remains disclosed: the logs do not embed explicit per-command exit markers.
-- All nine original tasks and three final-review fix tasks are implemented. Narrowed
-  final re-review, exit gate, and HiLL approval remain distinct pending boundaries.
+- All nine original tasks and four final-review fix tasks are implemented. The next
+  narrowed final review, exit gate, and HiLL approval remain distinct pending
+  boundaries.
 
 ### 2026-09-10 — Final lifecycle review received
 
@@ -577,7 +587,7 @@ that no fourth planning review should run; implementation/final reviews remain.
 
 ## Final Summary (for PR/docs)
 
-All nine original implementation tasks and three final-review fix tasks are
+All nine original implementation tasks and four final-review fix tasks are
 implemented, and all four phase reviews passed. The branch now provides versioned
 v1/v2 recon contracts, economical approved per-wave routing, bounded conditional
 escalation, exact outcome accounting, caller-owned judgment, normalized
