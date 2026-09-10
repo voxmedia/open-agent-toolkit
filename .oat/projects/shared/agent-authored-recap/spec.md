@@ -91,25 +91,25 @@ The OAT explainer adapter skill gains a `generate` flow made of three small scri
 
 ## Requirement Index
 
-| ID   | Summary                                  | Source                                |
-| ---- | ---------------------------------------- | ------------------------------------- |
-| FR1  | Allowlisted fact bundle, hashed          | Discovery decisions 1–2; item AC 2    |
-| FR2  | Agent-authored single artifact           | Item AC 2; recipe required narratives |
-| FR3  | Browser ladder with retained evidence    | Discovery Q1; item AC 3               |
-| FR4  | Browser-free checks always run           | Triage amendment (browser-less hosts) |
-| FR5  | Manifest v2; outcome semantics rewritten | Discovery Q2; triage amendment        |
-| FR6  | Generate / retry / skip                  | Item AC 4                             |
-| FR7  | One flow, two recipes                    | Discovery Option A; triage amendment  |
-| FR8  | Lifecycle consumers updated              | Triage amendment (migration scope)    |
-| FR9  | Program recap ships                      | Operator decision 2026-09-09          |
-| FR10 | Any-input invocation                     | Discovery amendment 2026-09-09        |
-| FR11 | Project explainer at plan approval       | Discovery amendment 2026-09-09        |
-| FR12 | Seam retirement                          | Discovery amendment 2026-09-09        |
-| NFR1 | Fresh-host proof with negative controls  | Item AC 5                             |
-| NFR2 | Weaker-anywhere                          | Repository convention                 |
-| NFR3 | Browser-less hosts complete              | Operator decision 2026-09-08          |
-| NFR4 | Bundled-asset discipline                 | `AGENTS.md`                           |
-| NFR5 | Necessity (no duplicate records)         | Operator decision 2026-09-09          |
+| ID   | Summary                                  | Source                                | Planned Tasks                                                                            |
+| ---- | ---------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------- |
+| FR1  | Allowlisted fact bundle, hashed          | Discovery decisions 1–2; item AC 2    | p01-t11, p01-t08                                                                         |
+| FR2  | Agent-authored single artifact           | Item AC 2; recipe required narratives | p01-t13, p02-t03                                                                         |
+| FR3  | Browser ladder with retained evidence    | Discovery Q1; item AC 3               | p02-t01, p02-t02                                                                         |
+| FR4  | Browser-free checks always run           | Triage amendment (browser-less hosts) | p01-t11, p01-t13                                                                         |
+| FR5  | Manifest v2; outcome semantics rewritten | Discovery Q2; triage amendment        | p01-t06, p01-t09, p01-t12, p01-t14                                                       |
+| FR6  | Generate / retry / skip                  | Item AC 4                             | p01-t14, p03-t02, p03-t03                                                                |
+| FR7  | One flow, two recipes                    | Discovery Option A; triage amendment  | p03-t01, p03-t04                                                                         |
+| FR8  | Lifecycle consumers updated              | Triage amendment (migration scope)    | p03-t01, p03-t02, p03-t03, p03-t04, p03-t05                                              |
+| FR9  | Program recap ships                      | Operator decision 2026-09-09          | p05-t01                                                                                  |
+| FR10 | Any-input invocation                     | Discovery amendment 2026-09-09        | p04-t01                                                                                  |
+| FR11 | Project explainer at plan approval       | Discovery amendment 2026-09-09        | p03-t04, p04-t02                                                                         |
+| FR12 | Seam retirement                          | Discovery amendment 2026-09-09        | p01-t01, p01-t02, p01-t07, p01-t08, p01-t09, p01-t10, p01-t16, p03-t06, p03-t07, p03-t08 |
+| NFR1 | Fresh-host proof with negative controls  | Item AC 5                             | p02-t04                                                                                  |
+| NFR2 | Weaker-anywhere                          | Repository convention                 | p01-t06, p01-t09, p01-t14                                                                |
+| NFR3 | Browser-less hosts complete              | Operator decision 2026-09-08          | p01-t13, p02-t02                                                                         |
+| NFR4 | Bundled-asset discipline                 | `AGENTS.md`                           | p01-t16, p03-t05, p03-t08                                                                |
+| NFR5 | Necessity (no duplicate records)         | Operator decision 2026-09-09          | p01-t12, p04-t01                                                                         |
 
 ## Open Questions
 
