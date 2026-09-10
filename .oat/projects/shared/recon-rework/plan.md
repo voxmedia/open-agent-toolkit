@@ -6,6 +6,8 @@ oat_last_updated: 2026-09-09
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: []
+oat_plan_hill_phases: ['p04']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
@@ -39,8 +41,8 @@ commit with its exact write set staged.
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
+- [x] Confirmed HiLL checkpoints from `workflow.hillCheckpointDefault: final`
+- [x] Set `oat_plan_hill_phases` in frontmatter
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
 
@@ -56,10 +58,10 @@ commit with its exact write set staged.
 - The configured quick-start gate is disabled for this project because the user
   explicitly closed the capped planning-review loop. No optional cross-runtime
   phase gate was selected. Built-in implementation reviews remain unchanged.
-- Implementation HiLL remains intentionally deferred to implementation start.
-- `oat_plan_hill_phases` remains absent until `oat-project-implement` confirms
-  the user's HiLL choice and writes the selected phases; an empty list would mean
-  pause after every phase, not "undecided."
+- Implementation HiLL is confirmed at `p04` only from the configured final-phase
+  workflow default. Automatic lifecycle review at that checkpoint is enabled from
+  workflow configuration. An empty checkpoint list would mean every phase, not
+  "undecided."
 - The low-cost policy describes recon workers **as product behavior**; it does
   not require implementing or reviewing this contract with an inadequate model.
 

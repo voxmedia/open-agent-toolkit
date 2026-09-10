@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: dca0c54bfbe209107cd5bf8911319303112367b7
+oat_current_task: p01-t01
+oat_last_commit: 4a3822f0d6f9a6e3472b05cdf038e1d7a516c4bd
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -8,11 +8,12 @@ oat_parent: null
 oat_siblings: []
 oat_depends_on: []
 oat_children: []
-oat_hill_checkpoints: []
+oat_hill_checkpoints:
+  - p04
 oat_hill_completed: []
 oat_parallel_execution: false
-oat_phase: plan
-oat_phase_status: complete
+oat_phase: implement
+oat_phase_status: in_progress
 oat_workflow_mode: quick
 oat_dispatch_policy:
   mode: managed
@@ -26,23 +27,22 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-10T01:15:45.000Z'
+oat_project_state_updated: '2026-09-10T01:22:50.000Z'
 oat_generated: false
 ---
 
 # Project State: Recon rework
 
-**Status:** Plan accepted and ready for implementation under high dispatch.
+**Status:** Implementation in progress under managed high dispatch.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-09
 
 ## Current Phase
 
-Plan complete. Discovery is complete; the lightweight design is integrated into
-the quick plan. Three plan-review cycles were received on 2026-09-09, all findings
-were applied, and Thomas manually accepted the corrected aggregate plan at the
-cycle cap. The configured quick-start gate is disabled for this project to avoid a
-fourth planning review. Implementation has not started.
+Phase 1 is active at `p01-t01`. The corrected quick plan remains the accepted
+source of truth. The configured quick-start gate remains disabled so the capped
+planning-review loop is not reopened. Final-phase HiLL is configured at `p04` with
+automatic lifecycle review.
 
 ## Artifacts
 
@@ -63,14 +63,14 @@ No existing project was absorbed or retired.
 
 ## Blockers
 
-No planning blocker. Implementation start must confirm HiLL checkpoints through
-`oat-project-implement`; no optional cross-runtime phase gate was selected.
+No blocker. The standard per-phase reviewer remains required; no optional
+cross-runtime phase gate was selected.
 
 ## Next Milestone
 
-Run `oat-project-implement`, confirm HiLL checkpoints, and begin with `p01-t01`.
-Do not re-scaffold or launch another planning review. The project dispatch ceiling
-is managed `high`.
+Complete Phase 1 from `p01-t01`, run its independent phase review, and continue
+according to the confirmed final-phase HiLL configuration. Do not re-scaffold or
+launch another planning review. The project dispatch ceiling is managed `high`.
 
 ## Authorization and Scope
 

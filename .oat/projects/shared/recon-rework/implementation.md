@@ -10,21 +10,21 @@ oat_template: false
 
 # Implementation: Recon rework
 
-**Started:** Not started — tracker initialized during planning on 2026-09-08.
+**Started:** 2026-09-09
 **Last Updated:** 2026-09-09
 
-The next task pointer identifies the first implementation task. The corrected
-quick plan is accepted and ready; the cloud runner should load
-`oat-project-implement`, confirm HiLL checkpoints, and start at `p01-t01`.
+Implementation Run 1 is active at `p01-t01`. The managed `high` dispatch policy
+resolved to the native Codex Sol/high phase implementer and reviewer roles. The
+configured final-phase HiLL checkpoint is `p04`, with automatic lifecycle review.
 
 ## Progress Overview
 
-| Phase                                      | Status  | Tasks | Completed |
-| ------------------------------------------ | ------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | pending | 2     | 0/2       |
-| Phase 2: Proposal, conditions, integration | pending | 3     | 0/3       |
-| Phase 3: Guidance and consumer output      | pending | 2     | 0/2       |
-| Phase 4: Distribution and verification     | pending | 2     | 0/2       |
+| Phase                                      | Status      | Tasks | Completed |
+| ------------------------------------------ | ----------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | in_progress | 2     | 0/2       |
+| Phase 2: Proposal, conditions, integration | pending     | 3     | 0/3       |
+| Phase 3: Guidance and consumer output      | pending     | 2     | 0/2       |
+| Phase 4: Distribution and verification     | pending     | 2     | 0/2       |
 
 **Total:** 0/9 tasks completed. All implementation reviews pending.
 
@@ -51,7 +51,18 @@ verification commands/results, and deviations per phase during implementation.
 
 <!-- orchestration-runs-start -->
 
-No implementation orchestration runs.
+### Run 1 — 2026-09-09
+
+- Entry baseline: `4a3822f0d6f9a6e3472b05cdf038e1d7a516c4bd`; clean branch
+  `recon-rework`, synchronized with `origin/recon-rework` at implementation start.
+- Tier: Tier 1, native Codex subagents; delegation authorized by the invoked
+  implementation workflow.
+- Dispatch policy: managed `high` from project state; live catalog contains the
+  exact Sol/high phase implementer and reviewer roles.
+- Checkpoints: final phase only (`p04`) from `workflow.hillCheckpointDefault`;
+  automatic HiLL lifecycle review enabled from workflow configuration.
+- Schedule: `p01` -> `p02` -> `p03` -> `p04`; no parallel groups.
+- Current scope: Phase 1, beginning with `p01-t01`.
 
 <!-- orchestration-runs-end -->
 
