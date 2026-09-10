@@ -134,6 +134,13 @@ No implementation orchestration runs.
 - Dispatch ladder preflight was complete; the project ceiling changed from managed
   `high` to managed `frontier` without persisting a concrete provider target.
 
+### 2026-09-09 — Dispatch ceiling corrected to high
+
+- Thomas changed the cloud execution ceiling from managed `frontier` to managed
+  `high` after the accepted handoff was first pushed.
+- Updated only the project-state ceiling and current handoff prose; reusable ladder
+  configuration and concrete provider targets remain config/resolver-owned.
+
 ## Planning Verification
 
 | Check                                                                 | Result                          | Scope                                                                                                                                  |
@@ -156,13 +163,15 @@ No implementation orchestration runs.
 | Frontier reviewer and implementer preflight                           | Exit 0, resolved                | Complete ladder; managed `frontier` selected from project state                                                                        |
 | Quick-start gate resolution after manual acceptance                   | Exit 0                          | `configured_disabled_by_project`; implementation/final gates unchanged                                                                 |
 | Final plan validation and dashboard refresh                           | Exit 0, valid true              | Dashboard recommends `oat-project-implement`                                                                                           |
+| Corrected high reviewer and implementer preflight                     | Exit 0, resolved                | Complete ladder; managed `high` selected from project state                                                                            |
 
 ## Deviations from Standard Quick-Start Completion
 
 The user requested a deliberate pre-review handoff. Three plan-review cycles were
 received and their findings applied. At the automated-review cap, Thomas manually
-accepted the corrected aggregate plan, selected managed `frontier`, and directed
-the readiness transition. The project-specific quick-start gate override records
+accepted the corrected aggregate plan and directed the readiness transition. The
+project ceiling was subsequently corrected from managed `frontier` to managed
+`high`. The project-specific quick-start gate override records
 that no fourth planning review should run; implementation/final reviews remain.
 
 ## Test Results

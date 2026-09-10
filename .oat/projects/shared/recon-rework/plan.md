@@ -52,7 +52,7 @@ commit with its exact write set staged.
 - This plan: 4 sequential phases, 9 tasks; no tasks started.
 - Manual plan artifact review: all three cycles' findings are applied; Thomas
   manually accepted the corrected aggregate plan and the latest event is `passed`.
-- Project dispatch policy: managed `frontier`, selected in project state.
+- Project dispatch policy: managed `high`, selected in project state.
 - The configured quick-start gate is disabled for this project because the user
   explicitly closed the capped planning-review loop. No optional cross-runtime
   phase gate was selected. Built-in implementation reviews remain unchanged.
@@ -67,7 +67,7 @@ commit with its exact write set staged.
 
 The receiving agent must follow `handoff.md`: verify the worktree, load
 `oat-project-implement`, confirm and write implementation HiLL checkpoints, and
-begin at `p01-t01` under the managed `frontier` ceiling. Do not launch another
+begin at `p01-t01` under the managed `high` ceiling. Do not launch another
 planning review or repeat discovery unless implementation reveals a substantive
 product ambiguity.
 

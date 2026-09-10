@@ -17,7 +17,8 @@ Thomas originally authorized discovery capture and design/plan drafting, then a
 stop before self-review and plan/gate review. Three plan-review cycles were later
 received on 2026-09-09, and all findings were applied directly to the planning
 artifacts. At the three-cycle cap Thomas manually accepted the corrected aggregate
-plan, selected managed `frontier`, and authorized pushing it for cloud execution.
+plan and authorized pushing it for cloud execution. He then set the final project
+dispatch ceiling to managed `high`.
 The project remains at `oat_phase: plan` with `oat_phase_status: complete`; plan
 `oat_ready_for: oat-project-implement` and `oat_template: false` expose the ready
 handoff.
@@ -116,7 +117,7 @@ The corrected aggregate plan is manually accepted and ready for implementation.
    ask only about a substantive ambiguity introduced by current evidence or
    review. Engineering proposals are identified in design rather than falsely
    recorded as user-approved schema choices.
-5. Preserve the complete dispatch ladder and managed `frontier` project ceiling.
+5. Preserve the complete dispatch ladder and managed `high` project ceiling.
    Do not infer that cheap recon workers imply cheap implementation/final review
    for this contract.
 6. Preserve the absent optional phase-gate setting and the explicit project
@@ -204,7 +205,7 @@ origin/main during implementation, not from the old proposal's numbers.
 > worktree. Read handoff.md, discovery.md, design.md, plan.md, and the source map.
 > Discovery is already covered. All three plan-review cycles' fixes are applied,
 > and Thomas manually accepted the corrected aggregate plan at the cycle cap. The
-> plan is ready for `oat-project-implement` under managed `frontier` dispatch.
+> plan is ready for `oat-project-implement` under managed `high` dispatch.
 > Confirm HiLL checkpoints, then begin at p01-t01. Preserve cheap evidence workers
 > with caller-owned judgment, the single terminal reconciliation, per-wave exact
 > approval, v1 compatibility, and the prohibition on invented launch provenance.

@@ -16,7 +16,7 @@ oat_phase_status: complete
 oat_workflow_mode: quick
 oat_dispatch_policy:
   mode: managed
-  policy: frontier
+  policy: high
   source: project-state
 oat_skill_gate_overrides:
   oat-project-quick-start: disabled
@@ -26,13 +26,13 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-10T01:05:05.000Z'
+oat_project_state_updated: '2026-09-10T01:15:45.000Z'
 oat_generated: false
 ---
 
 # Project State: Recon rework
 
-**Status:** Plan accepted and ready for implementation under frontier dispatch.
+**Status:** Plan accepted and ready for implementation under high dispatch.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-09
 
@@ -70,12 +70,13 @@ No planning blocker. Implementation start must confirm HiLL checkpoints through
 
 Run `oat-project-implement`, confirm HiLL checkpoints, and begin with `p01-t01`.
 Do not re-scaffold or launch another planning review. The project dispatch ceiling
-is managed `frontier`.
+is managed `high`.
 
 ## Authorization and Scope
 
-Thomas authorized the corrected plan, managed `frontier` dispatch, the readiness
-transition, and pushing this branch for cloud execution. No implementation,
+Thomas authorized the corrected plan, changed the dispatch ceiling from managed
+`frontier` to managed `high`, authorized the readiness transition, and authorized
+pushing this branch for cloud execution. No implementation,
 live-provider launch, triage change, PR publication, or merge has been performed.
 
 Source issue: https://github.com/voxmedia/open-agent-toolkit/issues/274.
