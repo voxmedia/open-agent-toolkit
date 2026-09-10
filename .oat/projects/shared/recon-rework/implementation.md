@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-09
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 oat_template: false
 ---
@@ -13,7 +13,7 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-09
 
-Implementation Run 1 is active at `p01-t01`. The managed `high` dispatch policy
+Implementation Run 1 is active at `p02-t01`. The managed `high` dispatch policy
 resolved to the native Codex Sol/high phase implementer and reviewer roles. The
 configured final-phase HiLL checkpoint is `p04`, with automatic lifecycle review.
 
@@ -21,31 +21,64 @@ configured final-phase HiLL checkpoint is `p04`, with automatic lifecycle review
 
 | Phase                                      | Status      | Tasks | Completed |
 | ------------------------------------------ | ----------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | in_progress | 2     | 0/2       |
-| Phase 2: Proposal, conditions, integration | pending     | 3     | 0/3       |
+| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | in_progress | 3     | 0/3       |
 | Phase 3: Guidance and consumer output      | pending     | 2     | 0/2       |
 | Phase 4: Distribution and verification     | pending     | 2     | 0/2       |
 
-**Total:** 0/9 tasks completed. All implementation reviews pending.
+**Total:** 2/9 tasks completed. Phase 1 review passed with one nonblocking Medium
+carried into `p02-t02`.
 
 ## Task Status
 
-| Task    | Outcome                                       | Commit |
-| ------- | --------------------------------------------- | ------ |
-| p01-t01 | Pending: superseding decision                 | -      |
-| p01-t02 | Pending: versioned manifest and normalization | -      |
-| p02-t01 | Pending: economical routing preview           | -      |
-| p02-t02 | Pending: conditional escalation/outcomes      | -      |
-| p02-t03 | Pending: complete profile/harness controls    | -      |
-| p03-t01 | Pending: controller/worker/shared guidance    | -      |
-| p03-t02 | Pending: renderer and public docs             | -      |
-| p04-t01 | Pending: bundle and release versions          | -      |
-| p04-t02 | Pending: full verification/evidence           | -      |
+| Task    | Outcome                                         | Commit                                     |
+| ------- | ----------------------------------------------- | ------------------------------------------ |
+| p01-t01 | Completed: superseding decision                 | `663dab68996b41dbc5e92bf2e85847924ea2a944` |
+| p01-t02 | Completed: versioned manifest and normalization | `f5317ee5fd4d5df78a341819023d7cc49f97da3e` |
+| p02-t01 | Pending: economical routing preview             | -                                          |
+| p02-t02 | Pending: conditional escalation/outcomes        | -                                          |
+| p02-t03 | Pending: complete profile/harness controls      | -                                          |
+| p03-t01 | Pending: controller/worker/shared guidance      | -                                          |
+| p03-t02 | Pending: renderer and public docs               | -                                          |
+| p04-t01 | Pending: bundle and release versions            | -                                          |
+| p04-t02 | Pending: full verification/evidence             | -                                          |
 
-## Phase Outcomes
+## Phase 1: Decision and versioned contract
 
-No implementation phase has run. Add actual delivered behavior, exact commits,
-verification commands/results, and deviations per phase during implementation.
+**Status:** completed
+**Started:** 2026-09-09
+**Completed:** 2026-09-10
+
+### Task p01-t01: Record the intended division of labor and superseding decision
+
+**Status:** completed
+**Commit:** `663dab68996b41dbc5e92bf2e85847924ea2a944`
+**Verification:** passed
+
+### Task p01-t02: Add a v2 manifest shape with lossless v1 normalization
+
+**Status:** completed
+**Commit:** `f5317ee5fd4d5df78a341819023d7cc49f97da3e`
+**Verification:** passed
+
+### Phase Summary
+
+- `p01-t01` recorded the accepted economical per-wave routing decision, superseded
+  the homogeneous run-wide decision, preserved caller-owned judgment and the
+  no-unsupported-receipts boundary, and regenerated the decision index.
+- `p01-t02` added closed manifest v1/v2 dispatch, preserved byte-exact v1
+  fingerprint semantics, introduced immutable normalized per-wave routing, and
+  retained the single `ValidatedRun` validation boundary.
+- Task commits: `663dab68996b41dbc5e92bf2e85847924ea2a944`,
+  `f5317ee5fd4d5df78a341819023d7cc49f97da3e`.
+- Verification: 81/81 focused contract tests and 203/203 full recon tests passed;
+  `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm lint`, and
+  `pnpm format` passed. Root independently reran the focused 81-test suite.
+- Review: `reviews/p01-review-2026-09-10T020657Z.md`, 0 Critical, 0 Important,
+  1 Medium, 0 Minor; pass with zero fix loops.
+- Carry-in: `p02-t02` must make repeated malformed condition entries return
+  categorical validation errors rather than throwing and validate every
+  `afterWaveIds` entry as a non-empty string.
 
 ## Orchestration Runs
 
@@ -62,7 +95,19 @@ verification commands/results, and deviations per phase during implementation.
 - Checkpoints: final phase only (`p04`) from `workflow.hillCheckpointDefault`;
   automatic HiLL lifecycle review enabled from workflow configuration.
 - Schedule: `p01` -> `p02` -> `p03` -> `p04`; no parallel groups.
-- Current scope: Phase 1, beginning with `p01-t01`.
+- Phase p01 implementation dispatch: request
+  `b68529ad-958c-4e53-91fb-e763bb2e234b`, accepted and completed `DONE` on
+  `oat-phase-implementer-gpt-5-6-sol-high`; two task commits; 0/10 recovery
+  attempts; no nested dispatches.
+- Phase p01 implementation stamp: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`.
+- Phase p01 review dispatch: request `7029624c-c477-4b0d-afc5-c79cf49df627`,
+  accepted and completed on `oat-reviewer-gpt-5-6-sol-high`; reconnaissance
+  not attempted; artifact `reviews/p01-review-2026-09-10T020657Z.md`.
+- Phase p01 review stamp: `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
+- Dispatch policy enforcement: high; selected=high; cap=high (Codex, enforced —
+  native materialized variants for implementation and review).
+- Phase p01 verdict: passed; fix-loop count 0. Current scope: Phase 2, beginning
+  with `p02-t01`.
 
 <!-- orchestration-runs-end -->
 
@@ -151,6 +196,15 @@ verification commands/results, and deviations per phase during implementation.
   `high` after the accepted handoff was first pushed.
 - Updated only the project-state ceiling and current handoff prose; reusable ladder
   configuration and concrete provider targets remain config/resolver-owned.
+
+### 2026-09-10 — Phase 1 implemented and reviewed
+
+- Phase implementation request `b68529ad-958c-4e53-91fb-e763bb2e234b`
+  completed both tasks with two atomic commits and no recovery attempts.
+- Independent review request `7029624c-c477-4b0d-afc5-c79cf49df627` passed the
+  blocking threshold with 0 Critical, 0 Important, 1 Medium, and 0 Minor findings.
+- The Medium malformed-condition diagnostic finding is nonblocking and is folded
+  into the already-planned conditional-validation task `p02-t02`.
 
 ## Planning Verification
 

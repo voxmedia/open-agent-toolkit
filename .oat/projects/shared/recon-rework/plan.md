@@ -323,6 +323,9 @@ fixtures, not qualified live models.
    preserve prior work, record an unresolved/out-of-envelope gap, and require
    renewed user approval or a new envelope/run; do not mutate the target, launch a
    second reconciliation, or substitute contradiction search for synthesis.
+9. Preserve the validator's structured-error contract for hostile condition
+   arrays: repeated null or primitive entries must return categorical errors rather
+   than throw, and every `afterWaveIds` entry must be a non-empty string.
 
 **Format:**
 
@@ -337,12 +340,13 @@ node --test .agents/skills/recon/tests/conditional-routing.test.mjs .agents/skil
 ```
 
 Negative controls cover a valid old conditional omission fixture where applicable,
-new guard neutralization, unknown/cyclic rules, unapproved stronger targets,
-activated missing outputs, skipped artifacts, and cap overflow. A complete valid
-conditional follow-up passes; a failed accepted predecessor remains failed. The
-pinned v1 fingerprint literal remains byte-identical after v2 fingerprint inputs
-gain conditions, while otherwise-identical v2 manifests with and without conditions
-produce different fingerprints.
+new guard neutralization, repeated malformed condition entries, invalid
+`afterWaveIds`, unknown/cyclic rules, unapproved stronger targets, activated missing
+outputs, skipped artifacts, and cap overflow. A complete valid conditional follow-up
+passes; a failed accepted predecessor remains failed. The pinned v1 fingerprint
+literal remains byte-identical after v2 fingerprint inputs gain conditions, while
+otherwise-identical v2 manifests with and without conditions produce different
+fingerprints.
 
 **Commit:** `feat(p02-t02): validate bounded recon escalation outcomes`.
 
@@ -660,18 +664,18 @@ plan and directed that it be marked passed. The final event records that manual
 acceptance; earlier event statuses remain as history. Keep the unbound template
 rows below. The spec and design placeholders are non-blocking in quick mode.
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| p02    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| final  | code     | pending         | -          | -                                                           | -             | -          | -           |
-| spec   | artifact | pending         | -          | -                                                           | -             | -          | -           |
-| design | artifact | pending         | -          | -                                                           | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T163711Z.md | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T232155Z.md | -             | -          | -           |
-| p03    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| p04    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| plan   | artifact | passed          | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T231851Z.md | -             | manual     | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | passed          | 2026-09-10 | reviews/p01-review-2026-09-10T020657Z.md                    | f5317ee5fd4d5df78a341819023d7cc49f97da3e | manual     | -           |
+| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T163711Z.md | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T232155Z.md | -                                        | -          | -           |
+| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| plan   | artifact | passed          | 2026-09-09 | reviews/archived/artifact-plan-review-2026-09-09T231851Z.md | -                                        | manual     | -           |
 
 ## Implementation Complete
 
