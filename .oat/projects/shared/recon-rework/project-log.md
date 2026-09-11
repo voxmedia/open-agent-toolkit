@@ -92,6 +92,10 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1
 
 run-2-malformed-manifest-fixes-20260911 The review's 1 Important and 2 Minor findings were all accepted and fixed in cfd2f25a539499276ae00f51c11b067f5c4871cf; malformed top-level fields now return structured diagnostics and withdraw stale output, all manifest collection loops are shape-safe, and quick terminal topology has one diagnostic owner.
 
+### 2026-09-11 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T024939Z.md run=f0529599-5745-4bcb-8abf-a72b5b0b7f1f
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
