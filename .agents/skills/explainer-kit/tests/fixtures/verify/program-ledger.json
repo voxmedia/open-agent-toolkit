@@ -1,0 +1,79 @@
+{
+  "terminology": [
+    { "term": "2026-08-31-execution-program.md" },
+    { "term": "W1" },
+    { "term": "W2" },
+    { "term": "wave-1" },
+    { "term": "wave-2" }
+  ],
+  "numbers": [
+    { "subject": "2026-08-31-execution-program.md", "value": "2026-08-31" },
+    { "subject": "Execution Program: 2026-08-31", "value": "2026-09-05" },
+    { "subject": "wave-1", "value": "20260909" },
+    { "subject": "wave-1", "value": "1" },
+    { "subject": "Wave 1 Execution", "value": "2026-09-09" },
+    { "subject": "Wave 1 Execution", "value": "4" },
+    { "subject": "wave-2", "value": "20260909" },
+    { "subject": "wave-2", "value": "2" },
+    { "subject": "Wave 2 Execution", "value": "2026-09-09" },
+    { "subject": "Wave 2 Execution", "value": "5" }
+  ],
+  "statuses": [
+    { "subject": "W1", "value": "merged" },
+    { "subject": "W2", "value": "merged" },
+    { "subject": "Wave 1 Execution", "value": "complete" },
+    { "subject": "Wave 2 Execution", "value": "complete" },
+    { "subject": "Wave 2 Execution", "value": "merged" },
+    { "subject": "Wave 2 Execution", "value": "closed" }
+  ],
+  "claims": [
+    {
+      "subject": "2026-08-31-execution-program.md",
+      "value": "2026-08-31",
+      "kind": "date"
+    },
+    {
+      "subject": "Execution Program: 2026-08-31",
+      "value": "2026-09-05",
+      "kind": "date"
+    },
+    { "subject": "W1", "value": "merged", "kind": "status" },
+    { "subject": "W2", "value": "merged", "kind": "status" },
+    { "subject": "wave-1", "value": "20260909", "kind": "number" },
+    { "subject": "wave-1", "value": "1", "kind": "number" },
+    {
+      "subject": "Wave 1 Execution",
+      "value": "complete",
+      "kind": "status"
+    },
+    {
+      "subject": "Wave 1 Execution",
+      "value": "2026-09-09",
+      "kind": "date"
+    },
+    { "subject": "Wave 1 Execution", "value": "4", "kind": "number" },
+    { "subject": "wave-2", "value": "20260909", "kind": "number" },
+    { "subject": "wave-2", "value": "2", "kind": "number" },
+    {
+      "subject": "Wave 2 Execution",
+      "value": "complete",
+      "kind": "status"
+    },
+    {
+      "subject": "Wave 2 Execution",
+      "value": "2026-09-09",
+      "kind": "date"
+    },
+    { "subject": "Wave 2 Execution", "value": "5", "kind": "number" },
+    {
+      "subject": "Wave 2 Execution",
+      "value": "merged",
+      "kind": "status"
+    },
+    {
+      "subject": "Wave 2 Execution",
+      "value": "closed",
+      "kind": "status"
+    }
+  ]
+}

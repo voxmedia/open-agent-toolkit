@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Execution program recap</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 2rem;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      td,
+      th {
+        padding: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section id="program-overview">
+        <h2>Program overview</h2>
+        <table>
+          <tbody>
+            <tr>
+              <td>2026-08-31-execution-program.md</td>
+              <td>2026-08-31</td>
+            </tr>
+            <tr>
+              <td>Execution Program: 2026-08-31</td>
+              <td>2026-09-05</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <section id="wave-map">
+        <h2>Wave map</h2>
+        <table>
+          <tbody>
+            <tr>
+              <td>W1</td>
+              <td>merged</td>
+            </tr>
+            <tr>
+              <td>W2</td>
+              <td>merged</td>
+            </tr>
+            <tr>
+              <td>wave-1</td>
+              <td>20260909 1</td>
+            </tr>
+            <tr>
+              <td>wave-2</td>
+              <td>20260909 2</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <section id="per-wave-outcomes">
+        <h2>Per-wave outcomes</h2>
+        <table>
+          <tbody>
+            <tr>
+              <td>Wave 1 Execution</td>
+              <td>complete</td>
+            </tr>
+            <tr>
+              <td>Wave 1 Execution</td>
+              <td>2026-09-09</td>
+            </tr>
+            <tr>
+              <td>Wave 1 Execution</td>
+              <td>4</td>
+            </tr>
+            <tr>
+              <td>Wave 2 Execution</td>
+              <td>complete</td>
+            </tr>
+            <tr>
+              <td>Wave 2 Execution</td>
+              <td>2026-09-09 merged closed</td>
+            </tr>
+            <tr>
+              <td>Wave 2 Execution</td>
+              <td>5</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+      <section id="convention-evolution">
+        <h2>Convention evolution</h2>
+        <p>The waves use one shared evidence shape.</p>
+      </section>
+      <section id="aggregate-numbers">
+        <h2>Aggregate numbers</h2>
+        <p>The table preserves the source values by subject.</p>
+      </section>
+      <section id="follow-up-ledger">
+        <h2>Follow-up ledger</h2>
+        <p>The evidence remains available for later analysis.</p>
+      </section>
+    </main>
+    <script>
+      (() => {
+        const links = [...document.querySelectorAll('.toc a[href^="#"]')];
+        const targets = links
+          .map((link) => document.querySelector(link.getAttribute('href')))
+          .filter(Boolean);
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              links.forEach((link) =>
+                link.classList.toggle(
+                  'active',
+                  link.getAttribute('href') === `#${entry.target.id}`,
+                ),
+              );
+            }
+          },
+          { rootMargin: '-15% 0px -70% 0px' },
+        );
+        targets.forEach((target) => observer.observe(target));
+      })();
+    </script>
+  </body>
+</html>

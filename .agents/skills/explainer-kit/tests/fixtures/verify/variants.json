@@ -1,0 +1,22 @@
+{
+  "missingSection": {
+    "find": "<section id=\"outcome\">",
+    "replace": "<div id=\"outcome\">"
+  },
+  "foreignScript": {
+    "find": "</body>",
+    "replace": "<script>globalThis.foreign = true;</script></body>"
+  },
+  "externalSrc": {
+    "find": "</main>",
+    "replace": "<img src=\"https://example.com/pixel.png\" alt=\"\" /></main>"
+  },
+  "untracedNumber": {
+    "find": "<td>2026-09-09 17 merged</td>",
+    "replace": "<td>2026-09-09 18 merged</td>"
+  },
+  "missingLedgerAnchor": {
+    "find": "The p02 boundary remains explicit.",
+    "replace": "The later boundary remains explicit."
+  }
+}
