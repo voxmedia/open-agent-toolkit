@@ -779,7 +779,11 @@ export function validateV2ProfileTopology(
     }
   }
   for (const wave of waves) {
-    if (wave?.conditional === true && !conditionDestinations.has(wave.waveId)) {
+    if (
+      wave?.conditional === true &&
+      !policy.orderedSingletonWaveModes.includes(wave.mode) &&
+      !conditionDestinations.has(wave.waveId)
+    ) {
       errors.push(
         issue(
           'MISSING_WAVE_CONDITION',
@@ -834,7 +838,10 @@ export function validateV2ProfileTopology(
     );
   }
   const conditionalRequired = stageIndexes.find(
-    ({ indexes }) => indexes.length === 1 && waves[indexes[0]]?.conditional,
+    ({ mode, indexes }) =>
+      mode !== 'reconciliation' &&
+      indexes.length === 1 &&
+      waves[indexes[0]]?.conditional,
   );
   if (conditionalRequired) {
     errors.push(

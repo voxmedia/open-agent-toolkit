@@ -2138,13 +2138,6 @@ export async function compileValidatedRun(packetDirectory) {
 
   if (isObject(manifest?.execution?.approval)) {
     if (manifestShape?.valid) routing = normalizeManifestRouting(manifest);
-  } else if (manifest) {
-    errors.push(
-      issue(
-        'MISSING_APPROVAL_ENVELOPE',
-        'Manifest lacks explicit approval evidence',
-      ),
-    );
   }
 
   const { artifactsByPath, artifactsById, validatedByteDigests } =
@@ -2186,23 +2179,6 @@ export async function compileValidatedRun(packetDirectory) {
     ],
     errors,
   );
-
-  if (manifest && ledger && !routing) {
-    if (packetRootIdentity) {
-      await assertUnchangedRoot(packetRootIdentity);
-      await rm(join(packetRoot, 'packet.md'), { force: true });
-    }
-    return {
-      valid: false,
-      publishable: false,
-      status: manifest.run?.status ?? 'failed',
-      requestedProfile: manifest.run?.requestedProfile ?? null,
-      achievedProfile: null,
-      packetRoot,
-      errors,
-      warnings,
-    };
-  }
 
   const exactEvidence = new Set();
   if (manifest && ledger) {
@@ -2270,20 +2246,26 @@ export async function compileValidatedRun(packetDirectory) {
         exactEvidence.add(evidence.id);
       }
     }
-    const conditionalState = validateConditionalRouting(
-      manifest,
-      routing,
-      artifactsById,
-      artifactsByPath,
-      errors,
-    );
-    validateApprovedLanes(
-      manifest,
-      routing,
-      artifactsById,
-      conditionalState,
-      errors,
-    );
+    let conditionalState = {
+      activeWaveIds: new Set(),
+      inactiveWaveIds: new Set(),
+    };
+    if (routing) {
+      conditionalState = validateConditionalRouting(
+        manifest,
+        routing,
+        artifactsById,
+        artifactsByPath,
+        errors,
+      );
+      validateApprovedLanes(
+        manifest,
+        routing,
+        artifactsById,
+        conditionalState,
+        errors,
+      );
+    }
     const passes = collectCompletePasses(
       artifactsById,
       manifest.run.id,

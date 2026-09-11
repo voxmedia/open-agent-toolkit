@@ -815,6 +815,42 @@ test('one manifest shape defect does not cascade into routing diagnostics', asyn
   );
 });
 
+test('routing-unavailable diagnostics retain independent source drift', async () => {
+  const packet = await createPacketFixture({ profile: 'standard' });
+  tempRoots.push(packet.tempRoot);
+  packet.manifest.request.unexpected = true;
+  await writeFile(packet.sourcePath, 'changed source bytes\n', 'utf8');
+  await packet.persist();
+
+  const result = await validatePacket(packet.packetRoot);
+  const errorCodes = result.errors.map(({ code }) => code);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.ok(
+    errorCodes.includes('UNKNOWN_FIELD'),
+    JSON.stringify(result, null, 2),
+  );
+  assert.ok(
+    errorCodes.includes('SOURCE_DRIFT'),
+    JSON.stringify(result, null, 2),
+  );
+  assert.equal(errorCodes.includes('UNAPPROVED_LANE'), false);
+  assert.equal(errorCodes.includes('UNKNOWN_CONDITION_OUTCOME'), false);
+});
+
+test('missing approval has one schema diagnostic owner', async () => {
+  const packet = await createPacketFixture({ profile: 'standard' });
+  tempRoots.push(packet.tempRoot);
+  delete packet.manifest.execution.approval;
+  await packet.persist();
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.deepEqual(
+    result.errors.map(({ code }) => code),
+    ['MISSING_REQUIRED_FIELD'],
+  );
+});
+
 test('packet validation rejects a conditional wave without an activating condition', async () => {
   const packet = await createPacketFixture({ profile: 'standard' });
   tempRoots.push(packet.tempRoot);
