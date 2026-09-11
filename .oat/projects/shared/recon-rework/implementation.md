@@ -1307,6 +1307,29 @@ configured exit gate must be refreshed against this latest implementation basis.
   `origin/main`; the refreshed final gate, push, readiness transition, issue
   closure, and canonical backlog closure remain separate shipping steps.
 
+### Final closeout verification after p-rev6
+
+**Date:** 2026-09-11
+**Basis:** `83d7316ec774d679f76d8011579f58e15525f34b`
+
+The complete repository gate sequence passed against the gather-pass ownership
+fix and its passing phase review. Each command recorded an explicit zero exit
+code in a dedicated `/tmp/recon-final-*.log` receipt:
+
+1. `pnpm check`
+2. `pnpm type-check`
+3. `pnpm test`
+4. `pnpm build`
+5. `pnpm run check:skill-bumps`
+6. `pnpm release:check-versions`
+7. `pnpm release:validate`
+8. `pnpm build:docs`
+9. `pnpm lint`
+10. `pnpm format`
+
+The final lifecycle review and configured implementation exit gate remain
+separate pending closeout boundaries.
+
 ## References
 
 - [Plan](plan.md)
