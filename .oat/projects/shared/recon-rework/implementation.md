@@ -1417,6 +1417,30 @@ attempt or product change was required. The final lifecycle review and
 configured implementation exit gate remain separate pending closeout
 boundaries.
 
+### Final lifecycle re-review received after p-rev7
+
+**Date:** 2026-09-11
+**Review artifact:**
+`reviews/archived/final-review-2026-09-11T202308Z.md`
+**Reviewed range:**
+`6faf9b996a88e0b9a55cfba5527636d762b042b4..16ad8b120a90d625372302b2f4ed2a0d6ade1373`
+**Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+The authorized narrowed final lifecycle re-review passed and closed the prior
+Important contradiction. It independently confirmed the failure-dominates
+ordering, primary and redundant gather regressions, honest partial control,
+project-artifact alignment, and complete final verification. No task or fix
+loop was added.
+
+The final review also resurfaced every earlier judgment-sweep deferral. M1's
+approval-drift diagnostic concern is superseded by session-local approval; M2's
+duplicate condition validation, M3's unstructured activated-lane gap identity,
+and m1's foreign-run inactive-condition diagnostic ownership were fixed by
+later implementation. Remaining deferred ledger: 0 Medium, 0 Minor.
+
+**Disposition:** passed. The configured implementation exit gate must now
+refresh against this reviewed basis.
+
 ## References
 
 - [Plan](plan.md)

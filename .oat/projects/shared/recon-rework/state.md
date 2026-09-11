@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T20:21:49Z'
+oat_project_state_updated: '2026-09-11T20:30:13Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -104,9 +104,9 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation — all tasks and the authorized `p-rev7` phase review are
-complete. Final verification and lifecycle review must refresh against commit
-`914e9fde6d67f6a3d1c88f2ff2b573b955503822`.
+Implementation — all tasks, final verification, and the authorized final
+lifecycle re-review are complete. The configured implementation exit gate must
+refresh against the current reviewed basis.
 
 ## Artifacts
 
@@ -150,7 +150,8 @@ No existing project was absorbed or retired.
 - ✓ One additional bounded fix and review cycle authorized
 - ✓ `prev7-t01` implemented and narrowed phase review passed
 - ✓ Refreshed final repository verification passed after `p-rev7`
-- ⧗ Refresh lifecycle review and configured exit gate
+- ✓ Authorized final lifecycle re-review passed with no findings
+- ⧗ Refresh configured implementation exit gate
 - ⧗ Summary, documentation, and PR description refresh pending
 - ✓ Final repository release-verification sequence passed
 - ✓ PR created
@@ -162,8 +163,8 @@ No active blocker.
 
 ## Next Milestone
 
-Run the final lifecycle review against the completed and verified `p-rev7`
-implementation.
+Refresh the configured implementation exit gate against the passing final
+lifecycle review.
 
 ## Authorization and Scope
 
