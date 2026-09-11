@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t10
+oat_current_task_id: p01-t11
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 17    | 9/17      |
+| Phase 1 | in_progress | 17    | 10/17     |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 8     | 0/8       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 9/32 tasks completed
+**Total:** 10/32 tasks completed
 
 ---
 
@@ -274,6 +274,25 @@ oat_generated: false
 
 ---
 
+### Task p01-t10: Rewrite the terminal-outcome guard and intent pairs
+
+**Status:** completed
+**Commit:** f3b0c6dbc160d2f690b838e66545c04e6d1dc293
+
+**Outcome:**
+
+- `generate` is satisfied only by `built` or `built-needs-review`; failed, incomplete, and retired durability outcomes are rejected.
+- `skip/failed_attempt` requires a failed/incomplete manifest or a well-formed `failure.json`; `capability_probe` remains readable.
+- Intent validation permits `skip/failed_attempt` only for project recaps.
+
+**Verification:**
+
+- Focused guard/intent suite passed 17/17.
+- Bypassing the missing-evidence guard made both lifecycle tests fail with `Missing expected rejection`; restoring it returned the suite to green.
+- `pnpm lint` and `pnpm format` passed.
+
+---
+
 ## Phase 2: Ladder and fresh-host proof
 
 **Status:** pending
@@ -351,7 +370,8 @@ Chronological log of implementation progress.
 - [x] p01-t07: Add browser-free `verify.mjs` checks and the none rung - 6bbde384d318e1558178814929bbe94890da7d27
 - [x] p01-t08: Replace archive validation with the v2 package contract - d7b4606e109466220d4e33a290f96b801d1a6502
 - [x] p01-t09: Prove one real path end to end before any deletion - c4a95b5fa1be33586dd001dff08410d3651ff585
-- [ ] p01-t10: Rewrite the terminal-outcome guard and add `skip/failed_attempt` - in progress
+- [x] p01-t10: Rewrite the terminal-outcome guard and add `skip/failed_attempt` - f3b0c6dbc160d2f690b838e66545c04e6d1dc293
+- [ ] p01-t11: Retire the explainer release-candidate tooling - in progress
 
 **What changed (high level):**
 
