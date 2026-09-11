@@ -1,8 +1,7 @@
 ---
 oat_current_task: p01-t09
 oat_last_commit: d7b4606e109466220d4e33a290f96b801d1a6502
-oat_blockers:
-  - p01-t09 archive recipe contract conflict requires operator direction
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -85,7 +84,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-11T04:22:00Z'
+oat_project_state_updated: '2026-09-11T09:41:00Z'
 oat_generated: false
 ---
 
@@ -117,7 +116,7 @@ Implementation — Phase 1: The cut
 
 ## Blockers
 
-- p01-t09 requires a `program-recap` package to pass `verifySelectedProjectRecapForArchive`, but that validator's retained and tested contract accepts only `project-recap`.
+None
 
 ## Next Milestone
 

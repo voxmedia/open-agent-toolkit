@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p01-t09 requires a program-recap package to pass a validator that must reject every recipe except project-recap
+oat_blockers: []
 oat_last_updated: 2026-09-10
 oat_current_task_id: p01-t09
 oat_generated: false
@@ -250,15 +249,14 @@ oat_generated: false
 
 ### Task p01-t09: Prove one real path end to end before any deletion
 
-**Status:** blocked
+**Status:** in_progress
 **Commit:** -
 
-**Blocker:**
+**Operator-approved plan correction:**
 
-- The task requires the `program-recap` package produced by the end-to-end flow to pass `verifySelectedProjectRecapForArchive`.
-- The retained archive contract rejects any manifest whose recipe id is not exactly `project-recap`; the required p01-t08 archive suite includes and passes `requires exact project-recap recipe identity`.
-- The approved spec's success metric asks only for the program recap manifest to be accepted by the archive validator's parser, not for program output to pass the project-only export validator.
-- Resolving this requires operator direction: either change p01-t09 to exercise the manifest/package parser contract, or widen the public project-recap archive validator to accept `program-recap`.
+- Corrected p01-t09 (`program-recap`), p04-t02 (`project-explainer`), p05-t01 (`program-recap`), and the design's FR9 test row to compose the generic package contract directly: manifest validation, every immutable hash checked against file bytes, and exact inventory enforcement.
+- The project-only `verifySelectedProjectRecapForArchive` recipe pin remains strict.
+- Cause: the archive check was added post-review without re-checking the recipe pin.
 
 **Deletion gate:** closed. No p01-t10 or later task has started.
 
@@ -311,6 +309,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
 - Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
+#### Continuation cont-agent-authored-recap-p01-plan-correction-1
+
+- Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
+- Disposition: `operator-scope`
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high` (unchanged)
+- Decision: preserve the strict project-only archive validator and replace the non-project-recap checks in p01-t09, p04-t02, p05-t01, and the FR9 test row with direct generic package-contract composition.
+- Cause: the archive check was added post-review without re-checking the recipe pin.
+- Recovery accounting: not an automatic phase-recovery attempt; usage remains `0/10`, `pending_attempt: null`.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -331,7 +338,7 @@ Chronological log of implementation progress.
 - [x] p01-t06: Add deterministic `record.mjs` and checked-in archive fixture - 0528fbfc54edb518478c79a4cc09e2529dbb14c7
 - [x] p01-t07: Add browser-free `verify.mjs` checks and the none rung - 6bbde384d318e1558178814929bbe94890da7d27
 - [x] p01-t08: Replace archive validation with the v2 package contract - d7b4606e109466220d4e33a290f96b801d1a6502
-- [ ] p01-t09: Prove one real path end to end before any deletion - blocked on archive recipe contract
+- [ ] p01-t09: Prove one real path end to end before any deletion - in progress
 
 **What changed (high level):**
 
@@ -347,6 +354,8 @@ Chronological log of implementation progress.
 **Decisions:**
 
 - Enforce citation `{ sourceId, locator }` in the validator because the unchanged fact-base schema retains legacy backlink fields.
+- Operator correction `cont-agent-authored-recap-p01-plan-correction-1` preserves the strict project-recap archive boundary and composes generic package validation directly for p01-t09, p04-t02, p05-t01, and the FR9 test row.
+- Cause: the archive check was added post-review without re-checking the recipe pin.
 
 **Follow-ups / TODO:**
 
@@ -354,7 +363,7 @@ Chronological log of implementation progress.
 
 **Blockers:**
 
-- p01-t09 asks a `program-recap` manifest to pass the project-only archive validator, while the retained and tested validator contract requires recipe id `project-recap`.
+- None.
 
 **Session End:** {time}
 
@@ -372,9 +381,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review                  | Source Artifact        | Planned / Documented                                                     | Actual / Accepted                                                                                                                               | Reason                                                                      | Source of Truth                                                     | Follow-up                   |
+| ------------------------------ | ---------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------- |
+| p01-t09, p04-t02, p05-t01, FR9 | `plan.md`, `design.md` | Non-project recap packages passed `verifySelectedProjectRecapForArchive` | Compose `validateContract('manifest')`, immutable byte-hash checks, and `enforceRunPackageInventory` directly; keep the project-only pin strict | The archive check was added post-review without re-checking the recipe pin. | Operator decision `cont-agent-authored-recap-p01-plan-correction-1` | Applied before p01-t09 code |
 
 ## Test Results
 
