@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t14
+oat_current_task_id: p01-t15
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 17    | 13/17     |
+| Phase 1 | in_progress | 17    | 14/17     |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 8     | 0/8       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 13/32 tasks completed
+**Total:** 14/32 tasks completed
 
 ---
 
@@ -349,6 +349,26 @@ oat_generated: false
 
 ---
 
+### Task p01-t14: Cut the adapter callback path, seam probe, and finalizer
+
+**Status:** completed
+**Commit:** f9b6fa6a0a450e8773d57f63e49e7e74e86fc1a6
+
+**Outcome:**
+
+- Removed the adapter orchestrator, destination, finalizer, and seam-probe scripts plus their runtime tests.
+- Reduced config resolution to theme defaults and workflow preferences; moved `MINIMUM_CORE_VERSION` to `check-core.mjs`.
+- Rewrote project/program allowlists and retained the supplied-fact-base path without repository bindings.
+- Removed runtime assertions from the completion integration test while retaining lifecycle prose assertions.
+
+**Verification:**
+
+- All 43 retained adapter tests passed, including new replacement-allowlist coverage.
+- `pnpm lint` and `pnpm format` passed.
+- The only retired-symbol matches in adapter tests are the lifecycle prose assertions explicitly deferred and allowlisted until Phase 3.
+
+---
+
 ## Phase 2: Ladder and fresh-host proof
 
 **Status:** pending
@@ -430,7 +450,8 @@ Chronological log of implementation progress.
 - [x] p01-t11: Retire the explainer release-candidate tooling - 72312063bc5a4edc979e6bbc386a50a76f8c1b5e
 - [x] p01-t12: Retire the explainer smoke tests - aeed93c29c791b5a19f4b09b0f6d6bf9af15d2e2
 - [x] p01-t13: Retire the core orchestrator and obsolete modules - e47be8859204bfc959350fd05cbfedf00537a799
-- [ ] p01-t14: Cut the adapter callback path, seam probe, and finalizer - in progress
+- [x] p01-t14: Cut the adapter callback path, seam probe, and finalizer - f9b6fa6a0a450e8773d57f63e49e7e74e86fc1a6
+- [ ] p01-t15: Remove the `explainers.publish.*` CLI config keys - in progress
 
 **What changed (high level):**
 
