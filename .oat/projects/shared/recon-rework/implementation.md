@@ -32,8 +32,8 @@ project for the user-approved post-retro simplification in `p05-t01`.
 | Phase p-rev1: Integrate current main       | completed   | 1     | 1/1       |
 | Phase p-rev2: Merged-head review fixes     | in_progress | 2     | 2/2       |
 
-**Total:** 20/20 tasks implemented. The integrated head's final lifecycle review
-fixes are implemented and await independent phase review.
+**Total:** 20/20 tasks implemented. The merged-head final-review fixes are complete
+and awaiting narrowed lifecycle re-review.
 
 ## Task Status
 

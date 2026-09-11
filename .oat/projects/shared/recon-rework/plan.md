@@ -918,7 +918,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T024939Z.md         | d08443a4494aa0f7344893ce03cabf61a50fb683 | gate       | cursor-fable-5-1-high |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T030536Z.md         | 5f243f7ac825a050e995c867597c69ef3e1b46bc | gate       | cursor-fable-5-1-high |
 | p-rev1 | code     | passed          | 2026-09-11 | reviews/archived/p-rev1-review-2026-09-11T143545Z.md        | 9d27e15a615fc18056a8c5b7501a0508ffb9c4a4 | manual     | -                     |
-| final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T144641Z.md         | 0ee34935306c0dcb711ded3f83746a890cb50c97 | auto       | -                     |
+| final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T144641Z.md         | 0ee34935306c0dcb711ded3f83746a890cb50c97 | auto       | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -966,7 +966,7 @@ Source: final lifecycle review `final-review-2026-09-11T144641Z.md`
 
 ### Task prev2-t01: (review) Align profile topology caps with documented waves
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
@@ -1001,7 +1001,7 @@ Commit as `fix(prev2-t01): align recon profile topology caps`.
 
 ### Task prev2-t02: (review) Close object-valued manifest collection failures
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
@@ -1034,8 +1034,8 @@ Commit as `fix(prev2-t02): fail closed on hostile manifest collections`.
 
 ## Implementation Complete
 
-**Implementation tasks complete: 18 of 20 implemented. The merged-head final
-review added two blocking correction tasks.**
+**Implementation tasks complete: 20 of 20 implemented. The merged-head final
+review fixes are complete and awaiting narrowed re-review.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1045,7 +1045,7 @@ review added two blocking correction tasks.**
 - Phase p-rev1: 1 task — integrate current `origin/main` and resolve conflicts.
 - Phase p-rev2: 2 tasks — close merged-head profile and hostile-collection gaps.
 
-**Total: 7 phases, 20 tasks.** Two final-review fix tasks remain.
+**Total: 7 phases, 20 tasks.** All implementation tasks are complete.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References
