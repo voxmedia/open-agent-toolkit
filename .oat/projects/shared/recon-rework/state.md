@@ -43,12 +43,12 @@ oat_implement_exit_gate:
   reviewed_head: 16ad8b120a90d625372302b2f4ed2a0d6ade1373
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:f7844cc1a5d2a14f46355b8e8dda88af40c961bcf1b91850de847380f3b1470b'
-  freshness_head: b68a9b19035e32dcd8c9792fabd22094dd25807e
-  freshness_fingerprint: 'sha256:effective-delta-v1:6b100c9552b81ecf05df049a888904ddb716e5aeea9e7f44b1ddcffd6447537d'
-  launch_state: not_started
-  launch_attempt_id: null
-  launch_started_at: null
-  launch_result_receipt: null
+  freshness_head: 5acdf804df3bfc9e301b4ff91ded29a952b3b139
+  freshness_fingerprint: 'sha256:effective-delta-v1:561ac3c66fe6382fea88a1ff2dc21d419ee3f787794bcfa70891bb670dd6490a'
+  launch_state: intent_persisted
+  launch_attempt_id: 'recon-exit-gate-20260911T203343Z'
+  launch_started_at: '2026-09-11T20:33:43Z'
+  launch_result_receipt: '/private/tmp/recon-exit-gate-20260911T203343Z.receipt.json'
   gate_run_marker: null
   gate_run_id: null
   envelope_status: null
@@ -64,7 +64,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-09-11T20:32:30Z'
+  updated_at: '2026-09-11T20:33:43Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T20:32:30Z'
+oat_project_state_updated: '2026-09-11T20:33:43Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
