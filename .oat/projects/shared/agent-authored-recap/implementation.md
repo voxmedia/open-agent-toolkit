@@ -491,6 +491,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Recovery ledger: `used_attempts: 0`, `pending_attempt: null`; no recovery events.
 - File boundary: only p01-declared files, the operator-approved plan/design correction, p01 bookkeeping, and mechanically derived in-phase symbol consumers were changed.
 - Completion time: `2026-09-11T15:44:08Z`.
+- Task p01-t17 bookkeeping: `dd203b3aacdfdd9642fbe95d74855059b2711819`.
+- Phase completion disposition: implementation complete; root-owned review pending; p02 not started.
 
 #### Continuation cont-agent-authored-recap-p01-plan-correction-1
 
