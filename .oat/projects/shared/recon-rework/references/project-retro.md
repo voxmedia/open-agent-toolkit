@@ -66,7 +66,7 @@ is asserted.
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | Delivered scope   | 14/14 implementation tasks across five phases                                                                                                 |
 | Product contract  | Per-wave approved routing, manifest v2 only, session-local approval, structured conditional gaps, one terminal reconciliation                 |
-| Verification      | Eight CI-equivalent gates, fresh 10/10 Turbo tasks, 258/258 recon tests, 29/29 bundle tests, and guard-neutralization controls passed         |
+| Verification      | Run 1 gates passed; Run 2 passed 255/255 recon tests, workspace/release/docs gates, and six guard-neutralization controls                     |
 | Reviews           | All phase and final blocking reviews passed; the exit gate passed at the Important threshold with four sub-threshold follow-ups dispositioned |
 | Lifecycle         | Final HiLL and implementation closeout completed; draft PR #285 is open                                                                       |
 | Shipping boundary | PR #285 conflicts with current `main`; merge, issue #274 closure, and backlog closure were not performed                                      |
@@ -243,7 +243,7 @@ verification rather than the intended receipt quality.
 - **Destination-receipt:** —
 - **Remote-visibility:** —
 - **Sanitized:** no
-- **Disposition-note:** Implemented directly in project task `p05-t01`; no tracker filing remains.
+- **Disposition-note:** Implemented directly in project tasks `p05-t01` and `p05-t03`; no tracker filing remains.
 
 The configured exit-gate review
 `final-review-2026-09-10T091637Z.md` found three related diagnostic ownership

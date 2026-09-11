@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: f16437f54491c57f9ad9518c34b415ffb7418a7e
+oat_last_commit: 3d21ea885a557e2642eb4b82cfb32d7a51024ea7
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -98,21 +98,21 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** Run 2 implementation and verification complete; fresh final review pending.
+**Status:** Run 2 review fixes complete; narrowed final re-review pending.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-11
 
 ## Current Phase
 
-Run 2 implementation and verification complete — fresh final review pending.
+Run 2 review fixes complete — narrowed final re-review pending.
 
 ## Artifacts
 
 - Discovery: `discovery.md` — captured from the conversation, CLI-completed.
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight design aligned with the simplified approval contract.
-- Plan: `plan.md` — complete; 5 sequential phases, 14 tasks.
-- Implementation: `implementation.md` — 14/14 tasks complete; Run 2 final review pending.
+- Plan: `plan.md` — complete; 5 sequential phases, 17 tasks.
+- Implementation: `implementation.md` — 17/17 tasks complete; narrowed final re-review pending.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
@@ -131,18 +131,19 @@ No existing project was absorbed or retired.
 - ✓ PR #285 updated and open as a draft
 - ✓ Post-retro RP-01, RP-02, UP-01, and UP-02 implemented directly
 - ✓ Run 2 focused and repository verification passed
-- ⧗ Run a fresh final review over the Run 2 delta
+- ✓ Fresh final review received and all seven findings fixed
+- ⧗ Run a narrowed final re-review over the fix commits
 
 ## Blockers
 
-No active blocker. Run 2 is ready for fresh final review.
+No active blocker. Run 2 is ready for narrowed final re-review.
 
 ## Next Milestone
 
-Run a fresh final review over the Run 2 mergeable delta. If it passes, update and
-push draft PR #285. Reconcile any current base conflicts before marking the PR
-ready or merging it. Project tracking remains active; after the chosen
-merge/closeout boundary, run `oat-project-complete`.
+Run a narrowed final re-review over the 2026-09-11 fix commits. If it passes,
+update and push draft PR #285. Reconcile any current base conflicts before
+marking the PR ready or merging it. Project tracking remains active; after the
+chosen merge/closeout boundary, run `oat-project-complete`.
 
 ## Authorization and Scope
 

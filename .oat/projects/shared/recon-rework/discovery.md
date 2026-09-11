@@ -69,12 +69,16 @@ Chosen direction: one recon-specific compatibility change combining economical a
 7. Quick remains capped at supported evidence; standard/thorough retain their required independent passes and derived assurance. The root still judges use.
 8. Accepted failed lanes cannot be silently retried or replaced under an escalation label. Partial outcomes remain visible.
 9. Preserve valid legacy v1 packets and their original approval meaning.
+   **Superseded 2026-09-11:** the operator explicitly declined backward
+   compatibility; `DR-260911-use-session-local-recon` replaces this with a
+   manifest-v2-only, session-local approval contract.
 
 ## Constraints
 
 - Planning baseline: `bb93ad233befc75d0da9bd699ffc57db80dfe393`, CLI 0.2.65, recon 1.1.1. Target branch/worktree: `recon-rework` on this Mac.
 - Narrowly align shared classification guidance so bounded counterexample searches do not inherit the floor for a final consequential review. Preserve stronger floors for actual judgment.
-- Reuse the existing `ValidatedRun` boundary and canonical fingerprint machinery.
+- Reuse the existing `ValidatedRun` boundary and canonical artifact hashing;
+  approval itself no longer carries a fingerprint under `DR-260911`.
 - Edit canonical skills/roles; generate bundled/provider copies with repository tooling.
 - No live-provider launch during planning. Future live tests need exact bounded dispatch approval.
 - No triage, GitHub, release, push, or merge changes are authorized by this draft.
@@ -86,6 +90,8 @@ Chosen direction: one recon-specific compatibility change combining economical a
 - Unapproved target/topology/limit changes are refused. Preapproved escalation follows its declared trigger without changing the approved envelope.
 - Provider-neutral tests cover Claude, Cursor, and Codex-shaped selections, unavailable controls, exact-target preservation, and opaque selectors.
 - Valid v1 packets validate/render unchanged; v2 never silently reinterprets approval or accepts untyped extensions.
+  **Superseded 2026-09-11:** `DR-260911-use-session-local-recon` makes manifest
+  v2 the only supported manifest while version-1 evidence artifacts remain valid.
 - Activated conditional work supplies an outcome or honest material gap; non-triggered work cannot count as a completed pass.
 - Packets expose evidence and intended routing without claiming actual-launch proof or final correctness.
 

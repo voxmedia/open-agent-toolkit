@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-09-09
+oat_last_updated: 2026-09-11
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: []
@@ -794,11 +794,16 @@ do not claim model-name capability ranking, and do not close recap or wave-7 ite
 
 ### Task p05-t01: Remove unnecessary approval machinery and close RP-01/RP-02
 
-**Status:** completed
+**Status:** in_progress
 
 **Files:**
 
 - Modify: `.agents/skills/recon/**`
+- Modify: `apps/oat-docs/docs/workflows/skills/recon.md`
+- Modify: `packages/*/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `.oat/sync/manifest.json`
 - Modify: `.oat/repo/reference/decisions/**`
 - Modify: `.oat/projects/shared/recon-rework/**`
 
@@ -823,6 +828,50 @@ reproduction-grade negative controls for exact-target mismatch, condition
 ownership, foreign-run attribution, and structured conditional gaps.
 
 **Commit:** `refactor(recon): simplify approval and condition contracts`.
+
+### Task p05-t02: Align shipped docs and historical decision surfaces
+
+**Status:** completed
+
+**Commit:** `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/skills/recon.md`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+- Modify: `.oat/projects/shared/recon-rework/**`
+- Modify: `.oat/repo/reference/decisions/**`
+
+**Implement:** Replace stale manifest-v1 documentation with the current
+manifest-v2-only, session-local approval contract; annotate superseded discovery
+requirements and prior decision clauses; and correct the packet-contract prose.
+
+### Task p05-t03: Close dependent-validation and dead-condition gaps
+
+**Status:** completed
+
+**Commit:** `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/**`
+- Modify: `.agents/skills/recon/tests/**`
+
+**Implement:** Stop dependent lane/condition validation when routing cannot be
+normalized, require every conditional wave to have exactly one activating
+condition, and pin both fixes at pure and packet-validation boundaries.
+
+### Task p05-t04: Reconcile final-review bookkeeping
+
+**Status:** in_progress
+
+**Files:**
+
+- Modify: `.oat/projects/shared/recon-rework/**`
+
+**Implement:** Receive and archive the final review, record all seven finding
+dispositions, refresh task totals and retrospective closure, and run a narrowed
+final re-review.
 
 ## Reviews
 
@@ -853,19 +902,20 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_completed | 2026-09-10 | reviews/archived/final-review-2026-09-10T083842Z.md         | fe30e986219bbf27b04fb08957166229acc955fe | auto       | -                     |
 | final  | code     | passed          | 2026-09-10 | reviews/archived/final-review-2026-09-10T085115Z.md         | b1c7e84716f65ccf414448f1d2ac7d96d9cac434 | auto       | -                     |
 | final  | code     | passed          | 2026-09-10 | reviews/archived/final-review-2026-09-10T091637Z.md         | ad1d8ae99e43d125e7dd791225c3dc1984e7812f | gate       | cursor-fable-5-1-high |
-| final  | code     | received        | 2026-09-11 | reviews/final-review-2026-09-11T014112Z.md                  | b1dd2acaf13bbad8ce49c2b472565584e33e08f2 | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T014112Z.md         | b1dd2acaf13bbad8ce49c2b472565584e33e08f2 | gate       | cursor-fable-5-1-high |
 
 ## Implementation Complete
 
-**Implementation tasks complete: 13 of 13 implemented. All phase and final reviews
-passed; the implementation exit gate and HiLL boundary remain pending.**
+**Implementation tasks complete: 16 of 17 implemented. Run 2 final-review fixes
+are complete; review reconciliation remains active through the narrowed re-review.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
 - Phase 3: 2 tasks — guidance and consumer output.
 - Phase 4: 6 tasks — distribution, complete verification, and final-review fixes.
+- Phase 5: 4 tasks — simplification plus fresh final-review fixes.
 
-**Total: 4 phases, 13 tasks.** No incomplete implementation task remains.
+**Total: 5 phases, 17 tasks.** One review-reconciliation task remains.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

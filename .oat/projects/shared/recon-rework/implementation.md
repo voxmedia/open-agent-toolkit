@@ -28,10 +28,11 @@ project for the user-approved post-retro simplification in `p05-t01`.
 | Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
 | Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
 | Phase 4: Distribution and verification     | completed | 6     | 6/6       |
-| Phase 5: Post-retro simplification         | completed | 1     | 1/1       |
+| Phase 5: Post-retro simplification         | active    | 4     | 3/4       |
 
-**Total:** 14/14 tasks implemented. Run 2 verification passed; its fresh final
-review remains pending.
+**Total:** 16/17 tasks implemented. The fresh final review's seven findings are
+fixed and received; review reconciliation remains active through the narrowed
+final re-review.
 
 ## Task Status
 
@@ -51,12 +52,14 @@ review remains pending.
 | p04-t05 | Completed: align lifecycle summaries            | `fe30e986219bbf27b04fb08957166229acc955fe` |
 | p04-t06 | Completed: correct Phase 4 completion wording   | this commit                                |
 | p05-t01 | Completed: simplify approval and diagnostics    | `f16437f54491c57f9ad9518c34b415ffb7418a7e` |
+| p05-t02 | Completed: align shipped and historical docs    | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7` |
+| p05-t03 | Completed: close validator regressions          | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7` |
+| p05-t04 | In progress: reconcile final-review bookkeeping | —                                          |
 
 ## Phase 5: Post-retro simplification
 
-**Status:** completed
+**Status:** active
 **Started:** 2026-09-10
-**Completed:** 2026-09-11
 
 ### Task p05-t01: Remove unnecessary approval machinery and close RP-01/RP-02
 
@@ -77,6 +80,46 @@ was neutralized, then passed again after restoration. Project-plan validation an
 project-scope sync passed. The repository check, type-check, full test, build,
 skill-bump, release-version, release-validation, docs-build, lint, and format
 gates passed after advancing the five public packages to lockstep `0.2.73`.
+
+### Task p05-t02: Align shipped docs and historical decision surfaces
+
+**Status:** completed
+**Commit:** `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`
+**Verification:** passed
+
+The public docs now describe manifest v2 only, independently versioned v1
+evidence, session-local approval, and Intended Routing on every valid packet.
+Discovery and the two partially superseded decisions carry forward pointers to
+`DR-260911`, and the packet-contract sentence and reverse condition rule are
+explicit. The docs contract pin and `oat-docs` check passed.
+
+### Task p05-t03: Close dependent-validation and dead-condition gaps
+
+**Status:** completed
+**Commit:** `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`
+**Verification:** passed
+
+Packet compilation now stops dependent routing checks when routing cannot be
+normalized, so one shape defect remains one diagnostic. The shared topology
+validator again rejects every conditional wave without exactly one activating
+condition. Pure and packet controls pass, and neutralizing either guard turns
+its targeted test red before restoration.
+
+### Task p05-t04: Reconcile final-review bookkeeping
+
+**Status:** in progress
+**Commit:** —
+**Verification:** fixes recorded; narrowed final re-review pending
+
+The 2026-09-11 final review reported 0 Critical, 1 Important, 2 Medium, and 4
+Minor findings. All seven were accepted for immediate repair: the Important docs
+drift is fixed in `p05-t02`; both Medium validator gaps are fixed in `p05-t03`;
+and the four Minor project/decision/contract alignments are included in those
+same tasks. No finding is deferred or filed to backlog.
+
+The review artifact is archived at
+`reviews/archived/final-review-2026-09-11T014112Z.md`, and its Reviews row is
+`fixes_completed` against reviewed head `b1dd2acaf`.
 
 ## Phase 1: Decision and versioned contract
 
