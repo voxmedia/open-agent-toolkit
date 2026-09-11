@@ -23,6 +23,7 @@ import {
   indexClaims,
   runBundle,
   selectAnchorLedger,
+  writeFailure,
 } from '../scripts/bundle.mjs';
 import { validateContract } from '../scripts/lib/contracts.mjs';
 import { loadRecipe } from '../scripts/lib/recipes.mjs';
@@ -552,6 +553,43 @@ test('retry removes stale failure and CLI refuses a missing --out', async () => 
   );
   assert.notEqual(missingOut.status, 0);
   assert.match(missingOut.stderr, /--out/);
+});
+
+test('changed-input rebundle and interruption cannot retain a satisfied manifest', async () => {
+  const { root, path } = await temporaryFixture('project');
+  const out = join(root, 'run');
+  const theme = await themeFile(root);
+  await cp(checkedPackage, out, { recursive: true });
+
+  const bundle = await runBundle(
+    [
+      '--recipe',
+      'project-recap',
+      '--project',
+      path,
+      '--theme',
+      theme,
+      '--out',
+      out,
+    ],
+    { log() {} },
+  );
+  assert.equal(bundle.reuse, false);
+  await assert.rejects(lstat(join(out, 'manifest.json')), { code: 'ENOENT' });
+
+  await writeFailure(out, 'interrupted', 'operator stopped after rebundle');
+  assert.ok(await lstat(join(out, 'failure.json')));
+  await assert.rejects(lstat(join(out, 'manifest.json')), { code: 'ENOENT' });
+});
+
+test('failure recording removes an existing manifest before writing evidence', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'explainer-failure-exclusive-'));
+  await cp(checkedPackage, root, { recursive: true });
+
+  await writeFailure(root, 'interrupted', 'operator stopped the flow');
+
+  assert.ok(await lstat(join(root, 'failure.json')));
+  await assert.rejects(lstat(join(root, 'manifest.json')), { code: 'ENOENT' });
 });
 
 test('script source does not import a browser runtime', async () => {

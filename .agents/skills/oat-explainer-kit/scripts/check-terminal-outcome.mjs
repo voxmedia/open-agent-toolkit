@@ -5,14 +5,8 @@ import { pathToFileURL } from 'node:url';
 
 import { validateContract } from '../../explainer-kit/scripts/lib/contracts.mjs';
 import { isFlowFailureStage } from '../../explainer-kit/scripts/lib/failure.mjs';
-
-const TERMINAL_OUTCOMES = new Set([
-  'built',
-  'built-needs-review',
-  'failed',
-  'incomplete',
-]);
-const SATISFIED_OUTCOMES = new Set(['built', 'built-needs-review']);
+import { loadRecipe } from '../../explainer-kit/scripts/lib/recipes.mjs';
+import { validateSatisfiedRunPackage } from '../../explainer-kit/scripts/lib/run-package.mjs';
 
 /**
  * A skip reason is the recorded `source` of the skip decision, so the guard
@@ -26,7 +20,6 @@ const SKIP_REASONS = new Set([
 
 export function checkTerminalOutcome({
   intent,
-  outcome,
   reason,
   manifest = null,
   failure = null,
@@ -56,12 +49,9 @@ export function checkTerminalOutcome({
   if (intent !== 'generate') {
     throw recapOutcomeError('Recap intent must be generate or skip.');
   }
-  if (!TERMINAL_OUTCOMES.has(outcome) || !SATISFIED_OUTCOMES.has(outcome)) {
-    throw recapOutcomeError(
-      'Generated project recaps require a terminal recap outcome before approval.',
-    );
-  }
-  return { ok: true, intent, outcome };
+  throw recapOutcomeError(
+    'A terminal recap outcome requires a complete satisfied project-recap package.',
+  );
 }
 
 async function main(argv) {
@@ -71,7 +61,29 @@ async function main(argv) {
       'Use either --manifest or --failure as failed-attempt evidence, not both.',
     );
   }
-  let outcome;
+  if (intent === 'generate') {
+    if (
+      reason !== undefined ||
+      failurePath !== undefined ||
+      manifestPath === undefined ||
+      basename(manifestPath) !== 'manifest.json'
+    ) {
+      throw recapOutcomeError(
+        'Generated project recaps require the canonical manifest.json for a complete satisfied package.',
+      );
+    }
+    try {
+      const manifest = await validateSatisfiedRunPackage(
+        dirname(manifestPath),
+        loadRecipe('project-recap', '2'),
+      );
+      return { ok: true, intent, outcome: manifest.outcome };
+    } catch (error) {
+      throw recapOutcomeError(
+        `Generated project recap package assurance failed: ${error.message}`,
+      );
+    }
+  }
   let manifest;
   let failure;
   let failureRootHash;
@@ -83,7 +95,6 @@ async function main(argv) {
         `Recap manifest could not be read: ${error.message}`,
       );
     }
-    outcome = manifest?.outcome;
   }
   if (failurePath !== undefined) {
     if (basename(failurePath) !== 'failure.json') {
@@ -102,7 +113,6 @@ async function main(argv) {
   }
   return checkTerminalOutcome({
     intent,
-    outcome,
     manifest,
     failure,
     failureRootHash,

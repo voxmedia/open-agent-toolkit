@@ -26,15 +26,10 @@ import { pathToFileURL } from 'node:url';
 import { normalizeClaimSubject } from './lib/claim-subject.mjs';
 import { validateContract } from './lib/contracts.mjs';
 import { isFlowFailureStage } from './lib/failure.mjs';
-import {
-  enforceRunPackageInventory,
-  validateImmutablePackageEvidence,
-} from './lib/package-coverage.mjs';
-import { validateQaResult } from './lib/qa-result.mjs';
 import { loadRecipe, recipeRequiredNarrative } from './lib/recipes.mjs';
+import { validateSatisfiedRunPackage } from './lib/run-package.mjs';
 
 const HASH_PREFIX = 'sha256:';
-const SATISFIED_OUTCOMES = new Set(['built', 'built-needs-review']);
 const DOCUMENT_EXTENSIONS = new Set(['.md', '.txt', '.html', '.json']);
 const PROJECT_INPUTS = [
   'summary.md',
@@ -237,45 +232,12 @@ export async function findReusableRun(outputRoot, recipe, inputHashes) {
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
   }
-  const recipeId = typeof recipe === 'string' ? recipe : recipe.id;
   for (const runRoot of candidates) {
     try {
-      const manifest = JSON.parse(
-        await readFile(join(runRoot, 'manifest.json'), 'utf8'),
-      );
-      if (
-        manifest.recipe?.id !== recipeId ||
-        manifest.recipe?.version !== recipe.version ||
-        !SATISFIED_OUTCOMES.has(manifest.outcome) ||
-        !deepEqual(manifest.source?.inputHashes, inputHashes) ||
-        !validateContract('manifest', manifest).valid ||
-        manifest.source?.factBasePath !== 'source/fact-base.json' ||
-        manifest.source.factBaseHash !==
-          manifest.immutableHashes[manifest.source.factBasePath] ||
-        manifest.artifacts?.length !== 1 ||
-        manifest.artifacts[0].id !== recipe.floor[0].id ||
-        manifest.artifacts[0].type !== recipe.floor[0].type ||
-        manifest.artifacts[0].contentPath !== 'site/index.html' ||
-        manifest.artifacts[0].status !== 'built'
-      ) {
-        continue;
-      }
-      validateImmutablePackageEvidence(manifest);
-      await verifyImmutableBytes(runRoot, manifest.immutableHashes);
-      await enforceRunPackageInventory(runRoot, manifest);
-      const qa = validateQaResult(
-        JSON.parse(await readFile(join(runRoot, 'qa/result.json'), 'utf8')),
-      );
-      if (
-        qa.artifactSha256 !== manifest.artifacts[0].hash ||
-        Object.values(qa.checks).some(({ status }) => status !== 'pass') ||
-        outcomeFromQa(qa) !== manifest.outcome
-      ) {
-        continue;
-      }
+      await validateSatisfiedRunPackage(runRoot, recipe, { inputHashes });
       return runRoot;
-    } catch (error) {
-      if (!['ENOENT', 'ENOTDIR'].includes(error.code)) continue;
+    } catch {
+      continue;
     }
   }
   return null;
@@ -286,6 +248,7 @@ export async function writeFailure(runRoot, stage, cause) {
     throw bundleError(`Unsupported failure stage: ${stage}`);
   }
   await mkdir(runRoot, { recursive: true });
+  await rm(join(runRoot, 'manifest.json'), { force: true });
   const message = cause instanceof Error ? cause.message : String(cause);
   const sanitized = message
     .replaceAll(process.cwd(), '<repo>')
@@ -326,6 +289,7 @@ export async function runBundle(argv, io = console) {
       io.log(JSON.stringify(result));
       return result;
     }
+    await rm(join(options.out, 'manifest.json'), { force: true });
 
     const supplied = collected.find(({ suppliedFactBase }) => suppliedFactBase);
     let factBase;
@@ -624,23 +588,6 @@ function hashBytes(bytes) {
   return `${HASH_PREFIX}${createHash('sha256').update(bytes).digest('hex')}`;
 }
 
-async function verifyImmutableBytes(runRoot, immutableHashes) {
-  for (const [path, expected] of Object.entries(immutableHashes)) {
-    if (hashBytes(await readFile(join(runRoot, path))) !== expected) {
-      throw bundleError(`Reusable package hash mismatch: ${path}`);
-    }
-  }
-}
-
-function outcomeFromQa(qa) {
-  if (Object.values(qa.checks).some(({ status }) => status !== 'pass')) {
-    return 'failed';
-  }
-  return qa.rung !== 'none' && qa.visual.verdict === 'pass'
-    ? 'built'
-    : 'built-needs-review';
-}
-
 function finalSummaryInput(input) {
   const lines = input.text.split(/\r?\n/);
   const start = lines.findIndex((line) =>
@@ -666,10 +613,6 @@ async function writeJson(path, value) {
 
 function uniqueByLocator(files) {
   return [...new Map(files.map((file) => [file.locator, file])).values()];
-}
-
-function deepEqual(left, right) {
-  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 function usageError() {

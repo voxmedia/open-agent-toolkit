@@ -53,17 +53,21 @@ function recordArgs(root) {
   ];
 }
 
-test('project completion accepts only terminal generated recap outcomes', () => {
-  for (const outcome of ['built', 'built-needs-review']) {
-    assert.deepEqual(checkTerminalOutcome({ intent: 'generate', outcome }), {
-      ok: true,
-      intent: 'generate',
-      outcome,
-    });
-  }
+function runGenerateGuard(manifestPath) {
+  return execFileAsync(process.execPath, [
+    guardScript.pathname,
+    '--intent',
+    'generate',
+    '--manifest',
+    manifestPath,
+  ]);
+}
 
+test('project completion rejects outcome-only generated recap claims', () => {
   for (const outcome of [
     undefined,
+    'built',
+    'built-needs-review',
     'failed',
     'incomplete',
     'built-durable',
@@ -99,6 +103,39 @@ test('project completion accepts only terminal generated recap outcomes', () => 
       () => checkTerminalOutcome(invalid),
       (error) => error?.code === 'E_RECAP_OUTCOME',
     );
+  }
+});
+
+test('project completion accepts a complete recorded project-recap package', async () => {
+  const { stdout } = await runGenerateGuard(
+    join(packageFixture, 'manifest.json'),
+  );
+  assert.deepEqual(JSON.parse(stdout), {
+    ok: true,
+    intent: 'generate',
+    outcome: 'built-needs-review',
+  });
+});
+
+test('project completion rejects a partial built manifest', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'recap-partial-built-complete-'));
+  try {
+    const manifestPath = join(root, 'manifest.json');
+    await writeFile(manifestPath, '{"outcome":"built"}\n');
+    await assert.rejects(runGenerateGuard(manifestPath));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('project completion rejects corrupted package bytes', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'recap-corrupt-complete-'));
+  try {
+    await cp(packageFixture, root, { recursive: true });
+    await writeFile(join(root, 'site/index.html'), 'corrupted');
+    await assert.rejects(runGenerateGuard(join(root, 'manifest.json')));
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });
 

@@ -56,17 +56,21 @@ function recordArgs(root) {
   ];
 }
 
-test('implementation closeout accepts only terminal generated recap outcomes', () => {
-  for (const outcome of ['built', 'built-needs-review']) {
-    assert.deepEqual(checkTerminalOutcome({ intent: 'generate', outcome }), {
-      ok: true,
-      intent: 'generate',
-      outcome,
-    });
-  }
+function runGenerateGuard(manifestPath) {
+  return execFileAsync(process.execPath, [
+    guardScript.pathname,
+    '--intent',
+    'generate',
+    '--manifest',
+    manifestPath,
+  ]);
+}
 
+test('implementation closeout rejects outcome-only generated recap claims', () => {
   for (const outcome of [
     undefined,
+    'built',
+    'built-needs-review',
     'failed',
     'incomplete',
     'built-durable',
@@ -102,6 +106,39 @@ test('implementation closeout accepts only terminal generated recap outcomes', (
       () => checkTerminalOutcome(invalid),
       (error) => error?.code === 'E_RECAP_OUTCOME',
     );
+  }
+});
+
+test('implementation closeout accepts a complete recorded project-recap package', async () => {
+  const { stdout } = await runGenerateGuard(
+    join(packageFixture, 'manifest.json'),
+  );
+  assert.deepEqual(JSON.parse(stdout), {
+    ok: true,
+    intent: 'generate',
+    outcome: 'built-needs-review',
+  });
+});
+
+test('implementation closeout rejects a partial built manifest', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'recap-partial-built-implement-'));
+  try {
+    const manifestPath = join(root, 'manifest.json');
+    await writeFile(manifestPath, '{"outcome":"built"}\n');
+    await assert.rejects(runGenerateGuard(manifestPath));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('implementation closeout rejects corrupted package bytes', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'recap-corrupt-implement-'));
+  try {
+    await cp(packageFixture, root, { recursive: true });
+    await writeFile(join(root, 'site/index.html'), 'corrupted');
+    await assert.rejects(runGenerateGuard(join(root, 'manifest.json')));
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });
 
