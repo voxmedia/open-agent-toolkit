@@ -1046,6 +1046,24 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 - Next: final automatic review-fix iteration for the new Important finding, followed by governance-final root-owned review round 3
 
+#### Phase Review Round 2 Fix
+
+- Continuation: `cont-agent-authored-recap-p03-review-r2-fix-2`
+- Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- Source review: `reviews/p03-review-2026-09-11T221353Z.md`
+- Fix base: `d5d843f2bab14c0b8453206802da52372b027ef6`
+- Fix commit: `b697cb725b278d6b185a4a2c02b5ac7fb352f0cb`
+- Fixed: persisted `skip/failed_attempt` now carries one validated project-relative `failed_attempt_evidence` locator through the deployed consumer to the real terminal guard without general explainer discovery or authoring
+- Locator contract: only `explainers/<run-slug>/{manifest,failure}.json`; project, run, and evidence paths are canonicalized; absolute paths, traversal, symlink escapes, missing paths, directories, wrong-kind evidence, and semantically invalid evidence are rejected
+- Negative controls: the pre-fix fresh-process composition failed; neutralizing propagation or containment failed; valid failed/incomplete manifest and `failure.json` controls passed; interactive skip and generate expose no failed-attempt evidence
+- Typed consumers: CLI and control-plane state parsers accept the bounded optional field and reject invalid shapes
+- Protected boundaries: all eleven Phase 3 slices remained byte-identical to base `ab4785bf510ea737961a9431da4376a461be930e`; all six autonomy copies share SHA-256 `3fb4b5ec02ef118edb3d20456baf830c22104329a2cb0c8ca070508c647ab5a8`
+- Verification: focused adapter/completion/terminal suites (71/71), CLI lifecycle contracts (418/418), control-plane (142/142), sweep/parity (10/10), complete CI gates, isolated-HOME uncached Turbo, standalone suites, lint, format, and final diff check exited 0
+- Recovery accounting: final review-fix iteration, not phase recovery; p03 remains `used_attempts: 0`, `pending_attempt: null`, with no recovery events
+- Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- Dispatch: scope=p03-review-r2-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- Disposition: `fixes_completed`; governance-final root-owned review round 3 is required and p03 is not marked passed
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -1131,6 +1149,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | Task / Review                  | Source Artifact        | Planned / Documented                                                     | Actual / Accepted                                                                                                                               | Reason                                                                      | Source of Truth                                                     | Follow-up                   |
 | ------------------------------ | ---------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------- |
 | p01-t09, p04-t02, p05-t01, FR9 | `plan.md`, `design.md` | Non-project recap packages passed `verifySelectedProjectRecapForArchive` | Compose `validateContract('manifest')`, immutable byte-hash checks, and `enforceRunPackageInventory` directly; keep the project-only pin strict | The archive check was added post-review without re-checking the recipe pin. | Operator decision `cont-agent-authored-recap-p01-plan-correction-1` | Applied before p01-t09 code |
+| p03 review round 2             | `design.md`            | Persisted intent contains only decision, source, and decision timestamp  | `skip/failed_attempt` may additionally persist one validated project-relative `failed_attempt_evidence` locator                                 | A fresh process otherwise cannot satisfy the mandatory terminal guard without reopening general discovery. | Review fix `b697cb725b278d6b185a4a2c02b5ac7fb352f0cb` | Lifecycle contract, typed consumers, and tests updated; this log preserves the accepted design delta |
 
 ## Test Results
 
