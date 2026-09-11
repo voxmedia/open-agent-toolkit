@@ -754,14 +754,13 @@ fi
 
 Generate only after plan artifact review, the configured plan gate, and the plan commit have completed successfully.
 When the resolved project-explainer decision is `generate`, invoke
-`oat-explainer-kit` for the `project-explainer` recipe using the approved
-project artifacts and report its outcome and run path. A `skip` decision ends
-this step without invoking the adapter.
-Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.
+`oat-explainer-kit` § Generate with recipe `project-explainer` over the
+approved plan artifacts and report its outcome and run path. A `skip` decision
+ends this step without invoking the adapter.
 
 Explainer failure must not roll back, amend, or invalidate the valid committed plan.
 Preserve the adapter's failure outcome and recovery guidance, warn the user,
-and continue to the planning summary. This post-plan product does not replace
+and continue to the planning summary on any outcome. This post-plan product does not replace
 or reorder plan artifact review, dispatch resolution, the configured plan gate,
 or HiLL handling.
 

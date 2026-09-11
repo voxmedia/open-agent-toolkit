@@ -86,7 +86,7 @@ test('lite closeout never enters the recap subsection', () => {
   );
   assert.match(
     carriers.closeout,
-    /For lite, do not resolve recap intent, inspect recap runs, invoke\s+`oat-explainer-kit`, run the terminal-outcome guard, or let recap block\s+closeout\./,
+    /For\s+lite, do not resolve recap intent, inspect recap runs, invoke\s+`oat-explainer-kit`, run the terminal-outcome guard, or let recap block\s+closeout\./,
   );
 });
 
@@ -114,7 +114,7 @@ test('summary maps manifest v2 and qa result outcomes', () => {
 test('plan project explainer uses Generate and never rolls back the plan', () => {
   const step = sectionBetween(
     carriers.plan,
-    '### Step 15.5: Project Explainer',
+    '### Step 15.5: Generate the Project Explainer When Selected',
     '### Step 16:',
   );
   assert.match(step, /§ Generate/);
@@ -124,17 +124,23 @@ test('plan project explainer uses Generate and never rolls back the plan', () =>
 });
 
 test('both program-close callers use Generate and record terminal identity', () => {
-  for (const [name, text] of [
-    ['oat-wave-program', carriers.waveProgram],
-    ['oat-wave-execute', carriers.waveExecute],
-  ]) {
-    const section = sectionBetween(
-      text,
+  for (const [name, text, start, end] of [
+    [
+      'oat-wave-program',
+      carriers.waveProgram,
       '### Program-close explainer caller',
-      '## ',
-    );
+      '## Integration',
+    ],
+    [
+      'oat-wave-execute',
+      carriers.waveExecute,
+      '#### Program-close recap explainer caller',
+      '## Success Criteria',
+    ],
+  ]) {
+    const section = sectionBetween(text, start, end);
     assert.match(section, /§ Generate/, name);
-    assert.match(section, /recipe `program-recap`/, name);
+    assert.match(section, /recipe\s+`program-recap`/, name);
     assert.match(section, /`runId`.*`outcome`.*program ledger/s, name);
   }
 });
