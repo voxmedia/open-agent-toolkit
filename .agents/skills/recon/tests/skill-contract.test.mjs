@@ -290,6 +290,30 @@ test('controller publishes honest partials and never retries or substitutes sile
   assert.match(skill, /structural failure[\s\S]{0,240}no `packet\.md`/i);
 });
 
+test('packet contract pins exact lane outcome contradictions and same-run errors', async () => {
+  const { skill, packetContract } = await readContracts();
+  assert.match(
+    skill,
+    /`PASS_FAILED` gap[\s\S]{0,100}exact[\s\S]{0,80}`waveId`[\s\S]{0,40}`laneId`[\s\S]{0,120}conditional and non-conditional lanes alike/i,
+  );
+  assert.match(
+    packetContract,
+    /Evidence from another run fails with\s+`CONDITION_EVIDENCE_RUN_MISMATCH`/i,
+  );
+  assert.match(
+    packetContract,
+    /legacy mode-only gap is accepted only when that mode\s+unambiguously identifies one wave containing exactly one lane/i,
+  );
+  assert.match(
+    packetContract,
+    /complete\s+artifact contradicts material failed or omitted outcome evidence only when both\s+identify the same exact wave and lane[\s\S]*?`CONTRADICTORY_PASS_OUTCOME`/i,
+  );
+  assert.match(
+    packetContract,
+    /Complete evidence from one lane and exact material\s+failure evidence from another lane preserve the achieved pass while making the\s+run an honest partial/i,
+  );
+});
+
 test('worker exposes only the declared non-interactive leaf modes', async () => {
   const { worker, workerContract } = await readContracts();
   for (const mode of [

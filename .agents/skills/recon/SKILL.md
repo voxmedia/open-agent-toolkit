@@ -230,9 +230,10 @@ approval. This check proves invocation intent, not actual runtime
 identity. Launch acceptance is distinct from worker completion. After
 acceptance there is no replacement child, alternate route, target substitution,
 and no silent retry. If an accepted lane fails, is cancelled, or times out,
-record that pass as failed with a material `PASS_FAILED` gap naming the pass. A
-conditional-lane gap also records its exact `waveId` and `laneId`; prose is
-descriptive, not identity.
+record that lane as failed with a material `PASS_FAILED` gap carrying its exact
+approved `waveId` and `laneId`. This structured identity is required for
+conditional and non-conditional lanes alike; prose is descriptive, not
+identity.
 
 Run the passes in this order:
 

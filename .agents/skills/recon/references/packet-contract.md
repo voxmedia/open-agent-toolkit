@@ -140,9 +140,11 @@ capped at 4/6/8.
 
 Triggered dispositions require exact complete same-run artifacts from every
 approved predecessor and concrete typed predicate evidence from those same-run
-artifacts. A triggered destination must produce its approved output or a
-material `PASS_FAILED`/`PASS_OMITTED` gap with exact `waveId` and `laneId`
-fields. The gap message is explanatory prose and is never parsed for identity.
+artifacts. Evidence from another run fails with
+`CONDITION_EVIDENCE_RUN_MISMATCH`. A triggered destination must produce its
+approved output or a material `PASS_FAILED`/`PASS_OMITTED` gap with exact
+`waveId` and `laneId` fields. The gap message is explanatory prose and is never
+parsed for identity.
 Not-triggered and unresolved destinations publish no artifacts and contribute
 no achieved pass. Accepted failed, cancelled, timed-out, or missing predecessor
 work cannot activate replacement work. Required profile passes remain required
@@ -213,11 +215,18 @@ primary and redundant gathering pass is derived from this exact approved wave
 ownership, not from aggregate dossier mode or lane cardinality. Multiple
 complete lanes from one gathering wave cannot satisfy the other wave's pass.
 Every non-conditional approved lane must either have written an artifact or be
-covered by a material `PASS_FAILED` or `PASS_OMITTED` gap naming its wave
-mode; otherwise the packet fails with `MISSING_LANE_OUTCOME`. Each required
-pass of the requested profile that has no complete artifact must likewise be
-named by such a gap, or the packet fails with
-`MISSING_PASS_OUTCOME_EVIDENCE`.
+covered by a material `PASS_FAILED` or `PASS_OMITTED` gap carrying its exact
+`waveId` and `laneId`; otherwise the packet fails with
+`MISSING_LANE_OUTCOME`. A legacy mode-only gap is accepted only when that mode
+unambiguously identifies one wave containing exactly one lane. A complete
+artifact contradicts material failed or omitted outcome evidence only when both
+identify the same exact wave and lane, or when an accepted legacy mode-only gap
+unambiguously identifies that singleton lane; validation then fails with
+`CONTRADICTORY_PASS_OUTCOME`. Complete evidence from one lane and exact material
+failure evidence from another lane preserve the achieved pass while making the
+run an honest partial. Each required pass of the requested profile that has no
+complete artifact must likewise be named by such a gap, or the packet fails
+with `MISSING_PASS_OUTCOME_EVIDENCE`.
 
 ## Source Descriptors and Locators
 
