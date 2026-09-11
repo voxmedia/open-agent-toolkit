@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "explainer-kit.fact-base/v1",
+  "generatedAt": "2026-09-11T03:47:48.123Z",
+  "mode": "supplied",
+  "freshnessPolicy": "live-wins",
+  "sources": [
+    {
+      "id": "source-f13dd30d608d",
+      "kind": "file",
+      "locator": "summary.md",
+      "hash": "sha256:88281114e8057ec4feb189e4df6a6664962eae52fd22f9d8fa381525588ef7af"
+    },
+    {
+      "id": "source-9f74c1a0c743",
+      "kind": "file",
+      "locator": "implementation.md",
+      "hash": "sha256:7cae3a8e1c1c24e07ed22ecf9f48cf1fa473def61ef16e89101f46ddf05fc246"
+    },
+    {
+      "id": "source-780bd28eb0ce",
+      "kind": "file",
+      "locator": "project-log.md",
+      "hash": "sha256:bbff4d63b334b19c2c9dfc129d571326e4c3d5fcaa89d9b6030ed53957c7ddea"
+    },
+    {
+      "id": "source-0bbe5bc4573b",
+      "kind": "file",
+      "locator": "plan.md",
+      "hash": "sha256:d750277c6635106a8b2b856163d2d32686363fc0a3ac8380fe5ddf1d7fc9d2a1"
+    },
+    {
+      "id": "source-3b1445640016",
+      "kind": "file",
+      "locator": "state.md",
+      "hash": "sha256:e31b2c86438b2c2e5b8eb725bda13e96dbbeab52c3113d766f87bddfa3dc5f59"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-b0b2df3c2a4d111d",
+      "text": "The Alpha migration completed on 2026-09-09 with 17 tasks merged.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-f13dd30d608d",
+          "locator": "summary.md:3-3"
+        }
+      ]
+    },
+    {
+      "id": "claim-1688f67f665fc380",
+      "text": "Phase p01 is complete. Phase p02 is deferred.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-9f74c1a0c743",
+          "locator": "implementation.md:3-3"
+        }
+      ]
+    },
+    {
+      "id": "claim-4a83af3bfdcfcc46",
+      "text": "2026-09-08: W1 merged.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-780bd28eb0ce",
+          "locator": "project-log.md:3-3"
+        }
+      ]
+    },
+    {
+      "id": "claim-232d193e68636336",
+      "text": "2026-09-09: W2 parked for operator review.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-780bd28eb0ce",
+          "locator": "project-log.md:4-4"
+        }
+      ]
+    },
+    {
+      "id": "claim-d0dda9b31732e635",
+      "text": "| Task    | Status   |",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-0bbe5bc4573b",
+          "locator": "plan.md:3-3"
+        }
+      ]
+    },
+    {
+      "id": "claim-14c317661ac8572b",
+      "text": "| p01-t01 | complete |",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-0bbe5bc4573b",
+          "locator": "plan.md:5-5"
+        }
+      ]
+    },
+    {
+      "id": "claim-cd6d292633a76b5f",
+      "text": "| p01-t02 | complete |",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-0bbe5bc4573b",
+          "locator": "plan.md:6-6"
+        }
+      ]
+    },
+    {
+      "id": "claim-305c63b384f3ebb4",
+      "text": "Status: complete",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-3b1445640016",
+          "locator": "state.md:3-3"
+        }
+      ]
+    },
+    {
+      "id": "claim-801c3d72c99aafef",
+      "text": "Progress: 17 of 17 tasks.",
+      "status": "confirmed",
+      "citations": [
+        {
+          "sourceId": "source-3b1445640016",
+          "locator": "state.md:5-5"
+        }
+      ]
+    }
+  ],
+  "unresolvedClaims": [],
+  "overrides": []
+}

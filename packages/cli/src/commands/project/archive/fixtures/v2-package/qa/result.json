@@ -1,0 +1,11 @@
+{
+  "artifactSha256": "sha256:84c9a4f32907614a3b7c6c47941ec2d95d63ddfd2a35922216a07168d3bd6187",
+  "rung": "none",
+  "reason": "fixture-browser-not-run",
+  "checks": [
+    {
+      "id": "fixture-structure",
+      "status": "pass"
+    }
+  ]
+}

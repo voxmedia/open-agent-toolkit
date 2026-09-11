@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v2",
+  "runId": "run-p01-t06-fixture",
+  "slug": "fixture-recap",
+  "recipe": {
+    "id": "project-recap",
+    "version": "2"
+  },
+  "createdAt": "2026-09-11T03:45:00.000Z",
+  "mode": "unattended",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:73f223436f7aa1e1f30f464d058193a3fb66c8eab5777c21efe41ade4a8528eb",
+    "inputHashes": {
+      "implementation.md": "sha256:7cae3a8e1c1c24e07ed22ecf9f48cf1fa473def61ef16e89101f46ddf05fc246",
+      "plan.md": "sha256:d750277c6635106a8b2b856163d2d32686363fc0a3ac8380fe5ddf1d7fc9d2a1",
+      "project-log.md": "sha256:bbff4d63b334b19c2c9dfc129d571326e4c3d5fcaa89d9b6030ed53957c7ddea",
+      "state.md": "sha256:e31b2c86438b2c2e5b8eb725bda13e96dbbeab52c3113d766f87bddfa3dc5f59",
+      "summary.md": "sha256:88281114e8057ec4feb189e4df6a6664962eae52fd22f9d8fa381525588ef7af"
+    }
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:0cc7f3d5efe5a725ba2b06fc026e7e11fb117d5ef51157204403428f322d282c"
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "contentPath": "site/index.html",
+      "hash": "sha256:84c9a4f32907614a3b7c6c47941ec2d95d63ddfd2a35922216a07168d3bd6187",
+      "status": "built"
+    }
+  ],
+  "immutableHashes": {
+    "PROVENANCE.md": "sha256:4287a0e764710a08eb1308900de704d5b2c2b746bb1554236327418879a0ff50",
+    "qa/result.json": "sha256:258fe545308a45add813b2b2ddf37791b0d6c7e63c3ac0da872fe26f3a8fad97",
+    "site/index.html": "sha256:84c9a4f32907614a3b7c6c47941ec2d95d63ddfd2a35922216a07168d3bd6187",
+    "source/fact-base.json": "sha256:73f223436f7aa1e1f30f464d058193a3fb66c8eab5777c21efe41ade4a8528eb",
+    "source/fact-base.md": "sha256:20c9086f27f7f6cdfa8e3e48dffc4b317489d920daa739f0e176a55ab1e9ec50",
+    "source/ledger.json": "sha256:e7dd42fb9ab91fa861ae7fefa0190cca0adfeb6757ba6921b065721c16b509d0",
+    "theme.resolved.json": "sha256:0cc7f3d5efe5a725ba2b06fc026e7e11fb117d5ef51157204403428f322d282c"
+  },
+  "outcome": "built-needs-review",
+  "warnings": ["record-needs-review:fixture-browser-not-run"]
+}
