@@ -10,6 +10,7 @@
 
 | ID                                       | Date       | Status     | Title                                                                                                  | Legacy  |
 | ---------------------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | ------- |
+| DR-260911-explainers-are-agent-authored  | 2026-09-11 | accepted   | Explainers are agent-authored; the provider seams and durability path are retired                      | -       |
 | DR-260908-a-stop-whose-remedy-lies       | 2026-09-08 | accepted   | A STOP whose remedy lies inside the plan's own file scope is closed by a dated refresh, not a park     | -       |
 | DR-260908-bundled-skills-declare         | 2026-09-08 | accepted   | Bundled skills declare metadata.version only; the top-level alias retires on a fixed schedule          | -       |
 | DR-260907-additive-post-selection        | 2026-09-07 | accepted   | Additive post-selection recovery envelopes                                                             | -       |

@@ -1,7 +1,7 @@
 ---
 id: BL-260727-make-explainer-run-durability
 title: Make explainer run durability survive ephemeral environments
-status: open
+status: wont_do
 priority: high
 scope: task
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - cloud
 assignee: null
 created: 2026-07-27T14:43:21.655Z
-updated: 2026-07-27T14:43:21.655Z
+updated: '2026-09-11T21:11:06Z'
 associated_issues: []
 external_plans: []
 ---

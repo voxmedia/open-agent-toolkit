@@ -234,7 +234,6 @@
 | BL-260906-harden-dispatch-launch         | Harden dispatch launch baselines and terminal reconciliation                                          | open   | high     | feature    | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch                                | open   | high     | feature    | M        |
 | BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                                                          | open   | high     | feature    | L        |
-| BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments                                          | open   | high     | task       | M        |
 | BL-260829-order-phase-bookkeeping-before | Order phase bookkeeping before per-phase review dispatch                                              | open   | high     | task       | M        |
 | BL-260907-replace-the-default-project    | Replace the default project recap with a direct agent-authored visual flow                            | open   | high     | feature    | M        |
 | BL-260908-restore-recon-s-cheap-fan-out  | Restore recon's cheap-fan-out intent with per-wave routing under one approval envelope                | open   | high     | feature    | L        |
