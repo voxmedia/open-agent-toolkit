@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T15:39:00Z'
+oat_project_state_updated: '2026-09-11T15:47:00Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -98,14 +98,14 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** Gate remediation complete; narrowed lifecycle re-review pending.
+**Status:** Gate remediation review passed; configured gate attempt 2 pending.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-11
 
 ## Current Phase
 
-Revision p-rev3 implementation is complete. Narrowed lifecycle re-review is
-pending before the configured gate's second and final attempt.
+Revision p-rev3 and its narrowed lifecycle re-review are complete. The configured
+gate's second and final attempt is pending.
 
 ## Artifacts
 
@@ -115,7 +115,7 @@ pending before the configured gate's second and final attempt.
 - Plan: `plan.md` — complete; 5 implementation phases plus three revision phases,
   23 tasks.
 - Implementation: `implementation.md` — all 23 tasks complete; narrowed lifecycle
-  re-review is pending.
+  re-review passed and configured gate attempt 2 is pending.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
@@ -132,7 +132,8 @@ No existing project was absorbed or retired.
 - ✓ Revision p-rev2 implemented both Important final-review fixes
 - ✓ Narrowed final review passed with no blocking findings
 - ✓ Configured implementation exit-gate remediation attempt 1 implemented
-- ⧗ Narrowed lifecycle re-review pending before gate attempt 2
+- ✓ Narrowed lifecycle re-review passed
+- ⧗ Configured implementation exit-gate attempt 2 pending
 - ✓ Final HiLL and configured closeout sequence completed
 - ✓ PR #285 updated and open as a draft
 - ✓ Post-retro RP-01, RP-02, UP-01, and UP-02 implemented directly
@@ -146,8 +147,8 @@ No active blocker.
 
 ## Next Milestone
 
-Pass the narrowed lifecycle re-review, rerun the configured exit gate once, then
-update and push PR #285 and mark it ready for review.
+Rerun the configured exit gate once, then update and push PR #285 and mark it ready
+for review.
 
 ## Authorization and Scope
 

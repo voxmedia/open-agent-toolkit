@@ -132,6 +132,10 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1
 
 run-3-exit-gate-receive-20260911T152512Z Configured gate run c1c2d64e-b921-4484-8c81-6259fe3e397b blocked at the Important threshold with 0C/1I/1M/1m; all three findings were converted to prev3-t01 through prev3-t03 for the first allowed remediation attempt.
 
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-3-gate-remediation-rereview-pass-20260911T154126Z The narrowed lifecycle re-review closed all configured-gate findings and reported 0C/0I/0M/1m; m1 stale PR-summary prose was fixed during receipt, so gate attempt 2 may proceed.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

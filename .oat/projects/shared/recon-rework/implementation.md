@@ -22,16 +22,16 @@ project for the user-approved post-retro simplification in `p05-t01`.
 
 ## Progress Overview
 
-| Phase                                      | Status      | Tasks | Completed |
-| ------------------------------------------ | ----------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
-| Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
-| Phase 4: Distribution and verification     | completed   | 6     | 6/6       |
-| Phase 5: Post-retro simplification         | completed   | 4     | 4/4       |
-| Phase p-rev1: Integrate current main       | completed   | 1     | 1/1       |
-| Phase p-rev2: Merged-head review fixes     | completed   | 2     | 2/2       |
-| Phase p-rev3: Configured-gate cap fixes    | in_progress | 3     | 3/3       |
+| Phase                                      | Status    | Tasks | Completed |
+| ------------------------------------------ | --------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
+| Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
+| Phase 4: Distribution and verification     | completed | 6     | 6/6       |
+| Phase 5: Post-retro simplification         | completed | 4     | 4/4       |
+| Phase p-rev1: Integrate current main       | completed | 1     | 1/1       |
+| Phase p-rev2: Merged-head review fixes     | completed | 2     | 2/2       |
+| Phase p-rev3: Configured-gate cap fixes    | completed | 3     | 3/3       |
 
 **Total:** 23/23 tasks implemented. The configured-gate remediation is complete
 and awaiting narrowed lifecycle re-review.
@@ -953,7 +953,7 @@ head.
 
 ## Phase p-rev3: Configured-gate profile-cap fixes
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-09-11
 
 ### Review Received: final configured exit gate
@@ -1016,9 +1016,18 @@ total `laneCount`. Markdown renders the profile's adaptive cap together with
 the counted and total lane relationship, including the maximum quick example:
 `Profile adaptive-lane cap: 4 (counted lanes: 4 of 6 total)`.
 
-**Next:** Execute the three fix tasks, pass the mandatory narrowed lifecycle
-re-review, then resume this same gate generation for its one allowed remediation
-attempt.
+### Narrowed Final Re-review Received
+
+**Date:** 2026-09-11
+**Review artifact:**
+`reviews/archived/final-review-2026-09-11T154126Z.md`
+
+The re-review reported 0 Critical, 0 Important, 0 Medium, and 1 Minor finding.
+All three configured-gate findings are closed. Minor m1 was fixed during receipt
+by aligning this PR-facing p-rev3 status and summary; no follow-up task or backlog
+item is needed.
+
+**Next:** Resume configured exit-gate attempt 2 on this reviewed basis.
 
 **Receive:** commit `654d10d0a3ac22b73dc402ac107df2802471ee25`
 corroborates the archived run-bound artifact, exact `fixes_added` Reviews event,
@@ -1027,9 +1036,10 @@ implementation begins.
 
 ## Final Summary (for PR/docs)
 
-All 20 implementation and revision tasks are implemented. The merged-head final
-lifecycle review found two blocking gaps; both are fixed and the narrowed final
-re-review passed. The branch provides versioned
+All 23 implementation and revision tasks are implemented. The merged-head final
+lifecycle review and configured gate identified five substantive or alignment
+gaps; all are fixed, and both narrowed lifecycle re-reviews passed. The branch
+provides versioned
 v1/v2 recon contracts, economical approved per-wave routing, bounded conditional
 escalation, exact outcome accounting, caller-owned judgment, normalized
 intended-routing output, aligned worker and controller guidance, bundled runtime
@@ -1046,12 +1056,11 @@ exact-target drift, shadow reconciliation, profile topology, and malformed wave
 containers. The retained raw gate logs lack explicit `exit=` markers; that
 nonblocking evidence-quality limitation remains disclosed.
 
-The earlier production-topology, malformed-input, and lifecycle-prose findings are
-fixed. The merged-head profile-cap and hostile-collection gaps are also fixed, and
-the terminal narrowed final review passed with no blocking findings. The previous
-configured implementation exit gate passed and Thomas approved the final HiLL
-checkpoint. Integrating current `origin/main` made that prior gate stale, so a
-fresh gate remains required on the merged head.
+The earlier production-topology, malformed-input, lifecycle-prose, profile-cap,
+hostile-collection, singleton-lane, adaptive-cap documentation, and preview-label
+findings are fixed. The terminal narrowed final review passed with no blocking
+findings. Configured exit-gate attempt 1 produced the last three fixes; attempt 2
+remains required before closeout.
 
 ## Completion Outcome
 
