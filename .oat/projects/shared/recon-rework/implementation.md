@@ -13,9 +13,9 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-11
 
-Three implementation runs plus five revision phases completed 26 original,
-post-retro, integration, and review-remediation tasks. A fresh full-delta review
-then added one Important gather-pass ownership task in `p-rev6`.
+Three implementation runs plus six revision phases completed all 27 original,
+post-retro, integration, and review-remediation tasks. The `p-rev6` phase review
+passed the gather-pass ownership fix with no findings.
 
 ## Progress Overview
 
@@ -31,9 +31,9 @@ then added one Important gather-pass ownership task in `p-rev6`.
 | Phase p-rev3: Configured-gate cap fixes    | completed | 3     | 3/3       |
 | Phase p-rev4: Same-run condition evidence  | completed | 2     | 2/2       |
 | Phase p-rev5: Thorough gather compilation  | completed | 1     | 1/1       |
-| Phase p-rev6: Gather pass ownership        | pending   | 1     | 0/1       |
+| Phase p-rev6: Gather pass ownership        | completed | 1     | 1/1       |
 
-**Total:** 26/27 tasks implemented. Task `prev6-t01` is next.
+**Total:** 27/27 tasks implemented. Refreshed final closeout review is next.
 
 ## Task Status
 
@@ -65,7 +65,7 @@ then added one Important gather-pass ownership task in `p-rev6`.
 | prev4-t01 | Completed: require same-run condition evidence  | `8257446bed1f3105e288cd6f2fd46eb5c9d53190`         |
 | prev4-t02 | Completed: suppress derivative diagnostics      | `3784abc9f26e6714901c450c775b0ceb16ad30b7`         |
 | prev5-t01 | Completed: compile redundant thorough evidence  | `26c8357d081ced7047379140c5353ab5993a7f46`         |
-| prev6-t01 | Pending: bind gather passes to approved waves   | -                                                  |
+| prev6-t01 | Completed: bind gather passes to approved waves | `52c21ca6b065b95907887459770b3d38ac8cb105`         |
 
 ## Phase p-rev4: Remote condition-evidence review fix
 
@@ -165,7 +165,7 @@ single terminal reconciliation. Focused 113/113 and full recon 273/273 passed.
 
 ## Phase p-rev6: Bind derived gather passes to approved waves
 
-**Status:** pending
+**Status:** completed
 **Started:** 2026-09-11
 
 ### Review Received: refreshed final review
@@ -181,6 +181,25 @@ primary gather wave can currently impersonate the failed redundant-gather pass,
 leaving a partial packet publishable with achieved profile `thorough`.
 `prev6-t01` will derive each gather pass from approved wave ownership and pin
 the reciprocal direction with fallible controls.
+
+**Outcome:** `prev6-t01` completed in
+`52c21ca6b065b95907887459770b3d38ac8cb105`. Pass derivation now matches exact
+approved wave and lane ownership. Primary and redundant gather lanes cannot
+impersonate one another, and either missing required pass prevents thorough
+assurance.
+
+### Narrowed p-rev6 review received
+
+**Date:** 2026-09-11
+**Review artifact:** `reviews/archived/p-rev6-review-2026-09-11T182327Z.md`
+**Reviewed head:** `52c21ca6b065b95907887459770b3d38ac8cb105`
+**Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+The reviewer confirmed exact wave ownership, reciprocal non-impersonation,
+fallback schema diagnostics, and the negative control against the parent
+validator. Focused 2/2, packet 59/59, and full recon 275/275 passed.
+
+**Outcome:** `p-rev6` passed with no fix loop.
 
 ## Phase 5: Post-retro simplification
 

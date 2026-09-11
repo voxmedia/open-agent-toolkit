@@ -160,6 +160,10 @@ run-4-p-rev5-pass-20260911 Phase p-rev5 passed with task prev5-t01 complete at 2
 
 run-4-final-gather-ownership-20260911 Fresh final review found one Important gather-pass ownership bypass; p-rev6 task prev6-t01 records the accepted fix to derive primary and redundant gather passes from approved wave ownership.
 
+### 2026-09-11 · structural · oat-project-implement · p-rev6
+
+run-4-p-rev6-pass-20260911 Phase p-rev6 passed with task prev6-t01 complete at 52c21ca6b065b95907887459770b3d38ac8cb105; narrowed review reported 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

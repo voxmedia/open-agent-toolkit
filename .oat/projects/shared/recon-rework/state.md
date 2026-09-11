@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev6-t01
-oat_last_commit: 872cae9ce95df3be5d4b2964d542825100055542
+oat_current_task: null
+oat_last_commit: 52c21ca6b065b95907887459770b3d38ac8cb105
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -104,9 +104,9 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation — the fresh project-wide review found one Important gather-pass
-ownership defect. Task `prev6-t01` is pending to prevent primary and redundant
-gathering lanes from impersonating one another's required pass.
+Implementation — all 27 tasks are complete. The Important gather-pass ownership
+defect is fixed and `p-rev6` passed its narrowed review with no findings. A
+fresh project-wide final review and configured gate remain pending.
 
 ## Artifacts
 
@@ -114,8 +114,8 @@ gathering lanes from impersonating one another's required pass.
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight design aligned with the simplified approval contract.
 - Plan: `plan.md` — 5 implementation phases plus six revision phases, 27 tasks.
-- Implementation: `implementation.md` — 26 of 27 tasks complete; `p-rev6` is
-  pending one Important final-review remediation.
+- Implementation: `implementation.md` — all 27 tasks complete; `p-rev6` passed
+  with no review findings.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
@@ -144,8 +144,9 @@ No existing project was absorbed or retired.
 - ✓ Refreshed repository gate sequence passed after `p-rev4`
 - ✓ Refreshed final review's Important thorough-ordering defect fixed
 - ✓ `p-rev5` narrowed review passed with no findings
-- ✗ Latest final review found one Important gather-pass ownership defect
-- ⧗ Implement and re-review `prev6-t01`
+- ✓ Latest final review's Important gather-pass ownership defect fixed
+- ✓ `p-rev6` narrowed review passed with no findings
+- ⧗ Repeat project-wide final review and configured gate
 - ⧗ Summary, documentation, and PR description refresh pending
 - ✓ Final repository release-verification sequence passed
 - ✓ PR created
@@ -157,7 +158,7 @@ No active blocker.
 
 ## Next Milestone
 
-Implement `prev6-t01`, then repeat final review and the configured exit gate.
+Repeat the project-wide final review and configured exit gate.
 
 ## Authorization and Scope
 

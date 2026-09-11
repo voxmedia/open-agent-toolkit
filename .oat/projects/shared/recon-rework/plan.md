@@ -929,6 +929,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T173037Z.md         | 9b7c04a7783a14f92e10edc56c7e5e81d965cc26 | auto       | -                     |
 | p-rev5 | code     | passed          | 2026-09-11 | reviews/archived/p-rev5-review-2026-09-11T175232Z.md        | 26c8357d081ced7047379140c5353ab5993a7f46 | manual     | -                     |
 | final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T180106Z.md         | 872cae9ce95df3be5d4b2964d542825100055542 | auto       | -                     |
+| p-rev6 | code     | passed          | 2026-09-11 | reviews/archived/p-rev6-review-2026-09-11T182327Z.md        | 52c21ca6b065b95907887459770b3d38ac8cb105 | manual     | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1255,7 +1256,7 @@ Source: final lifecycle review (2026-09-11)
 
 ### Task prev6-t01: (review) Prevent cross-wave gather impersonation
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
@@ -1288,10 +1289,10 @@ recon suites.
 
 Commit as `fix(prev6-t01): bind gather passes to approved waves`.
 
-## Implementation In Progress
+## Implementation Complete
 
-**Implementation tasks complete: 26 of 27 implemented. The latest final review's
-Important gather-pass ownership finding is pending in `prev6-t01`.**
+**Implementation tasks complete: 27 of 27 implemented. The latest final review's
+Important gather-pass ownership finding is fixed and its phase review passed.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1305,7 +1306,7 @@ Important gather-pass ownership finding is pending in `prev6-t01`.**
 - Phase p-rev5: 1 task — connect redundant thorough gathering to compilation.
 - Phase p-rev6: 1 task — bind derived gathering passes to their approved waves.
 
-**Total: 11 phases, 27 tasks.** One final-review remediation task is pending.
+**Total: 11 phases, 27 tasks.** All implementation tasks are complete.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References
