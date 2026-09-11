@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -6,11 +7,13 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { RUNTIME_UNAVAILABLE_REASONS } from '../scripts/lib/browser-runtime.mjs';
+import { recordRun } from '../scripts/record.mjs';
 import {
   extractRenderedClaims,
   runVerify,
   verifyRun,
 } from '../scripts/verify.mjs';
+import { png } from './fixtures/png.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixtures = join(here, 'fixtures', 'verify');
@@ -43,6 +46,28 @@ async function runRoot(page = 'valid.html') {
 
 function allPass(result) {
   return Object.values(result.checks).every(({ status }) => status === 'pass');
+}
+
+async function pageHash(root) {
+  return `sha256:${createHash('sha256')
+    .update(await readFile(join(root, 'site/index.html')))
+    .digest('hex')}`;
+}
+
+async function screenshotFixture(
+  entries = [
+    [320, png(320, 640)],
+    [768, png(768, 1024)],
+    [1440, png(1440, 900)],
+  ],
+) {
+  const root = await mkdtemp(join(tmpdir(), 'explainer-host-screenshots-'));
+  await Promise.all(
+    entries.map(async ([width, bytes]) => {
+      await writeFile(join(root, `${width}.png`), bytes);
+    }),
+  );
+  return root;
 }
 
 test('extractRenderedClaims keys terms and normalized facts by subject', async () => {
@@ -79,6 +104,110 @@ test('none rung writes passing browser-free checks without externalRequests', as
     JSON.parse(await readFile(join(root, 'qa/result.json'), 'utf8')),
     result,
   );
+});
+
+test('host rung binds inspected screenshots to the authored artifact', async () => {
+  for (const visualVerdict of ['pass', 'findings']) {
+    const root = await runRoot();
+    const screenshots = await screenshotFixture();
+    const result = await verifyRun({
+      runRoot: root,
+      recipe: 'project-recap',
+      rung: 'host',
+      screenshots,
+      artifactSha256: await pageHash(root),
+      visualVerdict,
+      visualNotes: `${visualVerdict} inspection at all three widths`,
+    });
+
+    assert.equal(allPass(result), true);
+    assert.equal(result.rung, 'host');
+    assert.deepEqual(result.screenshots, [
+      'qa/320.png',
+      'qa/768.png',
+      'qa/1440.png',
+    ]);
+    assert.deepEqual(result.visual, {
+      verdict: visualVerdict,
+      ...(visualVerdict === 'findings' && {
+        findings: [`${visualVerdict} inspection at all three widths`],
+      }),
+      notes: `${visualVerdict} inspection at all three widths`,
+    });
+    const manifest = await recordRun({
+      runRoot: root,
+      recipe: 'project-recap',
+      slug: `host-${visualVerdict}`,
+      mode: 'unattended',
+      themePath: join(root, 'theme.resolved.json'),
+    });
+    assert.equal(
+      manifest.outcome,
+      visualVerdict === 'pass' ? 'built' : 'built-needs-review',
+    );
+  }
+});
+
+test('host rung rejects capture without an inspection verdict', async () => {
+  const root = await runRoot();
+  const screenshots = await screenshotFixture();
+  await assert.rejects(
+    verifyRun({
+      runRoot: root,
+      recipe: 'project-recap',
+      rung: 'host',
+      screenshots,
+      artifactSha256: await pageHash(root),
+    }),
+    { code: 'verify-host-visual-verdict-required' },
+  );
+});
+
+test('host rung downgrades mismatched hashes and invalid screenshots', async () => {
+  const cases = [
+    {
+      name: 'artifact hash',
+      artifactSha256: `sha256:${'0'.repeat(64)}`,
+      expectedReason: 'host-artifact-hash-mismatch',
+    },
+    {
+      name: 'wrong width',
+      entries: [
+        [320, png(319, 640)],
+        [768, png(768, 1024)],
+        [1440, png(1440, 900)],
+      ],
+      expectedReason: 'host-screenshot-invalid',
+    },
+    {
+      name: 'non-PNG',
+      entries: [
+        [320, Buffer.from('not a png')],
+        [768, png(768, 1024)],
+        [1440, png(1440, 900)],
+      ],
+      expectedReason: 'host-screenshot-invalid',
+    },
+  ];
+
+  for (const fixture of cases) {
+    const root = await runRoot();
+    const screenshots = await screenshotFixture(fixture.entries);
+    const result = await verifyRun({
+      runRoot: root,
+      recipe: 'project-recap',
+      rung: 'host',
+      screenshots,
+      artifactSha256: fixture.artifactSha256 ?? (await pageHash(root)),
+      visualVerdict: 'pass',
+      visualNotes: 'inspection input must not survive failed binding',
+    });
+
+    assert.equal(result.rung, 'none', fixture.name);
+    assert.equal(result.reason, fixture.expectedReason, fixture.name);
+    assert.equal(result.screenshots, undefined, fixture.name);
+    assert.deepEqual(result.visual, { verdict: 'none' }, fixture.name);
+  }
 });
 
 test('fixture variants fail their owning browser-free check', async () => {

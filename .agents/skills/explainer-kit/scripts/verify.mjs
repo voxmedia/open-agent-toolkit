@@ -13,6 +13,8 @@ import {
   checkArtifactCohesion,
   checkHtmlStructure,
   checkSourceDumping,
+  pngDimensions,
+  REPRESENTATIVE_WIDTHS,
 } from './lib/qa.mjs';
 import { loadRecipe, recipeRequiredNarrative } from './lib/recipes.mjs';
 
@@ -192,22 +194,25 @@ export async function verifyRun({
       ),
     };
     const pageHash = hashText(html);
-    const effectiveRung = rung === 'none' ? 'none' : 'none';
+    const browserResult =
+      rung === 'host'
+        ? await verifyHostRung({
+            runRoot,
+            screenshots,
+            expectedArtifactHash: pageHash,
+            artifactSha256,
+            visualVerdict,
+            visualNotes,
+          })
+        : {
+            rung: 'none',
+            reason: RUNTIME_UNAVAILABLE_REASONS.disabled,
+            visual: { verdict: 'none' },
+          };
     const result = {
       artifactSha256: pageHash,
       checks,
-      rung: effectiveRung,
-      reason: RUNTIME_UNAVAILABLE_REASONS.disabled,
-      visual: { verdict: 'none' },
-      ...(rung !== 'none' && {
-        deferredBrowserRequest: {
-          rung,
-          screenshots,
-          artifactSha256,
-          visualVerdict,
-          visualNotes,
-        },
-      }),
+      ...browserResult,
     };
     await mkdir(join(runRoot, 'qa'), { recursive: true });
     await rm(join(runRoot, 'failure.json'), { force: true });
@@ -267,6 +272,85 @@ function checkResult(issues) {
           )
           .join('; '),
       };
+}
+
+async function verifyHostRung({
+  runRoot,
+  screenshots,
+  expectedArtifactHash,
+  artifactSha256,
+  visualVerdict,
+  visualNotes,
+}) {
+  if (!['pass', 'findings'].includes(visualVerdict)) {
+    throw verifyError(
+      'verify-host-visual-verdict-required',
+      'The host rung requires --visual-verdict pass|findings after screenshot inspection.',
+    );
+  }
+  if (artifactSha256 !== expectedArtifactHash) {
+    await clearCanonicalScreenshots(runRoot);
+    return noneRung('host-artifact-hash-mismatch');
+  }
+
+  const captures = await readHostScreenshots(screenshots);
+  if (!captures) {
+    await clearCanonicalScreenshots(runRoot);
+    return noneRung('host-screenshot-invalid');
+  }
+  await clearCanonicalScreenshots(runRoot);
+  await mkdir(join(runRoot, 'qa'), { recursive: true });
+  await Promise.all(
+    captures.map(({ path, bytes }) => writeFile(join(runRoot, path), bytes)),
+  );
+
+  const notes =
+    visualNotes?.trim() ||
+    `Host inspection reported ${visualVerdict} at 320, 768, and 1440 pixels.`;
+  return {
+    rung: 'host',
+    screenshots: captures.map(({ path }) => path),
+    visual: {
+      verdict: visualVerdict,
+      ...(visualVerdict === 'findings' && { findings: [notes] }),
+      notes,
+    },
+  };
+}
+
+async function readHostScreenshots(screenshots) {
+  if (typeof screenshots !== 'string' || screenshots.length === 0) return null;
+  try {
+    const captures = await Promise.all(
+      REPRESENTATIVE_WIDTHS.map(async (width) => {
+        const bytes = await readFile(join(screenshots, `${width}.png`));
+        const dimensions = pngDimensions(bytes);
+        if (!dimensions || dimensions.width !== width) {
+          throw new Error('invalid screenshot');
+        }
+        return { path: `qa/${width}.png`, bytes };
+      }),
+    );
+    return captures;
+  } catch {
+    return null;
+  }
+}
+
+async function clearCanonicalScreenshots(runRoot) {
+  await Promise.all(
+    REPRESENTATIVE_WIDTHS.map((width) =>
+      rm(join(runRoot, `qa/${width}.png`), { force: true }),
+    ),
+  );
+}
+
+function noneRung(reason) {
+  return {
+    rung: 'none',
+    reason,
+    visual: { verdict: 'none' },
+  };
 }
 
 function parseArgs(argv) {
