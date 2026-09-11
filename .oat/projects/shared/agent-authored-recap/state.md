@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p01-t02
+oat_last_commit: cd6314c6eeadf512dc5d0077a080c37587b3abbb
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -14,13 +14,14 @@ oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
-# oat_phase_recovery_policy: # optional; automatic append-only post-commit phase recovery
-#   default_attempt_limit: 10 # project default, integer 0-20; 0 disables automatic recovery
-#   phase_attempt_limits: {} # optional pNN: 0-20 overrides; prior usage never resets
-#   phase_attempt_usage: # authoritative monotonic per-phase attempt ledger
-#     pNN:
-#       used_attempts: 0
-#       pending_attempt: null # null or {attempt, event_id, original_request_id, original_task_id, original_commit, discovered_by, dispatch_target, reservation_head, status}
+oat_phase_recovery_policy:
+  default_attempt_limit: 10
+  phase_attempt_limits:
+    p01: 10
+  phase_attempt_usage:
+    p01:
+      used_attempts: 0
+      pending_attempt: null
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -111,7 +112,7 @@ Implementation — Phase 1: The cut
 - ✓ Specification complete
 - ✓ Design complete (HiLL 2026-09-10)
 - ✓ Plan complete
-- ⧗ Phase 1 in progress (0/17 tasks)
+- ⧗ Phase 1 in progress (1/17 tasks)
 
 ## Blockers
 

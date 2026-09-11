@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 17    | 0/17      |
+| Phase 1 | in_progress | 17    | 1/17      |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 8     | 0/8       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 0/32 tasks completed
+**Total:** 1/32 tasks completed
 
 ---
 
@@ -62,33 +62,35 @@ oat_generated: false
 
 ### Task p01-t01: Trim `contracts.mjs` to the three kept contract kinds
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cd6314c6eeadf512dc5d0077a080c37587b3abbb
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Contract validation now loads only fact-base, manifest, and theme schemas.
+- Retired publication, authoring, planning, review, and evidence validation branches and exports are gone.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `.agents/skills/explainer-kit/scripts/lib/contracts.mjs` - retained schema validation and canonical serialization only.
+- `.agents/skills/explainer-kit/tests/contracts.test.mjs` - bounded tests for the three retained contract surfaces.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs`; retired-symbol `rg`; `pnpm lint`; `pnpm format`.
+- Result: pass; five contract tests green and retired-symbol search empty.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- The fact-base schema still permits legacy backlink tuple keys, so the retained validator explicitly rejects those keys on citations to enforce the new `{ sourceId, locator }` contract without changing the frozen fact-base schema.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- RED correctly failed for both the retired contract kind and a citation carrying `path`; the retained implementation made both cases pass.
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Trim the recipes, the recipe loader, and the briefs
 
 **Status:** pending
 **Commit:** -
@@ -123,6 +125,29 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run dispatch-agent-authored-recap-p01-20260911T0308Z
+
+- Request ID: `dispatch-agent-authored-recap-p01-20260911T0308Z`
+- Launch status: `accepted`
+- Authorization scope: this OAT implementation run
+- Role selector: `oat-phase-implementer-gpt-5-6-sol-high`
+- Model selector: `gpt-5.6-sol-high`
+- Model selector granularity: `opaque-materialized-role`
+- Effort selector: `null`
+- Reasoning mode selector: `null`
+- Service tier selector: `standard`
+- Guidance reference: `subagent-orchestration/references/provider-cursor.md`
+- Guidance version: `2026-07-25`
+- Guidance verified at: `2026-07-25`
+- Guidance status: `review-required`
+- Selection source: `native-default`
+- Selection reason: `native-catalog`
+- Floor satisfaction: `satisfied`
+- Fallback: `caller-inline` (`allow_below_task_class_floor=false`)
+- Runtime confirmation: `not-reported`
+- Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -133,26 +158,26 @@ Chronological log of implementation progress.
 
 ### 2026-09-09
 
-**Session Start:** {time}
+**Session Start:** 2026-09-11T03:08:00Z
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [x] p01-t01: Trim `contracts.mjs` to the three kept contract kinds - cd6314c6eeadf512dc5d0077a080c37587b3abbb
+- [ ] p01-t02: Trim the recipes, the recipe loader, and the briefs - in progress
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Reduced the core contract registry and validator to the three retained contract kinds.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Enforce citation `{ sourceId, locator }` in the validator because the unchanged fact-base schema retains legacy backlink fields.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Continue p01 in plan order; no deletion tasks may begin before p01-t09 passes.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
 **Session End:** {time}
 
