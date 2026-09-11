@@ -584,7 +584,7 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 
 | Scope | Type  | Status  | Notes                                                                                                               |
 | ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------- |
-| p01   | phase | fixes_completed | Operator-authorized governance remediation is committed; one independent verification review remains before p02. |
+| p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings. |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
@@ -593,6 +593,7 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 | p01    | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T155532Z.md                      | f1cff54c0e364e858f9e36fb820e9f95b1e5b578 | manual     | -           |
 | p01    | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T165150Z.md                      | 3f29035c2588bc590cfd361e88e5632e084238f5 | manual     | -           |
 | p01    | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T173707Z.md                      | 5e8694abbb7f7740970bd69e5feea64ddf9df316 | manual     | -           |
+| p01    | code     | passed          | 2026-09-11 | reviews/p01-review-2026-09-11T185739Z.md                      | 285673119c8493c99ea0c0208e18779a8e9a142c | manual     | -           |
 | p02    | code     | pending         | -          | -                                                             | -             | -          | -           |
 | p03    | code     | pending         | -          | -                                                             | -             | -          | -           |
 | p04    | code     | pending         | -          | -                                                             | -             | -          | -           |

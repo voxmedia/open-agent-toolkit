@@ -48,6 +48,10 @@ p01-r3-governance-exhausted-20260911: review round 3 requested changes; one Impo
 
 p01-governance-manual-fix-authorized-20260911: operator authorized one bounded terminal-guard remediation and one independent verification review; automatic retry accounting remains exhausted and unchanged.
 
+### 2026-09-11 · structural · oat-project-implement · p01
+
+phase-outcome-p01-20260911T1902Z: PASS; 0 Critical, 0 Important, 3 deferred Medium; 2 automatic fix iterations plus 1 operator-authorized remediation; independent verification artifact reviews/p01-review-2026-09-11T185739Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

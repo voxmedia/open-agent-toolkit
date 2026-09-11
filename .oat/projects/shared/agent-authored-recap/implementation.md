@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-10
+oat_last_updated: 2026-09-11
 oat_current_task_id: p02-t01
 oat_generated: false
 ---
@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: agent-authored-recap
 
 **Started:** 2026-09-09
-**Last Updated:** 2026-09-09
+**Last Updated:** 2026-09-11
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -486,7 +486,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 | Phase | Status    | Tasks | Base                                       | Code Head                                  | Review                          |
 | ----- | --------- | ----- | ------------------------------------------ | ------------------------------------------ | ------------------------------- |
-| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `853462ffd53b2d347ad6495c5829abd18091cab0` | manual fix complete             |
+| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `5844547c524f09f700027691bd7c1148b536b2e4` | independent verification passed |
 
 - Recovery ledger: `used_attempts: 0`, `pending_attempt: null`; no recovery events.
 - File boundary: only p01-declared files, the operator-approved plan/design correction, p01 bookkeeping, and mechanically derived in-phase symbol consumers were changed.
@@ -606,6 +606,25 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch: scope=p01-governance-manual-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 - Deferred unchanged: failure sanitization, duplicate relative-locator handling, and heading-fact asymmetry
 - Disposition: `fixes_completed`; one operator-authorized independent verification review remains before p02
+
+#### Operator-Authorized Independent Verification
+
+- Request ID: `dispatch-agent-authored-recap-p01-independent-verification-20260911T1857Z`
+- Launch status: `accepted`
+- Terminal outcome: `completed`
+- Review artifact: `reviews/p01-review-2026-09-11T185739Z.md`
+- Reviewed range: `79f359957fabe4cbe042b39379523887b816cbff..285673119c8493c99ea0c0208e18779a8e9a142c`
+- Reviewed head: `285673119c8493c99ea0c0208e18779a8e9a142c`
+- Findings: 0 Critical, 0 Important, 3 deferred Medium, 0 Minor
+- Disposition: `PASS`
+- Reconnaissance: `not-attempted`; no Review Orchestration section or project-log orchestration entry
+- Verification: 154 focused tests passed, including positive and negative remediation controls and the strict project-recap archive boundary
+- Selection reason: `gate-target`
+- Candidates considered: `gpt-5.6-sol-high`
+- Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- Phase outcome: p01 passed after 2 automatic fix iterations and 1 operator-authorized remediation; p02 is now ready
+- Recovery accounting: phase recovery usage remains `0/10`, `pending_attempt: null`
 
 #### Continuation cont-agent-authored-recap-p01-plan-correction-1
 
