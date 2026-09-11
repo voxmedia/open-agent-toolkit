@@ -486,7 +486,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 | Phase | Status    | Tasks | Base                                       | Code Head                                  | Review                          |
 | ----- | --------- | ----- | ------------------------------------------ | ------------------------------------------ | ------------------------------- |
-| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `853462ffd53b2d347ad6495c5829abd18091cab0` | round 2 changes requested       |
+| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `853462ffd53b2d347ad6495c5829abd18091cab0` | round 2 fixes completed         |
 
 - Recovery ledger: `used_attempts: 0`, `pending_attempt: null`; no recovery events.
 - File boundary: only p01-declared files, the operator-approved plan/design correction, p01 bookkeeping, and mechanically derived in-phase symbol consumers were changed.
@@ -543,6 +543,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
 - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 - Next: final allowed bounded fix iteration for the three Important findings, then fresh root-owned review round 3
+
+#### Phase Review Round 2 Fix
+
+- Continuation: `cont-agent-authored-recap-p01-review-r2-fix-2`
+- Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
+- Review artifact: `reviews/p01-review-2026-09-11T165150Z.md`
+- Fix range: `8219e29adcbf161c7092c2bbce9e605463cdc6c2..ca185f1c629892c1616f136cfe9c15aa8c0bddcc`
+- Fix commit: `ca185f1c629892c1616f136cfe9c15aa8c0bddcc`
+- Fixed: all 3 Important findings with pre-fix controls and post-fix verification
+- Deferred unchanged: failure sanitization, duplicate relative-locator handling, and heading-fact asymmetry
+- Verification: focused core, lifecycle, archive/CLI, all eight phase gates, uncached Turbo, smoke, skills, scripts, lint, and format passed
+- Recovery accounting: final review-fix iteration; phase recovery usage remains `0/10`
+- Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- Dispatch: scope=p01-review-r2-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- Disposition: `fixes_completed`; governance-final root-owned review round 3 required before p02
 
 #### Continuation cont-agent-authored-recap-p01-plan-correction-1
 
