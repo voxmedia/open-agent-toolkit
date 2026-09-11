@@ -100,6 +100,10 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0
 
 run-2-collection-residuals-20260911 The passing review's 1 Medium and 1 Minor residuals were both fixed in bd5dded4d460a95a1f9cd7ca46475ac49249dbbe; non-array gaps and artifacts now stop at structured diagnostics, withdraw stale output, and cannot cascade into downstream validation.
 
+### 2026-09-11 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T030536Z.md run=626478bd-1ce7-4e53-8328-9f3b694c1558
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
