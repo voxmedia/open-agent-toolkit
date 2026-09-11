@@ -2467,7 +2467,10 @@ export async function compileValidatedRun(packetDirectory) {
       reconciliationRequired,
       errors,
     );
-    if (routing) {
+    if (
+      routing &&
+      (!reconciliationRequired || reconciliationContext.priorLedger)
+    ) {
       validateThoroughGatherLedgerInputs(
         manifest,
         reconciliationContext.priorLedger ?? ledger,

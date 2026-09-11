@@ -1045,6 +1045,46 @@ test('rejects a thorough ledger that omits its redundant gather dossier input', 
   );
 });
 
+test('missing terminal prior ledger does not cascade into thorough gather diagnostics', async () => {
+  const packet = await makePacket({ profile: 'thorough' });
+  const priorReference = packet.manifest.artifacts.find(
+    ({ path }) => path === 'raw/drafts/claims-v1.json',
+  );
+  const dossierReference = packet.manifest.artifacts.find(
+    ({ path }) => path === 'raw/dossiers/dossier-1.json',
+  );
+  packet.ledger.inputArtifacts = [{ ...priorReference }];
+
+  const reconciliation = packet.reviewPaths.get('review-reconciliation');
+  reconciliation.value.inputLedger = {
+    ...dossierReference,
+    revision: 1,
+  };
+  const permittedPriorIndex = reconciliation.value.permittedInputs.findIndex(
+    ({ path }) => path === priorReference.path,
+  );
+  reconciliation.value.permittedInputs[permittedPriorIndex] = {
+    ...dossierReference,
+  };
+  await persistReview(packet, 'review-reconciliation');
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.deepEqual(
+    result.errors
+      .filter(({ code }) =>
+        [
+          'RECONCILIATION_REVISION_MISMATCH',
+          'MISSING_THOROUGH_GATHER_LEDGER_INPUT',
+        ].includes(code),
+      )
+      .map(({ code }) => code),
+    ['RECONCILIATION_REVISION_MISMATCH'],
+    JSON.stringify(result, null, 2),
+  );
+});
+
 test('production validation enforces approved profile topology', async () => {
   const cases = [
     {
