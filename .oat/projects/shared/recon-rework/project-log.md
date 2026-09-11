@@ -180,6 +180,10 @@ run-4-p-rev7-pass-20260911 Phase p-rev7 completed task prev7-t01 at 914e9fde6d67
 
 run-4-final-rereview-pass-20260911T202308Z The authorized narrowed final lifecycle review passed with 0C/0I/0M/0m, closed prev7-t01, and dispositioned the carried deferred ledger to zero remaining items; source reviews/archived/final-review-2026-09-11T202308Z.md.
 
+### 2026-09-11 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T204246Z.md run=e54ba2dd-6df7-468d-9984-638aa95ea3c6
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility
