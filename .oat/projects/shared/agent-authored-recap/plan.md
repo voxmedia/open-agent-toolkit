@@ -586,7 +586,7 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 | ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------- |
 | p01   | phase | passed | Independent verification passed with 0 Critical, 0 Important, and 3 deferred Medium findings. |
 | p02   | phase | passed | Fresh re-review closed all three blocking findings with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. |
-| p03   | phase | fixes_added | Governance-final round 3 found 1 Important typed-state compatibility defect; automatic review/fix budget exhausted and operator direction required. |
+| p03   | phase | fixes_added | Operator authorized one bounded manual remediation and one independent verification review for the governance-final typed-state compatibility defect. |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 

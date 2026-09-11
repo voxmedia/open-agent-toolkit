@@ -1084,6 +1084,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 - Stop: operator direction is required before any further fix or Phase 4 work
 
+#### Operator Authorization — Governance Extension
+
+- Authorization time: `2026-09-11T23:07:00Z`
+- Scope: one bounded manual remediation for the governance-final typed-state compatibility finding, followed by one independent verification review
+- Finding: require raw-string `failed_attempt_evidence` consistently across CLI/control-plane readers and preserve read-only legacy `skip/capability_probe` compatibility without permitting new writes
+- Continuation: `cont-agent-authored-recap-p03-governance-manual-fix-1`
+- Authorization: `operator-scope`
+- Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- Exact target: `oat-phase-implementer-gpt-5-6-sol-high` (unchanged)
+- Recovery accounting: outside the automatic review-fix budget and not phase recovery; usage remains `0/10`
+- Boundary: no Phase 4 work, no closed Phase 3 findings, and no Phase 1 deferred Medium findings
+
 <!-- orchestration-runs-end -->
 
 ---

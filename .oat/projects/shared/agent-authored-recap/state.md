@@ -84,7 +84,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-11T23:04:00Z'
+oat_project_state_updated: '2026-09-11T23:07:00Z'
 oat_generated: false
 ---
 
@@ -96,7 +96,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 3 governance review stopped; operator direction required
+Implementation — Phase 3 operator-authorized remediation pending
 
 ## Artifacts
 
@@ -114,12 +114,12 @@ Implementation — Phase 3 governance review stopped; operator direction require
 - ✓ Plan complete
 - ✓ Phase 1 complete and independently verified (17/17 tasks)
 - ✓ Phase 2 complete and independently verified (4/4 tasks)
-- ⧗ Phase 3 governance-final review found 1 Important defect; automatic review/fix budget exhausted
+- ⧗ Phase 3 governance-final review found 1 Important defect; bounded manual remediation authorized
 
 ## Blockers
 
-Typed state readers disagree on malformed `failed_attempt_evidence` and reject the supported read-only legacy `skip/capability_probe` pair.
+None; remediation is limited to the operator-authorized typed-state compatibility finding.
 
 ## Next Milestone
 
-Obtain operator direction before any further Phase 3 remediation or Phase 4 work.
+Complete the bounded typed-state remediation and its independent verification review before Phase 4.
