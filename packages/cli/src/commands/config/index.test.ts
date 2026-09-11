@@ -1052,19 +1052,40 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('lists and describes all twelve explainer configuration keys', async () => {
+  it('rejects retired explainer publish keys while keeping defaults', async () => {
+    const root = await createRepoRoot();
+    const retiredKey = ['explainers', 'publish', 'provider'].join('.');
+    const retired = createHarness({ cwd: root });
+    await runCommand(retired.command, [
+      'set',
+      retiredKey,
+      's3-static',
+      '--shared',
+    ]);
+    expect(process.exitCode).toBe(1);
+    expect(retired.capture.error[0]).toContain(
+      `Unknown config key: ${retiredKey}`,
+    );
+
+    process.exitCode = undefined;
+    const retained = createHarness({ cwd: root });
+    await runCommand(retained.command, [
+      'set',
+      'explainers.defaults.style',
+      'clean-neutral',
+      '--shared',
+    ]);
+    expect(process.exitCode).toBe(0);
+    expect(retained.capture.error).toHaveLength(0);
+  });
+
+  it('lists and describes all six explainer configuration keys', async () => {
     const root = await createRepoRoot();
     const expectedKeys = [
       'explainers.defaults.style',
       'explainers.defaults.palette',
       'explainers.defaults.visualProfile',
       'explainers.defaults.themeBundlePath',
-      'explainers.publish.provider',
-      'explainers.publish.s3Uri',
-      'explainers.publish.publicBaseUrl',
-      'explainers.publish.awsRegion',
-      'explainers.publish.publicAccess',
-      'explainers.publish.awsProfile',
       'workflow.explainers.projectExplainer',
       'workflow.explainers.projectRecap',
     ];
@@ -1095,16 +1116,6 @@ describe('oat config', () => {
       ['explainers.defaults.palette', 'ocean', '--user'],
       ['explainers.defaults.visualProfile', 'technical', '--local'],
       ['explainers.defaults.themeBundlePath', 'themes/shared.json', '--shared'],
-      ['explainers.publish.provider', 's3-static', '--shared'],
-      ['explainers.publish.s3Uri', 's3://bucket/explainers/', '--shared'],
-      [
-        'explainers.publish.publicBaseUrl',
-        'https://docs.example.com/explainers/',
-        '--shared',
-      ],
-      ['explainers.publish.awsRegion', 'us-east-1', '--shared'],
-      ['explainers.publish.publicAccess', 'protected', '--shared'],
-      ['explainers.publish.awsProfile', 'work-sso', '--user'],
       ['workflow.explainers.projectExplainer', 'always', '--local'],
       ['workflow.explainers.projectRecap', 'never', '--shared'],
     ] as const;
@@ -1122,13 +1133,6 @@ describe('oat config', () => {
     expect(shared).toMatchObject({
       explainers: {
         defaults: { themeBundlePath: 'themes/shared.json' },
-        publish: {
-          provider: 's3-static',
-          s3Uri: 's3://bucket/explainers',
-          publicBaseUrl: 'https://docs.example.com/explainers',
-          awsRegion: 'us-east-1',
-          publicAccess: 'protected',
-        },
       },
       workflow: { explainers: { projectRecap: 'never' } },
     });
@@ -1237,15 +1241,6 @@ describe('oat config', () => {
     ['explainers.defaults.style', 'not-curated', '--local'],
     ['explainers.defaults.themeBundlePath', '/absolute/theme.json', '--shared'],
     ['explainers.defaults.themeBundlePath', 'themes/user.json', '--user'],
-    ['explainers.publish.provider', 's3-static', '--local'],
-    ['explainers.publish.s3Uri', 'https://not-s3.example.com', '--shared'],
-    [
-      'explainers.publish.publicBaseUrl',
-      'http://insecure.example.com',
-      '--shared',
-    ],
-    ['explainers.publish.publicAccess', 'private', '--shared'],
-    ['explainers.publish.awsProfile', 'shared-profile', '--shared'],
     ['workflow.explainers.projectExplainer', 'sometimes', '--local'],
   ] as const)(
     'rejects invalid explainer key value or surface: %s %s %s',

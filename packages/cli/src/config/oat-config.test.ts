@@ -3365,7 +3365,7 @@ describe('oat-config', () => {
   });
 
   describe('explainer configuration', () => {
-    it('normalizes the shared explainer build and publish surface', async () => {
+    it('normalizes the shared explainer defaults surface', async () => {
       const repoRoot = await createRepoRoot();
       await writeFile(
         join(repoRoot, '.oat', 'config.json'),
@@ -3377,14 +3377,6 @@ describe('oat-config', () => {
               palette: ' ocean ',
               visualProfile: ' editorial ',
               themeBundlePath: 'themes/team.json',
-            },
-            publish: {
-              provider: 's3-static',
-              s3Uri: 's3://example-bucket/explainers/',
-              publicBaseUrl: 'https://docs.example.com/explainers/',
-              awsRegion: ' us-east-1 ',
-              publicAccess: 'protected',
-              awsProfile: 'not-shared',
             },
           },
           workflow: {
@@ -3404,13 +3396,6 @@ describe('oat-config', () => {
             palette: 'ocean',
             visualProfile: 'editorial',
             themeBundlePath: 'themes/team.json',
-          },
-          publish: {
-            provider: 's3-static',
-            s3Uri: 's3://example-bucket/explainers',
-            publicBaseUrl: 'https://docs.example.com/explainers',
-            awsRegion: 'us-east-1',
-            publicAccess: 'protected',
           },
         },
         workflow: {
@@ -3437,10 +3422,6 @@ describe('oat-config', () => {
             palette: 'violet',
             visualProfile: 'clean',
             themeBundlePath: '/tmp/private-theme.json',
-          },
-          publish: {
-            provider: 's3-static',
-            awsProfile: 'work-sso',
           },
         },
         workflow: {
@@ -3469,7 +3450,6 @@ describe('oat-config', () => {
             visualProfile: 'clean',
             themeBundlePath: '/tmp/private-theme.json',
           },
-          publish: { awsProfile: 'work-sso' },
         },
       });
       await expect(readUserConfig(userConfigDir)).resolves.toMatchObject({
@@ -3479,7 +3459,6 @@ describe('oat-config', () => {
             palette: 'violet',
             visualProfile: 'clean',
           },
-          publish: { awsProfile: 'work-sso' },
         },
       });
     });

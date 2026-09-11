@@ -63,14 +63,6 @@ const DEFAULT_SHARED_CONFIG = {
       visualProfile: null,
       themeBundlePath: null,
     },
-    publish: {
-      provider: null,
-      s3Uri: null,
-      publicBaseUrl: null,
-      awsRegion: null,
-      publicAccess: 'public',
-      awsProfile: null,
-    },
   },
   documentation: {
     root: null,

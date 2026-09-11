@@ -142,12 +142,6 @@ type ConfigKey =
   | 'explainers.defaults.palette'
   | 'explainers.defaults.themeBundlePath'
   | 'explainers.defaults.visualProfile'
-  | 'explainers.publish.awsProfile'
-  | 'explainers.publish.awsRegion'
-  | 'explainers.publish.provider'
-  | 'explainers.publish.publicAccess'
-  | 'explainers.publish.publicBaseUrl'
-  | 'explainers.publish.s3Uri'
   | 'git.defaultBranch'
   | 'projects.defaultScope'
   | 'projects.root'
@@ -309,12 +303,6 @@ const KEY_ORDER: ConfigKey[] = [
   'explainers.defaults.palette',
   'explainers.defaults.visualProfile',
   'explainers.defaults.themeBundlePath',
-  'explainers.publish.provider',
-  'explainers.publish.s3Uri',
-  'explainers.publish.publicBaseUrl',
-  'explainers.publish.awsRegion',
-  'explainers.publish.publicAccess',
-  'explainers.publish.awsProfile',
   'git.defaultBranch',
   'projects.root',
   'projects.defaultScope',
@@ -740,80 +728,6 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'oat config set explainers.defaults.themeBundlePath <path> [--local|--shared]',
     description:
       'Theme bundle path; shared values must be repository-relative and local values may be absolute.',
-  },
-  {
-    key: 'explainers.publish.provider',
-    group: 'Explainer Publish (shared)',
-    file: '.oat/config.json',
-    scope: 'shared repo',
-    type: 's3-static',
-    defaultValue: 'unset',
-    mutability: 'read/write',
-    owningCommand:
-      'oat config set explainers.publish.provider s3-static --shared',
-    description: 'Static publishing provider for explainer artifacts.',
-  },
-  {
-    key: 'explainers.publish.s3Uri',
-    group: 'Explainer Publish (shared)',
-    file: '.oat/config.json',
-    scope: 'shared repo',
-    type: 's3:// URI',
-    defaultValue: 'unset',
-    mutability: 'read/write',
-    owningCommand:
-      'oat config set explainers.publish.s3Uri <s3://bucket/prefix> --shared',
-    description: 'Shared S3 destination root for explainer publishing.',
-  },
-  {
-    key: 'explainers.publish.publicBaseUrl',
-    group: 'Explainer Publish (shared)',
-    file: '.oat/config.json',
-    scope: 'shared repo',
-    type: 'https:// URL',
-    defaultValue: 'unset',
-    mutability: 'read/write',
-    owningCommand:
-      'oat config set explainers.publish.publicBaseUrl <https://url> --shared',
-    description: 'Shared public URL root for published explainer artifacts.',
-  },
-  {
-    key: 'explainers.publish.awsRegion',
-    group: 'Explainer Publish (shared)',
-    file: '.oat/config.json',
-    scope: 'shared repo',
-    type: 'non-empty string',
-    defaultValue: 'unset',
-    mutability: 'read/write',
-    owningCommand:
-      'oat config set explainers.publish.awsRegion <region> --shared',
-    description: 'AWS region used for explainer publishing.',
-  },
-  {
-    key: 'explainers.publish.publicAccess',
-    group: 'Explainer Publish (shared)',
-    file: '.oat/config.json',
-    scope: 'shared repo',
-    type: 'public | protected',
-    defaultValue: 'public',
-    mutability: 'read/write',
-    owningCommand:
-      'oat config set explainers.publish.publicAccess <public|protected> --shared',
-    description:
-      'Declares whether published explainer URLs support anonymous access; it does not authorize publication.',
-  },
-  {
-    key: 'explainers.publish.awsProfile',
-    group: 'Explainer Publish Credentials (local > user)',
-    file: '.oat/config.local.json | ~/.oat/config.json',
-    scope: 'local or user',
-    type: 'non-empty string',
-    defaultValue: 'unset',
-    mutability: 'read/write',
-    owningCommand:
-      'oat config set explainers.publish.awsProfile <profile> [--local|--user]',
-    description:
-      'Checkout- or user-specific AWS profile used for explainer publishing.',
   },
   {
     key: 'workflow.explainers.projectExplainer',
@@ -1448,38 +1362,6 @@ function parseExplainerValue(
     }
     return value;
   }
-  if (key === 'explainers.publish.provider') {
-    if (value !== 's3-static') {
-      throw new Error(
-        `Invalid value for ${key}: expected 's3-static', got '${rawValue}'.`,
-      );
-    }
-    return value;
-  }
-  if (key === 'explainers.publish.s3Uri') {
-    if (!/^s3:\/\/[^/\s]+(?:\/.*)?$/.test(value)) {
-      throw new Error(
-        `Invalid value for ${key}: expected an s3:// URI, got '${rawValue}'.`,
-      );
-    }
-    return value.replace(/\/+$/, '');
-  }
-  if (key === 'explainers.publish.publicBaseUrl') {
-    if (!/^https:\/\/[^/\s]+(?:\/.*)?$/.test(value)) {
-      throw new Error(
-        `Invalid value for ${key}: expected an https:// URL, got '${rawValue}'.`,
-      );
-    }
-    return value.replace(/\/+$/, '');
-  }
-  if (key === 'explainers.publish.publicAccess') {
-    if (value !== 'public' && value !== 'protected') {
-      throw new Error(
-        `Invalid value for ${key}: expected 'public' or 'protected', got '${rawValue}'.`,
-      );
-    }
-    return value;
-  }
   return value;
 }
 
@@ -1586,11 +1468,7 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
       key === 'explainers.defaults.palette' ||
       key === 'explainers.defaults.visualProfile'
         ? ['shared', 'local', 'user']
-        : key === 'explainers.defaults.themeBundlePath'
-          ? ['shared', 'local']
-          : key === 'explainers.publish.awsProfile'
-            ? ['local', 'user']
-            : ['shared'];
+        : ['shared', 'local'];
     if (!allowed.includes(surface)) {
       throw new Error(
         `Cannot set '${key}' at '${surface}' scope. Allowed scopes: ${allowed.join(', ')}.`,
@@ -1650,8 +1528,7 @@ function defaultSurfaceForKey(key: ConfigKey): ConfigSurface {
     key === 'explainers.defaults.style' ||
     key === 'explainers.defaults.palette' ||
     key === 'explainers.defaults.visualProfile' ||
-    key === 'explainers.defaults.themeBundlePath' ||
-    key === 'explainers.publish.awsProfile'
+    key === 'explainers.defaults.themeBundlePath'
   ) {
     return 'local';
   }
@@ -2504,10 +2381,7 @@ async function setConfigValue(
 
   if (key.startsWith('explainers.')) {
     const nextValue = parseExplainerValue(key, rawValue, effectiveSurface);
-    const section = key.startsWith('explainers.defaults.')
-      ? 'defaults'
-      : 'publish';
-    const field = key.slice(`explainers.${section}.`.length);
+    const field = key.slice('explainers.defaults.'.length);
 
     if (effectiveSurface === 'user') {
       const userConfig = await dependencies.readUserConfig(userConfigDir);
@@ -2515,8 +2389,8 @@ async function setConfigValue(
         ...userConfig,
         explainers: {
           ...userConfig.explainers,
-          [section]: {
-            ...userConfig.explainers?.[section],
+          defaults: {
+            ...userConfig.explainers?.defaults,
             [field]: nextValue,
           },
         },
@@ -2530,8 +2404,8 @@ async function setConfigValue(
         ...localConfig,
         explainers: {
           ...localConfig.explainers,
-          [section]: {
-            ...localConfig.explainers?.[section],
+          defaults: {
+            ...localConfig.explainers?.defaults,
             [field]: nextValue,
           },
         },
@@ -2544,8 +2418,8 @@ async function setConfigValue(
       ...sharedConfig,
       explainers: {
         ...sharedConfig.explainers,
-        [section]: {
-          ...sharedConfig.explainers?.[section],
+        defaults: {
+          ...sharedConfig.explainers?.defaults,
           [field]: nextValue,
         },
       },
