@@ -84,7 +84,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-11T22:12:00Z'
+oat_project_state_updated: '2026-09-11T22:25:00Z'
 oat_generated: false
 ---
 
@@ -96,7 +96,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 3 review fixes complete; independent re-review required
+Implementation — Phase 3 final automatic review fix required
 
 ## Artifacts
 
@@ -114,12 +114,12 @@ Implementation — Phase 3 review fixes complete; independent re-review required
 - ✓ Plan complete
 - ✓ Phase 1 complete and independently verified (17/17 tasks)
 - ✓ Phase 2 complete and independently verified (4/4 tasks)
-- ⧗ Phase 3 implementation and review round 1 fixes complete; independent re-review required
+- ⧗ Phase 3 review round 2 found one new Important defect; final automatic fix iteration pending
 
 ## Blockers
 
-Phase 3 cannot pass until root-owned independent re-review confirms the bounded round 1 fixes.
+Fresh resume cannot carry persisted `skip/failed_attempt` evidence through the terminal guard.
 
 ## Next Milestone
 
-Run a fresh root-owned independent review of Phase 3.
+Complete the final automatic Phase 3 review fix and run governance-final review round 3.
