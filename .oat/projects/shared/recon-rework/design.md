@@ -42,14 +42,14 @@ safeguards. This is not a new launcher, price service, or receipt framework.
 
 ### System context and ownership
 
-| Component              | Owns                                                                                       | Does not claim                                                    |
-| ---------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| Calling agent          | Scope, decomposition, qualification judgment, user dialogue, final evidence assessment     | That validated citations guarantee correct conclusions            |
-| Recon controller skill | Profile, economical defaults, per-wave proposal, bounded conditions, evidence pipeline     | A duplicate provider catalog or implementation of native dispatch |
-| Subagent orchestration | Task-class definitions, provider-specific qualification/effort/economy guidance            | That a phase label dictates capability                            |
-| Dispatch skill         | Available exact targets, invocation construction, acceptance/recovery                      | Packet proof of actual launch without a producer                  |
-| Routing helpers        | Version normalization, exact target resolution, approval preview, structural constraints   | A model-string-to-capability oracle                               |
-| Packet validator       | Approval integrity, approved lanes, conditional dispositions, existing evidence invariants | Billing, runtime identity, or final recommendation correctness    |
+| Component              | Owns                                                                                      | Does not claim                                                    |
+| ---------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Calling agent          | Scope, decomposition, qualification judgment, user dialogue, final evidence assessment    | That validated citations guarantee correct conclusions            |
+| Recon controller skill | Profile, economical defaults, per-wave proposal, bounded conditions, evidence pipeline    | A duplicate provider catalog or implementation of native dispatch |
+| Subagent orchestration | Task-class definitions, provider-specific qualification/effort/economy guidance           | That a phase label dictates capability                            |
+| Dispatch skill         | Available exact targets, invocation construction, acceptance/recovery                     | Packet proof of actual launch without a producer                  |
+| Routing helpers        | Version normalization, exact target resolution, approval preview, structural constraints  | A model-string-to-capability oracle                               |
+| Packet validator       | Approval presence, approved lanes, conditional dispositions, existing evidence invariants | Billing, runtime identity, or final recommendation correctness    |
 
 ### Data flow
 
@@ -60,8 +60,8 @@ safeguards. This is not a new launcher, price service, or receipt framework.
    for each wave. Preserve provider-native selector/control values.
 5. A pure proposal helper validates routing structure and renders the complete
    per-wave table and worst-case lane/concurrency/deadline/retry limits.
-6. User approves the envelope's exact fingerprint or revises the proposal.
-   Revisions before approval are cheap; declining launches nothing.
+6. User approves the exact displayed proposal or revises it. Approval is valid
+   only in the same uninterrupted launch flow; declining launches nothing.
 7. Before each launch, compare the constructed target to that wave's approved
    effective target. Dispatch through the existing dependency.
 8. Root evaluates predeclared evidence conditions against prior outcomes. An
@@ -127,10 +127,9 @@ or parse Cursor's opaque selector strings.
 Proposed new script: `scripts/prepare-routing.mjs`. It accepts a draft manifest,
 checks only proposal shape through routing helpers, and prints Markdown or JSON:
 wave ID/mode, concise assignment, class/floor, lane count, exact effective target,
-selection reason, conditional rule, and aggregate worst-case limits. It emits the
-canonical approval fingerprint input/digest but **does not record approval,
-spawn, or make the packet publishable**. The controller owns the actual user
-approval and writes the existing approval evidence.
+selection reason, conditional rule, and aggregate worst-case limits. It **does
+not record approval, spawn, or make the packet publishable**. The controller owns
+the actual user approval and writes the minimal approval evidence.
 
 A pure comparator checks the selected/constructed target against the approved
 wave target immediately before dispatch. Expose it through the same script's
@@ -138,26 +137,23 @@ check mode so prose does not invent a second comparison implementation. This
 checks intended invocation axes, not the native arguments' undocumented meaning
 or actual runtime identity. Native invocation construction stays dependency-owned.
 
-### 3. Version boundary and legacy behavior
+### 3. Version boundary
 
 Version artifacts by `kind`, not by globally replacing `SCHEMA_VERSION = 1`.
 
 - New `recon.packet-manifest` writers emit schemaVersion 2.
-- Valid manifest v1 remains accepted with its original closed fields and
-  fingerprint projection. Its one target is inherited by all normalized waves.
+- Manifest v1 compatibility is intentionally removed; unsupported manifest
+  versions fail closed.
 - Claim ledger, raw dossier, review brief, and review result remain v1 because
   their wire shape does not need to change. Explicitly document/test the supported
   combination: manifest v2 referencing those v1 evidence artifacts.
-- Unknown kind/version combinations and v2-only keys inside a v1 manifest fail
-  closed. Do not rewrite a legacy packet or recompute its approval to "upgrade" it.
+- Unknown kind/version combinations fail closed.
 - Review-brief and reconciliation producers keep their v1 output contract.
   Audit their consumers; a manifest-version change must not accidentally force
   evidence-version changes.
-- Validate original shape and original approval fingerprint first; normalize
-  into an immutable internal effective routing view afterward. Retain original
-  bytes/digests for publication revalidation.
-
-This is a draft compatibility choice requiring review, not a completed migration.
+- Validate original shape first; normalize into an immutable internal effective
+  routing view afterward. Retain original bytes/digests for publication
+  revalidation.
 
 ### 4. Conditional escalation with fixed identities
 
@@ -295,7 +291,6 @@ interface ExecutionV2 {
   approval: {
     type: 'explicit-user-approval';
     approvedAt: string;
-    fingerprint: string;
   };
 }
 
@@ -345,13 +340,20 @@ node .agents/skills/recon/scripts/prepare-routing.mjs --manifest manifest.json -
 ```
 
 Preview accepts a structurally valid proposal before `approval` exists.
-Check-target requires approved execution with a valid fingerprint and a known wave.
+Check-target requires explicit approval and a known wave.
 These modes never invoke a provider or write approval. The check compares exact
 nullable axes without normalizing opaque selector strings.
 
+Approval is session-local, not a durable authorization token. A resume, reload,
+or proposal change before launch removes approval, returns the run to
+`awaiting-approval`, and requires a newly rendered proposal plus fresh user
+approval. This keeps the contract proposal → yes → immediate exact launch without
+a receipt or fingerprint subsystem.
+
 Existing `validate-artifact.mjs`, `validate-packet.mjs`, and
 `render-packet.mjs` entrypoints remain. Their output must distinguish invalid
-schema, approval drift, conditional evidence failures, and source/evidence errors.
+schema, constructed-target mismatch, conditional evidence failures, and
+source/evidence errors.
 Do not expose an option that bypasses full validation during packet publication.
 
 ## Error Handling
@@ -359,8 +361,8 @@ Do not expose an option that bypasses full validation during packet publication.
 Preserve existing categories and codes where applicable. Proposed additions
 identify invalid target shape, missing selection rationale, invalid/recursive
 condition topology, unapproved condition references, missing conditional
-disposition, and constructed-target mismatch. Keep
-`APPROVAL_FINGERPRINT_MISMATCH`, unsupported schema, unapproved lane, and
+disposition, and constructed-target mismatch. Keep unsupported schema,
+unapproved lane, and
 `PASS_FAILED`/`PASS_OMITTED` semantics.
 
 Declined approval launches nothing. An unavailable exact route blocks before
@@ -370,8 +372,8 @@ invalid packet remains unpublished; stale output withdrawal still applies.
 
 ## Testing Strategy
 
-Use focused Node tests and existing packet fixture helpers, with immutable v1
-control fixtures retained. Test pure helpers through their CLI consumers as well
+Use focused Node tests and existing packet fixture helpers. Test pure helpers
+through their CLI consumers as well
 as directly. Synthetic fixture selectors test preservation and control flow;
 they are not evidence of live provider qualification.
 
@@ -383,10 +385,10 @@ Key scenarios:
   adversary-mode contradiction-resolution evidence pass, and exactly one terminal
   reconciliation with its own approved target. Test the evidence condition both
   firing and not, and reject a second/shadow reconciliation.
-- Change model, effort, reasoning mode, service tier, class, scope, condition,
-  concurrency, deadline, retry limit, or lane membership after approval; reject.
-- Preserve valid v1 approval bytes/fingerprint/rendering; reject v2 keys under v1
-  and unknown versions; explicitly accept v2 manifest with v1 evidence.
+- Change the constructed provider-native target after approval; reject. A
+  controller resume or proposal edit requires fresh approval before this check.
+- Reject manifest v1 and unknown versions; explicitly accept a v2 manifest with
+  v1 evidence artifacts.
 - Reject activated work with missing output/no gap, non-triggered work with
   artifacts, cyclic/unknown/duplicate condition references, and cap overflow.
 - An accepted failed lane cannot be replaced through escalation; conditional
@@ -397,11 +399,10 @@ Key scenarios:
   and atomic-rendering controls remain intact.
 
 For new approval/conditional guards, preserve reproduction-grade bad-state and
-valid-control probes. When a v2 state cannot exist on the old schema, test the
-semantic legacy vulnerability with a valid v1 conditional fixture, and separately
-prove the new v2 guard fails when neutralized; do not describe old-schema rejection
-as proof of the new invariant. Evidence-producing live runs are separate,
-user-approved acceptance work, not a dependency of draft planning.
+valid-control probes. Condition semantics have one validator owner and one
+diagnostic per injected defect. Conditional lane gaps use structured `waveId` and
+`laneId`; message parsing is not an identity contract. Evidence-producing live
+runs are separate, user-approved acceptance work, not a dependency of planning.
 
 ## References
 

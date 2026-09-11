@@ -790,6 +790,40 @@ and any canonical backlog record through their owning workflows against the
 explicit below-floor interpretation in `design.md` and `## Before Implementation`;
 do not claim model-name capability ranking, and do not close recap or wave-7 items.
 
+## Phase 5: Post-retro simplification
+
+### Task p05-t01: Remove unnecessary approval machinery and close RP-01/RP-02
+
+**Status:** completed
+
+**Files:**
+
+- Modify: `.agents/skills/recon/**`
+- Modify: `.oat/repo/reference/decisions/**`
+- Modify: `.oat/projects/shared/recon-rework/**`
+
+**Implement:**
+
+1. Replace persisted approval fingerprints with session-local explicit approval
+   and require fresh approval after resume, reload, or proposal edits.
+2. Reject legacy packet-manifest v1 while retaining independently versioned v1
+   evidence artifacts.
+3. Make the shared profile-topology validator the sole owner of condition
+   semantics and pin one diagnostic per isolated defect.
+4. Skip foreign-run artifacts during inactive-condition attribution.
+5. Replace conditional gap message parsing with structured `waveId` and `laneId`.
+6. Update the public contract, durable decision, fixtures, integration coverage,
+   project records, and retrospective dispositions coherently.
+
+**Verify:**
+
+Run the complete recon suite, the repository definition-of-done gates, skill
+version/release checks, project validation, distribution sync, and
+reproduction-grade negative controls for exact-target mismatch, condition
+ownership, foreign-run attribution, and structured conditional gaps.
+
+**Commit:** `refactor(recon): simplify approval and condition contracts`.
+
 ## Reviews
 
 All three plan-review cycles have their corrections recorded. One tightened

@@ -1,5 +1,5 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
@@ -11,13 +11,14 @@ oat_template: false
 # Implementation: Recon rework
 
 **Started:** 2026-09-09
-**Last Updated:** 2026-09-10
+**Last Updated:** 2026-09-11
 
 Implementation Run 1 completed all nine original tasks and all four phase reviews.
 The bounded findings from the automatic final lifecycle review and its first
 narrowed re-review are fixed as `p04-t03` through `p04-t06`. The terminal narrowed
 final review and configured exit gate passed, Thomas approved the final HiLL, and
-the configured closeout sequence completed.
+the configured closeout sequence completed. Implementation Run 2 reopens the
+project for the user-approved post-retro simplification in `p05-t01`.
 
 ## Progress Overview
 
@@ -27,9 +28,10 @@ the configured closeout sequence completed.
 | Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
 | Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
 | Phase 4: Distribution and verification     | completed | 6     | 6/6       |
+| Phase 5: Post-retro simplification         | completed | 1     | 1/1       |
 
-**Total:** 13/13 tasks implemented. All phase and final reviews, the configured
-exit gate, final HiLL approval, and implementation closeout passed.
+**Total:** 14/14 tasks implemented. Run 2 verification passed; its fresh final
+review remains pending.
 
 ## Task Status
 
@@ -48,6 +50,33 @@ exit gate, final HiLL approval, and implementation closeout passed.
 | p04-t04 | Completed: structure malformed-wave errors      | `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3` |
 | p04-t05 | Completed: align lifecycle summaries            | `fe30e986219bbf27b04fb08957166229acc955fe` |
 | p04-t06 | Completed: correct Phase 4 completion wording   | this commit                                |
+| p05-t01 | Completed: simplify approval and diagnostics    | `f16437f54491c57f9ad9518c34b415ffb7418a7e` |
+
+## Phase 5: Post-retro simplification
+
+**Status:** completed
+**Started:** 2026-09-10
+**Completed:** 2026-09-11
+
+### Task p05-t01: Remove unnecessary approval machinery and close RP-01/RP-02
+
+**Status:** completed
+**Commit:** `f16437f54491c57f9ad9518c34b415ffb7418a7e`
+**Verification:** passed
+
+This task removes manifest approval fingerprints and legacy manifest v1,
+centralizes condition semantics, fixes foreign-run diagnostic attribution, and
+gives conditional outcome gaps structured wave/lane identity. It also updates
+the controller contract, durable decision, tests, project records, and retro
+dispositions as one coherent contract revision.
+
+The complete recon suite passed 251/251. Four reproduction-grade negative
+controls each turned their targeted test red when exact-target comparison,
+condition predicate ownership, same-run attribution, or structured gap identity
+was neutralized, then passed again after restoration. Project-plan validation and
+project-scope sync passed. The repository check, type-check, full test, build,
+skill-bump, release-version, release-validation, docs-build, lint, and format
+gates passed after advancing the five public packages to lockstep `0.2.73`.
 
 ## Phase 1: Decision and versioned contract
 
