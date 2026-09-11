@@ -924,6 +924,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T154126Z.md         | 819591ba1044e65a7eff7495a529bbe5ee122db3 | auto       | -                     |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T155617Z.md         | 0fe70eb728ed25aaafb94d521f0609bf642be23a | gate       | cursor-fable-5-1-high |
 | pr-285 | code     | fixes_added     | 2026-09-11 | reviews/archived/remote-pr-285-review-2026-09-11T163646Z.md | 5120541946a83927bf798ccc6d9f27c070b6b9af | -          | -                     |
+| p-rev4 | code     | fixes_added     | 2026-09-11 | reviews/archived/p-rev4-review-2026-09-11T165722Z.md        | 8257446bed1f3105e288cd6f2fd46eb5c9d53190 | manual     | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1139,7 +1140,7 @@ Source: GitHub PR #285 comment `3991181642` (2026-09-11)
 
 ### Task prev4-t01: (review) Require same-run conditional evidence
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
@@ -1171,9 +1172,40 @@ and complete recon suites.
 
 Commit as `fix(prev4-t01): require same-run condition evidence`.
 
+### Task prev4-t02: (review) Suppress derivative condition diagnostics
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/tests/conditional-routing.test.mjs`
+
+**Step 1: Understand the issue**
+
+The same-run guard correctly rejects foreign evidence, but the condition then
+also reports incomplete-predecessor and unsatisfied-predicate errors. Those are
+derivative noise for one isolated evidence-ownership defect.
+
+**Step 2: Implement fix**
+
+Track whether a condition evidence reference failed a primary exactness,
+same-run, predecessor, or completeness check. Suppress only the downstream
+predecessor and predicate diagnostics for that condition while preserving all
+primary evidence diagnostics.
+
+**Step 3: Verify**
+
+Tighten the foreign-run regression to assert the exact single error code. Run
+the focused conditional-routing suite and the complete recon suite.
+
+**Step 4: Commit**
+
+Commit as `fix(prev4-t02): suppress derivative condition diagnostics`.
+
 ## Implementation Complete
 
-**Implementation tasks complete: 23 of 24 implemented. One remote-review fix is
+**Implementation tasks complete: 24 of 25 implemented. One phase-review fix is
 pending before completion can resume.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
@@ -1184,9 +1216,9 @@ pending before completion can resume.**
 - Phase p-rev1: 1 task — integrate current `origin/main` and resolve conflicts.
 - Phase p-rev2: 2 tasks — close merged-head profile and hostile-collection gaps.
 - Phase p-rev3: 3 tasks — bound fixed waves and align cap docs and preview.
-- Phase p-rev4: 1 task — require same-run conditional evidence.
+- Phase p-rev4: 2 tasks — require same-run evidence and suppress derivative diagnostics.
 
-**Total: 9 phases, 24 tasks.** One implementation task remains.
+**Total: 9 phases, 25 tasks.** One implementation task remains.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

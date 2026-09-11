@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
-oat_current_task_id: prev4-t01
+oat_current_task_id: prev4-t02
 oat_generated: false
 oat_template: false
 ---
@@ -13,9 +13,9 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-11
 
-Three implementation runs completed 23 original, post-retro, integration, and
-review-remediation tasks. A new PR review identified one same-run condition-
-evidence gap, now tracked as `prev4-t01` before completion resumes.
+Three implementation runs and the first `p-rev4` task completed 24 original,
+post-retro, integration, and review-remediation tasks. A phase review identified
+one diagnostic-cascade gap, now tracked as `prev4-t02` before completion resumes.
 
 ## Progress Overview
 
@@ -29,9 +29,9 @@ evidence gap, now tracked as `prev4-t01` before completion resumes.
 | Phase p-rev1: Integrate current main       | completed   | 1     | 1/1       |
 | Phase p-rev2: Merged-head review fixes     | completed   | 2     | 2/2       |
 | Phase p-rev3: Configured-gate cap fixes    | completed   | 3     | 3/3       |
-| Phase p-rev4: Same-run condition evidence  | in_progress | 1     | 0/1       |
+| Phase p-rev4: Same-run condition evidence  | in_progress | 2     | 1/2       |
 
-**Total:** 23/24 tasks implemented. Remote-review remediation is in progress.
+**Total:** 24/25 tasks implemented. Phase-review remediation is in progress.
 
 ## Task Status
 
@@ -60,7 +60,8 @@ evidence gap, now tracked as `prev4-t01` before completion resumes.
 | prev3-t01 | Completed: bound singleton wave lanes           | `2ac9578b417e8963a49e48eefd3d9b6fc3f3cfaf`         |
 | prev3-t02 | Completed: align adaptive cap contract prose    | `3bdfaa286519c08749a6cbdb7315546019f40f40`         |
 | prev3-t03 | Completed: clarify adaptive cap preview         | `12b68773a957c4a011a1099027e1b6da3a7f1463`         |
-| prev4-t01 | Pending: require same-run condition evidence    | —                                                  |
+| prev4-t01 | Completed: require same-run condition evidence  | `8257446bed1f3105e288cd6f2fd46eb5c9d53190`         |
+| prev4-t02 | Pending: suppress derivative diagnostics        | —                                                  |
 
 ## Phase p-rev4: Remote condition-evidence review fix
 
@@ -79,8 +80,30 @@ reuses an approved predecessor lane. The reproduction retained the genuine
 same-run map artifact and substituted only the condition's exact evidence
 reference; the packet incorrectly remained valid.
 
-**Next:** Execute `prev4-t01`, run focused and full recon validation, and obtain
-a narrowed review before resuming completion.
+**Outcome:** `prev4-t01` completed in `8257446bed1f3105e288cd6f2fd46eb5c9d53190`;
+focused and full recon validation passed, then the phase review below found one
+non-blocking diagnostic-quality gap.
+
+### Review Received: p-rev4
+
+**Date:** 2026-09-11
+**Review artifact:** `reviews/archived/p-rev4-review-2026-09-11T165722Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** `prev4-t02`
+
+M1 is accepted for immediate repair. The run-ownership check is correct, but an
+isolated foreign-run reference currently cascades into predecessor and predicate
+errors. `prev4-t02` will preserve the primary categorical owner and suppress only
+its derivative condition diagnostics.
+
+**Next:** Execute `prev4-t02`, then re-review only the diagnostic fix.
 
 ## Phase 5: Post-retro simplification
 
