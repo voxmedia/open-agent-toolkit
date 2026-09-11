@@ -933,7 +933,8 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T183428Z.md         | 6faf9b996a88e0b9a55cfba5527636d762b042b4 | auto       | -                     |
 | p-rev7 | code     | passed          | 2026-09-11 | reviews/archived/p-rev7-review-2026-09-11T200317Z.md        | 914e9fde6d67f6a3d1c88f2ff2b573b955503822 | manual     | -                     |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T202308Z.md         | 16ad8b120a90d625372302b2f4ed2a0d6ade1373 | auto       | -                     |
-| final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T204246Z.md         | dbcb4cdfa4801f39182ae21fe5e2ac9846aadb5f | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T204246Z.md         | dbcb4cdfa4801f39182ae21fe5e2ac9846aadb5f | gate       | cursor-fable-5-1-high |
+| p-rev8 | code     | passed          | 2026-09-11 | reviews/archived/p-rev8-review-2026-09-11T210626Z.md        | 016f7aade4e91fdcf7323d81ed4c2a5dc7374106 | manual     | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1341,7 +1342,9 @@ Source: configured implementation exit gate
 
 ### Task prev8-t01: (review) Reconcile contradictory outcomes at lane granularity
 
-**Status:** pending
+**Status:** completed
+
+**Commit:** `57be7d33b5cd30b7490c46c9838c9318c078f206`
 
 **Files:**
 
@@ -1381,7 +1384,9 @@ Commit as `fix(prev8-t01): reconcile pass outcomes per lane`.
 
 ### Task prev8-t02: (review) Document contradiction and same-run evidence codes
 
-**Status:** pending
+**Status:** completed
+
+**Commit:** `5bddb07ca84859285214e75c2eb5caccae22747b`
 
 **Files:**
 
@@ -1415,7 +1420,9 @@ Commit as `docs(prev8-t02): document lane outcome contradictions`.
 
 ### Task prev8-t03: (review) Suppress derivative thorough-ledger diagnostics
 
-**Status:** pending
+**Status:** completed
+
+**Commit:** `016f7aade4e91fdcf7323d81ed4c2a5dc7374106`
 
 **Files:**
 
@@ -1445,11 +1452,12 @@ plus complete recon suites.
 
 Commit as `fix(prev8-t03): suppress derivative gather diagnostics`.
 
-## Implementation In Progress
+## Implementation Complete
 
-**Implementation tasks complete: 28 of 31 implemented. The configured exit gate
-found one Important lane-granularity defect, one Medium contract gap, and one
-Minor derivative diagnostic after the authorized `prev7-t01` cycle.**
+**Implementation tasks complete: 31 of 31 implemented. The configured exit
+gate's Important and Medium findings are closed; its Minor derivative-diagnostic
+fix is implemented for the unresolvable-prior case, with the distinct
+absent-terminal edge deferred by the passing phase review.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1466,9 +1474,8 @@ Minor derivative diagnostic after the authorized `prev7-t01` cycle.**
 - Phase p-rev8: 3 tasks — reconcile exact lane outcomes, document the contract,
   and suppress derivative thorough-ledger diagnostics.
 
-**Total: 13 phases, 31 tasks.** Three configured-gate remediation tasks are
-pending. Final verification, lifecycle re-review, gate retry, and refreshed
-shipping artifacts remain distinct.
+**Total: 13 phases, 31 tasks.** Final verification, lifecycle re-review,
+configured-gate retry, and refreshed shipping artifacts remain distinct.
 
 ## References
 

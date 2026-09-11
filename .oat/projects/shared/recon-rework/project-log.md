@@ -188,6 +188,10 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1
 
 run-4-exit-gate-receive-20260911T204246Z Configured gate e54ba2dd-6df7-468d-9984-638aa95ea3c6 blocked with 0C/1I/1M/1m; all findings became prev8-t01 through prev8-t03 for remediation attempt 1 of 2.
 
+### 2026-09-11 · structural · oat-project-implement · p-rev8
+
+run-4-p-rev8-pass-20260911 Phase p-rev8 completed prev8-t01 through prev8-t03 at 016f7aade4e91fdcf7323d81ed4c2a5dc7374106; review reviews/archived/p-rev8-review-2026-09-11T210626Z.md reported 0C/0I/0M/1m, with its fail-closed diagnostic-only edge deferred to final disposition.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

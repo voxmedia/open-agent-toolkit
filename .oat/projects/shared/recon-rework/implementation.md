@@ -13,10 +13,9 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-11
 
-Three implementation runs plus seven revision phases completed 28 of 31
-original, post-retro, integration, and review-remediation tasks. The refreshed
-configured exit gate found three additional lane-outcome and diagnostic tasks
-in `p-rev8`.
+Three implementation runs plus eight revision phases completed all 31 original,
+post-retro, integration, and review-remediation tasks. Phase `p-rev8` closed the
+refreshed configured exit gate's blocking lane-outcome defect and contract gap.
 
 ## Progress Overview
 
@@ -34,45 +33,45 @@ in `p-rev8`.
 | Phase p-rev5: Thorough gather compilation  | completed | 1     | 1/1       |
 | Phase p-rev6: Gather pass ownership        | completed | 1     | 1/1       |
 | Phase p-rev7: Pass outcome reconciliation  | completed | 1     | 1/1       |
-| Phase p-rev8: Lane-outcome gate fixes      | pending   | 3     | 0/3       |
+| Phase p-rev8: Lane-outcome gate fixes      | completed | 3     | 3/3       |
 
-**Total:** 28/31 tasks implemented. Task `prev8-t01` is next.
+**Total:** 31/31 tasks implemented.
 
 ## Task Status
 
-| Task      | Outcome                                          | Commit                                             |
-| --------- | ------------------------------------------------ | -------------------------------------------------- |
-| p01-t01   | Completed: superseding decision                  | `663dab68996b41dbc5e92bf2e85847924ea2a944`         |
-| p01-t02   | Completed: versioned manifest and normalization  | `f5317ee5fd4d5df78a341819023d7cc49f97da3e`         |
-| p02-t01   | Completed: economical routing preview            | `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c`         |
-| p02-t02   | Completed: conditional escalation/outcomes       | `1bad7202d740ef2daf6d22a254875e8ba2774c0b`         |
-| p02-t03   | Completed: profile and harness integration       | `58b165063f7f1f154920b9793d353a2f8777ed81`         |
-| p03-t01   | Completed: controller/worker/shared guidance     | `e38994e2809c57542aa3146c6a64ffedca22cd34`         |
-| p03-t02   | Completed: renderer and public docs              | `33a5cfff83a11219429d3944cec8de8a1eb475a4`         |
-| p04-t01   | Completed: bundle and release versions           | `9721d7c680a0778967addaf9ef8b391839949d9c`         |
-| p04-t02   | Completed: full verification/evidence            | `3e200321b705e5a3204cbe72434dff547ab2bc28`         |
-| p04-t03   | Completed: validate production topology          | `4f6884a99844cf5e86168ad422db7f2f49a23c08`         |
-| p04-t04   | Completed: structure malformed-wave errors       | `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3`         |
-| p04-t05   | Completed: align lifecycle summaries             | `fe30e986219bbf27b04fb08957166229acc955fe`         |
-| p04-t06   | Completed: correct Phase 4 completion wording    | this commit                                        |
-| p05-t01   | Completed: simplify approval and diagnostics     | `f16437f54491c57f9ad9518c34b415ffb7418a7e`         |
-| p05-t02   | Completed: align shipped and historical docs     | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`         |
-| p05-t03   | Completed: close validator regressions           | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`, `bd5dded4d` |
-| p05-t04   | Completed: reconcile final-review bookkeeping    | this commit                                        |
-| prev1-t01 | Completed: integrate current main                | `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`         |
-| prev2-t01 | Completed: align profile topology caps           | `be329458b7c1f931b4fc5712c1456619484d0e13`         |
-| prev2-t02 | Completed: close hostile manifest collections    | `fc4470be39e49dfc26489bbe5caeabcbc22525ef`         |
-| prev3-t01 | Completed: bound singleton wave lanes            | `2ac9578b417e8963a49e48eefd3d9b6fc3f3cfaf`         |
-| prev3-t02 | Completed: align adaptive cap contract prose     | `3bdfaa286519c08749a6cbdb7315546019f40f40`         |
-| prev3-t03 | Completed: clarify adaptive cap preview          | `12b68773a957c4a011a1099027e1b6da3a7f1463`         |
-| prev4-t01 | Completed: require same-run condition evidence   | `8257446bed1f3105e288cd6f2fd46eb5c9d53190`         |
-| prev4-t02 | Completed: suppress derivative diagnostics       | `3784abc9f26e6714901c450c775b0ceb16ad30b7`         |
-| prev5-t01 | Completed: compile redundant thorough evidence   | `26c8357d081ced7047379140c5353ab5993a7f46`         |
-| prev6-t01 | Completed: bind gather passes to approved waves  | `52c21ca6b065b95907887459770b3d38ac8cb105`         |
-| prev7-t01 | Completed: reconcile contradictory pass outcomes | `914e9fde6d67f6a3d1c88f2ff2b573b955503822`         |
-| prev8-t01 | Pending: reconcile pass outcomes per lane        | -                                                  |
-| prev8-t02 | Pending: document lane outcome contradictions    | -                                                  |
-| prev8-t03 | Pending: suppress derivative gather diagnostics  | -                                                  |
+| Task      | Outcome                                           | Commit                                             |
+| --------- | ------------------------------------------------- | -------------------------------------------------- |
+| p01-t01   | Completed: superseding decision                   | `663dab68996b41dbc5e92bf2e85847924ea2a944`         |
+| p01-t02   | Completed: versioned manifest and normalization   | `f5317ee5fd4d5df78a341819023d7cc49f97da3e`         |
+| p02-t01   | Completed: economical routing preview             | `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c`         |
+| p02-t02   | Completed: conditional escalation/outcomes        | `1bad7202d740ef2daf6d22a254875e8ba2774c0b`         |
+| p02-t03   | Completed: profile and harness integration        | `58b165063f7f1f154920b9793d353a2f8777ed81`         |
+| p03-t01   | Completed: controller/worker/shared guidance      | `e38994e2809c57542aa3146c6a64ffedca22cd34`         |
+| p03-t02   | Completed: renderer and public docs               | `33a5cfff83a11219429d3944cec8de8a1eb475a4`         |
+| p04-t01   | Completed: bundle and release versions            | `9721d7c680a0778967addaf9ef8b391839949d9c`         |
+| p04-t02   | Completed: full verification/evidence             | `3e200321b705e5a3204cbe72434dff547ab2bc28`         |
+| p04-t03   | Completed: validate production topology           | `4f6884a99844cf5e86168ad422db7f2f49a23c08`         |
+| p04-t04   | Completed: structure malformed-wave errors        | `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3`         |
+| p04-t05   | Completed: align lifecycle summaries              | `fe30e986219bbf27b04fb08957166229acc955fe`         |
+| p04-t06   | Completed: correct Phase 4 completion wording     | this commit                                        |
+| p05-t01   | Completed: simplify approval and diagnostics      | `f16437f54491c57f9ad9518c34b415ffb7418a7e`         |
+| p05-t02   | Completed: align shipped and historical docs      | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`         |
+| p05-t03   | Completed: close validator regressions            | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`, `bd5dded4d` |
+| p05-t04   | Completed: reconcile final-review bookkeeping     | this commit                                        |
+| prev1-t01 | Completed: integrate current main                 | `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`         |
+| prev2-t01 | Completed: align profile topology caps            | `be329458b7c1f931b4fc5712c1456619484d0e13`         |
+| prev2-t02 | Completed: close hostile manifest collections     | `fc4470be39e49dfc26489bbe5caeabcbc22525ef`         |
+| prev3-t01 | Completed: bound singleton wave lanes             | `2ac9578b417e8963a49e48eefd3d9b6fc3f3cfaf`         |
+| prev3-t02 | Completed: align adaptive cap contract prose      | `3bdfaa286519c08749a6cbdb7315546019f40f40`         |
+| prev3-t03 | Completed: clarify adaptive cap preview           | `12b68773a957c4a011a1099027e1b6da3a7f1463`         |
+| prev4-t01 | Completed: require same-run condition evidence    | `8257446bed1f3105e288cd6f2fd46eb5c9d53190`         |
+| prev4-t02 | Completed: suppress derivative diagnostics        | `3784abc9f26e6714901c450c775b0ceb16ad30b7`         |
+| prev5-t01 | Completed: compile redundant thorough evidence    | `26c8357d081ced7047379140c5353ab5993a7f46`         |
+| prev6-t01 | Completed: bind gather passes to approved waves   | `52c21ca6b065b95907887459770b3d38ac8cb105`         |
+| prev7-t01 | Completed: reconcile contradictory pass outcomes  | `914e9fde6d67f6a3d1c88f2ff2b573b955503822`         |
+| prev8-t01 | Completed: reconcile pass outcomes per lane       | `57be7d33b5cd30b7490c46c9838c9318c078f206`         |
+| prev8-t02 | Completed: document lane outcome contradictions   | `5bddb07ca84859285214e75c2eb5caccae22747b`         |
+| prev8-t03 | Completed: suppress derivative gather diagnostics | `016f7aade4e91fdcf7323d81ed4c2a5dc7374106`         |
 
 ## Phase p-rev4: Remote condition-evidence review fix
 
@@ -264,8 +263,9 @@ review-orchestration log entry is required.
 
 ## Phase p-rev8: Configured-gate lane-outcome fixes
 
-**Status:** pending
+**Status:** completed
 **Started:** 2026-09-11
+**Completed:** 2026-09-11
 
 ### Review Received: configured implementation exit gate
 
@@ -289,6 +289,57 @@ must not cascade into a derivative thorough gather-ledger diagnostic.
 Remediation attempt 1 of 2 is consumed after durable receive reconciliation;
 the configured gate cannot proceed until `p-rev8`, final verification, and
 lifecycle re-review pass.
+
+### Task prev8-t01: Reconcile pass outcomes per lane
+
+**Status:** completed
+**Commit:** `57be7d33b5cd30b7490c46c9838c9318c078f206`
+**Verification:** passed
+
+Non-conditional outcome gaps now bind exact wave and lane identity. Mixed
+adaptive waves preserve an achieved pass when one lane completes and a distinct
+lane fails, while same-lane and unambiguous singleton contradictions remain
+invalid. Focused lane controls passed 102/102, and neutralizing exact matching
+turned the targeted mixed-lane control red before restoration.
+
+### Task prev8-t02: Document lane outcome contradictions
+
+**Status:** completed
+**Commit:** `5bddb07ca84859285214e75c2eb5caccae22747b`
+**Verification:** passed
+
+Controller and packet contracts now state exact lane-gap identity, the
+`CONTRADICTORY_PASS_OUTCOME` rule, and
+`CONDITION_EVIDENCE_RUN_MISMATCH`. The 14 contract pins passed.
+
+### Task prev8-t03: Suppress derivative gather diagnostics
+
+**Status:** completed
+**Commit:** `016f7aade4e91fdcf7323d81ed4c2a5dc7374106`
+**Verification:** passed with one non-blocking diagnostic edge
+
+The thorough gather-input check now skips an unresolvable reconciliation prior
+ledger while preserving independent malformed-ledger diagnostics. Neutralizing
+the suppression turned the targeted one-error-per-defect control red before
+restoration. Complete recon passed 281/281, skill tests 968/968, and skill
+validation, bump checks, lint, and formatting passed.
+
+### Narrowed p-rev8 review received
+
+**Date:** 2026-09-11
+**Review artifact:** `reviews/archived/p-rev8-review-2026-09-11T210626Z.md`
+**Reviewed head:** `016f7aade4e91fdcf7323d81ed4c2a5dc7374106`
+**Findings:** 0 Critical, 0 Important, 0 Medium, 1 Minor
+
+The reviewer confirmed lane-level reconciliation, mixed-lane and singleton
+controls, public contracts, and independent ledger diagnostics. Minor m1 is
+deferred to final disposition: a genuinely absent reconciliation still emits
+the derivative gather-input diagnostic because achieved-profile downgrade
+occurs before the current suppression condition. The packet remains fail-closed
+and unpublishable; this is diagnostic singularity only.
+
+**Outcome:** `p-rev8` passed with no blocking fix loop. Final review must
+explicitly disposition deferred m1 before closeout.
 
 ## Phase 5: Post-retro simplification
 
@@ -889,6 +940,28 @@ implementation exit gate is allowed; final HiLL sequencing may proceed.
   `Dispatch: scope=p-rev7 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`.
 - Phase p-rev7 verdict: passed; fix-loop count 0. All 28 tasks are complete and
   final lifecycle closeout must refresh against the new implementation basis.
+
+### Run 4 gate remediation — 2026-09-11
+
+- Configured gate run `e54ba2dd-6df7-468d-9984-638aa95ea3c6` blocked at the
+  Important threshold with 0 Critical, 1 Important, 1 Medium, and 1 Minor
+  findings. All three became `prev8-t01` through `prev8-t03`; remediation
+  attempt 1 of 2 was consumed after durable receive.
+- Phase p-rev8 implementation request
+  `recon-rework-p-rev8-implement-20260911T2051Z` completed three ordered commits
+  on `oat-phase-implementer-gpt-5-6-sol-high`; no recovery attempts or nested
+  dispatches were used.
+- Phase p-rev8 implementation stamp:
+  `Dispatch: scope=p-rev8 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`.
+- The root-owned p-rev8 review completed on
+  `oat-reviewer-gpt-5-6-sol-high`; artifact
+  `reviews/archived/p-rev8-review-2026-09-11T210626Z.md` reported only one
+  non-blocking Minor diagnostic edge and no reviewer reconnaissance.
+- Phase p-rev8 review stamp:
+  `Dispatch: scope=p-rev8 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`.
+- Phase p-rev8 verdict: passed; blocking fix-loop count 0. All 31 tasks are
+  complete; final verification and lifecycle review must refresh before
+  configured gate attempt 2.
 
 <!-- orchestration-runs-end -->
 
