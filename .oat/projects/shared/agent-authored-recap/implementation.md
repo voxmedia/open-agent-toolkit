@@ -451,7 +451,11 @@ oat_generated: false
 - Added the agent authoring mechanics and replaced the retired fact-base
   callback reference with the bundle, ledger, and consumer contract.
 - Proved the browser-less fresh-host flow, archive acceptance, failed-section
-  evidence, completion resume, missing-core stop, and browser-launch fallback.
+  evidence, persisted-intent reload and resolution, missing-core stop, and
+  browser-launch fallback.
+- Review fixes now prevent statically rejected active content from reaching
+  Chromium and remove canonical screenshots on every downgrade to no browser
+  evidence.
 
 **Verification:**
 
@@ -459,6 +463,10 @@ oat_generated: false
 - All ordered repository gates, the isolated-HOME forced Turbo run
   (`Cached: 0`), standalone smoke/skill/script validation, lint, and format
   passed.
+- Review-fix controls passed with real Chromium `152.0.7977.84`; the rejected
+  script payload mutated an isolated control page but the verifier never
+  loaded it, and host, Playwright, and explicit-none retries all recorded
+  `built-needs-review` without stale screenshots.
 - Recovery usage remained `0/10`; no recovery attempt or event was opened.
 
 ### Task p02-t01: Host rung with the artifact-hash binding
@@ -516,6 +524,12 @@ brief; reference formatting, skill validation, lint, and format passed.
 passed. Neutralizing required-section validation, browser-failure distinction,
 or the missing-core prerequisite made its focused assurance control fail;
 restoring each guard returned the suite to green.
+
+**Review-fix correction:** the missing-core control now reloads the persisted
+record through the production adapter reader before intent resolution. Phase 2
+does not claim executable completion-orchestrator suppression: no such
+consumer exists yet, so downstream bundle/author suppression remains a Phase 3
+consumer assurance obligation.
 
 ---
 
@@ -760,6 +774,39 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 - Next: resume the original Phase 2 implementation handle for the first bounded review-fix iteration, then run a fresh root-owned review
+
+#### Phase Review Round 1 Fix
+
+- Continuation: `cont-agent-authored-recap-p02-review-r1-fix-1`
+- Original request: `dispatch-agent-authored-recap-p02-20260911T190604Z`
+- Source review: `reviews/p02-review-2026-09-11T194856Z.md`
+- Fix base: `59669e1bcc506b473fb5804be924dab6f222310d`
+- Fix commit: `d6f34511e8235221a562a971383b67fed67ed79e`
+- Fixed: browser launch is blocked after failed parse, structure, or
+  shell-script checks; every none/unavailable downgrade clears canonical
+  screenshots; persisted recap intent is re-read before resolution.
+- Negative controls: the pre-fix ladder suite failed on retained screenshots
+  and returned `playwright` for a rejected script; the pre-fix fresh-host suite
+  failed because no persisted-state reader existed. After the fix, the
+  rejected payload's real-Chromium capability control passed while verifier
+  driver loads stayed zero, all three downgrade retries recorded
+  `built-needs-review`, and persisted read/resolution passed with valid
+  controls.
+- Assurance boundary: Phase 2 proves persisted write, production adapter read,
+  and intent resolution. It does not claim downstream completion suppression;
+  the executable completion consumer does not exist before Phase 3.
+- Verification: focused ladder/runtime (19/19), Explainer Kit (103/103),
+  adapter (43/43), and two fresh-host runs (4/4 each) passed; all eight ordered
+  gates, isolated-HOME forced Turbo (`Cached: 0`), standalone smoke, skills,
+  scripts, skill validation, lint, and format exited 0.
+- Verification deviation: the first lint invocation overlapped the standalone
+  lint-enrollment test's temporary seeded violations and exited 1; after that
+  test cleaned up, the unchanged-tree lint retry exited 0.
+- Recovery accounting: review-fix continuation, not phase recovery; p02 remains
+  `used_attempts: 0`, `pending_attempt: null`, with no recovery events.
+- Dispatch: scope=p02-review-r1-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- Disposition: `fixes_completed`; root-owned re-review is required and p02 is
+  not marked passed.
 
 <!-- orchestration-runs-end -->
 
