@@ -5,7 +5,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Glob, Grep, AskUserQuestion
 metadata:
-  version: 1.6.5
+  version: 1.6.6
 ---
 
 # Receive Review
@@ -35,6 +35,17 @@ When a project review target is resolvable, summarize the selected review path, 
 **OAT MODE: Receive Review**
 
 **Purpose:** Convert review findings into plan tasks for systematic gap closure.
+
+**Judgment stays with the caller.** Receiving a review is disposition judgment,
+not reconnaissance: the agent running this skill reads the artifact, weighs each
+finding against the project's artifacts and code, and decides fix, defer, or
+reject in the current context on its own model class. Do not dispatch subagents
+to read, parse, summarize, or disposition review artifacts, and never route any
+part of a receive to a lower model class than the caller's — the same rule
+`oat-repo-improve` applies to plan writes. Bounded read-only lookups (a grep, a
+file:line check) may be delegated only as recon whose result the caller still
+judges; the dispositions, the ledger row, and the bookkeeping commit are always
+written by the caller.
 
 ## Progress Indicators (User-Facing)
 

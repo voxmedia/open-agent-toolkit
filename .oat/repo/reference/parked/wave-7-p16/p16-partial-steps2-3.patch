@@ -1,0 +1,302 @@
+diff --git a/packages/cli/src/commands/project/dispatch/record.ts b/packages/cli/src/commands/project/dispatch/record.ts
+index a037b96d0..3a2019663 100644
+--- a/packages/cli/src/commands/project/dispatch/record.ts
++++ b/packages/cli/src/commands/project/dispatch/record.ts
+@@ -1,5 +1,7 @@
++import { execFile as execFileCallback } from 'node:child_process';
+ import { readFile, readdir } from 'node:fs/promises';
+ import { join } from 'node:path';
++import { promisify } from 'node:util';
+ 
+ import {
+   publishContainedJsonRevision,
+@@ -24,9 +26,11 @@ import {
+   compareObservedRuntimeMetadata,
+   comparedObservationAxes,
+   configuredInvocationForObservation,
++  MAX_OBSERVED_HEAD_REASON_LENGTH,
+   parsePersistedOatDispatchRecord,
+   parseRuntimeObservation,
+   type OatDispatchEvidenceEvent,
++  type ObservedHead,
+   type ObservedRuntimeMetadata,
+   type PersistedOatDispatchRecordV1,
+   type RuntimeObservation,
+@@ -51,6 +55,91 @@ export interface DispatchRecordRaceBarriers {
+   afterRead?: () => Promise<void>;
+ }
+ 
++const execFileAsync = promisify(execFileCallback);
++
++export type ExecFileResult = {
++  stdout: string;
++  stderr: string;
++};
++
++export type ExecFileLike = (
++  file: string,
++  args: string[],
++  options?: { cwd?: string; env?: NodeJS.ProcessEnv },
++) => Promise<ExecFileResult>;
++
++const OBSERVED_SHA_PATTERN = /^[0-9a-f]{40}$/;
++
++/**
++ * Build the `unobserved` reason.
++ *
++ * Bounded and redacted at construction rather than at the schema, because the
++ * schema rejects an over-long or path-bearing reason and a rejection here would
++ * turn evidence collection into a launch failure — exactly what observing git
++ * must never become. Nothing downstream can widen this string, so the slot
++ * cannot be the thing that refuses a publish.
++ */
++function unobservedReason(error: unknown, projectPath: string): string {
++  const raw =
++    error instanceof Error
++      ? error.message
++      : typeof error === 'string'
++        ? error
++        : 'git could not be executed.';
++  const redacted = redactDispatchMessage(raw.replace(/\s+/g, ' ').trim(), {
++    project: projectPath,
++  });
++  const bounded = redacted.slice(0, MAX_OBSERVED_HEAD_REASON_LENGTH);
++  return bounded === '' ? 'git reported no diagnostic.' : bounded;
++}
++
++/**
++ * Observe the repository containing the project, for the record about to be
++ * published.
++ *
++ * Never throws. A project outside a repository, a missing git binary, a
++ * non-zero exit, and an unparsable SHA all degrade to `unobserved` with a
++ * reason, because a dispatch that succeeds today must still succeed with this
++ * observation in place.
++ */
++async function observeHead(
++  projectPath: string,
++  gitExecFile: ExecFileLike,
++): Promise<ObservedHead> {
++  const observedAt = new Date().toISOString();
++  try {
++    const head = await gitExecFile('git', ['rev-parse', 'HEAD'], {
++      cwd: projectPath,
++    });
++    const sha = head.stdout.trim();
++    if (!OBSERVED_SHA_PATTERN.test(sha)) {
++      return {
++        status: 'unobserved',
++        reason: unobservedReason(
++          'git rev-parse HEAD returned no resolvable commit.',
++          projectPath,
++        ),
++        observed_at: observedAt,
++      };
++    }
++    const worktree = await gitExecFile('git', ['status', '--porcelain'], {
++      cwd: projectPath,
++    });
++    return {
++      status: 'observed',
++      sha,
++      tree_clean: worktree.stdout.trim() === '',
++      observed_at: observedAt,
++    };
++  } catch (error) {
++    return {
++      status: 'unobserved',
++      reason: unobservedReason(error, projectPath),
++      observed_at: observedAt,
++    };
++  }
++}
++
+ /**
+  * The journal is append-only. Revision 1 keeps the plain `<request-id>.json`
+  * name; every later revision is published create-only under
+@@ -460,24 +549,40 @@ async function publishRevision(
+   requestId: string,
+   revision: number,
+   record: PersistedOatDispatchRecordV1,
+-): Promise<string> {
++  gitExecFile: ExecFileLike,
++): Promise<{ path: string; record: PersistedOatDispatchRecordV1 }> {
+   if (revision > MAX_REVISION) {
+     throw new Error(
+       `Dispatch journal for ${requestId} reached its ${MAX_REVISION}-revision limit.`,
+     );
+   }
+   const fileName = revisionFileName(requestId, revision);
++  // Stamped here, on the one path every published revision passes through, so a
++  // later revision records the head as of its own write and no future call site
++  // can publish an unstamped one. The stamp is recorder-owned: it replaces
++  // whatever the caller's input or the previous stored revision carried, because
++  // the slot is an observation and a trusted claim would be exactly the inferred
++  // provenance this evidence exists to remove.
++  const stamped: PersistedOatDispatchRecordV1 = {
++    ...record,
++    oat: {
++      ...record.oat,
++      observedHead: await observeHead(projectPath, gitExecFile),
++    },
++  };
+   // Last check before bytes reach the journal. The sanitizer runs at parse, but
+   // the journal is committed to a shared repository, so the guarantee is
+   // enforced on the exact value being written rather than trusted upstream.
+   // Guarantees identity and control fields only; prose redaction is
+   // best-effort by design. See absolute-paths.ts.
+-  assertJournalIdentityHasNoAbsolutePath(identityFieldsOf(genericPart(record)));
+-  assertBoundedDispatchRecordSize(record);
++  assertJournalIdentityHasNoAbsolutePath(
++    identityFieldsOf(genericPart(stamped)),
++  );
++  assertBoundedDispatchRecordSize(stamped);
+   try {
+     await publishContainedJsonRevision(
+       join(dispatchDir, fileName),
+-      record,
++      stamped,
+       projectPath,
+     );
+   } catch (error) {
+@@ -489,7 +594,9 @@ async function publishRevision(
+     }
+     throw error;
+   }
+-  return `dispatch/${fileName}`;
++  // The stamped record is returned, not the caller's: the reported record and
++  // the persisted bytes must be the same fact.
++  return { path: `dispatch/${fileName}`, record: stamped };
+ }
+ 
+ /**
+@@ -503,7 +610,13 @@ export async function recordProjectDispatch(input: {
+   projectPath: string | null;
+   input: unknown;
+   raceBarriers?: DispatchRecordRaceBarriers;
++  /**
++   * Test seam for the observed-head stamp. The command layer passes nothing;
++   * the default runs the real `git` in the project's own directory.
++   */
++  gitExecFile?: ExecFileLike;
+ }): Promise<ProjectDispatchRecordResult> {
++  const gitExecFile = input.gitExecFile ?? execFileAsync;
+   const parsedInput = parseDispatchRecordInput(input.input);
+   if (input.projectPath === null) {
+     const record = augmentDispatchRecord(parsedInput);
+@@ -591,30 +704,36 @@ export async function recordProjectDispatch(input: {
+           },
+         });
+         if (JSON.stringify(claimed) !== JSON.stringify(trigger)) {
+-          await publishRevision(
++          const published = await publishRevision(
+             projectPath,
+             dispatchDir,
+             triggerRequestId,
+             triggerEntry.revision + 1,
+             claimed,
++            gitExecFile,
+           );
++          // Carry the stamped record forward so the in-memory trigger matches
++          // the revision that was actually written.
++          triggerRecord = published.record;
++        } else {
++          triggerRecord = claimed;
+         }
+-        triggerRecord = claimed;
+       }
+ 
+-      const record = augmentDispatchRecord({
++      const augmented = augmentDispatchRecord({
+         record: existing ?? parsedInput.record,
+         event: parsedInput.event,
+         ...(triggerRecord ? { triggerRecord } : {}),
+         relatedRecords,
+       });
+       const revision = (existingEntry?.revision ?? 0) + 1;
+-      const path = await publishRevision(
++      const { path, record } = await publishRevision(
+         projectPath,
+         dispatchDir,
+         requestId,
+         revision,
+-        record,
++        augmented,
++        gitExecFile,
+       );
+       return {
+         status: 'persisted' as const,
+diff --git a/packages/cli/src/providers/identity/oat-dispatch-record.ts b/packages/cli/src/providers/identity/oat-dispatch-record.ts
+index bb3f3d79a..2512eaf2d 100644
+--- a/packages/cli/src/providers/identity/oat-dispatch-record.ts
++++ b/packages/cli/src/providers/identity/oat-dispatch-record.ts
+@@ -586,6 +586,50 @@ const fallbackClaimSchema = z
+ 
+ export type FallbackClaim = z.infer<typeof fallbackClaimSchema>;
+ 
++/**
++ * Cap on the free-text reason an `unobserved` head records. The reason quotes a
++ * git failure, and an unbounded stderr would bloat every revision of a journal
++ * that is committed to a shared repository.
++ */
++export const MAX_OBSERVED_HEAD_REASON_LENGTH = 200;
++
++/**
++ * The `HEAD` of the repository containing the project at the moment this
++ * revision was written, and whether that tree was clean.
++ *
++ * Read the name literally: this is the head observed at journal-write time, not
++ * the child's execution baseline. For a host that returns after the child
++ * finishes, the acceptance revision is written after the child's last task
++ * commit, so `sha` will normally be that commit rather than the phase base. The
++ * two coincide only for a revision written before launch. What the slot makes
++ * auditable is the journal-write ordering itself: a revision whose `sha` equals
++ * the recorded phase base proves the write did not precede baseline capture, and
++ * a revision whose `sha` descends from it proves the child ran first.
++ *
++ * The value is recorder-observed, never caller-claimed — see the stamp in
++ * `commands/project/dispatch/record.ts`, which overwrites whatever a caller or
++ * an earlier stored revision carried here.
++ */
++const observedHeadSchema = z.discriminatedUnion('status', [
++  z
++    .object({
++      status: z.literal('observed'),
++      sha: z.string().regex(/^[0-9a-f]{40}$/),
++      tree_clean: z.boolean(),
++      observed_at: z.string().datetime(),
++    })
++    .strict(),
++  z
++    .object({
++      status: z.literal('unobserved'),
++      reason: z.string().min(1).max(MAX_OBSERVED_HEAD_REASON_LENGTH),
++      observed_at: z.string().datetime(),
++    })
++    .strict(),
++]);
++
++export type ObservedHead = z.infer<typeof observedHeadSchema>;
++
+ const oatRecordSchema = z
+   .object({
+     schemaVersion: z.literal(1),
+@@ -594,6 +638,10 @@ const oatRecordSchema = z
+     fallbackClaim: fallbackClaimSchema.nullable().default(null),
+     fallback: fallbackSchema,
+     runtimeObservation: runtimeObservationSchema,
++    // Additive slot. The default keeps every record persisted before this slot
++    // existed parseable through `oatPart`, so no stored journal needs a
++    // migration.
++    observedHead: observedHeadSchema.nullable().default(null),
+   })
+   .strict();
+ 
+@@ -673,6 +721,7 @@ function initialOatRecord(): PersistedOatDispatchRecordV1['oat'] {
+     fallbackClaim: null,
+     fallback: { status: 'not-applicable', reason: 'No fallback recorded.' },
+     runtimeObservation: { status: 'not-reported' },
++    observedHead: null,
+   };
+ }
+ 

@@ -3223,7 +3223,7 @@ describe('validateOatSkills', () => {
       ['.agents/agents/oat-phase-implementer.md', '1.1.5'],
       ['.agents/agents/oat-reviewer.md', '1.2.5'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.8'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.5'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.6'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.5'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.3'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.4'],
@@ -4739,7 +4739,7 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.25'],
       ['oat-project-review-provide', '1.5.8'],
-      ['oat-project-review-receive', '1.6.5'],
+      ['oat-project-review-receive', '1.6.6'],
       ['oat-project-review-receive-remote', '1.5.2'],
       ['oat-project-implement', '2.3.8'],
       ['oat-project-pr-final', '1.6.4'],
@@ -4820,7 +4820,7 @@ describe('validateOatSkills', () => {
       receive.indexOf('### Step 2: Parse Findings into Buckets'),
     );
 
-    expect(readDeclaredVersion(receive)).toBe('1.6.5');
+    expect(readDeclaredVersion(receive)).toBe('1.6.6');
     expect(resolver).toContain(
       'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
     );
