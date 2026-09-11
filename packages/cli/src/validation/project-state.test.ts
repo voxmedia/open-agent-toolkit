@@ -155,6 +155,38 @@ describe('validateProjectState - explainer intent', () => {
     });
   });
 
+  it('accepts failed-attempt evidence only on the matching recap decision', () => {
+    const failedAttempt = {
+      decision: 'skip',
+      source: 'failed_attempt',
+      decided_at: '2026-09-11T14:45:00Z',
+      failed_attempt_evidence: 'explainers/failed-run/manifest.json',
+    };
+    expect(
+      validateProjectState({
+        frontmatter: { oat_project_recap: failedAttempt },
+      }),
+    ).toMatchObject({
+      ok: true,
+      state: { oat_project_recap: failedAttempt },
+    });
+    for (const record of [
+      { ...failedAttempt, source: 'interactive' },
+      { ...failedAttempt, failed_attempt_evidence: '../outside/manifest.json' },
+      {
+        decision: 'skip',
+        source: 'failed_attempt',
+        decided_at: '2026-09-11T14:45:00Z',
+      },
+    ]) {
+      expect(
+        validateProjectState({
+          frontmatter: { oat_project_recap: record },
+        }).ok,
+      ).toBe(false);
+    }
+  });
+
   it.each([
     ['oat_project_explainer', 'generate', 'interactive', true],
     ['oat_project_explainer', 'skip', 'interactive', true],

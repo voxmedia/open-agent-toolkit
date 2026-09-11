@@ -29,8 +29,14 @@ const EXPLAINER_SOURCES = [
   'interactive',
   'kickoff_prompt',
   'autonomous_policy',
+  'failed_attempt',
 ] as const;
-const EXPLAINER_DECISION_KEYS = ['decision', 'source', 'decided_at'] as const;
+const EXPLAINER_DECISION_KEYS = [
+  'decision',
+  'source',
+  'decided_at',
+  'failed_attempt_evidence',
+] as const;
 const EXPLAINER_ALLOWED_PAIRS = {
   projectExplainer: new Set([
     'generate:interactive',
@@ -41,6 +47,7 @@ const EXPLAINER_ALLOWED_PAIRS = {
     'generate:interactive',
     'skip:interactive',
     'generate:autonomous_policy',
+    'skip:failed_attempt',
   ]),
 } as const;
 const ISO_TIMESTAMP_PATTERN =
@@ -178,7 +185,6 @@ function parseExplainerDecision(
   const record = value as Record<string, unknown>;
   const keys = Object.keys(record);
   if (
-    keys.length !== EXPLAINER_DECISION_KEYS.length ||
     keys.some(
       (key) => !(EXPLAINER_DECISION_KEYS as readonly string[]).includes(key),
     )
@@ -189,18 +195,54 @@ function parseExplainerDecision(
   const decision = normalizeEnum(record.decision, EXPLAINER_DECISIONS);
   const source = normalizeEnum(record.source, EXPLAINER_SOURCES);
   const decidedAt = normalizeNullableString(record.decided_at);
+  const hasFailedAttemptEvidence = Object.hasOwn(
+    record,
+    'failed_attempt_evidence',
+  );
+  const failedAttemptEvidence = normalizeNullableString(
+    record.failed_attempt_evidence,
+  );
+  const isFailedAttempt =
+    product === 'projectRecap' &&
+    decision === 'skip' &&
+    source === 'failed_attempt';
   if (
     decision === null ||
     source === null ||
     decidedAt === null ||
     !ISO_TIMESTAMP_PATTERN.test(decidedAt) ||
     Number.isNaN(Date.parse(decidedAt)) ||
-    !EXPLAINER_ALLOWED_PAIRS[product].has(`${decision}:${source}`)
+    !EXPLAINER_ALLOWED_PAIRS[product].has(`${decision}:${source}`) ||
+    (isFailedAttempt
+      ? !isFailedAttemptEvidenceLocator(failedAttemptEvidence)
+      : hasFailedAttemptEvidence)
   ) {
     return null;
   }
 
-  return { decision, source, decided_at: decidedAt };
+  return {
+    decision,
+    source,
+    decided_at: decidedAt,
+    ...(isFailedAttempt && {
+      failed_attempt_evidence: failedAttemptEvidence as string,
+    }),
+  };
+}
+
+function isFailedAttemptEvidenceLocator(value: string | null): value is string {
+  if (value === null) return false;
+  const parts = value.split('/');
+  const runSlug = parts[1];
+  const fileName = parts[2];
+  return (
+    parts.length === 3 &&
+    parts[0] === 'explainers' &&
+    typeof runSlug === 'string' &&
+    /^[a-z0-9][a-z0-9._-]*$/.test(runSlug) &&
+    typeof fileName === 'string' &&
+    ['manifest.json', 'failure.json'].includes(fileName)
+  );
 }
 
 function parseStringArray(value: unknown): string[] {

@@ -271,9 +271,12 @@ preference, so `never` does not suppress the initial recap attempt.
 Kickoff persists the forced `generate` intent. At closeout, invoke
 `oat-explainer-kit` § Generate with recipe `project-recap`. If the terminal
 outcome is `failed` or `incomplete`, make one retry. If that retry also fails,
-persist `skip/failed_attempt` with the sanitized cause and continue unattended
-closeout. On resume, honor that persisted skip without another bundle or
-authoring pass; do not reassert `generate` over it.
+persist `skip/failed_attempt` with `failed_attempt_evidence` naming that run's
+project-relative failed or incomplete `manifest.json`, or its `failure.json`
+when recording did not occur, and continue unattended closeout. On resume, use
+the completion consumer's containment-checked proof and honor that persisted
+skip without another bundle or authoring pass; do not reassert `generate` over
+it.
 
 Resolve and persist `projectExplainer` as `generate` with source `kickoff_prompt` only when the kickoff request explicitly asks for a project explainer.
 A general autonomous goal, project creation, or normal planning does not count as an explainer request.

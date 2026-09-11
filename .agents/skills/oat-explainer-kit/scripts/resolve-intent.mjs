@@ -25,6 +25,13 @@ const ALLOWED_PAIRS = Object.freeze({
 });
 const ISO_TIMESTAMP_PATTERN =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+const INTENT_RECORD_KEYS = new Set([
+  'decision',
+  'source',
+  'decided_at',
+  'failed_attempt_evidence',
+]);
+const RUN_SLUG_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
 
 export function resolveIntent({
   product,
@@ -114,12 +121,9 @@ export function validateIntentRecord(product, record) {
     throw new TypeError(`${product} intent must be a decision record.`);
   }
   const keys = Object.keys(record);
-  if (
-    keys.length !== 3 ||
-    keys.some((key) => !['decision', 'source', 'decided_at'].includes(key))
-  ) {
+  if (keys.some((key) => !INTENT_RECORD_KEYS.has(key))) {
     throw new Error(
-      `${product} intent must contain only decision, source, and decided_at.`,
+      `${product} intent contains an unsupported lifecycle decision field.`,
     );
   }
   if (!DECISIONS.has(record.decision)) {
@@ -134,7 +138,38 @@ export function validateIntentRecord(product, record) {
     );
   }
   assertTimestamp(record.decided_at);
+  const isFailedAttempt =
+    product === 'projectRecap' &&
+    record.decision === 'skip' &&
+    record.source === 'failed_attempt';
+  if (isFailedAttempt) {
+    validateFailedAttemptEvidenceLocator(record.failed_attempt_evidence);
+  } else if (Object.hasOwn(record, 'failed_attempt_evidence')) {
+    throw new Error(
+      'failed_attempt_evidence is allowed only for projectRecap skip/failed_attempt.',
+    );
+  }
   return record;
+}
+
+export function validateFailedAttemptEvidenceLocator(value) {
+  if (typeof value !== 'string') {
+    throw new Error(
+      'projectRecap skip/failed_attempt requires failed_attempt_evidence.',
+    );
+  }
+  const parts = value.split('/');
+  if (
+    parts.length !== 3 ||
+    parts[0] !== 'explainers' ||
+    !RUN_SLUG_PATTERN.test(parts[1]) ||
+    !['manifest.json', 'failure.json'].includes(parts[2])
+  ) {
+    throw new Error(
+      'failed_attempt_evidence must be explainers/<run-slug>/manifest.json or explainers/<run-slug>/failure.json.',
+    );
+  }
+  return value;
 }
 
 export function explainerModeForIntent(intent) {

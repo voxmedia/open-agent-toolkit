@@ -551,8 +551,9 @@ A persisted `skip`, including `skip/failed_attempt`, returns route `skip`
 without touching `explainers/`, suppressing manifest discovery, bundle, and
 authoring together. Leave `SELECTED_PROJECT_RECAP_RUN` empty and invoke the
 terminal-outcome guard with `--intent skip` and the persisted source as
-`--skip-reason`. For `failed_attempt`, also pass the failed or incomplete
-`manifest.json`, or the flow's `failure.json`.
+`--skip-reason`. For `failed_attempt`, use only the consumer's validated
+`failedAttemptEvidence`; never rediscover or reconstruct a proof path from
+memory.
 
 ```bash
 RECAP_CONSUMPTION=$(node "$RECAP_INTENT_CONSUMER" \
@@ -560,20 +561,40 @@ RECAP_CONSUMPTION=$(node "$RECAP_INTENT_CONSUMER" \
 RECAP_CONSUMPTION_FIELDS=$(node -e '
 const value = JSON.parse(process.argv[1]);
 if (value.route !== value.decision) process.exit(1);
+const evidence = value.failedAttemptEvidence ?? null;
 if (value.route === "skip" && (value.manifestDiscoveryPerformed !== false ||
     value.manifestCandidates.length !== 0 ||
     value.authoringPermitted !== false)) process.exit(1);
+if (value.route === "skip" && value.source === "failed_attempt" &&
+    (!evidence || !["manifest", "failure"].includes(evidence.kind) ||
+     typeof evidence.path !== "string")) process.exit(1);
+if (value.route === "skip" && value.source !== "failed_attempt" &&
+    evidence !== null) process.exit(1);
 if (value.route === "generate" &&
     (value.manifestDiscoveryPerformed !== true ||
      !Array.isArray(value.manifestCandidates) ||
-     value.authoringPermitted !== true)) process.exit(1);
+     value.authoringPermitted !== true ||
+     evidence !== null)) process.exit(1);
 if (!["generate", "skip"].includes(value.route)) process.exit(1);
 process.stdout.write(`${value.route}\t${value.source}\t` +
-  `${value.authoringPermitted}\t${JSON.stringify(value.manifestCandidates)}`);
+  `${value.authoringPermitted}\t${JSON.stringify(value.manifestCandidates)}\t` +
+  JSON.stringify(evidence));
 ' "$RECAP_CONSUMPTION") || exit 1
 IFS=$'\t' read -r PERSISTED_RECAP_DECISION PERSISTED_RECAP_SOURCE \
   RECAP_AUTHORING_PERMITTED RECAP_MANIFEST_CANDIDATES_JSON \
+  RECAP_FAILED_ATTEMPT_EVIDENCE_JSON \
   <<< "$RECAP_CONSUMPTION_FIELDS"
+
+RECAP_TERMINAL_EVIDENCE_ARGS=()
+if [[ "$PERSISTED_RECAP_SOURCE" == "failed_attempt" ]]; then
+  while IFS= read -r -d '' RECAP_EVIDENCE_ARG; do
+    RECAP_TERMINAL_EVIDENCE_ARGS+=("$RECAP_EVIDENCE_ARG")
+  done < <(node -e '
+const value = JSON.parse(process.argv[1]);
+const flag = value.kind === "manifest" ? "--manifest" : "--failure";
+process.stdout.write(`${flag}\0${value.path}\0`);
+' "$RECAP_FAILED_ATTEMPT_EVIDENCE_JSON")
+fi
 ```
 
 For route `generate`, inspect only the manifest candidates returned in
@@ -603,13 +624,16 @@ the project-relative path `explainers/<run-slug>`. A stale, wrong-project,
 On `failed` or `incomplete`, show the sanitized cause and require an explicit
 retry or skip before lifecycle mutation. Under autonomy, retry once. If that
 retry also fails, persist `skip/failed_attempt` with a fresh state hash and
-re-read it through the executable consumer before continuing. Never silently
-skip a failed attempt.
+`failed_attempt_evidence` naming that run's project-relative failed/incomplete
+`manifest.json` or `failure.json`. Re-read it through the executable consumer
+before continuing. Never silently skip a failed attempt.
 
 Before any lifecycle mutation, invoke
 `oat-explainer-kit/scripts/check-terminal-outcome.mjs` with the persisted
 intent. For `generate`, pass the selected package's canonical `manifest.json`;
-for `skip`, pass the recorded source and any required failed-attempt evidence.
+for `skip`, pass `--project-root "$PROJECT_PATH"`, the recorded source, and
+`"${RECAP_TERMINAL_EVIDENCE_ARGS[@]}"`. This passes only the failed-attempt
+proof path already validated and canonicalized by the executable consumer.
 The outcome vocabulary is `built`, `built-needs-review`, `failed`, and
 `incomplete`: only the first two satisfy generation. Missing packages do not
 satisfy generation.

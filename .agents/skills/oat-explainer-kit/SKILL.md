@@ -77,10 +77,13 @@ Lifecycle callers use `mode: unattended` and never prompt.
 
 On `failed` or `incomplete`, show the sanitized cause and require retry or an
 explicit skip. A skip after an attempted run must be persisted as
-`skip/failed_attempt` and passed to `scripts/check-terminal-outcome.mjs` with
-the failed or incomplete `manifest.json`, or with the flow's `failure.json`
-when recording never occurred. `skip/capability_probe` remains readable only
-for an existing legacy intent and must not be newly written.
+`skip/failed_attempt` with `failed_attempt_evidence` set to the project-relative
+`explainers/<run-slug>/manifest.json`, or to that run's `failure.json` when
+recording never occurred. The deployed completion consumer validates canonical
+project/run containment and the terminal evidence contract before returning
+the trusted path to `scripts/check-terminal-outcome.mjs`.
+`skip/capability_probe` remains readable only for an existing legacy intent and
+must not be newly written.
 
 ## Progress Indicators (User-Facing)
 

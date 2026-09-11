@@ -47,6 +47,9 @@ export function updateStateFrontmatter(content, product, record) {
     `  decision: ${record.decision}`,
     `  source: ${record.source}`,
     `  decided_at: '${record.decided_at}'`,
+    ...(Object.hasOwn(record, 'failed_attempt_evidence')
+      ? [`  failed_attempt_evidence: '${record.failed_attempt_evidence}'`]
+      : []),
   ];
   if (matches.length === 0) {
     lines.splice(closingIndex, 0, ...replacement);
@@ -107,7 +110,7 @@ export function readIntentFromStateContent(content, product) {
   ) {
     if (lines[index].trim() === '') continue;
     const field = lines[index].match(
-      /^\s+(decision|source|decided_at)\s*:\s*(.+?)\s*$/,
+      /^\s+(decision|source|decided_at|failed_attempt_evidence)\s*:\s*(.+?)\s*$/,
     );
     if (!field || Object.hasOwn(record, field[1])) {
       throw new Error(`${key} contains an invalid lifecycle decision field.`);

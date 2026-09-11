@@ -1,6 +1,14 @@
 import { createHash } from 'node:crypto';
-import { readFile, realpath } from 'node:fs/promises';
-import { basename, dirname } from 'node:path';
+import { lstat, readFile, realpath } from 'node:fs/promises';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { validateContract } from '../../explainer-kit/scripts/lib/contracts.mjs';
@@ -55,7 +63,8 @@ export function checkTerminalOutcome({
 }
 
 async function main(argv) {
-  const { intent, manifestPath, failurePath, reason } = parseArguments(argv);
+  const { intent, manifestPath, failurePath, projectRoot, reason } =
+    parseArguments(argv);
   if (manifestPath !== undefined && failurePath !== undefined) {
     throw recapOutcomeError(
       'Use either --manifest or --failure as failed-attempt evidence, not both.',
@@ -83,6 +92,66 @@ async function main(argv) {
         `Generated project recap package assurance failed: ${error.message}`,
       );
     }
+  }
+  if (
+    (manifestPath !== undefined || failurePath !== undefined) &&
+    reason !== 'failed_attempt'
+  ) {
+    throw recapOutcomeError(
+      'Failed-attempt evidence is accepted only for a skip/failed_attempt intent.',
+    );
+  }
+  if (projectRoot !== undefined && reason !== 'failed_attempt') {
+    throw recapOutcomeError(
+      'A failed-attempt project root applies only to skip/failed_attempt evidence.',
+    );
+  }
+  if (reason === 'failed_attempt') {
+    if (intent !== 'skip') {
+      throw recapOutcomeError(
+        'Failed-attempt evidence is accepted only for a skip/failed_attempt intent.',
+      );
+    }
+    if (projectRoot !== undefined) {
+      const suppliedPath = manifestPath ?? failurePath;
+      if (suppliedPath === undefined) {
+        return validateFailedAttemptEvidence({});
+      }
+      const canonicalProjectRoot = await realpath(projectRoot);
+      const locator = relative(canonicalProjectRoot, resolve(suppliedPath))
+        .split(sep)
+        .join('/');
+      const evidence = await resolveProjectFailedAttemptEvidence({
+        projectPath: canonicalProjectRoot,
+        locator,
+      });
+      if ((evidence.kind === 'manifest') !== (manifestPath !== undefined)) {
+        throw recapOutcomeError(
+          'Failed-attempt evidence kind does not match its guard flag.',
+        );
+      }
+      return validateFailedAttemptEvidence({
+        ...(evidence.kind === 'manifest'
+          ? { manifestPath: evidence.path }
+          : { failurePath: evidence.path }),
+      });
+    }
+    return validateFailedAttemptEvidence({ manifestPath, failurePath });
+  }
+  return checkTerminalOutcome({
+    intent,
+    ...(reason !== undefined && { reason }),
+  });
+}
+
+export async function validateFailedAttemptEvidence({
+  manifestPath,
+  failurePath,
+}) {
+  if (manifestPath !== undefined && failurePath !== undefined) {
+    throw recapOutcomeError(
+      'Use either --manifest or --failure as failed-attempt evidence, not both.',
+    );
   }
   let manifest;
   let failure;
@@ -112,18 +181,88 @@ async function main(argv) {
     }
   }
   return checkTerminalOutcome({
-    intent,
+    intent: 'skip',
     manifest,
     failure,
     failureRootHash,
-    ...(reason !== undefined && { reason }),
+    reason: 'failed_attempt',
   });
+}
+
+export async function resolveProjectFailedAttemptEvidence({
+  projectPath,
+  locator,
+}) {
+  try {
+    if (typeof locator !== 'string') {
+      throw new Error('the persisted locator is not a string');
+    }
+    const parts = locator.split('/');
+    const runSlug = parts[1];
+    const fileName = parts[2];
+    if (
+      parts.length !== 3 ||
+      parts[0] !== 'explainers' ||
+      typeof runSlug !== 'string' ||
+      !/^[a-z0-9][a-z0-9._-]*$/.test(runSlug) ||
+      !['manifest.json', 'failure.json'].includes(fileName)
+    ) {
+      throw new Error(
+        'the locator must name explainers/<run-slug>/manifest.json or failure.json',
+      );
+    }
+
+    const projectRoot = await realpath(projectPath);
+    const explainersRoot = await realpath(join(projectRoot, 'explainers'));
+    if (!isContained(projectRoot, explainersRoot)) {
+      throw new Error('the explainers root escapes the project root');
+    }
+    const runRoot = await realpath(join(explainersRoot, runSlug));
+    if (!isContained(explainersRoot, runRoot)) {
+      throw new Error('the evidence run escapes the explainers root');
+    }
+    const evidencePath = await realpath(join(projectRoot, locator));
+    if (
+      !isContained(runRoot, evidencePath) ||
+      basename(evidencePath) !== fileName
+    ) {
+      throw new Error('the evidence path escapes its declared run root');
+    }
+    const evidenceInfo = await lstat(evidencePath);
+    if (!evidenceInfo.isFile()) {
+      throw new Error('the evidence path is not a regular file');
+    }
+
+    const kind = fileName === 'manifest.json' ? 'manifest' : 'failure';
+    await validateFailedAttemptEvidence({
+      ...(kind === 'manifest'
+        ? { manifestPath: evidencePath }
+        : { failurePath: evidencePath }),
+    });
+    return { kind, path: evidencePath };
+  } catch (error) {
+    if (error?.code === 'E_RECAP_OUTCOME') throw error;
+    throw recapOutcomeError(
+      `Failed-attempt evidence containment failed: ${error.message}`,
+    );
+  }
+}
+
+function isContained(root, candidate) {
+  const relation = relative(root, candidate);
+  return (
+    relation !== '' &&
+    relation !== '..' &&
+    !relation.startsWith(`..${sep}`) &&
+    !isAbsolute(relation)
+  );
 }
 
 function parseArguments(argv) {
   let intent;
   let manifestPath;
   let failurePath;
+  let projectRoot;
   let reason;
   for (let index = 0; index < argv.length; index += 2) {
     const flag = argv[index];
@@ -137,13 +276,15 @@ function parseArguments(argv) {
       manifestPath = value;
     } else if (flag === '--failure') {
       failurePath = value;
+    } else if (flag === '--project-root') {
+      projectRoot = value;
     } else if (flag === '--skip-reason') {
       reason = value;
     } else {
       throw recapOutcomeError(`Unsupported argument: ${flag}.`);
     }
   }
-  return { intent, manifestPath, failurePath, reason };
+  return { intent, manifestPath, failurePath, projectRoot, reason };
 }
 
 function isFailedManifest(value) {

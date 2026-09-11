@@ -206,6 +206,47 @@ oat_project_recap: null
     });
   });
 
+  it('parses failed-attempt recap evidence without granting it to other decisions', () => {
+    const failedAttempt = `---
+oat_project_recap:
+  decision: skip
+  source: failed_attempt
+  decided_at: '2026-09-11T14:45:00Z'
+  failed_attempt_evidence: explainers/failed-run/failure.json
+---
+`;
+    expect(parseStateFrontmatter(failedAttempt)).toMatchObject({
+      projectRecap: {
+        decision: 'skip',
+        source: 'failed_attempt',
+        decided_at: '2026-09-11T14:45:00Z',
+        failed_attempt_evidence: 'explainers/failed-run/failure.json',
+      },
+    });
+
+    expect(
+      parseStateFrontmatter(
+        failedAttempt.replace('source: failed_attempt', 'source: interactive'),
+      ),
+    ).toMatchObject({ projectRecap: null });
+    expect(
+      parseStateFrontmatter(
+        failedAttempt.replace(
+          '\n  failed_attempt_evidence: explainers/failed-run/failure.json',
+          '',
+        ),
+      ),
+    ).toMatchObject({ projectRecap: null });
+    expect(
+      parseStateFrontmatter(
+        failedAttempt.replace(
+          'explainers/failed-run/failure.json',
+          '../outside/failure.json',
+        ),
+      ),
+    ).toMatchObject({ projectRecap: null });
+  });
+
   it.each([
     ['oat_project_explainer', 'generate', 'interactive', true],
     ['oat_project_explainer', 'skip', 'interactive', true],

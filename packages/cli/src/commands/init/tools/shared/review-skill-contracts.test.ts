@@ -462,10 +462,10 @@ describe('review skill contracts', () => {
       /Reassert this forced recap intent on resume unless closeout already persisted\s+`skip\/failed_attempt`\./,
     );
     expect(content).toMatch(
-      /If that retry also fails,\s+persist `skip\/failed_attempt` with the sanitized cause and continue unattended\s+closeout\./,
+      /If that retry also fails,\s+persist `skip\/failed_attempt` with `failed_attempt_evidence` naming that run's\s+project-relative failed or incomplete `manifest\.json`, or its `failure\.json`/,
     );
     expect(content).toMatch(
-      /On resume, honor that persisted skip without another bundle or\s+authoring pass; do not reassert `generate` over it\./,
+      /On resume, use\s+the completion consumer's containment-checked proof and honor that persisted\s+skip without another bundle or authoring pass; do not reassert `generate` over\s+it\./,
     );
     expect(content).toContain(
       'Resolve and persist `projectExplainer` as `generate` with source `kickoff_prompt` only when the kickoff request explicitly asks for a project explainer.',
@@ -538,10 +538,13 @@ printf 'artifact-read\\n'`,
       /A persisted `skip`, including `skip\/failed_attempt`,\s+suppresses manifest discovery and generation/,
     );
     expect(content).toMatch(
+      /a failed-attempt skip also\s+passes only the deployed consumer's containment-checked\s+`failedAttemptEvidence`/,
+    );
+    expect(content).toMatch(
       /When no fresh package exists, invoke the `oat-explainer-kit` adapter's\s+§ Generate with recipe `project-recap` and `mode: unattended`\./,
     );
     expect(content).toMatch(
-      /In autonomy, retry once after either unsatisfied outcome\. If the retry\s+also fails, persist `skip\/failed_attempt`, re-read that persisted skip, and\s+continue without another bundle or authoring pass\./,
+      /In autonomy, retry once after either unsatisfied outcome\. If the retry\s+also fails, persist `skip\/failed_attempt` with `failed_attempt_evidence` set to\s+the attempted run's project-relative failed\/incomplete `manifest\.json` or\s+`failure\.json`\./,
     );
     expect(content).toMatch(
       /Before recording final approval, invoke\s+`oat-explainer-kit\/scripts\/check-terminal-outcome\.mjs` with the persisted\s+intent\./,
@@ -1391,13 +1394,16 @@ printf 'artifact-read\\n'`,
       /A persisted `skip`, including `skip\/failed_attempt`, returns route `skip`\s+without touching `explainers\/`, suppressing manifest discovery, bundle, and\s+authoring together\./,
     );
     expect(content).toMatch(
+      /For `failed_attempt`, use only the consumer's validated\s+`failedAttemptEvidence`; never rediscover or reconstruct a proof path from\s+memory\./,
+    );
+    expect(content).toMatch(
       /For route `generate`, inspect only the manifest candidates returned in\s+`RECAP_MANIFEST_CANDIDATES_JSON`; do not perform a second filesystem discovery\s+outside the executable boundary\./,
     );
     expect(content).toMatch(
       /If no fresh package exists, require\s+`RECAP_AUTHORING_PERMITTED="true"` from that same boundary before invoking the\s+`oat-explainer-kit` adapter's § Generate with recipe `project-recap`/,
     );
     expect(content).toMatch(
-      /Under autonomy, retry once\. If that\s+retry also fails, persist `skip\/failed_attempt` with a fresh state hash and\s+re-read it through the executable consumer before continuing\./,
+      /Under autonomy, retry once\. If that\s+retry also fails, persist `skip\/failed_attempt` with a fresh state hash and\s+`failed_attempt_evidence` naming that run's project-relative failed\/incomplete\s+`manifest\.json` or `failure\.json`\./,
     );
     expect(content).toMatch(
       /Before any lifecycle mutation, invoke\s+`oat-explainer-kit\/scripts\/check-terminal-outcome\.mjs` with the persisted\s+intent\./,

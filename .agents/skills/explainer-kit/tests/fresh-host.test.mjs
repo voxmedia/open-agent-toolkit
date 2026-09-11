@@ -327,6 +327,7 @@ test('core prerequisite failure persists a skip that reloads into intent resolut
     decision: 'skip',
     source: 'failed_attempt',
     decided_at: '2026-09-11T19:30:00Z',
+    failed_attempt_evidence: 'explainers/core-missing/failure.json',
   };
   await persistIntent({
     statePath,

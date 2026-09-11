@@ -895,7 +895,9 @@ consumer boundary. A persisted `skip`, including `skip/failed_attempt`,
 suppresses manifest discovery and generation: do not bundle or author, do not
 invoke the adapter, and leave the selected run empty. Pass the persisted source
 to the terminal-outcome guard as `--skip-reason`; a failed-attempt skip also
-passes its failed or incomplete manifest, or the flow's `failure.json`.
+passes only the deployed consumer's containment-checked
+`failedAttemptEvidence`, sourced from the persisted project-relative
+`failed_attempt_evidence` locator.
 
 For a persisted `generate`, inspect the active project's explainer runs. Reuse
 a fresh satisfied `project-recap` package and do not invoke the adapter again.
@@ -913,7 +915,9 @@ block final HiLL approval.
 
 `built` and `built-needs-review` satisfy generation. `failed` and `incomplete`
 do not. In autonomy, retry once after either unsatisfied outcome. If the retry
-also fails, persist `skip/failed_attempt`, re-read that persisted skip, and
+also fails, persist `skip/failed_attempt` with `failed_attempt_evidence` set to
+the attempted run's project-relative failed/incomplete `manifest.json` or
+`failure.json`. Re-read that persisted skip through the deployed consumer and
 continue without another bundle or authoring pass. Never turn the first failed
 attempt into a silent skip.
 
@@ -926,6 +930,9 @@ the persisted skip; never append a duplicate.
 Before recording final approval, invoke
 `oat-explainer-kit/scripts/check-terminal-outcome.mjs` with the persisted
 intent. For `generate`, pass the selected package's canonical `manifest.json`.
+For `skip/failed_attempt`, pass the validated canonical path and evidence kind
+returned by the deployed consumer together with the active project as
+`--project-root`; other skip sources carry no evidence.
 The outcome vocabulary is `built`, `built-needs-review`, `failed`, and
 `incomplete`; only the first two satisfy generation. Missing packages block
 approval.

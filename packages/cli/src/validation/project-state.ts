@@ -19,8 +19,14 @@ const EXPLAINER_SOURCES = [
   'interactive',
   'kickoff_prompt',
   'autonomous_policy',
+  'failed_attempt',
 ] as const;
-const EXPLAINER_DECISION_KEYS = ['decision', 'source', 'decided_at'] as const;
+const EXPLAINER_DECISION_KEYS = [
+  'decision',
+  'source',
+  'decided_at',
+  'failed_attempt_evidence',
+] as const;
 const EXPLAINER_ALLOWED_PAIRS = {
   oat_project_explainer: new Set([
     'generate:interactive',
@@ -31,6 +37,7 @@ const EXPLAINER_ALLOWED_PAIRS = {
     'generate:interactive',
     'skip:interactive',
     'generate:autonomous_policy',
+    'skip:failed_attempt',
   ]),
 } as const;
 const ISO_TIMESTAMP_PATTERN =
@@ -145,7 +152,7 @@ function readExplainerDecision(
   ) {
     errors.push({
       code: 'invalid-explainer-decision-keys',
-      message: `${key} must contain only decision, source, and decided_at`,
+      message: `${key} contains an unsupported decision field`,
     });
     return null;
   }
@@ -153,6 +160,11 @@ function readExplainerDecision(
   const decision = record.decision;
   const source = record.source;
   const decidedAt = record.decided_at;
+  const hasFailedAttemptEvidence = Object.hasOwn(
+    record,
+    'failed_attempt_evidence',
+  );
+  const failedAttemptEvidence = record.failed_attempt_evidence;
   let valid = true;
   if (
     typeof decision !== 'string' ||
@@ -170,7 +182,7 @@ function readExplainerDecision(
   ) {
     errors.push({
       code: 'invalid-explainer-source',
-      message: `${key}.source must be interactive, kickoff_prompt, or autonomous_policy`,
+      message: `${key}.source must be interactive, kickoff_prompt, autonomous_policy, or failed_attempt`,
     });
     valid = false;
   }
@@ -195,14 +207,47 @@ function readExplainerDecision(
     });
     valid = false;
   }
+  const isFailedAttempt =
+    key === 'oat_project_recap' &&
+    decision === 'skip' &&
+    source === 'failed_attempt';
+  if (
+    (isFailedAttempt &&
+      !isFailedAttemptEvidenceLocator(failedAttemptEvidence)) ||
+    (!isFailedAttempt && hasFailedAttemptEvidence)
+  ) {
+    errors.push({
+      code: 'invalid-failed-attempt-evidence',
+      message: `${key}.failed_attempt_evidence is required only for skip/failed_attempt and must name explainers/<run-slug>/manifest.json or failure.json`,
+    });
+    valid = false;
+  }
 
   return valid
     ? {
         decision: decision as ExplainerDecisionV1['decision'],
         source: source as ExplainerDecisionV1['source'],
         decided_at: decidedAt as string,
+        ...(isFailedAttempt && {
+          failed_attempt_evidence: failedAttemptEvidence as string,
+        }),
       }
     : null;
+}
+
+function isFailedAttemptEvidenceLocator(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const parts = value.split('/');
+  const runSlug = parts[1];
+  const fileName = parts[2];
+  return (
+    parts.length === 3 &&
+    parts[0] === 'explainers' &&
+    typeof runSlug === 'string' &&
+    /^[a-z0-9][a-z0-9._-]*$/.test(runSlug) &&
+    typeof fileName === 'string' &&
+    ['manifest.json', 'failure.json'].includes(fileName)
+  );
 }
 
 function readKind(frontmatter: Record<string, unknown>): ProjectStateKind {

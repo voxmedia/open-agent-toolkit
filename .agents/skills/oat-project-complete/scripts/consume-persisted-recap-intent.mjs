@@ -1,7 +1,8 @@
-import { readdir } from 'node:fs/promises';
+import { readdir, realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { resolveProjectFailedAttemptEvidence } from '../../oat-explainer-kit/scripts/check-terminal-outcome.mjs';
 import { readPersistedIntent } from '../../oat-explainer-kit/scripts/persist-intent.mjs';
 
 function consumptionError(message) {
@@ -38,9 +39,23 @@ async function discoverManifestCandidates(explainersPath) {
   return candidates;
 }
 
+async function resolveFailedAttemptEvidence(projectRoot, locator) {
+  try {
+    return await resolveProjectFailedAttemptEvidence({
+      projectPath: projectRoot,
+      locator,
+    });
+  } catch (error) {
+    throw consumptionError(
+      `Persisted failed-attempt evidence is invalid: ${error.message}`,
+    );
+  }
+}
+
 export async function consumePersistedRecapIntent({ projectPath }) {
+  const projectRoot = await realpath(projectPath);
   const record = await readPersistedIntent({
-    statePath: join(projectPath, 'state.md'),
+    statePath: join(projectRoot, 'state.md'),
     product: 'projectRecap',
   });
   if (record === null) {
@@ -49,6 +64,13 @@ export async function consumePersistedRecapIntent({ projectPath }) {
     );
   }
   if (record.decision === 'skip') {
+    const failedAttemptEvidence =
+      record.source === 'failed_attempt'
+        ? await resolveFailedAttemptEvidence(
+            projectRoot,
+            record.failed_attempt_evidence,
+          )
+        : null;
     return {
       decision: 'skip',
       source: record.source,
@@ -56,6 +78,7 @@ export async function consumePersistedRecapIntent({ projectPath }) {
       manifestDiscoveryPerformed: false,
       manifestCandidates: [],
       authoringPermitted: false,
+      failedAttemptEvidence,
     };
   }
   if (record.decision !== 'generate') {
@@ -64,7 +87,7 @@ export async function consumePersistedRecapIntent({ projectPath }) {
     );
   }
   const manifestCandidates = await discoverManifestCandidates(
-    join(projectPath, 'explainers'),
+    join(projectRoot, 'explainers'),
   );
   return {
     decision: 'generate',
@@ -73,6 +96,7 @@ export async function consumePersistedRecapIntent({ projectPath }) {
     manifestDiscoveryPerformed: true,
     manifestCandidates,
     authoringPermitted: true,
+    failedAttemptEvidence: null,
   };
 }
 

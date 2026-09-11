@@ -205,6 +205,7 @@ test('failed_attempt is a projectRecap-only skip source', () => {
     decision: 'skip',
     source: 'failed_attempt',
     decided_at: NOW,
+    failed_attempt_evidence: 'explainers/failed-run/failure.json',
   };
   assert.equal(
     resolve({
@@ -223,6 +224,77 @@ test('failed_attempt is a projectRecap-only skip source', () => {
       }),
     /invalid projectExplainer decision\/source pair/i,
   );
+});
+
+test('failed_attempt requires one narrow project-relative evidence locator', () => {
+  const base = {
+    decision: 'skip',
+    source: 'failed_attempt',
+    decided_at: NOW,
+  };
+  for (const failed_attempt_evidence of [
+    '/tmp/failure.json',
+    '../outside/failure.json',
+    'explainers/../outside/failure.json',
+    'explainers/run/not-evidence.json',
+  ]) {
+    assert.throws(
+      () =>
+        updateStateFrontmatter('---\noat_phase: plan\n---\n', 'projectRecap', {
+          ...base,
+          failed_attempt_evidence,
+        }),
+      /failed_attempt_evidence/i,
+    );
+  }
+  assert.throws(
+    () =>
+      updateStateFrontmatter(
+        '---\noat_phase: plan\n---\n',
+        'projectRecap',
+        base,
+      ),
+    /failed_attempt_evidence/i,
+  );
+  for (const decision of ['skip', 'generate']) {
+    assert.throws(
+      () =>
+        updateStateFrontmatter('---\noat_phase: plan\n---\n', 'projectRecap', {
+          decision,
+          source: 'interactive',
+          decided_at: NOW,
+          failed_attempt_evidence: 'explainers/failed-run/failure.json',
+        }),
+      /failed_attempt_evidence/i,
+    );
+  }
+});
+
+test('failed_attempt evidence survives state persistence and reload', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-failed-intent-'));
+  const statePath = join(root, 'state.md');
+  try {
+    const initial = '---\noat_phase: implement\n---\n\n# State\n';
+    await writeFile(statePath, initial);
+    const record = {
+      decision: 'skip',
+      source: 'failed_attempt',
+      decided_at: NOW,
+      failed_attempt_evidence: 'explainers/failed-run/manifest.json',
+    };
+    await persistIntent({
+      statePath,
+      product: 'projectRecap',
+      record,
+      expectedHash: hashStateContent(initial),
+    });
+    assert.deepEqual(
+      await readPersistedIntent({ statePath, product: 'projectRecap' }),
+      record,
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test('safe frontmatter updates preserve unrelated fields and markdown body', () => {

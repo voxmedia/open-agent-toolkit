@@ -30,7 +30,9 @@ project state. An unresolved `ask` prompts once. Either answer produces an
 
 ## State records
 
-Records retain the three-field state contract:
+Records normally retain the three-field state contract. The sole extension is
+`projectRecap` `skip/failed_attempt`, which requires one project-relative
+`failed_attempt_evidence` locator:
 
 ```yaml
 oat_project_explainer:
@@ -38,9 +40,10 @@ oat_project_explainer:
   source: kickoff_prompt
   decided_at: '2026-07-18T02:30:00Z'
 oat_project_recap:
-  decision: generate
-  source: autonomous_policy
+  decision: skip
+  source: failed_attempt
   decided_at: '2026-07-18T02:30:00Z'
+  failed_attempt_evidence: explainers/failed-run/failure.json
 ```
 
 Allowed decision/source pairs are:
@@ -54,10 +57,17 @@ Allowed decision/source pairs are:
 an already persisted record, but lifecycle callers must not write a new one.
 After an actual failed generation, persist `skip/failed_attempt` only when the
 terminal guard can read either a failed or incomplete `manifest.json` or the
-flow's `failure.json`.
+flow's `failure.json`. Store that proof only as
+`explainers/<run-slug>/manifest.json` or
+`explainers/<run-slug>/failure.json`; no other decision/source pair may carry
+the field.
 
 The pair is product-scoped but not mode-scoped. A resumed completion honors any
-valid persisted skip without prompting, bundling, or authoring again.
+valid persisted skip without prompting, bundling, or authoring again. The
+deployed consumer resolves only an explicitly persisted failed-attempt locator,
+requires its canonical real path to remain inside the declared project run,
+requires a regular file, and validates it through the terminal guard's own
+failed-attempt contract. It never enumerates explainer runs for a skip.
 
 ## Safe persistence
 
