@@ -149,6 +149,59 @@ test('the shared v2 topology validator enforces singleton order at the productio
   );
 });
 
+test('quick permits four gather lanes in addition to map and compile', () => {
+  const execution = createV2ExecutionApproval({
+    modes: ['map', 'gather', 'compile'],
+    laneIdForMode,
+  });
+  const gather = execution.waves.find((wave) => wave.mode === 'gather');
+  for (let index = 2; index <= 4; index += 1) {
+    gather.lanes.push({
+      laneId: `lane-gather-${index}`,
+      scope: `packet/gather-${index}`,
+      writeRoot: `raw/dossiers/pass-gather-${index}.json`,
+    });
+  }
+
+  assert.deepEqual(
+    validateV2ProfileTopology({
+      schemaVersion: 2,
+      run: { requestedProfile: 'quick' },
+      execution,
+    }),
+    [],
+  );
+});
+
+test('profiles reject wave modes owned by stronger profiles', () => {
+  for (const [profile, modes, forbiddenMode] of [
+    [
+      'quick',
+      ['map', 'gather', 'semantic-verification', 'compile'],
+      'semantic-verification',
+    ],
+    [
+      'standard',
+      [...standardModes.slice(0, -1), 'redundant-gather', 'reconciliation'],
+      'redundant-gather',
+    ],
+  ]) {
+    const execution = createV2ExecutionApproval({ modes, laneIdForMode });
+    const errors = validateV2ProfileTopology({
+      schemaVersion: 2,
+      run: { requestedProfile: profile },
+      execution,
+    });
+    assert.ok(
+      errors.some(
+        (error) =>
+          error.code === 'WAVE_MODE_NOT_ALLOWED_FOR_PROFILE' &&
+          error.message.includes(forbiddenMode),
+      ),
+    );
+  }
+});
+
 test('condition semantics have one validator owner and one diagnostic per injected defect', () => {
   const unknownPredicate = createV2ExecutionApproval({
     modes: standardModes,
@@ -210,7 +263,7 @@ test('every conditional wave has exactly one activating condition', () => {
   });
   execution.waves.splice(-1, 0, {
     waveId: 'wave-dead-conditional',
-    mode: 'redundant-gather',
+    mode: 'contradiction-resolution',
     taskClass: 'mechanical-recon',
     classFloor: 'mechanical-recon',
     selectionReason: 'Dead conditional wave regression fixture.',
@@ -235,10 +288,7 @@ test('every conditional wave has exactly one activating condition', () => {
   );
 });
 
-for (const [profile, modes] of [
-  ['quick', ['map', 'gather', 'compile', 'reconciliation']],
-  ['standard', standardModes],
-]) {
+for (const [profile, modes] of [['standard', standardModes]]) {
   test(`${profile} conditional terminal defects have one topology diagnostic owner`, () => {
     const execution = createV2ExecutionApproval({
       modes,

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
-oat_current_task_id: prev2-t01
+oat_current_task_id: prev2-t02
 oat_generated: false
 oat_template: false
 ---
@@ -30,10 +30,10 @@ project for the user-approved post-retro simplification in `p05-t01`.
 | Phase 4: Distribution and verification     | completed   | 6     | 6/6       |
 | Phase 5: Post-retro simplification         | completed   | 4     | 4/4       |
 | Phase p-rev1: Integrate current main       | completed   | 1     | 1/1       |
-| Phase p-rev2: Merged-head review fixes     | in_progress | 2     | 0/2       |
+| Phase p-rev2: Merged-head review fixes     | in_progress | 2     | 1/2       |
 
-**Total:** 18/20 tasks implemented. The integrated head's final lifecycle review
-added two blocking fix tasks.
+**Total:** 19/20 tasks implemented. The integrated head's final lifecycle review
+added two blocking fix tasks; the topology-cap correction is complete.
 
 ## Task Status
 
@@ -57,7 +57,7 @@ added two blocking fix tasks.
 | p05-t03   | Completed: close validator regressions          | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`, `bd5dded4d` |
 | p05-t04   | Completed: reconcile final-review bookkeeping   | this commit                                        |
 | prev1-t01 | Completed: integrate current main               | `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`         |
-| prev2-t01 | Pending: align profile topology caps            | —                                                  |
+| prev2-t01 | Completed: align profile topology caps          | this commit                                        |
 | prev2-t02 | Pending: close hostile manifest collections     | —                                                  |
 
 ## Phase 5: Post-retro simplification
@@ -868,6 +868,22 @@ review passed with its formatter-owned Minor explicitly dispositioned.
   before structured validation and stale-output withdrawal.
 
 **New tasks added:** `prev2-t01`, `prev2-t02`
+
+### Task prev2-t01: Align profile topology caps
+
+**Status:** completed
+**Commit:** this commit
+**Verification:** passed
+
+The topology policy now declares both the wave modes each profile permits and
+the adaptive evidence modes counted by its 4/10/20 lane cap. Quick accepts one
+map lane, four gather lanes, and one compile lane while rejecting modes owned by
+standard or thorough. Standard likewise rejects thorough-only redundant modes.
+
+The routing-contract and routing-preview suites passed 20/20. With the new
+allowed-mode guard temporarily neutralized, the focused forbidden-profile test
+failed as required (exit 1); restoring the guard returned the focused suites to
+green.
 
 **Next:** Execute both fix tasks via `oat-project-implement`, then run a narrowed
 final lifecycle re-review before refreshing the configured exit gate.

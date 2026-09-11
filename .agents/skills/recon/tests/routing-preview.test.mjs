@@ -318,6 +318,31 @@ test('preview rejects incomplete quick, standard, and thorough profile topologie
   });
 });
 
+test('preview accepts maximum quick gather fanout and rejects stronger-profile modes', () => {
+  const maximumQuick = completeDraft('quick');
+  const gather = maximumQuick.execution.waves.find(
+    (wave) => wave.mode === 'gather',
+  );
+  for (let index = 2; index <= 4; index += 1) {
+    gather.lanes.push({
+      laneId: `lane-gather-${index}`,
+      scope: `packet/gather-${index}`,
+      writeRoot: `raw/dossiers/pass-gather-${index}.json`,
+    });
+  }
+  const preview = createRoutingPreview(maximumQuick);
+  assert.equal(preview.limits.laneCount, 6);
+  assert.equal(preview.profileCaps.maxLanes, 4);
+
+  const forbidden = draftManifest({
+    profile: 'quick',
+    modes: ['map', 'gather', 'adversarial', 'compile'],
+  });
+  assert.throws(() => createRoutingPreview(forbidden), {
+    code: 'WAVE_MODE_NOT_ALLOWED_FOR_PROFILE',
+  });
+});
+
 test('preview enforces singleton order and condition-bound contradiction topology', () => {
   for (const [manifest, code] of [
     [duplicateSingletonDraft(), 'DUPLICATE_PROFILE_WAVE_MODE'],
@@ -409,44 +434,43 @@ test('preview rejects missing, malformed, mismatched, and over-cap v2 routing', 
     code: 'PROFILE_CONCURRENCY_CAP_EXCEEDED',
   });
 
-  const laneCap = draftManifest({ profile: 'quick', modes: ['map'] });
+  const laneCap = completeDraft('quick');
+  const gather = laneCap.execution.waves.find((wave) => wave.mode === 'gather');
   for (let index = 0; index < 4; index += 1) {
-    laneCap.execution.waves[0].lanes.push({
-      laneId: `lane-map-extra-${index}`,
-      scope: `packet/map-extra-${index}`,
-      writeRoot: `raw/dossiers/map-extra-${index}.json`,
+    gather.lanes.push({
+      laneId: `lane-gather-extra-${index}`,
+      scope: `packet/gather-extra-${index}`,
+      writeRoot: `raw/dossiers/gather-extra-${index}.json`,
     });
   }
   assert.throws(() => createRoutingPreview(laneCap), {
     code: 'PROFILE_LANE_CAP_EXCEEDED',
   });
 
-  const conditionCap = completeDraft('quick');
+  const conditionCap = conditionalDraft();
   const conditional = {
-    waveId: 'wave-conditional-resolution',
+    waveId: 'wave-conditional-resolution-second',
     mode: 'contradiction-resolution',
     taskClass: 'mechanical-recon',
     classFloor: 'mechanical-recon',
     selectionReason: 'Bounded conditional evidence fixture.',
     lanes: [
       {
-        laneId: 'lane-conditional-resolution',
-        scope: 'packet/conditional-resolution',
-        writeRoot: 'reviews/conditional-resolution.json',
+        laneId: 'lane-conditional-resolution-second',
+        scope: 'packet/conditional-resolution-second',
+        writeRoot: 'reviews/conditional-resolution-second.json',
       },
     ],
     conditional: true,
   };
   conditionCap.execution.waves.splice(1, 0, conditional);
-  conditionCap.execution.conditions = [
-    {
-      conditionId: 'condition-resolution',
-      destinationWaveId: conditional.waveId,
-      afterWaveIds: ['wave-map'],
-      predicate: 'insufficient-evidence',
-      maxActivations: 1,
-    },
-  ];
+  conditionCap.execution.conditions.push({
+    conditionId: 'condition-resolution-second',
+    destinationWaveId: conditional.waveId,
+    afterWaveIds: ['wave-map'],
+    predicate: 'insufficient-evidence',
+    maxActivations: 1,
+  });
   assert.throws(() => createRoutingPreview(conditionCap), {
     code: 'PROFILE_CONDITION_CAP_EXCEEDED',
   });

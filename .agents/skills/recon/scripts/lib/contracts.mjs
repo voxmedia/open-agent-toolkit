@@ -67,19 +67,31 @@ export const conditionPredicates = [
   'unresolved-material-challenge',
 ];
 
-function profilePolicy(orderedSingletonWaveModes, caps) {
+function profilePolicy(
+  orderedSingletonWaveModes,
+  allowedWaveModes,
+  countedLaneModes,
+  caps,
+) {
   return Object.freeze({
     orderedSingletonWaveModes: Object.freeze(orderedSingletonWaveModes),
+    allowedWaveModes: Object.freeze(allowedWaveModes),
+    countedLaneModes: Object.freeze(countedLaneModes),
     ...caps,
   });
 }
 
 export const profileRoutingPolicy = Object.freeze({
-  quick: profilePolicy(['map', 'gather', 'compile'], {
-    lanes: 4,
-    concurrency: 4,
-    conditions: 0,
-  }),
+  quick: profilePolicy(
+    ['map', 'gather', 'compile'],
+    ['map', 'gather', 'compile'],
+    ['gather'],
+    {
+      lanes: 4,
+      concurrency: 4,
+      conditions: 0,
+    },
+  ),
   standard: profilePolicy(
     [
       'map',
@@ -89,6 +101,23 @@ export const profileRoutingPolicy = Object.freeze({
       'adversarial',
       'coverage',
       'reconciliation',
+    ],
+    [
+      'map',
+      'gather',
+      'compile',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'reconciliation',
+      'contradiction-resolution',
+    ],
+    [
+      'gather',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'contradiction-resolution',
     ],
     { lanes: 10, concurrency: 6, conditions: 1 },
   ),
@@ -103,6 +132,27 @@ export const profileRoutingPolicy = Object.freeze({
       'redundant-gather',
       'redundant-verification',
       'reconciliation',
+    ],
+    [
+      'map',
+      'gather',
+      'compile',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'redundant-gather',
+      'redundant-verification',
+      'reconciliation',
+      'contradiction-resolution',
+    ],
+    [
+      'gather',
+      'semantic-verification',
+      'adversarial',
+      'coverage',
+      'redundant-gather',
+      'redundant-verification',
+      'contradiction-resolution',
     ],
     { lanes: 20, concurrency: 8, conditions: 2 },
   ),
@@ -553,16 +603,38 @@ export function validateV2ProfileTopology(
   const conditions = Array.isArray(execution.conditions)
     ? execution.conditions
     : [];
+  const forbiddenModes = waves
+    .filter(
+      (wave) =>
+        typeof wave?.mode === 'string' &&
+        !policy.allowedWaveModes.includes(wave.mode),
+    )
+    .map((wave) => wave.mode);
+  if (forbiddenModes.length > 0) {
+    errors.push(
+      issue(
+        'WAVE_MODE_NOT_ALLOWED_FOR_PROFILE',
+        `${requestedProfile} routing does not permit wave modes: ${[
+          ...new Set(forbiddenModes),
+        ].join(', ')}`,
+        `${path}.waves`,
+      ),
+    );
+  }
   const laneCount = waves.reduce(
     (count, wave) =>
-      count + (Array.isArray(wave?.lanes) ? wave.lanes.length : 0),
+      count +
+      (policy.countedLaneModes.includes(wave?.mode) &&
+      Array.isArray(wave?.lanes)
+        ? wave.lanes.length
+        : 0),
     0,
   );
   if (laneCount > policy.lanes) {
     errors.push(
       issue(
         'PROFILE_LANE_CAP_EXCEEDED',
-        `${requestedProfile} routing permits at most ${policy.lanes} total worker lanes`,
+        `${requestedProfile} routing permits at most ${policy.lanes} adaptive evidence lanes`,
         `${path}.waves`,
       ),
     );
