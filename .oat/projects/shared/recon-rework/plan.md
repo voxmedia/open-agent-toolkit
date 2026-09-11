@@ -920,7 +920,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | p-rev1 | code     | passed          | 2026-09-11 | reviews/archived/p-rev1-review-2026-09-11T143545Z.md        | 9d27e15a615fc18056a8c5b7501a0508ffb9c4a4 | manual     | -                     |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T144641Z.md         | 0ee34935306c0dcb711ded3f83746a890cb50c97 | auto       | -                     |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T150854Z.md         | 695f4dba72d9fb46ab10a962a08907a6d593f7e3 | auto       | -                     |
-| final  | code     | received        | 2026-09-11 | reviews/final-review-2026-09-11T152512Z.md                  | c11f78febec9329642f068ae849059547f924c0a | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T152512Z.md         | c11f78febec9329642f068ae849059547f924c0a | gate       | cursor-fable-5-1-high |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1034,10 +1034,106 @@ complete recon suites; neutralize the guard once to prove the P0 test fails.
 
 Commit as `fix(prev2-t02): fail closed on hostile manifest collections`.
 
+## Phase p-rev3: Configured-gate profile-cap fixes
+
+Source: configured exit-gate review `final-review-2026-09-11T152512Z.md`
+
+### Task prev3-t01: (review) Bound singleton wave lanes
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/tests/routing-contracts.test.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+
+**Step 1: Understand the issue**
+
+The adaptive 4/10/20 cap now excludes map, compile, and reconciliation, but those
+singleton-mode waves have no per-wave lane bound. A quick run with 40 map lanes
+therefore validates even though the profile permits one map lane.
+
+**Step 2: Implement fix**
+
+Require exactly one lane for every wave whose mode is outside the profile's
+adaptive counted modes. Keep the shared validator authoritative for preview and
+finalized packet validation.
+
+**Step 3: Verify**
+
+Pin quick map/compile and standard reconciliation overpopulation at both routing
+and packet-validation boundaries. Reproduce the 40-map-lane pre-fix acceptance,
+neutralize the new guard to prove the targeted test fails, restore it, and run the
+focused plus complete recon suites.
+
+**Step 4: Commit**
+
+Commit as `fix(prev3-t01): bound singleton recon wave lanes`.
+
+### Task prev3-t02: (review) Align adaptive cap contract prose
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+- Modify: `.agents/skills/recon/references/profiles.md`
+- Modify: `.agents/skills/recon/tests/skill-contract.test.mjs`
+
+**Step 1: Understand the issue**
+
+The shipped references still call 4/10/20 a total-worker hard cap even though the
+implemented policy applies it to adaptive evidence modes and separately requires
+single-lane map, compile, and reconciliation waves.
+
+**Step 2: Implement fix**
+
+Describe exactly which modes count toward the adaptive cap, which fixed modes are
+single-lane, and how the total maximum follows from both rules. Pin the wording in
+the skill-contract suite.
+
+**Step 3: Verify**
+
+Run the skill-contract suite, canonical skill validation, skill-bump gate, and
+format checks.
+
+**Step 4: Commit**
+
+Commit as `docs(prev3-t02): align recon adaptive cap contract`.
+
+### Task prev3-t03: (review) Clarify adaptive cap preview
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/routing.mjs`
+- Modify: `.agents/skills/recon/tests/routing-preview.test.mjs`
+
+**Step 1: Understand the issue**
+
+The approval preview shows six total lanes beside a profile lane cap of four
+without explaining that the latter counts only adaptive evidence lanes.
+
+**Step 2: Implement fix**
+
+Expose the counted adaptive lane total and render the relationship explicitly,
+for example four counted adaptive lanes out of six total.
+
+**Step 3: Verify**
+
+Pin the structured preview fields and rendered approval text, then run the routing
+preview and complete recon suites.
+
+**Step 4: Commit**
+
+Commit as `fix(prev3-t03): clarify recon adaptive lane preview`.
+
 ## Implementation Complete
 
-**Implementation tasks complete: 20 of 20 implemented. The merged-head final
-review fixes are complete and awaiting narrowed re-review.**
+**Implementation tasks complete: 20 of 23 implemented. The configured exit gate
+added three bounded profile-cap correction tasks.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1046,8 +1142,9 @@ review fixes are complete and awaiting narrowed re-review.**
 - Phase 5: 4 tasks — simplification plus fresh final-review fixes.
 - Phase p-rev1: 1 task — integrate current `origin/main` and resolve conflicts.
 - Phase p-rev2: 2 tasks — close merged-head profile and hostile-collection gaps.
+- Phase p-rev3: 3 tasks — bound fixed waves and align cap docs and preview.
 
-**Total: 7 phases, 20 tasks.** All implementation tasks are complete.
+**Total: 8 phases, 23 tasks.** Three configured-gate fix tasks remain.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

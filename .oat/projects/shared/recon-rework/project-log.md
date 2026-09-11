@@ -128,6 +128,10 @@ run-3-final-rereview-pass-20260911T150854Z The narrowed final lifecycle re-revie
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T152512Z.md run=c1c2d64e-b921-4484-8c81-6259fe3e397b
 
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-3-exit-gate-receive-20260911T152512Z Configured gate run c1c2d64e-b921-4484-8c81-6259fe3e397b blocked at the Important threshold with 0C/1I/1M/1m; all three findings were converted to prev3-t01 through prev3-t03 for the first allowed remediation attempt.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

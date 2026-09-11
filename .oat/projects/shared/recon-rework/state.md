@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev3-t01
 oat_last_commit: 695f4dba72d9fb46ab10a962a08907a6d593f7e3
 oat_blockers: []
 associated_issues: []
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T15:20:00Z'
+oat_project_state_updated: '2026-09-11T15:30:00Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -98,24 +98,24 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** Final lifecycle review passed; configured exit-gate refresh pending.
+**Status:** Configured exit-gate remediation is in progress.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-11
 
 ## Current Phase
 
-Revision p-rev2 and its narrowed final lifecycle re-review are complete. The
-configured exit gate is pending refresh.
+Revision p-rev3 - correcting the configured exit gate's one Important, one Medium,
+and one Minor profile-cap findings.
 
 ## Artifacts
 
 - Discovery: `discovery.md` — captured from the conversation, CLI-completed.
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight design aligned with the simplified approval contract.
-- Plan: `plan.md` — complete; 5 implementation phases plus two revision phases,
-  20 tasks.
-- Implementation: `implementation.md` — all 20 tasks complete; final lifecycle
-  review passed and configured exit-gate refresh is pending.
+- Plan: `plan.md` — complete; 5 implementation phases plus three revision phases,
+  23 tasks.
+- Implementation: `implementation.md` — 20/23 tasks complete; configured-gate
+  remediation is in progress.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
@@ -131,7 +131,7 @@ No existing project was absorbed or retired.
 - ✓ Revision p-rev1 completed and phase review passed
 - ✓ Revision p-rev2 implemented both Important final-review fixes
 - ✓ Narrowed final review passed with no blocking findings
-- ⧗ Configured implementation exit gate requires refresh
+- ⧗ Configured implementation exit gate blocked; remediation attempt 1 pending
 - ✓ Final HiLL and configured closeout sequence completed
 - ✓ PR #285 updated and open as a draft
 - ✓ Post-retro RP-01, RP-02, UP-01, and UP-02 implemented directly
@@ -145,8 +145,9 @@ No active blocker.
 
 ## Next Milestone
 
-Refresh the implementation exit gate, then update and push PR #285 and mark it
-ready for review.
+Implement `prev3-t01` through `prev3-t03`, pass the narrowed lifecycle review,
+rerun the configured exit gate once, then update and push PR #285 and mark it ready
+for review.
 
 ## Authorization and Scope
 

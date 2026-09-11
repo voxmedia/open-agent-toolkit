@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
-oat_current_task_id: null
+oat_current_task_id: prev3-t01
 oat_generated: false
 oat_template: false
 ---
@@ -22,18 +22,19 @@ project for the user-approved post-retro simplification in `p05-t01`.
 
 ## Progress Overview
 
-| Phase                                      | Status    | Tasks | Completed |
-| ------------------------------------------ | --------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
-| Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
-| Phase 4: Distribution and verification     | completed | 6     | 6/6       |
-| Phase 5: Post-retro simplification         | completed | 4     | 4/4       |
-| Phase p-rev1: Integrate current main       | completed | 1     | 1/1       |
-| Phase p-rev2: Merged-head review fixes     | completed | 2     | 2/2       |
+| Phase                                      | Status      | Tasks | Completed |
+| ------------------------------------------ | ----------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
+| Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
+| Phase 4: Distribution and verification     | completed   | 6     | 6/6       |
+| Phase 5: Post-retro simplification         | completed   | 4     | 4/4       |
+| Phase p-rev1: Integrate current main       | completed   | 1     | 1/1       |
+| Phase p-rev2: Merged-head review fixes     | completed   | 2     | 2/2       |
+| Phase p-rev3: Configured-gate cap fixes    | in_progress | 3     | 0/3       |
 
-**Total:** 20/20 tasks implemented. The merged-head final-review fixes are complete
-and awaiting narrowed lifecycle re-review.
+**Total:** 20/23 tasks implemented. The configured exit gate added three bounded
+profile-cap correction tasks.
 
 ## Task Status
 
@@ -59,6 +60,9 @@ and awaiting narrowed lifecycle re-review.
 | prev1-t01 | Completed: integrate current main               | `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`         |
 | prev2-t01 | Completed: align profile topology caps          | `be329458b7c1f931b4fc5712c1456619484d0e13`         |
 | prev2-t02 | Completed: close hostile manifest collections   | `fc4470be39e49dfc26489bbe5caeabcbc22525ef`         |
+| prev3-t01 | Pending: bound singleton wave lanes             | —                                                  |
+| prev3-t02 | Pending: align adaptive cap contract prose      | —                                                  |
+| prev3-t03 | Pending: clarify adaptive cap preview           | —                                                  |
 
 ## Phase 5: Post-retro simplification
 
@@ -946,6 +950,41 @@ no follow-up task or backlog item is needed.
 
 **Next:** Refresh the configured implementation exit gate on the reviewed merged
 head.
+
+## Phase p-rev3: Configured-gate profile-cap fixes
+
+**Status:** in_progress
+**Started:** 2026-09-11
+
+### Review Received: final configured exit gate
+
+**Date:** 2026-09-11
+**Gate:** run `c1c2d64e-b921-4484-8c81-6259fe3e397b`, target
+`cursor-fable-5-1-high`, different-family diversity achieved
+**Review artifact:**
+`reviews/archived/final-review-2026-09-11T152512Z.md`
+**Envelope:** `blocked`, threshold Important, receive eligible
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 1
+
+**Dispositions:**
+
+- I1 -> convert to `prev3-t01`; fixed-mode waves need an exact one-lane bound.
+- M1 -> convert to `prev3-t02`; the shipped 4/10/20 cap prose must describe
+  adaptive evidence lanes and fixed singletons accurately.
+- m1 -> convert to `prev3-t03`; the approval preview must distinguish adaptive
+  counted lanes from total lanes.
+
+**New tasks added:** `prev3-t01`, `prev3-t02`, `prev3-t03`
+
+**Next:** Execute the three fix tasks, pass the mandatory narrowed lifecycle
+re-review, then resume this same gate generation for its one allowed remediation
+attempt.
 
 ## Final Summary (for PR/docs)
 
