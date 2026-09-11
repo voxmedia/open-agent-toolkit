@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 52c21ca6b065b95907887459770b3d38ac8cb105
+oat_current_task: prev7-t01
+oat_last_commit: 6faf9b996a88e0b9a55cfba5527636d762b042b4
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -104,18 +104,19 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation — all 27 tasks are complete. The Important gather-pass ownership
-defect is fixed and `p-rev6` passed its narrowed review with no findings. A
-fresh project-wide final review and configured gate remain pending.
+Implementation — the terminal final review found one Important contradiction
+between complete artifacts and material failed-pass gaps. Task `prev7-t01` is
+pending; the three-cycle automated final-review cap requires user authorization
+before another bounded fix and review cycle.
 
 ## Artifacts
 
 - Discovery: `discovery.md` — captured from the conversation, CLI-completed.
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight design aligned with the simplified approval contract.
-- Plan: `plan.md` — 5 implementation phases plus six revision phases, 27 tasks.
-- Implementation: `implementation.md` — all 27 tasks complete; `p-rev6` passed
-  with no review findings.
+- Plan: `plan.md` — 5 implementation phases plus seven revision phases, 28 tasks.
+- Implementation: `implementation.md` — 27 of 28 tasks complete; `p-rev7` is
+  pending one Important terminal-review remediation.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
@@ -146,7 +147,8 @@ No existing project was absorbed or retired.
 - ✓ `p-rev5` narrowed review passed with no findings
 - ✓ Latest final review's Important gather-pass ownership defect fixed
 - ✓ `p-rev6` narrowed review passed with no findings
-- ⧗ Repeat project-wide final review and configured gate
+- ✗ Terminal final review found one Important pass-outcome contradiction
+- ⧗ Awaiting authorization for one additional bounded fix and review cycle
 - ⧗ Summary, documentation, and PR description refresh pending
 - ✓ Final repository release-verification sequence passed
 - ✓ PR created
@@ -158,7 +160,7 @@ No active blocker.
 
 ## Next Milestone
 
-Repeat the project-wide final review and configured exit gate.
+Authorize one additional bounded cycle, then implement and review `prev7-t01`.
 
 ## Authorization and Scope
 

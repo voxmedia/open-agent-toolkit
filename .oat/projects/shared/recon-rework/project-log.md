@@ -164,6 +164,10 @@ run-4-final-gather-ownership-20260911 Fresh final review found one Important gat
 
 run-4-p-rev6-pass-20260911 Phase p-rev6 passed with task prev6-t01 complete at 52c21ca6b065b95907887459770b3d38ac8cb105; narrowed review reported 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
 
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-4-final-cap-pass-outcome-20260911 Cycle-cap final review found one Important artifact/failure contradiction; p-rev7 task prev7-t01 records the accepted fix, but another bounded implementation and review cycle requires explicit user authorization.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

@@ -930,6 +930,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | p-rev5 | code     | passed          | 2026-09-11 | reviews/archived/p-rev5-review-2026-09-11T175232Z.md        | 26c8357d081ced7047379140c5353ab5993a7f46 | manual     | -                     |
 | final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T180106Z.md         | 872cae9ce95df3be5d4b2964d542825100055542 | auto       | -                     |
 | p-rev6 | code     | passed          | 2026-09-11 | reviews/archived/p-rev6-review-2026-09-11T182327Z.md        | 52c21ca6b065b95907887459770b3d38ac8cb105 | manual     | -                     |
+| final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T183428Z.md         | 6faf9b996a88e0b9a55cfba5527636d762b042b4 | auto       | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1289,10 +1290,49 @@ recon suites.
 
 Commit as `fix(prev6-t01): bind gather passes to approved waves`.
 
-## Implementation Complete
+## Phase p-rev7: Reconcile contradictory pass outcomes
 
-**Implementation tasks complete: 27 of 27 implemented. The latest final review's
-Important gather-pass ownership finding is fixed and its phase review passed.**
+Source: terminal final lifecycle review (2026-09-11)
+
+### Task prev7-t01: (review) Prevent complete artifacts from masking failed passes
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: supporting recon contract guidance only when required
+
+**Step 1: Understand the issue**
+
+A complete artifact currently wins silently over a material `PASS_FAILED` or
+`PASS_OMITTED` gap for the same approved pass. Pass derivation therefore retains
+the full achieved profile and publication eligibility despite contradictory
+root-recorded failure evidence.
+
+**Step 2: Implement fix**
+
+Reconcile typed artifacts and material pass-outcome gaps before deriving
+achievement. Reject the contradictory combination categorically, or make the
+failure outcome dominate so the pass is excluded and assurance degrades.
+
+**Step 3: Verify**
+
+Add production-boundary regressions for contradictory primary `gather` and
+`redundant-gather` outcomes, plus a valid partial control with failure evidence
+and no complete artifact. Neutralize the guard once, confirm the hostile packets
+become publishable or the regressions fail, restore it, and run focused plus
+complete recon suites.
+
+**Step 4: Commit**
+
+Commit as `fix(prev7-t01): reconcile contradictory pass outcomes`.
+
+## Implementation In Progress
+
+**Implementation tasks complete: 27 of 28 implemented. The terminal final review's
+Important artifact/failure contradiction is pending in `prev7-t01`.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1305,8 +1345,9 @@ Important gather-pass ownership finding is fixed and its phase review passed.**
 - Phase p-rev4: 2 tasks — require same-run evidence and suppress derivative diagnostics.
 - Phase p-rev5: 1 task — connect redundant thorough gathering to compilation.
 - Phase p-rev6: 1 task — bind derived gathering passes to their approved waves.
+- Phase p-rev7: 1 task — reconcile contradictory artifacts and failed pass outcomes.
 
-**Total: 11 phases, 27 tasks.** All implementation tasks are complete.
+**Total: 12 phases, 28 tasks.** One terminal-review remediation task is pending.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

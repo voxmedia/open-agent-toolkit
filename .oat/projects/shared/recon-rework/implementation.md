@@ -13,9 +13,9 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-11
 
-Three implementation runs plus six revision phases completed all 27 original,
-post-retro, integration, and review-remediation tasks. The `p-rev6` phase review
-passed the gather-pass ownership fix with no findings.
+Three implementation runs plus six revision phases completed 27 original,
+post-retro, integration, and review-remediation tasks. The terminal full-delta
+review then added one Important pass-outcome contradiction task in `p-rev7`.
 
 ## Progress Overview
 
@@ -32,8 +32,9 @@ passed the gather-pass ownership fix with no findings.
 | Phase p-rev4: Same-run condition evidence  | completed | 2     | 2/2       |
 | Phase p-rev5: Thorough gather compilation  | completed | 1     | 1/1       |
 | Phase p-rev6: Gather pass ownership        | completed | 1     | 1/1       |
+| Phase p-rev7: Pass outcome reconciliation  | pending   | 1     | 0/1       |
 
-**Total:** 27/27 tasks implemented. Refreshed final closeout review is next.
+**Total:** 27/28 tasks implemented. Task `prev7-t01` is next.
 
 ## Task Status
 
@@ -66,6 +67,7 @@ passed the gather-pass ownership fix with no findings.
 | prev4-t02 | Completed: suppress derivative diagnostics      | `3784abc9f26e6714901c450c775b0ceb16ad30b7`         |
 | prev5-t01 | Completed: compile redundant thorough evidence  | `26c8357d081ced7047379140c5353ab5993a7f46`         |
 | prev6-t01 | Completed: bind gather passes to approved waves | `52c21ca6b065b95907887459770b3d38ac8cb105`         |
+| prev7-t01 | Pending: reconcile contradictory pass outcomes  | -                                                  |
 
 ## Phase p-rev4: Remote condition-evidence review fix
 
@@ -200,6 +202,25 @@ fallback schema diagnostics, and the negative control against the parent
 validator. Focused 2/2, packet 59/59, and full recon 275/275 passed.
 
 **Outcome:** `p-rev6` passed with no fix loop.
+
+## Phase p-rev7: Reconcile contradictory pass outcomes
+
+**Status:** pending
+**Started:** 2026-09-11
+
+### Review Received: terminal final review
+
+**Date:** 2026-09-11
+**Review artifact:** `reviews/archived/final-review-2026-09-11T183428Z.md`
+**Reviewed head:** `6faf9b996a88e0b9a55cfba5527636d762b042b4`
+**Findings:** 0 Critical, 1 Important, 0 Medium, 0 Minor
+**New tasks added:** `prev7-t01`
+
+The finding is accepted but the three-cycle automated final-review cap has been
+reached. A complete required-pass artifact currently masks a material
+`PASS_FAILED` or `PASS_OMITTED` gap for the same pass, preserving full achieved
+assurance and publication. `prev7-t01` records the bounded fix; implementation
+and another review cycle require explicit user authorization.
 
 ## Phase 5: Post-retro simplification
 
