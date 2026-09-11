@@ -398,7 +398,7 @@ test('approved lanes bind wave mode, write root, and per-lane outcomes', async (
   silentLane.manifest.gaps.pop();
 
   silentLane.manifest.gaps.push({
-    id: 'gap-lane-gather-2',
+    id: 'gap-mode-only-gather',
     code: 'PASS_FAILED',
     message: 'gather lane lane-gather-2 was cancelled before writing.',
     material: true,
@@ -407,19 +407,43 @@ test('approved lanes bind wave mode, write root, and per-lane outcomes', async (
     coverageFindingIds: [],
   });
   await writeJson(silentLane.manifestPath, silentLane.manifest);
-  const contradictory = await validatePacket(silentLane.packetRoot);
-  assert.equal(
-    contradictory.valid,
-    false,
-    JSON.stringify(contradictory, null, 2),
-  );
-  assert.equal(contradictory.achievedProfile, null);
+  const ambiguousLegacyGap = await validatePacket(silentLane.packetRoot);
   assert.ok(
-    contradictory.errors.some(
+    ambiguousLegacyGap.errors.some(
       ({ code, path }) =>
-        code === 'CONTRADICTORY_PASS_OUTCOME' && path === 'pass:gather',
+        code === 'MISSING_LANE_OUTCOME' && path === 'lane:lane-gather-2',
     ),
-    JSON.stringify(contradictory, null, 2),
+    'a mode-only legacy gap must not cover one lane of a multi-lane wave',
+  );
+  silentLane.manifest.gaps.pop();
+
+  silentLane.manifest.gaps.push({
+    id: 'gap-lane-gather-2',
+    code: 'PASS_FAILED',
+    message: 'gather lane lane-gather-2 was cancelled before writing.',
+    material: true,
+    waveId: gatherWave.waveId,
+    laneId: 'lane-gather-2',
+    sourceIds: [],
+    claimIds: [],
+    coverageFindingIds: [],
+  });
+  await writeJson(silentLane.manifestPath, silentLane.manifest);
+  const honestPartial = await validatePacket(silentLane.packetRoot);
+  assert.equal(
+    honestPartial.valid,
+    true,
+    JSON.stringify(honestPartial, null, 2),
+  );
+  assert.equal(honestPartial.achievedProfile, 'quick');
+  assert.equal(honestPartial.publishable, true);
+  assert.equal(honestPartial.status, 'partial');
+  assert.equal(
+    honestPartial.errors.some(
+      ({ code }) => code === 'CONTRADICTORY_PASS_OUTCOME',
+    ),
+    false,
+    JSON.stringify(honestPartial, null, 2),
   );
 });
 

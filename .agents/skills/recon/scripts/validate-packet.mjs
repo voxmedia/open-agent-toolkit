@@ -716,6 +716,25 @@ function gapNamesConditionalLane(gap, waveId, laneId) {
   );
 }
 
+function gapHasLaneIdentity(gap) {
+  return gap.waveId !== undefined || gap.laneId !== undefined;
+}
+
+function legacyGapNamesSingletonWave(gap, wave, routing) {
+  if (gapHasLaneIdentity(gap) || wave.lanes?.length !== 1) return false;
+  const matchingWaves = (routing?.waves ?? []).filter(
+    (candidate) => candidate.mode === wave.mode,
+  );
+  return matchingWaves.length === 1 && gapNamesMode(gap, wave.mode);
+}
+
+function gapNamesApprovedLane(gap, wave, laneId, routing) {
+  return (
+    gapNamesConditionalLane(gap, wave.waveId, laneId) ||
+    (!wave.conditional && legacyGapNamesSingletonWave(gap, wave, routing))
+  );
+}
+
 function artifactIsComplete(artifact) {
   return (
     (!('status' in artifact) || artifact.status === 'complete') &&
@@ -946,7 +965,6 @@ function validateApprovedLanes(
     }
   }
   const written = new Set();
-  const consumedConditionalGaps = new Set();
   for (const [id, { reference, value }] of artifactsById) {
     if (value.runId !== manifest.run.id) continue;
     const laneId = artifactLaneId(value);
@@ -990,23 +1008,16 @@ function validateApprovedLanes(
     ) {
       continue;
     }
-    const outcomeGap = wave.conditional
-      ? (manifest.gaps ?? []).find(
-          (gap) =>
-            !consumedConditionalGaps.has(gap.id) &&
-            gapNamesConditionalLane(gap, wave.waveId, laneId),
-        )
-      : (manifest.gaps ?? []).find((gap) => gapNamesMode(gap, wave.mode));
-    if (wave.conditional && outcomeGap) {
-      consumedConditionalGaps.add(outcomeGap.id);
-    }
+    const outcomeGap = (manifest.gaps ?? []).find((gap) =>
+      gapNamesApprovedLane(gap, wave, laneId, routing),
+    );
     if (!outcomeGap) {
       errors.push(
         issue(
           'MISSING_LANE_OUTCOME',
           wave.conditional
             ? `Activated conditional wave ${wave.waveId} lane ${laneId} has neither a result nor a distinct material outcome gap naming both exact identities`
-            : `Approved lane ${laneId} has neither a result nor a material ${wave.mode} outcome gap`,
+            : `Approved lane ${laneId} has neither a result nor a material outcome gap naming its exact wave and lane identities`,
           `lane:${laneId}`,
         ),
       );
@@ -1143,10 +1154,35 @@ function deriveAchievedProfile(passes) {
   return achieved;
 }
 
-function reconcilePassOutcomes(manifest, passes, errors) {
-  for (const mode of [...passes.keys()]) {
+function reconcilePassOutcomes(
+  manifest,
+  passes,
+  artifactsById,
+  routing,
+  errors,
+) {
+  const wavesByLane = new Map();
+  for (const wave of routing?.waves ?? []) {
+    for (const lane of wave.lanes ?? []) wavesByLane.set(lane.laneId, wave);
+  }
+  for (const [mode, artifactIds] of passes) {
+    const completeLanes = artifactIds
+      .map((id) => {
+        const value = artifactsById.get(id)?.value;
+        const laneId = artifactLaneId(value);
+        const wave = wavesByLane.get(laneId);
+        return wave && laneId ? { wave, laneId } : null;
+      })
+      .filter(Boolean);
     const contradictoryGap = (manifest.gaps ?? []).find((gap) =>
-      gapNamesMode(gap, mode),
+      completeLanes.some(({ wave, laneId }) => {
+        if (gapHasLaneIdentity(gap)) {
+          return gapNamesConditionalLane(gap, wave.waveId, laneId);
+        }
+        return (
+          wave.mode === mode && legacyGapNamesSingletonWave(gap, wave, routing)
+        );
+      }),
     );
     if (!contradictoryGap) continue;
     passes.delete(mode);
@@ -1160,12 +1196,20 @@ function reconcilePassOutcomes(manifest, passes, errors) {
   }
 }
 
-function validatePassOutcomes(manifest, passes, errors) {
+function validatePassOutcomes(manifest, passes, routing, errors) {
   for (const mode of requiredPasses[manifest.run.requestedProfile] ?? []) {
     if (passes.has(mode)) continue;
-    const hasOutcomeEvidence = (manifest.gaps ?? []).some((gap) =>
-      gapNamesMode(gap, mode),
-    );
+    const hasOutcomeEvidence = (manifest.gaps ?? []).some((gap) => {
+      if (!gapHasLaneIdentity(gap)) return gapNamesMode(gap, mode);
+      const wave = (routing?.waves ?? []).find(
+        (candidate) => candidate.waveId === gap.waveId,
+      );
+      return (
+        wave?.mode === mode &&
+        wave.lanes?.some((lane) => lane.laneId === gap.laneId) &&
+        gapNamesConditionalLane(gap, gap.waveId, gap.laneId)
+      );
+    });
     if (!hasOutcomeEvidence) {
       errors.push(
         issue(
@@ -2407,9 +2451,9 @@ export async function compileValidatedRun(packetDirectory) {
       routing,
       conditionalState,
     );
-    reconcilePassOutcomes(manifest, passes, errors);
+    reconcilePassOutcomes(manifest, passes, artifactsById, routing, errors);
     const achievedProfile = deriveAchievedProfile(passes);
-    validatePassOutcomes(manifest, passes, errors);
+    validatePassOutcomes(manifest, passes, routing, errors);
     const assuranceReviewIds = collectAssuranceReviewIds(
       artifactsById,
       manifest.run.id,

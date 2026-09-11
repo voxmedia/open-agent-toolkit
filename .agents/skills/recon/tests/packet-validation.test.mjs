@@ -807,6 +807,49 @@ test('rejects a complete redundant gather contradicted by omitted pass evidence'
   );
 });
 
+test('rejects an exact same-lane contradiction in a multi-lane gather wave', async () => {
+  const packet = await makePacket({ profile: 'quick', status: 'partial' });
+  const gatherWave = packet.manifest.execution.waves.find(
+    (wave) => wave.mode === 'gather',
+  );
+  gatherWave.lanes.push({
+    laneId: 'lane-gather-failed',
+    scope: 'packet/gather-failed',
+    writeRoot: 'raw/dossiers/gather-failed.json',
+  });
+  packet.manifest.gaps.push(
+    {
+      id: 'gap-gather-failed-lane',
+      code: 'PASS_FAILED',
+      message: 'The second gather lane failed before writing.',
+      material: true,
+      waveId: gatherWave.waveId,
+      laneId: 'lane-gather-failed',
+    },
+    {
+      id: 'gap-gather-complete-lane',
+      code: 'PASS_OMITTED',
+      message: 'The completed gather lane was also reported omitted.',
+      material: true,
+      waveId: gatherWave.waveId,
+      laneId: gatherWave.lanes[0].laneId,
+    },
+  );
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.equal(result.publishable, false);
+  assert.equal(result.achievedProfile, null);
+  assert.ok(
+    result.errors.some(
+      ({ code, path }) =>
+        code === 'CONTRADICTORY_PASS_OUTCOME' && path === 'pass:gather',
+    ),
+    JSON.stringify(result, null, 2),
+  );
+});
+
 test('accepts a partial packet with failed redundant gather evidence and no complete artifact', async () => {
   const packet = await makePacket({ profile: 'thorough', status: 'partial' });
   await rewriteGatherDossier(
