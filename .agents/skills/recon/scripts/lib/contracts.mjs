@@ -1378,10 +1378,16 @@ function validateLedger(value, errors) {
       ? value.evidence.map((item) => item?.id).filter(Boolean)
       : [],
   );
-  for (const [index, reference] of (value.inputArtifacts ?? []).entries()) {
+  const inputArtifacts = Array.isArray(value.inputArtifacts)
+    ? value.inputArtifacts
+    : [];
+  const evidenceItems = Array.isArray(value.evidence) ? value.evidence : [];
+  const claims = Array.isArray(value.claims) ? value.claims : [];
+  const transitions = Array.isArray(value.transitions) ? value.transitions : [];
+  for (const [index, reference] of inputArtifacts.entries()) {
     validateExactReference(reference, `$.inputArtifacts[${index}]`, errors);
   }
-  for (const [index, evidence] of (value.evidence ?? []).entries()) {
+  for (const [index, evidence] of evidenceItems.entries()) {
     closedObject(
       evidence,
       new Set([
@@ -1478,7 +1484,7 @@ function validateLedger(value, errors) {
       errors,
     );
   }
-  for (const [index, claim] of (value.claims ?? []).entries()) {
+  for (const [index, claim] of claims.entries()) {
     closedObject(
       claim,
       new Set([
@@ -1515,7 +1521,10 @@ function validateLedger(value, errors) {
       requiredArray(claim, key, errors, `$.claims[${index}]`);
     }
     const linkedEvidenceIds = new Set();
-    for (const [linkIndex, link] of (claim.evidence ?? []).entries()) {
+    for (const [linkIndex, link] of (Array.isArray(claim.evidence)
+      ? claim.evidence
+      : []
+    ).entries()) {
       const linkPath = `$.claims[${index}].evidence[${linkIndex}]`;
       if (!isObject(link)) {
         errors.push(
@@ -1561,8 +1570,9 @@ function validateLedger(value, errors) {
       }
       linkedEvidenceIds.add(link.evidenceId);
     }
-    for (const [referenceIndex, reference] of (
-      claim.derivedFrom ?? []
+    for (const [referenceIndex, reference] of (Array.isArray(claim.derivedFrom)
+      ? claim.derivedFrom
+      : []
     ).entries()) {
       validateExactReference(
         reference,
@@ -1571,7 +1581,7 @@ function validateLedger(value, errors) {
       );
     }
   }
-  for (const [index, transition] of (value.transitions ?? []).entries()) {
+  for (const [index, transition] of transitions.entries()) {
     closedObject(
       transition,
       new Set(['claimId', 'from', 'to']),
@@ -1588,9 +1598,9 @@ function validateLedger(value, errors) {
       );
     }
   }
-  const claimIds = new Set((value.claims ?? []).map((claim) => claim.id));
+  const claimIds = new Set(claims.map((claim) => claim.id));
   const lastTransitionByClaim = new Map();
-  for (const transition of value.transitions ?? []) {
+  for (const transition of transitions) {
     if (!claimIds.has(transition.claimId)) {
       errors.push(
         issue(
@@ -1602,7 +1612,7 @@ function validateLedger(value, errors) {
     }
     lastTransitionByClaim.set(transition.claimId, transition);
   }
-  for (const claim of value.claims ?? []) {
+  for (const claim of claims) {
     const lastTransition = lastTransitionByClaim.get(claim.id);
     if (value.revision === 1 && claim.status === 'provisional') {
       if (lastTransition) {

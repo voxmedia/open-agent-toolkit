@@ -147,14 +147,24 @@ async function readManagedJson(
 
 function collectReferences(manifest, ledger) {
   const references = [];
-  for (const reference of manifest?.artifacts ?? []) references.push(reference);
-  for (const reference of ledger?.inputArtifacts ?? [])
+  for (const reference of Array.isArray(manifest?.artifacts)
+    ? manifest.artifacts
+    : [])
     references.push(reference);
-  for (const evidence of ledger?.evidence ?? []) {
+  for (const reference of Array.isArray(ledger?.inputArtifacts)
+    ? ledger.inputArtifacts
+    : [])
+    references.push(reference);
+  for (const evidence of Array.isArray(ledger?.evidence)
+    ? ledger.evidence
+    : []) {
     if (evidence.provenance) references.push(evidence.provenance);
   }
-  for (const claim of ledger?.claims ?? []) {
-    for (const reference of claim.derivedFrom ?? []) references.push(reference);
+  for (const claim of Array.isArray(ledger?.claims) ? ledger.claims : []) {
+    for (const reference of Array.isArray(claim?.derivedFrom)
+      ? claim.derivedFrom
+      : [])
+      references.push(reference);
   }
   return references;
 }
@@ -2188,7 +2198,17 @@ export async function compileValidatedRun(packetDirectory) {
     Array.isArray(manifest?.conditionOutcomes) &&
     isObject(manifest?.run) &&
     typeof manifest.run.id === 'string';
-  if (manifest && ledger && manifestCoreUsable) {
+  const ledgerCoreUsable =
+    Array.isArray(ledger?.inputArtifacts) &&
+    Array.isArray(ledger?.evidence) &&
+    Array.isArray(ledger?.claims) &&
+    Array.isArray(ledger?.unresolvedQuestions) &&
+    Array.isArray(ledger?.transitions) &&
+    isObject(ledger?.synthesis) &&
+    Array.isArray(ledger.synthesis.keyClaimIds) &&
+    Array.isArray(ledger.synthesis.caveats) &&
+    Array.isArray(ledger.synthesis.unresolvedQuestionIds);
+  if (manifest && ledger && manifestCoreUsable && ledgerCoreUsable) {
     validateDerivedSourceGaps(manifest, ledger, errors);
     const sources = new Map(
       manifest.sources.map((source) => [source.id, source]),

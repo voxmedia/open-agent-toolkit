@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
-oat_current_task_id: prev2-t02
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -30,10 +30,10 @@ project for the user-approved post-retro simplification in `p05-t01`.
 | Phase 4: Distribution and verification     | completed   | 6     | 6/6       |
 | Phase 5: Post-retro simplification         | completed   | 4     | 4/4       |
 | Phase p-rev1: Integrate current main       | completed   | 1     | 1/1       |
-| Phase p-rev2: Merged-head review fixes     | in_progress | 2     | 1/2       |
+| Phase p-rev2: Merged-head review fixes     | in_progress | 2     | 2/2       |
 
-**Total:** 19/20 tasks implemented. The integrated head's final lifecycle review
-added two blocking fix tasks; the topology-cap correction is complete.
+**Total:** 20/20 tasks implemented. The integrated head's final lifecycle review
+fixes are implemented and await independent phase review.
 
 ## Task Status
 
@@ -58,7 +58,7 @@ added two blocking fix tasks; the topology-cap correction is complete.
 | p05-t04   | Completed: reconcile final-review bookkeeping   | this commit                                        |
 | prev1-t01 | Completed: integrate current main               | `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`         |
 | prev2-t01 | Completed: align profile topology caps          | this commit                                        |
-| prev2-t02 | Pending: close hostile manifest collections     | —                                                  |
+| prev2-t02 | Completed: close hostile manifest collections   | this commit                                        |
 
 ## Phase 5: Post-retro simplification
 
@@ -884,6 +884,26 @@ The routing-contract and routing-preview suites passed 20/20. With the new
 allowed-mode guard temporarily neutralized, the focused forbidden-profile test
 failed as required (exit 1); restoring the guard returned the focused suites to
 green.
+
+### Task prev2-t02: Fail closed on hostile manifest collections
+
+**Status:** completed
+**Commit:** this commit
+**Verification:** passed
+
+Reference collection now treats non-array manifest and ledger collections as
+empty for safe traversal, while the schema validator retains categorical shape
+errors. The full validation pipeline also requires every ledger core collection
+and synthesis list to be an array before downstream iteration. Public CLI tests
+cover object and numeric values for all four manifest collections, assert exit 1
+and JSON diagnostics without pass/reconciliation cascades, and prove seeded
+`packet.md` output is withdrawn. Equivalent top-level ledger collections and
+nested claim reference lists have direct object/numeric shape coverage.
+
+The packet-validation and integrity-contract suites passed 95/95. With the
+manifest artifacts traversal guard temporarily neutralized, the public CLI P0
+test failed on exit 2 with `object is not iterable`; restoring the guard returned
+the focused suites to green.
 
 **Next:** Execute both fix tasks via `oat-project-implement`, then run a narrowed
 final lifecycle re-review before refreshing the configured exit gate.

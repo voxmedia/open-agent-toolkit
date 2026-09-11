@@ -867,6 +867,52 @@ test('non-array manifest collections return structured shape diagnostics', async
   }
 });
 
+test('public CLI rejects hostile manifest collections and withdraws stale output', async () => {
+  const cliPath = fileURLToPath(
+    new URL('../scripts/validate-packet.mjs', import.meta.url),
+  );
+  for (const field of ['sources', 'artifacts', 'gaps', 'conditionOutcomes']) {
+    for (const hostileValue of [{}, 7]) {
+      const packet = await createPacketFixture({ profile: 'standard' });
+      tempRoots.push(packet.tempRoot);
+      await writeFile(
+        join(packet.packetRoot, 'packet.md'),
+        '# last known good\n',
+        'utf8',
+      );
+      packet.manifest[field] = hostileValue;
+      await writeJson(packet.manifestPath, packet.manifest);
+
+      const cli = spawnSync(process.execPath, [cliPath, packet.packetRoot], {
+        encoding: 'utf8',
+      });
+      assert.equal(cli.status, 1, cli.stderr || cli.stdout);
+      assert.equal(cli.stderr, '');
+      const result = JSON.parse(cli.stdout);
+      const errorCodes = result.errors.map(({ code }) => code);
+      assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+      assert.equal(result.publishable, false, JSON.stringify(result, null, 2));
+      assert.ok(
+        errorCodes.includes('MISSING_REQUIRED_FIELD'),
+        JSON.stringify(result, null, 2),
+      );
+      for (const forbiddenCode of [
+        'MISSING_PASS_OUTCOME_EVIDENCE',
+        'SHADOW_RECONCILIATION',
+      ]) {
+        assert.equal(
+          errorCodes.includes(forbiddenCode),
+          false,
+          JSON.stringify(result, null, 2),
+        );
+      }
+      await assert.rejects(
+        readFile(join(packet.packetRoot, 'packet.md'), 'utf8'),
+      );
+    }
+  }
+});
+
 for (const [name, mutate, forbiddenCodes] of [
   [
     'sources',
@@ -934,7 +980,7 @@ test('packet validation rejects a conditional wave without an activating conditi
   tempRoots.push(packet.tempRoot);
   packet.manifest.execution.waves.splice(-1, 0, {
     waveId: 'wave-dead-conditional',
-    mode: 'redundant-gather',
+    mode: 'contradiction-resolution',
     taskClass: 'mechanical-recon',
     classFloor: 'mechanical-recon',
     selectionReason: 'Dead conditional wave regression fixture.',

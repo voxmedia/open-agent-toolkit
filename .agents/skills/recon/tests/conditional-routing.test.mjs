@@ -78,9 +78,11 @@ test('condition topology is forward-only, single-activation, unique-output, and 
     (wave) => wave.mode === 'contradiction-resolution',
   ).lanes[0].writeRoot = packet.manifest.execution.waves[0].lanes[0].writeRoot;
   packet.manifest.execution.maxConcurrency = 7;
-  const mapWave = packet.manifest.execution.waves[0];
-  for (let index = 0; index < 3; index += 1) {
-    mapWave.lanes.push({
+  const gatherWave = packet.manifest.execution.waves.find(
+    (wave) => wave.mode === 'gather',
+  );
+  for (let index = 0; index < 6; index += 1) {
+    gatherWave.lanes.push({
       laneId: `lane-cap-overflow-${index}`,
       scope: `packet/cap-overflow-${index}`,
       writeRoot: `raw/dossiers/cap-overflow-${index}.json`,

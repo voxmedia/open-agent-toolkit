@@ -95,6 +95,49 @@ test('manifest shape validation returns stable errors for object-valued waves', 
   );
 });
 
+test('ledger collection shape validation is categorical for objects and numbers', async () => {
+  const packet = await fixture();
+  for (const field of [
+    'inputArtifacts',
+    'evidence',
+    'claims',
+    'unresolvedQuestions',
+    'transitions',
+  ]) {
+    for (const hostileValue of [{}, 7]) {
+      const ledger = structuredClone(packet.ledger);
+      ledger[field] = hostileValue;
+      const validation = validateArtifactShape(ledger);
+      assert.equal(validation.valid, false);
+      assert.ok(
+        validation.errors.some(
+          (error) =>
+            error.code === 'MISSING_REQUIRED_FIELD' &&
+            error.path === `$.${field}`,
+        ),
+        JSON.stringify(validation, null, 2),
+      );
+    }
+  }
+
+  for (const field of ['evidence', 'derivedFrom']) {
+    for (const hostileValue of [{}, 7]) {
+      const ledger = structuredClone(packet.ledger);
+      ledger.claims[0][field] = hostileValue;
+      const validation = validateArtifactShape(ledger);
+      assert.equal(validation.valid, false);
+      assert.ok(
+        validation.errors.some(
+          (error) =>
+            error.code === 'MISSING_REQUIRED_FIELD' &&
+            error.path === `$.claims[0].${field}`,
+        ),
+        JSON.stringify(validation, null, 2),
+      );
+    }
+  }
+});
+
 test('ValidatedRun retains exact digests for canonical and referenced packet bytes', async () => {
   const packet = await fixture();
   const validation = await compileValidatedRun(packet.packetRoot);
