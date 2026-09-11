@@ -923,6 +923,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T152512Z.md         | c11f78febec9329642f068ae849059547f924c0a | gate       | cursor-fable-5-1-high |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T154126Z.md         | 819591ba1044e65a7eff7495a529bbe5ee122db3 | auto       | -                     |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T155617Z.md         | 0fe70eb728ed25aaafb94d521f0609bf642be23a | gate       | cursor-fable-5-1-high |
+| pr-285 | code     | fixes_added     | 2026-09-11 | reviews/archived/remote-pr-285-review-2026-09-11T163646Z.md | 5120541946a83927bf798ccc6d9f27c070b6b9af | -          | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1132,10 +1133,48 @@ preview and complete recon suites.
 
 Commit as `fix(prev3-t03): clarify recon adaptive lane preview`.
 
+## Phase p-rev4: Remote condition-evidence review fix
+
+Source: GitHub PR #285 comment `3991181642` (2026-09-11)
+
+### Task prev4-t01: (review) Require same-run conditional evidence
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/tests/conditional-routing.test.mjs`
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+
+**Step 1: Understand the issue**
+
+Conditional routing resolves exact hashed evidence and verifies its predecessor
+lane, but does not require the evidence artifact to belong to the current run.
+A foreign-run artifact can reuse an approved lane identity and activate the
+conditional destination.
+
+**Step 2: Implement fix**
+
+Reject condition evidence whose `runId` differs from `manifest.run.id` before it
+can contribute predecessor coverage or predicate evidence. Keep the existing
+same-run artifact eligible and document the requirement explicitly.
+
+**Step 3: Verify**
+
+Add a regression test retaining valid same-run predecessor output while binding
+the condition to an exact hashed foreign-run copy. Require categorical rejection,
+neutralize the guard once to prove the test fails, restore it, and run the focused
+and complete recon suites.
+
+**Step 4: Commit**
+
+Commit as `fix(prev4-t01): require same-run condition evidence`.
+
 ## Implementation Complete
 
-**Implementation tasks complete: 23 of 23 implemented. The configured exit-gate
-remediation is complete and awaiting narrowed lifecycle re-review.**
+**Implementation tasks complete: 23 of 24 implemented. One remote-review fix is
+pending before completion can resume.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1145,8 +1184,9 @@ remediation is complete and awaiting narrowed lifecycle re-review.**
 - Phase p-rev1: 1 task — integrate current `origin/main` and resolve conflicts.
 - Phase p-rev2: 2 tasks — close merged-head profile and hostile-collection gaps.
 - Phase p-rev3: 3 tasks — bound fixed waves and align cap docs and preview.
+- Phase p-rev4: 1 task — require same-run conditional evidence.
 
-**Total: 8 phases, 23 tasks.** All implementation tasks are complete.
+**Total: 9 phases, 24 tasks.** One implementation task remains.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

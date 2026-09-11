@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
-oat_current_task_id: null
+oat_current_task_id: prev4-t01
 oat_generated: false
 oat_template: false
 ---
@@ -13,27 +13,25 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-11
 
-Three implementation runs completed all 23 original, post-retro, integration, and
-review-remediation tasks. The branch includes current `origin/main`; every final
-lifecycle finding and configured-gate finding is fixed; the terminal gate passed
-with no findings; Thomas approved the final HiLL; documentation is current; and
-the final repository release-verification sequence passed.
+Three implementation runs completed 23 original, post-retro, integration, and
+review-remediation tasks. A new PR review identified one same-run condition-
+evidence gap, now tracked as `prev4-t01` before completion resumes.
 
 ## Progress Overview
 
-| Phase                                      | Status    | Tasks | Completed |
-| ------------------------------------------ | --------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
-| Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
-| Phase 4: Distribution and verification     | completed | 6     | 6/6       |
-| Phase 5: Post-retro simplification         | completed | 4     | 4/4       |
-| Phase p-rev1: Integrate current main       | completed | 1     | 1/1       |
-| Phase p-rev2: Merged-head review fixes     | completed | 2     | 2/2       |
-| Phase p-rev3: Configured-gate cap fixes    | completed | 3     | 3/3       |
+| Phase                                      | Status      | Tasks | Completed |
+| ------------------------------------------ | ----------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
+| Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
+| Phase 4: Distribution and verification     | completed   | 6     | 6/6       |
+| Phase 5: Post-retro simplification         | completed   | 4     | 4/4       |
+| Phase p-rev1: Integrate current main       | completed   | 1     | 1/1       |
+| Phase p-rev2: Merged-head review fixes     | completed   | 2     | 2/2       |
+| Phase p-rev3: Configured-gate cap fixes    | completed   | 3     | 3/3       |
+| Phase p-rev4: Same-run condition evidence  | in_progress | 1     | 0/1       |
 
-**Total:** 23/23 tasks implemented. The configured-gate remediation is complete
-and awaiting narrowed lifecycle re-review.
+**Total:** 23/24 tasks implemented. Remote-review remediation is in progress.
 
 ## Task Status
 
@@ -62,6 +60,27 @@ and awaiting narrowed lifecycle re-review.
 | prev3-t01 | Completed: bound singleton wave lanes           | `2ac9578b417e8963a49e48eefd3d9b6fc3f3cfaf`         |
 | prev3-t02 | Completed: align adaptive cap contract prose    | `3bdfaa286519c08749a6cbdb7315546019f40f40`         |
 | prev3-t03 | Completed: clarify adaptive cap preview         | `12b68773a957c4a011a1099027e1b6da3a7f1463`         |
+| prev4-t01 | Pending: require same-run condition evidence    | —                                                  |
+
+## Phase p-rev4: Remote condition-evidence review fix
+
+**Status:** in_progress
+**Started:** 2026-09-11
+
+### Remote Review Received: PR #285
+
+**Date:** 2026-09-11
+**Source:** GitHub comment `3991181642`
+**Severity counts:** 0 Critical, 0 Important, 1 Medium, 0 Minor
+**New tasks added:** `prev4-t01`
+
+The validated condition-evidence path accepts a foreign-run artifact when it
+reuses an approved predecessor lane. The reproduction retained the genuine
+same-run map artifact and substituted only the condition's exact evidence
+reference; the packet incorrectly remained valid.
+
+**Next:** Execute `prev4-t01`, run focused and full recon validation, and obtain
+a narrowed review before resuming completion.
 
 ## Phase 5: Post-retro simplification
 
