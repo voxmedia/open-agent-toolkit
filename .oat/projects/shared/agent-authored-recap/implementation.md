@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status    | Tasks | Completed |
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 17    | 17/17     |
-| Phase 2 | pending   | 4     | 0/4       |
+| Phase 2 | completed | 4     | 4/4       |
 | Phase 3 | pending   | 8     | 0/8       |
 | Phase 4 | pending   | 2     | 0/2       |
 | Phase 5 | pending   | 1     | 0/1       |
 
-**Total:** 17/32 tasks completed
+**Total:** 21/32 tasks completed
 
 ---
 
@@ -437,13 +437,85 @@ oat_generated: false
 
 ## Phase 2: Ladder and fresh-host proof
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-09-11
+
+### Phase Summary
+
+**Outcome:**
+
+- Added host screenshot verification bound to the exact authored-page hash,
+  canonical PNG widths, and an explicit inspection verdict.
+- Added Playwright probing with retained screenshots, consumed layout
+  findings, runtime downgrade reasons, and real Chromium coverage.
+- Added the agent authoring mechanics and replaced the retired fact-base
+  callback reference with the bundle, ledger, and consumer contract.
+- Proved the browser-less fresh-host flow, archive acceptance, failed-section
+  evidence, completion resume, missing-core stop, and browser-launch fallback.
+
+**Verification:**
+
+- Both fresh-host runs passed without Turbo caching.
+- All ordered repository gates, the isolated-HOME forced Turbo run
+  (`Cached: 0`), standalone smoke/skill/script validation, lint, and format
+  passed.
+- Recovery usage remained `0/10`; no recovery attempt or event was opened.
 
 ### Task p02-t01: Host rung with the artifact-hash binding
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a670b8e8955ccd31c9ff9508e9ccdac04ae6e5cb
+
+**Files changed:**
+
+- `.agents/skills/explainer-kit/scripts/verify.mjs`
+- `.agents/skills/explainer-kit/tests/verify.test.mjs`
+
+**Verification:** focused host-rung suite, lint, and format passed. Bypassing
+the hash comparison made the mismatch control fail; restoring it returned the
+suite to green.
+
+### Task p02-t02: Playwright rung
+
+**Status:** completed
+**Commit:** 18d13671e8a7fc4b1a45aeefabdf7e441bbafe4b
+
+**Files changed:**
+
+- `.agents/skills/explainer-kit/scripts/verify.mjs`
+- `.agents/skills/explainer-kit/tests/verify.test.mjs`
+
+**Verification:** focused verify and unchanged browser-runtime suites passed
+with installed Chromium `152.0.7977.84`. Suppressing probe findings made the
+fixed-width layout control fail; restoring findings returned the suite to
+green.
+
+### Task p02-t03: The authoring brief
+
+**Status:** completed
+**Commit:** 43ab318281970d2c51ba3ab09101a0639b8e5889
+
+**Files changed:**
+
+- `.agents/skills/explainer-kit/references/recap-authoring.md`
+- `.agents/skills/explainer-kit/references/fact-base-contract.md`
+
+**Verification:** the new reference shares no headings with the project-recap
+brief; reference formatting, skill validation, lint, and format passed.
+
+### Task p02-t04: Fresh-host end-to-end proof with negative controls
+
+**Status:** completed
+**Commit:** 38a46c85653ae8630465518e25aad053f92a088a
+
+**Files changed:**
+
+- `.agents/skills/explainer-kit/tests/fresh-host.test.mjs`
+
+**Verification:** two uncached fresh-host runs and every phase-boundary gate
+passed. Neutralizing required-section validation, browser-failure distinction,
+or the missing-core prerequisite made its focused assurance control fail;
+restoring each guard returned the suite to green.
 
 ---
 
@@ -717,7 +789,7 @@ Track test execution during implementation.
 | Phase | Tests Run                                                                                                                | Passed             | Failed  | Coverage                                                                                           |
 | ----- | ------------------------------------------------------------------------------------------------------------------------ | ------------------ | ------- | -------------------------------------------------------------------------------------------------- |
 | 1     | Ordered CI gates; forced Turbo; standalone smoke/skills/scripts/skill validation; lint/format; focused negative controls | All final commands | 0 final | Browser-free flow, archive/package contract, terminal outcomes, retired references, version parity |
-| 2     | -                                                                                                                        | -                  | -       | -                                                                                                  |
+| 2     | Ordered CI gates; forced Turbo; standalone smoke/skills/scripts; fresh-host controls; lint/format                        | All final commands | 0 final | Host and Playwright rungs, authoring contract, fresh-host completion and failure evidence          |
 
 ## Final Summary (for PR/docs)
 
