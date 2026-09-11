@@ -1055,6 +1055,22 @@ gate may become `allowed/passed`.
 **Attempt 2 receive intent:** run-bound source, archive destination, exact Reviews
 event, and pre-receive head persisted before disposition.
 
+### Review Received: final configured exit gate attempt 2
+
+**Date:** 2026-09-11
+**Gate:** run `e9a3a038-dc02-4f62-affe-c3d5cfb2c4dc`, target
+`cursor-fable-5-1-high`, different-family diversity achieved
+**Review artifact:**
+`reviews/archived/final-review-2026-09-11T155617Z.md`
+**Envelope:** `ok`, threshold Important, blocking false, receive eligible
+
+**Findings:** 0 Critical / 0 Important / 0 Medium / 0 Minor.
+
+**Disposition:** passed. No remediation tasks, deferrals, or product changes are
+required. The run-bound artifact and exact Reviews event are archived; durable
+receive reconciliation remains before the configured gate becomes
+`allowed/passed`.
+
 ## Final Summary (for PR/docs)
 
 All 23 implementation and revision tasks are implemented. The merged-head final
