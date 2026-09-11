@@ -42,9 +42,6 @@ export function readDeclaredVersion(content: string): string | undefined {
  * happens to pick is the other half of that trap: a file carrying both
  * declarations would come out self-contradictory, and the consumer under test
  * would then be rejecting a conflict rather than the version it was handed.
- * `withSkillVersion` in `tools/smoke/explainer-kit/packaged-layout.test.mjs`
- * follows the same rule.
- *
  * Comment lines carry no structure in YAML, so they neither end a block nor set
  * its indentation: a block scalar reached past a misread indent would otherwise
  * have its payload rewritten while the real declaration kept its old value.
