@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 17    | 17/17     |
 | Phase 2 | completed | 4     | 4/4       |
-| Phase 3 | pending   | 8     | 0/8       |
+| Phase 3 | completed | 8     | 8/8       |
 | Phase 4 | pending   | 2     | 0/2       |
 | Phase 5 | pending   | 1     | 0/1       |
 
-**Total:** 21/32 tasks completed
+**Total:** 29/32 tasks completed
 
 ---
 
@@ -533,6 +533,149 @@ consumer assurance obligation.
 
 ---
 
+## Phase 3: Adapter, lifecycle consumers, documentation, and repository records
+
+**Status:** completed
+**Started:** 2026-09-11
+
+### Phase Summary
+
+**Outcome:**
+
+- Reframed both public skills around one `bundle → host-agent author → verify →
+record` flow and manifest-v2 outcomes.
+- Moved project completion, implementation closeout, planning, autonomous
+  closeout, summaries, and both wave callers onto the shared Generate contract.
+- Closed the Phase 2 deferred consumer assurance: completion re-reads persisted
+  intent, and a persisted skip suppresses discovery, bundling, and authoring.
+- Rewrote the public docs, recorded the accepted repository decision, archived
+  superseded backlog item `BL-260727-make-explainer-run-durability`, widened the
+  retired-reference invariant to the tracked repository, and bumped all eleven
+  changed lifecycle skills once.
+
+**Verification:**
+
+- Every ordered CI gate passed with explicit exit 0: `pnpm check`,
+  `pnpm type-check`, `pnpm test`, `pnpm build`,
+  `pnpm run check:skill-bumps`, `pnpm release:check-versions`,
+  `pnpm release:validate`, and `pnpm build:docs`; `git fetch origin main`
+  also exited 0 before the version gate.
+- Isolated-HOME `pnpm exec turbo run test --force` passed with
+  `10 successful`, `0 cached`, including 390 CLI files / 7,364 tests.
+- `pnpm test:smoke`, `pnpm test:skills`, `pnpm test:scripts`,
+  `pnpm oat:validate-skills`, `pnpm lint`, and `pnpm format` all exited 0.
+- The authoritative retired-reference sweep failed on transitional vocabulary
+  before cleanup and passed afterward; its synthetic retired-outcome control
+  remained red-capable.
+- Neutralizing either the production persisted-intent reader or its skip
+  suppression guard made the completion integration test fail; restoring each
+  returned the suite to green.
+- All eleven plan-declared protected slices remained byte-identical to phase
+  base `ab4785bf510ea737961a9431da4376a461be930e`; all six autonomy-contract
+  paths resolved to one SHA-256.
+
+**Recovery accounting:** p03 used no dedicated recovery attempt. The p03 usage
+entry remains absent, equivalent to `used_attempts: 0` and
+`pending_attempt: null`; no recovery event occurred.
+
+### Task p03-t01: Reframe the adapter and the public core skill
+
+**Status:** completed
+**Commit:** eb5e806dda362b5ed277a8dc2eb710d9f6546825
+
+**Files changed:** `.agents/skills/{explainer-kit,oat-explainer-kit}/SKILL.md`,
+adapter lifecycle reference, and CLI prose/version contract tests.
+
+**Verification:** focused skill contracts, adapter integration, validation,
+lint, and format passed.
+
+### Task p03-t02: Route completion onto Generate and retire recap attestation
+
+**Status:** completed
+**Commit:** fef534776121a698597658284e2fc42203f6cb46
+
+**Files changed:** `oat-project-complete` skill, persisted-intent consumer,
+completion retry/archive-resume scripts and tests, and synced bookkeeping
+inventory.
+
+**Verification:** completion tests passed; the executable persisted-intent
+reader and suppression guard each failed their negative control when
+neutralized.
+
+### Task p03-t03: Closeout, autonomous tail, and summary mapping
+
+**Status:** completed
+**Commit:** 7378bb43b306a457af4ba7055a37c5824b969d8a
+
+**Files changed:** implementation closeout reference,
+`oat-project-autonomous`, `oat-project-summary`, and their terminal-outcome
+tests.
+
+**Verification:** focused outcome and closeout tests, skill validation, lint,
+and format passed.
+
+### Task p03-t04: Plan and wave program-close callers
+
+**Status:** completed
+**Commit:** 8d18c4df00bc42ada879f2b58629901c543815ba
+
+**Files changed:** `oat-project-plan`, `oat-wave-program`,
+`oat-wave-execute`, and completion integration.
+
+**Verification:** plan/wave caller contracts and completion integration passed.
+
+### Task p03-t05: Autonomy mirrors and prose pins
+
+**Status:** completed
+**Commit:** c0088a0d69a7aff7ca7e301f570ff1b349d2d328
+
+**Files changed:** canonical autonomy contract and linked mirrors, plus
+`review-skill-contracts.test.ts`.
+
+**Verification:** 87 focused Vitest cases and completion integration passed;
+the six contract paths resolved byte-identically.
+
+### Task p03-t06: Agent-authored public documentation
+
+**Status:** completed
+**Commit:** 55d334d8ecfd68b4049bc426fb26504a813f4098
+
+**Files changed:** Explainer Kit guide, lifecycle/artifact/config/tool-pack/CLI
+and troubleshooting pages, two navigation indexes, two retired pages, and the
+generated docs index.
+
+**Verification:** retired docs vocabulary was empty; `pnpm check` and
+`pnpm build:docs` exited 0.
+
+### Task p03-t07: Repository decision and backlog reconciliation
+
+**Status:** completed
+**Commit:** 7721cf9cef93fbf3fead5fe7be5bce286965da1c
+
+**Files changed:** decision
+`DR-260911-explainers-are-agent-authored`, generated decision index, archived
+backlog item, completed ledger, and generated backlog index.
+
+**Verification:** `oat pjm doctor --json` reported
+`adoption.state: declared`; `oat decision new`, decision-index regeneration,
+and `oat backlog archive ... --wont-do` completed through CLI-owned surfaces.
+Project scope resolved to `shared`, so no synced-project push was applicable.
+
+### Task p03-t08: Authoritative sweep and shipped version bumps
+
+**Status:** completed
+**Commit:** e349ae0028eff05ff510946e041d231edc0f7c8d
+
+**Files changed:** repository-wide retired-reference sweep, eleven lifecycle
+skill versions and their pins, completion integration and transaction cleanup,
+and the named-skill corpus floor adjusted for the three intentional skill
+reference deletions.
+
+**Verification:** all complete phase gates and uncached evidence listed in the
+Phase Summary passed.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -744,9 +887,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 #### Phase Outcome
 
-| Phase | Status    | Tasks | Base                                       | Code Head                                  | Review  |
-| ----- | --------- | ----- | ------------------------------------------ | ------------------------------------------ | ------- |
-| p02   | completed | 4/4   | `37989f49bf1b6a07e297444a8d51f1d0d7b33b02` | `d6f34511e8235221a562a971383b67fed67ed79e` | passed  |
+| Phase | Status    | Tasks | Base                                       | Code Head                                  | Review |
+| ----- | --------- | ----- | ------------------------------------------ | ------------------------------------------ | ------ |
+| p02   | completed | 4/4   | `37989f49bf1b6a07e297444a8d51f1d0d7b33b02` | `d6f34511e8235221a562a971383b67fed67ed79e` | passed |
 
 - Task commits: `a670b8e8955ccd31c9ff9508e9ccdac04ae6e5cb`, `18d13671e8a7fc4b1a45aeefabdf7e441bbafe4b`, `43ab318281970d2c51ba3ab09101a0639b8e5889`, `38a46c85653ae8630465518e25aad053f92a088a`
 - Bookkeeping commit: `413d93adaa946348ebdf0bb3ee056d1cd9713331`
@@ -828,6 +971,25 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Phase outcome: p02 passed after 1 automatic fix iteration; p03 is now ready
 - Recovery accounting: p02 remains `used_attempts: 0`, `pending_attempt: null`, with no recovery events
 
+### Run dispatch-agent-authored-recap-p03-20260911T202900Z
+
+- Request ID: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- Original request ID: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- Launch status: `accepted`
+- Authorization scope: Phase 3 implementation only
+- Role selector: `oat-phase-implementer-gpt-5-6-sol-high`
+- Configured runtime: Cursor
+- Runtime identity: exact executing model not independently observable
+- Base: `ab4785bf510ea737961a9431da4376a461be930e`
+- Task outcome: p03-t01 through p03-t08 completed in strict dependency order
+- Task commits: `eb5e806`, `fef5347`, `7378bb4`, `8d18c4d`,
+  `c0088a0`, `55d334d`, `7721cf9`, `e349ae0`
+- Verification: all ordered gates, isolated-HOME uncached Turbo, standalone
+  suites, lint, format, protected-region checks, and negative controls passed
+- Recovery accounting: p03 usage entry remains absent/zero; no recovery event
+- Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- Phase outcome: p03 implementation complete; p04-t01 is next
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -887,11 +1049,22 @@ Chronological log of implementation progress.
 
 ---
 
-### 2026-09-09
+### 2026-09-11
 
-**Session Start:** {time}
+**Session Start:** 2026-09-11T20:29:00Z
 
-{Continue log...}
+- [x] p03-t01: Reframe adapter and core skill - eb5e806dda362b5ed277a8dc2eb710d9f6546825
+- [x] p03-t02: Completion Generate flow and persisted-intent assurance - fef534776121a698597658284e2fc42203f6cb46
+- [x] p03-t03: Closeout, autonomy, and summary consumers - 7378bb43b306a457af4ba7055a37c5824b969d8a
+- [x] p03-t04: Plan and wave callers - 8d18c4df00bc42ada879f2b58629901c543815ba
+- [x] p03-t05: Autonomy mirrors and prose pins - c0088a0d69a7aff7ca7e301f570ff1b349d2d328
+- [x] p03-t06: Public documentation rewrite - 55d334d8ecfd68b4049bc426fb26504a813f4098
+- [x] p03-t07: Decision and backlog reconciliation - 7721cf9cef93fbf3fead5fe7be5bce286965da1c
+- [x] p03-t08: Repository sweep and skill bumps - e349ae0028eff05ff510946e041d231edc0f7c8d
+
+**Blockers:** None.
+
+**Session End:** 2026-09-11T21:31:28Z
 
 ---
 
@@ -911,6 +1084,7 @@ Track test execution during implementation.
 | ----- | ------------------------------------------------------------------------------------------------------------------------ | ------------------ | ------- | -------------------------------------------------------------------------------------------------- |
 | 1     | Ordered CI gates; forced Turbo; standalone smoke/skills/scripts/skill validation; lint/format; focused negative controls | All final commands | 0 final | Browser-free flow, archive/package contract, terminal outcomes, retired references, version parity |
 | 2     | Ordered CI gates; forced Turbo; standalone smoke/skills/scripts; fresh-host controls; lint/format                        | All final commands | 0 final | Host and Playwright rungs, authoring contract, fresh-host completion and failure evidence          |
+| 3     | Ordered CI gates; forced Turbo; standalone suites; docs; PJM CLI; focused consumer and sweep negative controls           | All final commands | 0 final | Lifecycle Generate consumers, persisted skip suppression, docs, repository sweep, version parity   |
 
 ## Final Summary (for PR/docs)
 

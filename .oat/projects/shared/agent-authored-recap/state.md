@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: d6f34511e8235221a562a971383b67fed67ed79e
+oat_current_task: p04-t01
+oat_last_commit: e349ae0028eff05ff510946e041d231edc0f7c8d
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -84,7 +84,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-11T20:27:00Z'
+oat_project_state_updated: '2026-09-11T21:32:00Z'
 oat_generated: false
 ---
 
@@ -96,7 +96,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 3 ready (`p03-t01`)
+Implementation — Phase 3 complete; Phase 4 ready (`p04-t01`)
 
 ## Artifacts
 
@@ -114,7 +114,8 @@ Implementation — Phase 3 ready (`p03-t01`)
 - ✓ Plan complete
 - ✓ Phase 1 complete and independently verified (17/17 tasks)
 - ✓ Phase 2 complete and independently verified (4/4 tasks)
-- ⧗ Phase 3 ready (0/8 tasks)
+- ✓ Phase 3 complete (8/8 tasks)
+- ⧗ Phase 4 ready (0/2 tasks)
 
 ## Blockers
 
@@ -122,4 +123,4 @@ None.
 
 ## Next Milestone
 
-Implement and review Phase 3: adapter, lifecycle consumers, documentation, and repository records.
+Implement and review Phase 4: installed-surface smoke and public docs/config verification.
