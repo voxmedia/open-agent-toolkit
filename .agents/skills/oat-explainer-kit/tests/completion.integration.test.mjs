@@ -144,11 +144,3 @@ test('both program-close callers use Generate and record terminal identity', () 
     assert.match(section, /`runId`.*`outcome`.*program ledger/s, name);
   }
 });
-
-test('lifecycle carriers contain no retired live vocabulary', () => {
-  const retired =
-    /probeRecapSeams|authorModulePath|visualCritic|browserSession|planSet|runOatExplainer|built-durable|built-not-durable|finalize-tracked-run|explainers\.publish/;
-  for (const [name, content] of Object.entries(carriers)) {
-    assert.doesNotMatch(content, retired, name);
-  }
-});

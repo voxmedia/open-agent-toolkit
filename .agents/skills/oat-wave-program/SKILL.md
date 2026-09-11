@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 metadata:
-  version: 1.5.2
+  version: 1.5.3
 ---
 
 # Program a Corpus of External Plans into Waves

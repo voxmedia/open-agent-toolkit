@@ -25,9 +25,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 const PROJECT_SLUG = 'completion-receipt';
 const PR_ARTIFACT = 'pr/project-pr-2026-08-28.md';
-const RECAP_MANIFEST = 'explainers/project-recap/manifest.json';
 const FINAL_ARTIFACT_MESSAGE = 'chore(oat): publish final project links';
-const EVIDENCE_MESSAGE = 'chore(oat): attest final project recap';
 const RECOVERY_SCRIPT = fileURLToPath(
   new URL(
     '../../../../../../.agents/skills/oat-project-complete/scripts/recover-completion-receipts.mjs',
@@ -59,13 +57,6 @@ const NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT = fileURLToPath(
   ),
 );
 
-interface CompletionReceipts {
-  projectLinksPinCommit: string;
-  projectRefCommit: string;
-  evidenceCommit: string | null;
-  evidencePushRequired: boolean;
-}
-
 interface CompletionArchiveDecision {
   shouldArchive: boolean;
   source: 'configured' | 'interactive' | 'local-default';
@@ -93,15 +84,20 @@ type CompletionRetryResolution =
       projectLinksPinCommit: string;
       prArtifactPath: string;
     }
-  | (CompletionReceipts & {
+  | {
       status: 'recovered';
       route: 'recovery';
       candidate: true;
       nextStep: '7.5';
       skipMutations: true;
       skippedMutations: string[];
+      retainedRef: string;
+      localCommit: string;
+      remoteCommit: string;
+      projectLinksPinCommit: string;
+      projectRefCommit: string;
       prArtifactPath: string;
-    });
+    };
 
 function git(cwd: string, args: string[]): string {
   return execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
@@ -549,41 +545,6 @@ it('does not accept the prior HEAD when a fresh lifecycle commit hook fails', as
   }
 });
 
-async function commitRecapEvidenceLocally(
-  projectPath: string,
-  finalArtifactCommit: string,
-): Promise<string> {
-  const head = git(projectPath, ['rev-parse', 'HEAD']);
-  if (head === finalArtifactCommit) {
-    await writeFile(
-      `${projectPath}/${RECAP_MANIFEST}`,
-      `${JSON.stringify({ schemaVersion: 'explainer-kit.manifest/v2', outcome: 'built', artifactCommit: finalArtifactCommit }, null, 2)}\n`,
-      'utf8',
-    );
-    git(projectPath, ['add', '--', RECAP_MANIFEST]);
-    git(projectPath, [
-      '-c',
-      'core.hooksPath=/dev/null',
-      'commit',
-      '--only',
-      '-m',
-      EVIDENCE_MESSAGE,
-      '--',
-      RECAP_MANIFEST,
-    ]);
-  }
-
-  const evidenceCommit = git(projectPath, ['rev-parse', 'HEAD']);
-  expect(git(projectPath, ['show', '-s', '--format=%s', evidenceCommit])).toBe(
-    EVIDENCE_MESSAGE,
-  );
-  expect(git(projectPath, ['rev-parse', `${evidenceCommit}^`])).toBe(
-    finalArtifactCommit,
-  );
-  expect(changedPaths(projectPath, evidenceCommit)).toEqual([RECAP_MANIFEST]);
-  return evidenceCommit;
-}
-
 function resolveCompletionRetry(
   projectPath: string,
   ref: string,
@@ -596,15 +557,7 @@ function resolveCompletionRetry(
 function resolveCompletionRetryJson(projectPath: string, ref: string): string {
   return execFileSync(
     process.execPath,
-    [
-      RETRY_SCRIPT,
-      '--project-path',
-      projectPath,
-      '--retained-ref',
-      ref,
-      '--evidence-path',
-      RECAP_MANIFEST,
-    ],
+    [RETRY_SCRIPT, '--project-path', projectPath, '--retained-ref', ref],
     { encoding: 'utf8' },
   );
 }
@@ -617,19 +570,13 @@ function consumeCompletionRetryFields(routerJson: string) {
       String.raw`
 PROJECT_LINKS_PIN_COMMIT=""
 PROJECT_REF_COMMIT=""
-EVIDENCE_COMMIT=""
-RECOVERED_EVIDENCE_COMMIT=""
-EVIDENCE_PUSH_REQUIRED=""
 PR_DESCRIPTION_RELATIVE_PATH=""
 COMPLETION_RETRY_FIELDS=$(node "$1" "$2") || exit 1
 IFS=$'\t' read -r COMPLETION_RETRY_ROUTE _ <<< "$COMPLETION_RETRY_FIELDS"
 if [[ "$COMPLETION_RETRY_ROUTE" == "recovery" ]]; then
   IFS=$'\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT \
-    PROJECT_REF_COMMIT RECOVERED_EVIDENCE_COMMIT EVIDENCE_PUSH_REQUIRED \
-    PR_DESCRIPTION_RELATIVE_PATH <<< "$COMPLETION_RETRY_FIELDS"
-  if [[ "$RECOVERED_EVIDENCE_COMMIT" != "-" ]]; then
-    EVIDENCE_COMMIT="$RECOVERED_EVIDENCE_COMMIT"
-  fi
+    PROJECT_REF_COMMIT PR_DESCRIPTION_RELATIVE_PATH \
+    <<< "$COMPLETION_RETRY_FIELDS"
 elif [[ "$COMPLETION_RETRY_ROUTE" == "pin-source" ]]; then
   IFS=$'\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT \
     PR_DESCRIPTION_RELATIVE_PATH <<< "$COMPLETION_RETRY_FIELDS"
@@ -641,8 +588,6 @@ printf '%s\n' \
   "route=$COMPLETION_RETRY_ROUTE" \
   "pin=$PROJECT_LINKS_PIN_COMMIT" \
   "ref=$PROJECT_REF_COMMIT" \
-  "evidence=$EVIDENCE_COMMIT" \
-  "push=$EVIDENCE_PUSH_REQUIRED" \
   "pr=$PR_DESCRIPTION_RELATIVE_PATH"`,
       'completion-retry-consumer',
       RETRY_FIELDS_SCRIPT,
@@ -664,12 +609,10 @@ printf '%s\n' \
 const interruptionStages = [
   'after final-artifact push',
   'after parent-record commit',
-  'after evidence commit before push',
-  'after evidence push',
 ] as const;
 
 describe('archived synced completion transaction', () => {
-  it('recovers the post-lifecycle receipt and anchors retry evidence to it', async () => {
+  it('recovers the post-lifecycle receipt without a later recap commit', async () => {
     const fixture = await createSyncedFixture();
     try {
       const slug = 'archived-receipt-retry';
@@ -722,33 +665,7 @@ describe('archived synced completion transaction', () => {
           relative(fixture.cloneA, retried.summaryExportFile!),
         ].sort(),
       );
-
-      const evidenceRoot = join(
-        fixture.cloneA,
-        '.oat/repo/reference/project-recaps',
-        retried.snapshotId,
-      );
-      await mkdir(evidenceRoot, { recursive: true });
-      const manifestPath = join(evidenceRoot, 'manifest.json');
-      await writeFile(
-        manifestPath,
-        `${JSON.stringify({ schemaVersion: 'explainer-kit.manifest/v2', outcome: 'built', artifactCommit: retried.lifecycleCommit })}\n`,
-      );
-      git(fixture.cloneA, ['add', relative(fixture.cloneA, manifestPath)]);
-      git(fixture.cloneA, [
-        'commit',
-        '-m',
-        EVIDENCE_MESSAGE,
-        '--',
-        relative(fixture.cloneA, manifestPath),
-      ]);
-      const evidenceCommit = git(fixture.cloneA, ['rev-parse', 'HEAD']);
-      expect(git(fixture.cloneA, ['rev-parse', `${evidenceCommit}^`])).toBe(
-        retried.lifecycleCommit,
-      );
-      expect(changedPaths(fixture.cloneA, evidenceCommit)).toEqual([
-        relative(fixture.cloneA, manifestPath),
-      ]);
+      expect(git(fixture.cloneA, ['rev-parse', 'HEAD'])).toBe(lifecycleCommit);
     } finally {
       await fixture.cleanup();
     }
@@ -809,8 +726,6 @@ describe('non-archive synced completion transaction', () => {
         route: 'pin-source',
         pin: pinReceipt.sha,
         ref: '',
-        evidence: '',
-        push: '',
         pr: PR_ARTIFACT,
       });
       expect({
@@ -878,7 +793,7 @@ describe('non-archive synced completion transaction', () => {
       interruption,
     })),
   ])(
-    'recovers exact recap receipts after $decision interrupted $interruption',
+    'recovers exact lifecycle receipts after $decision interrupted $interruption',
     async ({ decision, interruption }) => {
       const fixture = await createCompletionFixture();
       try {
@@ -919,15 +834,6 @@ describe('non-archive synced completion transaction', () => {
           '# Pull request\n\nCompletion body.\n',
           'utf8',
         );
-        await mkdir(`${target.projectPath}/explainers/project-recap`, {
-          recursive: true,
-        });
-        await writeFile(
-          `${target.projectPath}/${RECAP_MANIFEST}`,
-          '{"schemaVersion":"explainer-kit.manifest/v2","outcome":"built"}\n',
-          'utf8',
-        );
-
         const recordPath = `${target.syncedRoot}/${PROJECT_SLUG}.json`;
         await writeSyncedRecord(
           recordPath,
@@ -970,29 +876,12 @@ describe('non-archive synced completion transaction', () => {
           target,
         );
         let recordCommit: string | null = null;
-        let evidenceCommit: string | null = null;
 
         if (interruption !== 'after final-artifact push') {
           recordCommit = await commitCompletionRecord(
             fixture.cloneA,
             recordPath,
           );
-        }
-        if (
-          interruption === 'after evidence commit before push' ||
-          interruption === 'after evidence push'
-        ) {
-          evidenceCommit = await commitRecapEvidenceLocally(
-            target.projectPath,
-            publishedReceipts.finalArtifactCommit,
-          );
-        }
-        if (interruption === 'after evidence push') {
-          const evidencePush = await pushSynced(target, defaultGitRunner);
-          expect(evidencePush).toMatchObject({
-            status: 'pushed',
-            sha: evidenceCommit,
-          });
         }
 
         await writeFile(`${target.projectPath}/dirty-retry.txt`, 'dirty\n');
@@ -1068,8 +957,6 @@ describe('non-archive synced completion transaction', () => {
             route: 'recovery',
             pin: recovered.projectLinksPinCommit,
             ref: recovered.projectRefCommit,
-            evidence: recovered.evidenceCommit ?? '',
-            push: String(recovered.evidencePushRequired),
             pr: recovered.prArtifactPath,
           },
         );
@@ -1084,23 +971,6 @@ describe('non-archive synced completion transaction', () => {
           fixture.cloneA,
           recordPath,
         );
-        evidenceCommit ??= await commitRecapEvidenceLocally(
-          target.projectPath,
-          recovered.projectRefCommit,
-        );
-        if (recovered.evidencePushRequired) {
-          const evidencePush = await pushSynced(target, defaultGitRunner);
-          expect(evidencePush).toMatchObject({
-            status: 'pushed',
-            sha: evidenceCommit,
-          });
-        } else if (recovered.evidenceCommit === null) {
-          const evidencePush = await pushSynced(target, defaultGitRunner);
-          expect(evidencePush).toMatchObject({
-            status: 'pushed',
-            sha: evidenceCommit,
-          });
-        }
 
         const retryReceipts = resolveCompletionRetry(
           target.projectPath,
@@ -1113,19 +983,12 @@ describe('non-archive synced completion transaction', () => {
           fixture.cloneA,
           recordPath,
         );
-        const retryEvidenceCommit = await commitRecapEvidenceLocally(
-          target.projectPath,
-          retryReceipts.projectRefCommit,
-        );
 
         expect(retryReceipts).toMatchObject({
           projectLinksPinCommit: publishedReceipts.pinSourceCommit,
           projectRefCommit: publishedReceipts.finalArtifactCommit,
-          evidenceCommit,
-          evidencePushRequired: false,
         });
         expect(retryRecordCommit).toBe(recordCommit);
-        expect(retryEvidenceCommit).toBe(evidenceCommit);
         expect(git(target.projectPath, ['status', '--porcelain'])).toBe('');
         expect(
           git(fixture.cloneA, [
@@ -1141,83 +1004,13 @@ describe('non-archive synced completion transaction', () => {
           'rev-parse',
           target.ref,
         ]);
-        expect(retainedRefReceipt).toBe(evidenceCommit);
-        expect(
-          git(target.projectPath, ['rev-parse', `${evidenceCommit}^`]),
-        ).toBe(publishedReceipts.finalArtifactCommit);
-        expect(changedPaths(target.projectPath, evidenceCommit)).toEqual([
-          RECAP_MANIFEST,
-        ]);
+        expect(retainedRefReceipt).toBe(publishedReceipts.finalArtifactCommit);
       } finally {
         await fixture.cleanup();
       }
     },
     20_000,
   );
-
-  it('fails closed when a recap evidence candidate changes an extra path', async () => {
-    const fixture = await createCompletionFixture();
-    try {
-      const target = buildSyncTarget(
-        fixture.cloneA,
-        '.oat/projects',
-        PROJECT_SLUG,
-      );
-      await createSyncedProject(target, defaultGitRunner);
-
-      await writeCompletedLifecycle(target.projectPath);
-      await writeFile(
-        `${target.projectPath}/summary.md`,
-        '# Durable summary\n',
-        'utf8',
-      );
-      await mkdir(`${target.projectPath}/pr`, { recursive: true });
-      await mkdir(`${target.projectPath}/explainers/project-recap`, {
-        recursive: true,
-      });
-      await writeFile(
-        `${target.projectPath}/${PR_ARTIFACT}`,
-        '# Pull request\n\nCompletion body.\n',
-        'utf8',
-      );
-      await writeFile(
-        `${target.projectPath}/${RECAP_MANIFEST}`,
-        '{"schemaVersion":"explainer-kit.manifest/v2","outcome":"built"}\n',
-        'utf8',
-      );
-      const receipts = await publishFinalArtifact(target.projectPath, target);
-
-      await writeFile(
-        `${target.projectPath}/${RECAP_MANIFEST}`,
-        `${JSON.stringify({ schemaVersion: 'explainer-kit.manifest/v2', outcome: 'built', artifactCommit: receipts.finalArtifactCommit }, null, 2)}\n`,
-        'utf8',
-      );
-      await writeFile(
-        `${target.projectPath}/unexpected.txt`,
-        'contamination\n',
-      );
-      git(target.projectPath, ['add', '--', RECAP_MANIFEST, 'unexpected.txt']);
-      git(target.projectPath, [
-        '-c',
-        'core.hooksPath=/dev/null',
-        'commit',
-        '-m',
-        EVIDENCE_MESSAGE,
-      ]);
-
-      expect(() =>
-        resolveCompletionRetry(target.projectPath, target.ref),
-      ).toThrow(/changed.*expected exactly/i);
-      expect(git(fixture.originDir, ['rev-parse', target.ref])).toBe(
-        receipts.finalArtifactCommit,
-      );
-      expect(git(target.projectPath, ['rev-parse', 'HEAD'])).not.toBe(
-        receipts.finalArtifactCommit,
-      );
-    } finally {
-      await fixture.cleanup();
-    }
-  });
 
   it.each([
     {
@@ -1455,8 +1248,6 @@ describe('non-archive synced completion transaction', () => {
         route: 'normal',
         pin: '',
         ref: '',
-        evidence: '',
-        push: '',
         pr: '',
       });
       expect(git(target.projectPath, ['rev-parse', 'HEAD'])).toBe(head);
@@ -1557,8 +1348,6 @@ describe('non-archive synced completion transaction', () => {
         ],
         projectLinksPinCommit: 'a'.repeat(40),
         projectRefCommit: 'b'.repeat(7),
-        evidenceCommit: null,
-        evidencePushRequired: false,
         prArtifactPath: PR_ARTIFACT,
       },
     },

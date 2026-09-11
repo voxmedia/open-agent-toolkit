@@ -2634,7 +2634,7 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
  */
 const CORPUS_MINIMUMS: CorpusMinimums = {
   files: 40,
-  fenceScanFiles: 208,
+  fenceScanFiles: 207,
   candidates: 150,
 };
 

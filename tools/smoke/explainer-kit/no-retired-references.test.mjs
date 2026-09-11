@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { execFile as execFileCallback } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve, sep } from 'node:path';
 import test from 'node:test';
@@ -67,21 +74,6 @@ const RETIRED_PATTERNS = [
   { id: 'explainer-kit-verification', value: 'explainer-kit-verification' },
 ];
 
-const TRANSITIONAL_PROSE_EXCLUSIONS = new Map([
-  [
-    'packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts',
-    'Quotes lifecycle prose that Phase 3 rewrites and re-pins.',
-  ],
-  [
-    'packages/cli/src/validation/skills.test.ts',
-    'Quotes lifecycle prose that Phase 3 rewrites and re-pins.',
-  ],
-  [
-    '.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs',
-    'Quotes lifecycle prose that Phase 3 rewrites and re-pins.',
-  ],
-]);
-
 const NEGATIVE_CONTROL_ALLOWLIST = new Map([
   [
     '.agents/skills/oat-project-complete/tests/check-terminal-outcome.test.mjs',
@@ -93,15 +85,6 @@ const NEGATIVE_CONTROL_ALLOWLIST = new Map([
   ],
 ]);
 
-function inPhaseOneCodeScope(path) {
-  return (
-    path.startsWith('packages/') ||
-    path.startsWith('tools/') ||
-    path.startsWith('scripts/') ||
-    /^\.agents\/skills\/[^/]+\/(?:scripts|tests)\//.test(path)
-  );
-}
-
 export async function scanRetiredReferences({ root = repoRoot, files } = {}) {
   const candidates = files ?? (await trackedFiles(root));
   const findings = [];
@@ -110,12 +93,15 @@ export async function scanRetiredReferences({ root = repoRoot, files } = {}) {
     const path = candidate.split(sep).join('/');
     if (
       path === selfPath ||
-      !inPhaseOneCodeScope(path) ||
-      TRANSITIONAL_PROSE_EXCLUSIONS.has(path)
+      path.startsWith('.oat/projects/') ||
+      path.startsWith('.oat/repo/reference/') ||
+      path.startsWith('.oat/repo/pjm/')
     ) {
       continue;
     }
-    const content = await readFile(join(root, path), 'utf8');
+    const absolutePath = join(root, path);
+    if ((await stat(absolutePath)).isDirectory()) continue;
+    const content = await readFile(absolutePath, 'utf8');
     const allowed = NEGATIVE_CONTROL_ALLOWLIST.get(path) ?? new Set();
     for (const pattern of RETIRED_PATTERNS) {
       if (!allowed.has(pattern.id) && content.includes(pattern.value)) {
@@ -132,11 +118,11 @@ export async function scanRetiredReferences({ root = repoRoot, files } = {}) {
 }
 
 async function trackedFiles(root) {
-  const { stdout } = await execFile(
-    'git',
-    ['ls-files', '-z', '--', 'packages', 'tools', '.agents/skills', 'scripts'],
-    { cwd: root, encoding: 'buffer', maxBuffer: 16 * 1024 * 1024 },
-  );
+  const { stdout } = await execFile('git', ['ls-files', '-z'], {
+    cwd: root,
+    encoding: 'buffer',
+    maxBuffer: 16 * 1024 * 1024,
+  });
   return stdout.toString('utf8').split('\0').filter(Boolean);
 }
 
@@ -173,7 +159,7 @@ test('honors only the named terminal-outcome negative-control allowlist', async 
   }
 });
 
-test('keeps the Phase 1 tracked code scope free of retired references', async () => {
+test('keeps the tracked repository free of retired references', async () => {
   const findings = await scanRetiredReferences();
   assert.deepEqual(
     findings,

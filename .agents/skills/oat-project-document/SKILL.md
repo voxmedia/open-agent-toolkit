@@ -6,7 +6,7 @@ disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash(git:*), Bash(jq:*), Bash(oat pjm:*), Bash(oat project push:*), Bash(oat project scope:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
 metadata:
-  version: 1.8.3
+  version: 1.8.4
 ---
 
 # Project Documentation Sync
