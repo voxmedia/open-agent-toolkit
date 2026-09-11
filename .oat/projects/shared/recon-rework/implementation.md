@@ -1034,6 +1034,13 @@ corroborates the archived run-bound artifact, exact `fixes_added` Reviews event,
 and all three task dispositions. Remediation attempt 1 of 2 is consumed before
 implementation begins.
 
+**Remediation basis:** lifecycle review at
+`819591ba1044e65a7eff7495a529bbe5ee122db3` passed; implementation fingerprint
+advanced to
+`sha256:effective-delta-v1:247a48c4fc00804e5b7696fad76c04ef31e73c2a36539f0b8b615140fd9cad79`.
+The same immutable gate configuration is pending attempt 2 with the consumed
+attempt count preserved at 1.
+
 ## Final Summary (for PR/docs)
 
 All 23 implementation and revision tasks are implemented. The merged-head final
