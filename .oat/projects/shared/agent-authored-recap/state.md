@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t05
-oat_last_commit: c96741c987b2b4c6873cd633910b65d073be1549
+oat_current_task: p01-t06
+oat_last_commit: 0adf7ddf690e713c57d099a12b3d131e31eef748
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -112,7 +112,7 @@ Implementation — Phase 1: The cut
 - ✓ Specification complete
 - ✓ Design complete (HiLL 2026-09-10)
 - ✓ Plan complete
-- ⧗ Phase 1 in progress (4/17 tasks)
+- ⧗ Phase 1 in progress (5/17 tasks)
 
 ## Blockers
 

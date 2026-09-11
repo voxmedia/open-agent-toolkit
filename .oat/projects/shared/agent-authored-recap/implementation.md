@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t05
+oat_current_task_id: p01-t06
 oat_generated: false
 ---
 
@@ -184,12 +184,18 @@ oat_generated: false
 
 ### Task p01-t05: `bundle.mjs` — allowlisted inputs, fact base, and anchor ledger
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0adf7ddf690e713c57d099a12b3d131e31eef748
 
 **Notes:**
 
-- In progress.
+- Added all four input modes with recipe-specific allowlists, newest-per-wave program summaries, deterministic SHA-256 input hashes, schema-valid fact-base generation, and unresolved claims for unparseable inputs.
+- Added realpath containment for every selected input, atomic source-directory writes, pre-authoring theme output, stale-failure cleanup, satisfied-manifest reuse, and mandatory `--out`.
+- Added the bounded terminology/numbers/status anchor ledger plus the full numeric/date/status claims index keyed by row, sentence identifier, or heading subject.
+- Added provenance-marked fixtures derived from the execution program and two wave summaries.
+- Focused suite: `pnpm exec node --test .agents/skills/explainer-kit/tests/bundle.test.mjs` (9/9 passed).
+- Required negative control: bypassing `assertContained` made the symlink-escape case fail with `Missing expected rejection`; restoring realpath containment returned the suite to 9/9.
+- Skill gates: `pnpm lint` and `pnpm format` passed.
 
 ---
 
@@ -256,7 +262,8 @@ Chronological log of implementation progress.
 - [x] p01-t02: Trim the recipes, the recipe loader, and the briefs - e092ba547525262a70c456773c4650981731898c
 - [x] p01-t03: Trim `qa.mjs` and rewrite the kept core tests - c34b07113206e8c07d1b55c08f4ba4066d8b7ff9
 - [x] p01-t04: Manifest v2 schema and package rule v3 - c96741c987b2b4c6873cd633910b65d073be1549
-- [ ] p01-t05: Add `bundle.mjs` with anchor ledger - in progress
+- [x] p01-t05: Add `bundle.mjs` with anchor ledger - 0adf7ddf690e713c57d099a12b3d131e31eef748
+- [ ] p01-t06: Add deterministic `record.mjs` and checked-in archive fixture - in progress
 
 **What changed (high level):**
 
@@ -264,6 +271,7 @@ Chronological log of implementation progress.
 - Reduced the recipe registry to four floor-and-brief contracts.
 - Reduced QA to the retained browser-free and browser-probe primitives.
 - Replaced manifest/package contracts with v2/v3.
+- Added the replacement bundle intake, fact-base extraction, anchor ledger, and reuse flow.
 
 **Decisions:**
 
