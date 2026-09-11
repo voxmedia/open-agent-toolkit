@@ -184,6 +184,10 @@ run-4-final-rereview-pass-20260911T202308Z The authorized narrowed final lifecyc
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T204246Z.md run=e54ba2dd-6df7-468d-9984-638aa95ea3c6
 
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-4-exit-gate-receive-20260911T204246Z Configured gate e54ba2dd-6df7-468d-9984-638aa95ea3c6 blocked with 0C/1I/1M/1m; all findings became prev8-t01 through prev8-t03 for remediation attempt 1 of 2.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

@@ -933,7 +933,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T183428Z.md         | 6faf9b996a88e0b9a55cfba5527636d762b042b4 | auto       | -                     |
 | p-rev7 | code     | passed          | 2026-09-11 | reviews/archived/p-rev7-review-2026-09-11T200317Z.md        | 914e9fde6d67f6a3d1c88f2ff2b573b955503822 | manual     | -                     |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T202308Z.md         | 16ad8b120a90d625372302b2f4ed2a0d6ade1373 | auto       | -                     |
-| final  | code     | received        | 2026-09-11 | reviews/final-review-2026-09-11T204246Z.md                  | dbcb4cdfa4801f39182ae21fe5e2ac9846aadb5f | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T204246Z.md         | dbcb4cdfa4801f39182ae21fe5e2ac9846aadb5f | gate       | cursor-fable-5-1-high |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1334,11 +1334,122 @@ complete recon suites.
 
 Commit as `fix(prev7-t01): reconcile contradictory pass outcomes`.
 
-## Implementation Complete
+## Phase p-rev8: Configured-gate lane-outcome fixes
 
-**Implementation tasks complete: 28 of 28 implemented. The authorized
-`prev7-t01` cycle closed the terminal final review's Important artifact/failure
-contradiction, and the narrowed phase review passed with no findings.**
+Source: configured implementation exit gate
+`e54ba2dd-6df7-468d-9984-638aa95ea3c6` (2026-09-11)
+
+### Task prev8-t01: (review) Reconcile contradictory outcomes at lane granularity
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: supporting recon schemas/contracts only when required for exact
+  non-conditional lane identity
+
+**Step 1: Understand the issue**
+
+The pass-level `reconcilePassOutcomes` guard rejects any complete pass when a
+material outcome gap names that mode. For an adaptive multi-lane wave, the same
+mode-level gap is also required to account for a failed lane, making the
+documented honest-partial path unrepresentable even when another lane completed.
+
+**Step 2: Implement fix**
+
+Bind non-conditional outcome gaps to exact `waveId` and `laneId`, matching the
+conditional lane identity model. Treat a complete artifact as contradictory
+only when the material failure/omission gap identifies that same lane, or when a
+legacy mode-only gap unambiguously describes a singleton wave. Preserve pass
+achievement when one approved lane is complete and a different failed lane is
+covered by exact lane-identified evidence.
+
+**Step 3: Verify**
+
+Restore the mixed-outcome multi-lane scenario as a valid, publishable partial
+control at the expected achieved profile. Retain single-lane primary and
+redundant gather contradiction regressions. Add cross-lane identity controls,
+neutralize the lane-identity guard once, confirm a targeted regression fails,
+restore it, and run focused plus complete recon suites.
+
+**Step 4: Commit**
+
+Commit as `fix(prev8-t01): reconcile pass outcomes per lane`.
+
+### Task prev8-t02: (review) Document contradiction and same-run evidence codes
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/references/packet-contract.md`
+- Modify: `.agents/skills/recon/SKILL.md` only when controller-facing guidance
+  must expose the exact lane-gap identity
+- Modify: `.agents/skills/recon/tests/skill-contract.test.mjs`
+
+**Step 1: Understand the issue**
+
+The packet contract does not state when complete lane evidence conflicts with a
+material failed/omitted outcome or name `CONTRADICTORY_PASS_OUTCOME`. Its
+same-run condition-evidence prose also omits the categorical
+`CONDITION_EVIDENCE_RUN_MISMATCH` code.
+
+**Step 2: Implement fix**
+
+Document the final lane-granular contradiction rule, required structured
+identity, and categorical error. Name the same-run condition-evidence mismatch
+code beside its existing requirement, keeping controller and packet guidance
+aligned.
+
+**Step 3: Verify**
+
+Pin the exact public clauses in `skill-contract.test.mjs`; run the focused
+contract test, skill validation, formatting, and complete recon suite.
+
+**Step 4: Commit**
+
+Commit as `docs(prev8-t02): document lane outcome contradictions`.
+
+### Task prev8-t03: (review) Suppress derivative thorough-ledger diagnostics
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+
+**Step 1: Understand the issue**
+
+When a thorough packet lacks terminal reconciliation,
+`validateThoroughGatherLedgerInputs` falls back to the final ledger and emits
+`MISSING_THOROUGH_GATHER_LEDGER_INPUT` beside the primary
+`SHADOW_RECONCILIATION` error.
+
+**Step 2: Implement fix**
+
+Skip the thorough gather-input check when terminal reconciliation is required
+but no prior ledger is available. Preserve the check for valid thorough
+reconciliation and for every independently malformed gather-ledger input.
+
+**Step 3: Verify**
+
+Add a one-error-per-defect regression for missing reconciliation, neutralize
+the suppression once to prove the regression fails, restore it, and run focused
+plus complete recon suites.
+
+**Step 4: Commit**
+
+Commit as `fix(prev8-t03): suppress derivative gather diagnostics`.
+
+## Implementation In Progress
+
+**Implementation tasks complete: 28 of 31 implemented. The configured exit gate
+found one Important lane-granularity defect, one Medium contract gap, and one
+Minor derivative diagnostic after the authorized `prev7-t01` cycle.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1352,9 +1463,12 @@ contradiction, and the narrowed phase review passed with no findings.**
 - Phase p-rev5: 1 task — connect redundant thorough gathering to compilation.
 - Phase p-rev6: 1 task — bind derived gathering passes to their approved waves.
 - Phase p-rev7: 1 task — reconcile contradictory artifacts and failed pass outcomes.
+- Phase p-rev8: 3 tasks — reconcile exact lane outcomes, document the contract,
+  and suppress derivative thorough-ledger diagnostics.
 
-**Total: 12 phases, 28 tasks.** Final lifecycle review, the configured exit gate,
-and refreshed shipping artifacts remain distinct.
+**Total: 13 phases, 31 tasks.** Three configured-gate remediation tasks are
+pending. Final verification, lifecycle re-review, gate retry, and refreshed
+shipping artifacts remain distinct.
 
 ## References
 

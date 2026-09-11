@@ -13,10 +13,10 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-11
 
-Three implementation runs plus seven revision phases completed all 28 original,
-post-retro, integration, and review-remediation tasks. The authorized `p-rev7`
-cycle closed the terminal full-delta review's Important pass-outcome
-contradiction.
+Three implementation runs plus seven revision phases completed 28 of 31
+original, post-retro, integration, and review-remediation tasks. The refreshed
+configured exit gate found three additional lane-outcome and diagnostic tasks
+in `p-rev8`.
 
 ## Progress Overview
 
@@ -34,8 +34,9 @@ contradiction.
 | Phase p-rev5: Thorough gather compilation  | completed | 1     | 1/1       |
 | Phase p-rev6: Gather pass ownership        | completed | 1     | 1/1       |
 | Phase p-rev7: Pass outcome reconciliation  | completed | 1     | 1/1       |
+| Phase p-rev8: Lane-outcome gate fixes      | pending   | 3     | 0/3       |
 
-**Total:** 28/28 tasks implemented.
+**Total:** 28/31 tasks implemented. Task `prev8-t01` is next.
 
 ## Task Status
 
@@ -69,6 +70,9 @@ contradiction.
 | prev5-t01 | Completed: compile redundant thorough evidence   | `26c8357d081ced7047379140c5353ab5993a7f46`         |
 | prev6-t01 | Completed: bind gather passes to approved waves  | `52c21ca6b065b95907887459770b3d38ac8cb105`         |
 | prev7-t01 | Completed: reconcile contradictory pass outcomes | `914e9fde6d67f6a3d1c88f2ff2b573b955503822`         |
+| prev8-t01 | Pending: reconcile pass outcomes per lane        | -                                                  |
+| prev8-t02 | Pending: document lane outcome contradictions    | -                                                  |
+| prev8-t03 | Pending: suppress derivative gather diagnostics  | -                                                  |
 
 ## Phase p-rev4: Remote condition-evidence review fix
 
@@ -257,6 +261,34 @@ integrity-contract assertion update. Reconnaissance was not attempted, so no
 review-orchestration log entry is required.
 
 **Outcome:** `p-rev7` passed with no fix loop.
+
+## Phase p-rev8: Configured-gate lane-outcome fixes
+
+**Status:** pending
+**Started:** 2026-09-11
+
+### Review Received: configured implementation exit gate
+
+**Date:** 2026-09-11
+**Gate run:** `e54ba2dd-6df7-468d-9984-638aa95ea3c6`
+**Gate target:** `cursor-fable-5-1-high`
+**Review artifact:**
+`reviews/archived/final-review-2026-09-11T204246Z.md`
+**Reviewed head:** `dbcb4cdfa4801f39182ae21fe5e2ac9846aadb5f`
+**Findings:** 0 Critical, 1 Important, 1 Medium, 1 Minor
+**New tasks added:** `prev8-t01`, `prev8-t02`, `prev8-t03`
+
+All findings are accepted in the gate's non-pausing auto-disposition mode. I1
+becomes `prev8-t01`: pass-level reconciliation over-rejects honest partial
+adaptive waves and must use exact lane identity. M1 becomes `prev8-t02`: the
+packet contract must state the final contradiction rule and categorical
+same-run evidence code. m1 becomes `prev8-t03`: missing terminal reconciliation
+must not cascade into a derivative thorough gather-ledger diagnostic.
+
+**Gate disposition:** receive eligible and blocking at the Important threshold.
+Remediation attempt 1 of 2 is consumed after durable receive reconciliation;
+the configured gate cannot proceed until `p-rev8`, final verification, and
+lifecycle re-review pass.
 
 ## Phase 5: Post-retro simplification
 
