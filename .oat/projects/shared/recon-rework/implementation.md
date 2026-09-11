@@ -1052,6 +1052,8 @@ findings 0 Critical / 0 Important / 0 Medium / 0 Minor,
 **Attempt 2 artifact:** `reviews/final-review-2026-09-11T155617Z.md`
 **Attempt 2 status:** terminal result persisted; receipt is required before the
 gate may become `allowed/passed`.
+**Attempt 2 receive intent:** run-bound source, archive destination, exact Reviews
+event, and pre-receive head persisted before disposition.
 
 ## Final Summary (for PR/docs)
 
