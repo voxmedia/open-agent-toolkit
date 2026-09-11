@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t06
+oat_current_task_id: p01-t07
 oat_generated: false
 ---
 
@@ -199,6 +199,22 @@ oat_generated: false
 
 ---
 
+### Task p01-t06: `record.mjs` — manifest v2 and the checked-in archive fixture
+
+**Status:** completed
+**Commit:** 0528fbfc54edb518478c79a4cc09e2529dbb14c7
+
+**Notes:**
+
+- Added deterministic manifest recording with explicit run-id and creation-time seams, exact immutable hashes, fact-base input hashes, recipe floor metadata, and all four terminal outcomes.
+- Rejected stale QA evidence and pre-recording `failure.json`, and sanitized failed-check causes against absolute user paths and environment values.
+- Added a checked-in v2 package with generating-task provenance, independently validated manifest, exact package inventory, and byte-for-byte regeneration parity.
+- Focused suite: `node --test .agents/skills/explainer-kit/tests/record.test.mjs` (4/4 passed).
+- Required negative control: omitting `source/ledger.json` from `record.mjs` hashing made 3/4 tests fail with `Manifest immutable hashes do not cover the canonical package`; restoring coverage returned the suite to 4/4.
+- Skill gates: `pnpm lint` and `pnpm format` passed.
+
+---
+
 ## Phase 2: Ladder and fresh-host proof
 
 **Status:** pending
@@ -263,7 +279,8 @@ Chronological log of implementation progress.
 - [x] p01-t03: Trim `qa.mjs` and rewrite the kept core tests - c34b07113206e8c07d1b55c08f4ba4066d8b7ff9
 - [x] p01-t04: Manifest v2 schema and package rule v3 - c96741c987b2b4c6873cd633910b65d073be1549
 - [x] p01-t05: Add `bundle.mjs` with anchor ledger - 0adf7ddf690e713c57d099a12b3d131e31eef748
-- [ ] p01-t06: Add deterministic `record.mjs` and checked-in archive fixture - in progress
+- [x] p01-t06: Add deterministic `record.mjs` and checked-in archive fixture - 0528fbfc54edb518478c79a4cc09e2529dbb14c7
+- [ ] p01-t07: Add browser-free `verify.mjs` checks and the none rung - in progress
 
 **What changed (high level):**
 
@@ -272,6 +289,7 @@ Chronological log of implementation progress.
 - Reduced QA to the retained browser-free and browser-probe primitives.
 - Replaced manifest/package contracts with v2/v3.
 - Added the replacement bundle intake, fact-base extraction, anchor ledger, and reuse flow.
+- Added deterministic terminal recording and a parity-checked v2 archive package fixture.
 
 **Decisions:**
 
