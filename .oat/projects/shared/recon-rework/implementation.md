@@ -36,25 +36,25 @@ final re-review.
 
 ## Task Status
 
-| Task    | Outcome                                         | Commit                                     |
-| ------- | ----------------------------------------------- | ------------------------------------------ |
-| p01-t01 | Completed: superseding decision                 | `663dab68996b41dbc5e92bf2e85847924ea2a944` |
-| p01-t02 | Completed: versioned manifest and normalization | `f5317ee5fd4d5df78a341819023d7cc49f97da3e` |
-| p02-t01 | Completed: economical routing preview           | `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c` |
-| p02-t02 | Completed: conditional escalation/outcomes      | `1bad7202d740ef2daf6d22a254875e8ba2774c0b` |
-| p02-t03 | Completed: profile and harness integration      | `58b165063f7f1f154920b9793d353a2f8777ed81` |
-| p03-t01 | Completed: controller/worker/shared guidance    | `e38994e2809c57542aa3146c6a64ffedca22cd34` |
-| p03-t02 | Completed: renderer and public docs             | `33a5cfff83a11219429d3944cec8de8a1eb475a4` |
-| p04-t01 | Completed: bundle and release versions          | `9721d7c680a0778967addaf9ef8b391839949d9c` |
-| p04-t02 | Completed: full verification/evidence           | `3e200321b705e5a3204cbe72434dff547ab2bc28` |
-| p04-t03 | Completed: validate production topology         | `4f6884a99844cf5e86168ad422db7f2f49a23c08` |
-| p04-t04 | Completed: structure malformed-wave errors      | `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3` |
-| p04-t05 | Completed: align lifecycle summaries            | `fe30e986219bbf27b04fb08957166229acc955fe` |
-| p04-t06 | Completed: correct Phase 4 completion wording   | this commit                                |
-| p05-t01 | Completed: simplify approval and diagnostics    | `f16437f54491c57f9ad9518c34b415ffb7418a7e` |
-| p05-t02 | Completed: align shipped and historical docs    | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7` |
-| p05-t03 | Completed: close validator regressions          | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`      |
-| p05-t04 | In progress: reconcile final-review bookkeeping | —                                          |
+| Task    | Outcome                                         | Commit                                             |
+| ------- | ----------------------------------------------- | -------------------------------------------------- |
+| p01-t01 | Completed: superseding decision                 | `663dab68996b41dbc5e92bf2e85847924ea2a944`         |
+| p01-t02 | Completed: versioned manifest and normalization | `f5317ee5fd4d5df78a341819023d7cc49f97da3e`         |
+| p02-t01 | Completed: economical routing preview           | `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c`         |
+| p02-t02 | Completed: conditional escalation/outcomes      | `1bad7202d740ef2daf6d22a254875e8ba2774c0b`         |
+| p02-t03 | Completed: profile and harness integration      | `58b165063f7f1f154920b9793d353a2f8777ed81`         |
+| p03-t01 | Completed: controller/worker/shared guidance    | `e38994e2809c57542aa3146c6a64ffedca22cd34`         |
+| p03-t02 | Completed: renderer and public docs             | `33a5cfff83a11219429d3944cec8de8a1eb475a4`         |
+| p04-t01 | Completed: bundle and release versions          | `9721d7c680a0778967addaf9ef8b391839949d9c`         |
+| p04-t02 | Completed: full verification/evidence           | `3e200321b705e5a3204cbe72434dff547ab2bc28`         |
+| p04-t03 | Completed: validate production topology         | `4f6884a99844cf5e86168ad422db7f2f49a23c08`         |
+| p04-t04 | Completed: structure malformed-wave errors      | `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3`         |
+| p04-t05 | Completed: align lifecycle summaries            | `fe30e986219bbf27b04fb08957166229acc955fe`         |
+| p04-t06 | Completed: correct Phase 4 completion wording   | this commit                                        |
+| p05-t01 | Completed: simplify approval and diagnostics    | `f16437f54491c57f9ad9518c34b415ffb7418a7e`         |
+| p05-t02 | Completed: align shipped and historical docs    | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`         |
+| p05-t03 | Completed: close validator regressions          | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`, `bd5dded4d` |
+| p05-t04 | In progress: reconcile final-review bookkeeping | —                                                  |
 
 ## Phase 5: Post-retro simplification
 
@@ -98,7 +98,8 @@ explicit. The docs contract pin and `oat-docs` check passed.
 **Status:** completed
 **Commits:** `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`,
 `01a2a92c5e0de817110feea6cd88503636308585`,
-`cfd2f25a539499276ae00f51c11b067f5c4871cf`
+`cfd2f25a539499276ae00f51c11b067f5c4871cf`,
+`bd5dded4d460a95a1f9cd7ca46475ac49249dbbe`
 **Verification:** passed
 
 Packet compilation now continues independent source, evidence, review, and
@@ -113,8 +114,8 @@ or duplicate path turns its targeted test red before restoration.
 
 **Status:** in progress
 **Commit:** —
-**Verification:** two review rounds received; full gates passed; narrowed final
-re-review pending
+**Verification:** all review findings received and fixed; final freshness review
+pending
 
 The 2026-09-11 final review reported 0 Critical, 1 Important, 2 Medium, and 4
 Minor findings. All seven were accepted for immediate repair: the Important docs
@@ -145,6 +146,13 @@ non-array manifest collections could throw inside shape validation. Commit
 three new negative controls restore the corresponding throw or duplicate
 diagnostic before the fixes are restored. The eight CI/release/docs gates plus
 lint and format all return zero against this fix.
+
+That review passed the blocking threshold with one Medium and one Minor residual:
+non-array `gaps` could still throw, and non-array `artifacts` could cascade
+into downstream diagnostics. Commit `bd5dded4d` adds both collections to the
+safe structural gate, expands the collection-shape tests, and raises the composed
+recon suite to 265/265. Both residuals fail their targeted controls when the
+guards are removed and pass after restoration.
 
 ## Phase 1: Decision and versioned contract
 

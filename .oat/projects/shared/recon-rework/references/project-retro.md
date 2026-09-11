@@ -66,7 +66,7 @@ is asserted.
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | Delivered scope   | 16/17 implementation tasks across five phases; final review reconciliation remains active                                              |
 | Product contract  | Per-wave approved routing, manifest v2 only, session-local approval, structured conditional gaps, one terminal reconciliation          |
-| Verification      | Run 1 gates passed; Run 2 passes 263/263 recon tests, all repository gates, and twelve guard-neutralization controls                   |
+| Verification      | Run 1 gates passed; Run 2 passes 265/265 recon tests and fourteen guard-neutralization controls; final post-fix gates are pending      |
 | Reviews           | All blocking reviews passed; every sub-threshold finding from the latest passing gate was fixed directly and awaits narrowed re-review |
 | Lifecycle         | Final HiLL and implementation closeout completed; draft PR #285 is open                                                                |
 | Shipping boundary | PR #285 conflicts with current `main`; merge, issue #274 closure, and backlog closure were not performed                               |

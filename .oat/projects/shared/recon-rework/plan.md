@@ -854,7 +854,8 @@ requirements and prior decision clauses; and correct the packet-contract prose.
 
 **Commits:** `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`,
 `01a2a92c5e0de817110feea6cd88503636308585`,
-`cfd2f25a539499276ae00f51c11b067f5c4871cf`
+`cfd2f25a539499276ae00f51c11b067f5c4871cf`,
+`bd5dded4d460a95a1f9cd7ca46475ac49249dbbe`
 
 **Files:**
 
@@ -912,7 +913,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T014112Z.md         | b1dd2acaf13bbad8ce49c2b472565584e33e08f2 | gate       | cursor-fable-5-1-high |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T020623Z.md         | e35342bae80cfbd95d3d393faa94d5d07021adac | gate       | cursor-fable-5-1-high |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T022854Z.md         | 44c00a120be3c6ad139354593e3876b41cedc845 | gate       | cursor-fable-5-1-high |
-| final  | code     | received        | 2026-09-11 | reviews/final-review-2026-09-11T024939Z.md                  | d08443a4494aa0f7344893ce03cabf61a50fb683 | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T024939Z.md         | d08443a4494aa0f7344893ce03cabf61a50fb683 | gate       | cursor-fable-5-1-high |
 
 ## Implementation Complete
 

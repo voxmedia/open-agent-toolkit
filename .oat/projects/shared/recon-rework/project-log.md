@@ -96,6 +96,10 @@ run-2-malformed-manifest-fixes-20260911 The review's 1 Important and 2 Minor fin
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T024939Z.md run=f0529599-5745-4bcb-8abf-a72b5b0b7f1f
 
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-2-collection-residuals-20260911 The passing review's 1 Medium and 1 Minor residuals were both fixed in bd5dded4d460a95a1f9cd7ca46475ac49249dbbe; non-array gaps and artifacts now stop at structured diagnostics, withdraw stale output, and cannot cascade into downstream validation.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
