@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t15
+oat_current_task_id: p01-t16
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 17    | 14/17     |
+| Phase 1 | in_progress | 17    | 15/17     |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 8     | 0/8       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 14/32 tasks completed
+**Total:** 15/32 tasks completed
 
 ---
 
@@ -369,6 +369,25 @@ oat_generated: false
 
 ---
 
+### Task p01-t15: Remove the explainer publish config keys
+
+**Status:** completed
+**Commit:** 0a8450c6d2c4413a62e7aa133d12a7e882984777
+
+**Outcome:**
+
+- Removed all six `explainers.publish.*` keys from CLI config types, catalogs, validation, normalization, defaults, writes, and tests.
+- Retained four `explainers.defaults.*` keys and the two explainer workflow preferences.
+- Collapsed the explainer write and surface-selection branches to defaults-only behavior.
+
+**Verification:**
+
+- The new retired-key test failed before implementation and passed after removal.
+- Affected config suites passed 481/481; CLI type-check, `pnpm lint`, and `pnpm format` passed.
+- Retired key/type sweep is empty; the sole `publish` hit in `oat-config.ts` is unrelated documentation-exclusion prose.
+
+---
+
 ## Phase 2: Ladder and fresh-host proof
 
 **Status:** pending
@@ -451,7 +470,8 @@ Chronological log of implementation progress.
 - [x] p01-t12: Retire the explainer smoke tests - aeed93c29c791b5a19f4b09b0f6d6bf9af15d2e2
 - [x] p01-t13: Retire the core orchestrator and obsolete modules - e47be8859204bfc959350fd05cbfedf00537a799
 - [x] p01-t14: Cut the adapter callback path, seam probe, and finalizer - f9b6fa6a0a450e8773d57f63e49e7e74e86fc1a6
-- [ ] p01-t15: Remove the `explainers.publish.*` CLI config keys - in progress
+- [x] p01-t15: Remove the `explainers.publish.*` CLI config keys - 0a8450c6d2c4413a62e7aa133d12a7e882984777
+- [ ] p01-t16: Move completion-transaction recap fixtures to v2 - in progress
 
 **What changed (high level):**
 
