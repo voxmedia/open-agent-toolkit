@@ -1506,9 +1506,9 @@ describe('validateOatSkills', () => {
       readRepoFile('.agents/skills/oat-explainer-kit/SKILL.md'),
     ]);
 
-    expect(coreContract).toContain('explainer-kit.package-coverage/v2');
+    expect(coreContract).toContain('explainer-kit.package-coverage/v3');
     expect(coreContract).toContain(
-      'export async function validateImmutablePackageEvidence',
+      'export function validateImmutablePackageEvidence',
     );
     expect(adapterSkill).toContain('`browserSession`');
     expect(adapterSkill).toContain('`browserSessionModulePath`');

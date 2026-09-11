@@ -4,21 +4,12 @@ import { pathToFileURL } from 'node:url';
 import { CliError } from '@errors/cli-error';
 import { resolveAssetsRoot } from '@fs/assets';
 
-const PACKAGE_COVERAGE_VERSION = 'explainer-kit.package-coverage/v2';
+const PACKAGE_COVERAGE_VERSION = 'explainer-kit.package-coverage/v3';
 
 export interface ExplainerPackageCoverage {
   PACKAGE_COVERAGE_VERSION: typeof PACKAGE_COVERAGE_VERSION;
-  requiredImmutablePackagePaths: (
-    manifest: unknown,
-    options?: { runMode?: 'interactive' | 'unattended' },
-  ) => string[];
-  validateImmutablePackageEvidence: (
-    manifest: unknown,
-    options: {
-      runMode?: 'interactive' | 'unattended';
-      read: (path: string) => Promise<Buffer | string>;
-    },
-  ) => Promise<void>;
+  requiredImmutablePackagePaths: (manifest: unknown) => string[];
+  validateImmutablePackageEvidence: (manifest: unknown) => void;
 }
 
 let cachedCoverage: Promise<ExplainerPackageCoverage> | undefined;

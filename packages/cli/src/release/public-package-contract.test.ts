@@ -112,7 +112,6 @@ describe('getPublicPackageContracts', () => {
           'assets/templates/pjm-agents.md',
           'assets/templates/reference-agents.md',
           'assets/skills/explainer-kit/scripts/lib/package-coverage.mjs',
-          'assets/skills/explainer-kit/scripts/lib/source-backlinks.mjs',
           'assets/NOTICES.md',
           'README.md',
         ]),
@@ -134,16 +133,9 @@ describe('getPublicPackageContracts', () => {
           {
             path: 'assets/skills/explainer-kit/scripts/lib/package-coverage.mjs',
             requiredContents: [
-              'explainer-kit.package-coverage/v2',
+              'explainer-kit.package-coverage/v3',
               'export function requiredImmutablePackagePaths',
-              'export async function validateImmutablePackageEvidence',
-            ],
-          },
-          {
-            path: 'assets/skills/explainer-kit/scripts/lib/source-backlinks.mjs',
-            requiredContents: [
-              'explainer-kit.source-backlinks/v1',
-              'export function parseCanonicalGithubBlobUrl',
+              'export function validateImmutablePackageEvidence',
             ],
           },
         ],
@@ -264,7 +256,6 @@ describe('getPublicPackageContracts', () => {
       'assets/templates/pjm-agents.md',
       'assets/templates/reference-agents.md',
       'assets/skills/explainer-kit/scripts/lib/package-coverage.mjs',
-      'assets/skills/explainer-kit/scripts/lib/source-backlinks.mjs',
       'assets/NOTICES.md',
       'README.md',
       'src/index.ts',
@@ -370,7 +361,7 @@ describe('getPublicPackageContracts', () => {
         },
         cliContract,
       ),
-    ).toHaveLength(11);
+    ).toHaveLength(10);
   });
 
   it('reports workspace protocol dependency specs from packed package metadata', () => {
