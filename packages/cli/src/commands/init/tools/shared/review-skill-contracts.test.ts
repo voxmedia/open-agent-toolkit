@@ -442,8 +442,8 @@ describe('review skill contracts', () => {
     expect(content).toContain(
       'Generate only after plan artifact review, the configured plan gate, and the plan commit have completed successfully.',
     );
-    expect(content).toContain(
-      'Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.',
+    expect(content).toMatch(
+      /invoke\s+`oat-explainer-kit` § Generate with recipe `project-explainer`/,
     );
     expect(content).toContain(
       'Explainer failure must not roll back, amend, or invalidate the valid committed plan.',
@@ -458,20 +458,14 @@ describe('review skill contracts', () => {
     expect(content).toContain(
       'Resolve and persist `projectRecap` as `generate` with source `autonomous_policy` after project creation or resolution.',
     );
-    expect(content).toContain(
-      'Reassert this forced recap intent on resume; a stale lower-precedence skip is overridden, warned, and recorded.',
+    expect(content).toMatch(
+      /Reassert this forced recap intent on resume unless closeout already persisted\s+`skip\/failed_attempt`\./,
     );
     expect(content).toMatch(
-      /Kickoff persists the forced `generate` intent without probing seams/,
+      /If that retry also fails,\s+persist `skip\/failed_attempt` with the sanitized cause and continue unattended\s+closeout\./,
     );
     expect(content).toMatch(
-      /may resolve a recordable\s+`skip` with source `capability_probe`/,
-    );
-    expect(content).toMatch(
-      /it is decided before any run rather than from a failed one, and\s+it never blocks unattended completion/,
-    );
-    expect(content).toMatch(
-      /Do not reassert `generate` over a\s+recorded `capability_probe` skip within the same closeout\./,
+      /On resume, honor that persisted skip without another bundle or\s+authoring pass; do not reassert `generate` over it\./,
     );
     expect(content).toContain(
       'Resolve and persist `projectExplainer` as `generate` with source `kickoff_prompt` only when the kickoff request explicitly asks for a project explainer.',
@@ -537,68 +531,23 @@ printf 'artifact-read\\n'`,
       '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
     );
 
-    expect(content).toContain(
-      'A fresh `project-recap` manifest for the current completed implementation deduplicates the lifecycle-tail run: reuse it and do not invoke the adapter again.',
-    );
-    expect(content).toContain(
-      'When `OAT_AUTONOMOUS=1` and no fresh recap exists, run this recap gate exactly once; missing or stale persisted intent cannot suppress this autonomous gate. In autonomy, attempt the adapter run exactly once and only when the seam probe resolves every required seam and intent resolves to `generate`; an interactive `generate` still attempts the run regardless of the probe result, and a seam-less interactive attempt is still the `failed` outcome it is today.',
-    );
-    expect(content).toContain(
-      'Invoke the `oat-explainer-kit` adapter first, then run its shared tracked-run finalizer in `dedicated` mode for a successful build.',
-    );
-    expect(content).toContain(
-      'Outcomes `failed` and `built-not-durable` are recorded warnings, never blockers for final HiLL approval, completion reporting, or later PR steps.',
-    );
-    expect(content).toContain(
-      'Run this recap gate after the final code review has passed and configured pre-approval summary/document steps have completed, but before final HiLL approval.',
+    expect(content).toMatch(
+      /Re-read the persisted `oat_project_recap` decision from `state\.md` at this\s+consumer boundary\./,
     );
     expect(content).toMatch(
-      /construct exactly one brief-aware,\s+provider-neutral author seam/,
+      /A persisted `skip`, including `skip\/failed_attempt`,\s+suppresses manifest discovery and generation/,
     );
     expect(content).toMatch(
-      /In-process callers pass\s+`author`; JSON\/CLI callers pass a validated `authorModulePath`\./,
+      /When no fresh package exists, invoke the `oat-explainer-kit` adapter's\s+§ Generate with recipe `project-recap` and `mode: unattended`\./,
     );
     expect(content).toMatch(
-      /Supply it\s+alongside the existing `critic` callback \(or validated\s+`criticModulePath`\)/,
+      /In autonomy, retry once after either unsatisfied outcome\. If the retry\s+also fails, persist `skip\/failed_attempt`, re-read that persisted skip, and\s+continue without another bundle or authoring pass\./,
     );
     expect(content).toMatch(
-      /always invoke this implementation-tail recap with\s+`mode: unattended`\./,
-    );
-    expect(content).toMatch(
-      /Probe seam availability before resolving intent\. Call\s+`oat-explainer-kit\/scripts\/probe-recap-seams\.mjs#probeRecapSeams` in\s+`mode: unattended`/,
-    );
-    expect(content).toMatch(
-      /covers all five required seams — author, fact critic, browser session,\s+visual critic, and set planner/,
-    );
-    expect(content).toMatch(
-      /a host missing only the set planner is\s+detected here instead of at the adapter's `E_SET_PLANNER_REQUIRED`/,
-    );
-    expect(content).toMatch(
-      /In autonomy, a probe result of `seams-unavailable` means no provider is\s+configured for a required seam\. Autonomous resolution then returns a recordable\s+`skip` with source `capability_probe`: record it with the warning, do not invoke\s+the adapter, and continue closeout\./,
-    );
-    expect(content).toMatch(
-      /Interactive closeout is unchanged: a\s+recorded interactive `generate` still attempts the recap and a run that fails\s+for a missing seam is still the `failed` outcome it is today\./,
-    );
-    expect(content).toMatch(
-      /never blocks final HiLL approval on a missing recap, and this skip is\s+resolved before any run, never from a failed one/,
-    );
-    expect(content).toMatch(
-      /Never convert a configured-but-invalid seam, or a run that failed after a\s+passing probe, into a skip; that run stays `failed`\./,
-    );
-    expect(content).toMatch(
-      /A `skip` intent requires no manifest; pass its recorded source as\s+`--skip-reason` so the receipt states why no recap exists\./,
+      /Before recording final approval, invoke\s+`oat-explainer-kit\/scripts\/check-terminal-outcome\.mjs` with the persisted\s+intent\./,
     );
     expect(content).toContain(
-      'The autonomy gate and the interactive rule are two separate rules and are never read as one.',
-    );
-    expect(content).toMatch(
-      /an interactive `generate` still attempts the run regardless of the probe result, and a seam-less interactive attempt is still the `failed` outcome it is today/,
-    );
-    expect(content).toMatch(
-      /That probe-driven skip record supersedes the\s+intent resolved and persisted earlier in this run for the remainder of the run/,
-    );
-    expect(content).toMatch(
-      /pass the skip — not the earlier `generate` — to\s+the terminal-outcome guard as `--intent skip --skip-reason capability_probe`/,
+      'The outcome vocabulary is `built`, `built-needs-review`, `failed`, and',
     );
 
     const normalizedContent = content.replace(/\s+/g, ' ');
@@ -619,20 +568,17 @@ printf 'artifact-read\\n'`,
     const content = readRepoFile('.agents/skills/oat-project-summary/SKILL.md');
 
     expect(content).toContain('## Explainer Outcome');
-    expect(content).toContain(
-      'Include exactly one concise item with its recipe, state (`generated`, `degraded`, or `skipped`), and either its outcome (`built-durable`, `built-not-durable`, `built-needs-review`, or `failed`) with run path, or its skip reason.',
+    expect(content).toMatch(
+      /Include exactly one concise item with its recipe and run path or skip\s+reason/,
     );
     expect(content).toContain(
-      'Use `generated` for `built-durable`, `degraded` for any other terminal outcome, and `skipped` only for a recap whose intent resolved to skip.',
+      '`generated — needs review` for `built-needs-review`, including the reason',
     );
-    expect(content).toContain(
-      'Use `manifest.json` and `build-record.json` as the source of truth for a run, and the recorded recap intent for a skip; refresh the existing item instead of appending a duplicate.',
+    expect(content).toMatch(
+      /Use `manifest\.json` and `qa\/result\.json` as the source of truth for a run, and\s+the persisted recap intent for a skip\./,
     );
-    expect(content).toContain(
-      'Omit `Explainer Outcome` only when no project-recap attempt and no recorded recap skip exist.',
-    );
-    expect(content).toContain(
-      'A `capability_probe` skip means the host had no provider configured for a required seam, not that the recap failed.',
+    expect(content).toMatch(
+      /Omit `Explainer Outcome` only when no project-recap attempt and no persisted\s+recap skip exist\./,
     );
     expect(content).toContain('- **project-recap:** skipped — {skip reason}');
   });
@@ -1436,47 +1382,22 @@ printf 'artifact-read\\n'`,
       'dispatch `oat-project-retro` in generate mode before any lifecycle mutation: load the current `oat-project-retro/SKILL.md` and follow it, or dispatch a child that carries it.',
     );
     expect(content).toMatch(
-      /construct exactly one brief-aware, provider-neutral\s+author seam/,
+      /First re-read the persisted `oat_project_recap` record from\s+`"\$PROJECT_PATH\/state\.md"` through\s+`scripts\/consume-persisted-recap-intent\.mjs`\./,
     );
     expect(content).toMatch(
-      /In-process callers pass\s+`author`; JSON\/CLI callers pass a validated `authorModulePath`\./,
+      /A persisted `skip`, including\s+`skip\/failed_attempt`, suppresses all manifest discovery, bundle, and authoring\s+work\./,
     );
     expect(content).toMatch(
-      /Supply it\s+alongside the existing `critic` callback \(or validated\s+`criticModulePath`\)/,
-    );
-    expect(content).toMatch(/invoke the recap with `mode: unattended`\./);
-    expect(content).toMatch(
-      /If no fresh recap exists, probe seam availability before invoking the adapter\.\s+Call `oat-explainer-kit\/scripts\/probe-recap-seams\.mjs#probeRecapSeams` in\s+`mode: unattended`/,
+      /For a persisted `generate`, inspect manifests under\s+`\{PROJECT_PATH\}\/explainers\/` before generating\./,
     );
     expect(content).toMatch(
-      /covers all five required seams — author, fact critic, browser session,\s+visual critic, and set planner/,
+      /If no fresh package exists, invoke the `oat-explainer-kit` adapter's § Generate\s+with recipe `project-recap`/,
     );
     expect(content).toMatch(
-      /In autonomy, a probe result of `seams-unavailable` means no provider is\s+configured for a required seam\. Autonomous resolution then returns a recordable\s+`skip` with source `capability_probe`: record it with the warning, leave\s+`SELECTED_PROJECT_RECAP_RUN` empty, and complete without a recap\./,
+      /Under autonomy, retry once\. If that\s+retry also fails, persist `skip\/failed_attempt` with a fresh state hash and\s+re-read it through the executable consumer before continuing\./,
     );
     expect(content).toMatch(
-      /An interactive\s+completion is unchanged: the decision recorded at the batched prompt governs, a\s+recorded `generate` still attempts the recap, and a run that fails for a missing\s+seam is still the `failed` outcome it is today\./,
-    );
-    expect(content).toMatch(
-      /Never convert a\s+configured-but-invalid seam, or a run that failed after a passing probe, into a\s+skip; that run stays `failed`\./,
-    );
-    expect(content).toMatch(
-      /This covers both an interactive skip and a\s+probe-driven `capability_probe` skip; neither prompts, and neither blocks\s+completion\./,
-    );
-    expect(content).toContain(
-      'The autonomy gate and the interactive rule are two separate rules and are never read as one.',
-    );
-    expect(content).toMatch(
-      /In autonomy, attempt the adapter run exactly once and only when the probe resolves every seam; an interactive `generate` still attempts the run regardless of the probe result/,
-    );
-    expect(content).toMatch(
-      /When the gate above allows the attempt, invoke `scripts\/run\.mjs#runOatExplainer` exactly once with recipe `project-recap`/,
-    );
-    expect(content).toMatch(
-      /That\s+probe-driven skip record supersedes the intent resolved and persisted earlier in\s+this run for the remainder of the run/,
-    );
-    expect(content).toMatch(
-      /treat any `SHOULD_GENERATE_RECAP="true"` set from the earlier resolution as\s+stale, and pass the skip — not the earlier `generate` — to the terminal-outcome\s+guard as `--intent skip --skip-reason capability_probe`/,
+      /Before any lifecycle mutation, invoke\s+`oat-explainer-kit\/scripts\/check-terminal-outcome\.mjs` with the persisted\s+intent\./,
     );
 
     const resolveIndex = normalizedContent.indexOf(
@@ -1503,11 +1424,11 @@ printf 'artifact-read\\n'`,
       '.agents/skills/oat-project-complete/SKILL.md',
     );
 
-    expect(content).toContain(
-      'A fresh `project-recap` manifest for the current completed implementation is reused without invoking the adapter again.',
+    expect(content).toMatch(
+      /Reuse a fresh satisfied\s+`project-recap` package without invoking the adapter\./,
     );
-    expect(content).toContain(
-      'Set `SELECTED_PROJECT_RECAP_RUN` only to the final selected `project-recap` run.',
+    expect(content).toMatch(
+      /Set\s+`SELECTED_PROJECT_RECAP_RUN` only to that final satisfied project-recap run/,
     );
     expect(content).toContain('ARCHIVE_ARGS=("$PROJECT_PATH")');
     expect(content).toContain(
@@ -1516,11 +1437,11 @@ printf 'artifact-read\\n'`,
     expect(content).toContain(
       'Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty.',
     );
-    expect(content).toContain(
-      '`project-explainer` runs are active-project working artifacts, not durable post-completion reference products.',
+    expect(content).toMatch(
+      /`project-explainer` runs are active-project working artifacts, not\s+post-completion reference products\./,
     );
-    expect(content).toContain(
-      'Do not export, re-attest, or add archive-aware PR or summary reference links for a `project-explainer` run.',
+    expect(content).toMatch(
+      /Do not export or add archive-aware PR or\s+summary reference links for a `project-explainer` run\./,
     );
   });
 
@@ -1528,15 +1449,16 @@ printf 'artifact-read\\n'`,
     const content = readRepoFile(
       '.agents/skills/oat-project-complete/SKILL.md',
     );
+    const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content).toContain(
+    expect(normalizedContent).toContain(
       'For `IS_DURABLE_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`.',
     );
-    expect(content).toContain(
-      'A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence.',
+    expect(normalizedContent).toContain(
+      'This is the local scope. Do not treat local filesystem presence as project durability.',
     );
-    expect(content).toContain(
-      'Do not treat local filesystem presence as durability.',
+    expect(normalizedContent).toContain(
+      'Shared and synced recaps are exported by the later archive step.',
     );
   });
 
@@ -1994,7 +1916,7 @@ printf 'artifact-read\\n'`,
     },
   );
 
-  it('recovers exact non-archive recap receipts through the executable completion surface', () => {
+  it('recovers exact non-archive lifecycle receipts through the executable completion surface', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-complete/SKILL.md',
     );
@@ -2070,38 +1992,13 @@ printf 'artifact-read\\n'`,
       content.indexOf('#### Step 7.5: Publish Synced Project Pin Source'),
     );
     expect(normalizedContent).toContain(
-      'single-parent pin-source → final-artifact → optional evidence ordering',
-    );
-    expect(normalizedContent).toContain(
-      'exactly the two supplied recap record paths in an evidence commit',
-    );
-    expect(normalizedContent).toContain(
-      'the one allowed unpublished-evidence state',
+      'single-parent pin-source → final-artifact ordering',
     );
     expect(normalizedContent).toContain(
       'Do not fall through to a new pin-source publication after a partial or contradictory candidate.',
     );
-    expect(normalizedContent).toContain(
-      'receipt SHA exactly equal to `EVIDENCE_COMMIT`',
-    );
     expect(content).toContain('"$COMPLETION_RETRY_FIELDS" != "normal"');
     expect(content).not.toContain('["normal", "-", "-", "-", "false", "-"]');
-    expect(content).toContain(
-      'PUBLISHED_RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT"',
-    );
-    expect(content).toContain(
-      'test "$RECOVERED_PUSH_SHA" = "$EVIDENCE_COMMIT" || exit 1',
-    );
-    expect(normalizedContent).toContain(
-      'When Step 7.5 restored `EVIDENCE_COMMIT` for a non-archive completion, do not stage or commit recap records again.',
-    );
-    expect(content).toContain(
-      'git commit --only -m "chore(oat): attest final project recap" --',
-    );
-    expect(content).toContain('git -C "$ACTIVE_PROJECT_PATH" commit --only');
-    expect(content).toContain(
-      'test "$(git diff --cached --binary)" = "$UNRELATED_STAGED_PATCH_BEFORE"',
-    );
   });
 
   it('chains and validates fresh non-archive lifecycle receipts', () => {
@@ -2110,7 +2007,7 @@ printf 'artifact-read\\n'`,
     );
     const step10 = content.slice(
       content.indexOf('### Step 10: Commit + Push Bookkeeping (Required)'),
-      content.indexOf('### Step 10.5: Re-attest Final Project Recap'),
+      content.indexOf('### Step 11: Open PR in GitHub (Conditional)'),
     );
 
     expect(step10).toMatch(
@@ -2124,63 +2021,32 @@ printf 'artifact-read\\n'`,
     );
   });
 
-  it.each([
-    ['without a selected recap', 'SELECTED_PROJECT_RECAP_RUN is empty'],
-    ['with a selected recap', 'SELECTED_PROJECT_RECAP_RUN is non-empty'],
-  ])(
-    'uses the correct non-archive synced receipts %s',
-    (_scenario, recapState) => {
-      const content = readRepoFile(
-        '.agents/skills/oat-project-complete/SKILL.md',
-      );
-      const normalizedContent = content.replace(/\s+/g, ' ');
+  it('uses the correct non-archive synced receipts', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const normalizedContent = content.replace(/\s+/g, ' ');
 
-      expect(normalizedContent).toContain(recapState);
-      expect(normalizedContent).toContain(
-        'Capture the exact structured receipt SHA as `PROJECT_LINKS_PIN_COMMIT`.',
-      );
-      expect(normalizedContent).toContain(
-        'Capture that exact SHA as `PROJECT_REF_COMMIT`.',
-      );
-      expect(normalizedContent).toContain(
-        'Use `PROJECT_REF_COMMIT`, not the parent-branch `LIFECYCLE_COMMIT`, as the active recap artifact commit.',
-      );
-      expect(normalizedContent).toContain(
-        'The non-archive recap evidence commit must be the immediate child of `PROJECT_REF_COMMIT` in the project checkout.',
-      );
-      expect(normalizedContent).toMatch(
-        /publish the evidence commit with `oat project push`, retaining the custom ref and checkout\./i,
-      );
-      expect(normalizedContent).toMatch(
-        /Snapshot unrelated staged state[\s\S]*?verify[\s\S]*?byte-for-byte unchanged/,
-      );
-    },
-  );
+    expect(normalizedContent).toContain(
+      'Capture the exact structured receipt SHA as `PROJECT_LINKS_PIN_COMMIT`.',
+    );
+    expect(normalizedContent).toContain(
+      'Capture that exact SHA as `PROJECT_REF_COMMIT`.',
+    );
+    expect(normalizedContent).toContain(
+      'The retained project ref remains the artifact authority after non-archive completion.',
+    );
+    expect(normalizedContent).toMatch(
+      /Snapshot unrelated staged state[\s\S]*?verify[\s\S]*?byte-for-byte unchanged/,
+    );
+  });
 
   it.each([
-    [
-      'configured decline without a recap',
-      'workflow.archiveOnComplete=false',
-      'SELECTED_PROJECT_RECAP_RUN is empty',
-    ],
-    [
-      'configured decline with a recap',
-      'workflow.archiveOnComplete=false',
-      'SELECTED_PROJECT_RECAP_RUN is non-empty',
-    ],
-    [
-      'interactive decline without a recap',
-      'the interactive archive answer is `false`',
-      'SELECTED_PROJECT_RECAP_RUN is empty',
-    ],
-    [
-      'interactive decline with a recap',
-      'the interactive archive answer is `false`',
-      'SELECTED_PROJECT_RECAP_RUN is non-empty',
-    ],
+    ['configured decline', 'workflow.archiveOnComplete=false'],
+    ['interactive decline', 'the interactive archive answer is `false`'],
   ])(
     'publishes an initially absent late PR artifact after %s',
-    (_scenario, archiveDecision, recapState) => {
+    (_scenario, archiveDecision) => {
       const content = readRepoFile(
         '.agents/skills/oat-project-complete/SKILL.md',
       );
@@ -2212,7 +2078,6 @@ printf 'artifact-read\\n'`,
       );
 
       expect(normalizedContent).toContain(archiveDecision);
-      expect(normalizedContent).toContain(recapState);
       expect(normalizedContent).toContain(
         'When no PR description artifact exists, write it before the final synced project-ref publication, regardless of archive or recap selection.',
       );
