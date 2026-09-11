@@ -152,7 +152,8 @@ non-array `gaps` could still throw, and non-array `artifacts` could cascade
 into downstream diagnostics. Commit `bd5dded4d` adds both collections to the
 safe structural gate, expands the collection-shape tests, and raises the composed
 recon suite to 265/265. Both residuals fail their targeted controls when the
-guards are removed and pass after restoration.
+guards are removed and pass after restoration. The eight CI/release/docs gates
+plus lint and format all return zero against the final collection guard.
 
 ## Phase 1: Decision and versioned contract
 
