@@ -1044,6 +1044,8 @@ attempt count preserved at 1.
 **Attempt 2 launch intent:** `recon-exit-gate-20260911T154843Z` persisted before
 execution; structured stdout receipt reserved at
 `/private/tmp/recon-exit-gate-20260911T154843Z.receipt.json`.
+**Attempt 2 accepted:** gate run `e9a3a038-dc02-4f62-affe-c3d5cfb2c4dc` on
+`cursor-fable-5-1-high`; marker persisted before terminal result handling.
 
 ## Final Summary (for PR/docs)
 
