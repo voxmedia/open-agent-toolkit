@@ -136,6 +136,10 @@ run-3-exit-gate-receive-20260911T152512Z Configured gate run c1c2d64e-b921-4484-
 
 run-3-gate-remediation-rereview-pass-20260911T154126Z The narrowed lifecycle re-review closed all configured-gate findings and reported 0C/0I/0M/1m; m1 stale PR-summary prose was fixed during receipt, so gate attempt 2 may proceed.
 
+### 2026-09-11 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T155617Z.md run=e9a3a038-dc02-4f62-affe-c3d5cfb2c4dc
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility
