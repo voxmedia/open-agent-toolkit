@@ -7,8 +7,18 @@ import { promisify } from 'node:util';
 const execFile = promisify(execFileCallback);
 
 const RECIPE_ARTIFACTS = Object.freeze({
-  'project-explainer': ['plan', 'design', 'spec'],
-  'project-recap': ['plan', 'design', 'spec', 'implementation', 'summary'],
+  'project-explainer': ['plan', 'design', 'spec', 'discovery'],
+  'project-recap': [
+    'summary',
+    'implementation',
+    'project-log',
+    'plan',
+    'discovery',
+    'spec',
+    'design',
+    'orchestration-log',
+  ],
+  'program-recap': ['program'],
 });
 
 export async function bindProjectSources({
@@ -86,19 +96,13 @@ export async function bindProjectSources({
   };
 }
 
-export async function bindRepositorySources({
-  repoRoot,
-  suppliedFactBasePath,
-  reviewedRepository,
-}) {
+export async function bindRepositorySources({ suppliedFactBasePath }) {
   if (!suppliedFactBasePath) {
     throw new Error(
       'Repository invocation requires a caller-supplied fact base path.',
     );
   }
-  const repository =
-    reviewedRepository ?? (await resolveReviewedRepository(repoRoot));
-  return bindSuppliedFactBase(suppliedFactBasePath, repository);
+  return bindSuppliedFactBase(suppliedFactBasePath, null);
 }
 
 export async function resolveReviewedRepository(
@@ -274,6 +278,7 @@ function githubRepositoryIdentity(remote) {
 function authoritativeTopics(id) {
   return {
     plan: ['phases', 'validation-approach'],
+    discovery: ['problem-space', 'constraints'],
     design: ['planned-architecture', 'decisions', 'risks'],
     spec: ['original-request', 'requirements'],
     implementation: [
@@ -282,6 +287,9 @@ function authoritativeTopics(id) {
       'implementation-record',
       'validation-evidence',
     ],
+    'project-log': ['project-history'],
+    'orchestration-log': ['execution-orchestration'],
+    program: ['program-map'],
     summary: ['outcome'],
   }[id];
 }

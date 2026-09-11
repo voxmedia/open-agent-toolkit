@@ -11,11 +11,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
-import { validateContract } from '../../explainer-kit/scripts/lib/contracts.mjs';
+import {
+  bindProjectSources,
+  bindRepositorySources,
+} from '../scripts/bind-project-sources.mjs';
 import {
   EXPLAINER_CONFIG_KEYS,
   resolveExplainerConfig,
-  toExplainerRunRequest,
 } from '../scripts/resolve-config.mjs';
 import { resolveExplainerOutputRoot } from '../scripts/resolve-paths.mjs';
 
@@ -141,11 +143,6 @@ test('applies only allowed runtime overrides without mutating CLI results', asyn
     runtimeOverrides: {
       'explainers.defaults.style': 'dark-edgy',
       'explainers.defaults.palette': 'sunset',
-      'explainers.publish.provider': 's3-static',
-      'explainers.publish.s3Uri': 's3://runtime-bucket/explainers/',
-      'explainers.publish.publicBaseUrl':
-        'https://runtime.example.com/explainers/',
-      'explainers.publish.awsRegion': 'us-west-2',
     },
   });
 
@@ -153,7 +150,6 @@ test('applies only allowed runtime overrides without mutating CLI results', asyn
   assert.equal(resolved.theme.style, 'dark-edgy');
   assert.equal(resolved.theme.palette, 'sunset');
   assert.equal(resolved.sources['explainers.defaults.palette'], 'runtime');
-  assert.equal(resolved.publish.s3Uri, 's3://runtime-bucket/explainers');
   await assert.rejects(
     resolveExplainerConfig({
       repoRoot,
@@ -161,125 +157,6 @@ test('applies only allowed runtime overrides without mutating CLI results', asyn
       runtimeOverrides: { outputRoot: '/tmp/not-configurable' },
     }),
     /unsupported runtime override.*outputRoot/i,
-  );
-});
-
-test('reports incomplete publish configuration and remains build-only', async () => {
-  const repoRoot = await fixture();
-  const duetShape = await resolveExplainerConfig({
-    repoRoot,
-    getConfig: configGetter({
-      'explainers.publish.publicBaseUrl': {
-        value: 'https://docs.example.com/repositories/demo',
-        source: 'shared',
-      },
-    }).get,
-  });
-
-  assert.equal(duetShape.publish, null);
-  assert.deepEqual(duetShape.publishReport, {
-    mode: 'build-only',
-    publishCapable: false,
-    missing: ['provider', 's3Uri', 'awsRegion'],
-  });
-
-  for (const [entries, missing] of [
-    [
-      {
-        'explainers.publish.provider': {
-          value: 's3-static',
-          source: 'shared',
-        },
-      },
-      ['s3Uri', 'publicBaseUrl', 'awsRegion'],
-    ],
-    [
-      {
-        'explainers.publish.provider': {
-          value: 's3-static',
-          source: 'shared',
-        },
-        'explainers.publish.s3Uri': {
-          value: 's3://example-bucket/repositories/demo',
-          source: 'shared',
-        },
-        'explainers.publish.awsRegion': {
-          value: 'us-east-1',
-          source: 'shared',
-        },
-      },
-      ['publicBaseUrl'],
-    ],
-  ]) {
-    const partial = await resolveExplainerConfig({
-      repoRoot,
-      getConfig: configGetter(entries).get,
-    });
-    assert.equal(partial.publish, null);
-    assert.deepEqual(partial.publishReport.missing, missing);
-  }
-});
-
-test('resolves complete publish config and source-aware public access', async () => {
-  const repoRoot = await fixture();
-  const complete = {
-    'explainers.publish.provider': {
-      value: 's3-static',
-      source: 'shared',
-    },
-    'explainers.publish.s3Uri': {
-      value: 's3://example-bucket/repositories/demo/',
-      source: 'shared',
-    },
-    'explainers.publish.publicBaseUrl': {
-      value: 'https://docs.example.com/repositories/demo/',
-      source: 'shared',
-    },
-    'explainers.publish.awsRegion': {
-      value: 'us-east-1',
-      source: 'shared',
-    },
-  };
-
-  for (const [entry, expected] of [
-    [undefined, undefined],
-    [{ value: 'public', source: 'shared' }, 'public'],
-    [{ value: 'protected', source: 'shared' }, 'protected'],
-  ]) {
-    const resolved = await resolveExplainerConfig({
-      repoRoot,
-      getConfig: configGetter({
-        ...complete,
-        ...(entry && { 'explainers.publish.publicAccess': entry }),
-      }).get,
-    });
-    assert.deepEqual(resolved.publishReport, {
-      mode: 'publish-capable',
-      publishCapable: true,
-      missing: [],
-    });
-    assert.equal(resolved.publish.publicAccess, expected);
-  }
-
-  const override = await resolveExplainerConfig({
-    repoRoot,
-    getConfig: configGetter(complete).get,
-    runtimeOverrides: {
-      'explainers.publish.publicAccess': 'protected',
-    },
-  });
-  assert.equal(override.publish.publicAccess, 'protected');
-  assert.equal(override.sources['explainers.publish.publicAccess'], 'runtime');
-
-  await assert.rejects(
-    resolveExplainerConfig({
-      repoRoot,
-      getConfig: configGetter(complete).get,
-      runtimeOverrides: {
-        'explainers.publish.publicAccess': 'private',
-      },
-    }),
-    /publicAccess.*public.*protected/i,
   );
 });
 
@@ -410,145 +287,70 @@ test('rejects traversal and symlink ancestors that escape the repository', async
   );
 });
 
-test('translates source-aware config into ExplainerRunRequestV1', async () => {
+test('binds only the replacement flow allowlists and supplied fact bases', async () => {
   const repoRoot = await fixture();
-  const resolved = await resolveExplainerConfig({
-    repoRoot,
-    getConfig: configGetter({
-      'explainers.defaults.palette': { value: 'ocean', source: 'local' },
-      'explainers.defaults.visualProfile': {
-        value: 'technical',
-        source: 'user',
-      },
-      'explainers.publish.provider': {
-        value: 's3-static',
-        source: 'shared',
-      },
-      'explainers.publish.s3Uri': {
-        value: 's3://example-bucket/explainers',
-        source: 'shared',
-      },
-      'explainers.publish.publicBaseUrl': {
-        value: 'https://docs.example.com/explainers',
-        source: 'shared',
-      },
-      'explainers.publish.awsRegion': {
-        value: 'us-east-1',
-        source: 'shared',
-      },
-      'explainers.publish.awsProfile': {
-        value: 'developer',
-        source: 'local',
-      },
-    }).get,
-  });
-  const outputRoot = await resolveExplainerOutputRoot({
-    repoRoot,
-    invocation: 'project',
-    activeProject: '.oat/projects/shared/demo',
-  });
+  const projectRoot = join(repoRoot, '.oat/projects/shared/demo');
+  for (const artifact of [
+    'summary',
+    'implementation',
+    'project-log',
+    'plan',
+    'discovery',
+    'spec',
+    'design',
+    'orchestration-log',
+    'program',
+    'unlisted',
+  ]) {
+    await writeFile(join(projectRoot, `${artifact}.md`), `${artifact}\n`);
+  }
 
-  const request = toExplainerRunRequest({
-    resolvedConfig: resolved,
+  const recap = await bindProjectSources({
+    projectRoot,
+    recipe: 'project-recap',
+  });
+  assert.deepEqual(
+    recap.factBase.sources.map(({ id }) => id),
+    [
+      'summary',
+      'implementation',
+      'project-log',
+      'plan',
+      'discovery',
+      'spec',
+      'design',
+      'orchestration-log',
+    ],
+  );
+
+  const explainer = await bindProjectSources({
+    projectRoot,
     recipe: 'project-explainer',
-    slug: 'demo-project',
-    outputRoot,
-    factBase: {
-      mode: 'federated',
-      freshnessPolicy: 'live-wins',
-      sources: [
-        {
-          id: 'plan',
-          kind: 'file',
-          locator: join(repoRoot, '.oat/projects/shared/demo/plan.md'),
-          role: 'plan',
-          sourceSetId: 'demo',
-        },
-      ],
-    },
-    mode: 'unattended',
-    durabilityStrategy: 'publish',
-    artDirection: 'Use compact technical diagrams',
   });
-
-  assert.deepEqual(request, {
-    schemaVersion: 'explainer-kit.run-request/v1',
-    recipe: { id: 'project-explainer', version: '1' },
-    slug: 'demo-project',
-    outputRoot,
-    factBase: {
-      mode: 'federated',
-      freshnessPolicy: 'live-wins',
-      sources: [
-        {
-          id: 'plan',
-          kind: 'file',
-          locator: join(repoRoot, '.oat/projects/shared/demo/plan.md'),
-          role: 'plan',
-          sourceSetId: 'demo',
-        },
-      ],
-    },
-    theme: {
-      palette: 'ocean',
-      visualProfile: 'technical',
-      artDirection: 'Use compact technical diagrams',
-    },
-    durability: {
-      strategy: 'publish',
-      publish: {
-        schemaVersion: 'explainer-kit.publish-request/v2',
-        provider: 's3-static',
-        s3Uri: 's3://example-bucket/explainers',
-        publicBaseUrl: 'https://docs.example.com/explainers',
-        awsRegion: 'us-east-1',
-        awsProfile: 'developer',
-        publicAccess: 'public',
-        siteRoot: join(outputRoot, 'demo-project/site'),
-        manifestPath: join(outputRoot, 'demo-project/manifest.json'),
-      },
-    },
-    privacy: { retainRawArtDirection: false },
-    mode: 'unattended',
-  });
-  assert.deepEqual(validateContract('run-request', request), {
-    valid: true,
-    errors: [],
-  });
-});
-
-test('selects project recap v2 for new runs while other recipe selectors remain stable', async () => {
-  const repoRoot = await fixture();
-  const resolvedConfig = await resolveExplainerConfig({
-    repoRoot,
-    getConfig: configGetter().get,
-  });
-  const common = {
-    resolvedConfig,
-    slug: 'demo-project',
-    outputRoot: join(repoRoot, 'output'),
-    factBase: {
-      mode: 'federated',
-      freshnessPolicy: 'live-wins',
-      sources: [
-        {
-          id: 'plan',
-          kind: 'file',
-          locator: join(repoRoot, '.oat/projects/shared/demo/plan.md'),
-          role: 'plan',
-          sourceSetId: 'demo',
-        },
-      ],
-    },
-    mode: 'unattended',
-  };
-
   assert.deepEqual(
-    toExplainerRunRequest({ ...common, recipe: 'project-recap' }).recipe,
-    { id: 'project-recap', version: '2' },
+    explainer.factBase.sources.map(({ id }) => id),
+    ['plan', 'design', 'spec', 'discovery'],
   );
+
+  const program = await bindProjectSources({
+    projectRoot,
+    recipe: 'program-recap',
+  });
   assert.deepEqual(
-    toExplainerRunRequest({ ...common, recipe: 'project-explainer' }).recipe,
-    { id: 'project-explainer', version: '1' },
+    program.factBase.sources.map(({ id }) => id),
+    ['program'],
   );
+
+  const factBasePath = join(repoRoot, 'fact-base.json');
+  await writeFile(factBasePath, '{}\n');
+  const supplied = await bindRepositorySources({
+    suppliedFactBasePath: factBasePath,
+  });
+  assert.deepEqual(supplied.factBase, {
+    mode: 'supplied',
+    path: await realpath(factBasePath),
+    freshnessPolicy: 'live-wins',
+  });
+  assert.equal(supplied.reviewedSource.repository, undefined);
+  assert.equal(supplied.reviewedSource.revision, undefined);
 });

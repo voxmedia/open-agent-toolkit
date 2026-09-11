@@ -5,6 +5,7 @@ import { basename, dirname, join, resolve } from 'node:path';
 export const CORE_INSTALL_COMMAND = 'oat tools install utility --scope user';
 export const CORE_UPDATE_COMMAND =
   'oat tools update --pack utility --scope user';
+export const MINIMUM_CORE_VERSION = '2.1.0';
 
 export async function checkCoreCompatibility({
   adapterRoot,

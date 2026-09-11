@@ -7,13 +7,10 @@ import { afterEach, test } from 'node:test';
 import {
   CORE_INSTALL_COMMAND,
   CORE_UPDATE_COMMAND,
+  MINIMUM_CORE_VERSION,
   checkCoreCompatibility,
   readFrontmatterVersion,
 } from '../scripts/check-core.mjs';
-import {
-  MINIMUM_CORE_VERSION,
-  supportsAdaptiveSetPlanning,
-} from '../scripts/run.mjs';
 
 const tempDirs = [];
 
@@ -79,7 +76,6 @@ test('adapter requires the core release that supports publish request v2', async
       minimumVersion: MINIMUM_CORE_VERSION,
     });
     assert.equal(result.ok, ok, version);
-    assert.equal(supportsAdaptiveSetPlanning(version), ok, version);
   }
 });
 
