@@ -63,11 +63,11 @@ test('accepts a compatible installed canonical core', async () => {
   );
 });
 
-test('adapter requires the core release that supports publish request v2', async () => {
-  assert.equal(MINIMUM_CORE_VERSION, '2.1.0');
+test('adapter requires the core release with the replacement flow', async () => {
+  assert.equal(MINIMUM_CORE_VERSION, '3.0.0');
   for (const [version, ok] of [
-    ['2.0.3', false],
-    ['2.1.0', true],
+    ['2.1.1', false],
+    ['3.0.0', true],
   ]) {
     const { adapterRoot, skillsRoot } = await createInstalledLayout(version);
     const result = await checkCoreCompatibility({
