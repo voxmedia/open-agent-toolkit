@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t09
+oat_current_task_id: p01-t10
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 17    | 8/17      |
+| Phase 1 | in_progress | 17    | 9/17      |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 8     | 0/8       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 8/32 tasks completed
+**Total:** 9/32 tasks completed
 
 ---
 
@@ -249,8 +249,8 @@ oat_generated: false
 
 ### Task p01-t09: Prove one real path end to end before any deletion
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** c4a95b5fa1be33586dd001dff08410d3651ff585
 
 **Operator-approved plan correction:**
 
@@ -258,7 +258,19 @@ oat_generated: false
 - The project-only `verifySelectedProjectRecapForArchive` recipe pin remains strict.
 - Cause: the archive check was added post-review without re-checking the recipe pin.
 
-**Deletion gate:** closed. No p01-t10 or later task has started.
+**Outcome:**
+
+- A hand-authored program recap over the execution program and the two newest wave summaries passes all browser-free checks, records `built-needs-review`, passes direct generic manifest/hash/inventory validation, and is reused on identical inputs.
+- Swapping the W6/W7 task counts produces `verify-claim-untraced`; recording QA against changed HTML bytes produces `record-qa-stale`.
+- The project-only archive validator remained unchanged and its 89-test suite passed.
+
+**Verification:**
+
+- `node --test .agents/skills/explainer-kit/tests/flow.e2e.test.mjs` (3/3 passed).
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts` (89/89 passed).
+- `pnpm lint` and `pnpm format` passed.
+
+**Deletion gate:** open. p01-t10 may proceed.
 
 ---
 
@@ -338,7 +350,8 @@ Chronological log of implementation progress.
 - [x] p01-t06: Add deterministic `record.mjs` and checked-in archive fixture - 0528fbfc54edb518478c79a4cc09e2529dbb14c7
 - [x] p01-t07: Add browser-free `verify.mjs` checks and the none rung - 6bbde384d318e1558178814929bbe94890da7d27
 - [x] p01-t08: Replace archive validation with the v2 package contract - d7b4606e109466220d4e33a290f96b801d1a6502
-- [ ] p01-t09: Prove one real path end to end before any deletion - in progress
+- [x] p01-t09: Prove one real path end to end before any deletion - c4a95b5fa1be33586dd001dff08410d3651ff585
+- [ ] p01-t10: Rewrite the terminal-outcome guard and add `skip/failed_attempt` - in progress
 
 **What changed (high level):**
 
