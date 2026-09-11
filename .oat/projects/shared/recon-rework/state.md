@@ -30,7 +30,7 @@ oat_dispatch_policy:
 oat_skill_gate_overrides:
   oat-project-quick-start: disabled
 oat_implement_exit_gate:
-  status: pending
+  status: blocked
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -39,7 +39,7 @@ oat_implement_exit_gate:
   project_override: null
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0
+  attempts_completed: 1
   reviewed_head: 695f4dba72d9fb46ab10a962a08907a6d593f7e3
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:4cd156d382aea38fe06bbd9e0c59f7d5749dc81ab8d7ec17eed5b499c2f9065c'
@@ -54,17 +54,17 @@ oat_implement_exit_gate:
   envelope_status: blocked
   artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T152512Z.md'
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T152512Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=c1c2d64e-b921-4484-8c81-6259fe3e397b; handoff=receive; source=reviews/final-review-2026-09-11T152512Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T152512Z.md'
   receive_archived_artifact: '.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-11T152512Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-11T152512Z.md'
   receive_pre_head: e9a217cd13da471e3af27a28ebc03bce438593e0
-  receive_commit: null
+  receive_commit: 654d10d0a3ac22b73dc402ac107df2802471ee25
   receive_eligible: true
-  receive_completed: false
-  failure: null
-  updated_at: '2026-09-11T15:28:00Z'
+  receive_completed: true
+  failure: 'validated blocking gate findings queued for remediation attempt 1 of 2'
+  updated_at: '2026-09-11T15:32:00Z'
 oat_post_implement_sequence:
   status: complete
   source: configured

@@ -986,6 +986,11 @@ head.
 re-review, then resume this same gate generation for its one allowed remediation
 attempt.
 
+**Receive:** commit `654d10d0a3ac22b73dc402ac107df2802471ee25`
+corroborates the archived run-bound artifact, exact `fixes_added` Reviews event,
+and all three task dispositions. Remediation attempt 1 of 2 is consumed before
+implementation begins.
+
 ## Final Summary (for PR/docs)
 
 All 20 implementation and revision tasks are implemented. The merged-head final
