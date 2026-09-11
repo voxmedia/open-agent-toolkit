@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t17
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,41 +24,50 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 17    | 16/17     |
-| Phase 2 | pending     | 4     | 0/4       |
-| Phase 3 | pending     | 8     | 0/8       |
-| Phase 4 | pending     | 2     | 0/2       |
-| Phase 5 | pending     | 1     | 0/1       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 17    | 17/17     |
+| Phase 2 | pending   | 4     | 0/4       |
+| Phase 3 | pending   | 8     | 0/8       |
+| Phase 4 | pending   | 2     | 0/2       |
+| Phase 5 | pending   | 1     | 0/1       |
 
-**Total:** 16/32 tasks completed
+**Total:** 17/32 tasks completed
 
 ---
 
 ## Phase 1: The cut — core flow, contracts, and retirement
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-09-09
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Added the browser-free `bundle → author → verify → record` flow with manifest-v2 packages and direct generic package validation.
+- Replaced project recap archive validation with the strict v2 package contract while preserving the exact project-recap recipe boundary.
+- Proved the flow over tracked program material before deleting callback orchestration, durability/publishing, release-candidate, smoke, and adapter tooling.
+- Removed explainer publish configuration and migrated completion-transaction fixtures to the new outcome/package vocabulary.
+- Added a code-scope retired-reference sweep; bumped the core to 3.0.0, adapter to 1.0.9, and public packages to 0.2.73.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `.agents/skills/explainer-kit/scripts/{bundle,verify,record}.mjs` - replacement core flow.
+- `.agents/skills/explainer-kit/tests/flow.e2e.test.mjs` - real-material proof and negative controls.
+- `packages/cli/src/commands/project/archive/archive-utils.ts` - strict project-recap manifest-v2 archive boundary.
+- `.agents/skills/oat-explainer-kit/scripts/check-terminal-outcome.mjs` - new outcomes and guarded `skip/failed_attempt`.
+- `tools/smoke/explainer-kit/no-retired-references.test.mjs` - executable retired-reference invariant.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: full ordered CI gate list; forced uncached Turbo tests; standalone smoke/skill/script/skill-validation suites; lint; format; focused package and negative-control suites.
+- Result: all final gates passed. Forced Turbo reported `Cached: 0`; one unrelated visual-companion five-second startup timeout passed independently and on the immediate full retry.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Operator correction `cont-agent-authored-recap-p01-plan-correction-1` kept `verifySelectedProjectRecapForArchive` project-only and changed non-project recap checks to direct generic package validation.
+- Recovery usage remained `0/10`; no automatic phase recovery was opened.
 
 ### Task p01-t01: Trim `contracts.mjs` to the three kept contract kinds
 
@@ -406,6 +415,26 @@ oat_generated: false
 
 ---
 
+### Task p01-t17: Add the retired-reference sweep and bump shipped versions
+
+**Status:** completed
+**Commit:** 853462ffd53b2d347ad6495c5829abd18091cab0
+
+**Outcome:**
+
+- Added the Phase 1 code-scope retired-reference scanner with three named transitional prose exclusions and two outcome-only negative-control allowlists.
+- Bumped `explainer-kit` to 3.0.0, `oat-explainer-kit` to 1.0.9, the adapter minimum core to 3.0.0, and all five public packages to 0.2.73.
+- Updated canonical version pins and the packaged public-version map.
+
+**Verification:**
+
+- Sweep red control found seeded `built-durable`; the named guard-test allowlist control stayed green; the tracked tree stayed green.
+- Ordered phase gates all exited 0: check, type-check, test, build, skill bumps, origin fetch, release versions, release validation, and docs build.
+- Final forced Turbo run passed all ten tasks with `Cached: 0`; standalone smoke (156/156), skills, scripts, canonical skill validation, lint, and format passed.
+- One unrelated forced-run visual-companion startup timeout passed 5/5 independently and the immediate full uncached retry passed 390/390 CLI files.
+
+---
+
 ## Phase 2: Ladder and fresh-host proof
 
 **Status:** pending
@@ -453,6 +482,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch target: `oat-phase-implementer-gpt-5-6-sol-high`
 - Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
+#### Phase Outcome
+
+| Phase | Status    | Tasks | Base                                       | Code Head                                  | Review                          |
+| ----- | --------- | ----- | ------------------------------------------ | ------------------------------------------ | ------------------------------- |
+| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `853462ffd53b2d347ad6495c5829abd18091cab0` | root-owned phase review pending |
+
+- Recovery ledger: `used_attempts: 0`, `pending_attempt: null`; no recovery events.
+- File boundary: only p01-declared files, the operator-approved plan/design correction, p01 bookkeeping, and mechanically derived in-phase symbol consumers were changed.
+- Completion time: `2026-09-11T15:44:08Z`.
+
 #### Continuation cont-agent-authored-recap-p01-plan-correction-1
 
 - Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
@@ -490,7 +529,7 @@ Chronological log of implementation progress.
 - [x] p01-t14: Cut the adapter callback path, seam probe, and finalizer - f9b6fa6a0a450e8773d57f63e49e7e74e86fc1a6
 - [x] p01-t15: Remove the `explainers.publish.*` CLI config keys - 0a8450c6d2c4413a62e7aa133d12a7e882984777
 - [x] p01-t16: Move completion-transaction recap fixtures to v2 - bd444a3ea44c1d990ddab448dc72e2f91de86d4b
-- [ ] p01-t17: Add retired-reference sweep and bump shipped versions - in progress
+- [x] p01-t17: Add retired-reference sweep and bump shipped versions - 853462ffd53b2d347ad6495c5829abd18091cab0
 
 **What changed (high level):**
 
@@ -511,13 +550,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Continue p01 in plan order; no deletion tasks may begin before p01-t09 passes.
+- Root-owned Phase p01 review; do not start p02 from this implementation handle.
 
 **Blockers:**
 
 - None.
 
-**Session End:** {time}
+**Session End:** 2026-09-11T15:44:08Z
 
 ---
 
@@ -541,10 +580,10 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                                                | Passed             | Failed  | Coverage                                                                                           |
+| ----- | ------------------------------------------------------------------------------------------------------------------------ | ------------------ | ------- | -------------------------------------------------------------------------------------------------- |
+| 1     | Ordered CI gates; forced Turbo; standalone smoke/skills/scripts/skill validation; lint/format; focused negative controls | All final commands | 0 final | Browser-free flow, archive/package contract, terminal outcomes, retired references, version parity |
+| 2     | -                                                                                                                        | -                  | -       | -                                                                                                  |
 
 ## Final Summary (for PR/docs)
 

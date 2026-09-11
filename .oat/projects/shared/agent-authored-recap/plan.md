@@ -2,9 +2,9 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-09-10
+oat_last_updated: 2026-09-11
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: [] # fully sequential: every phase touches the explainer-kit tree or its consumers
 oat_plan_hill_phases: ['p05']
 oat_auto_review_at_hill_checkpoints: true
@@ -582,7 +582,9 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
+| Scope | Type  | Status  | Notes                                                                                                               |
+| ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------- |
+| p01   | phase | pending | Implementation complete at `853462ffd53b2d347ad6495c5829abd18091cab0`; root-owned phase review required before p02. |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
