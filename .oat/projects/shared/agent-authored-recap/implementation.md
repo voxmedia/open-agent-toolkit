@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t07
+oat_current_task_id: p01-t08
 oat_generated: false
 ---
 
@@ -215,6 +215,22 @@ oat_generated: false
 
 ---
 
+### Task p01-t07: `verify.mjs` — browser-free checks, rendered claims, and the none rung
+
+**Status:** completed
+**Commit:** 6bbde384d318e1558178814929bbe94890da7d27
+
+**Notes:**
+
+- Added required-section, structure, source-dumping, shell-script, ledger-to-page, and bounded page-to-ledger checks with no separate `externalRequests` result.
+- Added rendered term, number, date, and closed-status extraction keyed by table-row, sentence identifier, or section/heading subject.
+- Added the none rung, distinct authoring/verify failure records, malformed-page QA output, and program fixtures derived from real execution material.
+- Focused suite: `node --test .agents/skills/explainer-kit/tests/verify.test.mjs` (6/6 passed).
+- Required negative controls: bypassing page-to-ledger matching made the untraced-number and swapped-wave tests fail; bypassing shell-script errors made the foreign-script test fail. Restoring both guards returned the suite to 6/6.
+- Skill gates: `pnpm lint` and `pnpm format` passed.
+
+---
+
 ## Phase 2: Ladder and fresh-host proof
 
 **Status:** pending
@@ -280,7 +296,8 @@ Chronological log of implementation progress.
 - [x] p01-t04: Manifest v2 schema and package rule v3 - c96741c987b2b4c6873cd633910b65d073be1549
 - [x] p01-t05: Add `bundle.mjs` with anchor ledger - 0adf7ddf690e713c57d099a12b3d131e31eef748
 - [x] p01-t06: Add deterministic `record.mjs` and checked-in archive fixture - 0528fbfc54edb518478c79a4cc09e2529dbb14c7
-- [ ] p01-t07: Add browser-free `verify.mjs` checks and the none rung - in progress
+- [x] p01-t07: Add browser-free `verify.mjs` checks and the none rung - 6bbde384d318e1558178814929bbe94890da7d27
+- [ ] p01-t08: Replace archive validation with the v2 package contract - in progress
 
 **What changed (high level):**
 
@@ -290,6 +307,7 @@ Chronological log of implementation progress.
 - Replaced manifest/package contracts with v2/v3.
 - Added the replacement bundle intake, fact-base extraction, anchor ledger, and reuse flow.
 - Added deterministic terminal recording and a parity-checked v2 archive package fixture.
+- Added browser-free authoring verification and both mechanical claim-tracing directions.
 
 **Decisions:**
 
