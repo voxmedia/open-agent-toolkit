@@ -30,9 +30,9 @@ oat_dispatch_policy:
 oat_skill_gate_overrides:
   oat-project-quick-start: disabled
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -54,17 +54,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T155617Z.md'
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T155617Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=e9a3a038-dc02-4f62-affe-c3d5cfb2c4dc; handoff=receive; source=reviews/final-review-2026-09-11T155617Z.md; scope=final; type=code'
   receive_source_artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T155617Z.md'
   receive_archived_artifact: '.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-11T155617Z.md'
   receive_event_identity: 'final | code | final-review-2026-09-11T155617Z.md'
   receive_pre_head: dd77aa9040246d3dd5629b013775fe8eaed006d2
-  receive_commit: null
+  receive_commit: fcc97ac11ca7d2caf42f6fcf89521d492dd1cf7e
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-09-11T16:01:05Z'
+  updated_at: '2026-09-11T16:02:36Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -98,15 +98,15 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** Configured gate attempt 2 passed; review receipt pending.
+**Status:** Configured implementation exit gate passed and received.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-11
 
 ## Current Phase
 
-Revision p-rev3 and its narrowed lifecycle re-review are complete. The configured
-gate's second and final attempt passed with no findings; its review receipt is
-pending.
+Revision p-rev3, its narrowed lifecycle re-review, and the configured gate are
+complete. Gate attempt 2 passed with no findings and its run-bound review receipt
+is durably reconciled.
 
 ## Artifacts
 
@@ -135,7 +135,7 @@ No existing project was absorbed or retired.
 - ✓ Configured implementation exit-gate remediation attempt 1 implemented
 - ✓ Narrowed lifecycle re-review passed
 - ✓ Configured implementation exit-gate attempt 2 passed with no findings
-- ⧗ Configured implementation exit-gate review receipt pending
+- ✓ Configured implementation exit-gate review received and archived
 - ✓ Final HiLL and configured closeout sequence completed
 - ✓ PR #285 updated and open as a draft
 - ✓ Post-retro RP-01, RP-02, UP-01, and UP-02 implemented directly
@@ -149,8 +149,8 @@ No active blocker.
 
 ## Next Milestone
 
-Receive the passing configured-gate review, then update and push PR #285 and mark
-it ready for review.
+Refresh project documentation and PR metadata, run the full release verification,
+then push PR #285 and mark it ready for review.
 
 ## Authorization and Scope
 

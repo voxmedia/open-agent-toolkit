@@ -463,7 +463,7 @@ corroborates the archived run-bound artifact, exact passed Reviews event, and
 durable judgment-sweep dispositions.
 **Status:** `allowed/passed`; no product change followed the reviewed head.
 
-### Implementation Exit Gate: generation 2 passed, receipt pending
+### Implementation Exit Gate: generation 2 passed
 
 **Resolved:** 2026-09-11T15:23:00Z
 **Gate:** `IMPLEMENT-11` via configured `oat --json gate review`
@@ -1067,9 +1067,9 @@ event, and pre-receive head persisted before disposition.
 **Findings:** 0 Critical / 0 Important / 0 Medium / 0 Minor.
 
 **Disposition:** passed. No remediation tasks, deferrals, or product changes are
-required. The run-bound artifact and exact Reviews event are archived; durable
-receive reconciliation remains before the configured gate becomes
-`allowed/passed`.
+required. The run-bound artifact and exact Reviews event are archived. Receive
+commit `fcc97ac11ca7d2caf42f6fcf89521d492dd1cf7e` corroborates the run ID,
+artifact, target, and passed event. The configured gate is `allowed/passed`.
 
 ## Final Summary (for PR/docs)
 
@@ -1097,7 +1097,7 @@ The earlier production-topology, malformed-input, lifecycle-prose, profile-cap,
 hostile-collection, singleton-lane, adaptive-cap documentation, and preview-label
 findings are fixed. The terminal narrowed final review passed with no blocking
 findings. Configured exit-gate attempt 1 produced the last three fixes; attempt 2
-passed with no findings and awaits durable receipt before closeout.
+passed with no findings and was durably received without further changes.
 
 ## Completion Outcome
 
