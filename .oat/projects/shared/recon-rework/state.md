@@ -45,15 +45,15 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:4cd156d382aea38fe06bbd9e0c59f7d5749dc81ab8d7ec17eed5b499c2f9065c'
   freshness_head: 935088094234df8ce12a1b2d5ce6f85bc71fa5d9
   freshness_fingerprint: 'sha256:effective-delta-v1:873425b1ae82ef864cfe4228a69bd9be71184c7cfedcc05f6d865bddaca20e82'
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 'recon-exit-gate-20260911T151854Z'
   launch_started_at: '2026-09-11T15:18:54Z'
   launch_result_receipt: '/private/tmp/recon-exit-gate-20260911T151854Z.receipt.json'
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/c1c2d64e-b921-4484-8c81-6259fe3e397b.json'
   gate_run_id: c1c2d64e-b921-4484-8c81-6259fe3e397b
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: blocked
+  artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T152512Z.md'
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T152512Z.md before treating this gate review as consumed.'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -61,10 +61,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-11T15:19:21Z'
+  updated_at: '2026-09-11T15:25:12Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
