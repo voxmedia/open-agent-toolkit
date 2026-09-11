@@ -1441,6 +1441,28 @@ later implementation. Remaining deferred ledger: 0 Medium, 0 Minor.
 **Disposition:** passed. The configured implementation exit gate must now
 refresh against this reviewed basis.
 
+### Configured implementation exit gate after p-rev7
+
+**Generation started:** 2026-09-11T20:32:30Z
+**Resolution:** configured
+**Reviewed head:** `16ad8b120a90d625372302b2f4ed2a0d6ade1373`
+**Integration base:** `origin/main`, unique merge base
+`842cb3a1059dc24c521adf7383f4fbf512899f14`
+**Implementation fingerprint:**
+`sha256:effective-delta-v1:f7844cc1a5d2a14f46355b8e8dda88af40c961bcf1b91850de847380f3b1470b`
+**Freshness checkpoint:** `b68a9b19035e32dcd8c9792fabd22094dd25807e`,
+`sha256:effective-delta-v1:6b100c9552b81ecf05df049a888904ddb716e5aeea9e7f44b1ddcffd6447537d`
+**Configuration fingerprint:**
+`sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324`
+**Policy:** `onFailure=block`, `maxAttempts=2`
+**Status:** pending; launch not started.
+
+The current configuration resolves the same provider-neutral final code-review
+gate as the prior generation. The passed lifecycle review is the immutable
+implementation basis; its artifact receipt and the final-review receive commit
+are classified as corroborated closeout-only descendants in the rolling
+freshness checkpoint.
+
 ## References
 
 - [Plan](plan.md)

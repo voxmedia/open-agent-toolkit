@@ -30,41 +30,41 @@ oat_dispatch_policy:
 oat_skill_gate_overrides:
   oat-project-quick-start: disabled
 oat_implement_exit_gate:
-  status: stale
+  status: pending
   resolution: configured
-  disposition: passed
+  disposition: null
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
   project_override: null
   on_failure: block
   max_attempts: 2
-  attempts_completed: 1
-  reviewed_head: 819591ba1044e65a7eff7495a529bbe5ee122db3
+  attempts_completed: 0
+  reviewed_head: 16ad8b120a90d625372302b2f4ed2a0d6ade1373
   implementation_base_ref: origin/main
-  implementation_fingerprint: 'sha256:effective-delta-v1:247a48c4fc00804e5b7696fad76c04ef31e73c2a36539f0b8b615140fd9cad79'
-  freshness_head: 7ccc9eea42db7793bd76eaf7995e000bd79588d9
-  freshness_fingerprint: 'sha256:effective-delta-v1:d6338da2e0522f3e91c8733f48751dd3a656f432766462d79aeee5d2bb82a172'
-  launch_state: result_persisted
-  launch_attempt_id: 'recon-exit-gate-20260911T154843Z'
-  launch_started_at: '2026-09-11T15:48:43Z'
-  launch_result_receipt: '/private/tmp/recon-exit-gate-20260911T154843Z.receipt.json'
-  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/e9a3a038-dc02-4f62-affe-c3d5cfb2c4dc.json'
-  gate_run_id: e9a3a038-dc02-4f62-affe-c3d5cfb2c4dc
-  envelope_status: ok
-  artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T155617Z.md'
-  handoff: 'Run oat-project-review-receive for .oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T155617Z.md before treating this gate review as consumed.'
-  receive_state: completed
-  receive_correlation: 'run=e9a3a038-dc02-4f62-affe-c3d5cfb2c4dc; handoff=receive; source=reviews/final-review-2026-09-11T155617Z.md; scope=final; type=code'
-  receive_source_artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T155617Z.md'
-  receive_archived_artifact: '.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-11T155617Z.md'
-  receive_event_identity: 'final | code | final-review-2026-09-11T155617Z.md'
-  receive_pre_head: dd77aa9040246d3dd5629b013775fe8eaed006d2
-  receive_commit: fcc97ac11ca7d2caf42f6fcf89521d492dd1cf7e
-  receive_eligible: true
-  receive_completed: true
+  implementation_fingerprint: 'sha256:effective-delta-v1:f7844cc1a5d2a14f46355b8e8dda88af40c961bcf1b91850de847380f3b1470b'
+  freshness_head: b68a9b19035e32dcd8c9792fabd22094dd25807e
+  freshness_fingerprint: 'sha256:effective-delta-v1:6b100c9552b81ecf05df049a888904ddb716e5aeea9e7f44b1ddcffd6447537d'
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
   failure: null
-  updated_at: '2026-09-11T16:15:07Z'
+  updated_at: '2026-09-11T20:32:30Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T20:30:13Z'
+oat_project_state_updated: '2026-09-11T20:32:30Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
