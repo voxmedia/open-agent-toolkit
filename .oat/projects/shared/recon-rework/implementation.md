@@ -143,7 +143,8 @@ quick-profile conditional reconciliation still had two diagnostic owners, and
 non-array manifest collections could throw inside shape validation. Commit
 `cfd2f25a5` fixes all three. The composed recon suite now passes 263/263, and
 three new negative controls restore the corresponding throw or duplicate
-diagnostic before the fixes are restored.
+diagnostic before the fixes are restored. The eight CI/release/docs gates plus
+lint and format all return zero against this fix.
 
 ## Phase 1: Decision and versioned contract
 
