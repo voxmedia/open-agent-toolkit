@@ -13,9 +13,10 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-11
 
-Three implementation runs plus six revision phases completed 27 original,
-post-retro, integration, and review-remediation tasks. The terminal full-delta
-review then added one Important pass-outcome contradiction task in `p-rev7`.
+Three implementation runs plus seven revision phases completed all 28 original,
+post-retro, integration, and review-remediation tasks. The authorized `p-rev7`
+cycle closed the terminal full-delta review's Important pass-outcome
+contradiction.
 
 ## Progress Overview
 
@@ -32,42 +33,42 @@ review then added one Important pass-outcome contradiction task in `p-rev7`.
 | Phase p-rev4: Same-run condition evidence  | completed | 2     | 2/2       |
 | Phase p-rev5: Thorough gather compilation  | completed | 1     | 1/1       |
 | Phase p-rev6: Gather pass ownership        | completed | 1     | 1/1       |
-| Phase p-rev7: Pass outcome reconciliation  | pending   | 1     | 0/1       |
+| Phase p-rev7: Pass outcome reconciliation  | completed | 1     | 1/1       |
 
-**Total:** 27/28 tasks implemented. Task `prev7-t01` is next.
+**Total:** 28/28 tasks implemented.
 
 ## Task Status
 
-| Task      | Outcome                                         | Commit                                             |
-| --------- | ----------------------------------------------- | -------------------------------------------------- |
-| p01-t01   | Completed: superseding decision                 | `663dab68996b41dbc5e92bf2e85847924ea2a944`         |
-| p01-t02   | Completed: versioned manifest and normalization | `f5317ee5fd4d5df78a341819023d7cc49f97da3e`         |
-| p02-t01   | Completed: economical routing preview           | `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c`         |
-| p02-t02   | Completed: conditional escalation/outcomes      | `1bad7202d740ef2daf6d22a254875e8ba2774c0b`         |
-| p02-t03   | Completed: profile and harness integration      | `58b165063f7f1f154920b9793d353a2f8777ed81`         |
-| p03-t01   | Completed: controller/worker/shared guidance    | `e38994e2809c57542aa3146c6a64ffedca22cd34`         |
-| p03-t02   | Completed: renderer and public docs             | `33a5cfff83a11219429d3944cec8de8a1eb475a4`         |
-| p04-t01   | Completed: bundle and release versions          | `9721d7c680a0778967addaf9ef8b391839949d9c`         |
-| p04-t02   | Completed: full verification/evidence           | `3e200321b705e5a3204cbe72434dff547ab2bc28`         |
-| p04-t03   | Completed: validate production topology         | `4f6884a99844cf5e86168ad422db7f2f49a23c08`         |
-| p04-t04   | Completed: structure malformed-wave errors      | `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3`         |
-| p04-t05   | Completed: align lifecycle summaries            | `fe30e986219bbf27b04fb08957166229acc955fe`         |
-| p04-t06   | Completed: correct Phase 4 completion wording   | this commit                                        |
-| p05-t01   | Completed: simplify approval and diagnostics    | `f16437f54491c57f9ad9518c34b415ffb7418a7e`         |
-| p05-t02   | Completed: align shipped and historical docs    | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`         |
-| p05-t03   | Completed: close validator regressions          | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`, `bd5dded4d` |
-| p05-t04   | Completed: reconcile final-review bookkeeping   | this commit                                        |
-| prev1-t01 | Completed: integrate current main               | `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`         |
-| prev2-t01 | Completed: align profile topology caps          | `be329458b7c1f931b4fc5712c1456619484d0e13`         |
-| prev2-t02 | Completed: close hostile manifest collections   | `fc4470be39e49dfc26489bbe5caeabcbc22525ef`         |
-| prev3-t01 | Completed: bound singleton wave lanes           | `2ac9578b417e8963a49e48eefd3d9b6fc3f3cfaf`         |
-| prev3-t02 | Completed: align adaptive cap contract prose    | `3bdfaa286519c08749a6cbdb7315546019f40f40`         |
-| prev3-t03 | Completed: clarify adaptive cap preview         | `12b68773a957c4a011a1099027e1b6da3a7f1463`         |
-| prev4-t01 | Completed: require same-run condition evidence  | `8257446bed1f3105e288cd6f2fd46eb5c9d53190`         |
-| prev4-t02 | Completed: suppress derivative diagnostics      | `3784abc9f26e6714901c450c775b0ceb16ad30b7`         |
-| prev5-t01 | Completed: compile redundant thorough evidence  | `26c8357d081ced7047379140c5353ab5993a7f46`         |
-| prev6-t01 | Completed: bind gather passes to approved waves | `52c21ca6b065b95907887459770b3d38ac8cb105`         |
-| prev7-t01 | Pending: reconcile contradictory pass outcomes  | -                                                  |
+| Task      | Outcome                                          | Commit                                             |
+| --------- | ------------------------------------------------ | -------------------------------------------------- |
+| p01-t01   | Completed: superseding decision                  | `663dab68996b41dbc5e92bf2e85847924ea2a944`         |
+| p01-t02   | Completed: versioned manifest and normalization  | `f5317ee5fd4d5df78a341819023d7cc49f97da3e`         |
+| p02-t01   | Completed: economical routing preview            | `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c`         |
+| p02-t02   | Completed: conditional escalation/outcomes       | `1bad7202d740ef2daf6d22a254875e8ba2774c0b`         |
+| p02-t03   | Completed: profile and harness integration       | `58b165063f7f1f154920b9793d353a2f8777ed81`         |
+| p03-t01   | Completed: controller/worker/shared guidance     | `e38994e2809c57542aa3146c6a64ffedca22cd34`         |
+| p03-t02   | Completed: renderer and public docs              | `33a5cfff83a11219429d3944cec8de8a1eb475a4`         |
+| p04-t01   | Completed: bundle and release versions           | `9721d7c680a0778967addaf9ef8b391839949d9c`         |
+| p04-t02   | Completed: full verification/evidence            | `3e200321b705e5a3204cbe72434dff547ab2bc28`         |
+| p04-t03   | Completed: validate production topology          | `4f6884a99844cf5e86168ad422db7f2f49a23c08`         |
+| p04-t04   | Completed: structure malformed-wave errors       | `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3`         |
+| p04-t05   | Completed: align lifecycle summaries             | `fe30e986219bbf27b04fb08957166229acc955fe`         |
+| p04-t06   | Completed: correct Phase 4 completion wording    | this commit                                        |
+| p05-t01   | Completed: simplify approval and diagnostics     | `f16437f54491c57f9ad9518c34b415ffb7418a7e`         |
+| p05-t02   | Completed: align shipped and historical docs     | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`         |
+| p05-t03   | Completed: close validator regressions           | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`, `bd5dded4d` |
+| p05-t04   | Completed: reconcile final-review bookkeeping    | this commit                                        |
+| prev1-t01 | Completed: integrate current main                | `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`         |
+| prev2-t01 | Completed: align profile topology caps           | `be329458b7c1f931b4fc5712c1456619484d0e13`         |
+| prev2-t02 | Completed: close hostile manifest collections    | `fc4470be39e49dfc26489bbe5caeabcbc22525ef`         |
+| prev3-t01 | Completed: bound singleton wave lanes            | `2ac9578b417e8963a49e48eefd3d9b6fc3f3cfaf`         |
+| prev3-t02 | Completed: align adaptive cap contract prose     | `3bdfaa286519c08749a6cbdb7315546019f40f40`         |
+| prev3-t03 | Completed: clarify adaptive cap preview          | `12b68773a957c4a011a1099027e1b6da3a7f1463`         |
+| prev4-t01 | Completed: require same-run condition evidence   | `8257446bed1f3105e288cd6f2fd46eb5c9d53190`         |
+| prev4-t02 | Completed: suppress derivative diagnostics       | `3784abc9f26e6714901c450c775b0ceb16ad30b7`         |
+| prev5-t01 | Completed: compile redundant thorough evidence   | `26c8357d081ced7047379140c5353ab5993a7f46`         |
+| prev6-t01 | Completed: bind gather passes to approved waves  | `52c21ca6b065b95907887459770b3d38ac8cb105`         |
+| prev7-t01 | Completed: reconcile contradictory pass outcomes | `914e9fde6d67f6a3d1c88f2ff2b573b955503822`         |
 
 ## Phase p-rev4: Remote condition-evidence review fix
 
@@ -205,8 +206,9 @@ validator. Focused 2/2, packet 59/59, and full recon 275/275 passed.
 
 ## Phase p-rev7: Reconcile contradictory pass outcomes
 
-**Status:** pending
+**Status:** completed
 **Started:** 2026-09-11
+**Completed:** 2026-09-11
 
 ### Review Received: terminal final review
 
@@ -225,6 +227,36 @@ and another review cycle require explicit user authorization.
 **Authorization:** On 2026-09-11, Thomas authorized one additional bounded
 `prev7-t01` fix and review cycle. This authorization does not widen task scope,
 alter the managed `high` dispatch policy, or authorize further cycles.
+
+### Task prev7-t01: Reconcile contradictory pass outcomes
+
+**Status:** completed
+**Commit:** `914e9fde6d67f6a3d1c88f2ff2b573b955503822`
+**Verification:** passed
+
+The packet compiler now reconciles complete typed artifacts against material
+`PASS_FAILED` and `PASS_OMITTED` gaps before profile derivation. A contradiction
+removes the affected pass, emits `CONTRADICTORY_PASS_OUTCOME`, and prevents
+publication. The production-boundary regressions cover primary gather,
+redundant gather, and an honest partial control without a complete artifact.
+Temporarily removing the reconciliation call made both hostile packets valid,
+publishable, and thorough and failed both hostile regressions; restoring it
+returned the focused 3/3 and complete recon 278/278 suites to green. All eight
+repository gates, lint, and formatting passed.
+
+### Narrowed p-rev7 review received
+
+**Date:** 2026-09-11
+**Review artifact:** `reviews/archived/p-rev7-review-2026-09-11T200317Z.md`
+**Reviewed head:** `914e9fde6d67f6a3d1c88f2ff2b573b955503822`
+**Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+The reviewer independently confirmed failure-dominates semantics, required
+production-boundary coverage, the fallible negative control, and the mechanical
+integrity-contract assertion update. Reconnaissance was not attempted, so no
+review-orchestration log entry is required.
+
+**Outcome:** `p-rev7` passed with no fix loop.
 
 ## Phase 5: Post-retro simplification
 
@@ -807,6 +839,24 @@ implementation exit gate is allowed; final HiLL sequencing may proceed.
   item was created.
 - Phase `p-rev1` passed with zero blocking fix loops; final lifecycle closeout
   remains distinct.
+
+### Run 4 continuation — 2026-09-11
+
+- Phase p-rev7 implementation request
+  `recon-rework-p-rev7-implement-20260911T1944Z` completed one task commit,
+  `914e9fde6d67f6a3d1c88f2ff2b573b955503822`, on
+  `oat-phase-implementer-gpt-5-6-sol-high`; no recovery attempts or nested
+  dispatches were used.
+- Phase p-rev7 implementation stamp:
+  `Dispatch: scope=p-rev7 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`.
+- The root-owned phase review completed on
+  `oat-reviewer-gpt-5-6-sol-high`; artifact
+  `reviews/archived/p-rev7-review-2026-09-11T200317Z.md` reported zero findings
+  and no reviewer reconnaissance.
+- Phase p-rev7 review stamp:
+  `Dispatch: scope=p-rev7 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`.
+- Phase p-rev7 verdict: passed; fix-loop count 0. All 28 tasks are complete and
+  final lifecycle closeout must refresh against the new implementation basis.
 
 <!-- orchestration-runs-end -->
 

@@ -930,7 +930,8 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | p-rev5 | code     | passed          | 2026-09-11 | reviews/archived/p-rev5-review-2026-09-11T175232Z.md        | 26c8357d081ced7047379140c5353ab5993a7f46 | manual     | -                     |
 | final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T180106Z.md         | 872cae9ce95df3be5d4b2964d542825100055542 | auto       | -                     |
 | p-rev6 | code     | passed          | 2026-09-11 | reviews/archived/p-rev6-review-2026-09-11T182327Z.md        | 52c21ca6b065b95907887459770b3d38ac8cb105 | manual     | -                     |
-| final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T183428Z.md         | 6faf9b996a88e0b9a55cfba5527636d762b042b4 | auto       | -                     |
+| final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T183428Z.md         | 6faf9b996a88e0b9a55cfba5527636d762b042b4 | auto       | -                     |
+| p-rev7 | code     | passed          | 2026-09-11 | reviews/archived/p-rev7-review-2026-09-11T200317Z.md        | 914e9fde6d67f6a3d1c88f2ff2b573b955503822 | manual     | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1296,7 +1297,9 @@ Source: terminal final lifecycle review (2026-09-11)
 
 ### Task prev7-t01: (review) Prevent complete artifacts from masking failed passes
 
-**Status:** pending
+**Status:** completed
+
+**Commit:** `914e9fde6d67f6a3d1c88f2ff2b573b955503822`
 
 **Files:**
 
@@ -1329,10 +1332,11 @@ complete recon suites.
 
 Commit as `fix(prev7-t01): reconcile contradictory pass outcomes`.
 
-## Implementation In Progress
+## Implementation Complete
 
-**Implementation tasks complete: 27 of 28 implemented. The terminal final review's
-Important artifact/failure contradiction is pending in `prev7-t01`.**
+**Implementation tasks complete: 28 of 28 implemented. The authorized
+`prev7-t01` cycle closed the terminal final review's Important artifact/failure
+contradiction, and the narrowed phase review passed with no findings.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1347,8 +1351,8 @@ Important artifact/failure contradiction is pending in `prev7-t01`.**
 - Phase p-rev6: 1 task — bind derived gathering passes to their approved waves.
 - Phase p-rev7: 1 task — reconcile contradictory artifacts and failed pass outcomes.
 
-**Total: 12 phases, 28 tasks.** One terminal-review remediation task is pending.
-Plan readiness, task completion, reviews, final gate, and shipping are distinct.
+**Total: 12 phases, 28 tasks.** Final lifecycle review, the configured exit gate,
+and refreshed shipping artifacts remain distinct.
 
 ## References
 
