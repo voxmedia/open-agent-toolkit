@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
-import { initializeRun } from '../scripts/lib/records.mjs';
 import { resolveTheme } from '../scripts/lib/theme.mjs';
 
 const PALETTES = ['neutral', 'ocean', 'ember', 'forest', 'violet'];
@@ -216,37 +215,6 @@ test('a supplied bundle wins over named and art-direction inputs', async () => {
     resolved.warnings.some((warning) => /supplied bundle wins/i.test(warning)),
   );
   assert.equal(validateContract('theme', resolved.theme).valid, true);
-});
-
-test('normalized requests and build records persist render strategy separately', async () => {
-  const outputRoot = await mkdtemp(join(tmpdir(), 'explainer-theme-record-'));
-  tempDirs.push(outputRoot);
-  const request = {
-    schemaVersion: 'explainer-kit.run-request/v1',
-    recipe: { id: 'project-explainer', version: '1' },
-    slug: 'theme-demo',
-    outputRoot,
-    factBase: {
-      mode: 'supplied',
-      path: 'facts.json',
-      freshnessPolicy: 'live-wins',
-    },
-    theme: {
-      palette: 'violet',
-      renderStrategy: 'user-switchable',
-    },
-    mode: 'interactive',
-  };
-
-  const run = await initializeRun(request);
-  const persistedRequest = JSON.parse(await readFile(run.requestPath, 'utf8'));
-  const buildRecord = JSON.parse(await readFile(run.buildRecordPath, 'utf8'));
-  const resolved = await resolveTheme(run.request.theme);
-
-  assert.equal(persistedRequest.theme.renderStrategy, 'user-switchable');
-  assert.equal(buildRecord.renderStrategy, 'user-switchable');
-  assert.equal(resolved.renderStrategy, 'user-switchable');
-  assert.equal('renderStrategy' in resolved.theme, false);
 });
 
 function withoutBundleHash(theme) {

@@ -9,7 +9,12 @@ import {
 } from '../scripts/lib/html-safety.mjs';
 
 const templates = new Map();
-for (const name of ['deck-shell', 'diagram-shell', 'engineer-tour']) {
+for (const name of [
+  'deck-shell',
+  'diagram-shell',
+  'engineer-tour',
+  'house-style',
+]) {
   templates.set(
     name,
     await readFile(
