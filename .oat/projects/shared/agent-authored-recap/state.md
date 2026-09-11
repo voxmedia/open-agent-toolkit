@@ -84,7 +84,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-11T15:44:08Z'
+oat_project_state_updated: '2026-09-11T15:58:00Z'
 oat_generated: false
 ---
 
@@ -96,7 +96,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 complete, awaiting root-owned phase review
+Implementation — Phase 1 review fixes in progress
 
 ## Artifacts
 
@@ -112,7 +112,7 @@ Implementation — Phase 1 complete, awaiting root-owned phase review
 - ✓ Specification complete
 - ✓ Design complete (HiLL 2026-09-10)
 - ✓ Plan complete
-- ✓ Phase 1 complete (17/17 tasks)
+- ⧗ Phase 1 implementation complete (17/17 tasks); review round 1 changes requested
 
 ## Blockers
 
@@ -120,4 +120,4 @@ None
 
 ## Next Milestone
 
-Complete the root-owned Phase 1 review before starting Phase 2.
+Resolve Phase 1 review findings and pass re-review before starting Phase 2.

@@ -486,13 +486,30 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 | Phase | Status    | Tasks | Base                                       | Code Head                                  | Review                          |
 | ----- | --------- | ----- | ------------------------------------------ | ------------------------------------------ | ------------------------------- |
-| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `853462ffd53b2d347ad6495c5829abd18091cab0` | root-owned phase review pending |
+| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `853462ffd53b2d347ad6495c5829abd18091cab0` | round 1 changes requested       |
 
 - Recovery ledger: `used_attempts: 0`, `pending_attempt: null`; no recovery events.
 - File boundary: only p01-declared files, the operator-approved plan/design correction, p01 bookkeeping, and mechanically derived in-phase symbol consumers were changed.
 - Completion time: `2026-09-11T15:44:08Z`.
 - Task p01-t17 bookkeeping: `dd203b3aacdfdd9642fbe95d74855059b2711819`.
-- Phase completion disposition: implementation complete; root-owned review pending; p02 not started.
+- Phase completion disposition: implementation complete; review round 1 fixes required; p02 not started.
+
+#### Phase Review Round 1
+
+- Request ID: `dispatch-agent-authored-recap-p01-review-r1-20260911T1549Z`
+- Launch status: `accepted`
+- Terminal outcome: `completed`
+- Review artifact: `reviews/p01-review-2026-09-11T155532Z.md`
+- Reviewed range: `79f359957fabe4cbe042b39379523887b816cbff..f1cff54c0e364e858f9e36fb820e9f95b1e5b578`
+- Reviewed head: `f1cff54c0e364e858f9e36fb820e9f95b1e5b578`
+- Findings: 2 Critical, 5 Important, 3 Medium, 0 Minor
+- Disposition: `CHANGES REQUESTED`; review row advanced to `fixes_added`
+- Reconnaissance: `not-attempted`; no Review Orchestration section or project-log entry
+- Selection reason: `gate-target`
+- Candidates considered: `gpt-5.6-sol-high`
+- Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- Next: resume the original Phase 1 handle for the bounded review findings, then run a fresh root-owned review round.
 
 #### Continuation cont-agent-authored-recap-p01-plan-correction-1
 
