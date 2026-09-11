@@ -486,7 +486,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 | Phase | Status    | Tasks | Base                                       | Code Head                                  | Review                          |
 | ----- | --------- | ----- | ------------------------------------------ | ------------------------------------------ | ------------------------------- |
-| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `853462ffd53b2d347ad6495c5829abd18091cab0` | governance retry exhausted      |
+| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `853462ffd53b2d347ad6495c5829abd18091cab0` | manual fix complete             |
 
 - Recovery ledger: `used_attempts: 0`, `pending_attempt: null`; no recovery events.
 - File boundary: only p01-declared files, the operator-approved plan/design correction, p01 bookkeeping, and mechanically derived in-phase symbol consumers were changed.
@@ -589,6 +589,23 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Exact target: `oat-phase-implementer-gpt-5-6-sol-high` (unchanged)
 - Recovery accounting: outside the automatic review-fix budget and not phase recovery; usage remains `0/10`
 - Boundary: no Medium findings, p02 work, archive recipe widening, or unrelated cleanup
+
+#### Operator-Authorized Governance Remediation
+
+- Continuation: `cont-agent-authored-recap-p01-governance-manual-fix-1`
+- Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
+- Source review: `reviews/p01-review-2026-09-11T173707Z.md`
+- Fix range: `4d971b476fac42e3d9cb95829b23a417a55bb132..5844547c524f09f700027691bd7c1148b536b2e4`
+- Fix commit: `5844547c524f09f700027691bd7c1148b536b2e4`
+- Fixed: terminal `generate` now requires a complete assured project-recap package; changed-input rebundles and failure recording invalidate stale manifests
+- Negative controls: partial built manifest, corrupted package bytes, changed-input interruption, and failure/manifest coexistence all failed before the fix and pass after it
+- Positive control: checked-in recorded project-recap package remains accepted
+- Verification: focused core, lifecycle, archive/CLI, ordered phase gates, uncached Turbo, smoke, skills, scripts, lint, and format passed
+- Recovery accounting: operator-scoped governance remediation; automatic retry budget remains exhausted and phase recovery usage remains `0/10`
+- Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- Dispatch: scope=p01-governance-manual-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- Deferred unchanged: failure sanitization, duplicate relative-locator handling, and heading-fact asymmetry
+- Disposition: `fixes_completed`; one operator-authorized independent verification review remains before p02
 
 #### Continuation cont-agent-authored-recap-p01-plan-correction-1
 

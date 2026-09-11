@@ -84,7 +84,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-11T18:27:00Z'
+oat_project_state_updated: '2026-09-11T18:57:00Z'
 oat_generated: false
 ---
 
@@ -96,7 +96,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 operator-authorized remediation in progress
+Implementation — Phase 1 manual remediation complete, awaiting verification review
 
 ## Artifacts
 
@@ -112,12 +112,12 @@ Implementation — Phase 1 operator-authorized remediation in progress
 - ✓ Specification complete
 - ✓ Design complete (HiLL 2026-09-10)
 - ✓ Plan complete
-- ⧗ Phase 1 implementation complete (17/17 tasks); bounded manual remediation authorized
+- ⧗ Phase 1 implementation complete (17/17 tasks); operator-authorized remediation committed
 
 ## Blockers
 
-None; remediation is limited to the operator-authorized terminal-guard finding.
+None; one independent verification review remains before Phase 2.
 
 ## Next Milestone
 
-Complete the bounded terminal-guard remediation and its independent verification review before Phase 2.
+Complete the operator-authorized independent verification review before Phase 2.
