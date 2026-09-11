@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t03
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 17    | 2/17      |
+| Phase 1 | in_progress | 17    | 3/17      |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 8     | 0/8       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 2/32 tasks completed
+**Total:** 3/32 tasks completed
 
 ---
 
@@ -120,6 +120,37 @@ oat_generated: false
 
 ### Task p01-t03: Trim `qa.mjs` and rewrite the kept QA, theme, safety, and schema tests
 
+**Status:** completed
+**Commit:** c34b07113206e8c07d1b55c08f4ba4066d8b7ff9
+
+**Outcome:**
+
+- QA now retains only structural, source-dumping, cohesion, browser-probe, and PNG checks.
+- The cohesion ledger accepts an empty individual group and fails only when all three groups are empty.
+- Theme, HTML safety, visual matrix, and schema tests no longer execute retired rendering or record paths.
+
+**Files changed:**
+
+- `.agents/skills/explainer-kit/scripts/lib/qa.mjs` - retained QA primitives and browser finding rules.
+- `.agents/skills/explainer-kit/tests/{qa,html-safety,theme,visual-matrix,schemas}.test.mjs` - retained browser-free test surface.
+
+**Verification:**
+
+- Run: retained five-file Node test suite; retired-symbol search; `pnpm lint`; `pnpm format`.
+- Result: pass; 35 tests green and the retired QA imports/symbols are absent.
+
+**Negative control:**
+
+- Restoring the old any-group-empty cohesion rule made `qa.test.mjs` exit 1; restoring the all-groups-empty rule returned it to green.
+
+**Issues encountered:**
+
+- The first commit attempt was rejected by commitlint for a long body line before history changed; the wrapped retry produced the sole task commit.
+
+---
+
+### Task p01-t04: Manifest v2 schema and package rule v3
+
 **Status:** pending
 **Commit:** -
 
@@ -190,12 +221,14 @@ Chronological log of implementation progress.
 
 - [x] p01-t01: Trim `contracts.mjs` to the three kept contract kinds - cd6314c6eeadf512dc5d0077a080c37587b3abbb
 - [x] p01-t02: Trim the recipes, the recipe loader, and the briefs - e092ba547525262a70c456773c4650981731898c
-- [ ] p01-t03: Trim `qa.mjs` and rewrite the kept core tests - in progress
+- [x] p01-t03: Trim `qa.mjs` and rewrite the kept core tests - c34b07113206e8c07d1b55c08f4ba4066d8b7ff9
+- [ ] p01-t04: Manifest v2 schema and package rule v3 - in progress
 
 **What changed (high level):**
 
 - Reduced the core contract registry and validator to the three retained contract kinds.
 - Reduced the recipe registry to four floor-and-brief contracts.
+- Reduced QA to the retained browser-free and browser-probe primitives.
 
 **Decisions:**
 
