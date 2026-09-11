@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t12
+oat_current_task_id: p01-t13
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 17    | 11/17     |
+| Phase 1 | in_progress | 17    | 12/17     |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 8     | 0/8       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 11/32 tasks completed
+**Total:** 12/32 tasks completed
 
 ---
 
@@ -312,6 +312,25 @@ oat_generated: false
 
 ---
 
+### Task p01-t12: Retire the explainer smoke tests
+
+**Status:** completed
+**Commit:** aeed93c29c791b5a19f4b09b0f6d6bf9af15d2e2
+
+**Outcome:**
+
+- Removed obsolete package-consumer, packaged-layout, publishing, wrapper-compatibility, and duplicated skill-reader smoke coverage.
+- Removed the stale package-layout cross-reference from the CLI test helper.
+- Retained `check-core-version-parity.test.mjs` as the sole explainer smoke test.
+
+**Verification:**
+
+- `pnpm build` and `pnpm test:smoke` passed; smoke ran 153/153 tests.
+- `pnpm format` passed.
+- Retired-file sweep found only p01-t13/p03-t01 deferred references and durable project/repository history.
+
+---
+
 ## Phase 2: Ladder and fresh-host proof
 
 **Status:** pending
@@ -391,7 +410,8 @@ Chronological log of implementation progress.
 - [x] p01-t09: Prove one real path end to end before any deletion - c4a95b5fa1be33586dd001dff08410d3651ff585
 - [x] p01-t10: Rewrite the terminal-outcome guard and add `skip/failed_attempt` - f3b0c6dbc160d2f690b838e66545c04e6d1dc293
 - [x] p01-t11: Retire the explainer release-candidate tooling - 72312063bc5a4edc979e6bbc386a50a76f8c1b5e
-- [ ] p01-t12: Retire the explainer smoke tests - in progress
+- [x] p01-t12: Retire the explainer smoke tests - aeed93c29c791b5a19f4b09b0f6d6bf9af15d2e2
+- [ ] p01-t13: Retire the core orchestrator and obsolete modules - in progress
 
 **What changed (high level):**
 
