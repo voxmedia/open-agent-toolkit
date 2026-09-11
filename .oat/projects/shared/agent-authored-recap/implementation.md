@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t11
+oat_current_task_id: p01-t12
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 17    | 10/17     |
+| Phase 1 | in_progress | 17    | 11/17     |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 8     | 0/8       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 10/32 tasks completed
+**Total:** 11/32 tasks completed
 
 ---
 
@@ -293,6 +293,25 @@ oat_generated: false
 
 ---
 
+### Task p01-t11: Retire the explainer release-candidate tooling
+
+**Status:** completed
+**Commit:** 72312063bc5a4edc979e6bbc386a50a76f8c1b5e
+
+**Outcome:**
+
+- Removed the explainer RC build/run/acceptance/visual tooling and its immutable acceptance snapshot.
+- Removed `release:validate:visual` and `test:release` from root scripts and contributor/testing instructions.
+- Retired-reference sweep found only the explicitly deferred skill/docs references and durable repository history.
+
+**Verification:**
+
+- Root-script absence probe passed with exit 0; `pnpm format` passed.
+- `pnpm release:validate` validated all five tarballs, then exited 1 only on the lockstep version bump deliberately owned by p01-t17.
+- `pnpm test:smoke` ran 161 tests: 156 passed and the five explainer smoke tests scheduled for deletion in p01-t12 failed as expected.
+
+---
+
 ## Phase 2: Ladder and fresh-host proof
 
 **Status:** pending
@@ -371,7 +390,8 @@ Chronological log of implementation progress.
 - [x] p01-t08: Replace archive validation with the v2 package contract - d7b4606e109466220d4e33a290f96b801d1a6502
 - [x] p01-t09: Prove one real path end to end before any deletion - c4a95b5fa1be33586dd001dff08410d3651ff585
 - [x] p01-t10: Rewrite the terminal-outcome guard and add `skip/failed_attempt` - f3b0c6dbc160d2f690b838e66545c04e6d1dc293
-- [ ] p01-t11: Retire the explainer release-candidate tooling - in progress
+- [x] p01-t11: Retire the explainer release-candidate tooling - 72312063bc5a4edc979e6bbc386a50a76f8c1b5e
+- [ ] p01-t12: Retire the explainer smoke tests - in progress
 
 **What changed (high level):**
 
