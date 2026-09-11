@@ -1588,6 +1588,25 @@ describe('validateOatSkills', () => {
     expect(content).toMatch(/judgment-sweep mode/i);
   });
 
+  it('keeps review artifact intake and disposition in the receiving root', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-review-receive/SKILL.md',
+    );
+
+    expect(content).toMatch(
+      /receiving\/root agent reads the selected review artifact completely/i,
+    );
+    expect(content).toMatch(
+      /do not delegate review-artifact reading[\s\S]{0,180}disposition judgment[\s\S]{0,120}artifact edits/i,
+    );
+    expect(content).toMatch(
+      /bounded inspection[\s\S]{0,160}related code or evidence[\s\S]{0,180}exclude the review artifact/i,
+    );
+    expect(content).toMatch(
+      /exact `file:line` evidence[\s\S]{0,180}receiving\/root agent/i,
+    );
+  });
+
   it('requires reviewer artifacts to expose gate-parseable findings counts or sections', async () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
 
@@ -3180,7 +3199,7 @@ describe('validateOatSkills', () => {
       ['.agents/agents/oat-phase-implementer.md', '1.1.5'],
       ['.agents/agents/oat-reviewer.md', '1.2.4'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.5.8'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.3'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.4'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.5.5'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.8.3'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.6.4'],
@@ -4696,7 +4715,7 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.25'],
       ['oat-project-review-provide', '1.5.8'],
-      ['oat-project-review-receive', '1.6.3'],
+      ['oat-project-review-receive', '1.6.4'],
       ['oat-project-review-receive-remote', '1.5.2'],
       ['oat-project-implement', '2.3.8'],
       ['oat-project-pr-final', '1.6.4'],
@@ -4777,7 +4796,7 @@ describe('validateOatSkills', () => {
       receive.indexOf('### Step 2: Parse Findings into Buckets'),
     );
 
-    expect(readDeclaredVersion(receive)).toBe('1.6.3');
+    expect(readDeclaredVersion(receive)).toBe('1.6.4');
     expect(resolver).toContain(
       'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
     );
