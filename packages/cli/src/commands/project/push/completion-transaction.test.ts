@@ -26,7 +26,6 @@ import { describe, expect, it, vi } from 'vitest';
 const PROJECT_SLUG = 'completion-receipt';
 const PR_ARTIFACT = 'pr/project-pr-2026-08-28.md';
 const RECAP_MANIFEST = 'explainers/project-recap/manifest.json';
-const RECAP_BUILD_RECORD = 'explainers/project-recap/build-record.json';
 const FINAL_ARTIFACT_MESSAGE = 'chore(oat): publish final project links';
 const EVIDENCE_MESSAGE = 'chore(oat): attest final project recap';
 const RECOVERY_SCRIPT = fileURLToPath(
@@ -558,15 +557,10 @@ async function commitRecapEvidenceLocally(
   if (head === finalArtifactCommit) {
     await writeFile(
       `${projectPath}/${RECAP_MANIFEST}`,
-      `${JSON.stringify({ outcome: 'built-durable', artifactCommit: finalArtifactCommit }, null, 2)}\n`,
+      `${JSON.stringify({ schemaVersion: 'explainer-kit.manifest/v2', outcome: 'built', artifactCommit: finalArtifactCommit }, null, 2)}\n`,
       'utf8',
     );
-    await writeFile(
-      `${projectPath}/${RECAP_BUILD_RECORD}`,
-      `${JSON.stringify({ attested: true, artifactCommit: finalArtifactCommit }, null, 2)}\n`,
-      'utf8',
-    );
-    git(projectPath, ['add', '--', RECAP_MANIFEST, RECAP_BUILD_RECORD]);
+    git(projectPath, ['add', '--', RECAP_MANIFEST]);
     git(projectPath, [
       '-c',
       'core.hooksPath=/dev/null',
@@ -576,7 +570,6 @@ async function commitRecapEvidenceLocally(
       EVIDENCE_MESSAGE,
       '--',
       RECAP_MANIFEST,
-      RECAP_BUILD_RECORD,
     ]);
   }
 
@@ -587,10 +580,7 @@ async function commitRecapEvidenceLocally(
   expect(git(projectPath, ['rev-parse', `${evidenceCommit}^`])).toBe(
     finalArtifactCommit,
   );
-  expect(changedPaths(projectPath, evidenceCommit)).toEqual([
-    RECAP_BUILD_RECORD,
-    RECAP_MANIFEST,
-  ]);
+  expect(changedPaths(projectPath, evidenceCommit)).toEqual([RECAP_MANIFEST]);
   return evidenceCommit;
 }
 
@@ -614,8 +604,6 @@ function resolveCompletionRetryJson(projectPath: string, ref: string): string {
       ref,
       '--evidence-path',
       RECAP_MANIFEST,
-      '--evidence-path',
-      RECAP_BUILD_RECORD,
     ],
     { encoding: 'utf8' },
   );
@@ -742,38 +730,25 @@ describe('archived synced completion transaction', () => {
       );
       await mkdir(evidenceRoot, { recursive: true });
       const manifestPath = join(evidenceRoot, 'manifest.json');
-      const buildRecordPath = join(evidenceRoot, 'build-record.json');
       await writeFile(
         manifestPath,
-        `${JSON.stringify({ outcome: 'built-durable', artifactCommit: retried.lifecycleCommit })}\n`,
+        `${JSON.stringify({ schemaVersion: 'explainer-kit.manifest/v2', outcome: 'built', artifactCommit: retried.lifecycleCommit })}\n`,
       );
-      await writeFile(
-        buildRecordPath,
-        `${JSON.stringify({ attested: true, artifactCommit: retried.lifecycleCommit })}\n`,
-      );
-      git(fixture.cloneA, [
-        'add',
-        relative(fixture.cloneA, manifestPath),
-        relative(fixture.cloneA, buildRecordPath),
-      ]);
+      git(fixture.cloneA, ['add', relative(fixture.cloneA, manifestPath)]);
       git(fixture.cloneA, [
         'commit',
         '-m',
         EVIDENCE_MESSAGE,
         '--',
         relative(fixture.cloneA, manifestPath),
-        relative(fixture.cloneA, buildRecordPath),
       ]);
       const evidenceCommit = git(fixture.cloneA, ['rev-parse', 'HEAD']);
       expect(git(fixture.cloneA, ['rev-parse', `${evidenceCommit}^`])).toBe(
         retried.lifecycleCommit,
       );
-      expect(changedPaths(fixture.cloneA, evidenceCommit)).toEqual(
-        [
-          relative(fixture.cloneA, buildRecordPath),
-          relative(fixture.cloneA, manifestPath),
-        ].sort(),
-      );
+      expect(changedPaths(fixture.cloneA, evidenceCommit)).toEqual([
+        relative(fixture.cloneA, manifestPath),
+      ]);
     } finally {
       await fixture.cleanup();
     }
@@ -949,12 +924,7 @@ describe('non-archive synced completion transaction', () => {
         });
         await writeFile(
           `${target.projectPath}/${RECAP_MANIFEST}`,
-          '{"outcome":"built-not-durable"}\n',
-          'utf8',
-        );
-        await writeFile(
-          `${target.projectPath}/${RECAP_BUILD_RECORD}`,
-          '{"attested":false}\n',
+          '{"schemaVersion":"explainer-kit.manifest/v2","outcome":"built"}\n',
           'utf8',
         );
 
@@ -1176,7 +1146,6 @@ describe('non-archive synced completion transaction', () => {
           git(target.projectPath, ['rev-parse', `${evidenceCommit}^`]),
         ).toBe(publishedReceipts.finalArtifactCommit);
         expect(changedPaths(target.projectPath, evidenceCommit)).toEqual([
-          RECAP_BUILD_RECORD,
           RECAP_MANIFEST,
         ]);
       } finally {
@@ -1213,37 +1182,21 @@ describe('non-archive synced completion transaction', () => {
       );
       await writeFile(
         `${target.projectPath}/${RECAP_MANIFEST}`,
-        '{"outcome":"built-not-durable"}\n',
-        'utf8',
-      );
-      await writeFile(
-        `${target.projectPath}/${RECAP_BUILD_RECORD}`,
-        '{"attested":false}\n',
+        '{"schemaVersion":"explainer-kit.manifest/v2","outcome":"built"}\n',
         'utf8',
       );
       const receipts = await publishFinalArtifact(target.projectPath, target);
 
       await writeFile(
         `${target.projectPath}/${RECAP_MANIFEST}`,
-        `${JSON.stringify({ outcome: 'built-durable', artifactCommit: receipts.finalArtifactCommit }, null, 2)}\n`,
-        'utf8',
-      );
-      await writeFile(
-        `${target.projectPath}/${RECAP_BUILD_RECORD}`,
-        `${JSON.stringify({ attested: true, artifactCommit: receipts.finalArtifactCommit }, null, 2)}\n`,
+        `${JSON.stringify({ schemaVersion: 'explainer-kit.manifest/v2', outcome: 'built', artifactCommit: receipts.finalArtifactCommit }, null, 2)}\n`,
         'utf8',
       );
       await writeFile(
         `${target.projectPath}/unexpected.txt`,
         'contamination\n',
       );
-      git(target.projectPath, [
-        'add',
-        '--',
-        RECAP_MANIFEST,
-        RECAP_BUILD_RECORD,
-        'unexpected.txt',
-      ]);
+      git(target.projectPath, ['add', '--', RECAP_MANIFEST, 'unexpected.txt']);
       git(target.projectPath, [
         '-c',
         'core.hooksPath=/dev/null',
