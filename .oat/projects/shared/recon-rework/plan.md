@@ -918,7 +918,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T024939Z.md         | d08443a4494aa0f7344893ce03cabf61a50fb683 | gate       | cursor-fable-5-1-high |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T030536Z.md         | 5f243f7ac825a050e995c867597c69ef3e1b46bc | gate       | cursor-fable-5-1-high |
 | p-rev1 | code     | passed          | 2026-09-11 | reviews/archived/p-rev1-review-2026-09-11T143545Z.md        | 9d27e15a615fc18056a8c5b7501a0508ffb9c4a4 | manual     | -                     |
-| final  | code     | received        | 2026-09-11 | reviews/final-review-2026-09-11T144641Z.md                  | 0ee34935306c0dcb711ded3f83746a890cb50c97 | auto       | -                     |
+| final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T144641Z.md         | 0ee34935306c0dcb711ded3f83746a890cb50c97 | auto       | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -960,11 +960,82 @@ skill, version, release, test, build, docs, lint, and formatting gates pass.
 Commit the semantic conflict resolution as the merge commit created by integrating
 `origin/main`.
 
+## Phase p-rev2: Final merged-head review fixes
+
+Source: final lifecycle review `final-review-2026-09-11T144641Z.md`
+
+### Task prev2-t01: (review) Align profile topology caps with documented waves
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/tests/routing-contracts.test.mjs`
+- Modify: `.agents/skills/recon/tests/routing-preview.test.mjs`
+
+**Step 1: Understand the issue**
+
+The quick profile documents one map lane, one to four gather lanes, and one compile
+lane, but the validator counts every lane against `quick.lanes: 4` and rejects the
+maximum documented topology. It also admits wave modes that belong only to
+standard or thorough profiles.
+
+**Step 2: Implement fix**
+
+Make each profile explicit about allowed wave modes and which lanes its caps
+count. Permit quick's map plus up to four gather lanes plus compile, reject
+cross-profile modes, and keep standard/thorough adaptive ranges aligned with the
+published contract.
+
+**Step 3: Verify**
+
+Run the routing-contract and routing-preview suites. Add direct positive coverage
+for the maximum quick topology and negative coverage for forbidden cross-profile
+modes. Neutralize the new guard once and confirm the targeted test fails before
+restoring it.
+
+**Step 4: Commit**
+
+Commit as `fix(prev2-t01): align recon profile topology caps`.
+
+### Task prev2-t02: (review) Close object-valued manifest collection failures
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: `.agents/skills/recon/tests/integrity-contracts.test.mjs`
+
+**Step 1: Understand the issue**
+
+`collectReferences()` iterates `manifest.artifacts` before the array-shape guard.
+An object-valued collection throws, emits no categorical JSON result, and leaves a
+seeded stale `packet.md` published.
+
+**Step 2: Implement fix**
+
+Guard every reference-list iteration with `Array.isArray()` and audit equivalent
+ledger collections so hostile object and numeric shapes reach the structured
+validation and stale-output withdrawal path without cascading diagnostics.
+
+**Step 3: Verify**
+
+Add public-CLI negative controls for object and numeric collection values. Assert
+exit 1, categorical JSON, no cascaded pass/reconciliation diagnostics, and removal
+of seeded stale `packet.md`. Run the packet-validation, integrity-contract, and
+complete recon suites; neutralize the guard once to prove the P0 test fails.
+
+**Step 4: Commit**
+
+Commit as `fix(prev2-t02): fail closed on hostile manifest collections`.
+
 ## Implementation Complete
 
-**Implementation tasks complete: 18 of 18 implemented. Run 2 final-review fixes,
-verification, review reconciliation, and the main-integration revision are
-complete.**
+**Implementation tasks complete: 18 of 20 implemented. The merged-head final
+review added two blocking correction tasks.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -972,8 +1043,9 @@ complete.**
 - Phase 4: 6 tasks — distribution, complete verification, and final-review fixes.
 - Phase 5: 4 tasks — simplification plus fresh final-review fixes.
 - Phase p-rev1: 1 task — integrate current `origin/main` and resolve conflicts.
+- Phase p-rev2: 2 tasks — close merged-head profile and hostile-collection gaps.
 
-**Total: 6 phases, 18 tasks.** All implementation tasks are complete.
+**Total: 7 phases, 20 tasks.** Two final-review fix tasks remain.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

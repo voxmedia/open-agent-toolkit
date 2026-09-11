@@ -116,6 +116,10 @@ run-3-p-rev1-pass-20260911 Phase p-rev1 passed at merge commit 9d27e15a615fc1805
 
 run-3-final-review-20260911T144641Z Final lifecycle review at 0ee34935306c0dcb711ded3f83746a890cb50c97 used two bounded recon lanes and reported 0 Critical, 2 Important, 0 Medium, and 0 Minor findings; artifact reviews/final-review-2026-09-11T144641Z.md blocks closeout pending fixes.
 
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-3-final-review-receive-20260911T144641Z The merged-head final review blocking findings were accepted and converted to prev2-t01 and prev2-t02; the review is archived and lifecycle closeout remains blocked until fixes and narrowed re-review pass.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

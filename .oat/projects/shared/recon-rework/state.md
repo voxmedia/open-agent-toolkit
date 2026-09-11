@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 9d27e15a615fc18056a8c5b7501a0508ffb9c4a4
+oat_current_task: prev2-t01
+oat_last_commit: 05da6d44c81d44567ee3052d6297cd63a07fb5b5
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T14:42:57Z'
+oat_project_state_updated: '2026-09-11T14:57:42Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -98,24 +98,24 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** Main integration complete; final closeout refresh is in progress.
+**Status:** Final merged-head review fixes are in progress.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-11
 
 ## Current Phase
 
-Revision p-rev1 is complete. Final verification and exit-gate freshness are being
-refreshed on the integrated head.
+Revision p-rev2 - correcting two blocking findings from the merged-head final
+lifecycle review.
 
 ## Artifacts
 
 - Discovery: `discovery.md` — captured from the conversation, CLI-completed.
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight design aligned with the simplified approval contract.
-- Plan: `plan.md` — complete; 5 implementation phases plus one revision phase,
-  18 tasks.
-- Implementation: `implementation.md` — all 18 tasks complete; final lifecycle
-  closeout is in progress.
+- Plan: `plan.md` — complete; 5 implementation phases plus two revision phases,
+  20 tasks.
+- Implementation: `implementation.md` — 18/20 tasks complete; merged-head review
+  fixes are in progress.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
@@ -129,7 +129,8 @@ Project scope is shared; active pointer is checkout-local.
 No existing project was absorbed or retired.
 
 - ✓ Revision p-rev1 completed and phase review passed
-- ⧗ Final review and configured exit gate require refresh on the merged head
+- ⧗ Revision p-rev2 fixing two Important final-review findings
+- ⧗ Final review and configured exit gate require refresh after those fixes
 - ✓ Final HiLL and configured closeout sequence completed
 - ✓ PR #285 updated and open as a draft
 - ✓ Post-retro RP-01, RP-02, UP-01, and UP-02 implemented directly
@@ -143,8 +144,9 @@ No active blocker.
 
 ## Next Milestone
 
-Refresh final verification and the implementation exit gate on the integrated
-head, then update and push PR #285 and mark it ready for review.
+Implement `prev2-t01` and `prev2-t02`, pass a narrowed final lifecycle review,
+refresh the implementation exit gate, then update and push PR #285 and mark it
+ready for review.
 
 ## Authorization and Scope
 

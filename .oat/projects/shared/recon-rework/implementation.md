@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
-oat_current_task_id: null
+oat_current_task_id: prev2-t01
 oat_generated: false
 oat_template: false
 ---
@@ -22,17 +22,18 @@ project for the user-approved post-retro simplification in `p05-t01`.
 
 ## Progress Overview
 
-| Phase                                      | Status    | Tasks | Completed |
-| ------------------------------------------ | --------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
-| Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
-| Phase 4: Distribution and verification     | completed | 6     | 6/6       |
-| Phase 5: Post-retro simplification         | completed | 4     | 4/4       |
-| Phase p-rev1: Integrate current main       | completed | 1     | 1/1       |
+| Phase                                      | Status      | Tasks | Completed |
+| ------------------------------------------ | ----------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
+| Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
+| Phase 4: Distribution and verification     | completed   | 6     | 6/6       |
+| Phase 5: Post-retro simplification         | completed   | 4     | 4/4       |
+| Phase p-rev1: Integrate current main       | completed   | 1     | 1/1       |
+| Phase p-rev2: Merged-head review fixes     | in_progress | 2     | 0/2       |
 
-**Total:** 18/18 tasks implemented. Every phase and review disposition is complete;
-the integrated head is ready for final lifecycle closeout.
+**Total:** 18/20 tasks implemented. The integrated head's final lifecycle review
+added two blocking fix tasks.
 
 ## Task Status
 
@@ -56,6 +57,8 @@ the integrated head is ready for final lifecycle closeout.
 | p05-t03   | Completed: close validator regressions          | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`, `bd5dded4d` |
 | p05-t04   | Completed: reconcile final-review bookkeeping   | this commit                                        |
 | prev1-t01 | Completed: integrate current main               | `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`         |
+| prev2-t01 | Pending: align profile topology caps            | —                                                  |
+| prev2-t02 | Pending: close hostile manifest collections     | —                                                  |
 
 ## Phase 5: Post-retro simplification
 
@@ -839,10 +842,41 @@ that no fourth planning review should run; implementation/final reviews remain.
 integrated current `origin/main`, all verification gates passed, and the phase
 review passed with its formatter-owned Minor explicitly dispositioned.
 
+## Phase p-rev2: Final merged-head review fixes
+
+**Status:** in_progress
+**Started:** 2026-09-11
+
+### Review Received: final
+
+**Date:** 2026-09-11
+**Review artifact:**
+`reviews/archived/final-review-2026-09-11T144641Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 0
+- Minor: 0
+
+**Dispositions:**
+
+- I1 -> convert to `prev2-t01`; the current aggregate lane cap rejects the
+  documented maximum quick topology and admits cross-profile modes.
+- I2 -> convert to `prev2-t02`; object-valued manifest collections can throw
+  before structured validation and stale-output withdrawal.
+
+**New tasks added:** `prev2-t01`, `prev2-t02`
+
+**Next:** Execute both fix tasks via `oat-project-implement`, then run a narrowed
+final lifecycle re-review before refreshing the configured exit gate.
+
 ## Final Summary (for PR/docs)
 
-All 18 implementation and revision tasks are implemented, and every phase review
-passed. The branch now provides versioned
+Eighteen of 20 implementation and revision tasks are implemented. The merged-head
+final lifecycle review found two blocking gaps now tracked in `p-rev2`. The branch
+otherwise provides versioned
 v1/v2 recon contracts, economical approved per-wave routing, bounded conditional
 escalation, exact outcome accounting, caller-owned judgment, normalized
 intended-routing output, aligned worker and controller guidance, bundled runtime
