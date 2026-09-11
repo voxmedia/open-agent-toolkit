@@ -62,7 +62,7 @@ profile-cap correction tasks.
 | prev2-t02 | Completed: close hostile manifest collections   | `fc4470be39e49dfc26489bbe5caeabcbc22525ef`         |
 | prev3-t01 | Completed: bound singleton wave lanes           | Task commit recorded by root after phase handoff   |
 | prev3-t02 | Completed: align adaptive cap contract prose    | Task commit recorded by root after phase handoff   |
-| prev3-t03 | Pending: clarify adaptive cap preview           | —                                                  |
+| prev3-t03 | Completed: clarify adaptive cap preview         | Task commit recorded by root after phase handoff   |
 
 ## Phase 5: Post-retro simplification
 
@@ -1005,6 +1005,16 @@ caps, enumerate the counted modes, and require exactly one lane for fixed map,
 compile, and terminal reconciliation modes. They derive total maxima of 6/13/23
 lanes from those two rules. The skill-contract suite pins the same relationship
 across both shipped references.
+
+### Task prev3-t03: Clarify adaptive cap preview
+
+**Status:** completed
+**Verification:** passed
+
+Structured routing previews now expose `countedAdaptiveLaneCount` beside the
+total `laneCount`. Markdown renders the profile's adaptive cap together with
+the counted and total lane relationship, including the maximum quick example:
+`Profile adaptive-lane cap: 4 (counted lanes: 4 of 6 total)`.
 
 **Next:** Execute the three fix tasks, pass the mandatory narrowed lifecycle
 re-review, then resume this same gate generation for its one allowed remediation

@@ -402,10 +402,18 @@ export function createRoutingPreview(manifest) {
     };
   });
   const requestedProfile = manifest.run?.requestedProfile ?? null;
+  const profilePolicy = profileRoutingPolicy[requestedProfile];
+  const laneCount = waves.reduce((count, wave) => count + wave.laneCount, 0);
+  const countedAdaptiveLaneCount = waves.reduce(
+    (count, wave) =>
+      count +
+      (profilePolicy.countedLaneModes.includes(wave.mode) ? wave.laneCount : 0),
+    0,
+  );
   const profileCaps = {
-    maxLanes: profileRoutingPolicy[requestedProfile].lanes,
-    maxConcurrency: profileRoutingPolicy[requestedProfile].concurrency,
-    maxConditions: profileRoutingPolicy[requestedProfile].conditions,
+    maxLanes: profilePolicy.lanes,
+    maxConcurrency: profilePolicy.concurrency,
+    maxConditions: profilePolicy.conditions,
   };
   return deepFreeze({
     schemaVersion: manifest.schemaVersion,
@@ -417,14 +425,13 @@ export function createRoutingPreview(manifest) {
     conditions: clone(execution.conditions),
     limits: {
       waveCount: waves.length,
-      laneCount: waves.reduce((count, wave) => count + wave.laneCount, 0),
+      laneCount,
+      countedAdaptiveLaneCount,
       conditionCount: execution.conditions.length,
       maxConcurrency: execution.maxConcurrency,
       deadlineSeconds: execution.deadlineSeconds,
       retryLimit: execution.retryLimit,
-      worstCaseLaneAttempts:
-        waves.reduce((count, wave) => count + wave.laneCount, 0) *
-        (execution.retryLimit + 1),
+      worstCaseLaneAttempts: laneCount * (execution.retryLimit + 1),
     },
   });
 }
@@ -513,7 +520,7 @@ export function renderRoutingPreview(preview, format = 'markdown') {
   );
   if (preview.profileCaps) {
     lines.push(
-      `- Profile lane cap: ${encodeMarkdownValue(preview.profileCaps.maxLanes)}`,
+      `- Profile adaptive-lane cap: ${encodeMarkdownValue(preview.profileCaps.maxLanes)} (counted lanes: ${encodeMarkdownValue(preview.limits.countedAdaptiveLaneCount)} of ${encodeMarkdownValue(preview.limits.laneCount)} total)`,
       `- Profile concurrency cap: ${encodeMarkdownValue(preview.profileCaps.maxConcurrency)}`,
       `- Profile condition cap: ${encodeMarkdownValue(preview.profileCaps.maxConditions)}`,
     );

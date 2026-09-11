@@ -235,6 +235,7 @@ test('preview covers all ten economical defaults and preserves independent targe
   });
   assert.equal(preview.limits.waveCount, 10);
   assert.equal(preview.limits.laneCount, 10);
+  assert.equal(preview.limits.countedAdaptiveLaneCount, 7);
   assert.match(renderRoutingPreview(preview), /Worst-case limits/);
   assert.equal(
     JSON.parse(renderRoutingPreview(preview, 'json')).waves.length,
@@ -265,7 +266,7 @@ test('preview validates and displays the complete approval-bound topology', () =
     'wave-map',
     'insufficient-evidence',
     '| 1 |',
-    '- Profile lane cap: 10',
+    '- Profile adaptive-lane cap: 10 (counted lanes: 5 of 8 total)',
     '- Profile concurrency cap: 6',
     '- Profile condition cap: 1',
   ]) {
@@ -277,6 +278,7 @@ test('preview validates and displays the complete approval-bound topology', () =
   const json = JSON.parse(renderRoutingPreview(preview, 'json'));
   assert.equal(json.conditions[0].maxActivations, 1);
   assert.equal(json.waves[1].lanes[0].scope, 'packet/conditional-resolution');
+  assert.equal(json.limits.countedAdaptiveLaneCount, 5);
 });
 
 test('preview rejects incomplete quick, standard, and thorough profile topologies', () => {
@@ -332,7 +334,12 @@ test('preview accepts maximum quick gather fanout and rejects stronger-profile m
   }
   const preview = createRoutingPreview(maximumQuick);
   assert.equal(preview.limits.laneCount, 6);
+  assert.equal(preview.limits.countedAdaptiveLaneCount, 4);
   assert.equal(preview.profileCaps.maxLanes, 4);
+  assert.match(
+    renderRoutingPreview(preview),
+    /Profile adaptive-lane cap: 4 \(counted lanes: 4 of 6 total\)/,
+  );
 
   const forbidden = draftManifest({
     profile: 'quick',
