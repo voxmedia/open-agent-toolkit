@@ -843,6 +843,16 @@ function validateConditionalRouting(
         continue;
       }
       const artifact = entry.value;
+      if (artifact.runId !== manifest.run.id) {
+        errors.push(
+          issue(
+            'CONDITION_EVIDENCE_RUN_MISMATCH',
+            `Condition ${condition.conditionId} evidence belongs to another run`,
+            reference.path,
+          ),
+        );
+        continue;
+      }
       const wave = lanesById.get(artifactLaneId(artifact));
       if (!wave || !condition.afterWaveIds.includes(wave.waveId)) {
         errors.push(

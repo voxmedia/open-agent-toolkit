@@ -138,11 +138,11 @@ Every permitted mode outside that counted set is fixed at exactly one lane:
 thorough. The resulting total lane maxima are 6/13/23, and concurrency remains
 capped at 4/6/8.
 
-Triggered dispositions require exact complete artifacts from every approved
-predecessor and concrete typed predicate evidence. A triggered destination must
-produce its approved output or a material `PASS_FAILED`/`PASS_OMITTED` gap with
-exact `waveId` and `laneId` fields. The gap message is explanatory prose and is
-never parsed for identity.
+Triggered dispositions require exact complete same-run artifacts from every
+approved predecessor and concrete typed predicate evidence from those same-run
+artifacts. A triggered destination must produce its approved output or a
+material `PASS_FAILED`/`PASS_OMITTED` gap with exact `waveId` and `laneId`
+fields. The gap message is explanatory prose and is never parsed for identity.
 Not-triggered and unresolved destinations publish no artifacts and contribute
 no achieved pass. Accepted failed, cancelled, timed-out, or missing predecessor
 work cannot activate replacement work. Required profile passes remain required

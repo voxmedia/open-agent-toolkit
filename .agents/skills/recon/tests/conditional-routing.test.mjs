@@ -164,6 +164,43 @@ test('triggered dispositions reject completed evidence that does not satisfy the
   );
 });
 
+test('triggered dispositions reject exact foreign-run predecessor evidence', async () => {
+  const packet = await fixture({ profile: 'thorough' });
+  await configureConditionalContradiction(packet, { disposition: 'triggered' });
+  const sameRunReference = packet.manifest.artifacts.find(
+    (reference) => reference.path === 'raw/dossiers/pass-map.json',
+  );
+  const sameRunPath = join(packet.packetRoot, sameRunReference.path);
+  const foreignArtifact = JSON.parse(await readFile(sameRunPath, 'utf8'));
+  foreignArtifact.id = 'dossier-map-foreign-run';
+  foreignArtifact.runId = 'run-foreign';
+  const foreignRelative = 'raw/dossiers/pass-map-foreign-run.json';
+  const foreignPath = join(packet.packetRoot, foreignRelative);
+  await writeFile(
+    foreignPath,
+    `${JSON.stringify(foreignArtifact, null, 2)}\n`,
+    'utf8',
+  );
+  const foreignReference = {
+    path: foreignRelative,
+    digest: await hashFile(foreignPath),
+  };
+  packet.manifest.artifacts.push(foreignReference);
+  packet.manifest.conditionOutcomes[0].evidence = [foreignReference];
+  await persistManifest(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.ok(
+    packet.manifest.artifacts.includes(sameRunReference),
+    'the valid same-run predecessor output must remain retained',
+  );
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.ok(
+    codes(result).includes('CONDITION_EVIDENCE_RUN_MISMATCH'),
+    JSON.stringify(result, null, 2),
+  );
+});
+
 test('a triggered lane may terminate only with a material typed outcome gap', async () => {
   const packet = await fixture({ profile: 'standard' });
   await configureConditionalContradiction(packet, { disposition: 'triggered' });
