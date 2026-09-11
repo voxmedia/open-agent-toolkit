@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
-oat_current_task_id: prev4-t02
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -13,25 +13,25 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-11
 
-Three implementation runs and the first `p-rev4` task completed 24 original,
-post-retro, integration, and review-remediation tasks. A phase review identified
-one diagnostic-cascade gap, now tracked as `prev4-t02` before completion resumes.
+Three implementation runs plus `p-rev4` completed all 25 original, post-retro,
+integration, and review-remediation tasks. The remote same-run evidence finding
+and its diagnostic-quality follow-up both passed narrowed review.
 
 ## Progress Overview
 
-| Phase                                      | Status      | Tasks | Completed |
-| ------------------------------------------ | ----------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
-| Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
-| Phase 4: Distribution and verification     | completed   | 6     | 6/6       |
-| Phase 5: Post-retro simplification         | completed   | 4     | 4/4       |
-| Phase p-rev1: Integrate current main       | completed   | 1     | 1/1       |
-| Phase p-rev2: Merged-head review fixes     | completed   | 2     | 2/2       |
-| Phase p-rev3: Configured-gate cap fixes    | completed   | 3     | 3/3       |
-| Phase p-rev4: Same-run condition evidence  | in_progress | 2     | 1/2       |
+| Phase                                      | Status    | Tasks | Completed |
+| ------------------------------------------ | --------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
+| Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
+| Phase 4: Distribution and verification     | completed | 6     | 6/6       |
+| Phase 5: Post-retro simplification         | completed | 4     | 4/4       |
+| Phase p-rev1: Integrate current main       | completed | 1     | 1/1       |
+| Phase p-rev2: Merged-head review fixes     | completed | 2     | 2/2       |
+| Phase p-rev3: Configured-gate cap fixes    | completed | 3     | 3/3       |
+| Phase p-rev4: Same-run condition evidence  | completed | 2     | 2/2       |
 
-**Total:** 24/25 tasks implemented. Phase-review remediation is in progress.
+**Total:** 25/25 tasks implemented. Final closeout verification is next.
 
 ## Task Status
 
@@ -61,7 +61,7 @@ one diagnostic-cascade gap, now tracked as `prev4-t02` before completion resumes
 | prev3-t02 | Completed: align adaptive cap contract prose    | `3bdfaa286519c08749a6cbdb7315546019f40f40`         |
 | prev3-t03 | Completed: clarify adaptive cap preview         | `12b68773a957c4a011a1099027e1b6da3a7f1463`         |
 | prev4-t01 | Completed: require same-run condition evidence  | `8257446bed1f3105e288cd6f2fd46eb5c9d53190`         |
-| prev4-t02 | Pending: suppress derivative diagnostics        | —                                                  |
+| prev4-t02 | Completed: suppress derivative diagnostics      | `3784abc9f26e6714901c450c775b0ceb16ad30b7`         |
 
 ## Phase p-rev4: Remote condition-evidence review fix
 
@@ -103,7 +103,23 @@ isolated foreign-run reference currently cascades into predecessor and predicate
 errors. `prev4-t02` will preserve the primary categorical owner and suppress only
 its derivative condition diagnostics.
 
-**Next:** Execute `prev4-t02`, then re-review only the diagnostic fix.
+**Outcome:** `prev4-t02` completed in
+`3784abc9f26e6714901c450c775b0ceb16ad30b7`; the narrowed re-review below
+passed with no findings.
+
+### Narrowed p-rev4 Re-review Received
+
+**Date:** 2026-09-11
+**Review artifact:** `reviews/archived/p-rev4-review-2026-09-11T170722Z.md`
+**Reviewed head:** `3784abc9f26e6714901c450c775b0ceb16ad30b7`
+**Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+The re-review confirmed that rejected evidence retains its primary categorical
+diagnostic while only derivative condition-level errors are suppressed. Normal
+missing-predecessor and predicate failures remain independently visible.
+
+**Outcome:** `p-rev4` passed after one bounded fix continuation. No findings are
+deferred.
 
 ## Phase 5: Post-retro simplification
 

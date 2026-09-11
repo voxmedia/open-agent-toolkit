@@ -144,6 +144,10 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0
 
 run-3-exit-gate-pass-receive-20260911T155617Z Configured gate run e9a3a038-dc02-4f62-affe-c3d5cfb2c4dc passed at the Important threshold with 0C/0I/0M/0m; the exact run-bound artifact is archived with no remediation tasks, deferrals, or product changes.
 
+### 2026-09-11 · structural · oat-project-implement · p-rev4
+
+Phase p-rev4 passed after one bounded fix loop; tasks prev4-t01 and prev4-t02 completed, root-owned re-review reported 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

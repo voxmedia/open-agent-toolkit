@@ -923,8 +923,9 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T152512Z.md         | c11f78febec9329642f068ae849059547f924c0a | gate       | cursor-fable-5-1-high |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T154126Z.md         | 819591ba1044e65a7eff7495a529bbe5ee122db3 | auto       | -                     |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T155617Z.md         | 0fe70eb728ed25aaafb94d521f0609bf642be23a | gate       | cursor-fable-5-1-high |
-| pr-285 | code     | fixes_added     | 2026-09-11 | reviews/archived/remote-pr-285-review-2026-09-11T163646Z.md | 5120541946a83927bf798ccc6d9f27c070b6b9af | -          | -                     |
-| p-rev4 | code     | fixes_added     | 2026-09-11 | reviews/archived/p-rev4-review-2026-09-11T165722Z.md        | 8257446bed1f3105e288cd6f2fd46eb5c9d53190 | manual     | -                     |
+| pr-285 | code     | fixes_completed | 2026-09-11 | reviews/archived/remote-pr-285-review-2026-09-11T163646Z.md | 5120541946a83927bf798ccc6d9f27c070b6b9af | -          | -                     |
+| p-rev4 | code     | fixes_completed | 2026-09-11 | reviews/archived/p-rev4-review-2026-09-11T165722Z.md        | 8257446bed1f3105e288cd6f2fd46eb5c9d53190 | manual     | -                     |
+| p-rev4 | code     | passed          | 2026-09-11 | reviews/archived/p-rev4-review-2026-09-11T170722Z.md        | 3784abc9f26e6714901c450c775b0ceb16ad30b7 | manual     | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1174,7 +1175,7 @@ Commit as `fix(prev4-t01): require same-run condition evidence`.
 
 ### Task prev4-t02: (review) Suppress derivative condition diagnostics
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
@@ -1205,8 +1206,8 @@ Commit as `fix(prev4-t02): suppress derivative condition diagnostics`.
 
 ## Implementation Complete
 
-**Implementation tasks complete: 24 of 25 implemented. One phase-review fix is
-pending before completion can resume.**
+**Implementation tasks complete: 25 of 25 implemented. The remote feedback and
+narrowed phase re-review are fully resolved.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1218,7 +1219,7 @@ pending before completion can resume.**
 - Phase p-rev3: 3 tasks — bound fixed waves and align cap docs and preview.
 - Phase p-rev4: 2 tasks — require same-run evidence and suppress derivative diagnostics.
 
-**Total: 9 phases, 25 tasks.** One implementation task remains.
+**Total: 9 phases, 25 tasks.** All implementation tasks are complete.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

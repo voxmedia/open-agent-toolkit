@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev4-t02
-oat_last_commit: 8257446bed1f3105e288cd6f2fd46eb5c9d53190
+oat_current_task: null
+oat_last_commit: 3784abc9f26e6714901c450c775b0ceb16ad30b7
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -14,7 +14,7 @@ oat_hill_completed:
   - p04
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T16:59:07Z'
+oat_project_state_updated: '2026-09-11T17:08:40Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -98,14 +98,14 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** Revision in progress for PR #285 review feedback.
+**Status:** Implementation complete; PR #285 open for review.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-11
 
 ## Current Phase
 
-Implementation — `prev4-t02` is suppressing derivative diagnostics from the
-same-run evidence rejection. Completion resumes after the focused fix and re-review.
+Implementation — PR #285 remains open. All 25 tasks, including the remote
+same-run evidence fix and its narrowed re-review, are complete.
 
 ## Artifacts
 
@@ -113,8 +113,8 @@ same-run evidence rejection. Completion resumes after the focused fix and re-rev
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight design aligned with the simplified approval contract.
 - Plan: `plan.md` — 5 implementation phases plus four revision phases, 25 tasks.
-- Implementation: `implementation.md` — 24 of 25 tasks complete; `prev4-t02`
-  addresses the phase-review diagnostic finding.
+- Implementation: `implementation.md` — all 25 tasks complete; `p-rev4` passed
+  after one bounded fix continuation.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
