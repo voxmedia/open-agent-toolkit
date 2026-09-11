@@ -6,6 +6,8 @@ oat_last_updated: 2026-09-10
 oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_parallel_groups: [] # fully sequential: every phase touches the explainer-kit tree or its consumers
+oat_plan_hill_phases: ['p05']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: spec-driven # spec-driven | quick | imported | lite
 oat_import_reference: null
 oat_import_source_path: null

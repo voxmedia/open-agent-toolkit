@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-09-09
+oat_last_updated: 2026-09-10
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -26,14 +26,17 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 17    | 0/17      |
+| Phase 2 | pending     | 4     | 0/4       |
+| Phase 3 | pending     | 8     | 0/8       |
+| Phase 4 | pending     | 2     | 0/2       |
+| Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/32 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: The cut — core flow, contracts, and retirement
 
 **Status:** in_progress
 **Started:** 2026-09-09
@@ -57,10 +60,10 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Trim `contracts.mjs` to the three kept contract kinds
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** pending
+**Commit:** -
 
 **Outcome (required when completed):**
 
@@ -96,12 +99,12 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Ladder and fresh-host proof
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Host rung with the artifact-hash binding
 
 **Status:** pending
 **Commit:** -
