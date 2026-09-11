@@ -15,6 +15,7 @@ import {
 import {
   hashStateContent,
   persistIntent,
+  readPersistedIntent,
 } from '../../oat-explainer-kit/scripts/persist-intent.mjs';
 import { resolveIntent } from '../../oat-explainer-kit/scripts/resolve-intent.mjs';
 import { writeFailure } from '../scripts/bundle.mjs';
@@ -283,7 +284,7 @@ test('missing narrative section stays failed and provides guarded skip evidence'
   );
 });
 
-test('core prerequisite failure is visible and resumed completion honors the skip', async (t) => {
+test('core prerequisite failure persists a skip that reloads into intent resolution', async (t) => {
   const host = await freshHost(t);
   const runRoot = join(host.projectPath, 'explainers/core-missing');
   await rm(host.coreRoot, { recursive: true });
@@ -333,10 +334,15 @@ test('core prerequisite failure is visible and resumed completion honors the ski
     record: intentRecord,
     expectedHash: hashStateContent(state),
   });
+  const persistedIntent = await readPersistedIntent({
+    statePath,
+    product: 'projectRecap',
+  });
+  assert.deepEqual(persistedIntent, intentRecord);
   const resumed = resolveIntent({
     product: 'projectRecap',
     mode: 'interactive',
-    state: intentRecord,
+    state: persistedIntent,
     preference: 'always',
   });
   assert.equal(resumed.decision, 'skip');

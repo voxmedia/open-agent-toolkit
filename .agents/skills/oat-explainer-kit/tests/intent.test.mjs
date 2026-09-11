@@ -7,6 +7,7 @@ import test from 'node:test';
 import {
   hashStateContent,
   persistIntent,
+  readPersistedIntent,
   updateStateFrontmatter,
 } from '../scripts/persist-intent.mjs';
 import { resolveIntent } from '../scripts/resolve-intent.mjs';
@@ -113,14 +114,19 @@ oat_project_explainer: null
       expectedHash: hashStateContent(initial),
     });
 
+    const reloaded = await readPersistedIntent({
+      statePath,
+      product: first.product,
+    });
     const second = resolve({
-      state: persisted.record,
+      state: reloaded,
       preference: 'ask',
     });
     assert.equal(second.decision, 'generate');
     assert.equal(second.resolutionSource, 'project_state');
     assert.equal(second.needsPrompt, false);
-    assert.equal(second.record, persisted.record);
+    assert.deepEqual(second.record, persisted.record);
+    assert.notEqual(second.record, persisted.record);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

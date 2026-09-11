@@ -7,6 +7,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import {
+  createBrowserProbeSession,
   RUNTIME_UNAVAILABLE_REASONS,
   resolveHeadlessRuntime,
 } from '../scripts/lib/browser-runtime.mjs';
@@ -348,6 +349,89 @@ test('playwright rung records disabled and launch-failure reasons', async () => 
   assert.equal(allPass(launchFailure), true);
 });
 
+test('every none downgrade clears canonical screenshots and remains recordable', async () => {
+  const retries = [
+    {
+      name: 'host-to-disabled',
+      seed: async (root) => {
+        const screenshots = await screenshotFixture();
+        await verifyRun({
+          runRoot: root,
+          recipe: 'project-recap',
+          rung: 'host',
+          screenshots,
+          artifactSha256: await pageHash(root),
+          visualVerdict: 'pass',
+        });
+      },
+      retry: (root) =>
+        verifyRun({
+          runRoot: root,
+          recipe: 'project-recap',
+          rung: 'playwright',
+          headlessRuntimeOptions: {
+            env: { EXPLAINER_KIT_HEADLESS_PROBE: 'off' },
+          },
+        }),
+    },
+    {
+      name: 'playwright-to-disabled',
+      seed: (root) =>
+        verifyRun({
+          runRoot: root,
+          recipe: 'project-recap',
+          rung: 'playwright',
+          headlessRuntimeOptions: browserRuntimeOptions(),
+        }),
+      retry: (root) =>
+        verifyRun({
+          runRoot: root,
+          recipe: 'project-recap',
+          rung: 'playwright',
+          headlessRuntimeOptions: {
+            env: { EXPLAINER_KIT_HEADLESS_PROBE: 'off' },
+          },
+        }),
+    },
+    {
+      name: 'explicit-none',
+      seed: (root) =>
+        verifyRun({
+          runRoot: root,
+          recipe: 'project-recap',
+          rung: 'playwright',
+          headlessRuntimeOptions: browserRuntimeOptions(),
+        }),
+      retry: (root) =>
+        verifyRun({
+          runRoot: root,
+          recipe: 'project-recap',
+          rung: 'none',
+        }),
+    },
+  ];
+
+  for (const retry of retries) {
+    const root = await runRoot();
+    await retry.seed(root);
+    const result = await retry.retry(root);
+    assert.equal(result.rung, 'none', retry.name);
+    for (const width of [320, 768, 1440]) {
+      await assert.rejects(readFile(join(root, `qa/${width}.png`)), {
+        code: 'ENOENT',
+      });
+    }
+    const manifest = await recordRun({
+      runRoot: root,
+      recipe: 'project-recap',
+      slug: retry.name,
+      mode: 'unattended',
+      themePath: join(root, 'theme.resolved.json'),
+    });
+    assert.equal(manifest.outcome, 'built-needs-review', retry.name);
+  }
+});
+
 test('installed Playwright runtime probes the authored page', async (t) => {
   const runtime = await resolveHeadlessRuntime();
   if (!runtime.available) {
@@ -398,6 +482,61 @@ test('installed Playwright runtime probes the authored page', async (t) => {
     themePath: join(brokenRoot, 'theme.resolved.json'),
   });
   assert.equal(manifest.outcome, 'built-needs-review');
+});
+
+test('rejected active content never reaches installed Chromium', async (t) => {
+  const runtime = await resolveHeadlessRuntime();
+  if (!runtime.available) {
+    t.skip(`headless runtime unavailable: ${runtime.reason}`);
+    return;
+  }
+
+  const root = await runRoot();
+  const pagePath = join(root, 'site/index.html');
+  const html = (await readFile(pagePath, 'utf8')).replace(
+    '</head>',
+    `<script>
+      document.documentElement.dataset.rejectedScriptExecuted = 'yes';
+      document.documentElement.style.minWidth = '2000px';
+    </script></head>`,
+  );
+  await writeFile(pagePath, html);
+
+  const capabilitySession = await createBrowserProbeSession();
+  try {
+    const mutation = await capabilitySession.probe({
+      artifact: { html },
+      viewport: { width: 320, height: 640 },
+      evaluate:
+        '(() => ({ marker: document.documentElement.dataset.rejectedScriptExecuted, minWidth: getComputedStyle(document.documentElement).minWidth }))()',
+    });
+    assert.deepEqual(
+      { marker: mutation.marker, minWidth: mutation.minWidth },
+      { marker: 'yes', minWidth: '2000px' },
+      'the negative-control payload must mutate a real Chromium page when loaded',
+    );
+  } finally {
+    await capabilitySession.close();
+  }
+
+  let driverLoads = 0;
+  const result = await verifyRun({
+    runRoot: root,
+    recipe: 'project-recap',
+    rung: 'playwright',
+    headlessRuntimeOptions: {
+      loadDriver: async () => {
+        driverLoads += 1;
+        return import('@playwright/test');
+      },
+    },
+  });
+  assert.equal(result.checks.shellScripts.status, 'fail');
+  assert.equal(result.rung, 'none');
+  assert.equal(result.reason, 'browser-blocked-by-static-safety-checks');
+  assert.equal(driverLoads, 0, 'rejected content must not launch Chromium');
+  assert.equal(result.screenshots, undefined);
+  assert.deepEqual(result.visual, { verdict: 'none' });
 });
 
 test('fixture variants fail their owning browser-free check', async () => {

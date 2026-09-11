@@ -200,23 +200,34 @@ export async function verifyRun({
       ),
     };
     const pageHash = hashText(html);
+    const browserSafetyPassed = ['parse', 'structure', 'shellScripts'].every(
+      (check) => checks[check].status === 'pass',
+    );
     const browserResult =
-      rung === 'host'
-        ? await verifyHostRung({
+      !browserSafetyPassed && rung !== 'none'
+        ? await downgradeToNone(
             runRoot,
-            screenshots,
-            expectedArtifactHash: pageHash,
-            artifactSha256,
-            visualVerdict,
-            visualNotes,
-          })
-        : rung === 'playwright'
-          ? await verifyPlaywrightRung({
+            'browser-blocked-by-static-safety-checks',
+          )
+        : rung === 'host'
+          ? await verifyHostRung({
               runRoot,
-              artifact: { ...artifact, html },
-              headlessRuntimeOptions,
+              screenshots,
+              expectedArtifactHash: pageHash,
+              artifactSha256,
+              visualVerdict,
+              visualNotes,
             })
-          : noneRung(RUNTIME_UNAVAILABLE_REASONS.disabled);
+          : rung === 'playwright'
+            ? await verifyPlaywrightRung({
+                runRoot,
+                artifact: { ...artifact, html },
+                headlessRuntimeOptions,
+              })
+            : await downgradeToNone(
+                runRoot,
+                RUNTIME_UNAVAILABLE_REASONS.disabled,
+              );
     const result = {
       artifactSha256: pageHash,
       checks,
@@ -297,14 +308,12 @@ async function verifyHostRung({
     );
   }
   if (artifactSha256 !== expectedArtifactHash) {
-    await clearCanonicalScreenshots(runRoot);
-    return noneRung('host-artifact-hash-mismatch');
+    return downgradeToNone(runRoot, 'host-artifact-hash-mismatch');
   }
 
   const captures = await readHostScreenshots(screenshots);
   if (!captures) {
-    await clearCanonicalScreenshots(runRoot);
-    return noneRung('host-screenshot-invalid');
+    return downgradeToNone(runRoot, 'host-screenshot-invalid');
   }
   await clearCanonicalScreenshots(runRoot);
   await mkdir(join(runRoot, 'qa'), { recursive: true });
@@ -335,10 +344,12 @@ async function verifyPlaywrightRung({
   try {
     session = await createBrowserProbeSession(headlessRuntimeOptions);
   } catch (error) {
-    await clearCanonicalScreenshots(runRoot);
-    return noneRung(`playwright-launch-failed:${sanitize(error)}`);
+    return downgradeToNone(
+      runRoot,
+      `playwright-launch-failed:${sanitize(error)}`,
+    );
   }
-  if (!session.available) return noneRung(session.reason);
+  if (!session.available) return downgradeToNone(runRoot, session.reason);
 
   try {
     await clearCanonicalScreenshots(runRoot);
@@ -367,8 +378,10 @@ async function verifyPlaywrightRung({
           : { verdict: 'findings', findings },
     };
   } catch (error) {
-    await clearCanonicalScreenshots(runRoot);
-    return noneRung(`playwright-probe-failed:${sanitize(error)}`);
+    return downgradeToNone(
+      runRoot,
+      `playwright-probe-failed:${sanitize(error)}`,
+    );
   } finally {
     await session.close();
   }
@@ -407,7 +420,8 @@ async function clearCanonicalScreenshots(runRoot) {
   );
 }
 
-function noneRung(reason) {
+async function downgradeToNone(runRoot, reason) {
+  await clearCanonicalScreenshots(runRoot);
   return {
     rung: 'none',
     reason,
