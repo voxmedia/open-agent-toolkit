@@ -1230,27 +1230,30 @@ code in a dedicated `/tmp/recon-closeout-*.log` receipt:
 
 ## Final Summary (for PR/docs)
 
-All 25 implementation and revision tasks are implemented. The merged-head final
+All 27 implementation and revision tasks are implemented. The merged-head final
 lifecycle review and configured gate identified five substantive or alignment
 gaps; all are fixed, and both narrowed lifecycle re-reviews passed. A subsequent
 remote PR review exposed a same-run provenance gap in conditional evidence; the
 validator now rejects foreign-run evidence even when it reuses an approved lane,
-and emits only the primary categorical diagnostic for that failure. The branch
-provides versioned
-v1/v2 recon contracts, economical approved per-wave routing, bounded conditional
-escalation, exact outcome accounting, caller-owned judgment, normalized
-intended-routing output, aligned worker and controller guidance, bundled runtime
-assets, project provider projections, and lockstep public package version `0.2.73`.
+and emits only the primary categorical diagnostic for that failure. Two later
+final-review fixes now require thorough compilation to incorporate both independent
+gathering outputs and bind each derived gather pass to its exact approved wave and
+lane ownership. The branch provides manifest-v2 recon contracts, economical
+approved per-wave routing, bounded conditional escalation, exact outcome
+accounting, caller-owned judgment, normalized intended-routing output, aligned
+worker and controller guidance, bundled runtime assets, project provider
+projections, and lockstep public package version `0.2.73`.
 
 Key surfaces include `.agents/skills/recon`, the canonical recon-worker role,
 shared model-selection guidance, CLI bundle consistency, public recon docs, five
 public package manifests, and the repeatable Phase 4 verification note.
 
 Verification includes the eight CI-equivalent gates in order, fresh isolated Turbo
-tests, the final 271/271 recon suite, 29/29 bundle tests, provider-view
+tests, the final 275/275 recon suite, 29/29 bundle tests, provider-view
 synchronization, release validation, docs build, and negative controls for
 exact-target drift, shadow reconciliation, profile topology, and malformed wave
-containers, same-run condition evidence, and derivative-diagnostic suppression.
+containers, same-run condition evidence, derivative-diagnostic suppression,
+compiled redundant-gather provenance, and reciprocal gather-pass impersonation.
 The retained raw gate logs lack explicit `exit=` markers; that
 nonblocking evidence-quality limitation remains disclosed.
 
@@ -1259,16 +1262,18 @@ hostile-collection, singleton-lane, adaptive-cap documentation, and preview-labe
 findings are fixed. The terminal narrowed final review passed with no blocking
 findings. Configured exit-gate attempt 1 produced three fixes; attempt 2 passed
 with no findings and was durably received. The later `p-rev4` review passed after
-one bounded diagnostic-quality fix; project-wide final review and the configured
-exit gate must be refreshed against this newer implementation basis.
+one bounded diagnostic-quality fix; the `p-rev5` and `p-rev6` reviews then passed
+after closing the two gather-flow defects. Project-wide final review and the
+configured exit gate must be refreshed against this latest implementation basis.
 
 ## Completion Outcome
 
 - The configured pre-approval sequence completed `summary`, `document`, and `pr`;
   its post-approval list was empty.
 - The refreshed project summary, repository references, and final PR description
-  reflect manifest v2 only, session-local approval, all three revision phases, and
-  lockstep public package version `0.2.73`.
+  require one final refresh for all six revision phases; manifest v2,
+  session-local approval, and lockstep public package version `0.2.73` remain
+  current.
 - Final verification passed `pnpm check`, `pnpm type-check`, `pnpm test`,
   `pnpm build`, both version gates, release validation, docs build, `pnpm lint`,
   and `pnpm format` with explicit zero exit codes.
