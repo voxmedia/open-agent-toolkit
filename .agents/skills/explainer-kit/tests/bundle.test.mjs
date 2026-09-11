@@ -303,11 +303,30 @@ test('supplied fact base preserves identity through verify, record, and reuse', 
       ],
       claims: [
         {
-          id: 'operator-claim',
-          text: 'p01 is complete with 17 tasks on 2026-09-11.',
+          id: 'operator-count',
+          text: 'The validation total is 17.',
           status: 'confirmed',
+          sections: ['validation-count'],
           citations: [
             { sourceId: 'operator-source', locator: 'operator.md:1-1' },
+          ],
+        },
+        {
+          id: 'operator-date',
+          text: 'The validation date is 2026-09-11.',
+          status: 'confirmed',
+          sections: ['validation-date'],
+          citations: [
+            { sourceId: 'operator-source', locator: 'operator.md:2-2' },
+          ],
+        },
+        {
+          id: 'operator-status',
+          text: 'Validation is complete.',
+          status: 'confirmed',
+          sections: ['validation-status'],
+          citations: [
+            { sourceId: 'operator-source', locator: 'operator.md:3-3' },
           ],
         },
       ],
@@ -332,12 +351,15 @@ test('supplied fact base preserves identity through verify, record, and reuse', 
     'utf8',
   );
   const content = `
-<section id="program-overview"><h2>Program overview</h2><p>program-recap evidence.</p><p>p01: 17 tasks, complete on 2026-09-11.</p></section>
+<section id="program-overview"><h2>Program overview</h2><p>Program evidence.</p></section>
 <section id="wave-map"><h2>Wave map</h2><p>Delivery sequence.</p></section>
 <section id="per-wave-outcomes"><h2>Per-wave outcomes</h2><p>Recorded results.</p></section>
 <section id="convention-evolution"><h2>Convention evolution</h2><p>Shared conventions.</p></section>
 <section id="aggregate-numbers"><h2>Aggregate totals</h2><p>See the overview.</p></section>
-<section id="follow-up-ledger"><h2>Follow-up ledger</h2><p>No pending action.</p></section>`;
+<section id="follow-up-ledger"><h2>Follow-up ledger</h2><p>No pending action.</p></section>
+<section id="validation-count"><h2>Validation count</h2><p>validation-count facts total 17.</p></section>
+<section id="validation-date"><h2>Validation date</h2><p>Evidence observed on 2026-09-11.</p></section>
+<section id="validation-status"><h2>Validation status</h2><p>The result is complete.</p></section>`;
   const page = Object.entries({
     THEME_CSS: '',
     TITLE: 'Program recap',
@@ -464,6 +486,42 @@ test('reuse requires a valid byte-bound canonical recorded package', async () =>
     );
   }
 });
+
+for (const [name, mutate] of [
+  [
+    'wrong canonical fact-base path',
+    (manifest) => {
+      manifest.source.factBasePath = 'source/fact-base.md';
+      manifest.source.factBaseHash =
+        manifest.immutableHashes['source/fact-base.md'];
+    },
+  ],
+  [
+    'wrong fact-base hash',
+    (manifest) => {
+      manifest.source.factBaseHash =
+        'sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+    },
+  ],
+]) {
+  test(`reuse rejects a manifest with ${name}`, async () => {
+    const root = await mkdtemp(join(tmpdir(), 'explainer-reuse-binding-'));
+    const runRoot = join(root, 'run');
+    const recipe = loadRecipe('project-recap', '2');
+    await cp(checkedPackage, runRoot, { recursive: true });
+    const manifest = JSON.parse(
+      await readFile(join(runRoot, 'manifest.json'), 'utf8'),
+    );
+    const inputHashes = manifest.source.inputHashes;
+    mutate(manifest);
+    await writeFile(
+      join(runRoot, 'manifest.json'),
+      `${JSON.stringify(manifest)}\n`,
+    );
+
+    assert.equal(await findReusableRun(runRoot, recipe, inputHashes), null);
+  });
+}
 
 test('retry removes stale failure and CLI refuses a missing --out', async () => {
   const { root, path } = await temporaryFixture('project');

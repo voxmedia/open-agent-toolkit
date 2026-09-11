@@ -23,7 +23,9 @@ import {
 } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { normalizeClaimSubject } from './lib/claim-subject.mjs';
 import { validateContract } from './lib/contracts.mjs';
+import { isFlowFailureStage } from './lib/failure.mjs';
 import {
   enforceRunPackageInventory,
   validateImmutablePackageEvidence,
@@ -65,7 +67,6 @@ const STATUS_VALUES = new Set([
   'incomplete',
   'skipped',
 ]);
-const FLOW_FAILURE_STAGES = new Set(['bundle', 'authoring', 'verify', 'core']);
 
 export async function collectInputs(recipe, inputs) {
   const recipeId = typeof recipe === 'string' ? recipe : recipe?.id;
@@ -132,7 +133,7 @@ export function extractClaims(input) {
       citations: [
         { sourceId: input.id, locator: `${input.locator}:${line}-${line}` },
       ],
-      _subject: subjectFor(text, heading),
+      _subject: normalizeClaimSubject({ text, sectionId: heading }),
       _section: heading,
     });
   }
@@ -248,6 +249,9 @@ export async function findReusableRun(outputRoot, recipe, inputHashes) {
         !SATISFIED_OUTCOMES.has(manifest.outcome) ||
         !deepEqual(manifest.source?.inputHashes, inputHashes) ||
         !validateContract('manifest', manifest).valid ||
+        manifest.source?.factBasePath !== 'source/fact-base.json' ||
+        manifest.source.factBaseHash !==
+          manifest.immutableHashes[manifest.source.factBasePath] ||
         manifest.artifacts?.length !== 1 ||
         manifest.artifacts[0].id !== recipe.floor[0].id ||
         manifest.artifacts[0].type !== recipe.floor[0].type ||
@@ -278,7 +282,7 @@ export async function findReusableRun(outputRoot, recipe, inputHashes) {
 }
 
 export async function writeFailure(runRoot, stage, cause) {
-  if (!FLOW_FAILURE_STAGES.has(stage)) {
+  if (!isFlowFailureStage(stage)) {
     throw bundleError(`Unsupported failure stage: ${stage}`);
   }
   await mkdir(runRoot, { recursive: true });
@@ -357,7 +361,10 @@ export async function runBundle(argv, io = console) {
           recipe.id;
         return {
           ...claim,
-          _subject: subjectFor(claim.text, section),
+          _subject: normalizeClaimSubject({
+            text: claim.text,
+            sectionId: section,
+          }),
           _section: section,
         };
       });
@@ -547,20 +554,6 @@ async function assertContained(root, path) {
     throw bundleError(`Input escapes its declared root: ${path}`);
   }
   return canonicalPath;
-}
-
-function subjectFor(text, heading) {
-  if (text.startsWith('|')) {
-    const cells = text
-      .split('|')
-      .map((cell) => cell.trim())
-      .filter(Boolean);
-    if (cells[0]) return cells[0];
-  }
-  const identifier = text.match(
-    /\b(?:p\d{2}|w\d+|wave-\d+|BL-\d{6}-[a-z0-9-]+)\b/i,
-  )?.[0];
-  return identifier ?? heading;
 }
 
 function addIndexed(indexed, seen, entry) {

@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 
 import { writeFailure } from './bundle.mjs';
 import { RUNTIME_UNAVAILABLE_REASONS } from './lib/browser-runtime.mjs';
+import { normalizeClaimSubject } from './lib/claim-subject.mjs';
 import { validateHtmlSafety } from './lib/html-safety.mjs';
 import {
   checkArtifactCohesion,
@@ -30,9 +31,6 @@ const STATUS_VALUES = new Set([
   'incomplete',
   'skipped',
 ]);
-const SUBJECT_IDENTIFIER =
-  /\b(?:p\d{2}(?:-t\d{2})?|w\d+|wave-\d+|BL-\d{6}-[a-z0-9-]+)\b/i;
-
 export function extractRenderedClaims(html) {
   const terminology = {};
   const numericClaims = {};
@@ -41,14 +39,12 @@ export function extractRenderedClaims(html) {
   const sections = extractSections(html);
 
   for (const section of sections) {
-    let heading = section.id;
     const blockPattern = /<(h[1-6]|tr|li|p)\b[^>]*>([\s\S]*?)<\/\1>/gi;
     for (const match of section.html.matchAll(blockPattern)) {
       const [, tag, blockHtml] = match;
       const text = htmlText(blockHtml);
       if (!text) continue;
       if (tag.toLowerCase().startsWith('h')) {
-        heading = text;
         terminology[text] = text;
       }
       const rowCells =
@@ -57,11 +53,11 @@ export function extractRenderedClaims(html) {
               .map((cell) => htmlText(cell[1]))
               .filter(Boolean)
           : [];
-      const subject =
-        rowCells[0] ??
-        text.match(SUBJECT_IDENTIFIER)?.[0] ??
-        heading ??
-        section.id;
+      const subject = normalizeClaimSubject({
+        text,
+        rowSubject: rowCells[0],
+        sectionId: section.id,
+      });
       const valuesText =
         rowCells.length > 1 ? rowCells.slice(1).join(' ') : text;
       for (const value of valuesText.match(/\b\d{4}-\d{2}-\d{2}\b/g) ?? []) {

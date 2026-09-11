@@ -155,7 +155,7 @@ test('project completion requires evidence for skip failed_attempt', async () =>
     await rm(join(incompleteRoot, 'qa/result.json'));
     await runRecord(recordArgs(incompleteRoot), { log() {} });
 
-    await writeFailure(failureRoot, 'authoring', 'interrupted');
+    await writeFailure(failureRoot, 'interrupted', 'operator stopped the flow');
     const failedManifest = join(failedRoot, 'manifest.json');
     const incompleteManifest = join(incompleteRoot, 'manifest.json');
     const builtManifest = join(packageFixture, 'manifest.json');
@@ -181,6 +181,30 @@ test('project completion requires evidence for skip failed_attempt', async () =>
         reason: 'failed_attempt',
       });
     }
+
+    const unknownFailure = JSON.parse(await readFile(failure, 'utf8'));
+    unknownFailure.stage = 'unknown-stage';
+    await writeFile(failure, `${JSON.stringify(unknownFailure)}\n`);
+    await assert.rejects(
+      execFileAsync(process.execPath, [
+        guardScript.pathname,
+        '--intent',
+        'skip',
+        '--skip-reason',
+        'failed_attempt',
+        '--failure',
+        failure,
+      ]),
+      (error) =>
+        error?.code === 1 &&
+        /failed_attempt requires a failed or incomplete manifest or failure\.json/.test(
+          error.stderr,
+        ),
+    );
+    await assert.rejects(
+      writeFailure(join(root, 'unknown-writer'), 'unknown-stage', 'invalid'),
+      /Unsupported failure stage/,
+    );
 
     const partialManifest = join(root, 'partial-manifest.json');
     const partialFailure = join(root, 'failure.json');

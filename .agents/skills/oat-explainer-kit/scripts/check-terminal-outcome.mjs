@@ -4,6 +4,7 @@ import { basename, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { validateContract } from '../../explainer-kit/scripts/lib/contracts.mjs';
+import { isFlowFailureStage } from '../../explainer-kit/scripts/lib/failure.mjs';
 
 const TERMINAL_OUTCOMES = new Set([
   'built',
@@ -12,7 +13,6 @@ const TERMINAL_OUTCOMES = new Set([
   'incomplete',
 ]);
 const SATISFIED_OUTCOMES = new Set(['built', 'built-needs-review']);
-const FLOW_FAILURE_STAGES = new Set(['bundle', 'authoring', 'verify', 'core']);
 
 /**
  * A skip reason is the recorded `source` of the skip decision, so the guard
@@ -155,7 +155,7 @@ function isFlowFailure(value, expectedRootHash) {
     ) &&
     value.schemaVersion === 'explainer-kit.failure/v1' &&
     value.runRootHash === expectedRootHash &&
-    FLOW_FAILURE_STAGES.has(value.stage) &&
+    isFlowFailureStage(value.stage) &&
     typeof value.cause === 'string' &&
     value.cause.length > 0 &&
     typeof value.at === 'string' &&
