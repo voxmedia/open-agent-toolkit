@@ -42,20 +42,12 @@ afterEach(async () => {
 function passesFor(profile) {
   const modes = ['map', 'gather', 'compile'];
   if (profile === 'standard' || profile === 'thorough') {
-    modes.push(
-      'semantic-verification',
-      'adversarial',
-      'coverage',
-      'reconciliation',
-    );
+    modes.push('semantic-verification', 'adversarial', 'coverage');
   }
   if (profile === 'thorough') {
-    modes.push(
-      'redundant-gather',
-      'redundant-verification',
-      'contradiction-resolution',
-    );
+    modes.push('redundant-gather', 'redundant-verification');
   }
+  if (profile !== 'quick') modes.push('reconciliation');
   return modes;
 }
 
@@ -246,10 +238,7 @@ async function makePacket({
                 'review-adversarial',
                 'review-coverage',
                 ...(profile === 'thorough'
-                  ? [
-                      'review-redundant-verification',
-                      'review-contradiction-resolution',
-                    ]
+                  ? ['review-redundant-verification']
                   : []),
               ]
             : [],
@@ -356,13 +345,6 @@ async function makePacket({
               'redundant-verify',
               { ...structuredClone(verifyBrief), id: 'brief-redundant-verify' },
             ],
-            [
-              'contradiction-resolution',
-              {
-                ...structuredClone(adversaryBrief),
-                id: 'brief-contradiction-resolution',
-              },
-            ],
           ]
         : []),
     ];
@@ -388,12 +370,6 @@ async function makePacket({
               'redundant-verification',
               'brief-redundant-verify',
               'affirmed',
-            ],
-            [
-              'review-contradiction-resolution',
-              'contradiction-resolution',
-              'brief-contradiction-resolution',
-              'resolved',
             ],
           ]
         : []),
@@ -451,9 +427,7 @@ async function makePacket({
         'review-semantic',
         'review-adversarial',
         'review-coverage',
-        ...(profile === 'thorough'
-          ? ['review-redundant-verification', 'review-contradiction-resolution']
-          : []),
+        ...(profile === 'thorough' ? ['review-redundant-verification'] : []),
       ],
       transitions: structuredClone(ledger.transitions),
       additions: [],
@@ -529,7 +503,7 @@ async function makePacket({
   }
   const manifest = {
     kind: 'recon.packet-manifest',
-    schemaVersion: 1,
+    schemaVersion: 2,
     run: {
       id: 'run-1',
       topic: 'fixture',
@@ -551,6 +525,7 @@ async function makePacket({
     execution,
     artifacts: [claimsRef, dossierRef, ...reviewArtifacts, ...passArtifacts],
     gaps: [],
+    conditionOutcomes: [],
   };
   const manifestPath = join(packetRoot, 'manifest.json');
   await writeJson(manifestPath, manifest);
@@ -700,8 +675,8 @@ test('rejects invalid schema versions and duplicate identifiers', async () => {
   await expectInvalid(duplicate, 'DUPLICATE_ID');
 });
 
-test('accepts a v2 manifest with v1 evidence artifacts', async () => {
-  const packet = await createPacketFixture({ manifestVersion: 2 });
+test('accepts the current manifest with version 1 evidence artifacts', async () => {
+  const packet = await createPacketFixture();
   tempRoots.push(packet.tempRoot);
   const result = await compileValidatedRun(packet.packetRoot);
   assert.equal(result.valid, true, JSON.stringify(result, null, 2));
@@ -714,7 +689,7 @@ test('accepts a v2 manifest with v1 evidence artifacts', async () => {
   );
 });
 
-test('production validation enforces approved v2 profile topology after fingerprint recomputation', async () => {
+test('production validation enforces approved profile topology', async () => {
   const cases = [
     {
       code: 'OUT_OF_ORDER_PROFILE_TOPOLOGY',
@@ -756,7 +731,6 @@ test('production validation enforces approved v2 profile topology after fingerpr
 
   for (const { code, mutate } of cases) {
     const packet = await createPacketFixture({
-      manifestVersion: 2,
       profile: 'standard',
     });
     tempRoots.push(packet.tempRoot);
@@ -778,8 +752,8 @@ test('production validation rejects unconditional contradiction resolution and a
     ['not-triggered', 'standard'],
   ]) {
     const valid = await createPacketFixture({
-      manifestVersion: 2,
       profile,
+      includeContradictionResolution: disposition === 'triggered',
     });
     tempRoots.push(valid.tempRoot);
     await configureConditionalContradiction(valid, { disposition });
@@ -788,7 +762,6 @@ test('production validation rejects unconditional contradiction resolution and a
   }
 
   const invalid = await createPacketFixture({
-    manifestVersion: 2,
     profile: 'standard',
   });
   tempRoots.push(invalid.tempRoot);
@@ -808,7 +781,7 @@ test('production validation rejects unconditional contradiction resolution and a
   );
 });
 
-test('dispatches schema versions by artifact kind and keeps v1 closed', async () => {
+test('dispatches schema versions by artifact kind and rejects legacy manifests', async () => {
   const unknownVersion = await makePacket();
   unknownVersion.manifest.schemaVersion = 99;
   await writeJson(unknownVersion.manifestPath, unknownVersion.manifest);
@@ -822,51 +795,36 @@ test('dispatches schema versions by artifact kind and keeps v1 closed', async ()
     unknownKind.errors.some((error) => error.code === 'UNKNOWN_ARTIFACT_KIND'),
   );
 
-  const v2KeyInV1 = await makePacket();
-  v2KeyInV1.manifest.conditionOutcomes = [];
-  await writeJson(v2KeyInV1.manifestPath, v2KeyInV1.manifest);
-  await expectInvalid(v2KeyInV1, 'UNKNOWN_FIELD');
-
-  const v2ExecutionKeyInV1 = await makePacket();
-  v2ExecutionKeyInV1.manifest.execution.target = {
-    provider: 'fixture-provider',
-    route: 'fake',
-    role: 'recon-worker',
-    model: 'fixture-model',
-    effort: null,
-    reasoningMode: null,
-    serviceTier: null,
-  };
-  await writeJson(v2ExecutionKeyInV1.manifestPath, v2ExecutionKeyInV1.manifest);
-  await expectInvalid(v2ExecutionKeyInV1, 'UNKNOWN_FIELD');
+  const legacyManifest = await makePacket();
+  legacyManifest.manifest.schemaVersion = 1;
+  await writeJson(legacyManifest.manifestPath, legacyManifest.manifest);
+  await expectInvalid(legacyManifest, 'UNSUPPORTED_SCHEMA_VERSION');
 });
 
-test('public validation returns categorical JSON for object-valued v1 and v2 waves', async () => {
+test('public validation returns categorical JSON for object-valued waves', async () => {
   const cliPath = fileURLToPath(
     new URL('../scripts/validate-packet.mjs', import.meta.url),
   );
-  for (const manifestVersion of [1, 2]) {
-    const packet = await createPacketFixture({ manifestVersion });
-    tempRoots.push(packet.tempRoot);
-    packet.manifest.execution.waves = {};
-    await packet.persist();
+  const packet = await createPacketFixture();
+  tempRoots.push(packet.tempRoot);
+  packet.manifest.execution.waves = {};
+  await packet.persist();
 
-    const cli = spawnSync(process.execPath, [cliPath, packet.packetRoot], {
-      encoding: 'utf8',
-    });
-    assert.equal(cli.status, 1, cli.stderr || cli.stdout);
-    assert.doesNotMatch(cli.stderr, /TypeError/);
-    const result = JSON.parse(cli.stdout);
-    assert.equal(result.valid, false, JSON.stringify(result, null, 2));
-    assert.ok(
-      result.errors.some(
-        (error) =>
-          error.code === 'MISSING_REQUIRED_FIELD' &&
-          error.path === '$.execution.waves',
-      ),
-      JSON.stringify(result, null, 2),
-    );
-  }
+  const cli = spawnSync(process.execPath, [cliPath, packet.packetRoot], {
+    encoding: 'utf8',
+  });
+  assert.equal(cli.status, 1, cli.stderr || cli.stdout);
+  assert.doesNotMatch(cli.stderr, /TypeError/);
+  const result = JSON.parse(cli.stdout);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.ok(
+    result.errors.some(
+      (error) =>
+        error.code === 'MISSING_REQUIRED_FIELD' &&
+        error.path === '$.execution.waves',
+    ),
+    JSON.stringify(result, null, 2),
+  );
 });
 
 test('worker artifacts use existing closed identity fields and reject invented mode fields', async () => {
@@ -905,8 +863,8 @@ test('worker artifacts use existing closed identity fields and reject invented m
   }
 });
 
-test('v2 exact targets preserve explicit nullable controls and bind approval', async () => {
-  const packet = await createPacketFixture({ manifestVersion: 2 });
+test('exact targets preserve explicit nullable controls', async () => {
+  const packet = await createPacketFixture();
   tempRoots.push(packet.tempRoot);
   packet.manifest.execution.target.effort = null;
   packet.manifest.execution.target.reasoningMode = null;
@@ -916,10 +874,6 @@ test('v2 exact targets preserve explicit nullable controls and bind approval', a
   const accepted = await compileValidatedRun(packet.packetRoot);
   assert.equal(accepted.valid, true, JSON.stringify(accepted, null, 2));
   assert.equal(accepted.validatedRun.routing.target.effort, null);
-
-  packet.manifest.execution.target.model = 'mutated-after-approval';
-  await packet.persist();
-  await expectInvalid(packet, 'APPROVAL_FINGERPRINT_MISMATCH');
 });
 
 test('rejects illegal claim state transitions and quick verification', async () => {
@@ -1022,12 +976,7 @@ test('rejects connected-resource version drift and insufficient provenance', asy
   await expectInvalid(provenance, 'INSUFFICIENT_PROVENANCE');
 });
 
-test('rejects approval fingerprint drift and unresolved verification challenge', async () => {
-  const approval = await makePacket();
-  approval.manifest.execution.effort = 'low';
-  await writeJson(approval.manifestPath, approval.manifest);
-  await expectInvalid(approval, 'APPROVAL_FINGERPRINT_MISMATCH');
-
+test('rejects an unresolved verification challenge', async () => {
   const challenged = await makePacket({ profile: 'standard' });
   challenged.ledger.claims[0].challenges.push({
     id: 'challenge-1',

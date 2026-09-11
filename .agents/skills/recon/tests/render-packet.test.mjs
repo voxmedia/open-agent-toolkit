@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import {
   copyFile,
   mkdir,
@@ -29,13 +28,6 @@ import {
 } from './fixtures/packet-fixture.mjs';
 
 const tempRoots = [];
-const V1_RENDERED_PACKET_DIGEST =
-  'sha256:b2ecb280b079ad8947742e4c33bf70c6679a55e5071fa55cfbf09e9f64308c9b';
-
-function textDigest(value) {
-  return `sha256:${createHash('sha256').update(value).digest('hex')}`;
-}
-
 afterEach(async () => {
   await Promise.all(
     tempRoots
@@ -123,7 +115,7 @@ async function declareDualUrlCapture(fixture) {
 }
 
 test('packet rendering is deterministic and contains the complete consumer view', async () => {
-  const fixture = await createPacketFixture({ manifestVersion: 2 });
+  const fixture = await createPacketFixture();
   tempRoots.push(fixture.tempRoot);
   const validation = await compileValidatedRun(fixture.packetRoot);
   assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
@@ -153,7 +145,6 @@ test('packet rendering is deterministic and contains the complete consumer view'
 test('v2 rendering shows normalized intended targets and conditional outcomes without runtime claims', async () => {
   const fixture = await createPacketFixture({
     profile: 'standard',
-    manifestVersion: 2,
   });
   tempRoots.push(fixture.tempRoot);
   await configureConditionalContradiction(fixture, {
@@ -187,54 +178,6 @@ test('v2 rendering shows normalized intended targets and conditional outcomes wi
     document,
     /actual-launch target|observed runtime target|total cost|correctness guaranteed/i,
   );
-});
-
-test('v1 rendering preserves canonical source bytes and the pre-v2 consumer output', async () => {
-  const fixture = await createPacketFixture({
-    manifestVersion: 1,
-    sourceKind: 'repository',
-  });
-  tempRoots.push(fixture.tempRoot);
-  const before = await Promise.all([
-    readFile(fixture.manifestPath, 'utf8'),
-    readFile(fixture.claimsPath, 'utf8'),
-  ]);
-
-  await renderPacket(fixture.packetRoot);
-
-  assert.deepEqual(
-    await Promise.all([
-      readFile(fixture.manifestPath, 'utf8'),
-      readFile(fixture.claimsPath, 'utf8'),
-    ]),
-    before,
-  );
-  const document = await readFile(
-    join(fixture.packetRoot, 'packet.md'),
-    'utf8',
-  );
-  assert.equal(textDigest(document), V1_RENDERED_PACKET_DIGEST);
-  assert.doesNotMatch(document, /## Intended Routing/);
-  assert.notEqual(
-    textDigest(`${document}\n## Intended Routing\n`),
-    V1_RENDERED_PACKET_DIGEST,
-  );
-});
-
-test('approval drift cannot publish intended routing', async () => {
-  const fixture = await createPacketFixture({
-    profile: 'quick',
-    manifestVersion: 2,
-  });
-  tempRoots.push(fixture.tempRoot);
-  fixture.manifest.execution.target.model = 'mutated-after-approval';
-  await fixture.persist();
-
-  await assert.rejects(
-    renderPacket(fixture.packetRoot),
-    /packet validation failed/i,
-  );
-  await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
 });
 
 test('render core rejects raw or partially validated packet data', async () => {

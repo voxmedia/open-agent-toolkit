@@ -1,6 +1,4 @@
-import { hashCanonicalJson } from './canonical-json.mjs';
 import {
-  approvalFingerprintInput,
   authorityLevels,
   profileRoutingPolicy,
   taskClasses,
@@ -157,7 +155,7 @@ function assertClosedObject(value, allowedFields, code, label) {
 
 function assertProposalExecution(manifest) {
   assertObject(manifest, 'INVALID_ROUTING_PROPOSAL', 'manifest');
-  if (![1, 2].includes(manifest.schemaVersion)) {
+  if (manifest.schemaVersion !== 2) {
     routingError(
       'UNSUPPORTED_ROUTING_VERSION',
       `Unsupported routing schemaVersion ${manifest.schemaVersion}`,
@@ -166,31 +164,20 @@ function assertProposalExecution(manifest) {
   const execution = manifest.execution;
   assertClosedObject(
     execution,
-    manifest.schemaVersion === 1
-      ? new Set([
-          ...exactTargetFields,
-          'authority',
-          'maxConcurrency',
-          'deadlineSeconds',
-          'retryLimit',
-          'waves',
-          'approval',
-        ])
-      : new Set([
-          'target',
-          'authority',
-          'maxConcurrency',
-          'deadlineSeconds',
-          'retryLimit',
-          'waves',
-          'conditions',
-          'approval',
-        ]),
+    new Set([
+      'target',
+      'authority',
+      'maxConcurrency',
+      'deadlineSeconds',
+      'retryLimit',
+      'waves',
+      'conditions',
+      'approval',
+    ]),
     'INVALID_ROUTING_PROPOSAL',
     'execution',
   );
-  const target =
-    manifest.schemaVersion === 1 ? v1Target(execution) : execution.target;
+  const target = execution.target;
   assertExactTarget(target, 'execution target');
   if (!authorityLevels.includes(execution.authority)) {
     routingError(
@@ -213,18 +200,16 @@ function assertProposalExecution(manifest) {
   for (const [index, wave] of execution.waves.entries()) {
     assertClosedObject(
       wave,
-      manifest.schemaVersion === 1
-        ? new Set(['waveId', 'mode', 'taskClass', 'lanes', 'conditional'])
-        : new Set([
-            'waveId',
-            'mode',
-            'taskClass',
-            'classFloor',
-            'selectionReason',
-            'target',
-            'lanes',
-            'conditional',
-          ]),
+      new Set([
+        'waveId',
+        'mode',
+        'taskClass',
+        'classFloor',
+        'selectionReason',
+        'target',
+        'lanes',
+        'conditional',
+      ]),
       'INVALID_ROUTING_WAVE',
       `waves[${index}]`,
     );
@@ -247,34 +232,31 @@ function assertProposalExecution(manifest) {
         `Unknown task class ${wave.taskClass}`,
       );
     }
-    if (manifest.schemaVersion === 2) {
-      if (!taskClasses.includes(wave.classFloor)) {
-        routingError(
-          'INVALID_TASK_CLASS',
-          `Unknown class floor ${wave.classFloor}`,
-        );
-      }
-      if (
-        taskClasses.indexOf(wave.taskClass) <
-        taskClasses.indexOf(wave.classFloor)
-      ) {
-        routingError(
-          'TASK_CLASS_BELOW_FLOOR',
-          `Wave ${wave.waveId} task class is below its class floor`,
-        );
-      }
-      if (
-        typeof wave.selectionReason !== 'string' ||
-        wave.selectionReason.trim().length === 0
-      ) {
-        routingError(
-          'MISSING_SELECTION_REASON',
-          `Wave ${wave.waveId} requires a substantive selection reason`,
-        );
-      }
-      if (Object.hasOwn(wave, 'target')) {
-        assertExactTarget(wave.target, `wave ${wave.waveId} target`);
-      }
+    if (!taskClasses.includes(wave.classFloor)) {
+      routingError(
+        'INVALID_TASK_CLASS',
+        `Unknown class floor ${wave.classFloor}`,
+      );
+    }
+    if (
+      taskClasses.indexOf(wave.taskClass) < taskClasses.indexOf(wave.classFloor)
+    ) {
+      routingError(
+        'TASK_CLASS_BELOW_FLOOR',
+        `Wave ${wave.waveId} task class is below its class floor`,
+      );
+    }
+    if (
+      typeof wave.selectionReason !== 'string' ||
+      wave.selectionReason.trim().length === 0
+    ) {
+      routingError(
+        'MISSING_SELECTION_REASON',
+        `Wave ${wave.waveId} requires a substantive selection reason`,
+      );
+    }
+    if (Object.hasOwn(wave, 'target')) {
+      assertExactTarget(wave.target, `wave ${wave.waveId} target`);
     }
     if (!Array.isArray(wave.lanes) || wave.lanes.length === 0) {
       routingError(
@@ -323,7 +305,7 @@ function assertProposalExecution(manifest) {
           `Lane ${lane.laneId}.writeRoot must be packet-relative`,
         );
       }
-      if (manifest.schemaVersion === 2 && writeRoots.has(lane.writeRoot)) {
+      if (writeRoots.has(lane.writeRoot)) {
         routingError(
           'DUPLICATE_WAVE_OUTPUT',
           `Wave output ${lane.writeRoot} is assigned more than once`,
@@ -333,10 +315,8 @@ function assertProposalExecution(manifest) {
     }
   }
 
-  if (manifest.schemaVersion === 2) {
-    assertV2ProposalTopology(manifest, execution);
-  }
-  return { execution, target };
+  assertV2ProposalTopology(manifest, execution);
+  return { execution };
 }
 
 function assertV2ProposalTopology(manifest, execution) {
@@ -350,19 +330,11 @@ function validateApproval(execution) {
     !approval ||
     approval.type !== 'explicit-user-approval' ||
     typeof approval.approvedAt !== 'string' ||
-    !Number.isFinite(Date.parse(approval.approvedAt)) ||
-    typeof approval.fingerprint !== 'string'
+    !Number.isFinite(Date.parse(approval.approvedAt))
   ) {
     routingError(
       'MISSING_APPROVAL_ENVELOPE',
       'Exact target checks require valid explicit approval evidence',
-    );
-  }
-  const expected = hashCanonicalJson(approvalFingerprintInput(execution));
-  if (approval.fingerprint !== expected) {
-    routingError(
-      'APPROVAL_FINGERPRINT_MISMATCH',
-      'Approved execution envelope no longer matches its fingerprint',
     );
   }
   return approval;
@@ -378,113 +350,75 @@ export function economicalRoutingDefaults() {
   return deepFreeze(clone(economicalDefaults));
 }
 
-function v1Target(execution) {
-  return Object.fromEntries(
-    exactTargetFields.map((field) => [field, execution[field]]),
-  );
-}
-
 export function resolveEffectiveWaveTarget(execution, wave) {
   const target = wave.target ?? execution.target;
   if (!target) {
-    throw new TypeError('Version 2 routing requires an effective exact target');
+    throw new TypeError('Recon routing requires an effective exact target');
   }
   return clone(target);
 }
 
 export function normalizeManifestRouting(manifest) {
-  const execution = manifest.execution;
-  let routing;
-  if (manifest.schemaVersion === 1) {
-    const target = v1Target(execution);
-    routing = {
-      sourceSchemaVersion: 1,
-      target,
-      authority: execution.authority,
-      maxConcurrency: execution.maxConcurrency,
-      deadlineSeconds: execution.deadlineSeconds,
-      retryLimit: execution.retryLimit,
-      waves: execution.waves.map((wave) => ({
-        ...clone(wave),
-        classFloor: wave.taskClass,
-        selectionReason: null,
-        target: clone(target),
-      })),
-      conditions: [],
-      approval: clone(execution.approval),
-    };
-  } else if (manifest.schemaVersion === 2) {
-    routing = {
-      sourceSchemaVersion: 2,
-      target: clone(execution.target),
-      authority: execution.authority,
-      maxConcurrency: execution.maxConcurrency,
-      deadlineSeconds: execution.deadlineSeconds,
-      retryLimit: execution.retryLimit,
-      waves: execution.waves.map((wave) => ({
-        ...clone(wave),
-        target: resolveEffectiveWaveTarget(execution, wave),
-      })),
-      conditions: clone(execution.conditions),
-      approval: clone(execution.approval),
-    };
-  } else {
+  if (manifest.schemaVersion !== 2) {
     throw new TypeError(
       `Unsupported recon manifest schemaVersion ${manifest.schemaVersion}`,
     );
   }
+  const execution = manifest.execution;
+  const routing = {
+    sourceSchemaVersion: 2,
+    target: clone(execution.target),
+    authority: execution.authority,
+    maxConcurrency: execution.maxConcurrency,
+    deadlineSeconds: execution.deadlineSeconds,
+    retryLimit: execution.retryLimit,
+    waves: execution.waves.map((wave) => ({
+      ...clone(wave),
+      target: resolveEffectiveWaveTarget(execution, wave),
+    })),
+    conditions: clone(execution.conditions),
+    approval: clone(execution.approval),
+  };
   return deepFreeze(routing);
 }
 
 export function createRoutingPreview(manifest) {
-  const { execution, target } = assertProposalExecution(manifest);
+  const { execution } = assertProposalExecution(manifest);
   if (execution.approval) validateApproval(execution);
   const waves = execution.waves.map((wave) => {
     const defaultPolicy = economicalDefaultForMode(wave.mode);
-    const effectiveTarget =
-      manifest.schemaVersion === 1
-        ? target
-        : resolveEffectiveWaveTarget(execution, wave);
+    const effectiveTarget = resolveEffectiveWaveTarget(execution, wave);
     return {
       waveId: wave.waveId,
       mode: wave.mode,
       assignment: defaultPolicy.assignment,
       taskClass: wave.taskClass,
-      classFloor:
-        manifest.schemaVersion === 1 ? wave.taskClass : wave.classFloor,
+      classFloor: wave.classFloor,
       laneCount: wave.lanes.length,
       target: clone(effectiveTarget),
-      selectionReason:
-        manifest.schemaVersion === 1 ? null : wave.selectionReason,
+      selectionReason: wave.selectionReason,
       lanes: clone(wave.lanes),
       conditional: wave.conditional === true,
     };
   });
-  const approvalInput = approvalFingerprintInput(execution);
-  const approvalFingerprint = hashCanonicalJson(approvalInput);
   const requestedProfile = manifest.run?.requestedProfile ?? null;
-  const profileCaps =
-    manifest.schemaVersion === 2
-      ? {
-          maxLanes: profileRoutingPolicy[requestedProfile].lanes,
-          maxConcurrency: profileRoutingPolicy[requestedProfile].concurrency,
-          maxConditions: profileRoutingPolicy[requestedProfile].conditions,
-        }
-      : null;
+  const profileCaps = {
+    maxLanes: profileRoutingPolicy[requestedProfile].lanes,
+    maxConcurrency: profileRoutingPolicy[requestedProfile].concurrency,
+    maxConditions: profileRoutingPolicy[requestedProfile].conditions,
+  };
   return deepFreeze({
     schemaVersion: manifest.schemaVersion,
     requestedProfile,
     profileCaps,
     approvalState: execution.approval ? 'recorded' : 'draft',
-    approvalFingerprint,
     authority: execution.authority,
     waves,
-    conditions: manifest.schemaVersion === 1 ? [] : clone(execution.conditions),
+    conditions: clone(execution.conditions),
     limits: {
       waveCount: waves.length,
       laneCount: waves.reduce((count, wave) => count + wave.laneCount, 0),
-      conditionCount:
-        manifest.schemaVersion === 1 ? 0 : execution.conditions.length,
+      conditionCount: execution.conditions.length,
       maxConcurrency: execution.maxConcurrency,
       deadlineSeconds: execution.deadlineSeconds,
       retryLimit: execution.retryLimit,
@@ -517,9 +451,8 @@ export function renderRoutingPreview(preview, format = 'markdown') {
     '# Recon routing proposal',
     '',
     `Approval: ${encodeMarkdownValue(preview.approvalState)}`,
-    `Approval fingerprint: ${encodeMarkdownValue(preview.approvalFingerprint)}`,
     `Authority: ${encodeMarkdownValue(preview.authority)}`,
-    `Requested profile: ${encodeMarkdownValue(preview.requestedProfile ?? 'legacy v1')}`,
+    `Requested profile: ${encodeMarkdownValue(preview.requestedProfile)}`,
     '',
     '| Wave | Mode | Assignment | Class / floor | Lanes | Exact target | Reason | Conditional |',
     '| --- | --- | --- | --- | ---: | --- | --- | --- |',
@@ -532,7 +465,7 @@ export function renderRoutingPreview(preview, format = 'markdown') {
       )
       .join(', ');
     lines.push(
-      `| ${encodeMarkdownValue(wave.waveId)} | ${encodeMarkdownValue(wave.mode)} | ${encodeMarkdownValue(wave.assignment)} | ${encodeMarkdownValue(wave.taskClass)} / ${encodeMarkdownValue(wave.classFloor)} | ${encodeMarkdownValue(wave.laneCount)} | ${target} | ${encodeMarkdownValue(wave.selectionReason ?? 'legacy v1 approval')} | ${encodeMarkdownValue(wave.conditional ? 'yes' : 'no')} |`,
+      `| ${encodeMarkdownValue(wave.waveId)} | ${encodeMarkdownValue(wave.mode)} | ${encodeMarkdownValue(wave.assignment)} | ${encodeMarkdownValue(wave.taskClass)} / ${encodeMarkdownValue(wave.classFloor)} | ${encodeMarkdownValue(wave.laneCount)} | ${target} | ${encodeMarkdownValue(wave.selectionReason)} | ${encodeMarkdownValue(wave.conditional ? 'yes' : 'no')} |`,
     );
   }
   lines.push(
@@ -600,10 +533,7 @@ export function checkApprovedWaveTarget(manifest, waveId, candidateTarget) {
     routingError('UNKNOWN_APPROVED_WAVE', `Unknown approved wave ${waveId}`);
   }
   assertExactTarget(candidateTarget, 'constructed target');
-  const approvedTarget =
-    manifest.schemaVersion === 1
-      ? v1Target(execution)
-      : resolveEffectiveWaveTarget(execution, wave);
+  const approvedTarget = resolveEffectiveWaveTarget(execution, wave);
   if (!exactTargetEqual(approvedTarget, candidateTarget)) {
     routingError(
       'CONSTRUCTED_TARGET_MISMATCH',

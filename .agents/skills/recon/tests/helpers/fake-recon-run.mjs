@@ -137,11 +137,7 @@ export async function runFakeRecon(options = {}) {
   }
 
   const requestedProfile = options.profile ?? 'standard';
-  const manifestVersion = options.manifestVersion ?? 1;
   const conditionalDisposition = options.conditionalDisposition;
-  if (manifestVersion === 1 && conditionalDisposition !== undefined) {
-    throw new Error('Conditional fixture routing requires manifest v2');
-  }
   if (requestedProfile === 'quick' && conditionalDisposition !== undefined) {
     throw new Error('Quick fixture routing does not permit conditional waves');
   }
@@ -155,16 +151,13 @@ export async function runFakeRecon(options = {}) {
         requestedProfile === 'thorough'));
   const effectiveConditionalDisposition =
     conditionalDisposition ??
-    (manifestVersion === 2 && includeContradictionResolution
-      ? 'triggered'
-      : undefined);
+    (includeContradictionResolution ? 'triggered' : undefined);
   const fixture = await createPacketFixture({
     profile: requestedProfile,
     requestedProfile,
     achievedProfile,
     status,
     failedPassMode: options.workerFailure,
-    manifestVersion,
     includeContradictionResolution,
     roots,
   });
@@ -183,43 +176,23 @@ export async function runFakeRecon(options = {}) {
   const draftExecution = structuredClone(fixture.manifest.execution);
   delete draftExecution.approval;
   draftExecution.authority = authorityLevel;
-  if (manifestVersion === 1) {
-    draftExecution.role = role;
-    if (options.target) {
-      Object.assign(draftExecution, options.target);
-    }
-  } else {
-    draftExecution.target = structuredClone(
-      options.target ?? draftExecution.target,
-    );
-    draftExecution.target.role = role;
-    for (const wave of draftExecution.waves) {
-      const override = options.waveTargets?.[wave.mode];
-      if (override) wave.target = structuredClone(override);
-    }
+  draftExecution.target = structuredClone(
+    options.target ?? draftExecution.target,
+  );
+  draftExecution.target.role = role;
+  for (const wave of draftExecution.waves) {
+    const override = options.waveTargets?.[wave.mode];
+    if (override) wave.target = structuredClone(override);
   }
   fixture.manifest.execution = draftExecution;
 
   const invocation = {
     profile: requestedProfile,
-    manifestVersion,
+    manifestVersion: 2,
     conditionalDisposition: effectiveConditionalDisposition ?? null,
     authorityLevel,
     strict: options.strict === true,
-    target:
-      manifestVersion === 1
-        ? Object.fromEntries(
-            [
-              'provider',
-              'route',
-              'role',
-              'model',
-              'effort',
-              'reasoningMode',
-              'serviceTier',
-            ].map((axis) => [axis, draftExecution[axis]]),
-          )
-        : structuredClone(draftExecution.target),
+    target: structuredClone(draftExecution.target),
   };
   let routingPreview;
   try {
@@ -299,13 +272,6 @@ export async function runFakeRecon(options = {}) {
 
   const execution = approveExecution(draftExecution);
   fixture.manifest.execution = execution;
-  if (options.approvalMutation) {
-    if (manifestVersion === 2 && options.approvalMutation.target) {
-      Object.assign(execution.target, options.approvalMutation.target);
-    } else {
-      Object.assign(execution, options.approvalMutation);
-    }
-  }
 
   // The fixture uses the same production exact-target check the controller
   // invokes immediately before each launch. These synthetic calls prove helper
@@ -319,7 +285,7 @@ export async function runFakeRecon(options = {}) {
     try {
       checkApprovedWaveTarget(
         {
-          schemaVersion: manifestVersion,
+          schemaVersion: 2,
           run: fixture.manifest.run,
           execution,
         },

@@ -11,7 +11,6 @@ import {
   approveExecution,
   configureConditionalContradiction,
   createPacketFixture,
-  V1_STANDARD_APPROVAL_FINGERPRINT,
 } from './fixtures/packet-fixture.mjs';
 
 const roots = [];
@@ -23,7 +22,10 @@ afterEach(async () => {
 });
 
 async function fixture(options = {}) {
-  const packet = await createPacketFixture({ manifestVersion: 2, ...options });
+  const packet = await createPacketFixture({
+    includeContradictionResolution: options.profile === 'thorough',
+    ...options,
+  });
   roots.push(packet.tempRoot);
   return packet;
 }
@@ -167,9 +169,10 @@ test('a triggered lane may terminate only with a material typed outcome gap', as
   packet.manifest.gaps.push({
     id: 'gap-condition-terminal-failure',
     code: 'PASS_FAILED',
-    message:
-      'Activated wave `wave-contradiction-resolution` lane `lane-contradiction-resolution` failed before writing its result.',
+    message: 'The activated conditional lane failed before writing its result.',
     material: true,
+    waveId: 'wave-contradiction-resolution',
+    laneId: 'lane-contradiction-resolution',
     sourceIds: [],
     claimIds: [],
     coverageFindingIds: [],
@@ -213,7 +216,7 @@ test('two triggered lanes require distinct exact wave and lane outcome gaps', as
     id: 'gap-shared-conditional-outcome',
     code: 'PASS_FAILED',
     message:
-      'Activated wave `wave-contradiction-resolution` lane `lane-contradiction-resolution` and wave `wave-contradiction-resolution-second` lane `lane-contradiction-resolution-second` failed.',
+      'Activated wave `wave-contradiction-resolution` lane `lane-contradiction-resolution` failed.',
     material: true,
     sourceIds: [],
     claimIds: [],
@@ -223,9 +226,25 @@ test('two triggered lanes require distinct exact wave and lane outcome gaps', as
 
   let result = await validatePacket(packet.packetRoot);
   assert.ok(
-    codes(result).includes('MISSING_LANE_OUTCOME'),
-    'one shared gap must not settle two activated lanes',
+    result.errors.some(
+      (error) =>
+        error.code === 'MISSING_LANE_OUTCOME' &&
+        error.path === 'lane:lane-contradiction-resolution',
+    ),
+    'free-text wave and lane names must not settle a structured lane outcome',
   );
+
+  Object.assign(
+    packet.manifest.gaps.find(
+      (gap) => gap.id === 'gap-shared-conditional-outcome',
+    ),
+    {
+      waveId: 'wave-contradiction-resolution',
+      laneId: 'lane-contradiction-resolution',
+    },
+  );
+  await persistManifest(packet);
+  result = await validatePacket(packet.packetRoot);
   assert.ok(
     result.errors.some(
       (error) =>
@@ -234,15 +253,22 @@ test('two triggered lanes require distinct exact wave and lane outcome gaps', as
     ),
     JSON.stringify(result, null, 2),
   );
+  assert.equal(
+    result.errors.some(
+      (error) =>
+        error.code === 'MISSING_LANE_OUTCOME' &&
+        error.path === 'lane:lane-contradiction-resolution',
+    ),
+    false,
+  );
 
-  packet.manifest.gaps[0].message =
-    'Activated wave `wave-contradiction-resolution` lane `lane-contradiction-resolution` failed.';
   packet.manifest.gaps.push({
     id: 'gap-second-conditional-outcome',
     code: 'PASS_OMITTED',
-    message:
-      'Activated wave `wave-contradiction-resolution-second` lane `lane-contradiction-resolution-second` was omitted after activation.',
+    message: 'The second activated conditional lane was omitted.',
     material: true,
+    waveId: 'wave-contradiction-resolution-second',
+    laneId: 'lane-contradiction-resolution-second',
     sourceIds: [],
     claimIds: [],
     coverageFindingIds: [],
@@ -263,6 +289,35 @@ test('non-triggered lanes cannot publish or contribute conditional artifacts', a
   const result = await validatePacket(packet.packetRoot);
   assert.ok(
     codes(result).includes('INACTIVE_CONDITIONAL_ARTIFACT'),
+    JSON.stringify(result, null, 2),
+  );
+});
+
+test('foreign-run artifacts are rejected by run ownership without inactive-condition noise', async () => {
+  const packet = await fixture({ profile: 'thorough' });
+  await configureConditionalContradiction(packet, { disposition: 'triggered' });
+  packet.manifest.conditionOutcomes[0].disposition = 'not-triggered';
+  packet.manifest.conditionOutcomes[0].reason =
+    'Root recorded that the evidence predicate did not activate.';
+  const relative = 'reviews/contradiction-resolution.json';
+  const path = join(packet.packetRoot, relative);
+  const artifact = JSON.parse(await readFile(path, 'utf8'));
+  artifact.runId = 'run-foreign';
+  await writeFile(path, `${JSON.stringify(artifact, null, 2)}\n`, 'utf8');
+  packet.manifest.artifacts.find(
+    (reference) => reference.path === relative,
+  ).digest = await hashFile(path);
+  await persistManifest(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false);
+  assert.equal(
+    codes(result).includes('INACTIVE_CONDITIONAL_ARTIFACT'),
+    false,
+    JSON.stringify(result, null, 2),
+  );
+  assert.ok(
+    codes(result).includes('RECONCILIATION_REVIEW_MISMATCH'),
     JSON.stringify(result, null, 2),
   );
 });
@@ -299,29 +354,6 @@ test('required profile failures remain visible beside unresolved conditions', as
   const result = await validatePacket(packet.packetRoot);
   assert.ok(
     codes(result).includes('MISSING_PASS_OUTCOME_EVIDENCE'),
-    JSON.stringify(result, null, 2),
-  );
-});
-
-test('conditions are approval-bound in v2 while the pinned v1 literal remains exact', async () => {
-  const legacy = await createPacketFixture({ profile: 'standard' });
-  roots.push(legacy.tempRoot);
-  assert.equal(
-    legacy.manifest.execution.approval.fingerprint,
-    V1_STANDARD_APPROVAL_FINGERPRINT,
-  );
-
-  const packet = await fixture({ profile: 'standard' });
-  const withoutConditions = packet.manifest.execution.approval.fingerprint;
-  await configureConditionalContradiction(packet);
-  const withConditions = packet.manifest.execution.approval.fingerprint;
-  assert.notEqual(withConditions, withoutConditions);
-  packet.manifest.execution.conditions[0].predicate =
-    'unresolved-material-challenge';
-  await persistManifest(packet);
-  const result = await validatePacket(packet.packetRoot);
-  assert.ok(
-    codes(result).includes('APPROVAL_FINGERPRINT_MISMATCH'),
     JSON.stringify(result, null, 2),
   );
 });

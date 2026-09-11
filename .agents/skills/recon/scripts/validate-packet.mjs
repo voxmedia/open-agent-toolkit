@@ -6,7 +6,6 @@ import { pathToFileURL } from 'node:url';
 
 import { hashCanonicalJson, hashFile, sha256 } from './lib/canonical-json.mjs';
 import {
-  approvalFingerprintInput,
   isDigest,
   isObject,
   issue,
@@ -702,9 +701,8 @@ function gapNamesConditionalLane(gap, waveId, laneId) {
   return (
     (gap.code === 'PASS_FAILED' || gap.code === 'PASS_OMITTED') &&
     gap.material === true &&
-    typeof gap.message === 'string' &&
-    gap.message.includes(`wave \`${waveId}\``) &&
-    gap.message.includes(`lane \`${laneId}\``)
+    gap.waveId === waveId &&
+    gap.laneId === laneId
   );
 }
 
@@ -892,6 +890,7 @@ function validateConditionalRouting(
     }
   }
   for (const { value } of artifactsById.values()) {
+    if (value.runId !== manifest.run.id) continue;
     const wave = lanesById.get(artifactLaneId(value));
     if (wave?.conditional && !activeWaveIds.has(wave.waveId)) {
       errors.push(
@@ -2138,25 +2137,12 @@ export async function compileValidatedRun(packetDirectory) {
   }
 
   if (isObject(manifest?.execution?.approval)) {
-    const expected = hashCanonicalJson(
-      approvalFingerprintInput(manifest.execution),
-    );
-    if (manifest.execution.approval.fingerprint !== expected) {
-      errors.push(
-        issue(
-          'APPROVAL_FINGERPRINT_MISMATCH',
-          'Approved execution envelope no longer matches its approval fingerprint',
-          '$.execution.approval.fingerprint',
-        ),
-      );
-    } else if (manifestShape?.valid) {
-      routing = normalizeManifestRouting(manifest);
-    }
+    if (manifestShape?.valid) routing = normalizeManifestRouting(manifest);
   } else if (manifest) {
     errors.push(
       issue(
         'MISSING_APPROVAL_ENVELOPE',
-        'Manifest lacks approval-bound execution evidence',
+        'Manifest lacks explicit approval evidence',
       ),
     );
   }

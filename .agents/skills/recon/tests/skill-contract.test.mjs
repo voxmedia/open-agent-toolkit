@@ -54,7 +54,11 @@ test('controller proposes and checks independently approved per-wave targets', a
   );
   assert.match(skill, /homogeneous wave/i);
   assert.match(skill, /generic role[\s\S]{0,220}before approval/i);
-  assert.match(skill, /check-target[\s\S]{0,200}approved invocation intent/i);
+  assert.match(skill, /check-target[\s\S]{0,200}invocation intent/i);
+  assert.match(
+    skill,
+    /approval is[\s\S]{0,40}session-local[\s\S]{0,240}resumed[\s\S]{0,160}fresh approval/i,
+  );
 });
 
 test('controller keeps selection, launch, and caller judgment ownership separate', async () => {

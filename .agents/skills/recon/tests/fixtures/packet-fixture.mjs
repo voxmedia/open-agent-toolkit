@@ -14,10 +14,6 @@ import {
   hashCanonicalJson,
   hashFile,
 } from '../../scripts/lib/canonical-json.mjs';
-import { approvalFingerprintInput } from '../../scripts/lib/contracts.mjs';
-
-export const V1_STANDARD_APPROVAL_FINGERPRINT =
-  'sha256:b9584f2462664ffb161a66d714957bc06cd16cf6a010aa8e365b45869933b98e';
 
 export const fixtureTarget = Object.freeze({
   provider: 'fixture-provider',
@@ -39,7 +35,6 @@ export function approveExecution(
     approval: {
       type: 'explicit-user-approval',
       approvedAt,
-      fingerprint: hashCanonicalJson(approvalFingerprintInput(approved)),
     },
   };
 }
@@ -55,42 +50,6 @@ export function writeRootForMode(mode) {
 }
 
 export function createExecutionApproval({
-  modes,
-  laneIdForMode,
-  writeRoot = writeRootForMode,
-  concurrency = 2,
-  role = 'recon-worker',
-  authority = 'contract-enforced',
-}) {
-  return approveExecution({
-    provider: 'fixture-provider',
-    route: 'fake',
-    role,
-    model: 'fixture-model',
-    effort: 'high',
-    reasoningMode: 'fixture-reasoning',
-    serviceTier: 'fixture',
-    authority,
-    maxConcurrency: concurrency,
-    deadlineSeconds: 60,
-    retryLimit: 0,
-    waves: modes.map((mode) => ({
-      waveId: `wave-${mode}`,
-      mode,
-      taskClass: 'intelligent-recon',
-      lanes: [
-        {
-          laneId: laneIdForMode(mode),
-          scope: `packet/${mode}`,
-          writeRoot: writeRoot(mode),
-        },
-      ],
-      conditional: false,
-    })),
-  });
-}
-
-export function createV2ExecutionApproval({
   modes,
   laneIdForMode,
   writeRoot = writeRootForMode,
@@ -121,6 +80,24 @@ export function createV2ExecutionApproval({
       conditional: false,
     })),
     conditions: [],
+  });
+}
+
+export function createV2ExecutionApproval({
+  modes,
+  laneIdForMode,
+  writeRoot = writeRootForMode,
+  concurrency = 2,
+  target = fixtureTarget,
+  authority = 'contract-enforced',
+}) {
+  return createExecutionApproval({
+    modes,
+    laneIdForMode,
+    writeRoot,
+    concurrency,
+    target,
+    authority,
   });
 }
 
@@ -217,8 +194,7 @@ export async function createPacketFixture({
   achievedProfile = profile,
   sourceKind = 'file',
   failedPassMode,
-  manifestVersion = 1,
-  includeContradictionResolution = achievedProfile === 'thorough',
+  includeContradictionResolution = false,
   roots,
 } = {}) {
   const tempRoot = roots
@@ -657,9 +633,7 @@ export async function createPacketFixture({
   ]);
   const passLaneId = (mode) =>
     mode === 'semantic-verification' ? 'lane-semantic' : `lane-${mode}`;
-  const executionFactory =
-    manifestVersion === 2 ? createV2ExecutionApproval : createExecutionApproval;
-  const execution = executionFactory({
+  const execution = createExecutionApproval({
     modes: passModes,
     laneIdForMode: passLaneId,
     concurrency: requestedProfile === 'thorough' ? 4 : 2,
@@ -711,7 +685,7 @@ export async function createPacketFixture({
   }
   const manifest = {
     kind: 'recon.packet-manifest',
-    schemaVersion: manifestVersion,
+    schemaVersion: 2,
     run: {
       id: 'run-render',
       topic: 'render fixture',
@@ -744,7 +718,7 @@ export async function createPacketFixture({
       },
       ...incompletePassGaps,
     ],
-    ...(manifestVersion === 2 ? { conditionOutcomes: [] } : {}),
+    conditionOutcomes: [],
   };
   const manifestPath = join(packetRoot, 'manifest.json');
   await writeJson(manifestPath, manifest);

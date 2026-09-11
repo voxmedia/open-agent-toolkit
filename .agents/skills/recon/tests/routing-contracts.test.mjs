@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { validateV2ProfileTopology } from '../scripts/lib/contracts.mjs';
+import {
+  validateExecution,
+  validateV2ProfileTopology,
+} from '../scripts/lib/contracts.mjs';
 import {
   economicalRoutingDefaults,
   normalizeManifestRouting,
@@ -9,10 +12,8 @@ import {
 } from '../scripts/lib/routing.mjs';
 import {
   approveExecution,
-  createExecutionApproval,
   createV2ExecutionApproval,
   fixtureTarget,
-  V1_STANDARD_APPROVAL_FINGERPRINT,
 } from './fixtures/packet-fixture.mjs';
 
 const standardModes = [
@@ -24,9 +25,51 @@ const standardModes = [
   'coverage',
   'reconciliation',
 ];
+const thoroughModes = [
+  'map',
+  'gather',
+  'compile',
+  'semantic-verification',
+  'adversarial',
+  'coverage',
+  'redundant-gather',
+  'redundant-verification',
+  'reconciliation',
+];
 
 const laneIdForMode = (mode) =>
   mode === 'semantic-verification' ? 'lane-semantic' : `lane-${mode}`;
+
+function addConditionalWave(execution, suffix = '') {
+  const waveId = `wave-conditional${suffix}`;
+  const wave = {
+    waveId,
+    mode: 'contradiction-resolution',
+    taskClass: 'mechanical-recon',
+    classFloor: 'mechanical-recon',
+    selectionReason: 'Bounded condition ownership regression fixture.',
+    lanes: [
+      {
+        laneId: `lane-conditional${suffix}`,
+        scope: `packet/conditional${suffix}`,
+        writeRoot: `reviews/conditional${suffix}.json`,
+      },
+    ],
+    conditional: true,
+  };
+  execution.waves.splice(-1, 0, wave);
+  return wave;
+}
+
+function conditionFor(wave, conditionId) {
+  return {
+    conditionId,
+    destinationWaveId: wave.waveId,
+    afterWaveIds: ['wave-map'],
+    predicate: 'insufficient-evidence',
+    maxActivations: 1,
+  };
+}
 
 test('economical routing defaults exhaust the supported wave-mode union', () => {
   const defaults = economicalRoutingDefaults();
@@ -51,45 +94,7 @@ test('economical routing defaults exhaust the supported wave-mode union', () => 
   assert.equal(Object.isFrozen(defaults), true);
 });
 
-test('v1 normalization preserves the pinned approval bytes and homogeneous target', () => {
-  const execution = createExecutionApproval({
-    modes: standardModes,
-    laneIdForMode,
-  });
-  assert.equal(
-    execution.approval.fingerprint,
-    V1_STANDARD_APPROVAL_FINGERPRINT,
-  );
-
-  const expensive = approveExecution({
-    ...execution,
-    model: 'fixture-expensive-model',
-    effort: 'maximum',
-  });
-  const routing = normalizeManifestRouting({
-    schemaVersion: 1,
-    execution: expensive,
-  });
-
-  assert.equal(routing.sourceSchemaVersion, 1);
-  assert.equal(routing.target.model, 'fixture-expensive-model');
-  assert.equal(routing.target.effort, 'maximum');
-  assert.deepEqual(
-    routing.waves.map((wave) => wave.target),
-    routing.waves.map(() => routing.target),
-  );
-  assert.ok(
-    routing.waves.every(
-      (wave) =>
-        wave.classFloor === wave.taskClass && wave.selectionReason === null,
-    ),
-  );
-  assert.deepEqual(routing.conditions, []);
-  assert.equal(Object.isFrozen(routing), true);
-  assert.equal(Object.isFrozen(routing.waves[0].target), true);
-});
-
-test('v2 resolution inherits or replaces a whole exact target without axis merging', () => {
+test('routing resolution inherits or replaces a whole exact target without axis merging', () => {
   const execution = createV2ExecutionApproval({
     modes: ['map', 'reconciliation'],
     laneIdForMode,
@@ -142,6 +147,60 @@ test('the shared v2 topology validator enforces singleton order at the productio
   assert.ok(
     errors.some((error) => error.code === 'OUT_OF_ORDER_PROFILE_TOPOLOGY'),
   );
+});
+
+test('condition semantics have one validator owner and one diagnostic per injected defect', () => {
+  const unknownPredicate = createV2ExecutionApproval({
+    modes: standardModes,
+    laneIdForMode,
+  });
+  const unknownWave = addConditionalWave(unknownPredicate);
+  unknownPredicate.conditions = [
+    {
+      ...conditionFor(unknownWave, 'condition-unknown-predicate'),
+      predicate: 'invented-predicate',
+    },
+  ];
+
+  const duplicateDestination = createV2ExecutionApproval({
+    modes: thoroughModes,
+    laneIdForMode,
+  });
+  const sharedWave = addConditionalWave(duplicateDestination);
+  duplicateDestination.conditions = [
+    conditionFor(sharedWave, 'condition-first'),
+    conditionFor(sharedWave, 'condition-second'),
+  ];
+
+  const duplicateId = createV2ExecutionApproval({
+    modes: thoroughModes,
+    laneIdForMode,
+  });
+  const firstWave = addConditionalWave(duplicateId, '-first');
+  const secondWave = addConditionalWave(duplicateId, '-second');
+  duplicateId.conditions = [
+    conditionFor(firstWave, 'condition-duplicate'),
+    conditionFor(secondWave, 'condition-duplicate'),
+  ];
+
+  for (const [execution, expectedCode, profile] of [
+    [unknownPredicate, 'INVALID_CONDITION_PREDICATE', 'standard'],
+    [duplicateDestination, 'DUPLICATE_CONDITION_DESTINATION', 'thorough'],
+    [duplicateId, 'DUPLICATE_ROUTING_ID', 'thorough'],
+  ]) {
+    const executionErrors = [];
+    validateExecution(execution, executionErrors);
+    assert.deepEqual(executionErrors, []);
+    const topologyErrors = validateV2ProfileTopology({
+      schemaVersion: 2,
+      run: { requestedProfile: profile },
+      execution,
+    });
+    assert.deepEqual(
+      topologyErrors.map(({ code }) => code),
+      [expectedCode],
+    );
+  }
 });
 
 test('normalization refuses unknown manifest versions', () => {

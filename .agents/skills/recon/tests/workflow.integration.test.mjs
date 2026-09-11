@@ -59,48 +59,40 @@ const contradictionEvidenceTarget = {
   route: 'agent-role:counterexample-search',
 };
 
-for (const manifestVersion of [1, 2]) {
-  for (const profile of ['quick', 'standard', 'thorough']) {
-    test(`fake v${manifestVersion} ${profile} run drives the complete deterministic pipeline`, async () => {
-      const injectedRoots = await roots();
-      const result = await runFakeRecon({
-        profile,
-        manifestVersion,
-        roots: injectedRoots,
-      });
-      assert.equal(result.status, 'complete');
-      assert.equal(result.requestedProfile, profile);
-      assert.equal(result.achievedProfile, profile);
-      assert.equal(result.directory, injectedRoots.packetRoot);
-      assert.match(result.digest, /^sha256:[a-f0-9]{64}$/);
-      assert.equal(result.launched, true);
-      assert.deepEqual(result.failures, []);
-      const manifest = JSON.parse(
-        await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
-      );
-      assert.equal(manifest.execution.approval.type, 'explicit-user-approval');
-      assert.equal(
-        manifestVersion === 1
-          ? manifest.execution.model
-          : manifest.execution.target.model,
-        'fixture-model',
-      );
-      const validation = await validatePacket(injectedRoots.packetRoot);
-      assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
-      const log = JSON.parse(
-        await readFile(
-          join(injectedRoots.packetRoot, 'raw', 'fixture-run-log.json'),
-          'utf8',
-        ),
-      );
-      assert.match(log.evidenceClass, /Synthetic/);
-      assert.equal(log.invocation.manifestVersion, manifestVersion);
-      assert.equal(log.output.status, 'complete');
-      await assert.rejects(
-        readFile(join(injectedRoots.packetRoot, 'raw', 'dispatch')),
-      );
+for (const profile of ['quick', 'standard', 'thorough']) {
+  test(`fake ${profile} run drives the complete deterministic pipeline`, async () => {
+    const injectedRoots = await roots();
+    const result = await runFakeRecon({
+      profile,
+      roots: injectedRoots,
     });
-  }
+    assert.equal(result.status, 'complete');
+    assert.equal(result.requestedProfile, profile);
+    assert.equal(result.achievedProfile, profile);
+    assert.equal(result.directory, injectedRoots.packetRoot);
+    assert.match(result.digest, /^sha256:[a-f0-9]{64}$/);
+    assert.equal(result.launched, true);
+    assert.deepEqual(result.failures, []);
+    const manifest = JSON.parse(
+      await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+    );
+    assert.equal(manifest.execution.approval.type, 'explicit-user-approval');
+    assert.equal(manifest.execution.target.model, 'fixture-model');
+    const validation = await validatePacket(injectedRoots.packetRoot);
+    assert.equal(validation.valid, true, JSON.stringify(validation, null, 2));
+    const log = JSON.parse(
+      await readFile(
+        join(injectedRoots.packetRoot, 'raw', 'fixture-run-log.json'),
+        'utf8',
+      ),
+    );
+    assert.match(log.evidenceClass, /Synthetic/);
+    assert.equal(log.invocation.manifestVersion, 2);
+    assert.equal(log.output.status, 'complete');
+    await assert.rejects(
+      readFile(join(injectedRoots.packetRoot, 'raw', 'dispatch')),
+    );
+  });
 }
 
 for (const profile of ['standard', 'thorough']) {
@@ -109,7 +101,6 @@ for (const profile of ['standard', 'thorough']) {
       const injectedRoots = await roots();
       const result = await runFakeRecon({
         profile,
-        manifestVersion: 2,
         conditionalDisposition,
         roots: injectedRoots,
       });
@@ -150,7 +141,6 @@ for (const conditionalDisposition of ['triggered', 'not-triggered']) {
     const injectedRoots = await roots();
     const result = await runFakeRecon({
       profile: 'standard',
-      manifestVersion: 2,
       conditionalDisposition,
       target: cheapTarget,
       waveTargets: {
@@ -231,7 +221,6 @@ test('provider-shaped controls preserve absent, independent, and opaque axes', a
     const injectedRoots = await roots();
     const result = await runFakeRecon({
       profile: 'quick',
-      manifestVersion: 2,
       target: shape.target,
       launcherCapabilities: shape.capabilities,
       roots: injectedRoots,
@@ -248,7 +237,6 @@ test('unsupported target controls stop before approval acceptance or launch', as
   const injectedRoots = await roots();
   const result = await runFakeRecon({
     profile: 'quick',
-    manifestVersion: 2,
     target: {
       provider: 'synthetic-provider',
       route: 'fixture',
@@ -286,7 +274,6 @@ test('user refusal after one envelope preview produces zero launches', async () 
   const injectedRoots = await roots();
   const result = await runFakeRecon({
     profile: 'standard',
-    manifestVersion: 2,
     conditionalDisposition: 'not-triggered',
     userApproval: false,
     roots: injectedRoots,
@@ -307,29 +294,22 @@ test('user refusal after one envelope preview produces zero launches', async () 
   );
 });
 
-test('approval fingerprint mutation and constructed-target drift refuse work', async () => {
-  for (const mutation of [
-    { approvalMutation: { target: { model: 'post-approval-mutation' } } },
-    { dispatchDrift: { route: 'constructed-target-mismatch' } },
-  ]) {
-    const injectedRoots = await roots();
-    const result = await runFakeRecon({
-      profile: 'quick',
-      manifestVersion: 2,
-      ...mutation,
-      roots: injectedRoots,
-    });
-    assert.equal(result.status, 'awaiting-approval');
-    assert.equal(result.launched, false);
-    assert.equal(result.reason, 'DISPATCH_AXIS_DRIFT');
-  }
+test('constructed-target drift refuses work', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'quick',
+    dispatchDrift: { route: 'constructed-target-mismatch' },
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'awaiting-approval');
+  assert.equal(result.launched, false);
+  assert.equal(result.reason, 'DISPATCH_AXIS_DRIFT');
 });
 
 test('triggered contradiction work uses the adversary brief and feeds only reconcile', async () => {
   const injectedRoots = await roots();
   await runFakeRecon({
     profile: 'standard',
-    manifestVersion: 2,
     conditionalDisposition: 'triggered',
     roots: injectedRoots,
   });
@@ -365,7 +345,6 @@ test('production validation rejects a shadow reconciliation in a complete v2 bra
   const injectedRoots = await roots();
   await runFakeRecon({
     profile: 'standard',
-    manifestVersion: 2,
     conditionalDisposition: 'triggered',
     roots: injectedRoots,
   });
@@ -398,7 +377,6 @@ test('representative v2 partial run preserves an exact synthetic invocation/outp
   const injectedRoots = await roots();
   const result = await runFakeRecon({
     profile: 'standard',
-    manifestVersion: 2,
     workerFailure: 'semantic-verification',
     roots: injectedRoots,
   });
@@ -450,7 +428,7 @@ test('worker failure publishes an honest lower-assurance partial', async () => {
       'utf8',
     ),
   );
-  assert.equal(log.invocation.manifestVersion, 1);
+  assert.equal(log.invocation.manifestVersion, 2);
   assert.equal(log.output.status, 'partial');
   assert.match(log.evidenceClass, /not native runtime launch identity/);
 });
@@ -529,7 +507,7 @@ test('generic worker-role fallback is fixed before approval', async () => {
   const manifest = JSON.parse(
     await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
   );
-  assert.equal(manifest.execution.role, 'generic');
+  assert.equal(manifest.execution.target.role, 'generic');
   assert.equal(manifest.execution.approval.type, 'explicit-user-approval');
 });
 
@@ -640,7 +618,7 @@ test('documented candidate validation withdraws the consumer view until successf
   await assert.rejects(renderPacket(fixture.packetRoot));
   await assert.rejects(readFile(join(fixture.packetRoot, 'packet.md'), 'utf8'));
 
-  fixture.manifest.schemaVersion = 1;
+  fixture.manifest.schemaVersion = 2;
   fixture.ledger.synthesis.answer = 'A successfully promoted replacement.';
   await fixture.persist();
   const validCandidate = await validatePacket(fixture.packetRoot);

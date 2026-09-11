@@ -1,10 +1,10 @@
-# Recon Packet Contract v1 and v2
+# Recon Packet Contract
 
 Every JSON artifact carries a `kind` discriminator and integer
 `schemaVersion`. Versions are dispatched by artifact kind: packet manifests
-accept versions 1 and 2, while claim ledgers, raw dossiers, review briefs, and
-review results remain version 1. Unknown kind/version combinations fail closed;
-extend a kind through a new version rather than accepting untyped fields.
+accept version 2, while claim ledgers, raw dossiers, review briefs, and review
+results remain version 1. Unknown kind/version combinations fail closed; extend
+a kind through a new version rather than accepting untyped fields.
 
 ## Directory
 
@@ -30,15 +30,11 @@ extend a kind through a new version rather than accepting untyped fields.
 consumer view. Each worker owns one unique path; candidates are immutable and
 never promoted over the last valid canonical artifact in place.
 
-## Artifact References and Canonical JSON
+## Artifact References
 
 An artifact reference is `{ "path": "packet-relative/path", "digest":
 "sha256:<64 lowercase hex>" }`. Paths must remain inside the packet directory.
 Digests cover the exact bytes on disk.
-
-Fingerprints use canonical JSON: UTF-8, object keys sorted lexicographically,
-array order preserved, no insignificant whitespace, and SHA-256 with the
-`sha256:` prefix.
 
 ## One Validation Boundary
 
@@ -49,17 +45,15 @@ Assurance derivation and rendering accept only `ValidatedRun`; they never
 reopen or independently reinterpret raw manifest, ledger, review, or
 reconciliation artifacts.
 
-The validator checks the original wire shape and approval fingerprint before it
-creates the normalized routing view. A v1 execution is normalized losslessly by
-inheriting its one exact target into every wave; a v2 wave inherits the complete
-execution target unless it supplies a complete replacement target. The
+The validator checks the original wire shape before it creates the normalized
+routing view. A wave inherits the complete execution target unless it supplies
+a complete replacement target. The
 `ValidatedRun` retains both the original manifest and its exact byte digest plus
 the immutable effective routing view. Consumers do not reparse raw routing data.
 
 Construction is all-or-nothing. A valid graph contains:
 
-- one approved execution envelope whose canonical fingerprint matches the
-  recorded explicit user approval;
+- one execution envelope with recorded explicit user approval;
 - complete typed same-run artifacts, each written by an approved wave and lane,
   from which the achieved profile is derived;
 - exactly one terminal reconciliation for standard or thorough runs and one
@@ -77,7 +71,7 @@ Construction is all-or-nothing. A valid graph contains:
 - derived claim assurance, achieved profile, material gaps, and publication
   status.
 
-Reject approval fingerprint drift, unknown execution fields, artifacts from
+Reject unsupported manifest versions, unknown execution fields, artifacts from
 unapproved lanes, duplicate or shadow reconciliation results, symlink root
 aliases, retargeted roots, raw secret-bearing stale excerpts, and
 caller-downgraded gap materiality. Equivalent-looking inputs do not excuse a
@@ -85,7 +79,7 @@ failed invariant.
 
 ## Manifest
 
-Both `recon.packet-manifest` versions contain:
+`recon.packet-manifest` version 2 contains:
 
 - `run`: stable ID, topic, status, requested and achieved profile, timestamps;
 - `request`: objective, questions, included/excluded scope, stable context
@@ -97,58 +91,27 @@ Both `recon.packet-manifest` versions contain:
   explicit boolean `material` classification and affected source, claim, and
   coverage-finding IDs when applicable.
 
-Version 2 additionally carries root-recorded `conditionOutcomes`. They are
+The manifest also carries root-recorded `conditionOutcomes`. They are
 control dispositions, not launcher receipts. Every declared condition has one
 closed `triggered`, `not-triggered`, or `unresolved` outcome with a non-empty
 reason and exact digest-bound predecessor artifact references.
 
-Version 2 records approved routing intent. Effective targets, selection
+The manifest records approved routing intent. Effective targets, selection
 rationales, and condition outcomes do not attest which native process ran, its
 runtime identity, token usage, cost, or the correctness of its conclusions.
 Those claims require evidence from an actual producer outside this contract.
 
-### Version 1 Execution Envelope
+### Execution Envelope
 
-`execution` is a closed object binding exactly what the user approved:
-
-- `provider`, `route`, `role`, `model`, `effort`: non-empty strings;
-- `reasoningMode`, `serviceTier`: string or `null`;
-- `authority`: `provider-enforced` or `contract-enforced`;
-- `maxConcurrency`, `deadlineSeconds`: integers of at least 1; `retryLimit`:
-  integer of at least 0;
-- `waves`: closed `{ waveId, mode, taskClass, lanes, conditional }` records
-  with a unique wave identity, a mode from the wave-mode set, a task class from
-  the durable task-class order, and at least one closed
-  `{ laneId, scope, writeRoot }` lane whose identity is unique across the run
-  and whose write root is a packet-relative path; and
-- `approval`: `{ type: "explicit-user-approval", approvedAt, fingerprint }`.
-
-The fingerprint is the canonical SHA-256 of `execution` with `approval`
-removed. Validation recomputes it; any difference is
-`APPROVAL_FINGERPRINT_MISMATCH`. The envelope records what will run, not proof
-that a launcher ran it. Launch acceptance and per-lane terminal outcomes are
-reported in the controller's status and as `PASS_FAILED` gaps, not as packet
-artifacts.
-
-Wave modes are `map`, `gather`, `compile`, `semantic-verification`,
-`adversarial`, `coverage`, `reconciliation`, `redundant-gather`,
-`redundant-verification`, and `contradiction-resolution`.
-
-Valid v1 manifests retain this exact flat shape, including non-empty string
-`effort`, previously legal expensive homogeneous selections, and their original
-fingerprint projection. V2-only keys inside a v1 manifest or execution object
-are rejected; validation never rewrites or reapproves a v1 packet.
-
-### Version 2 Execution Envelope
-
-Version 2 replaces the flat target axes with a required closed `target` object:
+Execution uses a required closed `target` object:
 `provider`, `route`, `role`, and `model` are non-empty strings; `effort`,
 `reasoningMode`, and `serviceTier` are each explicitly a non-empty string or
 `null`. A null axis means the adapter exposes no independently requested control;
 it is not an unknown-value fallback.
 
-The other execution fields retain the version 1 authority and numeric-limit
-contracts. Each closed wave adds:
+The other execution fields include `authority` as `provider-enforced` or
+`contract-enforced`; integer `maxConcurrency` and `deadlineSeconds` values of
+at least 1; and an integer `retryLimit` of at least 0. Each closed wave adds:
 
 - `classFloor`, from the same durable task-class order and not above
   `taskClass`;
@@ -169,7 +132,9 @@ profile's 4/10/20 worker-lane cap, and concurrency remains capped at 4/6/8.
 
 Triggered dispositions require exact complete artifacts from every approved
 predecessor and concrete typed predicate evidence. A triggered destination must
-produce its approved output or a material `PASS_FAILED`/`PASS_OMITTED` gap.
+produce its approved output or a material `PASS_FAILED`/`PASS_OMITTED` gap with
+exact `waveId` and `laneId` fields. The gap message is explanatory prose and is
+never parsed for identity.
 Not-triggered and unresolved destinations publish no artifacts and contribute
 no achieved pass. Accepted failed, cancelled, timed-out, or missing predecessor
 work cannot activate replacement work. Required profile passes remain required
@@ -187,10 +152,13 @@ redundant verification use `verify`; adversarial and contradiction-resolution
 use `adversary`; and only terminal reconciliation uses `reconcile`. This mapping
 does not change the approved manifest mode used for artifact and pass checks.
 
-The approval fingerprint remains the canonical SHA-256 of the original
-version-specific execution object with `approval` removed. A v2 manifest may
-reference version 1 evidence artifacts; changing the manifest version does not
-force evidence producers to emit a new schema.
+Approval is `{ type: "explicit-user-approval", approvedAt }`. It is valid only
+for the exact proposal shown in the same uninterrupted controller flow. Resume,
+reload, or any pre-launch proposal change returns the run to
+`awaiting-approval`, removes the recorded approval, and requires a fresh preview
+and explicit approval. The exact-target check immediately before launch still
+refuses a candidate whose provider-native axes differ from the current wave.
+The manifest may reference version 1 evidence artifacts.
 
 ### Passes and Achieved Profile
 
@@ -380,7 +348,7 @@ record under `raw/quarantine/`. Never promote invalid output.
 Run `scripts/validate-packet.mjs <packet-dir>` before rendering or publication.
 It delegates to the single validation boundary, which validates schemas, IDs,
 references, containment, hashes, source reopening, locators, the approval
-fingerprint, approved lanes, pass outcomes, the one terminal reconciliation,
+approved lanes, pass outcomes, the one terminal reconciliation,
 legal transitions, secret-safe persistence, derived gaps, assurance, and
 requested vs achieved profile. Candidate validation is non-destructive for
 canonical diagnostic artifacts, but a non-publishable candidate withdraws any
@@ -394,14 +362,13 @@ declared, including honest same-profile partials.
 
 Use `scripts/render-packet.mjs <packet-dir>` to generate the deterministic
 consumer view. Its public path entry point first obtains `ValidatedRun`; the
-render core accepts only that graph. For a manifest-v2 packet, the document
+render core accepts only that graph. The document
 includes a compact Intended Routing summary from the normalized view: approved
 authority and limits, each wave's effective exact target/class/floor/rationale,
 and every root-recorded conditional disposition. It labels those values as
 approved intent rather than launch receipts or observations of runtime identity,
-usage, cost, or correctness. A valid manifest-v1 packet retains the pre-v2
-rendered document without an Intended Routing section. Evidence, claims,
-contradictions, and gaps remain the primary consumer context in both versions.
+usage, cost, or correctness. Evidence, claims, contradictions, and gaps remain
+the primary consumer context.
 
 The renderer writes an exclusive unpredictable temporary sibling, retains that
 file's identity through hashing and atomic promotion, and verifies the promoted
@@ -418,8 +385,8 @@ dossier content.
 
 ## Compatibility and Non-Goals
 
-Version 2 does not reinterpret or migrate version 1 approvals. This boundary
-does not add another review pass, persisted intermediate, generalized plugin
+Legacy manifest compatibility is intentionally out of scope. This boundary does
+not add another review pass, persisted intermediate, generalized plugin
 artifact kind, saved validation profile, provider behavior, or integration
 surface. It does not require launcher-emitted
 dispatch receipts; reintroduce those only when a launcher exists that produces

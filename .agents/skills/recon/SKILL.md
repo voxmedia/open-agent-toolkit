@@ -179,7 +179,7 @@ proposal helper rather than manually reinterpreting the manifest:
 node scripts/prepare-routing.mjs --manifest manifest.json --format markdown
 ```
 
-The complete approval envelope binds:
+The proposal shown for approval includes:
 
 - every wave's exact effective provider, route, role, model, effort, reasoning
   mode, and service tier;
@@ -189,16 +189,17 @@ The complete approval envelope binds:
   predicate, and single-activation cap; and every lane with its identity, read
   scope, and worker-owned write root.
 
-Its canonical fingerprint covers every field above.
-
 Present every wave's exact supported target axes, class/floor, lane count,
 selection rationale, conditions, and finite worst-case concurrency, deadline,
 retry, lane, and condition limits for explicit approval before any worker
 launch. Name unsupported controls as null instead of inventing them. Named
 model examples are illustrative and non-normative; never route from an example.
 Declining approval leaves the run at `awaiting-approval` and launches nothing.
-Approval records `explicit-user-approval`, the approval time, and the
-fingerprint.
+Approval records `explicit-user-approval` and the approval time. Approval is
+session-local: it authorizes only the exact proposal shown in the same
+uninterrupted control flow. If the run is resumed, reloaded, or changed before
+launch, remove the approval, return to `awaiting-approval`, render the current
+proposal again, and obtain fresh approval.
 
 **Deadlines.** Choose the per-lane deadline from the expected task class and
 scope, and show it in the approval envelope; it is an approved execution limit,
@@ -224,12 +225,14 @@ same production helper used by preview:
 node scripts/prepare-routing.mjs --manifest manifest.json --wave <wave-id> --check-target <candidate-target.json>
 ```
 
-Any target or approval drift returns the complete manifest for renewed
-approval. This check proves approved invocation intent, not actual runtime
+Any constructed-target mismatch returns the complete manifest for renewed
+approval. This check proves invocation intent, not actual runtime
 identity. Launch acceptance is distinct from worker completion. After
 acceptance there is no replacement child, alternate route, target substitution,
-and no silent retry. If an accepted lane fails, is cancelled, or times out, record
-that pass as failed with a material `PASS_FAILED` gap naming the pass.
+and no silent retry. If an accepted lane fails, is cancelled, or times out,
+record that pass as failed with a material `PASS_FAILED` gap naming the pass. A
+conditional-lane gap also records its exact `waveId` and `laneId`; prose is
+descriptive, not identity.
 
 Run the passes in this order:
 

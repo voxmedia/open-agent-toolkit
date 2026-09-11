@@ -495,12 +495,11 @@ test('exact target check preserves opaque identity, nullable effort, and approva
       }),
     { code: 'CONSTRUCTED_TARGET_MISMATCH' },
   );
-  const mutated = structuredClone(manifest);
-  mutated.execution.target.model = 'changed-after-approval';
+  const unapproved = structuredClone(manifest);
+  delete unapproved.execution.approval;
   assert.throws(
-    () =>
-      checkApprovedWaveTarget(mutated, 'wave-gather', mutated.execution.target),
-    { code: 'APPROVAL_FINGERPRINT_MISMATCH' },
+    () => checkApprovedWaveTarget(unapproved, 'wave-gather', execution.target),
+    { code: 'MISSING_APPROVAL_ENVELOPE' },
   );
   assert.throws(
     () => checkApprovedWaveTarget(manifest, 'unknown', execution.target),

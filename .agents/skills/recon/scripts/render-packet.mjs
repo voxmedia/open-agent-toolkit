@@ -72,9 +72,7 @@ function formatIntendedTarget(target) {
 
 function intendedRoutingLines(routing) {
   return routing.waves.map((wave) => {
-    const reason =
-      wave.selectionReason ?? 'legacy v1 homogeneous approval preserved';
-    return `- **${escapeInline(wave.waveId)}** — mode=${escapeInline(wave.mode)}; class/floor=${escapeInline(wave.taskClass)}/${escapeInline(wave.classFloor)}; lanes=${wave.lanes.length}; conditional=${wave.conditional ? 'yes' : 'no'}; ${formatIntendedTarget(wave.target)}; rationale=${escapeInline(reason)}`;
+    return `- **${escapeInline(wave.waveId)}** — mode=${escapeInline(wave.mode)}; class/floor=${escapeInline(wave.taskClass)}/${escapeInline(wave.classFloor)}; lanes=${wave.lanes.length}; conditional=${wave.conditional ? 'yes' : 'no'}; ${formatIntendedTarget(wave.target)}; rationale=${escapeInline(wave.selectionReason)}`;
   });
 }
 
@@ -95,8 +93,6 @@ function conditionalOutcomeLines(manifest, routing) {
 }
 
 function intendedRoutingSection(manifest, routing) {
-  if (manifest.schemaVersion !== 2) return [];
-
   return [
     '',
     '## Intended Routing',

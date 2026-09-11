@@ -15,7 +15,6 @@ import {
 import {
   approveExecution,
   createPacketFixture,
-  V1_STANDARD_APPROVAL_FINGERPRINT,
 } from './fixtures/packet-fixture.mjs';
 
 const roots = [];
@@ -81,22 +80,19 @@ test('later ledger revisions reject final transitions that mismatch claim status
   );
 });
 
-test('manifest shape validation returns stable errors for object-valued v1 and v2 waves', async () => {
-  for (const manifestVersion of [1, 2]) {
-    const packet = await createPacketFixture({ manifestVersion });
-    roots.push(packet.tempRoot);
-    packet.manifest.execution.waves = {};
-    const validation = validateArtifactShape(packet.manifest);
-    assert.equal(validation.valid, false, JSON.stringify(validation, null, 2));
-    assert.ok(
-      validation.errors.some(
-        (error) =>
-          error.code === 'MISSING_REQUIRED_FIELD' &&
-          error.path === '$.execution.waves',
-      ),
-      JSON.stringify(validation, null, 2),
-    );
-  }
+test('manifest shape validation returns stable errors for object-valued waves', async () => {
+  const packet = await fixture();
+  packet.manifest.execution.waves = {};
+  const validation = validateArtifactShape(packet.manifest);
+  assert.equal(validation.valid, false, JSON.stringify(validation, null, 2));
+  assert.ok(
+    validation.errors.some(
+      (error) =>
+        error.code === 'MISSING_REQUIRED_FIELD' &&
+        error.path === '$.execution.waves',
+    ),
+    JSON.stringify(validation, null, 2),
+  );
 });
 
 test('ValidatedRun retains exact digests for canonical and referenced packet bytes', async () => {
@@ -128,31 +124,9 @@ test('ValidatedRun retains exact digests for canonical and referenced packet byt
   }
 });
 
-test('the pinned v1 approval fingerprint stays byte-exact and rejects retained-literal drift', async () => {
-  const packet = await fixture();
-  assert.equal(
-    packet.manifest.execution.approval.fingerprint,
-    V1_STANDARD_APPROVAL_FINGERPRINT,
-  );
-  const accepted = await compileValidatedRun(packet.packetRoot);
-  assert.equal(accepted.valid, true, JSON.stringify(accepted, null, 2));
-  assert.equal(accepted.validatedRun.routing.sourceSchemaVersion, 1);
-
-  packet.manifest.execution.model = 'changed-with-retained-v1-literal';
-  await packet.persist();
-  const rejected = await validatePacket(packet.packetRoot);
-  assert.ok(
-    rejected.errors.some(
-      (error) => error.code === 'APPROVAL_FINGERPRINT_MISMATCH',
-    ),
-    JSON.stringify(rejected, null, 2),
-  );
-});
-
 test('hostile repeated condition entries return structured errors instead of throwing', async () => {
   const packet = await createPacketFixture({
     profile: 'standard',
-    manifestVersion: 2,
   });
   roots.push(packet.tempRoot);
   for (const conditions of [
@@ -170,7 +144,7 @@ test('hostile repeated condition entries return structured errors instead of thr
       JSON.stringify(result, null, 2),
     );
     assert.ok(
-      result.errors.some((error) => error.code === 'INVALID_CONDITION'),
+      result.errors.some((error) => error.code === 'INVALID_ROUTING_CONDITION'),
       JSON.stringify(result, null, 2),
     );
   }
@@ -179,7 +153,6 @@ test('hostile repeated condition entries return structured errors instead of thr
 test('condition predecessor IDs must all be non-empty strings', async () => {
   const packet = await createPacketFixture({
     profile: 'standard',
-    manifestVersion: 2,
   });
   roots.push(packet.tempRoot);
   const destination = {
@@ -217,28 +190,6 @@ test('condition predecessor IDs must all be non-empty strings', async () => {
     3,
     JSON.stringify(result, null, 2),
   );
-});
-
-test('approval fingerprint binds every approved execution axis', async () => {
-  for (const [axis, value] of [
-    ['model', 'other-model'],
-    ['effort', 'low'],
-    ['role', 'generic'],
-    ['authority', 'provider-enforced'],
-    ['maxConcurrency', 9],
-    ['deadlineSeconds', 5],
-  ]) {
-    const packet = await fixture('quick');
-    packet.manifest.execution[axis] = value;
-    await writeJson(packet.manifestPath, packet.manifest);
-    const validation = await validatePacket(packet.packetRoot);
-    assert.ok(
-      validation.errors.some(
-        (error) => error.code === 'APPROVAL_FINGERPRINT_MISMATCH',
-      ),
-      `${axis} drift was not rejected: ${JSON.stringify(validation, null, 2)}`,
-    );
-  }
 });
 
 test('approved execution rejects unknown axes and unapproved lanes', async () => {
@@ -1414,10 +1365,7 @@ test('claim assurance and reconciliation reject a review from an unapproved lane
 
 test('thorough-only assurance passes use claim-bearing typed results', async () => {
   const packet = await fixture('thorough');
-  for (const reviewKind of [
-    'redundant-verification',
-    'contradiction-resolution',
-  ]) {
+  for (const reviewKind of ['redundant-verification']) {
     const reference = packet.manifest.artifacts.find(
       (item) => item.path === `reviews/${reviewKind}.json`,
     );
