@@ -584,13 +584,13 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 
 | Scope | Type  | Status  | Notes                                                                                                               |
 | ----- | ----- | ------- | ------------------------------------------------------------------------------------------------------------------- |
-| p01   | phase | fixes_added | Review round 1 requested fixes; p02 remains blocked until Critical and Important findings are resolved and re-reviewed. |
+| p01   | phase | fixes_completed | Review round 1 fixes are committed; p02 remains blocked until re-review passes. |
 
 {Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
 | Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head | Invocation | Gate Target |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | fixes_added     | 2026-09-11 | reviews/p01-review-2026-09-11T155532Z.md                      | f1cff54c0e364e858f9e36fb820e9f95b1e5b578 | manual     | -           |
+| p01    | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T155532Z.md                      | f1cff54c0e364e858f9e36fb820e9f95b1e5b578 | manual     | -           |
 | p02    | code     | pending         | -          | -                                                             | -             | -          | -           |
 | p03    | code     | pending         | -          | -                                                             | -             | -          | -           |
 | p04    | code     | pending         | -          | -                                                             | -             | -          | -           |
