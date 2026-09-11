@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t13
-oat_last_commit: aeed93c29c791b5a19f4b09b0f6d6bf9af15d2e2
+oat_current_task: p01-t14
+oat_last_commit: e47be8859204bfc959350fd05cbfedf00537a799
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -84,7 +84,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-11T10:02:00Z'
+oat_project_state_updated: '2026-09-11T10:08:00Z'
 oat_generated: false
 ---
 
@@ -112,7 +112,7 @@ Implementation — Phase 1: The cut
 - ✓ Specification complete
 - ✓ Design complete (HiLL 2026-09-10)
 - ✓ Plan complete
-- ⧗ Phase 1 in progress (12/17 tasks)
+- ⧗ Phase 1 in progress (13/17 tasks)
 
 ## Blockers
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t13
+oat_current_task_id: p01-t14
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 17    | 12/17     |
+| Phase 1 | in_progress | 17    | 13/17     |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 8     | 0/8       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 12/32 tasks completed
+**Total:** 13/32 tasks completed
 
 ---
 
@@ -331,6 +331,24 @@ oat_generated: false
 
 ---
 
+### Task p01-t13: Retire the core orchestrator and obsolete modules
+
+**Status:** completed
+**Commit:** e47be8859204bfc959350fd05cbfedf00537a799
+
+**Outcome:**
+
+- Removed the retired core orchestrator, render/publish/durability modules, schemas, references, examples, golden fixtures, and obsolete tests.
+- Retained exactly three entry scripts, ten library modules, three schemas, two references, and fourteen test files.
+
+**Verification:**
+
+- All 80 retained core tests passed.
+- Every retained core library module imported successfully.
+- `pnpm lint` and `pnpm format` passed.
+
+---
+
 ## Phase 2: Ladder and fresh-host proof
 
 **Status:** pending
@@ -411,7 +429,8 @@ Chronological log of implementation progress.
 - [x] p01-t10: Rewrite the terminal-outcome guard and add `skip/failed_attempt` - f3b0c6dbc160d2f690b838e66545c04e6d1dc293
 - [x] p01-t11: Retire the explainer release-candidate tooling - 72312063bc5a4edc979e6bbc386a50a76f8c1b5e
 - [x] p01-t12: Retire the explainer smoke tests - aeed93c29c791b5a19f4b09b0f6d6bf9af15d2e2
-- [ ] p01-t13: Retire the core orchestrator and obsolete modules - in progress
+- [x] p01-t13: Retire the core orchestrator and obsolete modules - e47be8859204bfc959350fd05cbfedf00537a799
+- [ ] p01-t14: Cut the adapter callback path, seam probe, and finalizer - in progress
 
 **What changed (high level):**
 
