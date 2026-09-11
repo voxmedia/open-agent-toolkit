@@ -1143,6 +1143,23 @@ function deriveAchievedProfile(passes) {
   return achieved;
 }
 
+function reconcilePassOutcomes(manifest, passes, errors) {
+  for (const mode of [...passes.keys()]) {
+    const contradictoryGap = (manifest.gaps ?? []).find((gap) =>
+      gapNamesMode(gap, mode),
+    );
+    if (!contradictoryGap) continue;
+    passes.delete(mode);
+    errors.push(
+      issue(
+        'CONTRADICTORY_PASS_OUTCOME',
+        `Complete ${mode} artifacts contradict material ${contradictoryGap.code} outcome evidence`,
+        `pass:${mode}`,
+      ),
+    );
+  }
+}
+
 function validatePassOutcomes(manifest, passes, errors) {
   for (const mode of requiredPasses[manifest.run.requestedProfile] ?? []) {
     if (passes.has(mode)) continue;
@@ -2390,6 +2407,7 @@ export async function compileValidatedRun(packetDirectory) {
       routing,
       conditionalState,
     );
+    reconcilePassOutcomes(manifest, passes, errors);
     const achievedProfile = deriveAchievedProfile(passes);
     validatePassOutcomes(manifest, passes, errors);
     const assuranceReviewIds = collectAssuranceReviewIds(

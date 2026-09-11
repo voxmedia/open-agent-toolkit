@@ -407,9 +407,20 @@ test('approved lanes bind wave mode, write root, and per-lane outcomes', async (
     coverageFindingIds: [],
   });
   await writeJson(silentLane.manifestPath, silentLane.manifest);
-  const honest = await validatePacket(silentLane.packetRoot);
-  assert.equal(honest.valid, true, JSON.stringify(honest, null, 2));
-  assert.equal(honest.achievedProfile, 'quick');
+  const contradictory = await validatePacket(silentLane.packetRoot);
+  assert.equal(
+    contradictory.valid,
+    false,
+    JSON.stringify(contradictory, null, 2),
+  );
+  assert.equal(contradictory.achievedProfile, null);
+  assert.ok(
+    contradictory.errors.some(
+      ({ code, path }) =>
+        code === 'CONTRADICTORY_PASS_OUTCOME' && path === 'pass:gather',
+    ),
+    JSON.stringify(contradictory, null, 2),
+  );
 });
 
 test('a cancelled lane without a typed result downgrades the achieved profile', async () => {

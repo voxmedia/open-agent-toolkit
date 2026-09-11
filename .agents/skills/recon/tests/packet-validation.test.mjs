@@ -610,15 +610,14 @@ function replaceReferenceDigest(value, path, digest) {
   }
 }
 
-async function reassignGatherDossier(packet, path, { waveId, laneId }) {
+async function rewriteGatherDossier(packet, path, updates) {
   const reference = packet.manifest.artifacts.find(
     (artifact) => artifact.path === path,
   );
   assert.ok(reference, `missing fixture artifact ${path}`);
   const artifactPath = join(packet.packetRoot, path);
   const artifact = JSON.parse(await readFile(artifactPath, 'utf8'));
-  artifact.waveId = waveId;
-  artifact.laneId = laneId;
+  Object.assign(artifact, updates);
   await writeJson(artifactPath, artifact);
   reference.digest = await hashFile(artifactPath);
   replaceReferenceDigest(packet.ledger, path, reference.digest);
@@ -686,7 +685,7 @@ test('primary gather lanes cannot impersonate the approved redundant gather wave
     scope: 'packet/gather-secondary',
     writeRoot: 'raw/dossiers/pass-redundant-gather.json',
   });
-  await reassignGatherDossier(
+  await rewriteGatherDossier(
     packet,
     'raw/dossiers/pass-redundant-gather.json',
     {
@@ -734,7 +733,7 @@ test('redundant gather lanes cannot impersonate the approved primary gather wave
     'raw/dossiers/dossier-1.json',
     'raw/dossiers/pass-gather.json',
   ]) {
-    await reassignGatherDossier(packet, path, {
+    await rewriteGatherDossier(packet, path, {
       waveId: redundantWave.waveId,
       laneId: 'lane-redundant-gather-secondary',
     });
@@ -759,6 +758,100 @@ test('redundant gather lanes cannot impersonate the approved primary gather wave
     ),
     JSON.stringify(result, null, 2),
   );
+});
+
+test('rejects a complete primary gather contradicted by failed pass evidence', async () => {
+  const packet = await makePacket({ profile: 'thorough', status: 'partial' });
+  packet.manifest.gaps.push({
+    id: 'gap-primary-gather-failed',
+    code: 'PASS_FAILED',
+    message: 'gather failed after its approved lane was accepted.',
+    material: true,
+  });
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.equal(result.publishable, false);
+  assert.equal(result.achievedProfile, null);
+  assert.ok(
+    result.errors.some(
+      ({ code, path }) =>
+        code === 'CONTRADICTORY_PASS_OUTCOME' && path === 'pass:gather',
+    ),
+    JSON.stringify(result, null, 2),
+  );
+});
+
+test('rejects a complete redundant gather contradicted by omitted pass evidence', async () => {
+  const packet = await makePacket({ profile: 'thorough', status: 'partial' });
+  packet.manifest.gaps.push({
+    id: 'gap-redundant-gather-omitted',
+    code: 'PASS_OMITTED',
+    message: 'redundant-gather was omitted after its approved lane failed.',
+    material: true,
+  });
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.equal(result.publishable, false);
+  assert.equal(result.achievedProfile, 'standard');
+  assert.ok(
+    result.errors.some(
+      ({ code, path }) =>
+        code === 'CONTRADICTORY_PASS_OUTCOME' &&
+        path === 'pass:redundant-gather',
+    ),
+    JSON.stringify(result, null, 2),
+  );
+});
+
+test('accepts a partial packet with failed redundant gather evidence and no complete artifact', async () => {
+  const packet = await makePacket({ profile: 'thorough', status: 'partial' });
+  await rewriteGatherDossier(
+    packet,
+    'raw/dossiers/pass-redundant-gather.json',
+    { outcome: 'partial' },
+  );
+  packet.manifest.run.achievedProfile = 'standard';
+  packet.ledger.claims[0].reviewIds = packet.ledger.claims[0].reviewIds.filter(
+    (id) => id !== 'review-redundant-verification',
+  );
+  packet.manifest.artifacts = packet.manifest.artifacts.filter(
+    ({ path }) => path !== 'reviews/redundant-verification.json',
+  );
+  const reconciliation = packet.reviewPaths.get('review-reconciliation');
+  reconciliation.value.incorporatedReviewIds =
+    reconciliation.value.incorporatedReviewIds.filter(
+      (id) => id !== 'review-redundant-verification',
+    );
+  reconciliation.value.permittedInputs =
+    reconciliation.value.permittedInputs.filter(
+      ({ path }) => path !== 'reviews/redundant-verification.json',
+    );
+  await persistReview(packet, 'review-reconciliation');
+  packet.manifest.gaps.push(
+    {
+      id: 'gap-redundant-gather-failed',
+      code: 'PASS_FAILED',
+      message: 'redundant-gather failed after returning a partial artifact.',
+      material: true,
+    },
+    {
+      id: 'gap-redundant-verification-omitted',
+      code: 'PASS_OMITTED',
+      message: 'redundant-verification was omitted after gathering failed.',
+      material: true,
+    },
+  );
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, true, JSON.stringify(result, null, 2));
+  assert.equal(result.publishable, true);
+  assert.equal(result.achievedProfile, 'standard');
+  assert.equal(result.status, 'partial');
 });
 
 for (const status of ['failed', 'running', 'preparing', 'awaiting-approval']) {
