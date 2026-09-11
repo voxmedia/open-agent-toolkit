@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - p01-t09 requires a program-recap package to pass a validator that must reject every recipe except project-recap
 oat_last_updated: 2026-09-10
 oat_current_task_id: p01-t09
 oat_generated: false
@@ -247,6 +248,22 @@ oat_generated: false
 
 ---
 
+### Task p01-t09: Prove one real path end to end before any deletion
+
+**Status:** blocked
+**Commit:** -
+
+**Blocker:**
+
+- The task requires the `program-recap` package produced by the end-to-end flow to pass `verifySelectedProjectRecapForArchive`.
+- The retained archive contract rejects any manifest whose recipe id is not exactly `project-recap`; the required p01-t08 archive suite includes and passes `requires exact project-recap recipe identity`.
+- The approved spec's success metric asks only for the program recap manifest to be accepted by the archive validator's parser, not for program output to pass the project-only export validator.
+- Resolving this requires operator direction: either change p01-t09 to exercise the manifest/package parser contract, or widen the public project-recap archive validator to accept `program-recap`.
+
+**Deletion gate:** closed. No p01-t10 or later task has started.
+
+---
+
 ## Phase 2: Ladder and fresh-host proof
 
 **Status:** pending
@@ -314,7 +331,7 @@ Chronological log of implementation progress.
 - [x] p01-t06: Add deterministic `record.mjs` and checked-in archive fixture - 0528fbfc54edb518478c79a4cc09e2529dbb14c7
 - [x] p01-t07: Add browser-free `verify.mjs` checks and the none rung - 6bbde384d318e1558178814929bbe94890da7d27
 - [x] p01-t08: Replace archive validation with the v2 package contract - d7b4606e109466220d4e33a290f96b801d1a6502
-- [ ] p01-t09: Prove one real path end to end before any deletion - in progress
+- [ ] p01-t09: Prove one real path end to end before any deletion - blocked on archive recipe contract
 
 **What changed (high level):**
 
@@ -337,7 +354,7 @@ Chronological log of implementation progress.
 
 **Blockers:**
 
-- None.
+- p01-t09 asks a `program-recap` manifest to pass the project-only archive validator, while the retained and tested validator contract requires recipe id `project-recap`.
 
 **Session End:** {time}
 
