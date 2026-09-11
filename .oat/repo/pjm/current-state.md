@@ -37,8 +37,8 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.72` (`recon-rework`, implementation and independent reviews complete;
-  final project closeout and PR publication pending) restores recon's inexpensive
+- CLI `0.2.72` (`recon-rework`, implementation, independent reviews, final HiLL,
+  and implementation closeout complete; draft PR #285 published) restores recon's inexpensive
   evidence fan-out with independently approved per-wave targets, a v2 manifest
   that preserves valid v1 approval semantics, bounded conditional evidence
   passes, exactly one terminal reconciliation for standard/thorough profiles,
@@ -47,7 +47,8 @@ copying their content here. -->
   fail with structured diagnostics. The runtime, recon worker contract, shared
   orchestration guidance, public docs, bundle assets, provider projections, and
   lockstep package versions are aligned. The configured final exit gate passed at
-  the Important threshold; GitHub issue #274 and
+  the Important threshold. PR #285 currently conflicts with `main` across the
+  generated sync/version surfaces; GitHub issue #274 and
   `BL-260908-restore-recon-s-cheap-fan-out` remain open until the authorized
   shipping boundary.
 
