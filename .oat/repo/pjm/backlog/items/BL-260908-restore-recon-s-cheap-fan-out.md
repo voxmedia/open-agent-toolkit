@@ -13,7 +13,7 @@ labels:
   - routing
 assignee: null
 created: 2026-09-08T16:54:21.407Z
-updated: 2026-09-08T16:55:27.000Z
+updated: 2026-09-11T16:05:00.000Z
 associated_issues:
   - type: github
     ref: https://github.com/voxmedia/open-agent-toolkit/issues/274
@@ -26,10 +26,10 @@ GitHub issue #274. Recon's intent is inexpensive, high-volume evidence gathering
 
 ## Acceptance Criteria
 
-- [ ] The recon skill opens with the intent statement (inexpensive, high-volume evidence gathering for an intelligent calling agent; cheapest adequate workers by default; focused passes for citation checking, coverage, and counterexample search; escalation only for judgment the cheaper route cannot supply; the calling agent evaluates the evidence and owns conclusions) and states the responsibility split among recon, `subagent-orchestration`, `oat-dispatch-subagents`, and the caller
-- [ ] Every worker wave resolves its own class floor independently; no run-wide maximum; challenge, verification, and coverage passes default to the cheapest qualified class; bounded synthesis is mechanical unless reconciliation demonstrably needs judgment, and it preserves disagreements with citations rather than settling them
-- [ ] Escalation is per wave on a named trigger (a lane returns insufficient evidence; a contradiction cannot be reconciled mechanically), inside one fingerprinted approval envelope that shows each wave's assignment, lane count, exact model, effort, rationale, and permitted escalation; model and effort are chosen separately; escalation never authorizes replacing an accepted failed lane
-- [ ] The guarantee is APPROVED per-wave selection (fingerprint-checkable); no self-attested launch provenance — actual-launch verification only where a harness supplies real evidence (`DR-260904` boundary)
-- [ ] `references/packet-contract.md` gains per-wave `classFloor` and `target` with a schema version bump and v1 single-target normalization; `scripts/lib/contracts.mjs` validates per-wave targets, below-floor routing, target drift, and unapproved escalation; fixtures, `tests/skill-contract.test.mjs` (which today pins the run-wide-maximum prose), the docs page, and the bundled asset mirror follow
-- [ ] A new decision supersedes `DR-260831-approval-bound-homogeneous` (homogeneity is a wave property; one envelope approves every target; independence still comes from separate passes, not model mix) and amends `DR-260904`'s singular-selection language; `DR-260719` is cited as restored
-- [ ] The `quick` profile is documented as an evidence packet for an intelligent consumer (no independent semantic pass by design)
+- [x] The recon skill opens with the intent statement (inexpensive, high-volume evidence gathering for an intelligent calling agent; cheapest adequate workers by default; focused passes for citation checking, coverage, and counterexample search; escalation only for judgment the cheaper route cannot supply; the calling agent evaluates the evidence and owns conclusions) and states the responsibility split among recon, `subagent-orchestration`, `oat-dispatch-subagents`, and the caller
+- [x] Every worker wave resolves its own class floor independently; no run-wide maximum; challenge, verification, and coverage passes default to the cheapest qualified class; bounded synthesis is mechanical unless reconciliation demonstrably needs judgment, and it preserves disagreements with citations rather than settling them
+- [x] Escalation is per wave on a named trigger (a lane returns insufficient evidence; a contradiction cannot be reconciled mechanically), and one session-local approval preview shows every wave's assignment, lane count, exact model, effort, rationale, condition, and limit; proposal changes or session resume require fresh approval, and escalation never authorizes replacing an accepted failed lane
+- [x] The guarantee is approved exact per-wave selection with immediate launch; no persisted approval fingerprint or self-attested launch provenance is treated as proof, and actual-launch verification exists only where a harness supplies real evidence (`DR-260904` boundary)
+- [x] `references/packet-contract.md` defines manifest v2 per-wave `classFloor` and complete `target`; `scripts/lib/contracts.mjs` validates per-wave targets, below-floor routing, target drift, profile modes and caps, singleton cardinality, conditional escalation, and packet publication; fixtures, contract tests, public docs, and the bundled asset mirror follow. Legacy manifest v1 support is intentionally removed while evidence formats remain independently versioned
+- [x] `DR-260910-restore-economical-recon` supersedes the homogeneous run-wide selection rule and restores `DR-260719`'s separate task-class floors; `DR-260911-use-session-local-recon` records the simplified approval contract and partially supersedes the remaining legacy approval clauses
+- [x] The `quick` profile is documented as an evidence packet for an intelligent consumer (no independent semantic pass by design)
