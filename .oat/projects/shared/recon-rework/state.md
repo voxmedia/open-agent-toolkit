@@ -43,17 +43,17 @@ oat_implement_exit_gate:
   reviewed_head: 16ad8b120a90d625372302b2f4ed2a0d6ade1373
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:f7844cc1a5d2a14f46355b8e8dda88af40c961bcf1b91850de847380f3b1470b'
-  freshness_head: 5acdf804df3bfc9e301b4ff91ded29a952b3b139
-  freshness_fingerprint: 'sha256:effective-delta-v1:561ac3c66fe6382fea88a1ff2dc21d419ee3f787794bcfa70891bb670dd6490a'
-  launch_state: intent_persisted
+  freshness_head: 57e8fba5cdacca543454ffdb11f53a9c7ba6ddb0
+  freshness_fingerprint: 'sha256:effective-delta-v1:4635f0e580779597a2ab3a7c0338cd80f256b15c6e6e390d103a09f572723003'
+  launch_state: result_persisted
   launch_attempt_id: 'recon-exit-gate-20260911T203343Z'
   launch_started_at: '2026-09-11T20:33:43Z'
   launch_result_receipt: '/private/tmp/recon-exit-gate-20260911T203343Z.receipt.json'
-  gate_run_marker: null
-  gate_run_id: null
-  envelope_status: null
-  artifact: null
-  handoff: null
+  gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/e54ba2dd-6df7-468d-9984-638aa95ea3c6.json'
+  gate_run_id: e54ba2dd-6df7-468d-9984-638aa95ea3c6
+  envelope_status: blocked
+  artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T204246Z.md'
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T204246Z.md before treating this gate review as consumed.'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -61,10 +61,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-11T20:33:43Z'
+  updated_at: '2026-09-11T20:46:38Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T20:33:43Z'
+oat_project_state_updated: '2026-09-11T20:46:38Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
