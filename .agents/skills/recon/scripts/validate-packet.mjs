@@ -1014,6 +1014,53 @@ function validateApprovedLanes(
   }
 }
 
+function validateThoroughGatherLedgerInputs(
+  manifest,
+  ledger,
+  routing,
+  artifactsById,
+  errors,
+) {
+  if (manifest.run.requestedProfile !== 'thorough') return;
+
+  const ledgerInputs = new Set(
+    ledger.inputArtifacts.map(
+      (reference) => `${reference.path}:${reference.digest}`,
+    ),
+  );
+  const missing = [];
+  for (const wave of routing.waves) {
+    if (!['gather', 'redundant-gather'].includes(wave.mode)) continue;
+    for (const lane of wave.lanes) {
+      const completeDossiers = [...artifactsById.values()].filter(
+        ({ value }) =>
+          value.runId === manifest.run.id &&
+          value.kind === 'recon.raw-dossier' &&
+          value.waveId === wave.waveId &&
+          value.laneId === lane.laneId &&
+          artifactIsComplete(value),
+      );
+      if (completeDossiers.length === 0) continue;
+      if (
+        !completeDossiers.some(({ reference }) =>
+          ledgerInputs.has(`${reference.path}:${reference.digest}`),
+        )
+      ) {
+        missing.push(`${wave.mode}/${lane.laneId}`);
+      }
+    }
+  }
+  if (missing.length > 0) {
+    errors.push(
+      issue(
+        'MISSING_THOROUGH_GATHER_LEDGER_INPUT',
+        `Thorough compilation omitted complete gather dossier inputs: ${missing.join(', ')}`,
+        '$.inputArtifacts',
+      ),
+    );
+  }
+}
+
 function collectCompletePasses(
   artifactsById,
   runId,
@@ -2331,6 +2378,15 @@ export async function compileValidatedRun(packetDirectory) {
       reconciliationRequired,
       errors,
     );
+    if (routing) {
+      validateThoroughGatherLedgerInputs(
+        manifest,
+        reconciliationContext.priorLedger ?? ledger,
+        routing,
+        artifactsById,
+        errors,
+      );
+    }
     validateReviewBindings(
       manifest,
       ledger,

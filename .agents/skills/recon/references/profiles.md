@@ -48,7 +48,9 @@ Use when expensive failure or correlated blind spots justify redundant source
 reopening and verification.
 
 - Required: standard topology plus redundant independent gathering and
-  redundant verification for load-bearing claims.
+  redundant verification for load-bearing claims. Redundant gathering finishes
+  before compilation, and every completed primary or redundant gather lane is
+  represented in the compiled ledger inputs before review briefs are created.
 - Adaptive evidence lanes: the standard counted modes plus `redundant-gather`
   and `redundant-verification`; hard cap 20 across those counted modes.
   Required `map`, `compile`, and terminal `reconciliation` waves are fixed at

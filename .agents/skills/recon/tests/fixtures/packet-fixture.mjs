@@ -234,6 +234,35 @@ export async function createPacketFixture({
     path: 'raw/dossiers/gather.json',
     digest: await hashFile(dossierPath),
   };
+  let redundantGatherRef = null;
+  if (achievedProfile === 'thorough') {
+    const redundantGatherPath = join(
+      packetRoot,
+      'raw',
+      'dossiers',
+      'pass-redundant-gather.json',
+    );
+    await writeJson(redundantGatherPath, {
+      kind: 'recon.raw-dossier',
+      schemaVersion: 1,
+      id: 'dossier-redundant-gather',
+      runId: 'run-render',
+      waveId: 'wave-redundant-gather',
+      laneId: 'lane-redundant-gather',
+      mode: 'gather',
+      outcome: 'complete',
+      allowedInputs: ['source-1'],
+      excludedInputs: [],
+      findings: [],
+      uncertainty: [],
+      contradictions: [],
+      gaps: [],
+    });
+    redundantGatherRef = {
+      path: 'raw/dossiers/pass-redundant-gather.json',
+      digest: await hashFile(redundantGatherPath),
+    };
+  }
 
   const sourceBase = {
     id: 'source-1',
@@ -340,7 +369,10 @@ export async function createPacketFixture({
     schemaVersion: 1,
     runId: 'run-render',
     revision: achievedProfile === 'quick' ? 1 : 2,
-    inputArtifacts: [dossierRef],
+    inputArtifacts: [
+      dossierRef,
+      ...(redundantGatherRef ? [redundantGatherRef] : []),
+    ],
     synthesis: {
       answer: 'The source contains alpha evidence.',
       keyClaimIds: ['claim-1'],
@@ -608,8 +640,13 @@ export async function createPacketFixture({
   ];
   const standardPasses = [...standardEvidencePasses, 'reconciliation'];
   const thoroughPasses = [
-    ...standardEvidencePasses,
+    'map',
+    'gather',
     'redundant-gather',
+    'compile',
+    'semantic-verification',
+    'adversarial',
+    'coverage',
     'redundant-verification',
     ...(includeContradictionResolution ? ['contradiction-resolution'] : []),
     'reconciliation',
@@ -656,6 +693,10 @@ export async function createPacketFixture({
       continue;
     }
     if (!['map', 'gather', 'redundant-gather'].includes(mode)) continue;
+    if (mode === 'redundant-gather' && redundantGatherRef) {
+      passArtifacts.push(redundantGatherRef);
+      continue;
+    }
     const artifactPath = join(
       packetRoot,
       'raw',

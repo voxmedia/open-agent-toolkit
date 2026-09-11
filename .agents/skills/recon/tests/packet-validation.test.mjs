@@ -40,12 +40,14 @@ afterEach(async () => {
 });
 
 function passesFor(profile) {
-  const modes = ['map', 'gather', 'compile'];
+  const modes = ['map', 'gather'];
+  if (profile === 'thorough') modes.push('redundant-gather');
+  modes.push('compile');
   if (profile === 'standard' || profile === 'thorough') {
     modes.push('semantic-verification', 'adversarial', 'coverage');
   }
   if (profile === 'thorough') {
-    modes.push('redundant-gather', 'redundant-verification');
+    modes.push('redundant-verification');
   }
   if (profile !== 'quick') modes.push('reconciliation');
   return modes;
@@ -94,6 +96,35 @@ async function makePacket({
     path: 'raw/dossiers/dossier-1.json',
     digest: await hashFile(dossierPath),
   };
+  let redundantGatherRef = null;
+  if (profile === 'thorough') {
+    const redundantGatherPath = join(
+      packetRoot,
+      'raw',
+      'dossiers',
+      'pass-redundant-gather.json',
+    );
+    await writeJson(redundantGatherPath, {
+      kind: 'recon.raw-dossier',
+      schemaVersion: 1,
+      id: 'pass-artifact-redundant-gather',
+      runId: 'run-1',
+      waveId: 'wave-redundant-gather',
+      laneId: 'lane-redundant-gather',
+      mode: 'gather',
+      outcome: 'complete',
+      allowedInputs: ['source-1'],
+      excludedInputs: [],
+      findings: [],
+      uncertainty: [],
+      contradictions: [],
+      gaps: [],
+    });
+    redundantGatherRef = {
+      path: 'raw/dossiers/pass-redundant-gather.json',
+      digest: await hashFile(redundantGatherPath),
+    };
+  }
 
   let source;
   let locator;
@@ -216,7 +247,10 @@ async function makePacket({
     schemaVersion: 1,
     runId: 'run-1',
     revision: profile === 'quick' ? 1 : 2,
-    inputArtifacts: [dossierRef],
+    inputArtifacts: [
+      dossierRef,
+      ...(redundantGatherRef ? [redundantGatherRef] : []),
+    ],
     synthesis: {
       answer: 'The fixture contains alpha evidence.',
       keyClaimIds: ['claim-1'],
@@ -479,6 +513,10 @@ async function makePacket({
   const passArtifacts = [];
   for (const mode of passModes) {
     if (!['map', 'gather', 'redundant-gather'].includes(mode)) continue;
+    if (mode === 'redundant-gather' && redundantGatherRef) {
+      passArtifacts.push(redundantGatherRef);
+      continue;
+    }
     const path = join(packetRoot, 'raw', 'dossiers', `pass-${mode}.json`);
     await writeJson(path, {
       kind: 'recon.raw-dossier',
@@ -686,6 +724,43 @@ test('accepts the current manifest with version 1 evidence artifacts', async () 
     result.validatedRun.artifacts.every(
       ({ value }) => value.schemaVersion === 1,
     ),
+  );
+});
+
+test('rejects a thorough ledger that omits its redundant gather dossier input', async () => {
+  const packet = await makePacket({ profile: 'thorough' });
+  const priorReference = packet.manifest.artifacts.find(
+    ({ path }) => path === 'raw/drafts/claims-v1.json',
+  );
+  const priorPath = join(packet.packetRoot, priorReference.path);
+  const priorLedger = JSON.parse(await readFile(priorPath, 'utf8'));
+  priorLedger.inputArtifacts = priorLedger.inputArtifacts.filter(
+    ({ path }) => path !== 'raw/dossiers/pass-redundant-gather.json',
+  );
+  await writeJson(priorPath, priorLedger);
+  priorReference.digest = await hashFile(priorPath);
+  packet.ledger.inputArtifacts.find(
+    ({ path }) => path === priorReference.path,
+  ).digest = priorReference.digest;
+
+  const reconciliation = packet.reviewPaths.get('review-reconciliation');
+  reconciliation.value.inputLedger.digest = priorReference.digest;
+  const permittedPrior = reconciliation.value.permittedInputs.find(
+    ({ path }) => path === priorReference.path,
+  );
+  permittedPrior.digest = priorReference.digest;
+  await persistReview(packet, 'review-reconciliation');
+  await persist(packet);
+
+  const result = await expectInvalid(
+    packet,
+    'MISSING_THOROUGH_GATHER_LEDGER_INPUT',
+  );
+  assert.deepEqual(
+    result.errors
+      .filter(({ code }) => code === 'MISSING_THOROUGH_GATHER_LEDGER_INPUT')
+      .map(({ path }) => path),
+    ['$.inputArtifacts'],
   );
 });
 

@@ -95,6 +95,47 @@ for (const profile of ['quick', 'standard', 'thorough']) {
   });
 }
 
+test('thorough compilation incorporates both gather waves before review briefs', async () => {
+  const injectedRoots = await roots();
+  const result = await runFakeRecon({
+    profile: 'thorough',
+    roots: injectedRoots,
+  });
+  assert.equal(result.status, 'complete');
+
+  const manifest = JSON.parse(
+    await readFile(join(injectedRoots.packetRoot, 'manifest.json'), 'utf8'),
+  );
+  const modes = manifest.execution.waves.map(({ mode }) => mode);
+  assert.ok(modes.indexOf('redundant-gather') < modes.indexOf('compile'));
+
+  const candidateLedger = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'raw/drafts/claims-v1.json'),
+      'utf8',
+    ),
+  );
+  const redundantReference = manifest.artifacts.find(
+    ({ path }) => path === 'raw/dossiers/pass-redundant-gather.json',
+  );
+  assert.ok(redundantReference);
+  assert.ok(
+    candidateLedger.inputArtifacts.some(
+      ({ path, digest }) =>
+        path === redundantReference.path &&
+        digest === redundantReference.digest,
+    ),
+  );
+
+  const review = JSON.parse(
+    await readFile(
+      join(injectedRoots.packetRoot, 'reviews/semantic.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(review.brief.path, 'reviews/briefs/verify.json');
+});
+
 for (const profile of ['standard', 'thorough']) {
   for (const conditionalDisposition of ['triggered', 'not-triggered']) {
     test(`v2 ${profile} ${conditionalDisposition} condition feeds one terminal reconciliation`, async () => {

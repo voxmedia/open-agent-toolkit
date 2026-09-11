@@ -125,11 +125,11 @@ export const profileRoutingPolicy = Object.freeze({
     [
       'map',
       'gather',
+      'redundant-gather',
       'compile',
       'semantic-verification',
       'adversarial',
       'coverage',
-      'redundant-gather',
       'redundant-verification',
       'reconciliation',
     ],

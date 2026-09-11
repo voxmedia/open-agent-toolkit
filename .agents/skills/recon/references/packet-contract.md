@@ -195,6 +195,13 @@ locator validation is performed by the validator.
 `contradiction-resolution` evidence pass may feed the same mandatory terminal
 reconciliation when its predicate triggers; it is not a second terminal pass.
 
+Thorough routing completes `redundant-gather` before `compile`. The compiled
+ledger must directly reference by exact path and digest at least one complete
+dossier from every approved primary and redundant gather lane. This makes both
+independent gathering outputs part of the immutable ledger consumed to create
+review briefs. Omitting one fails with
+`MISSING_THOROUGH_GATHER_LEDGER_INPUT`.
+
 Every dossier records the approved `waveId` and `laneId` that wrote it; every
 review result records its approved `reviewerLane`. The lane must belong to a
 wave whose mode matches the artifact (a semantic result to a

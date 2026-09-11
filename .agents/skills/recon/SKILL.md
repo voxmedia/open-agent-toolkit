@@ -237,7 +237,10 @@ descriptive, not identity.
 Run the passes in this order:
 
 1. `map` and `gather` workers write unique dossiers under `raw/dossiers/`.
-2. `compile` writes a candidate canonical claim ledger.
+   Thorough runs complete their independent `redundant-gather` wave here too.
+2. `compile` writes a candidate canonical claim ledger. A thorough candidate
+   directly references a complete dossier from every approved primary and
+   redundant gather lane before any review brief is created.
 3. Source preflight: run `scripts/validate-artifact.mjs` on the candidate
    manifest and ledger, then reopen every declared source and evidence locator
    with the checks in `scripts/validate-packet.mjs`. Resolve source roots to
