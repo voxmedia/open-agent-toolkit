@@ -486,7 +486,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 | Phase | Status    | Tasks | Base                                       | Code Head                                  | Review                          |
 | ----- | --------- | ----- | ------------------------------------------ | ------------------------------------------ | ------------------------------- |
-| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `853462ffd53b2d347ad6495c5829abd18091cab0` | round 2 fixes completed         |
+| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `853462ffd53b2d347ad6495c5829abd18091cab0` | governance retry exhausted      |
 
 - Recovery ledger: `used_attempts: 0`, `pending_attempt: null`; no recovery events.
 - File boundary: only p01-declared files, the operator-approved plan/design correction, p01 bookkeeping, and mechanically derived in-phase symbol consumers were changed.
@@ -558,6 +558,25 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
 - Dispatch: scope=p01-review-r2-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 - Disposition: `fixes_completed`; governance-final root-owned review round 3 required before p02
+
+#### Phase Review Round 3 — Governance Final
+
+- Request ID: `dispatch-agent-authored-recap-p01-review-r3-20260911T1726Z`
+- Launch status: `accepted`
+- Terminal outcome: `completed`
+- Review artifact: `reviews/p01-review-2026-09-11T173707Z.md`
+- Reviewed range: `79f359957fabe4cbe042b39379523887b816cbff..5e8694abbb7f7740970bd69e5feea64ddf9df316`
+- Reviewed head: `5e8694abbb7f7740970bd69e5feea64ddf9df316`
+- Prior closure: all earlier Critical and Important findings closed without regression
+- Findings: 0 Critical, 1 Important, 3 Medium, 0 Minor
+- Disposition: `CHANGES REQUESTED`; governance retry budget exhausted at round 3 of 3
+- Reconnaissance: `not-attempted`; no Review Orchestration section
+- Blocking finding: terminal `generate` guard accepts a partial or stale satisfied manifest, and interrupted rebundling can leave that stale manifest beside failure evidence
+- Selection reason: `gate-target`
+- Candidates considered: `gpt-5.6-sol-high`
+- Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- Stop: operator direction is required before any further fix or Phase 2 work
 
 #### Continuation cont-agent-authored-recap-p01-plan-correction-1
 

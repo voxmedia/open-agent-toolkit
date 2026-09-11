@@ -1,7 +1,8 @@
 ---
 oat_current_task: p02-t01
 oat_last_commit: 853462ffd53b2d347ad6495c5829abd18091cab0
-oat_blockers: []
+oat_blockers:
+  - Phase 1 governance-final review found one Important terminal-guard assurance gap; automatic fix/review retries are exhausted
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -84,7 +85,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-11T17:25:00Z'
+oat_project_state_updated: '2026-09-11T17:39:00Z'
 oat_generated: false
 ---
 
@@ -96,7 +97,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 1 review round 2 fixes complete, awaiting final review
+Implementation — Phase 1 review blocked after governance retry exhaustion
 
 ## Artifacts
 
@@ -112,12 +113,12 @@ Implementation — Phase 1 review round 2 fixes complete, awaiting final review
 - ✓ Specification complete
 - ✓ Design complete (HiLL 2026-09-10)
 - ✓ Plan complete
-- ⧗ Phase 1 implementation complete (17/17 tasks); review round 2 fixes completed
+- ⧗ Phase 1 implementation complete (17/17 tasks); final review requires operator direction
 
 ## Blockers
 
-None
+- Phase 1's terminal `generate` guard can accept a partial or stale satisfied manifest; review round 3 exhausted the automatic fix/review budget.
 
 ## Next Milestone
 
-Pass governance-final Phase 1 review round 3 before starting Phase 2.
+Choose manual remediation, explicit waiver/deferral, or stop. Do not start Phase 2.
