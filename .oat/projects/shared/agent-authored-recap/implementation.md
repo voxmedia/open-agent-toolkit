@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t04
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 17    | 3/17      |
+| Phase 1 | in_progress | 17    | 4/17      |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 8     | 0/8       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 3/32 tasks completed
+**Total:** 4/32 tasks completed
 
 ---
 
@@ -151,6 +151,39 @@ oat_generated: false
 
 ### Task p01-t04: Manifest v2 schema and package rule v3
 
+**Status:** completed
+**Commit:** c96741c987b2b4c6873cd633910b65d073be1549
+
+**Outcome:**
+
+- Manifest validation now pins `explainer-kit.manifest/v2`, the four terminal outcomes, and the small run-package shape.
+- Package coverage v3 requires the fact base, ledger, theme, QA result, and authored content while enforcing exact inventory.
+- Retired run-request and build-record schemas are removed.
+
+**Files changed:**
+
+- `.agents/skills/explainer-kit/schemas/{manifest,build-record,run-request}.schema.json` - v2 replacement and retired schema deletions.
+- `.agents/skills/explainer-kit/scripts/lib/{contracts,package-coverage}.mjs` - manifest hash bindings and v3 package rule.
+- `.agents/skills/explainer-kit/tests/{contracts,package-coverage,schemas}.test.mjs` - v2 contract and exact-inventory coverage.
+
+**Verification:**
+
+- Run: focused 10-test Node suite; retired-package-symbol search; `pnpm lint`; `pnpm format`.
+- Result: pass.
+
+**Negative controls:**
+
+- Allowing manifest v1 made `contracts.test.mjs` exit 1.
+- Ignoring unexpected package files made `package-coverage.test.mjs` exit 1.
+
+**Mechanical boundary addition:**
+
+- `.agents/skills/explainer-kit/tests/schemas.test.mjs` was advanced from manifest v1 to v2; it was a completed p01-t03 consumer discovered by the repository-wide symbol sweep.
+
+---
+
+### Task p01-t05: `bundle.mjs` — allowlisted inputs, fact base, and anchor ledger
+
 **Status:** pending
 **Commit:** -
 
@@ -222,13 +255,15 @@ Chronological log of implementation progress.
 - [x] p01-t01: Trim `contracts.mjs` to the three kept contract kinds - cd6314c6eeadf512dc5d0077a080c37587b3abbb
 - [x] p01-t02: Trim the recipes, the recipe loader, and the briefs - e092ba547525262a70c456773c4650981731898c
 - [x] p01-t03: Trim `qa.mjs` and rewrite the kept core tests - c34b07113206e8c07d1b55c08f4ba4066d8b7ff9
-- [ ] p01-t04: Manifest v2 schema and package rule v3 - in progress
+- [x] p01-t04: Manifest v2 schema and package rule v3 - c96741c987b2b4c6873cd633910b65d073be1549
+- [ ] p01-t05: Add `bundle.mjs` with anchor ledger - in progress
 
 **What changed (high level):**
 
 - Reduced the core contract registry and validator to the three retained contract kinds.
 - Reduced the recipe registry to four floor-and-brief contracts.
 - Reduced QA to the retained browser-free and browser-probe primitives.
+- Replaced manifest/package contracts with v2/v3.
 
 **Decisions:**
 
