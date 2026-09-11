@@ -54,17 +54,17 @@ oat_implement_exit_gate:
   envelope_status: blocked
   artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T152512Z.md'
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T152512Z.md before treating this gate review as consumed.'
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: 'run=c1c2d64e-b921-4484-8c81-6259fe3e397b; handoff=receive; source=reviews/final-review-2026-09-11T152512Z.md; scope=final; type=code'
+  receive_source_artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T152512Z.md'
+  receive_archived_artifact: '.oat/projects/shared/recon-rework/reviews/archived/final-review-2026-09-11T152512Z.md'
+  receive_event_identity: 'final | code | final-review-2026-09-11T152512Z.md'
+  receive_pre_head: e9a217cd13da471e3af27a28ebc03bce438593e0
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-11T15:25:12Z'
+  updated_at: '2026-09-11T15:28:00Z'
 oat_post_implement_sequence:
   status: complete
   source: configured

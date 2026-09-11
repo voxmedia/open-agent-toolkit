@@ -484,6 +484,8 @@ structured stdout receipt reserved at
 findings 0 Critical / 1 Important / 1 Medium / 1 Minor,
 `receiveEligible: true`; different-family diversity achieved.
 **Artifact:** `reviews/final-review-2026-09-11T152512Z.md`
+**Receive intent:** run-bound source, archive destination, exact Reviews event,
+and pre-receive head persisted before disposition.
 
 ### Review Received: final configured exit gate
 
