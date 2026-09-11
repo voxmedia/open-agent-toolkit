@@ -330,55 +330,32 @@ failure, which is intentional — you asked for a scope that does not exist here
 
 ## An Explainer Kit recap ends as `built-needs-review`
 
-`built-needs-review` means the required unattended visual-review chain did not
-reach a valid `pass`. The run retains available output for diagnosis, but OAT
-will not finalize, archive, attest, publish, or push it as a successful recap.
-Do not bypass the review gate by copying the package into a durable location.
+`built-needs-review` is a satisfied generation outcome. The explainer page and
+browser-free checks are complete, but the browser rung was unavailable or
+reported a visual issue that needs a human look. Lifecycle closeout can
+continue, and a fresh package that passes the complete package guard can be
+selected and archived.
 
 Inspect:
 
-1. `build-record.json` and `manifest.json` for the terminal outcome and warning.
-2. `qa/browser/` for all required mobile, tablet, and desktop PNG/metrics pairs.
-3. `qa/visual-review/attempt-*/request.json` and `result.json` for request
-   binding, critic disposition, and findings.
-4. `qa/visual-review/revision.json` when a correction was requested.
-5. Adapter logs for missing or invalid `browserSession`, `visualCritic`, or
-   correction-provider modules.
+1. `manifest.json` for the selected browser rung, warning, and exact package
+   inventory.
+2. `qa/result.json` for browser availability and visual findings.
+3. `site/index.html` at 320, 768, and 1440 pixels when visual inspection is
+   available.
+4. Adapter logs for a browser launch or capture failure.
 
-Common causes include unavailable Chromium, a fixture or unbranded session,
-missing screenshots, invalid decoded PNG dimensions, runtime/capture identity
-drift, critic exceptions, evidence mutation, `fail`, and an unresolved
-correction. Fix the provider or artifact problem and rebuild the recap; partial
-evidence is diagnostic only.
-
-See
-[Explainer Provider Integration](../workflows/skills/explainer-kit-providers.md)
-for the trusted-session and critic contracts.
-
-## Explainer Kit resume fails with `E_APPROVAL_RESUME`
-
-Interactive resume is same-request only. Keep the opaque `ekrt2` token returned
-as `approval.resumeToken` outside the package and provide it as
-`reviewedSource.resumeToken` with the complete original request.
-
-The error is expected when:
-
-- the token is missing, malformed, or not `ekrt2`;
-- the configured output root or retained run root moved;
-- `run-request.json` or a retained set-plan record changed;
-- the current request differs in source binding, recipe, mode, theme, render
-  strategy, privacy, public URL, durability, or publish destination; or
-- the package contains a legacy `ekrt1` token.
-
-Do not edit retained files or weaken the current request to force a match.
-Restore the exact original request and package bytes. Legacy paused runs cannot
-be upgraded in place; restart them to receive an authenticated `ekrt2` token.
+If the page is acceptable, retain the outcome as-is; the manifest honestly
+records that visual review is still due. If it is not acceptable, fix the
+source or authoring issue and generate a new run. Do not mutate a recorded run
+package.
 
 ## Reference artifacts
 
 - `.oat/projects/<scope>/<project>/implementation.md`
 - `.oat/projects/<scope>/<project>/reviews/`
-- `.oat/projects/<scope>/<project>/explainers/<slug>/qa/`
+- `.oat/projects/<scope>/<project>/explainers/<slug>/manifest.json`
+- `.oat/projects/<scope>/<project>/explainers/<slug>/qa/result.json`
 - `packages/cli/src/commands/doctor/index.ts`
 - `packages/cli/src/commands/status/index.ts`
 - `packages/cli/src/commands/tools/shared/pack-inventory.ts`

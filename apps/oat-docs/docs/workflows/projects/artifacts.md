@@ -101,8 +101,8 @@ different retention contracts:
 - A selected final `project-recap` is a durable completion record. Before a
   shared project is removed, archive copies the complete selected run to
   `.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>/`, verifies its
-  immutable package hashes, and reports that tracked export path. Summary and
-  PR links use this export, never the gitignored local archive. Lifecycle
+  package inventory and hashes, and reports that tracked export path. Summary
+  and PR links use this export, never the gitignored local archive. Lifecycle
   callers identify the selected project-relative run with:
 
   ```bash
@@ -110,40 +110,22 @@ different retention contracts:
     --project-recap-run explainers/<recap-slug>
   ```
 
-The archive exports at most one selected recap package. It preserves structured
-failure outcomes and successful intermediates, rejects an existing dated
-destination, and requires the selected path to stay under the project's
-`explainers/` directory with a `project-recap` manifest. Verification covers
-the complete mode-aware package:
+The archive exports at most one selected recap package. It rejects an existing
+dated destination and requires the selected path to stay under the project's
+`explainers/` directory with a `project-recap` manifest. Verification checks
+the manifest's exact inventory, every declared file byte, the fact base and
+ledger, resolved theme, authored page, and QA result before deleting the active
+project.
 
-- privacy-safe request and content approval;
-- fact-base JSON and Markdown;
-- the five immutable set-plan records and authored drafts;
-- declared author results and authored content;
-- resolved theme and every built artifact;
-- canonical mobile, tablet, and desktop screenshots;
-- paired `browser-evidence/v2` metrics with launched Chromium name, version,
-  and capture identity;
-- cohesion observations and each visual-review request/result; and
-- the bounded revision record when a correction occurred.
-
-Canonical object hashes identify normalized fact-base, theme, runtime, and
-capture objects; `manifest.immutableHashes` independently covers serialized file
-bytes. The archive requires one complete, internally consistent browser and
-review chain for a successful unattended recap. Missing, stale, forged,
-cross-record-mismatched, or tampered coverage fails before the active project is
-deleted.
-
-`built-needs-review` is a terminal review-gate outcome, not a non-durable
-success. Its partial evidence remains available for diagnosis, but it cannot be
-finalized, exported, attested, archived, or pushed. Review and rebuild the recap
-to a passing visual-review outcome first.
+Both `built` and `built-needs-review` are complete, archivable outcomes.
+`built-needs-review` means the browser rung was unavailable or found an issue;
+the archive retains that visible human-review signal. `failed`, `incomplete`,
+stale, mismatched, or tampered packages fail the export guard.
 
 Local-scope projects are not archived through this export path. Their explainer
-packages inherit the local project's untracked posture and remain
-`built-not-durable` unless independent publish evidence exists. Non-project OAT
-explainer runs use `.oat/repo/reference/explainers/<slug>/`; direct core callers
-must provide their own explicit output root.
+packages remain local working artifacts. Non-project OAT explainer runs use
+`.oat/repo/reference/explainers/<slug>/`; direct core callers provide an
+explicit output root.
 
 ### Gate review frontmatter
 
