@@ -1305,15 +1305,17 @@ code in a dedicated `/tmp/recon-closeout-*.log` receipt:
 
 ## Final Summary (for PR/docs)
 
-All 27 implementation and revision tasks are implemented. The merged-head final
+All 28 implementation and revision tasks are implemented. The merged-head final
 lifecycle review and configured gate identified five substantive or alignment
 gaps; all are fixed, and both narrowed lifecycle re-reviews passed. A subsequent
 remote PR review exposed a same-run provenance gap in conditional evidence; the
 validator now rejects foreign-run evidence even when it reuses an approved lane,
-and emits only the primary categorical diagnostic for that failure. Two later
+and emits only the primary categorical diagnostic for that failure. Three later
 final-review fixes now require thorough compilation to incorporate both independent
 gathering outputs and bind each derived gather pass to its exact approved wave and
-lane ownership. The branch provides manifest-v2 recon contracts, economical
+lane ownership, while material failed-pass evidence now dominates contradictory
+complete artifacts before assurance derivation. The branch provides manifest-v2
+recon contracts, economical
 approved per-wave routing, bounded conditional escalation, exact outcome
 accounting, caller-owned judgment, normalized intended-routing output, aligned
 worker and controller guidance, bundled runtime assets, project provider
@@ -1324,11 +1326,12 @@ shared model-selection guidance, CLI bundle consistency, public recon docs, five
 public package manifests, and the repeatable Phase 4 verification note.
 
 Verification includes the eight CI-equivalent gates in order, fresh isolated Turbo
-tests, the final 275/275 recon suite, 29/29 bundle tests, provider-view
+tests, the final 278/278 recon suite, 29/29 bundle tests, provider-view
 synchronization, release validation, docs build, and negative controls for
 exact-target drift, shadow reconciliation, profile topology, and malformed wave
 containers, same-run condition evidence, derivative-diagnostic suppression,
-compiled redundant-gather provenance, and reciprocal gather-pass impersonation.
+compiled redundant-gather provenance, reciprocal gather-pass impersonation, and
+contradictory complete-artifact/failed-pass outcomes.
 The retained raw gate logs lack explicit `exit=` markers; that
 nonblocking evidence-quality limitation remains disclosed.
 
@@ -1338,15 +1341,17 @@ findings are fixed. The terminal narrowed final review passed with no blocking
 findings. Configured exit-gate attempt 1 produced three fixes; attempt 2 passed
 with no findings and was durably received. The later `p-rev4` review passed after
 one bounded diagnostic-quality fix; the `p-rev5` and `p-rev6` reviews then passed
-after closing the two gather-flow defects. Project-wide final review and the
-configured exit gate must be refreshed against this latest implementation basis.
+after closing two gather-flow defects, and the authorized `p-rev7` review passed
+after closing the terminal pass-outcome contradiction. Project-wide final review
+and the configured exit gate must be refreshed against this latest
+implementation basis.
 
 ## Completion Outcome
 
 - The configured pre-approval sequence completed `summary`, `document`, and `pr`;
   its post-approval list was empty.
 - The refreshed project summary, repository references, and final PR description
-  require one final refresh for all six revision phases; manifest v2,
+  require one final refresh for all seven revision phases; manifest v2,
   session-local approval, and lockstep public package version `0.2.73` remain
   current.
 - Final verification passed `pnpm check`, `pnpm type-check`, `pnpm test`,
@@ -1383,6 +1388,34 @@ code in a dedicated `/tmp/recon-final-*.log` receipt:
 
 The final lifecycle review and configured implementation exit gate remain
 separate pending closeout boundaries.
+
+### Final closeout verification after p-rev7
+
+**Date:** 2026-09-11
+**Basis:** `a2e9aadaa85dafce934d2b0a40ecf9c46ed74507`
+
+The complete repository gate sequence passed against the contradictory
+pass-outcome fix and its no-finding phase review. Every command recorded an
+explicit exit code in `/tmp/recon-prev7-final/`:
+
+1. `pnpm check` — exit 0
+2. `pnpm type-check` — exit 0
+3. `pnpm test` — the first run reported one unrelated timing-sensitive
+   active-writer failure while 964 tests passed
+4. the isolated active-writer test rerun — exit 0 with no edit
+5. `pnpm test` rerun — exit 0
+6. `pnpm build` — exit 0
+7. `pnpm run check:skill-bumps` — exit 0
+8. `pnpm release:check-versions` after refreshing `origin/main` — exit 0
+9. `pnpm release:validate` — exit 0
+10. `pnpm build:docs` — exit 0
+11. `pnpm lint` — exit 0
+12. `pnpm format` — exit 0
+
+The no-edit rerun resolved the single timing failure, so no phase-recovery
+attempt or product change was required. The final lifecycle review and
+configured implementation exit gate remain separate pending closeout
+boundaries.
 
 ## References
 
