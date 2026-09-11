@@ -44,6 +44,10 @@ Entries are chronological and append-only.
 
 p01-r3-governance-exhausted-20260911: review round 3 requested changes; one Important terminal-guard assurance gap remains and automatic retries are exhausted; see reviews/p01-review-2026-09-11T173707Z.md.
 
+### 2026-09-11 · structural · oat-project-implement · p01-governance-extension
+
+p01-governance-manual-fix-authorized-20260911: operator authorized one bounded terminal-guard remediation and one independent verification review; automatic retry accounting remains exhausted and unchanged.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

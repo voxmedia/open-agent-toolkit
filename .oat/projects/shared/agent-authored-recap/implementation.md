@@ -578,6 +578,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 - Stop: operator direction is required before any further fix or Phase 2 work
 
+#### Operator Authorization — Governance Extension
+
+- Authorization time: `2026-09-11T18:27:00Z`
+- Scope: one bounded manual remediation for the governance-final terminal-guard finding, followed by one independent verification review
+- Finding: validate the complete satisfied project-recap package before `generate` succeeds, and prevent stale manifest/failure coexistence during changed-input rebundle interruption
+- Continuation: `cont-agent-authored-recap-p01-governance-manual-fix-1`
+- Authorization: `operator-scope`
+- Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
+- Exact target: `oat-phase-implementer-gpt-5-6-sol-high` (unchanged)
+- Recovery accounting: outside the automatic review-fix budget and not phase recovery; usage remains `0/10`
+- Boundary: no Medium findings, p02 work, archive recipe widening, or unrelated cleanup
+
 #### Continuation cont-agent-authored-recap-p01-plan-correction-1
 
 - Original request: `dispatch-agent-authored-recap-p01-20260911T0308Z`
