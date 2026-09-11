@@ -447,10 +447,11 @@ async function collectBoundedFiles(repoRoot: string): Promise<string[]> {
  * sibling skill's real directory inside `.agents/skills`, whose files are
  * already scanned where they live; following it would only duplicate them
  * under a second path. The floor below does not police those three skips one
- * target at a time — losing a single symlinked target still leaves 210 files,
- * above the floor. What it polices is the collapse: dropping symlink following
- * altogether leaves 205, under the floor of 208, so the regression this suite
- * already shipped once cannot recur quietly.
+ * target at a time — the live `> 207` assertion also catches loss of one of the
+ * 208 files. What it especially polices is the collapse: dropping symlink
+ * following altogether leaves the 202 directly reached files, under the floor
+ * of 207, so the regression this suite already shipped once cannot recur
+ * quietly.
  */
 async function collectFenceScanFiles(repoRoot: string): Promise<string[]> {
   // Resolved once, and every containment test is made against it: a `mkdtemp`
@@ -472,10 +473,9 @@ async function collectFenceScanFiles(repoRoot: string): Promise<string[]> {
   const walk = async (relativeDir: string): Promise<void> => {
     // Deliberately unguarded. Swallowing a `readdir` failure would let an
     // unreadable or vanished directory shrink the inventory silently, and the
-    // floor only catches a shrinkage larger than its headroom — at 211 live
-    // files against a floor of 208, two could disappear while this stayed green
-    // (the live-inventory case asserts `> floor`, which is what makes it two
-    // rather than three). A scan that cannot read part of
+    // floor only catches a shrinkage larger than its headroom — at 208 live
+    // files against a floor of 207, the live-inventory `> floor` assertion
+    // allows no file to disappear quietly. A scan that cannot read part of
     // its surface must fail loudly, not scan less. The only `readdir` here that
     // can fail on a missing path is the `.agents/skills` root, because every
     // deeper call is made against an entry `readdir` already reported as a
@@ -2610,24 +2610,24 @@ const CALL_SITE_MATRIX: readonly CallSiteRow[] = [
 /**
  * Floors, not exact counts: the corpus grows, but a glob or path regression that
  * shrinks it must fail loudly rather than quietly widening every exemption.
- * Recorded at 42 bounded files / 211 fence-scan files / 179 candidate
- * sentences. The floors are not tripwires on a single file: 2 bounded files, 2
- * fence-scan files (3 before the floor itself fires; the live-inventory case
- * asserts `> floor`), and 29 candidate sentences can be lost before one fires.
- * They catch the structural regressions — a glob that stopped matching, a walk
- * that stopped recursing, a filter that started skipping a whole entry kind.
+ * Recorded at 42 bounded files / 208 fence-scan files / 179 candidate
+ * sentences. The bounded and candidate floors are not tripwires on one loss:
+ * 2 bounded files and 29 candidate sentences can be lost before one fires. The
+ * fence-scan floor is intentionally tighter: its live `> 207` assertion catches
+ * one lost file. Together they catch structural regressions — a glob that
+ * stopped matching, a walk that stopped recursing, or a filter that started
+ * skipping a whole entry kind.
  * The fence-scan floor is the same guarantee for
  * the wider inventory: a walk that stopped recursing or started skipping
  * directories must fail on the shrinkage itself, not silently scan less.
  *
- * The fence-scan floor is deliberately tight rather than roomy. The 211 files
- * are 205 reached directly plus 6 distinct targets reached only through the
- * eleven markdown symlinks, so a floor anywhere in 206..210 makes losing
- * symlink following a floor breach — which is the one regression a content
- * differential structurally cannot see, and the one this suite already shipped
- * once. 208 keeps that guarantee with three files of ordinary headroom on each
- * side. Raise it when the corpus grows; never lower it to 205 or below, which
- * would re-disarm the symlink guarantee.
+ * The fence-scan floor is deliberately tight rather than roomy. The 208 files
+ * are 202 reached directly plus 6 distinct targets reached only through the
+ * eleven markdown symlinks. The floor of 207 makes losing even one file a
+ * breach and dropping symlink following falls to 202 — the one regression a
+ * content differential structurally cannot see, and the one this suite already
+ * shipped once. Raise the floor when the corpus grows; never lower it to 202 or
+ * below, which would re-disarm the symlink guarantee.
  *
  * The negative control below reads these values rather than restating them, so
  * lowering them cannot silently disarm the guard.
@@ -3336,7 +3336,7 @@ describe('named-skill execution contract', () => {
 
     // The symlinked half of the live inventory, named rather than counted. Each
     // of these is reached only through a `*.md` link under `.agents/skills`;
-    // without symlink following the live walk reaches 205 files and none of
+    // without symlink following the live walk reaches 202 files and none of
     // these six, which is below `CORPUS_MINIMUMS.fenceScanFiles`.
     expect(live).toEqual(
       expect.arrayContaining([

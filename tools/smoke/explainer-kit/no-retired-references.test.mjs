@@ -72,6 +72,22 @@ const RETIRED_PATTERNS = [
   { id: 'explainers.publish.', value: 'explainers.publish.' },
   { id: 'explainer-kit-providers', value: 'explainer-kit-providers' },
   { id: 'explainer-kit-verification', value: 'explainer-kit-verification' },
+  {
+    id: 'required-seam-skip',
+    value: 'required seam was unavailable',
+  },
+  {
+    id: 'manifest-and-build-record',
+    value: 'manifest and build record',
+  },
+  {
+    id: 'recap-publish-gate',
+    value: 'recap publish gate',
+  },
+  {
+    id: 'selected-recap-attestation',
+    value: 'attests a selected recap',
+  },
 ];
 
 const NEGATIVE_CONTROL_ALLOWLIST = new Map([
@@ -143,6 +159,31 @@ test('rejects a retired outcome outside the permanent allowlist', async () => {
   }
 });
 
+test('rejects retired semantic residues outside historical records', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'retired-semantics-red-'));
+  try {
+    const path = 'packages/live-guidance.md';
+    await mkdir(dirname(join(root, path)), { recursive: true });
+    await writeFile(
+      join(root, path),
+      [
+        'A required seam was unavailable.',
+        'Read the manifest and build record.',
+        'This mirrors the recap publish gate.',
+        'Completion attests a selected recap.',
+      ].join('\n'),
+    );
+    assert.deepEqual(await scanRetiredReferences({ root, files: [path] }), [
+      { path, pattern: 'manifest-and-build-record' },
+      { path, pattern: 'recap-publish-gate' },
+      { path, pattern: 'required-seam-skip' },
+      { path, pattern: 'selected-recap-attestation' },
+    ]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('honors only the named terminal-outcome negative-control allowlist', async () => {
   const root = await mkdtemp(join(tmpdir(), 'retired-reference-allow-'));
   try {
@@ -157,6 +198,14 @@ test('honors only the named terminal-outcome negative-control allowlist', async 
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test('accepts retired semantic wording in declared historical records', async () => {
+  const files = [
+    '.oat/repo/reference/decisions/historical.md',
+    '.oat/repo/pjm/backlog/archived/historical.md',
+  ];
+  assert.deepEqual(await scanRetiredReferences({ files }), []);
 });
 
 test('keeps the tracked repository free of retired references', async () => {

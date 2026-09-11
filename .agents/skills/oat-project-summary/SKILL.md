@@ -285,8 +285,8 @@ section with exactly one item. A run that happened uses the first form:
 - **project-recap:** {generated | generated — needs review | failed} — `{run path}`{optional reason or cause}
 ```
 
-A recap that never ran because a required seam was unavailable uses the second
-form, which has a reason and no run path:
+A recap that did not run because persisted intent records a skip uses the
+second form, which has a reason and no run path:
 
 ```markdown
 ## Explainer Outcome
@@ -662,6 +662,6 @@ Summary tracks: last task {task_id}, {N} revision phases
   ledger graduation
 - When the PJM tool pack is available, each Key Decision is promoted to a canonical `reference/decisions/DR-YYMMDD-slug` record via `oat decision new` (status `accepted`), deduped on the date-independent slug so re-runs never create duplicate records
 - When the PJM tool pack is unavailable, decision promotion is skipped silently with no prompt
-- A project-recap attempt or recorded capability skip appears once in a concise
-  Explainer Outcome section sourced from its manifest and build record, or from
-  the recorded recap intent
+- A project-recap attempt or recorded skip appears once in a concise Explainer
+  Outcome section sourced from `manifest.json` and `qa/result.json`, or from the
+  persisted recap intent

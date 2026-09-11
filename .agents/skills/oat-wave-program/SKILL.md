@@ -129,8 +129,8 @@ target (same disclaimer as the plan indexes).
    `SKILL.md` as a document until then, and flip every
    `completion tail: deferred to program close` ledger disposition to `done`. On
    no or defer, record the standing deferral and its owner in the program ledger.
-   This is the program completion gate and mirrors the recap publish gate; never
-   answer it autonomously or repeat it once per wave.
+   This is the program completion gate; never answer it autonomously or repeat
+   it once per wave.
 
 ### Program-close explainer caller
 

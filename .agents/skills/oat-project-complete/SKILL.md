@@ -540,42 +540,58 @@ mutation. Initialize `SELECTED_PROJECT_RECAP_RUN=""`.
 
 First re-read the persisted `oat_project_recap` record from
 `"$PROJECT_PATH/state.md"` through
-`scripts/consume-persisted-recap-intent.mjs`. This executable read is
+`scripts/consume-persisted-recap-intent.mjs`. Pass the project path to this
+single executable decision/effect boundary. It derives `state.md` and
+`explainers/` itself, re-reads the persisted decision, and performs manifest
+discovery only for `generate`. Its route and authoring permission are
 authoritative even when an earlier in-memory resolution set
-`SHOULD_GENERATE_RECAP`. A persisted `skip`, including
-`skip/failed_attempt`, suppresses all manifest discovery, bundle, and authoring
-work. Leave `SELECTED_PROJECT_RECAP_RUN` empty and invoke the terminal-outcome
-guard with `--intent skip` and the persisted source as `--skip-reason`. For
-`failed_attempt`, also pass the failed or incomplete `manifest.json`, or the
-flow's `failure.json`.
+`SHOULD_GENERATE_RECAP`.
+
+A persisted `skip`, including `skip/failed_attempt`, returns route `skip`
+without touching `explainers/`, suppressing manifest discovery, bundle, and
+authoring together. Leave `SELECTED_PROJECT_RECAP_RUN` empty and invoke the
+terminal-outcome guard with `--intent skip` and the persisted source as
+`--skip-reason`. For `failed_attempt`, also pass the failed or incomplete
+`manifest.json`, or the flow's `failure.json`.
 
 ```bash
 RECAP_CONSUMPTION=$(node "$RECAP_INTENT_CONSUMER" \
-  "$PROJECT_PATH/state.md") || exit 1
+  "$PROJECT_PATH") || exit 1
 RECAP_CONSUMPTION_FIELDS=$(node -e '
 const value = JSON.parse(process.argv[1]);
-if (!["generate", "skip"].includes(value.decision)) process.exit(1);
-if (value.decision === "skip" && (value.generated !== false ||
-    !value.suppressed.includes("bundle") ||
-    !value.suppressed.includes("authoring"))) process.exit(1);
-process.stdout.write(`${value.decision}\t${value.source}`);
+if (value.route !== value.decision) process.exit(1);
+if (value.route === "skip" && (value.manifestDiscoveryPerformed !== false ||
+    value.manifestCandidates.length !== 0 ||
+    value.authoringPermitted !== false)) process.exit(1);
+if (value.route === "generate" &&
+    (value.manifestDiscoveryPerformed !== true ||
+     !Array.isArray(value.manifestCandidates) ||
+     value.authoringPermitted !== true)) process.exit(1);
+if (!["generate", "skip"].includes(value.route)) process.exit(1);
+process.stdout.write(`${value.route}\t${value.source}\t` +
+  `${value.authoringPermitted}\t${JSON.stringify(value.manifestCandidates)}`);
 ' "$RECAP_CONSUMPTION") || exit 1
 IFS=$'\t' read -r PERSISTED_RECAP_DECISION PERSISTED_RECAP_SOURCE \
+  RECAP_AUTHORING_PERMITTED RECAP_MANIFEST_CANDIDATES_JSON \
   <<< "$RECAP_CONSUMPTION_FIELDS"
 ```
 
-For a persisted `generate`, inspect manifests under
-`{PROJECT_PATH}/explainers/` before generating. Reuse a fresh satisfied
-`project-recap` package without invoking the adapter. Fresh means the manifest
-identifies recipe `project-recap`, belongs to this project, has outcome `built`
-or `built-needs-review`, passes the complete package guard, and its input hashes
+For route `generate`, inspect only the manifest candidates returned in
+`RECAP_MANIFEST_CANDIDATES_JSON`; do not perform a second filesystem discovery
+outside the executable boundary. Reuse a fresh satisfied `project-recap`
+package without invoking the adapter. Fresh means the manifest identifies
+recipe `project-recap`, belongs to this project, has outcome `built` or
+`built-needs-review`, passes the complete package guard, and its input hashes
 match the current approved implementation inputs, including the refreshed
 summary when present.
 
-If no fresh package exists, invoke the `oat-explainer-kit` adapter's § Generate
-with recipe `project-recap`, project invocation, the active project, and
-`mode: unattended`. Run the installed core check, resolve inputs, theme, and
-output root, then perform `bundle` → host-agent authoring → `verify` → `record`.
+If no fresh package exists, require
+`RECAP_AUTHORING_PERMITTED="true"` from that same boundary before invoking the
+`oat-explainer-kit` adapter's § Generate with recipe `project-recap`, project
+invocation, the active project, and `mode: unattended`. The executable boundary
+does not fabricate host-agent authoring; it gates permission for the lifecycle
+caller that performs the installed core check, resolves inputs, theme, and
+output root, then runs `bundle` → host-agent authoring → `verify` → `record`.
 Lifecycle generation never prompts. Use the first available browser rung; a
 missing browser becomes `built-needs-review`, not a skip or block.
 

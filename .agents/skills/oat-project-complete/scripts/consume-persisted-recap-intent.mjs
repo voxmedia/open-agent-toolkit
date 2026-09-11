@@ -1,3 +1,5 @@
+import { readdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { readPersistedIntent } from '../../oat-explainer-kit/scripts/persist-intent.mjs';
@@ -8,12 +10,37 @@ function consumptionError(message) {
   return error;
 }
 
-export async function consumePersistedRecapIntent({
-  statePath,
-  generate = async () => undefined,
-}) {
+async function discoverManifestCandidates(explainersPath) {
+  let entries;
+  try {
+    entries = await readdir(explainersPath, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === 'ENOENT') return [];
+    throw error;
+  }
+
+  const candidates = [];
+  for (const entry of entries.sort((left, right) =>
+    left.name.localeCompare(right.name),
+  )) {
+    if (!entry.isDirectory()) continue;
+    const runEntries = await readdir(join(explainersPath, entry.name), {
+      withFileTypes: true,
+    });
+    if (
+      runEntries.some(
+        (runEntry) => runEntry.isFile() && runEntry.name === 'manifest.json',
+      )
+    ) {
+      candidates.push(`explainers/${entry.name}/manifest.json`);
+    }
+  }
+  return candidates;
+}
+
+export async function consumePersistedRecapIntent({ projectPath }) {
   const record = await readPersistedIntent({
-    statePath,
+    statePath: join(projectPath, 'state.md'),
     product: 'projectRecap',
   });
   if (record === null) {
@@ -25,9 +52,10 @@ export async function consumePersistedRecapIntent({
     return {
       decision: 'skip',
       source: record.source,
-      suppressed: ['manifest-discovery', 'bundle', 'authoring'],
-      generated: false,
-      value: null,
+      route: 'skip',
+      manifestDiscoveryPerformed: false,
+      manifestCandidates: [],
+      authoringPermitted: false,
     };
   }
   if (record.decision !== 'generate') {
@@ -35,22 +63,26 @@ export async function consumePersistedRecapIntent({
       `Unsupported persisted recap decision: ${String(record.decision)}`,
     );
   }
+  const manifestCandidates = await discoverManifestCandidates(
+    join(projectPath, 'explainers'),
+  );
   return {
     decision: 'generate',
     source: record.source,
-    suppressed: [],
-    generated: true,
-    value: await generate(record),
+    route: 'generate',
+    manifestDiscoveryPerformed: true,
+    manifestCandidates,
+    authoringPermitted: true,
   };
 }
 
 async function main(argv) {
   if (argv.length !== 1) {
     throw consumptionError(
-      'Usage: consume-persisted-recap-intent.mjs <state.md>',
+      'Usage: consume-persisted-recap-intent.mjs <project-path>',
     );
   }
-  return consumePersistedRecapIntent({ statePath: argv[0] });
+  return consumePersistedRecapIntent({ projectPath: argv[0] });
 }
 
 if (

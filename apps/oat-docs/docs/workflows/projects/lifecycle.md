@@ -125,7 +125,8 @@ On completion, OAT treats archive handling as an explicit closeout choice:
 - When archiving is disabled or declined, durable projects remain at their
   active path. Synced completion still finalizes and pushes the project ref,
   commits the discovery record as `complete`, retains the checkout and ref, and
-  attests a selected recap against the project-ref history.
+  keeps any recap governed by its manifest and package verification without a
+  separate closeout evidence push.
 - For a synced project, closeout first finalizes the project artifacts and
   pushes them to `refs/oat/projects/<project>`. Archive then requires a clean,
   fully pushed checkout; copies it without the `.git` pointer or `reviews/`;

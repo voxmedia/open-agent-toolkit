@@ -1385,13 +1385,16 @@ printf 'artifact-read\\n'`,
       /First re-read the persisted `oat_project_recap` record from\s+`"\$PROJECT_PATH\/state\.md"` through\s+`scripts\/consume-persisted-recap-intent\.mjs`\./,
     );
     expect(content).toMatch(
-      /A persisted `skip`, including\s+`skip\/failed_attempt`, suppresses all manifest discovery, bundle, and authoring\s+work\./,
+      /Pass the project path to this\s+single executable decision\/effect boundary\./,
     );
     expect(content).toMatch(
-      /For a persisted `generate`, inspect manifests under\s+`\{PROJECT_PATH\}\/explainers\/` before generating\./,
+      /A persisted `skip`, including `skip\/failed_attempt`, returns route `skip`\s+without touching `explainers\/`, suppressing manifest discovery, bundle, and\s+authoring together\./,
     );
     expect(content).toMatch(
-      /If no fresh package exists, invoke the `oat-explainer-kit` adapter's § Generate\s+with recipe `project-recap`/,
+      /For route `generate`, inspect only the manifest candidates returned in\s+`RECAP_MANIFEST_CANDIDATES_JSON`; do not perform a second filesystem discovery\s+outside the executable boundary\./,
+    );
+    expect(content).toMatch(
+      /If no fresh package exists, require\s+`RECAP_AUTHORING_PERMITTED="true"` from that same boundary before invoking the\s+`oat-explainer-kit` adapter's § Generate with recipe `project-recap`/,
     );
     expect(content).toMatch(
       /Under autonomy, retry once\. If that\s+retry also fails, persist `skip\/failed_attempt` with a fresh state hash and\s+re-read it through the executable consumer before continuing\./,
@@ -1425,7 +1428,7 @@ printf 'artifact-read\\n'`,
     );
 
     expect(content).toMatch(
-      /Reuse a fresh satisfied\s+`project-recap` package without invoking the adapter\./,
+      /Reuse a fresh satisfied `project-recap`\s+package without invoking the adapter\./,
     );
     expect(content).toMatch(
       /Set\s+`SELECTED_PROJECT_RECAP_RUN` only to that final satisfied project-recap run/,

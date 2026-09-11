@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
@@ -10,9 +10,12 @@ import { promisify } from 'node:util';
 import { writeFailure } from '../../explainer-kit/scripts/bundle.mjs';
 import { runRecord } from '../../explainer-kit/scripts/record.mjs';
 import { checkTerminalOutcome } from '../../oat-explainer-kit/scripts/check-terminal-outcome.mjs';
-import { consumePersistedRecapIntent } from '../scripts/consume-persisted-recap-intent.mjs';
 
 const route = new URL('../SKILL.md', import.meta.url);
+const consumerScript = new URL(
+  '../scripts/consume-persisted-recap-intent.mjs',
+  import.meta.url,
+);
 const guardScript = new URL(
   '../../oat-explainer-kit/scripts/check-terminal-outcome.mjs',
   import.meta.url,
@@ -278,38 +281,34 @@ test('project completion requires evidence for skip failed_attempt', async () =>
   }
 });
 
-test('completion re-reads persisted skip intent and suppresses generation', async () => {
+test('deployed completion boundary suppresses discovery and authoring for persisted skips', async () => {
   const root = await mkdtemp(join(tmpdir(), 'recap-persisted-skip-'));
   try {
     const statePath = join(root, 'state.md');
-    let generateCount = 0;
+    await writeFile(join(root, 'explainers'), 'fail if discovery is attempted');
     for (const source of ['interactive', 'failed_attempt']) {
       await writeFile(
         statePath,
         `---\noat_project_recap:\n  decision: skip\n  source: ${source}\n  decided_at: '2026-09-11T14:45:00.000Z'\n---\n`,
       );
-      const result = await consumePersistedRecapIntent({
-        statePath,
-        generate: async () => {
-          generateCount += 1;
-        },
-      });
+      const { stdout } = await execFileAsync(process.execPath, [
+        consumerScript.pathname,
+        root,
+      ]);
+      const result = JSON.parse(stdout);
       assert.equal(result.decision, 'skip');
       assert.equal(result.source, source);
-      assert.equal(result.generated, false);
-      assert.deepEqual(result.suppressed, [
-        'manifest-discovery',
-        'bundle',
-        'authoring',
-      ]);
+      assert.equal(result.route, 'skip');
+      assert.equal(result.manifestDiscoveryPerformed, false);
+      assert.deepEqual(result.manifestCandidates, []);
+      assert.equal(result.authoringPermitted, false);
     }
-    assert.equal(generateCount, 0);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
 
-test('completion consumes the persisted generate intent as accepted control', async () => {
+test('deployed completion boundary discovers manifests and permits authoring for generate', async () => {
   const root = await mkdtemp(join(tmpdir(), 'recap-persisted-generate-'));
   try {
     const statePath = join(root, 'state.md');
@@ -317,20 +316,41 @@ test('completion consumes the persisted generate intent as accepted control', as
       statePath,
       "---\noat_project_recap:\n  decision: generate\n  source: interactive\n  decided_at: '2026-09-11T14:45:00.000Z'\n---\n",
     );
-    let generateCount = 0;
-    const result = await consumePersistedRecapIntent({
-      statePath,
-      generate: async () => {
-        generateCount += 1;
-        return 'run-root';
-      },
-    });
-    assert.equal(generateCount, 1);
-    assert.equal(result.generated, true);
-    assert.equal(result.value, 'run-root');
+    const runPath = join(root, 'explainers', 'candidate-run');
+    await mkdir(runPath, { recursive: true });
+    await writeFile(join(runPath, 'manifest.json'), '{"outcome":"built"}\n');
+    const { stdout } = await execFileAsync(process.execPath, [
+      consumerScript.pathname,
+      root,
+    ]);
+    const result = JSON.parse(stdout);
+    assert.equal(result.decision, 'generate');
+    assert.equal(result.route, 'generate');
+    assert.equal(result.manifestDiscoveryPerformed, true);
+    assert.deepEqual(result.manifestCandidates, [
+      'explainers/candidate-run/manifest.json',
+    ]);
+    assert.equal(result.authoringPermitted, true);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test('project completion consumes boundary discovery and authoring permission', async () => {
+  const guidance = await readFile(route, 'utf8');
+  const start = guidance.indexOf('### Step 3.6: Select Final Project Recap');
+  const end = guidance.indexOf('### Step 3.65:', start);
+  const section = guidance.slice(start, end);
+
+  assert.match(
+    section,
+    /RECAP_CONSUMPTION=.*RECAP_INTENT_CONSUMER[\s\S]*"\$PROJECT_PATH"/,
+  );
+  assert.match(section, /RECAP_MANIFEST_CANDIDATES_JSON/);
+  assert.match(
+    section,
+    /RECAP_AUTHORING_PERMITTED="true"[\s\S]*`oat-explainer-kit` adapter's § Generate/,
+  );
 });
 
 test('project completion invokes the shared guard before lifecycle mutation', async () => {
