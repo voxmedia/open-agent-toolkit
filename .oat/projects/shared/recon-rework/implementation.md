@@ -222,6 +222,10 @@ reached. A complete required-pass artifact currently masks a material
 assurance and publication. `prev7-t01` records the bounded fix; implementation
 and another review cycle require explicit user authorization.
 
+**Authorization:** On 2026-09-11, Thomas authorized one additional bounded
+`prev7-t01` fix and review cycle. This authorization does not widen task scope,
+alter the managed `high` dispatch policy, or authorize further cycles.
+
 ## Phase 5: Post-retro simplification
 
 **Status:** completed
