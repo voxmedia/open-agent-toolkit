@@ -1128,6 +1128,26 @@ required. The run-bound artifact and exact Reviews event are archived. Receive
 commit `fcc97ac11ca7d2caf42f6fcf89521d492dd1cf7e` corroborates the run ID,
 artifact, target, and passed event. The configured gate is `allowed/passed`.
 
+### Refreshed closeout verification after p-rev4
+
+**Date:** 2026-09-11
+**Basis:** `e7cbf4654eab99070564f471a1fd31ad7c633009`
+
+The complete repository gate sequence passed again after the same-run evidence
+fix and its diagnostic refinement. Each command recorded an explicit zero exit
+code in a dedicated `/tmp/recon-closeout-*.log` receipt:
+
+- `pnpm check`
+- `pnpm type-check`
+- `pnpm test`
+- `pnpm build`
+- `pnpm run check:skill-bumps`
+- `pnpm release:check-versions`
+- `pnpm release:validate`
+- `pnpm build:docs`
+- `pnpm lint`
+- `pnpm format`
+
 ## Final Summary (for PR/docs)
 
 All 25 implementation and revision tasks are implemented. The merged-head final
