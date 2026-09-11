@@ -156,6 +156,10 @@ run-4-final-important-20260911 Fresh final review found one Important thorough-o
 
 run-4-p-rev5-pass-20260911 Phase p-rev5 passed with task prev5-t01 complete at 26c8357d081ced7047379140c5353ab5993a7f46; narrowed review reported 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
 
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-4-final-gather-ownership-20260911 Fresh final review found one Important gather-pass ownership bypass; p-rev6 task prev6-t01 records the accepted fix to derive primary and redundant gather passes from approved wave ownership.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

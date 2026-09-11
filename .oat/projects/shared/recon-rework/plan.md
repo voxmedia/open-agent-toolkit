@@ -928,6 +928,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | p-rev4 | code     | passed          | 2026-09-11 | reviews/archived/p-rev4-review-2026-09-11T170722Z.md        | 3784abc9f26e6714901c450c775b0ceb16ad30b7 | manual     | -                     |
 | final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T173037Z.md         | 9b7c04a7783a14f92e10edc56c7e5e81d965cc26 | auto       | -                     |
 | p-rev5 | code     | passed          | 2026-09-11 | reviews/archived/p-rev5-review-2026-09-11T175232Z.md        | 26c8357d081ced7047379140c5353ab5993a7f46 | manual     | -                     |
+| final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T180106Z.md         | 872cae9ce95df3be5d4b2964d542825100055542 | auto       | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1248,10 +1249,49 @@ restore it, and run focused plus complete recon suites.
 
 Commit as `fix(prev5-t01): compile redundant thorough evidence`.
 
-## Implementation Complete
+## Phase p-rev6: Bind derived gather passes to approved waves
 
-**Implementation tasks complete: 26 of 26 implemented. The fresh final review's
-Important thorough-ordering finding is fixed and its phase review passed.**
+Source: final lifecycle review (2026-09-11)
+
+### Task prev6-t01: (review) Prevent cross-wave gather impersonation
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/tests/packet-validation.test.mjs`
+- Modify: supporting recon fixtures or contract guidance only when required
+
+**Step 1: Understand the issue**
+
+Pass derivation currently counts all complete raw `gather` dossiers by lane ID.
+Two lanes from the primary gather wave can therefore satisfy the derived
+`redundant-gather` pass while the approved redundant wave failed, leaving a
+partial packet publishable as thorough.
+
+**Step 2: Implement fix**
+
+Derive primary and redundant gathering passes from the approved wave that owns
+each lane. A material failure gap may remain publishable as partial, but it must
+not satisfy the failed pass or preserve the thorough achieved profile.
+
+**Step 3: Verify**
+
+Add reciprocal regressions proving primary-wave lanes cannot impersonate the
+redundant pass and redundant-wave lanes cannot impersonate the primary pass.
+Require a categorical assurance/profile failure. Neutralize the ownership guard
+once, confirm the regression fails, restore it, and run focused plus complete
+recon suites.
+
+**Step 4: Commit**
+
+Commit as `fix(prev6-t01): bind gather passes to approved waves`.
+
+## Implementation In Progress
+
+**Implementation tasks complete: 26 of 27 implemented. The latest final review's
+Important gather-pass ownership finding is pending in `prev6-t01`.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1263,8 +1303,9 @@ Important thorough-ordering finding is fixed and its phase review passed.**
 - Phase p-rev3: 3 tasks — bound fixed waves and align cap docs and preview.
 - Phase p-rev4: 2 tasks — require same-run evidence and suppress derivative diagnostics.
 - Phase p-rev5: 1 task — connect redundant thorough gathering to compilation.
+- Phase p-rev6: 1 task — bind derived gathering passes to their approved waves.
 
-**Total: 10 phases, 26 tasks.** All implementation tasks are complete.
+**Total: 11 phases, 27 tasks.** One final-review remediation task is pending.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

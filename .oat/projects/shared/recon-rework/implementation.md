@@ -13,9 +13,9 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-11
 
-Three implementation runs plus five revision phases completed all 26 original,
-post-retro, integration, and review-remediation tasks. The `p-rev5` phase review
-passed the final Important remediation with no findings.
+Three implementation runs plus five revision phases completed 26 original,
+post-retro, integration, and review-remediation tasks. A fresh full-delta review
+then added one Important gather-pass ownership task in `p-rev6`.
 
 ## Progress Overview
 
@@ -31,8 +31,9 @@ passed the final Important remediation with no findings.
 | Phase p-rev3: Configured-gate cap fixes    | completed | 3     | 3/3       |
 | Phase p-rev4: Same-run condition evidence  | completed | 2     | 2/2       |
 | Phase p-rev5: Thorough gather compilation  | completed | 1     | 1/1       |
+| Phase p-rev6: Gather pass ownership        | pending   | 1     | 0/1       |
 
-**Total:** 26/26 tasks implemented. Refreshed final closeout review is next.
+**Total:** 26/27 tasks implemented. Task `prev6-t01` is next.
 
 ## Task Status
 
@@ -64,6 +65,7 @@ passed the final Important remediation with no findings.
 | prev4-t01 | Completed: require same-run condition evidence  | `8257446bed1f3105e288cd6f2fd46eb5c9d53190`         |
 | prev4-t02 | Completed: suppress derivative diagnostics      | `3784abc9f26e6714901c450c775b0ceb16ad30b7`         |
 | prev5-t01 | Completed: compile redundant thorough evidence  | `26c8357d081ced7047379140c5353ab5993a7f46`         |
+| prev6-t01 | Pending: bind gather passes to approved waves   | -                                                  |
 
 ## Phase p-rev4: Remote condition-evidence review fix
 
@@ -160,6 +162,25 @@ single primary omission diagnostic, fallible negative control, and unchanged
 single terminal reconciliation. Focused 113/113 and full recon 273/273 passed.
 
 **Outcome:** `p-rev5` passed with no fix loop.
+
+## Phase p-rev6: Bind derived gather passes to approved waves
+
+**Status:** pending
+**Started:** 2026-09-11
+
+### Review Received: refreshed final review
+
+**Date:** 2026-09-11
+**Review artifact:** `reviews/archived/final-review-2026-09-11T180106Z.md`
+**Reviewed head:** `872cae9ce95df3be5d4b2964d542825100055542`
+**Findings:** 0 Critical, 1 Important, 0 Medium, 0 Minor
+**New tasks added:** `prev6-t01`
+
+The finding is accepted for immediate repair. Two complete lanes from the
+primary gather wave can currently impersonate the failed redundant-gather pass,
+leaving a partial packet publishable with achieved profile `thorough`.
+`prev6-t01` will derive each gather pass from approved wave ownership and pin
+the reciprocal direction with fallible controls.
 
 ## Phase 5: Post-retro simplification
 
