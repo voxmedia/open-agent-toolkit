@@ -692,6 +692,47 @@ test('accepts the current manifest with version 1 evidence artifacts', async () 
 test('production validation enforces approved profile topology', async () => {
   const cases = [
     {
+      profile: 'quick',
+      code: 'INVALID_PROFILE_SINGLETON_LANE_COUNT',
+      mutate(execution) {
+        const map = execution.waves.find((wave) => wave.mode === 'map');
+        const template = map.lanes[0];
+        for (let index = 2; index <= 40; index += 1) {
+          map.lanes.push({
+            ...template,
+            laneId: `${template.laneId}-${index}`,
+            writeRoot: `${template.writeRoot}.${index}`,
+          });
+        }
+      },
+    },
+    {
+      profile: 'quick',
+      code: 'INVALID_PROFILE_SINGLETON_LANE_COUNT',
+      mutate(execution) {
+        const compile = execution.waves.find((wave) => wave.mode === 'compile');
+        compile.lanes.push({
+          ...compile.lanes[0],
+          laneId: 'lane-compile-second',
+          writeRoot: 'raw/drafts/compile-second.json',
+        });
+      },
+    },
+    {
+      profile: 'standard',
+      code: 'INVALID_PROFILE_SINGLETON_LANE_COUNT',
+      mutate(execution) {
+        const reconciliation = execution.waves.find(
+          (wave) => wave.mode === 'reconciliation',
+        );
+        reconciliation.lanes.push({
+          ...reconciliation.lanes[0],
+          laneId: 'lane-reconciliation-second',
+          writeRoot: 'reviews/reconciliation-second.json',
+        });
+      },
+    },
+    {
       code: 'OUT_OF_ORDER_PROFILE_TOPOLOGY',
       mutate(execution) {
         [execution.waves[3], execution.waves[4]] = [
@@ -729,9 +770,9 @@ test('production validation enforces approved profile topology', async () => {
     },
   ];
 
-  for (const { code, mutate } of cases) {
+  for (const { code, mutate, profile = 'standard' } of cases) {
     const packet = await createPacketFixture({
-      profile: 'standard',
+      profile,
     });
     tempRoots.push(packet.tempRoot);
     mutate(packet.manifest.execution);

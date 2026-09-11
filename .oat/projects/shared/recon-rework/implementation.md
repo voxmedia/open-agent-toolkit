@@ -60,7 +60,7 @@ profile-cap correction tasks.
 | prev1-t01 | Completed: integrate current main               | `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`         |
 | prev2-t01 | Completed: align profile topology caps          | `be329458b7c1f931b4fc5712c1456619484d0e13`         |
 | prev2-t02 | Completed: close hostile manifest collections   | `fc4470be39e49dfc26489bbe5caeabcbc22525ef`         |
-| prev3-t01 | Pending: bound singleton wave lanes             | —                                                  |
+| prev3-t01 | Completed: bound singleton wave lanes           | Task commit recorded by root after phase handoff   |
 | prev3-t02 | Pending: align adaptive cap contract prose      | —                                                  |
 | prev3-t03 | Pending: clarify adaptive cap preview           | —                                                  |
 
@@ -981,6 +981,19 @@ head.
   counted lanes from total lanes.
 
 **New tasks added:** `prev3-t01`, `prev3-t02`, `prev3-t03`
+
+### Task prev3-t01: Bound singleton wave lanes
+
+**Status:** completed
+**Verification:** passed
+
+The shared v2 topology validator now requires exactly one lane for every
+profile-permitted mode outside that profile's adaptive counted-lane set. The
+routing-contract and persisted packet-validation boundaries cover quick map and
+compile waves plus standard reconciliation, including the previously accepted
+40-map-lane case. With the new guard temporarily neutralized, the targeted
+singleton-lane test failed as required (exit 1); restoring the guard returned
+the focused 66-test suite to green.
 
 **Next:** Execute the three fix tasks, pass the mandatory narrowed lifecycle
 re-review, then resume this same gate generation for its one allowed remediation

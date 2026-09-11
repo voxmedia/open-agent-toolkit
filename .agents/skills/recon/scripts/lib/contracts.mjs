@@ -621,6 +621,22 @@ export function validateV2ProfileTopology(
       ),
     );
   }
+  for (const [waveIndex, wave] of waves.entries()) {
+    if (
+      policy.allowedWaveModes.includes(wave?.mode) &&
+      !policy.countedLaneModes.includes(wave.mode) &&
+      Array.isArray(wave?.lanes) &&
+      wave.lanes.length !== 1
+    ) {
+      errors.push(
+        issue(
+          'INVALID_PROFILE_SINGLETON_LANE_COUNT',
+          `${requestedProfile} ${wave.mode} waves require exactly one lane`,
+          `${path}.waves[${waveIndex}].lanes`,
+        ),
+      );
+    }
+  }
   const laneCount = waves.reduce(
     (count, wave) =>
       count +

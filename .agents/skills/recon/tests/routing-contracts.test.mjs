@@ -173,6 +173,39 @@ test('quick permits four gather lanes in addition to map and compile', () => {
   );
 });
 
+test('profiles require exactly one lane for every fixed wave mode', () => {
+  for (const [profile, modes, mode, laneCount] of [
+    ['quick', ['map', 'gather', 'compile'], 'map', 40],
+    ['quick', ['map', 'gather', 'compile'], 'compile', 2],
+    ['standard', standardModes, 'reconciliation', 2],
+  ]) {
+    const execution = createV2ExecutionApproval({ modes, laneIdForMode });
+    const wave = execution.waves.find((item) => item.mode === mode);
+    const template = wave.lanes[0];
+    for (let index = 2; index <= laneCount; index += 1) {
+      wave.lanes.push({
+        ...template,
+        laneId: `${template.laneId}-${index}`,
+        writeRoot: `${template.writeRoot}.${index}`,
+      });
+    }
+
+    const errors = validateV2ProfileTopology({
+      schemaVersion: 2,
+      run: { requestedProfile: profile },
+      execution,
+    });
+    assert.ok(
+      errors.some(
+        (error) =>
+          error.code === 'INVALID_PROFILE_SINGLETON_LANE_COUNT' &&
+          error.message.includes(mode),
+      ),
+      `${profile} ${mode}: ${JSON.stringify(errors)}`,
+    );
+  }
+});
+
 test('profiles reject wave modes owned by stronger profiles', () => {
   for (const [profile, modes, forbiddenMode] of [
     [
