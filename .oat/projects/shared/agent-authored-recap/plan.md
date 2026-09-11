@@ -198,7 +198,7 @@ Deliverable: the new core flow exists, is tested browser-free, and is proven end
 
 - Create: `.agents/skills/explainer-kit/tests/flow.e2e.test.mjs`, `.agents/skills/explainer-kit/tests/fixtures/flow/` (a page the implementing agent authors once, by hand, from `templates/house-style.html` and the program-recap brief over the real bundle below; provenance header names the inputs and their commit)
 
-**Step 1: Write test** — over tracked real material only (`.oat/repo/reference/external-plans/2026-08-31-execution-program.md` and the two newest wave summaries under `.oat/repo/reference/project-summaries/`): `bundle --recipe program-recap --theme <defaults>` → the authored fixture page copied to `site/index.html` → `verify --rung none` (every check `pass`, the two claim passes on real claims) → `record` (`built-needs-review`) → `verifySelectedProjectRecapForArchive` accepts the run root read-only; then `bundle` again over the same inputs reports `reuse: true`. Negative: the same page with two wave task counts swapped → `verify-claim-untraced`; `record` over a `qa/result.json` for different HTML bytes → `record-qa-stale`.
+**Step 1: Write test** — over tracked real material only (`.oat/repo/reference/external-plans/2026-08-31-execution-program.md` and the two newest wave summaries under `.oat/repo/reference/project-summaries/`): `bundle --recipe program-recap --theme <defaults>` → the authored fixture page copied to `site/index.html` → `verify --rung none` (every check `pass`, the two claim passes on real claims) → `record` (`built-needs-review`) → compose the generic package contract directly in the test: `validateContract('manifest')`, verify every `immutableHashes` entry against the corresponding file bytes, and `enforceRunPackageInventory`; then `bundle` again over the same inputs reports `reuse: true`. Negative: the same page with two wave task counts swapped → `verify-claim-untraced`; `record` over a `qa/result.json` for different HTML bytes → `record-qa-stale`. Do not add a helper or loosen the project-only `verifySelectedProjectRecapForArchive` boundary.
 
 **Step 2: Verify** — `node --test .agents/skills/explainer-kit/tests/flow.e2e.test.mjs` green; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts` green. This is the gate for every deletion task that follows: do not start p01-t10 until it is green.
 
@@ -551,7 +551,7 @@ Deliverable: a person can run the core skill on any inputs; the project explaine
 
 **Step 1: Run** the flow as the adapter's § Generate describes for `project-explainer`; expect `built` (host or Playwright rung) or `built-needs-review` (browser-less host) with every check passing.
 
-**Step 2: Verify (read-only; never re-run `verify.mjs` after `record.mjs`, it would rewrite `qa/result.json` under the manifest's hashes)** — `qa/result.json` shows every check `pass`; `verifySelectedProjectRecapForArchive` over the run root accepts the package byte-for-byte; the manifest validates; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts` unchanged.
+**Step 2: Verify (read-only; never re-run `verify.mjs` after `record.mjs`, it would rewrite `qa/result.json` under the manifest's hashes)** — `qa/result.json` shows every check `pass`; compose the generic package contract directly in the check: `validateContract('manifest')`, verify every `immutableHashes` entry against the corresponding file bytes, and `enforceRunPackageInventory`; `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts` unchanged. Do not add a helper or loosen the project-only `verifySelectedProjectRecapForArchive` boundary.
 
 **Step 3: Gates (phase boundary)** — the full list with exit codes.
 
@@ -572,7 +572,7 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 
 **Step 1: Run** the flow; expect every browser-free check to pass and `built` or `built-needs-review`.
 
-**Step 2: Verify (read-only; never re-run `verify.mjs` after `record.mjs`)** — `qa/result.json` shows every check `pass`; `verifySelectedProjectRecapForArchive` over the run root accepts the package byte-for-byte; the manifest validates through `validateContract('manifest')`; the package passes `enforceRunPackageInventory`; `unresolvedClaims` lists any unreachable wrapper input rather than dropping it.
+**Step 2: Verify (read-only; never re-run `verify.mjs` after `record.mjs`)** — `qa/result.json` shows every check `pass`; compose the generic package contract directly in the check: `validateContract('manifest')`, verify every `immutableHashes` entry against the corresponding file bytes, and `enforceRunPackageInventory`; `unresolvedClaims` lists any unreachable wrapper input rather than dropping it. Do not add a helper or loosen the project-only `verifySelectedProjectRecapForArchive` boundary.
 
 **Step 3: Gates (phase boundary)** — the full list with exit codes, forced test run, smoke/skills/scripts suites, `pnpm lint`, `pnpm format`.
 
