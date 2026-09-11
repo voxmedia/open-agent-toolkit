@@ -478,6 +478,8 @@ started.
 **Launch intent:** `recon-exit-gate-20260911T151854Z` persisted before execution;
 structured stdout receipt reserved at
 `/private/tmp/recon-exit-gate-20260911T151854Z.receipt.json`.
+**Launch accepted:** gate run `c1c2d64e-b921-4484-8c81-6259fe3e397b` on
+`cursor-fable-5-1-high`; marker path persisted before terminal result handling.
 
 ### Review Received: final configured exit gate
 
