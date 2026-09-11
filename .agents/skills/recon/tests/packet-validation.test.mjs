@@ -854,14 +854,17 @@ test('missing approval has one schema diagnostic owner', async () => {
 test('non-array manifest collections return structured shape diagnostics', async () => {
   const packet = await createPacketFixture({ profile: 'standard' });
   tempRoots.push(packet.tempRoot);
-  packet.manifest.sources = 'not-an-array';
 
-  const result = validateArtifactShape(packet.manifest);
-  assert.equal(result.valid, false);
-  assert.deepEqual(
-    result.errors.map(({ code }) => code),
-    ['MISSING_REQUIRED_FIELD'],
-  );
+  for (const field of ['sources', 'artifacts', 'gaps']) {
+    const manifest = structuredClone(packet.manifest);
+    manifest[field] = 'not-an-array';
+    const result = validateArtifactShape(manifest);
+    assert.equal(result.valid, false);
+    assert.deepEqual(
+      result.errors.map(({ code }) => code),
+      ['MISSING_REQUIRED_FIELD'],
+    );
+  }
 });
 
 for (const [name, mutate, forbiddenCodes] of [
@@ -880,6 +883,20 @@ for (const [name, mutate, forbiddenCodes] of [
     (manifest) => delete manifest.run.id,
     ['MISSING_PASS_OUTCOME_EVIDENCE', 'SHADOW_RECONCILIATION'],
   ],
+  [
+    'artifacts array',
+    (manifest) => {
+      manifest.artifacts = 'not-an-array';
+    },
+    ['MISSING_PASS_OUTCOME_EVIDENCE', 'SHADOW_RECONCILIATION'],
+  ],
+  [
+    'gaps array',
+    (manifest) => {
+      manifest.gaps = 'not-an-array';
+    },
+    ['MISSING_PASS_OUTCOME_EVIDENCE', 'SHADOW_RECONCILIATION'],
+  ],
 ]) {
   test(`missing manifest ${name} returns diagnostics and withdraws stale output`, async () => {
     const packet = await createPacketFixture({ profile: 'standard' });
@@ -890,7 +907,7 @@ for (const [name, mutate, forbiddenCodes] of [
       'utf8',
     );
     mutate(packet.manifest);
-    await packet.persist();
+    await writeJson(packet.manifestPath, packet.manifest);
 
     const result = await validatePacket(packet.packetRoot);
     const errorCodes = result.errors.map(({ code }) => code);

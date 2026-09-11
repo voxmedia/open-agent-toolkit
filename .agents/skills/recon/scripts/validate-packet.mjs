@@ -2183,6 +2183,9 @@ export async function compileValidatedRun(packetDirectory) {
   const exactEvidence = new Set();
   const manifestCoreUsable =
     Array.isArray(manifest?.sources) &&
+    Array.isArray(manifest?.artifacts) &&
+    Array.isArray(manifest?.gaps) &&
+    Array.isArray(manifest?.conditionOutcomes) &&
     isObject(manifest?.run) &&
     typeof manifest.run.id === 'string';
   if (manifest && ledger && manifestCoreUsable) {
