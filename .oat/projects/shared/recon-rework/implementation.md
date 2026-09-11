@@ -1,5 +1,5 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
@@ -31,7 +31,7 @@ and its diagnostic-quality follow-up both passed narrowed review.
 | Phase p-rev3: Configured-gate cap fixes    | completed | 3     | 3/3       |
 | Phase p-rev4: Same-run condition evidence  | completed | 2     | 2/2       |
 
-**Total:** 25/25 tasks implemented. Final closeout verification is next.
+**Total:** 25/25 tasks implemented. Refreshed final closeout verification is next.
 
 ## Task Status
 
@@ -65,7 +65,7 @@ and its diagnostic-quality follow-up both passed narrowed review.
 
 ## Phase p-rev4: Remote condition-evidence review fix
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-09-11
 
 ### Remote Review Received: PR #285
@@ -1130,9 +1130,12 @@ artifact, target, and passed event. The configured gate is `allowed/passed`.
 
 ## Final Summary (for PR/docs)
 
-All 23 implementation and revision tasks are implemented. The merged-head final
+All 25 implementation and revision tasks are implemented. The merged-head final
 lifecycle review and configured gate identified five substantive or alignment
-gaps; all are fixed, and both narrowed lifecycle re-reviews passed. The branch
+gaps; all are fixed, and both narrowed lifecycle re-reviews passed. A subsequent
+remote PR review exposed a same-run provenance gap in conditional evidence; the
+validator now rejects foreign-run evidence even when it reuses an approved lane,
+and emits only the primary categorical diagnostic for that failure. The branch
 provides versioned
 v1/v2 recon contracts, economical approved per-wave routing, bounded conditional
 escalation, exact outcome accounting, caller-owned judgment, normalized
@@ -1144,17 +1147,20 @@ shared model-selection guidance, CLI bundle consistency, public recon docs, five
 public package manifests, and the repeatable Phase 4 verification note.
 
 Verification includes the eight CI-equivalent gates in order, fresh isolated Turbo
-tests, the final 258/258 recon suite, 29/29 bundle tests, provider-view
+tests, the final 271/271 recon suite, 29/29 bundle tests, provider-view
 synchronization, release validation, docs build, and negative controls for
 exact-target drift, shadow reconciliation, profile topology, and malformed wave
-containers. The retained raw gate logs lack explicit `exit=` markers; that
+containers, same-run condition evidence, and derivative-diagnostic suppression.
+The retained raw gate logs lack explicit `exit=` markers; that
 nonblocking evidence-quality limitation remains disclosed.
 
 The earlier production-topology, malformed-input, lifecycle-prose, profile-cap,
 hostile-collection, singleton-lane, adaptive-cap documentation, and preview-label
 findings are fixed. The terminal narrowed final review passed with no blocking
-findings. Configured exit-gate attempt 1 produced the last three fixes; attempt 2
-passed with no findings and was durably received without further changes.
+findings. Configured exit-gate attempt 1 produced three fixes; attempt 2 passed
+with no findings and was durably received. The later `p-rev4` review passed after
+one bounded diagnostic-quality fix; project-wide final review and the configured
+exit gate must be refreshed against this newer implementation basis.
 
 ## Completion Outcome
 

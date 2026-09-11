@@ -14,7 +14,7 @@ oat_hill_completed:
   - p04
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
@@ -30,7 +30,7 @@ oat_dispatch_policy:
 oat_skill_gate_overrides:
   oat-project-quick-start: disabled
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T17:08:40Z'
+oat_project_state_updated: '2026-09-11T17:20:00Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -98,14 +98,15 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** Implementation complete; PR #285 open for review.
+**Status:** Implementation tasks complete; refreshed final closeout is in progress.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-11
 
 ## Current Phase
 
-Implementation — PR #285 remains open. All 25 tasks, including the remote
-same-run evidence fix and its narrowed re-review, are complete.
+Implementation — all 25 tasks, including the remote same-run evidence fix and
+its narrowed phase re-review, are complete. Project-wide final review and the
+configured exit gate are being refreshed against the new implementation basis.
 
 ## Artifacts
 
@@ -140,8 +141,8 @@ No existing project was absorbed or retired.
 - ✓ Run 2 focused and repository verification passed
 - ✓ Fresh final review received and all seven findings fixed
 - ✓ Terminal narrowed final review passed with no findings
-- ✓ Final configured gate review received with no findings
-- ✓ Summary, documentation, and repository references refreshed
+- ⧗ Refreshed final review and configured gate pending after `p-rev4`
+- ⧗ Summary, documentation, and PR description refresh pending
 - ✓ Final repository release-verification sequence passed
 - ✓ PR created
 - ⧗ Awaiting human review
@@ -152,11 +153,7 @@ No active blocker.
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`.
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Refreshed final closeout review and gate, followed by completion.
 
 ## Authorization and Scope
 
