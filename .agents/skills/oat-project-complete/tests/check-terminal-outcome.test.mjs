@@ -10,6 +10,7 @@ import { promisify } from 'node:util';
 import { writeFailure } from '../../explainer-kit/scripts/bundle.mjs';
 import { runRecord } from '../../explainer-kit/scripts/record.mjs';
 import { checkTerminalOutcome } from '../../oat-explainer-kit/scripts/check-terminal-outcome.mjs';
+import { consumePersistedRecapIntent } from '../scripts/consume-persisted-recap-intent.mjs';
 
 const route = new URL('../SKILL.md', import.meta.url);
 const guardScript = new URL(
@@ -277,6 +278,61 @@ test('project completion requires evidence for skip failed_attempt', async () =>
   }
 });
 
+test('completion re-reads persisted skip intent and suppresses generation', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'recap-persisted-skip-'));
+  try {
+    const statePath = join(root, 'state.md');
+    let generateCount = 0;
+    for (const source of ['interactive', 'failed_attempt']) {
+      await writeFile(
+        statePath,
+        `---\noat_project_recap:\n  decision: skip\n  source: ${source}\n  decided_at: '2026-09-11T14:45:00.000Z'\n---\n`,
+      );
+      const result = await consumePersistedRecapIntent({
+        statePath,
+        generate: async () => {
+          generateCount += 1;
+        },
+      });
+      assert.equal(result.decision, 'skip');
+      assert.equal(result.source, source);
+      assert.equal(result.generated, false);
+      assert.deepEqual(result.suppressed, [
+        'manifest-discovery',
+        'bundle',
+        'authoring',
+      ]);
+    }
+    assert.equal(generateCount, 0);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('completion consumes the persisted generate intent as accepted control', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'recap-persisted-generate-'));
+  try {
+    const statePath = join(root, 'state.md');
+    await writeFile(
+      statePath,
+      "---\noat_project_recap:\n  decision: generate\n  source: interactive\n  decided_at: '2026-09-11T14:45:00.000Z'\n---\n",
+    );
+    let generateCount = 0;
+    const result = await consumePersistedRecapIntent({
+      statePath,
+      generate: async () => {
+        generateCount += 1;
+        return 'run-root';
+      },
+    });
+    assert.equal(generateCount, 1);
+    assert.equal(result.generated, true);
+    assert.equal(result.value, 'run-root');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('project completion invokes the shared guard before lifecycle mutation', async () => {
   const guidance = await readFile(route, 'utf8');
   const guard = guidance.indexOf('scripts/check-terminal-outcome.mjs');
@@ -286,6 +342,6 @@ test('project completion invokes the shared guard before lifecycle mutation', as
   assert.ok(mutation > guard);
   assert.match(
     guidance.slice(guard, mutation),
-    /built-durable.*built-not-durable.*built-needs-review.*failed/s,
+    /`built`.*`built-needs-review`.*`failed`.*`incomplete`/s,
   );
 });

@@ -23,7 +23,7 @@ function completionRetryError(message) {
 }
 
 function parseArguments(argv) {
-  const result = { evidencePaths: [] };
+  const result = {};
   for (let index = 0; index < argv.length; index += 2) {
     const flag = argv[index];
     const value = argv[index + 1];
@@ -33,7 +33,6 @@ function parseArguments(argv) {
     if (flag === '--project-path') result.projectPath = value;
     else if (flag === '--retained-ref') result.retainedRef = value;
     else if (flag === '--pr-artifact') result.prArtifactPath = value;
-    else if (flag === '--evidence-path') result.evidencePaths.push(value);
     else if (flag === '--remote') result.remote = value;
     else throw completionRetryError(`Unsupported argument: ${flag}.`);
   }

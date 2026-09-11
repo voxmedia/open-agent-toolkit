@@ -47,6 +47,7 @@ ACTIVE_PROJECT_PATH="$PROJECT_PATH"
 
 # Set SKILL_DIR to the absolute directory containing this loaded SKILL.md.
 COMPLETION_RECEIPT_SCRIPT="$SKILL_DIR/scripts/recover-completion-receipts.mjs"
+RECAP_INTENT_CONSUMER="$SKILL_DIR/scripts/consume-persisted-recap-intent.mjs"
 COMPLETION_RETRY_SCRIPT="$SKILL_DIR/scripts/resolve-completion-retry.mjs"
 COMPLETION_RETRY_FIELDS_SCRIPT="$SKILL_DIR/scripts/parse-completion-retry-fields.mjs"
 NONARCHIVE_LIFECYCLE_RECEIPT_SCRIPT="$SKILL_DIR/scripts/validate-nonarchive-lifecycle-receipt.mjs"
@@ -57,6 +58,10 @@ SYNCED_ARCHIVE_FINALIZE_SCRIPT="$SKILL_DIR/scripts/finalize-synced-archive.mjs"
 DURABLE_ARCHIVE_RECEIPT_SCRIPT="$SKILL_DIR/scripts/validate-durable-archive-receipt.mjs"
 test -f "$COMPLETION_RECEIPT_SCRIPT" || {
   echo "oat: completion receipt recovery script is missing" >&2
+  exit 1
+}
+test -f "$RECAP_INTENT_CONSUMER" || {
+  echo "oat: persisted recap intent consumer is missing" >&2
   exit 1
 }
 test -f "$COMPLETION_RETRY_SCRIPT" || {
@@ -533,87 +538,79 @@ When `SHOULD_GENERATE_RETRO="false"`, do not dispatch the skill.
 Run this gate after the optional summary refresh and before any lifecycle
 mutation. Initialize `SELECTED_PROJECT_RECAP_RUN=""`.
 
-When `SHOULD_GENERATE_RECAP="true"`, inspect manifests under
-`{PROJECT_PATH}/explainers/` before generating. A fresh `project-recap` manifest for the current completed implementation is reused without invoking the adapter again. Fresh means the manifest identifies recipe `project-recap`, belongs to this project, has a terminal outcome, and its recorded source hashes match the current approved implementation inputs, including the refreshed summary when present.
+First re-read the persisted `oat_project_recap` record from
+`"$PROJECT_PATH/state.md"` through
+`scripts/consume-persisted-recap-intent.mjs`. This executable read is
+authoritative even when an earlier in-memory resolution set
+`SHOULD_GENERATE_RECAP`. A persisted `skip`, including
+`skip/failed_attempt`, suppresses all manifest discovery, bundle, and authoring
+work. Leave `SELECTED_PROJECT_RECAP_RUN` empty and invoke the terminal-outcome
+guard with `--intent skip` and the persisted source as `--skip-reason`. For
+`failed_attempt`, also pass the failed or incomplete `manifest.json`, or the
+flow's `failure.json`.
 
-If no fresh recap exists, probe seam availability before invoking the adapter.
-Call `oat-explainer-kit/scripts/probe-recap-seams.mjs#probeRecapSeams` in
-`mode: unattended` with the exact seam inputs this step would pass. The probe is
-pure and covers all five required seams — author, fact critic, browser session,
-visual critic, and set planner — so a host missing only the set planner is
-detected here instead of at the adapter's `E_SET_PLANNER_REQUIRED`. When
-`OAT_AUTONOMOUS=1`, pass the result to autonomous intent resolution as
-`seamProbe`. The resolver accepts a `seamProbe` only for autonomous
-`projectRecap`, so an interactive completion keeps the decision recorded at the
-batched prompt and does not pass one.
+```bash
+RECAP_CONSUMPTION=$(node "$RECAP_INTENT_CONSUMER" \
+  "$PROJECT_PATH/state.md") || exit 1
+RECAP_CONSUMPTION_FIELDS=$(node -e '
+const value = JSON.parse(process.argv[1]);
+if (!["generate", "skip"].includes(value.decision)) process.exit(1);
+if (value.decision === "skip" && (value.generated !== false ||
+    !value.suppressed.includes("bundle") ||
+    !value.suppressed.includes("authoring"))) process.exit(1);
+process.stdout.write(`${value.decision}\t${value.source}`);
+' "$RECAP_CONSUMPTION") || exit 1
+IFS=$'\t' read -r PERSISTED_RECAP_DECISION PERSISTED_RECAP_SOURCE \
+  <<< "$RECAP_CONSUMPTION_FIELDS"
+```
 
-In autonomy, a probe result of `seams-unavailable` means no provider is
-configured for a required seam. Autonomous resolution then returns a recordable
-`skip` with source `capability_probe`: record it with the warning, leave
-`SELECTED_PROJECT_RECAP_RUN` empty, and complete without a recap. That
-probe-driven skip record supersedes the intent resolved and persisted earlier in
-this run for the remainder of the run: persist it through the same
-`oat-explainer-kit` intent-persistence helper with a freshly captured state hash,
-treat any `SHOULD_GENERATE_RECAP="true"` set from the earlier resolution as
-stale, and pass the skip — not the earlier `generate` — to the terminal-outcome
-guard as `--intent skip --skip-reason capability_probe`. Passing the superseded
-`generate` with no manifest raises `E_RECAP_OUTCOME` and blocks completion,
-which is the exact failure this gate exists to prevent. An interactive
-completion is unchanged: the decision recorded at the batched prompt governs, a
-recorded `generate` still attempts the recap, and a run that fails for a missing
-seam is still the `failed` outcome it is today. A probe result
-of `seams-invalid` means a seam is supplied but violates a resolution rule:
-report the configuration error and fail closed. Never convert a
-configured-but-invalid seam, or a run that failed after a passing probe, into a
-skip; that run stays `failed`.
+For a persisted `generate`, inspect manifests under
+`{PROJECT_PATH}/explainers/` before generating. Reuse a fresh satisfied
+`project-recap` package without invoking the adapter. Fresh means the manifest
+identifies recipe `project-recap`, belongs to this project, has outcome `built`
+or `built-needs-review`, passes the complete package guard, and its input hashes
+match the current approved implementation inputs, including the refreshed
+summary when present.
 
-In autonomy, attempt the adapter run exactly once and only when the probe resolves every seam; an interactive `generate` still attempts the run regardless of the probe result, and a seam-less interactive attempt is still the `failed` outcome it is today. The autonomy gate and the interactive rule are two separate rules and are never read as one.
+If no fresh package exists, invoke the `oat-explainer-kit` adapter's § Generate
+with recipe `project-recap`, project invocation, the active project, and
+`mode: unattended`. Run the installed core check, resolve inputs, theme, and
+output root, then perform `bundle` → host-agent authoring → `verify` → `record`.
+Lifecycle generation never prompts. Use the first available browser rung; a
+missing browser becomes `built-needs-review`, not a skip or block.
 
-When the gate above allows the attempt, invoke `scripts/run.mjs#runOatExplainer` exactly once with recipe `project-recap`, project invocation, the active project, and unattended lifecycle mode so approved OAT artifacts do not trigger a second content prompt. A returned `failed` outcome warns but does not block completion. An invocation that returns no terminal outcome blocks lifecycle mutation. Use a returned valid terminal `project-recap` manifest as the selected run; do not rerun to improve its outcome.
-Before that invocation, construct exactly one brief-aware, provider-neutral
-author seam as documented by
-`oat-explainer-kit/references/author-callback.md`. In-process callers pass
-`author`; JSON/CLI callers pass a validated `authorModulePath`. Supply it
-alongside the existing `critic` callback (or validated
-`criticModulePath`), and invoke the recap with `mode: unattended`.
+`built` and `built-needs-review` satisfy generation. Set
+`SELECTED_PROJECT_RECAP_RUN` only to that final satisfied project-recap run, as
+the project-relative path `explainers/<run-slug>`. A stale, wrong-project,
+`project-explainer`, `failed`, or `incomplete` manifest is never selected.
 
-The author seam is the recap's quality mechanism, so derive its output from the
-request rather than from ambient context or a stock recap shape. Cover every
-`floor.requiredNarrative` section, ground each claim in the supplied `factBase`,
-and follow the inlined `brief` for structure — evidence tables for the
-implementation and validation sections, at least one high-level architecture
-diagram, and lists where material is enumerable. A recap whose warnings include
-`guideline-narrative-coverage-missing`, `guideline-structured-depth-missing`, or
-`guideline-architecture-diagram-missing` is thin: it still completes, but treat
-those warnings as the signal that the authored content did not use the evidence
-it was given.
+On `failed` or `incomplete`, show the sanitized cause and require an explicit
+retry or skip before lifecycle mutation. Under autonomy, retry once. If that
+retry also fails, persist `skip/failed_attempt` with a fresh state hash and
+re-read it through the executable consumer before continuing. Never silently
+skip a failed attempt.
 
-Set `SELECTED_PROJECT_RECAP_RUN` only to the final selected `project-recap` run. The value must be project-relative in the form `explainers/<run-slug>` so it can be passed safely to the archive CLI. An incomplete, stale, wrong-project, or `project-explainer` manifest is never selected as the final recap.
+Before any lifecycle mutation, invoke
+`oat-explainer-kit/scripts/check-terminal-outcome.mjs` with the persisted
+intent. For `generate`, pass the selected package's canonical `manifest.json`;
+for `skip`, pass the recorded source and any required failed-attempt evidence.
+The outcome vocabulary is `built`, `built-needs-review`, `failed`, and
+`incomplete`: only the first two satisfy generation. Missing packages do not
+satisfy generation.
 
-Before any lifecycle mutation, invoke the shared
-`oat-explainer-kit/scripts/check-terminal-outcome.mjs` guard with the resolved
-intent and, for `generate`, the selected or attempted manifest. The only
-terminal generated outcomes are `built-durable`, `built-not-durable`,
-`built-needs-review`, and `failed`. Missing records and `incomplete` block
-completion; do not substitute a warning or infer an outcome from filesystem
-presence. A `skip` intent requires no manifest; pass its recorded source as
-`--skip-reason` so the receipt states why no recap exists.
+`project-explainer` runs are active-project working artifacts, not
+post-completion reference products. Do not export or add archive-aware PR or
+summary reference links for a `project-explainer` run.
 
-When recap intent resolves to `skip`, leave `SELECTED_PROJECT_RECAP_RUN` empty
-and complete without a recap. This covers both an interactive skip and a
-probe-driven `capability_probe` skip; neither prompts, and neither blocks
-completion. A terminal `failed` recap attempt is recorded as
-a warning rather than changing project completion status.
-
-`project-explainer` runs are active-project working artifacts, not durable post-completion reference products. Do not export, re-attest, or add archive-aware PR or summary reference links for a `project-explainer` run.
-
-For `IS_DURABLE_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`. This is the local scope. A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence. Do not treat local filesystem presence as durability. Shared and synced recaps are exported and attested through the later durability stage.
+For `IS_DURABLE_PROJECT="false"`, never export a tracked project recap and
+never construct or pass `--project-recap-run`. This is the local scope. Do not
+treat local filesystem presence as project durability. Shared and synced recaps
+are exported by the later archive step.
 
 ### Step 3.65: Recover a Recognizable Completion Receipt Before Mutation
 
 Initialize `PROJECT_LINKS_PIN_COMMIT=""`, `PROJECT_REF_COMMIT=""`,
-`EVIDENCE_COMMIT=""`, `RECOVERED_EVIDENCE_COMMIT=""`,
-`EVIDENCE_PUSH_REQUIRED=""`, `PR_DESCRIPTION_RELATIVE_PATH=""`, and
+`PR_DESCRIPTION_RELATIVE_PATH=""`, and
 `COMPLETION_RECEIPTS_RECOVERED="false"`. For a
 synced non-archive run, invoke the skill-owned retry router before the
 project-log probe, seal append, review moves, `complete-state`, active-pointer,
@@ -626,12 +623,6 @@ if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "false" ]]; then
     --project-path "$ACTIVE_PROJECT_PATH"
     --retained-ref "$PROJECT_RETAINED_REF"
   )
-  if [[ -n "$SELECTED_PROJECT_RECAP_RUN" ]]; then
-    COMPLETION_RETRY_ARGS+=(
-      --evidence-path "$SELECTED_PROJECT_RECAP_RUN/manifest.json"
-      --evidence-path "$SELECTED_PROJECT_RECAP_RUN/build-record.json"
-    )
-  fi
   COMPLETION_RETRY_JSON=$(node "$COMPLETION_RETRY_SCRIPT" \
     "${COMPLETION_RETRY_ARGS[@]}") || exit 1
   COMPLETION_RETRY_FIELDS=$(node "$COMPLETION_RETRY_FIELDS_SCRIPT" \
@@ -640,11 +631,8 @@ if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "false" ]]; then
     <<< "$COMPLETION_RETRY_FIELDS"
   if [[ "$COMPLETION_RETRY_ROUTE" == "recovery" ]]; then
     IFS=$'\t' read -r COMPLETION_RETRY_ROUTE PROJECT_LINKS_PIN_COMMIT \
-      PROJECT_REF_COMMIT RECOVERED_EVIDENCE_COMMIT EVIDENCE_PUSH_REQUIRED \
-      PR_DESCRIPTION_RELATIVE_PATH <<< "$COMPLETION_RETRY_FIELDS"
-    if [[ "$RECOVERED_EVIDENCE_COMMIT" != "-" ]]; then
-      EVIDENCE_COMMIT="$RECOVERED_EVIDENCE_COMMIT"
-    fi
+      PROJECT_REF_COMMIT PR_DESCRIPTION_RELATIVE_PATH \
+      <<< "$COMPLETION_RETRY_FIELDS"
     PR_DESCRIPTION_PATH="$ACTIVE_PROJECT_PATH/$PR_DESCRIPTION_RELATIVE_PATH"
     COMPLETION_RECEIPTS_RECOVERED="true"
   elif [[ "$COMPLETION_RETRY_ROUTE" == "pin-source" ]]; then
@@ -917,8 +905,8 @@ the PR artifact → project-ref pin-source push → project archive → render
 `oat project links --durable-summary <path>` → update the open PR body. When
 archive is declined, it is: finalize → generate the PR artifact →
 project-ref pin-source push → render the final links → final artifact push →
-exact discovery-record commit → optional active-recap evidence commit and
-project push.
+exact discovery-record commit. The recap already travels in the final project
+reference push.
 
 The CLI command owns both the frontmatter completion fields and the canonical markdown body updates for `state.md`.
 It must set `oat_lifecycle: complete`, completion timestamps, `**Status:** Complete`, `**Last Updated:**`, the canonical `## Current Phase` body, normalized `## Progress`, and `## Next Milestone`.
@@ -1023,9 +1011,9 @@ artifact write. This receipt is the immutable pin source used when Step 8.6
 renders the final links. Keep it separate from the final non-archive artifact
 receipt:
 
-Preserve `PROJECT_LINKS_PIN_COMMIT`, `PROJECT_REF_COMMIT`, `EVIDENCE_COMMIT`,
-and `EVIDENCE_PUSH_REQUIRED` when the Step 3.65 router restored them. A
-`pin-source` route skips this step entirely and resumes at Step 8.6. Do not
+Preserve `PROJECT_LINKS_PIN_COMMIT` and `PROJECT_REF_COMMIT` when the Step 3.65
+router restored them. A `pin-source` route skips this step entirely and resumes
+at Step 8.6. Do not
 initialize over a recovered value or run a second candidate-routing branch at
 this step. The pre-mutation router owns candidate detection, exact PR-artifact
 selection, pin-source retry validation, and `recoverCompletionReceipts`; its
@@ -1033,10 +1021,9 @@ read-only recovery must have validated the applicable receipt chain before
 returning a receipt:
 
 - a clean synced checkout and the retained local ref;
-- the exact final-artifact and optional evidence subjects;
-- exactly the PR-description path in the final-artifact commit and exactly the
-  two supplied recap record paths in an evidence commit;
-- single-parent pin-source → final-artifact → optional evidence ordering, with
+- the exact final-artifact subject;
+- exactly the PR-description path in the final-artifact commit;
+- single-parent pin-source → final-artifact ordering, with
   the pin source subject equal to the preliminary push message below;
 - canonical `state.md` lifecycle fields in the pin-source tree, including
   `oat_lifecycle: complete` and equal valid UTC completion/update timestamps;
@@ -1044,63 +1031,17 @@ returning a receipt:
   canonical `oat-project-complete` completion seal; an absent log remains the
   supported inert project-log configuration from Step 3.7;
 - exactly one well-ordered links block pinned to the pin-source parent; and
-- either equal local/remote final-artifact receipts, equal local/remote evidence
-  receipts, or the one allowed unpublished-evidence state where checkout HEAD
-  is the exact evidence child while both retained refs remain at its exact
-  final-artifact parent.
+- equal local and remote final-artifact receipts.
 
 Restore the returned `projectLinksPinCommit` as
-`PROJECT_LINKS_PIN_COMMIT`, `projectRefCommit` as `PROJECT_REF_COMMIT`, and a
-non-null `evidenceCommit` as `EVIDENCE_COMMIT`. Any candidate with a malformed
+`PROJECT_LINKS_PIN_COMMIT` and `projectRefCommit` as `PROJECT_REF_COMMIT`. Any
+candidate with a malformed
 subject, path set, parent, links block, retained ref, or local/remote relation
 fails closed. Do not fall through to a new pin-source publication after a
 partial or contradictory candidate. This retry recognition is valid whether
 the parent discovery record is still active or already complete.
 
-Build the recovery arguments only for post-push revalidation of an unpublished
-evidence receipt:
-
-```bash
-RECOVERY_ARGS=(
-  --project-path "$ACTIVE_PROJECT_PATH"
-  --retained-ref "$PROJECT_RETAINED_REF"
-  --pr-artifact "$PR_DESCRIPTION_RELATIVE_PATH"
-)
-if [[ -n "$SELECTED_PROJECT_RECAP_RUN" ]]; then
-  RECOVERY_ARGS+=(
-    --evidence-path "$SELECTED_PROJECT_RECAP_RUN/manifest.json"
-    --evidence-path "$SELECTED_PROJECT_RECAP_RUN/build-record.json"
-  )
-fi
-
-parse_completion_receipts() {
-  node -e '
-const value = JSON.parse(process.argv[1]);
-const sha = /^[0-9a-f]{40}$/;
-if (value.status !== "recovered" || !sha.test(value.projectLinksPinCommit) || !sha.test(value.projectRefCommit)) process.exit(1);
-if (value.evidenceCommit !== null && !sha.test(value.evidenceCommit)) process.exit(1);
-if (typeof value.evidencePushRequired !== "boolean") process.exit(1);
-process.stdout.write([
-  value.projectLinksPinCommit,
-  value.projectRefCommit,
-  value.evidenceCommit ?? "-",
-  String(value.evidencePushRequired),
-].join("\t"));
-' "$1"
-}
-
-```
-
-Use this block only after the Step 3.65 router restored a candidate. Require
-`EVIDENCE_PUSH_REQUIRED` to be `true` or `false`; no other output is accepted.
-
-When the recovery result reports `evidencePushRequired: true`, publish the
-existing checkout HEAD with `oat project push "$PROJECT_PATH" --json` before
-continuing. Require `status: "pushed"` or `status: "up-to-date"`, the same
-retained ref, and a receipt SHA exactly equal to `EVIDENCE_COMMIT`. This push
-must not create a commit, rerender the PR artifact, or rewrite any receipt.
-Re-run the recovery surface after the push and require the exact same pin,
-final-artifact, and evidence SHAs with `evidencePushRequired: false`.
+Parse synced push receipts with:
 
 ```bash
 parse_synced_push_receipt() {
@@ -1111,30 +1052,6 @@ if (!/^[0-9a-f]{40}$/.test(value.sha) || typeof value.ref !== "string") process.
 process.stdout.write(`${value.ref}\t${value.sha}`);
 ' "$1"
 }
-
-if [[ "$EVIDENCE_PUSH_REQUIRED" == "true" ]]; then
-  RECOVERED_EVIDENCE_PUSH_OUTPUT=$(oat project push \
-    "$PROJECT_PATH" --json) || exit 1
-  RECOVERED_EVIDENCE_PUSH_FIELDS=$( \
-    parse_synced_push_receipt "$RECOVERED_EVIDENCE_PUSH_OUTPUT"
-  ) || exit 1
-  IFS=$'\t' read -r RECOVERED_PUSH_REF RECOVERED_PUSH_SHA \
-    <<< "$RECOVERED_EVIDENCE_PUSH_FIELDS"
-  test "$RECOVERED_PUSH_REF" = "$PROJECT_RETAINED_REF" || exit 1
-  test "$RECOVERED_PUSH_SHA" = "$EVIDENCE_COMMIT" || exit 1
-  PUBLISHED_RECOVERY_JSON=$(node "$COMPLETION_RECEIPT_SCRIPT" \
-    "${RECOVERY_ARGS[@]}") || exit 1
-  PUBLISHED_RECOVERY_FIELDS=$( \
-    parse_completion_receipts "$PUBLISHED_RECOVERY_JSON"
-  ) || exit 1
-  IFS=$'\t' read -r PUBLISHED_PIN_COMMIT PUBLISHED_REF_COMMIT \
-    PUBLISHED_EVIDENCE_COMMIT PUBLISHED_EVIDENCE_PUSH_REQUIRED \
-    <<< "$PUBLISHED_RECOVERY_FIELDS"
-  test "$PUBLISHED_PIN_COMMIT" = "$PROJECT_LINKS_PIN_COMMIT" || exit 1
-  test "$PUBLISHED_REF_COMMIT" = "$PROJECT_REF_COMMIT" || exit 1
-  test "$PUBLISHED_EVIDENCE_COMMIT" = "$EVIDENCE_COMMIT" || exit 1
-  test "$PUBLISHED_EVIDENCE_PUSH_REQUIRED" = "false" || exit 1
-fi
 ```
 
 When retry recognition did not set `PROJECT_REF_COMMIT`, publish the pin
@@ -1163,10 +1080,9 @@ write.
 
 Both configured and interactive archive-decline paths continue from this exact
 pin-source receipt into Step 8.6. The later final artifact receipt and exact
-parent-branch record commit finish the non-archive transaction when no recap is
-selected. With a selected recap, the evidence commit in Step 10.6 must remain
-the immediate child of the final artifact receipt, never the preliminary pin
-source.
+parent-branch record commit finish the non-archive transaction. A selected
+recap is already part of the project-ref content and requires no second
+completion commit.
 
 ### Step 8: Archive Project (Conditional)
 
@@ -1372,19 +1288,15 @@ byte-for-byte unchanged. The retained project ref remains the artifact
 authority after non-archive completion. Do not remove the checkout, delete the
 ref, create archive exports, or set `PROJECT_PATH` to an archive location.
 
-When `SELECTED_PROJECT_RECAP_RUN is empty`, the final artifact push plus exact
-record commit completes this transaction. When
-`SELECTED_PROJECT_RECAP_RUN is non-empty`, Steps 10.5 and 10.6 additionally
-attest the active recap within the project-ref history.
+The final artifact push plus exact record commit completes this transaction,
+whether or not `SELECTED_PROJECT_RECAP_RUN` is empty.
 
 On retry, accept an already-complete record only after its exact-path commit is
 verified and the final artifact push receipt still names the retained ref SHA.
 If the final artifact push succeeded but the record commit did not, reuse the
 validated `PROJECT_LINKS_PIN_COMMIT` and `PROJECT_REF_COMMIT` receipts and retry
-only the record write/commit. If the record commit succeeded but recap evidence
-did not, reuse both receipts and retry only recap finalization. Never create a
-second lifecycle record commit, rerender the links against the final receipt,
-or rewrite either history.
+only the record write/commit. Never create a second lifecycle record commit,
+rerender the links against the final receipt, or rewrite either history.
 
 ### Step 9: Regenerate Dashboard
 
@@ -1396,9 +1308,9 @@ oat state refresh
 
 ### Step 10: Commit + Push Bookkeeping (Required)
 
-Completion is not done until lifecycle changes are committed. This commit also
-anchors commit durability for a selected durable-project recap. Do not push yet
-when recap attestation is pending.
+Completion is not done until lifecycle changes are committed and pushed. The
+archive export made in Step 8 is the durable recap copy; there is no later recap
+record commit.
 
 Expected changes may include:
 
@@ -1454,166 +1366,20 @@ Rules:
   cross-project receipts, and non-ancestor commits fail closed. Validate both
   recovered and freshly created lifecycle commit SHAs before continuing; a
   failed commit or hook must not reuse the prior `HEAD` as a receipt.
-- The lifecycle bookkeeping commit is the artifact commit for final recap
-  durability. It must contain the final run's immutable paths.
-- Snapshot unrelated working-tree changes before finalization so the shared
-  finalizer can verify they remain unchanged.
-
-### Step 10.5: Re-attest Final Project Recap
-
-Skip when no final recap was selected, for local-scope projects, when the
-selected recap is already durable solely through independently verified publish
-evidence, or when Step 7.5 or the synced archive-resume executor restored an
-exact `EVIDENCE_COMMIT`. In the recovered evidence case, the recovery primitive
-has already verified the selected run's manifest and build record as the two
-exact paths in that commit, with `LIFECYCLE_COMMIT` as its immediate parent.
-Continue without re-attesting or rewriting either record.
-
-For an archived recap, consume the exact `projectRecapExport` values recorded
-in Step 8. Plan finalization through
-`oat-explainer-kit/scripts/finalize-tracked-run.mjs#planTrackedRunFinalization`
-with:
-
-- `runRoot`: `projectRecapExport.exportRoot`;
-- `manifestPath`:
-  `projectRecapExport.exportRoot/projectRecapExport.manifest.relativePath`;
-- commitMode: `completion-bookkeeping`;
-- relocatedFrom: `sourceRunRoot`; and
-- context `artifactCommit`: the full `LIFECYCLE_COMMIT` SHA.
-
-For a durable project that was not archived, use the selected active run and
-omit `relocatedFrom`, but keep the same `completion-bookkeeping` mode. Resolve
-the finalizer repository root as `ACTIVE_PROJECT_PATH`, not the parent
-checkout. Use `PROJECT_REF_COMMIT`, not the parent-branch `LIFECYCLE_COMMIT`,
-as the active recap artifact commit. Its immutable paths must be present in
-that exact project-ref commit. The parent record commit is separate durability
-evidence for discovery and must never be substituted into the project-ref
-history.
-
-When the finalization plan is `complete` with `built-needs-review` or `failed`,
-preserve that exact outcome and skip both attestation and the evidence commit.
-These evidence-only plans are already complete for lifecycle retention and
-remain unpublishable. Call `verifyTrackedRunFinalization(...)` on the complete
-plan; it must not promote either outcome to `built-durable`.
-
-For archive completion, the lifecycle bookkeeping commit is the artifact
-commit. For non-archive synced completion, `PROJECT_REF_COMMIT` is the artifact
-commit. Call the compatible
-core's `recordDurability(...)` with the finalizer's planned request. Submit only immutable paths under `projectRecapExport.exportRoot` as commit evidence for an archived recap; `manifest.json` and `build-record.json` are mutable records and
-must not appear in that evidence path list. The successful exported-path
-attestation supersedes the prior active-path evidence. Verify the resulting
-manifest records the old evidence in `supersedes` and reports the final
-tracked export path.
-
-Never submit the gitignored archive path as commit evidence. Local archive
-presence cannot make a recap durable.
-
-A failed exported recap attestation does not fail project completion. Preserve
-the tracked export, report `built-not-durable`, retain actionable recovery
-details, and continue to the evidence commit.
-
-### Step 10.6: Commit Evidence + Push
-
-When Step 10.5 ran and neither Step 7.5 nor the synced archive-resume executor
-restored `EVIDENCE_COMMIT`, create the evidence update. Commit only the exported `manifest.json` and `build-record.json` as the evidence update, including warning-bearing records from a failed attestation. On failure, commit the warning-bearing `manifest.json` and `build-record.json`. Run
-`verifyTrackedRunFinalization(...)` with the artifact commit, immediate evidence
-commit parent/order, exact evidence paths, attestation outcome, and unchanged
-unrelated-change snapshots.
-
-Archive completion is exactly two commits when recap attestation runs:
-
-1. lifecycle bookkeeping, including the tracked recap export; then
-2. final recap evidence records.
-
-Push once after both commits exist so they travel together. If no attestation
-ran, push the lifecycle bookkeeping commit once. If verification detects
-contamination or wrong commit order, do not push. If push fails, report the
-failure and do not claim completion is fully recorded.
-
-The evidence update remains a direct, exact-path Git commit. Stage only the
-reported exported `manifest.json` and `build-record.json` under tracked
-`.oat/repo/reference/project-recaps/`:
-
-```bash
-UNRELATED_STAGED_PATCH_BEFORE=$(git diff --cached --binary)
-git add -- "$EXPORTED_MANIFEST_PATH" "$EXPORTED_BUILD_RECORD_PATH"
-git commit --only -m "chore(oat): attest final project recap" -- \
-  "$EXPORTED_MANIFEST_PATH" "$EXPORTED_BUILD_RECORD_PATH"
-EVIDENCE_COMMIT=$(git rev-parse HEAD)
-test "$(git rev-parse "$EVIDENCE_COMMIT^")" = "$LIFECYCLE_COMMIT"
-test "$(git diff --cached --binary)" = "$UNRELATED_STAGED_PATCH_BEFORE"
-EVIDENCE_PUSH_REQUIRED="true"
-```
-
-Verify the evidence commit contains exactly those two paths, the lifecycle
-commit is its immediate parent, unrelated-change snapshots remain unchanged,
-and then push once. The archive command does not own this evidence transition;
-use the direct exact-path commit above.
-
-For a non-archive synced recap, stage and commit only the active run's reported
-`manifest.json` and `build-record.json` from inside `ACTIVE_PROJECT_PATH`. The
-non-archive recap evidence commit must be the immediate child of
-`PROJECT_REF_COMMIT` in the project checkout. Verify exact commit containment
-and the unchanged unrelated-state snapshot, then publish the evidence commit
-with `oat project push`, retaining the custom ref and checkout. Require the
-push receipt SHA to equal the evidence commit. Recovery reuses the existing
-project-ref artifact commit and parent-branch record commit; it never moves
-active recap files into archive-export paths.
-
-Use the same path-confined commit inside the synced checkout:
-
-```bash
-ACTIVE_MANIFEST_RELATIVE_PATH="$SELECTED_PROJECT_RECAP_RUN/manifest.json"
-ACTIVE_BUILD_RECORD_RELATIVE_PATH="$SELECTED_PROJECT_RECAP_RUN/build-record.json"
-UNRELATED_PROJECT_STAGE_BEFORE=$(git -C "$ACTIVE_PROJECT_PATH" diff --cached --binary)
-git -C "$ACTIVE_PROJECT_PATH" add -- \
-  "$ACTIVE_MANIFEST_RELATIVE_PATH" "$ACTIVE_BUILD_RECORD_RELATIVE_PATH"
-git -C "$ACTIVE_PROJECT_PATH" commit --only \
-  -m "chore(oat): attest final project recap" -- \
-  "$ACTIVE_MANIFEST_RELATIVE_PATH" "$ACTIVE_BUILD_RECORD_RELATIVE_PATH"
-EVIDENCE_COMMIT=$(git -C "$ACTIVE_PROJECT_PATH" rev-parse HEAD)
-test "$(git -C "$ACTIVE_PROJECT_PATH" rev-parse "$EVIDENCE_COMMIT^")" = \
-  "$PROJECT_REF_COMMIT"
-test "$(git -C "$ACTIVE_PROJECT_PATH" diff --cached --binary)" = \
-  "$UNRELATED_PROJECT_STAGE_BEFORE"
-```
-
-When Step 7.5 restored `EVIDENCE_COMMIT` for a non-archive completion, do not
-stage or commit recap records again. Require the retained remote ref to equal
-that exact evidence SHA, keep its immediate parent equal to
-`PROJECT_REF_COMMIT`, and preserve the recovered `PROJECT_LINKS_PIN_COMMIT`.
-When the synced archive-resume executor restored `EVIDENCE_COMMIT`, likewise do
-not re-attest, stage, or commit: it already required the evidence commit to
-change exactly `EXPORTED_MANIFEST_PATH` and `EXPORTED_BUILD_RECORD_PATH`, with
-`LIFECYCLE_COMMIT` as its immediate parent. Its `EVIDENCE_PUSH_REQUIRED`
-receipt determines whether the one parent-branch push remains pending. All
-unrelated staged-state snapshots must remain byte-for-byte unchanged.
+- The lifecycle bookkeeping commit must contain the tracked recap export when
+  one was selected.
+- Snapshot unrelated working-tree changes and verify they remain unchanged.
 
 For every synced archive completion, including `SYNCED_ARCHIVE_RESUME="true"`,
-push the parent branch exactly once after the lifecycle receipt and any recap
-evidence commit are final. Verify the pushed upstream contains the exact final
-bookkeeping commit before continuing to PR closeout or claiming completion:
+push the parent branch exactly once after the lifecycle receipt is final.
+Verify the pushed upstream contains that exact bookkeeping commit before
+continuing to PR closeout or claiming completion:
 
 ```bash
 if [[ "$PROJECT_SCOPE" == "synced" && "$SHOULD_ARCHIVE" == "true" ]]; then
-  BOOKKEEPING_PUSH_COMMIT="${EVIDENCE_COMMIT:-$LIFECYCLE_COMMIT}"
+  BOOKKEEPING_PUSH_COMMIT="$LIFECYCLE_COMMIT"
   test -n "$BOOKKEEPING_PUSH_COMMIT" || exit 1
-  git merge-base --is-ancestor "$LIFECYCLE_COMMIT" \
-    "$BOOKKEEPING_PUSH_COMMIT" || exit 1
-  if [[ -n "$EVIDENCE_COMMIT" ]]; then
-    test "$(git rev-parse "$EVIDENCE_COMMIT^")" = \
-      "$LIFECYCLE_COMMIT" || exit 1
-    if [[ "$EVIDENCE_PUSH_REQUIRED" != "true" && \
-      "$EVIDENCE_PUSH_REQUIRED" != "false" ]]; then
-      exit 1
-    fi
-    case "$EVIDENCE_PUSH_REQUIRED" in
-      true) git push || exit 1 ;;
-      false) echo "Reusing published recap evidence receipt: $EVIDENCE_COMMIT" ;;
-    esac
-  else
-    git push || exit 1
-  fi
+  git push || exit 1
   BOOKKEEPING_UPSTREAM=$(git rev-parse --abbrev-ref \
     --symbolic-full-name '@{u}') || exit 1
   BOOKKEEPING_UPSTREAM_COMMIT=$(git rev-parse \
@@ -1636,7 +1402,7 @@ Steps:
 1. Locate the PR description artifact at `{PROJECT_PATH}/pr/project-pr-*.md`.
 2. Write the stripped body to a temporary file (remove all lines from the opening `---` through the closing `---`, inclusive).
 3. Verify the temp file does not start with YAML frontmatter keys.
-4. Create the PR from the branch already pushed in Step 10.6:
+4. Create the PR from the branch already pushed in Step 10:
 
 ```bash
 gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
@@ -1656,7 +1422,7 @@ body to the existing PR. Archive completion uses the regenerated archive-aware
 body. Non-archive synced completion uses the exact PR artifact from
 `PROJECT_REF_COMMIT`, whose canonical links block is owned by
 `PROJECT_LINKS_PIN_COMMIT`; do not substitute the parent discovery-record
-commit or the optional evidence child.
+commit.
 
 Skip this step when:
 
@@ -1716,7 +1482,7 @@ Failure handling:
   Step 12 clears the pointer after the receipt validates and the user updates
   the tracked PR by hand from the printed artifact path.
 - Never re-archive or re-commit on failure here — the lifecycle bookkeeping
-  and any recap evidence update in Step 10.6 already shipped.
+  in Step 10 already shipped.
 
 ### Step 12: Confirm to User
 
@@ -1755,11 +1521,8 @@ Show user:
 - "Project **{PROJECT_NAME}** marked as complete."
 - If archived: "Archived location: **{PROJECT_PATH}**"
 - If S3 archive sync ran: include `ARCHIVE_S3_CONTEXT` when the archive command reported profile/region details. If only `ARCHIVE_S3_PATH` is available, include the S3 destination and note that profile/region context was not reported by the command. Never echo raw credentials (`AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, etc.).
-- Include both lifecycle bookkeeping and recap evidence commit hashes when
-  attestation ran, plus the single push result.
-- Report the final recap outcome and tracked reference root. A failed
-  attestation is a warning with `built-not-durable`, not a project-completion
-  failure.
+- Include the lifecycle bookkeeping commit hash and the single push result.
+- Report the final recap outcome and tracked reference root.
 - Report every absorbed-project retirement finding from the Step 3.7 sweep with
   its disposition. This is the required destination whenever the sweep could not
   append them to the project log — an absent log, or a resume whose log is

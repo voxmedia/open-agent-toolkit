@@ -7,7 +7,6 @@ const execFileAsync = promisify(execFile);
 
 const PIN_SOURCE_MESSAGE = 'chore(oat): finalize project lifecycle';
 const FINAL_ARTIFACT_MESSAGE = 'chore(oat): publish final project links';
-const EVIDENCE_MESSAGE = 'chore(oat): attest final project recap';
 const LINKS_START = '<!-- oat:project-links:start -->';
 const LINKS_END = '<!-- oat:project-links:end -->';
 const FULL_SHA = /^[0-9a-f]{40}$/;
@@ -89,23 +88,6 @@ async function changedPaths(projectPath, commit) {
     commit,
   ]);
   return output === '' ? [] : output.split('\n').sort();
-}
-
-async function isAncestor(projectPath, ancestor, descendant) {
-  try {
-    await execFileAsync(
-      'git',
-      ['merge-base', '--is-ancestor', ancestor, descendant],
-      { cwd: projectPath, encoding: 'utf8' },
-    );
-    return true;
-  } catch (error) {
-    if (error?.code === 1) return false;
-    const detail = error?.stderr?.trim() || error?.message || String(error);
-    throw completionReceiptError(
-      `git merge-base failed while recovering completion receipts: ${detail}`,
-    );
-  }
 }
 
 async function committedFile(projectPath, commit, path, label) {
@@ -394,7 +376,7 @@ export async function detectCompletionReceiptCandidate({
       'Retained ref must be a canonical OAT project ref.',
     );
   }
-  const receiptSubjects = new Set([FINAL_ARTIFACT_MESSAGE, EVIDENCE_MESSAGE]);
+  const receiptSubjects = new Set([FINAL_ARTIFACT_MESSAGE]);
   const head = await git(projectPath, ['rev-parse', 'HEAD']);
   const retained = await git(
     projectPath,
@@ -528,7 +510,6 @@ export async function recoverCompletionReceipts({
   projectPath,
   retainedRef,
   prArtifactPath,
-  evidencePaths = [],
   remote = 'origin',
 }) {
   if (typeof projectPath !== 'string' || projectPath.length === 0) {
@@ -552,13 +533,6 @@ export async function recoverCompletionReceipts({
       `Project checkout basename must match retained project ${expectedSlug}.`,
     );
   }
-  const exactEvidencePaths = evidencePaths.map((path, index) =>
-    requireRelativeGitPath(path, `Evidence path ${index + 1}`),
-  );
-  if (new Set(exactEvidencePaths).size !== exactEvidencePaths.length) {
-    throw completionReceiptError('Evidence paths must be unique.');
-  }
-
   const status = await git(projectPath, [
     'status',
     '--porcelain=v1',
@@ -594,60 +568,17 @@ export async function recoverCompletionReceipts({
   const expectedRepository = parseGitHubRepository(remoteUrl);
   const localSubject = await commitSubject(projectPath, localCommit);
 
-  let finalArtifactCommit;
-  let evidenceCommit = null;
-  let evidencePushRequired = false;
-
-  if (localSubject === FINAL_ARTIFACT_MESSAGE) {
-    if (
-      localCommit !== remoteCommit ||
-      localRetainedRefCommit !== localCommit
-    ) {
-      throw completionReceiptError(
-        'Final-artifact receipt recovery requires equal checkout, local retained ref, and remote retained ref commits.',
-      );
-    }
-    finalArtifactCommit = localCommit;
-  } else if (localSubject === EVIDENCE_MESSAGE) {
-    if (exactEvidencePaths.length === 0) {
-      throw completionReceiptError(
-        'Recap-evidence receipt recovery requires exact evidence paths.',
-      );
-    }
-    evidenceCommit = localCommit;
-    requireExactPaths(
-      await changedPaths(projectPath, evidenceCommit),
-      exactEvidencePaths,
-      'Recap evidence commit',
-    );
-    finalArtifactCommit = await singleParent(
-      projectPath,
-      evidenceCommit,
-      'Recap evidence commit',
-    );
-    if (remoteCommit === finalArtifactCommit) {
-      if (localRetainedRefCommit !== finalArtifactCommit) {
-        throw completionReceiptError(
-          'Unpublished recap evidence requires the local retained ref to remain at the final-artifact parent.',
-        );
-      }
-      evidencePushRequired = true;
-    } else if (remoteCommit === evidenceCommit) {
-      if (localRetainedRefCommit !== evidenceCommit) {
-        throw completionReceiptError(
-          'Published recap evidence requires equal local and remote retained refs.',
-        );
-      }
-    } else {
-      throw completionReceiptError(
-        'Recap-evidence recovery requires the remote retained ref to equal either the evidence commit or its final-artifact parent.',
-      );
-    }
-  } else {
+  if (localSubject !== FINAL_ARTIFACT_MESSAGE) {
     throw completionReceiptError(
       `HEAD subject ${JSON.stringify(localSubject)} is not an exact completion receipt.`,
     );
   }
+  if (localCommit !== remoteCommit || localRetainedRefCommit !== localCommit) {
+    throw completionReceiptError(
+      'Final-artifact receipt recovery requires equal checkout, local retained ref, and remote retained ref commits.',
+    );
+  }
+  const finalArtifactCommit = localCommit;
 
   if (
     (await commitSubject(projectPath, finalArtifactCommit)) !==
@@ -710,101 +641,6 @@ export async function recoverCompletionReceipts({
     remoteCommit,
     projectLinksPinCommit,
     projectRefCommit: finalArtifactCommit,
-    evidenceCommit,
-    evidencePushRequired,
-  };
-}
-
-export async function recoverArchivedRecapEvidenceReceipt({
-  repoRoot,
-  lifecycleCommit,
-  evidencePaths,
-}) {
-  if (typeof repoRoot !== 'string' || repoRoot.length === 0) {
-    throw completionReceiptError(
-      'Archived recap evidence recovery requires the repository root.',
-    );
-  }
-  if (!FULL_SHA.test(lifecycleCommit ?? '')) {
-    throw completionReceiptError(
-      'Archived recap evidence recovery requires a full lifecycle commit SHA.',
-    );
-  }
-  if (!Array.isArray(evidencePaths) || evidencePaths.length !== 2) {
-    throw completionReceiptError(
-      'Archived recap evidence recovery requires exactly two evidence paths.',
-    );
-  }
-  const exactEvidencePaths = evidencePaths.map((path, index) =>
-    requireRelativeGitPath(path, `Archived evidence path ${index + 1}`),
-  );
-  if (new Set(exactEvidencePaths).size !== exactEvidencePaths.length) {
-    throw completionReceiptError('Archived evidence paths must be unique.');
-  }
-
-  const resolvedLifecycle = await git(repoRoot, [
-    'rev-parse',
-    '--verify',
-    `${lifecycleCommit}^{commit}`,
-  ]);
-  if (resolvedLifecycle !== lifecycleCommit) {
-    throw completionReceiptError(
-      'Archived recap lifecycle receipt does not resolve to the exact commit.',
-    );
-  }
-  const head = await git(repoRoot, ['rev-parse', 'HEAD']);
-  if (head === lifecycleCommit) {
-    return {
-      status: 'none',
-      evidenceCommit: null,
-      evidencePushRequired: false,
-      evidencePaths: exactEvidencePaths,
-    };
-  }
-  if ((await commitSubject(repoRoot, head)) !== EVIDENCE_MESSAGE) {
-    throw completionReceiptError(
-      'Archived recap retry HEAD is neither the lifecycle commit nor the exact evidence commit.',
-    );
-  }
-  if (
-    (await singleParent(repoRoot, head, 'Archived recap evidence commit')) !==
-    lifecycleCommit
-  ) {
-    throw completionReceiptError(
-      'Archived recap evidence commit must be the immediate child of the lifecycle commit.',
-    );
-  }
-  requireExactPaths(
-    await changedPaths(repoRoot, head),
-    exactEvidencePaths,
-    'Archived recap evidence commit',
-  );
-
-  const upstream = await git(
-    repoRoot,
-    ['rev-parse', '--verify', '@{u}^{commit}'],
-    { allowFailure: true },
-  );
-  let evidencePushRequired;
-  if (upstream === head) {
-    evidencePushRequired = false;
-  } else if (
-    upstream === null ||
-    (FULL_SHA.test(upstream) &&
-      (await isAncestor(repoRoot, upstream, lifecycleCommit)))
-  ) {
-    evidencePushRequired = true;
-  } else {
-    throw completionReceiptError(
-      'Archived recap evidence retry requires upstream to equal the evidence commit or remain an ancestor of its lifecycle parent.',
-    );
-  }
-
-  return {
-    status: 'recovered',
-    evidenceCommit: head,
-    evidencePushRequired,
-    evidencePaths: exactEvidencePaths,
   };
 }
 
@@ -815,7 +651,7 @@ function parseBoolean(value, label) {
 }
 
 function parseArguments(argv) {
-  const result = { evidencePaths: [] };
+  const result = {};
   for (let index = 0; index < argv.length; index += 2) {
     const flag = argv[index];
     const value = argv[index + 1];
@@ -825,7 +661,6 @@ function parseArguments(argv) {
     if (flag === '--project-path') result.projectPath = value;
     else if (flag === '--retained-ref') result.retainedRef = value;
     else if (flag === '--pr-artifact') result.prArtifactPath = value;
-    else if (flag === '--evidence-path') result.evidencePaths.push(value);
     else if (flag === '--remote') result.remote = value;
     else if (flag === '--detect-candidate') {
       result.detectCandidate = parseBoolean(value, flag);

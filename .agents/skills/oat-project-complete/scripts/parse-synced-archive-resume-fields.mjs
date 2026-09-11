@@ -13,7 +13,22 @@ function shellQuote(value) {
 export function parseSyncedArchiveResumeFields(result) {
   const continuation = result?.continuation;
   const hasRecapExport = continuation?.projectRecapExport !== null;
+  const allowedContinuationFields = new Set([
+    'required',
+    'rejoinStep',
+    'archivePath',
+    'summaryExportFile',
+    'lifecycleCommit',
+    's3Path',
+    'selectedProjectRecapRun',
+    'projectRecapExport',
+    'exportedManifestPath',
+  ]);
   if (
+    !continuation ||
+    Object.keys(continuation).some(
+      (field) => !allowedContinuationFields.has(field),
+    ) ||
     result?.status !== 'ok' ||
     result?.route !== 'archive-resumed' ||
     result?.terminal !== true ||
@@ -25,21 +40,10 @@ export function parseSyncedArchiveResumeFields(result) {
     continuation.archivePath.length === 0 ||
     typeof continuation.lifecycleCommit !== 'string' ||
     !/^[0-9a-f]{40}$/.test(continuation.lifecycleCommit) ||
-    typeof continuation.evidenceCommit !== 'string' ||
-    (continuation.evidenceCommit !== '' &&
-      !/^[0-9a-f]{40}$/.test(continuation.evidenceCommit)) ||
-    typeof continuation.evidencePushRequired !== 'boolean' ||
-    (continuation.evidenceCommit === '' &&
-      continuation.evidencePushRequired !== false) ||
     (hasRecapExport &&
       (typeof continuation.exportedManifestPath !== 'string' ||
-        continuation.exportedManifestPath.length === 0 ||
-        typeof continuation.exportedBuildRecordPath !== 'string' ||
-        continuation.exportedBuildRecordPath.length === 0)) ||
-    (!hasRecapExport &&
-      (continuation.exportedManifestPath !== '' ||
-        continuation.exportedBuildRecordPath !== '' ||
-        continuation.evidenceCommit !== ''))
+        continuation.exportedManifestPath.length === 0)) ||
+    (!hasRecapExport && continuation.exportedManifestPath !== '')
   ) {
     throw fieldsError(
       'Synced archive resume result has no verified post-archive continuation.',
@@ -59,10 +63,7 @@ export function parseSyncedArchiveResumeFields(result) {
     PROJECT_RECAP_EXPORT_JSON: JSON.stringify(
       continuation.projectRecapExport ?? null,
     ),
-    EVIDENCE_COMMIT: continuation.evidenceCommit,
-    EVIDENCE_PUSH_REQUIRED: String(continuation.evidencePushRequired),
     EXPORTED_MANIFEST_PATH: continuation.exportedManifestPath,
-    EXPORTED_BUILD_RECORD_PATH: continuation.exportedBuildRecordPath,
     PROJECT_REF_COMMIT: '',
     SHOULD_OPEN_PR: 'false',
   };
