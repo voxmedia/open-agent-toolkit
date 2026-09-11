@@ -62,14 +62,14 @@ is asserted.
 
 ## Outcome Snapshot
 
-| Area              | Generation-time outcome                                                                                                                       |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Delivered scope   | 14/14 implementation tasks across five phases                                                                                                 |
-| Product contract  | Per-wave approved routing, manifest v2 only, session-local approval, structured conditional gaps, one terminal reconciliation                 |
-| Verification      | Run 1 gates passed; Run 2 passed 255/255 recon tests, workspace/release/docs gates, and six guard-neutralization controls                     |
-| Reviews           | All phase and final blocking reviews passed; the exit gate passed at the Important threshold with four sub-threshold follow-ups dispositioned |
-| Lifecycle         | Final HiLL and implementation closeout completed; draft PR #285 is open                                                                       |
-| Shipping boundary | PR #285 conflicts with current `main`; merge, issue #274 closure, and backlog closure were not performed                                      |
+| Area              | Generation-time outcome                                                                                                                |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Delivered scope   | 16/17 implementation tasks across five phases; final review reconciliation remains active                                              |
+| Product contract  | Per-wave approved routing, manifest v2 only, session-local approval, structured conditional gaps, one terminal reconciliation          |
+| Verification      | Run 1 gates passed; Run 2 passes 258/258 recon tests, all repository gates, and nine guard-neutralization controls                     |
+| Reviews           | All blocking reviews passed; every sub-threshold finding from the latest passing gate was fixed directly and awaits narrowed re-review |
+| Lifecycle         | Final HiLL and implementation closeout completed; draft PR #285 is open                                                                |
+| Shipping boundary | PR #285 conflicts with current `main`; merge, issue #274 closure, and backlog closure were not performed                               |
 
 ## Current State
 
@@ -250,8 +250,9 @@ The configured exit-gate review
 problems: approval drift cascades into spurious lane/condition errors, semantic
 condition rules are duplicated with divergent codes, and foreign-run inactive
 artifacts are attributed by the wrong validator. Consolidate semantic condition
-validation, emit one owner/code per defect, skip dependent checks when routing is
-unavailable, and add single-axis and one-error-per-defect controls.
+validation, emit one owner/code per defect, continue independent validation when
+routing is unavailable while skipping routing-dependent checks, and add
+single-axis and one-error-per-defect controls.
 
 ### RP-02: Give activated conditional gaps structured lane identity
 

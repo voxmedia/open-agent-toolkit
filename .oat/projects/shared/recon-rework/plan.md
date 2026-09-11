@@ -794,7 +794,9 @@ do not claim model-name capability ranking, and do not close recap or wave-7 ite
 
 ### Task p05-t01: Remove unnecessary approval machinery and close RP-01/RP-02
 
-**Status:** in_progress
+**Status:** completed
+
+**Commit:** `f16437f54491c57f9ad9518c34b415ffb7418a7e`
 
 **Files:**
 
@@ -850,16 +852,20 @@ requirements and prior decision clauses; and correct the packet-contract prose.
 
 **Status:** completed
 
-**Commit:** `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`
+**Commits:** `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`,
+`01a2a92c5e0de817110feea6cd88503636308585`
 
 **Files:**
 
 - Modify: `.agents/skills/recon/scripts/**`
 - Modify: `.agents/skills/recon/tests/**`
 
-**Implement:** Stop dependent lane/condition validation when routing cannot be
-normalized, require every conditional wave to have exactly one activating
-condition, and pin both fixes at pure and packet-validation boundaries.
+**Implement:** When routing cannot be normalized, continue independent source,
+evidence, review, and reconciliation validation while skipping only
+routing-dependent lane/condition checks. Require every eligible conditional wave
+to have exactly one activating condition, give terminal-topology defects one
+diagnostic owner, remove the duplicate missing-approval diagnostic, and pin the
+fixes at pure and packet-validation boundaries.
 
 ### Task p05-t04: Reconcile final-review bookkeeping
 
@@ -869,9 +875,9 @@ condition, and pin both fixes at pure and packet-validation boundaries.
 
 - Modify: `.oat/projects/shared/recon-rework/**`
 
-**Implement:** Receive and archive the final review, record all seven finding
-dispositions, refresh task totals and retrospective closure, and run a narrowed
-final re-review.
+**Implement:** Receive and archive both final reviews, record every finding
+disposition, fix all sub-threshold findings from the passing review, refresh task
+totals and retrospective closure, and run a narrowed final re-review.
 
 ## Reviews
 
@@ -903,7 +909,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | passed          | 2026-09-10 | reviews/archived/final-review-2026-09-10T085115Z.md         | b1c7e84716f65ccf414448f1d2ac7d96d9cac434 | auto       | -                     |
 | final  | code     | passed          | 2026-09-10 | reviews/archived/final-review-2026-09-10T091637Z.md         | ad1d8ae99e43d125e7dd791225c3dc1984e7812f | gate       | cursor-fable-5-1-high |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T014112Z.md         | b1dd2acaf13bbad8ce49c2b472565584e33e08f2 | gate       | cursor-fable-5-1-high |
-| final  | code     | received        | 2026-09-11 | reviews/final-review-2026-09-11T020623Z.md                  | e35342bae80cfbd95d3d393faa94d5d07021adac | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T020623Z.md         | e35342bae80cfbd95d3d393faa94d5d07021adac | gate       | cursor-fable-5-1-high |
 
 ## Implementation Complete
 

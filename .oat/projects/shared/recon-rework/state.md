@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 3d21ea885a557e2642eb4b82cfb32d7a51024ea7
+oat_last_commit: 01a2a92c5e0de817110feea6cd88503636308585
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -112,7 +112,7 @@ Run 2 review fixes complete — narrowed final re-review pending.
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight design aligned with the simplified approval contract.
 - Plan: `plan.md` — complete; 5 sequential phases, 17 tasks.
-- Implementation: `implementation.md` — 17/17 tasks complete; narrowed final re-review pending.
+- Implementation: `implementation.md` — 16/17 tasks complete; narrowed final re-review pending.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
