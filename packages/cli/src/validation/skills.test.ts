@@ -1498,7 +1498,7 @@ describe('validateOatSkills', () => {
     }
   });
 
-  it('keeps the explainer skill family on the trusted browser-session contract', async () => {
+  it('keeps the explainer skill family on the generate contract', async () => {
     const [coreContract, adapterSkill] = await Promise.all([
       readRepoFile(
         '.agents/skills/explainer-kit/scripts/lib/package-coverage.mjs',
@@ -1510,11 +1510,11 @@ describe('validateOatSkills', () => {
     expect(coreContract).toContain(
       'export function validateImmutablePackageEvidence',
     );
-    expect(adapterSkill).toContain('`browserSession`');
-    expect(adapterSkill).toContain('`browserSessionModulePath`');
-    expect(adapterSkill).toMatch(
-      /Bare browser callbacks and caller-authored runtime metadata\s+are rejected/,
+    expect(adapterSkill).toMatch(/^## Generate$/m);
+    expect(adapterSkill).toContain(
+      'Before reading OAT config or preparing a bundle',
     );
+    expect(adapterSkill).toContain('`explainer-kit.manifest/v2`');
   });
 
   it('keeps agent-instructions delta analysis aligned with numbered steps', async () => {

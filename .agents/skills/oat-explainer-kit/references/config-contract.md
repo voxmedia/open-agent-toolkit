@@ -3,41 +3,21 @@
 `oat-explainer-kit` is the OAT-aware boundary around the config-blind
 `explainer-kit` core. The adapter reads each supported stored value with
 `oat config get <key> --json` and preserves its `source` metadata while
-constructing an `explainer-kit.run-request/v1`.
+resolving the theme used by `bundle.mjs`.
 
-## Supported keys
+## Supported explainer defaults
 
-| Key                                    | Stored scopes       | Built-in default |
-| -------------------------------------- | ------------------- | ---------------- |
-| `explainers.defaults.style`            | local, shared, user | `clean-neutral`  |
-| `explainers.defaults.palette`          | local, shared, user | unset            |
-| `explainers.defaults.visualProfile`    | local, shared, user | unset            |
-| `explainers.defaults.themeBundlePath`  | local, shared       | unset            |
-| `explainers.publish.provider`          | shared              | unset            |
-| `explainers.publish.s3Uri`             | shared              | unset            |
-| `explainers.publish.publicBaseUrl`     | shared              | unset            |
-| `explainers.publish.awsRegion`         | shared              | unset            |
-| `explainers.publish.publicAccess`      | shared              | `public`         |
-| `explainers.publish.awsProfile`        | local, user         | unset            |
-| `workflow.explainers.projectExplainer` | local, shared, user | `ask`            |
-| `workflow.explainers.projectRecap`     | local, shared, user | `ask`            |
+| Key                                   | Stored scopes       | Built-in default |
+| ------------------------------------- | ------------------- | ---------------- |
+| `explainers.defaults.style`           | local, shared, user | `clean-neutral`  |
+| `explainers.defaults.palette`         | local, shared, user | unset            |
+| `explainers.defaults.visualProfile`   | local, shared, user | unset            |
+| `explainers.defaults.themeBundlePath` | local, shared       | unset            |
 
-Explicit runtime inputs may override these twelve keys for one invocation. They
-do not write config. Recipe, slug, fact-base path, output root, per-run art
-direction, and private wrapper lanes are invocation inputs rather than config
-keys and are rejected from the runtime config-override map.
-
-## Seams are invocation inputs, not configuration
-
-No supported key names an author, fact critic, browser session, visual critic,
-or set planner. Every seam is supplied per invocation as a callback or a module
-entry point, so seam availability is discovered by
-`scripts/probe-recap-seams.mjs#probeRecapSeams` against the inputs a caller is
-about to pass, not read from stored config. A host on which those inputs are
-absent has no configuration to correct: the probe reports `seams-unavailable`
-and the lifecycle caller records a `skip / capability_probe` recap intent. The
-`workflow.explainers.projectRecap` preference expresses whether a host _wants_
-a recap and cannot make an unavailable seam available.
+Explicit runtime inputs may override these four keys for one invocation. They
+do not write config. Recipe, slug, fact-base path, output root, and art
+direction are invocation inputs rather than config keys and are rejected from
+the runtime config-override map.
 
 ## Source-sensitive paths
 
@@ -51,39 +31,15 @@ The four curated styles are `clean-neutral`, `business-corporate`,
 `navy-ocean`, and `dark-edgy`. A theme bundle path has highest precedence,
 followed by an explicit style. Legacy palette and visual-profile fields remain
 accepted as an advanced compatibility path and produce deprecation warnings.
-When no source explicitly configures any selection, the adapter leaves the
-request theme empty so the core records its visible `clean-neutral` fallback
-warning. The adapter passes a resolved bundle as `theme.suppliedBundlePath`.
-
-## Publish block
-
-`provider`, `s3Uri`, `publicBaseUrl`, and `awsRegion` form one complete publish
-block. If any field is absent, the adapter returns a structured build-only
-report listing every missing field and does not construct publish config.
-`awsProfile` is optional and uses the normal AWS credential chain when absent.
-`publicAccess` accepts `public` or `protected` and defaults to `public`;
-source metadata is retained and the resolved mode is carried explicitly in the
-versioned core publish request. Destination roots are normalized without trailing
-slashes. Lifecycle callers must explicitly select publish durability; complete
-configuration only makes publication available and never authorizes it. The
-existing human gate remains mandatory.
+When no source explicitly configures a selection, the core records its visible
+`clean-neutral` fallback.
 
 ## Canonical output roots
 
-- Active project: `<resolved-project-path>/explainers/`, for both shared and
-  local projects.
-- Non-project OAT run: `.oat/repo/reference/explainers/`.
-- Direct core caller: an explicit `outputRoot`; the OAT adapter does not infer
-  one.
+- Active project: `<resolved-project-path>/explainers/`.
+- Program or repository run: `.oat/repo/reference/explainers/`.
+- Direct core caller: an explicit parent output root.
 
-Derived OAT roots reject traversal and must remain inside their canonical root
-after symlink resolution. The adapter validates all config and paths before the
-core creates output.
-
-## Run-request translation
-
-The adapter emits `explainer-kit.run-request/v1` with the requested recipe,
-slug, fact-base binding, mode, derived output root, resolved theme selection,
-privacy choice, and explicit durability strategy. Publish durability adds a
-complete `explainer-kit.publish-request/v2` whose `siteRoot` and
-`manifestPath` point inside `<outputRoot>/<slug>/`.
+Derived OAT roots reject traversal and remain inside their canonical root after
+symlink resolution. The adapter validates config and paths before the core
+creates output.
