@@ -124,6 +124,10 @@ run-3-final-review-receive-20260911T144641Z The merged-head final review blockin
 
 run-3-final-rereview-pass-20260911T150854Z The narrowed final lifecycle re-review closed both prior Important findings and reported 0 Critical, 0 Important, 0 Medium, and 1 Minor; m1 PR-summary drift was fixed during receipt, so the final review is passed and the configured exit gate may refresh.
 
+### 2026-09-11 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T152512Z.md run=c1c2d64e-b921-4484-8c81-6259fe3e397b
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility
