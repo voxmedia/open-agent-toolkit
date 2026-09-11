@@ -920,7 +920,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | p-rev1 | code     | passed          | 2026-09-11 | reviews/archived/p-rev1-review-2026-09-11T143545Z.md        | 9d27e15a615fc18056a8c5b7501a0508ffb9c4a4 | manual     | -                     |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T144641Z.md         | 0ee34935306c0dcb711ded3f83746a890cb50c97 | auto       | -                     |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T150854Z.md         | 695f4dba72d9fb46ab10a962a08907a6d593f7e3 | auto       | -                     |
-| final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T152512Z.md         | c11f78febec9329642f068ae849059547f924c0a | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T152512Z.md         | c11f78febec9329642f068ae849059547f924c0a | gate       | cursor-fable-5-1-high |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1040,7 +1040,7 @@ Source: configured exit-gate review `final-review-2026-09-11T152512Z.md`
 
 ### Task prev3-t01: (review) Bound singleton wave lanes
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
@@ -1073,7 +1073,7 @@ Commit as `fix(prev3-t01): bound singleton recon wave lanes`.
 
 ### Task prev3-t02: (review) Align adaptive cap contract prose
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
@@ -1104,7 +1104,7 @@ Commit as `docs(prev3-t02): align recon adaptive cap contract`.
 
 ### Task prev3-t03: (review) Clarify adaptive cap preview
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
@@ -1132,8 +1132,8 @@ Commit as `fix(prev3-t03): clarify recon adaptive lane preview`.
 
 ## Implementation Complete
 
-**Implementation tasks complete: 20 of 23 implemented. The configured exit gate
-added three bounded profile-cap correction tasks.**
+**Implementation tasks complete: 23 of 23 implemented. The configured exit-gate
+remediation is complete and awaiting narrowed lifecycle re-review.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1144,7 +1144,7 @@ added three bounded profile-cap correction tasks.**
 - Phase p-rev2: 2 tasks — close merged-head profile and hostile-collection gaps.
 - Phase p-rev3: 3 tasks — bound fixed waves and align cap docs and preview.
 
-**Total: 8 phases, 23 tasks.** Three configured-gate fix tasks remain.
+**Total: 8 phases, 23 tasks.** All implementation tasks are complete.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

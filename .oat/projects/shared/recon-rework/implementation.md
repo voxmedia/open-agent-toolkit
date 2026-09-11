@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
-oat_current_task_id: prev3-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -31,10 +31,10 @@ project for the user-approved post-retro simplification in `p05-t01`.
 | Phase 5: Post-retro simplification         | completed   | 4     | 4/4       |
 | Phase p-rev1: Integrate current main       | completed   | 1     | 1/1       |
 | Phase p-rev2: Merged-head review fixes     | completed   | 2     | 2/2       |
-| Phase p-rev3: Configured-gate cap fixes    | in_progress | 3     | 0/3       |
+| Phase p-rev3: Configured-gate cap fixes    | in_progress | 3     | 3/3       |
 
-**Total:** 20/23 tasks implemented. The configured exit gate added three bounded
-profile-cap correction tasks.
+**Total:** 23/23 tasks implemented. The configured-gate remediation is complete
+and awaiting narrowed lifecycle re-review.
 
 ## Task Status
 
@@ -60,9 +60,9 @@ profile-cap correction tasks.
 | prev1-t01 | Completed: integrate current main               | `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`         |
 | prev2-t01 | Completed: align profile topology caps          | `be329458b7c1f931b4fc5712c1456619484d0e13`         |
 | prev2-t02 | Completed: close hostile manifest collections   | `fc4470be39e49dfc26489bbe5caeabcbc22525ef`         |
-| prev3-t01 | Completed: bound singleton wave lanes           | Task commit recorded by root after phase handoff   |
-| prev3-t02 | Completed: align adaptive cap contract prose    | Task commit recorded by root after phase handoff   |
-| prev3-t03 | Completed: clarify adaptive cap preview         | Task commit recorded by root after phase handoff   |
+| prev3-t01 | Completed: bound singleton wave lanes           | `2ac9578b417e8963a49e48eefd3d9b6fc3f3cfaf`         |
+| prev3-t02 | Completed: align adaptive cap contract prose    | `3bdfaa286519c08749a6cbdb7315546019f40f40`         |
+| prev3-t03 | Completed: clarify adaptive cap preview         | `12b68773a957c4a011a1099027e1b6da3a7f1463`         |
 
 ## Phase 5: Post-retro simplification
 

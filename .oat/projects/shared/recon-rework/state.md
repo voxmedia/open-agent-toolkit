@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev3-t01
-oat_last_commit: 695f4dba72d9fb46ab10a962a08907a6d593f7e3
+oat_current_task: null
+oat_last_commit: 12b68773a957c4a011a1099027e1b6da3a7f1463
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -30,7 +30,7 @@ oat_dispatch_policy:
 oat_skill_gate_overrides:
   oat-project-quick-start: disabled
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324'
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T15:30:00Z'
+oat_project_state_updated: '2026-09-11T15:39:00Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -98,14 +98,14 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** Configured exit-gate remediation is in progress.
+**Status:** Gate remediation complete; narrowed lifecycle re-review pending.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-11
 
 ## Current Phase
 
-Revision p-rev3 - correcting the configured exit gate's one Important, one Medium,
-and one Minor profile-cap findings.
+Revision p-rev3 implementation is complete. Narrowed lifecycle re-review is
+pending before the configured gate's second and final attempt.
 
 ## Artifacts
 
@@ -114,8 +114,8 @@ and one Minor profile-cap findings.
 - Design: `design.md` — lightweight design aligned with the simplified approval contract.
 - Plan: `plan.md` — complete; 5 implementation phases plus three revision phases,
   23 tasks.
-- Implementation: `implementation.md` — 20/23 tasks complete; configured-gate
-  remediation is in progress.
+- Implementation: `implementation.md` — all 23 tasks complete; narrowed lifecycle
+  re-review is pending.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
@@ -131,7 +131,8 @@ No existing project was absorbed or retired.
 - ✓ Revision p-rev1 completed and phase review passed
 - ✓ Revision p-rev2 implemented both Important final-review fixes
 - ✓ Narrowed final review passed with no blocking findings
-- ⧗ Configured implementation exit gate blocked; remediation attempt 1 pending
+- ✓ Configured implementation exit-gate remediation attempt 1 implemented
+- ⧗ Narrowed lifecycle re-review pending before gate attempt 2
 - ✓ Final HiLL and configured closeout sequence completed
 - ✓ PR #285 updated and open as a draft
 - ✓ Post-retro RP-01, RP-02, UP-01, and UP-02 implemented directly
@@ -145,9 +146,8 @@ No active blocker.
 
 ## Next Milestone
 
-Implement `prev3-t01` through `prev3-t03`, pass the narrowed lifecycle review,
-rerun the configured exit gate once, then update and push PR #285 and mark it ready
-for review.
+Pass the narrowed lifecycle re-review, rerun the configured exit gate once, then
+update and push PR #285 and mark it ready for review.
 
 ## Authorization and Scope
 
