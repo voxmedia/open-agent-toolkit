@@ -871,7 +871,9 @@ fixes at pure and packet-validation boundaries.
 
 ### Task p05-t04: Reconcile final-review bookkeeping
 
-**Status:** in_progress
+**Status:** completed
+
+**Commit:** this commit
 
 **Files:**
 
@@ -914,12 +916,12 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T020623Z.md         | e35342bae80cfbd95d3d393faa94d5d07021adac | gate       | cursor-fable-5-1-high |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T022854Z.md         | 44c00a120be3c6ad139354593e3876b41cedc845 | gate       | cursor-fable-5-1-high |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T024939Z.md         | d08443a4494aa0f7344893ce03cabf61a50fb683 | gate       | cursor-fable-5-1-high |
-| final  | code     | received        | 2026-09-11 | reviews/final-review-2026-09-11T030536Z.md                  | 5f243f7ac825a050e995c867597c69ef3e1b46bc | gate       | cursor-fable-5-1-high |
+| final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T030536Z.md         | 5f243f7ac825a050e995c867597c69ef3e1b46bc | gate       | cursor-fable-5-1-high |
 
 ## Implementation Complete
 
-**Implementation tasks complete: 16 of 17 implemented. Run 2 final-review fixes
-are complete; review reconciliation remains active through the narrowed re-review.**
+**Implementation tasks complete: 17 of 17 implemented. Run 2 final-review fixes,
+verification, and review reconciliation are complete.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -927,7 +929,7 @@ are complete; review reconciliation remains active through the narrowed re-revie
 - Phase 4: 6 tasks — distribution, complete verification, and final-review fixes.
 - Phase 5: 4 tasks — simplification plus fresh final-review fixes.
 
-**Total: 5 phases, 17 tasks.** One review-reconciliation task remains.
+**Total: 5 phases, 17 tasks.** All implementation tasks are complete.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

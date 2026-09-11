@@ -104,6 +104,16 @@ run-2-collection-residuals-20260911 The passing review's 1 Medium and 1 Minor re
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T030536Z.md run=626478bd-1ce7-4e53-8328-9f3b694c1558
 
-## End-of-run synthesis (pending — do not skip at project completion)
+### 2026-09-11 · structural · oat-project-review-receive · final
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+run-2-terminal-pass-20260911 The terminal freshness review reported 0 Critical, 0 Important, 0 Medium, and 0 Minor findings against the final collection guard; p05-t04 and all 17 implementation tasks are complete.
+
+## End-of-run synthesis
+
+Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility
+machinery, consolidated condition diagnostics, replaced free-text conditional
+gap identity with structured fields, and closed every retrospective and review
+follow-up directly in this PR. The terminal review is clean, 265/265 recon tests
+pass, all repository gates pass, and fourteen guard-neutralization controls prove
+the assurance-bearing clauses fail when their guards are removed. No retrospective
+item was filed to backlog.

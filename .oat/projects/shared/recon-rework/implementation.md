@@ -28,11 +28,10 @@ project for the user-approved post-retro simplification in `p05-t01`.
 | Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
 | Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
 | Phase 4: Distribution and verification     | completed | 6     | 6/6       |
-| Phase 5: Post-retro simplification         | active    | 4     | 3/4       |
+| Phase 5: Post-retro simplification         | completed | 4     | 4/4       |
 
-**Total:** 16/17 tasks implemented. The fresh final review's seven findings are
-fixed and received; review reconciliation remains active through the narrowed
-final re-review.
+**Total:** 17/17 tasks implemented. Every final-review finding is fixed and
+received; the terminal freshness review reports no findings.
 
 ## Task Status
 
@@ -54,11 +53,11 @@ final re-review.
 | p05-t01 | Completed: simplify approval and diagnostics    | `f16437f54491c57f9ad9518c34b415ffb7418a7e`         |
 | p05-t02 | Completed: align shipped and historical docs    | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`         |
 | p05-t03 | Completed: close validator regressions          | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`, `bd5dded4d` |
-| p05-t04 | In progress: reconcile final-review bookkeeping | —                                                  |
+| p05-t04 | Completed: reconcile final-review bookkeeping   | this commit                                        |
 
 ## Phase 5: Post-retro simplification
 
-**Status:** active
+**Status:** completed
 **Started:** 2026-09-10
 
 ### Task p05-t01: Remove unnecessary approval machinery and close RP-01/RP-02
@@ -112,10 +111,9 @@ or duplicate path turns its targeted test red before restoration.
 
 ### Task p05-t04: Reconcile final-review bookkeeping
 
-**Status:** in progress
-**Commit:** —
-**Verification:** all review findings received and fixed; final freshness review
-pending
+**Status:** completed
+**Commit:** this commit
+**Verification:** passed
 
 The 2026-09-11 final review reported 0 Critical, 1 Important, 2 Medium, and 4
 Minor findings. All seven were accepted for immediate repair: the Important docs
@@ -154,6 +152,11 @@ safe structural gate, expands the collection-shape tests, and raises the compose
 recon suite to 265/265. Both residuals fail their targeted controls when the
 guards are removed and pass after restoration. The eight CI/release/docs gates
 plus lint and format all return zero against the final collection guard.
+
+The terminal freshness review reports 0 Critical, 0 Important, 0 Medium, and 0
+Minor findings. It independently reproduced the two pre-fix collection failures,
+restored the branch, and confirmed 265/265 recon tests. Its artifact is archived
+at `reviews/archived/final-review-2026-09-11T030536Z.md`.
 
 ## Phase 1: Decision and versioned contract
 

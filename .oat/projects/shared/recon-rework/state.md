@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: bd5dded4d460a95a1f9cd7ca46475ac49249dbbe
+oat_last_commit: 5f243f7ac825a050e995c867597c69ef3e1b46bc
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -14,7 +14,7 @@ oat_hill_completed:
   - p04
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
@@ -98,13 +98,13 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** Run 2 review fixes complete; narrowed final re-review pending.
+**Status:** Run 2 complete; PR #285 is ready for cloud execution.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-11
 
 ## Current Phase
 
-Run 2 review fixes complete — narrowed final re-review pending.
+Run 2 implementation, verification, and final review complete.
 
 ## Artifacts
 
@@ -112,7 +112,7 @@ Run 2 review fixes complete — narrowed final re-review pending.
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight design aligned with the simplified approval contract.
 - Plan: `plan.md` — complete; 5 sequential phases, 17 tasks.
-- Implementation: `implementation.md` — 16/17 tasks complete; narrowed final re-review pending.
+- Implementation: `implementation.md` — 17/17 tasks complete; terminal final review passed with no findings.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
@@ -132,18 +132,17 @@ No existing project was absorbed or retired.
 - ✓ Post-retro RP-01, RP-02, UP-01, and UP-02 implemented directly
 - ✓ Run 2 focused and repository verification passed
 - ✓ Fresh final review received and all seven findings fixed
-- ⧗ Run a narrowed final re-review over the fix commits
+- ✓ Terminal narrowed final review passed with no findings
 
 ## Blockers
 
-No active blocker. Run 2 is ready for narrowed final re-review.
+No active blocker.
 
 ## Next Milestone
 
-Run a narrowed final re-review over the 2026-09-11 fix commits. If it passes,
-update and push draft PR #285. Reconcile any current base conflicts before
-marking the PR ready or merging it. Project tracking remains active; after the
-chosen merge/closeout boundary, run `oat-project-complete`.
+Push the completed branch for cloud execution. Reconcile any current base
+conflicts before marking PR #285 ready or merging it. Project tracking remains
+active; after the chosen merge/closeout boundary, run `oat-project-complete`.
 
 ## Authorization and Scope
 
