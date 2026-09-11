@@ -1010,6 +1010,22 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 - Next: resume the original Phase 3 implementation handle for bounded review-fix iteration 1, then run a fresh root-owned review
 
+#### Phase Review Round 1 Fix
+
+- Continuation: `cont-agent-authored-recap-p03-review-r1-fix-1`
+- Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- Source review: `reviews/p03-review-2026-09-11T213626Z.md`
+- Fix base: `92be283f43e7f036a090c695c53e31f01a6819c6`
+- Fix commit: `7f842e2feeb19352c1f4c5f5c11dcf4c50742f04`
+- Fixed: the deployed completion boundary now gates real manifest discovery and host-authoring permission on persisted intent; all reviewed live semantic residue is removed and pinned by the authoritative sweep; named-skill inventory comments now match the measured 202 direct plus 6 symlink-only paths and floor 207
+- Negative controls: the pre-fix production-boundary control failed; neutralizing either the production reader or suppression guard failed; the pre-fix semantic sweep found all four live residues; valid generate and declared historical/negative-control allowlist cases remained accepted
+- Protected boundaries: all eleven Phase 3 slices remained byte-identical to base `ab4785bf510ea737961a9431da4376a461be930e`
+- Verification: committed cross-consumer suite (53/53), semantic sweep, complete CI gates, isolated-HOME uncached Turbo, standalone smoke/skills/scripts, canonical skill validation, lint, format, and final diff check exited 0
+- Recovery accounting: review-fix continuation, not phase recovery; p03 remains `used_attempts: 0`, `pending_attempt: null`, with no recovery events
+- Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- Dispatch: scope=p03-review-r1-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- Disposition: `fixes_completed`; root-owned re-review is required and p03 is not marked passed
+
 <!-- orchestration-runs-end -->
 
 ---
