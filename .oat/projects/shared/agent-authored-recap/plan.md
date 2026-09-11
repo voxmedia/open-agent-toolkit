@@ -594,7 +594,7 @@ Deliverable: the recap for the 2026-08-31 execution program exists, verifies, an
 | p01    | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T165150Z.md                      | 3f29035c2588bc590cfd361e88e5632e084238f5 | manual     | -           |
 | p01    | code     | fixes_completed | 2026-09-11 | reviews/p01-review-2026-09-11T173707Z.md                      | 5e8694abbb7f7740970bd69e5feea64ddf9df316 | manual     | -           |
 | p01    | code     | passed          | 2026-09-11 | reviews/p01-review-2026-09-11T185739Z.md                      | 285673119c8493c99ea0c0208e18779a8e9a142c | manual     | -           |
-| p02    | code     | pending         | -          | -                                                             | -             | -          | -           |
+| p02    | code     | fixes_added     | 2026-09-11 | reviews/p02-review-2026-09-11T194856Z.md                      | ecdce3e38ad6b86c8583ba115cfe27bc5faf0caa | manual     | -           |
 | p03    | code     | pending         | -          | -                                                             | -             | -          | -           |
 | p04    | code     | pending         | -          | -                                                             | -             | -          | -           |
 | p05    | code     | pending         | -          | -                                                             | -             | -          | -           |
