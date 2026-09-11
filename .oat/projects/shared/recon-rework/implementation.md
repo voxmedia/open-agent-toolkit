@@ -53,7 +53,7 @@ final re-review.
 | p04-t06 | Completed: correct Phase 4 completion wording   | this commit                                |
 | p05-t01 | Completed: simplify approval and diagnostics    | `f16437f54491c57f9ad9518c34b415ffb7418a7e` |
 | p05-t02 | Completed: align shipped and historical docs    | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7` |
-| p05-t03 | Completed: close validator regressions          | `3d21ea885`, `01a2a92c5`                   |
+| p05-t03 | Completed: close validator regressions          | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`      |
 | p05-t04 | In progress: reconcile final-review bookkeeping | —                                          |
 
 ## Phase 5: Post-retro simplification
@@ -97,7 +97,8 @@ explicit. The docs contract pin and `oat-docs` check passed.
 
 **Status:** completed
 **Commits:** `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`,
-`01a2a92c5e0de817110feea6cd88503636308585`
+`01a2a92c5e0de817110feea6cd88503636308585`,
+`cfd2f25a539499276ae00f51c11b067f5c4871cf`
 **Verification:** passed
 
 Packet compilation now continues independent source, evidence, review, and
@@ -133,8 +134,16 @@ approval diagnostics; this task also corrects its own status rollups and the
 retrospective snapshot. The second review is archived at
 `reviews/archived/final-review-2026-09-11T020623Z.md` with no finding deferred.
 The composed recon suite passes 258/258, all eight CI/release/docs gates plus
-lint and format return zero, and three additional guard-neutralization controls turn
-the targeted tests red before restoration.
+lint and format return zero, and three additional guard-neutralization controls
+turn the targeted tests red before restoration.
+
+The next narrowed review found one Important regression and two Minor edge cases:
+missing top-level manifest fields could throw and preserve stale `packet.md`,
+quick-profile conditional reconciliation still had two diagnostic owners, and
+non-array manifest collections could throw inside shape validation. Commit
+`cfd2f25a5` fixes all three. The composed recon suite now passes 263/263, and
+three new negative controls restore the corresponding throw or duplicate
+diagnostic before the fixes are restored.
 
 ## Phase 1: Decision and versioned contract
 

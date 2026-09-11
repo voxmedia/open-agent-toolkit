@@ -853,7 +853,8 @@ requirements and prior decision clauses; and correct the packet-contract prose.
 **Status:** completed
 
 **Commits:** `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`,
-`01a2a92c5e0de817110feea6cd88503636308585`
+`01a2a92c5e0de817110feea6cd88503636308585`,
+`cfd2f25a539499276ae00f51c11b067f5c4871cf`
 
 **Files:**
 
@@ -875,7 +876,7 @@ fixes at pure and packet-validation boundaries.
 
 - Modify: `.oat/projects/shared/recon-rework/**`
 
-**Implement:** Receive and archive both final reviews, record every finding
+**Implement:** Receive and archive all final reviews, record every finding
 disposition, fix all sub-threshold findings from the passing review, refresh task
 totals and retrospective closure, and run a narrowed final re-review.
 
@@ -910,7 +911,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | passed          | 2026-09-10 | reviews/archived/final-review-2026-09-10T091637Z.md         | ad1d8ae99e43d125e7dd791225c3dc1984e7812f | gate       | cursor-fable-5-1-high |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T014112Z.md         | b1dd2acaf13bbad8ce49c2b472565584e33e08f2 | gate       | cursor-fable-5-1-high |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T020623Z.md         | e35342bae80cfbd95d3d393faa94d5d07021adac | gate       | cursor-fable-5-1-high |
-| final  | code     | received        | 2026-09-11 | reviews/final-review-2026-09-11T022854Z.md                  | 44c00a120be3c6ad139354593e3876b41cedc845 | gate       | cursor-fable-5-1-high |
+| final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T022854Z.md         | 44c00a120be3c6ad139354593e3876b41cedc845 | gate       | cursor-fable-5-1-high |
 
 ## Implementation Complete
 

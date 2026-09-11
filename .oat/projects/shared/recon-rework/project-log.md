@@ -88,6 +88,10 @@ run-2-final-followups-20260911 The passing review's 1 Medium and 4 Minor finding
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:0,minor:2 exit=1 status=blocked artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T022854Z.md run=60e7fe16-0eee-4f9b-aac4-d774732391e2
 
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-2-malformed-manifest-fixes-20260911 The review's 1 Important and 2 Minor findings were all accepted and fixed in cfd2f25a539499276ae00f51c11b067f5c4871cf; malformed top-level fields now return structured diagnostics and withdraw stale output, all manifest collection loops are shape-safe, and quick terminal topology has one diagnostic owner.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
