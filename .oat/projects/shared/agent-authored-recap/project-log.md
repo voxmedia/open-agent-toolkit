@@ -60,6 +60,10 @@ phase-outcome-p02-20260911T2027Z: PASS; 0 Critical, 0 Important, 0 Medium; 1 aut
 
 stop-p03-governance-review-20260911T2304Z: governance-final round 3 found 1 Important typed-state compatibility defect; automatic review/fix budget exhausted; operator direction required; see reviews/p03-review-2026-09-11T225420Z.md.
 
+### 2026-09-11 · structural · oat-project-implement · p03
+
+stop-p03-independent-verification-20260911T2332Z: operator-authorized verification found 1 Important raw-string normalization mismatch; authorization consumed; operator direction required; see reviews/p03-review-2026-09-11T232506Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
