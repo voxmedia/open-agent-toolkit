@@ -84,7 +84,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-09-09T16:39:02.165Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-09-11T21:32:00Z'
+oat_project_state_updated: '2026-09-11T21:49:00Z'
 oat_generated: false
 ---
 
@@ -96,7 +96,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Phase 3 complete; Phase 4 ready (`p04-t01`)
+Implementation — Phase 3 review fixes required
 
 ## Artifacts
 
@@ -114,13 +114,12 @@ Implementation — Phase 3 complete; Phase 4 ready (`p04-t01`)
 - ✓ Plan complete
 - ✓ Phase 1 complete and independently verified (17/17 tasks)
 - ✓ Phase 2 complete and independently verified (4/4 tasks)
-- ✓ Phase 3 complete (8/8 tasks)
-- ⧗ Phase 4 ready (0/2 tasks)
+- ⧗ Phase 3 implementation complete (8/8 tasks); review round 1 fixes required
 
 ## Blockers
 
-None.
+Phase 3 review found 2 Important defects and 1 Minor finding; bounded fix iteration 1 is pending.
 
 ## Next Milestone
 
-Implement and review Phase 4: installed-surface smoke and public docs/config verification.
+Complete the bounded Phase 3 review fixes and run a fresh independent review.
