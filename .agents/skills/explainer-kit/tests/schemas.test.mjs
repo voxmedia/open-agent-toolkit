@@ -10,7 +10,7 @@ const skillRoot = path.resolve(
 );
 const schemas = {
   'fact-base': 'explainer-kit.fact-base/v1',
-  manifest: 'explainer-kit.manifest/v1',
+  manifest: 'explainer-kit.manifest/v2',
   theme: 'explainer-kit.theme/v1',
 };
 

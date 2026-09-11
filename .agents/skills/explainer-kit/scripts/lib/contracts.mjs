@@ -50,6 +50,9 @@ export function validateContract(kind, value) {
   if (schema === SCHEMAS['fact-base']) {
     rejectRetiredCitationKeys(value, errors);
   }
+  if (schema === SCHEMAS.manifest) {
+    validateManifest(value, errors);
+  }
   return { valid: errors.length === 0, errors };
 }
 
@@ -101,6 +104,58 @@ function rejectRetiredCitationKeys(value, errors) {
           }
         }
       }
+    }
+  }
+}
+
+function validateManifest(value, errors) {
+  const immutableHashes = isObject(value?.immutableHashes)
+    ? value.immutableHashes
+    : {};
+  if (
+    typeof value?.theme?.path === 'string' &&
+    !(value.theme.path in immutableHashes)
+  ) {
+    add(
+      errors,
+      '$.theme.path',
+      'immutable-package-incomplete',
+      'Theme path must be covered by immutable hashes.',
+    );
+  }
+  if (
+    typeof value?.theme?.hash === 'string' &&
+    value.theme.hash !== immutableHashes['theme.resolved.json']
+  ) {
+    add(
+      errors,
+      '$.theme.hash',
+      'hash-mismatch',
+      'Theme hash must match theme.resolved.json.',
+    );
+  }
+  for (const [index, artifact] of (value?.artifacts ?? []).entries()) {
+    if (
+      typeof artifact?.contentPath === 'string' &&
+      !(artifact.contentPath in immutableHashes)
+    ) {
+      add(
+        errors,
+        `$.artifacts[${index}].contentPath`,
+        'immutable-package-incomplete',
+        'Artifact content path must be covered by immutable hashes.',
+      );
+    }
+    if (
+      typeof artifact?.hash === 'string' &&
+      artifact.hash !== immutableHashes[artifact.contentPath]
+    ) {
+      add(
+        errors,
+        `$.artifacts[${index}].hash`,
+        'hash-mismatch',
+        'Artifact hash must match its immutable content hash.',
+      );
     }
   }
 }

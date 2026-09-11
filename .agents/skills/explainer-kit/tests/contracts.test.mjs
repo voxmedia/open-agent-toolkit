@@ -82,6 +82,42 @@ function theme() {
   };
 }
 
+function manifest() {
+  return {
+    schemaVersion: 'explainer-kit.manifest/v2',
+    runId: 'run-1',
+    slug: 'demo',
+    recipe: { id: 'project-recap', version: '2' },
+    createdAt: '2026-09-10T00:00:00Z',
+    mode: 'unattended',
+    source: {
+      factBasePath: 'source/fact-base.json',
+      factBaseHash: HASH,
+      inputHashes: { 'plan.md': HASH },
+    },
+    theme: { path: 'theme.resolved.json', hash: HASH },
+    artifacts: [
+      {
+        id: 'project-recap',
+        type: 'hub',
+        contentPath: 'site/index.html',
+        hash: HASH,
+        status: 'built',
+      },
+    ],
+    immutableHashes: {
+      'theme.resolved.json': HASH,
+      'source/fact-base.json': HASH,
+      'source/fact-base.md': HASH,
+      'source/ledger.json': HASH,
+      'qa/result.json': HASH,
+      'site/index.html': HASH,
+    },
+    outcome: 'built-needs-review',
+    warnings: [],
+  };
+}
+
 test('accepts the retained fact-base shape', () => {
   assert.deepEqual(validateContract('fact-base', factBase()), {
     valid: true,
@@ -111,6 +147,33 @@ test('canonical serialization and hashing are deterministic', () => {
   const right = { a: { x: 1, y: 2 }, b: 2 };
   assert.equal(canonicalStringify(left), canonicalStringify(right));
   assert.equal(canonicalHash(left), canonicalHash(right));
+});
+
+test('accepts manifest v2 and rejects v1 or retired build records', () => {
+  assert.equal(validateContract('manifest', manifest()).valid, true);
+  const v1 = manifest();
+  v1.schemaVersion = 'explainer-kit.manifest/v1';
+  assert.equal(validateContract('manifest', v1).valid, false);
+  const withBuildRecord = manifest();
+  withBuildRecord.buildRecord = { path: 'build-record.json', hash: HASH };
+  assert.equal(validateContract('manifest', withBuildRecord).valid, false);
+});
+
+test('rejects manifest theme and artifact hash mismatches', () => {
+  const themeMismatch = manifest();
+  themeMismatch.theme.hash = `sha256:${'b'.repeat(64)}`;
+  assert.ok(
+    validateContract('manifest', themeMismatch).errors.some(
+      ({ code }) => code === 'hash-mismatch',
+    ),
+  );
+  const artifactMismatch = manifest();
+  artifactMismatch.artifacts[0].hash = `sha256:${'b'.repeat(64)}`;
+  assert.ok(
+    validateContract('manifest', artifactMismatch).errors.some(
+      ({ code }) => code === 'hash-mismatch',
+    ),
+  );
 });
 
 test('throws for a retired contract kind', () => {
