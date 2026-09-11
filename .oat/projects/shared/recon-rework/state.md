@@ -45,15 +45,15 @@ oat_implement_exit_gate:
   implementation_fingerprint: 'sha256:effective-delta-v1:247a48c4fc00804e5b7696fad76c04ef31e73c2a36539f0b8b615140fd9cad79'
   freshness_head: f8d6deafe78f939302d1a637890620c2447131ab
   freshness_fingerprint: 'sha256:effective-delta-v1:078365cb0755d2be1b3d9e1b4743ef80674416ceb2d1d81e99e46dbc1068b39f'
-  launch_state: accepted
+  launch_state: result_persisted
   launch_attempt_id: 'recon-exit-gate-20260911T154843Z'
   launch_started_at: '2026-09-11T15:48:43Z'
   launch_result_receipt: '/private/tmp/recon-exit-gate-20260911T154843Z.receipt.json'
   gate_run_marker: '/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/e9a3a038-dc02-4f62-affe-c3d5cfb2c4dc.json'
   gate_run_id: e9a3a038-dc02-4f62-affe-c3d5cfb2c4dc
-  envelope_status: null
-  artifact: null
-  handoff: null
+  envelope_status: ok
+  artifact: '.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T155617Z.md'
+  handoff: 'Run oat-project-review-receive for .oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T155617Z.md before treating this gate review as consumed.'
   receive_state: not_started
   receive_correlation: null
   receive_source_artifact: null
@@ -61,10 +61,10 @@ oat_implement_exit_gate:
   receive_event_identity: null
   receive_pre_head: null
   receive_commit: null
-  receive_eligible: false
+  receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-09-11T15:49:08Z'
+  updated_at: '2026-09-11T16:00:16Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
@@ -98,14 +98,15 @@ oat_project_recap:
 
 # Project State: Recon rework
 
-**Status:** Gate remediation review passed; configured gate attempt 2 pending.
+**Status:** Configured gate attempt 2 passed; review receipt pending.
 **Started:** 2026-09-08
 **Last Updated:** 2026-09-11
 
 ## Current Phase
 
 Revision p-rev3 and its narrowed lifecycle re-review are complete. The configured
-gate's second and final attempt is pending.
+gate's second and final attempt passed with no findings; its review receipt is
+pending.
 
 ## Artifacts
 
@@ -133,7 +134,8 @@ No existing project was absorbed or retired.
 - ✓ Narrowed final review passed with no blocking findings
 - ✓ Configured implementation exit-gate remediation attempt 1 implemented
 - ✓ Narrowed lifecycle re-review passed
-- ⧗ Configured implementation exit-gate attempt 2 pending
+- ✓ Configured implementation exit-gate attempt 2 passed with no findings
+- ⧗ Configured implementation exit-gate review receipt pending
 - ✓ Final HiLL and configured closeout sequence completed
 - ✓ PR #285 updated and open as a draft
 - ✓ Post-retro RP-01, RP-02, UP-01, and UP-02 implemented directly
@@ -147,8 +149,8 @@ No active blocker.
 
 ## Next Milestone
 
-Rerun the configured exit gate once, then update and push PR #285 and mark it ready
-for review.
+Receive the passing configured-gate review, then update and push PR #285 and mark
+it ready for review.
 
 ## Authorization and Scope
 
