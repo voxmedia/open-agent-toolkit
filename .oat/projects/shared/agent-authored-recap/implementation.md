@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-10
-oat_current_task_id: p01-t02
+oat_current_task_id: p01-t03
 oat_generated: false
 ---
 
@@ -26,13 +26,13 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 17    | 1/17      |
+| Phase 1 | in_progress | 17    | 2/17      |
 | Phase 2 | pending     | 4     | 0/4       |
 | Phase 3 | pending     | 8     | 0/8       |
 | Phase 4 | pending     | 2     | 0/2       |
 | Phase 5 | pending     | 1     | 0/1       |
 
-**Total:** 1/32 tasks completed
+**Total:** 2/32 tasks completed
 
 ---
 
@@ -92,12 +92,40 @@ oat_generated: false
 
 ### Task p01-t02: Trim the recipes, the recipe loader, and the briefs
 
+**Status:** completed
+**Commit:** e092ba547525262a70c456773c4650981731898c
+
+**Outcome:**
+
+- The recipe registry now exposes four retained recipes whose policy is limited to source roles and required floor artifacts.
+- Legacy v1 recap replay, optional expansion policy, fallback policy, discovery limits, and unused briefs are removed.
+
+**Files changed:**
+
+- `.agents/skills/explainer-kit/recipes/` - four trimmed retained recipes; v1 recap recipe deleted.
+- `.agents/skills/explainer-kit/briefs/` - only the four recipe briefs remain.
+- `.agents/skills/explainer-kit/scripts/lib/recipes.mjs` - retained recipe loader and floor/narrative accessors.
+- `.agents/skills/explainer-kit/tests/recipes.test.mjs` - retained recipe contract tests.
+
+**Verification:**
+
+- Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs`; retained brief listing; recipe registry import; `pnpm lint`; `pnpm format`.
+- Result: pass; three tests green, four expected registry keys printed, and only four briefs remain.
+
+**Notes / Decisions:**
+
+- `validateRecipe` remains internal. Its retired-key behavior is tested by importing a scratch copy of the real module against a mutated recipe.
+
+---
+
+### Task p01-t03: Trim `qa.mjs` and rewrite the kept QA, theme, safety, and schema tests
+
 **Status:** pending
 **Commit:** -
 
 **Notes:**
 
-- {Notes will be added during implementation}
+- In progress.
 
 ---
 
@@ -161,11 +189,13 @@ Chronological log of implementation progress.
 **Session Start:** 2026-09-11T03:08:00Z
 
 - [x] p01-t01: Trim `contracts.mjs` to the three kept contract kinds - cd6314c6eeadf512dc5d0077a080c37587b3abbb
-- [ ] p01-t02: Trim the recipes, the recipe loader, and the briefs - in progress
+- [x] p01-t02: Trim the recipes, the recipe loader, and the briefs - e092ba547525262a70c456773c4650981731898c
+- [ ] p01-t03: Trim `qa.mjs` and rewrite the kept core tests - in progress
 
 **What changed (high level):**
 
 - Reduced the core contract registry and validator to the three retained contract kinds.
+- Reduced the recipe registry to four floor-and-brief contracts.
 
 **Decisions:**
 
