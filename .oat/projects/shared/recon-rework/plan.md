@@ -927,6 +927,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | p-rev4 | code     | fixes_completed | 2026-09-11 | reviews/archived/p-rev4-review-2026-09-11T165722Z.md        | 8257446bed1f3105e288cd6f2fd46eb5c9d53190 | manual     | -                     |
 | p-rev4 | code     | passed          | 2026-09-11 | reviews/archived/p-rev4-review-2026-09-11T170722Z.md        | 3784abc9f26e6714901c450c775b0ceb16ad30b7 | manual     | -                     |
 | final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T173037Z.md         | 9b7c04a7783a14f92e10edc56c7e5e81d965cc26 | auto       | -                     |
+| p-rev5 | code     | passed          | 2026-09-11 | reviews/archived/p-rev5-review-2026-09-11T175232Z.md        | 26c8357d081ced7047379140c5353ab5993a7f46 | manual     | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1211,7 +1212,7 @@ Source: final lifecycle review (2026-09-11)
 
 ### Task prev5-t01: (review) Compile both thorough gathering outputs
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
@@ -1247,10 +1248,10 @@ restore it, and run focused plus complete recon suites.
 
 Commit as `fix(prev5-t01): compile redundant thorough evidence`.
 
-## Implementation In Progress
+## Implementation Complete
 
-**Implementation tasks complete: 25 of 26 implemented. The fresh final review's
-Important thorough-ordering finding is pending in `prev5-t01`.**
+**Implementation tasks complete: 26 of 26 implemented. The fresh final review's
+Important thorough-ordering finding is fixed and its phase review passed.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1263,7 +1264,7 @@ Important thorough-ordering finding is pending in `prev5-t01`.**
 - Phase p-rev4: 2 tasks — require same-run evidence and suppress derivative diagnostics.
 - Phase p-rev5: 1 task — connect redundant thorough gathering to compilation.
 
-**Total: 10 phases, 26 tasks.** One final-review remediation task is pending.
+**Total: 10 phases, 26 tasks.** All implementation tasks are complete.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

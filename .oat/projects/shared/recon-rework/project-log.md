@@ -152,6 +152,10 @@ Phase p-rev4 passed after one bounded fix loop; tasks prev4-t01 and prev4-t02 co
 
 run-4-final-important-20260911 Fresh final review found one Important thorough-ordering defect; p-rev5 task prev5-t01 records the accepted fix to compile both independent gather dossiers before review.
 
+### 2026-09-11 · structural · oat-project-implement · p-rev5
+
+run-4-p-rev5-pass-20260911 Phase p-rev5 passed with task prev5-t01 complete at 26c8357d081ced7047379140c5353ab5993a7f46; narrowed review reported 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

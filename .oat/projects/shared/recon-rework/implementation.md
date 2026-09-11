@@ -13,9 +13,9 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-11
 
-Three implementation runs plus `p-rev4` completed 25 original, post-retro,
-integration, and review-remediation tasks. A fresh full-delta review then added
-one Important remediation task in `p-rev5`.
+Three implementation runs plus five revision phases completed all 26 original,
+post-retro, integration, and review-remediation tasks. The `p-rev5` phase review
+passed the final Important remediation with no findings.
 
 ## Progress Overview
 
@@ -30,9 +30,9 @@ one Important remediation task in `p-rev5`.
 | Phase p-rev2: Merged-head review fixes     | completed | 2     | 2/2       |
 | Phase p-rev3: Configured-gate cap fixes    | completed | 3     | 3/3       |
 | Phase p-rev4: Same-run condition evidence  | completed | 2     | 2/2       |
-| Phase p-rev5: Thorough gather compilation  | pending   | 1     | 0/1       |
+| Phase p-rev5: Thorough gather compilation  | completed | 1     | 1/1       |
 
-**Total:** 25/26 tasks implemented. Task `prev5-t01` is next.
+**Total:** 26/26 tasks implemented. Refreshed final closeout review is next.
 
 ## Task Status
 
@@ -63,7 +63,7 @@ one Important remediation task in `p-rev5`.
 | prev3-t03 | Completed: clarify adaptive cap preview         | `12b68773a957c4a011a1099027e1b6da3a7f1463`         |
 | prev4-t01 | Completed: require same-run condition evidence  | `8257446bed1f3105e288cd6f2fd46eb5c9d53190`         |
 | prev4-t02 | Completed: suppress derivative diagnostics      | `3784abc9f26e6714901c450c775b0ceb16ad30b7`         |
-| prev5-t01 | Pending: compile redundant thorough evidence    | -                                                  |
+| prev5-t01 | Completed: compile redundant thorough evidence  | `26c8357d081ced7047379140c5353ab5993a7f46`         |
 
 ## Phase p-rev4: Remote condition-evidence review fix
 
@@ -125,7 +125,7 @@ deferred.
 
 ## Phase p-rev5: Connect thorough redundant gathering to compilation
 
-**Status:** pending
+**Status:** completed
 **Started:** 2026-09-11
 
 ### Review Received: refreshed final review
@@ -141,6 +141,25 @@ The finding is accepted for immediate repair. Thorough routing currently places
 inform the candidate ledger or its review briefs. `prev5-t01` will move the wave
 before compilation and require both gathering outputs in compiled-ledger
 provenance, with a fallible omission control.
+
+**Outcome:** `prev5-t01` completed in
+`26c8357d081ced7047379140c5353ab5993a7f46`. Thorough routing now gathers both
+independent dossiers before compilation, and the candidate ledger must bind both
+by exact path and digest. Removing the new validator guard makes the malformed
+packet publishable and turns the targeted regression red.
+
+### Narrowed p-rev5 review received
+
+**Date:** 2026-09-11
+**Review artifact:** `reviews/archived/p-rev5-review-2026-09-11T175232Z.md`
+**Reviewed head:** `26c8357d081ced7047379140c5353ab5993a7f46`
+**Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+The reviewer independently confirmed the topology, exact dossier provenance,
+single primary omission diagnostic, fallible negative control, and unchanged
+single terminal reconciliation. Focused 113/113 and full recon 273/273 passed.
+
+**Outcome:** `p-rev5` passed with no fix loop.
 
 ## Phase 5: Post-retro simplification
 
