@@ -9,6 +9,7 @@ const SOURCES = new Set([
   'kickoff_prompt',
   'autonomous_policy',
   'capability_probe',
+  'failed_attempt',
 ]);
 const ALLOWED_PAIRS = Object.freeze({
   projectExplainer: new Set([
@@ -21,6 +22,7 @@ const ALLOWED_PAIRS = Object.freeze({
     'skip:interactive',
     'generate:autonomous_policy',
     'skip:capability_probe',
+    'skip:failed_attempt',
   ]),
 });
 const ISO_TIMESTAMP_PATTERN =

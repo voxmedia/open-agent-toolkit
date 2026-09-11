@@ -221,6 +221,31 @@ test('rejects invalid intent combinations including autonomous skip', () => {
   );
 });
 
+test('failed_attempt is a projectRecap-only skip source', () => {
+  const record = {
+    decision: 'skip',
+    source: 'failed_attempt',
+    decided_at: NOW,
+  };
+  assert.equal(
+    resolve({
+      product: 'projectRecap',
+      mode: 'interactive',
+      state: record,
+    }).resolutionSource,
+    'project_state',
+  );
+  assert.throws(
+    () =>
+      resolve({
+        product: 'projectExplainer',
+        mode: 'interactive',
+        state: record,
+      }),
+    /invalid projectExplainer decision\/source pair/i,
+  );
+});
+
 test('an unavailable seam resolves a recordable autonomous capability skip', () => {
   const unavailable = resolve({
     product: 'projectRecap',
