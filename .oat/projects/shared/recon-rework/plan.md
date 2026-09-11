@@ -914,6 +914,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T020623Z.md         | e35342bae80cfbd95d3d393faa94d5d07021adac | gate       | cursor-fable-5-1-high |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T022854Z.md         | 44c00a120be3c6ad139354593e3876b41cedc845 | gate       | cursor-fable-5-1-high |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T024939Z.md         | d08443a4494aa0f7344893ce03cabf61a50fb683 | gate       | cursor-fable-5-1-high |
+| final  | code     | received        | 2026-09-11 | reviews/final-review-2026-09-11T030536Z.md                  | 5f243f7ac825a050e995c867597c69ef3e1b46bc | gate       | cursor-fable-5-1-high |
 
 ## Implementation Complete
 
