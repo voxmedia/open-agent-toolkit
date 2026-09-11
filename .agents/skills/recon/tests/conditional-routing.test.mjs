@@ -195,8 +195,9 @@ test('triggered dispositions reject exact foreign-run predecessor evidence', asy
     'the valid same-run predecessor output must remain retained',
   );
   assert.equal(result.valid, false, JSON.stringify(result, null, 2));
-  assert.ok(
-    codes(result).includes('CONDITION_EVIDENCE_RUN_MISMATCH'),
+  assert.deepEqual(
+    codes(result),
+    ['CONDITION_EVIDENCE_RUN_MISMATCH'],
     JSON.stringify(result, null, 2),
   );
 });

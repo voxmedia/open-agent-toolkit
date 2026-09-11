@@ -827,12 +827,14 @@ function validateConditionalRouting(
     }
     const evidenceArtifacts = [];
     const evidencedPredecessors = new Set();
+    let rejectedConditionEvidence = false;
     for (const reference of outcome.evidence ?? []) {
       const entry = artifactsByPath.get(reference.path);
       const declared = (manifest.artifacts ?? []).some((artifactReference) =>
         sameReference(artifactReference, reference),
       );
       if (!declared || !entry || !sameReference(entry.reference, reference)) {
+        rejectedConditionEvidence = true;
         errors.push(
           issue(
             'INVALID_CONDITION_EVIDENCE',
@@ -844,6 +846,7 @@ function validateConditionalRouting(
       }
       const artifact = entry.value;
       if (artifact.runId !== manifest.run.id) {
+        rejectedConditionEvidence = true;
         errors.push(
           issue(
             'CONDITION_EVIDENCE_RUN_MISMATCH',
@@ -855,6 +858,7 @@ function validateConditionalRouting(
       }
       const wave = lanesById.get(artifactLaneId(artifact));
       if (!wave || !condition.afterWaveIds.includes(wave.waveId)) {
+        rejectedConditionEvidence = true;
         errors.push(
           issue(
             'INVALID_CONDITION_EVIDENCE',
@@ -865,6 +869,7 @@ function validateConditionalRouting(
         continue;
       }
       if (!artifactIsComplete(artifact)) {
+        rejectedConditionEvidence = true;
         errors.push(
           issue(
             'INCOMPLETE_CONDITION_PREDECESSOR',
@@ -879,6 +884,7 @@ function validateConditionalRouting(
     }
     if (
       outcome.disposition === 'triggered' &&
+      !rejectedConditionEvidence &&
       condition.afterWaveIds.some(
         (waveId) => !evidencedPredecessors.has(waveId),
       )
@@ -893,6 +899,7 @@ function validateConditionalRouting(
     }
     if (
       outcome.disposition === 'triggered' &&
+      !rejectedConditionEvidence &&
       !conditionPredicateSatisfied(condition, evidenceArtifacts)
     ) {
       errors.push(
