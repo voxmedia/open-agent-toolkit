@@ -43,8 +43,8 @@ oat_implement_exit_gate:
   reviewed_head: 819591ba1044e65a7eff7495a529bbe5ee122db3
   implementation_base_ref: origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:247a48c4fc00804e5b7696fad76c04ef31e73c2a36539f0b8b615140fd9cad79'
-  freshness_head: f8d6deafe78f939302d1a637890620c2447131ab
-  freshness_fingerprint: 'sha256:effective-delta-v1:078365cb0755d2be1b3d9e1b4743ef80674416ceb2d1d81e99e46dbc1068b39f'
+  freshness_head: ed621150aa85658efd81b72fdf47e8f129d59a5d
+  freshness_fingerprint: 'sha256:effective-delta-v1:dc91a0db1a29a9f949c4a168e7211c45b0a5dd4e7ac1ce27dacbf1174bbd7866'
   launch_state: result_persisted
   launch_attempt_id: 'recon-exit-gate-20260911T154843Z'
   launch_started_at: '2026-09-11T15:48:43Z'
@@ -64,7 +64,7 @@ oat_implement_exit_gate:
   receive_eligible: true
   receive_completed: true
   failure: null
-  updated_at: '2026-09-11T16:02:36Z'
+  updated_at: '2026-09-11T16:03:08Z'
 oat_post_implement_sequence:
   status: complete
   source: configured
