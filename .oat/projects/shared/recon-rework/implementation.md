@@ -1041,6 +1041,10 @@ advanced to
 The same immutable gate configuration is pending attempt 2 with the consumed
 attempt count preserved at 1.
 
+**Attempt 2 launch intent:** `recon-exit-gate-20260911T154843Z` persisted before
+execution; structured stdout receipt reserved at
+`/private/tmp/recon-exit-gate-20260911T154843Z.receipt.json`.
+
 ## Final Summary (for PR/docs)
 
 All 23 implementation and revision tasks are implemented. The merged-head final
