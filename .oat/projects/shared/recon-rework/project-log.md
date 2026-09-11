@@ -76,6 +76,10 @@ run-2-p05-outcome-20260911 Phase p05 implementation completed in f16437f54491c57
 
 target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:2,minor:4 exit=1 status=blocked artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T014112Z.md run=f3f5aaf3-da8f-4d3c-adf6-9933538c4169
 
+### 2026-09-11 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0,medium:1,minor:4 exit=0 status=ok artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T020623Z.md run=240c8e01-eaac-45d3-a179-21c9d465c0a9
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
