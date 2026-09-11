@@ -919,6 +919,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T030536Z.md         | 5f243f7ac825a050e995c867597c69ef3e1b46bc | gate       | cursor-fable-5-1-high |
 | p-rev1 | code     | passed          | 2026-09-11 | reviews/archived/p-rev1-review-2026-09-11T143545Z.md        | 9d27e15a615fc18056a8c5b7501a0508ffb9c4a4 | manual     | -                     |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T144641Z.md         | 0ee34935306c0dcb711ded3f83746a890cb50c97 | auto       | -                     |
+| final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T150854Z.md         | 695f4dba72d9fb46ab10a962a08907a6d593f7e3 | auto       | -                     |
 
 ## Phase p-rev1: Integrate current main
 

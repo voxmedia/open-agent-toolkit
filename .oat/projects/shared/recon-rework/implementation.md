@@ -22,15 +22,15 @@ project for the user-approved post-retro simplification in `p05-t01`.
 
 ## Progress Overview
 
-| Phase                                      | Status      | Tasks | Completed |
-| ------------------------------------------ | ----------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
-| Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
-| Phase 4: Distribution and verification     | completed   | 6     | 6/6       |
-| Phase 5: Post-retro simplification         | completed   | 4     | 4/4       |
-| Phase p-rev1: Integrate current main       | completed   | 1     | 1/1       |
-| Phase p-rev2: Merged-head review fixes     | in_progress | 2     | 2/2       |
+| Phase                                      | Status    | Tasks | Completed |
+| ------------------------------------------ | --------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
+| Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
+| Phase 4: Distribution and verification     | completed | 6     | 6/6       |
+| Phase 5: Post-retro simplification         | completed | 4     | 4/4       |
+| Phase p-rev1: Integrate current main       | completed | 1     | 1/1       |
+| Phase p-rev2: Merged-head review fixes     | completed | 2     | 2/2       |
 
 **Total:** 20/20 tasks implemented. The merged-head final-review fixes are complete
 and awaiting narrowed lifecycle re-review.
@@ -57,8 +57,8 @@ and awaiting narrowed lifecycle re-review.
 | p05-t03   | Completed: close validator regressions          | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`, `bd5dded4d` |
 | p05-t04   | Completed: reconcile final-review bookkeeping   | this commit                                        |
 | prev1-t01 | Completed: integrate current main               | `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`         |
-| prev2-t01 | Completed: align profile topology caps          | this commit                                        |
-| prev2-t02 | Completed: close hostile manifest collections   | this commit                                        |
+| prev2-t01 | Completed: align profile topology caps          | `be329458b7c1f931b4fc5712c1456619484d0e13`         |
+| prev2-t02 | Completed: close hostile manifest collections   | `fc4470be39e49dfc26489bbe5caeabcbc22525ef`         |
 
 ## Phase 5: Post-retro simplification
 
@@ -844,7 +844,7 @@ review passed with its formatter-owned Minor explicitly dispositioned.
 
 ## Phase p-rev2: Final merged-head review fixes
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-09-11
 
 ### Review Received: final
@@ -872,7 +872,7 @@ review passed with its formatter-owned Minor explicitly dispositioned.
 ### Task prev2-t01: Align profile topology caps
 
 **Status:** completed
-**Commit:** this commit
+**Commit:** `be329458b7c1f931b4fc5712c1456619484d0e13`
 **Verification:** passed
 
 The topology policy now declares both the wave modes each profile permits and
@@ -888,7 +888,7 @@ green.
 ### Task prev2-t02: Fail closed on hostile manifest collections
 
 **Status:** completed
-**Commit:** this commit
+**Commit:** `fc4470be39e49dfc26489bbe5caeabcbc22525ef`
 **Verification:** passed
 
 Reference collection now treats non-array manifest and ledger collections as
@@ -905,14 +905,25 @@ manifest artifacts traversal guard temporarily neutralized, the public CLI P0
 test failed on exit 2 with `object is not iterable`; restoring the guard returned
 the focused suites to green.
 
-**Next:** Execute both fix tasks via `oat-project-implement`, then run a narrowed
-final lifecycle re-review before refreshing the configured exit gate.
+### Narrowed Final Re-review Received
+
+**Date:** 2026-09-11
+**Review artifact:**
+`reviews/archived/final-review-2026-09-11T150854Z.md`
+
+The re-review reported 0 Critical, 0 Important, 0 Medium, and 1 Minor finding.
+Both prior Important findings are closed. Minor m1 was fixed during receipt by
+aligning this PR-facing summary and replacing the two task commit placeholders;
+no follow-up task or backlog item is needed.
+
+**Next:** Refresh the configured implementation exit gate on the reviewed merged
+head.
 
 ## Final Summary (for PR/docs)
 
-Eighteen of 20 implementation and revision tasks are implemented. The merged-head
-final lifecycle review found two blocking gaps now tracked in `p-rev2`. The branch
-otherwise provides versioned
+All 20 implementation and revision tasks are implemented. The merged-head final
+lifecycle review found two blocking gaps; both are fixed and the narrowed final
+re-review passed. The branch provides versioned
 v1/v2 recon contracts, economical approved per-wave routing, bounded conditional
 escalation, exact outcome accounting, caller-owned judgment, normalized
 intended-routing output, aligned worker and controller guidance, bundled runtime
@@ -929,11 +940,12 @@ exact-target drift, shadow reconciliation, profile topology, and malformed wave
 containers. The retained raw gate logs lack explicit `exit=` markers; that
 nonblocking evidence-quality limitation remains disclosed.
 
-The final review's production topology defect, structured malformed-input gap, and
-lifecycle prose drift are fixed, and the terminal narrowed final review passed with
-no findings. The previous configured implementation exit gate passed and Thomas
-approved the final HiLL checkpoint. Integrating current `origin/main` made that
-prior gate stale, so a fresh final closeout remains required on the merged head.
+The earlier production-topology, malformed-input, and lifecycle-prose findings are
+fixed. The merged-head profile-cap and hostile-collection gaps are also fixed, and
+the terminal narrowed final review passed with no blocking findings. The previous
+configured implementation exit gate passed and Thomas approved the final HiLL
+checkpoint. Integrating current `origin/main` made that prior gate stale, so a
+fresh gate remains required on the merged head.
 
 ## Completion Outcome
 
