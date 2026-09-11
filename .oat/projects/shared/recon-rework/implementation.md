@@ -475,6 +475,10 @@ durable judgment-sweep dispositions.
 **Status:** immutable configuration and fingerprints persisted; launch not
 started.
 
+**Launch intent:** `recon-exit-gate-20260911T151854Z` persisted before execution;
+structured stdout receipt reserved at
+`/private/tmp/recon-exit-gate-20260911T151854Z.receipt.json`.
+
 ### Review Received: final configured exit gate
 
 **Date:** 2026-09-10
