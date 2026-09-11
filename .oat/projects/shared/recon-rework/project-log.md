@@ -112,6 +112,10 @@ run-2-terminal-pass-20260911 The terminal freshness review reported 0 Critical, 
 
 run-3-p-rev1-pass-20260911 Phase p-rev1 passed at merge commit 9d27e15a615fc18056a8c5b7501a0508ffb9c4a4 after all repository gates passed; reviews/archived/p-rev1-review-2026-09-11T143545Z.md records 0 Critical, 0 Important, 0 Medium, and 1 Minor, with m1 accepted as a formatter-owned non-semantic scope exception.
 
+### 2026-09-11 · structural · oat-project-review-provide · final
+
+run-3-final-review-20260911T144641Z Final lifecycle review at 0ee34935306c0dcb711ded3f83746a890cb50c97 used two bounded recon lanes and reported 0 Critical, 2 Important, 0 Medium, and 0 Minor findings; artifact reviews/final-review-2026-09-11T144641Z.md blocks closeout pending fixes.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility
