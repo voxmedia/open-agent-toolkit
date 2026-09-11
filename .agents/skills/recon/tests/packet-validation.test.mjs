@@ -596,6 +596,61 @@ async function persistReview(packet, id, { updateManifest = true } = {}) {
   await writeJson(packet.manifestPath, packet.manifest);
 }
 
+function replaceReferenceDigest(value, path, digest) {
+  if (Array.isArray(value)) {
+    for (const entry of value) replaceReferenceDigest(entry, path, digest);
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  if (value.path === path && typeof value.digest === 'string') {
+    value.digest = digest;
+  }
+  for (const entry of Object.values(value)) {
+    replaceReferenceDigest(entry, path, digest);
+  }
+}
+
+async function reassignGatherDossier(packet, path, { waveId, laneId }) {
+  const reference = packet.manifest.artifacts.find(
+    (artifact) => artifact.path === path,
+  );
+  assert.ok(reference, `missing fixture artifact ${path}`);
+  const artifactPath = join(packet.packetRoot, path);
+  const artifact = JSON.parse(await readFile(artifactPath, 'utf8'));
+  artifact.waveId = waveId;
+  artifact.laneId = laneId;
+  await writeJson(artifactPath, artifact);
+  reference.digest = await hashFile(artifactPath);
+  replaceReferenceDigest(packet.ledger, path, reference.digest);
+
+  const priorReference = packet.manifest.artifacts.find(
+    (artifactRef) => artifactRef.path === 'raw/drafts/claims-v1.json',
+  );
+  if (priorReference) {
+    const priorPath = join(packet.packetRoot, priorReference.path);
+    const priorLedger = JSON.parse(await readFile(priorPath, 'utf8'));
+    replaceReferenceDigest(priorLedger, path, reference.digest);
+    await writeJson(priorPath, priorLedger);
+    priorReference.digest = await hashFile(priorPath);
+    replaceReferenceDigest(
+      packet.ledger,
+      priorReference.path,
+      priorReference.digest,
+    );
+    for (const review of packet.reviewPaths.values()) {
+      replaceReferenceDigest(review.value, path, reference.digest);
+      replaceReferenceDigest(
+        review.value,
+        priorReference.path,
+        priorReference.digest,
+      );
+      await writeJson(review.path, review.value);
+      review.ref.digest = await hashFile(review.path);
+    }
+  }
+  await persist(packet);
+}
+
 async function expectInvalid(packet, code) {
   const result = await compileValidatedRun(packet.packetRoot);
   assert.equal(result.valid, false, JSON.stringify(result, null, 2));
@@ -615,6 +670,96 @@ for (const profile of ['quick', 'standard', 'thorough']) {
     assert.equal(result.publishable, true);
   });
 }
+
+test('primary gather lanes cannot impersonate the approved redundant gather wave', async () => {
+  const packet = await makePacket({ profile: 'thorough', status: 'partial' });
+  const gatherWave = packet.manifest.execution.waves.find(
+    (wave) => wave.mode === 'gather',
+  );
+  const redundantWave = packet.manifest.execution.waves.find(
+    (wave) => wave.mode === 'redundant-gather',
+  );
+  redundantWave.lanes[0].writeRoot =
+    'raw/dossiers/expected-redundant-gather.json';
+  gatherWave.lanes.push({
+    laneId: 'lane-gather-secondary',
+    scope: 'packet/gather-secondary',
+    writeRoot: 'raw/dossiers/pass-redundant-gather.json',
+  });
+  await reassignGatherDossier(
+    packet,
+    'raw/dossiers/pass-redundant-gather.json',
+    {
+      waveId: gatherWave.waveId,
+      laneId: 'lane-gather-secondary',
+    },
+  );
+  packet.manifest.gaps.push({
+    id: 'gap-redundant-gather-omitted',
+    code: 'PASS_OMITTED',
+    message: 'redundant-gather was omitted after its approved wave failed.',
+    material: true,
+  });
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.equal(result.publishable, false);
+  assert.equal(result.achievedProfile, 'standard');
+  assert.ok(
+    result.errors.some(
+      ({ code, path }) =>
+        code === 'ACHIEVED_PROFILE_MISMATCH' &&
+        path === '$.run.achievedProfile',
+    ),
+    JSON.stringify(result, null, 2),
+  );
+});
+
+test('redundant gather lanes cannot impersonate the approved primary gather wave', async () => {
+  const packet = await makePacket({ profile: 'thorough', status: 'partial' });
+  const gatherWave = packet.manifest.execution.waves.find(
+    (wave) => wave.mode === 'gather',
+  );
+  const redundantWave = packet.manifest.execution.waves.find(
+    (wave) => wave.mode === 'redundant-gather',
+  );
+  gatherWave.lanes[0].writeRoot = 'raw/dossiers/expected-primary-gather.json';
+  redundantWave.lanes.push({
+    laneId: 'lane-redundant-gather-secondary',
+    scope: 'packet/redundant-gather-secondary',
+    writeRoot: 'raw/dossiers',
+  });
+  for (const path of [
+    'raw/dossiers/dossier-1.json',
+    'raw/dossiers/pass-gather.json',
+  ]) {
+    await reassignGatherDossier(packet, path, {
+      waveId: redundantWave.waveId,
+      laneId: 'lane-redundant-gather-secondary',
+    });
+  }
+  packet.manifest.gaps.push({
+    id: 'gap-primary-gather-omitted',
+    code: 'PASS_OMITTED',
+    message: 'gather was omitted after its approved wave failed.',
+    material: true,
+  });
+  await persist(packet);
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.equal(result.publishable, false);
+  assert.equal(result.achievedProfile, null);
+  assert.ok(
+    result.errors.some(
+      ({ code, path }) =>
+        code === 'ACHIEVED_PROFILE_MISMATCH' &&
+        path === '$.run.achievedProfile',
+    ),
+    JSON.stringify(result, null, 2),
+  );
+});
 
 for (const status of ['failed', 'running', 'preparing', 'awaiting-approval']) {
   test(`valid ${status} generation is diagnosed and withdraws the prior packet`, async () => {

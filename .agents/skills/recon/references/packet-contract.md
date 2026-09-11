@@ -174,17 +174,17 @@ Run status is `preparing`, `awaiting-approval`, `running`, `complete`, `partial`
 or `failed`. The validator, not a worker, derives the achieved profile from
 complete typed artifacts of the same run:
 
-| Pass                       | Complete artifact                                            |
-| -------------------------- | ------------------------------------------------------------ |
-| `map`                      | a `recon.raw-dossier` with mode `map`                        |
-| `gather`                   | a `recon.raw-dossier` with mode `gather`                     |
-| `semantic-verification`    | a `recon.review-result` with kind `semantic`                 |
-| `adversarial`              | a `recon.review-result` with kind `adversarial`              |
-| `coverage`                 | a `recon.review-result` with kind `coverage`                 |
-| `reconciliation`           | a `recon.review-result` with kind `reconciliation`           |
-| `redundant-gather`         | complete `gather` dossiers from at least two distinct lanes  |
-| `redundant-verification`   | a `recon.review-result` with kind `redundant-verification`   |
-| `contradiction-resolution` | a `recon.review-result` with kind `contradiction-resolution` |
+| Pass                       | Complete artifact                                                         |
+| -------------------------- | ------------------------------------------------------------------------- |
+| `map`                      | a `recon.raw-dossier` with mode `map`                                     |
+| `gather`                   | a complete `gather` dossier owned by the approved primary `gather` wave   |
+| `semantic-verification`    | a `recon.review-result` with kind `semantic`                              |
+| `adversarial`              | a `recon.review-result` with kind `adversarial`                           |
+| `coverage`                 | a `recon.review-result` with kind `coverage`                              |
+| `reconciliation`           | a `recon.review-result` with kind `reconciliation`                        |
+| `redundant-gather`         | a complete `gather` dossier owned by the approved `redundant-gather` wave |
+| `redundant-verification`   | a `recon.review-result` with kind `redundant-verification`                |
+| `contradiction-resolution` | a `recon.review-result` with kind `contradiction-resolution`              |
 
 `quick` requires `map` and `gather`; the canonical ledger itself is the
 compile result, so an approved `compile` lane needs no separate artifact, and
@@ -209,7 +209,10 @@ wave whose mode matches the artifact (a semantic result to a
 `redundant-gather` wave, and so on); otherwise the artifact is
 `UNAPPROVED_LANE`. The artifact path must equal or sit under the lane's
 approved `writeRoot`; otherwise it is `LANE_WRITE_PATH_VIOLATION`. Every
-non-conditional approved lane must either have written an artifact or be
+primary and redundant gathering pass is derived from this exact approved wave
+ownership, not from aggregate dossier mode or lane cardinality. Multiple
+complete lanes from one gathering wave cannot satisfy the other wave's pass.
+Every non-conditional approved lane must either have written an artifact or be
 covered by a material `PASS_FAILED` or `PASS_OMITTED` gap naming its wave
 mode; otherwise the packet fails with `MISSING_LANE_OUTCOME`. Each required
 pass of the requested profile that has no complete artifact must likewise be

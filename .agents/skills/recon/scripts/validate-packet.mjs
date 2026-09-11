@@ -1067,8 +1067,17 @@ function collectCompletePasses(
   routing,
   conditionalState,
 ) {
+  const gatherLaneOwners = new Map();
   const conditionalLanes = new Map();
   for (const wave of routing?.waves ?? []) {
+    if (wave.mode === 'gather' || wave.mode === 'redundant-gather') {
+      for (const lane of wave.lanes ?? []) {
+        gatherLaneOwners.set(lane.laneId, {
+          waveId: wave.waveId,
+          mode: wave.mode,
+        });
+      }
+    }
     if (!wave.conditional) continue;
     for (const lane of wave.lanes ?? [])
       conditionalLanes.set(lane.laneId, wave);
@@ -1083,6 +1092,21 @@ function collectCompletePasses(
     ) {
       continue;
     }
+    if (value.kind === 'recon.raw-dossier' && value.mode === 'gather') {
+      if (!routing) {
+        const ids = passes.get('gather') ?? [];
+        ids.push(id);
+        passes.set('gather', ids);
+        continue;
+      }
+      const owner = gatherLaneOwners.get(value.laneId);
+      if (owner?.waveId === value.waveId) {
+        const ids = passes.get(owner.mode) ?? [];
+        ids.push(id);
+        passes.set(owner.mode, ids);
+      }
+      continue;
+    }
     for (const [mode, contract] of Object.entries(passContracts)) {
       if (
         value.kind === contract.kind &&
@@ -1095,13 +1119,16 @@ function collectCompletePasses(
       }
     }
   }
-  const gatherLanes = new Set(
-    (passes.get('gather') ?? []).map(
-      (id) => artifactsById.get(id).value.laneId,
-    ),
-  );
-  if (gatherLanes.size >= 2)
-    passes.set('redundant-gather', passes.get('gather'));
+  if (!routing) {
+    const gatherLanes = new Set(
+      (passes.get('gather') ?? []).map(
+        (id) => artifactsById.get(id).value.laneId,
+      ),
+    );
+    if (gatherLanes.size >= 2) {
+      passes.set('redundant-gather', passes.get('gather'));
+    }
+  }
   for (const ids of passes.values()) ids.sort();
   return passes;
 }
