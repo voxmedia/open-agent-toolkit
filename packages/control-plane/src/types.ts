@@ -26,6 +26,7 @@ export interface ExplainerDecisionV1 {
     | 'interactive'
     | 'kickoff_prompt'
     | 'autonomous_policy'
+    | 'capability_probe'
     | 'failed_attempt';
   decided_at: string;
   failed_attempt_evidence?: string;

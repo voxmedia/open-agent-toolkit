@@ -2,7 +2,10 @@ import { createHash, randomUUID } from 'node:crypto';
 import { lstat, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 
-import { validateIntentRecord } from './resolve-intent.mjs';
+import {
+  validateIntentRecord,
+  validateWritableIntentRecord,
+} from './resolve-intent.mjs';
 
 const FRONTMATTER_KEYS = Object.freeze({
   projectExplainer: 'oat_project_explainer',
@@ -17,7 +20,7 @@ export function hashStateContent(content) {
 }
 
 export function updateStateFrontmatter(content, product, record) {
-  validateIntentRecord(product, record);
+  validateWritableIntentRecord(product, record);
   if (typeof content !== 'string') {
     throw new TypeError('State content must be a string.');
   }
@@ -150,7 +153,7 @@ export async function persistIntent({
   ) {
     throw new TypeError('expectedHash must be a SHA-256 state content hash.');
   }
-  validateIntentRecord(product, record);
+  validateWritableIntentRecord(product, record);
 
   const fileInfo = await lstat(statePath);
   if (fileInfo.isSymbolicLink() || !fileInfo.isFile()) {

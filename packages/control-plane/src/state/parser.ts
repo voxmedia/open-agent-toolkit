@@ -29,6 +29,7 @@ const EXPLAINER_SOURCES = [
   'interactive',
   'kickoff_prompt',
   'autonomous_policy',
+  'capability_probe',
   'failed_attempt',
 ] as const;
 const EXPLAINER_DECISION_KEYS = [
@@ -47,6 +48,7 @@ const EXPLAINER_ALLOWED_PAIRS = {
     'generate:interactive',
     'skip:interactive',
     'generate:autonomous_policy',
+    'skip:capability_probe',
     'skip:failed_attempt',
   ]),
 } as const;
@@ -199,9 +201,11 @@ function parseExplainerDecision(
     record,
     'failed_attempt_evidence',
   );
-  const failedAttemptEvidence = normalizeNullableString(
-    record.failed_attempt_evidence,
-  );
+  const rawFailedAttemptEvidence = record.failed_attempt_evidence;
+  const failedAttemptEvidence =
+    typeof rawFailedAttemptEvidence === 'string'
+      ? normalizeNullableString(rawFailedAttemptEvidence)
+      : null;
   const isFailedAttempt =
     product === 'projectRecap' &&
     decision === 'skip' &&

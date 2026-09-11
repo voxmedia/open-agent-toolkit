@@ -152,6 +152,20 @@ export function validateIntentRecord(product, record) {
   return record;
 }
 
+export function validateWritableIntentRecord(product, record) {
+  validateIntentRecord(product, record);
+  if (
+    product === 'projectRecap' &&
+    record.decision === 'skip' &&
+    record.source === 'capability_probe'
+  ) {
+    throw new Error(
+      'projectRecap skip/capability_probe is a read-only legacy intent.',
+    );
+  }
+  return record;
+}
+
 export function validateFailedAttemptEvidenceLocator(value) {
   if (typeof value !== 'string') {
     throw new Error(
@@ -227,7 +241,7 @@ function resolveAutonomous({
 
 function createRecord(product, decision, source, now) {
   const record = { decision, source, decided_at: now };
-  validateIntentRecord(product, record);
+  validateWritableIntentRecord(product, record);
   return record;
 }
 

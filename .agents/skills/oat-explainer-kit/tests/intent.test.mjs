@@ -226,6 +226,49 @@ test('failed_attempt is a projectRecap-only skip source', () => {
   );
 });
 
+test('legacy capability-probe recap records remain read-only', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-legacy-recap-'));
+  const statePath = join(root, 'state.md');
+  const record = {
+    decision: 'skip',
+    source: 'capability_probe',
+    decided_at: NOW,
+  };
+  const content = `---
+oat_phase: implement
+oat_project_recap:
+  decision: skip
+  source: capability_probe
+  decided_at: '${NOW}'
+---
+
+# State
+`;
+  try {
+    await writeFile(statePath, content);
+    assert.deepEqual(
+      await readPersistedIntent({ statePath, product: 'projectRecap' }),
+      record,
+    );
+    assert.throws(
+      () => updateStateFrontmatter(content, 'projectRecap', record),
+      /read-only legacy/i,
+    );
+    await assert.rejects(
+      persistIntent({
+        statePath,
+        product: 'projectRecap',
+        record,
+        expectedHash: hashStateContent(content),
+      }),
+      /read-only legacy/i,
+    );
+    assert.equal(await readFile(statePath, 'utf8'), content);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('failed_attempt requires one narrow project-relative evidence locator', () => {
   const base = {
     decision: 'skip',

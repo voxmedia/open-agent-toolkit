@@ -19,6 +19,7 @@ const EXPLAINER_SOURCES = [
   'interactive',
   'kickoff_prompt',
   'autonomous_policy',
+  'capability_probe',
   'failed_attempt',
 ] as const;
 const EXPLAINER_DECISION_KEYS = [
@@ -37,6 +38,7 @@ const EXPLAINER_ALLOWED_PAIRS = {
     'generate:interactive',
     'skip:interactive',
     'generate:autonomous_policy',
+    'skip:capability_probe',
     'skip:failed_attempt',
   ]),
 } as const;
@@ -182,7 +184,7 @@ function readExplainerDecision(
   ) {
     errors.push({
       code: 'invalid-explainer-source',
-      message: `${key}.source must be interactive, kickoff_prompt, autonomous_policy, or failed_attempt`,
+      message: `${key}.source must be interactive, kickoff_prompt, autonomous_policy, capability_probe, or failed_attempt`,
     });
     valid = false;
   }

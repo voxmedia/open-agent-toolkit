@@ -188,6 +188,75 @@ describe('validateProjectState - explainer intent', () => {
   });
 
   it.each([
+    ['a valid scalar locator', 'explainers/failed-run/failure.json', true],
+    ['a missing locator', undefined, false],
+    ['an array locator', ['explainers/failed-run/failure.json'], false],
+    [
+      'an object locator',
+      { path: 'explainers/failed-run/failure.json' },
+      false,
+    ],
+    ['a numeric locator', 42, false],
+    ['a boolean locator', true, false],
+    ['a malformed scalar locator', '../outside/failure.json', false],
+  ] as const)(
+    'validates failed-attempt evidence supplied as %s before normalization',
+    (_label, failedAttemptEvidence, expectedValid) => {
+      const record = {
+        decision: 'skip',
+        source: 'failed_attempt',
+        decided_at: '2026-09-11T14:45:00Z',
+        ...(failedAttemptEvidence !== undefined && {
+          failed_attempt_evidence: failedAttemptEvidence,
+        }),
+      };
+
+      expect(
+        validateProjectState({
+          frontmatter: { oat_project_recap: record },
+        }).ok,
+      ).toBe(expectedValid);
+    },
+  );
+
+  it('accepts missing failed-attempt evidence for non-failed-attempt records', () => {
+    expect(
+      validateProjectState({
+        frontmatter: {
+          oat_project_recap: {
+            decision: 'skip',
+            source: 'interactive',
+            decided_at: '2026-09-11T14:45:00Z',
+          },
+        },
+      }),
+    ).toMatchObject({ ok: true });
+  });
+
+  it('accepts the read-only legacy recap capability-probe decision', () => {
+    expect(
+      validateProjectState({
+        frontmatter: {
+          oat_project_recap: {
+            decision: 'skip',
+            source: 'capability_probe',
+            decided_at: '2026-09-11T14:45:00Z',
+          },
+        },
+      }),
+    ).toMatchObject({
+      ok: true,
+      state: {
+        oat_project_recap: {
+          decision: 'skip',
+          source: 'capability_probe',
+          decided_at: '2026-09-11T14:45:00Z',
+        },
+      },
+    });
+  });
+
+  it.each([
     ['oat_project_explainer', 'generate', 'interactive', true],
     ['oat_project_explainer', 'skip', 'interactive', true],
     ['oat_project_explainer', 'generate', 'kickoff_prompt', true],
