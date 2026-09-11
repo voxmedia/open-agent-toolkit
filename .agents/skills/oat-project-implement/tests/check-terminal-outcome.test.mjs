@@ -291,6 +291,6 @@ test('implementation closeout invokes the shared guard before final approval', a
   assert.ok(approval > guard);
   assert.match(
     guidance.slice(guard, approval),
-    /built-durable.*built-not-durable.*built-needs-review.*failed/s,
+    /`built`.*`built-needs-review`.*`failed`.*`incomplete`/s,
   );
 });

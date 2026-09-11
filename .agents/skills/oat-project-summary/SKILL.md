@@ -258,21 +258,21 @@ spec, or design artifacts.
 
 **Non-lite section sources:**
 
-| Section                        | Primary Sources                                                                   |
-| ------------------------------ | --------------------------------------------------------------------------------- |
-| Overview                       | discovery.md initial request, spec.md problem statement                           |
-| What Was Implemented           | implementation.md task outcomes, plan.md phase structure                          |
-| Key Decisions                  | design.md decisions, implementation.md notes/decisions                            |
-| Design Deltas                  | implementation.md deviations table; review-received design drift notes            |
-| Notable Challenges             | implementation.md issues/blockers in task notes                                   |
-| Tradeoffs Made                 | implementation.md decisions, design.md tradeoff sections                          |
-| Integration Notes              | implementation.md notes about cross-cutting concerns                              |
-| Revision History               | plan.md p-revN phases, implementation.md revision notes                           |
-| Follow-up Items                | implementation.md deferred findings, plan.md deferred items                       |
-| Associated Issues              | state.md `associated_issues` field                                                |
-| Workflow Observations          | project-log.md via `oat project log rollup` only                                  |
-| Autonomous Execution Learnings | oat-execution-learnings.md dated entries                                          |
-| Explainer Outcome              | project-recap `manifest.json` and `build-record.json`, or the recorded recap skip |
+| Section                        | Primary Sources                                                                |
+| ------------------------------ | ------------------------------------------------------------------------------ |
+| Overview                       | discovery.md initial request, spec.md problem statement                        |
+| What Was Implemented           | implementation.md task outcomes, plan.md phase structure                       |
+| Key Decisions                  | design.md decisions, implementation.md notes/decisions                         |
+| Design Deltas                  | implementation.md deviations table; review-received design drift notes         |
+| Notable Challenges             | implementation.md issues/blockers in task notes                                |
+| Tradeoffs Made                 | implementation.md decisions, design.md tradeoff sections                       |
+| Integration Notes              | implementation.md notes about cross-cutting concerns                           |
+| Revision History               | plan.md p-revN phases, implementation.md revision notes                        |
+| Follow-up Items                | implementation.md deferred findings, plan.md deferred items                    |
+| Associated Issues              | state.md `associated_issues` field                                             |
+| Workflow Observations          | project-log.md via `oat project log rollup` only                               |
+| Autonomous Execution Learnings | oat-execution-learnings.md dated entries                                       |
+| Explainer Outcome              | project-recap `manifest.json` and `qa/result.json`, or the recorded recap skip |
 
 **Explainer Outcome (conditional):**
 
@@ -282,7 +282,7 @@ section with exactly one item. A run that happened uses the first form:
 ```markdown
 ## Explainer Outcome
 
-- **project-recap:** {generated | degraded} {outcome} — `{run path}`{optional warning or recovery note}
+- **project-recap:** {generated | generated — needs review | failed} — `{run path}`{optional reason or cause}
 ```
 
 A recap that never ran because a required seam was unavailable uses the second
@@ -294,11 +294,21 @@ form, which has a reason and no run path:
 - **project-recap:** skipped — {skip reason}
 ```
 
-Include exactly one concise item with its recipe, state (`generated`, `degraded`, or `skipped`), and either its outcome (`built-durable`, `built-not-durable`, `built-needs-review`, or `failed`) with run path, or its skip reason. Add a warning or recovery note when applicable. Use `generated` for `built-durable`, `degraded` for any other terminal outcome, and `skipped` only for a recap whose intent resolved to skip.
+Include exactly one concise item with its recipe and run path or skip reason:
 
-Use `manifest.json` and `build-record.json` as the source of truth for a run, and the recorded recap intent for a skip; refresh the existing item instead of appending a duplicate.
+- `generated` for manifest outcome `built`;
+- `generated — needs review` for `built-needs-review`, including the reason
+  from `qa/result.json`;
+- `failed` for `failed` or `incomplete`, including the sanitized cause; and
+- `skipped` only when persisted recap intent resolves to skip.
 
-Omit `Explainer Outcome` only when no project-recap attempt and no recorded recap skip exist. A degraded or skipped recap remains visible as its own product outcome; do not reinterpret either as project implementation failure. A `capability_probe` skip means the host had no provider configured for a required seam, not that the recap failed.
+Use `manifest.json` and `qa/result.json` as the source of truth for a run, and
+the persisted recap intent for a skip. Refresh the existing item instead of
+appending a duplicate.
+
+Omit `Explainer Outcome` only when no project-recap attempt and no persisted
+recap skip exist. A failed or skipped recap remains visible as its own product
+outcome; do not reinterpret it as project implementation failure.
 
 **Autonomous Execution Learnings (conditional):**
 
