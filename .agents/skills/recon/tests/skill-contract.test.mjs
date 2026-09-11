@@ -4,6 +4,10 @@ import { test } from 'node:test';
 
 const skillPath = new URL('../SKILL.md', import.meta.url);
 const profilesPath = new URL('../references/profiles.md', import.meta.url);
+const packetContractPath = new URL(
+  '../references/packet-contract.md',
+  import.meta.url,
+);
 const workerContractPath = new URL(
   '../references/worker-contract.md',
   import.meta.url,
@@ -15,15 +19,23 @@ const publicDocsPath = new URL(
 );
 
 async function readContracts() {
-  const [skill, profiles, workerContract, worker, publicDocs] =
+  const [skill, profiles, packetContract, workerContract, worker, publicDocs] =
     await Promise.all([
       readFile(skillPath, 'utf8'),
       readFile(profilesPath, 'utf8'),
+      readFile(packetContractPath, 'utf8'),
       readFile(workerContractPath, 'utf8'),
       readFile(workerPath, 'utf8'),
       readFile(publicDocsPath, 'utf8'),
     ]);
-  return { skill, profiles, workerContract, worker, publicDocs };
+  return {
+    skill,
+    profiles,
+    packetContract,
+    workerContract,
+    worker,
+    publicDocs,
+  };
 }
 
 function readModeMappings(content) {
@@ -121,7 +133,7 @@ test('controller binds dispatch dependencies once to one portable installed scop
 });
 
 test('profiles define adaptive bounded quick, standard, and thorough runs', async () => {
-  const { profiles } = await readContracts();
+  const { packetContract, profiles } = await readContracts();
   for (const profile of ['quick', 'standard', 'thorough']) {
     assert.match(profiles, new RegExp(`^## ${profile}$`, 'm'));
   }
@@ -141,6 +153,16 @@ test('profiles define adaptive bounded quick, standard, and thorough runs', asyn
     profiles,
     /exactly one mandatory[\s\S]{0,120}terminal reconciliation/i,
   );
+  assert.match(packetContract, /4\/10\/20 adaptive-lane cap/i);
+  assert.match(packetContract, /fixed at exactly one lane/i);
+  assert.match(packetContract, /total lane maxima are 6\/13\/23/i);
+  assert.match(profiles, /hard cap 4[\s\S]*hard cap 10[\s\S]*hard cap 20/i);
+  for (const total of [6, 13, 23]) {
+    assert.match(
+      profiles,
+      new RegExp(`total\\s+maximum\\s+is ${total} lanes`, 'i'),
+    );
+  }
 });
 
 test('thorough keeps redundant work required and contradiction resolution conditional', async () => {
@@ -151,7 +173,7 @@ test('thorough keeps redundant work required and contradiction resolution condit
   );
   const required = thorough.slice(
     thorough.indexOf('- Required:'),
-    thorough.indexOf('- Adaptive lane range:'),
+    thorough.indexOf('- Adaptive evidence lanes:'),
   );
   const conditional = thorough.slice(thorough.indexOf('- Conditional work:'));
 

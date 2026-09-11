@@ -129,8 +129,14 @@ after every named predecessor and before the one terminal reconciliation, and
 owns unique lane IDs and write roots. Conversely, every wave marked
 `conditional: true` must be the destination of exactly one activating condition;
 dead conditional waves are invalid. Quick permits no conditional wave;
-standard permits one and thorough two. All possible lanes count against the
-profile's 4/10/20 worker-lane cap, and concurrency remains capped at 4/6/8.
+standard permits one and thorough two. The profile's 4/10/20 adaptive-lane cap
+counts `gather`, `semantic-verification`, `adversarial`, `coverage`,
+`redundant-gather`, `redundant-verification`, and
+`contradiction-resolution` when those modes are permitted by the profile.
+Every permitted mode outside that counted set is fixed at exactly one lane:
+`map` and `compile` for quick, plus terminal `reconciliation` for standard and
+thorough. The resulting total lane maxima are 6/13/23, and concurrency remains
+capped at 4/6/8.
 
 Triggered dispositions require exact complete artifacts from every approved
 predecessor and concrete typed predicate evidence. A triggered destination must

@@ -61,7 +61,7 @@ profile-cap correction tasks.
 | prev2-t01 | Completed: align profile topology caps          | `be329458b7c1f931b4fc5712c1456619484d0e13`         |
 | prev2-t02 | Completed: close hostile manifest collections   | `fc4470be39e49dfc26489bbe5caeabcbc22525ef`         |
 | prev3-t01 | Completed: bound singleton wave lanes           | Task commit recorded by root after phase handoff   |
-| prev3-t02 | Pending: align adaptive cap contract prose      | —                                                  |
+| prev3-t02 | Completed: align adaptive cap contract prose    | Task commit recorded by root after phase handoff   |
 | prev3-t03 | Pending: clarify adaptive cap preview           | —                                                  |
 
 ## Phase 5: Post-retro simplification
@@ -994,6 +994,17 @@ compile waves plus standard reconciliation, including the previously accepted
 40-map-lane case. With the new guard temporarily neutralized, the targeted
 singleton-lane test failed as required (exit 1); restoring the guard returned
 the focused 66-test suite to green.
+
+### Task prev3-t02: Align adaptive cap contract prose
+
+**Status:** completed
+**Verification:** passed
+
+The packet and profile references now define 4/10/20 as adaptive evidence-lane
+caps, enumerate the counted modes, and require exactly one lane for fixed map,
+compile, and terminal reconciliation modes. They derive total maxima of 6/13/23
+lanes from those two rules. The skill-contract suite pins the same relationship
+across both shipped references.
 
 **Next:** Execute the three fix tasks, pass the mandatory narrowed lifecycle
 re-review, then resume this same gate generation for its one allowed remediation

@@ -13,7 +13,9 @@ claims are sufficient.
 
 - Required: one mapping wave, one or more non-overlapping gather lanes, one
   compile lane, deterministic schema and locator validation, and rendering.
-- Adaptive lane range: 1–4 gather lanes; hard cap 4.
+- Adaptive evidence lanes: 1–4 `gather` lanes; hard cap 4. The required `map`
+  and `compile` waves are fixed at exactly one lane each, so the total maximum
+  is 6 lanes.
 - Maximum concurrency: 4.
 - Assurance ceiling: `supported`; a quick packet is never `verified`.
 - Conditional work: no semantic, adversarial, or coverage worker is implied.
@@ -27,8 +29,11 @@ Use for load-bearing evidence that needs independent semantic challenge.
 
 - Required: quick topology plus selectively blind semantic verification,
   adversarial review, coverage review, and reconciliation.
-- Adaptive lane range: 1–6 gather lanes and 1–3 verification lanes; hard cap 10
-  total worker lanes.
+- Adaptive evidence lanes: `gather`, `semantic-verification`, `adversarial`,
+  `coverage`, and any predeclared `contradiction-resolution`; hard cap 10
+  across those counted modes. Required `map`, `compile`, and terminal
+  `reconciliation` waves are fixed at exactly one lane each, so the total
+  maximum is 13 lanes.
 - Maximum concurrency: 6.
 - Assurance ceiling: `verified` only after exact locator validation, affirmative
   independent semantic review, no unresolved material challenge, and adequate
@@ -44,8 +49,10 @@ reopening and verification.
 
 - Required: standard topology plus redundant independent gathering and
   redundant verification for load-bearing claims.
-- Adaptive lane range: 2–10 gather lanes and 2–6 verification or adversarial
-  lanes; hard cap 20 total worker lanes.
+- Adaptive evidence lanes: the standard counted modes plus `redundant-gather`
+  and `redundant-verification`; hard cap 20 across those counted modes.
+  Required `map`, `compile`, and terminal `reconciliation` waves are fixed at
+  exactly one lane each, so the total maximum is 23 lanes.
 - Maximum concurrency: 8.
 - Assurance ceiling: `verified` only for claims affirmed by the required
   independent passes and left without unresolved material challenge.
