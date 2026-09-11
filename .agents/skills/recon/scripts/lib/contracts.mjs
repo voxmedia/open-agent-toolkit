@@ -781,6 +781,7 @@ export function validateV2ProfileTopology(
   for (const wave of waves) {
     if (
       wave?.conditional === true &&
+      wave.mode !== 'reconciliation' &&
       !policy.orderedSingletonWaveModes.includes(wave.mode) &&
       !conditionDestinations.has(wave.waveId)
     ) {
@@ -981,6 +982,9 @@ function validateManifest(value, errors) {
   validateExecution(value.execution, errors, '$.execution');
   errors.push(...validateV2ProfileTopology(value));
   requiredArray(value, 'conditionOutcomes', errors);
+  const sources = Array.isArray(value.sources) ? value.sources : [];
+  const artifacts = Array.isArray(value.artifacts) ? value.artifacts : [];
+  const gaps = Array.isArray(value.gaps) ? value.gaps : [];
   const outcomeIds = new Set();
   for (const [index, outcome] of (Array.isArray(value.conditionOutcomes)
     ? value.conditionOutcomes
@@ -1040,13 +1044,12 @@ function validateManifest(value, errors) {
     }
     outcomeIds.add(outcome.conditionId);
   }
-  if (Array.isArray(value.sources))
-    duplicateIds(value.sources, '$.sources', errors);
-  if (Array.isArray(value.gaps)) duplicateIds(value.gaps, '$.gaps', errors);
-  for (const [index, reference] of (value.artifacts ?? []).entries()) {
+  duplicateIds(sources, '$.sources', errors);
+  duplicateIds(gaps, '$.gaps', errors);
+  for (const [index, reference] of artifacts.entries()) {
     validateExactReference(reference, `$.artifacts[${index}]`, errors);
   }
-  for (const [index, source] of (value.sources ?? []).entries()) {
+  for (const [index, source] of sources.entries()) {
     for (const key of [
       'kind',
       'id',
@@ -1155,7 +1158,7 @@ function validateManifest(value, errors) {
       }
     }
   }
-  for (const [index, gap] of (value.gaps ?? []).entries()) {
+  for (const [index, gap] of gaps.entries()) {
     requiredString(gap, 'id', errors, `$.gaps[${index}]`);
     requiredString(gap, 'code', errors, `$.gaps[${index}]`);
     requiredString(gap, 'message', errors, `$.gaps[${index}]`);

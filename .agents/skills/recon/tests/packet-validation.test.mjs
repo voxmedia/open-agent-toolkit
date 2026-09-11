@@ -851,6 +851,67 @@ test('missing approval has one schema diagnostic owner', async () => {
   );
 });
 
+test('non-array manifest collections return structured shape diagnostics', async () => {
+  const packet = await createPacketFixture({ profile: 'standard' });
+  tempRoots.push(packet.tempRoot);
+  packet.manifest.sources = 'not-an-array';
+
+  const result = validateArtifactShape(packet.manifest);
+  assert.equal(result.valid, false);
+  assert.deepEqual(
+    result.errors.map(({ code }) => code),
+    ['MISSING_REQUIRED_FIELD'],
+  );
+});
+
+for (const [name, mutate, forbiddenCodes] of [
+  [
+    'sources',
+    (manifest) => delete manifest.sources,
+    ['MISSING_PASS_OUTCOME_EVIDENCE', 'SHADOW_RECONCILIATION'],
+  ],
+  [
+    'run',
+    (manifest) => delete manifest.run,
+    ['MISSING_PASS_OUTCOME_EVIDENCE', 'SHADOW_RECONCILIATION'],
+  ],
+  [
+    'run id',
+    (manifest) => delete manifest.run.id,
+    ['MISSING_PASS_OUTCOME_EVIDENCE', 'SHADOW_RECONCILIATION'],
+  ],
+]) {
+  test(`missing manifest ${name} returns diagnostics and withdraws stale output`, async () => {
+    const packet = await createPacketFixture({ profile: 'standard' });
+    tempRoots.push(packet.tempRoot);
+    await writeFile(
+      join(packet.packetRoot, 'packet.md'),
+      '# last known good\n',
+      'utf8',
+    );
+    mutate(packet.manifest);
+    await packet.persist();
+
+    const result = await validatePacket(packet.packetRoot);
+    const errorCodes = result.errors.map(({ code }) => code);
+    assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+    assert.ok(
+      errorCodes.includes('MISSING_REQUIRED_FIELD'),
+      JSON.stringify(result, null, 2),
+    );
+    for (const code of forbiddenCodes) {
+      assert.equal(
+        errorCodes.includes(code),
+        false,
+        JSON.stringify(result, null, 2),
+      );
+    }
+    await assert.rejects(
+      readFile(join(packet.packetRoot, 'packet.md'), 'utf8'),
+    );
+  });
+}
+
 test('packet validation rejects a conditional wave without an activating condition', async () => {
   const packet = await createPacketFixture({ profile: 'standard' });
   tempRoots.push(packet.tempRoot);

@@ -235,23 +235,28 @@ test('every conditional wave has exactly one activating condition', () => {
   );
 });
 
-test('conditional terminal defects have one topology diagnostic owner', () => {
-  const execution = createV2ExecutionApproval({
-    modes: standardModes,
-    laneIdForMode,
-  });
-  execution.waves.at(-1).conditional = true;
+for (const [profile, modes] of [
+  ['quick', ['map', 'gather', 'compile', 'reconciliation']],
+  ['standard', standardModes],
+]) {
+  test(`${profile} conditional terminal defects have one topology diagnostic owner`, () => {
+    const execution = createV2ExecutionApproval({
+      modes,
+      laneIdForMode,
+    });
+    execution.waves.at(-1).conditional = true;
 
-  const errors = validateV2ProfileTopology({
-    schemaVersion: 2,
-    run: { requestedProfile: 'standard' },
-    execution,
+    const errors = validateV2ProfileTopology({
+      schemaVersion: 2,
+      run: { requestedProfile: profile },
+      execution,
+    });
+    assert.deepEqual(
+      errors.map(({ code }) => code),
+      ['INVALID_TERMINAL_TOPOLOGY'],
+    );
   });
-  assert.deepEqual(
-    errors.map(({ code }) => code),
-    ['INVALID_TERMINAL_TOPOLOGY'],
-  );
-});
+}
 
 test('normalization refuses unknown manifest versions', () => {
   assert.throws(

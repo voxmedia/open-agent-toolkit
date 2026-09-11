@@ -2181,7 +2181,11 @@ export async function compileValidatedRun(packetDirectory) {
   );
 
   const exactEvidence = new Set();
-  if (manifest && ledger) {
+  const manifestCoreUsable =
+    Array.isArray(manifest?.sources) &&
+    isObject(manifest?.run) &&
+    typeof manifest.run.id === 'string';
+  if (manifest && ledger && manifestCoreUsable) {
     validateDerivedSourceGaps(manifest, ledger, errors);
     const sources = new Map(
       manifest.sources.map((source) => [source.id, source]),
