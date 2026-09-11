@@ -9,15 +9,21 @@ const workerContractPath = new URL(
   import.meta.url,
 );
 const workerPath = new URL('../../../agents/recon-worker.md', import.meta.url);
+const publicDocsPath = new URL(
+  '../../../../apps/oat-docs/docs/workflows/skills/recon.md',
+  import.meta.url,
+);
 
 async function readContracts() {
-  const [skill, profiles, workerContract, worker] = await Promise.all([
-    readFile(skillPath, 'utf8'),
-    readFile(profilesPath, 'utf8'),
-    readFile(workerContractPath, 'utf8'),
-    readFile(workerPath, 'utf8'),
-  ]);
-  return { skill, profiles, workerContract, worker };
+  const [skill, profiles, workerContract, worker, publicDocs] =
+    await Promise.all([
+      readFile(skillPath, 'utf8'),
+      readFile(profilesPath, 'utf8'),
+      readFile(workerContractPath, 'utf8'),
+      readFile(workerPath, 'utf8'),
+      readFile(publicDocsPath, 'utf8'),
+    ]);
+  return { skill, profiles, workerContract, worker, publicDocs };
 }
 
 function readModeMappings(content) {
@@ -59,6 +65,19 @@ test('controller proposes and checks independently approved per-wave targets', a
     skill,
     /approval is[\s\S]{0,40}session-local[\s\S]{0,240}resumed[\s\S]{0,160}fresh approval/i,
   );
+});
+
+test('public docs expose only the current manifest and session-local approval contract', async () => {
+  const { publicDocs } = await readContracts();
+  assert.match(publicDocs, /packet-manifest[^\n]*accepts version 2 only/i);
+  assert.match(publicDocs, /approval is session-local/i);
+  assert.match(publicDocs, /fresh preview and explicit approval/i);
+  assert.match(
+    publicDocs,
+    /every valid packet renders[\s\S]{0,80}Intended Routing/i,
+  );
+  assert.doesNotMatch(publicDocs, /manifest version 1 remains supported/i);
+  assert.doesNotMatch(publicDocs, /manifest-v1 packet/i);
 });
 
 test('controller keeps selection, launch, and caller judgment ownership separate', async () => {

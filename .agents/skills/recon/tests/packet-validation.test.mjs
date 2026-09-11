@@ -801,6 +801,49 @@ test('dispatches schema versions by artifact kind and rejects legacy manifests',
   await expectInvalid(legacyManifest, 'UNSUPPORTED_SCHEMA_VERSION');
 });
 
+test('one manifest shape defect does not cascade into routing diagnostics', async () => {
+  const packet = await createPacketFixture({ profile: 'standard' });
+  tempRoots.push(packet.tempRoot);
+  packet.manifest.request.unexpected = true;
+  await packet.persist();
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.deepEqual(
+    result.errors.map(({ code }) => code),
+    ['UNKNOWN_FIELD'],
+  );
+});
+
+test('packet validation rejects a conditional wave without an activating condition', async () => {
+  const packet = await createPacketFixture({ profile: 'standard' });
+  tempRoots.push(packet.tempRoot);
+  packet.manifest.execution.waves.splice(-1, 0, {
+    waveId: 'wave-dead-conditional',
+    mode: 'redundant-gather',
+    taskClass: 'mechanical-recon',
+    classFloor: 'mechanical-recon',
+    selectionReason: 'Dead conditional wave regression fixture.',
+    lanes: [
+      {
+        laneId: 'lane-dead-conditional',
+        scope: 'packet/dead-conditional',
+        writeRoot: 'raw/dossiers/dead-conditional.json',
+      },
+    ],
+    conditional: true,
+  });
+  packet.manifest.execution = approveExecution(packet.manifest.execution);
+  await packet.persist();
+
+  const result = await validatePacket(packet.packetRoot);
+  assert.equal(result.valid, false, JSON.stringify(result, null, 2));
+  assert.deepEqual(
+    result.errors.map(({ code }) => code),
+    ['MISSING_WAVE_CONDITION'],
+  );
+});
+
 test('public validation returns categorical JSON for object-valued waves', async () => {
   const cliPath = fileURLToPath(
     new URL('../scripts/validate-packet.mjs', import.meta.url),

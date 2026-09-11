@@ -778,10 +778,20 @@ export function validateV2ProfileTopology(
       );
     }
   }
+  for (const wave of waves) {
+    if (wave?.conditional === true && !conditionDestinations.has(wave.waveId)) {
+      errors.push(
+        issue(
+          'MISSING_WAVE_CONDITION',
+          `Conditional wave ${wave.waveId} must be bound to exactly one activating condition`,
+          `${path}.waves`,
+        ),
+      );
+    }
+  }
   const unconditionalContradiction = waves.find(
     (wave) =>
-      wave?.mode === 'contradiction-resolution' &&
-      (wave.conditional !== true || !conditionDestinations.has(wave.waveId)),
+      wave?.mode === 'contradiction-resolution' && wave.conditional !== true,
   );
   if (unconditionalContradiction) {
     errors.push(

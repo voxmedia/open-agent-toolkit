@@ -19,3 +19,7 @@ Remove the receipt chain and stage topology from the recon packet contract and r
 ## Consequences
 
 Recon publishes on launchers that only spawn workers and return results. The packet still rejects approval-axis drift, unapproved lanes, missing pass outcomes, malformed claim evidence links, and every source, locator, review, and reconciliation invariant. This supersedes DR-260831-canonical-validated-run. Its receipt-removal boundary remains in force, while DR-260910-restore-economical-recon supersedes the former homogeneous-selection requirement in DR-260831-approval-bound-homogeneous. Reintroduce launcher-emitted receipts only when a launcher exists that produces them itself.
+
+`DR-260911-use-session-local-recon` partially supersedes this decision's
+canonical-fingerprint and approval-axis-drift clauses. Its receipt-removal
+boundary remains in force.

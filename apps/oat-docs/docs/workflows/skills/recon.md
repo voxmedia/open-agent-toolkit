@@ -173,18 +173,17 @@ non-publishable candidate generation withdraws any existing `packet.md`:
 - `raw/` contains worker dossiers, candidate artifacts, and safe failure
   diagnostics. It is not normal consumer input.
 
-Manifest version 1 remains supported with its original homogeneous target and
-approval meaning. New writers use version 2, whose normalized routing view
-contains inherited or complete per-wave targets and conditional outcomes while
-continuing to reference version 1 evidence artifacts.
+The `recon.packet-manifest` contract accepts version 2 only. Evidence artifact
+kinds remain independently versioned at version 1. Approval is session-local
+and records only `{ type, approvedAt }`: resuming, reloading, or changing the
+proposal requires a fresh preview and explicit approval before launch.
 
-For manifest v2, `packet.md` renders a compact Intended Routing section from the
-already validated normalized view. It labels exact targets and condition
-dispositions as approved intent, not proof of the native process that ran,
-launcher receipts, token or billing totals, or universal correctness. A valid
-manifest-v1 packet retains the pre-v2 rendered output without an Intended
-Routing section. Evidence, claims, contradictions, and gaps remain the packet's
-main consumer context in both versions.
+Every valid packet renders a compact Intended Routing section from the already
+validated normalized view. It labels exact targets and condition dispositions
+as approved intent, not proof of the native process that ran, launcher receipts,
+token or billing totals, or universal correctness. A valid packet continues to
+reference version 1 evidence artifacts. Evidence, claims, contradictions, and
+gaps remain the packet's main consumer context.
 
 The ledger compiler and packet validator enforce categorical referential
 integrity on `synthesis.keyClaimIds` and `synthesis.unresolvedQuestionIds`. Any

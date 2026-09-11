@@ -126,7 +126,9 @@ condition contains `conditionId`, `destinationWaveId`, `afterWaveIds`, one of
 `maxActivations: 1`. Each conditional destination is a uniquely identified
 `contradiction-resolution` evidence wave, has exactly one condition, appears
 after every named predecessor and before the one terminal reconciliation, and
-owns unique lane IDs and write roots. Quick permits no conditional wave;
+owns unique lane IDs and write roots. Conversely, every wave marked
+`conditional: true` must be the destination of exactly one activating condition;
+dead conditional waves are invalid. Quick permits no conditional wave;
 standard permits one and thorough two. All possible lanes count against the
 profile's 4/10/20 worker-lane cap, and concurrency remains capped at 4/6/8.
 
@@ -348,7 +350,7 @@ record under `raw/quarantine/`. Never promote invalid output.
 Run `scripts/validate-packet.mjs <packet-dir>` before rendering or publication.
 It delegates to the single validation boundary, which validates schemas, IDs,
 references, containment, hashes, source reopening, locators, the approval
-approved lanes, pass outcomes, the one terminal reconciliation,
+presence, approved lanes, pass outcomes, the one terminal reconciliation,
 legal transitions, secret-safe persistence, derived gaps, assurance, and
 requested vs achieved profile. Candidate validation is non-destructive for
 canonical diagnostic artifacts, but a non-publishable candidate withdraws any

@@ -203,6 +203,38 @@ test('condition semantics have one validator owner and one diagnostic per inject
   }
 });
 
+test('every conditional wave has exactly one activating condition', () => {
+  const execution = createV2ExecutionApproval({
+    modes: standardModes,
+    laneIdForMode,
+  });
+  execution.waves.splice(-1, 0, {
+    waveId: 'wave-dead-conditional',
+    mode: 'redundant-gather',
+    taskClass: 'mechanical-recon',
+    classFloor: 'mechanical-recon',
+    selectionReason: 'Dead conditional wave regression fixture.',
+    lanes: [
+      {
+        laneId: 'lane-dead-conditional',
+        scope: 'packet/dead-conditional',
+        writeRoot: 'raw/dossiers/dead-conditional.json',
+      },
+    ],
+    conditional: true,
+  });
+
+  const errors = validateV2ProfileTopology({
+    schemaVersion: 2,
+    run: { requestedProfile: 'standard' },
+    execution,
+  });
+  assert.deepEqual(
+    errors.map(({ code }) => code),
+    ['MISSING_WAVE_CONDITION'],
+  );
+});
+
 test('normalization refuses unknown manifest versions', () => {
   assert.throws(
     () => normalizeManifestRouting({ schemaVersion: 99, execution: {} }),

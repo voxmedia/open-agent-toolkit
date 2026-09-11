@@ -52,3 +52,7 @@ evidence invariants stay fail-closed, but recon does not recreate unsupported
 launch receipts or treat approved intent as runtime proof. Current orchestration
 guidance remains the source of provider qualifications and target selection;
 recon does not add a second model ladder.
+
+`DR-260911-use-session-local-recon` partially supersedes the legacy-approval
+compatibility clause above and replaces durable fingerprint binding with
+session-local approval followed by immediate exact-target launch.

@@ -2187,6 +2187,23 @@ export async function compileValidatedRun(packetDirectory) {
     errors,
   );
 
+  if (manifest && ledger && !routing) {
+    if (packetRootIdentity) {
+      await assertUnchangedRoot(packetRootIdentity);
+      await rm(join(packetRoot, 'packet.md'), { force: true });
+    }
+    return {
+      valid: false,
+      publishable: false,
+      status: manifest.run?.status ?? 'failed',
+      requestedProfile: manifest.run?.requestedProfile ?? null,
+      achievedProfile: null,
+      packetRoot,
+      errors,
+      warnings,
+    };
+  }
+
   const exactEvidence = new Set();
   if (manifest && ledger) {
     validateDerivedSourceGaps(manifest, ledger, errors);
