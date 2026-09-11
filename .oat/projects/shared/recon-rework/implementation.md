@@ -13,9 +13,9 @@ oat_template: false
 **Started:** 2026-09-09
 **Last Updated:** 2026-09-11
 
-Three implementation runs plus `p-rev4` completed all 25 original, post-retro,
-integration, and review-remediation tasks. The remote same-run evidence finding
-and its diagnostic-quality follow-up both passed narrowed review.
+Three implementation runs plus `p-rev4` completed 25 original, post-retro,
+integration, and review-remediation tasks. A fresh full-delta review then added
+one Important remediation task in `p-rev5`.
 
 ## Progress Overview
 
@@ -30,8 +30,9 @@ and its diagnostic-quality follow-up both passed narrowed review.
 | Phase p-rev2: Merged-head review fixes     | completed | 2     | 2/2       |
 | Phase p-rev3: Configured-gate cap fixes    | completed | 3     | 3/3       |
 | Phase p-rev4: Same-run condition evidence  | completed | 2     | 2/2       |
+| Phase p-rev5: Thorough gather compilation  | pending   | 1     | 0/1       |
 
-**Total:** 25/25 tasks implemented. Refreshed final closeout verification is next.
+**Total:** 25/26 tasks implemented. Task `prev5-t01` is next.
 
 ## Task Status
 
@@ -62,6 +63,7 @@ and its diagnostic-quality follow-up both passed narrowed review.
 | prev3-t03 | Completed: clarify adaptive cap preview         | `12b68773a957c4a011a1099027e1b6da3a7f1463`         |
 | prev4-t01 | Completed: require same-run condition evidence  | `8257446bed1f3105e288cd6f2fd46eb5c9d53190`         |
 | prev4-t02 | Completed: suppress derivative diagnostics      | `3784abc9f26e6714901c450c775b0ceb16ad30b7`         |
+| prev5-t01 | Pending: compile redundant thorough evidence    | -                                                  |
 
 ## Phase p-rev4: Remote condition-evidence review fix
 
@@ -120,6 +122,25 @@ missing-predecessor and predicate failures remain independently visible.
 
 **Outcome:** `p-rev4` passed after one bounded fix continuation. No findings are
 deferred.
+
+## Phase p-rev5: Connect thorough redundant gathering to compilation
+
+**Status:** pending
+**Started:** 2026-09-11
+
+### Review Received: refreshed final review
+
+**Date:** 2026-09-11
+**Review artifact:** `reviews/archived/final-review-2026-09-11T173037Z.md`
+**Reviewed head:** `9b7c04a7783a14f92e10edc56c7e5e81d965cc26`
+**Findings:** 0 Critical, 1 Important, 0 Medium, 0 Minor
+**New tasks added:** `prev5-t01`
+
+The finding is accepted for immediate repair. Thorough routing currently places
+`redundant-gather` after compilation and review, so the second dossier cannot
+inform the candidate ledger or its review briefs. `prev5-t01` will move the wave
+before compilation and require both gathering outputs in compiled-ledger
+provenance, with a fallible omission control.
 
 ## Phase 5: Post-retro simplification
 

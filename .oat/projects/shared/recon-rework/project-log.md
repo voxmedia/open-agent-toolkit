@@ -148,6 +148,10 @@ run-3-exit-gate-pass-receive-20260911T155617Z Configured gate run e9a3a038-dc02-
 
 Phase p-rev4 passed after one bounded fix loop; tasks prev4-t01 and prev4-t02 completed, root-owned re-review reported 0 Critical, 0 Important, 0 Medium, and 0 Minor findings.
 
+### 2026-09-11 · structural · oat-project-review-receive · final
+
+run-4-final-important-20260911 Fresh final review found one Important thorough-ordering defect; p-rev5 task prev5-t01 records the accepted fix to compile both independent gather dossiers before review.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

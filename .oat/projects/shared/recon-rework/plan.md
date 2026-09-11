@@ -926,6 +926,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | pr-285 | code     | fixes_completed | 2026-09-11 | reviews/archived/remote-pr-285-review-2026-09-11T163646Z.md | 5120541946a83927bf798ccc6d9f27c070b6b9af | -          | -                     |
 | p-rev4 | code     | fixes_completed | 2026-09-11 | reviews/archived/p-rev4-review-2026-09-11T165722Z.md        | 8257446bed1f3105e288cd6f2fd46eb5c9d53190 | manual     | -                     |
 | p-rev4 | code     | passed          | 2026-09-11 | reviews/archived/p-rev4-review-2026-09-11T170722Z.md        | 3784abc9f26e6714901c450c775b0ceb16ad30b7 | manual     | -                     |
+| final  | code     | fixes_added     | 2026-09-11 | reviews/archived/final-review-2026-09-11T173037Z.md         | 9b7c04a7783a14f92e10edc56c7e5e81d965cc26 | auto       | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -1204,10 +1205,52 @@ the focused conditional-routing suite and the complete recon suite.
 
 Commit as `fix(prev4-t02): suppress derivative condition diagnostics`.
 
-## Implementation Complete
+## Phase p-rev5: Connect thorough redundant gathering to compilation
 
-**Implementation tasks complete: 25 of 25 implemented. The remote feedback and
-narrowed phase re-review are fully resolved.**
+Source: final lifecycle review (2026-09-11)
+
+### Task prev5-t01: (review) Compile both thorough gathering outputs
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/recon/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/recon/scripts/validate-packet.mjs`
+- Modify: `.agents/skills/recon/tests/fixtures/packet-fixture.mjs`
+- Modify: focused recon routing and integration tests as required
+- Modify: recon contract guidance when needed to preserve producer/consumer alignment
+
+**Step 1: Understand the issue**
+
+The thorough topology currently orders `redundant-gather` after compilation and
+the standard review waves. Its dossier therefore cannot be a compiled-ledger
+input or influence the review briefs, even though the packet can still claim the
+thorough profile.
+
+**Step 2: Implement fix**
+
+Move `redundant-gather` before `compile`. Make the production packet contract
+require the thorough candidate ledger to incorporate both independent gathering
+outputs before review briefs are constructed, while retaining the existing
+single terminal reconciliation topology.
+
+**Step 3: Verify**
+
+Update the routing fixture and integration coverage to demonstrate that both
+gather dossiers feed the compiled ledger. Add a negative control that removes
+the redundant dossier from the ledger inputs or provenance and requires
+categorical rejection. Neutralize the guard once, confirm the control fails,
+restore it, and run focused plus complete recon suites.
+
+**Step 4: Commit**
+
+Commit as `fix(prev5-t01): compile redundant thorough evidence`.
+
+## Implementation In Progress
+
+**Implementation tasks complete: 25 of 26 implemented. The fresh final review's
+Important thorough-ordering finding is pending in `prev5-t01`.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -1218,8 +1261,9 @@ narrowed phase re-review are fully resolved.**
 - Phase p-rev2: 2 tasks — close merged-head profile and hostile-collection gaps.
 - Phase p-rev3: 3 tasks — bound fixed waves and align cap docs and preview.
 - Phase p-rev4: 2 tasks — require same-run evidence and suppress derivative diagnostics.
+- Phase p-rev5: 1 task — connect redundant thorough gathering to compilation.
 
-**Total: 9 phases, 25 tasks.** All implementation tasks are complete.
+**Total: 10 phases, 26 tasks.** One final-review remediation task is pending.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References
