@@ -84,6 +84,10 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0
 
 run-2-final-followups-20260911 The passing review's 1 Medium and 4 Minor findings were all accepted and fixed in 01a2a92c5e0de817110feea6cd88503636308585; the review was archived with no backlog filing, and narrowed final re-review remains pending.
 
+### 2026-09-11 · structural · oat gate review · final
+
+target=cursor-fable-5-1-high threshold=important findings=critical:0,important:1,medium:0,minor:2 exit=1 status=blocked artifact=.oat/projects/shared/recon-rework/reviews/final-review-2026-09-11T022854Z.md run=60e7fe16-0eee-4f9b-aac4-d774732391e2
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
