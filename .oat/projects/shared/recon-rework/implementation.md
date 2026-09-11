@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
-oat_current_task_id: prev1-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 ---
@@ -22,17 +22,17 @@ project for the user-approved post-retro simplification in `p05-t01`.
 
 ## Progress Overview
 
-| Phase                                      | Status      | Tasks | Completed |
-| ------------------------------------------ | ----------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
-| Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
-| Phase 4: Distribution and verification     | completed   | 6     | 6/6       |
-| Phase 5: Post-retro simplification         | completed   | 4     | 4/4       |
-| Phase p-rev1: Integrate current main       | in_progress | 1     | 0/1       |
+| Phase                                      | Status    | Tasks | Completed |
+| ------------------------------------------ | --------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
+| Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
+| Phase 4: Distribution and verification     | completed | 6     | 6/6       |
+| Phase 5: Post-retro simplification         | completed | 4     | 4/4       |
+| Phase p-rev1: Integrate current main       | completed | 1     | 1/1       |
 
-**Total:** 17/18 tasks implemented. Every final-review finding is fixed and
-received; integrating current `origin/main` is the remaining revision task.
+**Total:** 18/18 tasks implemented. Every phase and review disposition is complete;
+the integrated head is ready for final lifecycle closeout.
 
 ## Task Status
 
@@ -55,7 +55,7 @@ received; integrating current `origin/main` is the remaining revision task.
 | p05-t02   | Completed: align shipped and historical docs    | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`         |
 | p05-t03   | Completed: close validator regressions          | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`, `bd5dded4d` |
 | p05-t04   | Completed: reconcile final-review bookkeeping   | this commit                                        |
-| prev1-t01 | In progress: integrate current main             | —                                                  |
+| prev1-t01 | Completed: integrate current main               | `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`         |
 
 ## Phase 5: Post-retro simplification
 
@@ -576,6 +576,41 @@ implementation exit gate is allowed; final HiLL sequencing may proceed.
   tasks `p04-t03` through `p04-t05`.
 - Final review stamp: `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`.
 
+### Run 3 — 2026-09-11
+
+- Entry baseline: `d1169e39964a8f97ae5d50c50eefd355955541f2`; revision scope
+  `p-rev1` integrated current `origin/main` at
+  `842cb3a1059dc24c521adf7383f4fbf512899f14`.
+- Implementation request `recon-rework-prev1-implement-20260911T1407Z`
+  completed on `oat-phase-implementer-gpt-5-6-sol-medium` with no recovery
+  attempts. Dispatch: scope=p-rev1 action=implementation role=implementer
+  producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol
+  effort_axis=selected:medium dispatch_policy=high dispatch_ceiling=high
+  target=oat-phase-implementer-gpt-5-6-sol-medium.
+- Merge commit `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4` has exact parents
+  `d1169e39964a8f97ae5d50c50eefd355955541f2` and
+  `842cb3a1059dc24c521adf7383f4fbf512899f14`. All nine conflicts were
+  resolved semantically, the receive contract composes both parents, and public
+  packages are lockstep `0.2.73`.
+- The complete CI-equivalent gate sequence plus `pnpm lint` and `pnpm format`
+  passed after the merge; focused review checks also passed.
+- Review request `recon-rework-prev1-review-20260911T1430Z` completed on
+  `oat-reviewer-gpt-5-6-sol-high`. Dispatch: scope=p-rev1 action=review
+  role=reviewer producer=unknown provenance=unknown
+  model_axis=selected:gpt-5.6-sol effort_axis=selected:high
+  dispatch_policy=high dispatch_ceiling=high
+  target=oat-reviewer-gpt-5-6-sol-high.
+- Review artifact
+  `reviews/archived/p-rev1-review-2026-09-11T143545Z.md` reported 0 Critical,
+  0 Important, 0 Medium, and 1 Minor finding; reconnaissance was not attempted.
+- Minor m1 is accepted as an explicit formatting-only scope exception. Restoring
+  the second parent's extra EOF blank line was attempted through the same
+  implementer handle, but repository formatting removed it again. The canonical
+  formatted output has no semantic or runtime impact, so no fix commit or backlog
+  item was created.
+- Phase `p-rev1` passed with zero blocking fix loops; final lifecycle closeout
+  remains distinct.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -783,7 +818,7 @@ that no fourth planning review should run; implementation/final reviews remain.
 
 ## Phase p-rev1: Integrate current main
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-09-11
 
 ### Revision Received: Inline Feedback
@@ -800,16 +835,18 @@ that no fourth planning review should run; implementation/final reviews remain.
 
 **New tasks added:** `prev1-t01`
 
-**Next:** Execute `prev1-t01` through `oat-project-implement`.
+**Outcome:** Merge commit `9d27e15a615fc18056a8c5b7501a0508ffb9c4a4`
+integrated current `origin/main`, all verification gates passed, and the phase
+review passed with its formatter-owned Minor explicitly dispositioned.
 
 ## Final Summary (for PR/docs)
 
-All nine original implementation tasks and four final-review fix tasks are
-implemented, and all four phase reviews passed. The branch now provides versioned
+All 18 implementation and revision tasks are implemented, and every phase review
+passed. The branch now provides versioned
 v1/v2 recon contracts, economical approved per-wave routing, bounded conditional
 escalation, exact outcome accounting, caller-owned judgment, normalized
 intended-routing output, aligned worker and controller guidance, bundled runtime
-assets, project provider projections, and lockstep public package version `0.2.72`.
+assets, project provider projections, and lockstep public package version `0.2.73`.
 
 Key surfaces include `.agents/skills/recon`, the canonical recon-worker role,
 shared model-selection guidance, CLI bundle consistency, public recon docs, five
@@ -824,8 +861,9 @@ nonblocking evidence-quality limitation remains disclosed.
 
 The final review's production topology defect, structured malformed-input gap, and
 lifecycle prose drift are fixed, and the terminal narrowed final review passed with
-no findings. The configured implementation exit gate passed and Thomas approved
-the final HiLL checkpoint.
+no findings. The previous configured implementation exit gate passed and Thomas
+approved the final HiLL checkpoint. Integrating current `origin/main` made that
+prior gate stale, so a fresh final closeout remains required on the merged head.
 
 ## Completion Outcome
 
@@ -834,9 +872,9 @@ the final HiLL checkpoint.
 - Project recap was skipped by interactive lifecycle decision because this host had
   no configured author, fact critic, browser session, visual critic, or set planner
   seam. Outcome: `skipped`; reason: `interactive`; run path: none.
-- PR #285 remains open as a draft. GitHub reports it as conflicting with the
-  current `main`; no rebase, merge, live-provider acceptance run, issue closure,
-  or canonical backlog closure was performed.
+- PR #285 remains open as a draft. The local branch now contains current
+  `origin/main`; the refreshed final gate, push, readiness transition, issue
+  closure, and canonical backlog closure remain separate shipping steps.
 
 ## References
 

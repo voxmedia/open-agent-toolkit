@@ -917,6 +917,7 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T022854Z.md         | 44c00a120be3c6ad139354593e3876b41cedc845 | gate       | cursor-fable-5-1-high |
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T024939Z.md         | d08443a4494aa0f7344893ce03cabf61a50fb683 | gate       | cursor-fable-5-1-high |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T030536Z.md         | 5f243f7ac825a050e995c867597c69ef3e1b46bc | gate       | cursor-fable-5-1-high |
+| p-rev1 | code     | passed          | 2026-09-11 | reviews/archived/p-rev1-review-2026-09-11T143545Z.md        | 9d27e15a615fc18056a8c5b7501a0508ffb9c4a4 | manual     | -                     |
 
 ## Phase p-rev1: Integrate current main
 
@@ -924,7 +925,7 @@ Source: inline feedback (2026-09-11)
 
 ### Task prev1-t01: (revision) Merge origin/main and resolve conflicts semantically
 
-**Status:** pending
+**Status:** completed
 
 **Files:**
 
@@ -960,9 +961,9 @@ Commit the semantic conflict resolution as the merge commit created by integrati
 
 ## Implementation Complete
 
-**Implementation tasks complete: 17 of 18 implemented. Run 2 final-review fixes,
-verification, and review reconciliation are complete; the main-integration revision
-is pending.**
+**Implementation tasks complete: 18 of 18 implemented. Run 2 final-review fixes,
+verification, review reconciliation, and the main-integration revision are
+complete.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
@@ -971,7 +972,7 @@ is pending.**
 - Phase 5: 4 tasks — simplification plus fresh final-review fixes.
 - Phase p-rev1: 1 task — integrate current `origin/main` and resolve conflicts.
 
-**Total: 5 phases, 17 tasks.** All implementation tasks are complete.
+**Total: 6 phases, 18 tasks.** All implementation tasks are complete.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.
 
 ## References

@@ -108,6 +108,10 @@ target=cursor-fable-5-1-high threshold=important findings=critical:0,important:0
 
 run-2-terminal-pass-20260911 The terminal freshness review reported 0 Critical, 0 Important, 0 Medium, and 0 Minor findings against the final collection guard; p05-t04 and all 17 implementation tasks are complete.
 
+### 2026-09-11 · structural · oat-project-implement · p-rev1
+
+run-3-p-rev1-pass-20260911 Phase p-rev1 passed at merge commit 9d27e15a615fc18056a8c5b7501a0508ffb9c4a4 after all repository gates passed; reviews/archived/p-rev1-review-2026-09-11T143545Z.md records 0 Critical, 0 Important, 0 Medium, and 1 Minor, with m1 accepted as a formatter-owned non-semantic scope exception.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility
