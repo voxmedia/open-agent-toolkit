@@ -459,6 +459,22 @@ corroborates the archived run-bound artifact, exact passed Reviews event, and
 durable judgment-sweep dispositions.
 **Status:** `allowed/passed`; no product change followed the reviewed head.
 
+### Implementation Exit Gate: generation 2 pending
+
+**Resolved:** 2026-09-11T15:23:00Z
+**Gate:** `IMPLEMENT-11` via configured `oat --json gate review`
+**Policy:** block on Important or above; maximum 2 remediation attempts
+**Reviewed basis:** `695f4dba72d9fb46ab10a962a08907a6d593f7e3`
+**Integration base:** `origin/main` with unique merge base
+`842cb3a1059dc24c521adf7383f4fbf512899f14`
+**Implementation fingerprint:**
+`sha256:effective-delta-v1:4cd156d382aea38fe06bbd9e0c59f7d5749dc81ab8d7ec17eed5b499c2f9065c`
+**Freshness checkpoint:** the final-review receipt advanced to
+`935088094234df8ce12a1b2d5ce6f85bc71fa5d9` with fingerprint
+`sha256:effective-delta-v1:873425b1ae82ef864cfe4228a69bd9be71184c7cfedcc05f6d865bddaca20e82`.
+**Status:** immutable configuration and fingerprints persisted; launch not
+started.
+
 ### Review Received: final configured exit gate
 
 **Date:** 2026-09-10
