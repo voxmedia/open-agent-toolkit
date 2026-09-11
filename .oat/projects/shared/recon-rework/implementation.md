@@ -1600,6 +1600,23 @@ zero exit code in `/tmp/recon-prev8-final/`:
 Final lifecycle review must now disposition the one deferred diagnostic-only
 Minor and establish the basis for configured exit-gate attempt 2.
 
+### Final-review cycle cap after p-rev8
+
+**Paused:** 2026-09-11T22:22:47Z
+
+The prior user authorization covered exactly one additional bounded fix and
+review cycle after the three-cycle final-review cap; that cycle was consumed by
+`prev7-t01` and the passing final review at
+`reviews/archived/final-review-2026-09-11T202308Z.md`. The configured exit gate
+then found a separate lane-granularity defect, whose authorized gate remediation
+completed in `p-rev8`.
+
+Because `p-rev8` changed substantive production code, the earlier final review
+cannot satisfy the closeout freshness contract. One additional final lifecycle
+review is required before configured gate attempt 2. Execution is paused at the
+governance cap pending a narrow authorization extension; no reviewer or gate is
+running.
+
 ## References
 
 - [Plan](plan.md)

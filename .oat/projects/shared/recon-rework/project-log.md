@@ -192,6 +192,10 @@ run-4-exit-gate-receive-20260911T204246Z Configured gate e54ba2dd-6df7-468d-9984
 
 run-4-p-rev8-pass-20260911 Phase p-rev8 completed prev8-t01 through prev8-t03 at 016f7aade4e91fdcf7323d81ed4c2a5dc7374106; review reviews/archived/p-rev8-review-2026-09-11T210626Z.md reported 0C/0I/0M/1m, with its fail-closed diagnostic-only edge deferred to final disposition.
 
+### 2026-09-11 · structural · oat-project-implement · final
+
+final-review-cap-p-rev8-20260911T222247Z paused after p-rev8 final verification because the prior one-cycle override is exhausted; one fresh final lifecycle review is required before configured gate attempt 2.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

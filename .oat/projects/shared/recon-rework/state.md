@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: 016f7aade4e91fdcf7323d81ed4c2a5dc7374106
-oat_blockers: []
+oat_blockers:
+  - final-review cycle cap requires authorization after substantive p-rev8 remediation
 associated_issues: []
 oat_kind: implementation
 oat_parent: null
@@ -88,7 +89,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T22:21:43Z'
+oat_project_state_updated: '2026-09-11T22:22:47Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -104,9 +105,9 @@ oat_project_recap:
 
 ## Current Phase
 
-Implementation — all 31 tasks and the `p-rev8` phase review are complete. Final
-verification and lifecycle review must refresh before configured exit-gate
-attempt 2.
+Implementation — all 31 tasks, the `p-rev8` phase review, and final verification
+are complete. A fresh final lifecycle review is required before configured
+exit-gate attempt 2, but the prior one-cycle authorization is exhausted.
 
 ## Artifacts
 
@@ -154,7 +155,7 @@ No existing project was absorbed or retired.
 - ✗ Refreshed configured exit gate found 1 Important, 1 Medium, and 1 Minor
 - ✓ `p-rev8` implemented and phase review passed without blocking findings
 - ✓ Refreshed final repository verification passed after `p-rev8`
-- ⧗ Refresh final lifecycle review before gate attempt 2
+- ✗ Final-review cycle cap requires a narrow authorization extension
 - ⧗ Summary, documentation, and PR description refresh pending
 - ✓ Final repository release-verification sequence passed
 - ✓ PR created
@@ -162,12 +163,15 @@ No existing project was absorbed or retired.
 
 ## Blockers
 
-No active blocker.
+The previously authorized additional final-review cycle was consumed after
+`p-rev7`. Because `p-rev8` changed substantive code, closeout requires one fresh
+final lifecycle review before configured gate attempt 2. No additional cycle is
+authorized yet.
 
 ## Next Milestone
 
-Run the final lifecycle review, including explicit disposition of the deferred
-p-rev8 Minor, before configured exit-gate attempt 2.
+Authorize one additional final lifecycle review cycle for the completed
+`p-rev8` remediation, then continue to configured exit-gate attempt 2.
 
 ## Authorization and Scope
 
