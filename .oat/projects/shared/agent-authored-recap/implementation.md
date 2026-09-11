@@ -486,7 +486,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 | Phase | Status    | Tasks | Base                                       | Code Head                                  | Review                          |
 | ----- | --------- | ----- | ------------------------------------------ | ------------------------------------------ | ------------------------------- |
-| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `853462ffd53b2d347ad6495c5829abd18091cab0` | round 1 fixes completed         |
+| p01   | completed | 17/17 | `79f359957fabe4cbe042b39379523887b816cbff` | `853462ffd53b2d347ad6495c5829abd18091cab0` | round 2 changes requested       |
 
 - Recovery ledger: `used_attempts: 0`, `pending_attempt: null`; no recovery events.
 - File boundary: only p01-declared files, the operator-approved plan/design correction, p01 bookkeeping, and mechanically derived in-phase symbol consumers were changed.
@@ -525,6 +525,24 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
 - Dispatch: scope=p01-review-r1-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 - Disposition: `fixes_completed`; root-owned re-review required before p02
+
+#### Phase Review Round 2
+
+- Request ID: `dispatch-agent-authored-recap-p01-review-r2-20260911T1635Z`
+- Launch status: `accepted`
+- Terminal outcome: `completed`
+- Review artifact: `reviews/p01-review-2026-09-11T165150Z.md`
+- Reviewed range: `79f359957fabe4cbe042b39379523887b816cbff..3f29035c2588bc590cfd361e88e5632e084238f5`
+- Reviewed head: `3f29035c2588bc590cfd361e88e5632e084238f5`
+- Prior dispositions: 2 Critical closed; 3 Important closed; 2 Important partial
+- Findings: 0 Critical, 3 Important, 3 Medium, 0 Minor
+- Disposition: `CHANGES REQUESTED`; new review row advanced to `fixes_added`
+- Reconnaissance: `not-attempted`; no Review Orchestration section or project-log entry
+- Selection reason: `gate-target`
+- Candidates considered: `gpt-5.6-sol-high`
+- Dispatch target: `oat-reviewer-gpt-5-6-sol-high`
+- Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+- Next: final allowed bounded fix iteration for the three Important findings, then fresh root-owned review round 3
 
 #### Continuation cont-agent-authored-recap-p01-plan-correction-1
 
