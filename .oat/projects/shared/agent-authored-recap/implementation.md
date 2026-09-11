@@ -1096,6 +1096,22 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Recovery accounting: outside the automatic review-fix budget and not phase recovery; usage remains `0/10`
 - Boundary: no Phase 4 work, no closed Phase 3 findings, and no Phase 1 deferred Medium findings
 
+#### Operator-Authorized Governance Remediation
+
+- Continuation: `cont-agent-authored-recap-p03-governance-manual-fix-1`
+- Original request: `dispatch-agent-authored-recap-p03-20260911T202900Z`
+- Source review: `reviews/p03-review-2026-09-11T225420Z.md`
+- Fix base: `bf8b69ccc94a5d800d14999c1f3fdb33b0dac393`
+- Fix commit: `e8ab4ec5bf7abb5ab862a250ff00f2d5d6181d5e`
+- Fixed: CLI and control-plane typed readers now reject non-string raw `failed_attempt_evidence` consistently and accept read-only legacy `skip/capability_probe`; active lifecycle write entry points reject creating the legacy pair
+- Negative controls: pre-fix control-plane accepted an array that CLI rejected; both readers rejected the valid legacy pair; the lifecycle writer accepted a new legacy record. Post-fix raw array/object/number/boolean and malformed values fail consistently, legacy reads pass, and both active writers reject new legacy records
+- Verification: focused control-plane (35/35), CLI (44/44), writer (11/11), lifecycle/containment (72/72), CLI contracts (131/131), control-plane package (151/151), sweep/parity (10/10), all sixteen gates, and isolated-HOME uncached Turbo passed
+- Protected boundaries: all eleven Phase 3 slices remained byte-identical; all autonomy mirrors remain coherent
+- Recovery accounting: operator-scoped governance remediation; automatic retry budget remains exhausted and p03 recovery usage remains `0/10`
+- Dispatch target and axes: unchanged (`oat-phase-implementer-gpt-5-6-sol-high`, `selected:gpt-5.6-sol-high`, effort not applicable)
+- Dispatch: scope=p03-governance-manual-fix action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- Disposition: `fixes_completed`; one operator-authorized independent verification review remains before Phase 4
+
 <!-- orchestration-runs-end -->
 
 ---
