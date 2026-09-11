@@ -918,16 +918,58 @@ rows below. The spec and design placeholders are non-blocking in quick mode.
 | final  | code     | fixes_completed | 2026-09-11 | reviews/archived/final-review-2026-09-11T024939Z.md         | d08443a4494aa0f7344893ce03cabf61a50fb683 | gate       | cursor-fable-5-1-high |
 | final  | code     | passed          | 2026-09-11 | reviews/archived/final-review-2026-09-11T030536Z.md         | 5f243f7ac825a050e995c867597c69ef3e1b46bc | gate       | cursor-fable-5-1-high |
 
+## Phase p-rev1: Integrate current main
+
+Source: inline feedback (2026-09-11)
+
+### Task prev1-t01: (revision) Merge origin/main and resolve conflicts semantically
+
+**Status:** pending
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-receive/SKILL.md`
+- Modify: `.oat/sync/manifest.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+
+**Step 1:** Merge current `origin/main` into `recon-rework`. Resolve the review
+contract and validation conflicts by composing both branches' behavior. Resolve
+the public package manifests to one lockstep version strictly newer than current
+`origin/main`, then regenerate or validate derived sync/version surfaces rather
+than choosing an entire side mechanically.
+
+**Step 2: Verify**
+
+Run `git diff --check`, confirm `git ls-files -u` is empty, run the focused skill
+and release validation suites for the conflicted surfaces, then run the complete
+repository definition-of-done gate sequence plus `pnpm lint` and `pnpm format`.
+
+Expected: no unmerged entries; composed review-receive behavior retained; all
+skill, version, release, test, build, docs, lint, and formatting gates pass.
+
+**Step 3: Commit**
+
+Commit the semantic conflict resolution as the merge commit created by integrating
+`origin/main`.
+
 ## Implementation Complete
 
-**Implementation tasks complete: 17 of 17 implemented. Run 2 final-review fixes,
-verification, and review reconciliation are complete.**
+**Implementation tasks complete: 17 of 18 implemented. Run 2 final-review fixes,
+verification, and review reconciliation are complete; the main-integration revision
+is pending.**
 
 - Phase 1: 2 tasks — decision and versioned contract.
 - Phase 2: 3 tasks — preview, conditional validation, integrated controls.
 - Phase 3: 2 tasks — guidance and consumer output.
 - Phase 4: 6 tasks — distribution, complete verification, and final-review fixes.
 - Phase 5: 4 tasks — simplification plus fresh final-review fixes.
+- Phase p-rev1: 1 task — integrate current `origin/main` and resolve conflicts.
 
 **Total: 5 phases, 17 tasks.** All implementation tasks are complete.
 Plan readiness, task completion, reviews, final gate, and shipping are distinct.

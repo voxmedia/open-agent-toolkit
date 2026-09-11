@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t01
 oat_last_commit: 5f243f7ac825a050e995c867597c69ef3e1b46bc
 oat_blockers: []
 associated_issues: []
@@ -14,7 +14,7 @@ oat_hill_completed:
   - p04
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: pr_open
+oat_phase_status: in_progress
 oat_phase_recovery_policy:
   default_attempt_limit: 10
   phase_attempt_limits: {}
@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T00:00:00.000Z'
+oat_project_state_updated: '2026-09-11T14:06:44Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -104,15 +104,17 @@ oat_project_recap:
 
 ## Current Phase
 
-Run 2 implementation, verification, and final review complete.
+Revision p-rev1 - integrating current `origin/main` into the PR branch.
 
 ## Artifacts
 
 - Discovery: `discovery.md` — captured from the conversation, CLI-completed.
 - Spec: N/A — native quick workflow.
 - Design: `design.md` — lightweight design aligned with the simplified approval contract.
-- Plan: `plan.md` — complete; 5 sequential phases, 17 tasks.
-- Implementation: `implementation.md` — 17/17 tasks complete; terminal final review passed with no findings.
+- Plan: `plan.md` — complete; 5 implementation phases plus one revision phase,
+  18 tasks.
+- Implementation: `implementation.md` — 17/18 tasks complete; main integration
+  is in progress.
 - Verification: `references/verification/phase-4-validation.md` — exact CI gate,
   cache/fresh-execution, compatibility, condition, and guard-neutralization evidence.
 - Handoff: `handoff.md` — exact continuation instructions.
@@ -125,7 +127,7 @@ Planning baseline is `bb93ad233befc75d0da9bd699ffc57db80dfe393`.
 Project scope is shared; active pointer is checkout-local.
 No existing project was absorbed or retired.
 
-- ✓ Implementation complete
+- ⧗ Revision p-rev1 in progress
 - ✓ Final review and configured exit gate passed
 - ✓ Final HiLL and configured closeout sequence completed
 - ✓ PR #285 updated and open as a draft
@@ -140,9 +142,9 @@ No active blocker.
 
 ## Next Milestone
 
-Push the completed branch for cloud execution. Reconcile any current base
-conflicts before marking PR #285 ready or merging it. Project tracking remains
-active; after the chosen merge/closeout boundary, run `oat-project-complete`.
+Merge current `origin/main`, resolve the nine conflicts, rerun complete
+verification, and refresh the implementation exit gate on the integrated head
+before updating PR #285.
 
 ## Authorization and Scope
 

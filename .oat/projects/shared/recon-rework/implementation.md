@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-09-11
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 oat_template: false
 ---
@@ -22,38 +22,40 @@ project for the user-approved post-retro simplification in `p05-t01`.
 
 ## Progress Overview
 
-| Phase                                      | Status    | Tasks | Completed |
-| ------------------------------------------ | --------- | ----- | --------- |
-| Phase 1: Decision and versioned contract   | completed | 2     | 2/2       |
-| Phase 2: Proposal, conditions, integration | completed | 3     | 3/3       |
-| Phase 3: Guidance and consumer output      | completed | 2     | 2/2       |
-| Phase 4: Distribution and verification     | completed | 6     | 6/6       |
-| Phase 5: Post-retro simplification         | completed | 4     | 4/4       |
+| Phase                                      | Status      | Tasks | Completed |
+| ------------------------------------------ | ----------- | ----- | --------- |
+| Phase 1: Decision and versioned contract   | completed   | 2     | 2/2       |
+| Phase 2: Proposal, conditions, integration | completed   | 3     | 3/3       |
+| Phase 3: Guidance and consumer output      | completed   | 2     | 2/2       |
+| Phase 4: Distribution and verification     | completed   | 6     | 6/6       |
+| Phase 5: Post-retro simplification         | completed   | 4     | 4/4       |
+| Phase p-rev1: Integrate current main       | in_progress | 1     | 0/1       |
 
-**Total:** 17/17 tasks implemented. Every final-review finding is fixed and
-received; the terminal freshness review reports no findings.
+**Total:** 17/18 tasks implemented. Every final-review finding is fixed and
+received; integrating current `origin/main` is the remaining revision task.
 
 ## Task Status
 
-| Task    | Outcome                                         | Commit                                             |
-| ------- | ----------------------------------------------- | -------------------------------------------------- |
-| p01-t01 | Completed: superseding decision                 | `663dab68996b41dbc5e92bf2e85847924ea2a944`         |
-| p01-t02 | Completed: versioned manifest and normalization | `f5317ee5fd4d5df78a341819023d7cc49f97da3e`         |
-| p02-t01 | Completed: economical routing preview           | `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c`         |
-| p02-t02 | Completed: conditional escalation/outcomes      | `1bad7202d740ef2daf6d22a254875e8ba2774c0b`         |
-| p02-t03 | Completed: profile and harness integration      | `58b165063f7f1f154920b9793d353a2f8777ed81`         |
-| p03-t01 | Completed: controller/worker/shared guidance    | `e38994e2809c57542aa3146c6a64ffedca22cd34`         |
-| p03-t02 | Completed: renderer and public docs             | `33a5cfff83a11219429d3944cec8de8a1eb475a4`         |
-| p04-t01 | Completed: bundle and release versions          | `9721d7c680a0778967addaf9ef8b391839949d9c`         |
-| p04-t02 | Completed: full verification/evidence           | `3e200321b705e5a3204cbe72434dff547ab2bc28`         |
-| p04-t03 | Completed: validate production topology         | `4f6884a99844cf5e86168ad422db7f2f49a23c08`         |
-| p04-t04 | Completed: structure malformed-wave errors      | `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3`         |
-| p04-t05 | Completed: align lifecycle summaries            | `fe30e986219bbf27b04fb08957166229acc955fe`         |
-| p04-t06 | Completed: correct Phase 4 completion wording   | this commit                                        |
-| p05-t01 | Completed: simplify approval and diagnostics    | `f16437f54491c57f9ad9518c34b415ffb7418a7e`         |
-| p05-t02 | Completed: align shipped and historical docs    | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`         |
-| p05-t03 | Completed: close validator regressions          | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`, `bd5dded4d` |
-| p05-t04 | Completed: reconcile final-review bookkeeping   | this commit                                        |
+| Task      | Outcome                                         | Commit                                             |
+| --------- | ----------------------------------------------- | -------------------------------------------------- |
+| p01-t01   | Completed: superseding decision                 | `663dab68996b41dbc5e92bf2e85847924ea2a944`         |
+| p01-t02   | Completed: versioned manifest and normalization | `f5317ee5fd4d5df78a341819023d7cc49f97da3e`         |
+| p02-t01   | Completed: economical routing preview           | `8b4a2a39e7b8a675ea05ac238a3e681428f1ca5c`         |
+| p02-t02   | Completed: conditional escalation/outcomes      | `1bad7202d740ef2daf6d22a254875e8ba2774c0b`         |
+| p02-t03   | Completed: profile and harness integration      | `58b165063f7f1f154920b9793d353a2f8777ed81`         |
+| p03-t01   | Completed: controller/worker/shared guidance    | `e38994e2809c57542aa3146c6a64ffedca22cd34`         |
+| p03-t02   | Completed: renderer and public docs             | `33a5cfff83a11219429d3944cec8de8a1eb475a4`         |
+| p04-t01   | Completed: bundle and release versions          | `9721d7c680a0778967addaf9ef8b391839949d9c`         |
+| p04-t02   | Completed: full verification/evidence           | `3e200321b705e5a3204cbe72434dff547ab2bc28`         |
+| p04-t03   | Completed: validate production topology         | `4f6884a99844cf5e86168ad422db7f2f49a23c08`         |
+| p04-t04   | Completed: structure malformed-wave errors      | `31619d967b0c0d7b42323ee77ff4ee86d6cef7a3`         |
+| p04-t05   | Completed: align lifecycle summaries            | `fe30e986219bbf27b04fb08957166229acc955fe`         |
+| p04-t06   | Completed: correct Phase 4 completion wording   | this commit                                        |
+| p05-t01   | Completed: simplify approval and diagnostics    | `f16437f54491c57f9ad9518c34b415ffb7418a7e`         |
+| p05-t02   | Completed: align shipped and historical docs    | `3d21ea885a557e2642eb4b82cfb32d7a51024ea7`         |
+| p05-t03   | Completed: close validator regressions          | `3d21ea885`, `01a2a92c5`, `cfd2f25a5`, `bd5dded4d` |
+| p05-t04   | Completed: reconcile final-review bookkeeping   | this commit                                        |
+| prev1-t01 | In progress: integrate current main             | —                                                  |
 
 ## Phase 5: Post-retro simplification
 
@@ -778,6 +780,27 @@ that no fourth planning review should run; implementation/final reviews remain.
 - Phase implementers reported `pnpm check`, `pnpm type-check`, `pnpm test`,
   `pnpm build`, `pnpm lint`, and `pnpm format` passing. These results do not
   override the terminal semantic review finding.
+
+## Phase p-rev1: Integrate current main
+
+**Status:** in_progress
+**Started:** 2026-09-11
+
+### Revision Received: Inline Feedback
+
+**Date:** 2026-09-11
+**Source:** inline conversation
+
+**Changes requested:**
+
+- Merge current `origin/main` into the PR branch.
+- Resolve all conflicts semantically.
+- Re-run complete verification and refresh lifecycle-gate freshness on the
+  integrated head before updating the PR.
+
+**New tasks added:** `prev1-t01`
+
+**Next:** Execute `prev1-t01` through `oat-project-implement`.
 
 ## Final Summary (for PR/docs)
 
