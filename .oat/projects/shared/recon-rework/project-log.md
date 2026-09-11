@@ -196,6 +196,10 @@ run-4-p-rev8-pass-20260911 Phase p-rev8 completed prev8-t01 through prev8-t03 at
 
 final-review-cap-p-rev8-20260911T222247Z paused after p-rev8 final verification because the prior one-cycle override is exhausted; one fresh final lifecycle review is required before configured gate attempt 2.
 
+### 2026-09-11 · structural · oat-project-implement · final
+
+final-review-cap-p-rev8-authorized-20260911T230742Z Thomas authorized exactly one additional final lifecycle review cycle for completed p-rev8 and configured gate attempt 2 if it passes.
+
 ## End-of-run synthesis
 
 Run 2 removed unnecessary approval-fingerprint and manifest-v1 compatibility

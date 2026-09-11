@@ -1617,6 +1617,11 @@ review is required before configured gate attempt 2. Execution is paused at the
 governance cap pending a narrow authorization extension; no reviewer or gate is
 running.
 
+**Authorization:** On 2026-09-11, Thomas authorized exactly one additional
+final lifecycle review cycle for the completed `p-rev8` remediation, followed
+by configured exit-gate attempt 2 if that review passes. This does not authorize
+another standard lifecycle review cycle.
+
 ## References
 
 - [Plan](plan.md)
