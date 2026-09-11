@@ -1410,7 +1410,7 @@ code in a dedicated `/tmp/recon-closeout-*.log` receipt:
 
 ## Final Summary (for PR/docs)
 
-All 28 implementation and revision tasks are implemented. The merged-head final
+All 31 implementation and revision tasks are implemented. The merged-head final
 lifecycle review and configured gate identified five substantive or alignment
 gaps; all are fixed, and both narrowed lifecycle re-reviews passed. A subsequent
 remote PR review exposed a same-run provenance gap in conditional evidence; the
@@ -1418,25 +1418,26 @@ validator now rejects foreign-run evidence even when it reuses an approved lane,
 and emits only the primary categorical diagnostic for that failure. Three later
 final-review fixes now require thorough compilation to incorporate both independent
 gathering outputs and bind each derived gather pass to its exact approved wave and
-lane ownership, while material failed-pass evidence now dominates contradictory
-complete artifacts before assurance derivation. The branch provides manifest-v2
-recon contracts, economical
-approved per-wave routing, bounded conditional escalation, exact outcome
-accounting, caller-owned judgment, normalized intended-routing output, aligned
-worker and controller guidance, bundled runtime assets, project provider
-projections, and lockstep public package version `0.2.73`.
+lane ownership, while material failed-pass evidence now reconciles against exact
+lane identity before assurance derivation. Mixed-lane partial waves remain
+publishable, same-lane contradictions fail closed, and the public packet
+contract names the categorical outcomes. The branch provides manifest-v2 recon
+contracts, economical approved per-wave routing, bounded conditional escalation,
+exact outcome accounting, caller-owned judgment, normalized intended-routing
+output, aligned worker and controller guidance, bundled runtime assets, project
+provider projections, and lockstep public package version `0.2.73`.
 
 Key surfaces include `.agents/skills/recon`, the canonical recon-worker role,
 shared model-selection guidance, CLI bundle consistency, public recon docs, five
 public package manifests, and the repeatable Phase 4 verification note.
 
 Verification includes the eight CI-equivalent gates in order, fresh isolated Turbo
-tests, the final 278/278 recon suite, 29/29 bundle tests, provider-view
+tests, the final 281/281 recon suite, 29/29 bundle tests, provider-view
 synchronization, release validation, docs build, and negative controls for
 exact-target drift, shadow reconciliation, profile topology, and malformed wave
 containers, same-run condition evidence, derivative-diagnostic suppression,
 compiled redundant-gather provenance, reciprocal gather-pass impersonation, and
-contradictory complete-artifact/failed-pass outcomes.
+same-lane versus mixed-lane artifact/outcome reconciliation.
 The retained raw gate logs lack explicit `exit=` markers; that
 nonblocking evidence-quality limitation remains disclosed.
 
@@ -1446,9 +1447,10 @@ findings are fixed. The terminal narrowed final review passed with no blocking
 findings. Configured exit-gate attempt 1 produced three fixes; attempt 2 passed
 with no findings and was durably received. The later `p-rev4` review passed after
 one bounded diagnostic-quality fix; the `p-rev5` and `p-rev6` reviews then passed
-after closing two gather-flow defects, and the authorized `p-rev7` review passed
-after closing the terminal pass-outcome contradiction. Project-wide final review
-and the configured exit gate must be refreshed against this latest
+after closing two gather-flow defects, the authorized `p-rev7` review passed
+after closing the terminal pass-outcome contradiction, and `p-rev8` closed the
+configured gate's lane-granularity and contract findings. Project-wide final
+review and configured-gate attempt 2 must be refreshed against this latest
 implementation basis.
 
 ## Completion Outcome
@@ -1456,7 +1458,7 @@ implementation basis.
 - The configured pre-approval sequence completed `summary`, `document`, and `pr`;
   its post-approval list was empty.
 - The refreshed project summary, repository references, and final PR description
-  require one final refresh for all seven revision phases; manifest v2,
+  require one final refresh for all eight revision phases; manifest v2,
   session-local approval, and lockstep public package version `0.2.73` remain
   current.
 - Final verification passed `pnpm check`, `pnpm type-check`, `pnpm test`,
@@ -1560,13 +1562,43 @@ refresh against this reviewed basis.
 **Configuration fingerprint:**
 `sha256:023ab163cd770b4124039ed932d22aacab2370148d7379074b4f78e0bcaaf324`
 **Policy:** `onFailure=block`, `maxAttempts=2`
-**Status:** pending; launch not started.
+**Status:** blocked; result received and archived.
 
 The current configuration resolves the same provider-neutral final code-review
 gate as the prior generation. The passed lifecycle review is the immutable
 implementation basis; its artifact receipt and the final-review receive commit
 are classified as corroborated closeout-only descendants in the rolling
 freshness checkpoint.
+
+Gate run `e54ba2dd-6df7-468d-9984-638aa95ea3c6` returned 0 Critical,
+1 Important, 1 Medium, and 1 Minor finding. Its receive-eligible artifact was
+archived at `reviews/archived/final-review-2026-09-11T204246Z.md`; all findings
+became `prev8-t01` through `prev8-t03`, and remediation attempt 1 of 2 was
+consumed. The `p-rev8` implementation changed the substantive basis, so this
+generation is stale pending fresh lifecycle review and gate attempt 2.
+
+### Final closeout verification after p-rev8
+
+**Date:** 2026-09-11
+**Basis:** `4f41f82f6d83e7536804b72fcf50e87feca5a24a`
+
+The complete repository gate sequence passed against the lane-granular
+remediation and its passing phase review. Every command recorded an explicit
+zero exit code in `/tmp/recon-prev8-final/`:
+
+1. `pnpm check`
+2. `pnpm type-check`
+3. `pnpm test`
+4. `pnpm build`
+5. `pnpm run check:skill-bumps`
+6. `pnpm release:check-versions` after refreshing `origin/main`
+7. `pnpm release:validate`
+8. `pnpm build:docs`
+9. `pnpm lint`
+10. `pnpm format`
+
+Final lifecycle review must now disposition the one deferred diagnostic-only
+Minor and establish the basis for configured exit-gate attempt 2.
 
 ## References
 

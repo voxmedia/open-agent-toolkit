@@ -88,7 +88,7 @@ oat_pr_status: open
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/285'
 oat_project_created: '2026-09-08T17:25:15.784Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-09-11T22:13:53Z'
+oat_project_state_updated: '2026-09-11T22:21:43Z'
 oat_generated: false
 oat_project_recap:
   decision: skip
@@ -153,7 +153,8 @@ No existing project was absorbed or retired.
 - ✓ Authorized final lifecycle re-review passed with no findings
 - ✗ Refreshed configured exit gate found 1 Important, 1 Medium, and 1 Minor
 - ✓ `p-rev8` implemented and phase review passed without blocking findings
-- ⧗ Refresh final verification and lifecycle review before gate attempt 2
+- ✓ Refreshed final repository verification passed after `p-rev8`
+- ⧗ Refresh final lifecycle review before gate attempt 2
 - ⧗ Summary, documentation, and PR description refresh pending
 - ✓ Final repository release-verification sequence passed
 - ✓ PR created
@@ -165,8 +166,8 @@ No active blocker.
 
 ## Next Milestone
 
-Refresh final verification and lifecycle review, including explicit disposition
-of the deferred p-rev8 Minor, before configured exit-gate attempt 2.
+Run the final lifecycle review, including explicit disposition of the deferred
+p-rev8 Minor, before configured exit-gate attempt 2.
 
 ## Authorization and Scope
 
