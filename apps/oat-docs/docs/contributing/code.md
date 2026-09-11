@@ -56,8 +56,8 @@ pnpm build:docs               # builds docs site and its dependencies
 ```
 
 `pnpm test` is composite: it runs the workspace vitest suites, then
-`test:smoke` (`tools/smoke`), `test:skills` (`.agents/skills/*/tests`), the
-named-file `test:release` set, and last `test:scripts` (`scripts/worktree`). Steps 5 and 6 are the version-lockstep
+`test:smoke` (`tools/smoke`), `test:skills` (`.agents/skills/*/tests`), and last
+`test:scripts` (`scripts/worktree`). Steps 5 and 6 are the version-lockstep
 gates; they are in the local list because they previously ran only in CI and
 version-bump drift twice reached review with no local gate to surface it.
 
