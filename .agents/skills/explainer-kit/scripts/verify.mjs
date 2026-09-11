@@ -6,15 +6,20 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { writeFailure } from './bundle.mjs';
-import { RUNTIME_UNAVAILABLE_REASONS } from './lib/browser-runtime.mjs';
+import {
+  createBrowserProbeSession,
+  RUNTIME_UNAVAILABLE_REASONS,
+} from './lib/browser-runtime.mjs';
 import { normalizeClaimSubject } from './lib/claim-subject.mjs';
 import { validateHtmlSafety } from './lib/html-safety.mjs';
 import {
+  BROWSER_PROBE_EVALUATE,
   checkArtifactCohesion,
   checkHtmlStructure,
   checkSourceDumping,
   pngDimensions,
   REPRESENTATIVE_WIDTHS,
+  runBrowserProbes,
 } from './lib/qa.mjs';
 import { loadRecipe, recipeRequiredNarrative } from './lib/recipes.mjs';
 
@@ -90,6 +95,7 @@ export async function verifyRun({
   artifactSha256,
   visualVerdict,
   visualNotes,
+  headlessRuntimeOptions,
 }) {
   const pagePath = join(runRoot, 'site/index.html');
   let html;
@@ -204,11 +210,13 @@ export async function verifyRun({
             visualVerdict,
             visualNotes,
           })
-        : {
-            rung: 'none',
-            reason: RUNTIME_UNAVAILABLE_REASONS.disabled,
-            visual: { verdict: 'none' },
-          };
+        : rung === 'playwright'
+          ? await verifyPlaywrightRung({
+              runRoot,
+              artifact: { ...artifact, html },
+              headlessRuntimeOptions,
+            })
+          : noneRung(RUNTIME_UNAVAILABLE_REASONS.disabled);
     const result = {
       artifactSha256: pageHash,
       checks,
@@ -318,6 +326,60 @@ async function verifyHostRung({
   };
 }
 
+async function verifyPlaywrightRung({
+  runRoot,
+  artifact,
+  headlessRuntimeOptions,
+}) {
+  let session;
+  try {
+    session = await createBrowserProbeSession(headlessRuntimeOptions);
+  } catch (error) {
+    await clearCanonicalScreenshots(runRoot);
+    return noneRung(`playwright-launch-failed:${sanitize(error)}`);
+  }
+  if (!session.available) return noneRung(session.reason);
+
+  try {
+    await clearCanonicalScreenshots(runRoot);
+    const probes = await runBrowserProbes({
+      artifacts: [artifact],
+      probe: (request) =>
+        session.probe({
+          ...request,
+          evaluate: BROWSER_PROBE_EVALUATE,
+          ...(request.scenario === 'default' && {
+            screenshotPath: join(runRoot, `qa/${request.viewport.width}.png`),
+          }),
+        }),
+    });
+    const screenshots = REPRESENTATIVE_WIDTHS.map((width) => `qa/${width}.png`);
+    const findings = probes.issues.map(formatBrowserFinding);
+    return {
+      rung: 'playwright',
+      screenshots,
+      visual:
+        findings.length === 0
+          ? {
+              verdict: 'pass',
+              notes: 'Playwright probes passed at all representative widths.',
+            }
+          : { verdict: 'findings', findings },
+    };
+  } catch (error) {
+    await clearCanonicalScreenshots(runRoot);
+    return noneRung(`playwright-probe-failed:${sanitize(error)}`);
+  } finally {
+    await session.close();
+  }
+}
+
+function formatBrowserFinding({ code, width, scenario, message }) {
+  return [code, width && `${width}px`, scenario, message]
+    .filter(Boolean)
+    .join(':');
+}
+
 async function readHostScreenshots(screenshots) {
   if (typeof screenshots !== 'string' || screenshots.length === 0) return null;
   try {
@@ -369,7 +431,8 @@ function parseArgs(argv) {
     options[field] = argv[index + 1];
   }
   if (!options.runRoot || !options.recipe) throw usageError();
-  if (!['none', 'host'].includes(options.rung)) throw usageError();
+  if (!['none', 'host', 'playwright'].includes(options.rung))
+    throw usageError();
   return options;
 }
 
@@ -391,7 +454,7 @@ function hashText(text) {
 function usageError() {
   return verifyError(
     'verify-usage',
-    'Usage: verify.mjs --run-root <dir> --recipe <id> [--rung none | --rung host --screenshots <dir> --artifact-sha256 <hash> --visual-verdict pass|findings [--visual-notes <text>]]',
+    'Usage: verify.mjs --run-root <dir> --recipe <id> [--rung none|playwright | --rung host --screenshots <dir> --artifact-sha256 <hash> --visual-verdict pass|findings [--visual-notes <text>]]',
   );
 }
 

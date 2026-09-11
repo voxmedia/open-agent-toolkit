@@ -6,7 +6,10 @@ import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { RUNTIME_UNAVAILABLE_REASONS } from '../scripts/lib/browser-runtime.mjs';
+import {
+  RUNTIME_UNAVAILABLE_REASONS,
+  resolveHeadlessRuntime,
+} from '../scripts/lib/browser-runtime.mjs';
 import { recordRun } from '../scripts/record.mjs';
 import {
   extractRenderedClaims,
@@ -68,6 +71,53 @@ async function screenshotFixture(
     }),
   );
   return root;
+}
+
+function browserRuntimeOptions(layout = {}) {
+  const browser = {
+    browserType() {
+      return { name: () => 'chromium' };
+    },
+    version() {
+      return 'fixture-chromium';
+    },
+    async newPage({ viewport }) {
+      return {
+        async route() {},
+        async goto() {},
+        async evaluate(evaluate) {
+          if (typeof evaluate === 'function') return true;
+          return {
+            pageOverflowX: false,
+            clippedX: [],
+            viewportClipped: [],
+            unreadableHeadings: [],
+            animationsDisabled: true,
+            reducedMotion: true,
+            ...layout,
+          };
+        },
+        async bringToFront() {},
+        mouse: { async click() {} },
+        keyboard: { async press() {} },
+        async screenshot({ path }) {
+          await writeFile(path, png(viewport.width, viewport.height));
+        },
+        async close() {},
+      };
+    },
+    async close() {},
+  };
+  return {
+    loadDriver: async () => ({
+      chromium: {
+        executablePath: () => '/fixture/chromium',
+        launch: async () => browser,
+      },
+    }),
+    fileExists: (path) => path === '/fixture/chromium',
+    env: {},
+  };
 }
 
 test('extractRenderedClaims keys terms and normalized facts by subject', async () => {
@@ -208,6 +258,146 @@ test('host rung downgrades mismatched hashes and invalid screenshots', async () 
     assert.equal(result.screenshots, undefined, fixture.name);
     assert.deepEqual(result.visual, { verdict: 'none' }, fixture.name);
   }
+});
+
+test('playwright rung captures three probes and consumes layout findings', async () => {
+  for (const fixture of [
+    { name: 'clean', layout: {}, expectedVerdict: 'pass' },
+    {
+      name: 'fixed-width table',
+      layout: { pageOverflowX: true },
+      expectedVerdict: 'findings',
+    },
+  ]) {
+    const root = await runRoot();
+    const result = await verifyRun({
+      runRoot: root,
+      recipe: 'project-recap',
+      rung: 'playwright',
+      headlessRuntimeOptions: browserRuntimeOptions(fixture.layout),
+    });
+
+    assert.equal(allPass(result), true, fixture.name);
+    assert.equal(result.rung, 'playwright', fixture.name);
+    assert.deepEqual(result.screenshots, [
+      'qa/320.png',
+      'qa/768.png',
+      'qa/1440.png',
+    ]);
+    assert.equal(result.visual.verdict, fixture.expectedVerdict, fixture.name);
+    if (fixture.expectedVerdict === 'findings') {
+      assert.ok(
+        result.visual.findings.some((finding) =>
+          finding.includes('viewport-overflow'),
+        ),
+      );
+    }
+    const manifest = await recordRun({
+      runRoot: root,
+      recipe: 'project-recap',
+      slug: `playwright-${fixture.name.replaceAll(' ', '-')}`,
+      mode: 'unattended',
+      themePath: join(root, 'theme.resolved.json'),
+    });
+    assert.equal(
+      manifest.outcome,
+      fixture.expectedVerdict === 'pass' ? 'built' : 'built-needs-review',
+      fixture.name,
+    );
+  }
+});
+
+test('playwright rung records disabled and launch-failure reasons', async () => {
+  const disabledRoot = await runRoot();
+  const disabled = await verifyRun({
+    runRoot: disabledRoot,
+    recipe: 'project-recap',
+    rung: 'playwright',
+    headlessRuntimeOptions: {
+      env: { EXPLAINER_KIT_HEADLESS_PROBE: 'off' },
+      loadDriver: async () => {
+        throw new Error('disabled resolution must not load the driver');
+      },
+    },
+  });
+  assert.equal(disabled.rung, 'none');
+  assert.equal(disabled.reason, RUNTIME_UNAVAILABLE_REASONS.disabled);
+  assert.equal(allPass(disabled), true);
+
+  const failureRoot = await runRoot();
+  const launchFailure = await verifyRun({
+    runRoot: failureRoot,
+    recipe: 'project-recap',
+    rung: 'playwright',
+    headlessRuntimeOptions: {
+      loadDriver: async () => ({
+        chromium: {
+          executablePath: () => '/fixture/non-executable',
+          launch: async () => {
+            throw new Error('spawn EACCES /fixture/non-executable');
+          },
+        },
+      }),
+      fileExists: (path) => path === '/fixture/non-executable',
+      env: {},
+    },
+  });
+  assert.equal(launchFailure.rung, 'none');
+  assert.match(launchFailure.reason, /^playwright-launch-failed:/);
+  assert.notEqual(launchFailure.reason, RUNTIME_UNAVAILABLE_REASONS.disabled);
+  assert.equal(allPass(launchFailure), true);
+});
+
+test('installed Playwright runtime probes the authored page', async (t) => {
+  const runtime = await resolveHeadlessRuntime();
+  if (!runtime.available) {
+    t.skip(`headless runtime unavailable: ${runtime.reason}`);
+    return;
+  }
+
+  const root = await runRoot();
+  const result = await verifyRun({
+    runRoot: root,
+    recipe: 'project-recap',
+    rung: 'playwright',
+  });
+  assert.equal(result.rung, 'playwright');
+  assert.equal(result.visual.verdict, 'pass');
+  assert.deepEqual(result.screenshots, [
+    'qa/320.png',
+    'qa/768.png',
+    'qa/1440.png',
+  ]);
+
+  const brokenRoot = await runRoot();
+  const html = await readFile(join(brokenRoot, 'site/index.html'), 'utf8');
+  await writeFile(
+    join(brokenRoot, 'site/index.html'),
+    html.replace(
+      '</head>',
+      '<style>table{width:1200px;min-width:1200px}</style></head>',
+    ),
+  );
+  const broken = await verifyRun({
+    runRoot: brokenRoot,
+    recipe: 'project-recap',
+    rung: 'playwright',
+  });
+  assert.equal(broken.rung, 'playwright');
+  assert.equal(broken.visual.verdict, 'findings');
+  assert.ok(
+    broken.visual.findings.some((finding) =>
+      finding.includes('viewport-overflow'),
+    ),
+  );
+  const manifest = await recordRun({
+    runRoot: brokenRoot,
+    recipe: 'project-recap',
+    slug: 'playwright-broken-layout',
+    mode: 'unattended',
+    themePath: join(brokenRoot, 'theme.resolved.json'),
+  });
+  assert.equal(manifest.outcome, 'built-needs-review');
 });
 
 test('fixture variants fail their owning browser-free check', async () => {
